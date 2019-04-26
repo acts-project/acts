@@ -22,11 +22,11 @@ class VolumeBounds;
 class TrackingVolume;
 class Layer;
 class Volume;
-using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
-using VolumeBoundsPtr          = std::shared_ptr<const VolumeBounds>;
-using LayerPtr                 = std::shared_ptr<const Layer>;
-using LayerVector              = std::vector<LayerPtr>;
+using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
+using LayerPtr = std::shared_ptr<const Layer>;
+using LayerVector = std::vector<LayerPtr>;
 ///  @class ITrackingVolumeBuilder
 ///
 /// Interface class ITrackingVolumeBuilders
@@ -39,9 +39,8 @@ using LayerVector              = std::vector<LayerPtr>;
 /// If a VolumeBounds object is given this defines the maximum extent.
 ///
 
-class ITrackingVolumeBuilder
-{
-public:
+class ITrackingVolumeBuilder {
+ public:
   /// Virtual destructor
   virtual ~ITrackingVolumeBuilder() = default;
 
@@ -52,10 +51,9 @@ public:
   /// @param outsideBounds is an (optional) outside confinement
   ///
   /// @return shared pointer to a newly created TrackingVolume
-  virtual MutableTrackingVolumePtr
-  trackingVolume(const GeometryContext& gctx,
-                 TrackingVolumePtr      insideVolume  = nullptr,
-                 VolumeBoundsPtr        outsideBounds = nullptr) const = 0;
+  virtual MutableTrackingVolumePtr trackingVolume(
+      const GeometryContext& gctx, TrackingVolumePtr insideVolume = nullptr,
+      VolumeBoundsPtr outsideBounds = nullptr) const = 0;
 };
 
-}  // namespace
+}  // namespace Acts

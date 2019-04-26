@@ -16,120 +16,93 @@
 namespace Acts {
 namespace Legacy {
 
-  template <typename SpacePoint>
-  class Seed
-  {
-
-    /////////////////////////////////////////////////////////////////////////////////
-    // Public methods:
-    /////////////////////////////////////////////////////////////////////////////////
-
-  public:
-    Seed();
-    Seed(const SpacePoint*, const SpacePoint*, const SpacePoint*, const double);
-    Seed(const Seed&);
-    Seed&
-    operator=(const Seed&);
-    virtual ~Seed();
-    void
-    erase();
-    void
-    add(const SpacePoint*&);
-    void
-    setZVertex(const double&);
-    const std::list<const SpacePoint*>&
-    spacePoints() const;
-    const double&
-    zVertex() const;
-
-    /////////////////////////////////////////////////////////////////////////////////
-    // Protected data members
-    /////////////////////////////////////////////////////////////////////////////////
-
-  protected:
-    std::list<const SpacePoint*> m_spacepoints;
-    double                       m_zvertex;
-  };
-
+template <typename SpacePoint>
+class Seed {
   /////////////////////////////////////////////////////////////////////////////////
-  // Inline methods
+  // Public methods:
   /////////////////////////////////////////////////////////////////////////////////
 
-  template <typename SpacePoint>
-  inline const std::list<const SpacePoint*>&
-  Seed<SpacePoint>::spacePoints() const
-  {
-    return this->m_spacepoints;
-  }
+ public:
+  Seed();
+  Seed(const SpacePoint*, const SpacePoint*, const SpacePoint*, const double);
+  Seed(const Seed&);
+  Seed& operator=(const Seed&);
+  virtual ~Seed();
+  void erase();
+  void add(const SpacePoint*&);
+  void setZVertex(const double&);
+  const std::list<const SpacePoint*>& spacePoints() const;
+  const double& zVertex() const;
 
-  template <typename SpacePoint>
-  inline void
-  Seed<SpacePoint>::erase()
-  {
-    m_spacepoints.erase(m_spacepoints.begin(), m_spacepoints.end());
-  }
+  /////////////////////////////////////////////////////////////////////////////////
+  // Protected data members
+  /////////////////////////////////////////////////////////////////////////////////
 
-  template <typename SpacePoint>
-  inline void
-  Seed<SpacePoint>::add(const SpacePoint*& p)
-  {
-    m_spacepoints.push_back(p);
-  }
+ protected:
+  std::list<const SpacePoint*> m_spacepoints;
+  double m_zvertex;
+};
 
-  template <typename SpacePoint>
-  inline void
-  Seed<SpacePoint>::setZVertex(const double& z)
-  {
-    m_zvertex = z;
-  }
+/////////////////////////////////////////////////////////////////////////////////
+// Inline methods
+/////////////////////////////////////////////////////////////////////////////////
 
-  template <typename SpacePoint>
-  inline const double&
-  Seed<SpacePoint>::zVertex() const
-  {
-    return m_zvertex;
-  }
+template <typename SpacePoint>
+inline const std::list<const SpacePoint*>& Seed<SpacePoint>::spacePoints()
+    const {
+  return this->m_spacepoints;
+}
 
-  ///////////////////////////////////////////////////////////////////////////////
-  // Constructors
-  ///////////////////////////////////////////////////////////////////////////////
+template <typename SpacePoint>
+inline void Seed<SpacePoint>::erase() {
+  m_spacepoints.erase(m_spacepoints.begin(), m_spacepoints.end());
+}
 
-  template <typename SpacePoint>
-  Seed<SpacePoint>::Seed(const Seed<SpacePoint>& s)
-  {
-    m_spacepoints = s.spacePoints();
-    m_zvertex     = s.zVertex();
-  }
+template <typename SpacePoint>
+inline void Seed<SpacePoint>::add(const SpacePoint*& p) {
+  m_spacepoints.push_back(p);
+}
 
-  template <typename SpacePoint>
-  Seed<SpacePoint>&
-  Seed<SpacePoint>::operator=(const Seed<SpacePoint>& s)
-  {
-    m_spacepoints = s.spacePoints();
-    m_zvertex     = s.zVertex();
-    return *this;
-  }
+template <typename SpacePoint>
+inline void Seed<SpacePoint>::setZVertex(const double& z) {
+  m_zvertex = z;
+}
 
-  template <typename SpacePoint>
-  Seed<SpacePoint>::Seed()
-  {
-  }
+template <typename SpacePoint>
+inline const double& Seed<SpacePoint>::zVertex() const {
+  return m_zvertex;
+}
 
-  template <typename SpacePoint>
-  Seed<SpacePoint>::Seed(const SpacePoint* b,
-                         const SpacePoint* m,
-                         const SpacePoint* u,
-                         const double      vertex)
-  {
-    m_zvertex = vertex;
-    m_spacepoints.push_back(b);
-    m_spacepoints.push_back(m);
-    m_spacepoints.push_back(u);
-  }
+///////////////////////////////////////////////////////////////////////////////
+// Constructors
+///////////////////////////////////////////////////////////////////////////////
 
-  template <typename SpacePoint>
-  Seed<SpacePoint>::~Seed()
-  {
-  }
-}  // end of Legacy namespace
-}  // end of Acts namespace
+template <typename SpacePoint>
+Seed<SpacePoint>::Seed(const Seed<SpacePoint>& s) {
+  m_spacepoints = s.spacePoints();
+  m_zvertex = s.zVertex();
+}
+
+template <typename SpacePoint>
+Seed<SpacePoint>& Seed<SpacePoint>::operator=(const Seed<SpacePoint>& s) {
+  m_spacepoints = s.spacePoints();
+  m_zvertex = s.zVertex();
+  return *this;
+}
+
+template <typename SpacePoint>
+Seed<SpacePoint>::Seed() {}
+
+template <typename SpacePoint>
+Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
+                       const SpacePoint* u, const double vertex) {
+  m_zvertex = vertex;
+  m_spacepoints.push_back(b);
+  m_spacepoints.push_back(m);
+  m_spacepoints.push_back(u);
+}
+
+template <typename SpacePoint>
+Seed<SpacePoint>::~Seed() {}
+}  // namespace Legacy
+}  // namespace Acts

@@ -27,9 +27,7 @@ namespace Acts {
 /// "momentumJacobian" respectively.
 ///
 
-struct LinearizedTrack
-{
-
+struct LinearizedTrack {
   /// @brief Constructor taking perigee parameters and covariance matrix
   /// of track propagated to closest approach (PCA) of linearization point,
   /// position and momentum Jacobian and const term.
@@ -46,32 +44,29 @@ struct LinearizedTrack
 
   LinearizedTrack() = default;
 
-  LinearizedTrack(const ActsVectorD<5>&    paramsAtPCA,
+  LinearizedTrack(const ActsVectorD<5>& paramsAtPCA,
                   const ActsSymMatrixD<5>& parCovarianceAtPCA,
-                  const Vector3D&          linPoint,
+                  const Vector3D& linPoint,
                   const ActsMatrixD<5, 3>& posJacobian,
                   const ActsMatrixD<5, 3>& momJacobian,
-                  const Vector3D&       position,
-                  const Vector3D&       momentum,
+                  const Vector3D& position, const Vector3D& momentum,
                   const ActsVectorD<5>& constTerm)
-    : parametersAtPCA(paramsAtPCA)
-    , covarianceAtPCA(parCovarianceAtPCA)
-    , linearizationPoint(linPoint)
-    , positionJacobian(posJacobian)
-    , momentumJacobian(momJacobian)
-    , positionAtPCA(position)
-    , momentumAtPCA(momentum)
-    , constantTerm(constTerm)
-  {
-  }
+      : parametersAtPCA(paramsAtPCA),
+        covarianceAtPCA(parCovarianceAtPCA),
+        linearizationPoint(linPoint),
+        positionJacobian(posJacobian),
+        momentumJacobian(momJacobian),
+        positionAtPCA(position),
+        momentumAtPCA(momentum),
+        constantTerm(constTerm) {}
 
-  ActsVectorD<5>    parametersAtPCA{ActsVectorD<5>::Zero()};
+  ActsVectorD<5> parametersAtPCA{ActsVectorD<5>::Zero()};
   ActsSymMatrixD<5> covarianceAtPCA{ActsSymMatrixD<5>::Zero()};
-  Vector3D          linearizationPoint{Vector3D::Zero()};
+  Vector3D linearizationPoint{Vector3D::Zero()};
   ActsMatrixD<5, 3> positionJacobian{ActsMatrixD<5, 3>::Zero()};
   ActsMatrixD<5, 3> momentumJacobian{ActsMatrixD<5, 3>::Zero()};
-  Vector3D       positionAtPCA{Vector3D::Zero()};
-  Vector3D       momentumAtPCA{Vector3D::Zero()};
+  Vector3D positionAtPCA{Vector3D::Zero()};
+  Vector3D momentumAtPCA{Vector3D::Zero()};
   ActsVectorD<5> constantTerm{ActsVectorD<5>::Zero()};
 };
 

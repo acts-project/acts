@@ -28,16 +28,15 @@ namespace Acts {
 ///
 /// @image html RadialBounds.gif
 
-class RadialBounds : public DiscBounds
-{
-public:
+class RadialBounds : public DiscBounds {
+ public:
   /// enumeration for readability
   enum BoundValues {
-    bv_rMin          = 0,
-    bv_rMax          = 1,
-    bv_averagePhi    = 2,
+    bv_rMin = 0,
+    bv_rMax = 1,
+    bv_averagePhi = 2,
     bv_halfPhiSector = 3,
-    bv_length        = 4
+    bv_length = 4
   };
 
   RadialBounds();
@@ -61,14 +60,11 @@ public:
 
   ~RadialBounds() override;
 
-  RadialBounds*
-  clone() const final;
+  RadialBounds* clone() const final;
 
-  SurfaceBounds::BoundsType
-  type() const final;
+  SurfaceBounds::BoundsType type() const final;
 
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///
@@ -76,69 +72,53 @@ public:
   /// @param bcheck boundary check directive
   ///
   /// @return is a boolean indicating the operation success
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary calculation
   ///
   /// @param lpos local 2D position in surface coordinate frame
   ///
   /// @return distance to boundary ( > 0 if outside and <=0 if inside)
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Outstream operator
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return method for inner Radius
-  double
-  rMin() const;
+  double rMin() const;
 
   /// Return method for outer Radius
-  double
-  rMax() const;
+  double rMax() const;
 
   /// Return method for the central phi value
   ///(i.e. phi value of x-axis of local 3D frame)
-  double
-  averagePhi() const;
+  double averagePhi() const;
 
   /// Return method for the half phi span
-  double
-  halfPhiSector() const;
+  double halfPhiSector() const;
 
-private:
+ private:
   double m_rMin, m_rMax, m_avgPhi, m_halfPhi;
 
-  Vector2D
-  shifted(const Vector2D& lpos) const;
+  Vector2D shifted(const Vector2D& lpos) const;
 };
 
-inline double
-RadialBounds::rMin() const
-{
+inline double RadialBounds::rMin() const {
   return m_rMin;
 }
 
-inline double
-RadialBounds::rMax() const
-{
+inline double RadialBounds::rMax() const {
   return m_rMax;
 }
 
-inline double
-RadialBounds::averagePhi() const
-{
+inline double RadialBounds::averagePhi() const {
   return m_avgPhi;
 }
 
-inline double
-RadialBounds::halfPhiSector() const
-{
+inline double RadialBounds::halfPhiSector() const {
   return m_halfPhi;
 }
 
-}  // namespace
+}  // namespace Acts

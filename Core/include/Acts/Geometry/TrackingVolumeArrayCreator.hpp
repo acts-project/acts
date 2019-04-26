@@ -31,24 +31,19 @@ using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
 /// binned arrays of TrackingVolumes for both, confinement in another volume
 /// and navigation issues.
 ///
-class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator
-{
-public:
+class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator {
+ public:
   /// @brief This struct stores the configuration of the tracking geometry
-  struct Config
-  {
-  };
+  struct Config {};
 
   /// Constructor
   ///
   /// @param logger logging instance
   TrackingVolumeArrayCreator(const Config& /*cfg*/,
-                             std::unique_ptr<const Logger> logger
-                             = getDefaultLogger("LayerArrayCreator",
-                                                Logging::INFO))
-    : m_logger(std::move(logger))
-  {
-  }
+                             std::unique_ptr<const Logger> logger =
+                                 getDefaultLogger("LayerArrayCreator",
+                                                  Logging::INFO))
+      : m_logger(std::move(logger)) {}
 
   /// Destructor
   ~TrackingVolumeArrayCreator() override = default;
@@ -60,29 +55,22 @@ public:
   /// @param [in] bValue is the binning value
   ///
   /// @return new created volume array
-  std::shared_ptr<const TrackingVolumeArray>
-  trackingVolumeArray(const GeometryContext&      gctx,
-                      const TrackingVolumeVector& tVolumes,
-                      BinningValue                bValue) const override;
+  std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
+      const GeometryContext& gctx, const TrackingVolumeVector& tVolumes,
+      BinningValue bValue) const override;
 
   /// Set logging instance
   ///
   /// @param logger is the logging instance to be set
-  void
-  setLogger(std::unique_ptr<const Logger> logger)
-  {
+  void setLogger(std::unique_ptr<const Logger> logger) {
     m_logger = std::move(logger);
   }
 
-private:
+ private:
   // Private access to the logger method
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
 };
-}
+}  // namespace Acts

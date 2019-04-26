@@ -21,7 +21,7 @@ class DetElement;
 class Segmentation;
 class Volume;
 class Material;
-}
+}  // namespace dd4hep
 
 namespace Acts {
 
@@ -79,71 +79,58 @@ class ISurfaceMaterial;
 /// the other boundary surface of the layer or at the representing (center)
 /// surface of the layer
 enum LayerMaterialPos {
-  inner   = 0,
+  inner = 0,
   central = 1,
-  outer   = 2,
+  outer = 2,
 };
 
-class IActsExtension
-{
-public:
+class IActsExtension {
+ public:
   /// Virtual destructor
   virtual ~IActsExtension() = default;
   /// Indicates if the DD4hep::DetElement is the beampipe
-  virtual bool
-  isBeampipe() const = 0;
+  virtual bool isBeampipe() const = 0;
   /// Indicates that the DD4hep::DetElement is a barrel
-  virtual bool
-  isBarrel() const = 0;
+  virtual bool isBarrel() const = 0;
   /// Indicates that the DD4hep::DetElement is an endcap
-  virtual bool
-  isEndcap() const = 0;
+  virtual bool isEndcap() const = 0;
   /// Indicates that the DD4hep::DetElement is a layer
-  virtual bool
-  isLayer() const = 0;
+  virtual bool isLayer() const = 0;
   /// Bool returning true if the layers should carry material using material
   /// mapping
   /// @note automatically set when the material bins are set
-  virtual bool
-  hasSupportMaterial() const = 0;
+  virtual bool hasSupportMaterial() const = 0;
   /// Access to the two bin numbers determining the granularity of the two
   /// dimensional grid on which the material of the layer should be mapped on
   /// @return std::pair with the number of bins in th first and the second
   /// direction
-  virtual std::pair<size_t, size_t>
-  materialBins() const = 0;
+  virtual std::pair<size_t, size_t> materialBins() const = 0;
   /// @return states if the material should be mapped on the inner,
   /// the center or the outer surface of the layer
-  virtual Acts::LayerMaterialPos
-  layerMaterialPosition() const = 0;
+  virtual Acts::LayerMaterialPos layerMaterialPosition() const = 0;
   /// Access the orientation of the module in respect to the tracking frame
   /// @return string describing the orientation of the axes
-  virtual const std::string
-  axes() const = 0;
+  virtual const std::string axes() const = 0;
   /// @return states if the geometrical boundaries of the current object should
   /// be built automatically by adding given tolerances to the expansion of the
   /// contained modules
-  virtual bool
-  buildEnvelope() const = 0;
+  virtual bool buildEnvelope() const = 0;
   /// @return the tolerance which should be added in r to the geometrical
   /// expansion of the contained surfaces (sensituive DetElements) of this
   /// DetElement to automatically create the layer envelope
-  virtual double
-  envelopeR() const = 0;
+  virtual double envelopeR() const = 0;
   /// @return the tolerance which should be added in z to the geometrical
   /// expansion of the contained surfaces (sensituive DetElements) of this
   /// DetElement to automatically create the layer envelope
-  virtual double
-  envelopeZ() const = 0;
+  virtual double envelopeZ() const = 0;
   /// @return The SurfaceMaterial
-  virtual std::shared_ptr<const Acts::ISurfaceMaterial>
-  material() const = 0;
+  virtual std::shared_ptr<const Acts::ISurfaceMaterial> material() const = 0;
   /// @return the shared pointer to the digitization module
-  virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const = 0;
+  virtual std::shared_ptr<const DigitizationModule> digitizationModule()
+      const = 0;
 
-protected:
+ protected:
   /// Protected constructor
   IActsExtension() = default;
 };
-}
+}  // namespace Acts

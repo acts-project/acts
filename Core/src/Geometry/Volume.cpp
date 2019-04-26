@@ -16,31 +16,27 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 
 Acts::Volume::Volume()
-  : GeometryObject()
-  , m_transform(nullptr)
-  , m_center(s_origin)
-  , m_volumeBounds(nullptr)
-{
-}
+    : GeometryObject(),
+      m_transform(nullptr),
+      m_center(s_origin),
+      m_volumeBounds(nullptr) {}
 
 Acts::Volume::Volume(const std::shared_ptr<const Transform3D>& htrans,
-                     std::shared_ptr<const VolumeBounds>       volbounds)
-  : GeometryObject()
-  , m_transform(htrans)
-  , m_center(s_origin)
-  , m_volumeBounds(std::move(volbounds))
-{
+                     std::shared_ptr<const VolumeBounds> volbounds)
+    : GeometryObject(),
+      m_transform(htrans),
+      m_center(s_origin),
+      m_volumeBounds(std::move(volbounds)) {
   if (htrans) {
     m_center = htrans->translation();
   }
 }
 
 Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
-  : GeometryObject()
-  , m_transform(vol.m_transform)
-  , m_center(s_origin)
-  , m_volumeBounds(vol.m_volumeBounds)
-{
+    : GeometryObject(),
+      m_transform(vol.m_transform),
+      m_center(s_origin),
+      m_volumeBounds(vol.m_volumeBounds) {
   // applyt he shift if it exists
   if (shift != nullptr) {
     m_transform = std::make_shared<const Transform3D>(transform() * (*shift));
@@ -51,10 +47,8 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
 
 Acts::Volume::~Volume() = default;
 
-const Acts::Vector3D
-Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
-                              Acts::BinningValue bValue) const
-{
+const Acts::Vector3D Acts::Volume::binningPosition(
+    const GeometryContext& /*gctx*/, Acts::BinningValue bValue) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
@@ -66,26 +60,20 @@ Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
 }
 
 // assignment operator
-Acts::Volume&
-Acts::Volume::operator=(const Acts::Volume& vol)
-{
+Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
   if (this != &vol) {
-    m_transform    = vol.m_transform;
-    m_center       = vol.m_center;
+    m_transform = vol.m_transform;
+    m_center = vol.m_center;
     m_volumeBounds = vol.m_volumeBounds;
   }
   return *this;
 }
 
-Acts::Volume*
-Acts::Volume::clone() const
-{
+Acts::Volume* Acts::Volume::clone() const {
   return new Acts::Volume(*this);
 }
 
-bool
-Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const
-{
+bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
   if (!m_transform) {
     return (volumeBounds()).inside(gpos, tol);
   }
@@ -93,9 +81,7 @@ Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const
   return (volumeBounds()).inside(posInVolFrame, tol);
 }
 
-std::ostream&
-Acts::operator<<(std::ostream& sl, const Acts::Volume& vol)
-{
+std::ostream& Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
   sl << "Voluem with " << vol.volumeBounds() << std::endl;
   return sl;
 }

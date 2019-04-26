@@ -33,9 +33,8 @@ class DigitizationModule;
 /// what
 /// if not used with DD4hep?
 ///
-class TGeoDetectorElement : public IdentifiedDetectorElement
-{
-public:
+class TGeoDetectorElement : public IdentifiedDetectorElement {
+ public:
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
@@ -71,15 +70,12 @@ public:
   /// @param digitizationModule Shared pointer to the geometric digitization
   /// description
   TGeoDetectorElement(
-      const Identifier&                               identifier,
-      TGeoNode*                                       tGeoDetElement,
-      const TGeoMatrix*                               mGlobal  = nullptr,
-      const std::string&                              axes     = "XYZ",
-      double                                          scalor   = 1.,
-      bool                                            isDisc   = false,
-      std::shared_ptr<const Acts::ISurfaceMaterial>   material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitizationModule
-      = nullptr);
+      const Identifier& identifier, TGeoNode* tGeoDetElement,
+      const TGeoMatrix* mGlobal = nullptr, const std::string& axes = "XYZ",
+      double scalor = 1., bool isDisc = false,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
+          nullptr);
 
   /// Alternative Constructor
   /// when the localToGlobal transform is already known for the detector element
@@ -118,42 +114,35 @@ public:
   /// @param digitizationModule Shared pointer to the geometric digitization
   /// description
   TGeoDetectorElement(
-      const Identifier&                               identifier,
-      const TGeoMatrix&                               transform,
-      TGeoNode*                                       tGeoDetElement,
-      const std::string&                              axes     = "XYZ",
-      double                                          scalor   = 1.,
-      bool                                            isDisc   = false,
-      std::shared_ptr<const Acts::ISurfaceMaterial>   material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitizationModule
-      = nullptr);
+      const Identifier& identifier, const TGeoMatrix& transform,
+      TGeoNode* tGeoDetElement, const std::string& axes = "XYZ",
+      double scalor = 1., bool isDisc = false,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
+          nullptr);
 
   ///  Destructor
   ~TGeoDetectorElement() override;
 
   /// Identifier
-  Identifier
-  identifier() const final;
+  Identifier identifier() const final;
 
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3D&
-  transform(const GeometryContext& gctx) const final;
+  const Transform3D& transform(const GeometryContext& gctx) const final;
 
   /// Return surface associated with this identifier, which should come from the
-  const Surface&
-  surface() const final;
+  const Surface& surface() const final;
 
   /// Returns the thickness of the module
-  double
-  thickness() const final;
+  double thickness() const final;
 
   /// Retrieve the DigitizationModule
-  const std::shared_ptr<const Acts::DigitizationModule>
-  digitizationModule() const final;
+  const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
+      const final;
 
-private:
+ private:
   /// DD4hep detector element, just linked - not owned
   TGeoNode* m_detElement{nullptr};
   /// Transformation of the detector element
@@ -174,33 +163,25 @@ private:
   std::shared_ptr<const Acts::DigitizationModule> m_digitizationModule{nullptr};
 };
 
-inline Identifier
-TGeoDetectorElement::identifier() const
-{
+inline Identifier TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 
-inline const Transform3D&
-TGeoDetectorElement::transform(const GeometryContext& /*gctx*/) const
-{
+inline const Transform3D& TGeoDetectorElement::transform(
+    const GeometryContext& /*gctx*/) const {
   return (*m_transform);
 }
 
-inline const Surface&
-TGeoDetectorElement::surface() const
-{
+inline const Surface& TGeoDetectorElement::surface() const {
   return (*m_surface);
 }
 
-inline double
-TGeoDetectorElement::thickness() const
-{
+inline double TGeoDetectorElement::thickness() const {
   return m_thickness;
 }
 
 inline const std::shared_ptr<const Acts::DigitizationModule>
-TGeoDetectorElement::digitizationModule() const
-{
+TGeoDetectorElement::digitizationModule() const {
   return m_digitizationModule;
 }
-}
+}  // namespace Acts

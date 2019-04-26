@@ -19,133 +19,114 @@ namespace Acts {
 
 namespace Test {
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
+// Create a test context
+GeometryContext tgContext = GeometryContext();
 
-  ///  create three cylinder surfaces
-  ///  the surface radius (will also be the layer radius)
-  double iVsurfaceHalfLengthZ = 50 * Acts::units::_mm;
-  double iVsurfaceRadius      = 25. * Acts::units::_mm;
-  double iVsurfaceRstagger    = 5. * Acts::units::_mm;
-  double iVsurfaceZoverlap    = 10. * Acts::units::_mm;
-  double iVlayerEnvelope      = 0.5 * Acts::units::_mm;
-  double iVvolumeEnvelope     = 10. * Acts::units::_mm;
-  double iVvolumeRadius       = iVsurfaceRadius + 0.5 * iVsurfaceRstagger
-      + iVlayerEnvelope + iVvolumeEnvelope;
+///  create three cylinder surfaces
+///  the surface radius (will also be the layer radius)
+double iVsurfaceHalfLengthZ = 50 * Acts::units::_mm;
+double iVsurfaceRadius = 25. * Acts::units::_mm;
+double iVsurfaceRstagger = 5. * Acts::units::_mm;
+double iVsurfaceZoverlap = 10. * Acts::units::_mm;
+double iVlayerEnvelope = 0.5 * Acts::units::_mm;
+double iVvolumeEnvelope = 10. * Acts::units::_mm;
+double iVvolumeRadius = iVsurfaceRadius + 0.5 * iVsurfaceRstagger +
+                        iVlayerEnvelope + iVvolumeEnvelope;
 
-  ///  the surface radius (will also be the layer radius)
-  double oVsurfaceHalfLengthZ = 50. * Acts::units::_mm;
-  double oVsurfaceRadius      = 100. * Acts::units::_mm;
-  double oVsurfaceRstagger    = 5. * Acts::units::_mm;
-  double oVsurfaceZoverlap    = 10. * Acts::units::_mm;
-  double oVlayerEnvelope      = 0.5 * Acts::units::_mm;
-  double oVvolumeEnvelope     = 10. * Acts::units::_mm;
-  double oVvolumeRadius       = oVsurfaceRadius + 0.5 * oVsurfaceRstagger
-      + oVlayerEnvelope + oVvolumeEnvelope;
+///  the surface radius (will also be the layer radius)
+double oVsurfaceHalfLengthZ = 50. * Acts::units::_mm;
+double oVsurfaceRadius = 100. * Acts::units::_mm;
+double oVsurfaceRstagger = 5. * Acts::units::_mm;
+double oVsurfaceZoverlap = 10. * Acts::units::_mm;
+double oVlayerEnvelope = 0.5 * Acts::units::_mm;
+double oVvolumeEnvelope = 10. * Acts::units::_mm;
+double oVvolumeRadius = oVsurfaceRadius + 0.5 * oVsurfaceRstagger +
+                        oVlayerEnvelope + oVvolumeEnvelope;
 
-  ///  inner volume
-  auto iVolume = constructCylinderVolume(tgContext,
-                                         iVsurfaceHalfLengthZ,
-                                         iVsurfaceRadius,
-                                         iVsurfaceRstagger,
-                                         iVsurfaceZoverlap,
-                                         iVlayerEnvelope,
-                                         iVvolumeEnvelope,
-                                         0.,
-                                         iVvolumeRadius,
-                                         "InnerVolume");
+///  inner volume
+auto iVolume = constructCylinderVolume(
+    tgContext, iVsurfaceHalfLengthZ, iVsurfaceRadius, iVsurfaceRstagger,
+    iVsurfaceZoverlap, iVlayerEnvelope, iVvolumeEnvelope, 0., iVvolumeRadius,
+    "InnerVolume");
 
-  BOOST_AUTO_TEST_CASE(GeometryID_innervolume_test)
-  {
-    BOOST_CHECK_EQUAL(0ul, iVolume->geoID().value());
+BOOST_AUTO_TEST_CASE(GeometryID_innervolume_test) {
+  BOOST_CHECK_EQUAL(0ul, iVolume->geoID().value());
+  // check the boundary surfaces
+  for (auto bSf : iVolume->boundarySurfaces()) {
+    BOOST_CHECK_EQUAL(0ul, bSf->surfaceRepresentation().geoID().value());
+    for (auto lay : iVolume->confinedLayers()->arrayObjects()) {
+      BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
+      // check the approach surfaces
+      for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
+        BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
+      }
+      // check the layer surface array
+      for (auto ssf : lay->surfaceArray()->surfaces()) {
+        BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
+      }
+    }
+  }
+}
+
+///  outer volume
+auto oVolume = constructCylinderVolume(
+    tgContext, oVsurfaceHalfLengthZ, oVsurfaceRadius, oVsurfaceRstagger,
+    oVsurfaceZoverlap, oVlayerEnvelope, oVvolumeEnvelope, iVvolumeRadius,
+    oVvolumeRadius, "OuterVolume");
+
+BOOST_AUTO_TEST_CASE(GeometryID_outervolume_test) {
+  BOOST_CHECK_EQUAL(0ul, oVolume->geoID().value());
+  // check the boundary surfaces
+  for (auto bSf : iVolume->boundarySurfaces()) {
+    BOOST_CHECK_EQUAL(0ul, bSf->surfaceRepresentation().geoID().value());
+    for (auto lay : oVolume->confinedLayers()->arrayObjects()) {
+      BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
+      // check the approach surfaces
+      for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
+        BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
+      }
+      // check the layer surface array
+      for (auto ssf : lay->surfaceArray()->surfaces()) {
+        BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
+      }
+    }
+  }
+}
+//
+double oVvolumeHalfZ =
+    (4 * oVsurfaceHalfLengthZ - oVsurfaceZoverlap) + oVvolumeEnvelope;
+// now create the container volume
+auto hVolume = constructContainerVolume(
+    tgContext, iVolume, oVolume, oVvolumeRadius, oVvolumeHalfZ, "Container");
+
+///  pre-check on GeometryID
+BOOST_AUTO_TEST_CASE(GeometryID_containervolume_test) {
+  ///  let's check that the geometry ID values are all 0
+  BOOST_CHECK_EQUAL(0ul, hVolume->geoID().value());
+  /// check the boundaries of the hVolume, should also be 0
+  for (auto hbsf : hVolume->boundarySurfaces()) {
+    BOOST_CHECK_EQUAL(0ul, hbsf->surfaceRepresentation().geoID().value());
+  }
+  for (auto cVol : hVolume->confinedVolumes()->arrayObjects()) {
+    /// let's check everything is set to 0
+    BOOST_CHECK_EQUAL(0ul, cVol->geoID().value());
     // check the boundary surfaces
-    for (auto bSf : iVolume->boundarySurfaces()) {
+    for (auto bSf : cVol->boundarySurfaces()) {
       BOOST_CHECK_EQUAL(0ul, bSf->surfaceRepresentation().geoID().value());
-      for (auto lay : iVolume->confinedLayers()->arrayObjects()) {
-        BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
-        // check the approach surfaces
-        for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
-          BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
-        }
-        // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->surfaces()) {
-          BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
-        }
+    }
+    for (auto lay : cVol->confinedLayers()->arrayObjects()) {
+      BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
+      // check the approach surfaces
+      for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
+        BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
+      }
+      // check the layer surface array
+      for (auto ssf : lay->surfaceArray()->surfaces()) {
+        BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
       }
     }
   }
-
-  ///  outer volume
-  auto oVolume = constructCylinderVolume(tgContext,
-                                         oVsurfaceHalfLengthZ,
-                                         oVsurfaceRadius,
-                                         oVsurfaceRstagger,
-                                         oVsurfaceZoverlap,
-                                         oVlayerEnvelope,
-                                         oVvolumeEnvelope,
-                                         iVvolumeRadius,
-                                         oVvolumeRadius,
-                                         "OuterVolume");
-
-  BOOST_AUTO_TEST_CASE(GeometryID_outervolume_test)
-  {
-    BOOST_CHECK_EQUAL(0ul, oVolume->geoID().value());
-    // check the boundary surfaces
-    for (auto bSf : iVolume->boundarySurfaces()) {
-      BOOST_CHECK_EQUAL(0ul, bSf->surfaceRepresentation().geoID().value());
-      for (auto lay : oVolume->confinedLayers()->arrayObjects()) {
-        BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
-        // check the approach surfaces
-        for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
-          BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
-        }
-        // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->surfaces()) {
-          BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
-        }
-      }
-    }
-  }
-  //
-  double oVvolumeHalfZ
-      = (4 * oVsurfaceHalfLengthZ - oVsurfaceZoverlap) + oVvolumeEnvelope;
-  // now create the container volume
-  auto hVolume = constructContainerVolume(tgContext,
-                                          iVolume,
-                                          oVolume,
-                                          oVvolumeRadius,
-                                          oVvolumeHalfZ,
-                                          "Container");
-
-  ///  pre-check on GeometryID
-  BOOST_AUTO_TEST_CASE(GeometryID_containervolume_test)
-  {
-    ///  let's check that the geometry ID values are all 0
-    BOOST_CHECK_EQUAL(0ul, hVolume->geoID().value());
-    /// check the boundaries of the hVolume, should also be 0
-    for (auto hbsf : hVolume->boundarySurfaces()) {
-      BOOST_CHECK_EQUAL(0ul, hbsf->surfaceRepresentation().geoID().value());
-    }
-    for (auto cVol : hVolume->confinedVolumes()->arrayObjects()) {
-      /// let's check everything is set to 0
-      BOOST_CHECK_EQUAL(0ul, cVol->geoID().value());
-      // check the boundary surfaces
-      for (auto bSf : cVol->boundarySurfaces()) {
-        BOOST_CHECK_EQUAL(0ul, bSf->surfaceRepresentation().geoID().value());
-      }
-      for (auto lay : cVol->confinedLayers()->arrayObjects()) {
-        BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
-        // check the approach surfaces
-        for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
-          BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
-        }
-        // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->surfaces()) {
-          BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
-        }
-      }
-    }
-  }
+}
 
 }  //  end of namespace Test
 }  //  end of namespace Acts

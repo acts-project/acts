@@ -30,15 +30,14 @@ namespace Acts {
 /// It can (optionally) depend on a result of an Actor from
 /// the actor list.
 template <typename... aborters_t>
-struct AbortList : public detail::Extendable<aborters_t...>
-{
-private:
+struct AbortList : public detail::Extendable<aborters_t...> {
+ private:
   static_assert(not detail::has_duplicates_v<aborters_t...>,
                 "same aborter type specified several times");
 
   using detail::Extendable<aborters_t...>::tuple;
 
-public:
+ public:
   // This uses the type collector
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
@@ -62,40 +61,32 @@ public:
   /// Default move assignment operator
   ///
   /// @param aborters The source action list
-  AbortList<aborters_t...>&
-  operator=(const AbortList<aborters_t...>& aborters)
-      = default;
+  AbortList<aborters_t...>& operator=(
+      const AbortList<aborters_t...>& aborters) = default;
 
   /// Default move assignment operator
   ///
   /// @param aborters The source action list
-  AbortList<aborters_t...>&
-  operator=(AbortList<aborters_t...>&& aborters)
-      = default;
+  AbortList<aborters_t...>& operator=(AbortList<aborters_t...>&& aborters) =
+      default;
 
   /// Constructor from tuple
   ///
   /// @param extensions Source extensions tuple
   AbortList(const std::tuple<aborters_t...>& aborters)
-    : detail::Extendable<aborters_t...>(aborters)
-  {
-  }
+      : detail::Extendable<aborters_t...>(aborters) {}
 
   /// Constructor from tuple move
   ///
   /// @param extensions Source extensions tuple
   AbortList(std::tuple<aborters_t...>&& aborters)
-    : detail::Extendable<aborters_t...>(std::move(aborters))
-  {
-  }
+      : detail::Extendable<aborters_t...>(std::move(aborters)) {}
 
   /// Append new entries and return a new condition
   template <typename... appendices_t>
-  AbortList<aborters_t..., appendices_t...>
-  append(appendices_t... aps) const
-  {
-    auto catTuple
-        = std::tuple_cat(tuple(), std::tuple<appendices_t...>(aps...));
+  AbortList<aborters_t..., appendices_t...> append(appendices_t... aps) const {
+    auto catTuple =
+        std::tuple_cat(tuple(), std::tuple<appendices_t...>(aps...));
     return AbortList<aborters_t..., appendices_t...>(std::move(catTuple));
   }
 
@@ -110,11 +101,8 @@ public:
   /// @param [in,out] state is the state object from the propagator
   /// @param [in] stepper Stepper used for the propagation
   template <typename result_t, typename propagator_state_t, typename stepper_t>
-  bool
-  operator()(const result_t&     result,
-             propagator_state_t& state,
-             const stepper_t&    stepper) const
-  {
+  bool operator()(const result_t& result, propagator_state_t& state,
+                  const stepper_t& stepper) const {
     // clang-format off
     static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<
                         aborters_t, 
@@ -122,8 +110,8 @@ public:
                   "not all aborters support the specified input");
     // clang-format on
 
-    return detail::abort_list_impl<aborters_t...>::check(
-        tuple(), result, state, stepper);
+    return detail::abort_list_impl<aborters_t...>::check(tuple(), result, state,
+                                                         stepper);
   }
 };
 

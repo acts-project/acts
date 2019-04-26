@@ -29,17 +29,16 @@ namespace Acts {
 ///  @image html ConeBounds.gif
 ///
 
-class ConeBounds : public SurfaceBounds
-{
-public:
+class ConeBounds : public SurfaceBounds {
+ public:
   /// @enum BoundValues for readablility
   enum BoundValues {
-    bv_alpha         = 0,
-    bv_minZ          = 1,
-    bv_maxZ          = 2,
-    bv_averagePhi    = 3,
+    bv_alpha = 0,
+    bv_minZ = 1,
+    bv_maxZ = 2,
+    bv_averagePhi = 3,
     bv_halfPhiSector = 4,
-    bv_length        = 5
+    bv_length = 5
   };
 
   ConeBounds() = delete;
@@ -63,148 +62,112 @@ public:
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha,
-             double zmin,
-             double zmax,
-             double halfphi = M_PI,
-             double avphi   = 0.);
+  ConeBounds(double alpha, double zmin, double zmax, double halfphi = M_PI,
+             double avphi = 0.);
 
   ~ConeBounds() override;
 
-  ConeBounds*
-  clone() const final;
+  ConeBounds* clone() const final;
 
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
   /// inside method for local position
   ///
   /// @param lpos is the local position to be checked
   /// @param bcheck is the boundary check directive
   /// @return is a boolean indicating if the position is inside
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const final;
+  bool inside(const Vector2D& lpos,
+              const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input obect
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return the radius at a specific z values
   ///
   /// @param z is the z value for which r is requested
   /// @return is the r value associated with z
-  double
-  r(double z) const;
+  double r(double z) const;
 
   /// Return the average values for the angles
-  double
-  tanAlpha() const;
+  double tanAlpha() const;
 
   /// Return the average values for the angles
-  double
-  sinAlpha() const;
+  double sinAlpha() const;
 
   /// Return the average values for the angles
-  double
-  cosAlpha() const;
+  double cosAlpha() const;
 
   /// Return the average values for the angles
-  double
-  alpha() const;
+  double alpha() const;
 
   /// This method returns the minimum z value in the local
   /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
-  double
-  minZ() const;
+  double minZ() const;
 
   /// This method returns the maximum z value in the local
   /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
-  double
-  maxZ() const;
+  double maxZ() const;
 
   /// This method returns the average phi value
   /// (i.e. the "middle" phi value for the conical sector we  are describing)
-  double
-  averagePhi() const;
+  double averagePhi() const;
 
   /// This method returns the half-phi width of the sector
   /// (so that averagePhi +/- halfPhiSector gives the phi bounds of the cone)
-  double
-  halfPhiSector() const;
+  double halfPhiSector() const;
 
-private:
+ private:
   double m_alpha, m_tanAlpha;
   double m_zMin, m_zMax;
   double m_avgPhi, m_halfPhi;
 
-  Vector2D
-  shifted(const Vector2D& lpos) const;
+  Vector2D shifted(const Vector2D& lpos) const;
 };
 
-inline double
-ConeBounds::r(double z) const
-{
+inline double ConeBounds::r(double z) const {
   return std::abs(z * m_tanAlpha);
 }
 
-inline double
-ConeBounds::tanAlpha() const
-{
+inline double ConeBounds::tanAlpha() const {
   return m_tanAlpha;
 }
 
-inline double
-ConeBounds::sinAlpha() const
-{
+inline double ConeBounds::sinAlpha() const {
   return std::sin(m_alpha);
 }
 
-inline double
-ConeBounds::cosAlpha() const
-{
+inline double ConeBounds::cosAlpha() const {
   return std::cos(m_alpha);
 }
 
-inline double
-ConeBounds::alpha() const
-{
+inline double ConeBounds::alpha() const {
   return m_alpha;
 }
 
-inline double
-ConeBounds::minZ() const
-{
+inline double ConeBounds::minZ() const {
   return m_zMin;
 }
 
-inline double
-ConeBounds::maxZ() const
-{
+inline double ConeBounds::maxZ() const {
   return m_zMax;
 }
 
-inline double
-ConeBounds::averagePhi() const
-{
+inline double ConeBounds::averagePhi() const {
   return m_avgPhi;
 }
 
-inline double
-ConeBounds::halfPhiSector() const
-{
+inline double ConeBounds::halfPhiSector() const {
   return m_halfPhi;
 }
-}
+}  // namespace Acts

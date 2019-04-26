@@ -29,17 +29,17 @@ namespace Acts {
 /// It is templated in order to allow for BoundarySurfaces from
 /// representing volumes of layers to be re-used
 
-class GenericApproachDescriptor : public ApproachDescriptor
-{
-public:
+class GenericApproachDescriptor : public ApproachDescriptor {
+ public:
   /// A generic approach descriptor for new Acts::Surface objects
   /// passing ownership
   ///
   /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(
       std::vector<std::shared_ptr<const Surface>> aSurfaces)
-    : ApproachDescriptor(), m_surfaces(std::move(aSurfaces)), m_surfaceCache()
-  {
+      : ApproachDescriptor(),
+        m_surfaces(std::move(aSurfaces)),
+        m_surfaceCache() {
     m_surfaceCache = unpack_shared_vector(m_surfaces);
   }
 
@@ -49,8 +49,7 @@ public:
   /// @brief Register the Layer to the surfaces
   ///
   /// @param lay is the layer to be registerd
-  void
-  registerLayer(const Layer& lay) override;
+  void registerLayer(const Layer& lay) override;
 
   /// get the compatible surfaces
   ///
@@ -61,23 +60,18 @@ public:
   /// @param corrfnc is an noption correction function
   ///
   /// @return : a boolean indicating if an actual intersection had been tried
-  ObjectIntersection<Surface>
-  approachSurface(const GeometryContext& gctx,
-                  const Vector3D&        gpos,
-                  const Vector3D&        gdir,
-                  NavigationDirection    navDir,
-                  const BoundaryCheck&   bcheck,
-                  CorrFnc                corrfnc = nullptr) const override;
+  ObjectIntersection<Surface> approachSurface(
+      const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
+      NavigationDirection navDir, const BoundaryCheck& bcheck,
+      CorrFnc corrfnc = nullptr) const override;
 
   /// return all contained surfaces of this approach descriptor
-  const std::vector<const Surface*>&
-  containedSurfaces() const override;
+  const std::vector<const Surface*>& containedSurfaces() const override;
 
   /// Non-const version
-  std::vector<const Surface*>&
-  containedSurfaces() override;
+  std::vector<const Surface*>& containedSurfaces() override;
 
-private:
+ private:
   /// approach surfaces with ownership control
   std::vector<std::shared_ptr<const Surface>> m_surfaces;
 

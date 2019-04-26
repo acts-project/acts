@@ -17,7 +17,7 @@ before_script:
 
 format:
   stage: build
-  image: gitlab-registry.cern.ch/acts/machines/check:latest
+  image: gitlab-registry.cern.ch/acts/machines/check_llvm8:latest
   before_script: []
   script:
     - CI/check_format .

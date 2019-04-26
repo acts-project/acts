@@ -35,8 +35,8 @@ static_assert(Acts::eLOC_R == Acts::eLOC_0 or Acts::eLOC_R == Acts::eLOC_1,
               "local radius must be a local parameter");
 static_assert(Acts::eLOC_PHI == Acts::eLOC_0 or Acts::eLOC_PHI == Acts::eLOC_1,
               "local phi must be a local parameter");
-static_assert(Acts::eLOC_RPHI == Acts::eLOC_0
-                  or Acts::eLOC_RPHI == Acts::eLOC_1,
+static_assert(Acts::eLOC_RPHI == Acts::eLOC_0 or
+                  Acts::eLOC_RPHI == Acts::eLOC_1,
               "local r x phi must be a local parameter");
 static_assert(Acts::eLOC_Z == Acts::eLOC_0 or Acts::eLOC_Z == Acts::eLOC_1,
               "local z must be a local parameter");

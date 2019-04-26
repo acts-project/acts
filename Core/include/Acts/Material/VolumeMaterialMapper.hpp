@@ -34,18 +34,15 @@ namespace Acts {
 /// @return The map
 detail::Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>
 createMaterialGrid(
-    std::array<double, 3>                             gridAxis1,
-    std::array<double, 3>                             gridAxis2,
+    std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2,
     const std::vector<std::pair<Material, Vector3D>>& mPoints,
-    const std::function<detail::Grid<ActsVectorF<5>,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis>::
-                            index_t(
-                                const Vector3D&,
-                                const detail::Grid<AccumulatedVolumeMaterial,
-                                                   detail::EquidistantAxis,
-                                                   detail::EquidistantAxis>&)>&
-        matchToGridPoint);
+    const std::function<
+        detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+                     detail::EquidistantAxis>::
+            index_t(const Vector3D&,
+                    const detail::Grid<
+                        AccumulatedVolumeMaterial, detail::EquidistantAxis,
+                        detail::EquidistantAxis>&)>& matchToGridPoint);
 
 /// @brief This function creates a discrete material map
 ///
@@ -59,24 +56,18 @@ createMaterialGrid(
 /// of @p mPoints to the grid points by its local index
 ///
 /// @return The map
-detail::Grid<ActsVectorF<5>,
-             detail::EquidistantAxis,
-             detail::EquidistantAxis,
+detail::Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis,
              detail::EquidistantAxis>
 createMaterialGrid(
-    std::array<double, 3>                             gridAxis1,
-    std::array<double, 3>                             gridAxis2,
-    std::array<double, 3>                             gridAxis3,
+    std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2,
+    std::array<double, 3> gridAxis3,
     const std::vector<std::pair<Material, Vector3D>>& mPoints,
-    const std::function<detail::Grid<ActsVectorF<5>,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis>::
-                            index_t(
-                                const Vector3D&,
-                                const detail::Grid<AccumulatedVolumeMaterial,
-                                                   detail::EquidistantAxis,
-                                                   detail::EquidistantAxis,
-                                                   detail::EquidistantAxis>&)>&
+    const std::function<
+        detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+                     detail::EquidistantAxis, detail::EquidistantAxis>::
+            index_t(const Vector3D&,
+                    const detail::Grid<
+                        AccumulatedVolumeMaterial, detail::EquidistantAxis,
+                        detail::EquidistantAxis, detail::EquidistantAxis>&)>&
         matchToGridPoint);
 }  // namespace Acts

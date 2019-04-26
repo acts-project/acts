@@ -20,9 +20,8 @@ namespace Acts {
 /// top bins, which are assumed to be the same bins. Does not take interaction
 /// region into account to limit z-bins.
 template <typename SpacePoint>
-class BinFinder : public IBinFinder<SpacePoint>
-{
-public:
+class BinFinder : public IBinFinder<SpacePoint> {
+ public:
   /// destructor
   ~BinFinder() override = default;
 
@@ -31,10 +30,9 @@ public:
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  std::vector<size_t>
-  findBins(size_t                            phiBin,
-           size_t                            zBin,
-           const SpacePointGrid<SpacePoint>* binnedSP) override;
+  std::vector<size_t> findBins(
+      size_t phiBin, size_t zBin,
+      const SpacePointGrid<SpacePoint>* binnedSP) override;
 };
-}
+}  // namespace Acts
 #include "Acts/Seeding/BinFinder.ipp"

@@ -77,21 +77,18 @@ using FullParameterSet = typename detail::full_parset::type;
  * stored in this class
  */
 template <ParID_t... params>
-class ParameterSet
-{
-private:
+class ParameterSet {
+ private:
   // local typedefs and constants
   using ParSet_t = ParameterSet<params...>;  ///< type of this parameter set
-  static constexpr unsigned int NPars
-      = sizeof...(params);  ///< number of parameters stored in this class
+  static constexpr unsigned int NPars =
+      sizeof...(params);  ///< number of parameters stored in this class
 
   // static assert to check that the template parameters are consistent
   static_assert(detail::are_sorted<true, true, ParID_t, params...>::value,
                 "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int,
-                         0,
-                         Acts::NGlobalPars,
+      detail::are_within<unsigned int, 0, Acts::NGlobalPars,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
@@ -100,7 +97,7 @@ private:
       NPars <= Acts::NGlobalPars,
       "number of stored parameters can not exceed number of total parameters");
 
-public:
+ public:
   // public typedefs
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
@@ -126,8 +123,7 @@ public:
   ParameterSet(CovPtr_t cov,
                std::enable_if_t<sizeof...(Tail) + 1 == NPars, ParValue_t> head,
                Tail... values)
-    : m_vValues(NPars), m_pCovariance(std::move(cov))
-  {
+      : m_vValues(NPars), m_pCovariance(std::move(cov)) {
     detail::initialize_parset<ParID_t, params...>::init(*this, head, values...);
   }
 
@@ -144,8 +140,7 @@ public:
    * @param values vector with parameter values
    */
   ParameterSet(CovPtr_t cov, const ParVector_t& values)
-    : m_vValues(NPars), m_pCovariance(std::move(cov))
-  {
+      : m_vValues(NPars), m_pCovariance(std::move(cov)) {
     detail::initialize_parset<ParID_t, params...>::init(*this, values);
   }
 
@@ -156,8 +151,7 @@ public:
    * object
    */
   ParameterSet(const ParSet_t& copy)
-    : m_vValues(copy.m_vValues), m_pCovariance(nullptr)
-  {
+      : m_vValues(copy.m_vValues), m_pCovariance(nullptr) {
     if (copy.m_pCovariance) {
       m_pCovariance = std::make_unique<const CovMatrix_t>(*copy.m_pCovariance);
     }
@@ -170,10 +164,8 @@ public:
    * object
    */
   ParameterSet(ParSet_t&& copy)
-    : m_vValues(std::move(copy.m_vValues))
-    , m_pCovariance(std::move(copy.m_pCovariance))
-  {
-  }
+      : m_vValues(std::move(copy.m_vValues)),
+        m_pCovariance(std::move(copy.m_pCovariance)) {}
 
   /**
    * @brief standard destructor
@@ -185,14 +177,12 @@ public:
    *
    * @param rhs object whose content is assigned to this @c ParameterSet object
    */
-  ParSet_t&
-  operator=(const ParSet_t& rhs)
-  {
+  ParSet_t& operator=(const ParSet_t& rhs) {
     m_vValues = rhs.m_vValues;
-    m_pCovariance
-        = (rhs.m_pCovariance
-               ? std::make_unique<const CovMatrix_t>(*rhs.m_pCovariance)
-               : nullptr);
+    m_pCovariance =
+        (rhs.m_pCovariance
+             ? std::make_unique<const CovMatrix_t>(*rhs.m_pCovariance)
+             : nullptr);
     return *this;
   }
 
@@ -201,10 +191,8 @@ public:
    *
    * @param rhs object whose content is moved into this @c ParameterSet object
    */
-  ParSet_t&
-  operator=(ParSet_t&& rhs)
-  {
-    m_vValues     = std::move(rhs.m_vValues);
+  ParSet_t& operator=(ParSet_t&& rhs) {
+    m_vValues = std::move(rhs.m_vValues);
     m_pCovariance = std::move(rhs.m_pCovariance);
     return *this;
   }
@@ -212,9 +200,7 @@ public:
   /**
    * @brief swap two objects
    */
-  friend void
-  swap(ParSet_t& first, ParSet_t& second) noexcept
-  {
+  friend void swap(ParSet_t& first, ParSet_t& second) noexcept {
     using std::swap;
     swap(first.m_vValues, second.m_vValues);
     swap(first.m_pCovariance, second.m_pCovariance);
@@ -230,9 +216,7 @@ public:
    * @return position of parameter in variadic template parameter set @c params
    */
   template <ParID_t parameter>
-  static constexpr size_t
-  getIndex()
-  {
+  static constexpr size_t getIndex() {
     return detail::get_position<ParID_t, parameter, params...>::value;
   }
 
@@ -248,9 +232,7 @@ public:
    *         parameter set @c params
    */
   template <size_t index>
-  static constexpr ParID_t
-  getParID()
-  {
+  static constexpr ParID_t getParID() {
     return detail::at_index<ParID_t, index, params...>::value;
   }
 
@@ -264,9 +246,7 @@ public:
    * @return value of the stored parameter
    */
   template <ParID_t parameter>
-  ParValue_t
-  getParameter() const
-  {
+  ParValue_t getParameter() const {
     return m_vValues(getIndex<parameter>());
   }
 
@@ -275,11 +255,7 @@ public:
    *
    * @return column vector with @c #NPars rows
    */
-  ParVector_t
-  getParameters() const
-  {
-    return m_vValues;
-  }
+  ParVector_t getParameters() const { return m_vValues; }
 
   /**
    * @brief sets value for given parameter
@@ -292,10 +268,8 @@ public:
    * @return previously stored value of this parameter
    */
   template <ParID_t parameter>
-  void
-  setParameter(ParValue_t value)
-  {
-    using parameter_type             = typename par_type<parameter>::type;
+  void setParameter(ParValue_t value) {
+    using parameter_type = typename par_type<parameter>::type;
     m_vValues(getIndex<parameter>()) = parameter_type::getValue(value);
   }
 
@@ -308,9 +282,7 @@ public:
    *
    * @param values vector of length #NPars
    */
-  void
-  setParameters(const ParVector_t& values)
-  {
+  void setParameters(const ParVector_t& values) {
     detail::initialize_parset<ParID_t, params...>::init(*this, values);
   }
 
@@ -326,9 +298,7 @@ public:
    * @return @c true if the parameter is stored in this set, otherwise @c false
    */
   template <ParID_t parameter>
-  bool
-  contains() const
-  {
+  bool contains() const {
     return detail::is_contained<ParID_t, parameter, params...>::value;
   }
 
@@ -340,11 +310,7 @@ public:
    *
    * @return raw pointer to covariance matrix (can be a nullptr)
    */
-  const CovMatrix_t*
-  getCovariance() const
-  {
-    return m_pCovariance.get();
-  }
+  const CovMatrix_t* getCovariance() const { return m_pCovariance.get(); }
 
   /**
    * @brief access uncertainty for individual parameter
@@ -359,9 +325,7 @@ public:
    *         covariance matrix is set
    */
   template <ParID_t parameter>
-  ParValue_t
-  getUncertainty() const
-  {
+  ParValue_t getUncertainty() const {
     if (m_pCovariance) {
       size_t index = getIndex<parameter>();
       return sqrt((*m_pCovariance)(index, index));
@@ -377,11 +341,7 @@ public:
    *
    * @param cov unique pointer to new covariance matrix (nullptr is accepted)
    */
-  void
-  setCovariance(CovPtr_t cov)
-  {
-    m_pCovariance = std::move(cov);
-  }
+  void setCovariance(CovPtr_t cov) { m_pCovariance = std::move(cov); }
 
   /**
    * @brief equality operator
@@ -390,9 +350,7 @@ public:
    * matrices are
    *         either identical or not set, otherwise @c false
    */
-  bool
-  operator==(const ParSet_t& rhs) const
-  {
+  bool operator==(const ParSet_t& rhs) const {
     // shortcut comparison with myself
     if (&rhs == this) {
       return true;
@@ -403,13 +361,13 @@ public:
       return false;
     }
     // both have covariance matrices set
-    if ((m_pCovariance && rhs.m_pCovariance)
-        && (*m_pCovariance != *rhs.m_pCovariance)) {
+    if ((m_pCovariance && rhs.m_pCovariance) &&
+        (*m_pCovariance != *rhs.m_pCovariance)) {
       return false;
     }
     // only one has a covariance matrix set
-    if ((m_pCovariance && !rhs.m_pCovariance)
-        || (!m_pCovariance && rhs.m_pCovariance)) {
+    if ((m_pCovariance && !rhs.m_pCovariance) ||
+        (!m_pCovariance && rhs.m_pCovariance)) {
       return false;
     }
 
@@ -423,11 +381,7 @@ public:
    *
    * @sa ParameterSet::operator==
    */
-  bool
-  operator!=(const ParSet_t& rhs) const
-  {
-    return !(*this == rhs);
-  }
+  bool operator!=(const ParSet_t& rhs) const { return !(*this == rhs); }
 
   /**
    * @brief project vector of full parameter set onto parameter sub-space
@@ -454,9 +408,7 @@ public:
    * vector
    *         which are also defined for this ParameterSet object
    */
-  ParVector_t
-  project(const FullParameterSet& fullParSet) const
-  {
+  ParVector_t project(const FullParameterSet& fullParSet) const {
     return projector() * fullParSet.getParameters();
   }
 
@@ -499,9 +451,7 @@ public:
       typename T = ParSet_t,
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
   /// @endcond
-  ParVector_t
-  residual(const FullParameterSet& fullParSet) const
-  {
+  ParVector_t residual(const FullParameterSet& fullParSet) const {
     return detail::residual_calculator<params...>::result(
         m_vValues, projector() * fullParSet.getParameters());
   }
@@ -538,9 +488,7 @@ public:
    * ParameterSet object
    *         with respect to the given other parameter set
    */
-  ParVector_t
-  residual(const ParSet_t& otherParSet) const
-  {
+  ParVector_t residual(const ParSet_t& otherParSet) const {
     return detail::residual_calculator<params...>::result(
         m_vValues, otherParSet.m_vValues);
   }
@@ -555,9 +503,7 @@ public:
    * @return constant matrix with @c #NPars rows and @c #Acts::NGlobalPars
    * columns
    */
-  static const ActsMatrix<ParValue_t, NPars, Acts::NGlobalPars>
-  projector()
-  {
+  static const ActsMatrix<ParValue_t, NPars, Acts::NGlobalPars> projector() {
     return sProjector;
   }
 
@@ -566,11 +512,7 @@ public:
    *
    * @return number of stored parameters
    */
-  static constexpr unsigned int
-  size()
-  {
-    return NPars;
-  }
+  static constexpr unsigned int size() { return NPars; }
 
   /**
    * @brief correct given parameter values
@@ -584,15 +526,13 @@ public:
    * @param values vector with parameter values to be checked and corrected if
    * necessary
    */
-  static void
-  correctValues(ParVector_t& values)
-  {
+  static void correctValues(ParVector_t& values) {
     detail::value_corrector<params...>::result(values);
   }
 
-private:
+ private:
   ParVector_t
-           m_vValues;  ///< column vector containing values of local parameters
+      m_vValues;  ///< column vector containing values of local parameters
   CovPtr_t m_pCovariance;  ///< unique pointer to covariance matrix
 
   static const Projection_t sProjector;  ///< matrix to project full parameter
@@ -605,8 +545,6 @@ constexpr unsigned int ParameterSet<params...>::NPars;
 
 template <ParID_t... params>
 const typename ParameterSet<params...>::Projection_t
-    ParameterSet<params...>::sProjector
-    = detail::make_projection_matrix<Acts::NGlobalPars,
-                                     static_cast<unsigned int>(
-                                         params)...>::init();
+    ParameterSet<params...>::sProjector = detail::make_projection_matrix<
+        Acts::NGlobalPars, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts

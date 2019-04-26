@@ -21,16 +21,14 @@ using namespace Acts;
 
 constexpr int NTESTS = 2 << 15;
 // trapezoidal area
-static const Vector2D POLY[]
-    = {{0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
+static const Vector2D POLY[] = {
+    {0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
 
-std::vector<Vector2D>
-make_random_points()
-{
-  std::mt19937                           rng(42);
+std::vector<Vector2D> make_random_points() {
+  std::mt19937 rng(42);
   std::uniform_real_distribution<double> axis(0, 1);
 
-  auto rnd_axis  = std::bind(axis, rng);
+  auto rnd_axis = std::bind(axis, rng);
   auto rnd_point = [&]() { return Vector2D(rnd_axis(), rnd_axis()); };
 
   std::vector<Vector2D> points(NTESTS);
@@ -61,28 +59,23 @@ make_random_points()
 //  return check.TestKDOPKDOP(limits, limitsErr);
 //}
 
-inline bool
-isInside(const Vector2D& point, const BoundaryCheck& check)
-{
+inline bool isInside(const Vector2D& point, const BoundaryCheck& check) {
   return check.isInside(point, POLY);
 }
 
-struct StopWatch
-{
-  using Clock     = std::chrono::high_resolution_clock;
+struct StopWatch {
+  using Clock = std::chrono::high_resolution_clock;
   using TimePoint = Clock::time_point;
 
   TimePoint start;
 
   StopWatch() : start(Clock::now()) {}
 
-  void
-  finish(size_t n_trials, const char* name)
-  {
+  void finish(size_t n_trials, const char* name) {
     auto stop = Clock::now();
     std::chrono::duration<double, std::micro> total = stop - start;
-    std::chrono::duration<double, std::micro> perTrial
-        = (stop - start) / n_trials;
+    std::chrono::duration<double, std::micro> perTrial =
+        (stop - start) / n_trials;
 
     std::cout << name << ":\n";
     std::cout << "  trials: " << n_trials << '\n';
@@ -91,17 +84,15 @@ struct StopWatch
   }
 };
 
-int
-main(int /*argc*/, char** /*argv[]*/)
-{
+int main(int /*argc*/, char** /*argv[]*/) {
   using std::cout;
 
   // absolute check w/o tolerance
   {
-    auto          points = make_random_points();
+    auto points = make_random_points();
     BoundaryCheck check(true);
-    int           n_inside = 0;
-    StopWatch     watch;
+    int n_inside = 0;
+    StopWatch watch;
     for (const auto& point : points) {
       n_inside += (isInside(point, check) ? 1 : 0);
     }
@@ -109,12 +100,12 @@ main(int /*argc*/, char** /*argv[]*/)
   }
   // check w/ covariance
   {
-    auto              points = make_random_points();
+    auto points = make_random_points();
     ActsSymMatrixD<2> cov;
     cov << 0.2, 0.02, 0.15, 0.02;
     BoundaryCheck check(cov, 3.0);  // 3-sigma cut
-    int           n_inside = 0;
-    StopWatch     watch;
+    int n_inside = 0;
+    StopWatch watch;
     for (const auto& point : points) {
       n_inside += (isInside(point, check) ? 1 : 0);
     }

@@ -11,8 +11,7 @@
 namespace Acts {
 
 /// @brief void Measurement calibrator and converter
-struct VoidKalmanComponents
-{
+struct VoidKalmanComponents {
   /// @brief Public call mimicking a calibrator
   ///
   /// @tparam measurement_t Type of the measurement
@@ -23,9 +22,8 @@ struct VoidKalmanComponents
   ///
   /// @return void-calibrated measurement
   template <typename measurement_t, typename parameters_t>
-  measurement_t
-  operator()(measurement_t m, const parameters_t& /*pars*/) const
-  {
+  measurement_t operator()(measurement_t m,
+                           const parameters_t& /*pars*/) const {
     return m;
   }
 
@@ -38,16 +36,13 @@ struct VoidKalmanComponents
   ///
   /// @return moved measurements
   template <typename measurements_t>
-  measurements_t
-  operator()(measurements_t ms) const
-  {
+  measurements_t operator()(measurements_t ms) const {
     return std::move(ms);
   }
 };
 
 /// @brief void Kalman updator
-struct VoidKalmanUpdator
-{
+struct VoidKalmanUpdator {
   /// @brief Public call mimicking an updator
   ///
   /// @tparam measurement_t Type of the measurement to be used
@@ -58,16 +53,14 @@ struct VoidKalmanUpdator
   ///
   /// @return The copied predicted parameters
   template <typename track_state_t, typename predicted_state_t>
-  auto
-  operator()(track_state_t& /*m*/, const predicted_state_t& predicted) const
-  {
+  auto operator()(track_state_t& /*m*/,
+                  const predicted_state_t& predicted) const {
     return &(predicted.parameters);
   }
 };
 
 /// @brief void Kalman smoother
-struct VoidKalmanSmoother
-{
+struct VoidKalmanSmoother {
   /// @brief Public call mimicking an updator
   ///
   /// @tparam track_states_t Type of the track states
@@ -76,9 +69,7 @@ struct VoidKalmanSmoother
   ///
   /// @return The resulting
   template <typename parameters_t, typename track_states_t>
-  const parameters_t*
-  operator()(track_states_t& /*states*/) const
-  {
+  const parameters_t* operator()(track_states_t& /*states*/) const {
     return nullptr;
   }
 };

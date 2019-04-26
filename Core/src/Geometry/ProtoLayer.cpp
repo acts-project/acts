@@ -15,34 +15,31 @@
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
+using Acts::VectorHelpers::phi;
 
 namespace Acts {
 
-ProtoLayer::ProtoLayer(const GeometryContext&             gctx,
-                       const std::vector<const Surface*>& surfaces)
-{
+ProtoLayer::ProtoLayer(const GeometryContext& gctx,
+                       const std::vector<const Surface*>& surfaces) {
   measure(gctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
-    const GeometryContext&                             gctx,
-    const std::vector<std::shared_ptr<const Surface>>& surfaces)
-{
+    const GeometryContext& gctx,
+    const std::vector<std::shared_ptr<const Surface>>& surfaces) {
   measure(gctx, unpack_shared_vector(surfaces));
 }
 
-double
-ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
-{
+double ProtoLayer::radialDistance(const Vector3D& pos1,
+                                  const Vector3D& pos2) const {
   Vector2D p1(pos1.x(), pos1.y());
   Vector2D p2(pos2.x(), pos2.y());
 
   Vector2D O(0, 0);
   Vector2D p1p2 = (p2 - p1);
-  double   L    = p1p2.norm();
-  Vector2D p1O  = (O - p1);
+  double L = p1p2.norm();
+  Vector2D p1O = (O - p1);
 
   // don't do division if L is very small
   if (L < 1e-7) {
@@ -54,14 +51,12 @@ ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
   f = std::min(L, std::max(0., f));
 
   Vector2D closest = f * p1p2.normalized() + p1;
-  double   dist    = (closest - O).norm();
+  double dist = (closest - O).norm();
 
   return dist;
 }
 
-std::ostream&
-ProtoLayer::toStream(std::ostream& sl) const
-{
+std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
   sl << " - r : " << minR << " - " << envR.first << " / " << maxR << " + "
      << envR.second << std::endl;
@@ -73,43 +68,40 @@ ProtoLayer::toStream(std::ostream& sl) const
   return sl;
 }
 
-void
-ProtoLayer::measure(const GeometryContext&             gctx,
-                    const std::vector<const Surface*>& surfaces)
-{
-  minR   = std::numeric_limits<double>::max();
-  maxR   = std::numeric_limits<double>::lowest();
-  minX   = std::numeric_limits<double>::max();
-  maxX   = std::numeric_limits<double>::lowest();
-  minY   = std::numeric_limits<double>::max();
-  maxY   = std::numeric_limits<double>::lowest();
-  minZ   = std::numeric_limits<double>::max();
-  maxZ   = std::numeric_limits<double>::lowest();
+void ProtoLayer::measure(const GeometryContext& gctx,
+                         const std::vector<const Surface*>& surfaces) {
+  minR = std::numeric_limits<double>::max();
+  maxR = std::numeric_limits<double>::lowest();
+  minX = std::numeric_limits<double>::max();
+  maxX = std::numeric_limits<double>::lowest();
+  minY = std::numeric_limits<double>::max();
+  maxY = std::numeric_limits<double>::lowest();
+  minZ = std::numeric_limits<double>::max();
+  maxZ = std::numeric_limits<double>::lowest();
   minPhi = std::numeric_limits<double>::max();
   maxPhi = std::numeric_limits<double>::lowest();
 
   for (const auto& sf : surfaces) {
     // if the associated detector element exists, use
     // it for thickness
-    double                     thickness = 0;
-    const DetectorElementBase* element   = sf->associatedDetectorElement();
+    double thickness = 0;
+    const DetectorElementBase* element = sf->associatedDetectorElement();
     if (element != nullptr) {
       thickness = element->thickness();
     }
 
     // check the shape
-    const PlanarBounds* pBounds
-        = dynamic_cast<const PlanarBounds*>(&(sf->bounds()));
+    const PlanarBounds* pBounds =
+        dynamic_cast<const PlanarBounds*>(&(sf->bounds()));
 
-    const CylinderSurface* cylSurface
-        = dynamic_cast<const CylinderSurface*>(sf);
+    const CylinderSurface* cylSurface =
+        dynamic_cast<const CylinderSurface*>(sf);
     if (pBounds != nullptr) {
-
       const auto& sTransform = sf->transform(gctx);
 
       // get the vertices
-      std::vector<Vector2D> vertices  = pBounds->vertices();
-      size_t                nVertices = vertices.size();
+      std::vector<Vector2D> vertices = pBounds->vertices();
+      size_t nVertices = vertices.size();
       // loop over the two sides of the module
       // we only need to run once if no element i.e. no thickness
       for (int side = 0; side < (element != nullptr ? 2 : 1); ++side) {
@@ -119,12 +111,10 @@ ProtoLayer::measure(const GeometryContext&             gctx,
           // thickness
           double locz = side != 0 ? 0.5 * thickness : -0.5 * thickness;
           // p1 & p2 vectors
-          Vector3D p2(sTransform * Vector3D(vertices.at(iv).x(),
-                                            vertices.at(iv).y(),
-                                            locz));
+          Vector3D p2(sTransform *
+                      Vector3D(vertices.at(iv).x(), vertices.at(iv).y(), locz));
           Vector3D p1(sTransform * Vector3D(vertices.at(ivp).x(),
-                                            vertices.at(ivp).y(),
-                                            locz));
+                                            vertices.at(ivp).y(), locz));
 
           maxX = std::max(maxX, p2.x());
           minX = std::min(minX, p2.x());
@@ -172,36 +162,35 @@ ProtoLayer::measure(const GeometryContext&             gctx,
         for (size_t i = 0; i < face.size(); i++) {
           Vector3D p1 = ph.vertices.at(face.at(i));
           Vector3D p2 = ph.vertices.at(face.at((i + 1) % face.size()));
-          minR        = std::min(minR, radialDistance(p1, p2));
+          minR = std::min(minR, radialDistance(p1, p2));
         }
       }
 
       // set envelopes to half radius
       double cylBoundsR = cylSurface->bounds().r();
-      double env        = cylBoundsR / 2.;
-      envX              = {env, env};
-      envY              = {env, env};
-      envZ              = {env, env};
-      envR              = {env, env};
+      double env = cylBoundsR / 2.;
+      envX = {env, env};
+      envY = {env, env};
+      envZ = {env, env};
+      envR = {env, env};
 
       // evaluate impact of r shift on phi
       double cylPosR = perp(cylSurface->center(gctx));
-      double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
-          - std::atan(cylBoundsR / cylPosR);
+      double dPhi = std::atan((cylBoundsR + env) / cylPosR) -
+                    std::atan(cylBoundsR / cylPosR);
 
       // use this as phi envelope
       envPhi = {dPhi, dPhi};
 
     } else {
       // check for cylinder bounds
-      const CylinderBounds* cBounds
-          = dynamic_cast<const CylinderBounds*>(&(sf->bounds()));
+      const CylinderBounds* cBounds =
+          dynamic_cast<const CylinderBounds*>(&(sf->bounds()));
       if (cBounds != nullptr) {
-
-        double r    = cBounds->r();
-        double z    = sf->center(gctx).z();
-        double hZ   = cBounds->halflengthZ();
-        double phi  = cBounds->averagePhi();
+        double r = cBounds->r();
+        double z = sf->center(gctx).z();
+        double hZ = cBounds->halflengthZ();
+        double phi = cBounds->averagePhi();
         double hPhi = cBounds->halfPhiSector();
 
         maxX = r;

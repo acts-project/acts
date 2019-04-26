@@ -29,7 +29,5 @@ namespace Acts {
 /// corresponding space point.
 ///
 template <class S>
-class SpacePointBuilder
-{
-};
+class SpacePointBuilder {};
 }  // namespace Acts

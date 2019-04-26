@@ -16,8 +16,7 @@
 #include <iostream>
 
 Acts::TriangleBounds::TriangleBounds(const std::array<Vector2D, 3>& vertices)
-  : m_vertices(vertices), m_boundingBox(0, 0)
-{
+    : m_vertices(vertices), m_boundingBox(0, 0) {
   double mx = 0;
   double my = 0;
   for (auto& v : vertices) {
@@ -29,21 +28,15 @@ Acts::TriangleBounds::TriangleBounds(const std::array<Vector2D, 3>& vertices)
 
 Acts::TriangleBounds::~TriangleBounds() = default;
 
-Acts::TriangleBounds*
-Acts::TriangleBounds::clone() const
-{
+Acts::TriangleBounds* Acts::TriangleBounds::clone() const {
   return new TriangleBounds(*this);
 }
 
-Acts::SurfaceBounds::BoundsType
-Acts::TriangleBounds::type() const
-{
+Acts::SurfaceBounds::BoundsType Acts::TriangleBounds::type() const {
   return SurfaceBounds::Triangle;
 }
 
-std::vector<TDD_real_t>
-Acts::TriangleBounds::valueStore() const
-{
+std::vector<TDD_real_t> Acts::TriangleBounds::valueStore() const {
   std::vector<TDD_real_t> values(TriangleBounds::bv_length);
   values[TriangleBounds::bv_x1] = m_vertices[0].x();
   values[TriangleBounds::bv_y1] = m_vertices[0].y();
@@ -54,35 +47,26 @@ Acts::TriangleBounds::valueStore() const
   return values;
 }
 
-bool
-Acts::TriangleBounds::inside(const Acts::Vector2D&      lpos,
-                             const Acts::BoundaryCheck& bcheck) const
-{
+bool Acts::TriangleBounds::inside(const Acts::Vector2D& lpos,
+                                  const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lpos, m_vertices);
 }
 
-double
-Acts::TriangleBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
-{
+double Acts::TriangleBounds::distanceToBoundary(
+    const Acts::Vector2D& lpos) const {
   return BoundaryCheck(true).distance(lpos, m_vertices);
 }
 
-std::vector<Acts::Vector2D>
-Acts::TriangleBounds::vertices() const
-{
+std::vector<Acts::Vector2D> Acts::TriangleBounds::vertices() const {
   return {std::begin(m_vertices), std::end(m_vertices)};
 }
 
-const Acts::RectangleBounds&
-Acts::TriangleBounds::boundingBox() const
-{
+const Acts::RectangleBounds& Acts::TriangleBounds::boundingBox() const {
   return m_boundingBox;
 }
 
 // ostream operator overload
-std::ostream&
-Acts::TriangleBounds::toStream(std::ostream& sl) const
-{
+std::ostream& Acts::TriangleBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::TriangleBounds:  generating vertices (X, Y)";

@@ -7,33 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-struct SpacePoint
-{
+struct SpacePoint {
   float m_x;
   float m_y;
   float m_z;
   float m_r;
-  int   surface;
+  int surface;
   float covr;
   float covz;
-  float
-  x() const
-  {
-    return m_x;
-  }
-  float
-  y() const
-  {
-    return m_y;
-  }
-  float
-  z() const
-  {
-    return m_z;
-  }
-  float
-  r() const
-  {
-    return m_r;
-  }
+  float x() const { return m_x; }
+  float y() const { return m_y; }
+  float z() const { return m_z; }
+  float r() const { return m_r; }
 };

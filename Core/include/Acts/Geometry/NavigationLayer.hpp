@@ -29,17 +29,15 @@ class BinUtility;
 /// Navigation Layers have a surface representation, but should usually never be
 /// propagated to.
 
-class NavigationLayer : public Layer
-{
-public:
+class NavigationLayer : public Layer {
+ public:
   ///  Factory Constructor - the surface representation is given by pointer
   /// (ownership passed)
   ///
   /// @param sRepresentation is the representation for extrapolation
   /// @param thickness is the thickness for the binning
-  static LayerPtr
-  create(std::shared_ptr<const Surface> sRepresentation, double thickness = 0.)
-  {
+  static LayerPtr create(std::shared_ptr<const Surface> sRepresentation,
+                         double thickness = 0.) {
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
 
@@ -53,8 +51,8 @@ public:
   ///  - as default the center is given, but may be overloaded
   ///
   /// @return The return vector can be used for binning in a TrackingVolume
-  const Vector3D
-  binningPosition(const GeometryContext& gctx, BinningValue bValue) const final;
+  const Vector3D binningPosition(const GeometryContext& gctx,
+                                 BinningValue bValue) const final;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -63,18 +61,14 @@ public:
   NavigationLayer(const NavigationLayer&) = delete;
 
   /// Assignment operator - deleted
-  NavigationLayer&
-  operator=(const NavigationLayer&)
-      = delete;
+  NavigationLayer& operator=(const NavigationLayer&) = delete;
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// In general, extrapolation to a surface should be avoided
-  const Surface&
-  surfaceRepresentation() const final;
+  const Surface& surfaceRepresentation() const final;
 
   // Non-const version
-  Surface&
-  surfaceRepresentation() final;
+  Surface& surfaceRepresentation() final;
 
   /// Geometric isOnLayer() method
   /// using isOnSurface() with Layer specific tolerance
@@ -84,10 +78,8 @@ public:
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
-  bool
-  isOnLayer(const GeometryContext& gctx,
-            const Vector3D&        gp,
-            const BoundaryCheck&   bcheck = true) const final;
+  bool isOnLayer(const GeometryContext& gctx, const Vector3D& gp,
+                 const BoundaryCheck& bcheck = true) const final;
 
   /// Accept layer according to the following colelction directives
   ///
@@ -98,12 +90,10 @@ public:
   /// @note navigation layers are never accepted
   ///
   /// @return a boolean whether the layer is accepted for processing
-  bool
-  resolve(bool resolveSensitive,
-          bool resolveMaterial,
-          bool resolvePassive) const final;
+  bool resolve(bool resolveSensitive, bool resolveMaterial,
+               bool resolvePassive) const final;
 
-protected:
+ protected:
   /// Private Constructor
   /// - this is called by the creat(args*) method
   /// passed spacer layer if needed
@@ -111,7 +101,7 @@ protected:
   /// @param surfaceRepresentation is the surface of the layer
   /// @param thickness ithe layer thickness
   NavigationLayer(std::shared_ptr<const Surface> surfaceRepresentation,
-                  double                         thickness);
+                  double thickness);
 
   /// for the navigation Volume the surface
   ///
@@ -121,38 +111,28 @@ protected:
   std::shared_ptr<const Surface> m_surfaceRepresentation;
 };
 
-inline const Surface&
-NavigationLayer::surfaceRepresentation() const
-{
+inline const Surface& NavigationLayer::surfaceRepresentation() const {
   return (*m_surfaceRepresentation);
 }
 
-inline Surface&
-NavigationLayer::surfaceRepresentation()
-{
+inline Surface& NavigationLayer::surfaceRepresentation() {
   return *(const_cast<Surface*>(m_surfaceRepresentation.get()));
 }
 
-inline const Vector3D
-NavigationLayer::binningPosition(const GeometryContext& gctx,
-                                 BinningValue           bValue) const
-{
+inline const Vector3D NavigationLayer::binningPosition(
+    const GeometryContext& gctx, BinningValue bValue) const {
   return m_surfaceRepresentation->binningPosition(gctx, bValue);
 }
 
-inline bool
-NavigationLayer::isOnLayer(const GeometryContext& gctx,
-                           const Vector3D&        gp,
-                           const BoundaryCheck&   bcheck) const
-{
+inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
+                                       const Vector3D& gp,
+                                       const BoundaryCheck& bcheck) const {
   return m_surfaceRepresentation->isOnSurface(gctx, gp, s_origin, bcheck);
 }
 
-inline bool
-NavigationLayer::resolve(bool /*resolveSensitive*/,
-                         bool /*resolveMaterial*/,
-                         bool /*reolvePassive*/) const
-{
+inline bool NavigationLayer::resolve(bool /*resolveSensitive*/,
+                                     bool /*resolveMaterial*/,
+                                     bool /*reolvePassive*/) const {
   return false;
 }
 

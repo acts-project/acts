@@ -27,9 +27,8 @@ namespace Acts {
 ///
 /// It performs event- and run-average when called, and returns
 /// a new SurfaceMaterial object as a unique_ptr after finalisation
-class AccumulatedSurfaceMaterial
-{
-public:
+class AccumulatedSurfaceMaterial {
+ public:
   using AccumulatedVector = std::vector<AccumulatedMaterialProperties>;
   using AccumulatedMatrix = std::vector<AccumulatedVector>;
 
@@ -49,7 +48,7 @@ public:
   /// @param binUtility defines the binning structure on the surface
   /// @param splitFactor is the pre/post splitting directive
   AccumulatedSurfaceMaterial(const BinUtility& binUtility,
-                             double            splitFactor = 0.);
+                             double splitFactor = 0.);
 
   /// Copy Constructor
   ///
@@ -64,23 +63,20 @@ public:
   /// Assignment Move operator
   ///
   /// @param asma is the source object to be copied
-  AccumulatedSurfaceMaterial&
-  operator=(AccumulatedSurfaceMaterial&& asma)
-      = default;
+  AccumulatedSurfaceMaterial& operator=(AccumulatedSurfaceMaterial&& asma) =
+      default;
 
   /// Assignment operator
   ///
   /// @param asma is the source object to be copied
-  AccumulatedSurfaceMaterial&
-  operator=(const AccumulatedSurfaceMaterial& asma)
-      = default;
+  AccumulatedSurfaceMaterial& operator=(
+      const AccumulatedSurfaceMaterial& asma) = default;
 
   /// Destructor
   ~AccumulatedSurfaceMaterial() = default;
 
   /// Return the BinUtility
-  const BinUtility&
-  binUtility() const;
+  const BinUtility& binUtility() const;
 
   /// Assign a material properites object
   ///
@@ -88,10 +84,9 @@ public:
   /// @param mp material properties to be assigned
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3>
-  accumulate(const Vector2D&           lp,
-             const MaterialProperties& mp,
-             double                    pathCorrection = 1.);
+  std::array<size_t, 3> accumulate(const Vector2D& lp,
+                                   const MaterialProperties& mp,
+                                   double pathCorrection = 1.);
 
   /// Assign a material properites object
   ///
@@ -99,31 +94,26 @@ public:
   /// @param mp material properties to be assigned
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3>
-  accumulate(const Vector3D&           gp,
-             const MaterialProperties& mp,
-             double                    pathCorrection = 1.);
+  std::array<size_t, 3> accumulate(const Vector3D& gp,
+                                   const MaterialProperties& mp,
+                                   double pathCorrection = 1.);
 
   /// Average the information accumulated from one mapped track
   ///
   /// @param trackBins The bins that were touched by this event
   /// If none is given, the average runs over all bins in the surface map
-  void
-  trackAverage(const std::vector<std::array<size_t, 3>>& trackBins = {});
+  void trackAverage(const std::vector<std::array<size_t, 3>>& trackBins = {});
 
   /// Total average creates SurfaceMaterial
-  std::unique_ptr<const ISurfaceMaterial>
-  totalAverage();
+  std::unique_ptr<const ISurfaceMaterial> totalAverage();
 
   /// Access to the accumulated material
-  const AccumulatedMatrix&
-  accumulatedMaterial() const;
+  const AccumulatedMatrix& accumulatedMaterial() const;
 
   /// Access to the split factor
-  double
-  splitFactor() const;
+  double splitFactor() const;
 
-private:
+ private:
   /// The helper for the bin finding
   BinUtility m_binUtility{};
 
@@ -134,21 +124,16 @@ private:
   AccumulatedMatrix m_accumulatedMaterial;
 };
 
-inline const BinUtility&
-AccumulatedSurfaceMaterial::binUtility() const
-{
+inline const BinUtility& AccumulatedSurfaceMaterial::binUtility() const {
   return (m_binUtility);
 }
 
 inline const AccumulatedSurfaceMaterial::AccumulatedMatrix&
-AccumulatedSurfaceMaterial::accumulatedMaterial() const
-{
+AccumulatedSurfaceMaterial::accumulatedMaterial() const {
   return (m_accumulatedMaterial);
 }
 
-inline double
-AccumulatedSurfaceMaterial::splitFactor() const
-{
+inline double AccumulatedSurfaceMaterial::splitFactor() const {
   return m_splitFactor;
 }
-}
+}  // namespace Acts

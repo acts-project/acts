@@ -21,35 +21,29 @@
 
 Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig,
-    std::unique_ptr<const Logger>                logger)
-  : m_cfg(), m_logger(std::move(logger))
-{
+    std::unique_ptr<const Logger> logger)
+    : m_cfg(), m_logger(std::move(logger)) {
   setConfiguration(cgbConfig);
 }
 
-void
-Acts::TrackingGeometryBuilder::setConfiguration(
-    const Acts::TrackingGeometryBuilder::Config& cgbConfig)
-{
+void Acts::TrackingGeometryBuilder::setConfiguration(
+    const Acts::TrackingGeometryBuilder::Config& cgbConfig) {
   // @todo check consistency
   // copy the configuration
   m_cfg = cgbConfig;
 }
 
-void
-Acts::TrackingGeometryBuilder::setLogger(
-    std::unique_ptr<const Logger> newLogger)
-{
+void Acts::TrackingGeometryBuilder::setLogger(
+    std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
 std::unique_ptr<const Acts::TrackingGeometry>
 Acts::TrackingGeometryBuilder::trackingGeometry(
-    const GeometryContext& gctx) const
-{
+    const GeometryContext& gctx) const {
   // the return geometry with the highest volume
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
-  MutableTrackingVolumePtr                highestVolume = nullptr;
+  MutableTrackingVolumePtr highestVolume = nullptr;
   // loop over the builders and wrap one around the other
   // -----------------------------
   for (auto& volumeBuilder : m_cfg.trackingVolumeBuilders) {
@@ -61,8 +55,8 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
   // create the TrackingGeometry & decorate it with the material
   if (highestVolume) {
     // first check if we have material to get
-    const IMaterialDecorator* materialDecorator
-        = m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr;
+    const IMaterialDecorator* materialDecorator =
+        m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr;
     // build and set the TrackingGeometry
     trackingGeometry.reset(
         new TrackingGeometry(highestVolume, materialDecorator));

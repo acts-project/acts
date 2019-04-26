@@ -8,32 +8,26 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-template <typename bfield_t,
-          typename propagator_t,
-          typename action_list_t,
+template <typename bfield_t, typename propagator_t, typename action_list_t,
           typename aborter_list_t>
 
-Acts::Result<Acts::LinearizedTrack>
-Acts::LinearizedTrackFactory<bfield_t,
-                             propagator_t,
-                             action_list_t,
-                             aborter_list_t>::
-    linearizeTrack(const GeometryContext&      gctx,
-                   const MagneticFieldContext& mctx,
-                   const BoundParameters*      params,
-                   const Vector3D&             linPoint,
-                   const propagator_t&         propagator) const
-{
+Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
+    bfield_t, propagator_t, action_list_t,
+    aborter_list_t>::linearizeTrack(const GeometryContext& gctx,
+                                    const MagneticFieldContext& mctx,
+                                    const BoundParameters* params,
+                                    const Vector3D& linPoint,
+                                    const propagator_t& propagator) const {
   if (params == nullptr) {
     return LinearizedTrack();
   }
 
-  const std::shared_ptr<PerigeeSurface> perigeeSurface
-      = Surface::makeShared<PerigeeSurface>(linPoint);
+  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(linPoint);
 
   // Variables to store track params and position at PCA to linPoint
-  ActsVectorD<5>    paramsAtPCA;
-  Vector3D          positionAtPCA;
+  ActsVectorD<5> paramsAtPCA;
+  Vector3D positionAtPCA;
   ActsSymMatrixD<5> parCovarianceAtPCA;
 
   PropagatorOptions<action_list_t, aborter_list_t> pOptions(gctx, mctx);
@@ -42,21 +36,21 @@ Acts::LinearizedTrackFactory<bfield_t,
   auto result = propagator.propagate(*params, *perigeeSurface, pOptions);
   if (result.ok()) {
     const auto& propRes = *result;
-    paramsAtPCA         = propRes.endParameters->parameters();
-    positionAtPCA       = propRes.endParameters->position();
-    parCovarianceAtPCA  = *propRes.endParameters->covariance();
+    paramsAtPCA = propRes.endParameters->parameters();
+    positionAtPCA = propRes.endParameters->position();
+    parCovarianceAtPCA = *propRes.endParameters->covariance();
 
   } else {
     return result.error();
   }
 
   // phiV and functions
-  double phiV    = paramsAtPCA(ParID_t::ePHI);
+  double phiV = paramsAtPCA(ParID_t::ePHI);
   double sinPhiV = std::sin(phiV);
   double cosPhiV = std::cos(phiV);
 
   // theta and functions
-  double th    = paramsAtPCA(ParID_t::eTHETA);
+  double th = paramsAtPCA(ParID_t::eTHETA);
   double sinTh = std::sin(th);
   double tanTh = std::tan(th);
 
@@ -79,10 +73,10 @@ Acts::LinearizedTrackFactory<bfield_t,
   }
 
   // Eq. 5.34 in Ref(1) (see .hpp)
-  double X  = positionAtPCA(0) - linPoint.x() + rho * sinPhiV;
-  double Y  = positionAtPCA(1) - linPoint.y() - rho * cosPhiV;
+  double X = positionAtPCA(0) - linPoint.x() + rho * sinPhiV;
+  double Y = positionAtPCA(1) - linPoint.y() - rho * cosPhiV;
   double S2 = (X * X + Y * Y);
-  double S  = std::sqrt(S2);
+  double S = std::sqrt(S2);
 
   /// F(V, p_i) at PCA in Billoir paper
   /// (see FullBilloirVertexFitter.hpp for paper reference,
@@ -104,8 +98,8 @@ Acts::LinearizedTrackFactory<bfield_t,
 
   // Eq. 5.33 in Ref(1) (see .hpp)
   predParamsAtPCA[0] = rho - sgnH * S;
-  predParamsAtPCA[1]
-      = positionAtPCA[eZ] - linPoint.z() + rho * (phiV - phiAtPCA) / tanTh;
+  predParamsAtPCA[1] =
+      positionAtPCA[eZ] - linPoint.z() + rho * (phiV - phiAtPCA) / tanTh;
   predParamsAtPCA[2] = phiAtPCA;
   predParamsAtPCA[3] = th;
   predParamsAtPCA[4] = qOvP;
@@ -130,8 +124,8 @@ Acts::LinearizedTrackFactory<bfield_t,
   ActsMatrixD<5, 3> momentumJacobian;
   momentumJacobian.setZero();
 
-  double R    = X * cosPhiV + Y * sinPhiV;
-  double Q    = X * sinPhiV - Y * cosPhiV;
+  double R = X * cosPhiV + Y * sinPhiV;
+  double Q = X * sinPhiV - Y * cosPhiV;
   double dPhi = phiAtPCA - phiV;
 
   // First row
@@ -157,15 +151,11 @@ Acts::LinearizedTrackFactory<bfield_t,
   momentumJacobian(4, 2) = 1.;
 
   // const term F(V_0, p_0) in Talyor expansion
-  ActsVectorD<5> constTerm = predParamsAtPCA - positionJacobian * positionAtPCA
-      - momentumJacobian * momentumAtPCA;
+  ActsVectorD<5> constTerm = predParamsAtPCA -
+                             positionJacobian * positionAtPCA -
+                             momentumJacobian * momentumAtPCA;
 
-  return LinearizedTrack(paramsAtPCA,
-                         parCovarianceAtPCA,
-                         linPoint,
-                         positionJacobian,
-                         momentumJacobian,
-                         positionAtPCA,
-                         momentumAtPCA,
-                         constTerm);
+  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPoint,
+                         positionJacobian, momentumJacobian, positionAtPCA,
+                         momentumAtPCA, constTerm);
 }

@@ -29,100 +29,94 @@ namespace Acts {
 
 namespace Test {
 
-  // Create a test context
-  MagneticFieldContext mfContext = MagneticFieldContext();
+// Create a test context
+MagneticFieldContext mfContext = MagneticFieldContext();
 
-  BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz)
-  {
-    // definition of dummy BField
-    struct BField
-    {
-      static Vector3D
-      value(const std::array<double, 2>& rz)
-      {
-        double r = rz.at(0);
-        double z = rz.at(1);
-        // linear in r and z so interpolation should be exact
-        return Vector3D(r * z, 3 * r, -2 * z);
-      }
-    };
-
-    // map (x,y,z) -> (r,z)
-    auto transformPos = [](const Vector3D& pos) {
-      return ActsVectorD<2>(perp(pos), pos.z());
-    };
-
-    // map (Bx,By,Bz) -> (Bx,By,Bz)
-    auto transformBField
-        = [](const Vector3D& field, const Vector3D&) { return field; };
-
-    // magnetic field known on grid in (r,z)
-    detail::EquidistantAxis r(0.0, 4.0, 4u);
-    detail::EquidistantAxis z(-5, 5, 5u);
-
-    using Grid_t = detail::
-        Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>;
-    using Mapper_t = InterpolatedBFieldMapper<Grid_t>;
-    using BField_t = InterpolatedBFieldMap<Mapper_t>;
-
-    Grid_t g(std::make_tuple(std::move(r), std::move(z)));
-
-    // set grid values
-    for (size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
-      for (size_t j = 1; j <= g.numLocalBins().at(1) + 1; ++j) {
-        Grid_t::index_t indices  = {{i, j}};
-        const auto&     llCorner = g.lowerLeftBinEdge(indices);
-        g.atLocalBins(indices)   = BField::value(llCorner);
-      }
+BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
+  // definition of dummy BField
+  struct BField {
+    static Vector3D value(const std::array<double, 2>& rz) {
+      double r = rz.at(0);
+      double z = rz.at(1);
+      // linear in r and z so interpolation should be exact
+      return Vector3D(r * z, 3 * r, -2 * z);
     }
+  };
 
-    // create field mapping
-    Mapper_t         mapper(transformPos, transformBField, std::move(g));
-    BField_t::Config config(std::move(mapper));
-    config.scale = 1.;
+  // map (x,y,z) -> (r,z)
+  auto transformPos = [](const Vector3D& pos) {
+    return ActsVectorD<2>(perp(pos), pos.z());
+  };
 
-    // create BField service
-    BField_t b(std::move(config));
+  // map (Bx,By,Bz) -> (Bx,By,Bz)
+  auto transformBField = [](const Vector3D& field, const Vector3D&) {
+    return field;
+  };
 
-    Vector3D pos;
-    pos << -3, 2.5, 1.7;
-    // test the cache interface
-    BField_t::Cache bCache(mfContext);
-    CHECK_CLOSE_REL(
-        b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
+  // magnetic field known on grid in (r,z)
+  detail::EquidistantAxis r(0.0, 4.0, 4u);
+  detail::EquidistantAxis z(-5, 5, 5u);
 
-    CHECK_CLOSE_REL(
-        b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
-    auto& c = *bCache.fieldCell;
-    BOOST_CHECK(c.isInside(pos));
-    CHECK_CLOSE_REL(
-        c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+  using Grid_t =
+      detail::Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>;
+  using Mapper_t = InterpolatedBFieldMapper<Grid_t>;
+  using BField_t = InterpolatedBFieldMap<Mapper_t>;
 
-    pos << 0, 1.5, -2.5;
-    BField_t::Cache bCache2(mfContext);
-    CHECK_CLOSE_REL(
-        b.getField(pos, bCache2), BField::value({{perp(pos), pos.z()}}), 1e-6);
-    c = *bCache2.fieldCell;
-    BOOST_CHECK(c.isInside(pos));
-    CHECK_CLOSE_REL(
-        c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+  Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
-    pos << 2, 3, -4;
-    BField_t::Cache bCache3(mfContext);
-    CHECK_CLOSE_REL(
-        b.getField(pos, bCache3), BField::value({{perp(pos), pos.z()}}), 1e-6);
-    c = *bCache3.fieldCell;
-    BOOST_CHECK(c.isInside(pos));
-    CHECK_CLOSE_REL(
-        c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
-
-    // some field cell tests
-    BOOST_CHECK(c.isInside((pos << 3, 2, -3.7).finished()));
-    BOOST_CHECK(c.isInside((pos << -2, 3, -4.7).finished()));
-    BOOST_CHECK(not c.isInside((pos << -2, 3, 4.7).finished()));
-    BOOST_CHECK(not c.isInside((pos << 0, 2, -4.7).finished()));
-    BOOST_CHECK(not c.isInside((pos << 5, 2, 14.).finished()));
+  // set grid values
+  for (size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
+    for (size_t j = 1; j <= g.numLocalBins().at(1) + 1; ++j) {
+      Grid_t::index_t indices = {{i, j}};
+      const auto& llCorner = g.lowerLeftBinEdge(indices);
+      g.atLocalBins(indices) = BField::value(llCorner);
+    }
   }
+
+  // create field mapping
+  Mapper_t mapper(transformPos, transformBField, std::move(g));
+  BField_t::Config config(std::move(mapper));
+  config.scale = 1.;
+
+  // create BField service
+  BField_t b(std::move(config));
+
+  Vector3D pos;
+  pos << -3, 2.5, 1.7;
+  // test the cache interface
+  BField_t::Cache bCache(mfContext);
+  CHECK_CLOSE_REL(b.getField(pos, bCache),
+                  BField::value({{perp(pos), pos.z()}}), 1e-6);
+
+  CHECK_CLOSE_REL(b.getField(pos, bCache),
+                  BField::value({{perp(pos), pos.z()}}), 1e-6);
+  auto& c = *bCache.fieldCell;
+  BOOST_CHECK(c.isInside(pos));
+  CHECK_CLOSE_REL(c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+
+  pos << 0, 1.5, -2.5;
+  BField_t::Cache bCache2(mfContext);
+  CHECK_CLOSE_REL(b.getField(pos, bCache2),
+                  BField::value({{perp(pos), pos.z()}}), 1e-6);
+  c = *bCache2.fieldCell;
+  BOOST_CHECK(c.isInside(pos));
+  CHECK_CLOSE_REL(c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+
+  pos << 2, 3, -4;
+  BField_t::Cache bCache3(mfContext);
+  CHECK_CLOSE_REL(b.getField(pos, bCache3),
+                  BField::value({{perp(pos), pos.z()}}), 1e-6);
+  c = *bCache3.fieldCell;
+  BOOST_CHECK(c.isInside(pos));
+  CHECK_CLOSE_REL(c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
+
+  // some field cell tests
+  BOOST_CHECK(c.isInside((pos << 3, 2, -3.7).finished()));
+  BOOST_CHECK(c.isInside((pos << -2, 3, -4.7).finished()));
+  BOOST_CHECK(not c.isInside((pos << -2, 3, 4.7).finished()));
+  BOOST_CHECK(not c.isInside((pos << 0, 2, -4.7).finished()));
+  BOOST_CHECK(not c.isInside((pos << 5, 2, 14.).finished()));
+}
 }  // namespace Test
 
 }  // namespace Acts

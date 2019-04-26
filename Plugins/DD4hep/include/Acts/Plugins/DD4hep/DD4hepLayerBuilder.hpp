@@ -29,13 +29,11 @@ namespace Acts {
 /// (layers of endcaps) of one hierarchy (e.g. PixelDetector, StripDetector,...)
 /// with input from DD4hep.
 
-class DD4hepLayerBuilder : public ILayerBuilder
-{
-public:
+class DD4hepLayerBuilder : public ILayerBuilder {
+ public:
   /// @struct Config
   /// nested configuration struct for steering of the layer builder
-  struct Config
-  {
+  struct Config {
     /// string based identification
     std::string configurationName = "undefined";
     /// layer creator which is internally used to build layers
@@ -79,7 +77,7 @@ public:
   /// @param config is the configuration struct
   /// @param logger is the logging instance
   DD4hepLayerBuilder(const Acts::DD4hepLayerBuilder::Config& config,
-                     std::unique_ptr<const Logger>           logger);
+                     std::unique_ptr<const Logger> logger);
   /// Destructor
   ~DD4hepLayerBuilder() override;
 
@@ -88,44 +86,37 @@ public:
   /// @param gctx the geometry context for this build call
   ///
   /// @return  the layers at negative side
-  const LayerVector
-  negativeLayers(const GeometryContext& gctx) const final;
+  const LayerVector negativeLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
   ///
   /// @param gctx the geometry context for this build call
   ///
   /// @return the layers at the central sector
-  const LayerVector
-  centralLayers(const GeometryContext& gctx) const final;
+  const LayerVector centralLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
   ///
   /// @param gctx the geometry context for this build call
   ///
   /// @return  the layers at positive side
-  const LayerVector
-  positiveLayers(const GeometryContext& gctx) const final;
+  const LayerVector positiveLayers(const GeometryContext& gctx) const final;
 
   /// Name identification
   /// @return the string based identification of this configuration
-  const std::string&
-  identification() const final;
+  const std::string& identification() const final;
 
   /// set the configuration object
   /// @param config is the configuration struct
-  void
-  setConfiguration(const Config& config);
+  void setConfiguration(const Config& config);
 
   /// get the configuration object
-  Config
-  getConfiguration() const;
+  Config getConfiguration() const;
 
   /// set logging instance
-  void
-  setLogger(std::unique_ptr<const Logger> logger);
+  void setLogger(std::unique_ptr<const Logger> logger);
 
-private:
+ private:
   /// configruation object
   Config m_cfg;
 
@@ -133,11 +124,7 @@ private:
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to the logger
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// Private helper function collecting all sensitive detector elements of a
   /// layer
@@ -146,10 +133,10 @@ private:
   /// @param surfaces the vector of surfaces which should be filled with the
   /// sensitive detector elements
   /// @param axes the orientation of the modules to the Acts frame
-  void
-  resolveSensitive(const dd4hep::DetElement& detElement,
-                   std::vector<std::shared_ptr<const Acts::Surface>>& surfaces,
-                   const std::string& axes = "XYZ") const;
+  void resolveSensitive(
+      const dd4hep::DetElement& detElement,
+      std::vector<std::shared_ptr<const Acts::Surface>>& surfaces,
+      const std::string& axes = "XYZ") const;
 
   /// Private helper function to create a sensitive surface from a given
   /// detector element
@@ -158,29 +145,24 @@ private:
   /// @param isDisc in case the sensitive detector module should be translated
   ///        as disc (e.g. for endcaps) this flag should be set to true
   /// @param axes the orientation of the modules to the Acts frame
-  std::shared_ptr<const Acts::Surface>
-  createSensitiveSurface(const dd4hep::DetElement& detElement,
-                         bool                      isDisc = false,
-                         const std::string&        axes   = "XYZ") const;
+  std::shared_ptr<const Acts::Surface> createSensitiveSurface(
+      const dd4hep::DetElement& detElement, bool isDisc = false,
+      const std::string& axes = "XYZ") const;
 
   // Private helper function to convert the TGeo transformation matrix into
   // a
   // Acts transformation matrix
   /// @param tGeoTrans TGeo transformation matrix which should be converted
-  std::shared_ptr<const Acts::Transform3D>
-  convertTransform(const TGeoMatrix* tGeoTrans) const;
+  std::shared_ptr<const Acts::Transform3D> convertTransform(
+      const TGeoMatrix* tGeoTrans) const;
 };
 
-inline const std::string&
-DD4hepLayerBuilder::identification() const
-{
+inline const std::string& DD4hepLayerBuilder::identification() const {
   return m_cfg.configurationName;
 }
 
-inline DD4hepLayerBuilder::Config
-DD4hepLayerBuilder::getConfiguration() const
-{
+inline DD4hepLayerBuilder::Config DD4hepLayerBuilder::getConfiguration() const {
   return m_cfg;
 }
 
-}  // namespace
+}  // namespace Acts

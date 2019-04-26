@@ -13,8 +13,8 @@ namespace Acts {
 
 namespace detail {
 
-  namespace {
-    // clang-format off
+namespace {
+// clang-format off
     template <bool... values>
     struct any_of : std::false_type {};
 
@@ -23,11 +23,11 @@ namespace detail {
 
     template <bool... others>
     struct any_of<false, others...> : public any_of<others...> {};
-    // clang-format on
-  }
+// clang-format on
+}  // namespace
 
-  template <bool... values>
-  constexpr bool any_of_v = any_of<values...>::value;
+template <bool... values>
+constexpr bool any_of_v = any_of<values...>::value;
 }  // namespace detail
 
 }  // namespace Acts

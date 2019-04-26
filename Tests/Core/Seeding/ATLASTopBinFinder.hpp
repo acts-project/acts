@@ -21,9 +21,8 @@ namespace Acts {
 /// satisfying the IBinFinder interface. Assumes the grid has 11 bins filled by
 /// the same logic as ATLAS bins.
 template <typename SpacePoint>
-class ATLASTopBinFinder : public IBinFinder<SpacePoint>
-{
-public:
+class ATLASTopBinFinder : public IBinFinder<SpacePoint> {
+ public:
   /// Virtual destructor
   ~ATLASTopBinFinder() = default;
 
@@ -32,11 +31,9 @@ public:
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  std::set<size_t>
-  findBins(size_t                            phiBin,
-           size_t                            zBin,
-           const SpacePointGrid<SpacePoint>* binnedSP);
+  std::set<size_t> findBins(size_t phiBin, size_t zBin,
+                            const SpacePointGrid<SpacePoint>* binnedSP);
 };
-}
+}  // namespace Acts
 
 #include "ATLASTopBinFinder.ipp"

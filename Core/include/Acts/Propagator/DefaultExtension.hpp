@@ -14,8 +14,7 @@ namespace Acts {
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
-struct DefaultExtension
-{
+struct DefaultExtension {
   /// @brief Default constructor
   DefaultExtension() = default;
 
@@ -31,9 +30,8 @@ struct DefaultExtension
   /// @tparam stepper_t Type of the stepper
   /// @return Boolean flag if the step would be valid
   template <typename propagator_state_t, typename stepper_t>
-  int
-  bid(const propagator_state_t& /*unused*/, const stepper_t& /*unused*/) const
-  {
+  int bid(const propagator_state_t& /*unused*/,
+          const stepper_t& /*unused*/) const {
     return 1;
   }
 
@@ -51,26 +49,20 @@ struct DefaultExtension
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool
-  k(const propagator_state_t& state,
-    const stepper_t&          stepper,
-    Vector3D&                 knew,
-    const Vector3D&           bField,
-    const int                 i     = 0,
-    const double              h     = 0.,
-    const Vector3D&           kprev = Vector3D())
-  {
+  bool k(const propagator_state_t& state, const stepper_t& stepper,
+         Vector3D& knew, const Vector3D& bField, const int i = 0,
+         const double h = 0., const Vector3D& kprev = Vector3D()) {
     // First step does not rely on previous data
     if (i == 0) {
       // Store qop, it is always used if valid
-      qop = stepper.charge(state.stepping)
-          / units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+      qop = stepper.charge(state.stepping) /
+            units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
 
       // Evaluate the k_i
       knew = qop * stepper.direction(state.stepping).cross(bField);
     } else {
-      knew
-          = qop * (stepper.direction(state.stepping) + h * kprev).cross(bField);
+      knew =
+          qop * (stepper.direction(state.stepping) + h * kprev).cross(bField);
     }
     return true;
   }
@@ -83,11 +75,8 @@ struct DefaultExtension
   /// @tparam stepper_t Type of the stepper
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool
-  finalize(propagator_state_t& /*unused*/,
-           const stepper_t& /*unused*/,
-           const double /*unused*/) const
-  {
+  bool finalize(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+                const double /*unused*/) const {
     return true;
   }
 
@@ -103,16 +92,12 @@ struct DefaultExtension
   /// @param [out] D Transport matrix
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool
-  finalize(propagator_state_t& state,
-           const stepper_t&    stepper,
-           const double        h,
-           ActsMatrixD<7, 7>& D) const
-  {
+  bool finalize(propagator_state_t& state, const stepper_t& stepper,
+                const double h, ActsMatrixD<7, 7>& D) const {
     return transportMatrix(state, stepper, h, D);
   }
 
-private:
+ private:
   /// @brief Calculates the transport matrix D for the jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
@@ -123,12 +108,8 @@ private:
   /// @param [out] D Transport matrix
   /// @return Boolean flag if evaluation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool
-  transportMatrix(propagator_state_t& state,
-                  const stepper_t&    stepper,
-                  const double        h,
-                  ActsMatrixD<7, 7>& D) const
-  {
+  bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
+                       const double h, ActsMatrixD<7, 7>& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -148,8 +129,8 @@ private:
     /// constant offset does not exist for rectangular matrix dGdu' (due to the
     /// missing Lambda part) and only exists for dFdu' in dlambda/dlambda.
 
-    auto& sd  = state.stepping.stepData;
-    auto  dir = stepper.direction(state.stepping);
+    auto& sd = state.stepping.stepData;
+    auto dir = stepper.direction(state.stepping);
 
     D = ActsMatrixD<7, 7>::Identity();
 
@@ -174,12 +155,12 @@ private:
 
     // For the case without energy loss
     dk1dL = dir.cross(sd.B_first);
-    dk2dL = (dir + half_h * sd.k1).cross(sd.B_middle)
-        + qop * half_h * dk1dL.cross(sd.B_middle);
-    dk3dL = (dir + half_h * sd.k2).cross(sd.B_middle)
-        + qop * half_h * dk2dL.cross(sd.B_middle);
-    dk4dL
-        = (dir + h * sd.k3).cross(sd.B_last) + qop * h * dk3dL.cross(sd.B_last);
+    dk2dL = (dir + half_h * sd.k1).cross(sd.B_middle) +
+            qop * half_h * dk1dL.cross(sd.B_middle);
+    dk3dL = (dir + half_h * sd.k2).cross(sd.B_middle) +
+            qop * half_h * dk2dL.cross(sd.B_middle);
+    dk4dL =
+        (dir + h * sd.k3).cross(sd.B_last) + qop * h * dk3dL.cross(sd.B_last);
 
     dk1dT(0, 1) = sd.B_first.z();
     dk1dT(0, 2) = -sd.B_first.y();

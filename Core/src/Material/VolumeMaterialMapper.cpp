@@ -20,14 +20,14 @@ using Acts::VectorHelpers::phi;
 
 namespace {
 using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3D>>;
-using EAxis            = Acts::detail::EquidistantAxis;
-using Grid2D
-    = Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
-using Grid3D
-    = Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+using EAxis = Acts::detail::EquidistantAxis;
+using Grid2D =
+    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
+using Grid3D =
+    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis>;
-using MaterialGrid3D
-    = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
+using MaterialGrid3D =
+    Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -38,9 +38,8 @@ using MaterialGrid3D
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid2D
-createGrid(std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2)
-{
+Grid2D createGrid(std::array<double, 3> gridAxis1,
+                  std::array<double, 3> gridAxis2) {
   // get the number of bins
   size_t nBinsAxis1 = gridAxis1[2];
   size_t nBinsAxis2 = gridAxis2[2];
@@ -76,11 +75,9 @@ createGrid(std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2)
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid3D
-createGrid(std::array<double, 3> gridAxis1,
-           std::array<double, 3> gridAxis2,
-           std::array<double, 3> gridAxis3)
-{
+Grid3D createGrid(std::array<double, 3> gridAxis1,
+                  std::array<double, 3> gridAxis2,
+                  std::array<double, 3> gridAxis3) {
   // get the number of bins
   size_t nBinsAxis1 = gridAxis1[2];
   size_t nBinsAxis2 = gridAxis2[2];
@@ -122,13 +119,10 @@ createGrid(std::array<double, 3> gridAxis1,
 /// of @p mPoints to the grid points by its local index
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid2D
-mapMaterialPoints(
-    Grid2D&                 grid,
-    const RecordedMaterial& mPoints,
+MaterialGrid2D mapMaterialPoints(
+    Grid2D& grid, const RecordedMaterial& mPoints,
     const std::function<Grid2D::index_t(const Acts::Vector3D&, const Grid2D&)>&
-        matchToGridPoint)
-{
+        matchToGridPoint) {
   // Walk over each point
   for (const auto& rm : mPoints) {
     // Search for fitting grid point and accumulate
@@ -138,8 +132,8 @@ mapMaterialPoints(
 
   // Build material grid
   // Re-build the axes
-  Grid2D::point_t min   = grid.minPosition();
-  Grid2D::point_t max   = grid.maxPosition();
+  Grid2D::point_t min = grid.minPosition();
+  Grid2D::point_t max = grid.maxPosition();
   Grid2D::index_t nBins = grid.numLocalBins();
 
   EAxis axis1(min[0], max[0], nBins[0]);
@@ -163,13 +157,10 @@ mapMaterialPoints(
 /// of @p mPoints to the grid points by its local index
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid3D
-mapMaterialPoints(
-    Grid3D&                 grid,
-    const RecordedMaterial& mPoints,
+MaterialGrid3D mapMaterialPoints(
+    Grid3D& grid, const RecordedMaterial& mPoints,
     const std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>&
-        matchToGridPoint)
-{
+        matchToGridPoint) {
   // Walk over each point
   for (const auto& rm : mPoints) {
     // Search for fitting grid point and accumulate
@@ -179,8 +170,8 @@ mapMaterialPoints(
 
   // Build material grid
   // Re-build the axes
-  Grid3D::point_t min   = grid.minPosition();
-  Grid3D::point_t max   = grid.maxPosition();
+  Grid3D::point_t min = grid.minPosition();
+  Grid3D::point_t max = grid.maxPosition();
   Grid3D::index_t nBins = grid.numLocalBins();
 
   EAxis axis1(min[0], max[0], nBins[0]);
@@ -196,28 +187,21 @@ mapMaterialPoints(
 }
 }  // namespace
 
-MaterialGrid2D
-Acts::createMaterialGrid(
-    std::array<double, 3> gridAxis1,
-    std::array<double, 3> gridAxis2,
+MaterialGrid2D Acts::createMaterialGrid(
+    std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2,
     const RecordedMaterial& mPoints,
     const std::function<Grid2D::index_t(const Vector3D&, const Grid2D&)>&
-        matchToGridPoint)
-{
+        matchToGridPoint) {
   Grid2D grid = createGrid(std::move(gridAxis1), std::move(gridAxis2));
   return mapMaterialPoints(grid, mPoints, matchToGridPoint);
 }
 
-MaterialGrid3D
-Acts::createMaterialGrid(
-    std::array<double, 3> gridAxis1,
-    std::array<double, 3> gridAxis2,
-    std::array<double, 3> gridAxis3,
-    const RecordedMaterial& mPoints,
+MaterialGrid3D Acts::createMaterialGrid(
+    std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2,
+    std::array<double, 3> gridAxis3, const RecordedMaterial& mPoints,
     const std::function<Grid3D::index_t(const Vector3D&, const Grid3D&)>&
-        matchToGridPoint)
-{
-  Grid3D grid = createGrid(
-      std::move(gridAxis1), std::move(gridAxis2), std::move(gridAxis3));
+        matchToGridPoint) {
+  Grid3D grid = createGrid(std::move(gridAxis1), std::move(gridAxis2),
+                           std::move(gridAxis3));
   return mapMaterialPoints(grid, mPoints, matchToGridPoint);
 }

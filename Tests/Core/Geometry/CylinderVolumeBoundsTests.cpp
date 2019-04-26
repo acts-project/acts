@@ -20,101 +20,85 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
 namespace bdata = boost::unit_test::data;
-namespace tt    = boost::test_tools;
+namespace tt = boost::test_tools;
 
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Volumes)
+BOOST_AUTO_TEST_SUITE(Volumes)
 
-  /// Unit test for testing the decomposeToSurfaces() function
-  BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
-                       bdata::random(-M_PI, M_PI) ^ bdata::random(-M_PI, M_PI)
-                           ^ bdata::random(-M_PI, M_PI)
-                           ^ bdata::random(-10., 10.)
-                           ^ bdata::random(-10., 10.)
-                           ^ bdata::random(-10., 10.)
-                           ^ bdata::xrange(100),
-                       alpha,
-                       beta,
-                       gamma,
-                       posX,
-                       posY,
-                       posZ,
-                       index)
-  {
-    (void)index;
+/// Unit test for testing the decomposeToSurfaces() function
+BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
+                     bdata::random(-M_PI, M_PI) ^ bdata::random(-M_PI, M_PI) ^
+                         bdata::random(-M_PI, M_PI) ^ bdata::random(-10., 10.) ^
+                         bdata::random(-10., 10.) ^ bdata::random(-10., 10.) ^
+                         bdata::xrange(100),
+                     alpha, beta, gamma, posX, posY, posZ, index) {
+  (void)index;
 
-    // Create a test context
-    GeometryContext tgContext = GeometryContext();
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
 
-    // position of volume
-    const Vector3D pos(posX, posY, posZ);
-    // rotation around x axis
-    AngleAxis3D rotX(alpha, Vector3D(1., 0., 0.));
-    // rotation around y axis
-    AngleAxis3D rotY(beta, Vector3D(0., 1., 0.));
-    // rotation around z axis
-    AngleAxis3D rotZ(gamma, Vector3D(0., 0., 1.));
+  // position of volume
+  const Vector3D pos(posX, posY, posZ);
+  // rotation around x axis
+  AngleAxis3D rotX(alpha, Vector3D(1., 0., 0.));
+  // rotation around y axis
+  AngleAxis3D rotY(beta, Vector3D(0., 1., 0.));
+  // rotation around z axis
+  AngleAxis3D rotZ(gamma, Vector3D(0., 0., 1.));
 
-    // create the cylinder bounds
-    CylinderVolumeBounds cylBounds(1., 2., 3.);
-    // create the transformation matrix
-    auto mutableTransformPtr
-        = std::make_shared<Transform3D>(Translation3D(pos));
-    (*mutableTransformPtr) *= rotZ;
-    (*mutableTransformPtr) *= rotY;
-    (*mutableTransformPtr) *= rotX;
-    auto transformPtr
-        = std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
-    // get the boundary surfaces
-    std::vector<std::shared_ptr<const Acts::Surface>> boundarySurfaces
-        = cylBounds.decomposeToSurfaces(transformPtr.get());
-    // Test
+  // create the cylinder bounds
+  CylinderVolumeBounds cylBounds(1., 2., 3.);
+  // create the transformation matrix
+  auto mutableTransformPtr = std::make_shared<Transform3D>(Translation3D(pos));
+  (*mutableTransformPtr) *= rotZ;
+  (*mutableTransformPtr) *= rotY;
+  (*mutableTransformPtr) *= rotX;
+  auto transformPtr =
+      std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
+  // get the boundary surfaces
+  std::vector<std::shared_ptr<const Acts::Surface>> boundarySurfaces =
+      cylBounds.decomposeToSurfaces(transformPtr.get());
+  // Test
 
-    // check if difference is halfZ - sign and direction independent
-    CHECK_CLOSE_REL((pos - boundarySurfaces.at(0)->center(tgContext)).norm(),
-                    cylBounds.halflengthZ(),
-                    1e-12);
-    CHECK_CLOSE_REL((pos - boundarySurfaces.at(1)->center(tgContext)).norm(),
-                    cylBounds.halflengthZ(),
-                    1e-12);
-    // transform to local
-    double posDiscPosZ
-        = (transformPtr->inverse() * boundarySurfaces.at(1)->center(tgContext))
-              .z();
-    double centerPosZ = (transformPtr->inverse() * pos).z();
-    double negDiscPosZ
-        = (transformPtr->inverse() * boundarySurfaces.at(0)->center(tgContext))
-              .z();
-    // check if center of disc boundaries lies in the middle in z
-    BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
-    BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
-    // check positions of disc boundarysurfaces
-    // checks for zero value. double precision value is not exact.
-    CHECK_CLOSE_ABS(negDiscPosZ + cylBounds.halflengthZ(), centerPosZ, 1e-12);
-    CHECK_CLOSE_ABS(posDiscPosZ - cylBounds.halflengthZ(), centerPosZ, 1e-12);
-    // orientation of disc surfaces
-    // positive disc durface should point in positive direction in the frame of
-    // the volume
-    CHECK_CLOSE_REL(
-        transformPtr->rotation().col(2).dot(
-            boundarySurfaces.at(1)->normal(tgContext, Acts::Vector2D(0., 0.))),
-        1.,
-        1e-12);
-    // negative disc durface should point in negative direction in the frame of
-    // the volume
-    CHECK_CLOSE_REL(
-        transformPtr->rotation().col(2).dot(
-            boundarySurfaces.at(0)->normal(tgContext, Acts::Vector2D(0., 0.))),
-        -1.,
-        1e-12);
-    // test in r
-    CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(tgContext), pos, 1e-12);
-    CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(tgContext), pos, 1e-12);
-  }
+  // check if difference is halfZ - sign and direction independent
+  CHECK_CLOSE_REL((pos - boundarySurfaces.at(0)->center(tgContext)).norm(),
+                  cylBounds.halflengthZ(), 1e-12);
+  CHECK_CLOSE_REL((pos - boundarySurfaces.at(1)->center(tgContext)).norm(),
+                  cylBounds.halflengthZ(), 1e-12);
+  // transform to local
+  double posDiscPosZ =
+      (transformPtr->inverse() * boundarySurfaces.at(1)->center(tgContext)).z();
+  double centerPosZ = (transformPtr->inverse() * pos).z();
+  double negDiscPosZ =
+      (transformPtr->inverse() * boundarySurfaces.at(0)->center(tgContext)).z();
+  // check if center of disc boundaries lies in the middle in z
+  BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
+  BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
+  // check positions of disc boundarysurfaces
+  // checks for zero value. double precision value is not exact.
+  CHECK_CLOSE_ABS(negDiscPosZ + cylBounds.halflengthZ(), centerPosZ, 1e-12);
+  CHECK_CLOSE_ABS(posDiscPosZ - cylBounds.halflengthZ(), centerPosZ, 1e-12);
+  // orientation of disc surfaces
+  // positive disc durface should point in positive direction in the frame of
+  // the volume
+  CHECK_CLOSE_REL(
+      transformPtr->rotation().col(2).dot(
+          boundarySurfaces.at(1)->normal(tgContext, Acts::Vector2D(0., 0.))),
+      1., 1e-12);
+  // negative disc durface should point in negative direction in the frame of
+  // the volume
+  CHECK_CLOSE_REL(
+      transformPtr->rotation().col(2).dot(
+          boundarySurfaces.at(0)->normal(tgContext, Acts::Vector2D(0., 0.))),
+      -1., 1e-12);
+  // test in r
+  CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(tgContext), pos, 1e-12);
+  CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(tgContext), pos, 1e-12);
+}
 
-  BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
 

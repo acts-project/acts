@@ -31,9 +31,8 @@ namespace Acts {
 ///  - A   [g/mole]
 ///  - Z
 ///  - rho [g/mm3]
-class MaterialProperties
-{
-public:
+class MaterialProperties {
+ public:
   /// Default Constructor
   MaterialProperties() = default;
 
@@ -49,12 +48,8 @@ public:
   /// @param averageZ is the average atomic number
   /// @param averageRho is the average density in g/mm3
   /// @param thickness is the thickness of the material
-  MaterialProperties(float Xo,
-                     float Lo,
-                     float averageA,
-                     float averageZ,
-                     float averageRho,
-                     float thickness);
+  MaterialProperties(float Xo, float Lo, float averageA, float averageZ,
+                     float averageRho, float thickness);
 
   /// Constructor - for full Material class
   ///
@@ -85,34 +80,27 @@ public:
   /// Assignment Operator
   ///
   /// @param mprop is the source material properties object
-  MaterialProperties&
-  operator=(const MaterialProperties& mprop)
-      = default;
+  MaterialProperties& operator=(const MaterialProperties& mprop) = default;
 
   /// Assignment Move Operator
   ///
   /// @param mprop is the source material properties object
-  MaterialProperties&
-  operator=(MaterialProperties&& mprop)
-      = default;
+  MaterialProperties& operator=(MaterialProperties&& mprop) = default;
 
   /// Scale operator - scales the material thickness
   ///
   /// @param scale is the material scaling parameter
-  MaterialProperties&
-  operator*=(float scale);
+  MaterialProperties& operator*=(float scale);
 
   /// Comparison operator
   ///
   /// @param mprop is the source material properties object
-  bool
-  operator==(const MaterialProperties& mprop) const;
+  bool operator==(const MaterialProperties& mprop) const;
 
   /// Comparison operator
   ///
   /// @param mprop is the source material properties object
-  bool
-  operator!=(const MaterialProperties& mprop) const;
+  bool operator!=(const MaterialProperties& mprop) const;
 
   /// Scale to unit thickness
   ///
@@ -126,140 +114,106 @@ public:
   ///
   /// Leaves intact:
   /// - tInX0, tInL0, A, Z
-  void
-  scaleToUnitThickness();
+  void scaleToUnitThickness();
 
   /// Boolean operator
   /// false indicates it's vacuum
   operator bool() const { return bool(m_material); }
 
   /// Return the stored Material
-  const Material&
-  material() const;
+  const Material& material() const;
 
   /// Return the thickness in mm
-  float
-  thickness() const;
+  float thickness() const;
 
   /// Return the radiationlength fraction
-  float
-  thicknessInX0() const;
+  float thicknessInX0() const;
 
   /// Return the nuclear interaction length fraction
-  float
-  thicknessInL0() const;
+  float thicknessInL0() const;
 
   /// Returns the average X0 of the material
-  float
-  averageX0() const;
+  float averageX0() const;
 
   /// Return the average L0 of the material
-  float
-  averageL0() const;
+  float averageL0() const;
 
   /// Returns the average Z of the material
-  float
-  averageZ() const;
+  float averageZ() const;
 
   /// Return the average A of the material [gram/mole]
-  float
-  averageA() const;
+  float averageA() const;
 
   /// Return the average density of the material
   /// - in [g/mm^3]
-  float
-  averageRho() const;
+  float averageRho() const;
 
   /// Return the @f$ Z/A * rho @f$
-  float
-  zOverAtimesRho() const;
+  float zOverAtimesRho() const;
 
-protected:
-  Material m_material{};     //!< the material description
-  float    m_thickness{0.};  //!< the thickness of material
-  float    m_dInX0{0.};      //!< thickness in units of radiation length
-  float    m_dInL0{0.};      //!< thickness in units of nucl. interaction length
+ protected:
+  Material m_material{};  //!< the material description
+  float m_thickness{0.};  //!< the thickness of material
+  float m_dInX0{0.};      //!< thickness in units of radiation length
+  float m_dInL0{0.};      //!< thickness in units of nucl. interaction length
 };
 
-inline const Material&
-MaterialProperties::material() const
-{
+inline const Material& MaterialProperties::material() const {
   return m_material;
 }
 
-inline float
-MaterialProperties::thicknessInX0() const
-{
+inline float MaterialProperties::thicknessInX0() const {
   return m_dInX0;
 }
 
-inline float
-MaterialProperties::thicknessInL0() const
-{
+inline float MaterialProperties::thicknessInL0() const {
   return m_dInL0;
 }
 
-inline float
-MaterialProperties::thickness() const
-{
+inline float MaterialProperties::thickness() const {
   return m_thickness;
 }
 
-inline float
-MaterialProperties::zOverAtimesRho() const
-{
+inline float MaterialProperties::zOverAtimesRho() const {
   return m_material.zOverAtimesRho();
 }
 
-inline float
-MaterialProperties::averageX0() const
-{
+inline float MaterialProperties::averageX0() const {
   return m_material.X0();
 }
 
-inline float
-MaterialProperties::averageL0() const
-{
+inline float MaterialProperties::averageL0() const {
   return m_material.L0();
 }
 
-inline float
-MaterialProperties::averageA() const
-{
+inline float MaterialProperties::averageA() const {
   return m_material.A();
 }
 
-inline float
-MaterialProperties::averageZ() const
-{
+inline float MaterialProperties::averageZ() const {
   return m_material.Z();
 }
 
-inline float
-MaterialProperties::averageRho() const
-{
+inline float MaterialProperties::averageRho() const {
   return m_material.rho();
 }
 
-inline bool
-MaterialProperties::operator==(const MaterialProperties& mprop) const
-{
-  return (m_material == mprop.m_material && m_dInX0 == mprop.m_dInX0
-          && m_dInL0 == mprop.m_dInL0);
+inline bool MaterialProperties::operator==(
+    const MaterialProperties& mprop) const {
+  return (m_material == mprop.m_material && m_dInX0 == mprop.m_dInX0 &&
+          m_dInL0 == mprop.m_dInL0);
 }
 
-inline bool
-MaterialProperties::operator!=(const MaterialProperties& mprop) const
-{
+inline bool MaterialProperties::operator!=(
+    const MaterialProperties& mprop) const {
   return (!operator==(mprop));
 }
 
 // Overload of << operator for std::ostream for debug output
-std::ostream&
-operator<<(std::ostream& sl, const MaterialProperties& mprop);
+std::ostream& operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
 // Useful typedefs
 using MaterialPropertiesVector = std::vector<MaterialProperties>;
 using MaterialPropertiesMatrix = std::vector<MaterialPropertiesVector>;
 
-}  // namespace
+}  // namespace Acts

@@ -17,29 +17,27 @@
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder()
-{
-
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder() {
   m_checketa = false;
-  m_maxsize  = 50000;
-  m_ptmin    = 400.;
-  m_etamin   = 0.;
-  m_etamax   = 2.7;
+  m_maxsize = 50000;
+  m_ptmin = 400.;
+  m_etamin = 0.;
+  m_etamax = 2.7;
   // delta R minimum & maximum within a seed
-  m_drmin  = 5.;
+  m_drmin = 5.;
   m_drminv = 20.;
-  m_drmax  = 270.;
+  m_drmax = 270.;
   // restrict z coordinate of particle origin
   m_zmin = -250.;
   m_zmax = +250.;
   // radius of detector in mm
-  r_rmax  = 600.;
+  r_rmax = 600.;
   r_rstep = 2.;
 
   // checking if Z is compatible:
   // m_dzver is related to delta-Z
   // m_dzdrver is related to delta-Z divided by delta-R
-  m_dzver   = 5.;
+  m_dzver = 5.;
   m_dzdrver = .02;
 
   // shift all spacepoints by this offset such that the beam can be assumed to
@@ -54,7 +52,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder()
   // config
   // max impact parameters
   // m_diver = max ppp impact params
-  m_diver    = 10.;
+  m_diver = 10.;
   m_diverpps = 1.7;
   m_diversss = 50;
   m_divermax = 20.;
@@ -63,25 +61,25 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder()
   // limit for sp compatible with 1 middle space point
   // ridiculously large to be EXTRA safe
   // only actually keep 5 of these max 5000 (m_maxOneSize of m_maxsizeSP)
-  m_maxsizeSP  = 5000;
+  m_maxsizeSP = 5000;
   m_maxOneSize = 5;
 
   // cache: counting if ran already
   m_state = 0;
 
-  m_nlist      = 0;
-  m_endlist    = true;
-  r_Sorted     = 0;
-  r_index      = 0;
-  r_map        = 0;
-  m_SP         = 0;
-  m_R          = 0;
-  m_Tz         = 0;
-  m_Er         = 0;
-  m_U          = 0;
-  m_V          = 0;
-  m_Zo         = 0;
-  m_OneSeeds   = 0;
+  m_nlist = 0;
+  m_endlist = true;
+  r_Sorted = 0;
+  r_index = 0;
+  r_map = 0;
+  m_SP = 0;
+  m_R = 0;
+  m_Tz = 0;
+  m_Er = 0;
+  m_U = 0;
+  m_V = 0;
+  m_Zo = 0;
+  m_OneSeeds = 0;
   m_seedOutput = 0;
 
   // Build framework
@@ -94,8 +92,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder()
 // Destructor
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder()
-{
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder() {
   if (r_index) {
     delete[] r_index;
   }
@@ -152,16 +149,14 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder()
 ///////////////////////////////////////////////////////////////////
 template <typename SpacePoint>
 template <class RandIter>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int      iteration,
-                                                    RandIter spBegin,
-                                                    RandIter spEnd)
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int iteration,
+                                                         RandIter spBegin,
+                                                         RandIter spEnd) {
   iteration <= 0 ? m_iteration = 0 : m_iteration = iteration;
   erase();
   m_dzdrmin = m_dzdrmin0;
   m_dzdrmax = m_dzdrmax0;
-  m_umax    = 100.;
+  m_umax = 100.;
   // if first event
   r_first = 0;
   if (!m_iteration) {
@@ -174,7 +169,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int      iteration,
     // scattering of min pT track
     m_ipt2C = m_ipt2 * m_COF;
     // scattering times curvature (missing: div by pT)
-    m_COFK      = m_COF * (m_K * m_K);
+    m_COFK = m_COF * (m_K * m_K);
     i_spforseed = l_spforseed.begin();
   }
   // only if not first event
@@ -184,10 +179,10 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int      iteration,
   }
 
   float irstep = 1. / r_rstep;
-  int   irmax  = r_size - 1;
+  int irmax = r_size - 1;
   // TODO using 3 member vars to clear r_Sorted
   for (int i = 0; i != m_nr; ++i) {
-    int n    = r_index[i];
+    int n = r_index[i];
     r_map[n] = 0;
     r_Sorted[n].clear();
   }
@@ -198,7 +193,6 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int      iteration,
   // store number of SP per bin in r_map
   RandIter sp = spBegin;
   for (; sp != spEnd; ++sp) {
-
     Acts::Legacy::SPForSeed<SpacePoint>* sps = newSpacePoint((*sp));
     if (!sps) {
       continue;
@@ -226,20 +220,18 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int      iteration,
 ///////////////////////////////////////////////////////////////////
 
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::find3Sp()
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::find3Sp() {
   m_zminU = m_zmin;
   m_zmaxU = m_zmax;
 
   if ((m_state == 0) || m_nlist) {
-    i_seede   = l_seeds.begin();
-    m_state   = 1;
-    m_nlist   = 0;
+    i_seede = l_seeds.begin();
+    m_state = 1;
+    m_nlist = 0;
     m_endlist = true;
-    m_fvNmin  = 0;
-    m_fNmin   = 0;
-    m_zMin    = 0;
+    m_fvNmin = 0;
+    m_fNmin = 0;
+    m_zMin = 0;
     production3Sp();
   }
   i_seed = l_seeds.begin();
@@ -250,9 +242,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::find3Sp()
 // Find next set space points
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::findNext()
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::findNext() {
   if (m_endlist) {
     return;
   }
@@ -270,9 +260,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::findNext()
 // Initiate frame work for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork() {
   m_ptmin = fabs(m_ptmin);
 
   if (m_ptmin < 100.) {
@@ -294,30 +282,30 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
 
   // scattering factor. depends on error, forward direction and distance between
   // SP
-  m_COF  = 134 * .05 * 9.;
-  m_ipt  = 1. / fabs(.9 * m_ptmin);
+  m_COF = 134 * .05 * 9.;
+  m_ipt = 1. / fabs(.9 * m_ptmin);
   m_ipt2 = m_ipt * m_ipt;
-  m_K    = 0.;
+  m_K = 0.;
 
   // set all counters zero
   m_nsaz = m_nsazv = m_nr = m_nrfz = 0;
 
   // Build radius sorted containers
   //
-  r_size   = int((r_rmax + .1) / r_rstep);
+  r_size = int((r_rmax + .1) / r_rstep);
   r_Sorted = new std::list<Acts::Legacy::SPForSeed<SpacePoint>*>[r_size];
-  r_index  = new int[r_size];
-  r_map    = new int[r_size];
+  r_index = new int[r_size];
+  r_map = new int[r_size];
   for (int i = 0; i != r_size; ++i) {
     r_index[i] = 0;
-    r_map[i]   = 0;
+    r_map[i] = 0;
   }
 
   // Build radius-azimuthal sorted containers
   //
-  const float pi2     = 2. * M_PI;
-  const int   NFmax   = 53;
-  const float sFmax   = float(NFmax) / pi2;
+  const float pi2 = 2. * M_PI;
+  const int NFmax = 53;
+  const float sFmax = float(NFmax) / pi2;
   const float m_sFmin = 100. / 60.;
   // make phi-slices for 400MeV tracks, unless ptMin is even smaller
   float ptm = 400.;
@@ -341,13 +329,12 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
   m_nrfz = 0;
   for (int i = 0; i != 583; ++i) {
     rfz_index[i] = 0;
-    rfz_map[i]   = 0;
+    rfz_map[i] = 0;
   }
 
   // Build maps for radius-azimuthal-Z sorted collections
   //
   for (int f = 0; f <= m_fNmax; ++f) {
-
     int fb = f - 1;
     if (fb < 0) {
       fb = m_fNmax;
@@ -360,12 +347,11 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
     // For each azimuthal region loop through all Z regions
     //
     for (int z = 0; z != 11; ++z) {
-
-      int a        = f * 11 + z;
-      int b        = fb * 11 + z;
-      int c        = ft * 11 + z;
-      rfz_b[a]     = 3;
-      rfz_t[a]     = 3;
+      int a = f * 11 + z;
+      int b = fb * 11 + z;
+      int c = ft * 11 + z;
+      rfz_b[a] = 3;
+      rfz_t[a] = 3;
       rfz_ib[a][0] = a;
       rfz_it[a][0] = a;
       rfz_ib[a][1] = b;
@@ -373,8 +359,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
       rfz_ib[a][2] = c;
       rfz_it[a][2] = c;
       if (z == 5) {
-
-        rfz_t[a]     = 9;
+        rfz_t[a] = 9;
         rfz_it[a][3] = a + 1;
         rfz_it[a][4] = b + 1;
         rfz_it[a][5] = c + 1;
@@ -382,29 +367,25 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
         rfz_it[a][7] = b - 1;
         rfz_it[a][8] = c - 1;
       } else if (z > 5) {
-
-        rfz_b[a]     = 6;
+        rfz_b[a] = 6;
         rfz_ib[a][3] = a - 1;
         rfz_ib[a][4] = b - 1;
         rfz_ib[a][5] = c - 1;
 
         if (z < 10) {
-
-          rfz_t[a]     = 6;
+          rfz_t[a] = 6;
           rfz_it[a][3] = a + 1;
           rfz_it[a][4] = b + 1;
           rfz_it[a][5] = c + 1;
         }
       } else {
-
-        rfz_b[a]     = 6;
+        rfz_b[a] = 6;
         rfz_ib[a][3] = a + 1;
         rfz_ib[a][4] = b + 1;
         rfz_ib[a][5] = c + 1;
 
         if (z > 0) {
-
-          rfz_t[a]     = 6;
+          rfz_t[a] = 6;
           rfz_it[a][3] = a - 1;
           rfz_it[a][4] = b - 1;
           rfz_it[a][5] = c - 1;
@@ -412,12 +393,12 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
       }
 
       if (z == 3) {
-        rfz_b[a]     = 9;
+        rfz_b[a] = 9;
         rfz_ib[a][6] = a + 2;
         rfz_ib[a][7] = b + 2;
         rfz_ib[a][8] = c + 2;
       } else if (z == 7) {
-        rfz_b[a]     = 9;
+        rfz_b[a] = 9;
         rfz_ib[a][6] = a - 2;
         rfz_ib[a][7] = b - 2;
         rfz_ib[a][8] = c - 2;
@@ -454,7 +435,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
     m_seedOutput = new Acts::Legacy::Seed<SpacePoint>();
   }
 
-  i_seed  = l_seeds.begin();
+  i_seed = l_seeds.begin();
   i_seede = l_seeds.end();
 }
 
@@ -462,10 +443,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
 // Initiate beam frame work for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildBeamFrameWork()
-{
-
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildBeamFrameWork() {
   double bx = m_config.beamPosX;
   double by = m_config.beamPosY;
   double bz = m_config.beamPosZ;
@@ -479,12 +457,8 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildBeamFrameWork()
 // Initiate beam frame work for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::convertToBeamFrameWork(
-    SpacePoint* const& sp,
-    float*             r)
-{
-
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::convertToBeamFrameWork(
+    SpacePoint* const& sp, float* r) {
   r[0] = float(sp->x) - m_xbeam;
   r[1] = float(sp->y) - m_ybeam;
   r[2] = float(sp->z) - m_zbeam;
@@ -494,13 +468,11 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::convertToBeamFrameWork(
 // Initiate space points seed maker
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists()
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists() {
   const float pi2 = 2. * M_PI;
   typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r, re;
 
-  int  ir0 = 0;
+  int ir0 = 0;
   bool ibl = false;
 
   r_first = 0;
@@ -508,12 +480,11 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists()
     r_first = m_config.SCT_rMin / r_rstep;
   }
   for (int i = r_first; i != r_size; ++i) {
-
     if (!r_map[i]) {
       continue;
     }
 
-    r  = r_Sorted[i].begin();
+    r = r_Sorted[i].begin();
     re = r_Sorted[i].end();
 
     if (ir0 == 0) {
@@ -534,7 +505,6 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists()
     }
 
     for (; r != re; ++r) {
-
       // Azimuthal (Phi) angle sort
       // bin nr "f" is phi * phi-slices
       float F = (*r)->phi();
@@ -549,7 +519,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists()
         f = 0;
       }
 
-      int   z;
+      int z;
       float Z = (*r)->z();
 
       // Azimuthal angle and Z-coordinate sort
@@ -557,16 +527,17 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists()
       // space-point
       if (Z > 0.) {
         Z < 250. ? z = 5
-                 : Z < 450.
-                ? z                        = 6
-                : Z < 925. ? z             = 7
-                           : Z < 1400. ? z = 8 : Z < 2500. ? z = 9 : z = 10;
+                 : Z < 450. ? z = 6
+                            : Z < 925. ? z = 7
+                                       : Z < 1400. ? z = 8
+                                                   : Z < 2500. ? z = 9 : z = 10;
       } else {
-        Z > -250. ? z = 5
-                  : Z > -450.
-                ? z                          = 4
-                : Z > -925. ? z              = 3
-                            : Z > -1400. ? z = 2 : Z > -2500. ? z = 1 : z = 0;
+        Z > -250.
+            ? z = 5
+            : Z > -450.
+                  ? z = 4
+                  : Z > -925. ? z = 3
+                              : Z > -1400. ? z = 2 : Z > -2500. ? z = 1 : z = 0;
       }
       // calculate bin nr "n" for self made r-phi-z sorted 3D array "rfz_Sorted"
       // record number of sp in m_nsaz
@@ -588,28 +559,24 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists()
 // Erase space point information
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::erase()
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::erase() {
   for (int i = 0; i != m_nrfz; ++i) {
-    int n      = rfz_index[i];
+    int n = rfz_index[i];
     rfz_map[n] = 0;
     rfz_Sorted[n].clear();
   }
 
   m_state = 0;
-  m_nsaz  = 0;
+  m_nsaz = 0;
   m_nsazv = 0;
-  m_nrfz  = 0;
+  m_nrfz = 0;
 }
 
 ///////////////////////////////////////////////////////////////////
 // Production 3 space points seeds
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp()
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp() {
   // if less than 3 sp in total
   if (m_nsaz < 3) {
     return;
@@ -626,7 +593,6 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp()
   // Loop through all azimuthal regions
   //
   for (int f = m_fNmin; f <= m_fNmax; ++f) {
-
     // For each azimuthal region loop through all Z regions
     // first for barrel, then left EC, then right EC
     int z = 0;
@@ -634,38 +600,35 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp()
       z = m_zMin;
     }
     for (; z != 11; ++z) {
-
       int a = f * 11 + ZI[z];
       if (!rfz_map[a]) {
         continue;
       }
       int NB = 0, NT = 0;
       for (int i = 0; i != rfz_b[a]; ++i) {
-
         int an = rfz_ib[a][i];
         // if bin has no entry: continue
         if (!rfz_map[an]) {
           continue;
         }
         // assign begin-pointer and end-pointer of current bin to rb and rbe
-        rb[NB]    = rfz_Sorted[an].begin();
+        rb[NB] = rfz_Sorted[an].begin();
         rbe[NB++] = rfz_Sorted[an].end();
       }
       for (int i = 0; i != rfz_t[a]; ++i) {
-
         int an = rfz_it[a][i];
         // if bin has no entry: continue
         if (!rfz_map[an]) {
           continue;
         }
         // assign begin-pointer and end-pointer of current bin to rt and rte
-        rt[NT]    = rfz_Sorted[an].begin();
+        rt[NT] = rfz_Sorted[an].begin();
         rte[NT++] = rfz_Sorted[an].end();
       }
       production3Sp(rb, rbe, rt, rte, NB, NT, nseed);
       if (!m_endlist) {
         m_fNmin = f;
-        m_zMin  = z;
+        m_zMin = z;
         return;
       }
     }
@@ -677,26 +640,22 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp()
 // Production 3 space points seeds for full scan
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rb,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rbe,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rt,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rte,
-    int                                                                 NB,
-    int                                                                 NT,
-    int&                                                                nseed)
-{
+    int NB, int NT, int& nseed) {
   typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r0 = rb[0],
                                                                      r;
   if (!m_endlist) {
-    r0        = m_rMin;
+    r0 = m_rMin;
     m_endlist = true;
   }
 
   float ipt2K = m_ipt2K;
   float ipt2C = m_ipt2C;
-  float COFK  = m_COFK;
+  float COFK = m_COFK;
   float imaxp = m_diver;
   float imaxs = m_divermax;
 
@@ -705,24 +664,21 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
   // Loop through all space points
   // first bottom bin used as "current bin" for middle spacepoints
   for (; r0 != rbe[0]; ++r0) {
-
     m_nOneSeeds = 0;
     m_mapOneSeeds.clear();
 
     float R = (*r0)->radius();
 
     const int sur0 = (*r0)->surface();
-    float     X    = (*r0)->x();
-    float     Y    = (*r0)->y();
-    float     Z    = (*r0)->z();
-    int       Nb   = 0;
+    float X = (*r0)->x();
+    float Y = (*r0)->y();
+    float Z = (*r0)->z();
+    int Nb = 0;
 
     // Bottom links production
     //
     for (int i = 0; i != NB; ++i) {
-
       for (r = rb[i]; r != rbe[i]; ++r) {
-
         float Rb = (*r)->radius();
         float dR = R - Rb;
         // if deltaR larger than deltaRMax, store spacepoint counter position in
@@ -736,15 +692,15 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
         // if dR is smaller than drmin, stop processing this bottombin
         // because it has no more sp with lower radii
         // OR break because processing PPP and encountered SCT SP
-        if (dR < m_drmin
-            || (m_iteration && (*r)->spacepoint->clusterList().second)) {
+        if (dR < m_drmin ||
+            (m_iteration && (*r)->spacepoint->clusterList().second)) {
           break;
         }
         if ((*r)->surface() == sur0) {
           continue;
         }
         // forward direction of SP duplet
-        float Tz  = (Z - (*r)->z()) / dR;
+        float Tz = (Z - (*r)->z()) / dR;
         float aTz = fabs(Tz);
         // why also exclude seeds with small pseudorapidity??
         if (aTz < m_dzdrmin || aTz > m_dzdrmax) {
@@ -772,9 +728,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
     // Top links production
     //
     for (int i = 0; i != NT; ++i) {
-
       for (r = rt[i]; r != rte[i]; ++r) {
-
         float Rt = (*r)->radius();
         float dR = Rt - R;
 
@@ -790,7 +744,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
           continue;
         }
 
-        float Tz  = ((*r)->z() - Z) / dR;
+        float Tz = ((*r)->z() - Z) / dR;
         float aTz = fabs(Tz);
 
         if (aTz < m_dzdrmin || aTz > m_dzdrmax) {
@@ -816,11 +770,10 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
     }
     float covr0 = (*r0)->covr();
     float covz0 = (*r0)->covz();
-    float ax    = X / R;
-    float ay    = Y / R;
+    float ax = X / R;
+    float ay = Y / R;
 
     for (int i = 0; i != Nt; ++i) {
-
       Acts::Legacy::SPForSeed<SpacePoint>* sp = m_SP[i];
 
       float dx = sp->x() - X;
@@ -844,9 +797,9 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
 
       m_Tz[i] = tz;
       m_Zo[i] = Z - R * tz;
-      m_R[i]  = dr;
-      m_U[i]  = x * r2;
-      m_V[i]  = y * r2;
+      m_R[i] = dr;
+      m_U[i] = x * r2;
+      m_V[i] = y * r2;
       m_Er[i] = ((covz0 + sp->covz()) + (tz * tz) * (covr0 + sp->covr())) * r2;
     }
     covr0 *= .5;
@@ -855,16 +808,15 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
     // Three space points comparison
     //
     for (int b = 0; b != Nb; ++b) {
-
-      float Zob  = m_Zo[b];
-      float Tzb  = m_Tz[b];
+      float Zob = m_Zo[b];
+      float Tzb = m_Tz[b];
       float Rb2r = m_R[b] * covr0;
       float Rb2z = m_R[b] * covz0;
-      float Erb  = m_Er[b];
-      float Vb   = m_V[b];
-      float Ub   = m_U[b];
+      float Erb = m_Er[b];
+      float Vb = m_V[b];
+      float Ub = m_U[b];
       // Tzb2 = 1/sin^2(theta)
-      float Tzb2  = (1. + Tzb * Tzb);
+      float Tzb2 = (1. + Tzb * Tzb);
       float sTzb2 = sqrt(Tzb2);
       // CSA  = curvature^2/(pT^2 * sin^2(theta)) * scatteringFactor
       float CSA = Tzb2 * COFK;
@@ -876,10 +828,9 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
       }
 
       for (int t = Nb; t != Nt; ++t) {
-
-        float dT = ((Tzb - m_Tz[t]) * (Tzb - m_Tz[t]) - m_R[t] * Rb2z
-                    - (Erb + m_Er[t]))
-            - (m_R[t] * Rb2r) * ((Tzb + m_Tz[t]) * (Tzb + m_Tz[t]));
+        float dT = ((Tzb - m_Tz[t]) * (Tzb - m_Tz[t]) - m_R[t] * Rb2z -
+                    (Erb + m_Er[t])) -
+                   (m_R[t] * Rb2r) * ((Tzb + m_Tz[t]) * (Tzb + m_Tz[t]));
         if (dT > ICSA) {
           continue;
         }
@@ -888,9 +839,9 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
         if (dU == 0.) {
           continue;
         }
-        float A  = (m_V[t] - Vb) / dU;
+        float A = (m_V[t] - Vb) / dU;
         float S2 = 1. + A * A;
-        float B  = Vb - A * Ub;
+        float B = Vb - A * Ub;
         float B2 = B * B;
         // B2/S2=1/helixradius^2
         if (B2 > ipt2K * S2 || dT * S2 > B2 * CSA) {
@@ -929,18 +880,13 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
 // New 3 space points pro seeds
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
     Acts::Legacy::SPForSeed<SpacePoint>*& p1,
     Acts::Legacy::SPForSeed<SpacePoint>*& p2,
-    Acts::Legacy::SPForSeed<SpacePoint>*& p3,
-    float                                 z,
-    float                                 q)
-{
+    Acts::Legacy::SPForSeed<SpacePoint>*& p3, float z, float q) {
   // if the number of seeds already in m_OneSeeds does not exceed m_maxOneSize
   // then insert the current SP into m_mapOneSeeds and m_OneSeeds.
   if (m_nOneSeeds < m_maxOneSize) {
-
     m_OneSeeds[m_nOneSeeds].set(p1, p2, p3, z);
     m_mapOneSeeds.insert(std::make_pair(q, m_OneSeeds + m_nOneSeeds));
     ++m_nOneSeeds;
@@ -953,9 +899,9 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
   // Then remove all entries after the newly inserted entry equal to the new
   // seed.
   else {
-    typename std::multimap<float, Acts::Legacy::InternalSeed<SpacePoint>*>::
-        reverse_iterator l
-        = m_mapOneSeeds.rbegin();
+    typename std::multimap<
+        float, Acts::Legacy::InternalSeed<SpacePoint>*>::reverse_iterator l =
+        m_mapOneSeeds.rbegin();
 
     if ((*l).first <= q) {
       return;
@@ -964,9 +910,9 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
     Acts::Legacy::InternalSeed<SpacePoint>* s = (*l).second;
     s->set(p1, p2, p3, z);
 
-    typename std::multimap<float,
-                           Acts::Legacy::InternalSeed<SpacePoint>*>::iterator i
-        = m_mapOneSeeds.insert(std::make_pair(q, s));
+    typename std::multimap<
+        float, Acts::Legacy::InternalSeed<SpacePoint>*>::iterator i =
+        m_mapOneSeeds.insert(std::make_pair(q, s));
 
     for (++i; i != m_mapOneSeeds.end(); ++i) {
       if ((*i).second == s) {
@@ -981,39 +927,36 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
 // New 3 space points pro seeds production
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeedWithCurvaturesComparison(
-    Acts::Legacy::SPForSeed<SpacePoint>*& SPb,
-    Acts::Legacy::SPForSeed<SpacePoint>*& SP0,
-    float                                 Zob)
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::
+    newOneSeedWithCurvaturesComparison(
+        Acts::Legacy::SPForSeed<SpacePoint>*& SPb,
+        Acts::Legacy::SPForSeed<SpacePoint>*& SP0, float Zob) {
   // allowed (1/helixradius)-delta between 2 seeds
   const float dC = .00003;
 
-  bool  pixb = !SPb->spacepoint->clusterList().second;
-  float ub   = SPb->quality();
-  float u0   = SP0->quality();
+  bool pixb = !SPb->spacepoint->clusterList().second;
+  float ub = SPb->quality();
+  float u0 = SP0->quality();
 
   std::sort(m_CmSp.begin(), m_CmSp.end(), Acts::Legacy::comCurvature());
-  typename std::vector<std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>>::
-      iterator j,
+  typename std::vector<
+      std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>>::iterator j,
       jn, i = m_CmSp.begin(), ie = m_CmSp.end();
   jn = i;
 
   for (; i != ie; ++i) {
-
-    float u  = (*i).second->param();
+    float u = (*i).second->param();
     float Im = (*i).second->param();
 
     bool pixt = !(*i).second->spacepoint->clusterList().second;
 
     const int Sui = (*i).second->surface();
-    float     Ri  = (*i).second->radius();
-    float     Ci1 = (*i).first - dC;
-    float     Ci2 = (*i).first + dC;
-    float     Rmi = 0.;
-    float     Rma = 0.;
-    bool      in  = false;
+    float Ri = (*i).second->radius();
+    float Ci1 = (*i).first - dC;
+    float Ci2 = (*i).first + dC;
+    float Rmi = 0.;
+    float Rma = 0.;
+    bool in = false;
 
     if (!pixb) {
       u -= 400.;
@@ -1059,7 +1002,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeedWithCurvaturesComparison(
         }
       } else {
         // first found compatible seed: add 200 to quality
-        in  = true;
+        in = true;
         Rma = Rmi = Rj;
         u -= 200.;
       }
@@ -1092,15 +1035,13 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeedWithCurvaturesComparison(
 // Fill seeds
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillSeeds()
-{
+void Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillSeeds() {
   m_fillOneSeeds = 0;
 
-  typename std::multimap<float,
-                         Acts::Legacy::InternalSeed<SpacePoint>*>::iterator lf
-      = m_mapOneSeeds.begin(),
-      l = m_mapOneSeeds.begin(), le = m_mapOneSeeds.end();
+  typename std::multimap<float, Acts::Legacy::InternalSeed<SpacePoint>
+                                    *>::iterator lf = m_mapOneSeeds.begin(),
+                                                 l = m_mapOneSeeds.begin(),
+                                                 le = m_mapOneSeeds.end();
 
   if (l == le) {
     return;
@@ -1109,9 +1050,8 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillSeeds()
   Acts::Legacy::InternalSeed<SpacePoint>* s;
 
   for (; l != le; ++l) {
-
     float w = (*l).first;
-    s       = (*l).second;
+    s = (*l).second;
     if (l != lf && s->spacepoint0()->radius() < 43. && w > -200.) {
       continue;
     }
@@ -1120,7 +1060,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillSeeds()
     }
 
     if (i_seede != l_seeds.end()) {
-      s  = (*i_seede++);
+      s = (*i_seede++);
       *s = *(*l).second;
     } else {
       s = new Acts::Legacy::InternalSeed<SpacePoint>(*(*l).second);

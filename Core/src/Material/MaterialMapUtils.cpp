@@ -16,18 +16,14 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-auto
-Acts::materialMapperRZ(
+auto Acts::materialMapperRZ(
     const std::function<size_t(std::array<size_t, 2> binsRZ,
                                std::array<size_t, 2> nBinsRZ)>&
-                                materialVectorToGridMapper,
-    std::vector<double>         rPos,
-    std::vector<double>         zPos,
-    std::vector<Acts::Material> material,
-    double lengthUnit) -> MaterialMapper<detail::Grid<ActsVectorF<5>,
-                                                      detail::EquidistantAxis,
-                                                      detail::EquidistantAxis>>
-{
+        materialVectorToGridMapper,
+    std::vector<double> rPos, std::vector<double> zPos,
+    std::vector<Acts::Material> material, double lengthUnit)
+    -> MaterialMapper<detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+                                   detail::EquidistantAxis>> {
   // [1] Decompose material
   std::vector<ActsVectorF<5>> materialVector;
   materialVector.reserve(material.size());
@@ -50,12 +46,12 @@ Acts::materialMapperRZ(
   size_t nBinsZ = zPos.size();
 
   // get the minimum and maximum
-  auto   minMaxR = std::minmax_element(rPos.begin(), rPos.end());
-  auto   minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
-  double rMin    = *minMaxR.first;
-  double zMin    = *minMaxZ.first;
-  double rMax    = *minMaxR.second;
-  double zMax    = *minMaxZ.second;
+  auto minMaxR = std::minmax_element(rPos.begin(), rPos.end());
+  auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
+  double rMin = *minMaxR.first;
+  double zMin = *minMaxZ.first;
+  double rMax = *minMaxR.second;
+  double zMax = *minMaxZ.second;
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
   double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
@@ -68,8 +64,8 @@ Acts::materialMapperRZ(
   detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = detail::
-      Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>;
+  using Grid_t = detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+                              detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // [3] Set the material values
@@ -91,31 +87,26 @@ Acts::materialMapperRZ(
 
   // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
-  auto transformPos
-      = [](const Vector3D& pos) { return Vector2D(perp(pos), pos.z()); };
+  auto transformPos = [](const Vector3D& pos) {
+    return Vector2D(perp(pos), pos.z());
+  };
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return MaterialMapper<detail::Grid<ActsVectorF<5>,
-                                     detail::EquidistantAxis,
+  return MaterialMapper<detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
                                      detail::EquidistantAxis>>(transformPos,
                                                                std::move(grid));
 }
 
-auto
-Acts::materialMapperXYZ(
+auto Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
-                          materialVectorToGridMapper,
-    std::vector<double>   xPos,
-    std::vector<double>   yPos,
-    std::vector<double>   zPos,
-    std::vector<Material> material,
-    double lengthUnit) -> MaterialMapper<detail::Grid<ActsVectorF<5>,
-                                                      detail::EquidistantAxis,
-                                                      detail::EquidistantAxis,
-                                                      detail::EquidistantAxis>>
-{
+        materialVectorToGridMapper,
+    std::vector<double> xPos, std::vector<double> yPos,
+    std::vector<double> zPos, std::vector<Material> material, double lengthUnit)
+    -> MaterialMapper<
+        detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+                     detail::EquidistantAxis, detail::EquidistantAxis>> {
   // [1] Decompose material
   std::vector<ActsVectorF<5>> materialVector;
   materialVector.reserve(material.size());
@@ -167,10 +158,8 @@ Acts::materialMapperXYZ(
   detail::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
   detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  using Grid_t = detail::Grid<ActsVectorF<5>,
-                              detail::EquidistantAxis,
-                              detail::EquidistantAxis,
-                              detail::EquidistantAxis>;
+  using Grid_t = detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+                              detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
@@ -179,8 +168,8 @@ Acts::materialMapperXYZ(
     for (size_t j = 1; j <= nBinsY; ++j) {
       for (size_t k = 1; k <= nBinsZ; ++k) {
         Grid_t::index_t indices = {{i, j, k}};
-        std::array<size_t, 3> nIndices
-            = {{xPos.size(), yPos.size(), zPos.size()}};
+        std::array<size_t, 3> nIndices = {
+            {xPos.size(), yPos.size(), zPos.size()}};
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
@@ -200,9 +189,8 @@ Acts::materialMapperXYZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return MaterialMapper<detail::Grid<ActsVectorF<5>,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis>>(transformPos,
-                                                               std::move(grid));
+  return MaterialMapper<
+      detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+                   detail::EquidistantAxis, detail::EquidistantAxis>>(
+      transformPos, std::move(grid));
 }

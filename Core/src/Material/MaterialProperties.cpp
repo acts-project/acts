@@ -14,44 +14,33 @@
 #include <climits>
 
 Acts::MaterialProperties::MaterialProperties(float thickness)
-  : m_thickness(thickness)
-{
-}
+    : m_thickness(thickness) {}
 
-Acts::MaterialProperties::MaterialProperties(float Xo,
-                                             float Lo,
-                                             float averageA,
-                                             float averageZ,
-                                             float averageRho,
+Acts::MaterialProperties::MaterialProperties(float Xo, float Lo, float averageA,
+                                             float averageZ, float averageRho,
                                              float thickness)
-  : m_material(Xo, Lo, averageA, averageZ, averageRho)
-  , m_thickness(thickness)
-  , m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.)
-  , m_dInL0(Lo * Lo > 10e-10 ? thickness / Lo : 0.)
-{
-}
+    : m_material(Xo, Lo, averageA, averageZ, averageRho),
+      m_thickness(thickness),
+      m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.),
+      m_dInL0(Lo * Lo > 10e-10 ? thickness / Lo : 0.) {}
 
 Acts::MaterialProperties::MaterialProperties(const Material& material,
-                                             float           thickness)
-  : m_material(material)
-  , m_thickness(thickness)
-  , m_dInX0(material.X0() * material.X0() > 10e-10 ? thickness / material.X0()
-                                                   : 0.)
-  , m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
-                                                   : 0.)
-{
-}
+                                             float thickness)
+    : m_material(material),
+      m_thickness(thickness),
+      m_dInX0(material.X0() * material.X0() > 10e-10 ? thickness / material.X0()
+                                                     : 0.),
+      m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
+                                                     : 0.) {}
 
 Acts::MaterialProperties::MaterialProperties(
-    const std::vector<MaterialProperties>& matLayers,
-    bool                                   unitThickness)
-  : m_material(), m_thickness(0.), m_dInX0(0.), m_dInL0(0.)
-{
+    const std::vector<MaterialProperties>& matLayers, bool unitThickness)
+    : m_material(), m_thickness(0.), m_dInX0(0.), m_dInL0(0.) {
   double rho = 0.;
-  double A   = 0.;
-  double Z   = 0.;
-  double X0  = 0.;
-  double L0  = 0.;
+  double A = 0.;
+  double Z = 0.;
+  double X0 = 0.;
+  double L0 = 0.;
 
   for (auto& mat : matLayers) {
     // thickness in X0 and L0 are strictly additive
@@ -79,9 +68,7 @@ Acts::MaterialProperties::MaterialProperties(
   }
 }
 
-Acts::MaterialProperties&
-Acts::MaterialProperties::operator*=(float scale)
-{
+Acts::MaterialProperties& Acts::MaterialProperties::operator*=(float scale) {
   // assuming rescaling of the material thickness
   m_dInX0 *= scale;
   m_dInL0 *= scale;
@@ -89,23 +76,20 @@ Acts::MaterialProperties::operator*=(float scale)
   return (*this);
 }
 
-void
-Acts::MaterialProperties::scaleToUnitThickness()
-{
+void Acts::MaterialProperties::scaleToUnitThickness() {
   // And 'condense to unit thickness' if configured
-  double t    = thickness();
-  double X0   = m_material.X0() / t;
-  double L0   = m_material.L0() / t;
-  double A    = m_material.A();
-  double Z    = m_material.Z();
-  double rho  = m_material.rho() * t;
-  m_material  = Material(X0, L0, A, Z, rho);
+  double t = thickness();
+  double X0 = m_material.X0() / t;
+  double L0 = m_material.L0() / t;
+  double A = m_material.A();
+  double Z = m_material.Z();
+  double rho = m_material.rho() * t;
+  m_material = Material(X0, L0, A, Z, rho);
   m_thickness = 1.;
 }
 
-std::ostream&
-Acts::operator<<(std::ostream& sl, const MaterialProperties& mprop)
-{
+std::ostream& Acts::operator<<(std::ostream& sl,
+                               const MaterialProperties& mprop) {
   if (mprop) {
     sl << "Acts::MaterialProperties: " << std::endl;
     sl << "   - thickness/X0                          = "

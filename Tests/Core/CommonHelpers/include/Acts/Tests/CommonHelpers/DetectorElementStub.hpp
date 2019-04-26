@@ -29,107 +29,92 @@ class LineBounds;
 
 namespace Test {
 
-  /// @class DetectorElementStub
+/// @class DetectorElementStub
+///
+/// This is a lightweight type of detector element,
+/// it simply implements the base class.
+class DetectorElementStub : public DetectorElementBase {
+ public:
+  DetectorElementStub() : DetectorElementBase() {}
+
+  DetectorElementStub(std::shared_ptr<const Transform3D> transform)
+      : DetectorElementBase(), m_elementTransform(std::move(transform)) {}
+
+  /// Constructor for single sided detector element
+  /// - bound to a Plane Surface
   ///
-  /// This is a lightweight type of detector element,
-  /// it simply implements the base class.
-  class DetectorElementStub : public DetectorElementBase
-  {
-  public:
-    DetectorElementStub() : DetectorElementBase() {}
-
-    DetectorElementStub(std::shared_ptr<const Transform3D> transform)
-      : DetectorElementBase(), m_elementTransform(std::move(transform))
-    {
-    }
-
-    /// Constructor for single sided detector element
-    /// - bound to a Plane Surface
-    ///
-    /// @param transform is the transform that element the layer in 3D frame
-    /// @param pBounds is the planar bounds for the planar detector element
-    /// @param thickness is the module thickness
-    /// @param material is the (optional) Surface material associated to it
-    DetectorElementStub(std::shared_ptr<const Transform3D>      transform,
-                        std::shared_ptr<const PlanarBounds>     pBounds,
-                        double                                  thickness,
-                        std::shared_ptr<const ISurfaceMaterial> material
-                        = nullptr)
-      : DetectorElementBase()
-      , m_elementTransform(std::move(transform))
-      , m_elementThickness(thickness)
-    {
-      auto mutableSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-      mutableSurface->assignSurfaceMaterial(material);
-      m_elementSurface = mutableSurface;
-    }
-
-    /// Constructor for single sided detector element
-    /// - bound to a Line Surface
-    ///
-    /// @param transform is the transform that element the layer in 3D frame
-    /// @param dBounds is the line bounds for the line like detector element
-    /// @param thickness is the module thickness
-    /// @param material is the (optional) Surface material associated to it
-    DetectorElementStub(std::shared_ptr<const Transform3D>      transform,
-                        std::shared_ptr<const LineBounds>       lBounds,
-                        double                                  thickness,
-                        std::shared_ptr<const ISurfaceMaterial> material
-                        = nullptr)
-      : DetectorElementBase()
-      , m_elementTransform(std::move(transform))
-      , m_elementThickness(thickness)
-    {
-      auto mutableSurface
-          = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
-      mutableSurface->assignSurfaceMaterial(material);
-      m_elementSurface = mutableSurface;
-    }
-
-    ///  Destructor
-    ~DetectorElementStub() override { /*nop */}
-
-    /// Return local to global transform associated with this identifier
-    ///
-    /// @param gctx The current geometry context object, e.g. alignment
-    ///
-    /// @note this is called from the surface().transform() in the PROXY mode
-    const Transform3D&
-    transform(const GeometryContext& gctx) const override;
-
-    /// Return surface associated with this detector element
-    const Surface&
-    surface() const override;
-
-    /// The maximal thickness of the detector element wrt normal axis
-    double
-    thickness() const override;
-
-  private:
-    /// the transform for positioning in 3D space
-    std::shared_ptr<const Transform3D> m_elementTransform;
-    /// the surface represented by it
-    std::shared_ptr<const Surface> m_elementSurface{nullptr};
-    /// the element thickness
-    double m_elementThickness{0.};
-  };
-
-  inline const Transform3D&
-  DetectorElementStub::transform(const GeometryContext& /*gctx*/) const
-  {
-    return *m_elementTransform;
+  /// @param transform is the transform that element the layer in 3D frame
+  /// @param pBounds is the planar bounds for the planar detector element
+  /// @param thickness is the module thickness
+  /// @param material is the (optional) Surface material associated to it
+  DetectorElementStub(
+      std::shared_ptr<const Transform3D> transform,
+      std::shared_ptr<const PlanarBounds> pBounds, double thickness,
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr)
+      : DetectorElementBase(),
+        m_elementTransform(std::move(transform)),
+        m_elementThickness(thickness) {
+    auto mutableSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
+    mutableSurface->assignSurfaceMaterial(material);
+    m_elementSurface = mutableSurface;
   }
 
-  inline const Surface&
-  DetectorElementStub::surface() const
-  {
-    return *m_elementSurface;
+  /// Constructor for single sided detector element
+  /// - bound to a Line Surface
+  ///
+  /// @param transform is the transform that element the layer in 3D frame
+  /// @param dBounds is the line bounds for the line like detector element
+  /// @param thickness is the module thickness
+  /// @param material is the (optional) Surface material associated to it
+  DetectorElementStub(
+      std::shared_ptr<const Transform3D> transform,
+      std::shared_ptr<const LineBounds> lBounds, double thickness,
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr)
+      : DetectorElementBase(),
+        m_elementTransform(std::move(transform)),
+        m_elementThickness(thickness) {
+    auto mutableSurface = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
+    mutableSurface->assignSurfaceMaterial(material);
+    m_elementSurface = mutableSurface;
   }
 
-  inline double
-  DetectorElementStub::thickness() const
-  {
-    return m_elementThickness;
+  ///  Destructor
+  ~DetectorElementStub() override { /*nop */
   }
+
+  /// Return local to global transform associated with this identifier
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///
+  /// @note this is called from the surface().transform() in the PROXY mode
+  const Transform3D& transform(const GeometryContext& gctx) const override;
+
+  /// Return surface associated with this detector element
+  const Surface& surface() const override;
+
+  /// The maximal thickness of the detector element wrt normal axis
+  double thickness() const override;
+
+ private:
+  /// the transform for positioning in 3D space
+  std::shared_ptr<const Transform3D> m_elementTransform;
+  /// the surface represented by it
+  std::shared_ptr<const Surface> m_elementSurface{nullptr};
+  /// the element thickness
+  double m_elementThickness{0.};
+};
+
+inline const Transform3D& DetectorElementStub::transform(
+    const GeometryContext& /*gctx*/) const {
+  return *m_elementTransform;
 }
-}  // end of ns
+
+inline const Surface& DetectorElementStub::surface() const {
+  return *m_elementSurface;
+}
+
+inline double DetectorElementStub::thickness() const {
+  return m_elementThickness;
+}
+}  // namespace Test
+}  // namespace Acts

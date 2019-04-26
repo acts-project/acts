@@ -20,9 +20,7 @@ namespace Acts {
 /// @brief Vertex Fitter Options
 ///
 template <typename input_track_t>
-struct VertexFitterOptions
-{
-
+struct VertexFitterOptions {
   /// Default contstructor is deleted
   VertexFitterOptions() = delete;
 
@@ -31,13 +29,11 @@ struct VertexFitterOptions
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param pconstraint The pointing contraint to a vertex
-  VertexFitterOptions(std::reference_wrapper<const GeometryContext>      gctx,
+  VertexFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
-                      const Vertex<input_track_t>&                       vconstr
-                      = Vertex<input_track_t>(Vector3D(0., 0., 0.)))
-    : geoContext(gctx), magFieldContext(mctx), vertexConstraint(vconstr)
-  {
-  }
+                      const Vertex<input_track_t>& vconstr =
+                          Vertex<input_track_t>(Vector3D(0., 0., 0.)))
+      : geoContext(gctx), magFieldContext(mctx), vertexConstraint(vconstr) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -54,9 +50,8 @@ struct VertexFitterOptions
 /// @tparam input_track_t Track object type
 /// @tparam propagator_t Propagator type
 template <typename input_track_t, typename propagator_t>
-class IVertexFitter
-{
-public:
+class IVertexFitter {
+ public:
   /// @brief Default virtual destructor
   virtual ~IVertexFitter() = default;
 
@@ -64,8 +59,8 @@ public:
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Fitted vertex
-  virtual Result<Vertex<input_track_t>>
-  fit(const std::vector<input_track_t>&         paramVector,
+  virtual Result<Vertex<input_track_t>> fit(
+      const std::vector<input_track_t>& paramVector,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const = 0;
 };
 

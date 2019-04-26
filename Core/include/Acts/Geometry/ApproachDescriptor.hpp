@@ -32,9 +32,8 @@ class BoundaryCheck;
 /// representingVolume of the Layer
 ///
 ///
-class ApproachDescriptor
-{
-public:
+class ApproachDescriptor {
+ public:
   /// Default constructor
   ApproachDescriptor() = default;
 
@@ -45,9 +44,7 @@ public:
   /// this gives the approach surfaces the link to the layer
   ///
   /// @param lay is the layer to be assigned
-  virtual void
-  registerLayer(const Layer& lay)
-      = 0;
+  virtual void registerLayer(const Layer& lay) = 0;
 
   /// @brief Get the surface on approach
   ///
@@ -59,14 +56,12 @@ public:
   /// @param parameters The actual parameters object
   /// @param options are the steering options for the search
   /// @param corrfnc The actual Corrector object
-  template <typename parameters_t,
-            typename options_t,
+  template <typename parameters_t, typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
-  ObjectIntersection<Surface>
-  approachSurface(const GeometryContext& gctx,
-                  const parameters_t&    parameters,
-                  const options_t&       options,
-                  const corrector_t&     corrfnc = corrector_t()) const;
+  ObjectIntersection<Surface> approachSurface(
+      const GeometryContext& gctx, const parameters_t& parameters,
+      const options_t& options,
+      const corrector_t& corrfnc = corrector_t()) const;
 
   /// @brief Get the surface on approach
   ///
@@ -77,39 +72,26 @@ public:
   /// @param correciton is the function pointer to a corrector
   ///
   /// @return is a surface intersection
-  virtual ObjectIntersection<Surface>
-  approachSurface(const GeometryContext& gctx,
-                  const Vector3D&        pos,
-                  const Vector3D&        gdir,
-                  NavigationDirection    navDir,
-                  const BoundaryCheck&   bcheck,
-                  CorrFnc                correct = nullptr) const = 0;
+  virtual ObjectIntersection<Surface> approachSurface(
+      const GeometryContext& gctx, const Vector3D& pos, const Vector3D& gdir,
+      NavigationDirection navDir, const BoundaryCheck& bcheck,
+      CorrFnc correct = nullptr) const = 0;
 
   /// Tet to all the contained surfaces
   /// @return all contained surfaces of this approach descriptor
-  virtual const std::vector<const Surface*>&
-  containedSurfaces() const = 0;
+  virtual const std::vector<const Surface*>& containedSurfaces() const = 0;
 
   /// Non-const version
-  virtual std::vector<const Surface*>&
-  containedSurfaces()
-      = 0;
+  virtual std::vector<const Surface*>& containedSurfaces() = 0;
 };
 
 template <typename parameters_t, typename options_t, typename corrector_t>
-ObjectIntersection<Surface>
-ApproachDescriptor::approachSurface(const GeometryContext& gctx,
-                                    const parameters_t&    parameters,
-                                    const options_t&       options,
-                                    const corrector_t&     corrfnc) const
-{
+ObjectIntersection<Surface> ApproachDescriptor::approachSurface(
+    const GeometryContext& gctx, const parameters_t& parameters,
+    const options_t& options, const corrector_t& corrfnc) const {
   // calculate the actual intersection
-  return approachSurface(gctx,
-                         parameters.position(),
-                         parameters.direction(),
-                         options.navDir,
-                         options.boundaryCheck,
-                         corrfnc);
+  return approachSurface(gctx, parameters.position(), parameters.direction(),
+                         options.navDir, options.boundaryCheck, corrfnc);
 }
 
 }  // namespace Acts

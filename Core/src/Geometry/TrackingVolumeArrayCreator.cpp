@@ -20,10 +20,8 @@
 
 std::shared_ptr<const Acts::TrackingVolumeArray>
 Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
-    const GeometryContext&      gctx,
-    const TrackingVolumeVector& tVolumes,
-    BinningValue                bValue) const
-{
+    const GeometryContext& gctx, const TrackingVolumeVector& tVolumes,
+    BinningValue bValue) const {
   // MSG_VERBOSE("Create VolumeArray of "<< tVolumes.size() << " TrackingVolumes
   // with binning in : " << binningValueNames[bValue] );
   // let's copy and sort
@@ -44,7 +42,7 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   for (auto& tVolume : volumes) {
     // get the binning position
     Vector3D binningPosition = tVolume->binningPosition(gctx, bValue);
-    double   binningBorder   = tVolume->volumeBounds().binningBorder(bValue);
+    double binningBorder = tVolume->volumeBounds().binningBorder(bValue);
     // get the center value according to the bin
     double value = tVolume->binningPositionValue(gctx, bValue);
     // for the first one take low and high boundary
@@ -59,8 +57,8 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   }
 
   // now create the bin utility
-  auto binUtility
-      = std::make_unique<const BinUtility>(boundaries, open, bValue);
+  auto binUtility =
+      std::make_unique<const BinUtility>(boundaries, open, bValue);
 
   // and return the newly created binned array
   return std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(

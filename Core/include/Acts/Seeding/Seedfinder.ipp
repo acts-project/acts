@@ -18,38 +18,34 @@ namespace Acts {
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     const Acts::SeedfinderConfig<external_spacepoint_t> config)
-  : m_config(std::move(config))
-{
-
+    : m_config(std::move(config)) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
-  m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed)
-      * (1 + 0.038 * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle     = m_config.highland / m_config.minPt;
+  m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
+                      (1 + 0.038 * std::log(m_config.radLengthPerSeed));
+  float maxScatteringAngle = m_config.highland / m_config.minPt;
   m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
   m_config.pTPerHelixRadius = 300. * m_config.bFieldInZ;
-  m_config.minHelixDiameter2
-      = std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
-  m_config.pT2perRadius
-      = std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+  m_config.minHelixDiameter2 =
+      std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
+  m_config.pT2perRadius =
+      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
 }
 
 template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
 Acts::SeedfinderState<external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::initState(
-    spacepoint_iterator_t spBegin,
-    spacepoint_iterator_t spEnd,
-    std::function<Acts::Vector2D(const external_spacepoint_t&,
-                                 float,
-                                 float,
-                                 float)>                     covTool,
+    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
+    std::function<Acts::Vector2D(const external_spacepoint_t&, float, float,
+                                 float)>
+        covTool,
     std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> bottomBinFinder,
-    std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder) const
-{
+    std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder)
+    const {
   static_assert(
       std::is_same<
           typename std::iterator_traits<spacepoint_iterator_t>::value_type,
@@ -58,41 +54,39 @@ Seedfinder<external_spacepoint_t>::initState(
   auto state = Acts::SeedfinderState<external_spacepoint_t>();
   // setup spacepoint grid config
   SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ   = m_config.bFieldInZ;
-  gridConf.minPt       = m_config.minPt;
-  gridConf.rMax        = m_config.rMax;
-  gridConf.zMax        = m_config.zMax;
-  gridConf.zMin        = m_config.zMin;
-  gridConf.deltaRMax   = m_config.deltaRMax;
+  gridConf.bFieldInZ = m_config.bFieldInZ;
+  gridConf.minPt = m_config.minPt;
+  gridConf.rMax = m_config.rMax;
+  gridConf.zMax = m_config.zMax;
+  gridConf.zMin = m_config.zMin;
+  gridConf.deltaRMax = m_config.deltaRMax;
   gridConf.cotThetaMax = m_config.cotThetaMax;
   // create grid with bin sizes according to the configured geometry
-  std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid
-      = SpacePointGridCreator::createGrid<external_spacepoint_t>(gridConf);
+  std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid =
+      SpacePointGridCreator::createGrid<external_spacepoint_t>(gridConf);
 
   // get region of interest (or full detector if configured accordingly)
   float phiMin = m_config.phiMin;
   float phiMax = m_config.phiMax;
-  float zMin   = m_config.zMin;
-  float zMax   = m_config.zMax;
+  float zMin = m_config.zMin;
+  float zMax = m_config.zMax;
 
   // sort by radius
   // add magnitude of beamPos to rMax to avoid excluding measurements
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   size_t numRBins = (m_config.rMax + m_config.beamPos.norm());
-  std::
-      vector<std::
-                 vector<std::
-                            unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>>
-          rBins(numRBins);
+  std::vector<std::vector<
+      std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>>
+      rBins(numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
       continue;
     }
-    const external_spacepoint_t& sp  = **it;
-    float                        spX = sp.x();
-    float                        spY = sp.y();
-    float                        spZ = sp.z();
+    const external_spacepoint_t& sp = **it;
+    float spX = sp.x();
+    float spY = sp.y();
+    float spZ = sp.z();
 
     if (spZ > zMax || spZ < zMin) {
       continue;
@@ -103,11 +97,11 @@ Seedfinder<external_spacepoint_t>::initState(
     }
 
     // covariance tool provided by user
-    Acts::Vector2D cov
-        = covTool(sp, m_config.zAlign, m_config.rAlign, m_config.sigmaError);
+    Acts::Vector2D cov =
+        covTool(sp, m_config.zAlign, m_config.rAlign, m_config.sigmaError);
     Acts::Vector3D spPosition(spX, spY, spZ);
-    auto           isp
-        = std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
+    auto isp =
+        std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
             sp, spPosition, m_config.beamPos, cov);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
@@ -123,17 +117,15 @@ Seedfinder<external_spacepoint_t>::initState(
   for (auto& rbin : rBins) {
     for (auto& isp : rbin) {
       Acts::Vector2D spLocation(isp->phi(), isp->z());
-      std::
-          vector<std::
-                     unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
-              bin
-          = grid->atPosition(spLocation);
+      std::vector<
+          std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
+          bin = grid->atPosition(spLocation);
       bin.push_back(std::move(isp));
     }
   }
-  state.binnedSP        = std::move(grid);
+  state.binnedSP = std::move(grid);
   state.bottomBinFinder = bottomBinFinder;
-  state.topBinFinder    = topBinFinder;
+  state.topBinFinder = topBinFinder;
   std::array<size_t, 2> numBins = state.binnedSP->numLocalBins();
   for (size_t i = 0; i < numBins[0] * numBins[1]; i++) {
     state.outputVec.push_back({});
@@ -142,22 +134,20 @@ Seedfinder<external_spacepoint_t>::initState(
 }
 
 template <typename external_spacepoint_t>
-void
-Seedfinder<external_spacepoint_t>::createSeedsForRegion(
+void Seedfinder<external_spacepoint_t>::createSeedsForRegion(
     SeedfinderStateIterator<external_spacepoint_t> it,
-    Acts::SeedfinderState<external_spacepoint_t>&  state) const
-{
+    Acts::SeedfinderState<external_spacepoint_t>& state) const {
   for (size_t spIndex = 0; spIndex < it.currentBin->size(); spIndex++) {
-    const InternalSpacePoint<external_spacepoint_t>* spM
-        = (*(it.currentBin))[spIndex].get();
+    const InternalSpacePoint<external_spacepoint_t>* spM =
+        (*(it.currentBin))[spIndex].get();
 
-    float rM    = spM->radius();
-    float zM    = spM->z();
+    float rM = spM->radius();
+    float zM = spM->z();
     float covrM = spM->covr();
     float covzM = spM->covz();
 
     std::vector<size_t>& bottomBinIndices = it.bottomBinIndices;
-    std::vector<size_t>& topBinIndices    = it.topBinIndices;
+    std::vector<size_t>& topBinIndices = it.topBinIndices;
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>
         compatBottomSP;
 
@@ -165,7 +155,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
     for (auto bottomBinIndex : bottomBinIndices) {
       auto& bottomBin = it.grid->at(bottomBinIndex);
       for (auto& spB : bottomBin) {
-        float rB     = spB->radius();
+        float rB = spB->radius();
         float deltaR = rM - rB;
         // if r-distance is too big, try next SP in r-sorted bin
         if (deltaR > m_config.deltaRMax) {
@@ -182,8 +172,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
         }
         // check if duplet origin on z axis within collision region
         float zOrigin = zM - rM * cotTheta;
-        if (zOrigin < m_config.collisionRegionMin
-            || zOrigin > m_config.collisionRegionMax) {
+        if (zOrigin < m_config.collisionRegionMin ||
+            zOrigin > m_config.collisionRegionMax) {
           continue;
         }
         compatBottomSP.push_back(spB.get());
@@ -199,7 +189,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
     for (auto topBinIndex : topBinIndices) {
       auto& topBin = it.grid->at(topBinIndex);
       for (auto& spT : topBin) {
-        float rT     = spT->radius();
+        float rT = spT->radius();
         float deltaR = rT - rM;
         // this condition is the opposite of the condition for bottom SP
         if (deltaR < m_config.deltaRMin) {
@@ -214,8 +204,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
           continue;
         }
         float zOrigin = zM - rM * cotTheta;
-        if (zOrigin < m_config.collisionRegionMin
-            || zOrigin > m_config.collisionRegionMax) {
+        if (zOrigin < m_config.collisionRegionMin ||
+            zOrigin > m_config.collisionRegionMax) {
           continue;
         }
         compatTopSP.push_back(spT.get());
@@ -234,27 +224,23 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
 
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
-    std::vector<float>                                            curvatures;
+    std::vector<float> curvatures;
     std::vector<float> impactParameters;
 
-    std::
-        vector<std::
-                   pair<float,
-                        std::
-                            unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-            seedsPerSpM;
-    size_t  numBotSP = compatBottomSP.size();
-    size_t  numTopSP = compatTopSP.size();
+    std::vector<std::pair<
+        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+        seedsPerSpM;
+    size_t numBotSP = compatBottomSP.size();
+    size_t numTopSP = compatTopSP.size();
 
     for (size_t b = 0; b < numBotSP; b++) {
-
-      auto  lb        = linCircleBottom[b];
-      float Zob       = lb.Zo;
+      auto lb = linCircleBottom[b];
+      float Zob = lb.Zo;
       float cotThetaB = lb.cotTheta;
-      float Vb        = lb.V;
-      float Ub        = lb.U;
-      float ErB       = lb.Er;
-      float iDeltaRB  = lb.iDeltaR;
+      float Vb = lb.V;
+      float Ub = lb.U;
+      float ErB = lb.Er;
+      float iDeltaRB = lb.iDeltaR;
 
       // 1+(cot^2(theta)) = 1/sin^2(theta)
       float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -269,24 +255,23 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
       // eta=infinity: ~8.5%
       float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
       // multiply the squared sigma onto the squared scattering
-      scatteringInRegion2
-          *= m_config.sigmaScattering * m_config.sigmaScattering;
+      scatteringInRegion2 *=
+          m_config.sigmaScattering * m_config.sigmaScattering;
 
       // clear all vectors used in each inner for loop
       topSpVec.clear();
       curvatures.clear();
       impactParameters.clear();
       for (size_t t = 0; t < numTopSP; t++) {
-
         auto lt = linCircleTop[t];
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
-        float error2 = lt.Er + ErB
-            + 2 * (cotThetaB * lt.cotTheta * covrM + covzM) * iDeltaRB
-                * lt.iDeltaR;
+        float error2 = lt.Er + ErB +
+                       2 * (cotThetaB * lt.cotTheta * covrM + covzM) *
+                           iDeltaRB * lt.iDeltaR;
 
-        float deltaCotTheta  = cotThetaB - lt.cotTheta;
+        float deltaCotTheta = cotThetaB - lt.cotTheta;
         float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
         float error;
         float dCotThetaMinusError2;
@@ -296,8 +281,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
           deltaCotTheta = std::abs(deltaCotTheta);
           // if deltaTheta larger than the scattering for the lower pT cut, skip
           error = std::sqrt(error2);
-          dCotThetaMinusError2
-              = deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
+          dCotThetaMinusError2 =
+              deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
           // avoid taking root of scatteringInRegion
           // if left side of ">" is positive, both sides of unequality can be
           // squared
@@ -315,9 +300,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
         }
         // A and B are evaluated as a function of the circumference parameters
         // x_0 and y_0
-        float A  = (lt.V - Vb) / dU;
+        float A = (lt.V - Vb) / dU;
         float S2 = 1. + A * A;
-        float B  = Vb - A * Ub;
+        float B = Vb - A * Ub;
         float B2 = B * B;
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
@@ -333,9 +318,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
         // from rad to deltaCotTheta
         float p2scatter = pT2scatter * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if (deltaCotTheta2 - error2 > 0
-            && dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering
-                    * m_config.sigmaScattering) {
+        if (deltaCotTheta2 - error2 > 0 &&
+            dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering *
+                                       m_config.sigmaScattering) {
           continue;
         }
         // A and B allow calculation of impact params in U/V plane with linear
@@ -352,19 +337,12 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
         }
       }
       if (!topSpVec.empty()) {
-        std::
-            vector<std::
-                       pair<float,
-                            std::
-                                unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-                sameTrackSeeds;
-        sameTrackSeeds = std::move(
-            m_config.seedFilter->filterSeeds_2SpFixed(*compatBottomSP[b],
-                                                      *spM,
-                                                      topSpVec,
-                                                      curvatures,
-                                                      impactParameters,
-                                                      Zob));
+        std::vector<std::pair<
+            float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+            sameTrackSeeds;
+        sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(
+            *compatBottomSP[b], *spM, topSpVec, curvatures, impactParameters,
+            Zob));
         seedsPerSpM.insert(seedsPerSpM.end(),
                            std::make_move_iterator(sameTrackSeeds.begin()),
                            std::make_move_iterator(sameTrackSeeds.end()));
@@ -376,19 +354,16 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
 }
 
 template <typename external_spacepoint_t>
-void
-Seedfinder<external_spacepoint_t>::transformCoordinates(
+void Seedfinder<external_spacepoint_t>::transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>&               spM,
-    bool                                                           bottom,
-    std::vector<LinCircle>& linCircleVec) const
-{
-  float xM      = spM.x();
-  float yM      = spM.y();
-  float zM      = spM.z();
-  float rM      = spM.radius();
-  float covzM   = spM.covz();
-  float covrM   = spM.covr();
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    std::vector<LinCircle>& linCircleVec) const {
+  float xM = spM.x();
+  float yM = spM.y();
+  float zM = spM.z();
+  float rM = spM.radius();
+  float covzM = spM.covz();
+  float covrM = spM.covr();
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
   for (auto sp : vec) {
@@ -403,7 +378,7 @@ Seedfinder<external_spacepoint_t>::transformCoordinates(
     float y = deltaY * cosPhiM - deltaX * sinPhiM;
     // 1/(length of M -> SP)
     float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-    float iDeltaR  = std::sqrt(iDeltaR2);
+    float iDeltaR = std::sqrt(iDeltaR2);
     //
     int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
     // cot_theta = (deltaZ/deltaR)
@@ -412,7 +387,7 @@ Seedfinder<external_spacepoint_t>::transformCoordinates(
     LinCircle l;
     l.cotTheta = cot_theta;
     // location on z-axis of this SP-duplet
-    l.Zo      = zM - rM * cot_theta;
+    l.Zo = zM - rM * cot_theta;
     l.iDeltaR = iDeltaR;
     // transformation of circle equation (x,y) into linear equation (u,v)
     // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
@@ -423,10 +398,10 @@ Seedfinder<external_spacepoint_t>::transformCoordinates(
     l.U = x * iDeltaR2;
     l.V = y * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    l.Er = ((covzM + sp->covz())
-            + (cot_theta * cot_theta) * (covrM + sp->covr()))
-        * iDeltaR2;
+    l.Er = ((covzM + sp->covz()) +
+            (cot_theta * cot_theta) * (covrM + sp->covr())) *
+           iDeltaR2;
     linCircleVec.push_back(l);
   }
 }
-}  // Acts namespace
+}  // namespace Acts

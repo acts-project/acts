@@ -22,9 +22,8 @@ namespace Acts {
 ///
 /// It extends the IVolumeMaterial base class to describe a simple
 /// homogeneous material in a volume
-class HomogeneousVolumeMaterial : public IVolumeMaterial
-{
-public:
+class HomogeneousVolumeMaterial : public IVolumeMaterial {
+ public:
   /// Default Constructor - defaulted
   HomogeneousVolumeMaterial() = default;
 
@@ -37,14 +36,12 @@ public:
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  const Material&
-  material(const Vector3D& /*position*/) const final
-  {
+  const Material& material(const Vector3D& /*position*/) const final {
     return m_material;
   }
 
-private:
+ private:
   Material m_material;
 };
 
-}  // namespace
+}  // namespace Acts

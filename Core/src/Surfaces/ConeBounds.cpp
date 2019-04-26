@@ -19,93 +19,67 @@
 
 #include "Acts/Utilities/detail/periodic.hpp"
 
-Acts::ConeBounds::ConeBounds(double alpha,
-                             bool   symm,
-                             double halfphi,
+Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
                              double avphi)
-  : ConeBounds(alpha,
-               symm ? -std::numeric_limits<double>::infinity() : 0,
-               std::numeric_limits<double>::infinity(),
-               halfphi,
-               avphi)
-{
-}
+    : ConeBounds(alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
+                 std::numeric_limits<double>::infinity(), halfphi, avphi) {}
 
-Acts::ConeBounds::ConeBounds(double alpha,
-                             double zmin,
-                             double zmax,
-                             double halfphi,
-                             double avphi)
-  : m_alpha(alpha)
-  , m_tanAlpha(std::tan(alpha))
-  , m_zMin(zmin)
-  , m_zMax(zmax)
-  , m_avgPhi(detail::radian_sym(avphi))
-  , m_halfPhi(std::abs(halfphi))
-{
-}
+Acts::ConeBounds::ConeBounds(double alpha, double zmin, double zmax,
+                             double halfphi, double avphi)
+    : m_alpha(alpha),
+      m_tanAlpha(std::tan(alpha)),
+      m_zMin(zmin),
+      m_zMax(zmax),
+      m_avgPhi(detail::radian_sym(avphi)),
+      m_halfPhi(std::abs(halfphi)) {}
 
 Acts::ConeBounds::~ConeBounds() = default;
 
-Acts::ConeBounds*
-Acts::ConeBounds::clone() const
-{
+Acts::ConeBounds* Acts::ConeBounds::clone() const {
   return new ConeBounds(*this);
 }
 
-Acts::SurfaceBounds::BoundsType
-Acts::ConeBounds::type() const
-{
+Acts::SurfaceBounds::BoundsType Acts::ConeBounds::type() const {
   return SurfaceBounds::Cone;
 }
 
-std::vector<TDD_real_t>
-Acts::ConeBounds::valueStore() const
-{
+std::vector<TDD_real_t> Acts::ConeBounds::valueStore() const {
   std::vector<TDD_real_t> values(ConeBounds::bv_length);
-  values[ConeBounds::bv_alpha]         = alpha();
-  values[ConeBounds::bv_minZ]          = minZ();
-  values[ConeBounds::bv_maxZ]          = maxZ();
-  values[ConeBounds::bv_averagePhi]    = averagePhi();
+  values[ConeBounds::bv_alpha] = alpha();
+  values[ConeBounds::bv_minZ] = minZ();
+  values[ConeBounds::bv_maxZ] = maxZ();
+  values[ConeBounds::bv_averagePhi] = averagePhi();
   values[ConeBounds::bv_halfPhiSector] = halfPhiSector();
   return values;
 }
 
 /// Shift r-phi coordinate to be centered around the average phi.
-Acts::Vector2D
-Acts::ConeBounds::shifted(const Acts::Vector2D& lpos) const
-{
+Acts::Vector2D Acts::ConeBounds::shifted(const Acts::Vector2D& lpos) const {
   using Acts::detail::radian_sym;
 
-  auto     x = r(lpos[eLOC_Z]);  // cone radius at the local position
+  auto x = r(lpos[eLOC_Z]);  // cone radius at the local position
   Vector2D shifted;
-  shifted[eLOC_Z]    = lpos[eLOC_Z];
-  shifted[eLOC_RPHI] = std::isnormal(x)
-      ? (x * radian_sym((lpos[eLOC_RPHI] / x) - averagePhi()))
-      : lpos[eLOC_RPHI];
+  shifted[eLOC_Z] = lpos[eLOC_Z];
+  shifted[eLOC_RPHI] =
+      std::isnormal(x) ? (x * radian_sym((lpos[eLOC_RPHI] / x) - averagePhi()))
+                       : lpos[eLOC_RPHI];
   return shifted;
 }
 
-bool
-Acts::ConeBounds::inside(const Acts::Vector2D&      lpos,
-                         const Acts::BoundaryCheck& bcheck) const
-{
+bool Acts::ConeBounds::inside(const Acts::Vector2D& lpos,
+                              const Acts::BoundaryCheck& bcheck) const {
   auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
-  return bcheck.isInside(
-      shifted(lpos), Vector2D(-rphiHalf, minZ()), Vector2D(rphiHalf, maxZ()));
+  return bcheck.isInside(shifted(lpos), Vector2D(-rphiHalf, minZ()),
+                         Vector2D(rphiHalf, maxZ()));
 }
 
-double
-Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
-{
+double Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& lpos) const {
   auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
   return BoundaryCheck(true).distance(
       shifted(lpos), Vector2D(-rphiHalf, minZ()), Vector2D(rphiHalf, maxZ()));
 }
 
-std::ostream&
-Acts::ConeBounds::toStream(std::ostream& sl) const
-{
+std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) "

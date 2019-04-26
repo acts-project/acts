@@ -40,9 +40,8 @@ namespace Acts {
 /// uint8_t gives you 256 Elements (more than we need), with an accuracy of
 /// 1./256, i.e. < 0.5 %. That's better than we can dream of parameterizing
 /// hadronic interactions.
-class ElementFraction
-{
-public:
+class ElementFraction {
+ public:
   /// Default Constructor
   ElementFraction() = default;
 
@@ -51,9 +50,7 @@ public:
   /// @param iz is the z value of the element as an unsigned int
   /// @param ifrac is the associated fraction of that element
   ElementFraction(unsigned int iz, float ifrac)
-    : m_data{{(uint8_t)iz, (uint8_t)(ifrac * double(UCHAR_MAX))}}
-  {
-  }
+      : m_data{{(uint8_t)iz, (uint8_t)(ifrac * double(UCHAR_MAX))}} {}
 
   /// Constructor direct data
   ///
@@ -73,45 +70,29 @@ public:
   /// Assignment operator from base class
   ///
   /// @param ef is the element fraction source object
-  ElementFraction&
-  operator=(const ElementFraction& ef)
-      = default;
+  ElementFraction& operator=(const ElementFraction& ef) = default;
 
   /// Assigment Move Operator
   ///
   /// @param ef is the element fraction source object
-  ElementFraction&
-  operator=(ElementFraction&& ef)
-      = default;
+  ElementFraction& operator=(ElementFraction&& ef) = default;
 
   /// Access to the data itself
-  const std::array<uint8_t, 2>&
-  data() const
-  {
-    return m_data;
-  }
+  const std::array<uint8_t, 2>& data() const { return m_data; }
 
   /// Return in a nice format
   /// @return casts back to an unsigned integer
-  unsigned int
-  element() const
-  {
-    return static_cast<unsigned int>(m_data[0]);
-  }
+  unsigned int element() const { return static_cast<unsigned int>(m_data[0]); }
 
   /// Return in a nice format
   /// @return casts char to an unsigned int and then into double
-  double
-  fraction() const
-  {
+  double fraction() const {
     return (static_cast<unsigned int>(m_data[1]) * s_oneOverUcharMax);
   }
 
   /// Define the equality operator
   /// @param ef is the source ElementFraction for comparison
-  bool
-  operator==(const ElementFraction& ef) const
-  {
+  bool operator==(const ElementFraction& ef) const {
     return (m_data[0] == ef.m_data[0] && m_data[1] == ef.m_data[1]);
   }
 
@@ -120,13 +101,11 @@ public:
   /// most probable fraction
   ///
   /// @param ef is the source ElementFraction for comparison
-  bool
-  operator<(const ElementFraction& ef) const
-  {
+  bool operator<(const ElementFraction& ef) const {
     return (m_data[1] < ef.m_data[1]);
   }
 
-private:
+ private:
   std::array<uint8_t, 2> m_data = {{0, 0}};  //!< the data component
 };
-}
+}  // namespace Acts

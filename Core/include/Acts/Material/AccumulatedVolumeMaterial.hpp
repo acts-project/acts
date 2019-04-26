@@ -23,9 +23,8 @@ namespace Acts {
 ///
 /// It calculates the average of the material classification values when called,
 /// and returns a material with the averaged properties.
-class AccumulatedVolumeMaterial
-{
-public:
+class AccumulatedVolumeMaterial {
+ public:
   /// @brief Default constructor
   AccumulatedVolumeMaterial() = default;
 
@@ -36,17 +35,15 @@ public:
   /// the container
   ///
   /// @param [in] mat Material that will be collected
-  void
-  accumulate(const Material& mat);
+  void accumulate(const Material& mat);
 
   /// @brief Total average of each material classification value stored in the
   /// object independently
   ///
   /// @return Material consisting of the averaged values
-  Material
-  average();
+  Material average();
 
-private:
+ private:
   /// Accumulate the contribution to X0
   float m_totalX0{std::numeric_limits<float>::infinity()};
   /// Accumulate the contribution to L0

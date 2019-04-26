@@ -21,9 +21,8 @@ namespace Acts {
 /// The struct allows this information to be obtained in a consistent
 /// way, or be caller provided.
 
-struct ProtoLayer
-{
-public:
+struct ProtoLayer {
+ public:
   double maxX;
   double minX;
 
@@ -39,10 +38,10 @@ public:
   double maxPhi;
   double minPhi;
 
-  std::pair<double, double> envX   = {0, 0};
-  std::pair<double, double> envY   = {0, 0};
-  std::pair<double, double> envZ   = {0, 0};
-  std::pair<double, double> envR   = {0, 0};
+  std::pair<double, double> envX = {0, 0};
+  std::pair<double, double> envY = {0, 0};
+  std::pair<double, double> envZ = {0, 0};
+  std::pair<double, double> envR = {0, 0};
   std::pair<double, double> envPhi = {0, 0};
 
   /// Constructor
@@ -53,7 +52,7 @@ public:
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(const GeometryContext&             gctx,
+  ProtoLayer(const GeometryContext& gctx,
              const std::vector<const Surface*>& surfaces);
 
   /// Constructor
@@ -64,14 +63,13 @@ public:
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(const GeometryContext&                             gctx,
+  ProtoLayer(const GeometryContext& gctx,
              const std::vector<std::shared_ptr<const Surface>>& surfaces);
 
   // normal empty constructor
   ProtoLayer() = default;
 
-  std::ostream&
-  toStream(std::ostream& sl) const;
+  std::ostream& toStream(std::ostream& sl) const;
 
   /// Calculates the closest radial distance of a line
   ///
@@ -79,16 +77,14 @@ public:
   /// @param pos2 is the second position on the line
   ///
   /// @return is the closest distance
-  double
-  radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
+  double radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 
-private:
+ private:
   /// Helper method which performs the actual min/max calculation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The surfaces to build this protolayer out of
-  void
-  measure(const GeometryContext&             gctx,
-          const std::vector<const Surface*>& surfaces);
+  void measure(const GeometryContext& gctx,
+               const std::vector<const Surface*>& surfaces);
 };
 }  // namespace Acts

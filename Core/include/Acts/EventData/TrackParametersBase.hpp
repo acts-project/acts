@@ -31,9 +31,8 @@ class Surface;
 /// system. The track parameters and their uncertainty are defined in local
 /// reference frame which depends on the associated surface
 /// of the track parameters.
-class TrackParametersBase
-{
-public:
+class TrackParametersBase {
+ public:
   // public typedef's
 
   /// vector type for stored track parameters
@@ -46,44 +45,34 @@ public:
   virtual ~TrackParametersBase() = default;
 
   /// @brief virtual constructor
-  virtual TrackParametersBase*
-  clone() const = 0;
+  virtual TrackParametersBase* clone() const = 0;
 
   /// @brief equality operator
-  virtual bool
-  operator==(const TrackParametersBase& rhs) const = 0;
+  virtual bool operator==(const TrackParametersBase& rhs) const = 0;
 
   /// @brief inequality operator
   ///
   /// @return `not (*this == rhs)`
-  bool
-  operator!=(const TrackParametersBase& rhs) const
-  {
+  bool operator!=(const TrackParametersBase& rhs) const {
     return !(*this == rhs);
   }
 
   /// @brief access position in global coordinate system
   ///
   /// @return 3D vector with global position
-  virtual ActsVectorD<3>
-  position() const = 0;
+  virtual ActsVectorD<3> position() const = 0;
 
   /// @brief access momentum in global coordinate system
   ///
   /// @return 3D vector with global momentum
-  virtual ActsVectorD<3>
-  momentum() const = 0;
+  virtual ActsVectorD<3> momentum() const = 0;
 
   /// @brief access track parameters
   ///
   /// @return Eigen vector of dimension Acts::NGlobalPars with values of the
   /// track parameters
   ///         (in the order as defined by the ParID_t enumeration)
-  ParVector_t
-  parameters() const
-  {
-    return getParameterSet().getParameters();
-  }
+  ParVector_t parameters() const { return getParameterSet().getParameters(); }
 
   /// @brief access track parameter
   ///
@@ -93,9 +82,7 @@ public:
   ///
   /// @sa ParameterSet::get
   template <ParID_t par>
-  ParValue_t
-  get() const
-  {
+  ParValue_t get() const {
     return getParameterSet().template getParameter<par>();
   }
 
@@ -105,9 +92,7 @@ public:
   ///
   /// @return value of the requested track parameter uncertainty
   template <ParID_t par>
-  ParValue_t
-  uncertainty() const
-  {
+  ParValue_t uncertainty() const {
     return getParameterSet().template getUncertainty<par>();
   }
 
@@ -119,38 +104,26 @@ public:
   /// @return raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const CovMatrix_t*
-  covariance() const
-  {
+  const CovMatrix_t* covariance() const {
     return getParameterSet().getCovariance();
   }
 
   /// @brief convenience method to retrieve transverse momentum
-  double
-  pT() const
-  {
-    return VectorHelpers::perp(momentum());
-  }
+  double pT() const { return VectorHelpers::perp(momentum()); }
 
   /// @brief convenience method to retrieve pseudorapidity
-  double
-  eta() const
-  {
-    return VectorHelpers::eta(momentum());
-  }
+  double eta() const { return VectorHelpers::eta(momentum()); }
 
   /// @brief retrieve electric charge
   ///
   /// @return value of electric charge
-  virtual double
-  charge() const = 0;
+  virtual double charge() const = 0;
 
   /// @brief access associated surface defining the coordinate system for track
   ///        parameters and their covariance
   ///
   /// @return associated surface
-  virtual const Surface&
-  referenceSurface() const = 0;
+  virtual const Surface& referenceSurface() const = 0;
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
@@ -164,8 +137,8 @@ public:
   /// surface frame, for measurements with respect to a line this has to be
   /// constructed by the point of clostest approach to the line, for
   /// cylindrical surfaces this is (by convention) the tangential plane.
-  virtual RotationMatrix3D
-  referenceFrame(const GeometryContext& gctx) const = 0;
+  virtual RotationMatrix3D referenceFrame(
+      const GeometryContext& gctx) const = 0;
 
   /// @brief output stream operator
   ///
@@ -174,9 +147,8 @@ public:
   /// TrackParameters::print method.
   ///
   /// @return modified output stream object
-  friend std::ostream&
-  operator<<(std::ostream& out, const TrackParametersBase& tp)
-  {
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const TrackParametersBase& tp) {
     tp.print(out);
     return out;
   }
@@ -185,14 +157,12 @@ public:
   ///
   /// @return ParameterSet object holding parameter values and their covariance
   /// matrix
-  virtual const FullParameterSet&
-  getParameterSet() const = 0;
+  virtual const FullParameterSet& getParameterSet() const = 0;
 
-protected:
+ protected:
   /// @brief print information to output stream
   ///
   /// @return modified output stream object
-  virtual std::ostream&
-  print(std::ostream& sl) const;
+  virtual std::ostream& print(std::ostream& sl) const;
 };
 }  // namespace Acts

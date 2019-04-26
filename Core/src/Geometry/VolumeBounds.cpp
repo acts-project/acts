@@ -13,8 +13,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 
 /**Overload of << operator for std::ostream for debug output*/
-std::ostream&
-Acts::operator<<(std::ostream& sl, const Acts::VolumeBounds& vb)
-{
+std::ostream& Acts::operator<<(std::ostream& sl, const Acts::VolumeBounds& vb) {
   return vb.toStream(sl);
 }

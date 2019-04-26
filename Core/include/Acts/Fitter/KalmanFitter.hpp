@@ -33,9 +33,7 @@ namespace Acts {
 /// surface where to express the fit result
 ///
 /// @note the context objects must be provided
-struct KalmanFitterOptions
-{
-
+struct KalmanFitterOptions {
   /// Deleted default constructor
   KalmanFitterOptions() = delete;
 
@@ -45,16 +43,14 @@ struct KalmanFitterOptions
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
   /// @param rSurface The reference surface for the fit to be expressed at
-  KalmanFitterOptions(std::reference_wrapper<const GeometryContext>      gctx,
+  KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
-                      std::reference_wrapper<const CalibrationContext>   cctx,
+                      std::reference_wrapper<const CalibrationContext> cctx,
                       const Surface* rSurface = nullptr)
-    : geoContext(gctx)
-    , magFieldContext(mctx)
-    , calibrationContext(cctx)
-    , referenceSurface(rSurface)
-  {
-  }
+      : geoContext(gctx),
+        magFieldContext(mctx),
+        calibrationContext(cctx),
+        referenceSurface(rSurface) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -102,15 +98,13 @@ struct KalmanFitterOptions
 /// set of track states into a given track/track particle class
 ///
 /// The void components are provided mainly for unit testing.
-template <typename propagator_t,
-          typename updator_t          = VoidKalmanUpdator,
-          typename smoother_t         = VoidKalmanSmoother,
-          typename calibrator_t       = VoidKalmanComponents,
-          typename input_converter_t  = VoidKalmanComponents,
+template <typename propagator_t, typename updator_t = VoidKalmanUpdator,
+          typename smoother_t = VoidKalmanSmoother,
+          typename calibrator_t = VoidKalmanComponents,
+          typename input_converter_t = VoidKalmanComponents,
           typename output_converter_t = VoidKalmanComponents>
-class KalmanFitter
-{
-public:
+class KalmanFitter {
+ public:
   /// Shorthand definition
   using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
 
@@ -118,14 +112,12 @@ public:
   KalmanFitter() = delete;
 
   /// Constructor from arguments
-  KalmanFitter(propagator_t       pPropagator,
-               input_converter_t  pInputCnv  = input_converter_t(),
+  KalmanFitter(propagator_t pPropagator,
+               input_converter_t pInputCnv = input_converter_t(),
                output_converter_t pOutputCnv = output_converter_t())
-    : m_propagator(std::move(pPropagator))
-    , m_inputConverter(std::move(pInputCnv))
-    , m_outputConverter(std::move(pOutputCnv))
-  {
-  }
+      : m_propagator(std::move(pPropagator)),
+        m_inputConverter(std::move(pInputCnv)),
+        m_outputConverter(std::move(pOutputCnv)) {}
 
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
@@ -140,19 +132,16 @@ public:
   ///
   /// @return the output as an output track
   template <typename input_measurements_t, typename parameters_t>
-  auto
-  fit(input_measurements_t       measurements,
-      const parameters_t&        sParameters,
-      const KalmanFitterOptions& kfOptions) const
-  {
+  auto fit(input_measurements_t measurements, const parameters_t& sParameters,
+           const KalmanFitterOptions& kfOptions) const {
     // Bring the measurements into Acts style
     auto trackStates = m_inputConverter(measurements);
 
     // Create the ActionList and AbortList
-    using KalmanActor  = Actor<decltype(trackStates)>;
+    using KalmanActor = Actor<decltype(trackStates)>;
     using KalmanResult = typename KalmanActor::result_type;
-    using Actors       = ActionList<KalmanActor>;
-    using Aborters     = AbortList<>;
+    using Actors = ActionList<KalmanActor>;
+    using Aborters = AbortList<>;
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
@@ -160,12 +149,12 @@ public:
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.trackStates   = std::move(trackStates);
+    kalmanActor.trackStates = std::move(trackStates);
     kalmanActor.targetSurface = kfOptions.referenceSurface;
 
     // Run the fitter
-    const auto& result
-        = m_propagator.template propagate(sParameters, kalmanOptions).value();
+    const auto& result =
+        m_propagator.template propagate(sParameters, kalmanOptions).value();
 
     /// Get the result of the fit
     auto kalmanResult = result.template get<KalmanResult>();
@@ -174,7 +163,7 @@ public:
     return m_outputConverter(std::move(kalmanResult));
   }
 
-private:
+ private:
   /// The propgator for the transport and material update
   propagator_t m_propagator;
 
@@ -197,26 +186,21 @@ private:
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
   template <typename track_states_t>
-  class Actor
-  {
-  public:
+  class Actor {
+   public:
     using TrackState = typename track_states_t::value_type;
 
     /// Explicit constructor with updator and calibrator
-    Actor(updator_t    pUpdator    = updator_t(),
-          smoother_t   pSmoother   = smoother_t(),
+    Actor(updator_t pUpdator = updator_t(), smoother_t pSmoother = smoother_t(),
           calibrator_t pCalibrator = calibrator_t())
-      : m_updator(std::move(pUpdator))
-      , m_smoother(std::move(pSmoother))
-      , m_calibrator(std::move(pCalibrator))
-    {
-    }
+        : m_updator(std::move(pUpdator)),
+          m_smoother(std::move(pSmoother)),
+          m_calibrator(std::move(pCalibrator)) {}
 
     /// Simple result struct to be returned
     /// It mainly acts as an internal state which is
     /// created for every propagation/extrapolation step
-    struct this_result
-    {
+    struct this_result {
       // Move the result into the fitted states
       track_states_t fittedStates = {};
 
@@ -254,11 +238,8 @@ private:
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& state,
-               const stepper_t&    stepper,
-               result_type&        result) const
-    {
+    void operator()(propagator_state_t& state, const stepper_t& stepper,
+                    result_type& result) const {
       // Initialization:
       // - Only when track states are not set
       if (result.fittedStates.empty()) {
@@ -282,8 +263,8 @@ private:
 
       // Finalization:
       // - When all track states have been handled
-      if (result.processedStates == trackStates.size()
-          and not result.smoothed) {
+      if (result.processedStates == trackStates.size() and
+          not result.smoothed) {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
         // -> Set a stop condition when all track states have been handled
@@ -294,8 +275,8 @@ private:
       // parameters
       if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
         // Transport & bind the parameter to the final surface
-        auto fittedState
-            = stepper.boundState(state.stepping, *targetSurface, true);
+        auto fittedState =
+            stepper.boundState(state.stepping, *targetSurface, true);
         // Assign the fitted parameters
         result.fittedParameters = std::get<BoundParameters>(fittedState);
         // Break the navigation for stopping the Propagation
@@ -303,7 +284,7 @@ private:
       }
     }
 
-  private:
+   private:
     /// @brief Kalman actor operation : initialize
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -313,11 +294,8 @@ private:
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void
-    initialize(propagator_state_t& state,
-               const stepper_t&    stepper,
-               result_type&        result) const
-    {
+    void initialize(propagator_state_t& state, const stepper_t& stepper,
+                    result_type& result) const {
       // Screen output message
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -339,21 +317,18 @@ private:
         auto layer = surface.associatedLayer();
         if (layer == nullptr) {
           // Find the intersection to allocate the layer
-          auto surfaceIntersection
-              = surface.intersectionEstimate(state.geoContext,
-                                             stepper.position(state.stepping),
-                                             stepper.direction(state.stepping),
-                                             state.stepping.navDir,
-                                             false);
+          auto surfaceIntersection = surface.intersectionEstimate(
+              state.geoContext, stepper.position(state.stepping),
+              stepper.direction(state.stepping), state.stepping.navDir, false);
           // Allocate the layer via the tracking geometry search
           if (surfaceIntersection and state.navigation.worldVolume) {
             auto intersection = surfaceIntersection.position;
-            auto layerVolume
-                = state.navigation.worldVolume->lowestTrackingVolume(
+            auto layerVolume =
+                state.navigation.worldVolume->lowestTrackingVolume(
                     state.geoContext, intersection);
-            layer = layerVolume
-                ? layerVolume->associatedLayer(state.geoContext, intersection)
-                : nullptr;
+            layer = layerVolume ? layerVolume->associatedLayer(state.geoContext,
+                                                               intersection)
+                                : nullptr;
           }
         }
         // Insert the surface into the measurementsurfaces multimap
@@ -387,12 +362,8 @@ private:
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void
-    filter(const Surface*      surface,
-           propagator_state_t& state,
-           const stepper_t&    stepper,
-           result_type&        result) const
-    {
+    void filter(const Surface* surface, propagator_state_t& state,
+                const stepper_t& stepper, result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto cindexItr = result.accessIndices.find(surface);
       if (cindexItr != result.accessIndices.end()) {
@@ -410,12 +381,11 @@ private:
 
         // Transport & bind the state to the current surface
         std::tuple<BoundParameters,
-                   typename TrackState::Parameters::CovMatrix_t,
-                   double>
+                   typename TrackState::Parameters::CovMatrix_t, double>
             boundState = stepper.boundState(state.stepping, *surface, true);
         // Fill the track state
-        trackState.parameter.predicted  = std::get<0>(boundState);
-        trackState.parameter.jacobian   = std::get<1>(boundState);
+        trackState.parameter.predicted = std::get<0>(boundState);
+        trackState.parameter.jacobian = std::get<1>(boundState);
         trackState.parameter.pathLength = std::get<2>(boundState);
 
         // If the update is successful, set covariance and
@@ -448,18 +418,15 @@ private:
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void
-    finalize(propagator_state_t& state,
-             const stepper_t&    stepper,
-             result_type&        result) const
-    {
+    void finalize(propagator_state_t& state, const stepper_t& stepper,
+                  result_type& result) const {
       // Remember you smoothed the track states
       result.smoothed = true;
 
       // Sort the TrackStates according to the path length
       TrackStatePathLengthSorter plSorter;
-      std::sort(
-          result.fittedStates.begin(), result.fittedStates.end(), plSorter);
+      std::sort(result.fittedStates.begin(), result.fittedStates.end(),
+                plSorter);
       // Screen output for debugging
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -469,19 +436,20 @@ private:
         return dstream.str();
       });
       // Smooth the track states and obtain the last smoothed track parameters
-      const auto& smoothedPars
-          = m_smoother(state.geoContext, result.fittedStates);
+      const auto& smoothedPars =
+          m_smoother(state.geoContext, result.fittedStates);
       // Update the stepping parameters - in order to progress to destination
       if (smoothedPars) {
         // Update the stepping state
         debugLog(state, [&] {
-          return std::string("Smoothing successful, updating stepping state, "
-                             "set target surface.");
+          return std::string(
+              "Smoothing successful, updating stepping state, "
+              "set target surface.");
         });
         stepper.update(state.stepping, smoothedPars.get());
         // Reverse the propagation direction
-        state.stepping.stepSize
-            = detail::ConstrainedStep(-1. * state.options.maxStepSize);
+        state.stepping.stepSize =
+            detail::ConstrainedStep(-1. * state.options.maxStepSize);
         state.options.direction = backward;
       }
     }
@@ -497,10 +465,8 @@ private:
     /// @param state the propagator state for the debug flag, prefix/length
     /// @param logAction is a callable function that returns a stremable object
     template <typename propagator_state_t>
-    void
-    debugLog(propagator_state_t&                 state,
-             const std::function<std::string()>& logAction) const
-    {
+    void debugLog(propagator_state_t& state,
+                  const std::function<std::string()>& logAction) const {
       if (state.options.debug) {
         std::stringstream dstream;
         dstream << "K->" << std::setw(state.options.debugPfxWidth);

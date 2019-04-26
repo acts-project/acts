@@ -10,9 +10,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-void
-Acts::GenericApproachDescriptor::registerLayer(const Layer& lay)
-{
+void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
   // go through the surfaces
   for (auto& sf : m_surfaceCache) {
     auto mutableSf = const_cast<Surface*>(sf);
@@ -22,19 +20,18 @@ Acts::GenericApproachDescriptor::registerLayer(const Layer& lay)
 
 Acts::ObjectIntersection<Acts::Surface>
 Acts::GenericApproachDescriptor::approachSurface(const GeometryContext& gctx,
-                                                 const Vector3D&        gpos,
-                                                 const Vector3D&        gdir,
-                                                 NavigationDirection    navDir,
-                                                 const BoundaryCheck&   bcheck,
-                                                 CorrFnc corrfnc) const
-{
+                                                 const Vector3D& gpos,
+                                                 const Vector3D& gdir,
+                                                 NavigationDirection navDir,
+                                                 const BoundaryCheck& bcheck,
+                                                 CorrFnc corrfnc) const {
   // the intersection estimates
   std::vector<ObjectIntersection<Surface>> sIntersections;
   sIntersections.reserve(m_surfaceCache.size());
   for (auto& sf : m_surfaceCache) {
     // intersect
-    auto intersection
-        = sf->intersectionEstimate(gctx, gpos, gdir, navDir, bcheck, corrfnc);
+    auto intersection =
+        sf->intersectionEstimate(gctx, gpos, gdir, navDir, bcheck, corrfnc);
     sIntersections.push_back(
         ObjectIntersection<Surface>(intersection, sf, navDir));
   }
@@ -49,13 +46,11 @@ Acts::GenericApproachDescriptor::approachSurface(const GeometryContext& gctx,
 }
 
 const std::vector<const Acts::Surface*>&
-Acts::GenericApproachDescriptor::containedSurfaces() const
-{
+Acts::GenericApproachDescriptor::containedSurfaces() const {
   return m_surfaceCache;
 }
 
 std::vector<const Acts::Surface*>&
-Acts::GenericApproachDescriptor::containedSurfaces()
-{
+Acts::GenericApproachDescriptor::containedSurfaces() {
   return m_surfaceCache;
 }

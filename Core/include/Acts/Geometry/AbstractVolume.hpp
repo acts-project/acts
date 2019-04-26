@@ -19,8 +19,8 @@
 namespace Acts {
 
 class AbstractVolume;
-using BoundarySurfacePtr
-    = std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>;
+using BoundarySurfacePtr =
+    std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>;
 
 class VolumeBounds;
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
@@ -49,15 +49,14 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 ///
 /// @image html VolumeShapes.gif
 
-class AbstractVolume : public Volume
-{
-public:
+class AbstractVolume : public Volume {
+ public:
   /// Constructor with shared Transform3D*, VolumeBounds*
   ///
   /// @param htrans is the transform 3D the positions the volume in global frame
   /// @param volbounds is the boundary definition
   AbstractVolume(std::shared_ptr<const Transform3D> htrans,
-                 VolumeBoundsPtr                    volbounds);
+                 VolumeBoundsPtr volbounds);
 
   /// Copy constructor - deleted
   AbstractVolume(const AbstractVolume& vol) = delete;
@@ -69,23 +68,19 @@ public:
   ~AbstractVolume() override;
 
   /// Assignment operator - deleted
-  AbstractVolume&
-  operator=(const AbstractVolume& vol)
-      = delete;
+  AbstractVolume& operator=(const AbstractVolume& vol) = delete;
 
   /// Method to return the BoundarySurfaces
   ///
   /// @return the vector of boundary surfaces
-  const std::vector<BoundarySurfacePtr>&
-  boundarySurfaces() const;
+  const std::vector<BoundarySurfacePtr>& boundarySurfaces() const;
 
-private:
+ private:
   /// Private method to create BoundarySurfaces
-  void
-  createBoundarySurfaces();
+  void createBoundarySurfaces();
 
   /// boundary Surfaces for this volume
   std::vector<BoundarySurfacePtr> m_boundarySurfaces;
 };
 
-}  // namespace
+}  // namespace Acts

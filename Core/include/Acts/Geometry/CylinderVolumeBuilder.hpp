@@ -24,9 +24,9 @@
 #ifndef ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
 #define ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
 #define takeSmaller(current, test) current = current < test ? current : test
-#define takeBigger(current, test) current  = current > test ? current : test
-#define takeSmallerBigger(cSmallest, cBiggest, test)                           \
-  takeSmaller(cSmallest, test);                                                \
+#define takeBigger(current, test) current = current > test ? current : test
+#define takeSmallerBigger(cSmallest, cBiggest, test) \
+  takeSmaller(cSmallest, test);                      \
   takeBigger(cBiggest, test)
 #endif
 
@@ -38,43 +38,38 @@ class IVolumeMaterial;
 
 /// @enum WrappingCondition
 enum WrappingCondition {
-  Undefined        = 0,  ///< inconsistency detected
-  Attaching        = 1,  ///< attach the volumes
-  Inserting        = 2,  ///< insert the new volume
-  Wrapping         = 3,  ///< wrap the new volume around
+  Undefined = 0,         ///< inconsistency detected
+  Attaching = 1,         ///< attach the volumes
+  Inserting = 2,         ///< insert the new volume
+  Wrapping = 3,          ///< wrap the new volume around
   CentralInserting = 4,  ///< insert the new one into the center
-  CentralWrapping  = 5,  ///< wrap the new central volume around
-  NoWrapping       = 6   ///< no inner volume present - no wrapping needed
+  CentralWrapping = 5,   ///< wrap the new central volume around
+  NoWrapping = 6         ///< no inner volume present - no wrapping needed
 };
 
 /// VolumeConfig struct to understand the layer config
-struct VolumeConfig
-{
-  bool        present{false};   ///< layers are present
-  bool        wrapping{false};  ///< in what way they are binned
-  double      rMin;             ///< min parameter r
-  double      rMax;             ///< max parameter r
-  double      zMin;             ///< min parameter z
-  double      zMax;             ///< max parameter z
-  LayerVector layers;           ///< the layers you have
+struct VolumeConfig {
+  bool present{false};   ///< layers are present
+  bool wrapping{false};  ///< in what way they are binned
+  double rMin;           ///< min parameter r
+  double rMax;           ///< max parameter r
+  double zMin;           ///< min parameter z
+  double zMax;           ///< max parameter z
+  LayerVector layers;    ///< the layers you have
 
   /// Default constructor
   VolumeConfig()
-    : rMin(std::numeric_limits<double>::max())
-    , rMax(std::numeric_limits<double>::lowest())
-    , zMin(std::numeric_limits<double>::max())
-    , zMax(std::numeric_limits<double>::lowest())
-    , layers()
-  {
-  }
+      : rMin(std::numeric_limits<double>::max()),
+        rMax(std::numeric_limits<double>::lowest()),
+        zMin(std::numeric_limits<double>::max()),
+        zMax(std::numeric_limits<double>::lowest()),
+        layers() {}
 
   /// Adapt to the dimensions of another config in Z
   /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
-  void
-  adaptZ(const VolumeConfig& lConfig)
-  {
+  void adaptZ(const VolumeConfig& lConfig) {
     if (lConfig) {
       takeSmaller(zMin, lConfig.zMin);
       takeBigger(zMax, lConfig.zMax);
@@ -85,9 +80,7 @@ struct VolumeConfig
   /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
-  void
-  adaptR(const VolumeConfig& lConfig)
-  {
+  void adaptR(const VolumeConfig& lConfig) {
     if (lConfig) {
       takeSmaller(rMin, lConfig.rMin);
       takeBigger(rMax, lConfig.rMax);
@@ -98,9 +91,7 @@ struct VolumeConfig
   /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
-  void
-  adapt(const VolumeConfig& lConfig)
-  {
+  void adapt(const VolumeConfig& lConfig) {
     adaptZ(lConfig);
     adaptR(lConfig);
   }
@@ -111,17 +102,15 @@ struct VolumeConfig
   ///
   /// @param [in] lConfig is the config to which it should be attached
   /// @note lConfig will be changed
-  void
-  midPointAttachZ(VolumeConfig& lConfig)
-  {
+  void midPointAttachZ(VolumeConfig& lConfig) {
     if (lConfig.zMin >= zMax) {
-      double zMid  = 0.5 * (lConfig.zMin + zMax);
+      double zMid = 0.5 * (lConfig.zMin + zMax);
       lConfig.zMin = zMid;
-      zMax         = zMid;
+      zMax = zMid;
     } else {
-      double zMid  = 0.5 * (zMin + lConfig.zMax);
+      double zMid = 0.5 * (zMin + lConfig.zMax);
       lConfig.zMax = zMid;
-      zMin         = zMid;
+      zMin = zMid;
     }
   }
 
@@ -129,9 +118,7 @@ struct VolumeConfig
   /// it attaches the one volume config to the other one
   ///
   /// @param [in] lConfig is the confit to which it should be attached
-  void
-  attachZ(const VolumeConfig& lConfig)
-  {
+  void attachZ(const VolumeConfig& lConfig) {
     if (lConfig.zMin >= zMax) {
       zMax = lConfig.zMin;
     } else {
@@ -143,9 +130,7 @@ struct VolumeConfig
   ///
   /// @param [in] vConfig is the config against which is checked
   /// @return boolean if the overlap in r exists
-  bool
-  overlapsInR(const VolumeConfig& vConfig) const
-  {
+  bool overlapsInR(const VolumeConfig& vConfig) const {
     if (!present) {
       return false;
     }
@@ -156,9 +141,7 @@ struct VolumeConfig
   ///
   /// @param [in] vConfig is the config against which is checked
   /// @return boolean if the overlap in z exists
-  bool
-  overlapsInZ(const VolumeConfig& vConfig) const
-  {
+  bool overlapsInZ(const VolumeConfig& vConfig) const {
     if (!present) {
       return false;
     }
@@ -169,9 +152,7 @@ struct VolumeConfig
   ///
   /// @param [in] vConfig is the config against which is checked
   /// @return boolean if the current volume wraps the vConfig fully
-  bool
-  wraps(const VolumeConfig& vConfig) const
-  {
+  bool wraps(const VolumeConfig& vConfig) const {
     if ((zMax <= vConfig.zMin) || (zMin >= vConfig.zMax)) {
       return true;
     }
@@ -181,34 +162,26 @@ struct VolumeConfig
   /// Check if contained full set
   ///
   /// @param [in] vConfig is the config against which is checked
-  bool
-  contains(const VolumeConfig& vConfig) const
-  {
+  bool contains(const VolumeConfig& vConfig) const {
     return (containsInR(vConfig) && containsInZ(vConfig));
   }
 
   /// Check if contained radially
   ///
   /// @param [in] vConfig is the config against which is checked
-  bool
-  containsInR(const VolumeConfig& vConfig) const
-  {
+  bool containsInR(const VolumeConfig& vConfig) const {
     return (rMin >= vConfig.rMax);
   }
 
   /// Check if contained longitudinally
   ///
   /// @param [in] vConfig is the config against which is checked
-  bool
-  containsInZ(const VolumeConfig& vConfig) const
-  {
+  bool containsInZ(const VolumeConfig& vConfig) const {
     return (vConfig.zMin > zMin && vConfig.zMax < zMax);
   }
 
   /// Method for output formatting
-  std::string
-  toString() const
-  {
+  std::string toString() const {
     /// for screen output
     std::stringstream sl;
     sl << rMin << ", " << rMax << " / " << zMin << ", " << zMax;
@@ -220,9 +193,8 @@ struct VolumeConfig
 };
 
 /// @brief The WrappingSetup that is happening here
-struct WrappingConfig
-{
-public:
+struct WrappingConfig {
+ public:
   /// the new volumes
   VolumeConfig nVolumeConfig;
   VolumeConfig cVolumeConfig;
@@ -241,23 +213,21 @@ public:
   VolumeConfig externalVolumeConfig;
 
   // WrappingCondition
-  WrappingCondition wCondition       = Undefined;
-  std::string       wConditionScreen = "[left untouched]";
+  WrappingCondition wCondition = Undefined;
+  std::string wConditionScreen = "[left untouched]";
 
   /// constructor
   WrappingConfig() = default;
 
   /// configure the new Volume
-  void
-  configureContainerVolume()
-  {
+  void configureContainerVolume() {
     // set the container to be present
     containerVolumeConfig.present = true;
-    std::string wConditionAddon   = "";
+    std::string wConditionAddon = "";
     // if we have more than one config present
-    if ((nVolumeConfig && cVolumeConfig) || (cVolumeConfig && pVolumeConfig)
-        || (nVolumeConfig && pVolumeConfig)) {
-      wCondition       = Wrapping;
+    if ((nVolumeConfig && cVolumeConfig) || (cVolumeConfig && pVolumeConfig) ||
+        (nVolumeConfig && pVolumeConfig)) {
+      wCondition = Wrapping;
       wConditionScreen = "grouped to ";
     }
     // adapt the new volume config to the existing configs
@@ -295,9 +265,7 @@ public:
   }
 
   /// wrap, insert, attach
-  void
-  wrapInsertAttach()
-  {
+  void wrapInsertAttach() {
     // action is only needed if an existing volume
     // is present
     if (existingVolumeConfig) {
@@ -307,13 +275,13 @@ public:
         if (nVolumeConfig && nVolumeConfig.zMax < existingVolumeConfig.zMin) {
           nVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
-          wCondition       = Attaching;
+          wCondition = Attaching;
           wConditionScreen = "[n attched]";
         }
         if (pVolumeConfig && pVolumeConfig.zMin > existingVolumeConfig.zMax) {
           pVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
-          wCondition       = Attaching;
+          wCondition = Attaching;
           wConditionScreen = "[p attched]";
         }
         // see if inner glue volumes are needed
@@ -351,7 +319,7 @@ public:
           cVolumeConfig.rMax = containerVolumeConfig.rMax;
           pVolumeConfig.rMax = containerVolumeConfig.rMax;
           // will wrap the new volume(s) around existing
-          wCondition       = Wrapping;
+          wCondition = Wrapping;
           wConditionScreen = "[fully wrapped]";
         } else if (existingVolumeConfig.rMin > containerVolumeConfig.rMax) {
           // full insertion case
@@ -364,7 +332,7 @@ public:
           cVolumeConfig.rMin = containerVolumeConfig.rMin;
           pVolumeConfig.rMin = containerVolumeConfig.rMin;
           // will insert the new volume(s) into existing
-          wCondition       = Inserting;
+          wCondition = Inserting;
           wConditionScreen = "[fully inserted]";
         } else if (cVolumeConfig.wraps(existingVolumeConfig)) {
           // central wrapping case
@@ -377,7 +345,7 @@ public:
           cVolumeConfig.rMin = existingVolumeConfig.rMax;
           pVolumeConfig.rMin = existingVolumeConfig.rMin;
           // set the Central Wrapping
-          wCondition       = CentralWrapping;
+          wCondition = CentralWrapping;
           wConditionScreen = "[centrally wrapped]";
         } else if (existingVolumeConfig.wraps(cVolumeConfig)) {
           // central insertion case
@@ -390,7 +358,7 @@ public:
           cVolumeConfig.rMin = containerVolumeConfig.rMin;
           pVolumeConfig.rMin = containerVolumeConfig.rMin;
           // set the Central Wrapping
-          wCondition       = CentralWrapping;
+          wCondition = CentralWrapping;
           wConditionScreen = "[centrally inserted]";
         }
 
@@ -399,10 +367,10 @@ public:
         // the gap reference is either the container for FULL wrapping,
         // insertion
         // or it is the centralVolume for central wrapping, insertion
-        VolumeConfig referenceVolume
-            = (wCondition == Wrapping || wCondition == Inserting)
-            ? containerVolumeConfig
-            : cVolumeConfig;
+        VolumeConfig referenceVolume =
+            (wCondition == Wrapping || wCondition == Inserting)
+                ? containerVolumeConfig
+                : cVolumeConfig;
         // - at the negative sector
         if (existingVolumeConfig.zMin > referenceVolume.zMin) {
           fGapVolumeConfig.present = true;
@@ -437,9 +405,7 @@ public:
   }
 
   /// Method for output formatting
-  std::string
-  toString() const
-  {
+  std::string toString() const {
     // for screen output
     std::stringstream sl;
     if (containerVolumeConfig) {
@@ -495,13 +461,11 @@ public:
 /// barrel and the third the layers of the positive endcap. If the one of these
 /// pointers is a nullptr no layers will be created for this volume
 
-class CylinderVolumeBuilder : public ITrackingVolumeBuilder
-{
-public:
+class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
+ public:
   /// @struct Config
   /// Nested configuration struct for this CylinderVolumeBuilder
-  struct Config
-  {
+  struct Config {
     /// the trackign volume helper for construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
     /// the string based indenfication
@@ -515,8 +479,8 @@ public:
     /// needed to build layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
     /// the additional envelope in R to create rMin, rMax
-    std::pair<double, double> layerEnvelopeR
-        = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
+    std::pair<double, double> layerEnvelopeR = {1. * Acts::units::_mm,
+                                                1. * Acts::units::_mm};
     /// the additional envelope in Z to create zMin, zMax
     double layerEnvelopeZ = 10. * Acts::units::_mm;
 
@@ -528,10 +492,9 @@ public:
   ///
   /// @param [in] cvbConfig is the configuraiton struct to steer the builder
   /// @param [in] logger logging instance
-  CylinderVolumeBuilder(const Config&                 cvbConfig,
-                        std::unique_ptr<const Logger> logger
-                        = getDefaultLogger("CylinderVolumeBuilder",
-                                           Logging::INFO));
+  CylinderVolumeBuilder(const Config& cvbConfig,
+                        std::unique_ptr<const Logger> logger = getDefaultLogger(
+                            "CylinderVolumeBuilder", Logging::INFO));
 
   /// Destructor
   ~CylinderVolumeBuilder() override;
@@ -545,28 +508,24 @@ public:
   /// @return a mutable pointer to a new TrackingVolume which includes the
   ///         optionally provided exisitingVolume consistently for further
   ///         processing
-  MutableTrackingVolumePtr
-  trackingVolume(const GeometryContext& gctx,
-                 TrackingVolumePtr      existingVolume = nullptr,
-                 VolumeBoundsPtr externalBounds = nullptr) const override;
+  MutableTrackingVolumePtr trackingVolume(
+      const GeometryContext& gctx, TrackingVolumePtr existingVolume = nullptr,
+      VolumeBoundsPtr externalBounds = nullptr) const override;
 
   /// Set configuration method
   ///
   /// @param [in] cvbConfig is the new configuration to be set
-  void
-  setConfiguration(const Config& cvbConfig);
+  void setConfiguration(const Config& cvbConfig);
 
   /// Get configuration method
   ///
   /// @return a copy of the config object
-  Config
-  getConfiguration() const;
+  Config getConfiguration() const;
 
   /// set logging instance
   ///
   /// @param [in] newLogger is the logging istance to be set
-  void
-  setLogger(std::unique_ptr<const Logger> newLogger);
+  void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Analyze the layer config to gather needed dimension
   ///
@@ -574,21 +533,17 @@ public:
   /// @param [in] lVector is the vector of layers that are parsed
   ///
   /// @return a VolumeConfig representing this layer
-  VolumeConfig
-  analyzeLayers(const GeometryContext& gctx, const LayerVector& lVector) const;
+  VolumeConfig analyzeLayers(const GeometryContext& gctx,
+                             const LayerVector& lVector) const;
 
-private:
+ private:
   /// Configuration struct
   Config m_cfg;
 
   /// Private access to the logger
   ///
   /// @return a const reference to the logger
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -605,19 +560,16 @@ private:
   /// @param [in] sign distinguishes inside/outside testing
   ///
   /// @return boolean that indicates the test result
-  bool
-  checkLayerContainment(const GeometryContext& gctx,
-                        VolumeConfig&          layerConfig,
-                        const VolumeConfig&    insideConfig,
-                        const VolumeConfig&    volumeConfig,
-                        int                    sign) const;
+  bool checkLayerContainment(const GeometryContext& gctx,
+                             VolumeConfig& layerConfig,
+                             const VolumeConfig& insideConfig,
+                             const VolumeConfig& volumeConfig, int sign) const;
 };
 
 /// Return the configuration object
-inline CylinderVolumeBuilder::Config
-CylinderVolumeBuilder::getConfiguration() const
-{
+inline CylinderVolumeBuilder::Config CylinderVolumeBuilder::getConfiguration()
+    const {
   return m_cfg;
 }
 
-}  // namespace
+}  // namespace Acts

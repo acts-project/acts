@@ -14,42 +14,37 @@ namespace Acts {
 
 namespace Logging {
 
-  /// @brief mirror debug message
+/// @brief mirror debug message
+///
+/// This is just a fun example decorator which mirrors the debug message.
+class MirrorOutputDecorator final : public OutputDecorator {
+ public:
+  /// @brief constructor
   ///
-  /// This is just a fun example decorator which mirrors the debug message.
-  class MirrorOutputDecorator final : public OutputDecorator
-  {
-  public:
-    /// @brief constructor
-    ///
-    /// @param [in] wrappee  output print policy object to be wrapped
-    /// @param [in] maxWidth maximum width of field used for name
-    MirrorOutputDecorator(std::unique_ptr<OutputPrintPolicy> wrappee,
-                          unsigned int                       maxWidth = 180)
-      : OutputDecorator(std::move(wrappee)), m_maxWidth(maxWidth)
-    {
-    }
+  /// @param [in] wrappee  output print policy object to be wrapped
+  /// @param [in] maxWidth maximum width of field used for name
+  MirrorOutputDecorator(std::unique_ptr<OutputPrintPolicy> wrappee,
+                        unsigned int maxWidth = 180)
+      : OutputDecorator(std::move(wrappee)), m_maxWidth(maxWidth) {}
 
-    /// @brief flush the debug message to the destination stream
-    ///
-    /// @param [in] lvl   debug level of debug message
-    /// @param [in] input text of debug message
-    ///
-    /// This function inverts the given string and flushes it to the right.
-    void
-    flush(const Level& lvl, const std::ostringstream& input) override
-    {
-      std::ostringstream os;
-      std::string        text = input.str();
-      std::reverse(text.begin(), text.end());
-      os << std::right << std::setw(m_maxWidth) << text;
-      OutputDecorator::flush(lvl, os);
-    }
+  /// @brief flush the debug message to the destination stream
+  ///
+  /// @param [in] lvl   debug level of debug message
+  /// @param [in] input text of debug message
+  ///
+  /// This function inverts the given string and flushes it to the right.
+  void flush(const Level& lvl, const std::ostringstream& input) override {
+    std::ostringstream os;
+    std::string text = input.str();
+    std::reverse(text.begin(), text.end());
+    os << std::right << std::setw(m_maxWidth) << text;
+    OutputDecorator::flush(lvl, os);
+  }
 
-  private:
-    /// maximum width of field for printing the name
-    unsigned int m_maxWidth;
-  };
+ private:
+  /// maximum width of field for printing the name
+  unsigned int m_maxWidth;
+};
 
 }  // namespace Logging
 
@@ -64,11 +59,9 @@ namespace Logging {
 /// from right to left.
 ///
 /// @return pointer to logging instance
-std::unique_ptr<const Logger>
-getDefaultLogger(const std::string&    name,
-                 const Logging::Level& lvl,
-                 std::ostream*         log_stream)
-{
+std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
+                                               const Logging::Level& lvl,
+                                               std::ostream* log_stream) {
   using namespace Logging;
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(

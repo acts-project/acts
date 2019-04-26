@@ -24,37 +24,31 @@ namespace Acts {
 
 /// @brief the AtlasStepper implementation for the
 template <typename bfield_t>
-class AtlasStepper
-{
-
+class AtlasStepper {
   // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
-  struct s
-  {
+  struct s {
     using type = BoundParameters;
   };
 
   // Unless S is int, then it maps to CurvilinearParameters ...
   template <typename T>
-  struct s<T, int>
-  {
+  struct s<T, int> {
     using type = CurvilinearParameters;
   };
 
-public:
+ public:
   using cstep = detail::ConstrainedStep;
 
-  using Jacobian         = ActsMatrixD<5, 5>;
-  using Covariance       = ActsSymMatrixD<5>;
-  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
+  using Jacobian = ActsMatrixD<5, 5>;
+  using Covariance = ActsSymMatrixD<5>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
   using Corrector = VoidIntersectionCorrector;
 
   /// @brief Nested State struct for the local caching
-  struct State
-  {
-
+  struct State {
     /// Constructor
     ///
     /// @tparams Type of TrackParameters
@@ -65,31 +59,29 @@ public:
     /// @param[in] ndir The navigation direction w.r.t. parameters
     /// @param[in] ssize the steps size limitation
     template <typename Parameters>
-    State(std::reference_wrapper<const GeometryContext>      gctx,
+    State(std::reference_wrapper<const GeometryContext> gctx,
           std::reference_wrapper<const MagneticFieldContext> mctx,
-          const Parameters&                                  pars,
-          NavigationDirection                                ndir = forward,
+          const Parameters& pars, NavigationDirection ndir = forward,
           double ssize = std::numeric_limits<double>::max())
-      : state_ready(false)
-      , navDir(ndir)
-      , useJacobian(false)
-      , step(0.)
-      , maxPathLength(0.)
-      , mcondition(false)
-      , needgradient(false)
-      , newfield(true)
-      , field(0., 0., 0.)
-      , covariance(nullptr)
-      , stepSize(ndir * std::abs(ssize))
-      , fieldCache(mctx)
-      , geoContext(gctx)
-    {
+        : state_ready(false),
+          navDir(ndir),
+          useJacobian(false),
+          step(0.),
+          maxPathLength(0.),
+          mcondition(false),
+          needgradient(false),
+          newfield(true),
+          field(0., 0., 0.),
+          covariance(nullptr),
+          stepSize(ndir * std::abs(ssize)),
+          fieldCache(mctx),
+          geoContext(gctx) {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
       // this is a nasty but working solution for the stepper state without
       // functions
 
       const ActsVectorD<3> pos = pars.position();
-      const auto           Vp  = pars.parameters();
+      const auto Vp = pars.parameters();
 
       double Sf, Cf, Ce, Se;
       Sf = sin(Vp(2));
@@ -114,24 +106,24 @@ public:
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
+        covariance = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
         covTransport = true;
-        useJacobian  = true;
+        useJacobian = true;
         const auto transform = pars.referenceFrame(geoContext);
 
-        pVector[7]  = transform(0, eLOC_0);
+        pVector[7] = transform(0, eLOC_0);
         pVector[14] = transform(0, eLOC_1);
         pVector[21] = 0.;
         pVector[28] = 0.;
         pVector[35] = 0.;  // dX /
 
-        pVector[8]  = transform(1, eLOC_0);
+        pVector[8] = transform(1, eLOC_0);
         pVector[15] = transform(1, eLOC_1);
         pVector[22] = 0.;
         pVector[29] = 0.;
         pVector[36] = 0.;  // dY /
 
-        pVector[9]  = transform(2, eLOC_0);
+        pVector[9] = transform(2, eLOC_0);
         pVector[16] = transform(2, eLOC_1);
         pVector[23] = 0.;
         pVector[30] = 0.;
@@ -169,25 +161,24 @@ public:
         const auto& surface = pars.referenceSurface();
         // the disc needs polar coordinate adaptations
         if (surface.type() == Surface::Disc) {
-          double lCf   = cos(Vp[1]);
-          double lSf   = sin(Vp[1]);
+          double lCf = cos(Vp[1]);
+          double lSf = sin(Vp[1]);
           double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
           double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
-          double d0    = lCf * Ax[0] + lSf * Ay[0];
-          double d1    = lCf * Ax[1] + lSf * Ay[1];
-          double d2    = lCf * Ax[2] + lSf * Ay[2];
-          pVector[7]   = d0;
-          pVector[8]   = d1;
-          pVector[9]   = d2;
-          pVector[14]  = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
-          pVector[15]  = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
-          pVector[16]  = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
+          double d0 = lCf * Ax[0] + lSf * Ay[0];
+          double d1 = lCf * Ax[1] + lSf * Ay[1];
+          double d2 = lCf * Ax[2] + lSf * Ay[2];
+          pVector[7] = d0;
+          pVector[8] = d1;
+          pVector[9] = d2;
+          pVector[14] = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
+          pVector[15] = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
+          pVector[16] = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
         }
         // the line needs components that relate direction change
         // with global frame change
-        if (surface.type() == Surface::Perigee
-            || surface.type() == Surface::Straw) {
-
+        if (surface.type() == Surface::Perigee ||
+            surface.type() == Surface::Straw) {
           // sticking to the nomenclature of the original RkPropagator
           // - axis pointing along the drift/transverse direction
           double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
@@ -236,21 +227,21 @@ public:
     bool state_ready = false;
     // configuration
     NavigationDirection navDir;
-    bool                useJacobian;
-    double              step;
-    double              maxPathLength;
-    bool                mcondition;
-    bool                needgradient;
-    bool                newfield;
+    bool useJacobian;
+    double step;
+    double maxPathLength;
+    bool mcondition;
+    bool needgradient;
+    bool newfield;
     // internal parameters to be used
     Vector3D field;
-    double   pVector[64];
+    double pVector[64];
     // result
     double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
     const ActsSymMatrixD<NGlobalPars>* covariance;
-    Covariance                         cov          = Covariance::Zero();
-    bool                               covTransport = false;
-    double                             jacobian[NGlobalPars * NGlobalPars];
+    Covariance cov = Covariance::Zero();
+    bool covTransport = false;
+    double jacobian[NGlobalPars * NGlobalPars];
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -267,7 +258,7 @@ public:
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
-    bool        debug       = false;
+    bool debug = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
@@ -286,36 +277,26 @@ public:
   /// @param [in,out] state is the stepper state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D
-  getField(State& state, const Vector3D& pos) const
-  {
+  Vector3D getField(State& state, const Vector3D& pos) const {
     // get the field from the cell
     state.field = m_bField.getField(pos, state.fieldCache);
     return state.field;
   }
 
-  Vector3D
-  position(const State& state) const
-  {
+  Vector3D position(const State& state) const {
     return Vector3D(state.pVector[0], state.pVector[1], state.pVector[2]);
   }
 
-  Vector3D
-  direction(const State& state) const
-  {
+  Vector3D direction(const State& state) const {
     return Vector3D(state.pVector[3], state.pVector[4], state.pVector[5]);
   }
 
-  double
-  momentum(const State& state) const
-  {
+  double momentum(const State& state) const {
     return 1. / std::abs(state.pVector[6]);
   }
 
   /// Charge access
-  double
-  charge(const State& state) const
-  {
+  double charge(const State& state) const {
     return state.pVector[6] > 0. ? 1. : -1.;
   }
 
@@ -325,11 +306,9 @@ public:
   /// @param [in] surface Surface that is tested
   ///
   /// @return Boolean statement if surface is reached by state
-  bool
-  surfaceReached(const State& state, const Surface* surface) const
-  {
-    return surface->isOnSurface(
-        state.geoContext, position(state), direction(state), true);
+  bool surfaceReached(const State& state, const Surface* surface) const {
+    return surface->isOnSurface(state.geoContext, position(state),
+                                direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -344,10 +323,8 @@ public:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  BoundState
-  boundState(State& state, const Surface& surface, bool /*unused*/) const
-  {
-
+  BoundState boundState(State& state, const Surface& surface,
+                        bool /*unused*/) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
 
@@ -364,15 +341,11 @@ public:
     }
 
     // Fill the end parameters
-    BoundParameters parameters(state.geoContext,
-                               std::move(cov),
-                               gp,
-                               mom,
-                               charge(state),
-                               surface.getSharedPtr());
+    BoundParameters parameters(state.geoContext, std::move(cov), gp, mom,
+                               charge(state), surface.getSharedPtr());
 
-    return BoundState(
-        std::move(parameters), state.jacobian, state.pathAccumulated);
+    return BoundState(std::move(parameters), state.jacobian,
+                      state.pathAccumulated);
   }
 
   /// Create and return a curvilinear state at the current position
@@ -386,9 +359,7 @@ public:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  CurvilinearState
-  curvilinearState(State& state, bool /*unused*/) const
-  {
+  CurvilinearState curvilinearState(State& state, bool /*unused*/) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     //
@@ -404,24 +375,22 @@ public:
 
     CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state));
 
-    return CurvilinearState(
-        std::move(parameters), state.jacobian, state.pathAccumulated);
+    return CurvilinearState(std::move(parameters), state.jacobian,
+                            state.pathAccumulated);
   }
 
   /// The state update method
   ///
   /// @param [in,out] state The stepper state for
   /// @param [in] pars The new track parameters at start
-  void
-  update(State& state, const BoundParameters& pars) const
-  {
+  void update(State& state, const BoundParameters& pars) const {
     // state is ready - noting to do
     if (state.state_ready) {
       return;
     }
 
     const ActsVectorD<3> pos = pars.position();
-    const auto           Vp  = pars.parameters();
+    const auto Vp = pars.parameters();
 
     double Sf, Cf, Ce, Se;
     Sf = sin(Vp(2));
@@ -446,23 +415,23 @@ public:
     // prepare the jacobian if we have a covariance
     if (pars.covariance()) {
       // copy the covariance matrix
-      state.covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
+      state.covariance = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
       state.covTransport = true;
-      state.useJacobian  = true;
+      state.useJacobian = true;
       const auto transform = pars.referenceFrame(state.geoContext);
-      state.pVector[7]     = transform(0, eLOC_0);
-      state.pVector[14]    = transform(0, eLOC_1);
-      state.pVector[21]    = 0.;
-      state.pVector[28]    = 0.;
-      state.pVector[35]    = 0.;  // dX /
+      state.pVector[7] = transform(0, eLOC_0);
+      state.pVector[14] = transform(0, eLOC_1);
+      state.pVector[21] = 0.;
+      state.pVector[28] = 0.;
+      state.pVector[35] = 0.;  // dX /
 
-      state.pVector[8]  = transform(1, eLOC_0);
+      state.pVector[8] = transform(1, eLOC_0);
       state.pVector[15] = transform(1, eLOC_1);
       state.pVector[22] = 0.;
       state.pVector[29] = 0.;
       state.pVector[36] = 0.;  // dY /
 
-      state.pVector[9]  = transform(2, eLOC_0);
+      state.pVector[9] = transform(2, eLOC_0);
       state.pVector[16] = transform(2, eLOC_1);
       state.pVector[23] = 0.;
       state.pVector[30] = 0.;
@@ -500,25 +469,24 @@ public:
       const auto& surface = pars.referenceSurface();
       // the disc needs polar coordinate adaptations
       if (surface.type() == Surface::Disc) {
-        double lCf        = cos(Vp[1]);
-        double lSf        = sin(Vp[1]);
-        double Ax[3]      = {transform(0, 0), transform(1, 0), transform(2, 0)};
-        double Ay[3]      = {transform(0, 1), transform(1, 1), transform(2, 1)};
-        double d0         = lCf * Ax[0] + lSf * Ay[0];
-        double d1         = lCf * Ax[1] + lSf * Ay[1];
-        double d2         = lCf * Ax[2] + lSf * Ay[2];
-        state.pVector[7]  = d0;
-        state.pVector[8]  = d1;
-        state.pVector[9]  = d2;
+        double lCf = cos(Vp[1]);
+        double lSf = sin(Vp[1]);
+        double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+        double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+        double d0 = lCf * Ax[0] + lSf * Ay[0];
+        double d1 = lCf * Ax[1] + lSf * Ay[1];
+        double d2 = lCf * Ax[2] + lSf * Ay[2];
+        state.pVector[7] = d0;
+        state.pVector[8] = d1;
+        state.pVector[9] = d2;
         state.pVector[14] = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
         state.pVector[15] = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
         state.pVector[16] = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
       }
       // the line needs components that relate direction change
       // with global frame change
-      if (surface.type() == Surface::Perigee
-          || surface.type() == Surface::Straw) {
-
+      if (surface.type() == Surface::Perigee ||
+          surface.type() == Surface::Straw) {
         // sticking to the nomenclature of the original RkPropagator
         // - axis pointing along the drift/transverse direction
         double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
@@ -528,8 +496,8 @@ public:
         double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
 
         // projection of direction onto normal vector of reference frame
-        double PC = state.pVector[3] * C[0] + state.pVector[4] * C[1]
-            + state.pVector[5] * C[2];
+        double PC = state.pVector[3] * C[0] + state.pVector[4] * C[1] +
+                    state.pVector[5] * C[2];
         double Bn = 1. / PC;
 
         double Bx2 = -A[2] * state.pVector[25];
@@ -569,12 +537,8 @@ public:
   /// @param uposition the updated position
   /// @param udirection the updated direction
   /// @param p the updated momentum value
-  void
-  update(State&          state,
-         const Vector3D& uposition,
-         const Vector3D& udirection,
-         double          up) const
-  {
+  void update(State& state, const Vector3D& uposition,
+              const Vector3D& udirection, double up) const {
     // update the vector
     state.pVector[0] = uposition[0];
     state.pVector[1] = uposition[1];
@@ -586,9 +550,7 @@ public:
   }
 
   /// Return a corrector
-  VoidIntersectionCorrector
-  corrector(State& /*unused*/) const
-  {
+  VoidIntersectionCorrector corrector(State& /*unused*/) const {
     return VoidIntersectionCorrector();
   }
 
@@ -601,9 +563,7 @@ public:
   /// reinitialized at the new position
   ///
   /// @return the full transport jacobian
-  void
-  covarianceTransport(State& state, bool /*unused*/) const
-  {
+  void covarianceTransport(State& state, bool /*unused*/) const {
     double P[45];
     for (unsigned int i = 0; i < 45; ++i) {
       P[i] = state.pVector[i];
@@ -630,7 +590,7 @@ public:
     }
 
     double Ay[3] = {-Ax[1] * P[5], Ax[0] * P[5], An};
-    double S[3]  = {P[3], P[4], P[5]};
+    double S[3] = {P[3], P[4], P[5]};
 
     double A = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
     if (A != 0.) {
@@ -679,12 +639,12 @@ public:
 
     double P3, P4, C = P[3] * P[3] + P[4] * P[4];
     if (C > 1.e-20) {
-      C  = 1. / C;
+      C = 1. / C;
       P3 = P[3] * C;
       P4 = P[4] * C;
-      C  = -sqrt(C);
+      C = -sqrt(C);
     } else {
-      C  = -1.e10;
+      C = -1.e10;
       P3 = 1.;
       P4 = 0.;
     }
@@ -698,14 +658,14 @@ public:
     state.jacobian[4] = Ax[0] * P[35] + Ax[1] * P[36];  // dL0/dCM
 
     state.jacobian[5] = Ay[0] * P[7] + Ay[1] * P[8] + Ay[2] * P[9];  // dL1/dL0
-    state.jacobian[6]
-        = Ay[0] * P[14] + Ay[1] * P[15] + Ay[2] * P[16];  // dL1/dL1
-    state.jacobian[7]
-        = Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
-    state.jacobian[8]
-        = Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
-    state.jacobian[9]
-        = Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
+    state.jacobian[6] =
+        Ay[0] * P[14] + Ay[1] * P[15] + Ay[2] * P[16];  // dL1/dL1
+    state.jacobian[7] =
+        Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
+    state.jacobian[8] =
+        Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
+    state.jacobian[9] =
+        Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
 
     state.jacobian[10] = P3 * P[11] - P4 * P[10];  // dPhi/dL0
     state.jacobian[11] = P3 * P[18] - P4 * P[17];  // dPhi/dL1
@@ -741,11 +701,8 @@ public:
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @param [in] reinitialize is a flag to steer whether the state should be
   /// reinitialized at the new position
-  void
-  covarianceTransport(State&         state,
-                      const Surface& surface,
-                      bool /*unused*/) const
-  {
+  void covarianceTransport(State& state, const Surface& surface,
+                           bool /*unused*/) const {
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
     mom /= std::abs(state.pVector[6]);
@@ -762,11 +719,11 @@ public:
 
     double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
     double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
-    double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
+    double S[3] = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
 
     // this is the projection of direction onto the local normal vector
-    double A = state.pVector[3] * S[0] + state.pVector[4] * S[1]
-        + state.pVector[5] * S[2];
+    double A = state.pVector[3] * S[0] + state.pVector[4] * S[1] +
+               state.pVector[5] * S[2];
 
     if (A != 0.) {
       A = 1. / A;
@@ -776,30 +733,30 @@ public:
     S[1] *= A;
     S[2] *= A;
 
-    double s0 = state.pVector[7] * S[0] + state.pVector[8] * S[1]
-        + state.pVector[9] * S[2];
-    double s1 = state.pVector[14] * S[0] + state.pVector[15] * S[1]
-        + state.pVector[16] * S[2];
-    double s2 = state.pVector[21] * S[0] + state.pVector[22] * S[1]
-        + state.pVector[23] * S[2];
-    double s3 = state.pVector[28] * S[0] + state.pVector[29] * S[1]
-        + state.pVector[30] * S[2];
-    double s4 = state.pVector[35] * S[0] + state.pVector[36] * S[1]
-        + state.pVector[37] * S[2];
+    double s0 = state.pVector[7] * S[0] + state.pVector[8] * S[1] +
+                state.pVector[9] * S[2];
+    double s1 = state.pVector[14] * S[0] + state.pVector[15] * S[1] +
+                state.pVector[16] * S[2];
+    double s2 = state.pVector[21] * S[0] + state.pVector[22] * S[1] +
+                state.pVector[23] * S[2];
+    double s3 = state.pVector[28] * S[0] + state.pVector[29] * S[1] +
+                state.pVector[30] * S[2];
+    double s4 = state.pVector[35] * S[0] + state.pVector[36] * S[1] +
+                state.pVector[37] * S[2];
 
     // in case of line-type surfaces - we need to take into account that
     // the reference frame changes with variations of all local
     // parameters
-    if (surface.type() == Surface::Straw
-        || surface.type() == Surface::Perigee) {
+    if (surface.type() == Surface::Straw ||
+        surface.type() == Surface::Perigee) {
       // vector from position to center
       double x = state.pVector[0] - surface.center(state.geoContext).x();
       double y = state.pVector[1] - surface.center(state.geoContext).y();
       double z = state.pVector[2] - surface.center(state.geoContext).z();
 
       // this is the projection of the direction onto the local y axis
-      double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1]
-          + state.pVector[5] * Ay[2];
+      double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1] +
+                 state.pVector[5] * Ay[2];
 
       // this is cos(beta)
       double a = (1. - d) * (1. + d);
@@ -813,48 +770,48 @@ public:
       double Z = d * Ay[2] - state.pVector[5];  //
 
       // d0 to d1
-      double d0 = state.pVector[10] * Ay[0] + state.pVector[11] * Ay[1]
-          + state.pVector[12] * Ay[2];
-      double d1 = state.pVector[17] * Ay[0] + state.pVector[18] * Ay[1]
-          + state.pVector[19] * Ay[2];
-      double d2 = state.pVector[24] * Ay[0] + state.pVector[25] * Ay[1]
-          + state.pVector[26] * Ay[2];
-      double d3 = state.pVector[31] * Ay[0] + state.pVector[32] * Ay[1]
-          + state.pVector[33] * Ay[2];
-      double d4 = state.pVector[38] * Ay[0] + state.pVector[39] * Ay[1]
-          + state.pVector[40] * Ay[2];
+      double d0 = state.pVector[10] * Ay[0] + state.pVector[11] * Ay[1] +
+                  state.pVector[12] * Ay[2];
+      double d1 = state.pVector[17] * Ay[0] + state.pVector[18] * Ay[1] +
+                  state.pVector[19] * Ay[2];
+      double d2 = state.pVector[24] * Ay[0] + state.pVector[25] * Ay[1] +
+                  state.pVector[26] * Ay[2];
+      double d3 = state.pVector[31] * Ay[0] + state.pVector[32] * Ay[1] +
+                  state.pVector[33] * Ay[2];
+      double d4 = state.pVector[38] * Ay[0] + state.pVector[39] * Ay[1] +
+                  state.pVector[40] * Ay[2];
 
-      s0 = (((state.pVector[7] * X + state.pVector[8] * Y
-              + state.pVector[9] * Z)
-             + x * (d0 * Ay[0] - state.pVector[10]))
-            + (y * (d0 * Ay[1] - state.pVector[11])
-               + z * (d0 * Ay[2] - state.pVector[12])))
-          * (-a);
+      s0 = (((state.pVector[7] * X + state.pVector[8] * Y +
+              state.pVector[9] * Z) +
+             x * (d0 * Ay[0] - state.pVector[10])) +
+            (y * (d0 * Ay[1] - state.pVector[11]) +
+             z * (d0 * Ay[2] - state.pVector[12]))) *
+           (-a);
 
-      s1 = (((state.pVector[14] * X + state.pVector[15] * Y
-              + state.pVector[16] * Z)
-             + x * (d1 * Ay[0] - state.pVector[17]))
-            + (y * (d1 * Ay[1] - state.pVector[18])
-               + z * (d1 * Ay[2] - state.pVector[19])))
-          * (-a);
-      s2 = (((state.pVector[21] * X + state.pVector[22] * Y
-              + state.pVector[23] * Z)
-             + x * (d2 * Ay[0] - state.pVector[24]))
-            + (y * (d2 * Ay[1] - state.pVector[25])
-               + z * (d2 * Ay[2] - state.pVector[26])))
-          * (-a);
-      s3 = (((state.pVector[28] * X + state.pVector[29] * Y
-              + state.pVector[30] * Z)
-             + x * (d3 * Ay[0] - state.pVector[31]))
-            + (y * (d3 * Ay[1] - state.pVector[32])
-               + z * (d3 * Ay[2] - state.pVector[33])))
-          * (-a);
-      s4 = (((state.pVector[35] * X + state.pVector[36] * Y
-              + state.pVector[37] * Z)
-             + x * (d4 * Ay[0] - state.pVector[38]))
-            + (y * (d4 * Ay[1] - state.pVector[39])
-               + z * (d4 * Ay[2] - state.pVector[40])))
-          * (-a);
+      s1 = (((state.pVector[14] * X + state.pVector[15] * Y +
+              state.pVector[16] * Z) +
+             x * (d1 * Ay[0] - state.pVector[17])) +
+            (y * (d1 * Ay[1] - state.pVector[18]) +
+             z * (d1 * Ay[2] - state.pVector[19]))) *
+           (-a);
+      s2 = (((state.pVector[21] * X + state.pVector[22] * Y +
+              state.pVector[23] * Z) +
+             x * (d2 * Ay[0] - state.pVector[24])) +
+            (y * (d2 * Ay[1] - state.pVector[25]) +
+             z * (d2 * Ay[2] - state.pVector[26]))) *
+           (-a);
+      s3 = (((state.pVector[28] * X + state.pVector[29] * Y +
+              state.pVector[30] * Z) +
+             x * (d3 * Ay[0] - state.pVector[31])) +
+            (y * (d3 * Ay[1] - state.pVector[32]) +
+             z * (d3 * Ay[2] - state.pVector[33]))) *
+           (-a);
+      s4 = (((state.pVector[35] * X + state.pVector[36] * Y +
+              state.pVector[37] * Z) +
+             x * (d4 * Ay[0] - state.pVector[38])) +
+            (y * (d4 * Ay[1] - state.pVector[39]) +
+             z * (d4 * Ay[2] - state.pVector[40]))) *
+           (-a);
     }
 
     state.pVector[7] -= (s0 * state.pVector[3]);
@@ -893,15 +850,15 @@ public:
     state.pVector[40] -= (s4 * state.pVector[44]);
 
     double P3, P4,
-        C = state.pVector[3] * state.pVector[3]
-        + state.pVector[4] * state.pVector[4];
+        C = state.pVector[3] * state.pVector[3] +
+            state.pVector[4] * state.pVector[4];
     if (C > 1.e-20) {
-      C  = 1. / C;
+      C = 1. / C;
       P3 = state.pVector[3] * C;
       P4 = state.pVector[4] * C;
-      C  = -sqrt(C);
+      C = -sqrt(C);
     } else {
-      C  = -1.e10;
+      C = -1.e10;
       P3 = 1.;
       P4 = 0.;
     }
@@ -911,9 +868,8 @@ public:
     // Jacobian production of transport and to_local
     if (surface.type() == Surface::Disc) {
       // the vector from the disc surface to the p
-      const auto& sfc  = surface.center(state.geoContext);
-      double      d[3] = {state.pVector[0] - sfc(0),
-                     state.pVector[1] - sfc(1),
+      const auto& sfc = surface.center(state.geoContext);
+      double d[3] = {state.pVector[0] - sfc(0), state.pVector[1] - sfc(1),
                      state.pVector[2] - sfc(2)};
       // this needs the transformation to polar coordinates
       double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
@@ -922,56 +878,56 @@ public:
 
       // inverse radius
       double Ri = 1. / sqrt(R2);
-      MA[0]     = (RC * Ax[0] + RS * Ay[0]) * Ri;
-      MA[1]     = (RC * Ax[1] + RS * Ay[1]) * Ri;
-      MA[2]     = (RC * Ax[2] + RS * Ay[2]) * Ri;
+      MA[0] = (RC * Ax[0] + RS * Ay[0]) * Ri;
+      MA[1] = (RC * Ax[1] + RS * Ay[1]) * Ri;
+      MA[2] = (RC * Ax[2] + RS * Ay[2]) * Ri;
       MB[0] = (RC * Ay[0] - RS * Ax[0]) * (Ri = 1. / R2);
-      MB[1]                                   = (RC * Ay[1] - RS * Ax[1]) * Ri;
-      MB[2]                                   = (RC * Ay[2] - RS * Ax[2]) * Ri;
+      MB[1] = (RC * Ay[1] - RS * Ax[1]) * Ri;
+      MB[2] = (RC * Ay[2] - RS * Ax[2]) * Ri;
     }
 
-    state.jacobian[0] = MA[0] * state.pVector[7] + MA[1] * state.pVector[8]
-        + MA[2] * state.pVector[9];  // dL0/dL0
-    state.jacobian[1] = MA[0] * state.pVector[14] + MA[1] * state.pVector[15]
-        + MA[2] * state.pVector[16];  // dL0/dL1
-    state.jacobian[2] = MA[0] * state.pVector[21] + MA[1] * state.pVector[22]
-        + MA[2] * state.pVector[23];  // dL0/dPhi
-    state.jacobian[3] = MA[0] * state.pVector[28] + MA[1] * state.pVector[29]
-        + MA[2] * state.pVector[30];  // dL0/dThe
-    state.jacobian[4] = MA[0] * state.pVector[35] + MA[1] * state.pVector[36]
-        + MA[2] * state.pVector[37];  // dL0/dCM
+    state.jacobian[0] = MA[0] * state.pVector[7] + MA[1] * state.pVector[8] +
+                        MA[2] * state.pVector[9];  // dL0/dL0
+    state.jacobian[1] = MA[0] * state.pVector[14] + MA[1] * state.pVector[15] +
+                        MA[2] * state.pVector[16];  // dL0/dL1
+    state.jacobian[2] = MA[0] * state.pVector[21] + MA[1] * state.pVector[22] +
+                        MA[2] * state.pVector[23];  // dL0/dPhi
+    state.jacobian[3] = MA[0] * state.pVector[28] + MA[1] * state.pVector[29] +
+                        MA[2] * state.pVector[30];  // dL0/dThe
+    state.jacobian[4] = MA[0] * state.pVector[35] + MA[1] * state.pVector[36] +
+                        MA[2] * state.pVector[37];  // dL0/dCM
 
-    state.jacobian[5] = MB[0] * state.pVector[7] + MB[1] * state.pVector[8]
-        + MB[2] * state.pVector[9];  // dL1/dL0
-    state.jacobian[6] = MB[0] * state.pVector[14] + MB[1] * state.pVector[15]
-        + MB[2] * state.pVector[16];  // dL1/dL1
-    state.jacobian[7] = MB[0] * state.pVector[21] + MB[1] * state.pVector[22]
-        + MB[2] * state.pVector[23];  // dL1/dPhi
-    state.jacobian[8] = MB[0] * state.pVector[28] + MB[1] * state.pVector[29]
-        + MB[2] * state.pVector[30];  // dL1/dThe
-    state.jacobian[9] = MB[0] * state.pVector[35] + MB[1] * state.pVector[36]
-        + MB[2] * state.pVector[37];  // dL1/dCM
+    state.jacobian[5] = MB[0] * state.pVector[7] + MB[1] * state.pVector[8] +
+                        MB[2] * state.pVector[9];  // dL1/dL0
+    state.jacobian[6] = MB[0] * state.pVector[14] + MB[1] * state.pVector[15] +
+                        MB[2] * state.pVector[16];  // dL1/dL1
+    state.jacobian[7] = MB[0] * state.pVector[21] + MB[1] * state.pVector[22] +
+                        MB[2] * state.pVector[23];  // dL1/dPhi
+    state.jacobian[8] = MB[0] * state.pVector[28] + MB[1] * state.pVector[29] +
+                        MB[2] * state.pVector[30];  // dL1/dThe
+    state.jacobian[9] = MB[0] * state.pVector[35] + MB[1] * state.pVector[36] +
+                        MB[2] * state.pVector[37];  // dL1/dCM
 
-    state.jacobian[10]
-        = P3 * state.pVector[11] - P4 * state.pVector[10];  // dPhi/dL0
-    state.jacobian[11]
-        = P3 * state.pVector[18] - P4 * state.pVector[17];  // dPhi/dL1
-    state.jacobian[12]
-        = P3 * state.pVector[25] - P4 * state.pVector[24];  // dPhi/dPhi
-    state.jacobian[13]
-        = P3 * state.pVector[32] - P4 * state.pVector[31];  // dPhi/dThe
-    state.jacobian[14]
-        = P3 * state.pVector[39] - P4 * state.pVector[38];  // dPhi/dCM
-    state.jacobian[15] = C * state.pVector[12];             // dThe/dL0
-    state.jacobian[16] = C * state.pVector[19];             // dThe/dL1
-    state.jacobian[17] = C * state.pVector[26];             // dThe/dPhi
-    state.jacobian[18] = C * state.pVector[33];             // dThe/dThe
-    state.jacobian[19] = C * state.pVector[40];             // dThe/dCM
-    state.jacobian[20] = 0.;                                // dCM /dL0
-    state.jacobian[21] = 0.;                                // dCM /dL1
-    state.jacobian[22] = 0.;                                // dCM /dPhi
-    state.jacobian[23] = 0.;                                // dCM /dTheta
-    state.jacobian[24] = state.pVector[41];                 // dCM /dCM
+    state.jacobian[10] =
+        P3 * state.pVector[11] - P4 * state.pVector[10];  // dPhi/dL0
+    state.jacobian[11] =
+        P3 * state.pVector[18] - P4 * state.pVector[17];  // dPhi/dL1
+    state.jacobian[12] =
+        P3 * state.pVector[25] - P4 * state.pVector[24];  // dPhi/dPhi
+    state.jacobian[13] =
+        P3 * state.pVector[32] - P4 * state.pVector[31];  // dPhi/dThe
+    state.jacobian[14] =
+        P3 * state.pVector[39] - P4 * state.pVector[38];  // dPhi/dCM
+    state.jacobian[15] = C * state.pVector[12];           // dThe/dL0
+    state.jacobian[16] = C * state.pVector[19];           // dThe/dL1
+    state.jacobian[17] = C * state.pVector[26];           // dThe/dPhi
+    state.jacobian[18] = C * state.pVector[33];           // dThe/dThe
+    state.jacobian[19] = C * state.pVector[40];           // dThe/dCM
+    state.jacobian[20] = 0.;                              // dCM /dL0
+    state.jacobian[21] = 0.;                              // dCM /dL1
+    state.jacobian[22] = 0.;                              // dCM /dPhi
+    state.jacobian[23] = 0.;                              // dCM /dTheta
+    state.jacobian[24] = state.pVector[41];               // dCM /dCM
 
     Eigen::Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
         J(state.jacobian);
@@ -983,19 +939,17 @@ public:
   ///
   /// @param state is the provided stepper state (caller keeps thread locality)
   template <typename propagator_state_t>
-  Result<double>
-  step(propagator_state_t& state) const
-  {
+  Result<double> step(propagator_state_t& state) const {
     // we use h for keeping the nominclature with the original atlas code
-    double h   = state.stepping.stepSize;
-    bool   Jac = state.stepping.useJacobian;
+    double h = state.stepping.stepSize;
+    bool Jac = state.stepping.useJacobian;
 
-    double* R  = &(state.stepping.pVector[0]);  // Coordinates
-    double* A  = &(state.stepping.pVector[3]);  // Directions
+    double* R = &(state.stepping.pVector[0]);  // Coordinates
+    double* A = &(state.stepping.pVector[3]);  // Directions
     double* sA = &(state.stepping.pVector[42]);
     // Invert mometum/2.
-    double Pi
-        = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.stepping.pVector[6]);
+    double Pi =
+        0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.stepping.pVector[6]);
     //    double dltm = 0.0002 * .03;
     Vector3D f0, f;
 
@@ -1011,21 +965,20 @@ public:
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
     while (h != 0.) {
-
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
 
       // First point
       //
       double H0[3] = {f0[0] * PS2, f0[1] * PS2, f0[2] * PS2};
-      double A0    = A[1] * H0[2] - A[2] * H0[1];
-      double B0    = A[2] * H0[0] - A[0] * H0[2];
-      double C0    = A[0] * H0[1] - A[1] * H0[0];
-      double A2    = A0 + A[0];
-      double B2    = B0 + A[1];
-      double C2    = C0 + A[2];
-      double A1    = A2 + A[0];
-      double B1    = B2 + A[1];
-      double C1    = C2 + A[2];
+      double A0 = A[1] * H0[2] - A[2] * H0[1];
+      double B0 = A[2] * H0[0] - A[0] * H0[2];
+      double C0 = A[0] * H0[1] - A[1] * H0[0];
+      double A2 = A0 + A[0];
+      double B2 = B0 + A[1];
+      double C2 = C0 + A[2];
+      double A1 = A2 + A[0];
+      double B1 = B2 + A[1];
+      double C1 = C2 + A[2];
 
       // Second point
       //
@@ -1037,15 +990,15 @@ public:
       }
 
       double H1[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
-      double A3    = (A[0] + B2 * H1[2]) - C2 * H1[1];
-      double B3    = (A[1] + C2 * H1[0]) - A2 * H1[2];
-      double C3    = (A[2] + A2 * H1[1]) - B2 * H1[0];
-      double A4    = (A[0] + B3 * H1[2]) - C3 * H1[1];
-      double B4    = (A[1] + C3 * H1[0]) - A3 * H1[2];
-      double C4    = (A[2] + A3 * H1[1]) - B3 * H1[0];
-      double A5    = 2. * A4 - A[0];
-      double B5    = 2. * B4 - A[1];
-      double C5    = 2. * C4 - A[2];
+      double A3 = (A[0] + B2 * H1[2]) - C2 * H1[1];
+      double B3 = (A[1] + C2 * H1[0]) - A2 * H1[2];
+      double C3 = (A[2] + A2 * H1[1]) - B2 * H1[0];
+      double A4 = (A[0] + B3 * H1[2]) - C3 * H1[1];
+      double B4 = (A[1] + C3 * H1[0]) - A3 * H1[2];
+      double C4 = (A[2] + A3 * H1[1]) - B3 * H1[0];
+      double A5 = 2. * A4 - A[0];
+      double B5 = 2. * B4 - A[1];
+      double C5 = 2. * C4 - A[2];
 
       // Last point
       //
@@ -1057,15 +1010,15 @@ public:
       }
 
       double H2[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
-      double A6    = B5 * H2[2] - C5 * H2[1];
-      double B6    = C5 * H2[0] - A5 * H2[2];
-      double C6    = A5 * H2[1] - B5 * H2[0];
+      double A6 = B5 * H2[2] - C5 * H2[1];
+      double B6 = C5 * H2[0] - A5 * H2[2];
+      double C6 = A5 * H2[1] - B5 * H2[0];
 
       // Test approximation quality on give step and possible step reduction
       //
-      double EST = 2.
-          * (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4))
-             + std::abs((C1 + C6) - (C3 + C4)));
+      double EST = 2. * (std::abs((A1 + A6) - (A3 + A4)) +
+                         std::abs((B1 + B6) - (B3 + B4)) +
+                         std::abs((C1 + C6) - (C3 + C4)));
       if (EST > 0.0002) {
         h *= .5;
         //        dltm = 0.;
@@ -1082,9 +1035,9 @@ public:
       A[1] = 2. * B3 + (B0 + B5 + B6);
       A[2] = 2. * C3 + (C0 + C5 + C6);
 
-      double D  = (A[0] * A[0] + A[1] * A[1]) + (A[2] * A[2] - 9.);
+      double D = (A[0] * A[0] + A[1] * A[1]) + (A[2] * A[2] - 9.);
       double Sl = 2. / h;
-      D         = (1. / 3.) - ((1. / 648.) * D) * (12. - D);
+      D = (1. / 3.) - ((1. / 648.) * D) * (12. - D);
 
       R[0] += (A2 + A3 + A4) * S3;
       R[1] += (B2 + B3 + B4) * S3;
@@ -1096,72 +1049,72 @@ public:
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
-      state.stepping.field    = f;
+      state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
         // Jacobian calculation
         //
-        double* d2A  = &state.stepping.pVector[24];
-        double* d3A  = &state.stepping.pVector[31];
-        double* d4A  = &state.stepping.pVector[38];
-        double  d2A0 = H0[2] * d2A[1] - H0[1] * d2A[2];
-        double  d2B0 = H0[0] * d2A[2] - H0[2] * d2A[0];
-        double  d2C0 = H0[1] * d2A[0] - H0[0] * d2A[1];
-        double  d3A0 = H0[2] * d3A[1] - H0[1] * d3A[2];
-        double  d3B0 = H0[0] * d3A[2] - H0[2] * d3A[0];
-        double  d3C0 = H0[1] * d3A[0] - H0[0] * d3A[1];
-        double  d4A0 = (A0 + H0[2] * d4A[1]) - H0[1] * d4A[2];
-        double  d4B0 = (B0 + H0[0] * d4A[2]) - H0[2] * d4A[0];
-        double  d4C0 = (C0 + H0[1] * d4A[0]) - H0[0] * d4A[1];
-        double  d2A2 = d2A0 + d2A[0];
-        double  d2B2 = d2B0 + d2A[1];
-        double  d2C2 = d2C0 + d2A[2];
-        double  d3A2 = d3A0 + d3A[0];
-        double  d3B2 = d3B0 + d3A[1];
-        double  d3C2 = d3C0 + d3A[2];
-        double  d4A2 = d4A0 + d4A[0];
-        double  d4B2 = d4B0 + d4A[1];
-        double  d4C2 = d4C0 + d4A[2];
-        double  d0   = d4A[0] - A00;
-        double  d1   = d4A[1] - A11;
-        double  d2   = d4A[2] - A22;
-        double  d2A3 = (d2A[0] + d2B2 * H1[2]) - d2C2 * H1[1];
-        double  d2B3 = (d2A[1] + d2C2 * H1[0]) - d2A2 * H1[2];
-        double  d2C3 = (d2A[2] + d2A2 * H1[1]) - d2B2 * H1[0];
-        double  d3A3 = (d3A[0] + d3B2 * H1[2]) - d3C2 * H1[1];
-        double  d3B3 = (d3A[1] + d3C2 * H1[0]) - d3A2 * H1[2];
-        double  d3C3 = (d3A[2] + d3A2 * H1[1]) - d3B2 * H1[0];
-        double  d4A3 = ((A3 + d0) + d4B2 * H1[2]) - d4C2 * H1[1];
-        double  d4B3 = ((B3 + d1) + d4C2 * H1[0]) - d4A2 * H1[2];
-        double  d4C3 = ((C3 + d2) + d4A2 * H1[1]) - d4B2 * H1[0];
-        double  d2A4 = (d2A[0] + d2B3 * H1[2]) - d2C3 * H1[1];
-        double  d2B4 = (d2A[1] + d2C3 * H1[0]) - d2A3 * H1[2];
-        double  d2C4 = (d2A[2] + d2A3 * H1[1]) - d2B3 * H1[0];
-        double  d3A4 = (d3A[0] + d3B3 * H1[2]) - d3C3 * H1[1];
-        double  d3B4 = (d3A[1] + d3C3 * H1[0]) - d3A3 * H1[2];
-        double  d3C4 = (d3A[2] + d3A3 * H1[1]) - d3B3 * H1[0];
-        double  d4A4 = ((A4 + d0) + d4B3 * H1[2]) - d4C3 * H1[1];
-        double  d4B4 = ((B4 + d1) + d4C3 * H1[0]) - d4A3 * H1[2];
-        double  d4C4 = ((C4 + d2) + d4A3 * H1[1]) - d4B3 * H1[0];
-        double  d2A5 = 2. * d2A4 - d2A[0];
-        double  d2B5 = 2. * d2B4 - d2A[1];
-        double  d2C5 = 2. * d2C4 - d2A[2];
-        double  d3A5 = 2. * d3A4 - d3A[0];
-        double  d3B5 = 2. * d3B4 - d3A[1];
-        double  d3C5 = 2. * d3C4 - d3A[2];
-        double  d4A5 = 2. * d4A4 - d4A[0];
-        double  d4B5 = 2. * d4B4 - d4A[1];
-        double  d4C5 = 2. * d4C4 - d4A[2];
-        double  d2A6 = d2B5 * H2[2] - d2C5 * H2[1];
-        double  d2B6 = d2C5 * H2[0] - d2A5 * H2[2];
-        double  d2C6 = d2A5 * H2[1] - d2B5 * H2[0];
-        double  d3A6 = d3B5 * H2[2] - d3C5 * H2[1];
-        double  d3B6 = d3C5 * H2[0] - d3A5 * H2[2];
-        double  d3C6 = d3A5 * H2[1] - d3B5 * H2[0];
-        double  d4A6 = d4B5 * H2[2] - d4C5 * H2[1];
-        double  d4B6 = d4C5 * H2[0] - d4A5 * H2[2];
-        double  d4C6 = d4A5 * H2[1] - d4B5 * H2[0];
+        double* d2A = &state.stepping.pVector[24];
+        double* d3A = &state.stepping.pVector[31];
+        double* d4A = &state.stepping.pVector[38];
+        double d2A0 = H0[2] * d2A[1] - H0[1] * d2A[2];
+        double d2B0 = H0[0] * d2A[2] - H0[2] * d2A[0];
+        double d2C0 = H0[1] * d2A[0] - H0[0] * d2A[1];
+        double d3A0 = H0[2] * d3A[1] - H0[1] * d3A[2];
+        double d3B0 = H0[0] * d3A[2] - H0[2] * d3A[0];
+        double d3C0 = H0[1] * d3A[0] - H0[0] * d3A[1];
+        double d4A0 = (A0 + H0[2] * d4A[1]) - H0[1] * d4A[2];
+        double d4B0 = (B0 + H0[0] * d4A[2]) - H0[2] * d4A[0];
+        double d4C0 = (C0 + H0[1] * d4A[0]) - H0[0] * d4A[1];
+        double d2A2 = d2A0 + d2A[0];
+        double d2B2 = d2B0 + d2A[1];
+        double d2C2 = d2C0 + d2A[2];
+        double d3A2 = d3A0 + d3A[0];
+        double d3B2 = d3B0 + d3A[1];
+        double d3C2 = d3C0 + d3A[2];
+        double d4A2 = d4A0 + d4A[0];
+        double d4B2 = d4B0 + d4A[1];
+        double d4C2 = d4C0 + d4A[2];
+        double d0 = d4A[0] - A00;
+        double d1 = d4A[1] - A11;
+        double d2 = d4A[2] - A22;
+        double d2A3 = (d2A[0] + d2B2 * H1[2]) - d2C2 * H1[1];
+        double d2B3 = (d2A[1] + d2C2 * H1[0]) - d2A2 * H1[2];
+        double d2C3 = (d2A[2] + d2A2 * H1[1]) - d2B2 * H1[0];
+        double d3A3 = (d3A[0] + d3B2 * H1[2]) - d3C2 * H1[1];
+        double d3B3 = (d3A[1] + d3C2 * H1[0]) - d3A2 * H1[2];
+        double d3C3 = (d3A[2] + d3A2 * H1[1]) - d3B2 * H1[0];
+        double d4A3 = ((A3 + d0) + d4B2 * H1[2]) - d4C2 * H1[1];
+        double d4B3 = ((B3 + d1) + d4C2 * H1[0]) - d4A2 * H1[2];
+        double d4C3 = ((C3 + d2) + d4A2 * H1[1]) - d4B2 * H1[0];
+        double d2A4 = (d2A[0] + d2B3 * H1[2]) - d2C3 * H1[1];
+        double d2B4 = (d2A[1] + d2C3 * H1[0]) - d2A3 * H1[2];
+        double d2C4 = (d2A[2] + d2A3 * H1[1]) - d2B3 * H1[0];
+        double d3A4 = (d3A[0] + d3B3 * H1[2]) - d3C3 * H1[1];
+        double d3B4 = (d3A[1] + d3C3 * H1[0]) - d3A3 * H1[2];
+        double d3C4 = (d3A[2] + d3A3 * H1[1]) - d3B3 * H1[0];
+        double d4A4 = ((A4 + d0) + d4B3 * H1[2]) - d4C3 * H1[1];
+        double d4B4 = ((B4 + d1) + d4C3 * H1[0]) - d4A3 * H1[2];
+        double d4C4 = ((C4 + d2) + d4A3 * H1[1]) - d4B3 * H1[0];
+        double d2A5 = 2. * d2A4 - d2A[0];
+        double d2B5 = 2. * d2B4 - d2A[1];
+        double d2C5 = 2. * d2C4 - d2A[2];
+        double d3A5 = 2. * d3A4 - d3A[0];
+        double d3B5 = 2. * d3B4 - d3A[1];
+        double d3C5 = 2. * d3C4 - d3A[2];
+        double d4A5 = 2. * d4A4 - d4A[0];
+        double d4B5 = 2. * d4B4 - d4A[1];
+        double d4C5 = 2. * d4C4 - d4A[2];
+        double d2A6 = d2B5 * H2[2] - d2C5 * H2[1];
+        double d2B6 = d2C5 * H2[0] - d2A5 * H2[2];
+        double d2C6 = d2A5 * H2[1] - d2B5 * H2[0];
+        double d3A6 = d3B5 * H2[2] - d3C5 * H2[1];
+        double d3B6 = d3C5 * H2[0] - d3A5 * H2[2];
+        double d3C6 = d3A5 * H2[1] - d3B5 * H2[0];
+        double d4A6 = d4B5 * H2[2] - d4C5 * H2[1];
+        double d4B6 = d4C5 * H2[0] - d4A5 * H2[2];
+        double d4C6 = d4A5 * H2[1] - d4B5 * H2[0];
 
         double* dR = &state.stepping.pVector[21];
         dR[0] += (d2A2 + d2A3 + d2A4) * S3;
@@ -1196,7 +1149,7 @@ public:
     return h;
   }
 
-private:
+ private:
   bfield_t m_bField;
 };
 

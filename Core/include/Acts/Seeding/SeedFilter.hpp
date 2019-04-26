@@ -18,8 +18,7 @@
 #include "Acts/Seeding/Seed.hpp"
 
 namespace Acts {
-struct SeedFilterConfig
-{
+struct SeedFilterConfig {
   // the allowed delta between two inverted seed radii for them to be considered
   // compatible.
   float deltaInvHelixDiameter = 0.00003;
@@ -42,12 +41,11 @@ struct SeedFilterConfig
 /// @class Filter seeds at various stages with the currently
 /// available information.
 template <typename SpacePoint>
-class SeedFilter
-{
-public:
+class SeedFilter {
+ public:
   SeedFilter(SeedFilterConfig config, IExperimentCuts<SpacePoint>* expCuts = 0);
 
-  SeedFilter()          = delete;
+  SeedFilter() = delete;
   virtual ~SeedFilter() = default;
 
   /// Create InternalSeeds for the all seeds with the same bottom and middle
@@ -59,30 +57,27 @@ public:
   /// @param origin on the z axis as defined by bottom and middle space point
   /// @return vector of pairs containing seed weight and seed for all valid
   /// created seeds
-  virtual std::
-      vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-      filterSeeds_2SpFixed(
-          const InternalSpacePoint<SpacePoint>&               bottomSP,
-          const InternalSpacePoint<SpacePoint>&               middleSP,
-          std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
-          std::vector<float>& invHelixDiameterVec,
-          std::vector<float>& impactParametersVec,
-          float               zOrigin) const;
+  virtual std::vector<
+      std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+  filterSeeds_2SpFixed(
+      const InternalSpacePoint<SpacePoint>& bottomSP,
+      const InternalSpacePoint<SpacePoint>& middleSP,
+      std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
+      std::vector<float>& invHelixDiameterVec,
+      std::vector<float>& impactParametersVec, float zOrigin) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
   /// for all seeds with the same middle space point
   /// @return vector of all InternalSeeds that not filtered out
-  virtual void
-  filterSeeds_1SpFixed(
-      std::vector<std::pair<float,
-                            std::unique_ptr<const InternalSeed<SpacePoint>>>>&
-                                                      seedsPerSpM,
+  virtual void filterSeeds_1SpFixed(
+      std::vector<std::pair<
+          float, std::unique_ptr<const InternalSeed<SpacePoint>>>>& seedsPerSpM,
       std::vector<std::unique_ptr<Seed<SpacePoint>>>& outVec) const;
 
-private:
-  const SeedFilterConfig             m_cfg;
+ private:
+  const SeedFilterConfig m_cfg;
   const IExperimentCuts<SpacePoint>* m_experimentCuts;
 };
-}
+}  // namespace Acts
 #include "Acts/Seeding/SeedFilter.ipp"

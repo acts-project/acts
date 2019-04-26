@@ -18,22 +18,20 @@
 namespace Acts {
 namespace Test {
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
+// Create a test context
+GeometryContext tgContext = GeometryContext();
 
-  BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometryTest)
-  {
-    CylindricalTrackingGeometry cGeometry(tgContext);
-    auto                        tGeometry = cGeometry();
-    BOOST_CHECK_NE(tGeometry, nullptr);
-  }
+BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometryTest) {
+  CylindricalTrackingGeometry cGeometry(tgContext);
+  auto tGeometry = cGeometry();
+  BOOST_CHECK_NE(tGeometry, nullptr);
+}
 
-  BOOST_AUTO_TEST_CASE(CubicTrackingGeometryTest)
-  {
-    CubicTrackingGeometry cGeometry(tgContext);
-    auto                  tGeometry = cGeometry();
-    BOOST_CHECK_NE(tGeometry, nullptr);
-  }
+BOOST_AUTO_TEST_CASE(CubicTrackingGeometryTest) {
+  CubicTrackingGeometry cGeometry(tgContext);
+  auto tGeometry = cGeometry();
+  BOOST_CHECK_NE(tGeometry, nullptr);
+}
 
-}  // namespace Acts
 }  // namespace Test
+}  // namespace Acts

@@ -38,9 +38,8 @@ class DigitizationModule;
 /// if not used with DD4hep?
 /// @todo segmentation
 
-class DD4hepDetectorElement : public TGeoDetectorElement
-{
-public:
+class DD4hepDetectorElement : public TGeoDetectorElement {
+ public:
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
@@ -74,20 +73,18 @@ public:
   ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
   DD4hepDetectorElement(
-      const dd4hep::DetElement                  detElement,
-      const std::string&                        axes               = "XYZ",
-      double                                    scalor             = 1.,
-      bool                                      isDisc             = false,
-      std::shared_ptr<const ISurfaceMaterial>   material           = nullptr,
+      const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
+      double scalor = 1., bool isDisc = false,
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr,
       std::shared_ptr<const DigitizationModule> digitizationModule = nullptr);
 
   /// Desctructor
   ~DD4hepDetectorElement() override = default;
 
-private:
+ private:
   /// DD4hep detector element
   dd4hep::DetElement m_detElement;
   /// DD4hep segmentation
   dd4hep::Segmentation m_segmentation;
 };
-}
+}  // namespace Acts

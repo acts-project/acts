@@ -31,9 +31,8 @@ class ApproachDescriptor;
 /// both,
 /// Layer base class and CylinderSurface class
 ///
-class CylinderLayer : public CylinderSurface, public Layer
-{
-public:
+class CylinderLayer : public CylinderSurface, public Layer {
+ public:
   /// Factory for shared Layer pointer
   /// create a shared, fully deployed CylinderLayer
   ///
@@ -47,29 +46,22 @@ public:
   /// @todo ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  static MutableLayerPtr
-  create(const std::shared_ptr<const Transform3D>&    transform,
-         const std::shared_ptr<const CylinderBounds>& cbounds,
-         std::unique_ptr<SurfaceArray>                surfaceArray = nullptr,
-         double                                       thickness    = 0.,
-         std::unique_ptr<ApproachDescriptor>          ad           = nullptr,
-         LayerType                                    laytyp       = passive)
-  {
-    return MutableLayerPtr(new CylinderLayer(transform,
-                                             cbounds,
-                                             std::move(surfaceArray),
-                                             thickness,
-                                             std::move(ad),
-                                             laytyp));
+  static MutableLayerPtr create(
+      const std::shared_ptr<const Transform3D>& transform,
+      const std::shared_ptr<const CylinderBounds>& cbounds,
+      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      LayerType laytyp = passive) {
+    return MutableLayerPtr(new CylinderLayer(transform, cbounds,
+                                             std::move(surfaceArray), thickness,
+                                             std::move(ad), laytyp));
   }
 
   /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
 
   /// Assignment operator for CylinderLayers - deleted
-  CylinderLayer&
-  operator=(const CylinderLayer&)
-      = delete;
+  CylinderLayer& operator=(const CylinderLayer&) = delete;
 
   /// Default Constructor
   CylinderLayer() = delete;
@@ -79,19 +71,16 @@ public:
 
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation
-  const CylinderSurface&
-  surfaceRepresentation() const override;
+  const CylinderSurface& surfaceRepresentation() const override;
 
   // Non-const version
-  CylinderSurface&
-  surfaceRepresentation() override;
+  CylinderSurface& surfaceRepresentation() override;
 
-private:
+ private:
   /// build approach surfaces */
-  void
-  buildApproachDescriptor();
+  void buildApproachDescriptor();
 
-protected:
+ protected:
   /// Private constructor for CylinderLayer, called by create(args*) factory
   ///
   /// @param transform is the 3D transform that places the layer in 3D space
@@ -103,12 +92,12 @@ protected:
   /// @todo change ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  CylinderLayer(const std::shared_ptr<const Transform3D>&    transform,
+  CylinderLayer(const std::shared_ptr<const Transform3D>& transform,
                 const std::shared_ptr<const CylinderBounds>& cBounds,
-                std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
-                double                              thickness    = 0.,
-                std::unique_ptr<ApproachDescriptor> ades         = nullptr,
-                LayerType                           laytyp       = passive);
+                std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+                double thickness = 0.,
+                std::unique_ptr<ApproachDescriptor> ades = nullptr,
+                LayerType laytyp = passive);
 
   /// Private copy constructor with shift, called by create(args*)
   ///

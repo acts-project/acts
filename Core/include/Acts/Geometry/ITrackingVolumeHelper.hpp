@@ -25,12 +25,12 @@ class TrackingVolume;
 class VolumeBounds;
 class IVolumeMaterial;
 
-using LayerPtr                 = std::shared_ptr<const Layer>;
-using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using LayerPtr = std::shared_ptr<const Layer>;
+using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
-using VolumeBoundsPtr          = std::shared_ptr<const VolumeBounds>;
+using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
-using LayerVector          = std::vector<LayerPtr>;
+using LayerVector = std::vector<LayerPtr>;
 using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 
 ///  @class ITrackingVolumeHelper
@@ -43,9 +43,8 @@ using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 ///
 /// TrackingVolumes only exist as std::shared_ptr
 ///
-class ITrackingVolumeHelper
-{
-public:
+class ITrackingVolumeHelper {
+ public:
   /// Virtual destructor
   virtual ~ITrackingVolumeHelper() = default;
 
@@ -62,14 +61,13 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual MutableTrackingVolumePtr
-  createTrackingVolume(const GeometryContext&                 gctx,
-                       const LayerVector&                     layers,
-                       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                       VolumeBoundsPtr                        volumeBounds,
-                       std::shared_ptr<const Transform3D> transform = nullptr,
-                       const std::string& volumeName = "UndefinedVolume",
-                       BinningType        btype = arbitrary) const = 0;
+  virtual MutableTrackingVolumePtr createTrackingVolume(
+      const GeometryContext& gctx, const LayerVector& layers,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      VolumeBoundsPtr volumeBounds,
+      std::shared_ptr<const Transform3D> transform = nullptr,
+      const std::string& volumeName = "UndefinedVolume",
+      BinningType btype = arbitrary) const = 0;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -84,16 +82,12 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual MutableTrackingVolumePtr
-  createTrackingVolume(const GeometryContext&                 gctx,
-                       const LayerVector&                     layers,
-                       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                       double                                 loc0Min,
-                       double                                 loc0Max,
-                       double                                 loc1Min,
-                       double                                 loc1Max,
-                       const std::string& volumeName = "UndefinedVolume",
-                       BinningType        btype = arbitrary) const = 0;
+  virtual MutableTrackingVolumePtr createTrackingVolume(
+      const GeometryContext& gctx, const LayerVector& layers,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
+      double loc0Max, double loc1Min, double loc1Max,
+      const std::string& volumeName = "UndefinedVolume",
+      BinningType btype = arbitrary) const = 0;
 
   /// Create a gap volume from dimensions and
   ///
@@ -106,17 +100,12 @@ public:
   /// @param volumeName  volume name to be given
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual MutableTrackingVolumePtr
-  createGapTrackingVolume(const GeometryContext&                 gctx,
-                          std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                          double                                 loc0Min,
-                          double                                 loc0Max,
-                          double                                 loc1Min,
-                          double                                 loc1Max,
-                          unsigned int                           materialLayers,
-                          bool               cylinder = true,
-                          const std::string& volumeName
-                          = "UndefinedVolume") const = 0;
+  virtual MutableTrackingVolumePtr createGapTrackingVolume(
+      const GeometryContext& gctx,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
+      double loc0Max, double loc1Min, double loc1Max,
+      unsigned int materialLayers, bool cylinder = true,
+      const std::string& volumeName = "UndefinedVolume") const = 0;
 
   /// Create a gap volume from dimensions and
   ///
@@ -129,17 +118,13 @@ public:
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual MutableTrackingVolumePtr
-  createGapTrackingVolume(const GeometryContext&                 gctx,
-                          std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                          double                                 loc0Min,
-                          double                                 loc0Max,
-                          double                                 loc1Min,
-                          double                                 loc1Max,
-                          const std::vector<double>&             layerPositions,
-                          bool               cylinder   = true,
-                          const std::string& volumeName = "UndefinedVolume",
-                          BinningType        btype = arbitrary) const = 0;
+  virtual MutableTrackingVolumePtr createGapTrackingVolume(
+      const GeometryContext& gctx,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
+      double loc0Max, double loc1Min, double loc1Max,
+      const std::vector<double>& layerPositions, bool cylinder = true,
+      const std::string& volumeName = "UndefinedVolume",
+      BinningType btype = arbitrary) const = 0;
 
   /// Create a one level higher TrackingVolue
   ///
@@ -147,9 +132,9 @@ public:
   /// @param volumes the volumes to be contained
   ///
   /// @return shared pointer to a new TrackingVolume
-  virtual MutableTrackingVolumePtr
-  createContainerTrackingVolume(const GeometryContext&      gctx,
-                                const TrackingVolumeVector& volumes) const = 0;
+  virtual MutableTrackingVolumePtr createContainerTrackingVolume(
+      const GeometryContext& gctx,
+      const TrackingVolumeVector& volumes) const = 0;
 };
 
-}  // namespace
+}  // namespace Acts

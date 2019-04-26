@@ -20,67 +20,47 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
-                                 double                             radius,
-                                 double                             halez)
-  : GeometryObject(), LineSurface(std::move(htrans), radius, halez)
-{
-}
+                                 double radius, double halez)
+    : GeometryObject(), LineSurface(std::move(htrans), radius, halez) {}
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
-                                 std::shared_ptr<const LineBounds>  lbounds)
-  : GeometryObject(), LineSurface(std::move(htrans), std::move(lbounds))
-{
-}
+                                 std::shared_ptr<const LineBounds> lbounds)
+    : GeometryObject(), LineSurface(std::move(htrans), std::move(lbounds)) {}
 
 Acts::StrawSurface::StrawSurface(
     const std::shared_ptr<const LineBounds>& lbounds,
-    const DetectorElementBase&               detelement)
-  : GeometryObject(), LineSurface(lbounds, detelement)
-{
-}
+    const DetectorElementBase& detelement)
+    : GeometryObject(), LineSurface(lbounds, detelement) {}
 
 Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
-  : GeometryObject(), LineSurface(other)
-{
-}
+    : GeometryObject(), LineSurface(other) {}
 
 Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
-                                 const StrawSurface&    other,
-                                 const Transform3D&     transf)
-  : GeometryObject(), LineSurface(gctx, other, transf)
-{
-}
+                                 const StrawSurface& other,
+                                 const Transform3D& transf)
+    : GeometryObject(), LineSurface(gctx, other, transf) {}
 
-Acts::StrawSurface&
-Acts::StrawSurface::operator=(const StrawSurface& other)
-{
+Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
   if (this != &other) {
     LineSurface::operator=(other);
-    m_bounds             = other.m_bounds;
+    m_bounds = other.m_bounds;
   }
   return *this;
 }
 
-std::shared_ptr<Acts::StrawSurface>
-Acts::StrawSurface::clone(const GeometryContext& gctx,
-                          const Transform3D&     shift) const
-{
+std::shared_ptr<Acts::StrawSurface> Acts::StrawSurface::clone(
+    const GeometryContext& gctx, const Transform3D& shift) const {
   return std::shared_ptr<StrawSurface>(this->clone_impl(gctx, shift));
 }
 
-Acts::StrawSurface*
-Acts::StrawSurface::clone_impl(const GeometryContext& gctx,
-                               const Transform3D&     shift) const
-{
+Acts::StrawSurface* Acts::StrawSurface::clone_impl(
+    const GeometryContext& gctx, const Transform3D& shift) const {
   return new StrawSurface(gctx, *this, shift);
 }
 
-Acts::PolyhedronRepresentation
-Acts::StrawSurface::polyhedronRepresentation(const GeometryContext& gctx,
-                                             size_t                 l0div,
-                                             size_t /*l1div*/) const
-{
-  std::vector<Vector3D>            vertices;
+Acts::PolyhedronRepresentation Acts::StrawSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, size_t l0div, size_t /*l1div*/) const {
+  std::vector<Vector3D> vertices;
   std::vector<std::vector<size_t>> faces;
 
   if (l0div == 1) {
@@ -88,8 +68,8 @@ Acts::StrawSurface::polyhedronRepresentation(const GeometryContext& gctx,
   }
 
   double phistep = 2 * M_PI / l0div;
-  double hlZ     = m_bounds->halflengthZ();
-  double r       = m_bounds->r();
+  double hlZ = m_bounds->halflengthZ();
+  double r = m_bounds->r();
 
   Vector3D left(r, 0, -hlZ);
   Vector3D right(r, 0, hlZ);
@@ -103,7 +83,6 @@ Acts::StrawSurface::polyhedronRepresentation(const GeometryContext& gctx,
   }
 
   for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {
-
     faces.push_back({v, v + 1, v + 3, v + 2});
   }
   if (l0div > 2) {

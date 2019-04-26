@@ -38,18 +38,14 @@ class IMaterialDecorator;
 /// - attached (e.g. a neighbor detector attaching to the previous one)
 ///
 /// The returned volume of each step must be processable by the previous step
-class TrackingGeometryBuilder : public ITrackingGeometryBuilder
-{
-public:
+class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
+ public:
   /// @struct Config
   /// Nested Configuration for the CylinderVolumeBuilder
-  struct Config
-  {
-
+  struct Config {
     /// The list of tracking volume builders
     std::vector<std::function<std::shared_ptr<TrackingVolume>(
-        const GeometryContext& gctx,
-        const TrackingVolumePtr&,
+        const GeometryContext& gctx, const TrackingVolumePtr&,
         const VolumeBoundsPtr&)>>
         trackingVolumeBuilders;
 
@@ -64,10 +60,10 @@ public:
   ///
   /// @param [in] cgbConfig is the configuration struct for this builder
   /// @param [in] logger logging instance
-  TrackingGeometryBuilder(const Config&                 cgbConfig,
-                          std::unique_ptr<const Logger> logger
-                          = getDefaultLogger("TrackingGeometryBuilder",
-                                             Logging::INFO));
+  TrackingGeometryBuilder(const Config& cgbConfig,
+                          std::unique_ptr<const Logger> logger =
+                              getDefaultLogger("TrackingGeometryBuilder",
+                                               Logging::INFO));
 
   /// Destructor
   ~TrackingGeometryBuilder() override = default;
@@ -77,44 +73,36 @@ public:
   /// @param gctx geometry context of that building call
   ///
   /// @return a unique pointer to a TrackingGeometry
-  std::unique_ptr<const TrackingGeometry>
-  trackingGeometry(const GeometryContext& gctx) const final;
+  std::unique_ptr<const TrackingGeometry> trackingGeometry(
+      const GeometryContext& gctx) const final;
 
   /// Set configuration method
   ///
   /// @param cgbConfig is the new configuration struct
-  void
-  setConfiguration(const Config& cgbConfig);
+  void setConfiguration(const Config& cgbConfig);
 
   /// Get configuration method
   /// @return the current configuration
-  Config
-  getConfiguration() const;
+  Config getConfiguration() const;
 
   /// set logging instance
   /// @param newLogger the new logging instance
-  void
-  setLogger(std::unique_ptr<const Logger> newLogger);
+  void setLogger(std::unique_ptr<const Logger> newLogger);
 
-private:
+ private:
   /// Configuration member
   Config m_cfg;
 
   /// Private access method to the logger
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
 };
 
 inline TrackingGeometryBuilder::Config
-TrackingGeometryBuilder::getConfiguration() const
-{
+TrackingGeometryBuilder::getConfiguration() const {
   return m_cfg;
 }
 
-}  // namespace
+}  // namespace Acts

@@ -35,10 +35,8 @@ namespace Acts {
 ///   information from all mapped events per bin is taken.
 ///
 /// The averaging is always done to unit thickness
-class AccumulatedMaterialProperties
-{
-
-public:
+class AccumulatedMaterialProperties {
+ public:
   /// Default constructor sets everything to zero
   AccumulatedMaterialProperties() = default;
 
@@ -47,8 +45,8 @@ public:
 
   /// Default copy constructor
   /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties(const AccumulatedMaterialProperties& amp)
-      = default;
+  AccumulatedMaterialProperties(const AccumulatedMaterialProperties& amp) =
+      default;
 
   /// Default copy move constructor
   /// @param amp the source Accumulated properties
@@ -56,15 +54,13 @@ public:
 
   /// Default assignment operator
   /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties&
-  operator=(const AccumulatedMaterialProperties& amp)
-      = default;
+  AccumulatedMaterialProperties& operator=(
+      const AccumulatedMaterialProperties& amp) = default;
 
   /// Default move assignment operator
   /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties&
-  operator=(AccumulatedMaterialProperties&& amp)
-      = default;
+  AccumulatedMaterialProperties& operator=(
+      AccumulatedMaterialProperties&& amp) = default;
 
   /// Accumulation operator
   /// @brief this adds the material properties to event store
@@ -79,12 +75,10 @@ public:
   ///
   /// @param amp the source Accumulated properties
   /// @param pathCorreciton is the correction to nominal incident
-  void
-  accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
+  void accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
 
   /// Average the information accumulated for one track
-  void
-  trackAverage();
+  void trackAverage();
 
   /// Average the information accumulated during the entire
   /// mapping process
@@ -96,10 +90,9 @@ public:
   /// The latter can be used when parallelising the mapping
   /// to several jobs
   ///
-  std::pair<MaterialProperties, unsigned int>
-  totalAverage();
+  std::pair<MaterialProperties, unsigned int> totalAverage();
 
-private:
+ private:
   double m_eventPathInX0{0.};  //!< event: accumulate the thickness in X0
   double m_eventPathInL0{0.};  //!< event: accumulate the thickness in L0
   double m_eventA{0.};         //!< event: accumulate the contribution to A
@@ -117,10 +110,8 @@ private:
   unsigned int m_totalEvents{0};  //!< the number of events
 };
 
-inline void
-AccumulatedMaterialProperties::accumulate(const MaterialProperties& amp,
-                                          double pathCorrection)
-{
+inline void AccumulatedMaterialProperties::accumulate(
+    const MaterialProperties& amp, double pathCorrection) {
   m_eventPathInX0 += amp.thicknessInX0();
   m_eventPathInL0 += amp.thicknessInL0();
   double t = amp.thickness();
@@ -134,9 +125,7 @@ AccumulatedMaterialProperties::accumulate(const MaterialProperties& amp,
   m_eventPathCorrection += pathCorrection * t;
 }
 
-inline void
-AccumulatedMaterialProperties::trackAverage()
-{
+inline void AccumulatedMaterialProperties::trackAverage() {
   // Always count a hit if a path length is registered
   if (m_eventPath > 0.) {
     ++m_totalEvents;
@@ -151,18 +140,17 @@ AccumulatedMaterialProperties::trackAverage()
     m_totalZ += (m_eventZ / m_eventRho);
     m_totalRho += (m_eventRho);
   }
-  m_eventPathInX0       = 0.;
-  m_eventPathInL0       = 0.;
-  m_eventA              = 0.;
-  m_eventZ              = 0.;
-  m_eventRho            = 0.;
-  m_eventPath           = 0.;
+  m_eventPathInX0 = 0.;
+  m_eventPathInL0 = 0.;
+  m_eventA = 0.;
+  m_eventZ = 0.;
+  m_eventRho = 0.;
+  m_eventPath = 0.;
   m_eventPathCorrection = 0.;
 }
 
 inline std::pair<MaterialProperties, unsigned int>
-AccumulatedMaterialProperties::totalAverage()
-{
+AccumulatedMaterialProperties::totalAverage() {
   if (m_totalEvents > 0 && m_totalPathInX0 > 0.) {
     double eventScalor = 1. / m_totalEvents;
     m_totalPathInX0 *= eventScalor;

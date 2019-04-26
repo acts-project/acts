@@ -10,9 +10,7 @@
 
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
-std::string
-Acts::PolyhedronRepresentation::objString(size_t vtxOffset) const
-{
+std::string Acts::PolyhedronRepresentation::objString(size_t vtxOffset) const {
   std::stringstream sstr;
 
   for (const auto& vtx : vertices) {

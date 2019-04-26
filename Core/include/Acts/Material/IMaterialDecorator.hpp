@@ -24,23 +24,20 @@ class TrackingVolume;
 /// to be assigned either to surfaces or to volumes, hence there are
 /// two decorate interface methots.
 ///
-class IMaterialDecorator
-{
-public:
+class IMaterialDecorator {
+ public:
   /// Virtual Destructor
   virtual ~IMaterialDecorator() = default;
 
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
-  virtual void
-  decorate(Surface& surface) const = 0;
+  virtual void decorate(Surface& surface) const = 0;
 
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  virtual void
-  decorate(TrackingVolume& volume) const = 0;
+  virtual void decorate(TrackingVolume& volume) const = 0;
 };
 
-}  // namespace
+}  // namespace Acts
