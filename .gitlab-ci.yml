@@ -32,7 +32,7 @@ license:
   before_script: []
   script:
     - apk add --no-cache git
-    - CI/check_license.py . --check-years
+    - CI/check_license.py .
 
 include_guards:
   stage: build
