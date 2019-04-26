@@ -126,6 +126,38 @@ class AxisAlignedBoundingBox {
       vertex_array_type envelope = vertex_array_type::Zero());
 
   /**
+   * Helper function to calculate the size of a bounding box enclosing @p boxes.
+   * @param boxes The boxes to wrap (const pointers)
+   * @param envelope Optional envelop to add/subtract to dimension.
+   * @return Pair of vertixes: min and max.
+   */
+  static std::pair<vertex_type, vertex_type> wrap(
+      const std::vector<const self_t*>& boxes,
+      vertex_array_type envelope = vertex_array_type::Zero());
+
+  /**
+   * Helper function to calculate the size of a bounding box enclosing @p boxes.
+   * Overload which accepts non-const boxes in @p boxes.
+   * @param boxes The boxes to wrap (non-const pointers)
+   * @param envelope Optional envelop to add/subtract to dimension.
+   * @return Pair of vertixes: min and max.
+   */
+  static std::pair<vertex_type, vertex_type> wrap(
+      const std::vector<self_t*>& boxes,
+      vertex_array_type envelope = vertex_array_type::Zero());
+
+  /**
+   * Helper function to calculate the size of a bounding box enclosing @p boxes.
+   * Overload which accepts a vector in @p boxes which owns the instances
+   * @param boxes The boxes to wrap (by-value vector)
+   * @param envelope Optional envelop to add/subtract to dimension.
+   * @return Pair of vertixes: min and max.
+   */
+  static std::pair<vertex_type, vertex_type> wrap(
+      const std::vector<self_t>& boxes,
+      vertex_array_type envelope = vertex_array_type::Zero());
+
+  /**
    * Calculate whether a point is inside this box.
    * @param point The point to test.
    * @return Whether the point is inside or not.
@@ -250,38 +282,6 @@ class AxisAlignedBoundingBox {
   std::pair<vertex_type, vertex_type> transformVertices(
       const transform_type& trf) const;
 
-  /**
-   * Helper function to calculate the size of a bounding box enclosing @p boxes.
-   * @param boxes The boxes to wrap (const pointers)
-   * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
-   */
-  static std::pair<vertex_type, vertex_type> wrap(
-      const std::vector<const self_t*>& boxes,
-      vertex_array_type envelope = vertex_array_type::Zero());
-
-  /**
-   * Helper function to calculate the size of a bounding box enclosing @p boxes.
-   * Overload which accepts non-const boxes in @p boxes.
-   * @param boxes The boxes to wrap (non-const pointers)
-   * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
-   */
-  static std::pair<vertex_type, vertex_type> wrap(
-      const std::vector<self_t*>& boxes,
-      vertex_array_type envelope = vertex_array_type::Zero());
-
-  /**
-   * Helper function to calculate the size of a bounding box enclosing @p boxes.
-   * Overload which accepts a vector in @p boxes which owns the instances
-   * @param boxes The boxes to wrap (by-value vector)
-   * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
-   */
-  static std::pair<vertex_type, vertex_type> wrap(
-      const std::vector<self_t>& boxes,
-      vertex_array_type envelope = vertex_array_type::Zero());
-
   const entity_t* m_entity;
   vertex_type m_vmin;
   vertex_type m_vmax;
@@ -296,8 +296,12 @@ class AxisAlignedBoundingBox {
 
 /**
  * Build an octree from a list of bounding boxes.
+ * @note @p store and @p prims do not need to contain the same objects. @p store
+ * is only used to pass ownership back to the caller while preserving memory
+ * location.
  * @tparam box_t Works will all box types.
  * @param store Owns the created boxes by means of `std::unique_ptr`.
+ * @param prims Boxes to store. This is a read only vector.
  * @param max_depth No subdivisions beyond this level.
  * @param envelope1 Envelope to add/subtract to dimensions in all directions.
  * @return Pointer to the top most bounding box, containing the entire octree
