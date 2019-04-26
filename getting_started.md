@@ -117,7 +117,6 @@ source CI/setup_lcg94.sh # example, you can use any of the provided scripts.
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
       -DACTS_BUILD_DD4HEP_PLUGIN=ON \
-      -DACTS_BUILD_MATERIAL_PLUGIN=ON \
       -DACTS_BUILD_TGEO_PLUGIN=ON ..
 cmake --build . -- install
 ```
