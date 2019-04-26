@@ -108,12 +108,12 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
-  ActsSymMatrixD<5> cov;
+  TrackSymMatrix cov;
   // take some major correlations (off-diagonals)
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
   PropagatorOptions<> options(tgContext, mfContext);
@@ -156,12 +156,12 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
-  ActsSymMatrixD<5> cov;
+  TrackSymMatrix cov;
   // take some major correlations (off-diagonals)
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
   // A PlaneSelector for the SurfaceCollector
@@ -229,12 +229,12 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
-  ActsSymMatrixD<5> cov;
+  TrackSymMatrix cov;
   // take some major correlations (off-diagonals)
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
   using DebugOutput = detail::DebugOutputActor;
@@ -291,12 +291,12 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
-  ActsSymMatrixD<5> cov;
+  TrackSymMatrix cov;
   // take some major correlations (off-diagonals)
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
   // Action list and abort list

@@ -33,7 +33,7 @@
 namespace Acts {
 namespace Test {
 
-using Jacobian = ActsMatrixD<5, 5>;
+using Jacobian = TrackMatrix;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -121,11 +121,11 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   Propagator propagator(stepper, navigator);
 
   // Set initial parameters for the particle track
-  ActsSymMatrixD<5> cov;
+  TrackSymMatrix cov;
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
 
   // The start position and start parameters
   Vector3D pos(-3. * units::_m, 0., 0.), mom(1. * units::_GeV, 0., 0);

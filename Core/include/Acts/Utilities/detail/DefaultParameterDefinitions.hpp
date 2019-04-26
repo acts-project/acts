@@ -12,6 +12,7 @@
 
 // Acts includes
 #include "Acts/Utilities/ParameterTypes.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 enum ParDef : unsigned int {
@@ -32,8 +33,19 @@ enum ParDef : unsigned int {
   TrackParsDim
 };
 
+constexpr unsigned int GlobalParsDim = 7;
+
 using ParID_t    = ParDef;
 using ParValue_t = double;
+
+using TrackVector         = ActsVector<ParValue_t, TrackParsDim>;
+using TrackRowVector      = ActsRowVector<ParValue_t, TrackParsDim>;
+using GlobalVector        = ActsVector<ParValue_t, GlobalParsDim>;
+using TrackToGlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, TrackParsDim>;
+using GlobalToTrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, GlobalParsDim>;
+using TrackMatrix         = ActsMatrix<ParValue_t, TrackParsDim, TrackParsDim>;
+using TrackSymMatrix      = ActsSymMatrix<ParValue_t, TrackParsDim>;
+using GlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, GlobalParsDim>;
 
 template <ParID_t>
 struct par_type;

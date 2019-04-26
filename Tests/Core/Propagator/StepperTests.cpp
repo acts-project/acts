@@ -30,8 +30,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 
-// TODO: Testing of covariances in Integration test - requires N-layer box
-// detector for implementation of DenseEnvironmentExtension
 namespace tt = boost::test_tools;
 
 namespace Acts {
@@ -143,8 +141,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   naviVac.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  ActsSymMatrixD<5> cov = ActsSymMatrixD<5>::Identity();
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  TrackSymMatrix cov = TrackSymMatrix::Identity();
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
   Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
       std::move(covPtr), startParams, startMom, 1.);
@@ -260,8 +258,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   naviMat.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  ActsSymMatrixD<5> cov = ActsSymMatrixD<5>::Identity();
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  TrackSymMatrix cov = TrackSymMatrix::Identity();
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
   Vector3D startParams(0., 0., 0.), startMom(5. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
       std::move(covPtr), startParams, startMom, 1.);
@@ -436,8 +434,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   naviDet.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  ActsSymMatrixD<5> cov = ActsSymMatrixD<5>::Identity();
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  TrackSymMatrix cov = TrackSymMatrix::Identity();
+  auto covPtr = std::make_unique<const TrackSymMatrix>(cov);
   Vector3D startParams(0., 0., 0.), startMom(5. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
       std::move(covPtr), startParams, startMom, 1.);
@@ -557,7 +555,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track by using the result of the
   // first volume
   covPtr =
-      std::make_unique<const ActsSymMatrixD<5>>(ActsSymMatrixD<5>::Identity());
+      std::make_unique<const TrackSymMatrix>(TrackSymMatrix::Identity());
   startParams = endParams.first;
   startMom = endParams.second;
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtpPiecewise(

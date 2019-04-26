@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
         thetaDist(gen), q / pTDist(gen);
 
     // Fill vector of track objects with simple covariance matrix
-    std::unique_ptr<ActsSymMatrixD<5>> covMat =
-        std::make_unique<ActsSymMatrixD<5>>();
+    std::unique_ptr<TrackSymMatrix> covMat =
+        std::make_unique<TrackSymMatrix>();
 
     // Resolutions
     double resD0 = resIPDist(gen);
@@ -128,10 +128,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
                          Propagator<EigenStepper<ConstantBField>>>
       linFactory(ltConfig);
 
-  ActsVectorD<5> vec5Zero = ActsVectorD<5>::Zero();
-  ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
+  TrackVector vec5Zero = TrackVector::Zero();
+  TrackSymMatrix mat5Zero = TrackSymMatrix::Zero();
   Vector3D vec3Zero = Vector3D::Zero();
-  ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
+  ActsMatrixD<TrackParsDim, 3> mat53Zero = ActsMatrixD<TrackParsDim, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
@@ -165,10 +165,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
                          Propagator<EigenStepper<ConstantBField>>>
       linFactory(ltConfig);
 
-  ActsVectorD<5> vec5Zero = ActsVectorD<5>::Zero();
-  ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
+  TrackVector vec5Zero = TrackVector::Zero();
+  TrackSymMatrix mat5Zero = TrackSymMatrix::Zero();
   Vector3D vec3Zero = Vector3D::Zero();
-  ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
+  ActsMatrixD<TrackParsDim, 3> mat53Zero = ActsMatrixD<TrackParsDim, 3>::Zero();
 
   LinearizedTrack linTrack =
       linFactory

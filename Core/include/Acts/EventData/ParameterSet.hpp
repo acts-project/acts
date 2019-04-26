@@ -88,20 +88,20 @@ class ParameterSet {
   static_assert(detail::are_sorted<true, true, ParID_t, params...>::value,
                 "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int, 0, Acts::TrackParsDim,
+      detail::are_within<unsigned int, 0, TrackParsDim,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
   static_assert(NPars > 0, "number of stored parameters can not be zero");
   static_assert(
-      NPars <= Acts::TrackParsDim,
+      NPars <= TrackParsDim,
       "number of stored parameters can not exceed number of total parameters");
 
  public:
   // public typedefs
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
-  using Projection_t = ActsMatrix<ParValue_t, NPars, Acts::TrackParsDim>;
+  using Projection_t = ActsMatrix<ParValue_t, NPars, TrackParsDim>;
   /// vector type for stored parameters
   using ParVector_t = ActsVector<ParValue_t, NPars>;
   /// type of covariance matrix
@@ -503,7 +503,7 @@ class ParameterSet {
    * @return constant matrix with @c #NPars rows and @c #Acts::TrackParsDim
    * columns
    */
-  static const ActsMatrix<ParValue_t, NPars, Acts::TrackParsDim> projector() {
+  static const ActsMatrix<ParValue_t, NPars, TrackParsDim> projector() {
     return sProjector;
   }
 
@@ -546,5 +546,5 @@ constexpr unsigned int ParameterSet<params...>::NPars;
 template <ParID_t... params>
 const typename ParameterSet<params...>::Projection_t
     ParameterSet<params...>::sProjector = detail::make_projection_matrix<
-        Acts::TrackParsDim, static_cast<unsigned int>(params)...>::init();
+        TrackParsDim, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts

@@ -44,9 +44,9 @@ inline const RotationMatrix3D Surface::referenceFrame(
 }
 
 inline void Surface::initJacobianToGlobal(
-    const GeometryContext& gctx, ActsMatrixD<7, TrackParsDim>& jacobian,
+    const GeometryContext& gctx, TrackToGlobalMatrix& jacobian,
     const Vector3D& gpos, const Vector3D& dir,
-    const ActsVectorD<TrackParsDim>& /*pars*/) const {
+    const TrackVector& /*pars*/) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.
@@ -77,7 +77,7 @@ inline void Surface::initJacobianToGlobal(
 }
 
 inline const RotationMatrix3D Surface::initJacobianToLocal(
-    const GeometryContext& gctx, ActsMatrixD<TrackParsDim, 7>& jacobian,
+    const GeometryContext& gctx, GlobalToTrackMatrix& jacobian,
     const Vector3D& gpos, const Vector3D& dir) const {
   // Optimized trigonometry on the propagation direction
   const double x = dir(0);  // == cos(phi) * sin(theta)
@@ -100,10 +100,10 @@ inline const RotationMatrix3D Surface::initJacobianToLocal(
   return rframeT;
 }
 
-inline const ActsRowVectorD<TrackParsDim> Surface::derivativeFactors(
+inline const TrackRowVector Surface::derivativeFactors(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
     const Vector3D& dir, const RotationMatrix3D& rft,
-    const ActsMatrixD<7, TrackParsDim>& jac) const {
+    const TrackToGlobalMatrix& jac) const {
   // Create the normal and scale it with the projection onto the direction
   ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
   norm_vec /= (norm_vec * dir);

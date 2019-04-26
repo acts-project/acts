@@ -47,8 +47,8 @@ struct PropagatorState {
   /// This is a simple cache struct to mimic a Stepper
   struct Stepper {
     // comply with concept
-    using Jacobian = ActsMatrixD<5, 5>;
-    using Covariance = ActsSymMatrixD<5>;
+    using Jacobian = TrackMatrix;
+    using Covariance = TrackSymMatrix;
     using BoundState = std::tuple<BoundParameters, Jacobian, double>;
     using CurvilinearState =
         std::tuple<CurvilinearParameters, Jacobian, double>;

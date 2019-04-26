@@ -44,13 +44,13 @@ struct LinearizedTrack {
 
   LinearizedTrack() = default;
 
-  LinearizedTrack(const ActsVectorD<5>& paramsAtPCA,
-                  const ActsSymMatrixD<5>& parCovarianceAtPCA,
+  LinearizedTrack(const TrackVector& paramsAtPCA,
+                  const TrackSymMatrix& parCovarianceAtPCA,
                   const Vector3D& linPoint,
-                  const ActsMatrixD<5, 3>& posJacobian,
-                  const ActsMatrixD<5, 3>& momJacobian,
+                  const ActsMatrixD<TrackParsDim, 3>& posJacobian,
+                  const ActsMatrixD<TrackParsDim, 3>& momJacobian,
                   const Vector3D& position, const Vector3D& momentum,
-                  const ActsVectorD<5>& constTerm)
+                  const TrackVector& constTerm)
       : parametersAtPCA(paramsAtPCA),
         covarianceAtPCA(parCovarianceAtPCA),
         linearizationPoint(linPoint),
@@ -60,14 +60,14 @@ struct LinearizedTrack {
         momentumAtPCA(momentum),
         constantTerm(constTerm) {}
 
-  ActsVectorD<5> parametersAtPCA{ActsVectorD<5>::Zero()};
-  ActsSymMatrixD<5> covarianceAtPCA{ActsSymMatrixD<5>::Zero()};
+  TrackVector parametersAtPCA{TrackVector::Zero()};
+  TrackSymMatrix covarianceAtPCA{TrackSymMatrix::Zero()};
   Vector3D linearizationPoint{Vector3D::Zero()};
-  ActsMatrixD<5, 3> positionJacobian{ActsMatrixD<5, 3>::Zero()};
-  ActsMatrixD<5, 3> momentumJacobian{ActsMatrixD<5, 3>::Zero()};
+  ActsMatrixD<TrackParsDim, 3> positionJacobian{ActsMatrixD<TrackParsDim, 3>::Zero()};
+  ActsMatrixD<TrackParsDim, 3> momentumJacobian{ActsMatrixD<TrackParsDim, 3>::Zero()};
   Vector3D positionAtPCA{Vector3D::Zero()};
   Vector3D momentumAtPCA{Vector3D::Zero()};
-  ActsVectorD<5> constantTerm{ActsVectorD<5>::Zero()};
+  TrackVector constantTerm{TrackVector::Zero()};
 };
 
 }  // namespace Acts

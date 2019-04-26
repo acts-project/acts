@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <memory>
-
 #define BOOST_TEST_MODULE GainMatrix Tests
 #include <boost/optional/optional_io.hpp>
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -44,10 +43,10 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
       cylinder, 0, std::move(cov), -0.1, 0.45));
 
   // Make dummy track parameter
-  ActsSymMatrixD<Acts::TrackParsDim> covTrk;
+  TrackSymMatrix covTrk;
   covTrk << 0.08, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
       0, 0, 0, 1;
-  ActsVectorD<Acts::TrackParsDim> parValues;
+  TrackVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01;
   BoundParameters pars(
       tgContext,

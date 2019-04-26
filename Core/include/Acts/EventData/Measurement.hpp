@@ -308,7 +308,7 @@ struct fittable_measurement_helper {
   };
 
   using type =
-      typename detail::type_generator_t<meas_factory, Acts::NGlobalPars>;
+      typename detail::type_generator_t<meas_factory, TrackParsDim>;
 };
 
 /**
