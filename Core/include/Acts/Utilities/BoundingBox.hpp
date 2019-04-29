@@ -34,7 +34,7 @@ class AxisAlignedBoundingBox {
   using self_t = AxisAlignedBoundingBox<entity_t, value_t, DIM>;
 
   /**
-   * strong type helper, not public
+   * Strong type helper, not public
    * This is only used to provide sensible tag-dispatch below.
    */
   template <typename T, typename P>
@@ -111,6 +111,8 @@ class AxisAlignedBoundingBox {
    * @param entity The entity to store
    * @param center The center position
    * @param size The size (width and height) of the box.
+   * @note The special type @c size is required to disambiguate this constructor
+   * from the other one above. It is a wrapper around a simple @c Vector3D.
    */
   AxisAlignedBoundingBox(const entity_t* entity, const vertex_type& center,
                          const Size& size);
@@ -312,7 +314,7 @@ box_t* make_octree(std::vector<std::unique_ptr<box_t>>& store,
                    typename box_t::value_type envelope1 = 0);
 
 /**
- * Overload of the << operator ofr bounding boxes.
+ * Overload of the << operator for bounding boxes.
  * @tparam T entity type
  * @tparam U value type
  * @tparam V dimension
