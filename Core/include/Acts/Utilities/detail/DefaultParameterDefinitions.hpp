@@ -130,7 +130,12 @@ struct par_type<ParDef::eQOP> {
 };
 
 template <>
+<<<<<<< HEAD
 struct par_type<ParDef::eT> {
+=======
+struct par_type<ParDef::eT>
+{
+>>>>>>> Compiling version with failing unit tests
   using type = unbound_parameter;
 };
 }  // namespace Acts
