@@ -19,9 +19,8 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
-	
-	using Jacobian = Acts::SpacePointToTrackMatrix;
-	
+  using Jacobian = Acts::SpacePointToTrackMatrix;
+
   BilloirTrack(const input_track_t& params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
 
@@ -30,12 +29,12 @@ struct BilloirTrack {
   const input_track_t originalTrack;
   Acts::LinearizedTrack linTrack;
   double chi2;
-  Jacobian DiMat;   // position jacobian
-  Jacobian EiMat;   // momentum jacobian
+  Jacobian DiMat;                    // position jacobian
+  Jacobian EiMat;                    // momentum jacobian
   Acts::SpacePointSymMatrix GiMat;   //  = EtWmat * Emat (see below)
   Acts::SpacePointSymMatrix BiMat;   //  = DiMat^T * Wi * EiMat
   Acts::SpacePointSymMatrix CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
-  Acts::Vector3D UiVec;            //  = EiMat^T * Wi * dqi
+  Acts::Vector3D UiVec;              //  = EiMat^T * Wi * dqi
   Acts::SpacePointSymMatrix BCiMat;  //  = BiMat * Ci^-1
   Acts::TrackVector deltaQ;
 };
@@ -50,10 +49,11 @@ struct BilloirVertex {
       Acts::SpacePointSymMatrix::Zero()};  // Amat  = sum{DiMat^T * Wi * dqi}
   Acts::Vector3D Tvec{
       Acts::Vector3D::Zero()};  // Tvec  = sum{DiMat^T * Wi * DiMat}
-  Acts::SpacePointSymMatrix BCBmat{Acts::SpacePointSymMatrix::Zero()};  // BCBmat =
-                                                                    // sum{BiMat
-                                                                    // * Ci^-1 *
-                                                                    // BiMat^T}
+  Acts::SpacePointSymMatrix BCBmat{
+      Acts::SpacePointSymMatrix::Zero()};  // BCBmat =
+                                           // sum{BiMat
+                                           // * Ci^-1 *
+                                           // BiMat^T}
   Acts::Vector3D BCUvec{
       Acts::Vector3D::Zero()};  // BCUvec = sum{BiMat * Ci^-1 * UiVec}
 };

@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundaryCheckPolyDistance) {
-  // we check a box again, but this time described as a poly
+// we check a box again, but this time described as a poly
 
 #include "BoundaryCheckTestsRefs.hpp"
 

@@ -554,8 +554,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
   // first volume
-  covPtr =
-      std::make_unique<const TrackSymMatrix>(TrackSymMatrix::Identity());
+  covPtr = std::make_unique<const TrackSymMatrix>(TrackSymMatrix::Identity());
   startParams = endParams.first;
   startMom = endParams.second;
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtpPiecewise(

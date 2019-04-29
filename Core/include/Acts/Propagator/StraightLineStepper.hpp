@@ -196,8 +196,7 @@ class StraightLineStepper {
     CurvilinearParameters parameters(nullptr, state.pos, state.p * state.dir,
                                      state.q);
     // Create the bound state
-    CurvilinearState curvState{std::move(parameters),
-                               Jacobian::Identity(),
+    CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                state.pathAccumulated};
     /// Return the State
     return curvState;

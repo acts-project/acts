@@ -23,11 +23,11 @@ inline const Vector2D DiscSurface::localCartesianToPolar(
       atan2(lcart[eLOC_Y], lcart[eLOC_X]));
 }
 
-inline void DiscSurface::initJacobianToGlobal(
-    const GeometryContext& gctx, TrackToGlobalMatrix& jacobian,
-    const Vector3D& gpos, const Vector3D& dir,
-    const TrackVector& pars) const {
-
+inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
+                                              TrackToGlobalMatrix& jacobian,
+                                              const Vector3D& gpos,
+                                              const Vector3D& dir,
+                                              const TrackVector& pars) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.

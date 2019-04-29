@@ -138,10 +138,11 @@ inline Intersection LineSurface::intersectionEstimate(
   return Intersection(gpos, std::numeric_limits<double>::max(), false);
 }
 
-inline void LineSurface::initJacobianToGlobal(
-    const GeometryContext& gctx, TrackToGlobalMatrix& jacobian,
-    const Vector3D& gpos, const Vector3D& dir,
-    const TrackVector& pars) const {
+inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
+                                              TrackToGlobalMatrix& jacobian,
+                                              const Vector3D& gpos,
+                                              const Vector3D& dir,
+                                              const TrackVector& pars) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.

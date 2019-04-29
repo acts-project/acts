@@ -151,9 +151,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   momentumJacobian(4, 2) = 1.;
 
   // const term F(V_0, p_0) in Talyor expansion
-  TrackVector constTerm = predParamsAtPCA -
-                             positionJacobian * positionAtPCA -
-                             momentumJacobian * momentumAtPCA;
+  TrackVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
+                          momentumJacobian * momentumAtPCA;
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPoint,
                          positionJacobian, momentumJacobian, positionAtPCA,

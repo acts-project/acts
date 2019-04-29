@@ -11,8 +11,8 @@
 #include <cmath>
 
 // Acts includes
-#include "Acts/Utilities/ParameterTypes.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ParameterTypes.hpp"
 
 namespace Acts {
 enum ParDef : unsigned int {
@@ -30,7 +30,7 @@ enum ParDef : unsigned int {
   eTHETA = 3,  ///< theta direction of momentum in global frame
   eQOP = 4,    ///< charge/momentum for charged tracks, for neutral tracks it is
                /// 1/momentum
-  TrackParsDim /// < The local dimensions
+  TrackParsDim  /// < The local dimensions
 };
 
 /// The dimensions of tracks in global coordinates
@@ -38,7 +38,7 @@ constexpr unsigned int GlobalParsDim = 7;
 /// The dimension of a space point
 constexpr unsigned int SpacePointDim = 3;
 
-using ParID_t    = ParDef;
+using ParID_t = ParDef;
 using ParValue_t = double;
 
 ///
@@ -46,20 +46,20 @@ using ParValue_t = double;
 ///
 
 /// Vector of local track parameters
-using TrackVector         = ActsVector<ParValue_t, TrackParsDim>;
+using TrackVector = ActsVector<ParValue_t, TrackParsDim>;
 /// Row vector of local track parameters
-using TrackRowVector      = ActsRowVector<ParValue_t, TrackParsDim>;
+using TrackRowVector = ActsRowVector<ParValue_t, TrackParsDim>;
 /// Matrix of local-to-local parameters
-using TrackMatrix         = ActsMatrix<ParValue_t, TrackParsDim, TrackParsDim>;
+using TrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, TrackParsDim>;
 /// Symmetical matrix of local-to-local parameters
-using TrackSymMatrix      = ActsSymMatrix<ParValue_t, TrackParsDim>;
+using TrackSymMatrix = ActsSymMatrix<ParValue_t, TrackParsDim>;
 
 ///
 /// Type naming with global parameters
 ///
 
 /// Vector of global track parameters
-using GlobalVector        = ActsVector<ParValue_t, GlobalParsDim>;
+using GlobalVector = ActsVector<ParValue_t, GlobalParsDim>;
 /// Matrix of global-to-global parameters
 using GlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, GlobalParsDim>;
 
@@ -86,9 +86,11 @@ using SpacePointSymMatrix = ActsSymMatrix<ParValue_t, SpacePointDim>;
 ///
 
 /// Matrix of space point-to-local parameters
-using SpacePointToTrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, SpacePointDim>;
+using SpacePointToTrackMatrix =
+    ActsMatrix<ParValue_t, TrackParsDim, SpacePointDim>;
 /// Matrix with local parameters-to-space point
-using TrackToSpacePointMatrix = ActsMatrix<ParValue_t, SpacePointDim, TrackParsDim>;
+using TrackToSpacePointMatrix =
+    ActsMatrix<ParValue_t, SpacePointDim, TrackParsDim>;
 
 template <ParID_t>
 struct par_type;

@@ -29,9 +29,9 @@ struct covariance_validation_fixture {
   /// it can either be used for curvilinear transport
   template <typename StartParameters, typename EndParameters, typename U>
   TrackSymMatrix calculateCovariance(const StartParameters& startPars,
-                                        const TrackSymMatrix& startCov,
-                                        const EndParameters& endPars,
-                                        const U& options) const {
+                                     const TrackSymMatrix& startCov,
+                                     const EndParameters& endPars,
+                                     const U& options) const {
     // steps for estimating derivatives
     const std::array<double, 4> h_steps = {{-2e-4, -1e-4, 1e-4, 2e-4}};
 
@@ -129,7 +129,7 @@ struct covariance_validation_fixture {
  private:
   template <unsigned long int N>
   static TrackVector fitLinear(const std::vector<TrackVector>& values,
-                                  const std::array<double, N>& h) {
+                               const std::array<double, N>& h) {
     TrackVector A;
     TrackVector C;
     A.setZero();
