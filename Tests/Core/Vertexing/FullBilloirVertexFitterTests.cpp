@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
   // Some abitrary values
-  ActsSymMatrixD<3> myCovMat = ActsSymMatrixD<3>::Zero();
+  SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   Vector3D origin(0., 0., 0.);
   BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
-  ActsSymMatrixD<3> zeroMat = ActsSymMatrixD<3>::Zero();
+  SpacePointSymMatrix zeroMat = SpacePointSymMatrix::Zero();
   BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
 
   fittedVertex = billoirFitter.fit(emptyVector, vfOptions).value();
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
     // Some abitrary values
-    ActsSymMatrixD<3> myCovMat = ActsSymMatrixD<3>::Zero();
+    SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;
     // Some abitrary values
-    ActsSymMatrixD<3> myCovMat = ActsSymMatrixD<3>::Zero();
+    SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;

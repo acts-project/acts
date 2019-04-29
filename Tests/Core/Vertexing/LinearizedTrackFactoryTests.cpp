@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   TrackVector vec5Zero = TrackVector::Zero();
   TrackSymMatrix mat5Zero = TrackSymMatrix::Zero();
   Vector3D vec3Zero = Vector3D::Zero();
-  ActsMatrixD<TrackParsDim, 3> mat53Zero = ActsMatrixD<TrackParsDim, 3>::Zero();
+  SpacePointToTrackMatrix mat53Zero = SpacePointToTrackMatrix::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
   TrackVector vec5Zero = TrackVector::Zero();
   TrackSymMatrix mat5Zero = TrackSymMatrix::Zero();
   Vector3D vec3Zero = Vector3D::Zero();
-  ActsMatrixD<TrackParsDim, 3> mat53Zero = ActsMatrixD<TrackParsDim, 3>::Zero();
+  SpacePointToTrackMatrix mat53Zero = SpacePointToTrackMatrix::Zero();
 
   LinearizedTrack linTrack =
       linFactory
