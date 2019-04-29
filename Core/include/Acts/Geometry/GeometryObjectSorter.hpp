@@ -67,7 +67,9 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
         return (eta(one) < eta(two));
       }
       // default for the moment
-      default: { return (one.norm() < two.norm()); }
+      default: {
+        return (one.norm() < two.norm());
+      }
     }
   }
 

@@ -159,7 +159,9 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
 
     } break;
     // default return nullptr
-    default: { return nullptr; }
+    default: {
+      return nullptr;
+    }
   }
   // return the binned array
   return std::make_unique<const BinnedArrayXD<LayerPtr>>(layerOrderVector,
@@ -196,7 +198,9 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
       translation = Vector3D(offset, 0., 0.);
     } break;
     // do nothing for the default
-    default: { ACTS_WARNING("Not yet implemented."); }
+    default: {
+      ACTS_WARNING("Not yet implemented.");
+    }
   }
   // navigation surface
   std::shared_ptr<Surface> navigationSurface;
