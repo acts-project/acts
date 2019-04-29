@@ -105,7 +105,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   predParamsAtPCA[4] = qOvP;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
-  ActsMatrixD<TrackParsDim, 3> positionJacobian;
+  SpacePointToTrackMatrix positionJacobian;
   positionJacobian.setZero();
   // First row
   positionJacobian(0, 0) = -sgnH * X / S;
@@ -121,7 +121,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   positionJacobian(2, 1) = X / S2;
 
   // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
-  ActsMatrixD<TrackParsDim, 3> momentumJacobian;
+  SpacePointToTrackMatrix momentumJacobian;
   momentumJacobian.setZero();
 
   double R = X * cosPhiV + Y * sinPhiV;

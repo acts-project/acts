@@ -30,22 +30,47 @@ enum ParDef : unsigned int {
   eTHETA = 3,  ///< theta direction of momentum in global frame
   eQOP = 4,    ///< charge/momentum for charged tracks, for neutral tracks it is
                /// 1/momentum
-  TrackParsDim
+  TrackParsDim /// < The local dimensions
 };
 
+/// The dimensions of tracks in global coordinates
 constexpr unsigned int GlobalParsDim = 7;
+/// The dimension of a space point
+constexpr unsigned int SpacePointDim = 3;
 
 using ParID_t    = ParDef;
 using ParValue_t = double;
 
+/// Type namings with local parameters
+
+/// Vector of local track parameters
 using TrackVector         = ActsVector<ParValue_t, TrackParsDim>;
+/// Row vector of local track parameters
 using TrackRowVector      = ActsRowVector<ParValue_t, TrackParsDim>;
-using GlobalVector        = ActsVector<ParValue_t, GlobalParsDim>;
-using TrackToGlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, TrackParsDim>;
-using GlobalToTrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, GlobalParsDim>;
+/// Matrix of local-to-local parameters
 using TrackMatrix         = ActsMatrix<ParValue_t, TrackParsDim, TrackParsDim>;
+/// Symmetic matrix of local-to-local parameters
 using TrackSymMatrix      = ActsSymMatrix<ParValue_t, TrackParsDim>;
+
+/// Type naming with global parameters
+
+/// Vector of global track parameters
+using GlobalVector        = ActsVector<ParValue_t, GlobalParsDim>;
+/// Matrix of global-to-global parameters
 using GlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, GlobalParsDim>;
+
+/// Type namings with local & global parameters
+
+/// Matrix of local-to-global parameters
+using TrackToGlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, TrackParsDim>;
+/// Matrix of global-to-local parameters
+using GlobalToTrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, GlobalParsDim>;
+
+
+using SpacePointVector = ActsVector<ParValue_t, SpacePointDim>;
+using SpacePointToTrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, SpacePointDim>;
+using TrackToSpacePointMatrix = ActsMatrix<ParValue_t, SpacePointDim, TrackParsDim>;
+using SpacePointSymMatrix = ActsSymMatrix<ParValue_t, SpacePointDim>;
 
 template <ParID_t>
 struct par_type;
