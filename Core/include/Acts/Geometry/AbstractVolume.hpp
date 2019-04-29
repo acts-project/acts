@@ -58,8 +58,8 @@ class AbstractVolume : public Volume {
   AbstractVolume(std::shared_ptr<const Transform3D> htrans,
                  VolumeBoundsPtr volbounds);
 
-  /// Copy constructor
-  AbstractVolume(const AbstractVolume& vol) = default;
+  /// Copy constructor - deleted
+  AbstractVolume(const AbstractVolume& vol) = delete;
 
   /// Default Constructor - deleted
   AbstractVolume() = delete;
