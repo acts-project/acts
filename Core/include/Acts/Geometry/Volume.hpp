@@ -61,9 +61,10 @@ class Volume : public virtual GeometryObject {
   /// Pseudo-constructor
   virtual Volume* clone() const;
 
-  //// Return methods for geometry transform
+  /// Return methods for geometry transform
   const Transform3D& transform() const;
 
+  /// Returns the inverted transform of this volume.
   const Transform3D& itransform() const;
 
   /// returns the center of the volume
