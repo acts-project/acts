@@ -159,11 +159,11 @@ void random_residual_tests() {
   const double phi_max = par_type_t<ParID_t::ePHI>::max;
   const double phi_min = par_type_t<ParID_t::ePHI>::min;
 
-  ActsVectorD<5> parValues_1;
-  ActsVectorD<5> parValues_2;
+  TrackVector parValues_1;
+  TrackVector parValues_2;
   FullParameterSet parSet_1(nullptr, parValues_1);
   FullParameterSet parSet_2(nullptr, parValues_2);
-  ActsVectorD<5> residual;
+  TrackVector residual;
   const unsigned int toys = 1000;
   for (unsigned int i = 0; i < toys; ++i) {
     const double loc0_1 = uniform_dist(e);

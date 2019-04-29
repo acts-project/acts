@@ -198,8 +198,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
           thetaDist(gen), q / pTDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
-      std::unique_ptr<ActsSymMatrixD<5>> covMat =
-          std::make_unique<ActsSymMatrixD<5>>();
+      std::unique_ptr<TrackSymMatrix> covMat =
+          std::make_unique<TrackSymMatrix>();
 
       // Resolutions
       double resD0 = resIPDist(gen);
@@ -208,9 +208,12 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       double resTh = resAngDist(gen);
       double resQp = resQoPDist(gen);
 
-      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
-          0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0., 0., 0.,
-          0., 0., resQp * resQp;
+      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 
+				   0., resZ0 * resZ0, 0., 0., 0., 0.,
+				   0., 0., resPh * resPh, 0., 0., 0., 
+				   0., 0., 0., resTh * resTh, 0., 0., 
+				   0., 0., 0., 0., resQp * resQp, 0.,
+				   0., 0., 0., 0., 0., 0.;
       tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
@@ -346,10 +349,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
       double resPh = resAngDist(gen);
       double resTh = resAngDist(gen);
       double resQp = resQoPDist(gen);
-
-      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
-          0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0., 0., 0.,
-          0., 0., resQp * resQp;
+          
+      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 
+				   0., resZ0 * resZ0, 0., 0., 0., 0.,
+				   0., 0., resPh * resPh, 0., 0., 0., 
+				   0., 0., 0., resTh * resTh, 0., 0., 
+				   0., 0., 0., 0., resQp * resQp, 0.,
+				   0., 0., 0., 0., 0., 0.;
       tracks.push_back(InputTrack(BoundParameters(tgContext, std::move(covMat),
                                                   paramVec, perigeeSurface)));
     }
