@@ -43,17 +43,10 @@ class StraightLineStepper {
  public:
   using cstep = detail::ConstrainedStep;
 
-<<<<<<< HEAD
   using Corrector = VoidIntersectionCorrector;
-  using Jacobian = ActsMatrixD<TrackParsDim, TrackParsDim>;
-  using Covariance = ActsMatrixD<TrackParsDim, TrackParsDim>;
+  using Jacobian = TrackMatrix;
+  using Covariance = TrackSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-=======
-  using Corrector        = VoidIntersectionCorrector;
-  using Jacobian         = TrackMatrix;
-  using Covariance       = TrackSymMatrix;
-  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
->>>>>>> Renaming only
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
   /// State for track parameter propagation
@@ -85,13 +78,8 @@ class StraightLineStepper {
           geoContext(gctx) {}
 
     /// Boolean to indiciate if you need covariance transport
-<<<<<<< HEAD
     bool covTransport = false;
-    ActsSymMatrixD<TrackParsDim> cov = ActsSymMatrixD<TrackParsDim>::Zero();
-=======
-    bool           covTransport = false;
-    TrackSymMatrix cov          = TrackSymMatrix::Zero();
->>>>>>> Renaming only
+    Covariance cov = Covariance::Zero();
 
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
@@ -187,12 +175,7 @@ class StraightLineStepper {
                                state.p * state.dir, state.q,
                                surface.getSharedPtr());
     // Create the bound state
-<<<<<<< HEAD
-    BoundState bState{std::move(parameters), ActsMatrixD<5, 5>::Identity(),
-=======
-    BoundState bState{std::move(parameters),
-                      TrackMatrix::Identity(),
->>>>>>> Renaming only
+    BoundState bState{std::move(parameters), Jacobian::Identity(),
                       state.pathAccumulated};
     /// Return the State
     return bState;
@@ -214,11 +197,7 @@ class StraightLineStepper {
                                      state.q);
     // Create the bound state
     CurvilinearState curvState{std::move(parameters),
-<<<<<<< HEAD
-                               ActsMatrixD<TrackParsDim, TrackParsDim>::Identity(),
-=======
-                               TrackMatrix::Identity(),
->>>>>>> Renaming only
+                               Jacobian::Identity(),
                                state.pathAccumulated};
     /// Return the State
     return curvState;
@@ -261,15 +240,8 @@ class StraightLineStepper {
   /// @param [in] reinitialize is a flag to steer whether the
   ///        state should be reinitialized at the new
   ///        position
-<<<<<<< HEAD
   void covarianceTransport(State& /*state*/,
                            bool /*reinitialize = false*/) const {}
-=======
-  void
-  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/) const
-  {
-  }
->>>>>>> Renaming only
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -285,17 +257,8 @@ class StraightLineStepper {
   ///        position
   /// @note no check is done if the position is actually on the surface
   ///
-<<<<<<< HEAD
   void covarianceTransport(State& /*unused*/, const Surface& /*surface*/,
                            bool /*reinitialize = false*/) const {}
-=======
-  void
-  covarianceTransport(State& /*unused*/,
-                      const Surface& /*surface*/,
-                      bool /*reinitialize = false*/) const
-  {
-  }
->>>>>>> Renaming only
 
   /// Perform a straight line propagation step
   ///
