@@ -22,7 +22,7 @@
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/filter.hpp>
 // This include is technically not needed for this file, but removing it
-// introduces some form of or order dependency on subsequent include.
+// introduces some form of order dependency on subsequent include.
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>
 // clang-format on

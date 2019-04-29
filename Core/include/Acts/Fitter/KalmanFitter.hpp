@@ -148,7 +148,7 @@ class KalmanFitter {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
-    // To be able to find measurements later, we put the into a map
+    // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
     std::map<const Surface*, source_link_t> inputMeasurements;
@@ -210,7 +210,6 @@ class KalmanFitter {
   template <typename source_link_t, typename parameters_t>
   class Actor {
    public:
-    // using TrackState = typename track_states_t::value_type;
     using TrackStateType = TrackState<source_link_t, parameters_t>;
 
     /// Explicit constructor with updator and calibrator
