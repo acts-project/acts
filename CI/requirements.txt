@@ -6,3 +6,5 @@ codereport==0.2.*
 python-gitlab==1.6.0
 python-dateutil==2.7.5
 gcovr==4.1
+markdown==3.1
+pymdown-extensions==6.0
