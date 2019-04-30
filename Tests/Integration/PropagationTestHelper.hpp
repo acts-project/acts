@@ -496,8 +496,9 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
 	ActsSymMatrix<ParValue_t, TrackParsDim - 1> obt_cov = obtained_cov.template block<TrackParsDim -1, TrackParsDim - 1>(0, 0);
 	ActsSymMatrix<ParValue_t, TrackParsDim - 1> calc_cov = calculated_cov.template block<TrackParsDim -1, TrackParsDim - 1>(0, 0);
 
+  // TODO: Replace the following line by the following block
+  // CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
   CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
-  //~ CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
   for(unsigned int i = 0; i < calculated_cov.rows(); i++)
   {
 	  for(unsigned int j = 0; j < calculated_cov.cols(); j++)
