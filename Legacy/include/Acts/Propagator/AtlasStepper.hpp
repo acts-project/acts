@@ -138,21 +138,21 @@ class AtlasStepper {
         pVector[27] = -Sf * Se;  // - sin(phi) * cos(theta)
         pVector[35] = Cf * Ce;   // cos(phi) * cos(theta)
         pVector[43] = 0.;
-        pVector[51] = 0.;  // dAx/
+        pVector[51] = 0.;        // dAx/
 
         pVector[12] = 0.;
         pVector[20] = 0.;
         pVector[28] = Cf * Se;  // cos(phi) * sin(theta)
         pVector[36] = Sf * Ce;  // sin(phi) * cos(theta)
         pVector[44] = 0.;
-        pVector[52] = 0.;  // dAy/
+        pVector[52] = 0.;       // dAy/
 
         pVector[13] = 0.;
         pVector[21] = 0.;
         pVector[29] = 0.;
         pVector[37] = -Se;  // - sin(theta)
         pVector[45] = 0.;
-        pVector[53] = 0.;  // dAz/
+        pVector[53] = 0.;   // dAz/
 
         pVector[14] = 0.;
         pVector[22] = 0.;
@@ -167,10 +167,6 @@ class AtlasStepper {
         pVector[39] = 0.;
         pVector[47] = 0.;
         pVector[55] = 1.;  // dT/
-
-        pVector[56] = 0.;
-        pVector[57] = 0.;
-        pVector[58] = 0.;
 
         // special treatment for surface types
         const auto& surface = pars.referenceSurface();
@@ -250,7 +246,7 @@ class AtlasStepper {
     bool newfield;
     // internal parameters to be used
     Vector3D field;
-    double pVector[59];
+    double pVector[55];
     // result
     double parameters[BoundParsDim] = {0., 0., 0., 0., 0., 0.};
     const Covariance* covariance;
