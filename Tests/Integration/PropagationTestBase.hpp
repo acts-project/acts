@@ -281,50 +281,50 @@ BOOST_DATA_TEST_CASE(
                          plimit * Acts::units::_m, index);
 }
 
-//~ // test correct covariance transport from disc to disc
-//~ BOOST_DATA_TEST_CASE(
-    //~ covariance_transport_disc_disc_,
-    //~ bdata::random((bdata::seed = 3000,
-                   //~ bdata::distribution = std::uniform_real_distribution<>(
-                       //~ 0.4 * units::_GeV, 10. * units::_GeV))) ^
-        //~ bdata::random((bdata::seed = 3001,
-                       //~ bdata::distribution =
-                           //~ std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        //~ bdata::random((bdata::seed = 3002,
-                       //~ bdata::distribution =
-                           //~ std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3003,
-             //~ bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3004,
-             //~ bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3005,
-             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3006,
-             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3007,
-             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        //~ bdata::xrange(ntests),
-    //~ pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
-  //~ if (index < skip) {
-    //~ return;
-  //~ }
+// test correct covariance transport from disc to disc
+BOOST_DATA_TEST_CASE(
+    covariance_transport_disc_disc_,
+    bdata::random((bdata::seed = 3000,
+                   bdata::distribution = std::uniform_real_distribution<>(
+                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+        bdata::random((bdata::seed = 3001,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+        bdata::random((bdata::seed = 3002,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
+        bdata::random(
+            (bdata::seed = 3003,
+             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 3004,
+             bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
+        bdata::random(
+            (bdata::seed = 3005,
+             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+        bdata::random(
+            (bdata::seed = 3006,
+             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+        bdata::random(
+            (bdata::seed = 3007,
+             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+        bdata::xrange(ntests),
+    pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
+  if (index < skip) {
+    return;
+  }
 
-  //~ double dcharge = -1 + 2 * charge;
-  //~ // covariance check for atlas stepper
-  //~ covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
-      //~ apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
-      //~ rand2, rand3, index, true, true, 1e-1);
+  double dcharge = -1 + 2 * charge;
+  // covariance check for atlas stepper
+  covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
+      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      rand2, rand3, index, true, true, 1e-1);
 
-  //~ // covariance check for eigen stepper
-  //~ covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
-      //~ epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
-      //~ rand2, rand3, index, true, true, 1e-1);
-//~ }
+  // covariance check for eigen stepper
+  covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
+      epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      rand2, rand3, index, true, true, 1e-1);
+}
 
 //~ // test correct covariance transport from plane to plane
 //~ BOOST_DATA_TEST_CASE(
