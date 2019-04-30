@@ -96,6 +96,7 @@ class AtlasStepper {
       pVector[4] = Sf * Se;
       pVector[5] = Ce;
       pVector[6] = Vp[4];
+      pVector[7] = 0.;
 
       // @todo: remove magic numbers - is that the charge ?
       if (std::abs(pVector[6]) < .000000000000001) {
@@ -111,51 +112,61 @@ class AtlasStepper {
         useJacobian = true;
         const auto transform = pars.referenceFrame(geoContext);
 
-        pVector[7] = transform(0, eLOC_0);
-        pVector[14] = transform(0, eLOC_1);
-        pVector[21] = 0.;
-        pVector[28] = 0.;
-        pVector[35] = 0.;  // dX /
+        pVector[8] = transform(0, eLOC_0);
+        pVector[16] = transform(0, eLOC_1);
+        pVector[24] = 0.;
+        pVector[32] = 0.;
+        pVector[40] = 0.;
+        pVector[48] = 0.;  // dX /
 
-        pVector[8] = transform(1, eLOC_0);
-        pVector[15] = transform(1, eLOC_1);
-        pVector[22] = 0.;
-        pVector[29] = 0.;
-        pVector[36] = 0.;  // dY /
+        pVector[9] = transform(1, eLOC_0);
+        pVector[17] = transform(1, eLOC_1);
+        pVector[25] = 0.;
+        pVector[33] = 0.;
+        pVector[41] = 0.;
+        pVector[49] = 0.;  // dY /
 
-        pVector[9] = transform(2, eLOC_0);
-        pVector[16] = transform(2, eLOC_1);
-        pVector[23] = 0.;
-        pVector[30] = 0.;
-        pVector[37] = 0.;  // dZ /
-
-        pVector[10] = 0.;
-        pVector[17] = 0.;
-        pVector[24] = -Sf * Se;  // - sin(phi) * cos(theta)
-        pVector[31] = Cf * Ce;   // cos(phi) * cos(theta)
-        pVector[38] = 0.;        // dAx/
+        pVector[10] = transform(2, eLOC_0);
+        pVector[18] = transform(2, eLOC_1);
+        pVector[26] = 0.;
+        pVector[34] = 0.;
+        pVector[42] = 0.;
+        pVector[50] = 0.;  // dZ /
 
         pVector[11] = 0.;
-        pVector[18] = 0.;
-        pVector[25] = Cf * Se;  // cos(phi) * sin(theta)
-        pVector[32] = Sf * Ce;  // sin(phi) * cos(theta)
-        pVector[39] = 0.;       // dAy/
+        pVector[19] = 0.;
+        pVector[27] = -Sf * Se;  // - sin(phi) * cos(theta)
+        pVector[35] = Cf * Ce;   // cos(phi) * cos(theta)
+        pVector[43] = 0.;
+        pVector[51] = 0.;        // dAx/
 
         pVector[12] = 0.;
-        pVector[19] = 0.;
-        pVector[26] = 0.;
-        pVector[33] = -Se;  // - sin(theta)
-        pVector[40] = 0.;   // dAz/
+        pVector[20] = 0.;
+        pVector[28] = Cf * Se;  // cos(phi) * sin(theta)
+        pVector[36] = Sf * Ce;  // sin(phi) * cos(theta)
+        pVector[44] = 0.;
+        pVector[52] = 0.;       // dAy/
 
         pVector[13] = 0.;
-        pVector[20] = 0.;
-        pVector[27] = 0.;
-        pVector[34] = 0.;
-        pVector[41] = 1.;  // dCM/
+        pVector[21] = 0.;
+        pVector[29] = 0.;
+        pVector[37] = -Se;  // - sin(theta)
+        pVector[45] = 0.;
+        pVector[53] = 0.;   // dAz/
 
-        pVector[42] = 0.;
-        pVector[43] = 0.;
-        pVector[44] = 0.;
+        pVector[14] = 0.;
+        pVector[22] = 0.;
+        pVector[30] = 0.;
+        pVector[38] = 0.;
+        pVector[46] = 1.;
+        pVector[54] = 0.;  // dCM/
+
+        pVector[15] = 0.;
+        pVector[23] = 0.;
+        pVector[31] = 0.;
+        pVector[39] = 0.;
+        pVector[47] = 0.;
+        pVector[55] = 1.;  // dT/
 
         // special treatment for surface types
         const auto& surface = pars.referenceSurface();
@@ -168,12 +179,12 @@ class AtlasStepper {
           double d0 = lCf * Ax[0] + lSf * Ay[0];
           double d1 = lCf * Ax[1] + lSf * Ay[1];
           double d2 = lCf * Ax[2] + lSf * Ay[2];
-          pVector[7] = d0;
-          pVector[8] = d1;
-          pVector[9] = d2;
-          pVector[14] = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
-          pVector[15] = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
-          pVector[16] = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
+          pVector[8] = d0;
+          pVector[9] = d1;
+          pVector[10] = d2;
+          pVector[16] = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
+          pVector[17] = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
+          pVector[18] = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
         }
         // the line needs components that relate direction change
         // with global frame change
@@ -191,14 +202,14 @@ class AtlasStepper {
           double PC = pVector[3] * C[0] + pVector[4] * C[1] + pVector[5] * C[2];
           double Bn = 1. / PC;
 
-          double Bx2 = -A[2] * pVector[25];
-          double Bx3 = A[1] * pVector[33] - A[2] * pVector[32];
+          double Bx2 = -A[2] * pVector[28];
+          double Bx3 = A[1] * pVector[37] - A[2] * pVector[36];
 
-          double By2 = A[2] * pVector[24];
-          double By3 = A[2] * pVector[31] - A[0] * pVector[33];
+          double By2 = A[2] * pVector[27];
+          double By3 = A[2] * pVector[35] - A[0] * pVector[37];
 
-          double Bz2 = A[0] * pVector[25] - A[1] * pVector[24];
-          double Bz3 = A[0] * pVector[32] - A[1] * pVector[31];
+          double Bz2 = A[0] * pVector[28] - A[1] * pVector[27];
+          double Bz3 = A[0] * pVector[36] - A[1] * pVector[35];
 
           double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
           double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
@@ -211,12 +222,12 @@ class AtlasStepper {
           Bz3 = (Bz3 - B[2] * B3) * Bn;
 
           //  /dPhi      |     /dThe       |
-          pVector[21] = Bx2 * Vp[0];
-          pVector[28] = Bx3 * Vp[0];  // dX/
-          pVector[22] = By2 * Vp[0];
-          pVector[29] = By3 * Vp[0];  // dY/
-          pVector[23] = Bz2 * Vp[0];
-          pVector[30] = Bz3 * Vp[0];  // dZ/
+          pVector[24] = Bx2 * Vp[0];
+          pVector[32] = Bx3 * Vp[0];  // dX/
+          pVector[25] = By2 * Vp[0];
+          pVector[33] = By3 * Vp[0];  // dY/
+          pVector[26] = Bz2 * Vp[0];
+          pVector[34] = Bz3 * Vp[0];  // dZ/
         }
       }
       // now declare the state as ready
@@ -235,9 +246,9 @@ class AtlasStepper {
     bool newfield;
     // internal parameters to be used
     Vector3D field;
-    double pVector[64];
+    double pVector[55];
     // result
-    double parameters[BoundParsDim] = {0., 0., 0., 0., 0.};
+    double parameters[BoundParsDim] = {0., 0., 0., 0., 0., 0.};
     const Covariance* covariance;
     Covariance cov = Covariance::Zero();
     bool covTransport = false;
