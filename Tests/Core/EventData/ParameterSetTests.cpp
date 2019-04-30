@@ -171,7 +171,7 @@ void random_residual_tests() {
     const double phi_1 = uniform_dist(e);
     const double theta_1 = uniform_dist(e);
     const double qop_1 = uniform_dist(e);
-    parValues_1 << loc0_1, loc1_1, phi_1, theta_1, qop_1;
+    parValues_1 << loc0_1, loc1_1, phi_1, theta_1, qop_1, 0.;
     parSet_1.setParameters(parValues_1);
 
     const double loc0_2 = uniform_dist(e);
@@ -179,7 +179,7 @@ void random_residual_tests() {
     const double phi_2 = uniform_dist(e);
     const double theta_2 = uniform_dist(e);
     const double qop_2 = uniform_dist(e);
-    parValues_2 << loc0_2, loc1_2, phi_2, theta_2, qop_2;
+    parValues_2 << loc0_2, loc1_2, phi_2, theta_2, qop_2, 0.;
     parSet_2.setParameters(parValues_2);
 
     const double delta_loc0 = loc0_1 - loc0_2;
@@ -458,25 +458,26 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
  * @sa ParameterSet::projector
  */
 BOOST_AUTO_TEST_CASE(parset_projection_tests) {
+
   ActsMatrixD<1, BoundParsDim> phi_proj;
-  phi_proj << 0, 0, 1, 0, 0;
+  phi_proj << 0, 0, 1, 0, 0, 0;
 
   ActsMatrixD<2, BoundParsDim> loc0_qop_proj;
-  loc0_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  loc0_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<2, BoundParsDim> loc1_theta_proj;
-  loc1_theta_proj << 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
+  loc1_theta_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0;
 
   ActsMatrixD<3, BoundParsDim> loc0_loc1_phi_proj;
-  loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0;
+  loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
 
   ActsMatrixD<4, BoundParsDim> loc0_phi_theta_qop_proj;
-  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-      0, 0, 1;
+  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+      0, 0, 1, 0;
 
-  ActsMatrixD<BoundParsDim, BoundParsDim> loc0_loc1_phi_theta_qop_proj;
-  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
-      0, 0, 0, 1, 0, 0, 0, 0, 0, 1;
+  ActsMatrixD<5, BoundParsDim> loc0_loc1_phi_theta_qop_proj;
+  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+      0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
 
   BOOST_CHECK((ParameterSet<ParID_t::ePHI>::projector() == phi_proj));
   BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eQOP>::projector() ==

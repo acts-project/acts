@@ -170,6 +170,7 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(4, eTHETA) = cos_theta * sin_phi;
   jacobian(5, eTHETA) = (-sin_theta);
   jacobian(6, eQOP) = 1;
+  jacobian(7, eT) = 1;
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / dir.dot(rframe.col(2));

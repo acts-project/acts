@@ -185,7 +185,6 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       } else {
         return result.error();
       }
-
     }  // end loop tracks
 
     // calculate delta (billoirFrameOrigin-position), might be changed by the
@@ -216,7 +215,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
 
     // deltaV = cov_(deltaV) * Vdel;
     Vector3D deltaV = covDeltaVmat * Vdel;
-
+    
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
@@ -331,7 +330,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         // new refitted trackparameters
         TrackParametersBase::ParVector_t paramVec;
         paramVec << 0., 0., trackMomenta[iTrack](0), trackMomenta[iTrack](1),
-            trackMomenta[iTrack](2);
+            trackMomenta[iTrack](2), 0.;
 
         BoundParameters refittedParams(vFitterOptions.geoContext,
                                        std::move(covDeltaPmat[iTrack]),

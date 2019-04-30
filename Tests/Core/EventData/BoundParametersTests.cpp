@@ -77,11 +77,11 @@ BOOST_DATA_TEST_CASE(
   auto pSurface = Surface::makeShared<PlaneSurface>(transform, bounds);
 
   // now create parameters on this surface
-  // l_x, l_y, phi, theta, q/p (1/p)
-  std::array<double, 5> pars_array = {{-0.1234, 9.8765, 0.45, 0.888, 0.001}};
+  // l_x, l_y, phi, theta, q/p (1/p) t
+  std::array<double, 6> pars_array = {{-0.1234, 9.8765, 0.45, 0.888, 0.001, 0.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
-      pars_array[4];
+      pars_array[4], pars_array[5];
 
   const double phi = pars_array[2];
   const double theta = pars_array[3];
@@ -182,11 +182,11 @@ BOOST_DATA_TEST_CASE(
   auto dSurface = Surface::makeShared<DiscSurface>(transform, bounds);
 
   // now create parameters on this surface
-  // r, phi, phi, theta, q/p (1/p)
-  std::array<double, 5> pars_array = {{125., 0.345, 0.45, 0.888, 0.001}};
+  // r, phi, phi, theta, q/p (1/p) t
+  std::array<double, 6> pars_array = {{125., 0.345, 0.45, 0.888, 0.001, 0.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
-      pars_array[4];
+      pars_array[4], pars_array[5];
 
   const double phi = pars_array[2];
   const double theta = pars_array[3];
@@ -267,11 +267,11 @@ BOOST_DATA_TEST_CASE(
       Surface::makeShared<CylinderSurface>(transform, bounds);
 
   // now create parameters on this surface
-  // rPhi, a, phi, theta, q/p (1/p)
-  std::array<double, 5> pars_array = {{125., 343., 0.45, 0.888, 0.001}};
+  // rPhi, a, phi, theta, q/p (1/p) t
+  std::array<double, 6> pars_array = {{125., 343., 0.45, 0.888, 0.001, 0.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
-      pars_array[4];
+      pars_array[4], pars_array[5];
 
   const double phi = pars_array[2];
   const double theta = pars_array[3];
@@ -361,11 +361,11 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<const Transform3D>(*transform));
 
   // now create parameters on this surface
-  // d0, z0, phi, theta, q/p (1/p)
-  std::array<double, 5> pars_array = {{-0.7321, 22.5, 0.45, 0.888, 0.001}};
+  // d0, z0, phi, theta, q/p (1/p) t
+  std::array<double, 6> pars_array = {{-0.7321, 22.5, 0.45, 0.888, 0.001, 0.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
-      pars_array[4];
+      pars_array[4], pars_array[5];
 
   BoundParameters ataPerigee_from_pars(tgContext, nullptr, pars, pSurface);
   auto pos = ataPerigee_from_pars.position();
@@ -434,11 +434,11 @@ BOOST_DATA_TEST_CASE(
       transform, 2. * Acts::units::_mm, 1. * Acts::units::_m);
 
   // now create parameters on this surface
-  // r, z, phi, theta, q/p (1/p)
-  std::array<double, 5> pars_array = {{0.2321, 22.5, 0.45, 0.888, 0.001}};
+  // r, z, phi, theta, q/p (1/p) t
+  std::array<double, 6> pars_array = {{0.2321, 22.5, 0.45, 0.888, 0.001, 0.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
-      pars_array[4];
+      pars_array[4], pars_array[5];
 
   // constructor from parameter vector
   BoundParameters ataLine_from_pars(tgContext, nullptr, pars, sSurface);

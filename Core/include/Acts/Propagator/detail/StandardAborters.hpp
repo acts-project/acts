@@ -154,7 +154,6 @@ struct SurfaceReached {
     if (state.navigation.targetReached) {
       return true;
     }
-
     // Check if the cache filled the currentSurface - or if we are on the
     // surface
     // @todo - do not apply the isOnSurface check here, but handle by the
@@ -204,6 +203,7 @@ struct SurfaceReached {
         return dstream.str();
       });
     }
+
     // path limit check
     return targetReached;
   }

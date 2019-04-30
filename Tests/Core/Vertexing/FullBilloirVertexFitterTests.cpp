@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       // Construct random track parameters
       TrackParametersBase::ParVector_t paramVec;
       paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
-          thetaDist(gen), q / pTDist(gen);
+          thetaDist(gen), q / pTDist(gen), 0.;
 
       // Fill vector of track objects with simple covariance matrix
       std::unique_ptr<TrackSymMatrix> covMat =
@@ -213,11 +213,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 				   0., 0., resPh * resPh, 0., 0., 0., 
 				   0., 0., 0., resTh * resTh, 0., 0., 
 				   0., 0., 0., 0., resQp * resQp, 0.,
-				   0., 0., 0., 0., 0., 0.;
+				   0., 0., 0., 0., 0., 1.;
       tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
-
     // Do the actual fit with 4 tracks without constraint
     Vertex<BoundParameters> fittedVertex =
         billoirFitter.fit(tracks, vfOptions).value();
@@ -338,7 +337,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
       // Construct random track parameters
       TrackParametersBase::ParVector_t paramVec;
       paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
-          thetaDist(gen), q / pTDist(gen);
+          thetaDist(gen), q / pTDist(gen), 0.;
 
       // Fill vector of track objects with simple covariance matrix
       std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
@@ -355,7 +354,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
 				   0., 0., resPh * resPh, 0., 0., 0., 
 				   0., 0., 0., resTh * resTh, 0., 0., 
 				   0., 0., 0., 0., resQp * resQp, 0.,
-				   0., 0., 0., 0., 0., 0.;
+				   0., 0., 0., 0., 0., 1.;
       tracks.push_back(InputTrack(BoundParameters(tgContext, std::move(covMat),
                                                   paramVec, perigeeSurface)));
     }
