@@ -555,7 +555,7 @@ class AtlasStepper {
         state.pVector[34] = Bz3 * Vp[0];  // dZ/
       }
       // now declare the state as ready
-      state_ready = true;
+      state.state_ready = true;
   }
 
   /// Method to update momentum, direction and p
