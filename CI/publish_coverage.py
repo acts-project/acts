@@ -7,8 +7,7 @@ import requests
 import tempfile
 from urllib.parse import urljoin
 
-# from fs.sshfs import SSHFS
-from sshfs import SSHFS
+from fs.sshfs import SSHFS
 from fs.osfs import OSFS
 import fs.copy
 import gitlab
@@ -19,26 +18,48 @@ from dateutil.parser import parse
 from concurrent.futures import ThreadPoolExecutor, wait
 
 import logging
+
 # logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--deploy-user", default="atsjenkins")
     p.add_argument("--deploy-pwd", default=os.getenv("ATSJENKINS_PASSWORD"))
     p.add_argument("--coverage-source", required=True)
-    p.add_argument("--commit-hash", default=os.getenv("CI_COMMIT_SHA"))
-    p.add_argument("--coverage-commit-limit", default=int(os.getenv("COVERAGE_COMMIT_LIMIT", 10)), type=int)
-    p.add_argument("--coverage-root", default=os.getenv("COVERAGE_WEBSITE_ROOT", "/eos/user/a/atsjenkins/www/ACTS/coverage"))
-    p.add_argument("--website-public-url", default=os.getenv("COVERAGE_WEBSITE_URL", "https://acts.web.cern.ch/ACTS/coverage/"))
+    p.add_argument(
+        "--commit-hash", default=os.getenv("CI_COMMIT_SHA", None), required=True
+    )
+    p.add_argument(
+        "--coverage-commit-limit",
+        default=int(os.getenv("COVERAGE_COMMIT_LIMIT", 10)),
+        type=int,
+    )
+    p.add_argument(
+        "--coverage-root",
+        default=os.getenv(
+            "COVERAGE_WEBSITE_ROOT", "/eos/user/a/atsjenkins/www/ACTS/coverage"
+        ),
+    )
+    p.add_argument(
+        "--website-public-url",
+        default=os.getenv(
+            "COVERAGE_WEBSITE_URL", "https://acts.web.cern.ch/ACTS/coverage/"
+        ),
+    )
     p.add_argument("--project-id", default=3031, type=int)
     p.add_argument("--dry-run", "-s", action="store_true")
 
     args = p.parse_args()
 
     try:
-        www_fs = SSHFS(host="lxplus.cern.ch",
-                       user=args.deploy_user,
-                       passwd=args.deploy_pwd).opendir(args.coverage_root)
+        www_fs = SSHFS(
+            host="lxplus.cern.ch",
+            user=args.deploy_user,
+            passwd=args.deploy_pwd,
+            allow_agent=False,
+            look_for_keys=False,
+        ).opendir(args.coverage_root)
         # www_fs = OSFS("www")
         listdir = www_fs.listdir(".")
     except:
@@ -55,7 +76,10 @@ def main():
     commit_slug = args.commit_hash[:7]
     coverage_dest = os.path.join(args.coverage_root, commit_slug)
     print("Going to deploy coverage for", commit_slug, "to", coverage_dest)
-    print("Will be publicly available under", urljoin(args.website_public_url, commit_slug))
+    print(
+        "Will be publicly available under",
+        urljoin(args.website_public_url, commit_slug),
+    )
 
     src_fs = OSFS(args.coverage_source)
 
@@ -80,10 +104,14 @@ def main():
         except gitlab.exceptions.GitlabGetError as e:
             print("Commit", commit, "not found, will remove")
 
-    deployed_commits_with_time = list(reversed(sorted(deployed_commits_with_time, key=lambda i: i[1])))
+    deployed_commits_with_time = list(
+        reversed(sorted(deployed_commits_with_time, key=lambda i: i[1]))
+    )
 
     # take the n newest commits
-    commits_to_keep = set(h for h,_ in deployed_commits_with_time[:args.coverage_commit_limit])
+    commits_to_keep = set(
+        h for h, _ in deployed_commits_with_time[: args.coverage_commit_limit]
+    )
 
     print("Currently deployed commits:")
     for idx, (h, t) in enumerate(deployed_commits_with_time):
@@ -91,7 +119,6 @@ def main():
             print(" o", h, "-", t)
         else:
             print(" x", h, "-", t)
-
 
     print("Keeping commits:", ", ".join(commits_to_keep))
 
@@ -117,12 +144,15 @@ def main():
 Redirecting to <a href"{0}">{0}</a>
 </body>
 </html>
-    """.format(latest_coverage_url)
+    """.format(
+        latest_coverage_url
+    )
 
     with www_fs.open("index.html", "w") as f:
         print("Writing index file redirecting to", latest_coverage_url)
         if not args.dry_run:
             f.write(index_content)
+
 
 if "__main__" == __name__:
     main()
