@@ -13,7 +13,6 @@ Acts::Vertex<input_track_t>::Vertex(const Vector3D& position)
   m_position.setZero();
   m_position.head<3>() = position;
 }
->>>>>>> Added timing information support to Acts::Vertex, added eT axis and Vector4D to definitions
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
