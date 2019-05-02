@@ -29,7 +29,7 @@ namespace Test {
 
 struct Object {};
 
-using ObjectBBox = Acts::AABB3F<Object>;
+using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, float, 3>;
 
 BOOST_AUTO_TEST_CASE(box_construction) {
   BOOST_TEST_CONTEXT("2D") {

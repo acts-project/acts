@@ -326,18 +326,6 @@ template <typename T, typename U, size_t V>
 std::ostream& operator<<(std::ostream& os,
                          const AxisAlignedBoundingBox<T, U, V>& box);
 
-/**
- * A few typedefs for convenience
- */
-template <typename T, typename value_t>
-using AABB3 = AxisAlignedBoundingBox<T, value_t, 3>;
-
-template <typename T>
-using AABB3F = AABB3<T, float>;
-
-template <typename T>
-using AABB3D = AABB3<T, double>;
-
 }  // namespace Acts
 
 #include "Acts/Utilities/BoundingBox.ipp"

@@ -32,7 +32,7 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 class Volume : public virtual GeometryObject {
  public:
-  using BoundingBox = AABB3D<Volume>;
+  using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
 
   ///  Default constructor
   Volume();
@@ -41,6 +41,8 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param htrans is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
+  /// @note This will automatically build an oriented bounding box with an
+  /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const std::shared_ptr<const Transform3D>& htrans,
          VolumeBoundsPtr volbounds);
 
@@ -48,6 +50,8 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied after copying
+  /// @note This will automatically build an oriented bounding box with an
+  /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Volume& vol, const Transform3D* shift = nullptr);
 
   /// Destructor

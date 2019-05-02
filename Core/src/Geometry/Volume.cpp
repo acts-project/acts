@@ -48,8 +48,9 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
                                : Transform3D::Identity()),
       m_center(s_origin),
       m_volumeBounds(vol.m_volumeBounds),
-      m_orientedBoundingBox(
-          m_volumeBounds->boundingBox(nullptr, {0.05, 0.05, 0.05}, this)) {
+      m_orientedBoundingBox(m_volumeBounds->boundingBox(
+          nullptr, {0.05 * units::_mm, 0.05 * units::_mm, 0.05 * units::_mm},
+          this)) {
   // apply the shift if it exists
   if (shift != nullptr) {
     m_transform = std::make_shared<const Transform3D>(transform() * (*shift));
