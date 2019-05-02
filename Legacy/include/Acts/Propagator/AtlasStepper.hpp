@@ -940,7 +940,7 @@ class AtlasStepper {
     state.jacobian[8] = MB[0] * state.pVector[24] + MB[1] * state.pVector[25] +
                         MB[2] * state.pVector[26];  // dL1/dPhi
     state.jacobian[9] = MB[0] * state.pVector[32] + MB[1] * state.pVector[33] +
-                        MB[2] * state.pVector[33];  // dL1/dThe
+                        MB[2] * state.pVector[34];  // dL1/dThe
     state.jacobian[10] = MB[0] * state.pVector[40] + MB[1] * state.pVector[41] +
                         MB[2] * state.pVector[42];  // dL1/dCM
     state.jacobian[11] = 0.;  // dL1/dT
@@ -981,7 +981,7 @@ class AtlasStepper {
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
-std::cout << J << std::endl;
+
     state.cov = J * (*state.covariance) * J.transpose();
   }
 
