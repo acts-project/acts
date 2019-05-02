@@ -335,24 +335,6 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
   trf = trf * Eigen::Scaling(vertex_type(1, -1));
   trf.scale(unit);
 
-  // auto draw_line = [&](const vertex_type& left_,
-  // const vertex_type& right_,
-  // std::string color,
-  // size_t width) {
-
-  // vertex_type left = trf*left_;
-  // vertex_type right = trf*right_;
-  // os << "<line ";
-
-  // os << "x1=\"" << left.x() << "\" ";
-  // os << "y1=\"" << left.y() << "\" ";
-  // os << "x2=\"" << right.x() << "\" ";
-  // os << "y2=\"" << right.y() << "\" ";
-
-  // os <<" stroke=\"" << color << "\" stroke-width=\"" << width << "\"/>\n";
-
-  //};
-
   auto draw_point = [&](const vertex_type& p_, std::string color, size_t r) {
     vertex_type p = trf * p_;
     os << "<circle ";
@@ -382,23 +364,10 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     os << text << "</text>\n";
   };
 
-  // std::array<vertex_type, 4> points = {
-  // m_vmin,bb
-  //{m_vmin.x(), m_vmax.y()},
-  // m_vmax,
-  //{m_vmax.x(), m_vmin.y()}
-  //};
-
   draw_rect(m_center, m_width, fillcolor);
   draw_point(m_vmin, "black", 2);
   draw_point(m_vmax, "black", 2);
   draw_text(m_center, label, "white", 10);
-
-  // for(size_t i=0;i<points.size();i++) {
-  // size_t j = (i+1)%points.size();
-  // draw_point(points.at(i), "black", 3);
-  ////draw_line(points.at(i), points.at(j), "black", 3);
-  //}
 
   return os;
 }
@@ -409,7 +378,6 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
                     typename box_t::vertex_array_type envelope,
                     const std::vector<box_t*>& lprims, size_t depth) {
   using vertex_type = typename box_t::vertex_type;
-  // using vertex_array_type = typename box_t::vertex_array_type;
 
   assert(lprims.size() > 0);
   if (lprims.size() == 1) {
@@ -492,7 +460,6 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
     return sub_octs.front();
   }
 
-  // std::cout << "sub_octs.size() = " << sub_octs.size() << std::endl;
   auto bb = std::make_unique<box_t>(sub_octs, envelope);
   store.push_back(std::move(bb));
   return store.back().get();
@@ -504,19 +471,9 @@ box_t* Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
                          typename box_t::value_type envelope1) {
   static_assert(box_t::dim == 3, "Octree can only be created in 3D");
 
-  // using vertex_type       = typename box_t::vertex_type;
   using vertex_array_type = typename box_t::vertex_array_type;
 
   vertex_array_type envelope(vertex_array_type::Constant(envelope1));
-
-  // std::function<box_t*(const std::vector<box_t*>&, size_t)> oct;
-
-  /*oct = [&store, &max_depth, &oct, &envelope](const std::vector<box_t*>&
-  lprims,
-                                              size_t depth) -> box_t* {
-
-
-  };*/
 
   box_t* top = octree_inner(store, max_depth, envelope, prims, 0);
   return top;

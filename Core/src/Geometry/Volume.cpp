@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/Volume.hpp"
+
 #include <iostream>
 #include <utility>
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -32,8 +33,9 @@ Acts::Volume::Volume(const std::shared_ptr<const Transform3D>& htrans,
                                : Transform3D::Identity()),
       m_center(s_origin),
       m_volumeBounds(std::move(volbounds)),
-      m_orientedBoundingBox(
-          m_volumeBounds->boundingBox(nullptr, {0.05, 0.05, 0.05}, this)) {
+      m_orientedBoundingBox(m_volumeBounds->boundingBox(
+          nullptr, {0.05 * units::_mm, 0.05 * units::_mm, 0.05 * units::_mm},
+          this)) {
   if (htrans) {
     m_center = htrans->translation();
   }
@@ -101,9 +103,7 @@ std::ostream& Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
 
 Acts::Volume::BoundingBox Acts::Volume::boundingBox(
     const Vector3D& envelope) const {
-  BoundingBox box = m_volumeBounds->boundingBox(m_transform.get(), envelope);
-  box.setEntity(this);
-  return box;
+  return m_volumeBounds->boundingBox(m_transform.get(), envelope, this);
 }
 
 const Acts::Volume::BoundingBox& Acts::Volume::orientedBoundingBox() const {

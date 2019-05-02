@@ -127,6 +127,7 @@ Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
   Vector3D vmin, vmax;
 
   // no phi sector is possible, so this is just the outer size of
+  // the cylinder
 
   vmax = {m_rmax, m_rmax, m_dz1};
   vmin = {-m_rmax, -m_rmax, -m_dz1};
