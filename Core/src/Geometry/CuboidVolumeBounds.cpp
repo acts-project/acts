@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds()
     : VolumeBounds(), m_valueStore(bv_length, 0.) {}
@@ -136,4 +137,14 @@ Acts::CuboidVolumeBounds::faceZXRectangleBounds() const {
 // ostream operator overload
 std::ostream& Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
   return dumpT(sl);
+}
+
+Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
+    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Volume* entity) const {
+  Vector3D vmin(-halflengthX(), -halflengthY(), -halflengthZ());
+  Vector3D vmax(halflengthX(), halflengthY(), halflengthZ());
+
+  Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
+  return trf == nullptr ? box : box.transformed(*trf);
 }

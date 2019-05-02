@@ -108,6 +108,14 @@ BOOST_AUTO_TEST_CASE(inside_test) {
   BOOST_CHECK(!ccvb.inside({17, 0, 23}));
   BOOST_CHECK(!ccvb.inside({17, 0, -23}));
 }
+
+BOOST_AUTO_TEST_CASE(boundingbox_test) {
+  CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
+  auto box = ccvb.boundingBox();
+  CHECK_CLOSE_ABS(box.min(), Vector3D(-15, -15, -30), 1e-6);
+  CHECK_CLOSE_ABS(box.max(), Vector3D(15, 15, 30), 1e-6);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

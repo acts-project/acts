@@ -11,7 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -112,6 +114,15 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transformPtr) const override;
 
+  /// Construct bounding box for this shape
+  /// @param trf Optional transform
+  /// @param envelope Optional envelope to add / subtract from min/max
+  /// @param entity Entity to associate this bounding box with
+  /// @return Constructed bounding box
+  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
+                                  const Vector3D& envelope = {0, 0, 0},
+                                  const Volume* entity = nullptr) const final;
+
   /// This method returns the minimal halflength in local x
   double minHalflengthX() const;
 
@@ -189,7 +200,8 @@ template <class T>
 T& TrapezoidVolumeBounds::dumpT(T& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
-  dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) = ";
+  dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
+        "= ";
   dt << "(" << m_valueStore.at(bv_minHalfX) << ", " << m_valueStore.at(bv_halfY)
      << ", " << m_valueStore.at(bv_halfZ);
   dt << ", " << m_valueStore.at(bv_alpha) << ", " << m_valueStore.at(bv_beta)

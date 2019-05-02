@@ -92,3 +92,13 @@ target_link_libraries (TrackingGeometryCreationTests PRIVATE ActsCore ActsTestsC
 add_test (NAME TrackingGeometryCreationUnitTest COMMAND TrackingGeometryCreationTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST TrackingGeometryCreationUnitTest TARGETS TrackingGeometryCreationTests)
 
+add_executable (TrapezoidVolumeBoundsTest TrapezoidVolumeBoundsTest.cpp)
+target_include_directories (TrapezoidVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (TrapezoidVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME TrapezoidVolumeBoundsTest COMMAND TrapezoidVolumeBoundsTest)
+
+add_executable (DoubleTrapezoidVolumeBoundsTest DoubleTrapezoidVolumeBoundsTest.cpp)
+target_include_directories (DoubleTrapezoidVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (DoubleTrapezoidVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME DoubleTrapezoidVolumeBoundsTest COMMAND DoubleTrapezoidVolumeBoundsTest)
+

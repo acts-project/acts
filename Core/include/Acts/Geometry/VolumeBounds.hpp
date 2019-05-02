@@ -14,7 +14,9 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -67,6 +69,15 @@ class VolumeBounds {
   /// @return a vector of surfaces bounding this volume
   virtual std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transform) const = 0;
+
+  /// Construct bounding box for this shape
+  /// @param trf Optional transform
+  /// @param envelope Optional envelope to add / subtract from min/max
+  /// @param entity Entity to associate this bounding box with
+  /// @return Constructed bounding box
+  virtual Volume::BoundingBox boundingBox(
+      const Transform3D* trf = nullptr, const Vector3D& envelope = {0, 0, 0},
+      const Volume* entity = nullptr) const = 0;
 
   /// Binning offset - overloaded for some R-binning types
   ///

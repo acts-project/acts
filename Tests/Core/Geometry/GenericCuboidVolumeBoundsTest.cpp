@@ -142,6 +142,49 @@ BOOST_AUTO_TEST_CASE(ply_test) {
   os.close();
 }
 
+BOOST_AUTO_TEST_CASE(bounding_box_creation) {
+  float tol = 1e-4;
+  std::array<Vector3D, 8> vertices;
+  vertices = {{{0, 0, 0},
+               {2, 0, 0.4},
+               {2, 1, 0.4},
+               {0, 1, 0},
+               {0, 0, 1},
+               {1.8, 0, 1},
+               {1.8, 1, 1},
+               {0, 1, 1}}};
+
+  GenericCuboidVolumeBounds gcvb(vertices);
+  auto bb = gcvb.boundingBox();
+
+  Transform3D rot;
+  rot = AngleAxis3D(M_PI / 2., Vector3D::UnitX());
+
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  BOOST_CHECK_EQUAL(bb.max(), Vector3D(2, 1, 1));
+  BOOST_CHECK_EQUAL(bb.min(), Vector3D(0., 0., 0.));
+
+  bb = gcvb.boundingBox(&rot);
+
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3D(2, 0, 1), tol);
+  BOOST_CHECK_EQUAL(bb.min(), Vector3D(0, -1, 0));
+
+  rot = AngleAxis3D(M_PI / 2., Vector3D::UnitZ());
+  bb = gcvb.boundingBox(&rot);
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3D(0, 2, 1), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3D(-1, 0., 0.), tol);
+
+  rot = AngleAxis3D(0.542, Vector3D::UnitZ()) *
+        AngleAxis3D(M_PI / 5., Vector3D(1, 3, 6).normalized());
+
+  bb = gcvb.boundingBox(&rot);
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3D(1.00976, 2.26918, 1.11988), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3D(-0.871397, 0, -0.0867708), tol);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

@@ -174,6 +174,29 @@ std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
   }
   return sl;
 }
+
+Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
+    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Volume* entity) const {
+  Vector3D vmin, vmax;
+
+  Transform3D transform = Transform3D::Identity();
+  if (trf != nullptr) {
+    transform = *trf;
+  }
+
+  vmin = transform * m_vertices[0];
+  vmax = transform * m_vertices[0];
+
+  for (size_t i = 1; i < 8; i++) {
+    Vector3D vtx = transform * m_vertices[i];
+    vmin = vmin.cwiseMin(vtx);
+    vmax = vmax.cwiseMax(vtx);
+  }
+
+  return {entity, vmin - envelope, vmax + envelope};
+}
+
 void Acts::GenericCuboidVolumeBounds::draw(IVisualization& helper,
                                            const Transform3D& transform) const {
   auto draw_face = [&](const auto& a, const auto& b, const auto& c,

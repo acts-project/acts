@@ -13,6 +13,7 @@
 
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -54,7 +55,18 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @return a vector of surfaces bounding this volume
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transform) const override;
-  /// Output Method for std::ostream, to be overloaded by child classes
+
+  /**
+   * Construct bounding box for this shape
+   * @param trf Optional transform
+   * @param envelope Optional envelope to add / subtract from min/max
+   * @param entity Entity to associate this bounding box with
+   * @return Constructed bounding box
+   */
+  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
+                                  const Vector3D& envelope = {0, 0, 0},
+                                  const Volume* entity = nullptr) const final;
+
   ///
   /// @param sl is the output stream to be written into
   std::ostream& toStream(std::ostream& sl) const override;

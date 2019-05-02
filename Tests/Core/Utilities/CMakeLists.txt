@@ -72,6 +72,10 @@ add_executable (TypeTraitsTest TypeTraitsTest.cpp)
 target_link_libraries (TypeTraitsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME TypeTraitsTest COMMAND TypeTraitsTest)
 
+add_executable (BoundingBoxTest BoundingBoxTest.cpp)
+target_link_libraries (BoundingBoxTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME BoundingBoxTest COMMAND BoundingBoxTest)
+
 add_executable (VisualizationTests VisualizationTests.cpp)
 target_link_libraries (VisualizationTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME VisualizationTests COMMAND VisualizationTests)
