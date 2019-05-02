@@ -596,7 +596,7 @@ class AtlasStepper {
   /// @return the full transport jacobian
   void covarianceTransport(State& state, bool /*unused*/) const {
     double P[58];
-    for (unsigned int i = 0; i < 58; ++i) {
+    for (unsigned int i = 0; i < 59; ++i) {
       P[i] = state.pVector[i];
     }
 
