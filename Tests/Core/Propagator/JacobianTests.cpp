@@ -241,7 +241,6 @@ BOOST_AUTO_TEST_CASE(JacobianPerigeeToGlobalTest) {
       0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
       0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
-
   BoundVector pars;
   pars << -3.34, -822., -0.734, 0.85, 1. / (100 * units::_GeV), 0;
 

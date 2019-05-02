@@ -138,21 +138,21 @@ class AtlasStepper {
         pVector[27] = -Sf * Se;  // - sin(phi) * cos(theta)
         pVector[35] = Cf * Ce;   // cos(phi) * cos(theta)
         pVector[43] = 0.;
-        pVector[51] = 0.;        // dAx/
+        pVector[51] = 0.;  // dAx/
 
         pVector[12] = 0.;
         pVector[20] = 0.;
         pVector[28] = Cf * Se;  // cos(phi) * sin(theta)
         pVector[36] = Sf * Ce;  // sin(phi) * cos(theta)
         pVector[44] = 0.;
-        pVector[52] = 0.;       // dAy/
+        pVector[52] = 0.;  // dAy/
 
         pVector[13] = 0.;
         pVector[21] = 0.;
         pVector[29] = 0.;
         pVector[37] = -Se;  // - sin(theta)
         pVector[45] = 0.;
-        pVector[53] = 0.;   // dAz/
+        pVector[53] = 0.;  // dAz/
 
         pVector[14] = 0.;
         pVector[22] = 0.;
@@ -167,7 +167,7 @@ class AtlasStepper {
         pVector[39] = 0.;
         pVector[47] = 0.;
         pVector[55] = 1.;  // dT/
-        
+
         pVector[56] = 0.;
         pVector[57] = 0.;
         pVector[58] = 0.;
@@ -542,7 +542,7 @@ class AtlasStepper {
 
         double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
         double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
-          
+
         Bx2 = (Bx2 - B[0] * B2) * Bn;
         Bx3 = (Bx3 - B[0] * B3) * Bn;
         By2 = (By2 - B[1] * B2) * Bn;
@@ -558,8 +558,9 @@ class AtlasStepper {
         state.pVector[26] = Bz2 * Vp[0];
         state.pVector[34] = Bz3 * Vp[0];  // dZ/
       }
-      // now declare the state as ready
-      state.state_ready = true;
+    }
+    // now declare the state as ready
+    state.state_ready = true;
   }
 
   /// Method to update momentum, direction and p
@@ -978,7 +979,7 @@ class AtlasStepper {
     state.jacobian[27] = 0.;                 // dCM /dTheta
     state.jacobian[28] = state.pVector[46];  // dCM /dCM
     state.jacobian[29] = 0.;                 // dCM/dT
-    
+
     state.jacobian[30] = 0.;  // dT/dL0
     state.jacobian[31] = 0.;  // dT/dL1
     state.jacobian[32] = 0.;  // dT/dPhi
