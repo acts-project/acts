@@ -133,10 +133,12 @@ BOOST_DATA_TEST_CASE(
   double uphi = 1.2;
   double utheta = 0.2;
   double uqop = 0.025;
+  double ut = 1337.;
 
   ataPlane_from_pars.set<Acts::ePHI>(tgContext, uphi);
   ataPlane_from_pars.set<Acts::eTHETA>(tgContext, utheta);
   ataPlane_from_pars.set<Acts::eQOP>(tgContext, uqop);
+  ataPlane_from_pars.set<Acts::eT>(tgContext, ut);
   // we should have a new updated momentum
   Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
                                       sin(uphi) * sin(utheta), cos(utheta));
