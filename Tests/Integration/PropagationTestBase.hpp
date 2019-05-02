@@ -315,10 +315,10 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
-  //~ // covariance check for atlas stepper
-  //~ covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
-      //~ apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
-      //~ rand2, rand3, index, true, true, 1e-1);
+  // covariance check for atlas stepper
+  covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
+      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      rand2, rand3, index, true, true, 1e-1);
 
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
@@ -408,10 +408,10 @@ BOOST_DATA_TEST_CASE(
 
   double dcharge = -1 + 2 * charge;
 
-  //~ // covariance check for atlas stepper
-  //~ covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
-      //~ apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
-      //~ rand2, rand3, index, false, false, 1e-1);
+  // covariance check for atlas stepper
+  covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
+      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      rand2, rand3, index, false, false, 1e-1);
 
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
