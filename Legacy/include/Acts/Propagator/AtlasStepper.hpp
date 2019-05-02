@@ -167,6 +167,10 @@ class AtlasStepper {
         pVector[39] = 0.;
         pVector[47] = 0.;
         pVector[55] = 1.;  // dT/
+        
+        pVector[56] = 0.;
+        pVector[57] = 0.;
+        pVector[58] = 0.;
 
         // special treatment for surface types
         const auto& surface = pars.referenceSurface();
@@ -246,7 +250,7 @@ class AtlasStepper {
     bool newfield;
     // internal parameters to be used
     Vector3D field;
-    double pVector[58];
+    double pVector[59];
     // result
     double parameters[BoundParsDim] = {0., 0., 0., 0., 0., 0.};
     const Covariance* covariance;
@@ -487,6 +491,10 @@ class AtlasStepper {
         state.pVector[39] = 0.;
         state.pVector[47] = 0.;
         state.pVector[55] = 1.;  // dT/
+        
+        state.pVector[56] = 0.;
+        state.pVector[57] = 0.;
+        state.pVector[58] = 0.;
 
         // special treatment for surface types
         const auto& surface = pars.referenceSurface();
