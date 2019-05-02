@@ -144,12 +144,9 @@ void testJacobianToGlobal(const Parameters& pars) {
 /// This tests the jacobian of local curvilinear -> global
 BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 
-		 0, 10 * units::_mm, 0, 0, 0, 0, 
-		 0, 0, 0.1, 0, 0, 0, 
-		 0, 0, 0, 0.1, 0, 0, 
-		 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0,
+      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
+      0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // Let's create a surface somewhere in space
@@ -171,12 +168,9 @@ BOOST_AUTO_TEST_CASE(JacobianCylinderToGlobalTest) {
   auto cSurface = Surface::makeShared<CylinderSurface>(cTransform, 200., 1000.);
 
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 
-		 0, 10 * units::_mm, 0, 0, 0, 0, 
-		 0, 0, 0.1, 0, 0, 0, 
-		 0, 0, 0, 0.1, 0, 0, 
-		 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0,
+      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
+      0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   BoundVector pars;
@@ -197,12 +191,9 @@ BOOST_AUTO_TEST_CASE(JacobianDiscToGlobalTest) {
   auto dSurface = Surface::makeShared<DiscSurface>(dTransform, 200., 1000.);
 
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 
-		 0, 10 * units::_mm, 0, 0, 0, 0, 
-		 0, 0, 0.1, 0, 0, 0, 
-		 0, 0, 0, 0.1, 0, 0, 
-		 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0,
+      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
+      0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   BoundVector pars;
@@ -225,12 +216,9 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   auto pSurface = Surface::makeShared<PlaneSurface>(sPosition, sNormal);
 
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 
-		 0, 10 * units::_mm, 0, 0, 0, 0, 
-		 0, 0, 0.1, 0, 0, 0, 
-		 0, 0, 0, 0.1, 0, 0, 
-		 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0,
+      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
+      0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   BoundVector pars;
@@ -249,12 +237,9 @@ BOOST_AUTO_TEST_CASE(JacobianPerigeeToGlobalTest) {
   auto pSurface = Surface::makeShared<PerigeeSurface>(Vector3D({0., 0., 0.}));
 
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 
-		 0, 10 * units::_mm, 0, 0, 0, 0, 
-		 0, 0, 0.1, 0, 0, 0, 
-		 0, 0, 0, 0.1, 0, 0, 
-		 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0,
+      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
+      0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   BoundVector pars;
@@ -274,12 +259,9 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   auto sSurface = Surface::makeShared<StrawSurface>(sTransform, 10., 1000.);
 
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 
-		 0, 10 * units::_mm, 0, 0, 0, 0, 
-		 0, 0, 0.1, 0, 0, 0, 
-		 0, 0, 0, 0.1, 0, 0, 
-		 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0,
+      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
+      0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   BoundVector pars;

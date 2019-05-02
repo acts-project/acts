@@ -473,20 +473,16 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
 
   ActsMatrixD<4, BoundParsDim> loc0_phi_theta_qop_proj;
-  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-      0, 0, 1, 0;
+  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<5, BoundParsDim> loc0_loc1_phi_theta_qop_proj;
-  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-      0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
-      
+  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
+
   ActsMatrixD<TrackParsDim, TrackParsDim> loc0_loc1_phi_theta_qop_t_proj;
-  loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 
-								  0, 1, 0, 0, 0, 0, 
-								  0, 0, 1, 0, 0, 0,
-								  0, 0, 0, 1, 0, 0, 
-								  0, 0, 0, 0, 1, 0,
-								  0, 0, 0, 0, 0, 1;
+  loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 
   BOOST_CHECK((ParameterSet<ParID_t::ePHI>::projector() == phi_proj));
   BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eQOP>::projector() ==
@@ -501,9 +497,10 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI,
                             ParID_t::eTHETA, ParID_t::eQOP>::projector() ==
                loc0_loc1_phi_theta_qop_proj));
-  BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI,
-                            ParID_t::eTHETA, ParID_t::eQOP, ParID_t::eT>::projector() ==
-               loc0_loc1_phi_theta_qop_t_proj));
+  BOOST_CHECK(
+      (ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI,
+                    ParID_t::eTHETA, ParID_t::eQOP, ParID_t::eT>::projector() ==
+       loc0_loc1_phi_theta_qop_t_proj));
 }
 
 /**
@@ -610,15 +607,19 @@ using ParSet = ParameterSet<params...>;
  */
 BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
   // check logic for type-based access
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eLOC_0>() == 0));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eLOC_1>() == 1));
+  BOOST_CHECK(
+      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eLOC_0>() == 0));
+  BOOST_CHECK(
+      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eLOC_1>() == 1));
   BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<ePHI>() == 2));
   BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eQOP>() == 3));
   BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eT>() == 4));
 
   // check logic for index-based access
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<0>() == eLOC_0));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<1>() == eLOC_1));
+  BOOST_CHECK(
+      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<0>() == eLOC_0));
+  BOOST_CHECK(
+      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<1>() == eLOC_1));
   BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<2>() == ePHI));
   BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<3>() == eQOP));
   BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<4>() == eT));

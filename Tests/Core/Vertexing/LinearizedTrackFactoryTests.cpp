@@ -115,12 +115,9 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     double resTh = resAngDist(gen);
     double resQp = resQoPDist(gen);
 
-    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 
-				   0., resZ0 * resZ0, 0., 0., 0., 0.,
-				   0., 0., resPh * resPh, 0., 0., 0., 
-				   0., 0., 0., resTh * resTh, 0., 0., 
-				   0., 0., 0., 0., resQp * resQp, 0.,
-				   0., 0., 0., 0., 0., 1.;
+    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
+        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
+        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
     tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                      perigeeSurface));
   }

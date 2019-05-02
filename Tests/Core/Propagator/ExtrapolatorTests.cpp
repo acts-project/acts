@@ -111,12 +111,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 
-		 0, 10 * units::_mm, 0, 0.162, 0, 0,
-		 0.123, 0, 0.1, 0, 0, 0, 
-		 0, 0.162, 0, 0.1, 0, 0, 
-		 0.5, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
+      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
@@ -162,12 +159,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 
-		 0, 10 * units::_mm, 0, 0.162, 0, 0,
-		 0.123, 0, 0.1, 0, 0, 0, 
-		 0, 0.162, 0, 0.1, 0, 0, 
-		 0.5, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
+      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
@@ -238,12 +232,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 
-		 0, 10 * units::_mm, 0, 0.162, 0, 0,
-		 0.123, 0, 0.1, 0, 0, 0, 
-		 0, 0.162, 0, 0.1, 0, 0, 
-		 0.5, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
+      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
@@ -303,12 +294,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 
-		 0, 10 * units::_mm, 0, 0.162, 0, 0,
-		 0.123, 0, 0.1, 0, 0, 0, 
-		 0, 0.162, 0, 0.1, 0, 0, 
-		 0.5, 0, 0, 0, 1. / (10 * units::_GeV), 0,
-		 0, 0, 0, 0, 0, 0;
+  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
+      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 

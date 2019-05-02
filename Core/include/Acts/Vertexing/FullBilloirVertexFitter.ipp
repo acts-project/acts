@@ -215,7 +215,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
 
     // deltaV = cov_(deltaV) * Vdel;
     Vector3D deltaV = covDeltaVmat * Vdel;
-    
+
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 

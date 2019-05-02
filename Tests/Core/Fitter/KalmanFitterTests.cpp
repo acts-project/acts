@@ -282,12 +282,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Set initial parameters for the particle track
   Covariance cov;
-  cov << 1000. * units::_um, 0., 0., 0., 0., 0., 
-		 0., 1000. * units::_um, 0., 0., 0., 0.,
-         0., 0., 0.05, 0., 0., 0., 
-         0., 0., 0., 0.05, 0., 0., 
-         0., 0., 0., 0., 0.01, 0.,
-         0., 0., 0., 0., 0., 1.;
+  cov << 1000. * units::_um, 0., 0., 0., 0., 0., 0., 1000. * units::_um, 0., 0.,
+      0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0.,
+      0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
 
   auto covPtr = std::make_unique<const Covariance>(cov);
 
@@ -333,9 +330,11 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
-                  fittedShuffledParameters.parameters().template head<5>(), 1e-5);
+                  fittedShuffledParameters.parameters().template head<5>(),
+                  1e-5);
   CHECK_CLOSE_ABS(fittedParameters.parameters().template tail<1>(),
-                  fittedShuffledParameters.parameters().template tail<1>(), 1e-5);
+                  fittedShuffledParameters.parameters().template tail<1>(),
+                  1e-5);
 
   // Remove one measurement and find a hole
   std::vector<TrackState> measurementsWithHole = {

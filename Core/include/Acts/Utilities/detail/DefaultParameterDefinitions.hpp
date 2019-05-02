@@ -30,7 +30,7 @@ enum ParDef : unsigned int {
   eTHETA = 3,  ///< theta direction of momentum in local frame
   eQOP = 4,    ///< charge/momentum for charged tracks, for neutral tracks it is
                /// 1/momentum
-  eT = 5, /// < The time of the particle
+  eT = 5,      /// < The time of the particle
   BoundParsDim  /// < The local dimensions
 };
 
@@ -130,8 +130,7 @@ struct par_type<ParDef::eQOP> {
 };
 
 template <>
-struct par_type<ParDef::eT>
-{
+struct par_type<ParDef::eT> {
   using type = unbound_parameter;
 };
 }  // namespace Acts
