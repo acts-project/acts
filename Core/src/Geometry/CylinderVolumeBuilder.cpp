@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,40 +12,46 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
-#include "Acts/Geometry/CylinderLayer.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/DiscLayer.hpp"
-#include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/CylinderLayer.hpp"
+#include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig,
-    std::unique_ptr<const Logger> logger)
-    : Acts::ITrackingVolumeBuilder(), m_cfg(), m_logger(std::move(logger)) {
+    std::unique_ptr<const Logger>              logger)
+  : Acts::ITrackingVolumeBuilder(), m_cfg(), m_logger(std::move(logger))
+{
   setConfiguration(cvbConfig);
 }
 
 Acts::CylinderVolumeBuilder::~CylinderVolumeBuilder() = default;
 
-void Acts::CylinderVolumeBuilder::setConfiguration(
-    const Acts::CylinderVolumeBuilder::Config& cvbConfig) {
+void
+Acts::CylinderVolumeBuilder::setConfiguration(
+    const Acts::CylinderVolumeBuilder::Config& cvbConfig)
+{
   // @todo check consistency
   // copy the configuration
   m_cfg = cvbConfig;
 }
 
-void Acts::CylinderVolumeBuilder::setLogger(
-    std::unique_ptr<const Logger> newLogger) {
+void
+Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<const Logger> newLogger)
+{
   m_logger = std::move(newLogger);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx, TrackingVolumePtr existingVolume,
-    VolumeBoundsPtr externalBounds) const {
+    const GeometryContext& gctx,
+    TrackingVolumePtr      existingVolume,
+    VolumeBoundsPtr        externalBounds) const
+{
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
   if (existingVolume) {
     ACTS_DEBUG("- will wrap/enclose : " << existingVolume->volumeName());
@@ -73,6 +79,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // the positive Layer
     positiveLayers = m_cfg.layerBuilder->positiveLayers(gctx);
   }
+
+  // Build the confined volumes
+  MutableTrackingVolumeVector centralVolumes;
+  if (m_cfg.ctVolumeBuilder) {
+    centralVolumes = m_cfg.ctVolumeBuilder->centralVolumes();
+  }
+
   // (0) PREP WORK ------------------------------------------------
   //
   // a) volume config of the existing volume
@@ -82,28 +95,28 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         &existingVolume->volumeBounds());
     // set the inside values
     wConfig.existingVolumeConfig.present = true;
-    wConfig.existingVolumeConfig.rMin = existingBounds->innerRadius();
-    wConfig.existingVolumeConfig.rMax = existingBounds->outerRadius();
-    wConfig.existingVolumeConfig.zMin =
-        existingVolume->center().z() - existingBounds->halflengthZ();
-    wConfig.existingVolumeConfig.zMax =
-        existingVolume->center().z() + existingBounds->halflengthZ();
+    wConfig.existingVolumeConfig.rMin    = existingBounds->innerRadius();
+    wConfig.existingVolumeConfig.rMax    = existingBounds->outerRadius();
+    wConfig.existingVolumeConfig.zMin
+        = existingVolume->center().z() - existingBounds->halflengthZ();
+    wConfig.existingVolumeConfig.zMax
+        = existingVolume->center().z() + existingBounds->halflengthZ();
   }
   //
   // b) outside config
   // the volume config for the Outside
   VolumeConfig externalBoundConfig;
   if (externalBounds) {
-    const CylinderVolumeBounds* ocvBounds =
-        dynamic_cast<const CylinderVolumeBounds*>(externalBounds.get());
+    const CylinderVolumeBounds* ocvBounds
+        = dynamic_cast<const CylinderVolumeBounds*>(externalBounds.get());
     // the cast to CylinderVolumeBounds needs to be successful
     if (ocvBounds != nullptr) {
       // get values from the out bounds
       wConfig.externalVolumeConfig.present = true;
-      wConfig.externalVolumeConfig.rMin = ocvBounds->innerRadius();
-      wConfig.externalVolumeConfig.rMax = ocvBounds->outerRadius();
-      wConfig.externalVolumeConfig.zMin = -ocvBounds->halflengthZ();
-      wConfig.externalVolumeConfig.zMax = ocvBounds->halflengthZ();
+      wConfig.externalVolumeConfig.rMin    = ocvBounds->innerRadius();
+      wConfig.externalVolumeConfig.rMax    = ocvBounds->outerRadius();
+      wConfig.externalVolumeConfig.zMin    = -ocvBounds->halflengthZ();
+      wConfig.externalVolumeConfig.zMax    = ocvBounds->halflengthZ();
     }
   }
 
@@ -127,9 +140,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
   // Find out with Layer analysis
   // analyze the layers
-  wConfig.nVolumeConfig = analyzeLayers(gctx, negativeLayers);
-  wConfig.cVolumeConfig = analyzeLayers(gctx, centralLayers);
-  wConfig.pVolumeConfig = analyzeLayers(gctx, positiveLayers);
+  wConfig.nVolumeConfig = analyzeContent(gctx, negativeLayers, {});  // TODO
+  wConfig.cVolumeConfig = analyzeContent(gctx, centralLayers, centralVolumes);
+  wConfig.pVolumeConfig = analyzeContent(gctx, positiveLayers, {});  // TODO
 
   std::string layerConfiguration = "|";
   if (wConfig.nVolumeConfig) {
@@ -181,40 +194,49 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // (C) VOLUME CREATION ----------------------------------
   auto tvHelper = m_cfg.trackingVolumeHelper;
   // the barrel is always created
-  auto barrel =
-      wConfig.cVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.cVolumeConfig.layers, m_cfg.volumeMaterial,
-                wConfig.cVolumeConfig.rMin, wConfig.cVolumeConfig.rMax,
-                wConfig.cVolumeConfig.zMin, wConfig.cVolumeConfig.zMax,
-                m_cfg.volumeName + "::Barrel")
-          : nullptr;
+  auto barrel = wConfig.cVolumeConfig
+      ? tvHelper->createTrackingVolume(gctx,
+                                       wConfig.cVolumeConfig.layers,
+                                       wConfig.cVolumeConfig.volumes,
+                                       m_cfg.volumeMaterial,
+                                       wConfig.cVolumeConfig.rMin,
+                                       wConfig.cVolumeConfig.rMax,
+                                       wConfig.cVolumeConfig.zMin,
+                                       wConfig.cVolumeConfig.zMax,
+                                       m_cfg.volumeName + "::Barrel")
+      : nullptr;
 
   // the negative endcap is created if present
-  auto nEndcap =
-      wConfig.nVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.nVolumeConfig.layers, m_cfg.volumeMaterial,
-                wConfig.nVolumeConfig.rMin, wConfig.nVolumeConfig.rMax,
-                wConfig.nVolumeConfig.zMin, wConfig.nVolumeConfig.zMax,
-                m_cfg.volumeName + "::NegativeEndcap")
-          : nullptr;
+  auto nEndcap = wConfig.nVolumeConfig
+      ? tvHelper->createTrackingVolume(gctx,
+                                       wConfig.nVolumeConfig.layers,
+                                       wConfig.cVolumeConfig.volumes,
+                                       m_cfg.volumeMaterial,
+                                       wConfig.nVolumeConfig.rMin,
+                                       wConfig.nVolumeConfig.rMax,
+                                       wConfig.nVolumeConfig.zMin,
+                                       wConfig.nVolumeConfig.zMax,
+                                       m_cfg.volumeName + "::NegativeEndcap")
+      : nullptr;
 
   // the positive endcap is created
-  auto pEndcap =
-      wConfig.pVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.pVolumeConfig.layers, m_cfg.volumeMaterial,
-                wConfig.pVolumeConfig.rMin, wConfig.pVolumeConfig.rMax,
-                wConfig.pVolumeConfig.zMin, wConfig.pVolumeConfig.zMax,
-                m_cfg.volumeName + "::PositiveEndcap")
-          : nullptr;
+  auto pEndcap = wConfig.pVolumeConfig
+      ? tvHelper->createTrackingVolume(gctx,
+                                       wConfig.pVolumeConfig.layers,
+                                       wConfig.cVolumeConfig.volumes,
+                                       m_cfg.volumeMaterial,
+                                       wConfig.pVolumeConfig.rMin,
+                                       wConfig.pVolumeConfig.rMax,
+                                       wConfig.pVolumeConfig.zMin,
+                                       wConfig.pVolumeConfig.zMax,
+                                       m_cfg.volumeName + "::PositiveEndcap")
+      : nullptr;
 
   ACTS_DEBUG("Newly created volume(s) will be " << wConfig.wConditionScreen);
   // standalone container, full wrapping, full insertion & if no existing volume
   // is present needs a bare triple
-  if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting ||
-      wConfig.wCondition == NoWrapping) {
+  if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting
+      || wConfig.wCondition == NoWrapping) {
     ACTS_VERBOSE("Combined new container is being built.");
     // stuff into the container what you have
     std::vector<std::shared_ptr<const TrackingVolume>> volumesContainer;
@@ -265,10 +287,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                                      Acts::positiveFaceXY);
     }
     // and low lets create the new volume
-    volume =
-        volumesContainer.size() > 1
-            ? tvHelper->createContainerTrackingVolume(gctx, volumesContainer)
-            : volume;
+    volume = volumesContainer.size() > 1
+        ? tvHelper->createContainerTrackingVolume(gctx, volumesContainer)
+        : volume;
   } else if (wConfig.wCondition != Attaching) {
     // the new volume is the only one present
     volume = nEndcap ? nEndcap : (barrel ? barrel : pEndcap);
@@ -282,29 +303,42 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     std::vector<std::shared_ptr<const TrackingVolume>> existingContainer;
     if (wConfig.fGapVolumeConfig) {
       // create the gap volume
-      auto fGap = tvHelper->createGapTrackingVolume(
-          gctx, m_cfg.volumeMaterial, wConfig.fGapVolumeConfig.rMin,
-          wConfig.fGapVolumeConfig.rMax, wConfig.fGapVolumeConfig.zMin,
-          wConfig.fGapVolumeConfig.zMax, 1, false, m_cfg.volumeName + "::fGap");
+      auto fGap
+          = tvHelper->createGapTrackingVolume(gctx,
+                                              wConfig.cVolumeConfig.volumes,
+                                              m_cfg.volumeMaterial,
+                                              wConfig.fGapVolumeConfig.rMin,
+                                              wConfig.fGapVolumeConfig.rMax,
+                                              wConfig.fGapVolumeConfig.zMin,
+                                              wConfig.fGapVolumeConfig.zMax,
+                                              1,
+                                              false,
+                                              m_cfg.volumeName + "::fGap");
       // push it back into the list
       existingContainer.push_back(fGap);
     }
     existingContainer.push_back(existingVolumeCp);
     if (wConfig.sGapVolumeConfig) {
       // create the gap volume
-      auto sGap = tvHelper->createGapTrackingVolume(
-          gctx, m_cfg.volumeMaterial, wConfig.sGapVolumeConfig.rMin,
-          wConfig.sGapVolumeConfig.rMax, wConfig.sGapVolumeConfig.zMin,
-          wConfig.sGapVolumeConfig.zMax, 1, false, m_cfg.volumeName + "::sGap");
+      auto sGap
+          = tvHelper->createGapTrackingVolume(gctx,
+                                              wConfig.cVolumeConfig.volumes,
+                                              m_cfg.volumeMaterial,
+                                              wConfig.sGapVolumeConfig.rMin,
+                                              wConfig.sGapVolumeConfig.rMax,
+                                              wConfig.sGapVolumeConfig.zMin,
+                                              wConfig.sGapVolumeConfig.zMax,
+                                              1,
+                                              false,
+                                              m_cfg.volumeName + "::sGap");
       // push it back into the list
       existingContainer.push_back(sGap);
     }
 
     // and low lets create the new existing volume with gaps
-    existingVolumeCp =
-        existingContainer.size() > 1
-            ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
-            : existingVolumeCp;
+    existingVolumeCp = existingContainer.size() > 1
+        ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
+        : existingVolumeCp;
 
     // for central wrapping or inserting, we need to update once more
     // clear the container
@@ -317,16 +351,14 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       existingContainer.push_back(existingVolumeCp);
     }
     // update
-    existingVolumeCp =
-        !existingContainer.empty()
-            ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
-            : existingVolumeCp;
+    existingVolumeCp = !existingContainer.empty()
+        ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
+        : existingVolumeCp;
 
     std::vector<std::shared_ptr<const TrackingVolume>> totalContainer;
     // check what to do with the existing
-    if (wConfig.wCondition == Attaching ||
-        wConfig.wCondition == CentralWrapping ||
-        wConfig.wCondition == CentralInserting) {
+    if (wConfig.wCondition == Attaching || wConfig.wCondition == CentralWrapping
+        || wConfig.wCondition == CentralInserting) {
       if (nEndcap) {
         totalContainer.push_back(nEndcap);
       }
@@ -354,14 +386,18 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 }
 
 // -----------------------------
-Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeLayers(
-    const GeometryContext& gctx, const LayerVector& lVector) const {
+Acts::VolumeConfig
+Acts::CylinderVolumeBuilder::analyzeContent(
+    const GeometryContext&             gctx,
+    const LayerVector&                 lVector,
+    const MutableTrackingVolumeVector& mtvVector) const
+{
   // @TODO add envelope tolerance
   //
   // return object
   VolumeConfig lConfig;
   // only if the vector is present it can actually be analyzed
-  if (!lVector.empty()) {
+  if (!lVector.empty() || !mtvVector.empty()) {
     // we have layers
     lConfig.present = true;
     // loop over the layer
@@ -371,14 +407,14 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeLayers(
       // get the center of the layer
       const Vector3D& center = layer->surfaceRepresentation().center(gctx);
       // check if it is a cylinder layer
-      const CylinderLayer* cLayer =
-          dynamic_cast<const CylinderLayer*>(layer.get());
+      const CylinderLayer* cLayer
+          = dynamic_cast<const CylinderLayer*>(layer.get());
       if (cLayer != nullptr) {
         // now we have access to all the information
-        double rMinC =
-            cLayer->surfaceRepresentation().bounds().r() - 0.5 * thickness;
-        double rMaxC =
-            cLayer->surfaceRepresentation().bounds().r() + 0.5 * thickness;
+        double rMinC
+            = cLayer->surfaceRepresentation().bounds().r() - 0.5 * thickness;
+        double rMaxC
+            = cLayer->surfaceRepresentation().bounds().r() + 0.5 * thickness;
 
         double hZ = cLayer->surfaceRepresentation().bounds().halflengthZ();
         takeSmaller(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
@@ -402,9 +438,22 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeLayers(
         //!< @todo check for Endcap Ring config
       }
     }
+    for (auto& volume : mtvVector) {
+      const CylinderVolumeBounds* cvBounds
+          = dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
+      if (cvBounds != nullptr) {
+        takeSmaller(lConfig.rMin, cvBounds->innerRadius());
+        takeBigger(lConfig.rMax, cvBounds->outerRadius());
+        takeSmaller(lConfig.zMin, -cvBounds->halflengthZ());
+        takeBigger(lConfig.zMax, cvBounds->halflengthZ());
+      }
+    }
   }
+
   // set the layers to the layer vector
   lConfig.layers = lVector;
+  // set the layers to the layer vector
+  lConfig.volumes = mtvVector;
   // overwrite to radius 0 if needed
   if (m_cfg.buildToRadiusZero) {
     ACTS_VERBOSE("This layer builder is configured to build to the beamline.");

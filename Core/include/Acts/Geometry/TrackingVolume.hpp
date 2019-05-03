@@ -147,7 +147,7 @@ class TrackingVolume : public Volume {
       std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> containedLayers = nullptr,
-      std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr;
+      std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
       MutableTrackingVolumeVector denseVolumes = {},
       const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(new TrackingVolume(
