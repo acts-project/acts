@@ -13,8 +13,8 @@
 #include <vector>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -157,9 +157,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::pair<double, double> binningRange(const GeometryContext& gctx,
                                          const VolumeConfig& cfg) const;
 
-  void
-  sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3D>>& tapVec,
-              BinningValue bValue) const;
+  void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3D>>& tapVec,
+                   BinningValue bValue) const;
 
   /// @brief This function builds a world TrackingVolume based on a given
   /// configuration

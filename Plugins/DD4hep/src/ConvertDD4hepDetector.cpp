@@ -428,10 +428,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     std::vector<dd4hep::DetElement> centralLayers, centralVolumes;
     collectLayers_dd4hep(subDetector, centralLayers);
 
-    for (std::vector<dd4hep::DetElement>::reverse_iterator rit
-         = centralLayers.rbegin();
-         rit != centralLayers.rend();
-         rit++) {
+    for (std::vector<dd4hep::DetElement>::reverse_iterator rit =
+             centralLayers.rbegin();
+         rit != centralLayers.rend(); rit++) {
       if (rit->extension<Acts::IActsExtension>()->isVolume()) {
         centralVolumes.push_back(std::move(*rit));
       }
@@ -462,9 +461,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     // Configure DD4hepVolumeBuilder
     Acts::DD4hepVolumeBuilder::Config vbConfig;
     vbConfig.configurationName = subDetector.name();
-    vbConfig.centralVolumes    = centralVolumes;
-    auto dd4hepVolumeBuilder
-        = std::make_shared<const Acts::DD4hepVolumeBuilder>(
+    vbConfig.centralVolumes = centralVolumes;
+    auto dd4hepVolumeBuilder =
+        std::make_shared<const Acts::DD4hepVolumeBuilder>(
             vbConfig,
             Acts::getDefaultLogger(std::string("D2A_VB_") + subDetector.name(), loggingLevel));
 

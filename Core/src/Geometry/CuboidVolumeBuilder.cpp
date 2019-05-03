@@ -151,25 +151,14 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
     // Build TrackingVolume
-    trackVolume
-        = TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
-                                 bounds,
-                                 cfg.volumeMaterial,
-                                 nullptr,
-                                 nullptr,
-                                 cfg.trackingVolumes,
-                                 cfg.name);
+    trackVolume = TrackingVolume::create(
+        std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
+        nullptr, nullptr, cfg.trackingVolumes, cfg.name);
   } else {
-
     // Build TrackingVolume
-    trackVolume
-        = TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
-                                 bounds,
-                                 cfg.volumeMaterial,
-                                 std::move(layArr),
-                                 nullptr,
-                                 cfg.trackingVolumes,
-                                 cfg.name);
+    trackVolume = TrackingVolume::create(
+        std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
+        std::move(layArr), nullptr, cfg.trackingVolumes, cfg.name);
   }
   trackVolume->sign(GeometrySignature::Global);
 

@@ -1,20 +1,20 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 class TrackingVolume;
-using MutableTrackingVolumePtr    = std::shared_ptr<TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 
 class TGeoMatrix;
@@ -33,13 +33,11 @@ namespace Acts {
 /// (volumes of endcaps) of one hierarchy (e.g. ECal, HCal...) with input from
 /// DD4hep.
 
-class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder
-{
-public:
+class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
+ public:
   /// @struct Config
   /// Nested configuration struct for steering of the volume builder
-  struct Config
-  {
+  struct Config {
     /// string based identification
     std::string configurationName = "undefined";
     /// Vector of central confined volumes
@@ -50,7 +48,7 @@ public:
   /// @param [in] config is the configuration struct
   /// @param [in] logger is the logging instance
   DD4hepVolumeBuilder(const Acts::DD4hepVolumeBuilder::Config& config,
-                      std::unique_ptr<const Logger>            logger);
+                      std::unique_ptr<const Logger> logger);
 
   /// Destructor
   ~DD4hepVolumeBuilder() override;
@@ -58,30 +56,25 @@ public:
   /// @brief Builder method for cylindrical, confined volume
   ///
   /// @return The vector of TrackingVolumes at the central sector
-  MutableTrackingVolumeVector
-  centralVolumes() const final;
+  MutableTrackingVolumeVector centralVolumes() const final;
 
   /// Name identification
   /// @return The string based identification of this configuration
-  const std::string&
-  identification() const final;
+  const std::string& identification() const final;
 
   /// Set the configuration object
   /// @param [in] Config is the configuration struct
-  void
-  setConfiguration(const Config& config);
+  void setConfiguration(const Config& config);
 
   /// Get the configuration object
   /// @return The used configuration struct
-  Config
-  getConfiguration() const;
+  Config getConfiguration() const;
 
   /// Set logging instance
   /// @param [in] logger Logger in use
-  void
-  setLogger(std::unique_ptr<const Logger> logger);
+  void setLogger(std::unique_ptr<const Logger> logger);
 
-private:
+ private:
   /// Configruation object
   Config m_cfg;
 
@@ -90,31 +83,24 @@ private:
 
   /// Private access to the logger
   /// @return Used logger
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Converter of the transformation of a volume from DD4hep to Acts
   /// formalism
   ///
   /// @param [in] tGeoTrans Transformation of the DD4hep DetElement
   /// @return Pointer to the corresponding Acts transformation
-  std::shared_ptr<const Acts::Transform3D>
-  convertTransform(const TGeoMatrix* tGeoTrans) const;
+  std::shared_ptr<const Acts::Transform3D> convertTransform(
+      const TGeoMatrix* tGeoTrans) const;
 };
 
-inline const std::string&
-DD4hepVolumeBuilder::identification() const
-{
+inline const std::string& DD4hepVolumeBuilder::identification() const {
   return m_cfg.configurationName;
 }
 
-inline DD4hepVolumeBuilder::Config
-DD4hepVolumeBuilder::getConfiguration() const
-{
+inline DD4hepVolumeBuilder::Config DD4hepVolumeBuilder::getConfiguration()
+    const {
   return m_cfg;
 }
 
-}  // namespace
+}  // namespace Acts

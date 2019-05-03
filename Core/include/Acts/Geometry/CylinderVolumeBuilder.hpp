@@ -54,13 +54,13 @@ enum WrappingCondition {
 
 /// VolumeConfig struct to understand the layer config
 struct VolumeConfig {
-  bool present{false};   ///< layers are present
-  bool wrapping{false};  ///< in what way they are binned
-  double rMin;           ///< min parameter r
-  double rMax;           ///< max parameter r
-  double zMin;           ///< min parameter z
-  double zMax;           ///< max parameter z
-  LayerVector layers;    ///< the layers you have
+  bool present{false};                  ///< layers are present
+  bool wrapping{false};                 ///< in what way they are binned
+  double rMin;                          ///< min parameter r
+  double rMax;                          ///< max parameter r
+  double zMin;                          ///< min parameter z
+  double zMax;                          ///< max parameter z
+  LayerVector layers;                   ///< the layers you have
   MutableTrackingVolumeVector volumes;  ///< the confined volumes you have
 
   /// Default constructor
@@ -483,8 +483,8 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     /// needed to build layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
     /// needed to build confined volumes within the volume
-    std::shared_ptr<const IConfinedTrackingVolumeBuilder> ctVolumeBuilder
-        = nullptr;
+    std::shared_ptr<const IConfinedTrackingVolumeBuilder> ctVolumeBuilder =
+        nullptr;
     /// the additional envelope in R to create rMin, rMax
     std::pair<double, double> layerEnvelopeR = {1. * UnitConstants::mm,
                                                 1. * UnitConstants::mm};
@@ -547,7 +547,9 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] lVector is the vector of layers that are parsed
   ///
   /// @return a VolumeConfig representing this layer
-  VolumeConfig analyzeContent(const GeometryContext& gctx, const LayerVector& lVector, const MutableTrackingVolumeVector& mtvVector) const;
+  VolumeConfig analyzeContent(
+      const GeometryContext& gctx, const LayerVector& lVector,
+      const MutableTrackingVolumeVector& mtvVector) const;
 
  private:
   /// Configuration struct

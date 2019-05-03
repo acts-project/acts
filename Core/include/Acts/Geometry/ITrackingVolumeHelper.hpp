@@ -86,7 +86,8 @@ class ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createTrackingVolume(
-      const GeometryContext& gctx, const LayerVector& layers, MutableTrackingVolumeVector mtvVector,
+      const GeometryContext& gctx, const LayerVector& layers,
+      MutableTrackingVolumeVector mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
       double loc0Max, double loc1Min, double loc1Max,
       const std::string& volumeName = "UndefinedVolume",
