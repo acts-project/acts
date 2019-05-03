@@ -7,14 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
-#include "Acts/Material/Material.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "DD4hep/Detector.h"
 
 #include <boost/algorithm/string.hpp>
@@ -93,7 +93,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
       volumes.push_back(TrackingVolume::create(
           transform,
           std::make_shared<const CylinderVolumeBounds>(cvBounds),
-          std::make_shared<const Material>(volumeMaterial)));
+          std::make_shared<const HomogeneousVolumeMaterial>(volumeMaterial)));
     } else {
       volumes.push_back(TrackingVolume::create(
           transform, std::make_shared<const CylinderVolumeBounds>(cvBounds)));
