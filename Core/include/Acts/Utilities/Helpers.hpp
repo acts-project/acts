@@ -433,10 +433,9 @@ decltype(Callable<N>::invoke(std::declval<Args>()...)) template_switch(
 /// @param bs The bitset to convert
 /// @return A matrix with the integer values of the bits from @p bs
 template <typename MatrixType>
-MatrixType
-bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime
-                                 * MatrixType::ColsAtCompileTime> bs)
-{
+MatrixType bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime *
+                                            MatrixType::ColsAtCompileTime>
+                              bs) {
   constexpr int rows = MatrixType::RowsAtCompileTime;
   constexpr int cols = MatrixType::ColsAtCompileTime;
 
@@ -444,7 +443,7 @@ bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime
                 "bitsetToMatrix does not support dynamic matrices");
 
   MatrixType m;
-  auto*      p = m.data();
+  auto* p = m.data();
   for (size_t i = 0; i < rows * cols; i++) {
     p[i] = bs[rows * cols - 1 - i];
   }
@@ -458,10 +457,8 @@ bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime
 /// @param m Matrix that is converted
 /// @return The converted bitset.
 template <typename Derived>
-auto
-matrixToBitset(const Eigen::PlainObjectBase<Derived>& m)
-{
-  using MatrixType      = Eigen::PlainObjectBase<Derived>;
+auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
+  using MatrixType = Eigen::PlainObjectBase<Derived>;
   constexpr size_t rows = MatrixType::RowsAtCompileTime;
   constexpr size_t cols = MatrixType::ColsAtCompileTime;
 
