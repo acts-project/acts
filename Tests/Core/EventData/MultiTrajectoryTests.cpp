@@ -1,5 +1,5 @@
 // This file is part of the Acts project.
-
+//
 // Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
@@ -238,7 +238,6 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 
 BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   auto [ots, fm, meas] = make_trackstate();
-  using meas_t = decltype(meas);
 
   constexpr size_t maxmeasdim = MultiTrajectory<SourceLink>::MeasurementSizeMax;
 
