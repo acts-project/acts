@@ -106,6 +106,9 @@ struct IndexData {
   IndexType ijacobian = kInvalid;
   IndexType iprojector = kInvalid;
 
+  double chi2;
+  double pathLength;
+
   IndexType iuncalibrated = kInvalid;
   IndexType icalibrated = kInvalid;
   IndexType icalibratedsourcelink = kInvalid;
@@ -364,6 +367,35 @@ class TrackStateProxy {
     setCalibrated(meas);
   }
 
+  /// Getter/setter for chi2 value associated with the track state
+  /// This overload returns a mutable reference, which allows setting a new
+  /// value directly into the backing store.
+  /// @note this overload is only enabled in case the proxy is not read-only
+  /// @return Mutable reference to the chi2 value
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  double& chi2() {
+    return data().chi2;
+  }
+
+  /// Getter for the chi2 value associated with the track state.
+  /// This overload returns a copy of the chi2 value, and thus does not allow
+  /// modification of the value in the backing storage.
+  /// @return the chi2 value of the track state
+  double chi2() const { return data().chi2; }
+
+  /// Getter fot the path length associated with the track state.
+  /// This overloaded is only enabled if not read-only, and returns a mutable
+  /// reference.
+  /// @return Mutable reference to the pathlength.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  double& pathLength() {
+    return data().pathLength;
+  }
+
+  /// Getter for the path length. Returns a copy of the path length value.
+  /// @return The path length of this track state
+  double pathLength() const { return data().pathLength; }
+
  private:
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
@@ -458,6 +490,7 @@ class MultiTrajectory {
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
+
   // owning vector of shared pointers to surfaces
   // @TODO: This might be problematic when appending a large number of surfaces
   // / trackstates, because vector has to reallocated and thus copy. This might

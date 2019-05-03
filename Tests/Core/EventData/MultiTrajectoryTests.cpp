@@ -127,6 +127,9 @@ auto make_trackstate() {
 
   ts.parameter.jacobian = jac;
 
+  ts.parameter.chi2 = 78;
+  ts.parameter.pathLength = 42;
+
   return std::make_tuple(ts, std::move(fm), meas);
 }
 
@@ -179,6 +182,12 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   const auto& ct = t;
   auto cts = ct.getTrackState(0);
   auto ts = t.getTrackState(0);
+
+  // assert expected value of chi2 and path length
+  BOOST_CHECK_EQUAL(cts.chi2(), 78);
+  BOOST_CHECK_EQUAL(ts.chi2(), 78);
+  BOOST_CHECK_EQUAL(cts.pathLength(), 42);
+  BOOST_CHECK_EQUAL(ts.pathLength(), 42);
 
   ParVec_t v;
   CovMat_t cov;
@@ -234,6 +243,12 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   jac.setRandom();
   ts.jacobian() = jac;
   BOOST_CHECK_EQUAL(cts.jacobian(), jac);
+
+  ts.chi2() = 98;
+  BOOST_CHECK_EQUAL(cts.chi2(), 98);
+
+  ts.pathLength() = 66;
+  BOOST_CHECK_EQUAL(cts.pathLength(), 66);
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_reassignment) {

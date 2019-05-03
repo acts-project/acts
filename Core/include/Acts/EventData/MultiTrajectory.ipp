@@ -199,6 +199,9 @@ inline size_t MultiTrajectory<SL>::addTrackState(
                *ts.measurement.calibrated);
   }
 
+  nts.chi2() = ts.parameter.chi2;
+  nts.pathLength() = ts.parameter.pathLength;
+
   return index;
 }
 
