@@ -59,7 +59,6 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   if (surfaceRepresentation().surfaceMaterial() != nullptr) {
     m_ssRepresentingSurface = 2;
   }
-
   // loop over the approach surfaces
   if (m_approachDescriptor) {
     // indicates the existance of approach surfaces
@@ -72,7 +71,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
       auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeoID(asurfaceID);
       if (materialDecorator != nullptr) {
-        materialDecorator->decorate(*rSurface);
+        materialDecorator->decorate(*mutableASurface);
       }
       // if any of the approach surfaces has material
       if (aSurface->surfaceMaterial() != nullptr) {
@@ -92,7 +91,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
       if (materialDecorator != nullptr) {
-        materialDecorator->decorate(*rSurface);
+        materialDecorator->decorate(*mutableSSurface);
       }
       // if any of the sensitive surfaces has material
       if (sSurface->surfaceMaterial() != nullptr) {
