@@ -93,8 +93,11 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 3,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 4,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -115,7 +118,7 @@ BOOST_DATA_TEST_CASE(
       0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = 10. * units::_cm;
@@ -141,8 +144,11 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 13,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 14,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -163,7 +169,7 @@ BOOST_DATA_TEST_CASE(
       0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -214,8 +220,11 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 24,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -236,7 +245,7 @@ BOOST_DATA_TEST_CASE(
       0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
   using DebugOutput = detail::DebugOutputActor;
 
@@ -276,8 +285,11 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 24,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -298,7 +310,7 @@ BOOST_DATA_TEST_CASE(
       0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
   // Action list and abort list
   using DebugOutput = detail::DebugOutputActor;

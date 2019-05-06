@@ -82,7 +82,7 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
 template <typename Propagator_type>
 Vector3D constant_field_propagation(const Propagator_type& propagator,
                                     double pT, double phi, double theta,
-                                    double charge, int /*index*/, double Bz,
+                                    double charge, double time, int /*index*/, double Bz,
                                     double disttol = 0.1 * units::_um,
                                     bool debug = false) {
   namespace VH = VectorHelpers;
@@ -103,7 +103,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   double q = charge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters pars(nullptr, pos, mom, q);
+  CurvilinearParameters pars(nullptr, pos, mom, q, time);
 
   // do propagation
   const auto& tp = propagator.propagate(pars, options).value().endParameters;
@@ -164,7 +164,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
 template <typename Propagator_type>
 void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double plimit, int /*index*/,
+                     double theta, double charge, double time, double plimit, int /*index*/,
                      double disttol = 1. * units::_um,
                      double momtol = 10. * units::_keV, bool debug = false) {
   // setup propagation options
@@ -193,7 +193,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
   double q = charge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q);
+  CurvilinearParameters start(nullptr, pos, mom, q, time);
 
   // do forward-backward propagation
   const auto& fwdResult = propagator.propagate(start, fwdOptions).value();
@@ -232,7 +232,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
 template <typename Propagator_type>
 std::pair<Vector3D, double> to_cylinder(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2, double /*rand3*/,
+    double charge, double time, double plimit, double rand1, double rand2, double /*rand3*/,
     bool covtransport = false, bool debug = false) {
   // setup propagation options
   PropagatorOptions<> options(tgContext, mfContext);
@@ -262,7 +262,7 @@ std::pair<Vector3D, double> to_cylinder(
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // do propagation of the start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
@@ -284,7 +284,7 @@ std::pair<Vector3D, double> to_cylinder(
 template <typename Propagator_type, typename Surface_type>
 std::pair<Vector3D, double> to_surface(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2, double rand3,
+    double charge, double time, double plimit, double rand1, double rand2, double rand3,
     bool planar = true, bool covtransport = false, bool debug = false) {
   using DebugOutput = detail::DebugOutputActor;
 
@@ -316,7 +316,7 @@ std::pair<Vector3D, double> to_surface(
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // Create curvilinear start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
   const auto result_s = propagator.propagate(start, options).value();
   const auto& tp_s = result_s.endParameters;
 
@@ -363,7 +363,7 @@ std::pair<Vector3D, double> to_surface(
 
 template <typename Propagator_type>
 void covariance_curvilinear(const Propagator_type& propagator, double pT,
-                            double phi, double theta, double charge,
+                            double phi, double theta, double charge, double time,
                             double plimit, int /*index*/, double reltol = 1e-3,
                             bool debug = false) {
   covariance_validation_fixture<Propagator_type> fixture(propagator);
@@ -394,8 +394,8 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // do propagation of the start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
-  CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
+  CurvilinearParameters start_wo_c(nullptr, pos, mom, q, time);
 
   const auto result = propagator.propagate(start, options).value();
   const auto& tp = result.endParameters;
@@ -425,7 +425,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
 template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
 void covariance_bound(const Propagator_type& propagator, double pT, double phi,
-                      double theta, double charge, double plimit, double rand1,
+                      double theta, double charge, double time, double plimit, double rand1,
                       double rand2, double rand3, int /*index*/,
                       bool startPlanar = true, bool destPlanar = true,
                       double reltol = 1e-3, bool debug = false) {
@@ -448,12 +448,6 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   Vector3D mom(px, py, pz);
   Covariance cov;
 
-  // take some major correlations (off-diagonals)
-  // cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162,
-  // 0,
-  //     0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-  //     1. / (10 * units::_GeV);
-
   cov << 10. * units::_mm, 0, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0,
       0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV), 0,
       0, 0, 0, 0, 0, 0;
@@ -461,7 +455,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // create curvilinear start parameters
-  CurvilinearParameters start_c(nullptr, pos, mom, q);
+  CurvilinearParameters start_c(nullptr, pos, mom, q, time);
   const auto result_c = propagator.propagate(start_c, options).value();
   const auto& tp_c = result_c.endParameters;
 
@@ -478,9 +472,9 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
 
   auto startSurface =
       Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
-  BoundParameters start(tgContext, std::move(covPtr), pos, mom, q,
+  BoundParameters start(tgContext, std::move(covPtr), pos, mom, q, time,
                         startSurface);
-  BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, startSurface);
+  BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, time, startSurface);
 
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;

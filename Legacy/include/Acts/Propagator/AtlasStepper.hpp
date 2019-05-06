@@ -314,6 +314,11 @@ class AtlasStepper {
   double charge(const State& state) const {
     return state.pVector[6] > 0. ? 1. : -1.;
   }
+  
+  /// Time access
+  double time(const State& state) const {
+	  return state.pVector[7];
+  }
 
   /// Tests if the state reached a surface
   ///
@@ -357,7 +362,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(cov), gp, mom,
-                               charge(state), surface.getSharedPtr());
+                               charge(state), state.pVector[7], surface.getSharedPtr());
 
     return BoundState(std::move(parameters), state.jacobian,
                       state.pathAccumulated);
@@ -388,7 +393,7 @@ class AtlasStepper {
       cov = std::make_unique<const Covariance>(state.cov);
     }
 
-    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state));
+    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state), state.pVector[7]);
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);
@@ -569,7 +574,7 @@ class AtlasStepper {
   /// @param udirection the updated direction
   /// @param p the updated momentum value
   void update(State& state, const Vector3D& uposition,
-              const Vector3D& udirection, double up) const {
+              const Vector3D& udirection, double up, double time) const {
     // update the vector
     state.pVector[0] = uposition[0];
     state.pVector[1] = uposition[1];
@@ -578,6 +583,7 @@ class AtlasStepper {
     state.pVector[4] = udirection[1];
     state.pVector[5] = udirection[2];
     state.pVector[6] = charge(state) / up;
+    state.pVector[7] = time;
   }
 
   /// Return a corrector

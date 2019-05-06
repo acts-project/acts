@@ -19,7 +19,7 @@ namespace Test {
 
 template <typename Parameter>
 void consistencyCheck(const Parameter& pars, const Vector3D& position,
-                      const Vector3D& momentum, double charge,
+                      const Vector3D& momentum, double charge, double time,
                       std::array<double, BoundParsDim> values) {
   // check parameter vector
   CHECK_CLOSE_ABS(pars.parameters()[eLOC_0], values[0], s_onSurfaceTolerance);
@@ -32,6 +32,7 @@ void consistencyCheck(const Parameter& pars, const Vector3D& position,
   CHECK_CLOSE_REL(pars.position(), position, 1e-6);
   CHECK_CLOSE_REL(pars.momentum(), momentum, 1e-6);
   BOOST_CHECK_EQUAL(pars.charge(), charge);
+  CHECK_CLOSE_REL(pars.time(), time, 1e-6);
 }
 }  // namespace Test
 }  // namespace Acts

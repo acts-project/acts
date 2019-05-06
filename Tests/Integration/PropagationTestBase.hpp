@@ -264,20 +264,23 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
             (bdata::seed = 2004,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+        bdata::random(
+            (bdata::seed = 2005,
              bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, index) {
+    pT, phi, theta, charge, time, plimit, index) {
   if (index < skip) {
     return;
   }
 
   double dcharge = -1 + 2 * charge;
   // covariance check for eigen stepper
-  covariance_curvilinear(epropagator, pT, phi, theta, dcharge,
+  covariance_curvilinear(epropagator, pT, phi, theta, dcharge, time,
                          plimit * Acts::units::_m, index);
   // covariance check for eigen stepper in dense environment
   // covariance check fo atlas stepper
-  covariance_curvilinear(apropagator, pT, phi, theta, dcharge,
+  covariance_curvilinear(apropagator, pT, phi, theta, dcharge, time,
                          plimit * Acts::units::_m, index);
 }
 
@@ -342,32 +345,32 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 4003,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
-            (bdata::seed = 4004,
-             bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
-        bdata::random(
             (bdata::seed = 4005,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+             bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
         bdata::random(
             (bdata::seed = 4006,
              bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
         bdata::random(
             (bdata::seed = 4007,
              bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+        bdata::random(
+            (bdata::seed = 4008,
+             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
   if (index < skip) {
     return;
   }
-
+double time = 2.;
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
-      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      apropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m, rand1,
       rand2, rand3, index);
 
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
-      epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      epropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m, rand1,
       rand2, rand3, index);
 }
 
@@ -389,15 +392,15 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 1003,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random((
-            bdata::seed = 1004,
+            bdata::seed = 1005,
             bdata::distribution = std::uniform_real_distribution<>(0.1, 0.2))) ^
-        bdata::random((bdata::seed = 1005,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-0.25, 0.25))) ^
         bdata::random((bdata::seed = 1006,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-0.25, 0.25))) ^
         bdata::random((bdata::seed = 1007,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-0.25, 0.25))) ^
+        bdata::random((bdata::seed = 1008,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-0.25, 0.25))) ^
         bdata::xrange(ntests),
@@ -405,17 +408,17 @@ BOOST_DATA_TEST_CASE(
   if (index < skip) {
     return;
   }
-
+double time = 2.;
   double dcharge = -1 + 2 * charge;
 
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
-      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      apropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m, rand1,
       rand2, rand3, index, false, false, 1e-1);
 
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
-      epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      epropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m, rand1,
       rand2, rand3, index, false, false, 1e-1);
 }
 
@@ -448,14 +451,14 @@ BOOST_DATA_TEST_CASE(
 
   // covariance check for eigen stepper in dense environment
   DensePropagatorType dpropagator = setupDensePropagator();
-  covariance_curvilinear(dpropagator, pT, 0., M_PI / 2., 1,
+  covariance_curvilinear(dpropagator, pT, 0., 1., M_PI / 2., 1,
                          plimit * Acts::units::_m, index);
 
   covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1, plimit * Acts::units::_m, rand1, rand2,
+      dpropagator, pT, 0., 1., M_PI / 2., 1, plimit * Acts::units::_m, rand1, rand2,
       rand3, index, true, true, 1e-1);
 
   covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1, plimit * Acts::units::_m, rand1, rand2,
+      dpropagator, pT, 0., 1., M_PI / 2., 1, plimit * Acts::units::_m, rand1, rand2,
       rand3, index);
 }

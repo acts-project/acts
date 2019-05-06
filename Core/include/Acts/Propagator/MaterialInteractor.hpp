@@ -231,7 +231,7 @@ struct MaterialInteractor {
             stepper.update(
                 state.stepping, stepper.position(state.stepping),
                 stepper.direction(state.stepping),
-                std::copysign(newP, stepper.momentum(state.stepping)));
+                std::copysign(newP, stepper.momentum(state.stepping)), stepper.time(state.stepping));
           }
           // Transfer this into energy loss straggling and apply to
           // covariance:

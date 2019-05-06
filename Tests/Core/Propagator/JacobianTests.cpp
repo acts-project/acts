@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
   const double q = 1;
 
   // Create curvilinear parameters
-  CurvilinearParameters curvilinear(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters curvilinear(std::move(covPtr), pos, mom, q, 0.);
 
   // run the test
   testJacobianToGlobal(curvilinear);

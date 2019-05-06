@@ -79,7 +79,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // l_x, l_y, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {
-      {-0.1234, 9.8765, 0.45, 0.888, 0.001, 0.}};
+      {-0.1234, 9.8765, 0.45, 0.888, 0.001, 21.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
@@ -94,19 +94,19 @@ BOOST_DATA_TEST_CASE(
       center + pars_array[0] * rot.col(0) + pars_array[1] * rot.col(1);
   // constructor from parameter vector
   BoundParameters ataPlane_from_pars(tgContext, nullptr, pars, pSurface);
-  consistencyCheck(ataPlane_from_pars, pos, mom, 1., pars_array);
+  consistencyCheck(ataPlane_from_pars, pos, mom, 1., 21., pars_array);
   // constructor from global parameters
-  BoundParameters ataPlane_from_global(tgContext, nullptr, pos, mom, 1., 1.,
+  BoundParameters ataPlane_from_global(tgContext, nullptr, pos, mom, 1., 21.,
                                        pSurface);
-  consistencyCheck(ataPlane_from_global, pos, mom, 1., pars_array);
+  consistencyCheck(ataPlane_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
   NeutralBoundParameters n_ataPlane_from_pars(tgContext, nullptr, pars,
                                               pSurface);
-  consistencyCheck(n_ataPlane_from_pars, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataPlane_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataPlane_from_global(tgContext, nullptr, pos, mom, 33.33,
+  NeutralBoundParameters n_ataPlane_from_global(tgContext, nullptr, pos, mom, 21.,
                                                 pSurface);
-  consistencyCheck(n_ataPlane_from_global, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataPlane_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
   BOOST_CHECK_EQUAL(&ataPlane_from_pars.referenceSurface(), pSurface.get());
@@ -186,7 +186,7 @@ BOOST_DATA_TEST_CASE(
 
   // now create parameters on this surface
   // r, phi, phi, theta, q/p (1/p), t
-  std::array<double, 6> pars_array = {{125., 0.345, 0.45, 0.888, 0.001, 0.}};
+  std::array<double, 6> pars_array = {{125., 0.345, 0.45, 0.888, 0.001, 21.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
@@ -200,19 +200,19 @@ BOOST_DATA_TEST_CASE(
                  (pars_array[0] * sin(pars_array[1])) * rot.col(1) + center;
   // constructor from parameter vector
   BoundParameters ataDisc_from_pars(tgContext, nullptr, pars, dSurface);
-  consistencyCheck(ataDisc_from_pars, pos, mom, 1., pars_array);
+  consistencyCheck(ataDisc_from_pars, pos, mom, 1., 21., pars_array);
   // constructor from global parameters
-  BoundParameters ataDisc_from_global(tgContext, nullptr, pos, mom, 1., 1.,
+  BoundParameters ataDisc_from_global(tgContext, nullptr, pos, mom, 1., 21.,
                                       dSurface);
-  consistencyCheck(ataDisc_from_global, pos, mom, 1., pars_array);
+  consistencyCheck(ataDisc_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
   NeutralBoundParameters n_ataDisc_from_pars(tgContext, nullptr, pars,
                                              dSurface);
-  consistencyCheck(n_ataDisc_from_pars, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataDisc_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataDisc_from_global(tgContext, nullptr, pos, mom, 33.33,
+  NeutralBoundParameters n_ataDisc_from_global(tgContext, nullptr, pos, mom, 21.,
                                                dSurface);
-  consistencyCheck(n_ataDisc_from_global, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataDisc_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
   BOOST_CHECK_EQUAL(&ataDisc_from_pars.referenceSurface(), dSurface.get());
@@ -271,7 +271,7 @@ BOOST_DATA_TEST_CASE(
 
   // now create parameters on this surface
   // rPhi, a, phi, theta, q/p (1/p), t
-  std::array<double, 6> pars_array = {{125., 343., 0.45, 0.888, 0.001, 0.}};
+  std::array<double, 6> pars_array = {{125., 343., 0.45, 0.888, 0.001, 21.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
@@ -290,19 +290,19 @@ BOOST_DATA_TEST_CASE(
 
   // constructor from parameter vector
   BoundParameters ataCylinder_from_pars(tgContext, nullptr, pars, cSurface);
-  consistencyCheck(ataCylinder_from_pars, pos, mom, 1., pars_array);
+  consistencyCheck(ataCylinder_from_pars, pos, mom, 1., 21., pars_array);
   // constructor from global parameters
-  BoundParameters ataCylinder_from_global(tgContext, nullptr, pos, mom, 1., 1.,
+  BoundParameters ataCylinder_from_global(tgContext, nullptr, pos, mom, 1., 21.,
                                           cSurface);
-  consistencyCheck(ataCylinder_from_global, pos, mom, 1., pars_array);
+  consistencyCheck(ataCylinder_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
   NeutralBoundParameters n_ataCylinder_from_pars(tgContext, nullptr, pars,
                                                  cSurface);
-  consistencyCheck(n_ataCylinder_from_pars, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataCylinder_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataCylinder_from_global(tgContext, nullptr, pos, mom, 33.33,
+  NeutralBoundParameters n_ataCylinder_from_global(tgContext, nullptr, pos, mom, 21.,
                                                    cSurface);
-  consistencyCheck(n_ataCylinder_from_global, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataCylinder_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
   BOOST_CHECK_EQUAL(&ataCylinder_from_pars.referenceSurface(), cSurface.get());
@@ -365,7 +365,7 @@ BOOST_DATA_TEST_CASE(
 
   // now create parameters on this surface
   // d0, z0, phi, theta, q/p (1/p), t
-  std::array<double, 6> pars_array = {{-0.7321, 22.5, 0.45, 0.888, 0.001, 0.}};
+  std::array<double, 6> pars_array = {{-0.7321, 22.5, 0.45, 0.888, 0.001, 21.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
@@ -373,19 +373,19 @@ BOOST_DATA_TEST_CASE(
   BoundParameters ataPerigee_from_pars(tgContext, nullptr, pars, pSurface);
   auto pos = ataPerigee_from_pars.position();
   auto mom = ataPerigee_from_pars.momentum();
-  consistencyCheck(ataPerigee_from_pars, pos, mom, 1., pars_array);
+  consistencyCheck(ataPerigee_from_pars, pos, mom, 1., 21., pars_array);
   // constructor from global parameters
-  BoundParameters ataPerigee_from_global(tgContext, nullptr, pos, mom, 1., 1.,
+  BoundParameters ataPerigee_from_global(tgContext, nullptr, pos, mom, 1., 21.,
                                          pSurface);
-  consistencyCheck(ataPerigee_from_global, pos, mom, 1., pars_array);
+  consistencyCheck(ataPerigee_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
   NeutralBoundParameters n_ataPerigee_from_pars(tgContext, nullptr, pars,
                                                 pSurface);
-  consistencyCheck(n_ataPerigee_from_pars, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataPerigee_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataPerigee_from_global(tgContext, nullptr, pos, mom, 33.33,
+  NeutralBoundParameters n_ataPerigee_from_global(tgContext, nullptr, pos, mom, 21.,
                                                   pSurface);
-  consistencyCheck(n_ataPerigee_from_global, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataPerigee_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
   BOOST_CHECK_EQUAL(&ataPerigee_from_pars.referenceSurface(), pSurface.get());
@@ -438,7 +438,7 @@ BOOST_DATA_TEST_CASE(
 
   // now create parameters on this surface
   // r, z, phi, theta, q/p (1/p), t
-  std::array<double, 6> pars_array = {{0.2321, 22.5, 0.45, 0.888, 0.001, 0.}};
+  std::array<double, 6> pars_array = {{0.2321, 22.5, 0.45, 0.888, 0.001, 21.}};
   TrackParametersBase::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
@@ -447,19 +447,19 @@ BOOST_DATA_TEST_CASE(
   BoundParameters ataLine_from_pars(tgContext, nullptr, pars, sSurface);
   auto pos = ataLine_from_pars.position();
   auto mom = ataLine_from_pars.momentum();
-  consistencyCheck(ataLine_from_pars, pos, mom, 1., pars_array);
+  consistencyCheck(ataLine_from_pars, pos, mom, 1., 21., pars_array);
   // constructor from global parameters
-  BoundParameters ataLine_from_global(tgContext, nullptr, pos, mom, 1., 1.,
+  BoundParameters ataLine_from_global(tgContext, nullptr, pos, mom, 1., 21.,
                                       sSurface);
-  consistencyCheck(ataLine_from_global, pos, mom, 1., pars_array);
+  consistencyCheck(ataLine_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
   NeutralBoundParameters n_ataLine_from_pars(tgContext, nullptr, pars,
                                              sSurface);
-  consistencyCheck(n_ataLine_from_pars, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataLine_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataLine_from_global(tgContext, nullptr, pos, mom, 33.33,
+  NeutralBoundParameters n_ataLine_from_global(tgContext, nullptr, pos, mom, 21.,
                                                sSurface);
-  consistencyCheck(n_ataLine_from_global, pos, mom, 0., pars_array);
+  consistencyCheck(n_ataLine_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
   BOOST_CHECK_EQUAL(&ataLine_from_pars.referenceSurface(), sSurface.get());

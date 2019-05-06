@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                 0.025 * units::_GeV * gauss(generator));
 
   SingleCurvilinearTrackParameters<ChargedPolicy> rStart(std::move(covPtr),
-                                                         rPos, rMom, 1.);
+                                                         rPos, rMom, 1., 42.);
 
   const Surface* rSurface = &rStart.referenceSurface();
 

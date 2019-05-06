@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // The start position and start parameters
   Vector3D pos(-3. * units::_m, 0., 0.), mom(1. * units::_GeV, 0., 0);
   SingleCurvilinearTrackParameters<ChargedPolicy> start(std::move(covPtr), pos,
-                                                        mom, 1.);
+                                                        mom, 1., 42.);
 
   // Create the ActionList and AbortList
   using StepWiseResult = StepWiseActor::result_type;
