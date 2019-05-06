@@ -83,12 +83,12 @@ struct coordinate_transformation {
   /// @return curvilinear parameter representation
   static ParVector_t global2curvilinear(const ActsVectorD<3>& /*pos*/,
                                         const ActsVectorD<3>& mom,
-                                        double charge) {
+                                        double charge, double time) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;
     ParVector_t parameters;
     parameters << 0, 0, phi(mom), theta(mom),
-        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm(), 0.;
+        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm(), time;
 
     return parameters;
   }
@@ -109,7 +109,7 @@ struct coordinate_transformation {
   /// @return the track parameterisation
   static ParVector_t global2parameters(const GeometryContext& gctx,
                                        const ActsVectorD<3>& pos,
-                                       const ActsVectorD<3>& mom, double charge,
+                                       const ActsVectorD<3>& mom, double charge, double time,
                                        const Surface& s) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;
@@ -117,7 +117,7 @@ struct coordinate_transformation {
     s.globalToLocal(gctx, pos, mom, localPosition);
     ParVector_t result;
     result << localPosition(0), localPosition(1), phi(mom), theta(mom),
-        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm(), 0.;
+        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm(), time;
     return result;
   }
 
@@ -127,6 +127,13 @@ struct coordinate_transformation {
   static double parameters2charge(const ParVector_t& pars) {
     return (pars(Acts::eQOP) > 0) ? 1. : -1.;
   }
+  
+  /// @brief static calculate the time from the track parametrisation
+  ///
+  /// @return the time as a double
+  static double parameters2time(const ParVector_t& pars) {
+	  return pars(Acts::eT);
+	 }
 };
 }  // namespace detail
 /// @endcond

@@ -119,6 +119,11 @@ class TrackParametersBase {
   /// @return value of electric charge
   virtual double charge() const = 0;
 
+  /// @brief retrieve time
+  ///
+  /// @return value of time
+  virtual double time() const = 0;
+  
   /// @brief access associated surface defining the coordinate system for track
   ///        parameters and their covariance
   ///

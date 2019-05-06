@@ -100,7 +100,7 @@ namespace concept {
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const BoundParameters&>,
-                                                             has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double>>;
+                                                             has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
         static_assert(update_method_exists, "update method not found");
         constexpr static bool corrector_exists = has_method<const S, typename S::Corrector, corrector_t, state&>;
         static_assert(corrector_exists, "corrector method not found");

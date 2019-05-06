@@ -126,6 +126,7 @@ constexpr double _el_charge = _e / _C;
 constexpr double _c2 = _c * _c;
 constexpr double _c3 = _c * _c * _c;
 constexpr double _c4 = _c2 * _c2;
+constexpr double _c2inv = 1. / _c2;
 /// @}
 
 /// @cond

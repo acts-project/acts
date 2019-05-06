@@ -96,7 +96,7 @@ BOOST_DATA_TEST_CASE(
   BoundParameters ataPlane_from_pars(tgContext, nullptr, pars, pSurface);
   consistencyCheck(ataPlane_from_pars, pos, mom, 1., pars_array);
   // constructor from global parameters
-  BoundParameters ataPlane_from_global(tgContext, nullptr, pos, mom, 1.,
+  BoundParameters ataPlane_from_global(tgContext, nullptr, pos, mom, 1., 1.,
                                        pSurface);
   consistencyCheck(ataPlane_from_global, pos, mom, 1., pars_array);
   // constructor for neutral parameters
@@ -104,7 +104,7 @@ BOOST_DATA_TEST_CASE(
                                               pSurface);
   consistencyCheck(n_ataPlane_from_pars, pos, mom, 0., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataPlane_from_global(tgContext, nullptr, pos, mom,
+  NeutralBoundParameters n_ataPlane_from_global(tgContext, nullptr, pos, mom, 33.33,
                                                 pSurface);
   consistencyCheck(n_ataPlane_from_global, pos, mom, 0., pars_array);
 
@@ -202,7 +202,7 @@ BOOST_DATA_TEST_CASE(
   BoundParameters ataDisc_from_pars(tgContext, nullptr, pars, dSurface);
   consistencyCheck(ataDisc_from_pars, pos, mom, 1., pars_array);
   // constructor from global parameters
-  BoundParameters ataDisc_from_global(tgContext, nullptr, pos, mom, 1.,
+  BoundParameters ataDisc_from_global(tgContext, nullptr, pos, mom, 1., 1.,
                                       dSurface);
   consistencyCheck(ataDisc_from_global, pos, mom, 1., pars_array);
   // constructor for neutral parameters
@@ -210,7 +210,7 @@ BOOST_DATA_TEST_CASE(
                                              dSurface);
   consistencyCheck(n_ataDisc_from_pars, pos, mom, 0., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataDisc_from_global(tgContext, nullptr, pos, mom,
+  NeutralBoundParameters n_ataDisc_from_global(tgContext, nullptr, pos, mom, 33.33,
                                                dSurface);
   consistencyCheck(n_ataDisc_from_global, pos, mom, 0., pars_array);
 
@@ -292,7 +292,7 @@ BOOST_DATA_TEST_CASE(
   BoundParameters ataCylinder_from_pars(tgContext, nullptr, pars, cSurface);
   consistencyCheck(ataCylinder_from_pars, pos, mom, 1., pars_array);
   // constructor from global parameters
-  BoundParameters ataCylinder_from_global(tgContext, nullptr, pos, mom, 1.,
+  BoundParameters ataCylinder_from_global(tgContext, nullptr, pos, mom, 1., 1.,
                                           cSurface);
   consistencyCheck(ataCylinder_from_global, pos, mom, 1., pars_array);
   // constructor for neutral parameters
@@ -300,7 +300,7 @@ BOOST_DATA_TEST_CASE(
                                                  cSurface);
   consistencyCheck(n_ataCylinder_from_pars, pos, mom, 0., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataCylinder_from_global(tgContext, nullptr, pos, mom,
+  NeutralBoundParameters n_ataCylinder_from_global(tgContext, nullptr, pos, mom, 33.33,
                                                    cSurface);
   consistencyCheck(n_ataCylinder_from_global, pos, mom, 0., pars_array);
 
@@ -375,7 +375,7 @@ BOOST_DATA_TEST_CASE(
   auto mom = ataPerigee_from_pars.momentum();
   consistencyCheck(ataPerigee_from_pars, pos, mom, 1., pars_array);
   // constructor from global parameters
-  BoundParameters ataPerigee_from_global(tgContext, nullptr, pos, mom, 1.,
+  BoundParameters ataPerigee_from_global(tgContext, nullptr, pos, mom, 1., 1.,
                                          pSurface);
   consistencyCheck(ataPerigee_from_global, pos, mom, 1., pars_array);
   // constructor for neutral parameters
@@ -383,7 +383,7 @@ BOOST_DATA_TEST_CASE(
                                                 pSurface);
   consistencyCheck(n_ataPerigee_from_pars, pos, mom, 0., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataPerigee_from_global(tgContext, nullptr, pos, mom,
+  NeutralBoundParameters n_ataPerigee_from_global(tgContext, nullptr, pos, mom, 33.33,
                                                   pSurface);
   consistencyCheck(n_ataPerigee_from_global, pos, mom, 0., pars_array);
 
@@ -449,7 +449,7 @@ BOOST_DATA_TEST_CASE(
   auto mom = ataLine_from_pars.momentum();
   consistencyCheck(ataLine_from_pars, pos, mom, 1., pars_array);
   // constructor from global parameters
-  BoundParameters ataLine_from_global(tgContext, nullptr, pos, mom, 1.,
+  BoundParameters ataLine_from_global(tgContext, nullptr, pos, mom, 1., 1.,
                                       sSurface);
   consistencyCheck(ataLine_from_global, pos, mom, 1., pars_array);
   // constructor for neutral parameters
@@ -457,7 +457,7 @@ BOOST_DATA_TEST_CASE(
                                              sSurface);
   consistencyCheck(n_ataLine_from_pars, pos, mom, 0., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataLine_from_global(tgContext, nullptr, pos, mom,
+  NeutralBoundParameters n_ataLine_from_global(tgContext, nullptr, pos, mom, 33.33,
                                                sSurface);
   consistencyCheck(n_ataLine_from_global, pos, mom, 0., pars_array);
 
