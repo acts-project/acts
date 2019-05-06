@@ -12,7 +12,7 @@ template <typename value_t, size_t DIM>
 Acts::Ray<value_t, DIM>::Ray(const vertex_type& origin, const vertex_type& dir)
     : m_origin(origin), m_dir(dir.normalized()), m_idir(1 / m_dir.array()) {}
 template <typename value_t, size_t DIM>
-std::ostream& Acts::Ray<value_t, DIM>::dump(std::ostream& os) const {
+std::ostream& Acts::Ray<value_t, DIM>::toStream(std::ostream& os) const {
   os << "Ray(";
   for (size_t i = 0; i < DIM; i++) {
     if (i > 0) {

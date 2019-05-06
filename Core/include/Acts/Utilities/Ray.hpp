@@ -30,7 +30,7 @@ class Ray {
 
   Ray<value_t, DIM> transformed(const transform_type& trf) const;
 
-  std::ostream& dump(std::ostream& os) const;
+  std::ostream& toStream(std::ostream& os) const;
 
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   void draw(IVisualization& helper, value_type far_distance = 10) const;

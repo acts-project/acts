@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
   Vector2F idir2 = 1. / dir2.array();
   CHECK_CLOSE_ABS(ray2.idir().matrix(), idir2, 1e-6);
 
-  ray2.dump(output);
+  ray2.toStream(output);
   BOOST_CHECK(!output.is_empty(true));
 
   // 3D
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
   CHECK_CLOSE_ABS(ray3.dir(), dir3, 1e-6);
   CHECK_CLOSE_ABS(ray3.idir().matrix(), (1. / dir3.array()).matrix(), 1e-6);
 
-  ray3.dump(output);
+  ray3.toStream(output);
   BOOST_CHECK(!output.is_empty(true));
 
   // compile draw call, doesn't actually test anything
