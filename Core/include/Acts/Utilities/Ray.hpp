@@ -39,9 +39,6 @@ class Ray {
   vertex_type m_origin;
   vertex_type m_dir;
   vertex_array_type m_idir;
-
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 template <typename T, size_t D>

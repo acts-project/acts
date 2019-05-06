@@ -63,9 +63,6 @@ class Frustum {
   vertex_type m_origin;
   // need one more for direction we're facing
   std::array<vertex_type, SIDES + 1> m_normals;
-
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 }  // namespace Acts
