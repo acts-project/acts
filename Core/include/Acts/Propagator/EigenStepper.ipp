@@ -132,6 +132,12 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
   const Jacobian jacFull =
       jacToCurv * (state.jacToGlobal - state.derivative * sfactors);
+//~ std::cout << "jtc:\n" << jacToCurv << std::endl;
+//~ std::cout << "jtg:\n" << state.jacToGlobal << std::endl;
+//~ std::cout << "state.derivative:\n" << state.derivative << std::endl;
+//~ std::cout << "sfactors:\n" << sfactors << std::endl;
+//~ std::cout << "klammer:\n" << state.jacToGlobal - state.derivative * sfactors << std::endl;
+//~ std::cout << "jacfull:\n" << jacFull << std::endl;
   // Apply the actual covariance transport
   state.cov = (jacFull * state.cov * jacFull.transpose());
   // Reinitialize if asked to do so

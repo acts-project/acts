@@ -96,7 +96,7 @@ class AtlasStepper {
       pVector[4] = Sf * Se;
       pVector[5] = Ce;
       pVector[6] = Vp[4];
-      pVector[7] = 0.;
+      pVector[7] = pars.time();
 
       // @todo: remove magic numbers - is that the charge ?
       if (std::abs(pVector[6]) < .000000000000001) {
@@ -425,7 +425,7 @@ class AtlasStepper {
     state.pVector[4] = Sf * Se;
     state.pVector[5] = Ce;
     state.pVector[6] = Vp[4];
-    state.pVector[7] = 0.;
+    state.pVector[7] = pars.time();
 
     // @todo: remove magic numbers - is that the charge ?
     if (std::abs(state.pVector[6]) < .000000000000001) {
