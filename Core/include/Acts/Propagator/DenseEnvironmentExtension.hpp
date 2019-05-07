@@ -41,6 +41,8 @@ struct DenseEnvironmentExtension {
   double dgdqopValue = 0.;
   /// Derivative dEds at the initial point
   double g = 0.;
+  /// k_i equivalent for the time propagation
+  std::array<double, 4> tKi;
 
   /// Local store for conversion of momentum from SI to natural units
   const double conv = units::SI2Nat<units::MOMENTUM>(1);
@@ -105,6 +107,8 @@ struct DenseEnvironmentExtension {
       initializeEnergyLoss(state);
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
+      // Evaluate k_0 for the time propagation
+	  tKi[0] = std::sqrt(massSI * massSI / (currentMomentum * currentMomentum) + units::_c2inv);
     } else {
       // Update parameters and check for momentum condition
       updateEnergyLoss(h, state.stepping, stepper, i);
@@ -114,6 +118,8 @@ struct DenseEnvironmentExtension {
       // Evaluate k
       knew = qop[i] *
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
+      // Evaluate k_i for the time propagation
+      tKi[i] = std::sqrt(massSI * massSI / (currentMomentum * currentMomentum) + units::_c2inv);
     }
     return true;
   }
@@ -151,7 +157,9 @@ struct DenseEnvironmentExtension {
 
     // Update momentum
     state.stepping.p = newMomentum;
-
+    
+	// Update time
+	state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
     return true;
   }
 
@@ -175,6 +183,7 @@ struct DenseEnvironmentExtension {
   }
 
  private:
+ 
   /// @brief Evaluates the transport matrix D for the jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
