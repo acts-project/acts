@@ -309,7 +309,7 @@ struct DenseEnvironmentExtension {
 
     // Evaluation of the dLambda''/dlambda term
     D(6, 6) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
-    
+
     if(state.options.propagateTime)
     {
 		double dtpp1dl = - massSI * massSI * qop[0] * qop[0] * (3. * g + qop[0] * dgdqop(energy[0], state.options.absPdgCode, state.options.meanEnergyLoss));
@@ -320,7 +320,7 @@ struct DenseEnvironmentExtension {
 		qopNew = qop[0] + half_h * Lambdappi[1];
 		double dtpp3dl = - massSI * massSI * qopNew * qopNew * (3. * g * (1. + half_h * jdL[1]) + qopNew * dgdqop(energy[2], state.options.absPdgCode, state.options.meanEnergyLoss));
 	   
-		D(6, 7) = h + h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
+		D(6, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
 	}
     return true;
   }

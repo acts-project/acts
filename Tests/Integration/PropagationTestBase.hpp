@@ -464,11 +464,11 @@ BOOST_DATA_TEST_CASE(
   covariance_curvilinear(dpropagator, pT, 0., M_PI / 2., 1., time,
                          plimit * Acts::units::_m, index);
 
-  //~ covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
-      //~ dpropagator, pT, 0., 1., M_PI / 2., 1, time, plimit * Acts::units::_m, rand1, rand2,
-      //~ rand3, index, true, true, 1e-1);
+  covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
+      dpropagator, pT, 0., M_PI / 2., 1., time, plimit * Acts::units::_m, rand1, rand2,
+      rand3, index, true, true, 1e-1);
 
-  //~ covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
-      //~ dpropagator, pT, 0., 1., M_PI / 2., 1, time, plimit * Acts::units::_m, rand1, rand2,
-      //~ rand3, index);
+  covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
+      dpropagator, pT, 0., M_PI / 2., 1., time, plimit * Acts::units::_m, rand1, rand2,
+      rand3, index);
 }

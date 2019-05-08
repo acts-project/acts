@@ -56,7 +56,7 @@ using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
 // number of tests
 const int ntests = 100;
-const int skip = 98;
+const int skip = 0;
 const bool covtpr = true;
 const bool debug = false;
 

@@ -436,6 +436,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
+  options.propagateTime = true;
 
   // define start parameters
   double x = 1.;
@@ -451,7 +452,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
 
   cov << 10. * units::_mm, 0, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0,
       0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV), 0,
-      0, 0, 0, 0, 0, 0;
+      0, 0, 0, 0, 0, 1e-6 * units::_s;
 
   auto covPtr = std::make_unique<const Covariance>(cov);
 
@@ -497,15 +498,15 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
       calculated_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
 
   // TODO: Replace the following line by the following block
-  // CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
-  CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
-  for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
-    for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
-      if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
-        CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
-      }
-    }
-  }
+  CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
+  //~ CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
+  //~ for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
+    //~ for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
+      //~ if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
+        //~ CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
+      //~ }
+    //~ }
+  //~ }
 }
 }  // namespace IntegrationTest
 }  // namespace Acts
