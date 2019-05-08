@@ -93,7 +93,7 @@ class StraightLineStepper {
 
     /// Save the charge: neutral as default for SL stepper
     double q = 0.;
-    
+
     /// Time
     double t = 0.;
 
@@ -148,9 +148,9 @@ class StraightLineStepper {
 
   /// Charge access
   double charge(const State& state) const { return state.q; }
-  
+
   /// Time access
-  double time(const State& state) const { return state.t;}
+  double time(const State& state) const { return state.t; }
 
   /// Tests if the state reached a surface
   ///
@@ -284,9 +284,11 @@ class StraightLineStepper {
     const double h = state.stepping.stepSize;
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
-    if(state.options.propagateTime)
-    {
-		state.stepping.t += h * std::sqrt(state.options.mass * state.options.mass / (state.stepping.p * state.stepping.p) + units::_c2inv);
+    if (state.options.propagateTime) {
+      state.stepping.t +=
+          h * std::sqrt(state.options.mass * state.options.mass /
+                            (state.stepping.p * state.stepping.p) +
+                        units::_c2inv);
     }
     // state the path length
     state.stepping.pathAccumulated += h;

@@ -123,7 +123,7 @@ class EigenStepper {
 
     /// The charge
     double q = 1.;
-    
+
     /// Time
     double t = 0.;
 
@@ -209,8 +209,8 @@ class EigenStepper {
   double charge(const State& state) const { return state.q; }
 
   /// Time access
-  double time(const State& state) const { return state.t;}
-  
+  double time(const State& state) const { return state.t; }
+
   /// Tests if the state reached a surface
   ///
   /// @param [in] state State that is tests

@@ -123,7 +123,7 @@ class TrackParametersBase {
   ///
   /// @return value of time
   virtual double time() const = 0;
-  
+
   /// @brief access associated surface defining the coordinate system for track
   ///        parameters and their covariance
   ///

@@ -314,11 +314,9 @@ class AtlasStepper {
   double charge(const State& state) const {
     return state.pVector[6] > 0. ? 1. : -1.;
   }
-  
+
   /// Time access
-  double time(const State& state) const {
-	  return state.pVector[7];
-  }
+  double time(const State& state) const { return state.pVector[7]; }
 
   /// Tests if the state reached a surface
   ///
@@ -362,7 +360,8 @@ class AtlasStepper {
 
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(cov), gp, mom,
-                               charge(state), state.pVector[7], surface.getSharedPtr());
+                               charge(state), state.pVector[7],
+                               surface.getSharedPtr());
 
     return BoundState(std::move(parameters), state.jacobian,
                       state.pathAccumulated);
@@ -393,7 +392,8 @@ class AtlasStepper {
       cov = std::make_unique<const Covariance>(state.cov);
     }
 
-    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state), state.pVector[7]);
+    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state),
+                                     state.pVector[7]);
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);

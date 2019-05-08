@@ -72,7 +72,7 @@ class SingleTrackParameters : public TrackParametersBase {
     }
 
     return (m_oChargePolicy == casted->m_oChargePolicy &&
-			m_oTime == casted->m_oTime &&
+            m_oTime == casted->m_oTime &&
             m_oParameters == casted->m_oParameters &&
             m_vPosition == casted->m_vPosition &&
             m_vMomentum == casted->m_vMomentum);
@@ -80,9 +80,9 @@ class SingleTrackParameters : public TrackParametersBase {
 
   /// @copydoc TrackParametersBase::charge
   double charge() const final { return m_oChargePolicy.getCharge(); }
-  
+
   /// @copydoc TrackParametersBase::time
-  double time() const final {return m_oTime; }
+  double time() const final { return m_oTime; }
 
   /// @copydoc TrackParametersBase::getParameterSet
   const FullParameterSet& getParameterSet() const final {
@@ -184,7 +184,8 @@ class SingleTrackParameters : public TrackParametersBase {
                                const T& /*unused*/) {
     m_vMomentum = detail::coordinate_transformation::parameters2globalMomentum(
         getParameterSet().getParameters());
-    m_oTime = detail::coordinate_transformation::parameters2time(getParameterSet().getParameters());
+    m_oTime = detail::coordinate_transformation::parameters2time(
+        getParameterSet().getParameters());
   }
 
   /// @brief update global position from current parameter values
@@ -199,7 +200,7 @@ class SingleTrackParameters : public TrackParametersBase {
 
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing
                                    /// between charged and neutral tracks
-  double m_oTime; 				   ///< time of the track parametrisation
+  double m_oTime;                  ///< time of the track parametrisation
   FullParameterSet m_oParameters;  ///< ParameterSet object holding the
                                    /// parameter values and covariance matrix
   ActsVectorD<3> m_vPosition;      ///< 3D vector with global position

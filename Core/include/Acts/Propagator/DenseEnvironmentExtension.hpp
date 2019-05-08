@@ -111,11 +111,14 @@ struct DenseEnvironmentExtension {
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
-      if(state.options.propagateTime)
-      {
-       Lambdappi[0] = - qop[0] * qop[0] * qop[0] * g * energy[0] / (stepper.charge(state.stepping) * stepper.charge(state.stepping) * units::_C * units::_C);
-	   tKi[0] = std::sqrt(massSI * massSI / (initialMomentum * initialMomentum) + units::_c2inv);
-	  }
+      if (state.options.propagateTime) {
+        Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] /
+                       (stepper.charge(state.stepping) *
+                        stepper.charge(state.stepping) * units::_C * units::_C);
+        tKi[0] =
+            std::sqrt(massSI * massSI / (initialMomentum * initialMomentum) +
+                      units::_c2inv);
+      }
     } else {
       // Update parameters and check for momentum condition
       updateEnergyLoss(h, state.stepping, stepper, i);
@@ -126,12 +129,13 @@ struct DenseEnvironmentExtension {
       knew = qop[i] *
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
-      if(state.options.propagateTime)
-      {
-		  double qopNew = qop[0] + h * Lambdappi[i - 1];
-		  Lambdappi[i] = - qopNew * qopNew * qopNew * g * energy[i] / (stepper.charge(state.stepping) * stepper.charge(state.stepping) * units::_C * units::_C);
-		  tKi[i] = std::sqrt(massSI * massSI / (qopNew * qopNew) + units::_c2inv);
-	  }
+      if (state.options.propagateTime) {
+        double qopNew = qop[0] + h * Lambdappi[i - 1];
+        Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
+                       (stepper.charge(state.stepping) *
+                        stepper.charge(state.stepping) * units::_C * units::_C);
+        tKi[i] = std::sqrt(massSI * massSI / (qopNew * qopNew) + units::_c2inv);
+      }
     }
     return true;
   }
@@ -169,16 +173,19 @@ struct DenseEnvironmentExtension {
 
     // Update momentum
     state.stepping.p = newMomentum;
-    
-    if(state.options.propagateTime)
-    {
-		// Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
-		state.stepping.derivative(7) = std::sqrt(massSI * massSI / (units::Nat2SI<units::MOMENTUM>(newMomentum) * units::Nat2SI<units::MOMENTUM>(newMomentum)) + units::_c2inv);
-		
-		// Update time
-		state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
-	}
-	
+
+    if (state.options.propagateTime) {
+      // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
+      state.stepping.derivative(7) =
+          std::sqrt(massSI * massSI /
+                        (units::Nat2SI<units::MOMENTUM>(newMomentum) *
+                         units::Nat2SI<units::MOMENTUM>(newMomentum)) +
+                    units::_c2inv);
+
+      // Update time
+      state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
+    }
+
     return true;
   }
 
@@ -202,7 +209,6 @@ struct DenseEnvironmentExtension {
   }
 
  private:
- 
   /// @brief Evaluates the transport matrix D for the jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
@@ -265,16 +271,13 @@ struct DenseEnvironmentExtension {
     jdL[0] = dLdl[0];
     dk1dL = dir.cross(sd.B_first);
 
-
     jdL[1] = dLdl[1] * (1. + half_h * jdL[0]);
     dk2dL = (1. + half_h * jdL[0]) * (dir + half_h * sd.k1).cross(sd.B_middle) +
             qop[1] * half_h * dk1dL.cross(sd.B_middle);
-    
-             
+
     jdL[2] = dLdl[2] * (1. + half_h * jdL[1]);
     dk3dL = (1. + half_h * jdL[1]) * (dir + half_h * sd.k2).cross(sd.B_middle) +
             qop[2] * half_h * dk2dL.cross(sd.B_middle);
-            
 
     jdL[3] = dLdl[3] * (1. + h * jdL[2]);
     dk4dL = (1. + h * jdL[2]) * (dir + h * sd.k3).cross(sd.B_last) +
@@ -310,18 +313,26 @@ struct DenseEnvironmentExtension {
     // Evaluation of the dLambda''/dlambda term
     D(6, 6) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
 
-    if(state.options.propagateTime)
-    {
-		double dtpp1dl = - massSI * massSI * qop[0] * qop[0] * (3. * g + qop[0] * dgdqop(energy[0], state.options.absPdgCode, state.options.meanEnergyLoss));
+    if (state.options.propagateTime) {
+      double dtpp1dl =
+          -massSI * massSI * qop[0] * qop[0] *
+          (3. * g + qop[0] * dgdqop(energy[0], state.options.absPdgCode,
+                                    state.options.meanEnergyLoss));
 
-		double qopNew = qop[0] + half_h * Lambdappi[0];
-		double dtpp2dl = - massSI * massSI * qopNew * qopNew * (3. * g * (1. + half_h * jdL[0]) + qopNew * dgdqop(energy[1], state.options.absPdgCode, state.options.meanEnergyLoss));
-		
-		qopNew = qop[0] + half_h * Lambdappi[1];
-		double dtpp3dl = - massSI * massSI * qopNew * qopNew * (3. * g * (1. + half_h * jdL[1]) + qopNew * dgdqop(energy[2], state.options.absPdgCode, state.options.meanEnergyLoss));
-	   
-		D(6, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
-	}
+      double qopNew = qop[0] + half_h * Lambdappi[0];
+      double dtpp2dl = -massSI * massSI * qopNew * qopNew *
+                       (3. * g * (1. + half_h * jdL[0]) +
+                        qopNew * dgdqop(energy[1], state.options.absPdgCode,
+                                        state.options.meanEnergyLoss));
+
+      qopNew = qop[0] + half_h * Lambdappi[1];
+      double dtpp3dl = -massSI * massSI * qopNew * qopNew *
+                       (3. * g * (1. + half_h * jdL[1]) +
+                        qopNew * dgdqop(energy[2], state.options.absPdgCode,
+                                        state.options.meanEnergyLoss));
+
+      D(6, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
+    }
     return true;
   }
 
@@ -408,7 +419,7 @@ struct DenseEnvironmentExtension {
   template <typename propagator_state_t>
   void initializeEnergyLoss(const propagator_state_t& state) {
     energy[0] = std::sqrt(initialMomentum * initialMomentum * units::_c2 +
-                         massSI * massSI * units::_c4);
+                          massSI * massSI * units::_c4);
     // Use the same energy loss throughout the step.
     g = dEds(initialMomentum, energy[0], state.options.absPdgCode,
              state.options.meanEnergyLoss);
@@ -448,7 +459,7 @@ struct DenseEnvironmentExtension {
     currentMomentum = initialMomentum + h * dPds[i - 1];
 
     energy[i] = std::sqrt(currentMomentum * currentMomentum * units::_c2 +
-                         massSI * massSI * units::_c4);
+                          massSI * massSI * units::_c4);
     dPds[i] = g * energy[i] / (currentMomentum * units::_c2);
     qop[i] = stepper.charge(state) / currentMomentum;
     // Calculate term for later error propagation

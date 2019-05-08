@@ -82,7 +82,8 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
 template <typename Propagator_type>
 Vector3D constant_field_propagation(const Propagator_type& propagator,
                                     double pT, double phi, double theta,
-                                    double charge, double time, int /*index*/, double Bz,
+                                    double charge, double time, int /*index*/,
+                                    double Bz,
                                     double disttol = 0.1 * units::_um,
                                     bool debug = false) {
   namespace VH = VectorHelpers;
@@ -164,8 +165,8 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
 template <typename Propagator_type>
 void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double time, double plimit, int /*index*/,
-                     double disttol = 1. * units::_um,
+                     double theta, double charge, double time, double plimit,
+                     int /*index*/, double disttol = 1. * units::_um,
                      double momtol = 10. * units::_keV, bool debug = false) {
   // setup propagation options
   // Action list and abort list
@@ -232,8 +233,8 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
 template <typename Propagator_type>
 std::pair<Vector3D, double> to_cylinder(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double time, double plimit, double rand1, double rand2, double /*rand3*/,
-    bool covtransport = false, bool debug = false) {
+    double charge, double time, double plimit, double rand1, double rand2,
+    double /*rand3*/, bool covtransport = false, bool debug = false) {
   // setup propagation options
   PropagatorOptions<> options(tgContext, mfContext);
   // setup propagation options
@@ -284,8 +285,9 @@ std::pair<Vector3D, double> to_cylinder(
 template <typename Propagator_type, typename Surface_type>
 std::pair<Vector3D, double> to_surface(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double time, double plimit, double rand1, double rand2, double rand3,
-    bool planar = true, bool covtransport = false, bool debug = false) {
+    double charge, double time, double plimit, double rand1, double rand2,
+    double rand3, bool planar = true, bool covtransport = false,
+    bool debug = false) {
   using DebugOutput = detail::DebugOutputActor;
 
   // setup propagation options
@@ -363,9 +365,9 @@ std::pair<Vector3D, double> to_surface(
 
 template <typename Propagator_type>
 void covariance_curvilinear(const Propagator_type& propagator, double pT,
-                            double phi, double theta, double charge, double time,
-                            double plimit, int /*index*/, double reltol = 1e-3,
-                            bool debug = false) {
+                            double phi, double theta, double charge,
+                            double time, double plimit, int /*index*/,
+                            double reltol = 1e-3, bool debug = false) {
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
@@ -412,8 +414,8 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
 template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
 void covariance_bound(const Propagator_type& propagator, double pT, double phi,
-                      double theta, double charge, double time, double plimit, double rand1,
-                      double rand2, double rand3, int /*index*/,
+                      double theta, double charge, double time, double plimit,
+                      double rand1, double rand2, double rand3, int /*index*/,
                       bool startPlanar = true, bool destPlanar = true,
                       double reltol = 1e-3, bool debug = false) {
   covariance_validation_fixture<Propagator_type> fixture(propagator);
@@ -462,7 +464,8 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
       Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
   BoundParameters start(tgContext, std::move(covPtr), pos, mom, q, time,
                         startSurface);
-  BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, time, startSurface);
+  BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, time,
+                             startSurface);
 
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;

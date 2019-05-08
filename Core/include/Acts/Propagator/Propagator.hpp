@@ -152,7 +152,7 @@ struct PropagatorOptions {
 
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
-  
+
   /// Time propagation flag
   bool propagateTime = false;
 

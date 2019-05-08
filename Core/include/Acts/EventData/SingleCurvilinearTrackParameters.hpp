@@ -62,8 +62,8 @@ class SingleCurvilinearTrackParameters
                                    const ActsVectorD<3>& momentum, double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
-            detail::coordinate_transformation::global2curvilinear(position,
-                                                                  momentum, 0, dTime),
+            detail::coordinate_transformation::global2curvilinear(
+                position, momentum, 0, dTime),
             position, momentum),
         m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum)) {}
 

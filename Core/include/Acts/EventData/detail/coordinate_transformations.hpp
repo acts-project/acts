@@ -109,8 +109,8 @@ struct coordinate_transformation {
   /// @return the track parameterisation
   static ParVector_t global2parameters(const GeometryContext& gctx,
                                        const ActsVectorD<3>& pos,
-                                       const ActsVectorD<3>& mom, double charge, double time,
-                                       const Surface& s) {
+                                       const ActsVectorD<3>& mom, double charge,
+                                       double time, const Surface& s) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;
     ActsVectorD<2> localPosition;
@@ -127,13 +127,13 @@ struct coordinate_transformation {
   static double parameters2charge(const ParVector_t& pars) {
     return (pars(Acts::eQOP) > 0) ? 1. : -1.;
   }
-  
+
   /// @brief static calculate the time from the track parametrisation
   ///
   /// @return the time as a double
   static double parameters2time(const ParVector_t& pars) {
-	  return pars(Acts::eT);
-	 }
+    return pars(Acts::eT);
+  }
 };
 }  // namespace detail
 /// @endcond

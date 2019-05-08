@@ -71,7 +71,7 @@ struct PropagatorState {
 
       /// Charge
       double q;
-      
+
       /// Time
       double t;
 
@@ -96,7 +96,7 @@ struct PropagatorState {
 
     /// Charge access
     double charge(const State& state) const { return state.q; }
-    
+
     /// Time access
     double time(const State& state) const { return state.t; }
 
@@ -136,7 +136,8 @@ struct PropagatorState {
     void update(State& /*state*/, const BoundParameters& /*pars*/) const {}
 
     void update(State& /*state*/, const Vector3D& /*uposition*/,
-                const Vector3D& /*udirection*/, double /*up*/, double /*time*/) const {}
+                const Vector3D& /*udirection*/, double /*up*/,
+                double /*time*/) const {}
 
     void covarianceTransport(State& /*state*/,
                              bool /*reinitialize = false*/) const {}

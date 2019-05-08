@@ -223,7 +223,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // Build propagator for the measurement creation
   MeasurementPropagator mPropagator(mStepper, mNavigator);
   Vector3D mPos(-3. * units::_m, 0., 0.), mMom(1. * units::_GeV, 0., 0);
-  SingleCurvilinearTrackParameters<NeutralPolicy> mStart(nullptr, mPos, mMom, 42.);
+  SingleCurvilinearTrackParameters<NeutralPolicy> mStart(nullptr, mPos, mMom,
+                                                         42.);
 
   // Create action list for the measurement creation
   using MeasurementActions = ActionList<MeasurementCreator, DebugOutput>;
