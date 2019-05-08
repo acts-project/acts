@@ -148,7 +148,7 @@ struct covariance_validation_fixture {
     jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
     jacobian.col(Acts::eQOP) = fitLinear(qop_derivatives, h_steps);
     jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
-std::cout << fitLinear(t_derivatives, h_steps).transpose() << std::endl;
+
     return jacobian * startCov * jacobian.transpose();
   }
 

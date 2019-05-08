@@ -284,7 +284,10 @@ class StraightLineStepper {
     const double h = state.stepping.stepSize;
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
-    state.stepping.t += h * std::sqrt(state.options.mass * state.options.mass / (state.stepping.p * state.stepping.p) + units::_c2inv);
+    if(state.options.propagateTime)
+    {
+		state.stepping.t += h * std::sqrt(state.options.mass * state.options.mass / (state.stepping.p * state.stepping.p) + units::_c2inv);
+    }
     // state the path length
     state.stepping.pathAccumulated += h;
     // return h

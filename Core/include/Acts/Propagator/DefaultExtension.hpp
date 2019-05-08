@@ -75,8 +75,10 @@ struct DefaultExtension {
   /// @tparam stepper_t Type of the stepper
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool finalize(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                const double /*unused*/) const {
+  bool finalize(propagator_state_t& state, const stepper_t& stepper,
+                const double h) const {
+	if(state.options.propagateTime) {
+	propagateTime(state, stepper, h); }
     return true;
   }
 
