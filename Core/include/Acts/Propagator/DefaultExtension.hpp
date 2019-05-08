@@ -77,8 +77,10 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h) const {
-	if(state.options.propagateTime) {
-	propagateTime(state, stepper, h); }
+	if(state.options.propagateTime) 
+	{
+		propagateTime(state, stepper, h); 
+	}
     return true;
   }
 
@@ -117,6 +119,8 @@ struct DefaultExtension {
 	 const double mom = units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
 	 const double mass = units::Nat2SI<units::MASS>(state.options.mass);
 	 state.stepping.t += h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+	 // TODO: fit this into the actual work flow
+     state.stepping.derivative(7) = std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
  }
  
   /// @brief Calculates the transport matrix D for the jacobian

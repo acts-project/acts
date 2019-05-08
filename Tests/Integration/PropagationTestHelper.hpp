@@ -374,7 +374,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   options.pathLimit = plimit;
   options.debug = debug;
   options.tolerance = 1e-7;
-  options.propagateTime = true;
+  //~ options.propagateTime = true;
 
   // define start parameters
   double x = 1.;

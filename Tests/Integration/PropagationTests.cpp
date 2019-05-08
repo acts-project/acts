@@ -55,8 +55,8 @@ using DensePropagatorType = Propagator<DenseStepperType, Navigator>;
 using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
 // number of tests
-const int ntests = 100;
-const int skip = 0;
+const int ntests = 28;
+const int skip = 27;
 const bool covtpr = true;
 const bool debug = false;
 
