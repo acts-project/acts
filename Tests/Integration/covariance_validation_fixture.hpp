@@ -154,7 +154,6 @@ struct covariance_validation_fixture {
 	{
 		jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
 	}
-
     return jacobian * startCov * jacobian.transpose();
   }
 

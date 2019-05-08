@@ -369,12 +369,11 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
-  // setup propagation options
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
-  options.tolerance = 1e-7;
-  //~ options.propagateTime = true;
+  options.tolerance = 1e-8;
+  options.propagateTime = true;
 
   // define start parameters
   double x = 1.;
@@ -404,23 +403,10 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   // get numerically propagated covariance matrix
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
+
   Covariance obtained_cov = (*(tp->covariance()));
 
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> obt_cov =
-      obtained_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> calc_cov =
-      calculated_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-
-  // TODO: Replace the following line by the following block
   CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
-  //~ CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
-  //~ for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
-    //~ for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
-      //~ if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
-        //~ CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
-      //~ }
-    //~ }
-  //~ }
 }
 
 template <typename Propagator_type, typename StartSurface_type,
@@ -492,21 +478,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
 
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> obt_cov =
-      obtained_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> calc_cov =
-      calculated_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-
-  // TODO: Replace the following line by the following block
   CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
-  //~ CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
-  //~ for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
-    //~ for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
-      //~ if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
-        //~ CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
-      //~ }
-    //~ }
-  //~ }
 }
 }  // namespace IntegrationTest
 }  // namespace Acts

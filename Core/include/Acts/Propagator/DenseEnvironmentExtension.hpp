@@ -172,7 +172,7 @@ struct DenseEnvironmentExtension {
     
     if(state.options.propagateTime)
     {
-		// Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^-2 + c^-2)
+		// Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
 		state.stepping.derivative(7) = std::sqrt(massSI * massSI / (units::Nat2SI<units::MOMENTUM>(newMomentum) * units::Nat2SI<units::MOMENTUM>(newMomentum)) + units::_c2inv);
 		
 		// Update time
