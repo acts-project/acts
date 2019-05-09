@@ -346,16 +346,16 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 4003,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
-            (bdata::seed = 4005,
+            (bdata::seed = 4004,
              bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
+        bdata::random(
+            (bdata::seed = 4005,
+             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
         bdata::random(
             (bdata::seed = 4006,
              bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
         bdata::random(
             (bdata::seed = 4007,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 4008,
              bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
@@ -393,15 +393,15 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 1003,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random((
-            bdata::seed = 1005,
+            bdata::seed = 1004,
             bdata::distribution = std::uniform_real_distribution<>(0.1, 0.2))) ^
+        bdata::random((bdata::seed = 1005,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-0.25, 0.25))) ^
         bdata::random((bdata::seed = 1006,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-0.25, 0.25))) ^
         bdata::random((bdata::seed = 1007,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-0.25, 0.25))) ^
-        bdata::random((bdata::seed = 1008,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-0.25, 0.25))) ^
         bdata::xrange(ntests),
