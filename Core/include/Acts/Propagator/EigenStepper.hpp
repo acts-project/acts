@@ -86,7 +86,7 @@ class EigenStepper {
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
           q(par.charge()),
-          t(par.time()),
+          t0(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           fieldCache(mctx),
@@ -123,9 +123,12 @@ class EigenStepper {
 
     /// The charge
     double q = 1.;
-
-    /// Time
-    double t = 0.;
+    
+    /// @note The time is split into a starting and a propagated time to avoid machine precision related errors
+    /// Starting time
+    const double t0;
+    /// Propagated time
+    double dt = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -209,7 +212,7 @@ class EigenStepper {
   double charge(const State& state) const { return state.q; }
 
   /// Time access
-  double time(const State& state) const { return state.t; }
+  double time(const State& state) const { return state.t0 + state.dt; }
 
   /// Tests if the state reached a surface
   ///

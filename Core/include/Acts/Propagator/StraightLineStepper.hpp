@@ -73,7 +73,7 @@ class StraightLineStepper {
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
           q(par.charge()),
-          t(par.time()),
+          t0(par.time()),
           navDir(ndir),
           stepSize(ssize),
           geoContext(gctx) {}
@@ -94,8 +94,11 @@ class StraightLineStepper {
     /// Save the charge: neutral as default for SL stepper
     double q = 0.;
 
-    /// Time
-    double t = 0.;
+	/// @note The time is split into a starting and a propagated time to avoid machine precision related errors
+    /// Starting time
+    const double t0;
+    /// Propagated time
+    double dt = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -150,7 +153,7 @@ class StraightLineStepper {
   double charge(const State& state) const { return state.q; }
 
   /// Time access
-  double time(const State& state) const { return state.t; }
+  double time(const State& state) const { return state.t0 + state.dt; }
 
   /// Tests if the state reached a surface
   ///
@@ -179,7 +182,7 @@ class StraightLineStepper {
                         bool /*unused*/) const {
     // Create the bound parameters
     BoundParameters parameters(state.geoContext, nullptr, state.pos,
-                               state.p * state.dir, state.q, state.t,
+                               state.p * state.dir, state.q, state.t0 + state.dt,
                                surface.getSharedPtr());
     // Create the bound state
     BoundState bState{std::move(parameters), Jacobian::Identity(),
@@ -201,7 +204,7 @@ class StraightLineStepper {
   CurvilinearState curvilinearState(State& state, bool /*unused*/) const {
     // Create the curvilinear parameters
     CurvilinearParameters parameters(nullptr, state.pos, state.p * state.dir,
-                                     state.q, state.t);
+                                     state.q, state.t0 + state.dt);
     // Create the bound state
     CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                state.pathAccumulated};
@@ -218,7 +221,7 @@ class StraightLineStepper {
     state.pos = pars.position();
     state.dir = mom.normalized();
     state.p = mom.norm();
-    state.t = pars.time();
+    state.dt = pars.time();
   }
 
   /// Method to update momentum, direction and p
@@ -232,7 +235,7 @@ class StraightLineStepper {
     state.pos = uposition;
     state.dir = udirection;
     state.p = up;
-    state.t = time;
+    state.dt = time;
   }
 
   /// Return a corrector
@@ -285,7 +288,7 @@ class StraightLineStepper {
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
     if (state.options.propagateTime) {
-      state.stepping.t +=
+      state.stepping.dt +=
           h * std::sqrt(state.options.mass * state.options.mass /
                             (state.stepping.p * state.stepping.p) +
                         units::_c2inv);

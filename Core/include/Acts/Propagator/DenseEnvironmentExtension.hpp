@@ -183,7 +183,7 @@ struct DenseEnvironmentExtension {
                     units::_c2inv);
 
       // Update time
-      state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
+      state.stepping.dt += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
     }
 
     return true;

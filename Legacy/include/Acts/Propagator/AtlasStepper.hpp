@@ -73,6 +73,7 @@ class AtlasStepper {
           newfield(true),
           field(0., 0., 0.),
           covariance(nullptr),
+          t0(pars.time()),
           stepSize(ndir * std::abs(ssize)),
           fieldCache(mctx),
           geoContext(gctx) {
@@ -260,6 +261,8 @@ class AtlasStepper {
 
     // accummulated path length cache
     double pathAccumulated = 0.;
+    // Starting time
+    const double t0;
 
     // adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
@@ -316,7 +319,7 @@ class AtlasStepper {
   }
 
   /// Time access
-  double time(const State& state) const { return state.pVector[7]; }
+  double time(const State& state) const { return state.t0 + state.pVector[7]; }
 
   /// Tests if the state reached a surface
   ///
@@ -360,7 +363,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(cov), gp, mom,
-                               charge(state), state.pVector[7],
+                               charge(state), state.t0 + state.pVector[7],
                                surface.getSharedPtr());
 
     return BoundState(std::move(parameters), state.jacobian,
@@ -393,7 +396,7 @@ class AtlasStepper {
     }
 
     CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state),
-                                     state.pVector[7]);
+                                     state.t0 + state.pVector[7]);
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);
@@ -1113,7 +1116,15 @@ class AtlasStepper {
       sA[0] = A6 * Sl;
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
-
+      
+      if(state.options.propagateTime)
+      {
+		  const double mom =
+			units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
+		  const double mass = units::Nat2SI<units::MASS>(state.options.mass);
+		  state.stepping.pVector[7] += h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+	  }
+	  
       state.stepping.field = f;
       state.stepping.newfield = false;
 
