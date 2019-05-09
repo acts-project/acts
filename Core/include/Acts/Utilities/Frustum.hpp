@@ -16,12 +16,13 @@
 namespace Acts {
 
 /// Class representing a frustum shape. The frustum is defined using an origin,
-/// a direction and an opening angle. The "near plane" is assumed to coincide
-/// with the origin point, and the normal with the "direction" of the frustum.
-/// No far plane is defined.
+/// a direction and an opening angle. These parameters are then used to
+/// calculate a number of side planes, each having a position and a normal
+/// vector. The "near plane" is assumed to coincide with the origin point, and
+/// the normal with the "direction" of the frustum. No far plane is defined.
 /// @tparam value_t The floating point value to use
 /// @tparam DIM The number of dimensions of ambient space
-/// @tparam SIDES The number of sides (= side planes) the frustum has (minimum 2
+/// @tparam SIDES The number of sides (= side planes) the frustum has (exactly 2
 /// in 2D, minimum 3 in 3D)
 template <typename value_t, size_t DIM, size_t SIDES>
 class Frustum {

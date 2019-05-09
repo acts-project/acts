@@ -119,11 +119,14 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
     const Ray<value_type, DIM>& ray) const {
   const vertex_type& origin = ray.origin();
   const vertex_array_type& idir = ray.idir();
-  // this is NaN origin is on box boundary and ray is parallel to
-  // that boundary, since 0*inf = NaN.
+
+  // Calculate the intersect distances with the min and max planes along the ray
+  // direction, from the ray origin. See Ch VII.5 Fig.1 in [1].
+  // This is done in all dimensions at the same time:
   vertex_array_type t0s = (m_vmin - origin).array() * idir;
   vertex_array_type t1s = (m_vmax - origin).array() * idir;
 
+  // Calculate the component wise min/max between the t0s and t1s
   // this is non-compliant with IEEE-754-2008, NaN gets propagated through
   // http://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
   // this means that rays parallel to boundaries might not be considered
@@ -131,34 +134,28 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   vertex_array_type tsmaller = t0s.min(t1s);
   vertex_array_type tbigger = t0s.max(t1s);
 
+  // extract largest and smallest component of the component wise extrema
   value_type tmin = tsmaller.maxCoeff();
   value_type tmax = tbigger.minCoeff();
 
-  // std::cout << "--- " << ray << " -> " << this << std::endl;
-  // std::cout << "t0s:\n" << t0s << "\nt1s\n" << t1s << "\n\n";
-  // std::cout << "tsmaller:\n" << tsmaller << "\ntbigger\n" << tbigger <<
-  // "\n\n";
-  // std::cout << "tmin:" << tmin << "\ntmax:" << tmax << std::endl;
-
-  return tmin < tmax && tmax > 0.0;  // ((tmin > 0.0 && tmax > 0.0) || (tmin <
-                                     // 0.0 && tmax > 0.0));
+  // If tmin is smaller than tmax and tmax is positive, then the box is in
+  // positive ray direction, and the ray intersects the box.
+  return tmin < tmax && tmax > 0.0;
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
 template <size_t sides>
 bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
     const Frustum<value_type, DIM, sides>& fr) const {
-  // std::cout << __FUNCTION__ << std::endl;
-  // std::cout << "sides: " << sides << std::endl;
-
   const auto& normals = fr.normals();
-  const vertex_array_type vmin = m_vmin - fr.origin();
-  const vertex_array_type vmax = m_vmax - fr.origin();
+  // Transform vmin and vmax into the coordinate system, at which the frustum is
+  // located at the coordinate origin.
+  const vertex_array_type fr_vmin = m_vmin - fr.origin();
+  const vertex_array_type fr_vmax = m_vmax - fr.origin();
 
-  // std::cout << "vmin: " << vmin.transpose() << "\nvmax: " <<
-  // vmax.transpose()
-  //<< std::endl;
-
+  // For each plane, find the p-vertex, which is the vertex that is at the
+  // furthest distance from the plane *along* it's normal direction.
+  // See Fig. 2 in [2].
   vertex_type p_vtx;
   // for loop, we could eliminate this, probably,
   // but sides+1 is known at compile time, so the compiler
@@ -166,15 +163,14 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   for (size_t i = 0; i < sides + 1; i++) {
     const vertex_type& normal = normals[i];
 
-    // for (size_t j=0;j<DIM;j++) {
-    // p_vtx[j] = normal[j] < 0 ? vmin[j] : vmax[j];
-    // std::cout << p_vtx[j] << std::endl;
-    //}
+    // for AABBs, take the component from the min vertex, if the normal
+    // component is negative, else take the component from the max vertex.
+    p_vtx = (normal.array() < 0).template cast<value_type>() * fr_vmin +
+            (normal.array() >= 0).template cast<value_type>() * fr_vmax;
 
-    p_vtx = (normal.array() < 0).template cast<value_type>() * vmin +
-            (normal.array() >= 0).template cast<value_type>() * vmax;
-    // std::cout << p_vtx.transpose() << std::endl;
-
+    // Check if the p-vertex is at positive or negative direction along the
+    // If the p vertex is along negative normal direction *once*, the box is
+    // outside the frustum, and we can terminate early.
     if (p_vtx.dot(normal) < 0) {
       // p vertex is outside on this plane, box must be outside
       return false;
@@ -182,7 +178,7 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   }
 
   // If we get here, no p-vertex was outside, so box intersects or is
-  // contained. We don't care, so report 'intsersect'
+  // contained. We don't care, so report 'intersect'
   return true;
 }
 
