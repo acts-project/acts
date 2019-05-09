@@ -97,7 +97,7 @@ class AtlasStepper {
       pVector[4] = Sf * Se;
       pVector[5] = Ce;
       pVector[6] = Vp[4];
-      pVector[7] = pars.time();
+      pVector[7] = 0.;
 
       // @todo: remove magic numbers - is that the charge ?
       if (std::abs(pVector[6]) < .000000000000001) {
@@ -740,7 +740,6 @@ class AtlasStepper {
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
-
     state.cov = J * (*state.covariance) * J.transpose();
   }
 
@@ -1116,8 +1115,8 @@ class AtlasStepper {
       sA[0] = A6 * Sl;
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
-      
-      if(state.options.propagateTime)
+	  
+	  if(state.options.propagateTime)
       {
 		  const double mom =
 			units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));

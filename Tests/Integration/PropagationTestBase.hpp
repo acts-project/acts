@@ -34,14 +34,11 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 3,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
-        bdata::random((bdata::seed = 5,
+        bdata::random((bdata::seed = 4,
                        bdata::distribution = std::uniform_real_distribution<>(
                            0, 1. * units::_m))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, plimit, index) {
+    pT, phi, theta, charge, plimit, index) {
   if (index < skip) {
     return;
   }
@@ -49,10 +46,10 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
 
   // foward backward check atlas stepper
-  foward_backward(apropagator, pT, phi, theta, dcharge, time, plimit, index,
+  foward_backward(apropagator, pT, phi, theta, dcharge, plimit, index,
                   1e-3, Acts::units::_eV, debug);
   // foward backward check eigen stepper
-  foward_backward(epropagator, pT, phi, theta, dcharge, time, plimit, index,
+  foward_backward(epropagator, pT, phi, theta, dcharge, plimit, index,
                   1e-3, Acts::units::_eV, debug);
 }
 
@@ -90,16 +87,16 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
-  double time = 2.;
+
   // just make sure we can reach it
   double r = rfrac * std::abs(Nat2SI<units::MOMENTUM>(pT) / (1. * Bz));
   r = (r > 2.5 * Acts::units::_m) ? 2.5 * Acts::units::_m : r;
 
   // check atlas stepper
-  auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, dcharge, time,
+  auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, dcharge,
                                    r, rand1, rand2, rand3, covtpr, debug);
   // check eigen stepper
-  auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, dcharge, time,
+  auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, dcharge,
                                    r, rand1, rand2, rand3, covtpr, debug);
   CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10. * units::_um);
 }
@@ -138,14 +135,14 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
-  double time = 2.;
+
   // to a plane with the atlas stepper
   auto a_at_plane = to_surface<AtlasPropagatorType, PlaneSurface>(
-      apropagator, pT, phi, theta, dcharge, time, pfrac * Acts::units::_m,
+      apropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m,
       rand1, rand2, rand3, true, covtpr);
   // to a plane with the eigen stepper
   auto e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(
-      epropagator, pT, phi, theta, dcharge, time, pfrac * Acts::units::_m,
+      epropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m,
       rand1, rand2, rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_plane.first, a_at_plane.first, 1 * units::_um);
@@ -185,14 +182,14 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
-  double time = 2.;
+
   // to a disc with the  atlas stepper
   auto a_at_disc = to_surface<AtlasPropagatorType, DiscSurface>(
-      apropagator, pT, phi, theta, dcharge, time, pfrac * Acts::units::_m,
+      apropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m,
       rand1, rand2, rand3, true, covtpr);
   // to a disc with the eigen stepper
   auto e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(
-      epropagator, pT, phi, theta, dcharge, time, pfrac * Acts::units::_m,
+      epropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m,
       rand1, rand2, rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_disc.first, a_at_disc.first, 1 * units::_um);
@@ -232,21 +229,20 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
-  double time = 2.;
 
   // to a line with the atlas stepper
   if (debug) {
     std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
   }
   auto a_at_line = to_surface<AtlasPropagatorType, StrawSurface>(
-      apropagator, pT, phi, theta, dcharge, time, pfrac * Acts::units::_m,
+      apropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m,
       rand1, rand2, rand3, false, covtpr, debug);
   // to a line with the eigen stepper
   if (debug) {
     std::cout << "[ >>>> Testing Eigen Propagator <<<< ]" << std::endl;
   }
   auto e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, pT, phi, theta, dcharge, time, pfrac * Acts::units::_m,
+      epropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m,
       rand1, rand2, rand3, false, covtpr, debug);
 
   CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1 * units::_um);
@@ -271,23 +267,20 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
             (bdata::seed = 2004,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
-        bdata::random(
-            (bdata::seed = 2005,
              bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, plimit, index) {
+    pT, phi, theta, charge, plimit, index) {
   if (index < skip) {
     return;
   }
 
   double dcharge = -1 + 2 * charge;
   // covariance check for eigen stepper
-  covariance_curvilinear(epropagator, pT, phi, theta, dcharge, time,
+  covariance_curvilinear(epropagator, pT, phi, theta, dcharge,
                          plimit * Acts::units::_m, index);
   // covariance check for eigen stepper in dense environment
   // covariance check fo atlas stepper
-  covariance_curvilinear(apropagator, pT, phi, theta, dcharge, time,
+  covariance_curvilinear(apropagator, pT, phi, theta, dcharge,
                          plimit * Acts::units::_m, index);
 }
 
@@ -325,15 +318,15 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
-  double time = 2.;
+
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
-      apropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m,
+      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m,
       rand1, rand2, rand3, index, true, true, 1e-1);
 
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
-      epropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m,
+      epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m,
       rand1, rand2, rand3, index, true, true, 1e-1);
 }
 
@@ -369,16 +362,16 @@ BOOST_DATA_TEST_CASE(
   if (index < skip) {
     return;
   }
-  double time = 2.;
+
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
-      apropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m,
+      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m,
       rand1, rand2, rand3, index);
 
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
-      epropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m,
+      epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m,
       rand1, rand2, rand3, index);
 }
 
@@ -416,17 +409,17 @@ BOOST_DATA_TEST_CASE(
   if (index < skip) {
     return;
   }
-  double time = 2.;
+
   double dcharge = -1 + 2 * charge;
 
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
-      apropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m,
+      apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m,
       rand1, rand2, rand3, index, false, false, 1e-1);
 
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
-      epropagator, pT, phi, theta, dcharge, time, plimit * Acts::units::_m,
+      epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m,
       rand1, rand2, rand3, index, false, false, 1e-1);
 }
 
@@ -457,18 +450,16 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double time = 2.;
-
   // covariance check for eigen stepper in dense environment
   DensePropagatorType dpropagator = setupDensePropagator();
-  covariance_curvilinear(dpropagator, pT, 0., M_PI / 2., 1., time,
+  covariance_curvilinear(dpropagator, pT, 0., M_PI / 2., 1.,
                          plimit * Acts::units::_m, index);
 
   covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1., time, plimit * Acts::units::_m, rand1,
+      dpropagator, pT, 0., M_PI / 2., 1., plimit * Acts::units::_m, rand1,
       rand2, rand3, index, true, true, 1e-1);
 
   covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1., time, plimit * Acts::units::_m, rand1,
+      dpropagator, pT, 0., M_PI / 2., 1., plimit * Acts::units::_m, rand1,
       rand2, rand3, index);
 }

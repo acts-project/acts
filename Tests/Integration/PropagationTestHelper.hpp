@@ -165,7 +165,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
 template <typename Propagator_type>
 void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double time, double plimit,
+                     double theta, double charge, double plimit,
                      int /*index*/, double disttol = 1. * units::_um,
                      double momtol = 10. * units::_keV, bool debug = false) {
   // setup propagation options
@@ -192,6 +192,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   CurvilinearParameters start(nullptr, pos, mom, q, time);
@@ -233,7 +234,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
 template <typename Propagator_type>
 std::pair<Vector3D, double> to_cylinder(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double time, double plimit, double rand1, double rand2,
+    double charge, double plimit, double rand1, double rand2,
     double /*rand3*/, bool covtransport = false, bool debug = false) {
   // setup propagation options
   PropagatorOptions<> options(tgContext, mfContext);
@@ -241,6 +242,7 @@ std::pair<Vector3D, double> to_cylinder(
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
+  options.propagateTime = true;
 
   // define start parameters
   double x = 0;
@@ -250,6 +252,7 @@ std::pair<Vector3D, double> to_cylinder(
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
@@ -259,7 +262,7 @@ std::pair<Vector3D, double> to_cylinder(
     // take some major correlations (off-diagonals)
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
         0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // do propagation of the start parameters
@@ -285,7 +288,7 @@ std::pair<Vector3D, double> to_cylinder(
 template <typename Propagator_type, typename Surface_type>
 std::pair<Vector3D, double> to_surface(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double time, double plimit, double rand1, double rand2,
+    double charge, double plimit, double rand1, double rand2,
     double rand3, bool planar = true, bool covtransport = false,
     bool debug = false) {
   using DebugOutput = detail::DebugOutputActor;
@@ -296,6 +299,7 @@ std::pair<Vector3D, double> to_surface(
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
+  options.propagateTime = true;
 
   // define start parameters
   double x = 0;
@@ -305,6 +309,7 @@ std::pair<Vector3D, double> to_surface(
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
@@ -314,7 +319,7 @@ std::pair<Vector3D, double> to_surface(
     // take some major correlations (off-diagonals)
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
         0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // Create curvilinear start parameters
@@ -366,7 +371,7 @@ std::pair<Vector3D, double> to_surface(
 template <typename Propagator_type>
 void covariance_curvilinear(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
-                            double time, double plimit, int /*index*/,
+                            double plimit, int /*index*/,
                             double reltol = 1e-3, bool debug = false) {
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
@@ -374,7 +379,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
-  options.tolerance = 1e-8;
+  options.tolerance = 1e-7;
   options.propagateTime = true;
 
   // define start parameters
@@ -385,6 +390,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
@@ -414,7 +420,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
 template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
 void covariance_bound(const Propagator_type& propagator, double pT, double phi,
-                      double theta, double charge, double time, double plimit,
+                      double theta, double charge, double plimit,
                       double rand1, double rand2, double rand3, int /*index*/,
                       bool startPlanar = true, bool destPlanar = true,
                       double reltol = 1e-3, bool debug = false) {
@@ -434,6 +440,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   Covariance cov;
