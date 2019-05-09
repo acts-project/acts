@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -183,7 +183,8 @@ struct DenseEnvironmentExtension {
                     units::_c2inv);
 
       // Update time
-      state.stepping.dt += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
+      state.stepping.dt +=
+          (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
     }
 
     return true;

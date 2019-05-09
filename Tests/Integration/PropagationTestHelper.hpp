@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -165,8 +165,8 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
 template <typename Propagator_type>
 void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double plimit,
-                     int /*index*/, double disttol = 1. * units::_um,
+                     double theta, double charge, double plimit, int /*index*/,
+                     double disttol = 1. * units::_um,
                      double momtol = 10. * units::_keV, bool debug = false) {
   // setup propagation options
   // Action list and abort list
@@ -234,8 +234,8 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
 template <typename Propagator_type>
 std::pair<Vector3D, double> to_cylinder(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2,
-    double /*rand3*/, bool covtransport = false, bool debug = false) {
+    double charge, double plimit, double rand1, double rand2, double /*rand3*/,
+    bool covtransport = false, bool debug = false) {
   // setup propagation options
   PropagatorOptions<> options(tgContext, mfContext);
   // setup propagation options
@@ -288,9 +288,8 @@ std::pair<Vector3D, double> to_cylinder(
 template <typename Propagator_type, typename Surface_type>
 std::pair<Vector3D, double> to_surface(
     const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2,
-    double rand3, bool planar = true, bool covtransport = false,
-    bool debug = false) {
+    double charge, double plimit, double rand1, double rand2, double rand3,
+    bool planar = true, bool covtransport = false, bool debug = false) {
   using DebugOutput = detail::DebugOutputActor;
 
   // setup propagation options
@@ -371,8 +370,8 @@ std::pair<Vector3D, double> to_surface(
 template <typename Propagator_type>
 void covariance_curvilinear(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
-                            double plimit, int /*index*/,
-                            double reltol = 1e-3, bool debug = false) {
+                            double plimit, int /*index*/, double reltol = 1e-3,
+                            bool debug = false) {
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
@@ -420,8 +419,8 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
 template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
 void covariance_bound(const Propagator_type& propagator, double pT, double phi,
-                      double theta, double charge, double plimit,
-                      double rand1, double rand2, double rand3, int /*index*/,
+                      double theta, double charge, double plimit, double rand1,
+                      double rand2, double rand3, int /*index*/,
                       bool startPlanar = true, bool destPlanar = true,
                       double reltol = 1e-3, bool debug = false) {
   covariance_validation_fixture<Propagator_type> fixture(propagator);

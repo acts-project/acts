@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -94,7 +94,8 @@ class StraightLineStepper {
     /// Save the charge: neutral as default for SL stepper
     double q = 0.;
 
-	/// @note The time is split into a starting and a propagated time to avoid machine precision related errors
+    /// @note The time is split into a starting and a propagated time to avoid
+    /// machine precision related errors
     /// Starting time
     const double t0;
     /// Propagated time
@@ -182,8 +183,8 @@ class StraightLineStepper {
                         bool /*unused*/) const {
     // Create the bound parameters
     BoundParameters parameters(state.geoContext, nullptr, state.pos,
-                               state.p * state.dir, state.q, state.t0 + state.dt,
-                               surface.getSharedPtr());
+                               state.p * state.dir, state.q,
+                               state.t0 + state.dt, surface.getSharedPtr());
     // Create the bound state
     BoundState bState{std::move(parameters), Jacobian::Identity(),
                       state.pathAccumulated};

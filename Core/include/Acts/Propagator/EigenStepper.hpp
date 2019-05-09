@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -123,9 +123,9 @@ class EigenStepper {
 
     /// The charge
     double q = 1.;
-    
-    /// @note The time is split into a starting and a propagated time to avoid machine precision related errors
-    /// Starting time
+
+    /// @note The time is split into a starting and a propagated time to avoid
+    /// machine precision related errors Starting time
     const double t0;
     /// Propagated time
     double dt = 0.;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -75,12 +75,13 @@ struct DefaultExtension {
   /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
-  /// @param [in] h Step size  
+  /// @param [in] h Step size
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h) const {
-    return (state.options.propagateTime ? propagateTime(state, stepper, h) : true);
+    return (state.options.propagateTime ? propagateTime(state, stepper, h)
+                                        : true);
   }
 
   /// @brief Veto function after a RKN4 step was accepted by judging on the
@@ -97,7 +98,9 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h, FreeMatrix& D) const {
-    return transportMatrix(state, stepper, h, D) && (state.options.propagateTime ? propagateTime(state, stepper, h) : true);
+    return transportMatrix(state, stepper, h, D) &&
+           (state.options.propagateTime ? propagateTime(state, stepper, h)
+                                        : true);
   }
 
  private:

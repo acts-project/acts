@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1115,15 +1115,15 @@ class AtlasStepper {
       sA[0] = A6 * Sl;
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
-	  
-	  if(state.options.propagateTime)
-      {
-		  const double mom =
-			units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
-		  const double mass = units::Nat2SI<units::MASS>(state.options.mass);
-		  state.stepping.pVector[7] += h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
-	  }
-	  
+
+      if (state.options.propagateTime) {
+        const double mom =
+            units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
+        const double mass = units::Nat2SI<units::MASS>(state.options.mass);
+        state.stepping.pVector[7] +=
+            h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+      }
+
       state.stepping.field = f;
       state.stepping.newfield = false;
 
