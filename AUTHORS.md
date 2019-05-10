@@ -7,6 +7,7 @@ Contributors to Acts in alphabetical order:
 - Hadrien Grasland
 - Julia Hrdinka
 - Moritz Kiehn
+- Noemi Calace
 - Paul Gessinger
 - Robert Johannes Langenberg
 - Xiaocong Ai
