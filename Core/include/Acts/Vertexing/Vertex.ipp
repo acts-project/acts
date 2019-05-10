@@ -19,8 +19,7 @@ Acts::Vertex<input_track_t>::Vertex(
     const Vector3D& position, const ActsSymMatrixD<3>& covariance,
     std::vector<TrackAtVertex<input_track_t>>& tracks)
 
-  : m_tracksAtVertex(std::move(tracks))
-{
+    : m_tracksAtVertex(std::move(tracks)) {
   m_position.setZero();
   m_position.head<3>() = position;
   m_covariance.setZero();
@@ -29,48 +28,36 @@ Acts::Vertex<input_track_t>::Vertex(
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const Vector4D&                            position,
-    const ActsSymMatrixD<4>&                   covariance,
+    const Vector4D& position, const ActsSymMatrixD<4>& covariance,
     std::vector<TrackAtVertex<input_track_t>>& tracks)
-  : m_position(position)
-  , m_covariance(covariance)
-  , m_tracksAtVertex(std::move(tracks))
-{
-}
+    : m_position(position),
+      m_covariance(covariance),
+      m_tracksAtVertex(std::move(tracks)) {}
 
 template <typename input_track_t>
-Acts::Vector3D
-Acts::Vertex<input_track_t>::position() const
-{
+Acts::Vector3D Acts::Vertex<input_track_t>::position() const {
   return m_position.head<3>();
 }
 
 template <typename input_track_t>
-Acts::ParValue_t
-Acts::Vertex<input_track_t>::time() const
-{
+Acts::ParValue_t Acts::Vertex<input_track_t>::time() const {
   return m_position[Acts::eT];
 }
 
 template <typename input_track_t>
-const Acts::Vector4D&
-Acts::Vertex<input_track_t>::fullPosition() const
-{
+const Acts::Vector4D& Acts::Vertex<input_track_t>::fullPosition() const {
   return m_position;
 }
 
 template <typename input_track_t>
 
-Acts::ActsSymMatrixD<3>
-Acts::Vertex<input_track_t>::covariance() const
-{
+Acts::ActsSymMatrixD<3> Acts::Vertex<input_track_t>::covariance() const {
   return m_covariance.block<3, 3>(0, 0);
 }
 
 template <typename input_track_t>
-const Acts::ActsSymMatrixD<4>&
-Acts::Vertex<input_track_t>::fullCovariance() const
-{
+const Acts::ActsSymMatrixD<4>& Acts::Vertex<input_track_t>::fullCovariance()
+    const {
   return m_covariance;
 }
 
@@ -86,32 +73,26 @@ std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
 }
 
 template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
-                                         ParValue_t      time)
-{
+void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
+                                              ParValue_t time) {
   m_position.head<3>() = position;
-  m_position[eT]       = time;
-}
-
-template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setTime(ParValue_t time)
-{
   m_position[eT] = time;
 }
 
 template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setCovariance(const ActsSymMatrixD<3>& covariance)
-{
+void Acts::Vertex<input_track_t>::setTime(ParValue_t time) {
+  m_position[eT] = time;
+}
+
+template <typename input_track_t>
+void Acts::Vertex<input_track_t>::setCovariance(
+    const ActsSymMatrixD<3>& covariance) {
   m_covariance.block<3, 3>(0, 0) = covariance;
 }
 
 template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setCovariance(const ActsSymMatrixD<4>& covariance)
-{
+void Acts::Vertex<input_track_t>::setCovariance(
+    const ActsSymMatrixD<4>& covariance) {
   m_covariance = covariance;
 }
 
