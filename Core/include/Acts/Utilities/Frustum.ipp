@@ -81,7 +81,8 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
 
   // iterate around normals, calculate cross with "far" plane
   // to get intersection lines.
-  // Work in O = (0, 0) and shift draw vertices at the end
+  // Work in local reference frame of the frustum, and only convert to global
+  // right before drawing.
   vertex_type far_normal = m_normals[0];  // far has same normal as pseudo-near
   vertex_type far_center = m_normals[0] * far_distance;
   std::array<std::pair<vertex_type, vertex_type>, SIDES> planeFarIXs;
