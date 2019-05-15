@@ -36,10 +36,10 @@ class TrackParametersBase {
   // public typedef's
 
   /// vector type for stored track parameters
-  using ParVector_t = TrackVector;
+  using ParVector_t = BoundVector;
 
   /// type of covariance matrix
-  using CovMatrix_t = TrackSymMatrix;
+  using CovMatrix_t = BoundSymMatrix;
 
   /// @brief virtual default destructor to allow for inheritance
   virtual ~TrackParametersBase() = default;
@@ -69,7 +69,7 @@ class TrackParametersBase {
 
   /// @brief access track parameters
   ///
-  /// @return Eigen vector of dimension Acts::TrackParsDim with values of the
+  /// @return Eigen vector of dimension Acts::BoundParsDim with values of the
   /// track parameters
   ///         (in the order as defined by the ParID_t enumeration)
   ParVector_t parameters() const { return getParameterSet().getParameters(); }

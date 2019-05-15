@@ -121,7 +121,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// evaluation and returns a boolean.
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, GlobalMatrix& D) {
+                const double h, FreeMatrix& D) {
     return impl::finalize(tuple(), state, stepper, h, D, validExtensions);
   }
 

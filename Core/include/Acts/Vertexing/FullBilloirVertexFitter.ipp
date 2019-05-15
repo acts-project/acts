@@ -19,7 +19,7 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
-  using Jacobian = Acts::SpacePointToTrackMatrix;
+  using Jacobian = Acts::SpacePointToBoundMatrix;
 
   BilloirTrack(const input_track_t& params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
@@ -36,7 +36,7 @@ struct BilloirTrack {
   Acts::SpacePointSymMatrix CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
   Acts::Vector3D UiVec;              //  = EiMat^T * Wi * dqi
   Acts::SpacePointSymMatrix BCiMat;  //  = BiMat * Ci^-1
-  Acts::TrackVector deltaQ;
+  Acts::BoundVector deltaQ;
 };
 
 /// @struct BilloirVertex
@@ -138,16 +138,16 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         currentBilloirTrack.deltaQ[4] = qOverP - fQOvP;
 
         // position jacobian (D matrix)
-        SpacePointToTrackMatrix Dmat;
+        SpacePointToBoundMatrix Dmat;
         Dmat = linTrack.positionJacobian;
 
         // momentum jacobian (E matrix)
-        SpacePointToTrackMatrix Emat;
+        SpacePointToBoundMatrix Emat;
         Emat = linTrack.momentumJacobian;
         // cache some matrix multiplications
-        TrackToSpacePointMatrix DtWmat;
-        TrackToSpacePointMatrix EtWmat;
-        TrackSymMatrix Wi = linTrack.covarianceAtPCA.inverse();
+        BoundToSpacePointMatrix DtWmat;
+        BoundToSpacePointMatrix EtWmat;
+        BoundSymMatrix Wi = linTrack.covarianceAtPCA.inverse();
         DtWmat = Dmat.transpose() * Wi;
         EtWmat = Emat.transpose() * Wi;
 
@@ -220,7 +220,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
-    std::vector<std::unique_ptr<TrackSymMatrix>> covDeltaPmat(nTracks);
+    std::vector<std::unique_ptr<BoundSymMatrix>> covDeltaPmat(nTracks);
 
     iTrack = 0;
     for (auto& bTrack : billoirTracks) {
@@ -242,7 +242,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       // calculate 5x5 covdelta_P matrix
       // d(d0,z0,phi,theta,qOverP)/d(x,y,z,phi,theta,qOverP)-transformation
       // matrix
-      ActsMatrixD<TrackParsDim, 6> transMat;
+      ActsMatrixD<BoundParsDim, 6> transMat;
       transMat.setZero();
       transMat(0, 0) = bTrack.DiMat(0, 0);
       transMat(0, 1) = bTrack.DiMat(0, 1);
@@ -275,7 +275,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       covMat.block<3, 3>(3, 3) = PPmat;
 
       // covdelta_P calculation
-      covDeltaPmat[iTrack] = std::make_unique<TrackSymMatrix>(
+      covDeltaPmat[iTrack] = std::make_unique<BoundSymMatrix>(
           transMat * covMat * transMat.transpose());
       // Calculate chi2 per track.
       bTrack.chi2 =

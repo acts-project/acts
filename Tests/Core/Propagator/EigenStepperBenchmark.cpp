@@ -77,13 +77,13 @@ int main(int argc, char* argv[]) {
 
   Vector3D pos(0, 0, 0);
   Vector3D mom(pT * units::_GeV, 0, 0);
-  TrackSymMatrix cov;
+  BoundSymMatrix cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-  std::unique_ptr<const TrackSymMatrix> covPtr = nullptr;
+  std::unique_ptr<const BoundSymMatrix> covPtr = nullptr;
   if (withCov) {
-    covPtr = std::make_unique<const TrackSymMatrix>(cov);
+    covPtr = std::make_unique<const BoundSymMatrix>(cov);
   }
   CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
 

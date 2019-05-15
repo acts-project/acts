@@ -58,8 +58,8 @@ class EigenStepper {
   using Corrector = corrector_t;
 
   /// Jacobian, Covariance and State defintions
-  using Jacobian = TrackMatrix;
-  using Covariance = TrackSymMatrix;
+  using Jacobian = BoundMatrix;
+  using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
@@ -99,7 +99,7 @@ class EigenStepper {
         const auto& surface = par.referenceSurface();
         // set the covariance transport flag to true and copy
         covTransport = true;
-        cov = TrackSymMatrix(*par.covariance());
+        cov = BoundSymMatrix(*par.covariance());
         surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
                                      par.parameters());
       }
@@ -130,13 +130,13 @@ class EigenStepper {
     Jacobian jacobian = Jacobian::Identity();
 
     /// Jacobian from local to the global frame
-    TrackToGlobalMatrix jacToGlobal = TrackToGlobalMatrix::Zero();
+    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
     /// Pure transport jacobian part from runge kutta integration
-    GlobalMatrix jacTransport = GlobalMatrix::Identity();
+    FreeMatrix jacTransport = FreeMatrix::Identity();
 
     /// The propagation derivative
-    GlobalVector derivative = GlobalVector::Zero();
+    FreeVector derivative = FreeVector::Zero();
 
     /// Covariance matrix (and indicator)
     //// associated with the initial error on track parameters

@@ -96,7 +96,7 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
   // prepare the jacobian to curvilinear
-  GlobalToTrackMatrix jacToCurv = GlobalToTrackMatrix::Zero();
+  FreeToBoundMatrix jacToCurv = FreeToBoundMatrix::Zero();
   if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
     // We normally operate in curvilinear coordinates defined as follows
     jacToCurv(0, 0) = -sinPhi;
@@ -124,8 +124,8 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   state.jacToGlobal = state.jacTransport * state.jacToGlobal;
   // Transport the covariance
   ActsRowVectorD<3> normVec(state.dir);
-  const TrackRowVector sfactors =
-      normVec * state.jacToGlobal.template topLeftCorner<3, TrackParsDim>();
+  const BoundRowVector sfactors =
+      normVec * state.jacToGlobal.template topLeftCorner<3, BoundParsDim>();
   // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
   const Jacobian jacFull =
       jacToCurv * (state.jacToGlobal - state.derivative * sfactors);
@@ -135,8 +135,8 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   // this is useful for interruption calls
   if (reinitialize) {
     // reset the jacobians
-    state.jacToGlobal = TrackToGlobalMatrix::Zero();
-    state.jacTransport = GlobalMatrix::Identity();
+    state.jacToGlobal = BoundToFreeMatrix::Zero();
+    state.jacTransport = FreeMatrix::Identity();
     // fill the jacobian to global for next transport
     state.jacToGlobal(0, eLOC_0) = -sinPhi;
     state.jacToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
@@ -160,14 +160,14 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   using VectorHelpers::phi;
   using VectorHelpers::theta;
   // Initialize the transport final frame jacobian
-  GlobalToTrackMatrix jacToLocal = GlobalToTrackMatrix::Zero();
+  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // initalize the jacobian to local, returns the transposed ref frame
   auto rframeT = surface.initJacobianToLocal(state.geoContext, jacToLocal,
                                              state.pos, state.dir);
   // Update the jacobian with the transport from the steps
   state.jacToGlobal = state.jacTransport * state.jacToGlobal;
   // calculate the form factors for the derivatives
-  const TrackRowVector sVec = surface.derivativeFactors(
+  const BoundRowVector sVec = surface.derivativeFactors(
       state.geoContext, state.pos, state.dir, rframeT, state.jacToGlobal);
   // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
   const Jacobian jacFull =
@@ -178,14 +178,14 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   // this is useful for interruption calls
   if (reinitialize) {
     // reset the jacobians
-    state.jacToGlobal = TrackToGlobalMatrix::Zero();
-    state.jacTransport = GlobalMatrix::Identity();
+    state.jacToGlobal = BoundToFreeMatrix::Zero();
+    state.jacTransport = FreeMatrix::Identity();
     // reset the derivative
-    state.derivative = GlobalVector::Zero();
+    state.derivative = FreeVector::Zero();
     // fill the jacobian to global for next transport
     Vector2D loc{0., 0.};
     surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
-    TrackVector pars;
+    BoundVector pars;
     pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
         state.q / state.p;
     surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, state.pos,
@@ -280,7 +280,7 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
     // The step transport matrix in global coordinates
-    GlobalMatrix D;
+    FreeMatrix D;
     if (!state.stepping.extension.finalize(state, *this, h, D)) {
       return EigenStepperError::StepInvalid;
     }

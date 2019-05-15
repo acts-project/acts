@@ -28,8 +28,8 @@ struct covariance_validation_fixture {
   /// this is for covariance propagation validation
   /// it can either be used for curvilinear transport
   template <typename StartParameters, typename EndParameters, typename U>
-  TrackSymMatrix calculateCovariance(const StartParameters& startPars,
-                                     const TrackSymMatrix& startCov,
+  BoundSymMatrix calculateCovariance(const StartParameters& startPars,
+                                     const BoundSymMatrix& startCov,
                                      const EndParameters& endPars,
                                      const U& options) const {
     // steps for estimating derivatives
@@ -53,7 +53,7 @@ struct covariance_validation_fixture {
     var_options.pathLimit *= 2;
 
     // variation in x
-    std::vector<TrackVector> x_derivatives;
+    std::vector<BoundVector> x_derivatives;
     x_derivatives.reserve(h_steps.size());
     for (double h : h_steps) {
       StartParameters tp = startPars;
@@ -64,7 +64,7 @@ struct covariance_validation_fixture {
     }
 
     // variation in y
-    std::vector<TrackVector> y_derivatives;
+    std::vector<BoundVector> y_derivatives;
     y_derivatives.reserve(h_steps.size());
     for (double h : h_steps) {
       StartParameters tp = startPars;
@@ -75,7 +75,7 @@ struct covariance_validation_fixture {
     }
 
     // variation in phi
-    std::vector<TrackVector> phi_derivatives;
+    std::vector<BoundVector> phi_derivatives;
     phi_derivatives.reserve(h_steps.size());
     for (double h : h_steps) {
       StartParameters tp = startPars;
@@ -86,7 +86,7 @@ struct covariance_validation_fixture {
     }
 
     // variation in theta
-    std::vector<TrackVector> theta_derivatives;
+    std::vector<BoundVector> theta_derivatives;
     theta_derivatives.reserve(h_steps.size());
     for (double h : h_steps) {
       StartParameters tp = startPars;
@@ -105,7 +105,7 @@ struct covariance_validation_fixture {
     }
 
     // variation in q/p
-    std::vector<TrackVector> qop_derivatives;
+    std::vector<BoundVector> qop_derivatives;
     qop_derivatives.reserve(h_steps.size());
     for (double h : h_steps) {
       StartParameters tp = startPars;
@@ -115,7 +115,7 @@ struct covariance_validation_fixture {
       qop_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     }
 
-    TrackSymMatrix jacobian;
+    BoundSymMatrix jacobian;
     jacobian.setIdentity();
     jacobian.col(Acts::eLOC_0) = fitLinear(x_derivatives, h_steps);
     jacobian.col(Acts::eLOC_1) = fitLinear(y_derivatives, h_steps);
@@ -128,10 +128,10 @@ struct covariance_validation_fixture {
 
  private:
   template <unsigned long int N>
-  static TrackVector fitLinear(const std::vector<TrackVector>& values,
+  static BoundVector fitLinear(const std::vector<BoundVector>& values,
                                const std::array<double, N>& h) {
-    TrackVector A;
-    TrackVector C;
+    BoundVector A;
+    BoundVector C;
     A.setZero();
     C.setZero();
     double B = 0;
@@ -144,8 +144,8 @@ struct covariance_validation_fixture {
       D += h.at(i) * h.at(i);
     }
 
-    TrackVector b = (N * A - B * C) / (N * D - B * B);
-    TrackVector a = (C - B * b) / N;
+    BoundVector b = (N * A - B * C) / (N * D - B * B);
+    BoundVector a = (C - B * b) / N;
 
     return a;
   }

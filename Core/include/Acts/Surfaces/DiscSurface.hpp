@@ -237,9 +237,9 @@ class DiscSurface : public Surface {
   ///
   /// @param pars The paranmeters vector
   void initJacobianToGlobal(const GeometryContext& gctx,
-                            TrackToGlobalMatrix& jacobian, const Vector3D& gpos,
+                            BoundToFreeMatrix& jacobian, const Vector3D& gpos,
                             const Vector3D& dir,
-                            const TrackVector& pars) const final;
+                            const BoundVector& pars) const final;
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.
@@ -253,7 +253,7 @@ class DiscSurface : public Surface {
   ///
   /// @return the transposed reference frame (avoids recalculation)
   const RotationMatrix3D initJacobianToLocal(const GeometryContext& gctx,
-                                             GlobalToTrackMatrix& jacobian,
+                                             FreeToBoundMatrix& jacobian,
                                              const Vector3D& gpos,
                                              const Vector3D& dir) const final;
 

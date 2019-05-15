@@ -357,9 +357,9 @@ class Surface : public virtual GeometryObject,
   /// @param dir is the direction at of the parameters
   /// @param pars is the parameter vector
   virtual void initJacobianToGlobal(const GeometryContext& gctx,
-                                    TrackToGlobalMatrix& jacobian,
+                                    BoundToFreeMatrix& jacobian,
                                     const Vector3D& gpos, const Vector3D& dir,
-                                    const TrackVector& pars) const;
+                                    const BoundVector& pars) const;
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.
@@ -377,7 +377,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D initJacobianToLocal(
-      const GeometryContext& gctx, GlobalToTrackMatrix& jacobian,
+      const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
       const Vector3D& gpos, const Vector3D& dir) const;
 
   /// Calculate the form factors for the derivatives
@@ -396,9 +396,9 @@ class Surface : public virtual GeometryObject,
   /// @param jac is the transport jacobian
   ///
   /// @return a five-dim vector
-  virtual const TrackRowVector derivativeFactors(
+  virtual const BoundRowVector derivativeFactors(
       const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& dir,
-      const RotationMatrix3D& rft, const TrackToGlobalMatrix& jac) const;
+      const RotationMatrix3D& rft, const BoundToFreeMatrix& jac) const;
 
   /// Calucation of the path correction for incident
   ///

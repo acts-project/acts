@@ -84,7 +84,7 @@ struct stepper_extension_list_impl {
   template <typename propagator_state_t, typename stepper_t, typename... T>
   static bool finalize(const std::tuple<T...>& obs_tuple,
                        propagator_state_t& state, const stepper_t& stepper,
-                       const double h, GlobalMatrix& D,
+                       const double h, FreeMatrix& D,
                        const std::array<bool, sizeof...(T)>& validExtensions) {
     // If element is invalid: continue
     if (!std::get<N - 1>(validExtensions)) {

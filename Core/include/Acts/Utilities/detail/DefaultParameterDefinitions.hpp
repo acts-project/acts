@@ -30,11 +30,11 @@ enum ParDef : unsigned int {
   eTHETA = 3,  ///< theta direction of momentum in global frame
   eQOP = 4,    ///< charge/momentum for charged tracks, for neutral tracks it is
                /// 1/momentum
-  TrackParsDim  /// < The local dimensions
+  BoundParsDim  /// < The local dimensions
 };
 
-/// The dimensions of tracks in global coordinates
-constexpr unsigned int GlobalParsDim = 7;
+/// The dimensions of tracks in free coordinates
+constexpr unsigned int FreeParsDim = 7;
 /// The dimension of a space point
 constexpr unsigned int SpacePointDim = 3;
 
@@ -42,35 +42,35 @@ using ParID_t = ParDef;
 using ParValue_t = double;
 
 ///
-/// Type namings with local parameters
+/// Type namings with bound parameters
 ///
 
-/// Vector of local track parameters
-using TrackVector = ActsVector<ParValue_t, TrackParsDim>;
-/// Row vector of local track parameters
-using TrackRowVector = ActsRowVector<ParValue_t, TrackParsDim>;
-/// Matrix of local-to-local parameters
-using TrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, TrackParsDim>;
-/// Symmetical matrix of local-to-local parameters
-using TrackSymMatrix = ActsSymMatrix<ParValue_t, TrackParsDim>;
+/// Vector of bound parameters
+using BoundVector = ActsVector<ParValue_t, BoundParsDim>;
+/// Row vector of bound parameters
+using BoundRowVector = ActsRowVector<ParValue_t, BoundParsDim>;
+/// Matrix of bound-to-bound parameters
+using BoundMatrix = ActsMatrix<ParValue_t, BoundParsDim, BoundParsDim>;
+/// Symmetical matrix of bound-to-bound parameters
+using BoundSymMatrix = ActsSymMatrix<ParValue_t, BoundParsDim>;
 
 ///
-/// Type naming with global parameters
+/// Type naming with free parameters
 ///
 
-/// Vector of global track parameters
-using GlobalVector = ActsVector<ParValue_t, GlobalParsDim>;
-/// Matrix of global-to-global parameters
-using GlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, GlobalParsDim>;
+/// Vector of free track parameters
+using FreeVector = ActsVector<ParValue_t, FreeParsDim>;
+/// Matrix of free-to-free parameters
+using FreeMatrix = ActsMatrix<ParValue_t, FreeParsDim, FreeParsDim>;
 
 ///
-/// Type namings with local & global parameters
+/// Type namings with bound & free parameters
 ///
 
-/// Matrix of local-to-global parameters
-using TrackToGlobalMatrix = ActsMatrix<ParValue_t, GlobalParsDim, TrackParsDim>;
-/// Matrix of global-to-local parameters
-using GlobalToTrackMatrix = ActsMatrix<ParValue_t, TrackParsDim, GlobalParsDim>;
+/// Matrix of bound-to-free parameters
+using BoundToFreeMatrix = ActsMatrix<ParValue_t, FreeParsDim, BoundParsDim>;
+/// Matrix of free-to-bound parameters
+using FreeToBoundMatrix = ActsMatrix<ParValue_t, BoundParsDim, FreeParsDim>;
 
 ///
 /// Type namings with space points
@@ -82,15 +82,15 @@ using SpacePointVector = ActsVector<ParValue_t, SpacePointDim>;
 using SpacePointSymMatrix = ActsSymMatrix<ParValue_t, SpacePointDim>;
 
 ///
-/// Type namings with space points & local parameters
+/// Type namings with space points & bound parameters
 ///
 
-/// Matrix of space point-to-local parameters
-using SpacePointToTrackMatrix =
-    ActsMatrix<ParValue_t, TrackParsDim, SpacePointDim>;
-/// Matrix with local parameters-to-space point
-using TrackToSpacePointMatrix =
-    ActsMatrix<ParValue_t, SpacePointDim, TrackParsDim>;
+/// Matrix of space point-to-bound parameters
+using SpacePointToBoundMatrix =
+    ActsMatrix<ParValue_t, BoundParsDim, SpacePointDim>;
+/// Matrix with bound parameters-to-space point
+using BoundToSpacePointMatrix =
+    ActsMatrix<ParValue_t, SpacePointDim, BoundParsDim>;
 
 template <ParID_t>
 struct par_type;

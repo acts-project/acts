@@ -336,8 +336,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
           thetaDist(gen), q / pTDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
-      std::unique_ptr<TrackSymMatrix> covMat =
-          std::make_unique<TrackSymMatrix>();
+      std::unique_ptr<BoundSymMatrix> covMat =
+          std::make_unique<BoundSymMatrix>();
 
       // Resolutions
       double resD0 = resIPDist(gen);

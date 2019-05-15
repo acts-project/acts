@@ -40,8 +40,8 @@ class AtlasStepper {
  public:
   using cstep = detail::ConstrainedStep;
 
-  using Jacobian = TrackMatrix;
-  using Covariance = TrackSymMatrix;
+  using Jacobian = BoundMatrix;
+  using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
@@ -106,7 +106,7 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new ActsSymMatrixD<TrackParsDim>(*pars.covariance());
+        covariance = new ActsSymMatrixD<BoundParsDim>(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceFrame(geoContext);
@@ -237,11 +237,11 @@ class AtlasStepper {
     Vector3D field;
     double pVector[64];
     // result
-    double parameters[TrackParsDim] = {0., 0., 0., 0., 0.};
+    double parameters[BoundParsDim] = {0., 0., 0., 0., 0.};
     const Covariance* covariance;
     Covariance cov = Covariance::Zero();
     bool covTransport = false;
-    double jacobian[TrackParsDim * TrackParsDim];
+    double jacobian[BoundParsDim * BoundParsDim];
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -415,7 +415,7 @@ class AtlasStepper {
     // prepare the jacobian if we have a covariance
     if (pars.covariance()) {
       // copy the covariance matrix
-      state.covariance = new ActsSymMatrixD<TrackParsDim>(*pars.covariance());
+      state.covariance = new ActsSymMatrixD<BoundParsDim>(*pars.covariance());
       state.covTransport = true;
       state.useJacobian = true;
       const auto transform = pars.referenceFrame(state.geoContext);
@@ -686,7 +686,7 @@ class AtlasStepper {
     state.jacobian[24] = P[41];  // dCM /dCM
 
     Eigen::Map<
-        Eigen::Matrix<double, TrackParsDim, TrackParsDim, Eigen::RowMajor>>
+        Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
 
     state.cov = J * (*state.covariance) * J.transpose();
@@ -931,7 +931,7 @@ class AtlasStepper {
     state.jacobian[24] = state.pVector[41];               // dCM /dCM
 
     Eigen::Map<
-        Eigen::Matrix<double, TrackParsDim, TrackParsDim, Eigen::RowMajor>>
+        Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
 
     state.cov = J * (*state.covariance) * J.transpose();

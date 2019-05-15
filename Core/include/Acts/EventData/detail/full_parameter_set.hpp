@@ -57,7 +57,7 @@ struct full_parset {
   };
 
   using type = typename converter<
-      typename tparam_generator<ParID_t, TrackParsDim - 1>::type>::type;
+      typename tparam_generator<ParID_t, BoundParsDim - 1>::type>::type;
 };
 }  // namespace detail
 /// @endcond

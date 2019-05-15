@@ -44,8 +44,8 @@ class StraightLineStepper {
   using cstep = detail::ConstrainedStep;
 
   using Corrector = VoidIntersectionCorrector;
-  using Jacobian = TrackMatrix;
-  using Covariance = TrackSymMatrix;
+  using Jacobian = BoundMatrix;
+  using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
