@@ -79,7 +79,7 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
                                               value_type far_distance) const {
   static_assert(DIM == 3, "Drawing is only supported in 3D");
 
-  // iterate around normals, calculate cross with "far" plane
+  // Iterate around normals, calculate cross with "far" plane
   // to get intersection lines.
   // Work in local reference frame of the frustum, and only convert to global
   // right before drawing.
