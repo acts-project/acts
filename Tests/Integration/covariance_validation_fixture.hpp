@@ -19,6 +19,7 @@ namespace Acts {
 namespace IntegrationTest {
 	
 using Jacobian = BoundMatrix;
+using Covariance = BoundSymMatrix;
 
 template <typename T>
 struct covariance_validation_fixture {
@@ -30,8 +31,8 @@ struct covariance_validation_fixture {
   /// this is for covariance propagation validation
   /// it can either be used for curvilinear transport
   template <typename StartParameters, typename EndParameters, typename U>
-  BoundSymMatrix calculateCovariance(const StartParameters& startPars,
-                                     const BoundSymMatrix& startCov,
+  Covariance calculateCovariance(const StartParameters& startPars,
+                                     const Covariance& startCov,
                                      const EndParameters& endPars,
                                      const U& options) const {
     // steps for estimating derivatives
