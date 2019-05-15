@@ -17,6 +17,8 @@
 namespace Acts {
 
 namespace IntegrationTest {
+	
+using Jacobian = BoundMatrix;
 
 template <typename T>
 struct covariance_validation_fixture {
@@ -115,7 +117,7 @@ struct covariance_validation_fixture {
       qop_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     }
 
-    BoundMatrix jacobian;
+    Jacobian jacobian;
     jacobian.setIdentity();
     jacobian.col(Acts::eLOC_0) = fitLinear(x_derivatives, h_steps);
     jacobian.col(Acts::eLOC_1) = fitLinear(y_derivatives, h_steps);
