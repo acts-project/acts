@@ -83,8 +83,7 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
   // to get intersection lines.
   // Work in O = (0, 0) and shift draw vertices at the end
   vertex_type far_normal = m_normals[0];  // far has same normal as pseudo-near
-  vertex_type far_center =
-      m_normals[0] * far_distance;  // center defined as 10 "forward"
+  vertex_type far_center = m_normals[0] * far_distance;
   std::array<std::pair<vertex_type, vertex_type>, SIDES> planeFarIXs;
 
   auto ixPlanePlane =

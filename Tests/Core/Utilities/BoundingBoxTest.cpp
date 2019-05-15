@@ -401,10 +401,6 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   auto obb = vol.orientedBoundingBox();
   obb.draw(ply, {200, 0, 0});
 
-  // std::ofstream os("obb.ply");
-  // os << ply;
-  // os.close();
-  // os = std::ofstream("obb_rays.ply");
   ply.clear();
 
   Vector3D origin(10, -20, 6);
@@ -437,8 +433,6 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
     BOOST_CHECK(!obb.intersect(ray));
     ray.draw(ply, (vtx - origin).norm());
   }
-  // os << ply;
-  // os.close();
 }
 
 BOOST_AUTO_TEST_CASE(frustum_intersect) {
@@ -596,10 +590,6 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
         }
       }
 
-      // for(const auto& idx : act_idxs) {
-      // std::cout << idx << ", ";
-      //}
-      // std::cout << std::endl << std::endl;
       BOOST_CHECK(act_idxs == exp_idxs);
 
       fr.svg(os, w, w, maxx, unit);

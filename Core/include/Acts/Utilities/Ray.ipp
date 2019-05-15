@@ -29,8 +29,6 @@ std::ostream& Acts::Ray<value_t, DIM>::toStream(std::ostream& os) const {
   }
   os << ")";
 
-  // os << m_idir;
-
   return os;
 }
 

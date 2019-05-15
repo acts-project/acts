@@ -50,7 +50,7 @@ class Frustum {
   /// @param dir The direction of the frustum
   /// @param opening_angle The opening angle
   /// @note The @p opening_angle is defined as the angle between opposing side
-  /// planes.
+  /// planes. The opening angle needs to be < pi.
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   Frustum(const vertex_type& origin, const vertex_type& dir,
           value_type opening_angle);
@@ -60,7 +60,7 @@ class Frustum {
   /// @param dir The direction of the frustum
   /// @param opening_angle The opening angle
   /// @note The @p opening_angle is defined as the angle between opposing side
-  /// planes.
+  /// planes. The opening angle needs to be < pi.
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   Frustum(const vertex_type& origin, const vertex_type& dir,
           value_type opening_angle);
