@@ -31,6 +31,8 @@ namespace bdata = boost::unit_test::data;
 namespace Acts {
 namespace Test {
 
+using Covariance = BoundSymMatrix;
+
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -336,8 +338,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
           thetaDist(gen), q / pTDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
-      std::unique_ptr<BoundSymMatrix> covMat =
-          std::make_unique<BoundSymMatrix>();
+      std::unique_ptr<Covariance> covMat =
+          std::make_unique<Covariance>();
 
       // Resolutions
       double resD0 = resIPDist(gen);
