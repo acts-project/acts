@@ -37,6 +37,7 @@ namespace Test {
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<BFieldType>;
 using AtlasStepperType = AtlasStepper<BFieldType>;
+using Covariance = BoundSymMatrix;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -107,9 +108,9 @@ std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
 /// Az ->P[5]  dAz/   P[12]   P[19]   P[26]   P[33]   P[40]
 /// CM ->P[6]  dCM/   P[13]   P[20]   P[27]   P[34]   P[41]
 
-ActsMatrixD<7, 5> convertToMatrix(const double* P) {
+BoundToFreeMatrix convertToMatrix(const double* P) {
   // initialize to zero
-  ActsMatrixD<7, 5> jMatrix = ActsMatrixD<7, 5>::Zero();
+  BoundToFreeMatrix jMatrix = BoundToFreeMatrix::Zero();
   for (size_t j = 0; j < 5; ++j) {
     for (size_t i = 0; i < 7; ++i) {
       size_t ijc = 7 + j * 7 + i;
@@ -141,10 +142,10 @@ void testJacobianToGlobal(const Parameters& pars) {
 
 /// This tests the jacobian of local curvilinear -> global
 BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
-  ActsSymMatrixD<NGlobalPars> cov;
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1, 0,
       0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
   // Let's create a surface somewhere in space
   Vector3D pos(341., 412., 93.);
@@ -164,12 +165,12 @@ BOOST_AUTO_TEST_CASE(JacobianCylinderToGlobalTest) {
   auto cTransform = createCylindricTransform({10., -5., 0.}, 0.004, 0.03);
   auto cSurface = Surface::makeShared<CylinderSurface>(cTransform, 200., 1000.);
 
-  ActsSymMatrixD<NGlobalPars> cov;
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1, 0,
       0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
-  ActsVectorD<NGlobalPars> pars;
+  BoundVector pars;
   pars << 182.34, -82., 0.134, 0.85, 1. / (100 * units::_GeV);
 
   BoundParameters atCylinder(tgContext, std::move(covPtr), std::move(pars),
@@ -186,12 +187,12 @@ BOOST_AUTO_TEST_CASE(JacobianDiscToGlobalTest) {
       {10., -5., 0.}, Vector3D(0.23, 0.07, 1.).normalized(), 0.004, 0.03);
   auto dSurface = Surface::makeShared<DiscSurface>(dTransform, 200., 1000.);
 
-  ActsSymMatrixD<NGlobalPars> cov;
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1, 0,
       0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
-  ActsVectorD<NGlobalPars> pars;
+  BoundVector pars;
   pars << 192.34, 1.823, 0.734, 0.235, 1. / (100 * units::_GeV);
 
   BoundParameters atDisc(tgContext, std::move(covPtr), std::move(pars),
@@ -210,12 +211,12 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   // Create a surface & parameters with covariance on the surface
   auto pSurface = Surface::makeShared<PlaneSurface>(sPosition, sNormal);
 
-  ActsSymMatrixD<NGlobalPars> cov;
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1, 0,
       0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
-  ActsVectorD<NGlobalPars> pars;
+  BoundVector pars;
   pars << 12.34, -8722., 2.134, 0.85, 1. / (100 * units::_GeV);
 
   BoundParameters atPlane(tgContext, std::move(covPtr), std::move(pars),
@@ -230,12 +231,12 @@ BOOST_AUTO_TEST_CASE(JacobianPerigeeToGlobalTest) {
   // Create a surface & parameters with covariance on the surface
   auto pSurface = Surface::makeShared<PerigeeSurface>(Vector3D({0., 0., 0.}));
 
-  ActsSymMatrixD<NGlobalPars> cov;
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1, 0,
       0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
-  ActsVectorD<NGlobalPars> pars;
+  BoundVector pars;
   pars << -3.34, -822., -0.734, 0.85, 1. / (100 * units::_GeV);
 
   BoundParameters perigee(tgContext, std::move(covPtr), std::move(pars),
@@ -251,12 +252,12 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   auto sTransform = createCylindricTransform({1019., -52., 382.}, 0.4, -0.3);
   auto sSurface = Surface::makeShared<StrawSurface>(sTransform, 10., 1000.);
 
-  ActsSymMatrixD<NGlobalPars> cov;
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1, 0,
       0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
-  ActsVectorD<NGlobalPars> pars;
+  BoundVector pars;
   pars << -8.34, 812., 0.734, 0.25, 1. / (100 * units::_GeV);
 
   BoundParameters atStraw(tgContext, std::move(covPtr), std::move(pars),
@@ -265,6 +266,5 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   // run the test
   testJacobianToGlobal(atStraw);
 }
-
 }  // namespace Test
 }  // namespace Acts

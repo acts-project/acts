@@ -307,8 +307,7 @@ struct fittable_measurement_helper {
     using type = Measurement<source_link_t, pars...>;
   };
 
-  using type =
-      typename detail::type_generator_t<meas_factory, Acts::NGlobalPars>;
+  using type = typename detail::type_generator_t<meas_factory, BoundParsDim>;
 };
 
 /**

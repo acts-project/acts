@@ -61,7 +61,7 @@ namespace concept {
     template <typename S>
     constexpr bool StepperStateConcept
       = require<has_member<S, cov_transport_t, bool>,
-                has_member<S, cov_t, ActsSymMatrixD<5>>,
+                has_member<S, cov_t, BoundSymMatrix>,
                 has_member<S, nav_dir_t, NavigationDirection>,
                 has_member<S, path_accumulated_t, double>,
                 has_member<S, step_size_t, detail::ConstrainedStep>

@@ -23,10 +23,11 @@ inline const Vector2D DiscSurface::localCartesianToPolar(
       atan2(lcart[eLOC_Y], lcart[eLOC_X]));
 }
 
-inline void DiscSurface::initJacobianToGlobal(
-    const GeometryContext& gctx, ActsMatrixD<7, 5>& jacobian,
-    const Vector3D& gpos, const Vector3D& dir,
-    const ActsVectorD<5>& pars) const {
+inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
+                                              BoundToFreeMatrix& jacobian,
+                                              const Vector3D& gpos,
+                                              const Vector3D& dir,
+                                              const BoundVector& pars) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.
@@ -67,7 +68,7 @@ inline void DiscSurface::initJacobianToGlobal(
 }
 
 inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
-    const GeometryContext& gctx, ActsMatrixD<5, 7>& jacobian,
+    const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
     const Vector3D& gpos, const Vector3D& dir) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;

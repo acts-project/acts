@@ -25,7 +25,7 @@ static_assert(std::is_convertible<Acts::ParID_t, size_t>::value,
               "'ParID_t' is not convertible to size_t");
 
 /// number of global parameter must be at least 2 (for the two local parameters)
-static_assert(Acts::NGlobalPars > 1,
+static_assert(Acts::BoundParsDim > 1,
               "total number of global parameters must be >= 2");
 
 /// several constants for the local parameters need to be defined

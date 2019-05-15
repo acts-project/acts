@@ -138,10 +138,11 @@ inline Intersection LineSurface::intersectionEstimate(
   return Intersection(gpos, std::numeric_limits<double>::max(), false);
 }
 
-inline void LineSurface::initJacobianToGlobal(
-    const GeometryContext& gctx, ActsMatrixD<7, 5>& jacobian,
-    const Vector3D& gpos, const Vector3D& dir,
-    const ActsVectorD<5>& pars) const {
+inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
+                                              BoundToFreeMatrix& jacobian,
+                                              const Vector3D& gpos,
+                                              const Vector3D& dir,
+                                              const BoundVector& pars) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.
@@ -186,9 +187,9 @@ inline void LineSurface::initJacobianToGlobal(
   jacobian.block<3, 1>(0, eTHETA) = dDThetaY * pars[eLOC_0] * ipdn;
 }
 
-inline const ActsRowVectorD<5> LineSurface::derivativeFactors(
+inline const BoundRowVector LineSurface::derivativeFactors(
     const GeometryContext& gctx, const Vector3D& pos, const Vector3D& dir,
-    const RotationMatrix3D& rft, const ActsMatrixD<7, 5>& jac) const {
+    const RotationMatrix3D& rft, const BoundToFreeMatrix& jac) const {
   // the vector between position and center
   ActsRowVectorD<3> pc = (pos - center(gctx)).transpose();
   // the longitudinal component vector (alogn local z)
@@ -197,15 +198,15 @@ inline const ActsRowVectorD<5> LineSurface::derivativeFactors(
   double long_c = locz * dir;
   ActsRowVectorD<3> norm_vec = dir.transpose() - long_c * locz;
   // calculate the s factors for the dependency on X
-  const ActsRowVectorD<5> s_vec = norm_vec * jac.topLeftCorner<3, 5>();
+  const BoundRowVector s_vec = norm_vec * jac.topLeftCorner<3, BoundParsDim>();
   // calculate the d factors for the dependency on Tx
-  const ActsRowVectorD<5> d_vec = locz * jac.block<3, 5>(3, 0);
+  const BoundRowVector d_vec = locz * jac.block<3, BoundParsDim>(3, 0);
   // normalisation of normal & longitudinal components
   double norm = 1. / (1. - long_c * long_c);
   // create a matrix representation
-  ActsMatrixD<3, 5> long_mat = ActsMatrixD<3, 5>::Zero();
+  ActsMatrixD<3, BoundParsDim> long_mat = ActsMatrixD<3, BoundParsDim>::Zero();
   long_mat.colwise() += locz.transpose();
   // build the combined normal & longitudinal components
   return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -
-                                jac.block<3, 5>(3, 0))));
+                                jac.block<3, BoundParsDim>(3, 0))));
 }

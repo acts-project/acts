@@ -42,6 +42,7 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 using cstep = detail::ConstrainedStep;
+using Covariance = BoundSymMatrix;
 
 /// An observer that measures the perpendicular distance
 struct PerpendicularMeasure {
@@ -234,12 +235,12 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
-  ActsSymMatrixD<5> cov;
+  Covariance cov;
   // take some major correlations (off-diagonals)
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
   // propagate to a path length of 100 with two steps of 50
   const auto& mid_parameters =
@@ -300,12 +301,12 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
-  ActsSymMatrixD<5> cov;
+  Covariance cov;
   // take some major correlations (off-diagonals)
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10 * units::_GeV);
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
   // propagate to a final surface with one stop in between
   const auto& mid_parameters =

@@ -19,6 +19,8 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
+  using Jacobian = Acts::SpacePointToBoundMatrix;
+
   BilloirTrack(const input_track_t& params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
 
@@ -27,14 +29,14 @@ struct BilloirTrack {
   const input_track_t originalTrack;
   Acts::LinearizedTrack linTrack;
   double chi2;
-  Acts::ActsMatrixD<5, 3> DiMat;   // position jacobian
-  Acts::ActsMatrixD<5, 3> EiMat;   // momentum jacobian
-  Acts::ActsSymMatrixD<3> GiMat;   //  = EtWmat * Emat (see below)
-  Acts::ActsSymMatrixD<3> BiMat;   //  = DiMat^T * Wi * EiMat
-  Acts::ActsSymMatrixD<3> CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
-  Acts::Vector3D UiVec;            //  = EiMat^T * Wi * dqi
-  Acts::ActsSymMatrixD<3> BCiMat;  //  = BiMat * Ci^-1
-  Acts::ActsVectorD<5> deltaQ;
+  Jacobian DiMat;                    // position jacobian
+  Jacobian EiMat;                    // momentum jacobian
+  Acts::SpacePointSymMatrix GiMat;   //  = EtWmat * Emat (see below)
+  Acts::SpacePointSymMatrix BiMat;   //  = DiMat^T * Wi * EiMat
+  Acts::SpacePointSymMatrix CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
+  Acts::Vector3D UiVec;              //  = EiMat^T * Wi * dqi
+  Acts::SpacePointSymMatrix BCiMat;  //  = BiMat * Ci^-1
+  Acts::BoundVector deltaQ;
 };
 
 /// @struct BilloirVertex
@@ -43,14 +45,15 @@ struct BilloirTrack {
 struct BilloirVertex {
   BilloirVertex() = default;
 
-  Acts::ActsSymMatrixD<3> Amat{
-      Acts::ActsSymMatrixD<3>::Zero()};  // Amat  = sum{DiMat^T * Wi * dqi}
+  Acts::SpacePointSymMatrix Amat{
+      Acts::SpacePointSymMatrix::Zero()};  // Amat  = sum{DiMat^T * Wi * dqi}
   Acts::Vector3D Tvec{
       Acts::Vector3D::Zero()};  // Tvec  = sum{DiMat^T * Wi * DiMat}
-  Acts::ActsSymMatrixD<3> BCBmat{Acts::ActsSymMatrixD<3>::Zero()};  // BCBmat =
-                                                                    // sum{BiMat
-                                                                    // * Ci^-1 *
-                                                                    // BiMat^T}
+  Acts::SpacePointSymMatrix BCBmat{
+      Acts::SpacePointSymMatrix::Zero()};  // BCBmat =
+                                           // sum{BiMat
+                                           // * Ci^-1 *
+                                           // BiMat^T}
   Acts::Vector3D BCUvec{
       Acts::Vector3D::Zero()};  // BCUvec = sum{BiMat * Ci^-1 * UiVec}
 };
@@ -135,16 +138,16 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         currentBilloirTrack.deltaQ[4] = qOverP - fQOvP;
 
         // position jacobian (D matrix)
-        ActsMatrixD<5, 3> Dmat;
+        SpacePointToBoundMatrix Dmat;
         Dmat = linTrack.positionJacobian;
 
         // momentum jacobian (E matrix)
-        ActsMatrixD<5, 3> Emat;
+        SpacePointToBoundMatrix Emat;
         Emat = linTrack.momentumJacobian;
         // cache some matrix multiplications
-        ActsMatrixD<3, 5> DtWmat;
-        ActsMatrixD<3, 5> EtWmat;
-        ActsSymMatrixD<5> Wi = linTrack.covarianceAtPCA.inverse();
+        BoundToSpacePointMatrix DtWmat;
+        BoundToSpacePointMatrix EtWmat;
+        BoundSymMatrix Wi = linTrack.covarianceAtPCA.inverse();
         DtWmat = Dmat.transpose() * Wi;
         EtWmat = Emat.transpose() * Wi;
 
@@ -189,7 +192,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     // beam-const
     Vector3D Vdel = billoirVertex.Tvec -
                     billoirVertex.BCUvec;  // Vdel = Tvec-sum{BiMat*Ci^-1*UiVec}
-    ActsSymMatrixD<3> VwgtMat =
+    SpacePointSymMatrix VwgtMat =
         billoirVertex.Amat -
         billoirVertex.BCBmat;  // VwgtMat = Amat-sum{BiMat*Ci^-1*BiMat^T}
 
@@ -209,7 +212,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     }
 
     // cov(deltaV) = VwgtMat^-1
-    ActsSymMatrixD<3> covDeltaVmat = VwgtMat.inverse();
+    SpacePointSymMatrix covDeltaVmat = VwgtMat.inverse();
 
     // deltaV = cov_(deltaV) * Vdel;
     Vector3D deltaV = covDeltaVmat * Vdel;
@@ -217,7 +220,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
-    std::vector<std::unique_ptr<ActsSymMatrixD<5>>> covDeltaPmat(nTracks);
+    std::vector<std::unique_ptr<BoundSymMatrix>> covDeltaPmat(nTracks);
 
     iTrack = 0;
     for (auto& bTrack : billoirTracks) {
@@ -239,7 +242,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       // calculate 5x5 covdelta_P matrix
       // d(d0,z0,phi,theta,qOverP)/d(x,y,z,phi,theta,qOverP)-transformation
       // matrix
-      ActsMatrixD<5, 6> transMat;
+      ActsMatrixD<BoundParsDim, 6> transMat;
       transMat.setZero();
       transMat(0, 0) = bTrack.DiMat(0, 0);
       transMat(0, 1) = bTrack.DiMat(0, 1);
@@ -252,15 +255,15 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
 
       // some intermediate calculations to get 5x5 matrix
       // cov(V,V)
-      ActsSymMatrixD<3> VVmat;
+      SpacePointSymMatrix VVmat;
       VVmat = covDeltaVmat;
 
       // cov(V,P)
-      ActsSymMatrixD<3> VPmat;
+      SpacePointSymMatrix VPmat;
       VPmat = -covDeltaVmat * bTrack.GiMat * bTrack.CiInv;
 
       // cov(P,P)
-      ActsSymMatrixD<3> PPmat;
+      SpacePointSymMatrix PPmat;
       PPmat = bTrack.CiInv +
               bTrack.BCiMat.transpose() * covDeltaVmat * bTrack.BCiMat;
 
@@ -272,7 +275,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       covMat.block<3, 3>(3, 3) = PPmat;
 
       // covdelta_P calculation
-      covDeltaPmat[iTrack] = std::make_unique<ActsSymMatrixD<5>>(
+      covDeltaPmat[iTrack] = std::make_unique<BoundSymMatrix>(
           transMat * covMat * transMat.transpose());
       // Calculate chi2 per track.
       bTrack.chi2 =

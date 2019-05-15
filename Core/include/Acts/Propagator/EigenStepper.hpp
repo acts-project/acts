@@ -58,8 +58,8 @@ class EigenStepper {
   using Corrector = corrector_t;
 
   /// Jacobian, Covariance and State defintions
-  using Jacobian = ActsMatrixD<5, 5>;
-  using Covariance = ActsSymMatrixD<5>;
+  using Jacobian = BoundMatrix;
+  using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
@@ -99,7 +99,7 @@ class EigenStepper {
         const auto& surface = par.referenceSurface();
         // set the covariance transport flag to true and copy
         covTransport = true;
-        cov = ActsSymMatrixD<5>(*par.covariance());
+        cov = BoundSymMatrix(*par.covariance());
         surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
                                      par.parameters());
       }
@@ -127,16 +127,16 @@ class EigenStepper {
     NavigationDirection navDir;
 
     /// The full jacobian of the transport entire transport
-    ActsMatrixD<5, 5> jacobian = ActsMatrixD<5, 5>::Identity();
+    Jacobian jacobian = Jacobian::Identity();
 
     /// Jacobian from local to the global frame
-    ActsMatrixD<7, 5> jacToGlobal = ActsMatrixD<7, 5>::Zero();
+    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
     /// Pure transport jacobian part from runge kutta integration
-    ActsMatrixD<7, 7> jacTransport = ActsMatrixD<7, 7>::Identity();
+    FreeMatrix jacTransport = FreeMatrix::Identity();
 
     /// The propagation derivative
-    ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
+    FreeVector derivative = FreeVector::Zero();
 
     /// Covariance matrix (and indicator)
     //// associated with the initial error on track parameters

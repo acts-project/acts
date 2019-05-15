@@ -26,7 +26,7 @@ namespace detail {
 /// @brief helper structure summarizing coordinate transformations
 ///
 struct coordinate_transformation {
-  using ParVector_t = ActsVector<ParValue_t, Acts::NGlobalPars>;
+  using ParVector_t = BoundVector;
 
   /// @brief static method to transform the local information in
   /// the track parameterisation to a global position

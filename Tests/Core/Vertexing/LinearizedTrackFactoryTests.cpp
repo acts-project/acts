@@ -29,6 +29,8 @@ namespace bdata = boost::unit_test::data;
 namespace Acts {
 namespace Test {
 
+using Covariance = BoundSymMatrix;
+
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -104,8 +106,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
         thetaDist(gen), q / pTDist(gen);
 
     // Fill vector of track objects with simple covariance matrix
-    std::unique_ptr<ActsSymMatrixD<5>> covMat =
-        std::make_unique<ActsSymMatrixD<5>>();
+    std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
 
     // Resolutions
     double resD0 = resIPDist(gen);
@@ -128,10 +129,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
                          Propagator<EigenStepper<ConstantBField>>>
       linFactory(ltConfig);
 
-  ActsVectorD<5> vec5Zero = ActsVectorD<5>::Zero();
-  ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
-  Vector3D vec3Zero = Vector3D::Zero();
-  ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
+  BoundVector vecBoundZero = BoundVector::Zero();
+  BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
+  Vector3D vecSPZero = Vector3D::Zero();
+  SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
@@ -140,12 +141,12 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
                             Vector3D(0., 0., 0.), propagator)
             .value();
 
-    BOOST_CHECK_NE(linTrack.parametersAtPCA, vec5Zero);
-    BOOST_CHECK_NE(linTrack.covarianceAtPCA, mat5Zero);
-    BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vec3Zero);
-    BOOST_CHECK_NE(linTrack.positionJacobian, mat53Zero);
-    BOOST_CHECK_NE(linTrack.momentumJacobian, mat53Zero);
-    BOOST_CHECK_NE(linTrack.constantTerm, vec5Zero);
+    BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
+    BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
+    BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vecSPZero);
+    BOOST_CHECK_NE(linTrack.positionJacobian, matBound2SPZero);
+    BOOST_CHECK_NE(linTrack.momentumJacobian, matBound2SPZero);
+    BOOST_CHECK_NE(linTrack.constantTerm, vecBoundZero);
   }
 }
 
@@ -165,10 +166,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
                          Propagator<EigenStepper<ConstantBField>>>
       linFactory(ltConfig);
 
-  ActsVectorD<5> vec5Zero = ActsVectorD<5>::Zero();
-  ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
-  Vector3D vec3Zero = Vector3D::Zero();
-  ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
+  BoundVector vecBoundZero = BoundVector::Zero();
+  BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
+  Vector3D vecSPZero = Vector3D::Zero();
+  SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
 
   LinearizedTrack linTrack =
       linFactory
@@ -176,12 +177,12 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
                           propagator)
           .value();
 
-  BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vec5Zero);
-  BOOST_CHECK_EQUAL(linTrack.covarianceAtPCA, mat5Zero);
-  BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vec3Zero);
-  BOOST_CHECK_EQUAL(linTrack.positionJacobian, mat53Zero);
-  BOOST_CHECK_EQUAL(linTrack.momentumJacobian, mat53Zero);
-  BOOST_CHECK_EQUAL(linTrack.constantTerm, vec5Zero);
+  BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vecBoundZero);
+  BOOST_CHECK_EQUAL(linTrack.covarianceAtPCA, matBoundZero);
+  BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vecSPZero);
+  BOOST_CHECK_EQUAL(linTrack.positionJacobian, matBound2SPZero);
+  BOOST_CHECK_EQUAL(linTrack.momentumJacobian, matBound2SPZero);
+  BOOST_CHECK_EQUAL(linTrack.constantTerm, vecBoundZero);
 }
 
 }  // namespace Test

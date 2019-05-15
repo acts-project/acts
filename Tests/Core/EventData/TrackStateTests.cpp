@@ -26,7 +26,6 @@ namespace Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using Jacobian = ActsMatrixD<5, 5>;
 using Identifier = unsigned long int;
 
 template <ParID_t... params>

@@ -170,7 +170,7 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, ActsMatrixD<7, 7>& D) const {
+                const double h, FreeMatrix& D) const {
     return finalize(state, stepper, h) && transportMatrix(state, stepper, h, D);
   }
 
@@ -185,7 +185,7 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if evaluation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const double h, ActsMatrixD<7, 7>& D) const {
+                       const double h, FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -209,7 +209,7 @@ struct DenseEnvironmentExtension {
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
 
-    D = ActsMatrixD<7, 7>::Identity();
+    D = FreeMatrix::Identity();
     const double half_h = h * 0.5;
 
     // This sets the reference to the sub matrices
