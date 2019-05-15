@@ -24,6 +24,8 @@ using units::Nat2SI;
 
 namespace IntegrationTest {
 
+using Covariance = BoundSymMatrix;
+
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -250,14 +252,14 @@ std::pair<Vector3D, double> to_cylinder(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
-  std::unique_ptr<const BoundSymMatrix> covPtr = nullptr;
+  std::unique_ptr<const Covariance> covPtr = nullptr;
   if (covtransport) {
-    BoundSymMatrix cov;
+    Covariance cov;
     // take some major correlations (off-diagonals)
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    covPtr = std::make_unique<const BoundSymMatrix>(cov);
+    covPtr = std::make_unique<const Covariance>(cov);
   }
   // do propagation of the start parameters
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
@@ -304,14 +306,14 @@ std::pair<Vector3D, double> to_surface(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
-  std::unique_ptr<const BoundSymMatrix> covPtr = nullptr;
+  std::unique_ptr<const Covariance> covPtr = nullptr;
   if (covtransport) {
-    BoundSymMatrix cov;
+    Covariance cov;
     // take some major correlations (off-diagonals)
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    covPtr = std::make_unique<const BoundSymMatrix>(cov);
+    covPtr = std::make_unique<const Covariance>(cov);
   }
   // Create curvilinear start parameters
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
@@ -384,12 +386,12 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
-  BoundSymMatrix cov;
+  Covariance cov;
   // take some major correlations (off-diagonals)
   cov << 10. * units::_mm, 0, 0.123, 0, 0.5, 0, 10. * units::_mm, 0, 0.162, 0,
       0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
       1. / (10. * units::_GeV);
-  auto covPtr = std::make_unique<const BoundSymMatrix>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
   // do propagation of the start parameters
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
@@ -399,9 +401,9 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   const auto& tp = result.endParameters;
 
   // get numerically propagated covariance matrix
-  BoundSymMatrix calculated_cov = fixture.calculateCovariance(
+  Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
-  BoundSymMatrix obtained_cov = (*(tp->covariance()));
+  Covariance obtained_cov = (*(tp->covariance()));
   CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
 }
 
@@ -429,7 +431,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   double q = charge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  BoundSymMatrix cov;
+  Covariance cov;
 
   // take some major correlations (off-diagonals)
   // cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162,
@@ -440,7 +442,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   cov << 10. * units::_mm, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0.1,
       0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV);
 
-  auto covPtr = std::make_unique<const BoundSymMatrix>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
   // create curvilinear start parameters
   CurvilinearParameters start_c(nullptr, pos, mom, q);
@@ -472,10 +474,10 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   const auto& tp = result.endParameters;
 
   // get obtained covariance matrix
-  BoundSymMatrix obtained_cov = (*(tp->covariance()));
+  Covariance obtained_cov = (*(tp->covariance()));
 
   // get numerically propagated covariance matrix
-  BoundSymMatrix calculated_cov = fixture.calculateCovariance(
+  Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
 
   CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);

@@ -48,6 +48,7 @@ namespace Test {
 // A few initialisations and definitionas
 using Identifier = GeometryID;
 using Jacobian = BoundParameters::CovMatrix_t;
+using Covariance = BoundSymMatrix;
 
 using TrackState = TrackState<Identifier, BoundParameters>;
 using Resolution = std::pair<ParID_t, double>;
@@ -167,7 +168,7 @@ struct MaterialScattering {
     // Check if there is a surface with material and a covariance is existing
     if (state.navigation.currentSurface &&
         state.navigation.currentSurface->surfaceMaterial() &&
-        state.stepping.cov != BoundSymMatrix::Zero()) {
+        state.stepping.cov != Covariance::Zero()) {
       // Sample angles
       std::normal_distribution<double> scatterAngle(
           0., 0.017);  //< \approx 1 degree
@@ -280,11 +281,11 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   RecoPropagator rPropagator(rStepper, rNavigator);
 
   // Set initial parameters for the particle track
-  BoundSymMatrix cov;
+  Covariance cov;
   cov << 1000. * units::_um, 0., 0., 0., 0., 0., 1000. * units::_um, 0., 0., 0.,
       0., 0., 0.05, 0., 0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0., 0.01;
 
-  auto covPtr = std::make_unique<const BoundSymMatrix>(cov);
+  auto covPtr = std::make_unique<const Covariance>(cov);
 
   Vector3D rPos(-3. * units::_m, 10. * units::_um * gauss(generator),
                 100. * units::_um * gauss(generator));

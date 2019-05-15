@@ -36,6 +36,7 @@ namespace Acts {
 namespace Test {
 
 using cstep = detail::ConstrainedStep;
+using Covariance = BoundSymMatrix;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -141,8 +142,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   naviVac.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  BoundSymMatrix cov = BoundSymMatrix::Identity();
-  auto covPtr = std::make_unique<const BoundSymMatrix>(cov);
+  Covariance cov = Covariance::Identity();
+  auto covPtr = std::make_unique<const Covariance>(cov);
   Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
       std::move(covPtr), startParams, startMom, 1.);
@@ -258,8 +259,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   naviMat.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  BoundSymMatrix cov = BoundSymMatrix::Identity();
-  auto covPtr = std::make_unique<const BoundSymMatrix>(cov);
+  Covariance cov = Covariance::Identity();
+  auto covPtr = std::make_unique<const Covariance>(cov);
   Vector3D startParams(0., 0., 0.), startMom(5. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
       std::move(covPtr), startParams, startMom, 1.);
@@ -434,8 +435,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   naviDet.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  BoundSymMatrix cov = BoundSymMatrix::Identity();
-  auto covPtr = std::make_unique<const BoundSymMatrix>(cov);
+  Covariance cov = Covariance::Identity();
+  auto covPtr = std::make_unique<const Covariance>(cov);
   Vector3D startParams(0., 0., 0.), startMom(5. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
       std::move(covPtr), startParams, startMom, 1.);
@@ -554,7 +555,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
   // first volume
-  covPtr = std::make_unique<const BoundSymMatrix>(BoundSymMatrix::Identity());
+  covPtr = std::make_unique<const Covariance>(Covariance::Identity());
   startParams = endParams.first;
   startMom = endParams.second;
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtpPiecewise(

@@ -25,6 +25,7 @@ namespace Test {
 
 using Identifier = unsigned long int;
 using Jacobian = BoundParameters::CovMatrix_t;
+using Covariance = BoundSymMatrix;
 
 template <ParID_t... params>
 using MeasurementType = Measurement<Identifier, params...>;
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
       cylinder, 0, std::move(cov), -0.1, 0.45));
 
   // Make dummy track parameter
-  BoundSymMatrix covTrk;
+  Covariance covTrk;
   covTrk << 0.08, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
       0, 0, 0, 1;
   BoundVector parValues;

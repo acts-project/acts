@@ -67,6 +67,7 @@ int main(int argc, char* argv[]) {
   using BField_type = ConstantBField;
   using Stepper_type = AtlasStepper<BField_type>;
   using Propagator_type = Propagator<Stepper_type>;
+  using Covariance = BoundSymMatrix;
 
   BField_type bField(0, 0, Bz * units::_T);
   Stepper_type atlas_stepper(std::move(bField));
@@ -77,13 +78,13 @@ int main(int argc, char* argv[]) {
 
   Vector3D pos(0, 0, 0);
   Vector3D mom(pT * units::_GeV, 0, 0);
-  BoundSymMatrix cov;
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-  std::unique_ptr<const BoundSymMatrix> covPtr = nullptr;
+  std::unique_ptr<const Covariance> covPtr = nullptr;
   if (withCov) {
-    covPtr = std::make_unique<const BoundSymMatrix>(cov);
+    covPtr = std::make_unique<const Covariance>(cov);
   }
   CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
 
