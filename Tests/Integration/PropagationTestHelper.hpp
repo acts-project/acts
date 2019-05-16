@@ -404,7 +404,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
   Covariance obtained_cov = (*(tp->covariance()));
-  
+
   ActsSymMatrix<ParValue_t, BoundParsDim - 1> obt_cov =
       obtained_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
   ActsSymMatrix<ParValue_t, BoundParsDim - 1> calc_cov =

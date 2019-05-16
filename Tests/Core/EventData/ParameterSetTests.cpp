@@ -459,7 +459,6 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
  * @sa ParameterSet::projector
  */
 BOOST_AUTO_TEST_CASE(parset_projection_tests) {
-
   ActsMatrixD<1, BoundParsDim> phi_proj;
   phi_proj << 0, 0, 1, 0, 0, 0;
 
