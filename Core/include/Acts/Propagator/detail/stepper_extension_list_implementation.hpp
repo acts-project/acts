@@ -154,7 +154,7 @@ struct stepper_extension_list_impl<0u> {
   static bool finalize(const std::tuple<T...>& /*unused*/,
                        propagator_state_t& /*unused*/,
                        const stepper_t& /*unused*/, const double /*unused*/,
-                       GlobalMatrix& /*unused*/,
+                       FreeMatrix& /*unused*/,
                        const std::array<bool, sizeof...(T)>& /*unused*/) {
     return true;
   }

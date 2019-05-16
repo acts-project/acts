@@ -431,7 +431,7 @@ class AtlasStepper {
     // prepare the jacobian if we have a covariance
     if (pars.covariance()) {
       // copy the covariance matrix
-      state.covariance = new ActsSymMatrixD<TrackParsDim>(*pars.covariance());
+      state.covariance = new ActsSymMatrixD<BoundParsDim>(*pars.covariance());
       state.covTransport = true;
       state.useJacobian = true;
       const auto transform = pars.referenceFrame(state.geoContext);

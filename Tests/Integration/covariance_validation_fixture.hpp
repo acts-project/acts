@@ -119,7 +119,7 @@ struct covariance_validation_fixture {
     }
 
     // variation in t
-    std::vector<TrackVector> t_derivatives;
+    std::vector<BoundVector> t_derivatives;
     t_derivatives.reserve(h_steps.size());
     for (double h : h_steps) {
       StartParameters tp = startPars;

@@ -159,11 +159,11 @@ void random_residual_tests() {
   const double phi_max = par_type_t<ParID_t::ePHI>::max;
   const double phi_min = par_type_t<ParID_t::ePHI>::min;
 
-  TrackVector parValues_1;
-  TrackVector parValues_2;
+  BoundVector parValues_1;
+  BoundVector parValues_2;
   FullParameterSet parSet_1(nullptr, parValues_1);
   FullParameterSet parSet_2(nullptr, parValues_2);
-  TrackVector residual;
+  BoundVector residual;
   const unsigned int toys = 1000;
   for (unsigned int i = 0; i < toys; ++i) {
     const double loc0_1 = uniform_dist(e);
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<TrackParsDim, TrackParsDim> loc0_loc1_phi_theta_qop_t_proj;
+  ActsMatrixD<BoundParsDim, BoundParsDim> loc0_loc1_phi_theta_qop_t_proj;
   loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 
