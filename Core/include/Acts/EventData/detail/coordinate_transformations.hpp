@@ -88,7 +88,7 @@ struct coordinate_transformation {
     using VectorHelpers::theta;
     ParVector_t parameters;
     parameters << 0, 0, phi(mom), theta(mom),
-        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm();
+        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm(), 0.;
 
     return parameters;
   }
@@ -117,7 +117,7 @@ struct coordinate_transformation {
     s.globalToLocal(gctx, pos, mom, localPosition);
     ParVector_t result;
     result << localPosition(0), localPosition(1), phi(mom), theta(mom),
-        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm();
+        ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm(), 0.;
     return result;
   }
 

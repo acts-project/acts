@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     // Construct random track parameters
     TrackParametersBase::ParVector_t paramVec;
     paramVec << d0v + d0Dist(gen), z0v + z0Dist(gen), phiDist(gen),
-        thetaDist(gen), q / pTDist(gen);
+        thetaDist(gen), q / pTDist(gen), 0.;
 
     // Fill vector of track objects with simple covariance matrix
     std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     double resTh = resAngDist(gen);
     double resQp = resQoPDist(gen);
 
-    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
-        0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0., 0., 0.,
-        0., 0., resQp * resQp;
+    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
+        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
+        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
     tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                      perigeeSurface));
   }

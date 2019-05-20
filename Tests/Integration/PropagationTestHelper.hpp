@@ -256,9 +256,9 @@ std::pair<Vector3D, double> to_cylinder(
   if (covtransport) {
     Covariance cov;
     // take some major correlations (off-diagonals)
-    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
-        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV);
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
+        0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // do propagation of the start parameters
@@ -310,9 +310,9 @@ std::pair<Vector3D, double> to_surface(
   if (covtransport) {
     Covariance cov;
     // take some major correlations (off-diagonals)
-    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
-        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV);
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
+        0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // Create curvilinear start parameters
@@ -388,9 +388,9 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
 
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10. * units::_mm, 0, 0.123, 0, 0.5, 0, 10. * units::_mm, 0, 0.162, 0,
-      0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-      1. / (10. * units::_GeV);
+  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
+      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // do propagation of the start parameters
@@ -404,7 +404,22 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
   Covariance obtained_cov = (*(tp->covariance()));
-  CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
+
+  ActsSymMatrix<ParValue_t, BoundParsDim - 1> obt_cov =
+      obtained_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
+  ActsSymMatrix<ParValue_t, BoundParsDim - 1> calc_cov =
+      calculated_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
+
+  // TODO: Replace the following line by the following block
+  // CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
+  CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
+  for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
+    for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
+      if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
+        CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
+      }
+    }
+  }
 }
 
 template <typename Propagator_type, typename StartSurface_type,
@@ -439,8 +454,9 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   //     0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
   //     1. / (10 * units::_GeV);
 
-  cov << 10. * units::_mm, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0.1,
-      0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV);
+  cov << 10. * units::_mm, 0, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0,
+      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV), 0,
+      0, 0, 0, 0, 0, 0;
 
   auto covPtr = std::make_unique<const Covariance>(cov);
 
@@ -480,7 +496,21 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
 
-  CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
+  ActsSymMatrix<ParValue_t, BoundParsDim - 1> obt_cov =
+      obtained_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
+  ActsSymMatrix<ParValue_t, BoundParsDim - 1> calc_cov =
+      calculated_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
+
+  // TODO: Replace the following line by the following block
+  // CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
+  CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
+  for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
+    for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
+      if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
+        CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
+      }
+    }
+  }
 }
 }  // namespace IntegrationTest
 }  // namespace Acts

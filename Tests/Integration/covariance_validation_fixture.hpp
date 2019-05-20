@@ -118,6 +118,17 @@ struct covariance_validation_fixture {
       qop_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     }
 
+    // variation in t
+    std::vector<BoundVector> t_derivatives;
+    t_derivatives.reserve(h_steps.size());
+    for (double h : h_steps) {
+      StartParameters tp = startPars;
+      tp.template set<Acts::eT>(options.geoContext,
+                                tp.template get<Acts::eT>() + h);
+      const auto& r = m_propagator.propagate(tp, dest, var_options).value();
+      t_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+    }
+
     Jacobian jacobian;
     jacobian.setIdentity();
     jacobian.col(Acts::eLOC_0) = fitLinear(x_derivatives, h_steps);
@@ -125,6 +136,7 @@ struct covariance_validation_fixture {
     jacobian.col(Acts::ePHI) = fitLinear(phi_derivatives, h_steps);
     jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
     jacobian.col(Acts::eQOP) = fitLinear(qop_derivatives, h_steps);
+    jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
 
     return jacobian * startCov * jacobian.transpose();
   }

@@ -125,10 +125,8 @@ auto Acts::Propagator<S, N>::propagate(
     detail::LoopProtection<path_aborter_t> lProtection;
     lProtection(state, m_stepper);
   }
-
   // Perform the actual propagation & check its outcome
   auto result = propagate_impl<ResultType>(state);
-
   if (result.ok()) {
     auto& propRes = *result;
     /// Convert into return type and fill the result object

@@ -120,6 +120,7 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   jacToCurv(2, 4) = cosPhi * invSinTheta;
   jacToCurv(3, 5) = -invSinTheta;
   jacToCurv(4, 6) = 1;
+  jacToCurv(5, 7) = 1;
   // Apply the transport from the steps on the jacobian
   state.jacToGlobal = state.jacTransport * state.jacToGlobal;
   // Transport the covariance
@@ -149,6 +150,7 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
     state.jacToGlobal(4, eTHETA) = cosTheta * sinPhi;
     state.jacToGlobal(5, eTHETA) = -sinTheta;
     state.jacToGlobal(6, eQOP) = 1;
+    state.jacToGlobal(7, eT) = 1;
   }
   // Store The global and bound jacobian (duplication for the moment)
   state.jacobian = jacFull * state.jacobian;
@@ -187,7 +189,7 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
     surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
     BoundVector pars;
     pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-        state.q / state.p;
+        state.q / state.p, 0.;
     surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, state.pos,
                                  state.dir, pars);
   }

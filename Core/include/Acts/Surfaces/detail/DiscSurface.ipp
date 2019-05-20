@@ -65,6 +65,7 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(4, eTHETA) = cos_theta * sin_phi;
   jacobian(5, eTHETA) = (-sin_theta);
   jacobian(6, eQOP) = 1;
+  jacobian(7, eT) = 1;
 }
 
 inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
@@ -98,6 +99,7 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
   jacobian(ePHI, 4) = cos_phi_over_sin_theta;
   jacobian(eTHETA, 5) = -inv_sin_theta;
   jacobian(eQOP, 6) = 1;
+  jacobian(eT, 7) = 1;
   // return the transposed reference frame
   return rframeT;
 }

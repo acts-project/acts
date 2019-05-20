@@ -237,9 +237,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
-      0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV);
+  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
+      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
   // propagate to a path length of 100 with two steps of 50
@@ -263,7 +263,12 @@ BOOST_DATA_TEST_CASE(
   const auto& cov_1s = *(end_parameters_1s->covariance());
   const auto& cov_2s = *(end_parameters_2s->covariance());
 
-  CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
+  // CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
+  for (unsigned int i = 0; i < cov_1s.rows(); i++) {
+    for (unsigned int j = 0; j < cov_1s.cols(); j++) {
+      CHECK_CLOSE_OR_SMALL(cov_1s(i, j), cov_2s(i, j), 0.001, 1e-6);
+    }
+  }
 }
 
 BOOST_DATA_TEST_CASE(
@@ -303,9 +308,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
-      0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV);
+  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
+      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q);
   // propagate to a final surface with one stop in between
@@ -329,10 +334,15 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_REL(end_parameters_1s->position(), end_parameters_2s->position(),
                   0.001);
 
-  const auto& cov_1s = *(end_parameters_1s->covariance());
-  const auto& cov_2s = *(end_parameters_2s->covariance());
+  const auto& cov_1s = (*(end_parameters_1s->covariance()));
+  const auto& cov_2s = (*(end_parameters_2s->covariance()));
 
-  CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
+  // CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
+  for (unsigned int i = 0; i < cov_1s.rows(); i++) {
+    for (unsigned int j = 0; j < cov_1s.cols(); j++) {
+      CHECK_CLOSE_OR_SMALL(cov_1s(i, j), cov_2s(i, j), 0.001, 1e-6);
+    }
+  }
 }
 
 }  // namespace Test
