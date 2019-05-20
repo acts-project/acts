@@ -26,8 +26,8 @@ enum ParDef : unsigned int {
   eLOC_Y = eLOC_1,
   eLOC_D0 = eLOC_0,
   eLOC_Z0 = eLOC_1,
-  ePHI = 2,    ///< phi direction of momentum in local frame
-  eTHETA = 3,  ///< theta direction of momentum in local frame
+  ePHI = 2,    ///< phi direction of momentum in global frame
+  eTHETA = 3,  ///< theta direction of momentum in global frame
   eQOP = 4,    ///< charge/momentum for charged tracks, for neutral tracks it is
                /// 1/momentum
   eT = 5,      /// < The time of the particle
