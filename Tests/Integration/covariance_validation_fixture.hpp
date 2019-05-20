@@ -118,19 +118,6 @@ struct covariance_validation_fixture {
       qop_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     }
 
-    std::vector<TrackVector> t_derivatives;
-    if (options.propagateTime) {
-      // variation in t
-      t_derivatives.reserve(h_steps.size());
-      for (double h : h_steps) {
-        StartParameters tp = startPars;
-        tp.template set<Acts::eT>(options.geoContext,
-                                  tp.template get<Acts::eT>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
-        t_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-      }
-    }
-
     // variation in t
     std::vector<BoundVector> t_derivatives;
     t_derivatives.reserve(h_steps.size());
