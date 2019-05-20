@@ -123,8 +123,10 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   curvilinear_pos_copy.set<eQOP>(tgContext, uqop);
   curvilinear_pos_copy.set<eT>(tgContext, ut);
   // we should have a new updated momentum
-  Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
-                                      sin(uphi) * sin(utheta), cos(utheta)) * units::_GeV;
+  Vector3D umomentum =
+      40. *
+      Vector3D(cos(uphi) * sin(utheta), sin(uphi) * sin(utheta), cos(utheta)) *
+      units::_GeV;
   CHECK_CLOSE_REL(umomentum, curvilinear_pos_copy.momentum(), 1e-6);
   // the updated momentum should be the col(2) of the transform
   CHECK_CLOSE_REL(umomentum.normalized(),
