@@ -37,8 +37,10 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   Vector3D dir(mom.normalized());
   Vector3D z_axis_global(0., 0., 1.);
   /// create curvilinear parameters without covariance +1/-1 charge
-  CurvilinearParameters curvilinear_pos(nullptr, pos, mom, 1. * units::_e, 1. * units::_s);
-  CurvilinearParameters curvilinear_neg(nullptr, pos, mom, -1. * units::_e, 2.5 * units::_s);
+  CurvilinearParameters curvilinear_pos(nullptr, pos, mom, 1. * units::_e,
+                                        1. * units::_s);
+  CurvilinearParameters curvilinear_neg(nullptr, pos, mom, -1. * units::_e,
+                                        2.5 * units::_s);
   NeutralCurvilinearParameters curvilinear_neut(nullptr, pos, mom, 33.33);
 
   /// check local coordinates
