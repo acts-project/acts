@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
       std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
       parValues, plane1);
 
-  parValues << 0.31, 0.51, 0.5 * M_PI, 0., 1 / 100., 0.;
+  parValues << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
   BoundParameters filt(
       tgContext,
       std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
       tgContext,
       std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
       parValues, plane2);
-  parValues << 0.21, 0.51, 0.5 * M_PI, 0., 1 / 100., 0.;
+  parValues << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
   filt = BoundParameters(
       tgContext,
       std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
       tgContext,
       std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
       parValues, plane3);
-  parValues << 0.34, 0.48, 0.5 * M_PI, 0., 1 / 100., 0.;
+  parValues << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
   filt = BoundParameters(
       tgContext,
       std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   double tol = 1e-6;
 
   BoundVector expPars;
-  expPars << 0.3100000, 0.5100000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
+  expPars << 0.3510000, 0.4730000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
   CHECK_CLOSE_ABS(ts1.parameter.smoothed->parameters(), expPars, tol);
   Covariance expCov;
   expCov.diagonal() << 0.0800000, 0.3000000, 1.0000000, 1.0000000, 1.0000000,
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   BOOST_CHECK_NE(ts2.parameter.filtered->parameters(),
                  ts2.parameter.smoothed->parameters());
 
-  expPars << 0.2000000, 0.5000000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
+  expPars << 0.2500000, 0.4700000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
   CHECK_CLOSE_ABS(ts2.parameter.smoothed->parameters(), expPars, tol);
   CHECK_CLOSE_ABS(*ts2.parameter.smoothed->covariance(), expCov, tol);
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   BOOST_CHECK_EQUAL(ts3.parameter.filtered->parameters(),
                     ts3.parameter.smoothed->parameters());
 
-  expPars << 0.3400000, 0.4800000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
+  expPars << 0.3300000, 0.4300000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
   CHECK_CLOSE_ABS(ts3.parameter.smoothed->parameters(), expPars, tol);
   CHECK_CLOSE_ABS(*ts3.parameter.smoothed->covariance(), expCov, tol);
 }

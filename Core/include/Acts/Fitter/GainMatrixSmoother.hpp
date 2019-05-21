@@ -41,15 +41,16 @@ class GainMatrixSmoother {
     CovMatrix_t smoothedCov;
 
     // For the last state: smoothed is filtered - also: switch to next
-    auto& prev_ts = filteredStates.back();
-    prev_ts.parameter.smoothed = *prev_ts.parameter.filtered;
+    auto* prev_ts = &filteredStates.back();
+    assert(prev_ts->parameter.filtered);
+    prev_ts->parameter.smoothed = *prev_ts->parameter.filtered;
 
     // Smoothing gain matrix
     gain_matrix_t G;
 
     // Loop and smooth the remaining states
     for (track_state_t& ts :
-         filteredStates | sliced(0, filteredStates.size()) | reversed) {
+         filteredStates | sliced(0, filteredStates.size() - 1) | reversed) {
       // The current state
       assert(ts.parameter.filtered);
       assert(ts.parameter.predicted);
@@ -57,24 +58,24 @@ class GainMatrixSmoother {
       assert(ts.parameter.predicted->covariance() != nullptr);
       assert(ts.parameter.filtered->covariance() != nullptr);
 
-      assert(prev_ts.parameter.smoothed);
-      assert(prev_ts.parameter.predicted);
+      assert(prev_ts->parameter.smoothed);
+      assert(prev_ts->parameter.predicted);
 
       // clang-format off
 
       // Gain smoothing matrix
       G = (*ts.parameter.filtered->covariance())
           * ts.parameter.jacobian->transpose()
-          * (*prev_ts.parameter.predicted->covariance()).inverse();
+          * (*prev_ts->parameter.predicted->covariance()).inverse();
       // Calculate the smoothed parameters
       smoothedPars = ts.parameter.filtered->parameters()
-                     + G * (prev_ts.parameter.smoothed->parameters()
-                            - prev_ts.parameter.predicted->parameters());
+                     + G * (prev_ts->parameter.smoothed->parameters()
+                            - prev_ts->parameter.predicted->parameters());
 
       // And the smoothed covariance
       smoothedCov = (*ts.parameter.filtered->covariance())
-                    - G * (*(prev_ts.parameter.predicted->covariance())
-                           - (*prev_ts.parameter.smoothed->covariance()))
+                    - G * (*(prev_ts->parameter.predicted->covariance())
+                           - (*prev_ts->parameter.smoothed->covariance()))
                            * G.transpose();
 
       // clang-format on
@@ -85,10 +86,10 @@ class GainMatrixSmoother {
           smoothedPars, ts.referenceSurface().getSharedPtr());
 
       // Point prev state to current state
-      prev_ts = ts;
+      prev_ts = &ts;
     }
     // The result is the pointer to the last smoothed state - for the cache
-    return prev_ts.parameter.smoothed;
+    return prev_ts->parameter.smoothed;
   }
 };
 }  // namespace Acts
