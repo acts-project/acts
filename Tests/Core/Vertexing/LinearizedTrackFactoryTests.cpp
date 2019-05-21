@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(tgContext, mfContext, &parameters,
-                            Vector3D(0., 0., 0.), propagator)
+                            SpacePointVector::Zero(), propagator)
             .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
 
   LinearizedTrack linTrack =
       linFactory
-          .linearizeTrack(tgContext, mfContext, nullptr, Vector3D(1., 2., 3.),
-                          propagator)
+          .linearizeTrack(tgContext, mfContext, nullptr,
+                          SpacePointVector(1., 2., 3., 4.), propagator)
           .value();
 
   BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vecBoundZero);
