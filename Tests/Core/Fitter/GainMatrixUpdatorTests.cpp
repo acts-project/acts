@@ -1,12 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE GainMatrix Tests
+#define BOOST_TEST_MODULE GainMatrixUpdator Tests
 #include <boost/optional/optional_io.hpp>
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
@@ -18,6 +18,7 @@
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Fitter/GainMatrixUpdator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -80,7 +81,34 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
   BOOST_CHECK_EQUAL(&(*mState.parameter.filtered).referenceSurface(),
                     cylinder.get());
 
-  // @TODO: Check numerical outcome of the calculation
+  // Check for regression. This does NOT test if the math is correct, just that
+  // the result is the same as when the test was written.
+
+  Covariance expCov;
+  expCov << 0.0266667, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000,
+      0.0000000, 0.0750000, 0.0000000, 0.0000000, 0.0000000, 0.0000000,
+      0.0000000, 0.0000000, 1.0000000, 0.0000000, 0.0000000, 0.0000000,
+      0.0000000, 0.0000000, 0.0000000, 1.0000000, 0.0000000, 0.0000000,
+      0.0000000, 0.0000000, 0.0000000, 0.0000000, 1.0000000, 0.0000000,
+      0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000;
+
+  BoundVector expPar;
+  expPar << 0.0333333, 0.4625000, 1.5707963, 0.9424778, 0.0100000, 0.0000000;
+
+  Vector3D expPosition;
+  expPosition << 2.9998148, 0.0333326, 0.4625000;
+
+  Vector3D expMomentum;
+  expMomentum << 0.0000000, 80.9016994, 58.7785252;
+
+  auto& filtered = *mState.parameter.filtered;
+
+  double tol = 1e-6;
+
+  CHECK_CLOSE_ABS(expCov, *filtered.covariance(), tol);
+  CHECK_CLOSE_ABS(expPar, filtered.parameters(), tol);
+  CHECK_CLOSE_ABS(expPosition, filtered.position(), tol);
+  CHECK_CLOSE_ABS(expMomentum, filtered.momentum(), tol);
 }
 
 }  // namespace Test
