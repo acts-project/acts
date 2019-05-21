@@ -38,7 +38,7 @@ enum ParDef : unsigned int {
 constexpr unsigned int FreeParsDim = 8;
 
 /// The dimension of a space point
-constexpr unsigned int SpacePointDim = 3;
+constexpr unsigned int SpacePointDim = 4;
 
 using ParID_t = ParDef;
 using ParValue_t = double;

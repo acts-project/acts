@@ -112,7 +112,6 @@ using Rotation3D = Eigen::Quaternion<double>;
 using Translation3D = Eigen::Translation<double, 3>;
 using AngleAxis3D = Eigen::AngleAxisd;
 using Transform3D = Eigen::Affine3d;
-using Vector4D = Eigen::Matrix<double, 4, 1>;
 using Vector3D = Eigen::Matrix<double, 3, 1>;
 using Vector2D = Eigen::Matrix<double, 2, 1>;
 using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
@@ -121,7 +120,6 @@ using Rotation3F = Eigen::Quaternion<float>;
 using Translation3F = Eigen::Translation<float, 3>;
 using AngleAxis3F = Eigen::AngleAxisf;
 using Transform3F = Eigen::Affine3f;
-using Vector4F = Eigen::Matrix<float, 4, 1>;
 using Vector3F = Eigen::Matrix<float, 3, 1>;
 using Vector2F = Eigen::Matrix<float, 2, 1>;
 using RotationMatrix3F = Eigen::Matrix<float, 3, 3>;
@@ -136,7 +134,6 @@ enum AxisDefs : int {
   eX = 0,
   eY = 1,
   eZ = 2,
-  eT = 3,
   // momentum access
   ePX = 0,
   ePY = 1,

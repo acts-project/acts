@@ -43,7 +43,7 @@ class Vertex {
   /// @param position Full vertex position
   /// @param covariance 4x4 covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector4D& position, const ActsSymMatrixD<4>& covariance,
+  Vertex(const SpacePointVector& position, const ActsSymMatrixD<4>& covariance,
          std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
@@ -53,7 +53,7 @@ class Vertex {
   ParValue_t time() const;
 
   /// @return Returns 4-position
-  const Vector4D& fullPosition() const;
+  const SpacePointVector& fullPosition() const;
 
   /// @return Returns position covariance
   ActsSymMatrixD<3> covariance() const;
@@ -72,6 +72,11 @@ class Vertex {
   /// @param position Vertex position
   /// @param time The time
   void setPosition(const Vector3D& position, ParValue_t time = 0);
+
+  /// @brief Set position and time
+  ///
+  /// @param fullPosition Vertex position and time
+  void setPosition(const SpacePointVector& fullPosition);
 
   /// @brief Sets time
   ///
@@ -97,7 +102,7 @@ class Vertex {
   void setFitQuality(double chiSquared, double numberDoF);
 
  private:
-  Vector4D m_position = Vector4D::Zero();
+  SpacePointVector m_position = SpacePointVector::Zero();
   ActsSymMatrixD<4> m_covariance = ActsSymMatrixD<4>::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = std::numeric_limits<double>::max();  // chi2 of the fit
