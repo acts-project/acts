@@ -74,11 +74,10 @@ auto make_trackstate() {
 
   // predicted
   ParVec_t predPar;
-  predPar << 1, 2, M_PI / 4., M_PI / 2., 5;
+  predPar << 1, 2, M_PI / 4., M_PI / 2., 5, 0.;
 
   CovMat_t predCov;
-  predCov << 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-      20, 21, 22, 23, 24, 25;
+  predCov.setRandom();
 
   BoundParameters pred(gctx, std::make_unique<CovMat_t>(predCov), predPar,
                        plane);
@@ -87,11 +86,10 @@ auto make_trackstate() {
 
   // filtered
   ParVec_t filtPar;
-  filtPar << 6, 7, M_PI / 4., M_PI / 2., 10;
+  filtPar << 6, 7, M_PI / 4., M_PI / 2., 10, 0.;
 
   CovMat_t filtCov;
-  filtCov << 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
-      43, 44, 45, 46, 47, 48, 49, 50;
+  filtCov.setRandom();
 
   BoundParameters filt(gctx, std::make_unique<CovMat_t>(filtCov), filtPar,
                        plane);
@@ -100,11 +98,10 @@ auto make_trackstate() {
 
   // smoothed
   ParVec_t smotPar;
-  smotPar << 11, 12, M_PI / 4., M_PI / 2., 15;
+  smotPar << 11, 12, M_PI / 4., M_PI / 2., 15, 0.;
 
   CovMat_t smotCov;
-  smotCov << 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67,
-      68, 69, 70, 71, 72, 73, 74, 75;
+  smotCov.setRandom();
 
   BoundParameters smot(gctx, std::make_unique<CovMat_t>(smotCov), smotPar,
                        plane);
@@ -122,8 +119,7 @@ auto make_trackstate() {
 
   // make jacobian
   CovMat_t jac;
-  jac << 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 89, 90, 91, 92, 93, 94,
-      95, 96, 97, 98, 99, 100, 101;
+  jac.setRandom();
 
   ts.parameter.jacobian = jac;
 

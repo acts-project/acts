@@ -430,8 +430,8 @@ template <typename source_link_t>
 class MultiTrajectory {
  public:
   enum {
-    ParametersSize = NGlobalPars,
-    MeasurementSizeMax = NGlobalPars,
+    ParametersSize = BoundParsDim,
+    MeasurementSizeMax = BoundParsDim,
   };
   using SourceLink = source_link_t;
   using ConstTrackStateProxy =
