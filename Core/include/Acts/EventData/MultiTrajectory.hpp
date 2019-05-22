@@ -461,7 +461,7 @@ class TrackStateProxy {
 
 // implement track state visitor concept
 template <typename T, typename TS>
-using call_operator_t = decltype(std::declval<T>()(std::declval<TS&>()));
+using call_operator_t = decltype(std::declval<T>()(std::declval<TS>()));
 
 template <typename T, typename TS>
 constexpr bool VisitorConcept =
