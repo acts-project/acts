@@ -196,6 +196,15 @@ inline ParValue_t& time(SpacePointVector& spacePointVec) {
   return spacePointVec[3];
 }
 
+/// @brief Const overload access to the
+/// time component of input parameter
+///
+/// @param spacePointVec The SpacePointVector
+/// @return Reference to the time component
+inline const ParValue_t& time(const SpacePointVector& spacePointVec) {
+  return spacePointVec[3];
+}
+
 /// @brief Access to the time component of input parameter
 ///
 /// @param boundVec The BoundVector
@@ -204,11 +213,29 @@ inline ParValue_t& time(BoundVector& boundVec) {
   return boundVec[eT];
 }
 
+/// @brief Const overload access to the
+/// time component of input parameter
+///
+/// @param boundVec The BoundVector
+/// @return Reference to the time component
+inline const ParValue_t& time(const BoundVector& boundVec) {
+  return boundVec[eT];
+}
+
 /// @brief Access to the time component of input parameter
 ///
 /// @param freeVec The FreeVector
 /// @return Reference to the time component
 inline ParValue_t& time(FreeVector& freeVec) {
+  return freeVec[7];
+}
+
+/// @brief Const overload access to the
+/// time component of input parameter
+///
+/// @param freeVec The FreeVector
+/// @return Reference to the time component
+inline const ParValue_t& time(const FreeVector& freeVec) {
   return freeVec[7];
 }
 
