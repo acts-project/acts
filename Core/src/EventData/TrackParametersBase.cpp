@@ -18,19 +18,19 @@ std::ostream& TrackParametersBase::print(std::ostream& sl) const {
   auto old_precision = sl.precision(7);
   auto old_flags = sl.setf(std::ios::fixed);
 
-  sl << " * TrackParameters:" << std::endl;
-  sl << parameters() << std::endl;
+  sl << " * TrackParameters: ";
+  sl << parameters().transpose() << std::endl;
   sl << " * charge: " << charge() << std::endl;
   if (covariance() != nullptr) {
-    sl << " * covariance matrix = " << *covariance() << std::endl;
+    sl << " * covariance matrix:\n" << *covariance() << std::endl;
   } else {
-    sl << " * covariance matrix = " << covariance() << std::endl;
+    sl << " * covariance matrix:\n" << covariance() << std::endl;
   }
   sl << " * corresponding global parameters:" << std::endl;
-  sl << " *    position  (x,  y,  z ) = (" << position().x() << ", "
-     << position().y() << ", " << position().z() << ")" << std::endl;
-  sl << " *    momentum  (px, py, pz) = (" << momentum().x() << ", "
-     << momentum().y() << ", " << momentum().z() << ")" << std::endl;
+  sl << " *    position  (x y z) = (" << position().transpose() << ")"
+     << std::endl;
+  sl << " *    momentum  (px py pz) = (" << momentum().transpose() << ")"
+     << std::endl;
 
   // reset stream format
   sl.precision(old_precision);

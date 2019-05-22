@@ -13,16 +13,17 @@
 #include <random>
 
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 namespace Test {
 
-using Identifier = unsigned long int;
+using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
-using MeasurementType = Measurement<Identifier, params...>;
+using MeasurementType = Measurement<SourceLink, params...>;
 
 /// @brief Unit test for creation of Measurement object
 ///
@@ -31,8 +32,8 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
 
   ActsSymMatrixD<2> cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, 0, std::move(cov),
-                                                    -0.1, 0.45);
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
+                                                    std::move(cov), -0.1, 0.45);
 
   std::default_random_engine generator(42);
 
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   ActsSymMatrixD<2> covc;
   covc << 0.04, 0, 0, 0.1;
   MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mc(
-      cylinder, 0, std::move(covc), -0.1, 0.45);
+      cylinder, {}, std::move(covc), -0.1, 0.45);
 
   // Check the copy constructor
   auto mcCopy(mc);
@@ -69,14 +70,14 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
                                                  Vector3D(1., 0., 0.));
   ActsSymMatrixD<1> covp;
   covp << 0.01;
-  MeasurementType<ParDef::eLOC_0> mp(plane, 1, std::move(covp), 0.1);
+  MeasurementType<ParDef::eLOC_0> mp(plane, {}, std::move(covp), 0.1);
 
   ActsSymMatrixD<2> covpp;
   covpp << 0.01, 0., 0., 0.02;
   MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mpp(
-      plane, 2, std::move(covpp), 0.1, 0.2);
+      plane, {}, std::move(covpp), 0.1, 0.2);
 
-  std::vector<FittableMeasurement<Identifier>> measurements{
+  std::vector<FittableMeasurement<SourceLink>> measurements{
       std::move(mc), std::move(mp), std::move(mpp)};
 }
 }  // namespace Test

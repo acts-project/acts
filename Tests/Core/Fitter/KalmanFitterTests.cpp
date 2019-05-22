@@ -19,6 +19,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -46,11 +47,11 @@ namespace Acts {
 namespace Test {
 
 // A few initialisations and definitionas
-using Identifier = GeometryID;
+using SourceLink = MinimalSourceLink;
 using Jacobian = BoundParameters::CovMatrix_t;
 using Covariance = BoundSymMatrix;
 
-using TrackState = TrackState<Identifier, BoundParameters>;
+using TrackState = TrackState<SourceLink, BoundParameters>;
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<geo_id_value, ElementResolution>;
@@ -71,6 +72,9 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
+template <ParID_t... params>
+using MeasurementType = Measurement<SourceLink, params...>;
+
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
 ///
@@ -81,7 +85,7 @@ struct MeasurementCreator {
   /// The detector resolution
   DetectorResolution detectorResolution;
 
-  using result_type = std::vector<TrackState>;
+  using result_type = std::vector<FittableMeasurement<SourceLink>>;
 
   /// @brief Operater that is callable by an ActionList. The function collects
   /// the surfaces
@@ -116,14 +120,14 @@ struct MeasurementCreator {
             double dp = sp * gauss(generator);
             if (lResolution->second[0].first == eLOC_0) {
               // push back & move a LOC_0 measurement
-              Measurement<Identifier, eLOC_0> m0(surface->getSharedPtr(), geoID,
-                                                 cov1D, lPos[eLOC_0] + dp);
-              result.push_back(TrackState(std::move(m0)));
+              MeasurementType<eLOC_0> m0(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eLOC_0] + dp);
+              result.push_back(std::move(m0));
             } else {
               // push back & move a LOC_1 measurement
-              Measurement<Identifier, eLOC_1> m1(surface->getSharedPtr(), geoID,
-                                                 cov1D, lPos[eLOC_1] + dp);
-              result.push_back(TrackState(std::move(m1)));
+              MeasurementType<eLOC_1> m1(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eLOC_1] + dp);
+              result.push_back(std::move(m1));
             }
           } else if (lResolution->second.size() == 2) {
             // Create the measurment and move it
@@ -133,10 +137,10 @@ struct MeasurementCreator {
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            Measurement<Identifier, eLOC_0, eLOC_1> m01(
-                surface->getSharedPtr(), geoID, cov2D, lPos[eLOC_0] + dx,
-                lPos[eLOC_1] + dy);
-            result.push_back(TrackState(std::move(m01)));
+            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {},
+                                                cov2D, lPos[eLOC_0] + dx,
+                                                lPos[eLOC_1] + dy);
+            result.push_back(std::move(m01));
           }
         }
       }
@@ -146,10 +150,11 @@ struct MeasurementCreator {
 
 double dX, dY;
 Vector3D pos;
-Surface const* sur;
+const Surface* sur;
 
 ///
-/// @brief Simplified material interaction effect by pure gaussian deflection
+/// @brief Simplified material interaction effect by pure gaussian
+/// deflection
 ///
 struct MaterialScattering {
   /// @brief Constructor
@@ -263,8 +268,17 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
     std::cout << debugString;
   }
 
-  auto measurements = mResult.template get<MeasurementCreator::result_type>();
+  // Extract measurements from result of propagation.
+  // This vector owns the measurements
+  std::vector<FittableMeasurement<SourceLink>> measurements =
+      std::move(mResult.template get<MeasurementCreator::result_type>());
   BOOST_CHECK_EQUAL(measurements.size(), 6);
+
+  // Make a vector of source links as input to the KF
+  std::vector<SourceLink> sourcelinks;
+  std::transform(measurements.begin(), measurements.end(),
+                 std::back_inserter(sourcelinks),
+                 [](const auto& m) { return SourceLink{&m}; });
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
   // Build navigator for the measurement creatoin
@@ -302,16 +316,17 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   using Smoother = GainMatrixSmoother<BoundParameters>;
   using KalmanFitter = KalmanFitter<RecoPropagator, Updator, Smoother>;
 
-  KalmanFitter kFitter(rPropagator);
+  KalmanFitter kFitter(rPropagator,
+                       getDefaultLogger("KalmanFilter", Logging::VERBOSE));
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, rSurface);
 
   // Fit the track
-  auto fittedTrack = kFitter.fit(measurements, rStart, kfOptions);
+  auto fittedTrack = kFitter.fit(sourcelinks, rStart, kfOptions);
   auto fittedParameters = fittedTrack.fittedParameters.get();
 
   // Make sure it is deterministic
-  auto fittedAgainTrack = kFitter.fit(measurements, rStart, kfOptions);
+  auto fittedAgainTrack = kFitter.fit(sourcelinks, rStart, kfOptions);
   auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
@@ -319,10 +334,10 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   CHECK_CLOSE_ABS(fittedParameters.parameters().template tail<1>(),
                   fittedAgainParameters.parameters().template tail<1>(), 1e-5);
 
-  // Change the order of the measurements
-  std::vector<TrackState> shuffledMeasurements = {
-      measurements[3], measurements[2], measurements[1],
-      measurements[4], measurements[5], measurements[0]};
+  // Change the order of the sourcelinks
+  std::vector<SourceLink> shuffledMeasurements = {
+      sourcelinks[3], sourcelinks[2], sourcelinks[1],
+      sourcelinks[4], sourcelinks[5], sourcelinks[0]};
 
   // Make sure it works for shuffled measurements as well
   auto fittedShuffledTrack =
@@ -337,9 +352,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                   1e-5);
 
   // Remove one measurement and find a hole
-  std::vector<TrackState> measurementsWithHole = {
-      measurements[0], measurements[1], measurements[2], measurements[4],
-      measurements[5]};
+  std::vector<SourceLink> measurementsWithHole = {
+      sourcelinks[0], sourcelinks[1], sourcelinks[2], sourcelinks[4],
+      sourcelinks[5]};
 
   // Make sure it works for shuffled measurements as well
   auto fittedWithHoleTrack =

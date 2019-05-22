@@ -13,17 +13,21 @@
 
 #include <type_traits>
 
+// clang-format off
 #include <boost/hana/append.hpp>
 #include <boost/hana/integral_constant.hpp>
 #include <boost/hana/range.hpp>
 #include <boost/hana/remove_at.hpp>
 #include <boost/hana/transform.hpp>
 #include <boost/hana/tuple.hpp>
+#include <boost/hana/filter.hpp>
+// This include is technically not needed for this file, but removing it
+// introduces some form of order dependency on subsequent include.
+#include <boost/hana/set.hpp>
+#include <boost/hana/type.hpp>
+// clang-format on
 
 namespace Acts {
-// forward declaration
-template <typename identifier_t, ParID_t... params>
-class Measurement;
 
 /// @cond detail
 namespace detail {

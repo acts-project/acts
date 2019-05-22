@@ -23,13 +23,14 @@
 namespace Acts {
 namespace Test {
 
-using Identifier = unsigned long int;
 using Jacobian = BoundParameters::CovMatrix_t;
 using Covariance = BoundSymMatrix;
 
+using SourceLink = MinimalSourceLink;
+
 template <ParID_t... params>
-using MeasurementType = Measurement<Identifier, params...>;
-using TrackState = TrackState<Identifier, BoundParameters>;
+using MeasurementType = Measurement<SourceLink, params...>;
+using TrackState = TrackState<SourceLink, BoundParameters>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -40,8 +41,11 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
 
   ActsSymMatrixD<2> cov;
   cov << 0.04, 0, 0, 0.1;
-  TrackState mState(MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
-      cylinder, 0, std::move(cov), -0.1, 0.45));
+  FittableMeasurement<SourceLink> meas(
+      MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+          cylinder, {}, std::move(cov), -0.1, 0.45));
+
+  TrackState mState{SourceLink{&meas}};
 
   // Make dummy track parameter
   Covariance covTrk;
@@ -76,7 +80,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
   BOOST_CHECK_EQUAL(&(*mState.parameter.filtered).referenceSurface(),
                     cylinder.get());
 
-  // assert contents of mState were updated
+  // @TODO: Check numerical outcome of the calculation
 }
 
 }  // namespace Test

@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <variant>
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLinkConcept.hpp"
+
+#include <variant>
 
 namespace Acts {
 
@@ -31,4 +33,28 @@ size_t getSize(const T& fittable_measurement) {
                     fittable_measurement);
 }
 }  // namespace MeasurementHelpers
+
+struct MinimalSourceLink {
+  const FittableMeasurement<MinimalSourceLink>* meas{nullptr};
+
+  bool operator==(const MinimalSourceLink& rhs) const {
+    return meas == rhs.meas;
+  }
+
+  const Surface& referenceSurface() const {
+    return *MeasurementHelpers::getSurface(*meas);
+  }
+
+  const FittableMeasurement<MinimalSourceLink>& operator*() const {
+    return *meas;
+  }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const MinimalSourceLink& sl) {
+  os << "SourceLink(" << sl.meas << ")";
+  return os;
+}
+
+static_assert(SourceLinkConcept<MinimalSourceLink>,
+              "MinimalSourceLink does not fulfill SourceLinkConcept");
 }  // namespace Acts

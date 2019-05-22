@@ -18,6 +18,7 @@
 #include <variant>
 
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -75,11 +76,11 @@ BOOST_AUTO_TEST_CASE(index_combination_generation_test) {
 }
 
 using par_t = ParID_t;
-using Identifier = long;
+using SourceLink = MinimalSourceLink;
 
 template <par_t... pars>
 struct meas_factory {
-  using type = Measurement<Identifier, pars...>;
+  using type = Measurement<SourceLink, pars...>;
 };
 
 constexpr par_t operator"" _p(unsigned long long i) {
@@ -89,72 +90,72 @@ constexpr par_t operator"" _p(unsigned long long i) {
 BOOST_AUTO_TEST_CASE(variant_measurement_generation_test) {
   {
     using actual = detail::type_generator_t<meas_factory, 1>;
-    using expected = std::variant<Measurement<Identifier, 0_p>>;
+    using expected = std::variant<Measurement<SourceLink, 0_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 2>;
     using expected =
-        std::variant<Measurement<Identifier, 0_p>, Measurement<Identifier, 1_p>,
-                     Measurement<Identifier, 0_p, 1_p>>;
+        std::variant<Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
+                     Measurement<SourceLink, 0_p, 1_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 3>;
     using expected = std::variant<
-        Measurement<Identifier, 0_p>, Measurement<Identifier, 1_p>,
-        Measurement<Identifier, 0_p, 1_p>, Measurement<Identifier, 2_p>,
-        Measurement<Identifier, 0_p, 2_p>, Measurement<Identifier, 1_p, 2_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p>>;
+        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
+        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
+        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
+        Measurement<SourceLink, 0_p, 1_p, 2_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 4>;
     using expected = std::variant<
-        Measurement<Identifier, 0_p>, Measurement<Identifier, 1_p>,
-        Measurement<Identifier, 0_p, 1_p>, Measurement<Identifier, 2_p>,
-        Measurement<Identifier, 0_p, 2_p>, Measurement<Identifier, 1_p, 2_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p>, Measurement<Identifier, 3_p>,
-        Measurement<Identifier, 0_p, 3_p>, Measurement<Identifier, 1_p, 3_p>,
-        Measurement<Identifier, 0_p, 1_p, 3_p>,
-        Measurement<Identifier, 2_p, 3_p>,
-        Measurement<Identifier, 0_p, 2_p, 3_p>,
-        Measurement<Identifier, 1_p, 2_p, 3_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p, 3_p>>;
+        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
+        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
+        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
+        Measurement<SourceLink, 0_p, 1_p, 2_p>, Measurement<SourceLink, 3_p>,
+        Measurement<SourceLink, 0_p, 3_p>, Measurement<SourceLink, 1_p, 3_p>,
+        Measurement<SourceLink, 0_p, 1_p, 3_p>,
+        Measurement<SourceLink, 2_p, 3_p>,
+        Measurement<SourceLink, 0_p, 2_p, 3_p>,
+        Measurement<SourceLink, 1_p, 2_p, 3_p>,
+        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 5>;
     using expected = std::variant<
-        Measurement<Identifier, 0_p>, Measurement<Identifier, 1_p>,
-        Measurement<Identifier, 0_p, 1_p>, Measurement<Identifier, 2_p>,
-        Measurement<Identifier, 0_p, 2_p>, Measurement<Identifier, 1_p, 2_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p>, Measurement<Identifier, 3_p>,
-        Measurement<Identifier, 0_p, 3_p>, Measurement<Identifier, 1_p, 3_p>,
-        Measurement<Identifier, 0_p, 1_p, 3_p>,
-        Measurement<Identifier, 2_p, 3_p>,
-        Measurement<Identifier, 0_p, 2_p, 3_p>,
-        Measurement<Identifier, 1_p, 2_p, 3_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p, 3_p>,
-        Measurement<Identifier, 4_p>, Measurement<Identifier, 0_p, 4_p>,
-        Measurement<Identifier, 1_p, 4_p>,
-        Measurement<Identifier, 0_p, 1_p, 4_p>,
-        Measurement<Identifier, 2_p, 4_p>,
-        Measurement<Identifier, 0_p, 2_p, 4_p>,
-        Measurement<Identifier, 1_p, 2_p, 4_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p, 4_p>,
-        Measurement<Identifier, 3_p, 4_p>,
-        Measurement<Identifier, 0_p, 3_p, 4_p>,
-        Measurement<Identifier, 1_p, 3_p, 4_p>,
-        Measurement<Identifier, 0_p, 1_p, 3_p, 4_p>,
-        Measurement<Identifier, 2_p, 3_p, 4_p>,
-        Measurement<Identifier, 0_p, 2_p, 3_p, 4_p>,
-        Measurement<Identifier, 1_p, 2_p, 3_p, 4_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p, 3_p, 4_p>>;
+        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
+        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
+        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
+        Measurement<SourceLink, 0_p, 1_p, 2_p>, Measurement<SourceLink, 3_p>,
+        Measurement<SourceLink, 0_p, 3_p>, Measurement<SourceLink, 1_p, 3_p>,
+        Measurement<SourceLink, 0_p, 1_p, 3_p>,
+        Measurement<SourceLink, 2_p, 3_p>,
+        Measurement<SourceLink, 0_p, 2_p, 3_p>,
+        Measurement<SourceLink, 1_p, 2_p, 3_p>,
+        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p>,
+        Measurement<SourceLink, 4_p>, Measurement<SourceLink, 0_p, 4_p>,
+        Measurement<SourceLink, 1_p, 4_p>,
+        Measurement<SourceLink, 0_p, 1_p, 4_p>,
+        Measurement<SourceLink, 2_p, 4_p>,
+        Measurement<SourceLink, 0_p, 2_p, 4_p>,
+        Measurement<SourceLink, 1_p, 2_p, 4_p>,
+        Measurement<SourceLink, 0_p, 1_p, 2_p, 4_p>,
+        Measurement<SourceLink, 3_p, 4_p>,
+        Measurement<SourceLink, 0_p, 3_p, 4_p>,
+        Measurement<SourceLink, 1_p, 3_p, 4_p>,
+        Measurement<SourceLink, 0_p, 1_p, 3_p, 4_p>,
+        Measurement<SourceLink, 2_p, 3_p, 4_p>,
+        Measurement<SourceLink, 0_p, 2_p, 3_p, 4_p>,
+        Measurement<SourceLink, 1_p, 2_p, 3_p, 4_p>,
+        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p, 4_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }

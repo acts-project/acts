@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLinkConcept.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+
 namespace Acts {
 
 /// @brief void Measurement calibrator and converter
@@ -38,6 +41,36 @@ struct VoidKalmanComponents {
   template <typename measurements_t>
   measurements_t operator()(measurements_t ms) const {
     return std::move(ms);
+  }
+};
+
+/// @brief Void measurement calibrator for filtering
+struct VoidMeasurementCalibrator {
+  /// Main calibration call. In this implementation, it will dereference the
+  /// given source link and expect it to result in something convertible to
+  /// @c FittableMeasurement<source_link_t>.
+  /// @tparam source_link_t Source link type which identifier the uncalibrated
+  /// measurement
+  /// @tparam parameters_t Parameters type (unused)
+  /// @param sl Source link to turn into a measurement
+  /// @param pars The parameters to calibrate with (unused)
+  /// @note If the deref operator on @c source_link_t returns a reference, this
+  /// will copy it before returning. If it is already returned by-value (for
+  /// instance for a newly created measurement instance), return value
+  /// optimizitaion should auto-move the result.
+  template <typename source_link_t, typename parameters_t>
+  FittableMeasurement<source_link_t> operator()(
+      const source_link_t& sl, const parameters_t& /*pars*/) const {
+    static_assert(SourceLinkConcept<source_link_t>,
+                  "Source link does fulfill SourceLinkConcept.");
+    static_assert(
+        concept ::converts_to<FittableMeasurement<source_link_t>,
+                              concept ::detail_slc::dereferenceable_t,
+                              source_link_t>,
+        "For DefaultMeasurementCalibrator, source link needs to implement "
+        "dereference operator");
+
+    return *sl;
   }
 };
 

@@ -13,6 +13,7 @@
 
 #include <random>
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/EventData/TrackStateSorters.hpp"
@@ -26,11 +27,12 @@ namespace Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using Identifier = unsigned long int;
+using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
-using MeasurementType = Measurement<Identifier, params...>;
-using BoundTrackState = TrackState<Identifier, BoundParameters>;
+using MeasurementType = Measurement<SourceLink, params...>;
+using FittableMeasurement = FittableMeasurement<SourceLink>;
+using BoundTrackState = TrackState<SourceLink, BoundParameters>;
 ///
 /// @brief Unit test for creation of Measurement object
 ///
@@ -45,17 +47,26 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   ActsSymMatrixD<1> cov1D;
   cov1D << 0.04;
 
-  MeasurementType<ParDef::eLOC_0> m1D(plane, 0, std::move(cov1D), 0.02);
+  FittableMeasurement m1D(
+      MeasurementType<ParDef::eLOC_0>(plane, {}, std::move(cov1D), 0.02));
 
   // Construct the 2D measurement
   ActsSymMatrixD<2> cov2D;
   cov2D << 0.04, 0., 0.09, 0.;
 
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2D(
-      plane, 0, std::move(cov2D), 0.02, 0.03);
+  FittableMeasurement m2D(MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+      plane, {}, std::move(cov2D), 0.02, 0.03));
 
   // The 1D track state from the measurement
-  BoundTrackState mts1D(std::move(m1D));
+  BoundTrackState mts1D(SourceLink{&m1D});
+
+  auto calibrate = [](auto& trackstate) {
+    // double ref: optional, MinimalSourceLink
+    trackstate.measurement.calibrated = **trackstate.measurement.uncalibrated;
+  };
+
+  // "calibrate" the measurement
+  calibrate(mts1D);
 
   BOOST_CHECK_EQUAL(*mts1D.size(), 1);
 
@@ -75,7 +86,8 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   std::swap(mts1DMoveAssigned, mts1D);
 
   // The 2D track state from the measurement
-  BoundTrackState mts2D(std::move(m2D));
+  BoundTrackState mts2D(SourceLink{&m2D});
+  calibrate(mts2D);
 
   BOOST_CHECK_EQUAL(*mts2D.size(), 2);
 
