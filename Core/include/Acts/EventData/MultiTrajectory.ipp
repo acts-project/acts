@@ -99,7 +99,7 @@ template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::jacobian() const
     -> Covariance {
   assert(data().ijacobian != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ijacobian).data());
+  return Covariance(m_traj->m_jac.col(data().ijacobian).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
@@ -185,8 +185,8 @@ inline size_t MultiTrajectory<SL>::addTrackState(
 
   // store jacobian
   if (ts.parameter.jacobian) {
-    CovMap(m_cov.addCol().data()) = *ts.parameter.jacobian;
-    p.ijacobian = m_cov.size() - 1;
+    CovMap(m_jac.addCol().data()) = *ts.parameter.jacobian;
+    p.ijacobian = m_jac.size() - 1;
   }
 
   // handle measurements
