@@ -247,25 +247,18 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       transMat(0, 1) = bTrack.DiMat(0, 1);
       transMat(1, 0) = bTrack.DiMat(1, 0);
       transMat(1, 1) = bTrack.DiMat(1, 1);
-      // TODO:
-      // transMat.block<BoundParsDim, BoundParsDim>(1,2) =
-      // BoundSymMatrix::Identity();
       transMat(1, 2) = 1.;
       transMat(2, 3) = 1.;
       transMat(3, 4) = 1.;
       transMat(4, 5) = 1.;
       transMat(5, 6) = 1.;
-      // transMat(6, 7) = 1.;
 
       // some intermediate calculations to get 5x5 matrix
       // cov(V,V), 4x4 matrix
-      SpacePointSymMatrix VVmat;
-      VVmat = covDeltaVmat;
+      SpacePointSymMatrix VVmat = covDeltaVmat;
 
       // cov(V,P)
-      ActsMatrixD<4, 3> VPmat;
-      // TODO: only dimension correct here, change to correct matrices!
-      VPmat = -covDeltaVmat * bTrack.BiMat * bTrack.CiInv;
+      ActsMatrixD<4, 3> VPmat = bTrack.BiMat;
 
       // cov(P,P), 3x3 matrix
       ActsSymMatrixD<3> PPmat;
