@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   // Make dummy track parameter
   Covariance covTrk;
+  covTrk.setIdentity();
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
   // covTrk << 0.08, 0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
   // 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0;
@@ -148,6 +149,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   expPars << 0.3510000, 0.4730000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
   CHECK_CLOSE_ABS(ts1.parameter.smoothed->parameters(), expPars, tol);
   Covariance expCov;
+  expCov.setIdentity();
   expCov.diagonal() << 0.0800000, 0.3000000, 1.0000000, 1.0000000, 1.0000000,
       1.0000000;
   CHECK_CLOSE_ABS(*ts1.parameter.smoothed->covariance(), expCov, tol);
