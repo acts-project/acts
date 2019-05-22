@@ -49,6 +49,9 @@ class AtlasStepper {
 
   /// @brief Nested State struct for the local caching
   struct State {
+	/// Default constructor - deleted
+	State() = delete;
+	
     /// Constructor
     ///
     /// @tparams Type of TrackParameters

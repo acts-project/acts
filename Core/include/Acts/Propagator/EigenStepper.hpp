@@ -68,6 +68,9 @@ class EigenStepper {
   /// It contains the stepping information and is provided thread local
   /// by the propagator
   struct State {
+	/// Default constructor - deleted
+	State() = delete;  
+	
     /// Constructor from the initial track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
