@@ -119,7 +119,7 @@ struct IndexData {
 ///
 /// @tparam source_link_t Type to link back to an original measurement
 /// @tparam N         Number of track parameters
-/// @tparam M         Maximum number of measurements
+/// @tparam M         Maximum number of measurement dimensions
 /// @tparam ReadOnly  true for read-only access to underlying storage
 template <typename source_link_t, size_t N, size_t M, bool ReadOnly = true>
 class TrackStateProxy {
@@ -149,11 +149,16 @@ class TrackStateProxy {
   /// @return The index of the previous track state.
   size_t previous() const { return data().iprevious; }
 
+  /// Return the index tuple that makes up this track state
+  /// @return Mutable ref to index tuple from the parent @c MultiTrajectory
+  /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexData& data() {
     return m_traj->m_index[m_istate];
   }
 
+  /// Return the index tuple that makes up this track state
+  /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
   const IndexData& data() const { return m_traj->m_index[m_istate]; }
 
   /// Reference surface.
@@ -520,13 +525,14 @@ class MultiTrajectory {
   /// Create an empty trajectory.
   MultiTrajectory() = default;
 
-  /// Add a point without measurement and return its index.
+  /// Add a track state using information from a separate track state object.
   ///
   /// @tparam parameters_t The parameter type used for the trackstate
   /// @param trackParameters  at the local point
   /// @param iprevious        index of the previous state, SIZE_MAX if first
   /// @note The parameter type from @p parameters_t is not currently stored in
   /// MultiTrajectory.
+  /// @return Index of the newly added track state
   template <typename parameters_t>
   size_t addTrackState(const TrackState<SourceLink, parameters_t>& ts,
                        size_t iprevious = SIZE_MAX);
@@ -542,11 +548,15 @@ class MultiTrajectory {
       size_t iprevious = SIZE_MAX);
 
   /// Access a read-only point on the trajectory by index.
+  /// @param istate The index to access
+  /// @return Read only proxy to the stored track state
   ConstTrackStateProxy getTrackState(size_t istate) const {
     return {*this, istate};
   }
 
   /// Access a writable point on the trajectory by index.
+  /// @param istate The index to access
+  /// @return Read-write proxy to the stored track state
   TrackStateProxy getTrackState(size_t istate) { return {*this, istate}; }
 
   /// Visit all previous states starting at a given endpoint.
@@ -579,7 +589,7 @@ class MultiTrajectory {
 
   // owning vector of shared pointers to surfaces
   // @TODO: This might be problematic when appending a large number of surfaces
-  // / trackstates, because vector has to reallocated and thus copy. This might
+  // trackstates, because vector has to reallocated and thus copy. This might
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
