@@ -46,37 +46,33 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
       MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
           cylinder, {}, std::move(cov), -0.1, 0.45));
 
-  TrackState mState{SourceLink{&meas}};
-
   // Make dummy track parameter
   Covariance covTrk;
   covTrk.setZero();
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
-  BoundParameters pars(tgContext, covTrk, parValues, cylinder);
 
-  // "update" track state with "prediction"
-  mState.parameter.predicted = std::move(pars);
-  mState.parameter.jacobian = Jacobian::Identity();
-  mState.parameter.pathLength = 0.;
+  MultiTrajectory<SourceLink> traj;
+  traj.addTrackState(TrackStatePropMask::All);
+  auto ts = traj.getTrackState(0);
+
+  ts.uncalibrated() = SourceLink{&meas};
+  // "calibrate"
+  std::visit([&](const auto& m) { ts.setCalibrated(m); }, meas);
+
+  ts.predicted() = parValues;
+  ts.predictedCovariance() = covTrk;
+  ts.pathLength() = 0.;
 
   // Gain matrix update and filtered state
   GainMatrixUpdater<BoundParameters> gmu;
 
-  BOOST_CHECK(!mState.parameter.filtered);
-  BOOST_CHECK(!mState.measurement.calibrated);
-  BOOST_CHECK(gmu(tgContext, mState).ok());
-  // filtered is set now
-  BOOST_CHECK(!!mState.parameter.filtered);
-  // measurement was calibrated
-  BOOST_CHECK(!!mState.measurement.calibrated);
+  BOOST_CHECK(ts.hasFiltered());
+  BOOST_CHECK(ts.hasCalibrated());
+  BOOST_CHECK(gmu(tgContext, ts).ok());
   // ref surface is same on measurements and parameters
-  BOOST_CHECK_EQUAL(
-      MeasurementHelpers::getSurface(*mState.measurement.calibrated),
-      cylinder.get());
-  BOOST_CHECK_EQUAL(&(*mState.parameter.filtered).referenceSurface(),
-                    cylinder.get());
+  BOOST_CHECK_EQUAL(&ts.referenceSurface(), cylinder.get());
 
   // Check for regression. This does NOT test if the math is correct, just that
   // the result is the same as when the test was written.
@@ -95,7 +91,9 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   Vector3D expMomentum;
   expMomentum << 0.0000000, 80.9016994, 58.7785252;
 
-  auto& filtered = *mState.parameter.filtered;
+  BoundParameters filtered(
+      tgContext, std::make_unique<Covariance>(ts.filteredCovariance()),
+      ts.filtered(), cylinder);
 
   double expChi2 = 1.33958;
 
@@ -105,7 +103,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   CHECK_CLOSE_ABS(expPar, filtered.parameters(), tol);
   CHECK_CLOSE_ABS(expPosition, filtered.position(), tol);
   CHECK_CLOSE_ABS(expMomentum, filtered.momentum(), tol);
-  CHECK_CLOSE_ABS(expChi2, mState.parameter.chi2, 1e-4);
+  CHECK_CLOSE_ABS(expChi2, ts.chi2(), 1e-4);
 }
 
 }  // namespace Test

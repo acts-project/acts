@@ -11,6 +11,7 @@
 #include <memory>
 #include <variant>
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
@@ -24,12 +25,8 @@ namespace Acts {
 ///
 /// @tparam parameters_t Type of the parameters to be updated
 /// @tparam jacobian_t Type of the Transport jacobian
-/// @tparam calibrator_t A measurement calibrator (can be void)
 ///
-/// This is implemented as a boost vistor pattern for use of the
-/// boost variant container
-template <typename parameters_t,
-          typename calibrator_t = VoidMeasurementCalibrator>
+template <typename parameters_t>
 class GainMatrixUpdater {
   using jacobian_t = typename parameters_t::CovMatrix_t;
 
@@ -56,118 +53,77 @@ class GainMatrixUpdater {
   /// @note Non-'successful' updates could be holes or outliers,
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  Result<void> operator()(const GeometryContext& gctx,
-                          track_state_t& trackState) const {
+  Result<void> operator()(const GeometryContext& /*gctx*/,
+                          track_state_t trackState) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
-    using CovMatrix_t = typename parameters_t::CovMatrix_t;
-    using ParVector_t = typename parameters_t::ParVector_t;
+    // let's make sure the types are consistent
+    using SourceLink = typename track_state_t::SourceLink;
+    using TrackStateProxy =
+        typename MultiTrajectory<SourceLink>::TrackStateProxy;
+    static_assert(std::is_same_v<track_state_t, TrackStateProxy>,
+                  "Given track state type is not a track state proxy");
 
     // we should definitely have an uncalibrated measurement here
-    assert(trackState.measurement.uncalibrated);
-    // there should be no calibrated measurement
-    assert(!trackState.measurement.calibrated);
+    assert(trackState.hasUncalibrated());
+    // there should be a calibrated measurement
+    assert(trackState.hasCalibrated());
     // we should have predicted state set
-    assert(trackState.parameter.predicted);
-    // filtring should not have happened yet
-    assert(!trackState.parameter.filtered);
+    assert(trackState.hasPredicted());
+    // filtering should not have happened yet, but is allocated, therefore set
+    assert(trackState.hasFiltered());
 
-    // read-only prediction handle
-    const parameters_t& predicted = *trackState.parameter.predicted;
+    // read-only handles. Types are eigen maps to backing storage
+    const auto predicted = trackState.predicted();
+    // const auto predicted = *trackState.parameter.predicted;
+    const auto predicted_covariance = trackState.predictedCovariance();
+    // const CovMatrix_t& predicted_covariance = *predicted.covariance();
 
-    const CovMatrix_t& predicted_covariance = *predicted.covariance();
+    // ParVector_t filtered_parameters;
+    // CovMatrix_t filtered_covariance;
+    // read-write handles. Types are eigen maps into backing storage.
+    // This writes directly into the trajectory storage
+    auto filtered = trackState.filtered();
+    auto filtered_covariance = trackState.filteredCovariance();
 
-    ACTS_VERBOSE(
-        "Predicted parameters: " << predicted.parameters().transpose());
-    ACTS_VERBOSE("Predicted covariance:\n" << predicted_covariance);
+    // For, we use the dynamically sized views we obtain from the track state
+    // proxy. THIS IS SLOW!
+    // @TODO: Use switch to dispatch to fixed size call path or use fixed size
+    // math without dispatch
 
-    ParVector_t filtered_parameters;
-    CovMatrix_t filtered_covariance;
+    const auto calibrated = trackState.effectiveCalibrated();
+    const auto calibrated_covariance =
+        trackState.effectiveCalibratedCovariance();
 
-    // need to calibrate the uncalibrated measurement
-    // this will turn them into a measurement we can understand
-    trackState.measurement.calibrated =
-        m_mCalibrator(*trackState.measurement.uncalibrated, predicted);
+    const auto H = trackState.effectiveProjector();
 
-    // we need to remove type-erasure on the measurement type
-    // to access its methods
-    return std::visit(
-        [&](const auto& calibrated) -> Result<void> {
-          // type of measurement
-          using meas_t = typename std::remove_const<
-              typename std::remove_reference<decltype(calibrated)>::type>::type;
-          // measurement covariance matrix
-          using meas_cov_t = typename meas_t::CovMatrix_t;
-          // measurement (local) parameter vector
-          using meas_par_t = typename meas_t::ParVector_t;
-          // type of projection
-          using projection_t = typename meas_t::Projection_t;
-          // type of gain matrix (transposed projection)
-          using gain_matrix_t = ActsMatrixD<projection_t::ColsAtCompileTime,
-                                            projection_t::RowsAtCompileTime>;
+    // SLOW SLOW SLOW
+    ActsMatrixXd K =
+        predicted_covariance * H.transpose() *
+        (H * predicted_covariance * H.transpose() + calibrated_covariance)
+            .inverse();
 
-          ACTS_VERBOSE("Measurement dimension: " << meas_t::size());
-          ACTS_VERBOSE("Calibrated measurement: "
-                       << calibrated.parameters().transpose());
-          ACTS_VERBOSE("Calibrated measurement covariance:\n"
-                       << calibrated.covariance());
+    filtered = predicted + K * (calibrated - H * predicted);
+    filtered_covariance =
+        (ActsSymMatrixD<
+             MultiTrajectory<SourceLink>::ParametersSize>::Identity() -
+         K * H) *
+        predicted_covariance;
 
-          // Take the projector (measurement mapping function)
-          const projection_t& H = calibrated.projector();
+    // calculate filtered residual
+    // SLOW SLOW SLOW
+    ActsVectorXd residual(trackState.calibratedSize());
+    residual = (calibrated - H * filtered);
 
-          ACTS_VERBOSE("Measurement projector H:\n" << H);
+    // SLOW SLOW SLOW
+    ActsMatrixXd meas_unity(trackState.calibratedSize(),
+                            trackState.calibratedSize());
+    meas_unity.setIdentity();
 
-          // The Kalman gain matrix
-          gain_matrix_t K = predicted_covariance * H.transpose() *
-                            (H * predicted_covariance * H.transpose() +
-                             calibrated.covariance())
-                                .inverse();
+    trackState.chi2() =
+        (residual.transpose() *
+         ((meas_unity - H * K) * calibrated_covariance).inverse() * residual);
 
-          ACTS_VERBOSE("Gain Matrix K:\n" << K);
-
-          if (K.hasNaN()) {
-            return KalmanFitterError::UpdateFailed;
-          }
-
-          // filtered new parameters after update
-          filtered_parameters =
-              predicted.parameters() + K * calibrated.residual(predicted);
-
-          // updated covariance after filtering
-          filtered_covariance =
-              (CovMatrix_t::Identity() - K * H) * predicted_covariance;
-
-          ACTS_VERBOSE(
-              "Filtered parameters: " << filtered_parameters.transpose());
-          ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
-
-          // Create new filtered parameters and covariance
-          parameters_t filtered(gctx, std::move(filtered_covariance),
-                                filtered_parameters,
-                                predicted.referenceSurface().getSharedPtr());
-
-          // calculate the chi2
-          // chi2 = r^T * R^-1 * r
-          // r is the residual of the filtered state
-          // R is the covariance matrix of the filtered residual
-          meas_par_t residual = calibrated.residual(filtered);
-
-          ACTS_VERBOSE("Residual: " << residual.transpose());
-
-          trackState.parameter.chi2 =
-              (residual.transpose() *
-               ((meas_cov_t::Identity() - H * K) * calibrated.covariance())
-                   .inverse() *
-               residual)
-                  .value();
-
-          ACTS_VERBOSE("Chi2: " << trackState.parameter.chi2);
-
-          trackState.parameter.filtered = std::move(filtered);
-
-          // if we get here: always succeed, no outlier logic yet
-          return Result<void>::success();
-        },
-        *trackState.measurement.calibrated);
+    return Result<void>::success();
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
@@ -178,10 +134,6 @@ class GainMatrixUpdater {
     assert(m_logger);
     return *m_logger;
   }
-
- private:
-  /// The measurement calibrator
-  calibrator_t m_mCalibrator;
 };
 
 }  // namespace Acts

@@ -60,7 +60,13 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
       MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
           plane3, {}, std::move(cov), -0.05, 0.25));
 
-  std::vector<TrackState> trackStates;
+  MultiTrajectory<SourceLink> traj;
+
+  size_t ts_idx;
+
+  ts_idx = traj.addTrackState(TrackStatePropMask::All);
+  auto ts = traj.getTrackState(ts_idx);
+  ts.setReferenceSurface(plane1);
 
   // Make dummy track parameter
   Covariance covTrk;
@@ -68,90 +74,84 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
-  BoundParameters pars(tgContext, covTrk, parValues, plane1);
+
+  ts.predicted() = parValues;
+  ts.predictedCovariance() = covTrk;
 
   parValues << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
-  BoundParameters filt(tgContext, covTrk, parValues, plane1);
 
-  TrackState ts{SourceLink{&meas1}};
+  ts.filtered() = parValues;
+  ts.filteredCovariance() = covTrk;
+  ts.pathLength() = 1.;
+  ts.jacobian().setIdentity();
 
-  ts.parameter.predicted = std::move(pars);
-  ts.parameter.filtered = std::move(filt);
-  ts.parameter.jacobian = Jacobian::Identity();
-  ts.parameter.pathLength = 1.;
-
-  trackStates.push_back(ts);
-
-  ts = TrackState{SourceLink{&meas2}};
+  ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
+  ts = traj.getTrackState(ts_idx);
+  ts.setReferenceSurface(plane2);
 
   parValues << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
-  pars = BoundParameters(tgContext, covTrk, parValues, plane2);
+  ts.predicted() = parValues;
+  ts.predictedCovariance() = covTrk;
+
   parValues << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
-  filt = BoundParameters(tgContext, covTrk, parValues, plane2);
+  ts.filtered() = parValues;
+  ts.filteredCovariance() = covTrk;
+  ts.pathLength() = 2.;
+  ts.jacobian().setIdentity();
 
-  ts.parameter.predicted = std::move(pars);
-  ts.parameter.filtered = std::move(filt);
-  ts.parameter.jacobian = Jacobian::Identity();
-  ts.parameter.pathLength = 2.;
-
-  trackStates.push_back(ts);
-
-  ts = TrackState{SourceLink{&meas3}};
+  ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
+  ts = traj.getTrackState(ts_idx);
+  ts.setReferenceSurface(plane3);
 
   parValues << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
-  pars = BoundParameters(tgContext, covTrk, parValues, plane3);
+  ts.predicted() = parValues;
+  ts.predictedCovariance() = covTrk;
+
   parValues << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
-  filt = BoundParameters(tgContext, covTrk, parValues, plane3);
-
-  ts.parameter.predicted = std::move(pars);
-  ts.parameter.filtered = std::move(filt);
-  ts.parameter.jacobian = Jacobian::Identity();
-  ts.parameter.pathLength = 3.;
-
-  trackStates.push_back(ts);
+  ts.filtered() = parValues;
+  ts.filteredCovariance() = covTrk;
+  ts.pathLength() = 3.;
+  ts.jacobian().setIdentity();
 
   // "smooth" these three track states
 
   GainMatrixSmoother<BoundParameters> gms;
-  BOOST_CHECK(gms(tgContext, trackStates).ok());
+  BOOST_CHECK(gms(tgContext, traj, ts_idx).ok());
 
   // Regression tests, only tests very basic correctness of the math, but tests
   // for regressions in the result.
 
-  auto& ts1 = trackStates.at(0);
-  BOOST_CHECK(ts1.parameter.smoothed);
-  BOOST_CHECK_NE(ts1.parameter.filtered->parameters(),
-                 ts1.parameter.smoothed->parameters());
+  auto ts1 = traj.getTrackState(0);
+  BOOST_CHECK(ts1.hasSmoothed());
+  BOOST_CHECK_NE(ts1.filtered(), ts1.smoothed());
 
   double tol = 1e-6;
 
   BoundVector expPars;
   expPars << 0.3510000, 0.4730000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
-  CHECK_CLOSE_ABS(ts1.parameter.smoothed->parameters(), expPars, tol);
+  CHECK_CLOSE_ABS(ts1.smoothed(), expPars, tol);
   Covariance expCov;
   expCov.setIdentity();
   expCov.diagonal() << 0.0800000, 0.3000000, 1.0000000, 1.0000000, 1.0000000,
       1.0000000;
-  CHECK_CLOSE_ABS(*ts1.parameter.smoothed->covariance(), expCov, tol);
+  CHECK_CLOSE_ABS(ts1.smoothedCovariance(), expCov, tol);
 
-  auto& ts2 = trackStates.at(1);
-  BOOST_CHECK(ts2.parameter.smoothed);
-  BOOST_CHECK_NE(ts2.parameter.filtered->parameters(),
-                 ts2.parameter.smoothed->parameters());
+  auto ts2 = traj.getTrackState(1);
+  BOOST_CHECK(ts2.hasSmoothed());
+  BOOST_CHECK_NE(ts2.filtered(), ts2.smoothed());
 
   expPars << 0.2500000, 0.4700000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
-  CHECK_CLOSE_ABS(ts2.parameter.smoothed->parameters(), expPars, tol);
-  CHECK_CLOSE_ABS(*ts2.parameter.smoothed->covariance(), expCov, tol);
+  CHECK_CLOSE_ABS(ts2.smoothed(), expPars, tol);
+  CHECK_CLOSE_ABS(ts2.smoothedCovariance(), expCov, tol);
 
-  auto& ts3 = trackStates.at(2);
-  BOOST_CHECK(ts3.parameter.smoothed);
+  auto ts3 = traj.getTrackState(2);
+  BOOST_CHECK(ts3.hasSmoothed());
   // last one, smoothed == filtered
-  BOOST_CHECK_EQUAL(ts3.parameter.filtered->parameters(),
-                    ts3.parameter.smoothed->parameters());
+  BOOST_CHECK_EQUAL(ts3.filtered(), ts3.smoothed());
 
   expPars << 0.3300000, 0.4300000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
-  CHECK_CLOSE_ABS(ts3.parameter.smoothed->parameters(), expPars, tol);
-  CHECK_CLOSE_ABS(*ts3.parameter.smoothed->covariance(), expCov, tol);
+  CHECK_CLOSE_ABS(ts3.smoothed(), expPars, tol);
+  CHECK_CLOSE_ABS(ts3.smoothedCovariance(), expCov, tol);
 }
 
 }  // namespace Test
