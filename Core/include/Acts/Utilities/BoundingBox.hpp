@@ -16,8 +16,10 @@
 #include <tuple>
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Utilities/Ray.hpp"
 
 namespace Acts {
 
@@ -165,6 +167,37 @@ class AxisAlignedBoundingBox {
    * @return Whether the point is inside or not.
    */
   bool intersect(const vertex_type& point) const;
+
+  /**
+   * @brief Implements the slab method for Ray/AABB intersections.
+   *
+   * See https://tavianator.com/fast-branchless-raybounding-box-intersections/,
+   * https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/,
+   * https://medium.com/@bromanz/another-view-on-the-classic-ray-aabb-intersection-algorithm-for-bvh-traversal-41125138b525
+   * The original algorithms is described in "Graphics Gems (1990)" [1]
+   * (https://doi.org/10.1016/B978-0-08-050753-8.50084-X)
+   *
+   * @note This implementation may treat parallel rays on any of the slabs
+   *       as **outside** due to how @c NaNs are handled by Eigen.
+   *       See http://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+   * @param ray The ray to intersect with
+   * @return Whether the ray intersects this AABB
+   */
+  bool intersect(const Ray<value_type, DIM>& ray) const;
+
+  /**
+   * Check if a frustum intersects with this bounding box.
+   *
+   * This method implements an algorithm similar to the one described in
+   * "Optimized View Frustum Culling Algorithms for Bounding Boxes (2012)" [2]
+   * (https://doi.org/10.1080/10867651.2000.10487517), but drops some of the
+   * more sophisticated optimization.
+   *
+   * @param fr The frustum
+   * @return Whether the frustum intersects this AABB
+   */
+  template <size_t sides>
+  bool intersect(const Frustum<value_type, DIM, sides>& fr) const;
 
   /**
    * Set the skip node (bounding box)

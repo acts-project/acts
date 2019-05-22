@@ -115,6 +115,74 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
+bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
+    const Ray<value_type, DIM>& ray) const {
+  const vertex_type& origin = ray.origin();
+  const vertex_array_type& idir = ray.idir();
+
+  // Calculate the intersect distances with the min and max planes along the ray
+  // direction, from the ray origin. See Ch VII.5 Fig.1 in [1].
+  // This is done in all dimensions at the same time:
+  vertex_array_type t0s = (m_vmin - origin).array() * idir;
+  vertex_array_type t1s = (m_vmax - origin).array() * idir;
+
+  // Calculate the component wise min/max between the t0s and t1s
+  // this is non-compliant with IEEE-754-2008, NaN gets propagated through
+  // http://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+  // this means that rays parallel to boundaries might not be considered
+  // to intersect.
+  vertex_array_type tsmaller = t0s.min(t1s);
+  vertex_array_type tbigger = t0s.max(t1s);
+
+  // extract largest and smallest component of the component wise extrema
+  value_type tmin = tsmaller.maxCoeff();
+  value_type tmax = tbigger.minCoeff();
+
+  // If tmin is smaller than tmax and tmax is positive, then the box is in
+  // positive ray direction, and the ray intersects the box.
+  return tmin < tmax && tmax > 0.0;
+}
+
+template <typename entity_t, typename value_t, size_t DIM>
+template <size_t sides>
+bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
+    const Frustum<value_type, DIM, sides>& fr) const {
+  const auto& normals = fr.normals();
+  // Transform vmin and vmax into the coordinate system, at which the frustum is
+  // located at the coordinate origin.
+  const vertex_array_type fr_vmin = m_vmin - fr.origin();
+  const vertex_array_type fr_vmax = m_vmax - fr.origin();
+
+  // For each plane, find the p-vertex, which is the vertex that is at the
+  // furthest distance from the plane *along* it's normal direction.
+  // See Fig. 2 in [2].
+  vertex_type p_vtx;
+  // for loop, we could eliminate this, probably,
+  // but sides+1 is known at compile time, so the compiler
+  // will most likely unroll the loop
+  for (size_t i = 0; i < sides + 1; i++) {
+    const vertex_type& normal = normals[i];
+
+    // for AABBs, take the component from the min vertex, if the normal
+    // component is negative, else take the component from the max vertex.
+    p_vtx = (normal.array() < 0).template cast<value_type>() * fr_vmin +
+            (normal.array() >= 0).template cast<value_type>() * fr_vmax;
+
+    // Check if the p-vertex is at positive or negative direction along the
+    // If the p vertex is along negative normal direction *once*, the box is
+    // outside the frustum, and we can terminate early.
+    if (p_vtx.dot(normal) < 0) {
+      // p vertex is outside on this plane, box must be outside
+      return false;
+    }
+  }
+
+  // If we get here, no p-vertex was outside, so box intersects or is
+  // contained. We don't care, so report 'intersect'
+  return true;
+}
+
+template <typename entity_t, typename value_t, size_t DIM>
 void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setSkip(
     self_t* skip) {
   // set next on this
