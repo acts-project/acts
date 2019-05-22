@@ -28,7 +28,7 @@ Acts::Vertex<input_track_t>::Vertex(
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const SpacePointVector& position, const ActsSymMatrixD<4>& covariance,
+    const SpacePointVector& position, const SpacePointSymMatrix& covariance,
     std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_position(position),
       m_covariance(covariance),
@@ -56,7 +56,7 @@ Acts::ActsSymMatrixD<3> Acts::Vertex<input_track_t>::covariance() const {
 }
 
 template <typename input_track_t>
-const Acts::ActsSymMatrixD<4>& Acts::Vertex<input_track_t>::fullCovariance()
+const Acts::SpacePointSymMatrix& Acts::Vertex<input_track_t>::fullCovariance()
     const {
   return m_covariance;
 }
@@ -98,7 +98,7 @@ void Acts::Vertex<input_track_t>::setCovariance(
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setCovariance(
-    const ActsSymMatrixD<4>& covariance) {
+    const SpacePointSymMatrix& covariance) {
   m_covariance = covariance;
 }
 

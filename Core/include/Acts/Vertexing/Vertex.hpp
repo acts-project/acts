@@ -43,7 +43,8 @@ class Vertex {
   /// @param position Full vertex position
   /// @param covariance 4x4 covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const SpacePointVector& position, const ActsSymMatrixD<4>& covariance,
+  Vertex(const SpacePointVector& position,
+         const SpacePointSymMatrix& covariance,
          std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
@@ -59,7 +60,7 @@ class Vertex {
   ActsSymMatrixD<3> covariance() const;
 
   /// @return Returns 4x4 covariance
-  const ActsSymMatrixD<4>& fullCovariance() const;
+  const SpacePointSymMatrix& fullCovariance() const;
 
   /// @return Returns vector of tracks associated with the vertex
   const std::vector<TrackAtVertex<input_track_t>>& tracks() const;
@@ -91,7 +92,7 @@ class Vertex {
   /// @brief Sets 4x4 covariance
   ///
   /// @param covariance The 4x4 covariance matrix
-  void setCovariance(const ActsSymMatrixD<4>& covariance);
+  void setCovariance(const SpacePointSymMatrix& covariance);
 
   /// @param tracks Vector of tracks at vertex
   void setTracksAtVertex(
@@ -103,7 +104,7 @@ class Vertex {
 
  private:
   SpacePointVector m_position = SpacePointVector::Zero();
-  ActsSymMatrixD<4> m_covariance = ActsSymMatrixD<4>::Zero();
+  SpacePointSymMatrix m_covariance = SpacePointSymMatrix::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = std::numeric_limits<double>::max();  // chi2 of the fit
   double m_numberDoF = 0;  // number of degrees of freedom

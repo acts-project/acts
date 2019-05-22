@@ -72,6 +72,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
+  myCovMat(3, 3) = 30.;
   myConstraint.setCovariance(std::move(myCovMat));
   myConstraint.setPosition(Vector3D(0, 0, 0));
 
@@ -125,24 +126,20 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 /// with default input track type (= BoundParameters)
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
-  bool debugMode = false;
-  std::cout << "test 1" << std::endl;
+  bool debugMode = true;
   // Set up RNG
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
-  std::cout << "test 1" << std::endl;
   // Set up constant B-Field
   ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
-  std::cout << "test 13" << std::endl;
   // Set up propagator with void navigator
   Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
   // Number of events
   const int nEvents = 10;
-  std::cout << "test 14" << std::endl;
   for (int eventIdx = 0; eventIdx < nEvents; ++eventIdx) {
     // Number of tracks
     unsigned int nTracks = nTracksDist(gen);
@@ -154,7 +151,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     FullBilloirVertexFitter<ConstantBField, BoundParameters,
                             Propagator<EigenStepper<ConstantBField>>>
         billoirFitter(vertexFitterCfg);
-    std::cout << "test 15" << std::endl;
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
     // Some abitrary values
@@ -162,14 +158,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
+    myCovMat(3, 3) = 30.;
     myConstraint.setCovariance(std::move(myCovMat));
     myConstraint.setPosition(Vector3D(0, 0, 0));
-    std::cout << "test 16" << std::endl;
     VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
 
     VertexFitterOptions<BoundParameters> vfOptionsConstr(tgContext, mfContext,
                                                          myConstraint);
-    std::cout << "test 17" << std::endl;
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
     double y = vXYDist(gen);
@@ -178,7 +173,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     Vector3D vertexPosition(x, y, z);
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
-    std::cout << "test 18" << std::endl;
     // Calculate d0 and z0 corresponding to vertex position
     double d0V = sqrt(x * x + y * y);
     double z0V = z;
@@ -199,7 +193,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
       // Fill vector of track objects with simple covariance matrix
       std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-      std::cout << "test 19" << std::endl;
       // Resolutions
       double resD0 = resIPDist(gen);
       double resZ0 = resIPDist(gen);
@@ -213,15 +206,12 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
-    std::cout << "test 101" << std::endl;
     // Do the actual fit with 4 tracks without constraint
     Vertex<BoundParameters> fittedVertex =
         billoirFitter.fit(tracks, vfOptions).value();
-    std::cout << "test 1113" << std::endl;
     if (fittedVertex.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
     }
-    std::cout << "test 111" << std::endl;
     // Do the fit with a constraint
     Vertex<BoundParameters> fittedVertexConstraint =
         billoirFitter.fit(tracks, vfOptionsConstr).value();
@@ -229,7 +219,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition,
                       1 * units::_mm);
     }
-    std::cout << "test 121" << std::endl;
     // Test the IVertexFitter interface
     Vertex<BoundParameters> testVertex =
         myFitWrapper(&billoirFitter, tracks, vfOptions);
@@ -264,7 +253,7 @@ struct InputTrack {
 /// type
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
-  bool debugMode = false;
+  bool debugMode = true;
 
   // Set up RNG
   int mySeed = 31415;
@@ -304,6 +293,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
+    myCovMat(3, 3) = 30.;
     myConstraint.setCovariance(std::move(myCovMat));
     myConstraint.setPosition(Vector3D(0, 0, 0));
 

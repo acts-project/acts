@@ -123,8 +123,12 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   positionJacobian(2, 0) = -Y / S2;
   positionJacobian(2, 1) = X / S2;
 
+  // TODO: include timing in track linearization
+  // Last row
+  positionJacobian(5, 3) = 1;
+
   // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
-  SpacePointToBoundMatrix momentumJacobian;
+  ActsMatrixD<BoundParsDim, 3> momentumJacobian;
   momentumJacobian.setZero();
 
   double R = X * cosPhiV + Y * sinPhiV;
@@ -153,12 +157,9 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   momentumJacobian(3, 1) = 1.;
   momentumJacobian(4, 2) = 1.;
 
-  SpacePointVector temp4dMomentumAtPCA{SpacePointVector::Zero()};
-  temp4dMomentumAtPCA.head<3>() = momentumAtPCA;
-
   // const term F(V_0, p_0) in Talyor expansion
   BoundVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
-                          momentumJacobian * temp4dMomentumAtPCA;
+                          momentumJacobian * momentumAtPCA;
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPointPos,
                          positionJacobian, momentumJacobian, positionAtPCA,
