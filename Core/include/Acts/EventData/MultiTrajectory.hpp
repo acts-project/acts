@@ -469,6 +469,29 @@ constexpr bool VisitorConcept =
 
 }  // namespace detail_lt
 
+/// Collection of bit masks to enable steering which components of a track state
+/// should be initialized, and which should be left invalid.
+/// These mask values can be combined using binary operators, so
+/// (TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian) will instruct
+/// allocating storage for both predicted parameters (including covariance) and
+/// a jacobian.
+namespace TrackStatePropMask {
+/// Type of the bitmasks
+using Type = std::bitset<8>;
+
+constexpr Type Predicted{1 << 0};
+constexpr Type Filtered{1 << 1};
+constexpr Type Smoothed{1 << 2};
+constexpr Type Jacobian{1 << 3};
+
+constexpr Type Uncalibrated{1 << 4};
+constexpr Type Calibrated{1 << 5};
+
+// Initialize to all 1s. This only works as long as number of bits <= 64
+constexpr Type All{static_cast<unsigned long long>(-1)};
+constexpr Type None{0};
+}  // namespace TrackStatePropMask
+
 /// Store a trajectory of track states with multiple components.
 ///
 /// This container supports both simple, sequential trajectories as well
@@ -507,6 +530,16 @@ class MultiTrajectory {
   template <typename parameters_t>
   size_t addTrackState(const TrackState<SourceLink, parameters_t>& ts,
                        size_t iprevious = SIZE_MAX);
+
+  /// Add a track state without providing explicit information. Which components
+  /// of the track state are initialized/allocated can be controlled via @p mask
+  /// @param mask The bitmask that instructs which components to allocate and
+  /// which to leave invalid
+  /// @param iprevious index of the previous state, SIZE_MAX if first
+  /// @return Index of the newly added track state
+  size_t addTrackState(
+      const TrackStatePropMask::Type& mask = TrackStatePropMask::All,
+      size_t iprevious = SIZE_MAX);
 
   /// Access a read-only point on the trajectory by index.
   ConstTrackStateProxy getTrackState(size_t istate) const {

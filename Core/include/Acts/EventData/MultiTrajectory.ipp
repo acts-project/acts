@@ -207,6 +207,66 @@ inline size_t MultiTrajectory<SL>::addTrackState(
 }
 
 template <typename SL>
+inline size_t MultiTrajectory<SL>::addTrackState(
+    const TrackStatePropMask::Type& mask, size_t iprevious) {
+  namespace PropMask = TrackStatePropMask;
+
+  m_index.emplace_back();
+  detail_lt::IndexData& p = m_index.back();
+  size_t index = m_index.size() - 1;
+
+  if (iprevious != SIZE_MAX) {
+    p.iprevious = static_cast<uint16_t>(iprevious);
+  }
+
+  // always set, but can be null
+  m_referenceSurfaces.emplace_back(nullptr);
+  p.irefsurface = m_referenceSurfaces.size() - 1;
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
+    m_params.addCol();
+    m_cov.addCol();
+    p.ipredicted = m_params.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
+    m_params.addCol();
+    m_cov.addCol();
+    p.ifiltered = m_params.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
+    m_params.addCol();
+    m_cov.addCol();
+    p.ismoothed = m_params.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
+    m_jac.addCol();
+    p.ijacobian = m_jac.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
+    m_sourceLinks.emplace_back();
+    p.iuncalibrated = m_sourceLinks.size() - 1;
+  }
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
+    m_meas.addCol();
+    m_measCov.addCol();
+    p.icalibrated = m_meas.size() - 1;
+
+    m_sourceLinks.emplace_back();
+    p.icalibratedsourcelink = m_sourceLinks.size() - 1;
+
+    m_projectors.emplace_back();
+    p.iprojector = m_projectors.size() - 1;
+  }
+
+  return index;
+}
+
+template <typename SL>
 template <typename F>
 void MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,

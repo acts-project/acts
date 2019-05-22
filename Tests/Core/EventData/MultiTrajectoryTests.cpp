@@ -167,6 +167,109 @@ BOOST_AUTO_TEST_CASE(multitrajectory_build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 }
 
+BOOST_AUTO_TEST_CASE(trackstate_add_bitmask) {
+  namespace PM = TrackStatePropMask;
+  auto bs1 = PM::Uncalibrated;
+
+  BOOST_CHECK(ACTS_CHECK_BIT(bs1, PM::Uncalibrated));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs1, PM::Calibrated));
+
+  auto bs2 = PM::Calibrated;
+
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs2, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs2, PM::Calibrated));
+
+  auto bs3 = PM::Calibrated | PM::Uncalibrated;
+
+  BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Calibrated));
+
+  BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Calibrated));
+
+  auto bs4 = PM::Predicted | PM::Jacobian | PM::Uncalibrated;
+  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Predicted));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Jacobian));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Calibrated));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Smoothed));
+
+  MultiTrajectory<SourceLink> t;
+
+  auto ts = t.getTrackState(t.addTrackState(PM::All));
+  BOOST_CHECK(ts.hasPredicted());
+  BOOST_CHECK(ts.hasFiltered());
+  BOOST_CHECK(ts.hasSmoothed());
+  BOOST_CHECK(ts.hasUncalibrated());
+  BOOST_CHECK(ts.hasCalibrated());
+  BOOST_CHECK(ts.hasProjector());
+  BOOST_CHECK(ts.hasJacobian());
+
+  ts = t.getTrackState(t.addTrackState(PM::None));
+  BOOST_CHECK(!ts.hasPredicted());
+  BOOST_CHECK(!ts.hasFiltered());
+  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasUncalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasProjector());
+  BOOST_CHECK(!ts.hasJacobian());
+
+  ts = t.getTrackState(t.addTrackState(PM::Predicted));
+  BOOST_CHECK(ts.hasPredicted());
+  BOOST_CHECK(!ts.hasFiltered());
+  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasUncalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasProjector());
+  BOOST_CHECK(!ts.hasJacobian());
+
+  ts = t.getTrackState(t.addTrackState(PM::Filtered));
+  BOOST_CHECK(!ts.hasPredicted());
+  BOOST_CHECK(ts.hasFiltered());
+  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasUncalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasProjector());
+  BOOST_CHECK(!ts.hasJacobian());
+
+  ts = t.getTrackState(t.addTrackState(PM::Smoothed));
+  BOOST_CHECK(!ts.hasPredicted());
+  BOOST_CHECK(!ts.hasFiltered());
+  BOOST_CHECK(ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasUncalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasProjector());
+  BOOST_CHECK(!ts.hasJacobian());
+
+  ts = t.getTrackState(t.addTrackState(PM::Uncalibrated));
+  BOOST_CHECK(!ts.hasPredicted());
+  BOOST_CHECK(!ts.hasFiltered());
+  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(ts.hasUncalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasProjector());
+  BOOST_CHECK(!ts.hasJacobian());
+
+  ts = t.getTrackState(t.addTrackState(PM::Calibrated));
+  BOOST_CHECK(!ts.hasPredicted());
+  BOOST_CHECK(!ts.hasFiltered());
+  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasUncalibrated());
+  BOOST_CHECK(ts.hasCalibrated());
+  BOOST_CHECK(ts.hasProjector());
+  BOOST_CHECK(!ts.hasJacobian());
+
+  ts = t.getTrackState(t.addTrackState(PM::Jacobian));
+  BOOST_CHECK(!ts.hasPredicted());
+  BOOST_CHECK(!ts.hasFiltered());
+  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasUncalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasProjector());
+  BOOST_CHECK(ts.hasJacobian());
+}
+
 BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   // assert expected "cross-talk" between trackstate proxies
   auto [ots, fm, meas] = make_trackstate();

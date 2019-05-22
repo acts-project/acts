@@ -39,6 +39,8 @@
 #define ACTS_BIT_DECODE(code, mask) ((code & mask) >> ACTS_BIT_SHIFT(mask))
 #endif
 
+#define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
+
 /** Geometry primitives helper functions
  */
 
