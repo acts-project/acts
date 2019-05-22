@@ -145,6 +145,10 @@ class TrackStateProxy {
   /// @return the index
   size_t index() const { return m_istate; }
 
+  /// Return the index of the track state 'previous' in the track sequence
+  /// @return The index of the previous track state.
+  size_t previous() const { return data().iprevious; }
+
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexData& data() {
     return m_traj->m_index[m_istate];
@@ -157,6 +161,14 @@ class TrackStateProxy {
   const Surface& referenceSurface() const {
     assert(data().irefsurface != IndexData::kInvalid);
     return *m_traj->m_referenceSurfaces[data().irefsurface];
+  }
+
+  /// Set the reference surface to a given value
+  /// @param srf Shared pointer to the surface to set
+  /// @note This overload is only present in case @c ReadOnly is false.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
+    m_traj->m_referenceSurfaces[data().irefsurface] = std::move(srf);
   }
 
   /// Track parameters vector. This tries to be somewhat smart and return the
@@ -237,6 +249,40 @@ class TrackStateProxy {
   /// @return The effective projector
   EffectiveProjector effectiveProjector() const {
     return projector().topLeftCorner(data().measdim, M);
+  }
+
+  /// Set the projector on this track state
+  /// This will convert the projector to a more compact bitset representation
+  /// and store it.
+  /// @param projector The projector in the form of a dense matrix
+  /// @note @p projector is assumed to only have 0s or 1s as components.
+  template <typename Derived, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  void setProjector(const Eigen::MatrixBase<Derived>& projector) {
+    constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+    constexpr int cols = Eigen::MatrixBase<Derived>::ColsAtCompileTime;
+
+    static_assert(rows != -1 && cols != -1,
+                  "Assignment of dynamic matrices is currently not supported.");
+
+    IndexData& dataref = data();
+    assert(dataref.iprojector != IndexData::kInvalid);
+
+    constexpr int max_measdim = MultiTrajectory<SourceLink>::MeasurementSizeMax;
+
+    static_assert(rows <= max_measdim, "Given projector has too many rows");
+    static_assert(cols <= max_measdim, "Given projector has too many columns");
+
+    // set up full size projector with only zeros
+    typename TrackStateProxy::Projector fullProjector =
+        decltype(fullProjector)::Zero();
+
+    // assign (potentially) smaller actual projector to matrix, preserving
+    // zeroes outside of smaller matrix block.
+    fullProjector.template topLeftCorner<rows, max_measdim>() = projector;
+
+    // convert to bitset before storing
+    m_traj->m_projectors[dataref.iprojector] = matrixToBitset(fullProjector);
   }
 
   /// Return whether an uncalibrated measurement (source link) is set
@@ -328,13 +374,18 @@ class TrackStateProxy {
     calibratedCovariance().template topLeftCorner<measdim, measdim>() =
         meas.covariance();
 
-    assert(dataref.iprojector != IndexData::kInvalid);
-    typename TrackStateProxy::Projector fullProjector;
-    fullProjector.setZero();
-    fullProjector.template topLeftCorner<
-        measdim, MultiTrajectory<SourceLink>::MeasurementSizeMax>() =
-        meas.projector();
-    m_traj->m_projectors[dataref.iprojector] = matrixToBitset(fullProjector);
+    setProjector(meas.projector());
+
+    // this shouldn't change
+    assert(data().irefsurface != IndexData::kInvalid);
+    std::shared_ptr<const Surface>& refSrf =
+        m_traj->m_referenceSurfaces[dataref.irefsurface];
+    // either unset, or the same, otherwise this is inconsistent assignment
+    assert(!refSrf || refSrf.get() == &meas.referenceSurface());
+    if (!refSrf) {
+      // ref surface is not set, set it now
+      refSrf = meas.referenceSurface().getSharedPtr();
+    }
 
     assert(dataref.icalibratedsourcelink != IndexData::kInvalid);
     calibratedSourceLink() = meas.sourceLink();
