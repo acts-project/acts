@@ -147,16 +147,16 @@ class TrackStateProxy {
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexData& data() {
-    return m_traj.m_index[m_istate];
+    return m_traj->m_index[m_istate];
   }
 
-  const IndexData& data() const { return m_traj.m_index[m_istate]; }
+  const IndexData& data() const { return m_traj->m_index[m_istate]; }
 
   /// Reference surface.
   /// @return the reference surface
   const Surface& referenceSurface() const {
     assert(data().irefsurface != IndexData::kInvalid);
-    return *m_traj.m_referenceSurfaces[data().irefsurface];
+    return *m_traj->m_referenceSurfaces[data().irefsurface];
   }
 
   /// Track parameters vector. This tries to be somewhat smart and return the
@@ -255,7 +255,7 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   SourceLink& uncalibrated() {
     assert(data().iuncalibrated != IndexData::kInvalid);
-    return m_traj.m_sourceLinks[data().iuncalibrated];
+    return m_traj->m_sourceLinks[data().iuncalibrated];
   }
 
   /// Check if the point has an associated calibrated measurement.
@@ -276,7 +276,7 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   SourceLink& calibratedSourceLink() {
     assert(data().icalibratedsourcelink != IndexData::kInvalid);
-    return m_traj.m_sourceLinks[data().icalibratedsourcelink];
+    return m_traj->m_sourceLinks[data().icalibratedsourcelink];
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
@@ -334,7 +334,7 @@ class TrackStateProxy {
     fullProjector.template topLeftCorner<
         measdim, MultiTrajectory<SourceLink>::MeasurementSizeMax>() =
         meas.projector();
-    m_traj.m_projectors[dataref.iprojector] = matrixToBitset(fullProjector);
+    m_traj->m_projectors[dataref.iprojector] = matrixToBitset(fullProjector);
 
     assert(dataref.icalibratedsourcelink != IndexData::kInvalid);
     calibratedSourceLink() = meas.sourceLink();
@@ -350,18 +350,19 @@ class TrackStateProxy {
             ParID_t... params>
   void resetCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
     IndexData& dataref = data();
+    auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index
-    m_traj.m_meas.addCol();
-    m_traj.m_measCov.addCol();
+    traj.m_meas.addCol();
+    traj.m_measCov.addCol();
     // shared index between meas par
     // and cov
-    dataref.icalibrated = m_traj.m_meas.size() - 1;
+    dataref.icalibrated = traj.m_meas.size() - 1;
 
-    m_traj.m_sourceLinks.emplace_back();
-    dataref.icalibratedsourcelink = m_traj.m_sourceLinks.size() - 1;
+    traj.m_sourceLinks.emplace_back();
+    dataref.icalibratedsourcelink = traj.m_sourceLinks.size() - 1;
 
-    m_traj.m_projectors.emplace_back();
-    dataref.iprojector = m_traj.m_projectors.size() - 1;
+    traj.m_projectors.emplace_back();
+    dataref.iprojector = traj.m_projectors.size() - 1;
 
     // now actually assign to the allocated entries
     setCalibrated(meas);
@@ -401,7 +402,7 @@ class TrackStateProxy {
   TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
                   size_t istate);
 
-  ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& m_traj;
+  ConstIf<MultiTrajectory<SourceLink>, ReadOnly>* m_traj;
   size_t m_istate;
 
   friend class Acts::MultiTrajectory<SourceLink>;
