@@ -175,56 +175,49 @@ namespace units {
 
 /// @name length units
 /// @{
-#ifdef DOXYGEN
-constexpr double _m = unspecified;
-#else
-constexpr double _m = 1e3;
-#endif  // DOXYGEN
-constexpr double _km = 1e3 * _m;
-constexpr double _cm = 1e-2 * _m;
-constexpr double _mm = 1e-3 * _m;
-constexpr double _um = 1e-6 * _m;
-constexpr double _nm = 1e-9 * _m;
-constexpr double _pm = 1e-12 * _m;
-constexpr double _fm = 1e-15 * _m;
+constexpr double _km = UnitConstants::km;
+constexpr double _m = UnitConstants::m;
+constexpr double _cm = UnitConstants::cm;
+constexpr double _mm = UnitConstants::mm;
+constexpr double _um = UnitConstants::um;
+constexpr double _nm = UnitConstants::nm;
+constexpr double _pm = UnitConstants::pm;
+constexpr double _fm = UnitConstants::fm;
 /// Higher orders
 constexpr double _mm2 = _mm * _mm;
 /// @}
 
 /// @name time units
 /// @{
-#ifdef DOXYGEN
-constexpr double _s = unspecified;
-#else
-constexpr double _s = 1;
-#endif  // DOXYGEN
-constexpr double _ms = 1e-3 * _s;
-constexpr double _h = 3600 * _s;
+constexpr double _h = UnitConstants::h;
+constexpr double _s = UnitConstants::s;
+constexpr double _ms = UnitConstants::ms;
 /// @}
 
-/// @name energy units
+/// @name energy/momentum/mass units
 /// @{
-#ifdef DOXYGEN
-constexpr double _MeV = unspecified;
-#else
-constexpr double _MeV = 1e-3;
-#endif  // DOXYGEN
-constexpr double _GeV = 1e3 * _MeV;
-constexpr double _TeV = 1e6 * _MeV;
-constexpr double _keV = 1e-3 * _MeV;
-constexpr double _eV = 1e-6 * _MeV;
+constexpr double _GeV = UnitConstants::GeV;
+constexpr double _TeV = UnitConstants::TeV;
+constexpr double _MeV = UnitConstants::MeV;
+constexpr double _keV = UnitConstants::keV;
+constexpr double _eV = UnitConstants::eV;
+constexpr double _g = UnitConstants::g;
+constexpr double _kg = UnitConstants::kg;
 /// @}
 
 /// @name charge units
 /// @{
-#ifdef DOXYGEN
-constexpr double _C = unspecified;
-#else
-constexpr double _C = 1. / 1.60217733e-19;
-#endif  // DOXYGEN
-constexpr double _e = 1.60217733e-19 * _C;
+constexpr double _C = UnitConstants::C;
+constexpr double _e = UnitConstants::e;
 /// Higher orders
 constexpr double _e2 = _e * _e;
+/// @}
+
+/// @name magnetic field units
+/// @{
+constexpr double _T = UnitConstants::T;
+constexpr double _Gauss = UnitConstants::Gauss;
+constexpr double _kGauss = UnitConstants::kGauss;
 /// @}
 
 /// @brief physical quantities for selecting right conversion function
