@@ -11,17 +11,16 @@ Acts::Vertex<input_track_t>::Vertex(const Vector3D& position)
 
 {
   m_position.setZero();
-  m_position.head<3>() = position;
+  VectorHelpers::position(m_position) = position;
 }
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
     const Vector3D& position, const ActsSymMatrixD<3>& covariance,
     std::vector<TrackAtVertex<input_track_t>>& tracks)
-
     : m_tracksAtVertex(std::move(tracks)) {
   m_position.setZero();
-  m_position.head<3>() = position;
+  VectorHelpers::position(m_position) = position;
   m_covariance.setZero();
   m_covariance.block<3, 3>(0, 0) = covariance;
 }
@@ -36,7 +35,7 @@ Acts::Vertex<input_track_t>::Vertex(
 
 template <typename input_track_t>
 Acts::Vector3D Acts::Vertex<input_track_t>::position() const {
-  return m_position.head<3>();
+  return VectorHelpers::position(m_position);
 }
 
 template <typename input_track_t>
@@ -63,6 +62,7 @@ const Acts::SpacePointSymMatrix& Acts::Vertex<input_track_t>::fullCovariance()
 
 template <typename input_track_t>
 const std::vector<Acts::TrackAtVertex<input_track_t>>&
+
 Acts::Vertex<input_track_t>::tracks() const {
   return m_tracksAtVertex;
 }
@@ -75,7 +75,7 @@ std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
                                               ParValue_t time) {
-  m_position.head<3>() = position;
+  VectorHelpers::position(m_position) = position;
   VectorHelpers::time(m_position) = time;
 }
 

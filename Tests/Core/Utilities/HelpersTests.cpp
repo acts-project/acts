@@ -194,6 +194,27 @@ BOOST_AUTO_TEST_CASE(time_helper_test) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(position_helper_test) {
+  {
+    SpacePointVector spaceTimeVec = {1., 2., 3., 4.};
+    Vector3D pos = position(spaceTimeVec);
+    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), pos);
+
+    Vector3D newPos = {4., 7., 12.};
+    position(spaceTimeVec) = newPos;
+    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), newPos);
+  }
+
+  // same for const
+  {
+    // use temp object to initialize const vectors
+    SpacePointVector tempSpaceVec = {1., 2., 3., 4.};
+    const SpacePointVector spaceTimeVec(tempSpaceVec);
+    const Vector3D pos = position(spaceTimeVec);
+    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), pos);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

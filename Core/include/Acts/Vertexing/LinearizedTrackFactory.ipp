@@ -22,7 +22,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
     return LinearizedTrack();
   }
 
-  Vector3D linPointPos = linPoint.head<3>();
+  Vector3D linPointPos = VectorHelpers::position(linPoint);
 
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(linPointPos);
@@ -39,7 +39,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   if (result.ok()) {
     const auto& propRes = *result;
     paramsAtPCA = propRes.endParameters->parameters();
-    positionAtPCA.head<3>() = propRes.endParameters->position();
+    VectorHelpers::position(positionAtPCA) = propRes.endParameters->position();
     parCovarianceAtPCA = *propRes.endParameters->covariance();
 
   } else {

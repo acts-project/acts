@@ -80,7 +80,8 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     ndf = 1;
   }
 
-  // Determine if we do contraint fit or not
+  // Determine if we do contraint fit or not by checking if an
+  // invertible non-zero constraint vertex covariance is given
   bool isConstraintFit = false;
   if (vFitterOptions.vertexConstraint.covariance().determinant() != 0) {
     isConstraintFit = true;
@@ -323,7 +324,8 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       std::vector<TrackAtVertex<input_track_t>> tracksAtVertex;
 
       std::shared_ptr<PerigeeSurface> perigee =
-          Surface::makeShared<PerigeeSurface>(vertexPos.head<3>());
+          Surface::makeShared<PerigeeSurface>(
+              VectorHelpers::position(vertexPos));
 
       iTrack = 0;
       for (auto& bTrack : billoirTracks) {

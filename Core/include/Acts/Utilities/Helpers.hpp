@@ -239,6 +239,23 @@ inline const ParValue_t& time(const FreeVector& freeVec) {
   return freeVec[7];
 }
 
+/// @brief Access to the position components of input parameter
+///
+/// @param spacePointVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(SpacePointVector& spacePointVec) {
+  return spacePointVec.head<3>();
+}
+
+/// @brief Const overload access to the
+/// position components of input parameter
+///
+/// @param spacePointVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(const SpacePointVector& spacePointVec) {
+  return spacePointVec.head<3>();
+}
+
 }  // namespace VectorHelpers
 
 namespace detail {
