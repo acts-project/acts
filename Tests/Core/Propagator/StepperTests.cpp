@@ -709,8 +709,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   naviVac.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  ActsSymMatrixD<5> cov = ActsSymMatrixD<5>::Identity();
-  auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  Covariance cov = Covariance::Identity();
+  auto covPtr = std::make_unique<const Covariance>(cov);
   Vector3D startParams(0., 0., 0.), startMom(1._GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
       std::move(covPtr), startParams, startMom, 1.);
