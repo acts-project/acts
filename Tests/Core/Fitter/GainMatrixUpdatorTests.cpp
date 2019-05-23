@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
 
   // Make dummy track parameter
   Covariance covTrk;
-  covTrk << 0.08, 0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-      1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0;
+  covTrk.setZero();
+  covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
   BoundParameters pars(
@@ -85,12 +85,9 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
   // the result is the same as when the test was written.
 
   Covariance expCov;
-  expCov << 0.0266667, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000,
-      0.0000000, 0.0750000, 0.0000000, 0.0000000, 0.0000000, 0.0000000,
-      0.0000000, 0.0000000, 1.0000000, 0.0000000, 0.0000000, 0.0000000,
-      0.0000000, 0.0000000, 0.0000000, 1.0000000, 0.0000000, 0.0000000,
-      0.0000000, 0.0000000, 0.0000000, 0.0000000, 1.0000000, 0.0000000,
-      0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000;
+  expCov.setZero();
+  expCov.diagonal() << 0.0266667, 0.0750000, 1.0000000, 1.0000000, 1.0000000,
+      0.0000000;
 
   BoundVector expPar;
   expPar << 0.0333333, 0.4625000, 1.5707963, 0.9424778, 0.0100000, 0.0000000;
@@ -103,12 +100,15 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
 
   auto& filtered = *mState.parameter.filtered;
 
+  double expChi2 = 1.33958;
+
   double tol = 1e-6;
 
   CHECK_CLOSE_ABS(expCov, *filtered.covariance(), tol);
   CHECK_CLOSE_ABS(expPar, filtered.parameters(), tol);
   CHECK_CLOSE_ABS(expPosition, filtered.position(), tol);
   CHECK_CLOSE_ABS(expMomentum, filtered.momentum(), tol);
+  CHECK_CLOSE_ABS(expChi2, mState.parameter.chi2, 1e-4);
 }
 
 }  // namespace Test
