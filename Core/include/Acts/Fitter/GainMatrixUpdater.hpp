@@ -11,6 +11,7 @@
 #include <memory>
 #include <variant>
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
@@ -85,43 +86,39 @@ class GainMatrixUpdater {
     auto filtered = trackState.filtered();
     auto filtered_covariance = trackState.filteredCovariance();
 
-    // For, we use the dynamically sized views we obtain from the track state
-    // proxy. THIS IS SLOW!
-    // @TODO: Use switch to dispatch to fixed size call path or use fixed size
-    // math without dispatch
+    visit_measurement(
+        trackState.calibrated(), trackState.calibratedCovariance(),
+        trackState.calibratedSize(),
+        [&](const auto calibrated, const auto calibrated_covariance) {
+          constexpr size_t measdim = decltype(calibrated)::RowsAtCompileTime;
+          using cov_t = ActsSymMatrixD<measdim>;
+          using par_t = ActsVectorD<measdim>;
 
-    const auto calibrated = trackState.effectiveCalibrated();
-    const auto calibrated_covariance =
-        trackState.effectiveCalibratedCovariance();
+          const ActsMatrixD<measdim, BoundParsDim> H =
+              trackState.projector()
+                  .template topLeftCorner<measdim, BoundParsDim>();
 
-    const auto H = trackState.effectiveProjector();
+          const ActsMatrixD<BoundParsDim, measdim> K =
+              predicted_covariance * H.transpose() *
+              (H * predicted_covariance * H.transpose() + calibrated_covariance)
+                  .inverse();
 
-    // SLOW SLOW SLOW
-    ActsMatrixXd K =
-        predicted_covariance * H.transpose() *
-        (H * predicted_covariance * H.transpose() + calibrated_covariance)
-            .inverse();
+          filtered = predicted + K * (calibrated - H * predicted);
+          filtered_covariance =
+              (ActsSymMatrixD<
+                   MultiTrajectory<SourceLink>::ParametersSize>::Identity() -
+               K * H) *
+              predicted_covariance;
 
-    filtered = predicted + K * (calibrated - H * predicted);
-    filtered_covariance =
-        (ActsSymMatrixD<
-             MultiTrajectory<SourceLink>::ParametersSize>::Identity() -
-         K * H) *
-        predicted_covariance;
+          // calculate filtered residual
+          par_t residual(trackState.calibratedSize());
+          residual = (calibrated - H * filtered);
 
-    // calculate filtered residual
-    // SLOW SLOW SLOW
-    ActsVectorXd residual(trackState.calibratedSize());
-    residual = (calibrated - H * filtered);
-
-    // SLOW SLOW SLOW
-    ActsMatrixXd meas_unity(trackState.calibratedSize(),
-                            trackState.calibratedSize());
-    meas_unity.setIdentity();
-
-    trackState.chi2() =
-        (residual.transpose() *
-         ((meas_unity - H * K) * calibrated_covariance).inverse() * residual);
+          trackState.chi2() =
+              (residual.transpose() *
+               ((cov_t::Identity() - H * K) * calibrated_covariance).inverse() *
+               residual);
+        });
 
     return Result<void>::success();
   }
