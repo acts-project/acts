@@ -75,7 +75,7 @@ struct visit_measurement_callable {
   /// @param cov The covariance matrix
   /// @param lambda The lambda to call with the statically sized subsets
   template <typename L, typename A, typename B>
-  auto static constexpr invoke(A& param, B& cov, L&& lambda) {
+  auto static constexpr invoke(A&& param, B&& cov, L&& lambda) {
     return lambda(param.template head<I>(), cov.template topLeftCorner<I, I>());
   }
 };
@@ -95,7 +95,7 @@ struct visit_measurement_callable {
 /// @param dim The actual dimension as a runtime value
 /// @param lambda The lambda to call with the statically sized subsets
 template <typename L, typename A, typename B>
-auto visit_measurement(A& param, B& cov, size_t dim, L&& lambda) {
+auto visit_measurement(A&& param, B&& cov, size_t dim, L&& lambda) {
   return template_switch<detail::visit_measurement_callable, 0, BoundParsDim>(
       dim, param, cov, lambda);
 }
