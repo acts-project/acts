@@ -61,7 +61,8 @@ static_assert(SourceLinkConcept<MinimalSourceLink>,
 namespace detail {
 
 /// Helper functor for @c visit_measurement. This is the actual functor given
-/// to @c template_switch.   /// @tparam I Compile time int value
+/// to @c template_switch.
+/// @tparam I Compile time int value
 template <size_t I>
 struct visit_measurement_callable {
   /// The invoked function. It will perform the head/top-left corner
