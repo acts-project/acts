@@ -230,6 +230,19 @@ BOOST_AUTO_TEST_CASE(position_helper_test) {
   }
 }
 
+template <size_t I>
+struct functor {
+  static constexpr size_t invoke() { return I * I * I; }
+};
+
+BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
+  constexpr size_t imax = 20;
+  for (size_t i = 0; i < imax; i++) {
+    size_t val = template_switch<functor, 0, imax>(i);
+    BOOST_CHECK_EQUAL(val, i * i * i);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts
