@@ -80,7 +80,7 @@ void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setPosition(
+void Acts::Vertex<input_track_t>::setFullPosition(
     const SpacePointVector& fullPosition) {
   m_position = fullPosition;
 }
@@ -97,7 +97,7 @@ void Acts::Vertex<input_track_t>::setCovariance(
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setCovariance(
+void Acts::Vertex<input_track_t>::setFullCovariance(
     const SpacePointSymMatrix& covariance) {
   m_covariance = covariance;
 }

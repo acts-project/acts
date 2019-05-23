@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
   myCovMat(3, 3) = 30.;
-  myConstraint.setCovariance(std::move(myCovMat));
-  myConstraint.setPosition(Vector3D(0, 0, 0));
+  myConstraint.setFullCovariance(std::move(myCovMat));
+  myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
 
   std::vector<BoundParameters> emptyVector;
 
@@ -159,8 +159,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
-    myConstraint.setCovariance(std::move(myCovMat));
-    myConstraint.setPosition(Vector3D(0, 0, 0));
+    myConstraint.setFullCovariance(std::move(myCovMat));
+    myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
     VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
 
     VertexFitterOptions<BoundParameters> vfOptionsConstr(tgContext, mfContext,
@@ -294,8 +294,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
-    myConstraint.setCovariance(std::move(myCovMat));
-    myConstraint.setPosition(Vector3D(0, 0, 0));
+    myConstraint.setFullCovariance(std::move(myCovMat));
+    myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
 
     VertexFitterOptions<InputTrack> vfOptions(tgContext, mfContext);
 

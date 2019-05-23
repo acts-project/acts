@@ -77,7 +77,7 @@ class Vertex {
   /// @brief Set position and time
   ///
   /// @param fullPosition Vertex position and time
-  void setPosition(const SpacePointVector& fullPosition);
+  void setFullPosition(const SpacePointVector& fullPosition);
 
   /// @brief Sets time
   ///
@@ -92,7 +92,7 @@ class Vertex {
   /// @brief Sets 4x4 covariance
   ///
   /// @param covariance The 4x4 covariance matrix
-  void setCovariance(const SpacePointSymMatrix& covariance);
+  void setFullCovariance(const SpacePointSymMatrix& covariance);
 
   /// @param tracks Vector of tracks at vertex
   void setTracksAtVertex(

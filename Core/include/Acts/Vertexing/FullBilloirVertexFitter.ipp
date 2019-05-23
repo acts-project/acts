@@ -317,8 +317,8 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
 
       SpacePointVector vertexPos(linPoint);
 
-      fittedVertex.setPosition(vertexPos);
-      fittedVertex.setCovariance(covDeltaVmat);
+      fittedVertex.setFullPosition(vertexPos);
+      fittedVertex.setFullCovariance(covDeltaVmat);
       fittedVertex.setFitQuality(chi2, ndf);
 
       std::vector<TrackAtVertex<input_track_t>> tracksAtVertex;
