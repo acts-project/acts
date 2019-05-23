@@ -191,19 +191,6 @@ constexpr double _fm = 1e-15 * _m;
 constexpr double _mm2 = _mm * _mm;
 /// @}
 
-/// @name mass units
-/// @{
-#ifdef DOXYGEN
-constexpr double _kg = unspecified;
-#else
-constexpr double _kg = 1e3;
-#endif  // DOXYGEN
-constexpr double _g = 1e-3 * _kg;
-constexpr double _mg = 1e-6 * _kg;
-/// atomic mass unit
-constexpr double _u = 1.660539040e-27 * _kg;
-/// @}
-
 /// @name time units
 /// @{
 #ifdef DOXYGEN
@@ -239,42 +226,6 @@ constexpr double _e = 1.60217733e-19 * _C;
 /// Higher orders
 constexpr double _e2 = _e * _e;
 /// @}
-
-/// @name derived units
-/// @{
-constexpr double _N = _kg * _m / (_s * _s);
-constexpr double _J = _N * _m;
-constexpr double _T = _kg / (_C * _s);
-constexpr double _Gauss = 1e-4 * _T;
-constexpr double _kGauss = 1e-1 * _T;
-/// @}
-
-/// @name fundamental physical constants in SI units
-/// @{
-/// speed of light in vacuum
-constexpr double _c = 2.99792458e8 * _m / _s;
-/// reduced Planck constant
-constexpr double _hbar = 1.05457266e-34 * _J * _s;
-/// value of elementary charge in Coulomb
-constexpr double _el_charge = _e / _C;
-/// Higher orders
-constexpr double _c2 = _c * _c;
-constexpr double _c3 = _c * _c * _c;
-constexpr double _c4 = _c2 * _c2;
-constexpr double _c2inv = 1. / _c2;
-/// @}
-
-/// @cond
-/// @brief internally used conversion constants
-namespace {
-// 1 GeV = 1e9 * e * 1 V = 1.60217733e-10 As * 1 V = 1.60217733e-10 J
-// ==> 1 J = 1 / 1.60217733e-10 GeV
-constexpr double _GeV_per_J = _GeV / (_el_charge * 1e9 * _J);
-// hbar * c = 3.161529298809983e-26 J * m
-// ==> hbar * c * _GeV_per_J = 1.973270523563071e-16 GeV * m
-constexpr double _mm_times_GeV = _c * _hbar * _GeV_per_J;
-}  // namespace
-/// @endcond
 
 /// @brief physical quantities for selecting right conversion function
 enum Quantity { MOMENTUM, ENERGY, LENGTH, MASS };
