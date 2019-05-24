@@ -11,9 +11,9 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexFitterOptions.hpp"
 
 namespace Acts {
 
@@ -34,8 +34,7 @@ namespace Acts {
 
 template <typename bfield_t, typename input_track_t,
           typename propagator_t = Propagator<EigenStepper<bfield_t>>>
-class FullBilloirVertexFitter
-    : public IVertexFitter<input_track_t, propagator_t> {
+class FullBilloirVertexFitter {
  public:
   struct Config {
     /// Magnetic field
@@ -88,9 +87,6 @@ class FullBilloirVertexFitter
                           std::function<BoundParameters(input_track_t)> func)
       : m_cfg(cfg), extractParameters(func) {}
 
-  /// @brief Default destructor
-  ~FullBilloirVertexFitter() override = default;
-
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
@@ -99,7 +95,7 @@ class FullBilloirVertexFitter
   /// @return Fitted vertex
   Result<Vertex<input_track_t>> fit(
       const std::vector<input_track_t>& paramVector,
-      const VertexFitterOptions<input_track_t>& vFitterOptions) const override;
+      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
  private:
   /// Configuration object
