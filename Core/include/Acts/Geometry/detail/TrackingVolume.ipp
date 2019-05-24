@@ -118,7 +118,7 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
                               parameters.direction(), options, corrfnc, sorter);
 }
 
-template <typename options_t, typename corrector_t = VoidIntersectionCorrector>
+template <typename options_t, typename corrector_t>
 std::vector<SurfaceIntersection>
 TrackingVolume::compatibleSurfacesFromHierarchy(
     const GeometryContext& gctx, const Vector3D& position,
