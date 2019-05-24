@@ -29,6 +29,8 @@ namespace Acts {
 
 /// @brief create a small tracking geometry to map some dummy material on
 std::shared_ptr<const TrackingGeometry> trackingGeometry() {
+  using namespace Acts::UnitLiterals;
+
   BinUtility zbinned(8, -40, 40, open, binZ);
   auto matProxy = std::make_shared<const ProtoSurfaceMaterial>(zbinned);
 
@@ -74,7 +76,7 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
   cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   cvbConfig.volumeName = "BeamPipe";
   cvbConfig.layerBuilder = layerBuilder;
-  cvbConfig.layerEnvelopeR = {1. * units::_mm, 1. * units::_mm};
+  cvbConfig.layerEnvelopeR = {1_mm, 1_mm};
   cvbConfig.buildToRadiusZero = true;
   cvbConfig.volumeSignature = 0;
   auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
