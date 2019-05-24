@@ -36,7 +36,6 @@ namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -323,8 +322,7 @@ BOOST_DATA_TEST_CASE(
   const auto& status = epropagator.propagate(start, options).value();
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
-  double pmax = units::SI2Nat<units::MOMENTUM>(
-      options.pathLimit * bField.getField(pos).norm() / M_PI);
+  double pmax = options.pathLimit * bField.getField(pos).norm() / M_PI;
   if (mom.norm() < pmax) {
     BOOST_CHECK_LT(status.pathLength, options.pathLimit);
   } else {
