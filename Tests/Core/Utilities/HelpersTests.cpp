@@ -143,6 +143,93 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(time_helper_test) {
+  {
+    SpacePointVector spaceTimeVec = {1., 2., 3., 4.};
+    double t = time(spaceTimeVec);
+    BOOST_CHECK_EQUAL(spaceTimeVec[3], t);
+
+    double newTime = 17;
+    time(spaceTimeVec) = newTime;
+    BOOST_CHECK_EQUAL(spaceTimeVec[3], newTime);
+
+    BoundVector boundVec;
+    boundVec << 1., 2., 3., 4., 5., 6.;
+    t = time(boundVec);
+    BOOST_CHECK_EQUAL(boundVec[eT], t);
+
+    newTime = 28;
+    time(boundVec) = newTime;
+    BOOST_CHECK_EQUAL(boundVec[eT], newTime);
+
+    FreeVector freeVec;
+    freeVec << 1., 2., 3., 4., 5., 6., 7., 8.;
+    t = time(freeVec);
+    BOOST_CHECK_EQUAL(freeVec[7], t);
+
+    newTime = 352;
+    time(freeVec) = newTime;
+    BOOST_CHECK_EQUAL(freeVec[7], newTime);
+  }
+
+  // same for const
+  {
+    // use temp object to initialize const vectors
+    SpacePointVector tempSpaceVec = {1., 2., 3., 4.};
+    const SpacePointVector spaceTimeVec(tempSpaceVec);
+    const double t1 = time(spaceTimeVec);
+    BOOST_CHECK_EQUAL(spaceTimeVec[3], t1);
+
+    BoundVector tempBoundVec;
+    tempBoundVec << 1., 2., 3., 4., 5., 6.;
+    const BoundVector boundVec(tempBoundVec);
+    const double t2 = time(boundVec);
+    BOOST_CHECK_EQUAL(boundVec[eT], t2);
+
+    FreeVector tempFreeVec;
+    tempFreeVec << 1., 2., 3., 4., 5., 6., 7., 8.;
+    const FreeVector freeVec(tempFreeVec);
+    const double t3 = time(freeVec);
+    BOOST_CHECK_EQUAL(freeVec[7], t3);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(position_helper_test) {
+  {
+    SpacePointVector spaceTimeVec = {1., 2., 3., 4.};
+    Vector3D pos = position(spaceTimeVec);
+    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), pos);
+
+    Vector3D newPos = {4., 7., 12.};
+    position(spaceTimeVec) = newPos;
+    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), newPos);
+
+    FreeVector freeVec;
+    freeVec << 1., 2., 3., 4., 5., 6., 7., 8.;
+    pos = position(freeVec);
+    BOOST_CHECK_EQUAL(freeVec.head<3>(), pos);
+
+    newPos = {14., 17., 112.};
+    position(freeVec) = newPos;
+    BOOST_CHECK_EQUAL(freeVec.head<3>(), newPos);
+  }
+
+  // same for const
+  {
+    // use temp object to initialize const vectors
+    SpacePointVector tempSpaceVec = {1., 2., 3., 4.};
+    const SpacePointVector spaceTimeVec(tempSpaceVec);
+    const Vector3D pos1 = position(spaceTimeVec);
+    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), pos1);
+
+    FreeVector tempFreeVec;
+    tempFreeVec << 1., 2., 3., 4., 5., 6., 7., 8.;
+    const FreeVector freeVec(tempFreeVec);
+    const Vector3D pos2 = position(freeVec);
+    BOOST_CHECK_EQUAL(freeVec.head<3>(), pos2);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

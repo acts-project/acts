@@ -68,7 +68,7 @@ class LinearizedTrackFactory {
   Result<LinearizedTrack> linearizeTrack(const GeometryContext& gctx,
                                          const MagneticFieldContext& mctx,
                                          const BoundParameters* params,
-                                         const Vector3D& linPoint,
+                                         const SpacePointVector& linPoint,
                                          const propagator_t& propagator) const;
 
  private:

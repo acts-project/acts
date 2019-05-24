@@ -133,19 +133,21 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
   Vector3D vecSPZero = Vector3D::Zero();
   SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
+  ActsMatrixD<BoundParsDim, 3> matBound2MomZero =
+      ActsMatrixD<BoundParsDim, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(tgContext, mfContext, &parameters,
-                            Vector3D(0., 0., 0.), propagator)
+                            SpacePointVector::Zero(), propagator)
             .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
     BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vecSPZero);
     BOOST_CHECK_NE(linTrack.positionJacobian, matBound2SPZero);
-    BOOST_CHECK_NE(linTrack.momentumJacobian, matBound2SPZero);
+    BOOST_CHECK_NE(linTrack.momentumJacobian, matBound2MomZero);
     BOOST_CHECK_NE(linTrack.constantTerm, vecBoundZero);
   }
 }
@@ -170,18 +172,20 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
   Vector3D vecSPZero = Vector3D::Zero();
   SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
+  ActsMatrixD<BoundParsDim, 3> matBound2MomZero =
+      ActsMatrixD<BoundParsDim, 3>::Zero();
 
   LinearizedTrack linTrack =
       linFactory
-          .linearizeTrack(tgContext, mfContext, nullptr, Vector3D(1., 2., 3.),
-                          propagator)
+          .linearizeTrack(tgContext, mfContext, nullptr,
+                          SpacePointVector(1., 2., 3., 4.), propagator)
           .value();
 
   BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vecBoundZero);
   BOOST_CHECK_EQUAL(linTrack.covarianceAtPCA, matBoundZero);
   BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vecSPZero);
   BOOST_CHECK_EQUAL(linTrack.positionJacobian, matBound2SPZero);
-  BOOST_CHECK_EQUAL(linTrack.momentumJacobian, matBound2SPZero);
+  BOOST_CHECK_EQUAL(linTrack.momentumJacobian, matBound2MomZero);
   BOOST_CHECK_EQUAL(linTrack.constantTerm, vecBoundZero);
 }
 

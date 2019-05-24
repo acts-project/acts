@@ -25,6 +25,7 @@
 // Acts include(s)
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/DefaultParameterDefinitions.hpp"
 
 #ifndef ACTS_BIT_CODING
 #define ACTS_BIT_CODING 1
@@ -186,6 +187,93 @@ inline ActsMatrixD<3, 3> cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) {
 
   return r;
 }
+
+/// @brief Access to the time component of input parameter
+///
+/// @param spacePointVec The SpacePointVector
+/// @return Reference to the time component
+inline ParValue_t& time(SpacePointVector& spacePointVec) {
+  return spacePointVec[3];
+}
+
+/// @brief Const overload access to the
+/// time component of input parameter
+///
+/// @param spacePointVec The SpacePointVector
+/// @return Reference to the time component
+inline const ParValue_t& time(const SpacePointVector& spacePointVec) {
+  return spacePointVec[3];
+}
+
+/// @brief Access to the time component of input parameter
+///
+/// @param boundVec The BoundVector
+/// @return Reference to the time component
+inline ParValue_t& time(BoundVector& boundVec) {
+  return boundVec[eT];
+}
+
+/// @brief Const overload access to the
+/// time component of input parameter
+///
+/// @param boundVec The BoundVector
+/// @return Reference to the time component
+inline const ParValue_t& time(const BoundVector& boundVec) {
+  return boundVec[eT];
+}
+
+/// @brief Access to the time component of input parameter
+///
+/// @param freeVec The FreeVector
+/// @return Reference to the time component
+inline ParValue_t& time(FreeVector& freeVec) {
+  return freeVec[7];
+}
+
+/// @brief Const overload access to the
+/// time component of input parameter
+///
+/// @param freeVec The FreeVector
+/// @return Reference to the time component
+inline const ParValue_t& time(const FreeVector& freeVec) {
+  return freeVec[7];
+}
+
+/// @brief Access to the position components of input parameter
+///
+/// @param spacePointVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(SpacePointVector& spacePointVec) {
+  return spacePointVec.head<3>();
+}
+
+/// @brief Const overload access to the
+/// position components of input parameter
+///
+/// @param spacePointVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(const SpacePointVector& spacePointVec) {
+  return spacePointVec.head<3>();
+}
+
+/// @brief Access to the
+/// position components of input parameter
+///
+/// @param freeVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(FreeVector& freeVec) {
+  return freeVec.head<3>();
+}
+
+/// @brief Const overload access to the
+/// position components of input parameter
+///
+/// @param freeVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(const FreeVector& freeVec) {
+  return freeVec.head<3>();
+}
+
 }  // namespace VectorHelpers
 
 namespace detail {

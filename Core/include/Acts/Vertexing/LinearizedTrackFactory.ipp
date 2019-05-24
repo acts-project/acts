@@ -16,28 +16,30 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
     aborter_list_t>::linearizeTrack(const GeometryContext& gctx,
                                     const MagneticFieldContext& mctx,
                                     const BoundParameters* params,
-                                    const Vector3D& linPoint,
+                                    const SpacePointVector& linPoint,
                                     const propagator_t& propagator) const {
   if (params == nullptr) {
     return LinearizedTrack();
   }
 
-  const std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(linPoint);
+  Vector3D linPointPos = VectorHelpers::position(linPoint);
 
-  // Variables to store track params and position at PCA to linPoint
+  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(linPointPos);
+
+  // Variables to store track params and position at PCA to linPointPos
   BoundVector paramsAtPCA;
-  Vector3D positionAtPCA;
+  SpacePointVector positionAtPCA{SpacePointVector::Zero()};
   BoundSymMatrix parCovarianceAtPCA;
 
   PropagatorOptions<action_list_t, aborter_list_t> pOptions(gctx, mctx);
 
-  // Do the propagation to linPoint
+  // Do the propagation to linPointPos
   auto result = propagator.propagate(*params, *perigeeSurface, pOptions);
   if (result.ok()) {
     const auto& propRes = *result;
     paramsAtPCA = propRes.endParameters->parameters();
-    positionAtPCA = propRes.endParameters->position();
+    VectorHelpers::position(positionAtPCA) = propRes.endParameters->position();
     parCovarianceAtPCA = *propRes.endParameters->covariance();
 
   } else {
@@ -61,7 +63,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   Vector3D momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
-  double Bz = m_cfg.bField.getField(linPoint)[eZ];
+  double Bz = m_cfg.bField.getField(linPointPos)[eZ];
 
   double rho;
   // Curvature is infinite w/o b field
@@ -73,8 +75,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   }
 
   // Eq. 5.34 in Ref(1) (see .hpp)
-  double X = positionAtPCA(0) - linPoint.x() + rho * sinPhiV;
-  double Y = positionAtPCA(1) - linPoint.y() - rho * cosPhiV;
+  double X = positionAtPCA(0) - linPointPos.x() + rho * sinPhiV;
+  double Y = positionAtPCA(1) - linPointPos.y() - rho * cosPhiV;
   double S2 = (X * X + Y * Y);
   double S = std::sqrt(S2);
 
@@ -99,10 +101,11 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   // Eq. 5.33 in Ref(1) (see .hpp)
   predParamsAtPCA[0] = rho - sgnH * S;
   predParamsAtPCA[1] =
-      positionAtPCA[eZ] - linPoint.z() + rho * (phiV - phiAtPCA) / tanTh;
+      positionAtPCA[eZ] - linPointPos.z() + rho * (phiV - phiAtPCA) / tanTh;
   predParamsAtPCA[2] = phiAtPCA;
   predParamsAtPCA[3] = th;
   predParamsAtPCA[4] = qOvP;
+  predParamsAtPCA[5] = 0.;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
   SpacePointToBoundMatrix positionJacobian;
@@ -120,8 +123,12 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   positionJacobian(2, 0) = -Y / S2;
   positionJacobian(2, 1) = X / S2;
 
+  // TODO: include timing in track linearization
+  // Last row
+  positionJacobian(5, 3) = 1;
+
   // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
-  SpacePointToBoundMatrix momentumJacobian;
+  ActsMatrixD<BoundParsDim, 3> momentumJacobian;
   momentumJacobian.setZero();
 
   double R = X * cosPhiV + Y * sinPhiV;
@@ -154,7 +161,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   BoundVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
                           momentumJacobian * momentumAtPCA;
 
-  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPoint,
+  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPointPos,
                          positionJacobian, momentumJacobian, positionAtPCA,
                          momentumAtPCA, constTerm);
 }
