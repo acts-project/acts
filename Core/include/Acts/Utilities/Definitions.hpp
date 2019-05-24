@@ -18,8 +18,6 @@
 #include <Eigen/Dense>
 #endif
 
-#include "Acts/Utilities/Units.hpp"
-
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 using TDD_real_t = float;
 #else
@@ -30,8 +28,12 @@ using TDD_real_t = double;
 
 namespace Acts {
 
-///  Tolerance for being on Surface
-static const double s_onSurfaceTolerance = 10e-5 * units::_mm;
+/// Tolerance for being on Surface
+///
+/// @note This is intentionally given w/o an explicit unit to avoid having
+///       to include the units header unneccessarily. With the native length
+///       unit of mm this corresponds to 0.1um.
+static const double s_onSurfaceTolerance = 1e-4;
 
 /// Tolerance for not being within curvilinear projection
 /// this allows using the same curvilinear frame to eta = 6,
