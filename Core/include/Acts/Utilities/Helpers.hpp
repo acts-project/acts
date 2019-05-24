@@ -410,7 +410,7 @@ std::vector<const T*> unpack_shared_vector(
 /// that is callable with @c Args
 template <template <size_t> class Callable, size_t N, size_t NMAX,
           typename... Args>
-decltype(Callable<0>::invoke(std::declval<Args>()...)) template_switch(
+decltype(Callable<N>::invoke(std::declval<Args>()...)) template_switch(
     size_t v, Args&&... args) {
   if (v == N) {
     return Callable<N>::invoke(std::forward<Args>(args)...);
