@@ -95,6 +95,8 @@ struct MaterialInteractor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    using namespace Acts::UnitLiterals;
+
     // If we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
@@ -210,14 +212,14 @@ struct MaterialInteractor {
           const double lgamma = E / m;
           // Energy loss and straggling - per unit length
           std::pair<double, double> eLoss =
-              ionisationloss.dEds(m, lbeta, lgamma, mat, 1. * units::_mm);
+              ionisationloss.dEds(m, lbeta, lgamma, mat, 1_mm);
           // Apply the energy loss
           const double dEdl = state.stepping.navDir * eLoss.first;
           const double dE = mProperties.thickness() * dEdl;
           // Screen output
           debugLog(state, [&] {
             std::stringstream dstream;
-            dstream << "Energy loss calculated to " << dE << " GeV";
+            dstream << "Energy loss calculated to " << dE / 1_GeV << " GeV";
             return dstream.str();
           });
           // Check for energy conservation, and only apply momentum change
