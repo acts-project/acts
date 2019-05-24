@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   double y = vXYDist(gen);
   double z = vZDist(gen);
 
-  Vector3D vertexPosition(x, y, z);
+  SpacePointVector vertexPosition(x, y, z, 0.);
 
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
   myCovMat(3, 3) = 30.;
-  myConstraint.setCovariance(std::move(myCovMat));
-  myConstraint.setPosition(vertexPosition);
+  myConstraint.setFullCovariance(std::move(myCovMat));
+  myConstraint.setFullPosition(vertexPosition);
 
   // Calculate d0 and z0 corresponding to vertex position
   double d0_v = sqrt(x * x + y * y);
