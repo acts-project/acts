@@ -356,9 +356,10 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Return whether this TrackingVolume has a BVH associated
+  /// Return whether this TrackingVolume has a BoundingVolumeHierarchy
+  /// associated
   /// @return If it has a BVH or not.
-  bool hasBVH() const;
+  bool hasBoundingVolumeHierarchy() const;
 
   /// Sign the volume - the geometry builder has to do that
   ///
@@ -548,7 +549,7 @@ inline void TrackingVolume::setMotherVolume(const TrackingVolume* mvol) {
   m_motherVolume = mvol;
 }
 
-inline bool TrackingVolume::hasBVH() const {
+inline bool TrackingVolume::hasBoundingVolumeHierarchy() const {
   return m_bvhTop != nullptr;
 }
 

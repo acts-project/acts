@@ -685,7 +685,7 @@ class Navigator {
       });
 
       // check if current volume has BVH, or layers
-      if (state.navigation.currentVolume->hasBVH()) {
+      if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
         NavigationOptions<Surface> navOpts(
             state.stepping.navDir, true, resolveSensitive, resolveMaterial,
