@@ -71,7 +71,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
     rho = std::numeric_limits<double>::max();
   } else {
     // signed(!) rho
-    rho = sinTh * units::Nat2SI<units::MOMENTUM>(1 / qOvP) / Bz;
+    rho = sinTh * (1 / qOvP) / Bz;
   }
 
   // Eq. 5.34 in Ref(1) (see .hpp)
