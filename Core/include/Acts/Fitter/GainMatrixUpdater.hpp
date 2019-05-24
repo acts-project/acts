@@ -117,7 +117,8 @@ class GainMatrixUpdater {
           trackState.chi2() =
               (residual.transpose() *
                ((cov_t::Identity() - H * K) * calibrated_covariance).inverse() *
-               residual);
+               residual)
+                  .eval()(0, 0);
         });
 
     return Result<void>::success();
