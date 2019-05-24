@@ -8,25 +8,26 @@
 
 #pragma once
 
-#include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <functional>
 #include <memory>
 #include <type_traits>
+
+#include <boost/algorithm/string.hpp>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
+#include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
-
-#include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -118,7 +119,7 @@ struct PropagatorOptions {
   int absPdgCode = 211;
 
   /// The mass for the particle for (eventual) material integration
-  double mass = 139.57018 * units::_MeV;
+  double mass = 139.57018 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
