@@ -13,10 +13,10 @@
 #include <iomanip>
 #include <limits>
 #include <sstream>
+
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
-
 namespace detail {
 
 /// A constrained step class for the steppers
