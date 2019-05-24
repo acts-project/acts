@@ -8,6 +8,7 @@
 
 #pragma once
 #include <vector>
+
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -69,8 +70,8 @@ fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                   localToGlobalBin,
               std::vector<double> rPos, std::vector<double> zPos,
               std::vector<Acts::Vector2D> bField,
-              double lengthUnit = Acts::units::_mm,
-              double BFieldUnit = Acts::units::_T, bool firstQuadrant = false);
+              double lengthUnit = UnitConstants::mm,
+              double BFieldUnit = UnitConstants::T, bool firstQuadrant = false);
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -130,8 +131,8 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                    localToGlobalBin,
                std::vector<double> xPos, std::vector<double> yPos,
                std::vector<double> zPos, std::vector<Acts::Vector3D> bField,
-               double lengthUnit = Acts::units::_mm,
-               double BFieldUnit = Acts::units::_T, bool firstOctant = false);
+               double lengthUnit = UnitConstants::mm,
+               double BFieldUnit = UnitConstants::T, bool firstOctant = false);
 
 /// Function which takes an existing SolenoidBField instance and
 /// creates a field mapper by sampling grid points from the analytical
