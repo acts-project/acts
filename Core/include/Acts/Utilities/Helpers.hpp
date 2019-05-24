@@ -256,6 +256,24 @@ inline auto position(const SpacePointVector& spacePointVec) {
   return spacePointVec.head<3>();
 }
 
+/// @brief Access to the
+/// position components of input parameter
+///
+/// @param freeVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(FreeVector& freeVec) {
+  return freeVec.head<3>();
+}
+
+/// @brief Const overload access to the
+/// position components of input parameter
+///
+/// @param freeVec The SpacePointVector
+/// @return Reference to the position components
+inline auto position(const FreeVector& freeVec) {
+  return freeVec.head<3>();
+}
+
 }  // namespace VectorHelpers
 
 namespace detail {

@@ -203,6 +203,15 @@ BOOST_AUTO_TEST_CASE(position_helper_test) {
     Vector3D newPos = {4., 7., 12.};
     position(spaceTimeVec) = newPos;
     BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), newPos);
+
+    FreeVector freeVec;
+    freeVec << 1., 2., 3., 4., 5., 6., 7., 8.;
+    pos = position(freeVec);
+    BOOST_CHECK_EQUAL(freeVec.head<3>(), pos);
+
+    newPos = {14., 17., 112.};
+    position(freeVec) = newPos;
+    BOOST_CHECK_EQUAL(freeVec.head<3>(), newPos);
   }
 
   // same for const
@@ -210,8 +219,14 @@ BOOST_AUTO_TEST_CASE(position_helper_test) {
     // use temp object to initialize const vectors
     SpacePointVector tempSpaceVec = {1., 2., 3., 4.};
     const SpacePointVector spaceTimeVec(tempSpaceVec);
-    const Vector3D pos = position(spaceTimeVec);
-    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), pos);
+    const Vector3D pos1 = position(spaceTimeVec);
+    BOOST_CHECK_EQUAL(spaceTimeVec.head<3>(), pos1);
+
+    FreeVector tempFreeVec;
+    tempFreeVec << 1., 2., 3., 4., 5., 6., 7., 8.;
+    const FreeVector freeVec(tempFreeVec);
+    const Vector3D pos2 = position(freeVec);
+    BOOST_CHECK_EQUAL(freeVec.head<3>(), pos2);
   }
 }
 
