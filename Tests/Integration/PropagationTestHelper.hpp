@@ -19,9 +19,6 @@
 namespace tt = boost::test_tools;
 
 namespace Acts {
-
-using units::Nat2SI;
-
 namespace IntegrationTest {
 
 using Covariance = BoundSymMatrix;
@@ -116,7 +113,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
     CHECK_CLOSE_ABS(theta, VH::theta(tp->momentum()), 1e-4);
   // clang-format on
 
-  double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
+  double r = std::abs(pT / (q * Bz));
 
   // calculate number of turns of helix
   double turns = options.pathLimit / (2 * M_PI * r) * sin(theta);

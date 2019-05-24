@@ -92,7 +92,7 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
 
   // just make sure we can reach it
-  double r = rfrac * std::abs(Nat2SI<units::MOMENTUM>(pT) / (1. * Bz));
+  double r = rfrac * std::abs(pT / Bz);
   r = (r > 2.5 * Acts::units::_m) ? 2.5 * Acts::units::_m : r;
 
   // check atlas stepper
