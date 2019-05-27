@@ -391,4 +391,37 @@ std::vector<const T*> unpack_shared_vector(
   return rawPtrs;
 }
 
+/// @brief Dispatch a call based on a runtime value on a function taking the
+/// value at compile time.
+///
+/// This function allows to write a templated functor, which accepts a @c size_t
+/// like paramater at compile time. It is then possible to make a call to the
+/// corresponding instance of the functor based on a runtime value. To achieve
+/// this, the function essentially created a if cascade between @c N and @c
+/// NMAX, attempting to find the right instance. Because the cascade is visible
+/// to the compiler entirely, it should be able to optimize.
+///
+/// @tparam Callable Type which takes a size_t as a compile time param
+/// @tparam N Value from which to start the dispatch chain, i.e. 0 in most cases
+/// @tparam NMAX Maximum value up to which to attempt a dispatch
+/// @param v The runtime value to dispatch on
+/// @param args Additional arguments passed to @c Callable::invoke().
+/// @note @c Callable is expected to have a static member function @c invoke
+/// that is callable with @c Args
+template <template <size_t> class Callable, size_t N, size_t NMAX,
+          typename... Args>
+decltype(Callable<N>::invoke(std::declval<Args>()...)) template_switch(
+    size_t v, Args&&... args) {
+  if (v == N) {
+    return Callable<N>::invoke(std::forward<Args>(args)...);
+  }
+  if constexpr (N < NMAX) {
+    return template_switch<Callable, N + 1, NMAX>(v,
+                                                  std::forward<Args>(args)...);
+  }
+  std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
+            << ") is not valid (v > NMAX)" << std::endl;
+  std::abort();
+}
+
 }  // namespace Acts
