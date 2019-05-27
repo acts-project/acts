@@ -419,6 +419,8 @@ decltype(Callable<N>::invoke(std::declval<Args>()...)) template_switch(
     return template_switch<Callable, N + 1, NMAX>(v,
                                                   std::forward<Args>(args)...);
   }
+  std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
+            << ") is not valid (v > NMAX)" << std::endl;
   std::abort();
 }
 
