@@ -205,14 +205,24 @@ class StraightLineStepper {
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   BoundState boundState(State& state, const Surface& surface,
-                        bool /*unused*/) const {
+                        bool reinitialize) const {
+							  // Transport the covariance to here
+  std::unique_ptr<const Covariance> covPtr = nullptr;
+  if (state.covTransport) {
+    covarianceTransport(state, surface, reinitialize);
+    covPtr = std::make_unique<const Covariance>(state.cov);
+  }
     // Create the bound parameters
-    BoundParameters parameters(state.geoContext, nullptr, state.pos,
+    BoundParameters parameters(state.geoContext, std::move(covPtr), state.pos,
                                state.p * state.dir, state.q,
                                state.t0 + state.dt, surface.getSharedPtr());
     // Create the bound state
-    BoundState bState{std::move(parameters), Jacobian::Identity(),
+    BoundState bState{std::move(parameters), state.jacobian,
                       state.pathAccumulated};
+                        // Reset the jacobian to identity
+  if (reinitialize) {
+    state.jacobian = Jacobian::Identity();
+  }
     /// Return the State
     return bState;
   }
@@ -227,13 +237,23 @@ class StraightLineStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state, bool /*unused*/) const {
+  CurvilinearState curvilinearState(State& state, bool reinitialize) const {
+	  // Transport the covariance to here
+	  std::unique_ptr<const Covariance> covPtr = nullptr;
+	  if (state.covTransport) {
+		covarianceTransport(state, reinitialize);
+		covPtr = std::make_unique<const Covariance>(state.cov);
+	  }
     // Create the curvilinear parameters
-    CurvilinearParameters parameters(nullptr, state.pos, state.p * state.dir,
+    CurvilinearParameters parameters(std::move(covPtr), state.pos, state.p * state.dir,
                                      state.q, state.t0 + state.dt);
     // Create the bound state
-    CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
-                               state.pathAccumulated};
+    CurvilinearState curvState{std::move(parameters),state.jacobian,
+                               state.pathAccumulated};                            
+                                // Reset the jacobian to identity
+  if (reinitialize) {
+    state.jacobian = Jacobian::Identity();
+  }
     /// Return the State
     return curvState;
   }
@@ -255,6 +275,7 @@ class StraightLineStepper {
 			state.cov = (*(pars.covariance()));
 		}
 		state.derivative.template head<3>() = state.dir;
+		state.deruvatuve(7) = state.dt / state.pathAccumulated;
 	}
   }
 
@@ -266,7 +287,6 @@ class StraightLineStepper {
   /// @param [in] up the updated momentum value
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const {
-				  // TODO: should an update also update the accumulated path?
     state.pos = uposition;
     state.dir = udirection;
     state.p = up;
@@ -274,6 +294,7 @@ class StraightLineStepper {
     if(state.covTransport)
     {
 		state.derivative.template head<3>() = state.dir;
+		state.deruvatuve(7) = state.dt / state.pathAccumulated;
 	}
   }
 
@@ -448,14 +469,14 @@ class StraightLineStepper {
 		FreeMatrix D = FreeMatrix::Identity();
 		D.block<3, 3>(0, 3) = ActsSymMatrixD<3>::Identity() * h;
 		
-		// TODO: caching the time propagation?
-		const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
-		const double mass = units::Nat2SI<units::MASS>(state.options.mass);
-		D(6, 7) = h * mass * mass / mom * tStep;
-		
+		if(state.options.propagateTime)
+		{
+			// TODO: caching the time propagation?
+			const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
+			const double mass = units::Nat2SI<units::MASS>(state.options.mass);
+			D(6, 7) = h * mass * mass / mom * state.stepping.derivative(7);
+		}
 		state.stepping.jacTransport = D * state.stepping.jacTransport;
-		
-		state.stepping.derivative(7) = tStep;
 	}
     
     // state the path length
