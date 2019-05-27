@@ -72,7 +72,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
     ///       the material will have the'real' thickness.
     /// @attention The default thickness should be set thin enough that no
     ///            touching or overlapping with the next layer can happen.
-    double defaultThickness = UnitLiterals::fm;
+    double defaultThickness = UnitConstants::fm;
   };
 
   /// Constructor
