@@ -23,19 +23,18 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 size_t nbinsx = 100;
 size_t nbinsy = 200;
-double hThickness = 75 * units::_um;
+double hThickness = 75_um;
 double lAngle = 0.1;
 
 // Module bounds
-auto moduleBounds =
-    std::make_shared<const RectangleBounds>(5 * units::_mm, 10 * units::_mm);
+auto moduleBounds = std::make_shared<const RectangleBounds>(5_mm, 10_mm);
 CartesianSegmentation cSegmentation(moduleBounds, nbinsx, nbinsy);
 
 // Create a test context

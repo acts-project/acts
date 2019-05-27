@@ -21,9 +21,9 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -40,14 +40,14 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   // Build Bounds
   std::shared_ptr<const RectangleBounds> recBounds(
-      new RectangleBounds(35. * Acts::units::_um, 25. * units::_mm));
+      new RectangleBounds(35_um, 25_mm));
 
   // Build binning and segmentation
   std::vector<float> boundariesX, boundariesY;
-  boundariesX.push_back(-35. * units::_um);
-  boundariesX.push_back(35. * units::_um);
-  boundariesY.push_back(-25. * units::_mm);
-  boundariesY.push_back(25. * units::_mm);
+  boundariesX.push_back(-35_um);
+  boundariesX.push_back(35_um);
+  boundariesY.push_back(-25_mm);
+  boundariesY.push_back(25_mm);
 
   BinningData binDataX(BinningOption::open, BinningValue::binX, boundariesX);
   std::shared_ptr<BinUtility> buX(new BinUtility(binDataX));
@@ -69,7 +69,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   rotationPos.col(1) = yPos;
   rotationPos.col(2) = zPos;
   Transform3D t3d(Transform3D::Identity() * rotationPos);
-  t3d.translation() = Vector3D(0., 0., 10. * units::_m);
+  t3d.translation() = Vector3D(0., 0., 10_m);
 
   // Build Digitization
   const DigitizationModule digMod(segmentation, 1., 1., 0.);
@@ -96,7 +96,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   rotationNeg.col(1) = yNeg;
   rotationNeg.col(2) = zNeg;
   Transform3D t3d2(Transform3D::Identity() * rotationNeg);
-  t3d2.translation() = Vector3D(0., 0., 10.005 * units::_m);
+  t3d2.translation() = Vector3D(0., 0., 10.005_m);
 
   DetectorElementStub detElem2(std::make_shared<const Transform3D>(t3d2));
 
@@ -131,7 +131,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   // Build third PlanarModuleCluster
   Transform3D t3d3(Transform3D::Identity() * rotationNeg);
-  t3d3.translation() = Vector3D(0., 0., 10.005 * units::_m);
+  t3d3.translation() = Vector3D(0., 0., 10.005_m);
 
   DetectorElementStub detElem3(std::make_shared<const Transform3D>(t3d3));
   auto pSur3 = Surface::makeShared<PlaneSurface>(recBounds, detElem3);
@@ -147,6 +147,6 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   // Test for rejecting unconnected hits
   BOOST_CHECK_EQUAL(resultSP.size(), 1);
 }
-}  // end of namespace Test
 
+}  // end of namespace Test
 }  // end of namespace Acts
