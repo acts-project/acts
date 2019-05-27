@@ -76,8 +76,33 @@ class StraightLineStepper {
           t0(par.time()),
           navDir(ndir),
           stepSize(ssize),
-          geoContext(gctx) {}
+          geoContext(gctx) 
+          {
+        if (par.covariance()) {
+        // Get the reference surface for navigation
+        const auto& surface = par.referenceSurface();
+        // set the covariance transport flag to true and copy
+        covTransport = true;
+        cov = BoundSymMatrix(*par.covariance());
+        surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
+                                     par.parameters());
+                                     
+		derivative.template head<3>() = dir;
+      }
+      }
 
+    /// Jacobian from local to the global frame
+    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+    
+    /// Pure transport jacobian part from runge kutta integration
+    FreeMatrix jacTransport = FreeMatrix::Identity();
+    
+    /// The full jacobian of the transport entire transport
+    Jacobian jacobian = Jacobian::Identity();
+    
+    /// The propagation derivative
+    FreeVector derivative = FreeVector::Zero();
+    
     /// Boolean to indiciate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
@@ -223,6 +248,14 @@ class StraightLineStepper {
     state.dir = mom.normalized();
     state.p = mom.norm();
     state.dt = pars.time();
+    if(state.covTransport)
+    {
+		if(pars.covariance() != nullptr)
+		{
+			state.cov = (*(pars.covariance()));
+		}
+		state.derivative.template head<3>() = state.dir;
+	}
   }
 
   /// Method to update momentum, direction and p
@@ -233,10 +266,15 @@ class StraightLineStepper {
   /// @param [in] up the updated momentum value
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const {
+				  // TODO: should an update also update the accumulated path?
     state.pos = uposition;
     state.dir = udirection;
     state.p = up;
     state.dt = time;
+    if(state.covTransport)
+    {
+		state.derivative.template head<3>() = state.dir;
+	}
   }
 
   /// Return a corrector
@@ -252,8 +290,80 @@ class StraightLineStepper {
   /// @param [in] reinitialize is a flag to steer whether the
   ///        state should be reinitialized at the new
   ///        position
-  void covarianceTransport(State& /*state*/,
-                           bool /*reinitialize = false*/) const {}
+  void covarianceTransport(State& state,
+                           bool reinitialize = false) const 
+  {
+	  /// TODO: jacToCurv is const and can be moved out
+  // Optimized trigonometry on the propagation direction
+  const double x = state.dir(0);  // == cos(phi) * sin(theta)
+  const double y = state.dir(1);  // == sin(phi) * sin(theta)
+  const double z = state.dir(2);  // == cos(theta)
+  // can be turned into cosine/sine
+  const double cosTheta = z;
+  const double sinTheta = sqrt(x * x + y * y);
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
+  // prepare the jacobian to curvilinear
+  FreeToBoundMatrix jacToCurv = FreeToBoundMatrix::Zero();
+  if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
+    // We normally operate in curvilinear coordinates defined as follows
+    jacToCurv(0, 0) = -sinPhi;
+    jacToCurv(0, 1) = cosPhi;
+    jacToCurv(1, 0) = -cosPhi * cosTheta;
+    jacToCurv(1, 1) = -sinPhi * cosTheta;
+    jacToCurv(1, 2) = sinTheta;
+  } else {
+    // Under grazing incidence to z, the above coordinate system definition
+    // becomes numerically unstable, and we need to switch to another one
+    const double c = sqrt(y * y + z * z);
+    const double invC = 1. / c;
+    jacToCurv(0, 1) = -z * invC;
+    jacToCurv(0, 2) = y * invC;
+    jacToCurv(1, 0) = c;
+    jacToCurv(1, 1) = -x * y * invC;
+    jacToCurv(1, 2) = -x * z * invC;
+  }
+  // Directional and momentum parameters for curvilinear
+  jacToCurv(2, 3) = -sinPhi * invSinTheta;
+  jacToCurv(2, 4) = cosPhi * invSinTheta;
+  jacToCurv(3, 5) = -invSinTheta;
+  jacToCurv(4, 6) = 1;
+  jacToCurv(5, 7) = 1;  
+  // Apply the transport from the steps on the jacobian
+  state.jacToGlobal = state.jacTransport * state.jacToGlobal;
+  // Transport the covariance
+  ActsRowVectorD<3> normVec(state.dir);
+  const BoundRowVector sfactors =
+      normVec * state.jacToGlobal.template topLeftCorner<3, BoundParsDim>();
+  // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
+  const Jacobian jacFull =
+      jacToCurv * (state.jacToGlobal - state.derivative * sfactors);
+  // Apply the actual covariance transport
+  state.cov = (jacFull * state.cov * jacFull.transpose());
+  // Reinitialize if asked to do so
+  // this is useful for interruption calls
+  if (reinitialize) {
+    // reset the jacobians
+    state.jacToGlobal = BoundToFreeMatrix::Zero();
+    state.jacTransport = FreeMatrix::Identity();
+    // fill the jacobian to global for next transport
+    state.jacToGlobal(0, eLOC_0) = -sinPhi;
+    state.jacToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
+    state.jacToGlobal(1, eLOC_0) = cosPhi;
+    state.jacToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
+    state.jacToGlobal(2, eLOC_1) = sinTheta;
+    state.jacToGlobal(3, ePHI) = -sinTheta * sinPhi;
+    state.jacToGlobal(3, eTHETA) = cosTheta * cosPhi;
+    state.jacToGlobal(4, ePHI) = sinTheta * cosPhi;
+    state.jacToGlobal(4, eTHETA) = cosTheta * sinPhi;
+    state.jacToGlobal(5, eTHETA) = -sinTheta;
+    state.jacToGlobal(6, eQOP) = 1;
+    state.jacToGlobal(7, eT) = 1;
+  }
+  // Store The global and bound jacobian (duplication for the moment)
+  state.jacobian = jacFull * state.jacobian;
+  }
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -269,8 +379,46 @@ class StraightLineStepper {
   ///        position
   /// @note no check is done if the position is actually on the surface
   ///
-  void covarianceTransport(State& /*unused*/, const Surface& /*surface*/,
-                           bool /*reinitialize = false*/) const {}
+  void covarianceTransport(State& state, const Surface& surface,
+                           bool reinitialize = false) const 
+                           {
+  using VectorHelpers::phi;
+  using VectorHelpers::theta;
+  // Initialize the transport final frame jacobian
+  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
+  // initalize the jacobian to local, returns the transposed ref frame
+  auto rframeT = surface.initJacobianToLocal(state.geoContext, jacToLocal,
+                                             state.pos, state.dir);
+  // Update the jacobian with the transport from the steps
+  state.jacToGlobal = state.jacTransport * state.jacToGlobal;
+  // calculate the form factors for the derivatives
+  const BoundRowVector sVec = surface.derivativeFactors(
+      state.geoContext, state.pos, state.dir, rframeT, state.jacToGlobal);
+  // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+  const Jacobian jacFull =
+      jacToLocal * (state.jacToGlobal - state.derivative * sVec);
+  // Apply the actual covariance transport
+  state.cov = (jacFull * state.cov * jacFull.transpose());
+  // Reinitialize if asked to do so
+  // this is useful for interruption calls
+  if (reinitialize) {
+    // reset the jacobians
+    state.jacToGlobal = BoundToFreeMatrix::Zero();
+    state.jacTransport = FreeMatrix::Identity();
+    // reset the derivative
+    state.derivative = FreeVector::Zero();
+    // fill the jacobian to global for next transport
+    Vector2D loc{0., 0.};
+    surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
+    BoundVector pars;
+    pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
+        state.q / state.p, state.t0 + state.dt;
+    surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, state.pos,
+                                 state.dir, pars);
+  }
+  // Store The global and bound jacobian (duplication for the moment)
+  state.jacobian = jacFull * state.jacobian;
+  }
 
   /// Perform a straight line propagation step
   ///
@@ -288,10 +436,28 @@ class StraightLineStepper {
     const double h = state.stepping.stepSize;
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
-    state.stepping.dt +=
-        h * std::sqrt(state.options.mass * state.options.mass /
-                          (state.stepping.p * state.stepping.p) +
-                      units::_c2inv);
+    
+    double tStep = 0.;
+		tStep = std::sqrt(state.options.mass * state.options.mass /
+                            (state.stepping.p * state.stepping.p) +
+                        units::_c2inv);
+      state.stepping.dt +=
+          h * tStep;
+    if (state.stepping.covTransport) {
+		// The step transport matrix in global coordinates
+		FreeMatrix D = FreeMatrix::Identity();
+		D.block<3, 3>(0, 3) = ActsSymMatrixD<3>::Identity() * h;
+		
+		// TODO: caching the time propagation?
+		const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
+		const double mass = units::Nat2SI<units::MASS>(state.options.mass);
+		D(6, 7) = h * mass * mass / mom * tStep;
+		
+		state.stepping.jacTransport = D * state.stepping.jacTransport;
+		
+		state.stepping.derivative(7) = tStep;
+	}
+    
     // state the path length
     state.stepping.pathAccumulated += h;
     // return h
