@@ -11,20 +11,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 
 namespace Acts {
-
 namespace Test {
+
+using namespace Acts::UnitLiterals;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -38,14 +39,14 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   // Build bounds
   std::shared_ptr<const RectangleBounds> recBounds(
-      new RectangleBounds(35. * units::_um, 25. * units::_mm));
+      new RectangleBounds(35_um, 25_mm));
 
   // Build binning and segmentation
   std::vector<float> boundariesX, boundariesY;
-  boundariesX.push_back(-35. * units::_um);
-  boundariesX.push_back(35. * units::_um);
-  boundariesY.push_back(-25. * units::_mm);
-  boundariesY.push_back(25. * units::_mm);
+  boundariesX.push_back(-35_um);
+  boundariesX.push_back(35_um);
+  boundariesY.push_back(-25_mm);
+  boundariesY.push_back(25_mm);
 
   BinningData binDataX(BinningOption::open, BinningValue::binX, boundariesX);
   std::shared_ptr<BinUtility> buX(new BinUtility(binDataX));
@@ -58,7 +59,7 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   // Build translation
 
-  double rotation = 0.026;
+  double rotation = 0.026_rad;
   RotationMatrix3D rotationPos;
   Vector3D xPos(cos(rotation), sin(rotation), 0.);
   Vector3D yPos(-sin(rotation), cos(rotation), 0.);
@@ -67,7 +68,7 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
   rotationPos.col(1) = yPos;
   rotationPos.col(2) = zPos;
   Transform3D t3d(Transform3D::Identity() * rotationPos);
-  t3d.translation() = Vector3D(0., 0., 10. * units::_m);
+  t3d.translation() = Vector3D(0., 0., 10_m);
 
   // Build Digitization
   const DigitizationModule digMod(segmentation, 1., 1., 0.);
@@ -93,6 +94,6 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   std::cout << "Space point calculated" << std::endl;
 }
-}  // end of namespace Test
 
+}  // end of namespace Test
 }  // end of namespace Acts
