@@ -29,6 +29,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts {
 namespace Test {
 
@@ -44,7 +46,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   for (unsigned int i = 1; i < 5; i++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
-    cfg.position = {i * units::_m, 0., 0.};
+    cfg.position = {i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
     double rotationAngle = M_PI * 0.5;
@@ -56,17 +58,16 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.rotation.col(2) = zPos;
 
     // Boundaries of the surfaces
-    cfg.rBounds = std::make_shared<const RectangleBounds>(
-        RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+    cfg.rBounds =
+        std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3,
-                               0.5 * units::_mm);
+    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
     cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
         new HomogeneousSurfaceMaterial(matProp));
 
     // Thickness of the detector element
-    cfg.thickness = 1. * units::_um;
+    cfg.thickness = 1_um;
 
     cfg.detElementConstructor =
         [](std::shared_ptr<const Transform3D> trans,
@@ -115,8 +116,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
   // Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
-  volumeConfig.position = {2.5 * units::_m, 0., 0.};
-  volumeConfig.length = {5. * units::_m, 1. * units::_m, 1. * units::_m};
+  volumeConfig.position = {2.5_m, 0., 0.};
+  volumeConfig.length = {5_m, 1_m, 1_m};
   volumeConfig.layerCfg = layerConfig;
   volumeConfig.name = "Test volume";
   volumeConfig.volumeMaterial =
@@ -171,7 +172,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   for (int i = 1; i < 5; i++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
-    cfg.position = {-i * units::_m, 0., 0.};
+    cfg.position = {-i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
     double rotationAngle = M_PI * 0.5;
@@ -183,17 +184,16 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.rotation.col(2) = zPos;
 
     // Boundaries of the surfaces
-    cfg.rBounds = std::make_shared<const RectangleBounds>(
-        RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+    cfg.rBounds =
+        std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3,
-                               0.5 * units::_mm);
+    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
     cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
         new HomogeneousSurfaceMaterial(matProp));
 
     // Thickness of the detector element
-    cfg.thickness = 1. * units::_um;
+    cfg.thickness = 1_um;
     surfaceConfig2.push_back(cfg);
   }
 
@@ -204,14 +204,14 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     layerConfig2.push_back(cfg);
   }
   CuboidVolumeBuilder::VolumeConfig volumeConfig2;
-  volumeConfig2.position = {-2.5 * units::_m, 0., 0.};
-  volumeConfig2.length = {5. * units::_m, 1. * units::_m, 1. * units::_m};
+  volumeConfig2.position = {-2.5_m, 0., 0.};
+  volumeConfig2.length = {5_m, 1_m, 1_m};
   volumeConfig2.layerCfg = layerConfig2;
   volumeConfig2.name = "Test volume2";
 
   CuboidVolumeBuilder::Config config;
   config.position = {0., 0., 0.};
-  config.length = {10. * units::_m, 1. * units::_m, 1. * units::_m};
+  config.length = {10_m, 1_m, 1_m};
   config.volumeCfg = {volumeConfig2, volumeConfig};
 
   cvb.setConfig(config);

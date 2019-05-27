@@ -17,8 +17,9 @@
 #include "Acts/Utilities/Units.hpp"
 #include "TrackingVolumeCreation.hpp"
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
+namespace Acts {
 namespace Test {
 
 // Create a test context
@@ -34,19 +35,19 @@ GeometryContext tgContext = GeometryContext();
 /// - OuterVolume with volumeID       == 5
 
 // sensitive surface definitions
-double surfaceHalfLengthZ = 50 * Acts::units::_mm;
-double surfaceRstagger = 5. * Acts::units::_mm;
-double surfaceZoverlap = 10. * Acts::units::_mm;
-double layerEnvelope = 0.5 * Acts::units::_mm;
-double volumeEnvelope = 10. * Acts::units::_mm;
+double surfaceHalfLengthZ = 50_mm;
+double surfaceRstagger = 5_mm;
+double surfaceZoverlap = 10_mm;
+double layerEnvelope = 0.5_mm;
+double volumeEnvelope = 10_mm;
 
 // inner inner volume definitions
-double iiv_surfaceRadius = 25. * Acts::units::_mm;
+double iiv_surfaceRadius = 25_mm;
 double iiv_volumeRadius =
     iiv_surfaceRadius + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
 ///  inner outer volume defininitions
-double iov_surfaceRadius = 100. * Acts::units::_mm;
+double iov_surfaceRadius = 100_mm;
 double iov_volumeRadius =
     iov_surfaceRadius + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
@@ -70,7 +71,7 @@ auto iVolume =
                              volumeHalfZ, "InnerVolume");
 
 // outer volume definitions
-double ov_surfaceRadius = 150. * Acts::units::_mm;
+double ov_surfaceRadius = 150_mm;
 double ov_volumeRadius =
     ov_surfaceRadius + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 

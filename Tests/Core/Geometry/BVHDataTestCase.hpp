@@ -95,6 +95,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<>(-100, 100))) ^
         bdata::xrange(NTESTS),
     eta, phi, x, y, z, index) {
+  using namespace Acts::UnitLiterals;
   (void)index;
 
   // construct ray from parameters
@@ -147,10 +148,10 @@ BOOST_DATA_TEST_CASE(
                                                                mfContext);
 
   options.debug = false;
-  options.pathLimit = 20 * Acts::units::_m;
+  options.pathLimit = 20_m;
 
   // this should be irrelevant.
-  double mom = 50 * Acts::units::_GeV;
+  double mom = 50_GeV;
 
   Acts::CurvilinearParameters startPar(nullptr, ray.origin(), ray.dir() * mom,
                                        +1, 0.);

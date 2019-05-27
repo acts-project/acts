@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #define BOOST_TEST_MODULE SimpleGeometryTest
-
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -20,8 +20,9 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
+namespace Acts {
 namespace Test {
 
 // Create a test context
@@ -63,9 +64,9 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   // ----------------- build a beam pipe -----------------------------------
   PassiveLayerBuilder::Config bplConfig;
   bplConfig.layerIdentification = "BeamPipe";
-  bplConfig.centralLayerRadii = std::vector<double>(1, 3. * units::_mm);
-  bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 40. * units::_mm);
-  bplConfig.centralLayerThickness = std::vector<double>(1, 0.8 * units::_mm);
+  bplConfig.centralLayerRadii = std::vector<double>(1, 3_mm);
+  bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 40_mm);
+  bplConfig.centralLayerThickness = std::vector<double>(1, 0.8_mm);
   auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
       bplConfig, getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
   // create the volume for the beam pipe
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
   bpvConfig.volumeName = "BeamPipe";
   bpvConfig.layerBuilder = beamPipeBuilder;
-  bpvConfig.layerEnvelopeR = {1. * units::_mm, 1. * units::_mm};
+  bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
   bpvConfig.buildToRadiusZero = true;
   bpvConfig.volumeSignature = 0;
   auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
@@ -81,12 +82,9 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
 
   PassiveLayerBuilder::Config layerBuilderConfig;
   layerBuilderConfig.layerIdentification = "CentralBarrel";
-  layerBuilderConfig.centralLayerRadii = {10. * units::_mm, 20. * units::_mm,
-                                          30. * units::_mm};
-  layerBuilderConfig.centralLayerHalflengthZ = {
-      40. * units::_mm, 40. * units::_mm, 40. * units::_mm};
-  layerBuilderConfig.centralLayerThickness = {1. * units::_mm, 1. * units::_mm,
-                                              1. * units::_mm};
+  layerBuilderConfig.centralLayerRadii = {10_mm, 20_mm, 30_mm};
+  layerBuilderConfig.centralLayerHalflengthZ = {40_mm, 40_mm, 40_mm};
+  layerBuilderConfig.centralLayerThickness = {1_mm, 1_mm, 1_mm};
   auto layerBuilder = std::make_shared<const PassiveLayerBuilder>(
       layerBuilderConfig,
       getDefaultLogger("CentralBarrelBuilder", layerLLevel));
@@ -95,7 +93,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   cvbConfig.volumeName = "CentralBarrel";
   cvbConfig.layerBuilder = layerBuilder;
-  cvbConfig.layerEnvelopeR = {1. * units::_mm, 1. * units::_mm};
+  cvbConfig.layerEnvelopeR = {1_mm, 1_mm};
   cvbConfig.buildToRadiusZero = false;
   cvbConfig.volumeSignature = 0;
   auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
