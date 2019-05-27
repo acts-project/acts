@@ -30,6 +30,8 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts {
 namespace Test {
 
@@ -123,13 +125,13 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
 
   // Set initial parameters for the particle track
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // The start position and start parameters
-  Vector3D pos(-3. * units::_m, 0., 0.), mom(1. * units::_GeV, 0., 0);
+  Vector3D pos(-3_m, 0., 0.), mom(1_GeV, 0., 0);
   SingleCurvilinearTrackParameters<ChargedPolicy> start(std::move(covPtr), pos,
                                                         mom, 1., 42.);
 
@@ -182,5 +184,6 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   accJacobian = swlJacobian * accJacobian;
   CHECK_CLOSE_OR_SMALL(pJacobian, accJacobian, 1e-6, 1e-9);
 }
+
 }  // namespace Test
 }  // namespace Acts

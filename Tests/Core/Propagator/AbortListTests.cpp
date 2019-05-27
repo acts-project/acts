@@ -28,6 +28,7 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 
@@ -79,7 +80,7 @@ struct PropagatorState {
     double pathLimit = std::numeric_limits<double>::max();
 
     /// The target tolerance
-    double targetTolerance = 1. * units::_um;
+    double targetTolerance = 1_um;
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -111,7 +112,7 @@ struct Result {};
 // and the standard aborters
 BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit) {
   PropagatorState state;
-  state.options.pathLimit = 1. * units::_m;
+  state.options.pathLimit = 1_m;
   Stepper stepper;
   Result result;
 
@@ -120,14 +121,14 @@ BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit) {
   // It should not abort yet
   BOOST_CHECK(!abortList(result, state, stepper));
   // The step size should be adapted to 1 meter now
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, 1. * units::_m);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize, 1_m);
   // Let's do a step of 90 cm now
-  state.stepping.pathAccumulated = 90. * units::_cm;
+  state.stepping.pathAccumulated = 90_cm;
   // Still no abort yet
   BOOST_CHECK(!abortList(result, state, stepper));
   // 10 cm are left
   // The step size should be adapted to 10 cm now
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, 10. * units::_cm);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize, 10_cm);
 
   // Approach the target
   while (!abortList(result, state, stepper)) {
@@ -135,7 +136,7 @@ BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit) {
   }
 
   // now we need to be smaller than the tolerance
-  BOOST_CHECK_LT(state.stepping.stepSize, 1. * units::_um);
+  BOOST_CHECK_LT(state.stepping.stepSize, 1_um);
 
   // Check if you can expand the AbortList
   EndOfWorld eow;
