@@ -51,6 +51,9 @@ BOOST_DATA_TEST_CASE(
   // foward backward check eigen stepper
   foward_backward(epropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
                   Acts::units::_eV, debug);
+  // foward backward check straight line stepper
+  foward_backward(spropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
+                  Acts::units::_eV, debug);
 }
 
 /// test consistency of propagators when approaching a cylinder
@@ -248,6 +251,35 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1 * units::_um);
 }
 
+//~ /// test correct covariance transport for neutral propagations
+//~ BOOST_DATA_TEST_CASE(
+    //~ dense_covariance_transport_curvilinear_curvilinear_,
+    //~ bdata::random((bdata::seed = 2000,
+                   //~ bdata::distribution = std::uniform_real_distribution<>(
+                       //~ 3. * units::_GeV, 10. * units::_GeV))) ^
+        //~ bdata::random(
+            //~ (bdata::seed = 2004,
+             //~ bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
+        //~ bdata::random(
+            //~ (bdata::seed = 3005,
+             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+        //~ bdata::random(
+            //~ (bdata::seed = 3006,
+             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+        //~ bdata::random(
+            //~ (bdata::seed = 3007,
+             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
+        //~ bdata::xrange(ntests),
+    //~ pT, plimit, rand1, rand2, rand3, index) {
+  //~ if (index < skip) {
+    //~ return;
+  //~ }
+
+//~ // between the steppers
+//~ to_cylinder
+//~ to_surface
+//~ }
+
 /// test correct covariance transport for curvilinear parameters
 /// this test only works within the
 /// s_curvilinearProjTolerance (in: Definitions.hpp)
@@ -278,10 +310,11 @@ BOOST_DATA_TEST_CASE(
   // covariance check for eigen stepper
   covariance_curvilinear(epropagator, pT, phi, theta, dcharge,
                          plimit * Acts::units::_m, index);
-  // covariance check for eigen stepper in dense environment
   // covariance check fo atlas stepper
   covariance_curvilinear(apropagator, pT, phi, theta, dcharge,
                          plimit * Acts::units::_m, index);
+  // covariance check for straight line stepper
+  covariance_curvilinear(spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
 }
 
 // test correct covariance transport from disc to disc
@@ -328,6 +361,11 @@ BOOST_DATA_TEST_CASE(
   covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
       rand2, rand3, index, true, true, 1e-1);
+      
+  // covariance check for straight line stepper
+  covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
+      spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      rand2, rand3, index, true, true, 1e-1);
 }
 
 // test correct covariance transport from plane to plane
@@ -372,6 +410,11 @@ BOOST_DATA_TEST_CASE(
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      rand2, rand3, index);
+      
+  // covariance check for straight line stepper
+  covariance_bound<StraightPropagatorType, PlaneSurface, PlaneSurface>(
+      spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
       rand2, rand3, index);
 }
 
@@ -420,6 +463,11 @@ BOOST_DATA_TEST_CASE(
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
+      rand2, rand3, index, false, false, 1e-1);
+      
+  // covariance check for straight line stepper
+  covariance_bound<StraightPropagatorType, StrawSurface, StrawSurface>(
+      spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
       rand2, rand3, index, false, false, 1e-1);
 }
 

@@ -75,7 +75,7 @@ class StraightLineStepper {
           q(par.charge()),
           t0(par.time()),
           navDir(ndir),
-          stepSize(ssize),
+          stepSize(ndir * std::abs(ssize)),
           geoContext(gctx) 
           {
         if (par.covariance()) {
@@ -445,11 +445,12 @@ class StraightLineStepper {
     const double h = state.stepping.stepSize;
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
-    
-    // Storage for the derivative dt/ds
-	double dtds = 0.;
+
+	// SI momentum and mass
+	const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
+	const double mass = units::Nat2SI<units::MASS>(state.options.mass);
 	// Propagate the time
-		dtds = std::sqrt(state.options.mass * state.options.mass / (momentum(state.stepping) * momentum(state.stepping)) + units::_c2inv);
+	double	dtds = std::sqrt(state.options.mass * state.options.mass / (momentum(state.stepping) * momentum(state.stepping)) + units::_c2inv);
 		state.stepping.dt += h * dtds;
     // Propagate the jacobian
     if (state.stepping.covTransport) {
@@ -458,11 +459,8 @@ class StraightLineStepper {
 		D.block<3, 3>(0, 3) = ActsSymMatrixD<3>::Identity() * h;
 		
 		// Extend the calculation by the time propagation
-			const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
-			const double mass = units::Nat2SI<units::MASS>(state.options.mass);
 			// Evaluate dt/dlambda
 			D(6, 7) = h * mass * mass / (mom * dtds);
-			
 			// Set the derivative factor the time
 			state.stepping.derivative(7) = dtds;
 		
