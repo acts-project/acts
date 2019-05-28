@@ -7,20 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE BoundingVolumeHierarchy Navigation Tests
+#define BOOST_TEST_MODULE TrackingVolume Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
-
-#include <array>
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <random>
-#include <string>
-#include <vector>
 
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
@@ -43,11 +34,15 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 
 namespace Acts {
-namespace IntegrationTest {
+namespace Test {
 
-#define NBOXES 49
-#define NTESTS 100
-#include "../Core/Geometry/BVHDataTestCase.hpp"
+BOOST_AUTO_TEST_SUITE(Geometry)
 
-}  // namespace IntegrationTest
+#define NBOXES 10
+#define NTESTS 20
+#include "BVHDataTestCase.hpp"
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace Test
 }  // namespace Acts
