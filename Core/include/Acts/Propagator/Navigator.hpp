@@ -9,6 +9,7 @@
 #pragma once
 
 #include <boost/algorithm/string.hpp>
+#include <iomanip>
 #include <iterator>
 #include <sstream>
 #include <string>
@@ -255,7 +256,14 @@ class Navigator {
         });
         if (++state.navigation.navSurfaceIter ==
             state.navigation.navSurfaces.end()) {
-          ++state.navigation.navLayerIter;
+          // this was the last surface, check if we have layers
+          if (!state.navigation.navLayers.empty()) {
+            ++state.navigation.navLayerIter;
+          } else {
+            // no layers, go to boundary
+            state.navigation.navigationStage = Stage::boundaryTarget;
+            return;
+          }
         }
       }
       // Set the navigation stage to surface target
@@ -284,7 +292,7 @@ class Navigator {
     } else if (status(state, stepper, state.navigation.navBoundaries,
                       state.navigation.navBoundaryIter)) {
       debugLog(state,
-               [&] { return std::string("Stauts: in boundary handling."); });
+               [&] { return std::string("Status: in boundary handling."); });
 
       // Are we on the boundary - then overwrite the stage
       if (state.navigation.currentSurface != nullptr) {
@@ -675,6 +683,76 @@ class Navigator {
       debugLog(state, [&] {
         return std::string("No layers present, resolve volume first.");
       });
+
+      // check if current volume has BVH, or layers
+      if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
+        // has hierarchy, use that, skip layer resolution
+        NavigationOptions<Surface> navOpts(
+            state.stepping.navDir, true, resolveSensitive, resolveMaterial,
+            resolvePassive, nullptr, state.navigation.targetSurface);
+        double opening_angle = 0;
+
+        // Preliminary version of the frustum opening angle estimation.
+        // Currently not used (only rays), but will be.
+
+        /*
+        Vector3D pos = stepper.position(state.stepping);
+        double   mom
+            = units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+        double   q   = stepper.charge(state.stepping);
+        Vector3D dir = stepper.direction(state.stepping);
+        Vector3D B   = stepper.getField(state.stepping, pos);
+        if (B.squaredNorm() > 1e-9) {
+          // ~ non-zero field
+          double ir = (dir.cross(B).norm()) * q / mom;
+          double s;
+          if (state.stepping.navDir == forward) {
+            s = state.stepping.stepSize.max();
+          } else {
+            s = state.stepping.stepSize.min();
+          }
+          opening_angle = std::atan((1 - std::cos(s * ir)) / std::sin(s * ir));
+        }
+        debugLog(state, [&] {
+          std::stringstream ss;
+          ss << std::fixed << std::setprecision(50);
+          ss << "Estimating opening angle for frustum nav:" << std::endl;
+          ss << "pos: " << pos.transpose() << std::endl;
+          ss << "dir: " << dir.transpose() << std::endl;
+          ss << "B: " << B.transpose() << " |B|: " << B.norm() << std::endl;
+          ss << "step mom: " << stepper.momentum(state.stepping) << std::endl;
+          ss << "=> opening angle: " << opening_angle << std::endl;
+          return ss.str();
+        });
+        */
+
+        auto protoNavSurfaces =
+            state.navigation.currentVolume->compatibleSurfacesFromHierarchy(
+                state.geoContext, stepper.position(state.stepping),
+                stepper.direction(state.stepping), opening_angle, navOpts,
+                navCorr);
+        if (!protoNavSurfaces.empty()) {
+          // did we find any surfaces?
+
+          // are we on the first surface?
+          if (state.navigation.currentSurface == nullptr ||
+              state.navigation.currentSurface !=
+                  protoNavSurfaces.front().object) {
+            // we are not, go on
+            state.navigation.navSurfaces = std::move(protoNavSurfaces);
+
+            state.navigation.navSurfaceIter =
+                state.navigation.navSurfaces.begin();
+            state.navigation.navLayers = {};
+            state.navigation.navLayerIter = state.navigation.navLayers.end();
+            updateStep(state, navCorr,
+                       state.navigation.navSurfaceIter->intersection.pathLength,
+                       true);
+            return true;
+          }
+        }
+      }
+
       if (resolveLayers(state, stepper, navCorr)) {
         // The layer resolving worked
         return true;

@@ -25,7 +25,10 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Ray.hpp"
 
 namespace Acts {
 
@@ -80,7 +83,7 @@ class TrackingVolume : public Volume {
   /// Destructor
   ~TrackingVolume() override;
 
-  /// Factory constructor for a conatiner TrackingVolume
+  /// Factory constructor for a container TrackingVolume
   /// - by definition a Vacuum volume
   ///
   /// @param htrans is the global 3D transform to position the volume in space
@@ -97,6 +100,29 @@ class TrackingVolume : public Volume {
     return MutableTrackingVolumePtr(
         new TrackingVolume(std::move(htrans), std::move(volumeBounds),
                            containedVolumes, volumeName));
+  }
+
+  /// Factory constructor for Tracking Volume with a bounding volume hierarchy
+  ///
+  /// @param htrans is the global 3D transform to position the volume in space
+  /// @param volBounds is the description of the volume boundaries
+  /// @param boxStore Vector owning the contained bounding boxes
+  /// @param descendants Vector owning the child volumes
+  /// @param top The top of the hierarchy (top node)
+  /// @param matprop is are materials of the tracking volume
+  /// @param volumeName is a string identifier
+  ///
+  /// @return shared pointer to a new TrackingVolume
+  static MutableTrackingVolumePtr create(
+      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+      std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
+      std::vector<std::unique_ptr<const Volume>> descendants,
+      const Volume::BoundingBox* top,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      const std::string& volumeName = "undefined") {
+    return MutableTrackingVolumePtr(new TrackingVolume(
+        std::move(htrans), std::move(volbounds), std::move(boxStore),
+        std::move(descendants), top, std::move(volumeMaterial), volumeName));
   }
 
   /// Factory constructor for Tracking Volumes with content
@@ -215,6 +241,25 @@ class TrackingVolume : public Volume {
       const options_t& options, const corrector_t& corrfnc = corrector_t(),
       const sorter_t& sorter = sorter_t()) const;
 
+  /// @brief Return surfaces in given direction from bounding volume hierarchy
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam corrector_t Type of (optional) corrector for surface intersection
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to start from
+  /// @param direction The direction towards which to test
+  /// @param angle The opening angle
+  /// @param options The templated navigation options
+  /// @param corrfnc is the corrector struct / function
+  ///
+  /// @return Vector of surface candidates
+  template <typename options_t,
+            typename corrector_t = VoidIntersectionCorrector>
+  std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, double angle, const options_t& options,
+      const corrector_t& corrfnc = corrector_t()) const;
+
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -311,6 +356,11 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
+  /// Return whether this TrackingVolume has a BoundingVolumeHierarchy
+  /// associated
+  /// @return If it has a BVH or not.
+  bool hasBoundingVolumeHierarchy() const;
+
   /// Sign the volume - the geometry builder has to do that
   ///
   /// @param geosign is the volume signature
@@ -356,6 +406,14 @@ class TrackingVolume : public Volume {
                      containedVolumeArray = nullptr,
                  const std::string& volumeName = "undefined");
 
+  TrackingVolume(std::shared_ptr<const Transform3D> htrans,
+                 VolumeBoundsPtr volbounds,
+                 std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
+                 std::vector<std::unique_ptr<const Volume>> descendants,
+                 const Volume::BoundingBox* top,
+                 std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+                 const std::string& volumeName = "undefined");
+
   /// Constructor for a full equipped Tracking Volume
   ///
   /// @param htrans is the global 3D transform to position the volume in space
@@ -397,6 +455,10 @@ class TrackingVolume : public Volume {
   /// interlink the layers in this TrackingVolume
   void interlinkLayers();
 
+  template <typename T>
+  static std::vector<const Volume*> intersectSearchHierarchy(
+      const T obj, const Volume::BoundingBox* lnode);
+
   /// Forbidden copy constructor - deleted
   TrackingVolume(const TrackingVolume&) = delete;
 
@@ -433,6 +495,11 @@ class TrackingVolume : public Volume {
 
   /// color code for displaying
   unsigned int m_colorCode{20};
+
+  /// Bounding Volume Hierarchy (BVH)
+  std::vector<std::unique_ptr<const Volume::BoundingBox>> m_boundingBoxes;
+  std::vector<std::unique_ptr<const Volume>> m_descendantVolumes;
+  const Volume::BoundingBox* m_bvhTop{nullptr};
 };
 
 inline const std::string& TrackingVolume::volumeName() const {
@@ -480,6 +547,10 @@ inline const TrackingVolume* TrackingVolume::motherVolume() const {
 
 inline void TrackingVolume::setMotherVolume(const TrackingVolume* mvol) {
   m_motherVolume = mvol;
+}
+
+inline bool TrackingVolume::hasBoundingVolumeHierarchy() const {
+  return m_bvhTop != nullptr;
 }
 
 #include "detail/TrackingVolume.ipp"

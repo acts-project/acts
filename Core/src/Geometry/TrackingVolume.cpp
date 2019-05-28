@@ -58,6 +58,28 @@ Acts::TrackingVolume::TrackingVolume(
   interlinkLayers();
 }
 
+// constructor for arguments
+Acts::TrackingVolume::TrackingVolume(
+    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+    std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
+    std::vector<std::unique_ptr<const Volume>> descendants,
+    const Volume::BoundingBox* top,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    const std::string& volumeName)
+    : Volume(std::move(htrans), std::move(volbounds)),
+      m_volumeMaterial(std::move(volumeMaterial)),
+      m_name(volumeName),
+      m_descendantVolumes(std::move(descendants)),
+      m_bvhTop(top) {
+  createBoundarySurfaces();
+  // we take a copy of the unique box pointers, but we want to
+  // store them as consts.
+  for (auto& uptr : boxStore) {
+    m_boundingBoxes.push_back(
+        std::unique_ptr<Volume::BoundingBox>(uptr.release()));
+  }
+}
+
 Acts::TrackingVolume::~TrackingVolume() {
   delete m_glueVolumeDescriptor;
 }
@@ -324,6 +346,24 @@ void Acts::TrackingVolume::closeGeometry(
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID);
+      }
+    } else if (m_bvhTop != nullptr) {
+      geo_id_value isurface = 0;
+      for (const auto& descVol : m_descendantVolumes) {
+        // attempt to cast to AbstractVolume, that's the only one we'll handle
+        // here
+        const AbstractVolume* avol =
+            dynamic_cast<const AbstractVolume*>(descVol.get());
+        if (avol != nullptr) {
+          const auto& bndSrf = avol->boundarySurfaces();
+          for (const auto& bnd : bndSrf) {
+            const auto& srf = bnd->surfaceRepresentation();
+            Surface* mutableSurfcePtr = const_cast<Surface*>(&srf);
+            GeometryID geoID = volumeID;
+            geoID.add(++isurface, GeometryID::sensitive_mask);
+            mutableSurfcePtr->assignGeoID(geoID);
+          }
+        }
       }
     }
   } else {

@@ -117,3 +117,88 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
   return compatibleBoundaries(gctx, parameters.position(),
                               parameters.direction(), options, corrfnc, sorter);
 }
+
+template <typename options_t, typename corrector_t>
+std::vector<SurfaceIntersection>
+TrackingVolume::compatibleSurfacesFromHierarchy(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, double angle, const options_t& options,
+    const corrector_t& corrfnc) const {
+  std::vector<SurfaceIntersection> sIntersections;
+  sIntersections.reserve(20);  // arbitrary
+
+  if (m_bvhTop == nullptr || !options.navDir) {
+    return sIntersections;
+  }
+
+  Vector3D dir = direction;
+  if (options.navDir == backward) {
+    dir *= -1;
+  }
+
+  std::vector<const Volume*> hits;
+  if (angle == 0) {
+    // use ray
+    Ray3D obj(position, dir);
+    hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
+  } else {
+    Acts::Frustum<double, 3, 4> obj(position, dir, angle);
+    hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
+  }
+
+  // have cells, decompose to surfaces
+  for (const Volume* vol : hits) {
+    const AbstractVolume* avol = dynamic_cast<const AbstractVolume*>(vol);
+    const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
+        boundarySurfaces = avol->boundarySurfaces();
+    for (const auto& bs : boundarySurfaces) {
+      const Surface& srf = bs->surfaceRepresentation();
+      SurfaceIntersection sfi(
+          srf.intersectionEstimate(gctx, position, direction, options.navDir,
+                                   false, corrfnc),
+          &srf);
+
+      if (sfi) {
+        sIntersections.push_back(std::move(sfi));
+      }
+    }
+  }
+
+  // sort according to the path length
+  if (options.navDir == forward) {
+    std::sort(sIntersections.begin(), sIntersections.end());
+  } else {
+    std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
+  }
+
+  return sIntersections;
+}
+
+template <typename T>
+std::vector<const Volume*> TrackingVolume::intersectSearchHierarchy(
+    const T obj, const Volume::BoundingBox* lnode) {
+  std::vector<const Volume*> hits;
+  hits.reserve(20);  // arbitrary
+  do {
+    if (lnode->intersect(obj)) {
+      if (lnode->hasEntity()) {
+        // found primitive
+        // check obb to limit false positivies
+        const Volume* vol = lnode->entity();
+        const auto& obb = vol->orientedBoundingBox();
+        if (obb.intersect(obj.transformed(vol->itransform()))) {
+          hits.push_back(vol);
+        }
+        // we skip in any case, whether we actually hit the OBB or not
+        lnode = lnode->getSkip();
+      } else {
+        // go over children
+        lnode = lnode->getLeftChild();
+      }
+    } else {
+      lnode = lnode->getSkip();
+    }
+  } while (lnode != nullptr);
+
+  return hits;
+}

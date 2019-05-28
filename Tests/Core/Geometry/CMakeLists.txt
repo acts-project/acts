@@ -102,3 +102,8 @@ target_include_directories (DoubleTrapezoidVolumeBoundsTest PRIVATE ${Boost_INCL
 target_link_libraries (DoubleTrapezoidVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME DoubleTrapezoidVolumeBoundsTest COMMAND DoubleTrapezoidVolumeBoundsTest)
 
+add_executable (TrackingVolumeTests TrackingVolumeTests.cpp)
+target_include_directories (TrackingVolumeTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (TrackingVolumeTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME TrackingVolumeTests COMMAND TrackingVolumeTests)
+
