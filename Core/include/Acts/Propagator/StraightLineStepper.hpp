@@ -86,8 +86,6 @@ class StraightLineStepper {
         cov = BoundSymMatrix(*par.covariance());
         surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
                                      par.parameters());
-                                     
-		derivative.template head<3>() = dir;
       }
       }
 
@@ -96,7 +94,7 @@ class StraightLineStepper {
     
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();
-    
+
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
     
@@ -268,14 +266,10 @@ class StraightLineStepper {
     state.dir = mom.normalized();
     state.p = mom.norm();
     state.dt = pars.time();
-    if(state.covTransport)
-    {
-		if(pars.covariance() != nullptr)
-		{
-			state.cov = (*(pars.covariance()));
-		}
-		state.derivative.template head<3>() = state.dir;
-		state.deruvatuve(7) = state.dt / state.pathAccumulated;
+
+	if(pars.covariance() != nullptr)
+	{
+		state.cov = (*(pars.covariance()));
 	}
   }
 
@@ -291,11 +285,6 @@ class StraightLineStepper {
     state.dir = udirection;
     state.p = up;
     state.dt = time;
-    if(state.covTransport)
-    {
-		state.derivative.template head<3>() = state.dir;
-		state.deruvatuve(7) = state.dt / state.pathAccumulated;
-	}
   }
 
   /// Return a corrector
@@ -314,7 +303,6 @@ class StraightLineStepper {
   void covarianceTransport(State& state,
                            bool reinitialize = false) const 
   {
-	  /// TODO: jacToCurv is const and can be moved out
   // Optimized trigonometry on the propagation direction
   const double x = state.dir(0);  // == cos(phi) * sin(theta)
   const double y = state.dir(1);  // == sin(phi) * sin(theta)
@@ -349,8 +337,8 @@ class StraightLineStepper {
   jacToCurv(2, 3) = -sinPhi * invSinTheta;
   jacToCurv(2, 4) = cosPhi * invSinTheta;
   jacToCurv(3, 5) = -invSinTheta;
-  jacToCurv(4, 6) = 1;
-  jacToCurv(5, 7) = 1;  
+  jacToCurv(4, 6) = 1.;
+  jacToCurv(5, 7) = 1.;
   // Apply the transport from the steps on the jacobian
   state.jacToGlobal = state.jacTransport * state.jacToGlobal;
   // Transport the covariance
@@ -458,25 +446,29 @@ class StraightLineStepper {
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
     
-    double tStep = 0.;
-		tStep = std::sqrt(state.options.mass * state.options.mass /
-                            (state.stepping.p * state.stepping.p) +
-                        units::_c2inv);
-      state.stepping.dt +=
-          h * tStep;
+    // Storage for the derivative dt/ds
+	double dtds = 0.;
+	// Propagate the time
+		dtds = std::sqrt(state.options.mass * state.options.mass / (momentum(state.stepping) * momentum(state.stepping)) + units::_c2inv);
+		state.stepping.dt += h * dtds;
+    // Propagate the jacobian
     if (state.stepping.covTransport) {
 		// The step transport matrix in global coordinates
 		FreeMatrix D = FreeMatrix::Identity();
 		D.block<3, 3>(0, 3) = ActsSymMatrixD<3>::Identity() * h;
 		
-		if(state.options.propagateTime)
-		{
-			// TODO: caching the time propagation?
+		// Extend the calculation by the time propagation
 			const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
 			const double mass = units::Nat2SI<units::MASS>(state.options.mass);
-			D(6, 7) = h * mass * mass / mom * state.stepping.derivative(7);
-		}
+			// Evaluate dt/dlambda
+			D(6, 7) = h * mass * mass / (mom * dtds);
+			
+			// Set the derivative factor the time
+			state.stepping.derivative(7) = dtds;
+		
+		// Update jacobian and derivative
 		state.stepping.jacTransport = D * state.stepping.jacTransport;
+		state.stepping.derivative.template head<3>() = state.stepping.dir;
 	}
     
     // state the path length
