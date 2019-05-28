@@ -66,8 +66,6 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   Covariance covTrk;
   covTrk.setIdentity();
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
-  // covTrk << 0.08, 0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-  // 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0;
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
   BoundParameters pars(
