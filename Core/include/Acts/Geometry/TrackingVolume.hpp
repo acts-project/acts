@@ -241,7 +241,7 @@ class TrackingVolume : public Volume {
       const options_t& options, const corrector_t& corrfnc = corrector_t(),
       const sorter_t& sorter = sorter_t()) const;
 
-  /// @brief Return surface from bounding volume hierarchy
+  /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///

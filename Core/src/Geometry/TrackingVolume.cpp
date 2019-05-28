@@ -72,7 +72,6 @@ Acts::TrackingVolume::TrackingVolume(
       m_descendantVolumes(std::move(descendants)),
       m_bvhTop(top) {
   createBoundarySurfaces();
-  // interlinkLayers();
   // we take a copy of the unique box pointers, but we want to
   // store them as consts.
   for (auto& uptr : boxStore) {

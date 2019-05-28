@@ -136,15 +136,14 @@ TrackingVolume::compatibleSurfacesFromHierarchy(
     dir *= -1;
   }
 
-  const Volume::BoundingBox* lnode = m_bvhTop;
   std::vector<const Volume*> hits;
   if (angle == 0) {
     // use ray
     Ray3D obj(position, dir);
-    hits = intersectSearchHierarchy(std::move(obj), lnode);
+    hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   } else {
     Acts::Frustum<double, 3, 4> obj(position, dir, angle);
-    hits = intersectSearchHierarchy(std::move(obj), lnode);
+    hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   }
 
   // have cells, decompose to surfaces
