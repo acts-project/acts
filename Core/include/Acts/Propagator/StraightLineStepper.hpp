@@ -471,6 +471,7 @@ class StraightLineStepper {
     
     // state the path length
     state.stepping.pathAccumulated += h;
+
     // return h
     return h;
   }

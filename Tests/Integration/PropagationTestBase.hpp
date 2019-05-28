@@ -102,6 +102,12 @@ BOOST_DATA_TEST_CASE(
   auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, dcharge, r,
                                    rand1, rand2, rand3, covtpr, debug);
   CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10. * units::_um);
+  
+  // check without charge
+  auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1, rand2, rand3, covtpr, debug);
+  e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1, rand2, rand3, covtpr, debug);
+
+  CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 10. * units::_um);
 }
 
 /// test consistency of propagators to a plane
@@ -149,6 +155,17 @@ BOOST_DATA_TEST_CASE(
       rand2, rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_plane.first, a_at_plane.first, 1 * units::_um);
+  
+  // to a plane with the straight line stepper
+  auto s_at_plane = to_surface<StraightPropagatorType, PlaneSurface>(
+      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
+      rand2, rand3, true, covtpr);
+  // to a plane with the eigen stepper without charge
+  e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(
+      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
+      rand2, rand3, true, covtpr);
+
+  CHECK_CLOSE_ABS(e_at_plane.first, s_at_plane.first, 1 * units::_um);
 }
 
 /// test consistency of propagators to a disc
@@ -196,6 +213,17 @@ BOOST_DATA_TEST_CASE(
       rand2, rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_disc.first, a_at_disc.first, 1 * units::_um);
+  
+  // to a disc with the straight line stepper
+  auto s_at_disc = to_surface<StraightPropagatorType, DiscSurface>(
+      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
+      rand2, rand3, true, covtpr);
+  // to a disc with the eigen stepper without charge
+  e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(
+      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
+      rand2, rand3, true, covtpr);
+
+  CHECK_CLOSE_ABS(e_at_disc.first, s_at_disc.first, 1 * units::_um);
 }
 
 /// test consistency of propagators to a line
@@ -249,36 +277,21 @@ BOOST_DATA_TEST_CASE(
       rand2, rand3, false, covtpr, debug);
 
   CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1 * units::_um);
+  
+  if (debug) {
+    std::cout << "[ >>>> Testing Neutral Propagators <<<< ]" << std::endl;
+  }
+  // to a straw with the straight line stepper
+  auto s_at_line = to_surface<StraightPropagatorType, StrawSurface>(
+      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
+      rand2, rand3, false, covtpr, debug);
+  // to a straw with the eigen stepper without charge
+  e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
+      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
+      rand2, rand3, false, covtpr, debug);
+
+  CHECK_CLOSE_ABS(e_at_line.first, s_at_line.first, 1 * units::_um);
 }
-
-//~ /// test correct covariance transport for neutral propagations
-//~ BOOST_DATA_TEST_CASE(
-    //~ dense_covariance_transport_curvilinear_curvilinear_,
-    //~ bdata::random((bdata::seed = 2000,
-                   //~ bdata::distribution = std::uniform_real_distribution<>(
-                       //~ 3. * units::_GeV, 10. * units::_GeV))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 2004,
-             //~ bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3005,
-             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3006,
-             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        //~ bdata::random(
-            //~ (bdata::seed = 3007,
-             //~ bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        //~ bdata::xrange(ntests),
-    //~ pT, plimit, rand1, rand2, rand3, index) {
-  //~ if (index < skip) {
-    //~ return;
-  //~ }
-
-//~ // between the steppers
-//~ to_cylinder
-//~ to_surface
-//~ }
 
 /// test correct covariance transport for curvilinear parameters
 /// this test only works within the

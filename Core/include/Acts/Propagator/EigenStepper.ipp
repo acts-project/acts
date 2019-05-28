@@ -309,6 +309,5 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
   state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
-
   return h;
 }
