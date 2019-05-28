@@ -86,7 +86,7 @@ class IterativeVertexFinder {
     Linearizer_t linearizer;
 
     /// ImpactPoint3dEstimator
-    ImpactPoint3dEstimator ipEst;
+    ImpactPoint3dEstimator<input_track_t> ipEst;
 
     /// Vertex seed finder
     sfinder_t seedFinder;

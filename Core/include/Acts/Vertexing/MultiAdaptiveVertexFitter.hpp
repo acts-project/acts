@@ -49,7 +49,7 @@ class MultiAdaptiveVertexFitter {
     Chi2TrackCompatibilityEstimator<input_track_t> trackCompEst;
 
     /// ImpactPoint3dEstimator
-    ImpactPoint3dEstimator ipEst;
+    ImpactPoint3dEstimator<input_track_t> ipEst;
 
     /// Vertex updator
     KalmanVertexUpdator<input_track_t> vertexUpdator;
