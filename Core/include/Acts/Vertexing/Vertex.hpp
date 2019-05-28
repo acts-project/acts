@@ -25,10 +25,15 @@ class Vertex {
   /// @brief Default constructor
   Vertex() = default;
 
-  /// @brief Construct for vertex at given position, sets covariance to zero
+  /// @brief Construct for vertex at given 3d-position, sets covariance to zero
   ///
   /// @param position Vertex position
   Vertex(const Vector3D& position);
+
+  /// @brief Construct for vertex at given 4d-position, sets covariance to zero
+  ///
+  /// @param position Vertex position
+  Vertex(const SpacePointVector& position);
 
   /// @brief Vertex constructor
   ///
