@@ -509,7 +509,7 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
   std::vector<box_t*> sub_octs;
   for (const auto& sub_prims : octants) {
     if (sub_prims.size() <= 8) {
-      if (sub_prims.size() < 1) {
+      if (sub_prims.empty()) {
         // done
       } else if (sub_prims.size() == 1) {
         sub_octs.push_back(sub_prims.front());
