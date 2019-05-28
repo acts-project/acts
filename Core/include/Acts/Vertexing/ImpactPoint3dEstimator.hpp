@@ -16,6 +16,7 @@ namespace Acts {
 /// @class ImpactPoint3dEstimator
 ///
 /// @brief Estimates point of closest approach in 3D
+template <typename input_track_t>
 class ImpactPoint3dEstimator {
  public:
   ImpactPoint3dEstimator() = default;
@@ -37,13 +38,16 @@ class ImpactPoint3dEstimator {
   /// to the plane and center of the plane defined as the
   /// given reference point (vertex).
   ///
+  /// @param geoCtx The geometry context
   /// @param trk Track at vertex
   /// @param refPos Reference position (vertex)
   ///
   /// @return New track params
-  // BoundParameters paramsAtIP3d(const TrackAtVertex& trk,
-  //							const Vector3D& refPos)
-  // const;
+  BoundParameters getParamsAtIP3d(const GeometryContext& geoCtx,
+                                  const TrackAtVertex<input_track_t>& trk,
+                                  const Vector3D& refPos) const;
 };
 
 }  // namespace Acts
+
+#include "Acts/Vertexing/ImpactPoint3dEstimator.ipp"
