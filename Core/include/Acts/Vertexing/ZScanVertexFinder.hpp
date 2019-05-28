@@ -68,7 +68,6 @@ class ZScanVertexFinder {
     double expPt = 1.;
     // minimum required weight
     double minWeight = 0.01;
-
   };
 
   /// @brief Constructor used if InputTrack_t type == BoundParameters

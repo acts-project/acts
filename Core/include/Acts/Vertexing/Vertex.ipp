@@ -64,7 +64,6 @@ Acts::ActsSymMatrixD<3> Acts::Vertex<input_track_t>::covariance() const {
 template <typename input_track_t>
 const Acts::SpacePointSymMatrix& Acts::Vertex<input_track_t>::fullCovariance()
     const {
-
   return m_covariance;
 }
 

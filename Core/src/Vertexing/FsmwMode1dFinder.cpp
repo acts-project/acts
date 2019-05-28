@@ -19,7 +19,6 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
     std::vector<std::pair<double, double>> inputVector) const {
   if (inputVector.empty()) {
     return VertexingError::EmptyInput;
-
   }
   if (inputVector.size() == 1) {
     return inputVector.begin()->first;
@@ -39,7 +38,6 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
   double overallweight(0.);
   auto best_begin = begin;
   auto best_end = end;
-
 
   double last_value = std::numeric_limits<double>::max();
 

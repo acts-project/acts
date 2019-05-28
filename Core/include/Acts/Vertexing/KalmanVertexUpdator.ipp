@@ -18,45 +18,47 @@ Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
     const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign) const {
   // Retrieve linTrack information
-  const auto& posJac = linTrack.positionJacobian;
-  const auto& momJac = linTrack.momentumJacobian;  // B_k in comments below
-  const auto& trkParams = linTrack.parametersAtPCA;
-  const auto& constTerm = linTrack.constantTerm;
-  const auto& trkParamWeight =
+  const SpacePointToBoundMatrix& posJac = linTrack.positionJacobian;
+  const ActsMatrixD<BoundParsDim, 3>& momJac =
+      linTrack.momentumJacobian;  // B_k in comments below
+  const BoundVector& trkParams = linTrack.parametersAtPCA;
+  const BoundVector& constTerm = linTrack.constantTerm;
+  const BoundSymMatrix& trkParamWeight =
       linTrack.covarianceAtPCA.inverse();  // G_k in comments below
 
   // Vertex to be updated
-  const auto& oldVtxPos = vtx.position();
-  const auto& oldVtxWeight = vtx.covariance().inverse();
+  const SpacePointVector& oldVtxPos = vtx.fullPosition();
+  const SpacePointSymMatrix& oldVtxWeight = vtx.fullCovariance().inverse();
 
   // W_k matrix
   ActsSymMatrixD<3> wMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
-  ActsSymMatrixD<5> gBmat =
+  BoundSymMatrix gBmat =
       trkParamWeight - trkParamWeight * (momJac * (wMat * momJac.transpose())) *
                            trkParamWeight.transpose();
 
   // new vertex cov matrix
-  ActsSymMatrixD<3> newVtxCov =
+  SpacePointSymMatrix newVtxCov =
       (oldVtxWeight +
        trackWeight * sign * posJac.transpose() * (gBmat * posJac))
           .inverse();
 
   // new vertex position
-  Vector3D newVtxPos = newVtxCov * (oldVtxWeight * oldVtxPos +
-                                    trackWeight * sign * momJac.transpose() *
-                                        gBmat * (trkParams - constTerm));
+  SpacePointVector newVtxPos =
+      newVtxCov *
+      (oldVtxWeight * oldVtxPos + trackWeight * sign * posJac.transpose() *
+                                      gBmat * (trkParams - constTerm));
 
   // create return vertex with new position
   // and covariance, but w/o tracks
   Vertex<input_track_t> returnVertex;
 
   // set position
-  returnVertex.setPosition(newVtxPos);
+  returnVertex.setFullPosition(newVtxPos);
   // set cov
-  returnVertex.setCovariance(newVtxCov);
+  returnVertex.setFullCovariance(newVtxCov);
   // set fit quality
   returnVertex.setFitQuality(vtx.fitQuality().first, vtx.fitQuality().second);
 
@@ -67,8 +69,8 @@ template <typename input_track_t>
 float Acts::KalmanVertexUpdator<input_track_t>::vertexPositionChi2(
     const Vertex<input_track_t>& oldVtx,
     const Vertex<input_track_t>& newVtx) const {
-  ActsSymMatrixD<3> oldWeight = oldVtx.covariance().inverse();
-  Vector3D posDiff = newVtx.position() - oldVtx.position();
+  BoundSymMatrix oldWeight = oldVtx.fullCovariance().inverse();
+  SpacePointVector posDiff = newVtx.fullPosition() - oldVtx.fullPosition();
 
   // calculate and return corresponding chi2
   return posDiff.transpose() * (oldWeight * posDiff);
@@ -77,17 +79,18 @@ float Acts::KalmanVertexUpdator<input_track_t>::vertexPositionChi2(
 template <typename input_track_t>
 float Acts::KalmanVertexUpdator<input_track_t>::trackParametersChi2(
     const Vertex<input_track_t>& vtx, const LinearizedTrack& linTrack) const {
-  const Vector3D& vtxPos = vtx.position();
+  const SpacePointVector& vtxPos = vtx.fullPosition();
 
   // track properties
-  const auto& posJac = linTrack.positionJacobian;
-  const auto& momJac = linTrack.momentumJacobian;
-  const auto& trkParams = linTrack.parametersAtPCA;
-  const auto& constTerm = linTrack.constantTerm;
-  const auto& trkParamWeight = linTrack.covarianceAtPCA.inverse();
+  const SpacePointToBoundMatrix& posJac = linTrack.positionJacobian;
+  const ActsMatrixD<BoundParsDim, 3>& momJac = linTrack.momentumJacobian;
+  const BoundVector& trkParams = linTrack.parametersAtPCA;
+  const BoundVector& constTerm = linTrack.constantTerm;
+  const BoundSymMatrix& trkParamWeight = linTrack.covarianceAtPCA.inverse();
 
   // calculate temp matrix S
-  auto matS = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+  ActsSymMatrixD<3> matS =
+      (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   // refitted track momentum
   Vector3D newTrackMomentum = matS * momJac.transpose() * trkParamWeight *
@@ -131,8 +134,8 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   ndf += sign * trackWeight * 2;
 
   // updating the vertex
-  vtx.setPosition(tempVtx.position());
-  vtx.setCovariance(tempVtx.covariance());
+  vtx.setFullPosition(tempVtx.fullPosition());
+  vtx.setFullCovariance(tempVtx.fullCovariance());
   vtx.setFitQuality(chi2, ndf);
 
   // add track to existing list of tracks at vertex
