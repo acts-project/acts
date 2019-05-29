@@ -22,70 +22,52 @@
 
 using namespace Acts::UnitLiterals;
 
+// datasets for Boost::Test data-driven test cases
+namespace ds {
+// track parameters
+auto pT = bdata::xrange(0.5_GeV, 10_GeV, 500_MeV);
+auto phi = bdata::xrange(-180_degree, 180_degree, 30_degree);
+auto theta = bdata::xrange(15_degree, 90_degree, 15_degree);
+auto charge = bdata::make({1_e, -1_e});
+// combined track parameters as cartesian product of all possible combinations
+auto trackParameters = (pT * phi * theta * charge);
+auto propagationFraction = bdata::xrange(0.0, 1.0, 0.25);
+auto propagationLimit = bdata::xrange(10_cm, 1_m, 10_cm);
+// additional random numbers
+auto rand1 = bdata::random(
+    (bdata::seed = 1515,
+     bdata::distribution = std::uniform_real_distribution<>(-1., 1.)));
+auto rand2 = bdata::random(
+    (bdata::seed = 1616,
+     bdata::distribution = std::uniform_real_distribution<>(-1., 1.)));
+auto rand3 = bdata::random(
+    (bdata::seed = 1717,
+     bdata::distribution = std::uniform_real_distribution<>(-1., 1.)));
+auto threeRandom = (rand1 ^ rand2 ^ rand2);
+}  // namespace ds
+
 /// test consistency of forward-backward propagation
-BOOST_DATA_TEST_CASE(
-    forward_backward_propagation_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((
-            bdata::seed = 4,
-            bdata::distribution = std::uniform_real_distribution<>(0_m, 1_m))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(forward_backward_propagation_,
+                     ds::trackParameters* ds::propagationLimit, pT, phi, theta,
+                     charge, plimit) {
   // foward backward check atlas stepper
-  foward_backward(apropagator, pT, phi, theta, charge, plimit, index, 1e-3,
-                  Acts::UnitConstants::eV, debug);
+  foward_backward(apropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV,
+                  debug);
   // foward backward check eigen stepper
-  foward_backward(epropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
-                  Acts::UnitConstants::eV, debug);
+  foward_backward(epropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV,
+                  debug);
   // foward backward check straight line stepper
-  foward_backward(spropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
-                  Acts::UnitConstants::eV, debug);
+  foward_backward(spropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV,
+                  debug);
 }
 
 /// test consistency of propagators when approaching a cylinder
-BOOST_DATA_TEST_CASE(
-    propagation_to_cylinder_,
-    bdata::random((bdata::seed = 1010,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1111,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 1212,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1, 0.9 * M_PI))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random(
-            (bdata::seed = 1414,
-             bdata::distribution = std::uniform_real_distribution<>(0.5, 1.))) ^
-        bdata::random(
-            (bdata::seed = 1515,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 1616,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 1717,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, rfrac, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
+                     ds::trackParameters* ds::propagationFraction ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, pfrac, rand1, rand2, rand3) {
   // just make sure we can reach it
-  double r = rfrac * std::abs(pT / Bz);
+  double r = pfrac * std::abs(pT / Bz);
   r = (r > 2.5_m) ? 2.5_m : r;
   // check atlas stepper
   auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, charge, r,
@@ -105,35 +87,10 @@ BOOST_DATA_TEST_CASE(
 }
 
 /// test consistency of propagators to a plane
-BOOST_DATA_TEST_CASE(
-    propagation_to_plane_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((
-            bdata::seed = 2,
-            bdata::distribution = std::uniform_real_distribution<>(0., M_PI))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((bdata::seed = 4,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.5_m, 1_m))) ^
-        bdata::random(
-            (bdata::seed = 5,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 6,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 7,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(propagation_to_plane_,
+                     ds::trackParameters* ds::propagationLimit ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // to a plane with the atlas stepper
   auto a_at_plane = to_surface<AtlasPropagatorType, PlaneSurface>(
       apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
@@ -142,51 +99,24 @@ BOOST_DATA_TEST_CASE(
   auto e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(
       epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
       covtpr);
-
   CHECK_CLOSE_ABS(e_at_plane.first, a_at_plane.first, 1_um);
 
   // to a plane with the straight line stepper
   auto s_at_plane = to_surface<StraightPropagatorType, PlaneSurface>(
-      spropagator, pT, phi, theta, 0., pfrac * 1_m, rand1, rand2, rand3, true,
+      spropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, true,
       covtpr);
   // to a plane with the eigen stepper without charge
   e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(
-      epropagator, pT, phi, theta, 0., pfrac * 1_m, rand1, rand2, rand3, true,
+      epropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, true,
       covtpr);
-
   CHECK_CLOSE_ABS(e_at_plane.first, s_at_plane.first, 1_um);
 }
 
 /// test consistency of propagators to a disc
-BOOST_DATA_TEST_CASE(
-    propagation_to_disc_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((bdata::seed = 4,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.5_m, 1_m))) ^
-        bdata::random(
-            (bdata::seed = 5,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 6,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 7,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(propagation_to_disc_,
+                     ds::trackParameters* ds::propagationLimit ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // to a disc with the  atlas stepper
   auto a_at_disc = to_surface<AtlasPropagatorType, DiscSurface>(
       apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
@@ -195,7 +125,6 @@ BOOST_DATA_TEST_CASE(
   auto e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(
       epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
       covtpr);
-
   CHECK_CLOSE_ABS(e_at_disc.first, a_at_disc.first, 1_um);
 
   // to a disc with the straight line stepper
@@ -211,35 +140,10 @@ BOOST_DATA_TEST_CASE(
 }
 
 /// test consistency of propagators to a line
-BOOST_DATA_TEST_CASE(
-    propagation_to_line_,
-    bdata::random((bdata::seed = 1000,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1001,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 1002,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((bdata::seed = 1004,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.5_m, 1_m))) ^
-        bdata::random(
-            (bdata::seed = 1005,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 1006,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 1007,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(propagation_to_line_,
+                     ds::trackParameters* ds::propagationLimit ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // to a line with the atlas stepper
   if (debug) {
     std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
@@ -254,7 +158,6 @@ BOOST_DATA_TEST_CASE(
   auto e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
       epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
       covtpr, debug);
-
   CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1_um);
 
   if (debug) {
@@ -275,198 +178,86 @@ BOOST_DATA_TEST_CASE(
 /// test correct covariance transport for curvilinear parameters
 /// this test only works within the
 /// s_curvilinearProjTolerance (in: Definitions.hpp)
-BOOST_DATA_TEST_CASE(
-    covariance_transport_curvilinear_curvilinear_,
-    bdata::random((bdata::seed = 2000,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 2001,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2002,
-                       bdata::distribution = std::uniform_real_distribution<>(
-                           0.10, M_PI - 0.10))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((bdata::seed = 2004,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.5_m, 1_m))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
+                     ds::trackParameters* ds::propagationLimit, pT, phi, theta,
+                     charge, plimit) {
   // covariance check for eigen stepper
-  covariance_curvilinear(epropagator, pT, phi, theta, charge, plimit, index);
+  covariance_curvilinear(epropagator, pT, phi, theta, charge, plimit);
   // covariance check fo atlas stepper
-  covariance_curvilinear(apropagator, pT, phi, theta, charge, plimit, index);
+  covariance_curvilinear(apropagator, pT, phi, theta, charge, plimit);
   // covariance check for straight line stepper
-  covariance_curvilinear(spropagator, pT, phi, theta, charge, plimit, index);
+  covariance_curvilinear(spropagator, pT, phi, theta, charge, plimit);
 }
 
 // test correct covariance transport from disc to disc
-BOOST_DATA_TEST_CASE(
-    covariance_transport_disc_disc_,
-    bdata::random((bdata::seed = 3000,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 3001,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 3002,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((bdata::seed = 3004,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.5_m, 1_m))) ^
-        bdata::random(
-            (bdata::seed = 3005,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 3006,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 3007,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
+                     ds::trackParameters* ds::propagationLimit ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index,
-      true, true, 1e-1);
+      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
+      true, 1e-1);
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index,
-      true, true, 1e-1);
-
+      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
+      true, 1e-1);
   // covariance check for straight line stepper
   covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
-      spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index,
-      true, true, 1e-1);
+      spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
+      true, 1e-1);
 }
 
 // test correct covariance transport from plane to plane
-BOOST_DATA_TEST_CASE(
-    covariance_transport_plane_plane_,
-    bdata::random((bdata::seed = 4000,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 4001,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 4002,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((bdata::seed = 4004,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.5_m, 1_m))) ^
-        bdata::random(
-            (bdata::seed = 4005,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 4006,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 4007,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
+                     ds::trackParameters* ds::propagationLimit ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index);
+      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index);
+      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   // covariance check for straight line stepper
   covariance_bound<StraightPropagatorType, PlaneSurface, PlaneSurface>(
-      spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index);
+      spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
 }
 
 // test correct covariance transport from straw to straw
 // for straw surfaces the numerical fixture is actually more difficult
 // to calculate
-BOOST_DATA_TEST_CASE(
-    covariance_transport_line_line_,
-    bdata::random((bdata::seed = 1000,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1001,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 1002,
-                       bdata::distribution = std::uniform_real_distribution<>(
-                           0.15, M_PI - 0.15))) ^
-        bdata::make({1_e, -1_e}) ^
-        bdata::random((bdata::seed = 1004,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1_m, 0.2_m))) ^
-        bdata::random((bdata::seed = 1005,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-0.25, 0.25))) ^
-        bdata::random((bdata::seed = 1006,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-0.25, 0.25))) ^
-        bdata::random((bdata::seed = 1007,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-0.25, 0.25))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, plimit, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
+                     ds::trackParameters* ds::propagationLimit ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index,
-      false, false, 1e-1);
+      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
+      false, 1e-1);
   // covariance check for eigen stepper
   covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index,
-      false, false, 1e-1);
+      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
+      false, 1e-1);
   // covariance check for straight line stepper
   covariance_bound<StraightPropagatorType, StrawSurface, StrawSurface>(
-      spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, index,
-      false, false, 1e-1);
+      spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
+      false, 1e-1);
 }
 
 /// test correct covariance transport for curvilinear parameters in dense
 /// environment
 /// this test only works within the
 /// s_curvilinearProjTolerance (in: Definitions.hpp)
-BOOST_DATA_TEST_CASE(
-    dense_covariance_transport_curvilinear_curvilinear_,
-    bdata::random((bdata::seed = 2000,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(3_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 2004,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.5_m, 1_m))) ^
-        bdata::random(
-            (bdata::seed = 3005,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 3006,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::random(
-            (bdata::seed = 3007,
-             bdata::distribution = std::uniform_real_distribution<>(-1., 1.))) ^
-        bdata::xrange(ntests),
-    pT, plimit, rand1, rand2, rand3, index) {
-  if (index < skip) {
-    return;
-  }
+BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
+                     ds::pT* ds::propagationLimit ^ ds::threeRandom, pT, plimit,
+                     rand1, rand2, rand3) {
   // covariance check for eigen stepper in dense environment
   DensePropagatorType dpropagator = setupDensePropagator();
-  covariance_curvilinear(dpropagator, pT, 0., M_PI / 2., 1, plimit, index);
+  covariance_curvilinear(dpropagator, pT, 0_degree, 45_degree, 1_e, plimit);
   covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1, plimit, rand1, rand2, rand3, index,
+      dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2, rand3,
       true, true, 1e-1);
   covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1, plimit, rand1, rand2, rand3, index);
+      dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3);
 }

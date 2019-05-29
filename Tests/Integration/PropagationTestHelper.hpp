@@ -163,7 +163,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
 template <typename Propagator_type>
 void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double plimit, int /*index*/,
+                     double theta, double charge, double plimit,
                      double disttol = 1 * Acts::UnitConstants::um,
                      double momtol = 10 * Acts::UnitConstants::keV,
                      bool debug = false) {
@@ -395,7 +395,7 @@ std::pair<Vector3D, double> to_surface(
 template <typename Propagator_type>
 void covariance_curvilinear(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
-                            double plimit, int /*index*/, double reltol = 1e-3,
+                            double plimit, double reltol = 1e-3,
                             bool debug = false) {
   using namespace Acts::UnitLiterals;
 
@@ -452,9 +452,9 @@ template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
 void covariance_bound(const Propagator_type& propagator, double pT, double phi,
                       double theta, double charge, double plimit, double rand1,
-                      double rand2, double rand3, int /*index*/,
-                      bool startPlanar = true, bool destPlanar = true,
-                      double reltol = 1e-3, bool debug = false) {
+                      double rand2, double rand3, bool startPlanar = true,
+                      bool destPlanar = true, double reltol = 1e-3,
+                      bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   covariance_validation_fixture<Propagator_type> fixture(propagator);
