@@ -62,7 +62,7 @@ class StraightLineStepper {
     /// @param [in] gctx is the context object for the geometery
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] dir is the navigation direction
+    /// @param [in] ndir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
@@ -196,6 +196,8 @@ class StraightLineStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
@@ -229,6 +231,8 @@ class StraightLineStepper {
   /// @brief This creates a curvilinear state.
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
@@ -278,6 +282,7 @@ class StraightLineStepper {
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
+  /// @param [in] time the updated time value
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const {
     state.pos = uposition;
