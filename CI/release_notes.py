@@ -10,9 +10,9 @@ def parse_version(name):
 
 
 def get_label_groups():
-    return os.getenv("RELEASE_NOTES_LABEL_GROUPS", "New Feature;Bug;Improvement").split(
-        ";"
-    )
+    return os.getenv(
+        "RELEASE_NOTES_LABEL_GROUPS", "New Feature;Bug;Improvement;Infrastructure"
+    ).split(";")
 
 
 def group_items(labels, items):

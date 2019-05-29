@@ -253,13 +253,15 @@ clang_tidy:
     when: always
 
 doc_deploy:
+  image: alpine:3.8
   stage: deploy
   dependencies:
     - doc
+  before_script:
+    - apk --no-cache add python3 py3-pynacl py3-pip py3-cryptography py3-bcrypt
+    - pip3 install -r CI/requirements.txt
   script:
-    - unset PYTHONHOME
-    - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
-    - CI/deploy_tag . build/doc/html "acts-developers@cern.ch acts-users@cern.ch"
+    - CI/deploy_tag.py --doc-source build/doc/html --ref=$CI_COMMIT_TAG
   only:
     - tags
 
@@ -284,6 +286,7 @@ coverage_deploy:
     - CI/publish_coverage.py --coverage-source=build/coverage --project-id=$CI_PROJECT_ID
   only:
     - master
+    - tags
 
 sync_releases:
   stage: deploy

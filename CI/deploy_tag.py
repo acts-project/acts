@@ -51,6 +51,11 @@ def main():
 
     # refdir = OSFS("/tmp/doctest")
 
+    print(
+        os.path.abspath(args.doc_source),
+        "->",
+        os.path.join(args.doc_root, args.ref, "doc"),
+    )
     with Spinner(f"Publishing doc for {args.ref}"):
         if not args.dry_run:
             fs.copy.copy_dir(src_fs, ".", refdir, ".")
@@ -138,9 +143,7 @@ def main():
     your friendly Acts robot
     """
 
-    md = textwrap.dedent(md).format(
-        ref=args.ref, relnotes=relnotes, commit=os.getenv("CI_COMMIT_SHA")
-    )
+    md = textwrap.dedent(md).format(ref=args.ref, relnotes=relnotes)
 
     html = """\
     <html>
