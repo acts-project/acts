@@ -102,10 +102,12 @@ BOOST_DATA_TEST_CASE(
   auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, dcharge, r,
                                    rand1, rand2, rand3, covtpr, debug);
   CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10. * units::_um);
-  
+
   // check without charge
-  auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1, rand2, rand3, covtpr, debug);
-  e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1, rand2, rand3, covtpr, debug);
+  auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1,
+                                   rand2, rand3, covtpr, debug);
+  e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1, rand2,
+                              rand3, covtpr, debug);
 
   CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 10. * units::_um);
 }
@@ -155,15 +157,15 @@ BOOST_DATA_TEST_CASE(
       rand2, rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_plane.first, a_at_plane.first, 1 * units::_um);
-  
+
   // to a plane with the straight line stepper
   auto s_at_plane = to_surface<StraightPropagatorType, PlaneSurface>(
-      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
-      rand2, rand3, true, covtpr);
+      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1, rand2,
+      rand3, true, covtpr);
   // to a plane with the eigen stepper without charge
   e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(
-      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
-      rand2, rand3, true, covtpr);
+      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1, rand2,
+      rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_plane.first, s_at_plane.first, 1 * units::_um);
 }
@@ -213,15 +215,15 @@ BOOST_DATA_TEST_CASE(
       rand2, rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_disc.first, a_at_disc.first, 1 * units::_um);
-  
+
   // to a disc with the straight line stepper
   auto s_at_disc = to_surface<StraightPropagatorType, DiscSurface>(
-      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
-      rand2, rand3, true, covtpr);
+      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1, rand2,
+      rand3, true, covtpr);
   // to a disc with the eigen stepper without charge
   e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(
-      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
-      rand2, rand3, true, covtpr);
+      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1, rand2,
+      rand3, true, covtpr);
 
   CHECK_CLOSE_ABS(e_at_disc.first, s_at_disc.first, 1 * units::_um);
 }
@@ -277,18 +279,18 @@ BOOST_DATA_TEST_CASE(
       rand2, rand3, false, covtpr, debug);
 
   CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1 * units::_um);
-  
+
   if (debug) {
     std::cout << "[ >>>> Testing Neutral Propagators <<<< ]" << std::endl;
   }
   // to a straw with the straight line stepper
   auto s_at_line = to_surface<StraightPropagatorType, StrawSurface>(
-      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
-      rand2, rand3, false, covtpr, debug);
+      spropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1, rand2,
+      rand3, false, covtpr, debug);
   // to a straw with the eigen stepper without charge
   e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1,
-      rand2, rand3, false, covtpr, debug);
+      epropagator, pT, phi, theta, 0., pfrac * Acts::units::_m, rand1, rand2,
+      rand3, false, covtpr, debug);
 
   CHECK_CLOSE_ABS(e_at_line.first, s_at_line.first, 1 * units::_um);
 }
@@ -327,7 +329,8 @@ BOOST_DATA_TEST_CASE(
   covariance_curvilinear(apropagator, pT, phi, theta, dcharge,
                          plimit * Acts::units::_m, index);
   // covariance check for straight line stepper
-  covariance_curvilinear(spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
+  covariance_curvilinear(spropagator, pT, phi, theta, dcharge,
+                         plimit * Acts::units::_m, index);
 }
 
 // test correct covariance transport from disc to disc
@@ -374,7 +377,7 @@ BOOST_DATA_TEST_CASE(
   covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
       rand2, rand3, index, true, true, 1e-1);
-      
+
   // covariance check for straight line stepper
   covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
       spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
@@ -424,7 +427,7 @@ BOOST_DATA_TEST_CASE(
   covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
       rand2, rand3, index);
-      
+
   // covariance check for straight line stepper
   covariance_bound<StraightPropagatorType, PlaneSurface, PlaneSurface>(
       spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
@@ -477,7 +480,7 @@ BOOST_DATA_TEST_CASE(
   covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
       rand2, rand3, index, false, false, 1e-1);
-      
+
   // covariance check for straight line stepper
   covariance_bound<StraightPropagatorType, StrawSurface, StrawSurface>(
       spropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,

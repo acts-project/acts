@@ -267,20 +267,21 @@ std::pair<Vector3D, double> to_cylinder(
 
   // do propagation of the start parameters
   TrackParametersBase* start;
-  if(q == 0.)
-	start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
+  if (q == 0.)
+    start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
   else
-	start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
-  
-    // The transform at the destination
+    start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
+
+  // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
                                               0.05 * rand1, 0.05 * rand2);
   auto endSurface = Surface::makeShared<CylinderSurface>(
       seTransform, plimit * units::_m, std::numeric_limits<double>::max());
-  
+
   // Increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
-  const auto result = propagator.propagate(*start, *endSurface, options).value();
+  const auto result =
+      propagator.propagate(*start, *endSurface, options).value();
   const auto& tp = result.endParameters;
   // check for null pointer
   BOOST_CHECK(tp != nullptr);
@@ -326,11 +327,11 @@ std::pair<Vector3D, double> to_surface(
   }
   // Create curvilinear start parameters
   TrackParametersBase* start;
-  if(q == 0.)
-	start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
+  if (q == 0.)
+    start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
   else
-	start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
-	
+    start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
+
   const auto result_s = propagator.propagate(*start, options).value();
   const auto& tp_s = result_s.endParameters;
 
