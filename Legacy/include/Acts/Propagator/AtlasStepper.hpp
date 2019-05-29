@@ -1118,15 +1118,14 @@ class AtlasStepper {
       sA[0] = A6 * Sl;
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
-
-      if (state.options.propagateTime) {
+      
+      // Evaluate the time propagation
         const double mom =
             units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
         const double mass = units::Nat2SI<units::MASS>(state.options.mass);
         state.stepping.pVector[7] +=
             h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
-      }
-
+      
       state.stepping.field = f;
       state.stepping.newfield = false;
 

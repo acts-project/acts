@@ -243,11 +243,11 @@ struct DenseEnvironmentExtension {
 
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) zero
-    auto dFdT = D.block<3, 3>(0, 3);
-    auto dFdL = D.block<3, 1>(0, 6);
+    auto dFdT = D.block<3, 3>(0, 4);
+    auto dFdL = D.block<3, 1>(0, 7);
     // dGdx is already initialised as (3x3) identity
-    auto dGdT = D.block<3, 3>(3, 3);
-    auto dGdL = D.block<3, 1>(3, 6);
+    auto dGdT = D.block<3, 3>(4, 4);
+    auto dGdL = D.block<3, 1>(4, 7);
 
     ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
     ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
@@ -306,7 +306,7 @@ struct DenseEnvironmentExtension {
     dGdL = conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
     // Evaluation of the dLambda''/dlambda term
-    D(6, 6) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
+    D(7, 7) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
 
       double dtpp1dl =
           -massSI * massSI * qop[0] * qop[0] *
@@ -325,7 +325,7 @@ struct DenseEnvironmentExtension {
                         qopNew * dgdqop(energy[2], state.options.absPdgCode,
                                         state.options.meanEnergyLoss));
 
-      D(6, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
+      D(3, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
     return true;
   }
 
