@@ -143,7 +143,7 @@ class AtlasStepper {
         pVector[35] = 0.;
         pVector[43] = 0.;
         pVector[51] = 1.;  // dT/
-        
+
         pVector[12] = 0.;
         pVector[20] = 0.;
         pVector[28] = -Sf * Se;  // - sin(phi) * cos(theta)
@@ -256,17 +256,17 @@ class AtlasStepper {
     Vector3D field;
     double pVector[59];
 
-/// Storage pattern of pVector
-///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
-/// X  ->P[0]  dX /   P[ 8]   P[16]   P[24]   P[32]   P[40]  P[48]
-/// Y  ->P[1]  dY /   P[ 9]   P[17]   P[25]   P[33]   P[41]  P[49]
-/// Z  ->P[2]  dZ /   P[10]   P[18]   P[26]   P[34]   P[42]  P[50]
-/// T  ->P[3]  dT/	  P[11]   P[19]   P[27]   P[35]   P[43]  P[51]
-/// Ax ->P[4]  dAx/   P[12]   P[20]   P[28]   P[36]   P[44]  P[52]
-/// Ay ->P[5]  dAy/   P[13]   P[21]   P[29]   P[37]   P[45]  P[53]
-/// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]
-/// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]
-/// Cache: P[56] - P[58]
+    /// Storage pattern of pVector
+    ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
+    /// X  ->P[0]  dX /   P[ 8]   P[16]   P[24]   P[32]   P[40]  P[48]
+    /// Y  ->P[1]  dY /   P[ 9]   P[17]   P[25]   P[33]   P[41]  P[49]
+    /// Z  ->P[2]  dZ /   P[10]   P[18]   P[26]   P[34]   P[42]  P[50]
+    /// T  ->P[3]  dT/	  P[11]   P[19]   P[27]   P[35]   P[43]  P[51]
+    /// Ax ->P[4]  dAx/   P[12]   P[20]   P[28]   P[36]   P[44]  P[52]
+    /// Ay ->P[5]  dAy/   P[13]   P[21]   P[29]   P[37]   P[45]  P[53]
+    /// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]
+    /// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]
+    /// Cache: P[56] - P[58]
 
     // result
     double parameters[BoundParsDim] = {0., 0., 0., 0., 0., 0.};
@@ -487,7 +487,7 @@ class AtlasStepper {
       state.pVector[35] = 0.;
       state.pVector[43] = 0.;
       state.pVector[51] = 1.;  // dT/
-      
+
       state.pVector[12] = 0.;
       state.pVector[20] = 0.;
       state.pVector[28] = -Sf * Se;  // - sin(phi) * cos(theta)
@@ -1131,14 +1131,14 @@ class AtlasStepper {
       sA[0] = A6 * Sl;
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
-      
+
       // Evaluate the time propagation
-        const double mom =
-            units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
-        const double mass = units::Nat2SI<units::MASS>(state.options.mass);
-        state.stepping.pVector[3] +=
-            h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
-      
+      const double mom =
+          units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
+      const double mass = units::Nat2SI<units::MASS>(state.options.mass);
+      state.stepping.pVector[3] +=
+          h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+
       state.stepping.field = f;
       state.stepping.newfield = false;
 

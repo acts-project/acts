@@ -98,7 +98,7 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h, FreeMatrix& D) const {
-	propagateTime(state, stepper, h);
+    propagateTime(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
   }
 

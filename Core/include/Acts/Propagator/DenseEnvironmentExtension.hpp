@@ -111,12 +111,11 @@ struct DenseEnvironmentExtension {
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
-        Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] /
-                       (stepper.charge(state.stepping) *
-                        stepper.charge(state.stepping) * units::_C * units::_C);
-        tKi[0] =
-            std::sqrt(massSI * massSI / (initialMomentum * initialMomentum) +
-                      units::_c2inv);
+      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] /
+                     (stepper.charge(state.stepping) *
+                      stepper.charge(state.stepping) * units::_C * units::_C);
+      tKi[0] = std::sqrt(massSI * massSI / (initialMomentum * initialMomentum) +
+                         units::_c2inv);
     } else {
       // Update parameters and check for momentum condition
       updateEnergyLoss(h, state.stepping, stepper, i);
@@ -127,11 +126,11 @@ struct DenseEnvironmentExtension {
       knew = qop[i] *
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
-        double qopNew = qop[0] + h * Lambdappi[i - 1];
-        Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
-                       (stepper.charge(state.stepping) *
-                        stepper.charge(state.stepping) * units::_C * units::_C);
-        tKi[i] = std::sqrt(massSI * massSI / (qopNew * qopNew) + units::_c2inv);
+      double qopNew = qop[0] + h * Lambdappi[i - 1];
+      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
+                     (stepper.charge(state.stepping) *
+                      stepper.charge(state.stepping) * units::_C * units::_C);
+      tKi[i] = std::sqrt(massSI * massSI / (qopNew * qopNew) + units::_c2inv);
     }
     return true;
   }
@@ -170,16 +169,15 @@ struct DenseEnvironmentExtension {
     // Update momentum
     state.stepping.p = newMomentum;
 
-      // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
-      state.stepping.derivative(3) =
-          std::sqrt(massSI * massSI /
-                        (units::Nat2SI<units::MOMENTUM>(newMomentum) *
-                         units::Nat2SI<units::MOMENTUM>(newMomentum)) +
-                    units::_c2inv);
+    // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
+    state.stepping.derivative(3) =
+        std::sqrt(massSI * massSI /
+                      (units::Nat2SI<units::MOMENTUM>(newMomentum) *
+                       units::Nat2SI<units::MOMENTUM>(newMomentum)) +
+                  units::_c2inv);
 
-      // Update time
-      state.stepping.dt +=
-          (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
+    // Update time
+    state.stepping.dt += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
 
     return true;
   }
@@ -308,24 +306,24 @@ struct DenseEnvironmentExtension {
     // Evaluation of the dLambda''/dlambda term
     D(7, 7) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
 
-      double dtpp1dl =
-          -massSI * massSI * qop[0] * qop[0] *
-          (3. * g + qop[0] * dgdqop(energy[0], state.options.absPdgCode,
-                                    state.options.meanEnergyLoss));
+    double dtpp1dl =
+        -massSI * massSI * qop[0] * qop[0] *
+        (3. * g + qop[0] * dgdqop(energy[0], state.options.absPdgCode,
+                                  state.options.meanEnergyLoss));
 
-      double qopNew = qop[0] + half_h * Lambdappi[0];
-      double dtpp2dl = -massSI * massSI * qopNew * qopNew *
-                       (3. * g * (1. + half_h * jdL[0]) +
-                        qopNew * dgdqop(energy[1], state.options.absPdgCode,
-                                        state.options.meanEnergyLoss));
+    double qopNew = qop[0] + half_h * Lambdappi[0];
+    double dtpp2dl = -massSI * massSI * qopNew * qopNew *
+                     (3. * g * (1. + half_h * jdL[0]) +
+                      qopNew * dgdqop(energy[1], state.options.absPdgCode,
+                                      state.options.meanEnergyLoss));
 
-      qopNew = qop[0] + half_h * Lambdappi[1];
-      double dtpp3dl = -massSI * massSI * qopNew * qopNew *
-                       (3. * g * (1. + half_h * jdL[1]) +
-                        qopNew * dgdqop(energy[2], state.options.absPdgCode,
-                                        state.options.meanEnergyLoss));
+    qopNew = qop[0] + half_h * Lambdappi[1];
+    double dtpp3dl = -massSI * massSI * qopNew * qopNew *
+                     (3. * g * (1. + half_h * jdL[1]) +
+                      qopNew * dgdqop(energy[2], state.options.absPdgCode,
+                                      state.options.meanEnergyLoss));
 
-      D(3, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
+    D(3, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
     return true;
   }
 
