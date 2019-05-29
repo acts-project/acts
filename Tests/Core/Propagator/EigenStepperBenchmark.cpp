@@ -79,8 +79,14 @@ int main(int argc, char* argv[]) {
   Vector3D pos(0, 0, 0);
   Vector3D mom(pT * units::_GeV, 0, 0);
   Covariance cov;
-  cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
+  // clang-format off
+  cov << 10 * units::_mm, 0, 0, 0, 0, 0,
+         0, 10 * units::_mm, 0, 0, 0, 0,
+         0, 0, 1, 0, 0, 0,
+         0, 0, 0, 1, 0, 0,
+         0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
+         0, 0, 0, 0, 0, 0;
+  // clang-format on
 
   std::unique_ptr<const Covariance> covPtr = nullptr;
   if (withCov) {
