@@ -104,7 +104,6 @@ struct PropagatorOptions {
     // Stepper options
     eoptions.tolerance = tolerance;
     eoptions.stepSizeCutOff = stepSizeCutOff;
-    eoptions.propagateTime = propagateTime;
     // Action / abort list
     eoptions.actionList = std::move(actionList);
     eoptions.abortList = std::move(aborters);
@@ -152,9 +151,6 @@ struct PropagatorOptions {
 
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
-
-  /// Time propagation flag
-  bool propagateTime = false;
 
   /// List of actions
   action_list_t actionList;

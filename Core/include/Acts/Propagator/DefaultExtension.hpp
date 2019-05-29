@@ -80,8 +80,8 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h) const {
-    return (state.options.propagateTime ? propagateTime(state, stepper, h)
-                                        : true);
+    propagateTime(state, stepper, h);
+    return true;
   }
 
   /// @brief Veto function after a RKN4 step was accepted by judging on the
@@ -98,9 +98,8 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h, FreeMatrix& D) const {
-    return transportMatrix(state, stepper, h, D) &&
-           (state.options.propagateTime ? propagateTime(state, stepper, h)
-                                        : true);
+	propagateTime(state, stepper, h);
+    return transportMatrix(state, stepper, h, D);
   }
 
  private:
@@ -112,7 +111,7 @@ struct DefaultExtension {
   /// @param [in] stepper Stepper of the propagation
   /// @param [in] h Step size
   template <typename propagator_state_t, typename stepper_t>
-  bool propagateTime(propagator_state_t& state, const stepper_t& stepper,
+  void propagateTime(propagator_state_t& state, const stepper_t& stepper,
                      const double h) const {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
@@ -124,10 +123,9 @@ struct DefaultExtension {
     state.stepping.dt +=
         h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
     if (state.stepping.covTransport) {
-      state.stepping.derivative(7) =
+      state.stepping.derivative(3) =
           std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
     }
-    return true;
   }
 
   /// @brief Calculates the transport matrix D for the jacobian

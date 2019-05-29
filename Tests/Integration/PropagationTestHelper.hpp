@@ -242,7 +242,6 @@ std::pair<Vector3D, double> to_cylinder(
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
-  options.propagateTime = true;
 
   // define start parameters
   double x = 0;
@@ -298,7 +297,6 @@ std::pair<Vector3D, double> to_surface(
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
-  options.propagateTime = true;
 
   // define start parameters
   double x = 0;
@@ -379,7 +377,6 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   options.pathLimit = plimit;
   options.debug = debug;
   options.tolerance = 1e-9;
-  options.propagateTime = true;
 
   // define start parameters
   double x = 1.;
@@ -429,7 +426,6 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
-  options.propagateTime = true;
 
   // define start parameters
   double x = 1.;
