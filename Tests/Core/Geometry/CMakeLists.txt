@@ -1,0 +1,109 @@
+add_executable (CylinderVolumeBoundsTests CylinderVolumeBoundsTests.cpp)
+target_include_directories (CylinderVolumeBoundsTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (CylinderVolumeBoundsTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME CylinderVolumeBoundsUnitTest COMMAND CylinderVolumeBoundsTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST CylinderVolumeBoundsUnitTest TARGETS CylinderVolumeBoundsTests)
+
+add_executable (GenericCuboidVolumeBoundsTest GenericCuboidVolumeBoundsTest.cpp)
+target_include_directories (GenericCuboidVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (GenericCuboidVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME GenericCuboidVolumeBoundsTest COMMAND GenericCuboidVolumeBoundsTest)
+
+add_executable (CutoutCylinderVolumeBoundsTest CutoutCylinderVolumeBoundsTest.cpp)
+target_include_directories (CutoutCylinderVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (CutoutCylinderVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME CutoutCylinderVolumeBoundsTest COMMAND CutoutCylinderVolumeBoundsTest)
+
+add_executable (CylinderVolumeBuilderTests CylinderVolumeBuilderTests.cpp)
+target_link_libraries (CylinderVolumeBuilderTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME CylinderVolumeBuilderUnitTest COMMAND CylinderVolumeBuilderTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST CylinderVolumeBuilderUnitTest TARGETS CylinderVolumeBuilderTests)
+
+add_executable (SurfaceArrayCreatorTests SurfaceArrayCreatorTests.cpp)
+target_link_libraries (SurfaceArrayCreatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME SurfaceArrayCreatorUnitTest COMMAND SurfaceArrayCreatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST SurfaceArrayCreatorUnitTest TARGETS SurfaceArrayCreatorTests)
+
+add_executable (LayerCreatorTests LayerCreatorTests.cpp)
+target_link_libraries (LayerCreatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME LayerCreatorUnitTest COMMAND LayerCreatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST LayerCreatorUnitTest TARGETS LayerCreatorTests)
+
+add_executable (SimpleGeometryTests SimpleGeometryTests.cpp)
+target_link_libraries (SimpleGeometryTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME SimpleGeometryUnitTest COMMAND SimpleGeometryTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST SimpleGeometryUnitTest TARGETS SimpleGeometryTests)
+
+add_executable (CuboidVolumeBuilderTests CuboidVolumeBuilderTests.cpp)
+target_link_libraries (CuboidVolumeBuilderTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME CuboidVolumeBuilderUnitTest COMMAND CuboidVolumeBuilderTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST CuboidVolumeBuilderUnitTest TARGETS CuboidVolumeBuilderTests)
+
+add_executable (GenericApproachDescriptorTests GenericApproachDescriptorTests.cpp)
+target_link_libraries (GenericApproachDescriptorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME GenericApproachDescriptorUnitTests COMMAND GenericApproachDescriptorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST GenericApproachDescriptorUnitTests TARGETS GenericApproachDescriptorTests)
+
+add_executable (LayerTests LayerTests.cpp)
+target_link_libraries (LayerTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME LayerUnitTest COMMAND LayerTests)
+
+add_executable (PlaneLayerTests PlaneLayerTests.cpp)
+target_link_libraries (PlaneLayerTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME PlaneLayerUnitTest COMMAND PlaneLayerTests)
+
+add_executable (DiscLayerTests DiscLayerTests.cpp)
+target_link_libraries (DiscLayerTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME DiscLayerUnitTest COMMAND DiscLayerTests)
+
+add_executable (CylinderLayerTests CylinderLayerTests.cpp)
+target_link_libraries (CylinderLayerTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME CylinderLayerUnitTest COMMAND CylinderLayerTests)
+
+add_executable (ConeLayerTests ConeLayerTests.cpp)
+target_link_libraries (ConeLayerTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME ConeLayerUnitTest COMMAND ConeLayerTests)
+
+add_executable (NavigationLayerTests NavigationLayerTests.cpp)
+target_link_libraries (NavigationLayerTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME NavigationLayerUnitTest COMMAND NavigationLayerTests)
+
+add_executable (ProtoLayerTests ProtoLayerTests.cpp)
+target_link_libraries (ProtoLayerTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME ProtoLayerUnitTest COMMAND ProtoLayerTests)
+
+add_executable (AlignmentContextTests AlingmentContextTests.cpp)
+target_link_libraries (AlignmentContextTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME AlignmentContextUnitTest COMMAND AlignmentContextTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST AlignmentContextUnitTest TARGETS AlignmentContextTests)
+
+add_executable (TrackingGeometryGeoIDTests TrackingGeometryGeoIDTests.cpp)
+target_link_libraries (TrackingGeometryGeoIDTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME TrackingGeometryGeoIDUnitTest COMMAND TrackingGeometryGeoIDTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST TrackingGeometryGeoIDUnitTest TARGETS TrackingGeometryGeoIDTests)
+
+add_executable (TrackingGeometryCloseGeometryTests TrackingGeometryClosureTests.cpp)
+target_link_libraries (TrackingGeometryCloseGeometryTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME TrackingGeometryCloseGeometryUnitTest COMMAND TrackingGeometryCloseGeometryTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST TrackingGeometryCloseGeometryUnitTest TARGETS TrackingGeometryCloseGeometryTests)
+
+add_executable (TrackingGeometryCreationTests TrackingGeometryCreationTests.cpp)
+target_link_libraries (TrackingGeometryCreationTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME TrackingGeometryCreationUnitTest COMMAND TrackingGeometryCreationTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST TrackingGeometryCreationUnitTest TARGETS TrackingGeometryCreationTests)
+
+add_executable (TrapezoidVolumeBoundsTest TrapezoidVolumeBoundsTest.cpp)
+target_include_directories (TrapezoidVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (TrapezoidVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME TrapezoidVolumeBoundsTest COMMAND TrapezoidVolumeBoundsTest)
+
+add_executable (DoubleTrapezoidVolumeBoundsTest DoubleTrapezoidVolumeBoundsTest.cpp)
+target_include_directories (DoubleTrapezoidVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (DoubleTrapezoidVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME DoubleTrapezoidVolumeBoundsTest COMMAND DoubleTrapezoidVolumeBoundsTest)
+
+add_executable (TrackingVolumeTests TrackingVolumeTests.cpp)
+target_include_directories (TrackingVolumeTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (TrackingVolumeTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME TrackingVolumeTests COMMAND TrackingVolumeTests)
+

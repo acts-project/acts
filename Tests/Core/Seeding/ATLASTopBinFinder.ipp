@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,15 +8,11 @@
 
 // DEBUG: THIS REQUIRES THE BINS TO BE SET TO phi:41 z:11
 template <typename SpacePoint>
-std::set<size_t>
-Acts::ATLASTopBinFinder<SpacePoint>::findBins(
-    size_t                                  phiBin,
-    size_t                                  zBin,
-    const Acts::SpacePointGrid<SpacePoint>* binnedSP)
-{
-
-  std::set<size_t> neighbourBins
-      = binnedSP->neighborHoodIndices({phiBin, zBin}, 1);
+std::set<size_t> Acts::ATLASTopBinFinder<SpacePoint>::findBins(
+    size_t phiBin, size_t zBin,
+    const Acts::SpacePointGrid<SpacePoint>* binnedSP) {
+  std::set<size_t> neighbourBins =
+      binnedSP->neighborHoodIndices({phiBin, zBin}, 1);
   if (zBin == 6) {
     return neighbourBins;
   }

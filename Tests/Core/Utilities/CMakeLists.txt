@@ -72,6 +72,18 @@ add_executable (TypeTraitsTest TypeTraitsTest.cpp)
 target_link_libraries (TypeTraitsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME TypeTraitsTest COMMAND TypeTraitsTest)
 
+add_executable (BoundingBoxTest BoundingBoxTest.cpp)
+target_link_libraries (BoundingBoxTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME BoundingBoxTest COMMAND BoundingBoxTest)
+
+add_executable (FrustumTest FrustumTest.cpp)
+target_link_libraries (FrustumTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME FrustumTest COMMAND FrustumTest)
+
+add_executable (RayTest RayTest.cpp)
+target_link_libraries (RayTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME RayTest COMMAND RayTest)
+
 add_executable (VisualizationTests VisualizationTests.cpp)
 target_link_libraries (VisualizationTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME VisualizationTests COMMAND VisualizationTests)
@@ -80,3 +92,7 @@ add_executable (MaterialMapUtilsTests MaterialMapUtilsTests.cpp)
 target_link_libraries (MaterialMapUtilsTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME MaterialMapUtilsTest COMMAND MaterialMapUtilsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialMapUtilsTest TARGETS MaterialMapUtilsTests)
+
+add_executable (HelpersTests HelpersTests.cpp)
+target_link_libraries (HelpersTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME HelpersTests COMMAND HelpersTests)

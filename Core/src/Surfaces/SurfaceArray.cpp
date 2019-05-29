@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,8 @@
 
 #include <utility>
 
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -17,28 +17,23 @@
 Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
 
 Acts::SurfaceArray::SurfaceArray(
-    std::unique_ptr<ISurfaceGridLookup>         gridLookup,
+    std::unique_ptr<ISurfaceGridLookup> gridLookup,
     std::vector<std::shared_ptr<const Surface>> surfaces,
-    std::shared_ptr<const Transform3D>          transform)
-  : p_gridLookup(std::move(gridLookup))
-  , m_surfaces(std::move(surfaces))
-  , m_surfacesRawPointers(unpack_shared_vector(m_surfaces))
-  , m_transform(std::move(transform))
-{
-}
+    std::shared_ptr<const Transform3D> transform)
+    : p_gridLookup(std::move(gridLookup)),
+      m_surfaces(std::move(surfaces)),
+      m_surfacesRawPointers(unpack_shared_vector(m_surfaces)),
+      m_transform(std::move(transform)) {}
 
 Acts::SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
-  : p_gridLookup(
-        static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf.get())))
-  , m_surfaces({std::move(srf)})
-{
+    : p_gridLookup(
+          static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf.get()))),
+      m_surfaces({std::move(srf)}) {
   m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
 }
 
-std::ostream&
-Acts::SurfaceArray::toStream(const GeometryContext& /*gctx*/,
-                             std::ostream& sl) const
-{
+std::ostream& Acts::SurfaceArray::toStream(const GeometryContext& /*gctx*/,
+                                           std::ostream& sl) const {
   sl << std::fixed << std::setprecision(4);
   sl << "SurfaceArray:" << std::endl;
   sl << " - no surfaces: " << m_surfaces.size() << std::endl;

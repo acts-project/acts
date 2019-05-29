@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,8 +12,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 
@@ -40,15 +40,12 @@ namespace Acts {
 /// @tparam propagator_t Propagator type
 /// @tparam action_list_t Propagator action list type
 /// @tparam aborter_list_t Propagator aborter list type
-template <typename bfield_t,
-          typename propagator_t,
-          typename action_list_t  = ActionList<>,
+template <typename bfield_t, typename propagator_t,
+          typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
-class LinearizedTrackFactory
-{
-public:
-  struct Config
-  {
+class LinearizedTrackFactory {
+ public:
+  struct Config {
     bfield_t bField;
     Config(const bfield_t& bIn) : bField(bIn){};
   };
@@ -68,14 +65,13 @@ public:
   /// @param propagator Propagator
   ///
   /// @return Linearized track
-  Result<LinearizedTrack>
-  linearizeTrack(const GeometryContext&      gctx,
-                 const MagneticFieldContext& mctx,
-                 const BoundParameters*      params,
-                 const Vector3D&             linPoint,
-                 const propagator_t&         propagator) const;
+  Result<LinearizedTrack> linearizeTrack(const GeometryContext& gctx,
+                                         const MagneticFieldContext& mctx,
+                                         const BoundParameters* params,
+                                         const SpacePointVector& linPoint,
+                                         const propagator_t& propagator) const;
 
-private:
+ private:
   // Configuration object
   Config m_cfg;
 };

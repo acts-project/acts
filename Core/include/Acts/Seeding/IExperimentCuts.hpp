@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,41 +18,37 @@ namespace Acts {
 /// to decide if a seed passes a seed weight cut. As the weight is stored in
 /// seeds, there are two distinct methods.
 template <typename SpacePoint>
-class IExperimentCuts
-{
-public:
+class IExperimentCuts {
+ public:
   virtual ~IExperimentCuts() = default;
   /// Returns seed weight bonus/malus depending on detector considerations.
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
-  virtual float
-  seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
-             const InternalSpacePoint<SpacePoint>& middle,
-             const InternalSpacePoint<SpacePoint>& top) const = 0;
+  virtual float seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
+                           const InternalSpacePoint<SpacePoint>& middle,
+                           const InternalSpacePoint<SpacePoint>& top) const = 0;
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  virtual bool
-  singleSeedCut(float                                 weight,
-                const InternalSpacePoint<SpacePoint>& bottom,
-                const InternalSpacePoint<SpacePoint>& middle,
-                const InternalSpacePoint<SpacePoint>& top) const = 0;
+  virtual bool singleSeedCut(
+      float weight, const InternalSpacePoint<SpacePoint>& bottom,
+      const InternalSpacePoint<SpacePoint>& middle,
+      const InternalSpacePoint<SpacePoint>& top) const = 0;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space
   /// point
   /// @return vector of seeds that pass the cut
-  virtual std::
-      vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-      cutPerMiddleSP(
-          std::
-              vector<std::pair<float,
-                               std::unique_ptr<const InternalSeed<SpacePoint>>>>
-                  seeds) const = 0;
+  virtual std::vector<
+      std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+  cutPerMiddleSP(
+      std::vector<
+          std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+          seeds) const = 0;
 };
-}
+}  // namespace Acts

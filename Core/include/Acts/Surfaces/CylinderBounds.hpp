@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,17 +36,16 @@ namespace Acts {
 ///
 /// @image html CylinderBounds.gif
 
-class CylinderBounds : public SurfaceBounds
-{
-public:
+class CylinderBounds : public SurfaceBounds {
+ public:
   /// @enum BoundValues for readablility
   /// nested enumeration object
   enum BoundValues {
-    bv_radius        = 0,
-    bv_averagePhi    = 1,
+    bv_radius = 0,
+    bv_averagePhi = 1,
     bv_halfPhiSector = 2,
-    bv_halfZ         = 3,
-    bv_length        = 4
+    bv_halfZ = 3,
+    bv_length = 4
   };
 
   CylinderBounds() = delete;
@@ -70,21 +69,16 @@ public:
   /// @param avphi is the middle phi position of the segment
   /// @param halfphi is the half opening angle
   /// @param halez is the half length in z
-  CylinderBounds(double radius,
-                 double averagePhi,
-                 double halfPhi,
+  CylinderBounds(double radius, double averagePhi, double halfPhi,
                  double halfZ);
 
   ~CylinderBounds() override;
 
-  CylinderBounds*
-  clone() const final;
+  CylinderBounds* clone() const final;
 
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -93,8 +87,7 @@ public:
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Specialized method for CylinderBounds that checks if a global position
   /// is within the the cylinder cover
@@ -102,69 +95,52 @@ public:
   /// @param pos is the position in the cylinder frame
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for operation success
-  bool
-  inside3D(const Vector3D& pos, const BoundaryCheck& bcheck = true) const;
+  bool inside3D(const Vector3D& pos, const BoundaryCheck& bcheck = true) const;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Output Method for std::ostream
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
   /// This method returns the radius
-  double
-  r() const;
+  double r() const;
 
   /// This method returns the average phi
-  double
-  averagePhi() const;
+  double averagePhi() const;
 
   /// This method returns the halfPhiSector angle
-  double
-  halfPhiSector() const;
+  double halfPhiSector() const;
 
   /// This method returns the halflengthZ
-  double
-  halflengthZ() const;
+  double halflengthZ() const;
 
-private:
+ private:
   /// the bound radius, average, half phi and half Z
   double m_radius, m_avgPhi, m_halfPhi, m_halfZ;
   /// an indicator if the bounds are closed
   bool m_closed;
 
-  Vector2D
-  shifted(const Vector2D& lpos) const;
-  ActsSymMatrixD<2>
-  jacobian() const;
+  Vector2D shifted(const Vector2D& lpos) const;
+  ActsSymMatrixD<2> jacobian() const;
 };
 
-inline double
-CylinderBounds::r() const
-{
+inline double CylinderBounds::r() const {
   return m_radius;
 }
 
-inline double
-CylinderBounds::averagePhi() const
-{
+inline double CylinderBounds::averagePhi() const {
   return m_avgPhi;
 }
 
-inline double
-CylinderBounds::halfPhiSector() const
-{
+inline double CylinderBounds::halfPhiSector() const {
   return m_halfPhi;
 }
 
-inline double
-CylinderBounds::halflengthZ() const
-{
+inline double CylinderBounds::halflengthZ() const {
   return m_halfZ;
 }
-}
+}  // namespace Acts

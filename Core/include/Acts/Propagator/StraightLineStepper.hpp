@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,10 +11,10 @@
 #include <cmath>
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -26,38 +26,32 @@ namespace Acts {
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
-class StraightLineStepper
-{
-
-private:
+class StraightLineStepper {
+ private:
   // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
-  struct s
-  {
+  struct s {
     using type = BoundParameters;
   };
 
   // ...unless type S is int, in which case it maps to Curvilinear parameters
   template <typename T>
-  struct s<T, int>
-  {
+  struct s<T, int> {
     using type = CurvilinearParameters;
   };
 
-public:
+ public:
   using cstep = detail::ConstrainedStep;
 
-  using Corrector        = VoidIntersectionCorrector;
-  using Jacobian         = ActsMatrixD<5, 5>;
-  using Covariance       = ActsMatrixD<5, 5>;
-  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
+  using Corrector = VoidIntersectionCorrector;
+  using Jacobian = BoundMatrix;
+  using Covariance = BoundSymMatrix;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
   /// State for track parameter propagation
   ///
-  struct State
-  {
-
+  struct State {
     /// Delete the default constructor
     State() = delete;
 
@@ -73,22 +67,19 @@ public:
     template <typename parameters_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
-                   const parameters_t& par,
-                   NavigationDirection ndir = forward,
+                   const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
-      : pos(par.position())
-      , dir(par.momentum().normalized())
-      , p(par.momentum().norm())
-      , q(par.charge())
-      , navDir(ndir)
-      , stepSize(ssize)
-      , geoContext(gctx)
-    {
-    }
+        : pos(par.position()),
+          dir(par.momentum().normalized()),
+          p(par.momentum().norm()),
+          q(par.charge()),
+          navDir(ndir),
+          stepSize(ssize),
+          geoContext(gctx) {}
 
     /// Boolean to indiciate if you need covariance transport
-    bool              covTransport = false;
-    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
+    bool covTransport = false;
+    Covariance cov = Covariance::Zero();
 
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
@@ -137,40 +128,22 @@ public:
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D
-  getField(State& /*state*/, const Vector3D& /*pos*/) const
-  {
+  Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
     // get the field from the cell
     return Vector3D(0., 0., 0.);
   }
 
   /// Global particle position accessor
-  Vector3D
-  position(const State& state) const
-  {
-    return state.pos;
-  }
+  Vector3D position(const State& state) const { return state.pos; }
 
   /// Momentum direction accessor
-  Vector3D
-  direction(const State& state) const
-  {
-    return state.dir;
-  }
+  Vector3D direction(const State& state) const { return state.dir; }
 
   /// Momentum accessor
-  double
-  momentum(const State& state) const
-  {
-    return state.p;
-  }
+  double momentum(const State& state) const { return state.p; }
 
   /// Charge access
-  double
-  charge(const State& state) const
-  {
-    return state.q;
-  }
+  double charge(const State& state) const { return state.q; }
 
   /// Tests if the state reached a surface
   ///
@@ -178,11 +151,9 @@ public:
   /// @param [in] surface Surface that is tested
   ///
   /// @return Boolean statement if surface is reached by state
-  bool
-  surfaceReached(const State& state, const Surface* surface) const
-  {
-    return surface->isOnSurface(
-        state.geoContext, position(state), direction(state), true);
+  bool surfaceReached(const State& state, const Surface* surface) const {
+    return surface->isOnSurface(state.geoContext, position(state),
+                                direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -197,19 +168,14 @@ public:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState
-  boundState(State& state, const Surface& surface, bool /*unused*/) const
-  {
+  BoundState boundState(State& state, const Surface& surface,
+                        bool /*unused*/) const {
     // Create the bound parameters
-    BoundParameters parameters(state.geoContext,
-                               nullptr,
-                               state.pos,
-                               state.p * state.dir,
-                               state.q,
+    BoundParameters parameters(state.geoContext, nullptr, state.pos,
+                               state.p * state.dir, state.q,
                                surface.getSharedPtr());
     // Create the bound state
-    BoundState bState{std::move(parameters),
-                      ActsMatrixD<5, 5>::Identity(),
+    BoundState bState{std::move(parameters), Jacobian::Identity(),
                       state.pathAccumulated};
     /// Return the State
     return bState;
@@ -225,15 +191,12 @@ public:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState
-  curvilinearState(State& state, bool /*unused*/) const
-  {
+  CurvilinearState curvilinearState(State& state, bool /*unused*/) const {
     // Create the curvilinear parameters
-    CurvilinearParameters parameters(
-        nullptr, state.pos, state.p * state.dir, state.q);
+    CurvilinearParameters parameters(nullptr, state.pos, state.p * state.dir,
+                                     state.q);
     // Create the bound state
-    CurvilinearState curvState{std::move(parameters),
-                               ActsMatrixD<5, 5>::Identity(),
+    CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                state.pathAccumulated};
     /// Return the State
     return curvState;
@@ -243,13 +206,11 @@ public:
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
-  void
-  update(State& state, const BoundParameters& pars) const
-  {
+  void update(State& state, const BoundParameters& pars) const {
     const auto& mom = pars.momentum();
-    state.pos       = pars.position();
-    state.dir       = mom.normalized();
-    state.p         = mom.norm();
+    state.pos = pars.position();
+    state.dir = mom.normalized();
+    state.p = mom.norm();
   }
 
   /// Method to update momentum, direction and p
@@ -258,21 +219,15 @@ public:
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
-  void
-  update(State&          state,
-         const Vector3D& uposition,
-         const Vector3D& udirection,
-         double          up) const
-  {
+  void update(State& state, const Vector3D& uposition,
+              const Vector3D& udirection, double up) const {
     state.pos = uposition;
     state.dir = udirection;
-    state.p   = up;
+    state.p = up;
   }
 
   /// Return a corrector
-  VoidIntersectionCorrector
-  corrector(State& /*state*/) const
-  {
+  VoidIntersectionCorrector corrector(State& /*state*/) const {
     return VoidIntersectionCorrector();
   }
 
@@ -284,10 +239,8 @@ public:
   /// @param [in] reinitialize is a flag to steer whether the
   ///        state should be reinitialized at the new
   ///        position
-  void
-  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/) const
-  {
-  }
+  void covarianceTransport(State& /*state*/,
+                           bool /*reinitialize = false*/) const {}
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -303,12 +256,8 @@ public:
   ///        position
   /// @note no check is done if the position is actually on the surface
   ///
-  void
-  covarianceTransport(State& /*unused*/,
-                      const Surface& /*surface*/,
-                      bool /*reinitialize = false*/) const
-  {
-  }
+  void covarianceTransport(State& /*unused*/, const Surface& /*surface*/,
+                           bool /*reinitialize = false*/) const {}
 
   /// Perform a straight line propagation step
   ///
@@ -321,9 +270,7 @@ public:
   ///
   /// @return the step size taken
   template <typename propagator_state_t>
-  Result<double>
-  step(propagator_state_t& state) const
-  {
+  Result<double> step(propagator_state_t& state) const {
     // use the adjusted step size
     const double h = state.stepping.stepSize;
     // Update the track parameters according to the equations of motion

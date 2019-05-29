@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,17 +27,16 @@ namespace Acts {
 ///
 /// @image html TriangularBounds.gif
 
-class TriangleBounds : public PlanarBounds
-{
-public:
+class TriangleBounds : public PlanarBounds {
+ public:
   // @enum BoundValues for readability
   enum BoundValues {
-    bv_x1     = 0,
-    bv_y1     = 1,
-    bv_x2     = 2,
-    bv_y2     = 3,
-    bv_x3     = 4,
-    bv_y3     = 5,
+    bv_x1 = 0,
+    bv_y1 = 1,
+    bv_x2 = 2,
+    bv_y2 = 3,
+    bv_x3 = 4,
+    bv_y3 = 5,
     bv_length = 6
   };
 
@@ -50,14 +49,11 @@ public:
 
   ~TriangleBounds() override;
 
-  TriangleBounds*
-  clone() const final;
+  TriangleBounds* clone() const final;
 
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
   /// This method checks if the provided local coordinates are inside the
   /// surface bounds
@@ -65,33 +61,28 @@ public:
   /// @param lpos local position in 2D local carthesian frame
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /// This method returns the coordinates of vertices
-  std::vector<Vector2D>
-  vertices() const final;
+  std::vector<Vector2D> vertices() const final;
 
   // Bounding box representation
-  const RectangleBounds&
-  boundingBox() const final;
+  const RectangleBounds& boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
-private:
+ private:
   std::array<Vector2D, 3> m_vertices;
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
-}  // namespace
+}  // namespace Acts

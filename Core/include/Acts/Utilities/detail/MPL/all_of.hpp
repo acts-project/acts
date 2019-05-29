@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,8 +13,8 @@ namespace Acts {
 
 namespace detail {
 
-  namespace {
-    // clang-format off
+namespace {
+// clang-format off
     template <bool... values>
     struct all_of : std::true_type {};
 
@@ -23,11 +23,11 @@ namespace detail {
 
     template <bool... others>
     struct all_of<true, others...> : public all_of<others...> {};
-    // clang-format on
-  }  // end of anonymous namespace
+// clang-format on
+}  // end of anonymous namespace
 
-  template <bool... values>
-  constexpr bool all_of_v = all_of<values...>::value;
+template <bool... values>
+constexpr bool all_of_v = all_of<values...>::value;
 }  // namespace detail
 
 }  // namespace Acts

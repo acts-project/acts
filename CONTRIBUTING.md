@@ -330,7 +330,6 @@ Writing new code is not the only way one can contribute to the Acts project. Ano
 You can help reviewing proposed contributions by going to [the "merge requests" section of the Acts Gitlab repository](https://gitlab.cern.ch/acts/acts-core/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
 
 * Does its title and description reflect its contents?
-* Is it associated with a JIRA ticket so that we can easily document it in the release notes?
 * Do the automated continuous integration tests pass without problems?
 * Have all the comments raised by previous reviewers been addressed?
 
@@ -338,26 +337,11 @@ If you are confident that a merge request is ready for integration, please make 
 
 ### <a name="merging-a-merge-request">Merging a merge request</a>
 
-If you have been granted merge rights on the Acts repository, you can merge a merge request into the Acts master branch after it has been approved by someone else. In order to give everyone a chance to review the merge request, please wait for at least two days (48h) after the merge request has been submitted before doing so, even if the merge request has been approved by someone before this delay has elapsed.
+If you have been granted merge rights on the Acts repository, you can merge a merge request into the Acts master branch after it has been approved by someone else. 
 
 Gitlab may warn you that a "Fast-forward merge is not possible". This warning means that the merge request has fallen behind the current Acts master branch, and should be updated through a rebase. Please notify the merge request author in order to make sure that the latest master changes do not affect the merge request, and to have it updated as appropriate.
 
 ## <a name="admin-corner">Administrator's corner</a>
 
 This section gives useful information to the administrators of the Acts project. For normal developers the sections below are irrelevant.
-
-### <a name="tag-release">Make a new Acts release</a>
-
-In order to release a new version of Acts the following steps need to be taken:
-
-1. Check out all open JIRA issues for the next release in <a href="https://its.cern.ch/jira/projects/ACTS/versions/">JIRA</a>.
-2. Create a new branch called <tt>release-X.YY.ZZ</tt> branching off from <tt>origin/master</tt>.
-3. In this branch, update the <tt>ACTS_VERSION</tt> variable in the top-level CMakeLists.txt file to <tt>X.YY.ZZ</tt> and commit the change.
-4. Pushing this commit to the remote repository should trigger a CI build. Make sure that everything compiles without any warnings and all tests look fine.
-5. Create a new annotated tag locally. The tag should have the format <tt>vX.YY.ZZ</tt> and an associated tag message 'version vX.YY.ZZ'.
-6. Push the tag to the remote repository. This should trigger a CI job which rebuilds to documentation and deploys it together with a tar file of the source code to the Acts webpage. Make sure that the new release appears under the **Releases** section on the <a href="http://acts.web.cern.ch/ACTS/">Acts webpage</a>.
-7. If there is not yet a JIRA version for the next minor release, create it in the <a href="https://its.cern.ch/jira/plugins/servlet/project-config/ACTS/versions">JIRA project administration</a> area (e.g. if 1.23.02 was just released, version 1.23.03 should exist in JIRA for the next minor release for bug fixes).
-8. Got to the <a href="https://its.cern.ch/jira/projects/ACTS/versions/">Acts Releases page in JIRA</a> and release the version. Make sure that a correct release data is set and that all open issues get moved to the next major/minor release.
-9. From the JIRA release page, copy (all) the HTML code for the release notes. Login to lxplus using the service account <tt>atsjenkins</tt> (<tt>ssh atsjenkins@lxplus.cern.ch</tt>). Create the file <tt>~/www/ACTS/vX.YY.ZZ/ReleaseNotes.html</tt> with the copied HTML code for the release notes. Please make sure that _sub_-tasks appear as nested lists (JIRA unfortunately puts them all on one level in alphabetical order).
-10. Check that the release notes appear on the <a href="http://acts.web.cern.ch/ACTS/">Acts webpage</a> and are available from the respective link in the **Releases** section.
 

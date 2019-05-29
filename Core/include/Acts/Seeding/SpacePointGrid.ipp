@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,23 +13,22 @@
 template <typename SpacePoint>
 std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
-    const Acts::SpacePointGridConfig& config)
-{
+    const Acts::SpacePointGridConfig& config) {
   // calculate circle intersections of helix and max detector radius
   float minHelixRadius = config.minPt / (300. * config.bFieldInZ);  // in mm
-  float maxR2          = config.rMax * config.rMax;
-  float xOuter         = maxR2 / (2 * minHelixRadius);
-  float yOuter         = std::sqrt(maxR2 - xOuter * xOuter);
-  float outerAngle     = std::atan(xOuter / yOuter);
+  float maxR2 = config.rMax * config.rMax;
+  float xOuter = maxR2 / (2 * minHelixRadius);
+  float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
+  float outerAngle = std::atan(xOuter / yOuter);
   // intersection of helix and max detector radius minus maximum R distance from
   // middle SP to top SP
   float innerAngle = 0;
   if (config.rMax > config.deltaRMax) {
-    float innerCircleR2
-        = (config.rMax - config.deltaRMax) * (config.rMax - config.deltaRMax);
+    float innerCircleR2 =
+        (config.rMax - config.deltaRMax) * (config.rMax - config.deltaRMax);
     float xInner = innerCircleR2 / (2 * minHelixRadius);
     float yInner = std::sqrt(innerCircleR2 - xInner * xInner);
-    innerAngle   = std::atan(xInner / yInner);
+    innerAngle = std::atan(xInner / yInner);
   }
 
   // FIXME: phibin size must include max impact parameters
@@ -45,7 +44,7 @@ Acts::SpacePointGridCreator::createGrid(
   // seeds
   // FIXME: zBinSize must include scattering
   float zBinSize = config.cotThetaMax * config.deltaRMax;
-  int   zBins    = std::floor((config.zMax - config.zMin) / zBinSize);
+  int zBins = std::floor((config.zMax - config.zMin) / zBinSize);
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
       zAxis(config.zMin, config.zMax, zBins);
   return std::make_unique<Acts::SpacePointGrid<SpacePoint>>(

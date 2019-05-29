@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -83,12 +83,10 @@ class DigitizationModule;
 /// the envelope of the layer around the surfaces.
 ///
 
-class ActsExtension : public IActsExtension
-{
-public:
+class ActsExtension : public IActsExtension {
+ public:
   /// The configuration object of an ActsExtension
-  struct Config
-  {
+  struct Config {
     /// Indicating that the DD4hep::DetElement is the beampipe
     bool isBeampipe{false};
     /// Indicating that the DD4hep::DetElement is a barrel
@@ -182,49 +180,35 @@ public:
   ~ActsExtension() override = default;
   /// Set configuration method
   /// @param config is the new configuration struct
-  void
-  setConfiguration(const Config& config);
+  void setConfiguration(const Config& config);
   /// @copydoc IActsExtension::isBeampipe()
-  bool
-  isBeampipe() const final;
+  bool isBeampipe() const final;
   /// @copydoc IActsExtension::isBarrel()
-  bool
-  isBarrel() const final;
+  bool isBarrel() const final;
   /// @copydoc IActsExtension::isEndcap()
-  bool
-  isEndcap() const final;
+  bool isEndcap() const final;
   /// @copydoc IActsExtension::isLayer()
-  bool
-  isLayer() const final;
+  bool isLayer() const final;
   /// @copydoc IActsExtension::hasSupportMaterial()
-  bool
-  hasSupportMaterial() const final;
+  bool hasSupportMaterial() const final;
   /// @copydoc IActsExtension::materialBins()
-  std::pair<size_t, size_t>
-  materialBins() const final;
+  std::pair<size_t, size_t> materialBins() const final;
   /// @copydoc IActsExtension::layerMaterialPosition()
-  Acts::LayerMaterialPos
-  layerMaterialPosition() const final;
+  Acts::LayerMaterialPos layerMaterialPosition() const final;
   /// @copydoc IActsExtension::axes()
-  const std::string
-  axes() const final;
+  const std::string axes() const final;
   /// @copydoc IActsExtension::buildEnvelope()
-  bool
-  buildEnvelope() const final;
+  bool buildEnvelope() const final;
   /// @copydoc IActsExtension::envelopeZ()
-  double
-  envelopeR() const final;
+  double envelopeR() const final;
   /// @copydoc IActsExtension::envelopeZ()
-  double
-  envelopeZ() const final;
+  double envelopeZ() const final;
   /// @copydoc IActsExtension::material()
-  std::shared_ptr<const Acts::ISurfaceMaterial>
-  material() const final;
+  std::shared_ptr<const Acts::ISurfaceMaterial> material() const final;
   /// @copydoc IActsExtension::digitizationModule
-  std::shared_ptr<const DigitizationModule>
-  digitizationModule() const final;
+  std::shared_ptr<const DigitizationModule> digitizationModule() const final;
 
-private:
+ private:
   /// The configuration object
   Config m_cfg;
   // The Acts SurfaceMaterial
@@ -238,86 +222,62 @@ private:
   std::shared_ptr<const DigitizationModule> m_digitizationModule{nullptr};
 };
 
-inline bool
-ActsExtension::isBeampipe() const
-{
+inline bool ActsExtension::isBeampipe() const {
   return m_cfg.isBeampipe;
 }
 
-inline bool
-ActsExtension::isBarrel() const
-{
+inline bool ActsExtension::isBarrel() const {
   return m_cfg.isBarrel;
 }
 
-inline bool
-ActsExtension::isEndcap() const
-{
+inline bool ActsExtension::isEndcap() const {
   return m_cfg.isEndcap;
 }
 
-inline bool
-ActsExtension::isLayer() const
-{
+inline bool ActsExtension::isLayer() const {
   return m_cfg.isLayer;
 }
 
-inline bool
-ActsExtension::hasSupportMaterial() const
-{
+inline bool ActsExtension::hasSupportMaterial() const {
   if ((m_cfg.materialBins1 > 0) || (m_cfg.materialBins2 > 0)) {
     return true;
   }
   return false;
 }
 
-inline std::pair<size_t, size_t>
-ActsExtension::materialBins() const
-{
+inline std::pair<size_t, size_t> ActsExtension::materialBins() const {
   std::pair<size_t, size_t> materialBins(m_cfg.materialBins1,
                                          m_cfg.materialBins2);
   return (materialBins);
 }
 
-inline Acts::LayerMaterialPos
-ActsExtension::layerMaterialPosition() const
-{
+inline Acts::LayerMaterialPos ActsExtension::layerMaterialPosition() const {
   return m_cfg.layerMaterialPosition;
 }
 
-inline const std::string
-ActsExtension::axes() const
-{
+inline const std::string ActsExtension::axes() const {
   return m_cfg.axes;
 }
 
-inline bool
-ActsExtension::buildEnvelope() const
-{
+inline bool ActsExtension::buildEnvelope() const {
   return ((m_cfg.envelopeR > 0.) && (m_cfg.envelopeZ > 0.));
 }
 
-inline double
-ActsExtension::envelopeR() const
-{
+inline double ActsExtension::envelopeR() const {
   return (m_cfg.envelopeR);
 }
 
-inline double
-ActsExtension::envelopeZ() const
-{
+inline double ActsExtension::envelopeZ() const {
   return (m_cfg.envelopeR);
 }
 
 inline std::shared_ptr<const Acts::ISurfaceMaterial>
-Acts::ActsExtension::material() const
-{
+Acts::ActsExtension::material() const {
   return m_material;
 }
 
 inline std::shared_ptr<const DigitizationModule>
-Acts::ActsExtension::digitizationModule() const
-{
+Acts::ActsExtension::digitizationModule() const {
   return m_digitizationModule;
 }
-}
+}  // namespace Acts

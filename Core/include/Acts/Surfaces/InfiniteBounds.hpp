@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,54 +21,36 @@ namespace Acts {
 /// templated boundless extension to forward the interface
 /// Returns all inside checks to true and can templated for all bounds
 
-class InfiniteBounds : public SurfaceBounds
-{
-public:
-  InfiniteBounds()           = default;
+class InfiniteBounds : public SurfaceBounds {
+ public:
+  InfiniteBounds() = default;
   ~InfiniteBounds() override = default;
 
-  InfiniteBounds*
-  clone() const final
-  {
-    return new InfiniteBounds();
-  }
+  InfiniteBounds* clone() const final { return new InfiniteBounds(); }
 
-  SurfaceBounds::BoundsType
-  type() const final
-  {
+  SurfaceBounds::BoundsType type() const final {
     return SurfaceBounds::Boundless;
   }
 
-  std::vector<TDD_real_t>
-  valueStore() const final
-  {
-    return {};
-  }
+  std::vector<TDD_real_t> valueStore() const final { return {}; }
 
   /// Method inside() returns true for any case
   ///
   /// ignores input parameters
   ///
   /// @return always true
-  bool
-  inside(const Vector2D& /*lpos*/, const BoundaryCheck& /*bcheck*/) const final
-  {
+  bool inside(const Vector2D& /*lpos*/,
+              const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }
 
   /// Minimal distance calculation
   /// ignores input parameter
   /// @return always 0. (should be -NaN)
-  double
-  distanceToBoundary(const Vector2D& /*pos*/) const final
-  {
-    return 0;
-  }
+  double distanceToBoundary(const Vector2D& /*pos*/) const final { return 0; }
 
   /// Output Method for std::ostream
-  std::ostream&
-  toStream(std::ostream& os) const final
-  {
+  std::ostream& toStream(std::ostream& os) const final {
     os << "Acts::InfiniteBounds ... boundless surface" << std::endl;
     return os;
   }

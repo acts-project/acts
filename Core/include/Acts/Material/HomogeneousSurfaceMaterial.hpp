@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,9 +22,8 @@ namespace Acts {
 ///
 /// It extends the ISurfaceMaterial virutal base class to describe
 /// a simple homogeneous material on a surface
-class HomogeneousSurfaceMaterial : public ISurfaceMaterial
-{
-public:
+class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
+ public:
   /// Default Constructor - defaulted
   HomogeneousSurfaceMaterial() = default;
 
@@ -33,7 +32,7 @@ public:
   /// @param full are the full material properties
   /// @param splitFactor is the split for pre/post update
   HomogeneousSurfaceMaterial(const MaterialProperties& full,
-                             double                    splitFactor = 1.);
+                             double splitFactor = 1.);
 
   /// Copy Constructor
   ///
@@ -51,41 +50,35 @@ public:
   /// Assignment operator
   ///
   /// @param hsm is the source material
-  HomogeneousSurfaceMaterial&
-  operator=(const HomogeneousSurfaceMaterial& hsm)
-      = default;
+  HomogeneousSurfaceMaterial& operator=(const HomogeneousSurfaceMaterial& hsm) =
+      default;
 
   /// Assignment Move operator
   ///
   /// @param hsm is the source material
-  HomogeneousSurfaceMaterial&
-  operator=(HomogeneousSurfaceMaterial&& hsm)
-      = default;
+  HomogeneousSurfaceMaterial& operator=(HomogeneousSurfaceMaterial&& hsm) =
+      default;
 
   /// Scale operator
   /// - it is effectively a thickness scaling
   ///
   /// @param scale is the scale factor
-  HomogeneousSurfaceMaterial&
-  operator*=(double scale) final;
+  HomogeneousSurfaceMaterial& operator*=(double scale) final;
 
   /// Equality operator
   ///
   /// @param hsm is the source material
-  bool
-  operator==(const HomogeneousSurfaceMaterial& hsm) const;
+  bool operator==(const HomogeneousSurfaceMaterial& hsm) const;
 
   /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties&
-  materialProperties(const Vector2D& lp) const final;
+  const MaterialProperties& materialProperties(const Vector2D& lp) const final;
 
   /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties&
-  materialProperties(const Vector3D& gp) const final;
+  const MaterialProperties& materialProperties(const Vector3D& gp) const final;
 
   /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
   ///
@@ -93,8 +86,8 @@ public:
   /// @param ib1 The bin at local 1 for retrieving the material
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties&
-  materialProperties(size_t ib0, size_t ib1) const final;
+  const MaterialProperties& materialProperties(size_t ib0,
+                                               size_t ib1) const final;
 
   /// The inherited methods - for materialProperties access
   using ISurfaceMaterial::materialProperties;
@@ -105,38 +98,31 @@ public:
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
-private:
+ private:
   /// The five different MaterialProperties
   MaterialProperties m_fullMaterial = MaterialProperties();
 };
 
-inline const MaterialProperties&
-HomogeneousSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const
-{
+inline const MaterialProperties& HomogeneousSurfaceMaterial::materialProperties(
+    const Vector2D& /*lp*/) const {
   return (m_fullMaterial);
 }
 
-inline const MaterialProperties&
-HomogeneousSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const
-{
+inline const MaterialProperties& HomogeneousSurfaceMaterial::materialProperties(
+    const Vector3D& /*gp*/) const {
   return (m_fullMaterial);
 }
 
-inline const MaterialProperties&
-    HomogeneousSurfaceMaterial::materialProperties(size_t /*ib0*/,
-                                                   size_t /*ib1*/) const
-{
+inline const MaterialProperties& HomogeneousSurfaceMaterial::materialProperties(
+    size_t /*ib0*/, size_t /*ib1*/) const {
   return (m_fullMaterial);
 }
 
-inline bool
-HomogeneousSurfaceMaterial::
-operator==(const HomogeneousSurfaceMaterial& hsm) const
-{
+inline bool HomogeneousSurfaceMaterial::operator==(
+    const HomogeneousSurfaceMaterial& hsm) const {
   return (m_fullMaterial == hsm.m_fullMaterial);
 }
 
-}  // namespace
+}  // namespace Acts

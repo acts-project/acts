@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,32 +21,28 @@ namespace Acts {
  * This class serves as a base class for the actual bounds class.
  * The only deriving type is the templated `ConvexPolygonBounds`.
  */
-class ConvexPolygonBoundsBase : public PlanarBounds
-{
-public:
+class ConvexPolygonBoundsBase : public PlanarBounds {
+ public:
   /**
    * Output Method for std::ostream
    * @param sl is the ostream to be written into
    */
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
   /**
    * Return vector containing defining parameters
    * @return the parameters
    */
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
-protected:
+ protected:
   /**
    * Return a rectangle bounds instance that encloses a set of vertices.
    * @param vertices A collection of vertices to enclose.
    * @return Enclosing rectangle.
    */
   template <typename coll_t>
-  static RectangleBounds
-  makeBoundingBox(const coll_t& vertices);
+  static RectangleBounds makeBoundingBox(const coll_t& vertices);
 
   /**
    * Calculates whether a set of vertices forms a convex polygon. This is
@@ -56,8 +52,7 @@ protected:
    * @return Whether the vertices form a convex polygon.
    */
   template <typename coll_t>
-  static bool
-  convex_impl(const coll_t& vertices);
+  static bool convex_impl(const coll_t& vertices);
 };
 
 /**
@@ -68,8 +63,7 @@ protected:
  * @tparam N Number of vertices
  */
 template <int N>
-class ConvexPolygonBounds : public ConvexPolygonBoundsBase
-{
+class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /**
    * Expose number of vertices given as template parameter.
    */
@@ -79,7 +73,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase
    */
   using vertex_array = std::array<Vector2D, num_vertices>;
 
-public:
+ public:
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
   /**
@@ -111,15 +105,13 @@ public:
    * Return a copy of this bounds object.
    * @return The cloned instance
    */
-  ConvexPolygonBounds<N>*
-  clone() const final;
+  ConvexPolygonBounds<N>* clone() const final;
 
   /**
    * Return the bounds type of this bounds object.
    * @return The bounds type
    */
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
   /**
    * Return whether a local 2D point lies inside of the bounds defined by this
@@ -128,8 +120,7 @@ public:
    * @param bcheck The `BoundaryCheck` object handling tolerances.
    * @return Whether the points is inside
    */
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /**
    * Return the smallest distance to any point on the boundary of this bounds
@@ -137,32 +128,28 @@ public:
    * @param lpos The local position to get the distance to
    * @return The smallest distance to the boundary.
    */
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /**
    * Returns a vector containing the vertices making up the bounds.
    * @return Vector of vertices
    */
-  std::vector<Vector2D>
-  vertices() const final;
+  std::vector<Vector2D> vertices() const final;
 
   /**
    * Return a rectangle bounds object that encloses this polygon.
    * @return The rectangular bounds
    */
-  const RectangleBounds&
-  boundingBox() const final;
+  const RectangleBounds& boundingBox() const final;
 
   /**
    * Return whether this bounds class is in fact convex
    * @return Whether the bounds are convex.
    */
-  bool
-  convex() const;
+  bool convex() const;
 
-private:
-  vertex_array    m_vertices;
+ private:
+  vertex_array m_vertices;
   RectangleBounds m_boundingBox;
 };
 
@@ -176,9 +163,8 @@ constexpr int PolygonDynamic = -1;
  * points. It can accept any number of points.
  */
 template <>
-class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase
-{
-public:
+class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
+ public:
   /**
    * Default constructor, deleted
    */
@@ -200,15 +186,13 @@ public:
    * Return a copy of this bounds object.
    * @return The cloned instance
    */
-  ConvexPolygonBounds<PolygonDynamic>*
-  clone() const final;
+  ConvexPolygonBounds<PolygonDynamic>* clone() const final;
 
   /**
    * Return the bounds type of this bounds object.
    * @return The bounds type
    */
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
   /**
    * Return whether a local 2D point lies inside of the bounds defined by this
@@ -217,8 +201,7 @@ public:
    * @param bcheck The `BoundaryCheck` object handling tolerances.
    * @return Whether the points is inside
    */
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /**
    * Return the smallest distance to any point on the boundary of this bounds
@@ -226,35 +209,31 @@ public:
    * @param lpos The local position to get the distance to
    * @return The smallest distance to the boundary.
    */
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /**
    * Returns a vector containing the vertices making up the bounds.
    * @return Vector of vertices
    */
-  std::vector<Vector2D>
-  vertices() const final;
+  std::vector<Vector2D> vertices() const final;
 
   /**
    * Return a rectangle bounds object that encloses this polygon.
    * @return The rectangular bounds
    */
-  const RectangleBounds&
-  boundingBox() const final;
+  const RectangleBounds& boundingBox() const final;
 
   /**
    * Return whether this bounds class is in fact convex
    * @return Whether the bounds are convex.
    */
-  bool
-  convex() const;
+  bool convex() const;
 
-private:
+ private:
   boost::container::small_vector<Vector2D, 10> m_vertices;
   RectangleBounds m_boundingBox;
 };
 
-}  // namespace
+}  // namespace Acts
 
 #include "Acts/Surfaces/ConvexPolygonBounds.ipp"

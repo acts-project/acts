@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,10 +8,8 @@
 
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
-auto
-Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
-    -> Result<result_t>
-{
+auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
+    -> Result<result_t> {
   result_t result;
 
   // Pre-stepping call to the navigator and action list
@@ -83,20 +81,16 @@ Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
 }
 
 template <typename S, typename N>
-template <typename parameters_t,
-          typename action_list_t,
+template <typename parameters_t, typename action_list_t,
           typename aborter_list_t,
           template <typename, typename> class propagator_options_t,
           typename path_aborter_t>
-auto
-Acts::Propagator<S, N>::propagate(
+auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start,
     const propagator_options_t<action_list_t, aborter_list_t>& options) const
     -> Result<action_list_t_result_t<
         typename S::template return_parameter_type<parameters_t>,
-        action_list_t>>
-{
-
+        action_list_t>> {
   // Type of track parameters produced by the propagation
   using ReturnParameterType =
       typename S::template return_parameter_type<parameters_t>;
@@ -111,20 +105,18 @@ Acts::Propagator<S, N>::propagate(
 
   // Expand the abort list with a path aborter
   path_aborter_t pathAborter;
-  auto           abortList = options.abortList.append(pathAborter);
+  auto abortList = options.abortList.append(pathAborter);
 
   // The expanded options (including path limit)
-  auto eOptions     = options.extend(abortList);
+  auto eOptions = options.extend(abortList);
   using OptionsType = decltype(eOptions);
   // Initialize the internal propagator state
   using StateType = State<OptionsType>;
   StateType state(start, eOptions);
 
   static_assert(
-      concept::has_method<const S,
-                          Result<double>,
-                          concept::Stepper::step_t,
-                          StateType&>,
+      concept ::has_method<const S, Result<double>, concept ::Stepper::step_t,
+                           StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -133,14 +125,12 @@ Acts::Propagator<S, N>::propagate(
     detail::LoopProtection<path_aborter_t> lProtection;
     lProtection(state, m_stepper);
   }
-
   // Perform the actual propagation & check its outcome
   auto result = propagate_impl<ResultType>(state);
-
   if (result.ok()) {
     auto& propRes = *result;
     /// Convert into return type and fill the result object
-    auto  curvState      = m_stepper.curvilinearState(state.stepping, true);
+    auto curvState = m_stepper.curvilinearState(state.stepping, true);
     auto& curvParameters = std::get<CurvilinearParameters>(curvState);
     // Fill the end parameters
     propRes.endParameters = std::make_unique<const CurvilinearParameters>(
@@ -148,8 +138,8 @@ Acts::Propagator<S, N>::propagate(
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
       auto& tJacobian = std::get<Jacobian>(curvState);
-      propRes.transportJacobian
-          = std::make_unique<const Jacobian>(std::move(tJacobian));
+      propRes.transportJacobian =
+          std::make_unique<const Jacobian>(std::move(tJacobian));
     }
     return result;
   } else {
@@ -158,39 +148,32 @@ Acts::Propagator<S, N>::propagate(
 }
 
 template <typename S, typename N>
-template <typename parameters_t,
-          typename surface_t,
-          typename action_list_t,
+template <typename parameters_t, typename surface_t, typename action_list_t,
           typename aborter_list_t,
           template <typename, typename> class propagator_options_t,
-          typename target_aborter_t,
-          typename path_aborter_t>
-auto
-Acts::Propagator<S, N>::propagate(
-    const parameters_t& start,
-    const surface_t&    target,
+          typename target_aborter_t, typename path_aborter_t>
+auto Acts::Propagator<S, N>::propagate(
+    const parameters_t& start, const surface_t& target,
     const propagator_options_t<action_list_t, aborter_list_t>& options) const
     -> Result<action_list_t_result_t<
         typename S::template return_parameter_type<parameters_t, surface_t>,
-        action_list_t>>
-{
-
+        action_list_t>> {
   // Type of track parameters produced at the end of the propagation
   using return_parameter_type =
       typename S::template return_parameter_type<parameters_t, surface_t>;
 
   // Type of provided options
   target_aborter_t targetAborter;
-  path_aborter_t   pathAborter;
+  path_aborter_t pathAborter;
   auto abortList = options.abortList.append(targetAborter, pathAborter);
 
   // Create the extended options and declare their type
-  auto eOptions     = options.extend(abortList);
+  auto eOptions = options.extend(abortList);
   using OptionsType = decltype(eOptions);
 
   // Type of the full propagation result, including output from actions
-  using ResultType
-      = action_list_t_result_t<return_parameter_type, action_list_t>;
+  using ResultType =
+      action_list_t_result_t<return_parameter_type, action_list_t>;
 
   // Initialize the internal propagator state
   using StateType = State<OptionsType>;
@@ -198,10 +181,8 @@ Acts::Propagator<S, N>::propagate(
   state.navigation.targetSurface = &target;
 
   static_assert(
-      concept::has_method<const S,
-                          Result<double>,
-                          concept::Stepper::step_t,
-                          StateType&>,
+      concept ::has_method<const S, Result<double>, concept ::Stepper::step_t,
+                           StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -215,16 +196,16 @@ Acts::Propagator<S, N>::propagate(
   if (result.ok()) {
     auto& propRes = *result;
     // Compute the final results and mark the propagation as successful
-    auto  bs              = m_stepper.boundState(state.stepping, target, true);
+    auto bs = m_stepper.boundState(state.stepping, target, true);
     auto& boundParameters = std::get<BoundParameters>(bs);
     // Fill the end parameters
-    propRes.endParameters
-        = std::make_unique<const BoundParameters>(std::move(boundParameters));
+    propRes.endParameters =
+        std::make_unique<const BoundParameters>(std::move(boundParameters));
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
       auto& tJacobian = std::get<Jacobian>(bs);
-      propRes.transportJacobian
-          = std::make_unique<const Jacobian>(std::move(tJacobian));
+      propRes.transportJacobian =
+          std::make_unique<const Jacobian>(std::move(tJacobian));
     }
     return result;
   } else {
@@ -234,14 +215,12 @@ Acts::Propagator<S, N>::propagate(
 
 template <typename S, typename N>
 template <typename propagator_state_t>
-void
-Acts::Propagator<S, N>::debugLog(
-    propagator_state_t&                 state,
-    const std::function<std::string()>& logAction) const
-{
+void Acts::Propagator<S, N>::debugLog(
+    propagator_state_t& state,
+    const std::function<std::string()>& logAction) const {
   if (state.options.debug) {
     std::vector<std::string> lines;
-    std::string              input = logAction();
+    std::string input = logAction();
     boost::split(lines, input, boost::is_any_of("\n"));
     for (const auto& line : lines) {
       std::stringstream dstream;

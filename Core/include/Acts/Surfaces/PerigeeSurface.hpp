@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,10 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryStatics.hpp"
 
 namespace Acts {
 
@@ -25,13 +25,12 @@ namespace Acts {
 /// It inherits from StraingLineSurface.
 ///
 /// @image html LineSurface.png
-class PerigeeSurface : public LineSurface
-{
+class PerigeeSurface : public LineSurface {
   friend Surface;
 
   PerigeeSurface() = delete;
 
-protected:
+ protected:
   /// Constructor from GlobalPosition
   ///
   /// @param gp position where the perigee is centered
@@ -52,11 +51,10 @@ protected:
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  PerigeeSurface(const GeometryContext& gctx,
-                 const PerigeeSurface&  other,
-                 const Transform3D&     transf);
+  PerigeeSurface(const GeometryContext& gctx, const PerigeeSurface& other,
+                 const Transform3D& transf);
 
-public:
+ public:
   /// Destructor - defaulted
   ~PerigeeSurface() override = default;
 
@@ -64,22 +62,19 @@ public:
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
-  std::shared_ptr<PerigeeSurface>
-  clone(const GeometryContext& gctx, const Transform3D& shift) const;
+  std::shared_ptr<PerigeeSurface> clone(const GeometryContext& gctx,
+                                        const Transform3D& shift) const;
 
   /// Assignment operator
   ///
   /// @param other is the source surface to be assigned
-  PerigeeSurface&
-  operator=(const PerigeeSurface& other);
+  PerigeeSurface& operator=(const PerigeeSurface& other);
 
   /// Return the surface type
-  SurfaceType
-  type() const final;
+  SurfaceType type() const final;
 
   /// Return properly formatted class name for screen output */
-  std::string
-  name() const final;
+  std::string name() const final;
 
   /// Output Method for std::ostream
   ///
@@ -87,17 +82,16 @@ public:
   /// @param sl is the ostream to be dumped into
   ///
   /// @return ostreamn obect which was streamed into
-  std::ostream&
-  toStream(const GeometryContext& gctx, std::ostream& sl) const final;
+  std::ostream& toStream(const GeometryContext& gctx,
+                         std::ostream& sl) const final;
 
-private:
+ private:
   /// Clone method implementation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
-  PerigeeSurface*
-  clone_impl(const GeometryContext& gctx,
-             const Transform3D&     shift) const override;
+  PerigeeSurface* clone_impl(const GeometryContext& gctx,
+                             const Transform3D& shift) const override;
 };
 
 }  // namespace Acts

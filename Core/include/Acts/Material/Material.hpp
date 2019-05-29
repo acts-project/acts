@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,17 +38,16 @@ namespace Acts {
 ///  Z - nuclear number
 ///  rho - density
 ///  Z/A*rho
-class Material
-{
-public:
+class Material {
+ public:
   /// @brief Accessor enums
   enum Param {
-    matX0   = 0,  ///< X0 - this is in mm
-    matL0   = 1,  ///< L0 - this is in mm
-    matA    = 2,  ///< A - in au
-    matZ    = 3,  ///< Z - in e
-    matrho  = 4,  ///< rho - g/mm^3
-    matZ_AR = 5   ///< Z/A*rho
+    matX0 = 0,   ///< X0 - this is in mm
+    matL0 = 1,   ///< L0 - this is in mm
+    matA = 2,    ///< A - in au
+    matZ = 3,    ///< Z - in e
+    matrho = 4,  ///< rho - g/mm^3
+    matZ_AR = 5  ///< Z/A*rho
   };
 
   /// @brief Default Constructor - vacuum material
@@ -62,29 +61,18 @@ public:
   /// @param iZ is the average atomic number
   /// @param iRho is the average density
   /// @param imc is the material composition
-  Material(float               iX0,
-           float               iL0,
-           float               iA,
-           float               iZ,
-           float               iRho,
+  Material(float iX0, float iL0, float iA, float iZ, float iRho,
            MaterialComposition imc = {})
-    : m_vacuum(false)
-    , m_store({iX0, iL0, iA, iZ, iRho, 0.})
-    , m_composition(std::move(imc))
-  {
+      : m_vacuum(false),
+        m_store({iX0, iL0, iA, iZ, iRho, 0.}),
+        m_composition(std::move(imc)) {
     float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
-    m_store[5]  = zOaTr;
+    m_store[5] = zOaTr;
   }
 
   Material(ActsVectorF<5> iMatData, MaterialComposition imc = {})
-    : Material(iMatData[0],
-               iMatData[1],
-               iMatData[2],
-               iMatData[3],
-               iMatData[4],
-               std::move(imc))
-  {
-  }
+      : Material(iMatData[0], iMatData[1], iMatData[2], iMatData[3],
+                 iMatData[4], std::move(imc)) {}
 
   /// @brief Copy Constructor
   ///
@@ -99,16 +87,12 @@ public:
   /// @brief Assignment operator
   ///
   /// @param mat is the source material
-  Material&
-  operator=(const Material& mat)
-      = default;
+  Material& operator=(const Material& mat) = default;
 
   /// @brief Assignment Move operator
   ///
   /// @param mat is the source material
-  Material&
-  operator=(Material&& mat)
-      = default;
+  Material& operator=(Material&& mat) = default;
 
   /// @brief Desctructor
   ~Material() = default;
@@ -116,75 +100,45 @@ public:
   /// @brief Equality operator
   ///
   /// @param mat is the source material
-  bool
-  operator==(const Material& mat) const;
+  bool operator==(const Material& mat) const;
 
   /// @brief Inequality operator
   ///
   /// @param mat is the source material
-  bool
-  operator!=(const Material& mat) const;
+  bool operator!=(const Material& mat) const;
 
   /// @brief Boolean operator to check if this is vacuum
   operator bool() const { return (!m_vacuum); }
 
   /// @brief Access to X0
   /// if it's vacuum, infinity
-  float
-  X0() const
-  {
-    return m_store[matX0];
-  }
+  float X0() const { return m_store[matX0]; }
 
   /// @brief Access to L0
   /// if it's vacuum, infinity
-  float
-  L0() const
-  {
-    return m_store[matL0];
-  }
+  float L0() const { return m_store[matL0]; }
 
   /// @brief Access to A
-  float
-  A() const
-  {
-    return m_store[matA];
-  }
+  float A() const { return m_store[matA]; }
 
   /// @brief Access to Z
-  float
-  Z() const
-  {
-    return m_store[matZ];
-  }
+  float Z() const { return m_store[matZ]; }
 
   /// @brief Access to rho
-  float
-  rho() const
-  {
-    return m_store[matrho];
-  }
+  float rho() const { return m_store[matrho]; }
 
   ///  @brief Access to z/A*tho
-  float
-  zOverAtimesRho() const
-  {
-    return m_store[matZ_AR];
-  }
+  float zOverAtimesRho() const { return m_store[matZ_AR]; }
 
   /// @brief Access to all classification numbers of the material
-  ActsVectorF<5>
-  classificationNumbers()
-  {
+  ActsVectorF<5> classificationNumbers() {
     ActsVectorF<5> numbers;
     numbers << X0(), L0(), A(), Z(), rho();
     return numbers;
   }
 
   /// spit out as a string
-  std::string
-  toString() const
-  {
+  std::string toString() const {
     std::ostringstream sout;
     sout << std::setiosflags(std::ios::fixed) << std::setprecision(4);
     sout << " | ";
@@ -198,7 +152,7 @@ public:
     return sout.str();
   }
 
-private:
+ private:
   /// define it is vacuum or not
   bool m_vacuum = true;
 
@@ -214,15 +168,11 @@ private:
   MaterialComposition m_composition = MaterialComposition();
 };
 
-inline bool
-Material::operator==(const Material& mat) const
-{
+inline bool Material::operator==(const Material& mat) const {
   return (m_store == mat.m_store && m_composition == mat.m_composition);
 }
 
-inline bool
-Material::operator!=(const Material& mat) const
-{
+inline bool Material::operator!=(const Material& mat) const {
   return !operator==(mat);
 }
 }  // namespace Acts

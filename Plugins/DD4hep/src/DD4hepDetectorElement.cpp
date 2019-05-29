@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,20 +14,12 @@
 #include "DD4hep/CartesianGridXY.h"
 
 Acts::DD4hepDetectorElement::DD4hepDetectorElement(
-    const dd4hep::DetElement                        detElement,
-    const std::string&                              axes,
-    double                                          scalor,
-    bool                                            isDisc,
-    std::shared_ptr<const Acts::ISurfaceMaterial>   material,
+    const dd4hep::DetElement detElement, const std::string& axes, double scalor,
+    bool isDisc, std::shared_ptr<const Acts::ISurfaceMaterial> material,
     std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
-  : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
-                              detElement.nominal().worldTransformation(),
-                              detElement.placement().ptr(),
-                              axes,
-                              scalor,
-                              isDisc,
-                              std::move(material),
-                              std::move(digitizationModule))
-  , m_detElement(std::move(detElement))
-{
-}
+    : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
+                                detElement.nominal().worldTransformation(),
+                                detElement.placement().ptr(), axes, scalor,
+                                isDisc, std::move(material),
+                                std::move(digitizationModule)),
+      m_detElement(std::move(detElement)) {}

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,9 +9,8 @@
 #pragma once
 
 namespace Acts {
-class CovarianceTool
-{
-public:
+class CovarianceTool {
+ public:
   /// Virtual destructor
   ~CovarianceTool() = default;
 
@@ -26,22 +25,16 @@ public:
   /// @param sigma is multiplied with the combined alignment and covariance
   /// errors
   template <typename SpacePoint>
-  Acts::Vector2D
-  getCovariances(const SpacePoint* sp,
-                 float             zAlign = 0,
-                 float             rAlign = 0,
-                 float             sigma  = 1);
+  Acts::Vector2D getCovariances(const SpacePoint* sp, float zAlign = 0,
+                                float rAlign = 0, float sigma = 1);
 };
 template <typename SpacePoint>
-inline Acts::Vector2D
-CovarianceTool::getCovariances(const SpacePoint* sp,
-                               float             zAlign,
-                               float             rAlign,
-                               float             sigma)
-{
+inline Acts::Vector2D CovarianceTool::getCovariances(const SpacePoint* sp,
+                                                     float zAlign, float rAlign,
+                                                     float sigma) {
   Acts::Vector2D cov;
   cov[0] = ((*sp).covr + rAlign * rAlign) * sigma;
   cov[1] = ((*sp).covz + zAlign * zAlign) * sigma;
   return cov;
 }
-}
+}  // namespace Acts

@@ -32,3 +32,8 @@ target_include_directories (TrackStateTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (TrackStateTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME TrackStateUnitTests COMMAND TrackStateTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST TrackStateUnitTests TARGETS TrackStateTests)
+
+add_executable (MeasurementHelpersTests MeasurementHelpersTests.cpp)
+target_include_directories (MeasurementHelpersTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (MeasurementHelpersTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME MeasurementHelpersTests COMMAND MeasurementHelpersTests)

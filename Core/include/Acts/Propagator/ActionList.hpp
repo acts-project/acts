@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,15 +28,14 @@ namespace Acts {
 /// to define a list of different actors_t that are eacch
 /// executed during the stepping procedure
 template <typename... actors_t>
-struct ActionList : public detail::Extendable<actors_t...>
-{
-private:
+struct ActionList : public detail::Extendable<actors_t...> {
+ private:
   static_assert(not detail::has_duplicates_v<actors_t...>,
                 "same action type specified several times");
 
   using detail::Extendable<actors_t...>::tuple;
 
-public:
+ public:
   // This uses the type collector and unpacks using the `R` meta funciton
   template <template <typename...> class R>
   using result_type = typename decltype(hana::unpack(
@@ -61,16 +60,14 @@ public:
   /// Default move assignment operator
   ///
   /// @param actors The source action list
-  ActionList<actors_t...>&
-  operator=(const ActionList<actors_t...>& actors)
-      = default;
+  ActionList<actors_t...>& operator=(const ActionList<actors_t...>& actors) =
+      default;
 
   /// Default move assignment operator
   ///
   /// @param actors The source action list
-  ActionList<actors_t...>&
-  operator=(ActionList<actors_t...>&& actors)
-      = default;
+  ActionList<actors_t...>& operator=(ActionList<actors_t...>&& actors) =
+      default;
 
   /// Call operator that is that broadcasts the call to the tuple()
   /// members of the list
@@ -85,11 +82,8 @@ public:
   ///
   /// @return bool type indiciating if the step size can be released
   template <typename propagator_state_t, typename stepper_t, typename result_t>
-  void
-  operator()(propagator_state_t& state,
-             const stepper_t&    stepper,
-             result_t&           result) const
-  {
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  result_t& result) const {
     // clang-format off
     static_assert(detail::all_of_v<detail::action_signature_check_v<actors_t, 
                                       propagator_state_t, stepper_t>...>,

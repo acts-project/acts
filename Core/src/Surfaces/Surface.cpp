@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,42 +17,32 @@
 #include <utility>
 
 Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
-  : GeometryObject(), m_transform(std::move(tform))
-{
-}
+    : GeometryObject(), m_transform(std::move(tform)) {}
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
-  : GeometryObject(), m_transform(nullptr), m_associatedDetElement(&detelement)
-{
-}
+    : GeometryObject(),
+      m_transform(nullptr),
+      m_associatedDetElement(&detelement) {}
 
 Acts::Surface::Surface(const Surface& other)
-  : GeometryObject(other)
-  , std::enable_shared_from_this<Surface>()
-  , m_transform(other.m_transform)
-  , m_surfaceMaterial(other.m_surfaceMaterial)
-{
-}
+    : GeometryObject(other),
+      std::enable_shared_from_this<Surface>(),
+      m_transform(other.m_transform),
+      m_surfaceMaterial(other.m_surfaceMaterial) {}
 
-Acts::Surface::Surface(const GeometryContext& gctx,
-                       const Surface&         other,
-                       const Transform3D&     shift)
-  : GeometryObject()
-  , m_transform(std::make_shared<const Transform3D>(
-        Transform3D(shift * other.transform(gctx))))
-  , m_associatedLayer(nullptr)
-  , m_surfaceMaterial(other.m_surfaceMaterial)
-{
-}
+Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
+                       const Transform3D& shift)
+    : GeometryObject(),
+      m_transform(std::make_shared<const Transform3D>(
+          Transform3D(shift * other.transform(gctx)))),
+      m_associatedLayer(nullptr),
+      m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::~Surface() = default;
 
-bool
-Acts::Surface::isOnSurface(const GeometryContext& gctx,
-                           const Vector3D&        gpos,
-                           const Vector3D&        gmom,
-                           const BoundaryCheck&   bcheck) const
-{
+bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
+                                const Vector3D& gpos, const Vector3D& gmom,
+                                const BoundaryCheck& bcheck) const {
   // create the local position
   Vector2D lpos;
   // global to local transformation
@@ -64,35 +54,27 @@ Acts::Surface::isOnSurface(const GeometryContext& gctx,
   return false;
 }
 
-std::shared_ptr<Acts::Surface>
-Acts::Surface::getSharedPtr()
-{
+std::shared_ptr<Acts::Surface> Acts::Surface::getSharedPtr() {
   return shared_from_this();
 }
 
-std::shared_ptr<const Acts::Surface>
-Acts::Surface::getSharedPtr() const
-{
+std::shared_ptr<const Acts::Surface> Acts::Surface::getSharedPtr() const {
   return shared_from_this();
 }
 
-Acts::Surface&
-Acts::Surface::operator=(const Surface& other)
-{
+Acts::Surface& Acts::Surface::operator=(const Surface& other) {
   if (&other != this) {
     GeometryObject::operator=(other);
     // detector element, identifier & layer association are unique
-    m_transform            = other.m_transform;
-    m_associatedLayer      = other.m_associatedLayer;
-    m_surfaceMaterial      = other.m_surfaceMaterial;
+    m_transform = other.m_transform;
+    m_associatedLayer = other.m_associatedLayer;
+    m_surfaceMaterial = other.m_surfaceMaterial;
     m_associatedDetElement = other.m_associatedDetElement;
   }
   return *this;
 }
 
-bool
-Acts::Surface::operator==(const Surface& other) const
-{
+bool Acts::Surface::operator==(const Surface& other) const {
   // (a) fast exit for pointer comparison
   if (&other == this) {
     return true;
@@ -125,9 +107,8 @@ Acts::Surface::operator==(const Surface& other) const
 }
 
 // overload dump for stream operator
-std::ostream&
-Acts::Surface::toStream(const GeometryContext& gctx, std::ostream& sl) const
-{
+std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
+                                      std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(4);
   sl << name() << std::endl;
@@ -135,9 +116,9 @@ Acts::Surface::toStream(const GeometryContext& gctx, std::ostream& sl) const
   sl << "     Center position  (x, y, z) = (" << sfcenter.x() << ", "
      << sfcenter.y() << ", " << sfcenter.z() << ")" << std::endl;
   Acts::RotationMatrix3D rot(transform(gctx).matrix().block<3, 3>(0, 0));
-  Acts::Vector3D         rotX(rot.col(0));
-  Acts::Vector3D         rotY(rot.col(1));
-  Acts::Vector3D         rotZ(rot.col(2));
+  Acts::Vector3D rotX(rot.col(0));
+  Acts::Vector3D rotY(rot.col(1));
+  Acts::Vector3D rotZ(rot.col(2));
   sl << std::setprecision(6);
   sl << "     Rotation:             colX = (" << rotX(0) << ", " << rotX(1)
      << ", " << rotX(2) << ")" << std::endl;
@@ -150,8 +131,6 @@ Acts::Surface::toStream(const GeometryContext& gctx, std::ostream& sl) const
   return sl;
 }
 
-bool
-Acts::Surface::operator!=(const Acts::Surface& sf) const
-{
+bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
   return !(operator==(sf));
 }

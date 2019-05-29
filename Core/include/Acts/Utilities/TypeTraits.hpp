@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,77 +16,70 @@ namespace Acts {
 
 namespace detail {
 
-  /**
-   * This file contains an implementation of the detection idiom in C++.
-   * It's not currently in the standard, but can be implemented using
-   * standard features. This implementation is largely taken from the C++
-   * [technical specifications, library fundamentals
-   * v2](https://en.cppreference.com/w/cpp/experimental/is_detected)
-   *
-   * The detector pattern works like this: there is a default type, that
-   * accepts an "operation" that can be basically anything. It also accepts
-   * variadic arguments for that operation. The default type
-   * has a member type that is std::false_type to indicate success or
-   * failure. It also has a member type "type" which captures a type result.
-   * Then there is a specialization which attempts to instantiate the operation
-   * with the given parameters, and tries to assign it into std::void_t. If the
-   * operation fails to instantiate (say, the checked for type does not exist),
-   * the specialization will not be instantiated, and the compiler falls back to
-   * the default type which contains std::false_type. Since it happens inside
-   * while the compiler tries to find a better matching template specialization
-   * than the default one (so basically overload resolution), a compile error
-   * inside the operation is handled as a substitution failure, and is not an
-   * error. If the instantiation succeeds, the specialization contains a
-   * std::true_type, and an alias to the result of the operation.
-   *
-   * Essentially, it provides a convenient way to "lift" operations into this
-   * overload resolution, allowing testing expressions and evaluating them into
-   * compile time booleans (instead of compilation failures).
-   */
+/**
+ * This file contains an implementation of the detection idiom in C++.
+ * It's not currently in the standard, but can be implemented using
+ * standard features. This implementation is largely taken from the C++
+ * [technical specifications, library fundamentals
+ * v2](https://en.cppreference.com/w/cpp/experimental/is_detected)
+ *
+ * The detector pattern works like this: there is a default type, that
+ * accepts an "operation" that can be basically anything. It also accepts
+ * variadic arguments for that operation. The default type
+ * has a member type that is std::false_type to indicate success or
+ * failure. It also has a member type "type" which captures a type result.
+ * Then there is a specialization which attempts to instantiate the operation
+ * with the given parameters, and tries to assign it into std::void_t. If the
+ * operation fails to instantiate (say, the checked for type does not exist),
+ * the specialization will not be instantiated, and the compiler falls back to
+ * the default type which contains std::false_type. Since it happens inside
+ * while the compiler tries to find a better matching template specialization
+ * than the default one (so basically overload resolution), a compile error
+ * inside the operation is handled as a substitution failure, and is not an
+ * error. If the instantiation succeeds, the specialization contains a
+ * std::true_type, and an alias to the result of the operation.
+ *
+ * Essentially, it provides a convenient way to "lift" operations into this
+ * overload resolution, allowing testing expressions and evaluating them into
+ * compile time booleans (instead of compilation failures).
+ */
 
-  /**
-   * Helper struct which cannot be constructe (or destroyes)d at all.
-   */
-  struct nonesuch
-  {
-    ~nonesuch()               = delete;
-    nonesuch(nonesuch const&) = delete;
-    void
-    operator=(nonesuch const&)
-        = delete;
-  };
+/**
+ * Helper struct which cannot be constructe (or destroyes)d at all.
+ */
+struct nonesuch {
+  ~nonesuch() = delete;
+  nonesuch(nonesuch const&) = delete;
+  void operator=(nonesuch const&) = delete;
+};
 
-  /**
-   * This is the default specialization.
-   * It does not attempt to instantiate `Op<Args...>` at all.
-   * @tparam Default The default type to set
-   * @tparam AlwaysVoid Helper type that accepts the void instantiation
-   * @tparam Op The operation to test
-   * @tparam Args Arguments to the operation
-   */
-  template <class Default,
-            class AlwaysVoid,
-            template <class...> class Op,
-            class... Args>
-  struct detector
-  {
-    using value_t = std::false_type;
-    using type    = Default;
-  };
+/**
+ * This is the default specialization.
+ * It does not attempt to instantiate `Op<Args...>` at all.
+ * @tparam Default The default type to set
+ * @tparam AlwaysVoid Helper type that accepts the void instantiation
+ * @tparam Op The operation to test
+ * @tparam Args Arguments to the operation
+ */
+template <class Default, class AlwaysVoid, template <class...> class Op,
+          class... Args>
+struct detector {
+  using value_t = std::false_type;
+  using type = Default;
+};
 
-  /**
-   * This is the specialization which attempts to instantiate `Op<Args...`.
-   * @tparam Default Default type to set if substitution fails
-   * @tparam Op The operation to test
-   * @tparam Args Arguments to the operation
-   */
-  template <class Default, template <class...> class Op, class... Args>
-  struct detector<Default, std::void_t<Op<Args...>>, Op, Args...>
-  {
-    // Note that std::void_t is a C++17 feature
-    using value_t = std::true_type;
-    using type    = Op<Args...>;
-  };
+/**
+ * This is the specialization which attempts to instantiate `Op<Args...`.
+ * @tparam Default Default type to set if substitution fails
+ * @tparam Op The operation to test
+ * @tparam Args Arguments to the operation
+ */
+template <class Default, template <class...> class Op, class... Args>
+struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
+  // Note that std::void_t is a C++17 feature
+  using value_t = std::true_type;
+  using type = Op<Args...>;
+};
 
 }  // namespace detail
 
@@ -133,8 +126,8 @@ namespace concept {
    * @tparam Args The arguments to the operation
    */
   template <class To, template <class...> class Op, class... Args>
-  using is_detected_convertible
-      = std::is_convertible<detected_t<Op, Args...>, To>;
+  using is_detected_convertible =
+      std::is_convertible<detected_t<Op, Args...>, To>;
 
   /**
    * Helper which invokes the detector with a default type, and resolves to the
@@ -209,9 +202,7 @@ namespace concept {
    * @tparam M The method trait, as generated by METHOD_TRAIT
    * @tparam Arguments The argument types that make up the signature.
    */
-  template <typename T,
-            typename R,
-            template <class...> class M,
+  template <typename T, typename R, template <class...> class M,
             typename... Arguments>
   constexpr bool has_method = M<T, R, Arguments...>::template tv<T>::value;
 
@@ -228,8 +219,8 @@ namespace concept {
   /**
    * Have a look at `TypeTraitsTest.cpp` to see most of this in action.
    */
-}
-}
+}  // namespace concept
+}  // namespace Acts
 
 /**
  * These helpers allow writing checks. The missing piece is something that you
@@ -348,13 +339,12 @@ namespace concept {
  */
 #define METHOD_TRAIT(trait_name, method_name)                                  \
   template <class T, typename R, typename... Arguments>                        \
-  struct trait_name                                                            \
-  {                                                                            \
+  struct trait_name {                                                          \
     /* Meta function to check if a type has a const qualifier*/                \
     /* (by stripping it and seeing if something changed */                     \
     template <typename T_>                                                     \
-    static constexpr bool is_const                                             \
-        = not std::is_same_v<std::remove_const_t<T_>, T_>;                     \
+    static constexpr bool is_const =                                           \
+        not std::is_same_v<std::remove_const_t<T_>, T_>;                       \
                                                                                \
     /*These following meta-functions basically to this: they check whether or  \
      * not the actual function pointer extracted through `&T::method_name` can \
@@ -365,14 +355,12 @@ namespace concept {
     /* Meta function which constructs the right type to check a function       \
      * pointer, non-const version*/                                            \
     template <typename T_, typename = int>                                     \
-    struct fptr_meta                                                           \
-    {                                                                          \
+    struct fptr_meta {                                                         \
       template <typename... Arguments_>                                        \
-      using type = typename std::                                              \
-          integral_constant<decltype(std::declval<T_>().method_name(           \
-                                std::declval<Arguments_>()...)) (T_::*)(       \
-                                Arguments_...),                                \
-                            &T_::method_name>::value_type;                     \
+      using type = typename std::integral_constant<                            \
+          decltype(std::declval<T_>().method_name(                             \
+              std::declval<Arguments_>()...)) (T_::*)(Arguments_...),          \
+          &T_::method_name>::value_type;                                       \
     };                                                                         \
                                                                                \
     /* Meta function which constructs the right type to check a function       \
@@ -380,14 +368,12 @@ namespace concept {
     /* The `const` needs to be put in there in one specific spot, that's why   \
      * the metafunction is needed*/                                            \
     template <typename T_>                                                     \
-    struct fptr_meta<T_, std::enable_if_t<is_const<T_>, int>>                  \
-    {                                                                          \
+    struct fptr_meta<T_, std::enable_if_t<is_const<T_>, int>> {                \
       template <typename... Arguments_>                                        \
-      using type = typename std::                                              \
-          integral_constant<decltype(std::declval<T_>().method_name(           \
-                                std::declval<Arguments_>()...)) (T_::*)(       \
-                                Arguments_...) const,                          \
-                            &T_::method_name>::value_type;                     \
+      using type = typename std::integral_constant<                            \
+          decltype(std::declval<T_>().method_name(                             \
+              std::declval<Arguments_>()...)) (T_::*)(Arguments_...) const,    \
+          &T_::method_name>::value_type;                                       \
     };                                                                         \
                                                                                \
     /* Helper on top of the function pointer metafunction */                   \
@@ -409,20 +395,15 @@ namespace concept {
      * based signature check. That way, there is no hard failures, only        \
      * substitution failures and we're happy. */                               \
     template <typename T_, typename = int>                                     \
-    struct tv                                                                  \
-    {                                                                          \
+    struct tv {                                                                \
       static constexpr bool value = false;                                     \
     };                                                                         \
     template <typename T_>                                                     \
-    struct tv<T_,                                                              \
-              std::enable_if_t<is_detected_exact<R,                            \
-                                                 qual_ret,                     \
-                                                 T_,                           \
-                                                 Arguments...>::value,         \
-                               int>>                                           \
-    {                                                                          \
+    struct tv<T_, std::enable_if_t<                                            \
+                      is_detected_exact<R, qual_ret, T_, Arguments...>::value, \
+                      int>> {                                                  \
       /* This is only ever evaluate if the method exists!*/                    \
-      static constexpr bool value                                              \
-          = is_detected<fptr_meta_t, T, Arguments...>::value;                  \
+      static constexpr bool value =                                            \
+          is_detected<fptr_meta_t, T, Arguments...>::value;                    \
     };                                                                         \
   }

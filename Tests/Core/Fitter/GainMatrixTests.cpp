@@ -1,18 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-#include <memory>
 
 #define BOOST_TEST_MODULE GainMatrix Tests
 #include <boost/optional/optional_io.hpp>
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
+#include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -24,62 +23,65 @@
 namespace Acts {
 namespace Test {
 
-  using Identifier = unsigned long int;
-  using Jacobian   = BoundParameters::CovMatrix_t;
+using Jacobian = BoundParameters::CovMatrix_t;
+using Covariance = BoundSymMatrix;
 
-  template <ParID_t... params>
-  using MeasurementType = Measurement<Identifier, params...>;
-  using TrackState      = TrackState<Identifier, BoundParameters>;
+using SourceLink = MinimalSourceLink;
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
+template <ParID_t... params>
+using MeasurementType = Measurement<SourceLink, params...>;
+using TrackState = TrackState<SourceLink, BoundParameters>;
 
-  BOOST_AUTO_TEST_CASE(gain_matrix_updator)
-  {
-    // Make dummy measurement
-    auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+// Create a test context
+GeometryContext tgContext = GeometryContext();
 
-    ActsSymMatrixD<2> cov;
-    cov << 0.04, 0, 0, 0.1;
-    TrackState mState(MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
-        cylinder, 0, std::move(cov), -0.1, 0.45));
+BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
+  // Make dummy measurement
+  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
 
-    // Make dummy track parameter
-    ActsSymMatrixD<Acts::NGlobalPars> covTrk;
-    covTrk << 0.08, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
-        0, 0, 0, 0, 1;
-    ActsVectorD<Acts::NGlobalPars> parValues;
-    parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01;
-    BoundParameters pars(
-        tgContext,
-        std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-        parValues,
-        cylinder);
+  ActsSymMatrixD<2> cov;
+  cov << 0.04, 0, 0, 0.1;
+  FittableMeasurement<SourceLink> meas(
+      MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+          cylinder, {}, std::move(cov), -0.1, 0.45));
 
-    // "update" track state with "prediction"
-    mState.parameter.predicted  = std::move(pars);
-    mState.parameter.jacobian   = Jacobian::Identity();
-    mState.parameter.pathLength = 0.;
+  TrackState mState{SourceLink{&meas}};
 
-    // Gain matrix update and filtered state
-    GainMatrixUpdator<BoundParameters> gmu;
+  // Make dummy track parameter
+  Covariance covTrk;
+  covTrk << 0.08, 0, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+      1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0;
+  BoundVector parValues;
+  parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
+  BoundParameters pars(
+      tgContext,
+      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
+      parValues, cylinder);
 
-    BOOST_CHECK(!mState.parameter.filtered);
-    BOOST_CHECK(!mState.measurement.calibrated);
-    BOOST_CHECK(gmu(tgContext, mState));
-    // filtered is set now
-    BOOST_CHECK(!!mState.parameter.filtered);
-    // measurement was calibrated
-    BOOST_CHECK(!!mState.measurement.calibrated);
-    // ref surface is same on measurements and parameters
-    BOOST_CHECK_EQUAL(
-        MeasurementHelpers::getSurface(*mState.measurement.calibrated),
-        cylinder.get());
-    BOOST_CHECK_EQUAL(&(*mState.parameter.filtered).referenceSurface(),
-                      cylinder.get());
+  // "update" track state with "prediction"
+  mState.parameter.predicted = std::move(pars);
+  mState.parameter.jacobian = Jacobian::Identity();
+  mState.parameter.pathLength = 0.;
 
-    // assert contents of mState were updated
-  }
+  // Gain matrix update and filtered state
+  GainMatrixUpdator<BoundParameters> gmu;
+
+  BOOST_CHECK(!mState.parameter.filtered);
+  BOOST_CHECK(!mState.measurement.calibrated);
+  BOOST_CHECK(gmu(tgContext, mState));
+  // filtered is set now
+  BOOST_CHECK(!!mState.parameter.filtered);
+  // measurement was calibrated
+  BOOST_CHECK(!!mState.measurement.calibrated);
+  // ref surface is same on measurements and parameters
+  BOOST_CHECK_EQUAL(
+      MeasurementHelpers::getSurface(*mState.measurement.calibrated),
+      cylinder.get());
+  BOOST_CHECK_EQUAL(&(*mState.parameter.filtered).referenceSurface(),
+                    cylinder.get());
+
+  // @TODO: Check numerical outcome of the calculation
+}
 
 }  // namespace Test
 }  // namespace Acts

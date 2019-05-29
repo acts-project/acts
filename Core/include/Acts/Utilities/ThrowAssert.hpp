@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,16 +15,14 @@
 namespace Acts {
 /// @brief Exception type for assertion failures
 /// This class captures the information available to the throw_assert macro
-class AssertionFailureException : public std::exception
-{
-public:
+class AssertionFailureException : public std::exception {
+ public:
   /// @brief Class which allows to use the << operator to assemble a string
-  class StreamFormatter
-  {
-  private:
+  class StreamFormatter {
+   private:
     std::ostringstream stream;
 
-  public:
+   public:
     /// @brief Converts to string
     operator std::string() const { return stream.str(); }
 
@@ -33,9 +31,7 @@ public:
     /// @tparam T type of anything
     /// @param value const ref to anything
     template <typename T>
-    StreamFormatter&
-    operator<<(const T& value)
-    {
+    StreamFormatter& operator<<(const T& value) {
       stream << value;
       return *this;
     }
@@ -47,10 +43,8 @@ public:
   /// @param line The current line
   /// @param msg The message to print if assertion fails
   AssertionFailureException(const std::string& expression,
-                            const std::string& file,
-                            int                line,
-                            const std::string& msg)
-  {
+                            const std::string& file, int line,
+                            const std::string& msg) {
     std::ostringstream os;
 
     if (!msg.empty()) {
@@ -64,23 +58,17 @@ public:
   }
 
   /// The assertion message
-  const char*
-  what() const throw() override
-  {
-    return report.c_str();
-  }
+  const char* what() const throw() override { return report.c_str(); }
 
-private:
+ private:
   std::string report;
 };
 
 }  // namespace Acts
 
-#define throw_assert(EXPRESSION, MESSAGE)                                      \
-  if (!(EXPRESSION)) {                                                         \
-    throw Acts::AssertionFailureException(                                     \
-        #EXPRESSION,                                                           \
-        __FILE__,                                                              \
-        __LINE__,                                                              \
-        (Acts::AssertionFailureException::StreamFormatter() << MESSAGE));      \
+#define throw_assert(EXPRESSION, MESSAGE)                                 \
+  if (!(EXPRESSION)) {                                                    \
+    throw Acts::AssertionFailureException(                                \
+        #EXPRESSION, __FILE__, __LINE__,                                  \
+        (Acts::AssertionFailureException::StreamFormatter() << MESSAGE)); \
   }

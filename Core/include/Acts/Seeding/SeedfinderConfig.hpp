@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,9 +16,7 @@ template <typename T>
 class SeedFilter;
 
 template <typename SpacePoint>
-struct SeedfinderConfig
-{
-
+struct SeedfinderConfig {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 
   // Algorithm settings
@@ -60,8 +58,8 @@ struct SeedfinderConfig
   // limiting location of collision region in z
   float collisionRegionMin = -150;
   float collisionRegionMax = +150;
-  float phiMin             = -M_PI;
-  float phiMax             = M_PI;
+  float phiMin = -M_PI;
+  float phiMax = M_PI;
   // limiting location of measurements
   float zMin = -2800;
   float zMax = 2800;
@@ -95,10 +93,10 @@ struct SeedfinderConfig
   float sigmaError = 5;
 
   // derived values, set on Seedfinder construction
-  float highland            = 0;
+  float highland = 0;
   float maxScatteringAngle2 = 0;
-  float pTPerHelixRadius    = 0;
-  float minHelixDiameter2   = 0;
-  float pT2perRadius        = 0;
+  float pTPerHelixRadius = 0;
+  float minHelixDiameter2 = 0;
+  float pT2perRadius = 0;
 };
 }  // namespace Acts

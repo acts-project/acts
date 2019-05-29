@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,9 +21,8 @@ class Material;
 /// Virtual base class of volume material description
 //
 /// Material associated with a Volume (homogenous, binned, interpolated)
-class IVolumeMaterial
-{
-public:
+class IVolumeMaterial {
+ public:
   /// Virtual Destructor
   virtual ~IVolumeMaterial() = default;
 
@@ -31,8 +30,7 @@ public:
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  virtual const Material&
-  material(const Vector3D& position) const = 0;
+  virtual const Material& material(const Vector3D& position) const = 0;
 };
 
-}  // namespace
+}  // namespace Acts

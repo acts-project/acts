@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,8 +15,7 @@
 
 // space point structure with the bare minimum and reasonable default
 // covariances. clusterList default is SCT (strip detector)
-struct SpacePoint
-{
+struct SpacePoint {
   float x;
   float y;
   float z;
@@ -24,30 +23,22 @@ struct SpacePoint
   float covr = 0.03;
   float covz = 0.03;
   std::pair<int, int> m_clusterList = std::pair<int, int>(1, 1);
-  void
-  setClusterList(int first, int second)
-  {
+  void setClusterList(int first, int second) {
     m_clusterList = std::pair<int, int>(first, second);
   }
-  const std::pair<int, int>
-  clusterList() const
-  {
-    return m_clusterList;
-  }
+  const std::pair<int, int> clusterList() const { return m_clusterList; }
   int surface;
 };
 
 // call sequence to create seeds. Seeds are copied as the
 // call to next() overwrites the previous seed object
-std::vector<Acts::Legacy::Seed<SpacePoint>>
-runSeeding(std::vector<SpacePoint*> spVec)
-{
-
+std::vector<Acts::Legacy::Seed<SpacePoint>> runSeeding(
+    std::vector<SpacePoint*> spVec) {
   Acts::Legacy::AtlasSeedfinder<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
-  const Acts::Legacy::Seed<SpacePoint>*       seed     = seedMaker.next();
-  int                                         numSeeds = 0;
+  const Acts::Legacy::Seed<SpacePoint>* seed = seedMaker.next();
+  int numSeeds = 0;
   std::vector<Acts::Legacy::Seed<SpacePoint>> seedVec;
   while (seed != 0) {
     numSeeds++;
@@ -61,13 +52,10 @@ runSeeding(std::vector<SpacePoint*> spVec)
 }
 
 // used to sort seeds, ignores z
-class seedComparator
-{
-public:
-  bool
-  operator()(const Acts::Legacy::Seed<SpacePoint>& s1,
-             const Acts::Legacy::Seed<SpacePoint>& s2)
-  {
+class seedComparator {
+ public:
+  bool operator()(const Acts::Legacy::Seed<SpacePoint>& s1,
+                  const Acts::Legacy::Seed<SpacePoint>& s2) {
     auto sp1It = s1.spacePoints().begin();
     auto sp2It = s2.spacePoints().begin();
     for (int i = 0; i < 3; i++) {
@@ -81,11 +69,10 @@ public:
   }
 };
 
-BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
-{
+BOOST_AUTO_TEST_CASE(number_of_seeds_correct_) {
   // single particle event with 405MeV (just above default pT-cut)
   std::vector<SpacePoint*> spVec;
-  std::vector<int>         layerVec{1, 2, 2, 3, 4, 11, 13, 14};
+  std::vector<int> layerVec{1, 2, 2, 3, 4, 11, 13, 14};
   // clang-format off
   std::vector<float> xVec{-33.3403,
                           -48.2369,
@@ -119,11 +106,11 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
   // the detector region of the pixel detector
   for (unsigned int i = 0; i < layerVec.size(); i++) {
     SpacePoint* sp = new SpacePoint();
-    sp->surface    = layerVec.at(i);
-    sp->x          = xVec.at(i);
-    sp->y          = yVec.at(i);
-    sp->z          = zVec.at(i);
-    sp->r          = std::sqrt(sp->x * sp->x + sp->y * sp->y);
+    sp->surface = layerVec.at(i);
+    sp->x = xVec.at(i);
+    sp->y = yVec.at(i);
+    sp->z = zVec.at(i);
+    sp->r = std::sqrt(sp->x * sp->x + sp->y * sp->y);
     if (sp->r < 200.) {
       sp->setClusterList(1, 0);
     }
@@ -159,11 +146,8 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
   // difference between reference and result shows if results exactly the same
   // (i.e. difference is 0)
   std::vector<Acts::Legacy::Seed<SpacePoint>> diff;
-  std::set_difference(refVec.begin(),
-                      refVec.end(),
-                      seedVec.begin(),
-                      seedVec.end(),
-                      std::inserter(diff, diff.begin()),
+  std::set_difference(refVec.begin(), refVec.end(), seedVec.begin(),
+                      seedVec.end(), std::inserter(diff, diff.begin()),
                       seedComparator());
   BOOST_CHECK(diff.empty());
   for (auto sp : spVec) {

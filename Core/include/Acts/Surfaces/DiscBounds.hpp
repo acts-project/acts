@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,8 +20,6 @@ namespace Acts {
 /// common base class for all bounds that are in a r/phi frame
 ///  - simply introduced to avoid wrong bound assigments to surfaces
 
-class DiscBounds : public SurfaceBounds
-{
-};
+class DiscBounds : public SurfaceBounds {};
 
-}  // namespace
+}  // namespace Acts

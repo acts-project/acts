@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,7 @@
 
 #include <random>
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/EventData/TrackStateSorters.hpp"
@@ -23,166 +24,175 @@
 namespace Acts {
 namespace Test {
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
+// Create a test context
+GeometryContext tgContext = GeometryContext();
 
-  using Jacobian   = ActsMatrixD<5, 5>;
-  using Identifier = unsigned long int;
+using SourceLink = MinimalSourceLink;
 
-  template <ParID_t... params>
-  using MeasurementType = Measurement<Identifier, params...>;
-  using BoundTrackState = TrackState<Identifier, BoundParameters>;
-  ///
-  /// @brief Unit test for creation of Measurement object
-  ///
-  BOOST_AUTO_TEST_CASE(track_state_initialization)
-  {
+template <ParID_t... params>
+using MeasurementType = Measurement<SourceLink, params...>;
+using FittableMeasurement = FittableMeasurement<SourceLink>;
+using BoundTrackState = TrackState<SourceLink, BoundParameters>;
+///
+/// @brief Unit test for creation of Measurement object
+///
+BOOST_AUTO_TEST_CASE(track_state_initialization) {
+  std::default_random_engine generator(42);
 
-    std::default_random_engine generator(42);
+  // The plane surface
+  auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
+                                                 Vector3D{1., 0., 0.});
 
-    // The plane surface
-    auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
-                                                   Vector3D{1., 0., 0.});
+  // Construct the 1D measurement
+  ActsSymMatrixD<1> cov1D;
+  cov1D << 0.04;
 
-    // Construct the 1D measurement
-    ActsSymMatrixD<1> cov1D;
-    cov1D << 0.04;
+  FittableMeasurement m1D(
+      MeasurementType<ParDef::eLOC_0>(plane, {}, std::move(cov1D), 0.02));
 
-    MeasurementType<ParDef::eLOC_0> m1D(plane, 0, std::move(cov1D), 0.02);
+  // Construct the 2D measurement
+  ActsSymMatrixD<2> cov2D;
+  cov2D << 0.04, 0., 0.09, 0.;
 
-    // Construct the 2D measurement
-    ActsSymMatrixD<2> cov2D;
-    cov2D << 0.04, 0., 0.09, 0.;
+  FittableMeasurement m2D(MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+      plane, {}, std::move(cov2D), 0.02, 0.03));
 
-    MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2D(
-        plane, 0, std::move(cov2D), 0.02, 0.03);
+  // The 1D track state from the measurement
+  BoundTrackState mts1D(SourceLink{&m1D});
 
-    // The 1D track state from the measurement
-    BoundTrackState mts1D(std::move(m1D));
+  auto calibrate = [](auto& trackstate) {
+    // double ref: optional, MinimalSourceLink
+    trackstate.measurement.calibrated = **trackstate.measurement.uncalibrated;
+  };
 
-    BOOST_CHECK_EQUAL(*mts1D.size(), 1);
+  // "calibrate" the measurement
+  calibrate(mts1D);
 
-    // Test the copy construtor
-    BoundTrackState mts1DCopy(mts1D);
+  BOOST_CHECK_EQUAL(*mts1D.size(), 1);
 
-    // Test the copy move constructor
-    BoundTrackState mts1DCopyMoved(std::move(mts1DCopy));
+  // Test the copy construtor
+  BoundTrackState mts1DCopy(mts1D);
 
-    // Test the copy assignment operator
-    BoundTrackState mts1DCopyAssigned = mts1DCopyMoved;
+  // Test the copy move constructor
+  BoundTrackState mts1DCopyMoved(std::move(mts1DCopy));
 
-    // Test the comovepy assignment operator
-    BoundTrackState mts1DMoveAssigned = std::move(mts1DCopyAssigned);
+  // Test the copy assignment operator
+  BoundTrackState mts1DCopyAssigned = mts1DCopyMoved;
 
-    // Swap the measurements
-    std::swap(mts1DMoveAssigned, mts1D);
+  // Test the comovepy assignment operator
+  BoundTrackState mts1DMoveAssigned = std::move(mts1DCopyAssigned);
 
-    // The 2D track state from the measurement
-    BoundTrackState mts2D(std::move(m2D));
+  // Swap the measurements
+  std::swap(mts1DMoveAssigned, mts1D);
 
-    BOOST_CHECK_EQUAL(*mts2D.size(), 2);
+  // The 2D track state from the measurement
+  BoundTrackState mts2D(SourceLink{&m2D});
+  calibrate(mts2D);
 
-    // Construct the parameter
-    std::array<double, 5> pars_array = {{-0.1234, 9.8765, 0.45, 0.888, 0.001}};
-    TrackParametersBase::ParVector_t pars;
-    pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
-        pars_array[4];
+  BOOST_CHECK_EQUAL(*mts2D.size(), 2);
 
-    // constructor from parameter vector: predicted filtered, smoothed
-    BoundParameters ataPlane(tgContext, nullptr, pars, plane);
+  // Construct the parameter
+  std::array<double, 6> pars_array = {
+      {-0.1234, 9.8765, 0.45, 0.888, 0.001, 0.}};
+  TrackParametersBase::ParVector_t pars;
+  pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
+      pars_array[4], pars_array[5];
 
-    // The parameter track state from the parameters
-    BoundTrackState pts(std::move(ataPlane));
+  // constructor from parameter vector: predicted filtered, smoothed
+  BoundParameters ataPlane(tgContext, nullptr, pars, plane);
 
-    // Test the copy constructor for a parameter state
-    BoundTrackState ptsCopy(pts);
+  // The parameter track state from the parameters
+  BoundTrackState pts(std::move(ataPlane));
 
-    // Test the copy move constructor for a parameter state
-    BoundTrackState ptsCopyMove(std::move(ptsCopy));
+  // Test the copy constructor for a parameter state
+  BoundTrackState ptsCopy(pts);
 
-    // Test the copy assignment for a parameter state
-    BoundTrackState ptsCopyAssigned = ptsCopyMove;
+  // Test the copy move constructor for a parameter state
+  BoundTrackState ptsCopyMove(std::move(ptsCopy));
 
-    // Test the move assignment for a parameter state
-    BoundTrackState ptsMoveAssigned = std::move(ptsCopyAssigned);
+  // Test the copy assignment for a parameter state
+  BoundTrackState ptsCopyAssigned = ptsCopyMove;
 
-    std::vector<BoundTrackState> trackStates
-        = {std::move(mts1DMoveAssigned), std::move(mts2D), std::move(pts)};
+  // Test the move assignment for a parameter state
+  BoundTrackState ptsMoveAssigned = std::move(ptsCopyAssigned);
 
-    BOOST_CHECK_EQUAL(trackStates.size(), 3);
+  std::vector<BoundTrackState> trackStates = {std::move(mts1DMoveAssigned),
+                                              std::move(mts2D), std::move(pts)};
 
-    // Test is we can shuffle the track states
-    // Test to extract the surface of these guys
-    for (auto& ts : trackStates) {
-      const Surface* sf = &ts.referenceSurface();
-      BOOST_CHECK_EQUAL(sf, plane.get());
-    }
+  BOOST_CHECK_EQUAL(trackStates.size(), 3);
 
-    // Create predicted, filtered and smoothed parameters
-    BoundParameters ataPlaneUpdt(tgContext, nullptr, pars, plane);
-    BoundParameters ataPlanePred(tgContext, nullptr, pars, plane);
-    BoundParameters ataPlaneSmth(tgContext, nullptr, pars, plane);
-
-    // Get the predicted parameters back from the trackState
-    auto& ptsfList          = trackStates[2];
-    auto& ataPlanefListPred = ptsfList.parameter.predicted;
-    BOOST_CHECK(ataPlanefListPred);
-
-    // Check that the other parameters are empty
-    auto& ataPlanefListUpdt = ptsfList.parameter.filtered;
-    BOOST_CHECK(!ataPlanefListUpdt);
-
-    auto& ataPlanefListSmthd = ptsfList.parameter.smoothed;
-    BOOST_CHECK(!ataPlanefListSmthd);
-
-    // Get the track States from the list
-    auto& m2DfList = trackStates[1];
-
-    m2DfList.parameter.filtered = std::move(ataPlaneUpdt);
-    auto& ataPlanefListUpdtM2D  = m2DfList.parameter.filtered;
-    BOOST_CHECK(ataPlanefListUpdtM2D);
-
-    m2DfList.parameter.predicted = std::move(ataPlanePred);
-    auto& ataPlanefListPred2D    = m2DfList.parameter.predicted;
-    BOOST_CHECK(ataPlanefListPred2D);
-
-    // Test the sorting helper
-    BoundParameters ataPlaneAt1(tgContext, nullptr, pars, plane);
-    BoundTrackState ataPlaneState1(std::move(ataPlaneAt1));
-    ataPlaneState1.parameter.pathLength = 1.;
-
-    BoundParameters ataPlaneAt2(tgContext, nullptr, pars, plane);
-    BoundTrackState ataPlaneState2(std::move(ataPlaneAt2));
-    ataPlaneState2.parameter.pathLength = 2.;
-
-    std::vector<BoundTrackState> unorderedStates
-        = {std::move(ataPlaneState2), std::move(ataPlaneState1)};
-
-    // Sort the variant track state
-    TrackStatePathLengthSorter plSorter;
-    std::sort(unorderedStates.begin(), unorderedStates.end(), plSorter);
-
-    auto firstOrdered = unorderedStates[0];
-    BOOST_CHECK_EQUAL(firstOrdered.parameter.pathLength, 1.);
-
-    auto secondOrdered = unorderedStates[1];
-    BOOST_CHECK_EQUAL(secondOrdered.parameter.pathLength, 2.);
-
-    auto& pState = firstOrdered.parameter;
-
-    BOOST_CHECK_EQUAL(pState.pathLength, 1.);
-
-    std::shuffle(unorderedStates.begin(), unorderedStates.end(), generator);
-
-    // Copy the TrackStates into a new vector
-    std::vector<BoundTrackState> copiedStates
-        = {unorderedStates[0], unorderedStates[1]};
-
-    // Shuffle
-    std::shuffle(copiedStates.begin(), copiedStates.end(), generator);
-    // And sort again
-    std::sort(copiedStates.begin(), copiedStates.end(), plSorter);
+  // Test is we can shuffle the track states
+  // Test to extract the surface of these guys
+  for (auto& ts : trackStates) {
+    const Surface* sf = &ts.referenceSurface();
+    BOOST_CHECK_EQUAL(sf, plane.get());
   }
+
+  // Create predicted, filtered and smoothed parameters
+  BoundParameters ataPlaneUpdt(tgContext, nullptr, pars, plane);
+  BoundParameters ataPlanePred(tgContext, nullptr, pars, plane);
+  BoundParameters ataPlaneSmth(tgContext, nullptr, pars, plane);
+
+  // Get the predicted parameters back from the trackState
+  auto& ptsfList = trackStates[2];
+  auto& ataPlanefListPred = ptsfList.parameter.predicted;
+  BOOST_CHECK(ataPlanefListPred);
+
+  // Check that the other parameters are empty
+  auto& ataPlanefListUpdt = ptsfList.parameter.filtered;
+  BOOST_CHECK(!ataPlanefListUpdt);
+
+  auto& ataPlanefListSmthd = ptsfList.parameter.smoothed;
+  BOOST_CHECK(!ataPlanefListSmthd);
+
+  // Get the track States from the list
+  auto& m2DfList = trackStates[1];
+
+  m2DfList.parameter.filtered = std::move(ataPlaneUpdt);
+  auto& ataPlanefListUpdtM2D = m2DfList.parameter.filtered;
+  BOOST_CHECK(ataPlanefListUpdtM2D);
+
+  m2DfList.parameter.predicted = std::move(ataPlanePred);
+  auto& ataPlanefListPred2D = m2DfList.parameter.predicted;
+  BOOST_CHECK(ataPlanefListPred2D);
+
+  // Test the sorting helper
+  BoundParameters ataPlaneAt1(tgContext, nullptr, pars, plane);
+  BoundTrackState ataPlaneState1(std::move(ataPlaneAt1));
+  ataPlaneState1.parameter.pathLength = 1.;
+
+  BoundParameters ataPlaneAt2(tgContext, nullptr, pars, plane);
+  BoundTrackState ataPlaneState2(std::move(ataPlaneAt2));
+  ataPlaneState2.parameter.pathLength = 2.;
+
+  std::vector<BoundTrackState> unorderedStates = {std::move(ataPlaneState2),
+                                                  std::move(ataPlaneState1)};
+
+  // Sort the variant track state
+  TrackStatePathLengthSorter plSorter;
+  std::sort(unorderedStates.begin(), unorderedStates.end(), plSorter);
+
+  auto firstOrdered = unorderedStates[0];
+  BOOST_CHECK_EQUAL(firstOrdered.parameter.pathLength, 1.);
+
+  auto secondOrdered = unorderedStates[1];
+  BOOST_CHECK_EQUAL(secondOrdered.parameter.pathLength, 2.);
+
+  auto& pState = firstOrdered.parameter;
+
+  BOOST_CHECK_EQUAL(pState.pathLength, 1.);
+
+  std::shuffle(unorderedStates.begin(), unorderedStates.end(), generator);
+
+  // Copy the TrackStates into a new vector
+  std::vector<BoundTrackState> copiedStates = {unorderedStates[0],
+                                               unorderedStates[1]};
+
+  // Shuffle
+  std::shuffle(copiedStates.begin(), copiedStates.end(), generator);
+  // And sort again
+  std::sort(copiedStates.begin(), copiedStates.end(), plSorter);
+}
 
 }  // namespace Test
 }  // namespace Acts

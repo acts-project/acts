@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,9 +26,8 @@ namespace Acts {
 ///
 /// @image html RectangularBounds.gif
 
-class RectangleBounds : public PlanarBounds
-{
-public:
+class RectangleBounds : public PlanarBounds {
+ public:
   /// @enum BoundValues for readability
   enum BoundValues { bv_halfX = 0, bv_halfY = 1, bv_length = 2 };
 
@@ -48,14 +47,11 @@ public:
 
   ~RectangleBounds() override = default;
 
-  RectangleBounds*
-  clone() const final;
+  RectangleBounds* clone() const final;
 
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -64,80 +60,61 @@ public:
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Return the vertices - or, the points of the extremas
-  std::vector<Vector2D>
-  vertices() const final;
+  std::vector<Vector2D> vertices() const final;
 
   // Bounding box representation
-  const RectangleBounds&
-  boundingBox() const final;
+  const RectangleBounds& boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream for the dump
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return method for the half length in X
-  double
-  halflengthX() const;
+  double halflengthX() const;
 
   /// Return method for the half length in Y
-  double
-  halflengthY() const;
+  double halflengthY() const;
 
   /// Get the min vertex defining the bounds
   /// @return The min vertex
-  const Vector2D&
-  min() const;
+  const Vector2D& min() const;
 
   /// Get the max vertex defining the bounds
   /// @return The max vertex
-  const Vector2D&
-  max() const;
+  const Vector2D& max() const;
 
-private:
+ private:
   Vector2D m_min;
   Vector2D m_max;
 };
 
-inline double
-RectangleBounds::halflengthX() const
-{
+inline double RectangleBounds::halflengthX() const {
   return std::abs(m_max.x() - m_min.x()) * 0.5;
 }
 
-inline double
-RectangleBounds::halflengthY() const
-{
+inline double RectangleBounds::halflengthY() const {
   return std::abs(m_max.y() - m_min.y()) * 0.5;
 }
 
-inline SurfaceBounds::BoundsType
-RectangleBounds::type() const
-{
+inline SurfaceBounds::BoundsType RectangleBounds::type() const {
   return SurfaceBounds::Rectangle;
 }
 
-inline const Vector2D&
-RectangleBounds::min() const
-{
+inline const Vector2D& RectangleBounds::min() const {
   return m_min;
 }
 
-inline const Vector2D&
-RectangleBounds::max() const
-{
+inline const Vector2D& RectangleBounds::max() const {
   return m_max;
 }
 

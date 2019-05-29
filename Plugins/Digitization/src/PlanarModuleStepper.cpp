@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,16 +18,11 @@
 
 Acts::PlanarModuleStepper::PlanarModuleStepper(
     std::unique_ptr<const Logger> mlogger)
-  : m_logger(std::move(mlogger))
-{
-}
+    : m_logger(std::move(mlogger)) {}
 
-std::vector<Acts::DigitizationStep>
-Acts::PlanarModuleStepper::cellSteps(const GeometryContext&    gctx,
-                                     const DigitizationModule& dmodule,
-                                     const Vector3D&           startPoint,
-                                     const Vector3D&           endPoint) const
-{
+std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
+    const GeometryContext& gctx, const DigitizationModule& dmodule,
+    const Vector3D& startPoint, const Vector3D& endPoint) const {
   // create the return vector
   std::vector<DigitizationStep> cSteps;
 
@@ -50,10 +45,8 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&    gctx,
       // now record
       stepIntersections.push_back(sIntersection);
       ACTS_VERBOSE("Boundary Surface intersected with = "
-                   << sIntersection.position.x()
-                   << ", "
-                   << sIntersection.position.y()
-                   << ", "
+                   << sIntersection.position.x() << ", "
+                   << sIntersection.position.y() << ", "
                    << sIntersection.position.z());
     }
   }
@@ -76,18 +69,15 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&    gctx,
 }
 
 // calculate the steps caused by this track - fast simulation interface
-std::vector<Acts::DigitizationStep>
-Acts::PlanarModuleStepper::cellSteps(const GeometryContext&          gctx,
-                                     const Acts::DigitizationModule& dmodule,
-                                     const Vector2D& moduleIntersection,
-                                     const Vector3D& trackDirection) const
-{
+std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
+    const GeometryContext& gctx, const Acts::DigitizationModule& dmodule,
+    const Vector2D& moduleIntersection, const Vector3D& trackDirection) const {
   // first, intersect the boundary surfaces
   auto boundarySurfaces = dmodule.boundarySurfaces();
   // intersect them - fast exit for cases where
   // readout and counter readout are hit
   Vector3D intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
-  size_t   attempts = 0;
+  size_t attempts = 0;
   // the collected intersections
   std::vector<Acts::Intersection> boundaryIntersections;
   // run them - and check for the fast exit
@@ -101,10 +91,8 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&          gctx,
       // now record
       boundaryIntersections.push_back(bIntersection);
       ACTS_VERBOSE("Boundary Surface intersected with = "
-                   << bIntersection.position.x()
-                   << ", "
-                   << bIntersection.position.y()
-                   << ", "
+                   << bIntersection.position.x() << ", "
+                   << bIntersection.position.y() << ", "
                    << bIntersection.position.z());
     }
     // fast break in case of readout/counter surface hit
@@ -117,8 +105,9 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&          gctx,
   // Post-process if we have more than 2 intersections
   // only first or last can be wrong after resorting
   if (boundaryIntersections.size() > 2) {
-    ACTS_VERBOSE("More than 2 Boundary Surfaces intersected, this is an edge "
-                 "case, resolving ... ");
+    ACTS_VERBOSE(
+        "More than 2 Boundary Surfaces intersected, this is an edge "
+        "case, resolving ... ");
     std::sort(boundaryIntersections.begin(), boundaryIntersections.end());
   }
   // if for some reason the intersection does not work
@@ -126,8 +115,6 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&          gctx,
     return std::vector<Acts::DigitizationStep>();
   }
   // return
-  return cellSteps(gctx,
-                   dmodule,
-                   boundaryIntersections[0].position,
+  return cellSteps(gctx, dmodule, boundaryIntersections[0].position,
                    boundaryIntersections[1].position);
 }

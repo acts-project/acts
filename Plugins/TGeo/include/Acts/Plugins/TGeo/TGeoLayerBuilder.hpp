@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,10 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "Acts/Tools/ILayerBuilder.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ILayerBuilder.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 class TGeoMatrix;
@@ -30,13 +30,11 @@ using NodeTransform = std::pair<TGeoNode*, std::shared_ptr<const Transform3D>>;
 
 /// @class TGeoLayerBuilder
 /// works on the gGeoManager, as this is filled from GDML
-class TGeoLayerBuilder : public ILayerBuilder
-{
-public:
+class TGeoLayerBuilder : public ILayerBuilder {
+ public:
   ///  Helper config structs for volume parsin
-  struct LayerConfig
-  {
-  public:
+  struct LayerConfig {
+   public:
     /// identify the layer by name
     std::string layerName = "";
     /// identify the sensor by name
@@ -51,18 +49,15 @@ public:
     size_t binsLoc1{100};
 
     LayerConfig()
-      : layerName("")
-      , sensorName("")
-      , localAxes("XZY")
-      , envelope(std::pair<double, double>(1., 1.))
-    {
-    }
+        : layerName(""),
+          sensorName(""),
+          localAxes("XZY"),
+          envelope(std::pair<double, double>(1., 1.)) {}
   };
 
   /// @struct Config
   /// nested configuration struct for steering of the layer builder
-  struct Config
-  {
+  struct Config {
     /// string based identification
     std::string configurationName = "undefined";
     // unit conversion
@@ -80,9 +75,9 @@ public:
   /// Constructor
   /// @param config is the configuration struct
   /// @param logger the local logging instance
-  TGeoLayerBuilder(const Config&                 config,
-                   std::unique_ptr<const Logger> logger
-                   = getDefaultLogger("LayerArrayCreator", Logging::INFO));
+  TGeoLayerBuilder(const Config& config,
+                   std::unique_ptr<const Logger> logger =
+                       getDefaultLogger("LayerArrayCreator", Logging::INFO));
 
   /// Destructor
   ~TGeoLayerBuilder() override;
@@ -91,54 +86,43 @@ public:
   ///
   /// @param gctx the geometry context for this build call
   ///
-  const LayerVector
-  negativeLayers(const GeometryContext& gctx) const final;
+  const LayerVector negativeLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method - returning the central layers
   ///
   /// @param gctx the geometry context for this build call
   ///
-  const LayerVector
-  centralLayers(const GeometryContext& gctx) const final;
+  const LayerVector centralLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method - returning the layers at negative side
   ///
   /// @param gctx the geometry context for this build call
   ///
-  const LayerVector
-  positiveLayers(const GeometryContext& gctx) const final;
+  const LayerVector positiveLayers(const GeometryContext& gctx) const final;
 
   /// Name identification
-  const std::string&
-  identification() const final;
+  const std::string& identification() const final;
 
   /// set the configuration object
   /// @param config is the configuration struct
-  void
-  setConfiguration(const Config& config);
+  void setConfiguration(const Config& config);
 
   /// get the configuration object
-  Config
-  getConfiguration() const;
+  Config getConfiguration() const;
 
   /// set logging instance
-  void
-  setLogger(std::unique_ptr<const Logger> newLogger);
+  void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Return the created detector elements
   const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
   detectorElements() const;
 
-private:
+ private:
   /// configruation object
   Config m_cfg;
 
   /// Private access to the logger
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -149,54 +133,43 @@ private:
   /// Private helper function to parse the geometry tree
   /// @param gcts the geometry context of this call
   /// @param layerSurfaces are the surfaces that build the layer
-  void
-  resolveSensitive(const GeometryContext&                       gctx,
-                   std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
-                   TGeoVolume*                                  tgVolume,
-                   TGeoNode*                                    tgNode,
-                   const TGeoMatrix&                            tgTransform,
-                   const LayerConfig&                           layerConfig,
-                   int                                          type,
-                   bool               correctBranch = false,
-                   const std::string& offset        = "");
+  void resolveSensitive(
+      const GeometryContext& gctx,
+      std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
+      TGeoVolume* tgVolume, TGeoNode* tgNode, const TGeoMatrix& tgTransform,
+      const LayerConfig& layerConfig, int type, bool correctBranch = false,
+      const std::string& offset = "");
 
   /// Private helper method : build layers
   /// @param gcts the geometry context of this call
   /// @param layers is goint to be filled
   /// @param type is the indication which ones to build -1 | 0 | 1
-  void
-  buildLayers(const GeometryContext& gctx, LayerVector& layers, int type = 0);
+  void buildLayers(const GeometryContext& gctx, LayerVector& layers,
+                   int type = 0);
 
   /// Private helper method : match string with wildcards
   /// @param wc is the one with the potential wildcard
   /// @param test is the test string
-  bool
-  match(const char* first, const char* second) const;
+  bool match(const char* first, const char* second) const;
 };
 
-inline TGeoLayerBuilder::Config
-TGeoLayerBuilder::getConfiguration() const
-{
+inline TGeoLayerBuilder::Config TGeoLayerBuilder::getConfiguration() const {
   return m_cfg;
 }
 
 inline const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
-TGeoLayerBuilder::detectorElements() const
-{
+TGeoLayerBuilder::detectorElements() const {
   return m_elementStore;
 }
 
-inline const std::string&
-TGeoLayerBuilder::identification() const
-{
+inline const std::string& TGeoLayerBuilder::identification() const {
   return m_cfg.configurationName;
 }
 
 // The main function that checks if two given strings
 // match. The first string may contain wildcard characters
-inline bool
-TGeoLayerBuilder::match(const char* first, const char* second) const
-{
+inline bool TGeoLayerBuilder::match(const char* first,
+                                    const char* second) const {
   // If we reach at the end of both strings, we are done
   if (*first == '\0' && *second == '\0') {
     return true;
@@ -223,4 +196,4 @@ TGeoLayerBuilder::match(const char* first, const char* second) const
   }
   return false;
 }
-}
+}  // namespace Acts

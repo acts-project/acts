@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,8 +15,7 @@
 namespace Acts {
 
 /// @brief Structure for easier bookkeeping of clusters.
-struct DoubleHitSpacePoint
-{
+struct DoubleHitSpacePoint {
   /// Storage of the hit cluster on a surface
   const PlanarModuleCluster* clusterFront;
   /// Storage of the hit cluster on another surface
@@ -26,27 +25,15 @@ struct DoubleHitSpacePoint
 
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
-  double
-  x() const
-  {
-    return spacePoint(0);
-  }
+  double x() const { return spacePoint(0); }
 
   /// @brief Getter of the second element in @p spacePoint
   /// @return Second element in @p spacePoint
-  double
-  y() const
-  {
-    return spacePoint(1);
-  }
+  double y() const { return spacePoint(1); }
 
   /// @brief Getter of the third element in @p spacePoint
   /// @return Third element in @p spacePoint
-  double
-  z() const
-  {
-    return spacePoint(2);
-  }
+  double z() const { return spacePoint(2); }
 };
 
 /// @class TwoHitsSpacePointBuilder
@@ -60,12 +47,10 @@ struct DoubleHitSpacePoint
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 template <>
-class SpacePointBuilder<DoubleHitSpacePoint>
-{
-public:
+class SpacePointBuilder<DoubleHitSpacePoint> {
+ public:
   /// @brief Configuration of the class to steer its behaviour
-  struct DoubleHitSpacePointConfig
-  {
+  struct DoubleHitSpacePointConfig {
     /// Accepted difference in eta for two clusters
     double diffTheta2 = 1.;
     /// Accepted difference in phi for two clusters
@@ -95,9 +80,8 @@ public:
   /// @param clusterPairs storage of the cluster pairs
   /// @note The structure of @p clustersFront and @p clustersBack is meant to be
   /// clusters[Independent clusters on a single surface]
-  void
-  makeClusterPairs(
-      const GeometryContext&                         gctx,
+  void makeClusterPairs(
+      const GeometryContext& gctx,
       const std::vector<const PlanarModuleCluster*>& clustersFront,
       const std::vector<const PlanarModuleCluster*>& clustersBack,
       std::vector<std::pair<const PlanarModuleCluster*,
@@ -110,21 +94,19 @@ public:
   /// @param clusterPairs pairs of clusters that are space point candidates
   /// @param spacePoints storage of the results
   /// @note If no configuration is set, the default values will be used
-  void
-  calculateSpacePoints(
+  void calculateSpacePoints(
       const GeometryContext& gctx,
       const std::vector<std::pair<const PlanarModuleCluster*,
                                   const PlanarModuleCluster*>>& clusterPairs,
       std::vector<DoubleHitSpacePoint>& spacePoints) const;
 
-private:
+ private:
   /// Config
   DoubleHitSpacePointConfig m_cfg;
 
   /// @brief Storage container for variables related to the calculation of space
   /// points
-  struct SpacePointParameters
-  {
+  struct SpacePointParameters {
     /// Vector pointing from bottom to top end of first SDE
     Vector3D q;
     /// Vector pointing from bottom to top end of second SDE
@@ -158,31 +140,28 @@ private:
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2D
-  localCoords(const PlanarModuleCluster& cluster) const;
+  Vector2D localCoords(const PlanarModuleCluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  Vector3D
-  globalCoords(const GeometryContext&     gctx,
-               const PlanarModuleCluster& cluster) const;
+  Vector3D globalCoords(const GeometryContext& gctx,
+                        const PlanarModuleCluster& cluster) const;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
   /// @param pos1 position of the first cluster
   /// @param pos2 position the second cluster
   /// @return the squared sum within configuration parameters, otherwise -1
-  double
-  differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2) const;
+  double differenceOfClustersChecked(const Vector3D& pos1,
+                                     const Vector3D& pos2) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
-  std::pair<Vector3D, Vector3D>
-  endsOfStrip(const GeometryContext&     gctx,
-              const PlanarModuleCluster& cluster) const;
+  std::pair<Vector3D, Vector3D> endsOfStrip(
+      const GeometryContext& gctx, const PlanarModuleCluster& cluster) const;
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data
@@ -194,11 +173,8 @@ private:
   /// 1. if it failed
   /// @note The meaning of the parameter is explained in more detail in the
   /// function body
-  double
-  calcPerpProj(const Vector3D& a,
-               const Vector3D& c,
-               const Vector3D& q,
-               const Vector3D& r) const;
+  double calcPerpProj(const Vector3D& a, const Vector3D& c, const Vector3D& q,
+                      const Vector3D& r) const;
 
   /// @brief This function tests if a space point can be estimated by a more
   /// tolerant treatment of construction. In fact, this function indirectly
@@ -206,8 +182,7 @@ private:
   /// @param spaPoPa container that stores geometric parameters and rules of the
   /// space point formation
   /// @return indicator if the test was successful
-  bool
-  recoverSpacePoint(SpacePointParameters& spaPoPa) const;
+  bool recoverSpacePoint(SpacePointParameters& spaPoPa) const;
 };
 
 }  // namespace Acts

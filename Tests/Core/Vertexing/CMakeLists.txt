@@ -9,3 +9,21 @@ target_include_directories (LinearizedTrackFactoryTests PRIVATE ${Boost_INCLUDE_
 target_link_libraries (LinearizedTrackFactoryTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME LinearizedTrackFactoryUnitTests COMMAND LinearizedTrackFactoryTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST LinearizedTrackFactoryUnitTests TARGETS LinearizedTrackFactoryTests)
+
+add_executable (TrackToVertexIPEstimatorTests TrackToVertexIPEstimatorTests.cpp)
+target_include_directories (TrackToVertexIPEstimatorTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (TrackToVertexIPEstimatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME TrackToVertexIPEstimatorUnitTests COMMAND TrackToVertexIPEstimatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST TrackToVertexIPEstimatorUnitTests TARGETS TrackToVertexIPEstimatorTests)
+
+add_executable (ZScanVertexFinderTests ZScanVertexFinderTests.cpp)
+target_include_directories (ZScanVertexFinderTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (ZScanVertexFinderTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME ZScanVertexFinderUnitTests COMMAND ZScanVertexFinderTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ZScanVertexFinderUnitTests TARGETS ZScanVertexFinderTests)
+
+add_executable (IterativeVertexFinderTests IterativeVertexFinderTests.cpp)
+target_include_directories (IterativeVertexFinderTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (IterativeVertexFinderTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME IterativeVertexFinderUnitTests COMMAND IterativeVertexFinderTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST IterativeVertexFinderUnitTests TARGETS IterativeVertexFinderTests)

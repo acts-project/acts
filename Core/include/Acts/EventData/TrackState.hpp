@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -23,27 +24,25 @@ class Surface;
 /// @brief Templated class to hold the track information
 /// on a surface along the trajectory
 ///
-/// @tparam identifier_t Type of the identifier
+/// @tparam source_link_t Type of the source link
 /// @tparam parameters_t Type of the parameters on the surface
 ///
 /// @note the Surface is only stored as a pointer, i.e. it is
 /// assumed the surface lives longer than the TrackState
-template <typename identifier_t, typename parameters_t>
-class TrackState
-{
+template <typename source_link_t, typename parameters_t>
+class TrackState {
+  static_assert(SourceLinkConcept<source_link_t>,
+                "Source link does not fulfill SourceLinkConcept");
 
-public:
-  using Identifier = identifier_t;
+ public:
+  using SourceLink = source_link_t;
   using Parameters = parameters_t;
-  using Jacobian   = typename Parameters::CovMatrix_t;
+  using Jacobian = typename Parameters::CovMatrix_t;
 
   /// Constructor from (uncalibrated) measurement
   ///
-  /// @tparam measurement_t Type of the measurement
   /// @param m The measurement object
-  TrackState(FittableMeasurement<identifier_t> m)
-  {
-    m_surface                = MeasurementHelpers::getSurface(m);
+  TrackState(SourceLink m) : m_surface(&m.referenceSurface()) {
     measurement.uncalibrated = std::move(m);
   }
 
@@ -51,9 +50,8 @@ public:
   ///
   /// @tparam parameters_t Type of the predicted parameters
   /// @param p The parameters object
-  TrackState(parameters_t p)
-  {
-    m_surface           = &p.referenceSurface();
+  TrackState(parameters_t p) {
+    m_surface = &p.referenceSurface();
     parameter.predicted = std::move(p);
   }
 
@@ -64,64 +62,47 @@ public:
   ///
   /// @param rhs is the source TrackState
   TrackState(const TrackState& rhs)
-    : parameter(rhs.parameter)
-    , measurement(rhs.measurement)
-    , m_surface(rhs.m_surface)
-  {
-  }
+      : parameter(rhs.parameter),
+        measurement(rhs.measurement),
+        m_surface(rhs.m_surface) {}
 
   /// Copy move constructor
   ///
   /// @param rhs is the source TrackState
   TrackState(TrackState&& rhs)
-    : parameter(std::move(rhs.parameter))
-    , measurement(std::move(rhs.measurement))
-    , m_surface(std::move(rhs.m_surface))
-  {
-  }
+      : parameter(std::move(rhs.parameter)),
+        measurement(std::move(rhs.measurement)),
+        m_surface(std::move(rhs.m_surface)) {}
 
   /// Assignment operator
   ///
   /// @param rhs is the source TrackState
-  TrackState&
-  operator=(const TrackState& rhs)
-  {
-    parameter   = rhs.parameter;
+  TrackState& operator=(const TrackState& rhs) {
+    parameter = rhs.parameter;
     measurement = rhs.measurement;
-    m_surface   = rhs.m_surface;
+    m_surface = rhs.m_surface;
     return (*this);
   }
 
   /// Assignment move operator
   ///
   /// @param rhs is the source TrackState
-  TrackState&
-  operator=(TrackState&& rhs)
-  {
-    parameter   = std::move(rhs.parameter);
+  TrackState& operator=(TrackState&& rhs) {
+    parameter = std::move(rhs.parameter);
     measurement = std::move(rhs.measurement);
-    m_surface   = std::move(rhs.m_surface);
+    m_surface = std::move(rhs.m_surface);
     return (*this);
   }
 
   /// @brief return method for the surface
-  const Surface&
-  referenceSurface() const
-  {
-    return (*m_surface);
-  }
+  const Surface& referenceSurface() const { return (*m_surface); }
 
   /// @brief number of Measured parameters, forwarded
-  /// @note This only returns a value if either of the measurements
-  ///       are set. If not, this returns boost::none
+  /// @note This only returns a value if there is a calibrated measurement
+  ///       set. If not, this returns boost::none
   ///
   /// @return number of measured parameters, or boost::none
-  boost::optional<size_t>
-  size()
-  {
-    if (this->measurement.uncalibrated) {
-      return MeasurementHelpers::getSize(*this->measurement.uncalibrated);
-    }
+  boost::optional<size_t> size() {
     if (this->measurement.calibrated) {
       return MeasurementHelpers::getSize(*this->measurement.calibrated);
     }
@@ -132,8 +113,7 @@ public:
   /// This is all the information that concerns the
   /// the track parameterisation and the jacobian
   /// It is enough to to run the track smoothing
-  struct
-  {
+  struct {
     /// The predicted state
     boost::optional<Parameters> predicted{boost::none};
     /// The filtered state
@@ -151,17 +131,15 @@ public:
   /// @brief Nested measurement part
   /// This is the uncalibrated and calibrated measurement
   /// (in case the latter is different)
-  struct
-  {
+  struct {
     /// The optional (uncalibrated) measurement
-    boost::optional<FittableMeasurement<identifier_t>> uncalibrated{
-        boost::none};
+    boost::optional<SourceLink> uncalibrated{boost::none};
     /// The optional calibrabed measurement
-    boost::optional<FittableMeasurement<identifier_t>> calibrated{boost::none};
+    boost::optional<FittableMeasurement<SourceLink>> calibrated{boost::none};
   } measurement;
 
-private:
+ private:
   /// The surface of this TrackState
   const Surface* m_surface = nullptr;
 };
-}
+}  // namespace Acts

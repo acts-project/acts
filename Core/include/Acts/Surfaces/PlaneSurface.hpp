@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,12 +13,12 @@
 #pragma once
 
 #include <limits>
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/GeometryStatics.hpp"
 
 namespace Acts {
 
@@ -33,11 +33,10 @@ class DetectorElementBase;
 ///
 /// @image html PlaneSurface.png
 ///
-class PlaneSurface : public Surface
-{
+class PlaneSurface : public Surface {
   friend Surface;
 
-protected:
+ protected:
   /// Default Constructor - needed for persistency
   PlaneSurface();
 
@@ -51,9 +50,8 @@ protected:
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  PlaneSurface(const GeometryContext& gctx,
-               const PlaneSurface&    other,
-               const Transform3D&     transf);
+  PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
+               const Transform3D& transf);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -67,31 +65,30 @@ protected:
   /// @param pbounds are the provided planar bounds (shared)
   /// @param detelement is the linked detector element to this surface
   PlaneSurface(const std::shared_ptr<const PlanarBounds>& pbounds,
-               const DetectorElementBase&                 detelement);
+               const DetectorElementBase& detelement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
+  PlaneSurface(std::shared_ptr<const Transform3D> htrans,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
-public:
+ public:
   /// Destructor - defaulted
   ~PlaneSurface() override = default;
 
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
-  PlaneSurface&
-  operator=(const PlaneSurface& other);
+  PlaneSurface& operator=(const PlaneSurface& other);
 
   /// Clone method into a concrete type of PlaneSurface with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
-  std::shared_ptr<PlaneSurface>
-  clone(const GeometryContext& gctx, const Transform3D& shift) const;
+  std::shared_ptr<PlaneSurface> clone(const GeometryContext& gctx,
+                                      const Transform3D& shift) const;
 
   /// Normal vector return
   ///
@@ -99,8 +96,8 @@ public:
   /// @param lpos is the local position is ignored
   ///
   /// return a Vector3D by value
-  const Vector3D
-  normal(const GeometryContext& gctx, const Vector2D& lpos) const final;
+  const Vector3D normal(const GeometryContext& gctx,
+                        const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -112,16 +109,14 @@ public:
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D
-  binningPosition(const GeometryContext& gctx, BinningValue bValue) const final;
+  const Vector3D binningPosition(const GeometryContext& gctx,
+                                 BinningValue bValue) const final;
 
   /// Return the surface type
-  SurfaceType
-  type() const override;
+  SurfaceType type() const override;
 
   /// Return method for bounds object of this surfrace
-  const SurfaceBounds&
-  bounds() const override;
+  const SurfaceBounds& bounds() const override;
 
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global
@@ -132,11 +127,8 @@ public:
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
-  void
-  localToGlobal(const GeometryContext& gctx,
-                const Vector2D&        lpos,
-                const Vector3D&        mom,
-                Vector3D&              gpos) const override;
+  void localToGlobal(const GeometryContext& gctx, const Vector2D& lpos,
+                     const Vector3D& mom, Vector3D& gpos) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
@@ -151,11 +143,8 @@ public:
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  bool
-  globalToLocal(const GeometryContext& gctx,
-                const Vector3D&        gpos,
-                const Vector3D&        mom,
-                Vector2D&              lpos) const override;
+  bool globalToLocal(const GeometryContext& gctx, const Vector3D& gpos,
+                     const Vector3D& mom, Vector2D& lpos) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
@@ -166,10 +155,8 @@ public:
   /// @note this is the final implementation of the pathCorrection function
   ///
   /// @return a double representing the scaling factor
-  double
-  pathCorrection(const GeometryContext& gctx,
-                 const Vector3D&        pos,
-                 const Vector3D&        mom) const final;
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& pos,
+                        const Vector3D& mom) const final;
 
   /// @brief Straight line intersection schema
   ///
@@ -199,30 +186,26 @@ public:
   /// - perpendicular to the normal of the plane
   ///
   /// @return the Intersection object
-  Intersection
-  intersectionEstimate(const GeometryContext& gctx,
-                       const Vector3D&        gpos,
-                       const Vector3D&        gdir,
-                       NavigationDirection    navDir  = forward,
-                       const BoundaryCheck&   bcheck  = false,
-                       CorrFnc                correct = nullptr) const final;
+  Intersection intersectionEstimate(const GeometryContext& gctx,
+                                    const Vector3D& gpos, const Vector3D& gdir,
+                                    NavigationDirection navDir = forward,
+                                    const BoundaryCheck& bcheck = false,
+                                    CorrFnc correct = nullptr) const final;
 
   /// Return properly formatted class name for screen output
-  std::string
-  name() const override;
+  std::string name() const override;
 
-protected:
+ protected:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 
-private:
+ private:
   /// Clone method implementation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
-  PlaneSurface*
-  clone_impl(const GeometryContext& gctx,
-             const Transform3D&     shift) const override;
+  PlaneSurface* clone_impl(const GeometryContext& gctx,
+                           const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,29 +9,27 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace po = boost::program_options;
 using namespace Acts;
 
-int
-main(int argc, char* argv[])
-{
-  unsigned int toys    = 1;
-  double       pT      = 1;
-  double       Bz      = 1;
-  double       maxPath = 1;
-  unsigned int lvl     = Acts::Logging::INFO;
-  bool         withCov = true;
+int main(int argc, char* argv[]) {
+  unsigned int toys = 1;
+  double pT = 1;
+  double Bz = 1;
+  double maxPath = 1;
+  unsigned int lvl = Acts::Logging::INFO;
+  bool withCov = true;
 
   // Create a test context
-  GeometryContext      tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
 
   try {
@@ -64,29 +62,29 @@ main(int argc, char* argv[])
 
   // print information about profiling setup
   ACTS_INFO("propagating " << toys << " tracks with pT = " << pT << "GeV in a "
-                           << Bz
-                           << "T B-field");
+                           << Bz << "T B-field");
 
-  using BField_type     = ConstantBField;
-  using Stepper_type    = EigenStepper<BField_type>;
+  using BField_type = ConstantBField;
+  using Stepper_type = EigenStepper<BField_type>;
   using Propagator_type = Propagator<Stepper_type>;
+  using Covariance = BoundSymMatrix;
 
-  BField_type     bField(0, 0, Bz * units::_T);
-  Stepper_type    atlas_stepper(std::move(bField));
+  BField_type bField(0, 0, Bz * units::_T);
+  Stepper_type atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.pathLimit = maxPath * units::_m;
 
-  Vector3D          pos(0, 0, 0);
-  Vector3D          mom(pT * units::_GeV, 0, 0);
-  ActsSymMatrixD<5> cov;
+  Vector3D pos(0, 0, 0);
+  Vector3D mom(pT * units::_GeV, 0, 0);
+  Covariance cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-  std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
+  std::unique_ptr<const Covariance> covPtr = nullptr;
   if (withCov) {
-    covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    covPtr = std::make_unique<const Covariance>(cov);
   }
   CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
 
@@ -94,12 +92,9 @@ main(int argc, char* argv[])
   for (unsigned int i = 0; i < toys; ++i) {
     auto r = propagator.propagate(pars, options).value();
     ACTS_DEBUG("reached position (" << r.endParameters->position().x() << ", "
-                                    << r.endParameters->position().y()
-                                    << ", "
+                                    << r.endParameters->position().y() << ", "
                                     << r.endParameters->position().z()
-                                    << ") in "
-                                    << r.steps
-                                    << " steps");
+                                    << ") in " << r.steps << " steps");
     totalPathLength += r.pathLength;
   }
 

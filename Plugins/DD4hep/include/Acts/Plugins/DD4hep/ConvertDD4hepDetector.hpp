@@ -1,15 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Tools/CylinderVolumeBuilder.hpp"
-#include "Acts/Tools/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -19,11 +19,8 @@ namespace Acts {
 
 /// Sort function which sorts dd4hep::DetElement by their ID
 /// @param[in][out] det the dd4hep::DetElements to be sorted
-void
-sortDetElementsByID(std::vector<dd4hep::DetElement>& det)
-{
-  sort(det.begin(),
-       det.end(),
+void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
+  sort(det.begin(), det.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
          return (a.id() < b.id());
        });
@@ -44,8 +41,8 @@ sortDetElementsByID(std::vector<dd4hep::DetElement>& det)
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
 /// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
-/// 		vary. This mode finds out the bin boundaries by scanning through the
-/// 		surfaces.
+/// 		vary. This mode finds out the bin boundaries by scanning through
+/// the 		surfaces.
 /// 	- equidistant - if the sensitive surfaces are placed equidistantly
 /// @note equidistant binningtype is recommended because it is faster not only
 /// while building the geometry but also for look up during the extrapolation
@@ -81,19 +78,15 @@ sortDetElementsByID(std::vector<dd4hep::DetElement>& det)
 /// dd4hep::DetElement. In case another sorting needs to be applied, the users
 /// can provide their own function
 
-std::unique_ptr<const TrackingGeometry>
-convertDD4hepDetector(
+std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     dd4hep::DetElement worldDetElement,
-    Logging::Level     loggingLevel          = Logging::Level::INFO,
-    BinningType        bTypePhi              = equidistant,
-    BinningType        bTypeR                = equidistant,
-    BinningType        bTypeZ                = equidistant,
-    double             layerEnvelopeR        = 1. * units::_mm,
-    double             layerEnvelopeZ        = 1. * units::_mm,
-    double             defaultLayerThickness = 10e-10 * units::_mm,
+    Logging::Level loggingLevel = Logging::Level::INFO,
+    BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
+    BinningType bTypeZ = equidistant, double layerEnvelopeR = 1. * units::_mm,
+    double layerEnvelopeZ = 1. * units::_mm,
+    double defaultLayerThickness = 10e-10 * units::_mm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
-        sortSubDetectors
-    = sortDetElementsByID,
+        sortSubDetectors = sortDetElementsByID,
     const GeometryContext& gctx = GeometryContext());
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
@@ -110,8 +103,8 @@ convertDD4hepDetector(
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
 /// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
-/// 		vary. This mode finds out the bin boundaries by scanning through the
-/// 		surfaces.
+/// 		vary. This mode finds out the bin boundaries by scanning through
+/// the 		surfaces.
 /// 	- equidistant - if the sensitive surfaces are placed equidistantly
 /// @note equidistant binningtype is recommended because it is faster not only
 /// while building the geometry but also for look up during the extrapolation
@@ -135,20 +128,18 @@ convertDD4hepDetector(
 ///            touching or overlapping with the next layer can happen.
 /// @return std::shared_ptr the Acts::CylinderVolumeBuilder which can be used to
 /// build the full tracking geometry
-std::shared_ptr<const CylinderVolumeBuilder>
-volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
-                     Logging::Level     loggingLevel   = Logging::Level::INFO,
-                     BinningType        bTypePhi       = equidistant,
-                     BinningType        bTypeR         = equidistant,
-                     BinningType        bTypeZ         = equidistant,
-                     double             layerEnvelopeR = 1. * units::_mm,
-                     double             layerEnvelopeZ = 1. * units::_mm,
-                     double defaultLayerThickness      = 10e-10 * units::_mm);
+std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
+    dd4hep::DetElement subDetector,
+    Logging::Level loggingLevel = Logging::Level::INFO,
+    BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
+    BinningType bTypeZ = equidistant, double layerEnvelopeR = 1. * units::_mm,
+    double layerEnvelopeZ = 1. * units::_mm,
+    double defaultLayerThickness = 10e-10 * units::_mm);
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
-std::shared_ptr<const CylinderVolumeHelper>
-cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel = Logging::Level::INFO);
+std::shared_ptr<const CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
+    Logging::Level loggingLevel = Logging::Level::INFO);
 
 /// Method internally used by convertDD4hepDetector to collect all sub detectors
 /// Sub detector means each 'compound' DetElement or DetElements which are
@@ -157,9 +148,8 @@ cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel = Logging::Level::INFO);
 /// detectors should be collected
 /// @param [out] subdetectors the DD4hep::DetElements of the sub detectors
 /// contained by detElement
-void
-collectSubDetectors_dd4hep(dd4hep::DetElement&              detElement,
-                           std::vector<dd4hep::DetElement>& subdetectors);
+void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
+                                std::vector<dd4hep::DetElement>& subdetectors);
 
 /// Method internally used by convertDD4hepDetector to collect all volumes of a
 /// compound detector
@@ -167,16 +157,14 @@ collectSubDetectors_dd4hep(dd4hep::DetElement&              detElement,
 /// compounds should be collected
 /// @param [out] compounds the DD4hep::DetElements of the compounds contained by
 /// detElement
-void
-collectCompounds_dd4hep(dd4hep::DetElement&              detElement,
-                        std::vector<dd4hep::DetElement>& compounds);
+void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
+                             std::vector<dd4hep::DetElement>& compounds);
 
 /// Method internally used by convertDD4hepDetector
 /// @param [in] detElement the dd4hep::DetElement of the volume of which the
 /// layers should be collected
 /// @param [out] layers the DD4hep::DetElements of the layers contained by
 /// detElement
-void
-collectLayers_dd4hep(dd4hep::DetElement&              detElement,
-                     std::vector<dd4hep::DetElement>& layers);
-}
+void collectLayers_dd4hep(dd4hep::DetElement& detElement,
+                          std::vector<dd4hep::DetElement>& layers);
+}  // namespace Acts

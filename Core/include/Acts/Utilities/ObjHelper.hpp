@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,9 +18,8 @@ namespace Acts {
  * supported in this implementation.
  */
 template <typename T = double>
-class ObjHelper : public IVisualization
-{
-public:
+class ObjHelper : public IVisualization {
+ public:
   static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
                 "Use either double or float");
 
@@ -42,10 +41,8 @@ public:
   /**
    * @copydoc Acts::IVisualization::vertex()
    */
-  void
-  vertex(const Vector3D&            vtx,
-         IVisualization::color_type color = {0, 0, 0}) override
-  {
+  void vertex(const Vector3D& vtx,
+              IVisualization::color_type color = {0, 0, 0}) override {
     (void)color;  // suppress unused warning
     m_vertices.push_back(vtx.template cast<value_type>());
   }
@@ -54,11 +51,8 @@ public:
    * @copydoc Acts::IVisualization::line()
    * @note This function ist not implemented for the OBJ format.
    */
-  void
-  line(const Vector3D& /*a*/,
-       const Vector3D& /*b*/,
-       IVisualization::color_type color = {0, 0, 0}) override
-  {
+  void line(const Vector3D& /*a*/, const Vector3D& /*b*/,
+            IVisualization::color_type color = {0, 0, 0}) override {
     (void)color;  // suppress unused warning
     // not implemented
     throw std::runtime_error("Line not implemented for OBJ");
@@ -67,10 +61,8 @@ public:
   /**
    * @copydoc Acts::IVisualization::face()
    */
-  void
-  face(const std::vector<Vector3D>& vtxs,
-       IVisualization::color_type   color = {0, 0, 0}) override
-  {
+  void face(const std::vector<Vector3D>& vtxs,
+            IVisualization::color_type color = {0, 0, 0}) override {
     (void)color;  // suppress unused warning
     face_type idxs;
     idxs.reserve(vtxs.size());
@@ -84,9 +76,7 @@ public:
   /**
    * @copydoc Acts::IVisualization::write()
    */
-  void
-  write(std::ostream& os) const override
-  {
+  void write(std::ostream& os) const override {
     for (const vertex_type& vtx : m_vertices) {
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
     }
@@ -103,15 +93,13 @@ public:
   /**
    * @copydoc Acts::IVisualization::clear()
    */
-  void
-  clear() override
-  {
+  void clear() override {
     m_vertices.clear();
     m_faces.clear();
   }
 
-private:
+ private:
   std::vector<vertex_type> m_vertices;
-  std::vector<face_type>   m_faces;
+  std::vector<face_type> m_faces;
 };
-}
+}  // namespace Acts

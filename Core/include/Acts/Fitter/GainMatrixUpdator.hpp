@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,21 +25,18 @@ namespace Acts {
 ///
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
-template <typename parameters_t, typename calibrator_t = VoidKalmanComponents>
-class GainMatrixUpdator
-{
-
+template <typename parameters_t,
+          typename calibrator_t = VoidMeasurementCalibrator>
+class GainMatrixUpdator {
   using jacobian_t = typename parameters_t::CovMatrix_t;
 
-public:
+ public:
   /// Explicit constructor
   ///
   /// @param calibrator is the calibration struct/class that converts
   /// uncalibrated measurements into calibrated ones
   GainMatrixUpdator(calibrator_t calibrator = calibrator_t())
-    : m_mCalibrator(std::move(calibrator))
-  {
-  }
+      : m_mCalibrator(std::move(calibrator)) {}
 
   /// @brief Public call operator for the boost visitor pattern
   ///
@@ -52,9 +49,8 @@ public:
   /// @note Non-'successful' updates could be holes or outliers,
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  bool
-  operator()(const GeometryContext& gctx, track_state_t& trackState) const
-  {
+  bool operator()(const GeometryContext& gctx,
+                  track_state_t& trackState) const {
     using CovMatrix_t = typename parameters_t::CovMatrix_t;
     using ParVector_t = typename parameters_t::ParVector_t;
 
@@ -75,14 +71,18 @@ public:
     ParVector_t filtered_parameters;
     CovMatrix_t filtered_covariance;
 
+    // need to calibrate the uncalibrated measurement
+    // this will turn them into a measurement we can understand
+    trackState.measurement.calibrated =
+        m_mCalibrator(*trackState.measurement.uncalibrated, predicted);
+
     // we need to remove type-erasure on the measurement type
     // to access its methods
     std::visit(
-        [&](const auto& uncalibrated) {
+        [&](const auto& calibrated) {
           // type of measurement
           using meas_t = typename std::remove_const<
-              typename std::remove_reference<decltype(uncalibrated)>::type>::
-              type;
+              typename std::remove_reference<decltype(calibrated)>::type>::type;
           // measurement covariance matrix
           using meas_cov_t = typename meas_t::CovMatrix_t;
           // measurement (local) parameter vector
@@ -93,25 +93,22 @@ public:
           using gain_matrix_t = ActsMatrixD<projection_t::ColsAtCompileTime,
                                             projection_t::RowsAtCompileTime>;
 
-          // Calibrate the measurement
-          meas_t calibrated = m_mCalibrator(uncalibrated, predicted);
-
           // Take the projector (measurement mapping function)
           const projection_t& H = calibrated.projector();
 
           // The Kalman gain matrix
-          gain_matrix_t K = predicted_covariance * H.transpose()
-              * (H * predicted_covariance * H.transpose()
-                 + calibrated.covariance())
-                    .inverse();
+          gain_matrix_t K = predicted_covariance * H.transpose() *
+                            (H * predicted_covariance * H.transpose() +
+                             calibrated.covariance())
+                                .inverse();
 
           // filtered new parameters after update
-          filtered_parameters
-              = predicted.parameters() + K * calibrated.residual(predicted);
+          filtered_parameters =
+              predicted.parameters() + K * calibrated.residual(predicted);
 
           // updated covariance after filtering
-          filtered_covariance
-              = (CovMatrix_t::Identity() - K * H) * predicted_covariance;
+          filtered_covariance =
+              (CovMatrix_t::Identity() - K * H) * predicted_covariance;
 
           // Create new filtered parameters and covariance
           parameters_t filtered(gctx,
@@ -125,26 +122,22 @@ public:
           // r is the residual of the filtered state
           // R is the covariance matrix of the filtered residual
           meas_par_t residual = calibrated.residual(filtered);
-          trackState.parameter.chi2
-              = (residual.transpose()
-                 * ((meas_cov_t::Identity() - H * K) * calibrated.covariance())
-                       .inverse()
-                 * residual)
-                    .eval()(0, 0);
-
-          // plug calibrated measurement back into track state
-          trackState.measurement.calibrated = std::move(calibrated);
+          trackState.parameter.chi2 =
+              (residual.transpose() *
+               ((meas_cov_t::Identity() - H * K) * calibrated.covariance())
+                   .inverse() *
+               residual)
+                  .eval()(0, 0);
 
           trackState.parameter.filtered = std::move(filtered);
-
         },
-        *trackState.measurement.uncalibrated);
+        *trackState.measurement.calibrated);
 
     // always succeed, no outlier logic yet
     return true;
   }
 
-private:
+ private:
   /// The measurement calibrator
   calibrator_t m_mCalibrator;
 };

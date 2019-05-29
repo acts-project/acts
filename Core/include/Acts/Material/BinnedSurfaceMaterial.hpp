@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,9 +24,8 @@ namespace Acts {
 /// MaterialProperties. This is not memory optimised as every bin
 /// holds one material property object.
 
-class BinnedSurfaceMaterial : public ISurfaceMaterial
-{
-public:
+class BinnedSurfaceMaterial : public ISurfaceMaterial {
+ public:
   /// Default Constructor - deleted
   BinnedSurfaceMaterial() = delete;
 
@@ -41,9 +40,9 @@ public:
   /// @param binUtility defines the binning structure on the surface (copied)
   /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
-  BinnedSurfaceMaterial(const BinUtility&        binUtility,
+  BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialPropertiesVector fullProperties,
-                        double                   splitFactor = 0.);
+                        double splitFactor = 0.);
 
   /// Explicit constructor with only full MaterialProperties,
   /// for two-dimensional binning.
@@ -56,9 +55,9 @@ public:
   /// @param binUtility defines the binning structure on the surface (copied)
   /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
-  BinnedSurfaceMaterial(const BinUtility&        binUtility,
+  BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialPropertiesMatrix fullProperties,
-                        double                   splitFactor = 0.);
+                        double splitFactor = 0.);
 
   /// Copy Move Constructor
   ///
@@ -71,14 +70,10 @@ public:
   BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm) = default;
 
   /// Assignment Move operator
-  BinnedSurfaceMaterial&
-  operator=(BinnedSurfaceMaterial&& bsm)
-      = default;
+  BinnedSurfaceMaterial& operator=(BinnedSurfaceMaterial&& bsm) = default;
 
   /// Assignment operator
-  BinnedSurfaceMaterial&
-  operator=(const BinnedSurfaceMaterial& bsm)
-      = default;
+  BinnedSurfaceMaterial& operator=(const BinnedSurfaceMaterial& bsm) = default;
 
   /// Destructor
   ~BinnedSurfaceMaterial() override = default;
@@ -86,34 +81,28 @@ public:
   /// Scale operator
   ///
   /// @param scale is the scale factor for the full material
-  BinnedSurfaceMaterial&
-  operator*=(double scale) final;
+  BinnedSurfaceMaterial& operator*=(double scale) final;
 
   /// Return the BinUtility
-  const BinUtility&
-  binUtility() const;
+  const BinUtility& binUtility() const;
 
   /// @copydoc SurfaceMaterial::fullMaterial
-  const MaterialPropertiesMatrix&
-  fullMaterial() const;
+  const MaterialPropertiesMatrix& fullMaterial() const;
 
   /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
-  const MaterialProperties&
-  materialProperties(const Vector2D& lp) const final;
+  const MaterialProperties& materialProperties(const Vector2D& lp) const final;
 
   /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
-  const MaterialProperties&
-  materialProperties(const Vector3D& gp) const final;
+  const MaterialProperties& materialProperties(const Vector3D& gp) const final;
 
   /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
-  const MaterialProperties&
-  materialProperties(size_t bin0, size_t bin1) const final;
+  const MaterialProperties& materialProperties(size_t bin0,
+                                               size_t bin1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
-private:
+ private:
   /// The helper for the bin finding
   BinUtility m_binUtility;
 
@@ -121,21 +110,17 @@ private:
   MaterialPropertiesMatrix m_fullMaterial;
 };
 
-inline const BinUtility&
-BinnedSurfaceMaterial::binUtility() const
-{
+inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
   return (m_binUtility);
 }
 
-inline const MaterialPropertiesMatrix&
-BinnedSurfaceMaterial::fullMaterial() const
-{
+inline const MaterialPropertiesMatrix& BinnedSurfaceMaterial::fullMaterial()
+    const {
   return m_fullMaterial;
 }
 
-inline const MaterialProperties&
-BinnedSurfaceMaterial::materialProperties(size_t bin0, size_t bin1) const
-{
+inline const MaterialProperties& BinnedSurfaceMaterial::materialProperties(
+    size_t bin0, size_t bin1) const {
   return m_fullMaterial[bin1][bin0];
 }
-}
+}  // namespace Acts

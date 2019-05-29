@@ -1,0 +1,125 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#define BOOST_TEST_MODULE MeasurementHelpers Tests
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+
+namespace Acts {
+namespace Test {
+
+// Create a test context
+GeometryContext tgContext = GeometryContext();
+
+using SourceLink = MinimalSourceLink;
+
+template <ParID_t... params>
+using MeasurementType = Measurement<SourceLink, params...>;
+using FittableMeasurement = FittableMeasurement<SourceLink>;
+
+BOOST_AUTO_TEST_CASE(getSurface_test) {
+  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder2 = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+
+  ActsSymMatrixD<2> cov;
+  cov << 0.04, 0, 0, 0.1;
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
+                                                    std::move(cov), -0.1, 0.45);
+
+  FittableMeasurement fm = m;
+
+  BOOST_CHECK_EQUAL(MeasurementHelpers::getSurface(fm), cylinder.get());
+
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2(
+      cylinder2, {}, std::move(cov), -0.1, 0.45);
+  fm = m2;
+  BOOST_CHECK_EQUAL(MeasurementHelpers::getSurface(fm), cylinder2.get());
+}
+
+BOOST_AUTO_TEST_CASE(getSize_test) {
+  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+
+  ActsSymMatrixD<2> cov;
+  cov << 0.04, 0, 0, 0.1;
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
+                                                    std::move(cov), -0.1, 0.45);
+
+  FittableMeasurement fm = m;
+  BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 2);
+
+  ActsSymMatrixD<3> cov3;
+  cov.setRandom();
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1, ParDef::eT> m2(
+      cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
+  fm = m2;
+
+  BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 3);
+}
+
+BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
+  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+
+  ActsSymMatrixD<2> cov;
+  cov << 0.04, 0, 0, 0.1;
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
+                                                    std::move(cov), -0.1, 0.45);
+
+  FittableMeasurement fm = m;
+  MinimalSourceLink msl{&fm};
+
+  BOOST_CHECK_EQUAL(&msl.referenceSurface(), cylinder.get());
+
+  MinimalSourceLink msl2{&fm};
+  BOOST_CHECK_EQUAL(msl, msl2);
+
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
+  FittableMeasurement fm2 = m2;
+  MinimalSourceLink msl3{&fm2};
+  BOOST_CHECK_NE(msl, msl3);
+
+  BOOST_CHECK_EQUAL(&*msl, &fm);
+}
+
+BOOST_AUTO_TEST_CASE(visit_measurement_test) {
+  // Overallocated full size parameter vector and covariance
+  ActsVectorD<BoundParsDim> parFull;
+  parFull.setRandom();
+
+  ActsSymMatrixD<BoundParsDim> covFull;
+  covFull.setRandom();
+
+  const auto& parFullConst = parFull;
+  const auto& covFullConst = covFull;
+
+  for (size_t i = 1; i <= BoundParsDim; i++) {
+    visit_measurement(parFull, covFull, i, [&](auto param, auto cov) {
+      BOOST_CHECK_EQUAL(param, parFull.head(i));
+      BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(i, i));
+    });
+
+    visit_measurement(
+        parFullConst, covFullConst, i, [&](const auto param, const auto cov) {
+          BOOST_CHECK_EQUAL(param, parFullConst.head(i));
+          BOOST_CHECK_EQUAL(cov, covFullConst.topLeftCorner(i, i));
+        });
+
+    visit_measurement(parFull, covFull, i,
+                      [&](const auto param, const auto cov) {
+                        BOOST_CHECK_EQUAL(param, parFull.head(i));
+                        BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(i, i));
+                      });
+  }
+}
+
+}  // namespace Test
+}  // namespace Acts

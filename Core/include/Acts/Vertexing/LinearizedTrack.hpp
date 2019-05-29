@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,9 +27,7 @@ namespace Acts {
 /// "momentumJacobian" respectively.
 ///
 
-struct LinearizedTrack
-{
-
+struct LinearizedTrack {
   /// @brief Constructor taking perigee parameters and covariance matrix
   /// of track propagated to closest approach (PCA) of linearization point,
   /// position and momentum Jacobian and const term.
@@ -46,33 +44,31 @@ struct LinearizedTrack
 
   LinearizedTrack() = default;
 
-  LinearizedTrack(const ActsVectorD<5>&    paramsAtPCA,
-                  const ActsSymMatrixD<5>& parCovarianceAtPCA,
-                  const Vector3D&          linPoint,
-                  const ActsMatrixD<5, 3>& posJacobian,
-                  const ActsMatrixD<5, 3>& momJacobian,
-                  const Vector3D&       position,
-                  const Vector3D&       momentum,
-                  const ActsVectorD<5>& constTerm)
-    : parametersAtPCA(paramsAtPCA)
-    , covarianceAtPCA(parCovarianceAtPCA)
-    , linearizationPoint(linPoint)
-    , positionJacobian(posJacobian)
-    , momentumJacobian(momJacobian)
-    , positionAtPCA(position)
-    , momentumAtPCA(momentum)
-    , constantTerm(constTerm)
-  {
-  }
+  LinearizedTrack(const BoundVector& paramsAtPCA,
+                  const BoundSymMatrix& parCovarianceAtPCA,
+                  const Vector3D& linPoint,
+                  const SpacePointToBoundMatrix& posJacobian,
+                  const ActsMatrixD<BoundParsDim, 3>& momJacobian,
+                  const SpacePointVector& position, const Vector3D& momentum,
+                  const BoundVector& constTerm)
+      : parametersAtPCA(paramsAtPCA),
+        covarianceAtPCA(parCovarianceAtPCA),
+        linearizationPoint(linPoint),
+        positionJacobian(posJacobian),
+        momentumJacobian(momJacobian),
+        positionAtPCA(position),
+        momentumAtPCA(momentum),
+        constantTerm(constTerm) {}
 
-  ActsVectorD<5>    parametersAtPCA{ActsVectorD<5>::Zero()};
-  ActsSymMatrixD<5> covarianceAtPCA{ActsSymMatrixD<5>::Zero()};
-  Vector3D          linearizationPoint{Vector3D::Zero()};
-  ActsMatrixD<5, 3> positionJacobian{ActsMatrixD<5, 3>::Zero()};
-  ActsMatrixD<5, 3> momentumJacobian{ActsMatrixD<5, 3>::Zero()};
-  Vector3D       positionAtPCA{Vector3D::Zero()};
-  Vector3D       momentumAtPCA{Vector3D::Zero()};
-  ActsVectorD<5> constantTerm{ActsVectorD<5>::Zero()};
+  BoundVector parametersAtPCA{BoundVector::Zero()};
+  BoundSymMatrix covarianceAtPCA{BoundSymMatrix::Zero()};
+  Vector3D linearizationPoint{Vector3D::Zero()};
+  SpacePointToBoundMatrix positionJacobian{SpacePointToBoundMatrix::Zero()};
+  ActsMatrixD<BoundParsDim, 3> momentumJacobian{
+      ActsMatrixD<BoundParsDim, 3>::Zero()};
+  SpacePointVector positionAtPCA{SpacePointVector::Zero()};
+  Vector3D momentumAtPCA{Vector3D::Zero()};
+  BoundVector constantTerm{BoundVector::Zero()};
 };
 
 }  // namespace Acts

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,30 +22,28 @@ using boost::test_tools::output_test_stream;
 namespace Acts {
 namespace Test {
 
-  BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(Utilities)
 
-  BOOST_AUTO_TEST_CASE(construction_test)
-  {
-    // this doesn't really test anything, other than conformance to the
-    // IVisualization interface
-    PlyHelper ply;
-    ObjHelper obj;
+BOOST_AUTO_TEST_CASE(construction_test) {
+  // this doesn't really test anything, other than conformance to the
+  // IVisualization interface
+  PlyHelper ply;
+  ObjHelper obj;
 
-    IVisualization* vis;
-    vis = &ply;
-    std::cout << *vis << std::endl;
-    vis = &obj;
-    std::cout << *vis << std::endl;
-  }
+  IVisualization* vis;
+  vis = &ply;
+  std::cout << *vis << std::endl;
+  vis = &obj;
+  std::cout << *vis << std::endl;
+}
 
-  BOOST_AUTO_TEST_CASE(ply_output_test)
-  {
-    PlyHelper          ply;
-    output_test_stream output;
+BOOST_AUTO_TEST_CASE(ply_output_test) {
+  PlyHelper ply;
+  output_test_stream output;
 
-    ply.vertex({0, 0, 0});
+  ply.vertex({0, 0, 0});
 
-    std::string exp = R"(ply
+  std::string exp = R"(ply
 format ascii 1.0
 element vertex 1
 property float x
@@ -66,13 +64,13 @@ end_header
 0 0 0 120 120 120
 )";
 
-    output << ply;
-    BOOST_CHECK(output.is_equal(exp));
+  output << ply;
+  BOOST_CHECK(output.is_equal(exp));
 
-    ply.clear();
-    ply.vertex({0, 1, 0});
+  ply.clear();
+  ply.vertex({0, 1, 0});
 
-    exp = R"(ply
+  exp = R"(ply
 format ascii 1.0
 element vertex 1
 property float x
@@ -93,15 +91,15 @@ end_header
 0 1 0 120 120 120
 )";
 
-    output << ply;
-    BOOST_CHECK(output.is_equal(exp));
+  output << ply;
+  BOOST_CHECK(output.is_equal(exp));
 
-    ply.clear();
-    ply.line({0, 0, 1}, {1, 0, 0});
+  ply.clear();
+  ply.line({0, 0, 1}, {1, 0, 0});
 
-    output << ply;
+  output << ply;
 
-    exp = R"(ply
+  exp = R"(ply
 format ascii 1.0
 element vertex 2
 property float x
@@ -124,14 +122,14 @@ end_header
 0 1 120 120 120
 )";
 
-    BOOST_CHECK(output.is_equal(exp));
+  BOOST_CHECK(output.is_equal(exp));
 
-    ply.clear();
-    ply.face({{1, 0, 0}, {1, 1, 0}, {0, 1, 0}});
+  ply.clear();
+  ply.face({{1, 0, 0}, {1, 1, 0}, {0, 1, 0}});
 
-    output << ply;
+  output << ply;
 
-    exp = R"(ply
+  exp = R"(ply
 format ascii 1.0
 element vertex 3
 property float x
@@ -155,41 +153,40 @@ end_header
 3 0 1 2
 )";
 
-    BOOST_CHECK(output.is_equal(exp));
-  }
+  BOOST_CHECK(output.is_equal(exp));
+}
 
-  BOOST_AUTO_TEST_CASE(obj_output_test)
-  {
-    ObjHelper obj;
+BOOST_AUTO_TEST_CASE(obj_output_test) {
+  ObjHelper obj;
 
-    output_test_stream output;
+  output_test_stream output;
 
-    obj.vertex({1, 0, 0});
+  obj.vertex({1, 0, 0});
 
-    output << obj;
+  output << obj;
 
-    std::string exp = R"(v 1 0 0
+  std::string exp = R"(v 1 0 0
 )";
 
-    BOOST_CHECK(output.is_equal(exp));
+  BOOST_CHECK(output.is_equal(exp));
 
-    obj.clear();
+  obj.clear();
 
-    BOOST_CHECK_THROW(obj.line({1, 0, 0}, {0, 1, 0}), std::runtime_error);
+  BOOST_CHECK_THROW(obj.line({1, 0, 0}, {0, 1, 0}), std::runtime_error);
 
-    obj.clear();
-    obj.face({{1, 0, 0}, {1, 1, 0}, {0, 1, 0}});
-    output << obj;
+  obj.clear();
+  obj.face({{1, 0, 0}, {1, 1, 0}, {0, 1, 0}});
+  output << obj;
 
-    exp = R"(v 1 0 0
+  exp = R"(v 1 0 0
 v 1 1 0
 v 0 1 0
 f 1 2 3
 )";
 
-    BOOST_CHECK(output.is_equal(exp));
-  }
+  BOOST_CHECK(output.is_equal(exp));
+}
 
-  BOOST_AUTO_TEST_SUITE_END()
-}
-}
+BOOST_AUTO_TEST_SUITE_END()
+}  // namespace Test
+}  // namespace Acts

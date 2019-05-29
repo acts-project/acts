@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,11 +21,9 @@
 namespace Acts {
 
 template <typename SpacePoint>
-class SeedfinderStateIterator
-{
-public:
-  SeedfinderStateIterator& operator++()
-  {
+class SeedfinderStateIterator {
+ public:
+  SeedfinderStateIterator& operator++() {
     if (zIndex < phiZbins[1]) {
       zIndex++;
 
@@ -35,76 +33,70 @@ public:
     }
     // set current & neighbor bins only if bin indices valid
     if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {
-      currentBin       = &(grid->atLocalBins({phiIndex, zIndex}));
+      currentBin = &(grid->atLocalBins({phiIndex, zIndex}));
       bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
-      topBinIndices    = topBinFinder->findBins(phiIndex, zIndex, grid);
+      topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
       outputIndex++;
       return *this;
     }
     phiIndex = phiZbins[0];
-    zIndex   = phiZbins[1] + 1;
+    zIndex = phiZbins[1] + 1;
     return *this;
   }
 
-  bool
-  operator==(const SeedfinderStateIterator& otherState)
-  {
+  bool operator==(const SeedfinderStateIterator& otherState) {
     return (zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
   }
 
   SeedfinderStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
-                          IBinFinder<SpacePoint>*           botBinFinder,
-                          IBinFinder<SpacePoint>*           tBinFinder)
-    : currentBin(&(spgrid->atLocalBins({1, 1})))
-  {
-    grid             = spgrid;
-    bottomBinFinder  = botBinFinder;
-    topBinFinder     = tBinFinder;
-    phiZbins         = grid->numLocalBins();
-    phiIndex         = 1;
-    zIndex           = 1;
-    outputIndex      = 0;
+                          IBinFinder<SpacePoint>* botBinFinder,
+                          IBinFinder<SpacePoint>* tBinFinder)
+      : currentBin(&(spgrid->atLocalBins({1, 1}))) {
+    grid = spgrid;
+    bottomBinFinder = botBinFinder;
+    topBinFinder = tBinFinder;
+    phiZbins = grid->numLocalBins();
+    phiIndex = 1;
+    zIndex = 1;
+    outputIndex = 0;
     bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
-    topBinIndices    = topBinFinder->findBins(phiIndex, zIndex, grid);
+    topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
   }
 
   SeedfinderStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
-                          IBinFinder<SpacePoint>*           botBinFinder,
-                          IBinFinder<SpacePoint>*           tBinFinder,
-                          size_t                            phiInd,
-                          size_t                            zInd)
-    : currentBin(&(spgrid->atLocalBins({phiInd, zInd})))
-  {
+                          IBinFinder<SpacePoint>* botBinFinder,
+                          IBinFinder<SpacePoint>* tBinFinder, size_t phiInd,
+                          size_t zInd)
+      : currentBin(&(spgrid->atLocalBins({phiInd, zInd}))) {
     bottomBinFinder = botBinFinder;
-    topBinFinder    = tBinFinder;
-    grid            = spgrid;
-    phiIndex        = phiInd;
-    zIndex          = zInd;
-    phiZbins        = grid->numLocalBins();
-    outputIndex     = (phiInd - 1) * phiZbins[1] + zInd - 1;
+    topBinFinder = tBinFinder;
+    grid = spgrid;
+    phiIndex = phiInd;
+    zIndex = zInd;
+    phiZbins = grid->numLocalBins();
+    outputIndex = (phiInd - 1) * phiZbins[1] + zInd - 1;
     if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {
       bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
-      topBinIndices    = topBinFinder->findBins(phiIndex, zIndex, grid);
+      topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
     }
   }
 
   // middle spacepoint bin
   const std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint>>>*
-                                    currentBin;
-  std::vector<size_t>               bottomBinIndices;
-  std::vector<size_t>               topBinIndices;
+      currentBin;
+  std::vector<size_t> bottomBinIndices;
+  std::vector<size_t> topBinIndices;
   const SpacePointGrid<SpacePoint>* grid;
-  size_t                            phiIndex    = 1;
-  size_t                            zIndex      = 1;
-  size_t                            outputIndex = 0;
+  size_t phiIndex = 1;
+  size_t zIndex = 1;
+  size_t outputIndex = 0;
   std::array<long unsigned int, 2ul> phiZbins;
   IBinFinder<SpacePoint>* bottomBinFinder;
   IBinFinder<SpacePoint>* topBinFinder;
 };
 
 template <typename SpacePoint>
-struct SeedfinderState
-{
+struct SeedfinderState {
   // grid with ownership of all InternalSpacePoint
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> binnedSP;
 
@@ -116,22 +108,16 @@ struct SeedfinderState
   // container with seeds created so far
   std::vector<std::vector<std::unique_ptr<Seed<SpacePoint>>>> outputVec;
 
-  SeedfinderStateIterator<SpacePoint>
-  begin()
-  {
+  SeedfinderStateIterator<SpacePoint> begin() {
     return SeedfinderStateIterator<SpacePoint>(
         binnedSP.get(), bottomBinFinder.get(), topBinFinder.get());
   }
 
-  SeedfinderStateIterator<SpacePoint>
-  end()
-  {
+  SeedfinderStateIterator<SpacePoint> end() {
     auto phiZbins = binnedSP->numLocalBins();
-    return SeedfinderStateIterator<SpacePoint>(binnedSP.get(),
-                                               bottomBinFinder.get(),
-                                               topBinFinder.get(),
-                                               phiZbins[0],
-                                               phiZbins[1] + 1);
+    return SeedfinderStateIterator<SpacePoint>(
+        binnedSP.get(), bottomBinFinder.get(), topBinFinder.get(), phiZbins[0],
+        phiZbins[1] + 1);
   }
 };
-}
+}  // namespace Acts

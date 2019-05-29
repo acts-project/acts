@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,9 +21,8 @@ namespace Acts {
 /// satisfying the IBinFinder interface. Assumes the grid has 11 bins filled by
 /// the same logic as ATLAS bins.
 template <typename SpacePoint>
-class ATLASBottomBinFinder : public IBinFinder<SpacePoint>
-{
-public:
+class ATLASBottomBinFinder : public IBinFinder<SpacePoint> {
+ public:
   /// destructor
   ~ATLASBottomBinFinder() = default;
 
@@ -32,10 +31,8 @@ public:
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  std::set<size_t>
-  findBins(size_t                            phiBin,
-           size_t                            zBin,
-           const SpacePointGrid<SpacePoint>* binnedSP);
+  std::set<size_t> findBins(size_t phiBin, size_t zBin,
+                            const SpacePointGrid<SpacePoint>* binnedSP);
 };
-}
+}  // namespace Acts
 #include "ATLASBottomBinFinder.ipp"

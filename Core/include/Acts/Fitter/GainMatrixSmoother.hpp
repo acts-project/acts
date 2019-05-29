@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,24 +19,21 @@ namespace Acts {
 /// @tparam parameters_t Type of the track parameters
 /// @tparam jacobian_t Type of the Jacobian
 template <typename parameters_t>
-class GainMatrixSmoother
-{
-
+class GainMatrixSmoother {
   using jacobian_t = typename parameters_t::CovMatrix_t;
 
-public:
+ public:
   /// @brief Gain Matrix smoother implementation
   ///
 
   template <typename track_states_t>
-  boost::optional<parameters_t>
-  operator()(const GeometryContext& gctx, track_states_t& filteredStates) const
-  {
+  boost::optional<parameters_t> operator()(
+      const GeometryContext& gctx, track_states_t& filteredStates) const {
     using namespace boost::adaptors;
 
     using track_state_t = typename track_states_t::value_type;
-    using ParVector_t   = typename parameters_t::ParVector_t;
-    using CovMatrix_t   = typename parameters_t::CovMatrix_t;
+    using ParVector_t = typename parameters_t::ParVector_t;
+    using CovMatrix_t = typename parameters_t::CovMatrix_t;
     using gain_matrix_t = CovMatrix_t;
 
     // smoothed parameter vector and covariance matrix
@@ -44,7 +41,7 @@ public:
     CovMatrix_t smoothedCov;
 
     // For the last state: smoothed is filtered - also: switch to next
-    auto& prev_ts              = filteredStates.back();
+    auto& prev_ts = filteredStates.back();
     prev_ts.parameter.smoothed = *prev_ts.parameter.filtered;
 
     // Smoothing gain matrix
@@ -53,7 +50,6 @@ public:
     // Loop and smooth the remaining states
     for (track_state_t& ts :
          filteredStates | sliced(0, filteredStates.size()) | reversed) {
-
       // The current state
       assert(ts.parameter.filtered);
       assert(ts.parameter.predicted);
@@ -84,11 +80,9 @@ public:
       // clang-format on
 
       // Create smoothed track parameters
-      ts.parameter.smoothed
-          = parameters_t(gctx,
-                         std::make_unique<CovMatrix_t>(std::move(smoothedCov)),
-                         smoothedPars,
-                         ts.referenceSurface().getSharedPtr());
+      ts.parameter.smoothed = parameters_t(
+          gctx, std::make_unique<CovMatrix_t>(std::move(smoothedCov)),
+          smoothedPars, ts.referenceSurface().getSharedPtr());
 
       // Point prev state to current state
       prev_ts = ts;
@@ -97,4 +91,4 @@ public:
     return prev_ts.parameter.smoothed;
   }
 };
-}
+}  // namespace Acts

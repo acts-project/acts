@@ -20,3 +20,7 @@ add_integration_test(SeedingTest)
 add_executable (InterpolatedSolenoidBFieldTest InterpolatedSolenoidBFieldTest.cpp)
 target_link_libraries (InterpolatedSolenoidBFieldTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_integration_test(InterpolatedSolenoidBFieldTest)
+
+add_executable (BVHNavigationTest BVHNavigationTest.cpp)
+target_link_libraries (BVHNavigationTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_integration_test(BVHNavigationTest)

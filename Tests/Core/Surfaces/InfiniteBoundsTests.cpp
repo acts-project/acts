@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,46 +25,44 @@
 namespace Acts {
 
 namespace Test {
-  BOOST_AUTO_TEST_SUITE(Surfaces)
-  /// Unit test for creating compliant/non-compliant InfiniteBounds object
-  BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction)
-  {
-    InfiniteBounds u;
-    BOOST_CHECK_EQUAL(u.type(), SurfaceBounds::Boundless);
-    // InfiniteBounds s(1);  // would act as size_t cast to InfiniteBounds
-    // InfiniteBounds t(s);
-    InfiniteBounds v(u);  // implicit
-    BOOST_CHECK_EQUAL(v.type(), SurfaceBounds::Boundless);
-  }
-  /// Unit tests for InfiniteBounds properties
-  BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties)
-  {
-    InfiniteBounds infiniteBoundsObject;
-    /// test for type()
-    BOOST_CHECK_EQUAL(infiniteBoundsObject.type(), SurfaceBounds::Boundless);
+BOOST_AUTO_TEST_SUITE(Surfaces)
+/// Unit test for creating compliant/non-compliant InfiniteBounds object
+BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction) {
+  InfiniteBounds u;
+  BOOST_CHECK_EQUAL(u.type(), SurfaceBounds::Boundless);
+  // InfiniteBounds s(1);  // would act as size_t cast to InfiniteBounds
+  // InfiniteBounds t(s);
+  InfiniteBounds v(u);  // implicit
+  BOOST_CHECK_EQUAL(v.type(), SurfaceBounds::Boundless);
+}
+/// Unit tests for InfiniteBounds properties
+BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
+  InfiniteBounds infiniteBoundsObject;
+  /// test for type()
+  BOOST_CHECK_EQUAL(infiniteBoundsObject.type(), SurfaceBounds::Boundless);
 
-    /// test for inside()
-    const Vector2D      anyVector{0., 1.};
-    const BoundaryCheck anyBoundaryCheck(true);
-    BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck));
+  /// test for inside()
+  const Vector2D anyVector{0., 1.};
+  const BoundaryCheck anyBoundaryCheck(true);
+  BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck));
 
-    /// test for distanceToBoundary
-    BOOST_TEST_MESSAGE("Perhaps the following should be inf?");
-    BOOST_CHECK_EQUAL(infiniteBoundsObject.distanceToBoundary(anyVector), 0.);
+  /// test for distanceToBoundary
+  BOOST_TEST_MESSAGE("Perhaps the following should be inf?");
+  BOOST_CHECK_EQUAL(infiniteBoundsObject.distanceToBoundary(anyVector), 0.);
 
-    /// test for clone
-    auto pInfiniteBoundsClone = infiniteBoundsObject.clone();
-    BOOST_CHECK_NE(pInfiniteBoundsClone, nullptr);
-    delete pInfiniteBoundsClone;
+  /// test for clone
+  auto pInfiniteBoundsClone = infiniteBoundsObject.clone();
+  BOOST_CHECK_NE(pInfiniteBoundsClone, nullptr);
+  delete pInfiniteBoundsClone;
 
-    /// test for dump
-    boost::test_tools::output_test_stream dumpOuput;
-    infiniteBoundsObject.toStream(dumpOuput);
-    BOOST_CHECK(
-        dumpOuput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
-  }
+  /// test for dump
+  boost::test_tools::output_test_stream dumpOuput;
+  infiniteBoundsObject.toStream(dumpOuput);
+  BOOST_CHECK(
+      dumpOuput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
+}
 
-  BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,12 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 
 namespace Acts {
 
@@ -33,15 +32,12 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 /// @tparam propagator_t Propagator type
 
-template <typename bfield_t,
-          typename input_track_t,
+template <typename bfield_t, typename input_track_t,
           typename propagator_t = Propagator<EigenStepper<bfield_t>>>
 class FullBilloirVertexFitter
-    : public IVertexFitter<input_track_t, propagator_t>
-{
-public:
-  struct Config
-  {
+    : public IVertexFitter<input_track_t, propagator_t> {
+ public:
+  struct Config {
     /// Magnetic field
     bfield_t bField;
 
@@ -50,33 +46,29 @@ public:
 
     /// Set up factory for linearizing tracks
     typename LinearizedTrackFactory<bfield_t, propagator_t>::Config ltConfig;
-    LinearizedTrackFactory<bfield_t, propagator_t>                  linFactory;
+    LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
 
     /// Propagator
     propagator_t propagator;
 
     /// Constructor with propagator input
     Config(const bfield_t& bIn, const propagator_t& propagatorIn)
-      : bField(bIn)
-      , ltConfig(bIn)
-      , linFactory(ltConfig)
-      , propagator(propagatorIn)
-    {
-    }
+        : bField(bIn),
+          ltConfig(bIn),
+          linFactory(ltConfig),
+          propagator(propagatorIn) {}
 
     /// Constructor with default propagator
-    template <
-        typename T = propagator_t,
-        std::enable_if_t<std::is_same<T, Propagator<EigenStepper<bfield_t>>>::
-                             value,
-                         int> = 0>
+    template <typename T = propagator_t,
+              std::enable_if_t<
+                  std::is_same<T, Propagator<EigenStepper<bfield_t>>>::value,
+                  int> = 0>
     Config(const bfield_t& bIn)
-      : bField(bIn)
-      , ltConfig(bIn)
-      , linFactory(ltConfig)
-      , propagator(
-            Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bIn)))
-    {
+        : bField(bIn),
+          ltConfig(bIn),
+          linFactory(ltConfig),
+          propagator(
+              Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bIn))) {
     }
   };
 
@@ -86,19 +78,15 @@ public:
   template <typename T = input_track_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg)
-    : m_cfg(cfg), extractParameters([&](T params) { return params; })
-  {
-  }
+      : m_cfg(cfg), extractParameters([](T params) { return params; }) {}
 
   /// @brief Constructor for user-defined input_track_t type =! BoundParameters
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from input_track_t object
-  FullBilloirVertexFitter(const Config&                                 cfg,
+  FullBilloirVertexFitter(const Config& cfg,
                           std::function<BoundParameters(input_track_t)> func)
-    : m_cfg(cfg), extractParameters(func)
-  {
-  }
+      : m_cfg(cfg), extractParameters(func) {}
 
   /// @brief Default destructor
   ~FullBilloirVertexFitter() override = default;
@@ -109,11 +97,11 @@ public:
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Fitted vertex
-  Result<Vertex<input_track_t>>
-  fit(const std::vector<input_track_t>&         paramVector,
+  Result<Vertex<input_track_t>> fit(
+      const std::vector<input_track_t>& paramVector,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const override;
 
-private:
+ private:
   /// Configuration object
   Config m_cfg;
 
@@ -130,8 +118,8 @@ private:
   /// @param thetaIn Theta
   ///
   /// @return Pair of (corrected phi, corrected theta)
-  std::pair<double, double>
-  correctPhiThetaPeriodicity(double phiIn, double thetaIn) const;
+  std::pair<double, double> correctPhiThetaPeriodicity(double phiIn,
+                                                       double thetaIn) const;
 };
 
 }  // namespace Acts

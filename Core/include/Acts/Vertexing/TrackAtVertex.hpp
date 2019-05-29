@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,8 +19,8 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 
 template <typename input_track_t>
-struct TrackAtVertex
-{
+
+struct TrackAtVertex {
   /// Deleted default constructor
   TrackAtVertex() = delete;
 
@@ -29,23 +29,25 @@ struct TrackAtVertex
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalParams Original perigee parameter
-  TrackAtVertex(double                 chi2perTrack,
-                const BoundParameters& paramsAtVertex,
-                const input_track_t&   originalTrack)
-    : m_chi2Track(chi2perTrack)
-    , m_fittedParams(paramsAtVertex)
-    , m_originalTrack(originalTrack)
-  {
-  }
+
+  TrackAtVertex(double chi2perTrack, const BoundParameters& paramsAtVertex,
+                const input_track_t& originalParams)
+      : chi2Track(chi2perTrack),
+        fittedParams(paramsAtVertex),
+        originalTrack(originalParams),
+        trackWeight(1.) {}
 
   /// Chi2 of track
-  double m_chi2Track;
+  double chi2Track;
 
   /// Fitted perigee
-  BoundParameters m_fittedParams;
+  BoundParameters fittedParams;
 
   /// Original input track
-  input_track_t m_originalTrack;
+  input_track_t originalTrack;
+
+  /// Weight of track in fit
+  double trackWeight;
 };
 
 }  // namespace Acts

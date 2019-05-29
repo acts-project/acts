@@ -33,6 +33,26 @@ add_executable (StepperTests StepperTests.cpp)
 target_link_libraries (StepperTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME StepperUnitTest COMMAND StepperTests)
 
+add_executable (NavigatorTests NavigatorTests.cpp)
+target_link_libraries (NavigatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME NavigatorUnitTests COMMAND NavigatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST NavigatorUnitTests TARGETS NavigatorTests)
+
+add_executable (MaterialCollectionTests MaterialCollectionTests.cpp)
+target_link_libraries (MaterialCollectionTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME MaterialCollectionUnitTests COMMAND MaterialCollectionTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialCollectionUnitTests TARGETS MaterialCollectionTests)
+    
+add_executable (ExtrapolatorTests ExtrapolatorTests.cpp)
+target_link_libraries (ExtrapolatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME ExtrapolatorUnitTests COMMAND ExtrapolatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ExtrapolatorUnitTests TARGETS ExtrapolatorTests)
+
+add_executable (KalmanExtrapolatorTests KalmanExtrapolatorTests.cpp)
+target_link_libraries (KalmanExtrapolatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME KalmanExtrapolatorUnitTests COMMAND KalmanExtrapolatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanExtrapolatorUnitTests TARGETS KalmanExtrapolatorTests)
+
 # these tests rely on the Legacy code
 if (ACTS_BUILD_LEGACY)
   add_executable (JacobianTests JacobianTests.cpp)

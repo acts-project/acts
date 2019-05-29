@@ -10,22 +10,27 @@ from fnmatch import fnmatch
 
 EXCLUDE = ["./Plugins/Json/include/Acts/Plugins/Json/lib/*"]
 
+
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
 
 CROSS_SYMBOL = u"\u2717"
+
+
 def err(string):
     if sys.stdout.isatty():
         return bcolors.FAIL + bcolors.BOLD + string + bcolors.ENDC
     else:
         return string
+
 
 class CommitInfo:
     date = None
@@ -34,8 +39,13 @@ class CommitInfo:
     subject = None
     body = None
 
+
 def check_git_dates(src):
-    output = check_output(["git", "log", '--format={{{%an|%ad|%s|%b}}}', "--", src]).decode("utf-8").strip()
+    output = (
+        check_output(["git", "log", "--format={{{%an|%ad|%s|%b}}}", "--", src])
+        .decode("utf-8")
+        .strip()
+    )
 
     # find single outputs
     commits = re.findall(r"{{{((?:.|\n)*?)}}}", output)
@@ -57,7 +67,7 @@ def check_git_dates(src):
     addcommit.author = add[0]
     addcommit.subject = add[2]
     addcommit.body = add[3]
-    
+
     modcommit = CommitInfo()
     modcommit.date = mod[1]
     modcommit.year = int(mmod.group(1))
@@ -71,14 +81,46 @@ def check_git_dates(src):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("input")
-    p.add_argument("--fix", action="store_true", help="Attempt to fix any license issues found.")
-    p.add_argument("--check-years", action="store_true", help="Check the license year info using git info for each file.")
-    p.add_argument("--fail-year-mismatch", action="store_true", help="Fail if year in license statement is not valid.")
+    p.add_argument(
+        "--fix", action="store_true", help="Attempt to fix any license issues found."
+    )
+    p.add_argument(
+        "--check-years",
+        action="store_true",
+        help="Check the license year info using git info for each file.",
+    )
+    p.add_argument(
+        "--fail-year-mismatch",
+        action="store_true",
+        help="Fail if year in license statement is not valid.",
+    )
+    p.add_argument("--exclude", "-e", action="append", default=EXCLUDE)
 
     args = p.parse_args()
+    print(args.exclude)
 
     if os.path.isdir(args.input):
-        srcs = str(check_output(["find", args.input, "-iname", "*.cpp", "-or", "-iname", "*.hpp", "-or", "-iname", "*.ipp"]), "utf-8").strip().split("\n")
+        srcs = (
+            str(
+                check_output(
+                    [
+                        "find",
+                        args.input,
+                        "-iname",
+                        "*.cpp",
+                        "-or",
+                        "-iname",
+                        "*.hpp",
+                        "-or",
+                        "-iname",
+                        "*.ipp",
+                    ]
+                ),
+                "utf-8",
+            )
+            .strip()
+            .split("\n")
+        )
         srcs = filter(lambda p: not p.startswith("./build"), srcs)
     else:
         srcs = [args.input]
@@ -87,7 +129,7 @@ def main():
 
     raw = """// This file is part of the Acts project.
 //
-// Copyright (C) {year} Acts project team
+// Copyright (C) {year} CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -95,23 +137,25 @@ def main():
 
     reg = (
         r"\A// This file is part of the Acts project.\n"
-        +r"//\n"
-        +r"// Copyright \(C\) (?P<year>.*) Acts project team\n"
-        +r"//\n"
-        +r"// This Source Code Form is subject to the terms of the Mozilla Public\n"
-        +r"// License, v\. 2\.0\. If a copy of the MPL was not distributed with this\n"
-        +r"// file, You can obtain one at http://mozilla.org/MPL/2.0/.\Z"
-        )
+        + r"//\n"
+        + r"// Copyright \(C\) (?P<year>.*) CERN for the benefit of the Acts project\n"
+        + r"//\n"
+        + r"// This Source Code Form is subject to the terms of the Mozilla Public\n"
+        + r"// License, v\. 2\.0\. If a copy of the MPL was not distributed with this\n"
+        + r"// file, You can obtain one at http://mozilla.org/MPL/2.0/.\Z"
+    )
 
     ref = re.compile(reg, re.M)
     clean_re = re.compile(r"(\(C\)) (.*) (Acts)", re.M)
     year_re = re.compile(r"^(?P<year1>20\d{2}|(?P<year2>20\d{2})-(?P<year3>20\d{2}))$")
     extract_re = re.compile(r"(20\d{2})-?(20\d{2})?")
-    
+
     def clean(s):
         return clean_re.sub(r"\1 XXXX \3", s)
+
     def get_clean_lines(s):
-        return [clean(l)+"\n" for l in s.split("\n")]
+        return [clean(l) + "\n" for l in s.split("\n")]
+
     def validate_years(year1, year2):
         if year1 and year2:
             year1 = int(year1)
@@ -145,17 +189,16 @@ def main():
     exit = 0
     srcs = list(srcs)
     nsrcs = len(srcs)
-    step = int(nsrcs/20)
+    step = int(nsrcs / 20)
     for i, src in enumerate(srcs):
 
-        if any([fnmatch(src, e) for e in EXCLUDE]):
+        if any([fnmatch(src, e) for e in args.exclude]):
             continue
 
-
-        if nsrcs > 1 and i%step == 0:
-            string = "{}/{} -> {:.2f}%".format(i, nsrcs, i/float(nsrcs)*100.)
+        if nsrcs > 1 and i % step == 0:
+            string = "{}/{} -> {:.2f}%".format(i, nsrcs, i / float(nsrcs) * 100.0)
             if sys.stdout.isatty():
-                sys.stdout.write(string+"\r")
+                sys.stdout.write(string + "\r")
             else:
                 print(string)
 
@@ -170,9 +213,9 @@ def main():
             m = ref.search(license)
 
             if m == None:
-                eprint("Invalid / missing license in "+src+"")
+                eprint("Invalid / missing license in " + src + "")
 
-                exp = [l+"\n" for l in raw.format(year="XXXX").split("\n")]
+                exp = [l + "\n" for l in raw.format(year="XXXX").split("\n")]
                 act = get_clean_lines(license)
 
                 diff = difflib.unified_diff(exp, act)
@@ -185,7 +228,7 @@ def main():
                     file_content = f.read()
                     f.seek(0)
                     stmnt = raw.format(year=year)
-                    f.write(stmnt+"\n\n")
+                    f.write(stmnt + "\n\n")
                     f.write(file_content)
 
                 exit = 1
@@ -219,7 +262,7 @@ def main():
 
                     if not validate_years(year1, year2):
                         eprint("Year string is not valid in {}".format(src))
-                        eprint("Year string is: "+year_act+"\n")
+                        eprint("Year string is: " + year_act + "\n")
                         exit = 1
                         valid = False
 
@@ -230,16 +273,29 @@ def main():
                             if not (year1 and year2):
                                 year_print("File: {}".format(src))
                                 # year_print("o File was modified in a different year ({}) than it was added ({})."
-                                           # .format(git_mod_year, git_add_year))
-                                year_print("- File was added in {}".format(git_add_year))
-                                year_print("- File was modified on {} by {}:\n{}".format(
-                                    git_mod_commit.date, 
-                                    git_mod_commit.author, 
-                                    git_mod_commit.subject + git_mod_commit.body))
-                                year_print("=> License should say {}-{}".format(git_add_year, git_mod_year))
+                                # .format(git_mod_year, git_add_year))
+                                year_print(
+                                    "- File was added in {}".format(git_add_year)
+                                )
+                                year_print(
+                                    "- File was modified on {} by {}:\n{}".format(
+                                        git_mod_commit.date,
+                                        git_mod_commit.author,
+                                        git_mod_commit.subject + git_mod_commit.body,
+                                    )
+                                )
+                                year_print(
+                                    "=> License should say {}-{}".format(
+                                        git_add_year, git_mod_year
+                                    )
+                                )
 
                                 act_year = year1 if year1 else year2
-                                year_print(err("{} But says: {}".format(CROSS_SYMBOL, act_year)))
+                                year_print(
+                                    err(
+                                        "{} But says: {}".format(CROSS_SYMBOL, act_year)
+                                    )
+                                )
 
                                 if args.fail_year_mismatch:
                                     exit = 1
@@ -248,17 +304,40 @@ def main():
                                     year_print("This is not treated as an error\n")
                                 valid = False
                             else:
-                                if int(year1) != git_add_year or int(year2) != git_mod_year:
+                                if (
+                                    int(year1) != git_add_year
+                                    or int(year2) != git_mod_year
+                                ):
 
                                     year_print("File: {}".format(src))
-                                    year_print("Year range {}-{} does not match range from git {}-{}".format(year1, year2, git_add_year, git_mod_year))
-                                    year_print("- File was added in {}".format(git_add_year))
-                                    year_print("- File was modified on {} by {}:\n{}".format(
-                                        git_mod_commit.date, 
-                                        git_mod_commit.author, 
-                                        git_mod_commit.subject + git_mod_commit.body))
-                                    year_print("=> License should say {}-{}".format(git_add_year, git_mod_year))
-                                    year_print(err("{} But says: {}-{}".format(CROSS_SYMBOL, year1, year2)))
+                                    year_print(
+                                        "Year range {}-{} does not match range from git {}-{}".format(
+                                            year1, year2, git_add_year, git_mod_year
+                                        )
+                                    )
+                                    year_print(
+                                        "- File was added in {}".format(git_add_year)
+                                    )
+                                    year_print(
+                                        "- File was modified on {} by {}:\n{}".format(
+                                            git_mod_commit.date,
+                                            git_mod_commit.author,
+                                            git_mod_commit.subject
+                                            + git_mod_commit.body,
+                                        )
+                                    )
+                                    year_print(
+                                        "=> License should say {}-{}".format(
+                                            git_add_year, git_mod_year
+                                        )
+                                    )
+                                    year_print(
+                                        err(
+                                            "{} But says: {}-{}".format(
+                                                CROSS_SYMBOL, year1, year2
+                                            )
+                                        )
+                                    )
                                     if args.fail_year_mismatch:
                                         exit = 1
                                         year_print("\n")
@@ -269,13 +348,24 @@ def main():
                         else:
                             if int(year1) < git_mod_year:
                                 year_print("File: {}".format(src))
-                                year_print("- Year {} does not match git modification year {}".format(year1, git_mod_year))
-                                year_print("- File was modified on {} by {}:\n{}".format(
-                                        git_mod_commit.date, 
-                                        git_mod_commit.author, 
-                                        git_mod_commit.subject + git_mod_commit.body))
-                                year_print("=> License should say {}".format(git_mod_year))
-                                year_print(err("{} But says: {}".format(CROSS_SYMBOL, year1)))
+                                year_print(
+                                    "- Year {} does not match git modification year {}".format(
+                                        year1, git_mod_year
+                                    )
+                                )
+                                year_print(
+                                    "- File was modified on {} by {}:\n{}".format(
+                                        git_mod_commit.date,
+                                        git_mod_commit.author,
+                                        git_mod_commit.subject + git_mod_commit.body,
+                                    )
+                                )
+                                year_print(
+                                    "=> License should say {}".format(git_mod_year)
+                                )
+                                year_print(
+                                    err("{} But says: {}".format(CROSS_SYMBOL, year1))
+                                )
                                 if args.fail_year_mismatch:
                                     exit = 1
                                     year_print("\n")
@@ -316,7 +406,6 @@ def main():
         print("License problems found. You can try running again with --fix")
 
     sys.exit(exit)
-
 
 
 if "__main__" == __name__:

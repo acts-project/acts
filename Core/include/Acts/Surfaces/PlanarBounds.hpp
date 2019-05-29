@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,16 +25,13 @@ class RectangleBounds;
 /// common base class for all bounds that are in a local x/y cartesian frame
 ///  - simply introduced to avoid wrong bound assigments to surfaces
 ///
-class PlanarBounds : public SurfaceBounds
-{
-public:
+class PlanarBounds : public SurfaceBounds {
+ public:
   /// Return the vertices - or, the points of the extremas
-  virtual std::vector<Vector2D>
-  vertices() const = 0;
+  virtual std::vector<Vector2D> vertices() const = 0;
 
   // Bounding box parameters
-  virtual const RectangleBounds&
-  boundingBox() const = 0;
+  virtual const RectangleBounds& boundingBox() const = 0;
 };
 
-}  // namespace
+}  // namespace Acts

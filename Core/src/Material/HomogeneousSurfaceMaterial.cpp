@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,23 +14,18 @@
 #include "Acts/Material/MaterialProperties.hpp"
 
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
-    const MaterialProperties& full,
-    double                    splitFactor)
-  : ISurfaceMaterial(splitFactor), m_fullMaterial(full)
-{
-}
+    const MaterialProperties& full, double splitFactor)
+    : ISurfaceMaterial(splitFactor), m_fullMaterial(full) {}
 
-Acts::HomogeneousSurfaceMaterial&
-Acts::HomogeneousSurfaceMaterial::operator*=(double scale)
-{
+Acts::HomogeneousSurfaceMaterial& Acts::HomogeneousSurfaceMaterial::operator*=(
+    double scale) {
   // scale the sub properties
   m_fullMaterial *= scale;
   return (*this);
 }
 
-std::ostream&
-Acts::HomogeneousSurfaceMaterial::toStream(std::ostream& sl) const
-{
+std::ostream& Acts::HomogeneousSurfaceMaterial::toStream(
+    std::ostream& sl) const {
   sl << "Acts::HomogeneousSurfaceMaterial : " << std::endl;
   sl << "   - fullMaterial : " << m_fullMaterial << std::endl;
   sl << "   - split factor : " << m_splitFactor << std::endl;

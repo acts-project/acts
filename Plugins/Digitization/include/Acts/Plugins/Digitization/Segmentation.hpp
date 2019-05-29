@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,7 @@ namespace Acts {
 class SurfaceBounds;
 class Surface;
 class BinUtility;
-using SurfacePtr       = std::shared_ptr<const Surface>;
+using SurfacePtr = std::shared_ptr<const Surface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @brief Segmentation Base class
@@ -33,9 +33,8 @@ using SurfacePtrVector = std::vector<SurfacePtr>;
 /// module,
 /// but hosts the binning information.
 ///
-class Segmentation
-{
-public:
+class Segmentation {
+ public:
   /// Virtual Destructor
   virtual ~Segmentation() = default;
 
@@ -51,13 +50,11 @@ public:
   /// where the readout is given : -1, 0, 1 possible
   /// @param lorentzAngle is the lorentz angle measured from the local z
   /// towards x axis
-  virtual void
-  createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
-                             SurfacePtrVector& segmentationSurfacesX,
-                             SurfacePtrVector& segmentationSurfacesY,
-                             double            halfThickness,
-                             int               readoutDirection,
-                             double            lorentzAngle) const = 0;
+  virtual void createSegmentationSurfaces(
+      SurfacePtrVector& boundarySurfaces,
+      SurfacePtrVector& segmentationSurfacesX,
+      SurfacePtrVector& segmentationSurfacesY, double halfThickness,
+      int readoutDirection, double lorentzAngle) const = 0;
 
   /// Get the digitization cell fropm a 3D position
   /// - ignores the shift, i.e. assumenes in to be in cell frame
@@ -65,8 +62,7 @@ public:
   /// @param position is the position for which the cell is requested
   ///
   /// @return is a cell with cell ids
-  virtual DigitizationCell
-  cell(const Vector3D& position) const = 0;
+  virtual DigitizationCell cell(const Vector3D& position) const = 0;
 
   /// Get the digitization cell fropm a 2D position
   /// - ignores the shift, i.e. assumenes in to be in cell frame
@@ -74,16 +70,14 @@ public:
   /// @param position is the position for which the cell is requested
   ///
   /// @return is a cell with cell ids
-  virtual DigitizationCell
-  cell(const Vector2D& position) const = 0;
+  virtual DigitizationCell cell(const Vector2D& position) const = 0;
 
   /// Calculate the cell Position from the Id
   ///
   /// @param cId is the digitization cell
   ///
   /// @return the center position of the associated cell
-  virtual Vector2D
-  cellPosition(const DigitizationCell& cId) const = 0;
+  virtual Vector2D cellPosition(const DigitizationCell& cId) const = 0;
 
   /// Fill the associated digitsation cell from the start and end position in 3D
   /// correct for lorentz effect if needed
@@ -95,19 +89,16 @@ public:
   /// @param lorentzAngle is the lorentz angle measured from local z towards x
   ///
   /// @return is a fully calculated digitzation step
-  virtual DigitizationStep
-  digitizationStep(const Vector3D& start,
-                   const Vector3D& end,
-                   double          halfThickness,
-                   int             readoutDirection,
-                   double          lorentzAngle) const = 0;
+  virtual DigitizationStep digitizationStep(const Vector3D& start,
+                                            const Vector3D& end,
+                                            double halfThickness,
+                                            int readoutDirection,
+                                            double lorentzAngle) const = 0;
 
   /// return the surface bounds by reference
-  virtual const SurfaceBounds&
-  moduleBounds() const = 0;
+  virtual const SurfaceBounds& moduleBounds() const = 0;
 
   /// return the bin utility that defines the readout
-  virtual const BinUtility&
-  binUtility() const = 0;
+  virtual const BinUtility& binUtility() const = 0;
 };
 }  // namespace Acts

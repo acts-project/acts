@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,8 +23,7 @@
 #include <vector>
 
 namespace Acts {
-struct LinCircle
-{
+struct LinCircle {
   float Zo;
   float cotTheta;
   float iDeltaR;
@@ -33,24 +32,22 @@ struct LinCircle
   float V;
 };
 template <typename external_spacepoint_t>
-class Seedfinder
-{
+class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
 
-public:
+ public:
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the Seedfinder
   Seedfinder(const Acts::SeedfinderConfig<external_spacepoint_t> config);
   ~Seedfinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
-  Seedfinder()                                         = delete;
+  Seedfinder() = delete;
   Seedfinder(const Seedfinder<external_spacepoint_t>&) = delete;
-  Seedfinder<external_spacepoint_t>&
-  operator=(const Seedfinder<external_spacepoint_t>&)
-      = delete;
+  Seedfinder<external_spacepoint_t>& operator=(
+      const Seedfinder<external_spacepoint_t>&) = delete;
   //@}
 
   /// @brief Create a new space point grid, fill all space points from input
@@ -64,14 +61,11 @@ public:
   /// @return the state object containing all space points and container for
   /// found seeds
   template <typename spacepoint_iterator_t>
-  Acts::SeedfinderState<external_spacepoint_t>
-  initState(
-      spacepoint_iterator_t spBegin,
-      spacepoint_iterator_t spEnd,
-      std::function<Acts::Vector2D(const external_spacepoint_t&,
-                                   float,
-                                   float,
-                                   float)>                     covTool,
+  Acts::SeedfinderState<external_spacepoint_t> initState(
+      spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
+      std::function<Acts::Vector2D(const external_spacepoint_t&, float, float,
+                                   float)>
+          covTool,
       std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> bottomBinFinder,
       std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder)
       const;
@@ -82,22 +76,19 @@ public:
   /// neighbors. Iterator must be separate object for each parallel call.
   /// @param state the state object in which all found seeds are stored.
   /// state object can be shared between all parallel calls
-  void
-  createSeedsForRegion(
+  void createSeedsForRegion(
       SeedfinderStateIterator<external_spacepoint_t> it,
-      Acts::SeedfinderState<external_spacepoint_t>&  state) const;
+      Acts::SeedfinderState<external_spacepoint_t>& state) const;
 
-private:
-  void
-  transformCoordinates(
+ private:
+  void transformCoordinates(
       std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-      const InternalSpacePoint<external_spacepoint_t>&               spM,
-      bool                                                           bottom,
+      const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
       std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 };
 
-}  // end of Acts namespace
+}  // namespace Acts
 
 #include "Acts/Seeding/Seedfinder.ipp"

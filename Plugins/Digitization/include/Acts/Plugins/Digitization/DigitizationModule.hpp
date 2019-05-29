@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,7 @@
 namespace Acts {
 
 class Surface;
-using SurfacePtr       = std::shared_ptr<const Surface>;
+using SurfacePtr = std::shared_ptr<const Surface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @class DigitizationModule
@@ -43,9 +43,8 @@ using SurfacePtrVector = std::vector<SurfacePtr>;
 /// The lorenzShift is the correction from the readout surface to the parameter
 /// surface
 ///
-class DigitizationModule
-{
-public:
+class DigitizationModule {
+ public:
   /// Constructor from a Segmentation descriptor
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -54,11 +53,9 @@ public:
   /// @param readoutDirection is the readout drift direction
   /// @param lorentzAngle is the lorentz drift angle
   DigitizationModule(std::shared_ptr<const Segmentation> moduleSegmentation,
-                     double                              halfThickness,
-                     int                                 readoutDirection,
-                     double                              lorentzAngle,
-                     double                              energyThreshold = 0.,
-                     bool                                analogue = false);
+                     double halfThickness, int readoutDirection,
+                     double lorentzAngle, double energyThreshold = 0.,
+                     bool analogue = false);
 
   /// Virtual Destructor
   virtual ~DigitizationModule() = default;
@@ -71,37 +68,30 @@ public:
   /// @param exitCids are the exit digitisation cell ids
   ///
   /// @return object is a vector of shared surfaces
-  const SurfacePtrVector
-  segmentationSurfaces(const DigitizationCell& entryCids,
-                       const DigitizationCell& exitCids) const;
+  const SurfacePtrVector segmentationSurfaces(
+      const DigitizationCell& entryCids,
+      const DigitizationCell& exitCids) const;
 
   /// Get the digitization cell from a position
-  const DigitizationCell
-  cell(const Vector2D& position) const;
+  const DigitizationCell cell(const Vector2D& position) const;
 
   /// Return the module thickness
-  double
-  halfThickness() const;
+  double halfThickness() const;
 
   /// Return the readout direction
-  int
-  readoutDirection() const;
+  int readoutDirection() const;
 
   /// Return the lorentz Angle
-  double
-  lorentzAngle() const;
+  double lorentzAngle() const;
 
   /// Return the energy threshold per cell of the module
-  double
-  energyThreshold() const;
+  double energyThreshold() const;
 
   /// Indicates if the readout of the module is analogue, default is digital
-  bool
-  analogue() const;
+  bool analogue() const;
 
   /// return the segmenation
-  const Segmentation&
-  segmentation() const;
+  const Segmentation& segmentation() const;
 
   /// Return the test surfaces between these points
   ///
@@ -109,30 +99,27 @@ public:
   /// @param end is the end position of the step
   ///
   /// @return stepSurfaces are the surfaces to test
-  const SurfacePtrVector
-  stepSurfaces(const Vector3D& start, const Vector3D& end) const;
+  const SurfacePtrVector stepSurfaces(const Vector3D& start,
+                                      const Vector3D& end) const;
 
   /// Fill the associated digitsation cell from this start and end position,
   /// correct for lorentz effect if needed
   ///
   /// @param start is the start position of the step
   /// @param end is the end position of the step
-  const DigitizationStep
-  digitizationStep(const Vector3D& start, const Vector3D& end) const;
+  const DigitizationStep digitizationStep(const Vector3D& start,
+                                          const Vector3D& end) const;
 
   /// Return the bounding surfaces inlcuding top and bottom
-  const SurfacePtrVector&
-  boundarySurfaces() const;
+  const SurfacePtrVector& boundarySurfaces() const;
 
   /// Return all surfaces in X - excluding the boundaries
-  const SurfacePtrVector&
-  segmentationSurfacesX() const;
+  const SurfacePtrVector& segmentationSurfacesX() const;
 
   /// Return all surfaces in Y - excluding the boundaries
-  const SurfacePtrVector&
-  segmentationSurfacesY() const;
+  const SurfacePtrVector& segmentationSurfacesY() const;
 
-private:
+ private:
   /// half thickness of the module
   double m_halfThickness;
   /// readout is along (+1) / (-1) wrt local z axis
@@ -155,65 +142,47 @@ private:
   SurfacePtrVector m_segmentationSurfacesY;
 };
 
-inline double
-DigitizationModule::halfThickness() const
-{
+inline double DigitizationModule::halfThickness() const {
   return m_halfThickness;
 }
 
-inline int
-DigitizationModule::readoutDirection() const
-{
+inline int DigitizationModule::readoutDirection() const {
   return m_readoutDirection;
 }
 
-inline double
-DigitizationModule::lorentzAngle() const
-{
+inline double DigitizationModule::lorentzAngle() const {
   return m_lorentzAngle;
 }
 
-inline double
-DigitizationModule::energyThreshold() const
-{
+inline double DigitizationModule::energyThreshold() const {
   return m_energyThreshold;
 }
 
-inline bool
-DigitizationModule::analogue() const
-{
+inline bool DigitizationModule::analogue() const {
   return m_analogue;
 }
 
-inline const Segmentation&
-DigitizationModule::segmentation() const
-{
+inline const Segmentation& DigitizationModule::segmentation() const {
   return (*(m_segmentation.get()));
 }
 
-inline const SurfacePtrVector&
-DigitizationModule::boundarySurfaces() const
-{
+inline const SurfacePtrVector& DigitizationModule::boundarySurfaces() const {
   return m_boundarySurfaces;
 }
 
-inline const SurfacePtrVector&
-DigitizationModule::segmentationSurfacesX() const
-{
+inline const SurfacePtrVector& DigitizationModule::segmentationSurfacesX()
+    const {
   return m_segmentationSurfacesX;
 }
 
-inline const SurfacePtrVector&
-DigitizationModule::segmentationSurfacesY() const
-{
+inline const SurfacePtrVector& DigitizationModule::segmentationSurfacesY()
+    const {
   return m_segmentationSurfacesY;
 }
 
-inline const DigitizationStep
-DigitizationModule::digitizationStep(const Vector3D& start,
-                                     const Vector3D& end) const
-{
-  return m_segmentation->digitizationStep(
-      start, end, m_halfThickness, m_readoutDirection, m_lorentzAngle);
+inline const DigitizationStep DigitizationModule::digitizationStep(
+    const Vector3D& start, const Vector3D& end) const {
+  return m_segmentation->digitizationStep(start, end, m_halfThickness,
+                                          m_readoutDirection, m_lorentzAngle);
 }
-}
+}  // namespace Acts

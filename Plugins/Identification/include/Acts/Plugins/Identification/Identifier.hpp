@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 Acts project team
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,5 +18,5 @@
 #else
 using identifier_type = unsigned long long;
 using identifier_diff = long long;
-using Identifier      = identifier_type;
+using Identifier = identifier_type;
 #endif

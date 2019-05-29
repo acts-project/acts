@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,14 +27,12 @@ namespace Acts {
 /// @param rBounds the Radial bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility
-adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds)
-{
+BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
   // Default constructor
   BinUtility uBinUtil;
   // The parameters from the cylinder bounds
-  double minR   = rBounds.rMin();
-  double maxR   = rBounds.rMax();
+  double minR = rBounds.rMin();
+  double maxR = rBounds.rMax();
   double minPhi = rBounds.averagePhi() - rBounds.halfPhiSector();
   double maxPhi = rBounds.averagePhi() + rBounds.halfPhiSector();
   // Retrieve the binning data
@@ -73,14 +71,13 @@ adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds)
 /// @param cBounds the Cylinder bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility
-adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds)
-{
+BinUtility adjustBinUtility(const BinUtility& bu,
+                            const CylinderBounds& cBounds) {
   // Default constructor
   BinUtility uBinUtil;
   // The parameters from the cylinder bounds
-  double cR     = cBounds.r();
-  double cHz    = cBounds.halflengthZ();
+  double cR = cBounds.r();
+  double cHz = cBounds.halflengthZ();
   double minPhi = cBounds.averagePhi() - cBounds.halfPhiSector();
   double maxPhi = cBounds.averagePhi() + cBounds.halfPhiSector();
   // Retrieve the binning data
@@ -122,9 +119,7 @@ adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds)
 /// @param Surface to which the adjustment is being done
 ///
 /// @return new updated BinUtiltiy
-BinUtility
-adjustBinUtility(const BinUtility& bu, const Surface& surface)
-{
+BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
   // The surface type is a cylinder
   if (surface.type() == Surface::Cylinder) {
     // Cast to Cylinder bounds and return
