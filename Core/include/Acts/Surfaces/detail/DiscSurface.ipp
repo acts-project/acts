@@ -96,12 +96,12 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
   jacobian.block<1, 3>(0, 0) = lcphi * lx + lsphi * ly;
   jacobian.block<1, 3>(1, 0) = (lcphi * ly - lsphi * lx) / lr;
   // Time element
-  jacobian(eT, 7) = 1;
+  jacobian(eT, 3) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 3) = -sin_phi_over_sin_theta;
-  jacobian(ePHI, 4) = cos_phi_over_sin_theta;
-  jacobian(eTHETA, 5) = -inv_sin_theta;
-  jacobian(eQOP, 6) = 1;
+  jacobian(ePHI, 4) = -sin_phi_over_sin_theta;
+  jacobian(ePHI, 5) = cos_phi_over_sin_theta;
+  jacobian(eTHETA, 6) = -inv_sin_theta;
+  jacobian(eQOP, 7) = 1;
   // return the transposed reference frame
   return rframeT;
 }
