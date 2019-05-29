@@ -207,7 +207,7 @@ class AtlasStepper {
           double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
 
           // projection of direction onto normal vector of reference frame
-          double PC = pVector[3] * C[0] + pVector[4] * C[1] + pVector[5] * C[2];
+          double PC = pVector[4] * C[0] + pVector[5] * C[1] + pVector[6] * C[2];
           double Bn = 1. / PC;
 
           double Bx2 = -A[2] * pVector[29];
@@ -772,10 +772,10 @@ class AtlasStepper {
   void covarianceTransport(State& state, const Surface& surface,
                            bool /*unused*/) const {
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
-    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
-    mom /= std::abs(state.pVector[6]);
+    Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
+    mom /= std::abs(state.pVector[7]);
 
-    double p = 1. / state.pVector[6];
+    double p = 1. / state.pVector[7];
     state.pVector[40] *= p;
     state.pVector[41] *= p;
     state.pVector[42] *= p;
