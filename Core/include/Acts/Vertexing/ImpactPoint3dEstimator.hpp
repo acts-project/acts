@@ -41,21 +41,10 @@ class ImpactPoint3dEstimator {
     double precision = 1.e-4;
   };
 
-  /// @brief Constructor used if input_track_t type == BoundParameters
+  /// @brief Constructor
   ///
   /// @param cfg Configuration object
-  template <typename T = input_track_t,
-            std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
-  ImpactPoint3dEstimator(const Config& cfg)
-      : m_cfg(cfg), m_extractParameters([](T params) { return params; }) {}
-
-  /// @brief Constructor for user-defined input_track_t type =! BoundParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from input_track_t object
-  ImpactPoint3dEstimator(const Config& cfg,
-                         std::function<BoundParameters(input_track_t)> func)
-      : m_cfg(cfg), m_extractParameters(func) {}
+  ImpactPoint3dEstimator(const Config& cfg) : m_cfg(cfg) {}
 
 
   /// @brief Calculates 3D distance between a track and a 3D point
@@ -76,25 +65,18 @@ class ImpactPoint3dEstimator {
   /// given reference point (vertex).
   ///
   /// @param geoCtx The geometry context
-  /// @param trk Track at vertex
-  /// @param refPos Reference position (vertex)
+  /// @param trkParams Track parameters
+  /// @param vtxPos Reference position (vertex)
   ///
   /// @return New track params
-
-  Result<BoundParameters> getParamsAtIP3d(
-      const GeometryContext& gctx, const MagneticFieldContext& mctx,
-      const TrackAtVertex<input_track_t>& trk, const Vector3D& vtxPos) const;
+  Result<BoundParameters> getParamsAtIP3d(const GeometryContext& gctx,
+                                          const MagneticFieldContext& mctx,
+                                          const BoundParameters& trkParams,
+                                          const Vector3D& vtxPos) const;
 
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// input_track_t objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other input_track_t objects.
-  ///
-  /// @param input_track_t object to extract track parameters from
-  const std::function<BoundParameters(input_track_t)> m_extractParameters;
 
   // TODO: add docs
 

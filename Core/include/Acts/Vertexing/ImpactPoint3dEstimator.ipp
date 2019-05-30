@@ -36,9 +36,9 @@ Acts::Result<Acts::BoundParameters> Acts::ImpactPoint3dEstimator<
     bfield_t, input_track_t,
     propagator_t>::getParamsAtIP3d(const GeometryContext& gctx,
                                    const MagneticFieldContext& mctx,
-                                   const TrackAtVertex<input_track_t>& trk,
+                                   const BoundParameters& trkParams,
                                    const Vector3D& vtxPos) const {
-  BoundParameters trkParams = m_extractParameters(trk.originalTrack);
+  // BoundParameters trkParams = m_extractParameters(trk.originalTrack);
 
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 

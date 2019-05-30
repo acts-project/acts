@@ -69,7 +69,8 @@ class IterativeVertexFinder {
 
   /// @struct Config Configuration struct
   struct Config {
-    /// @brief Finder configuration
+
+    /// @brief Config constructor
     ///
     /// @param fitter Vertex fitter
     /// @param lin Track linearizer
