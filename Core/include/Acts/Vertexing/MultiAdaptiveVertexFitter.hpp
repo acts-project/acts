@@ -37,10 +37,18 @@ class MultiAdaptiveVertexFitter {
   };
 
   struct Config {
-    Config(const bfield_t& bIn)
+
+    /// @brief Config constructor
+    ///
+    /// @param bIn The magnetic field
+    /// @param propagatorIn The propagator
+    Config(const bfield_t& bIn, const propagator_t& propagatorIn)
         : linFactory(
               typename LinearizedTrackFactory<bfield_t, propagator_t>::Config(
-                  bIn)) {}
+                  bIn)),
+          ipEst(typename ImpactPoint3dEstimator<
+                bfield_t, input_track_t, propagator_t>::Config(bIn,
+                                                               propagatorIn)) {}
 
     /// Linearized track factory
     LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
