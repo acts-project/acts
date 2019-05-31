@@ -171,7 +171,7 @@ class AtlasStepper {
         pVector[39] = 0.;
         pVector[47] = 1.;
         pVector[55] = 0.;  // dCM/
-        
+
         pVector[56] = 0.;
         pVector[57] = 0.;
         pVector[58] = 0.;

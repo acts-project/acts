@@ -305,8 +305,8 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
   state.stepping.dir += h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
   state.stepping.dir /= state.stepping.dir.norm();
   if (state.stepping.covTransport) {
-  state.stepping.derivative.template head<3>() = state.stepping.dir;
-  state.stepping.derivative.template segment<3>(4) = sd.k4;
+    state.stepping.derivative.template head<3>() = state.stepping.dir;
+    state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
   return h;

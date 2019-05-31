@@ -448,28 +448,28 @@ class StraightLineStepper {
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
 
-	// SI momentum and mass
-	const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
-	const double mass = units::Nat2SI<units::MASS>(state.options.mass);
-	// Propagate the time
-	double	dtds = std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
-		state.stepping.dt += h * dtds;
+    // SI momentum and mass
+    const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
+    const double mass = units::Nat2SI<units::MASS>(state.options.mass);
+    // Propagate the time
+    double dtds = std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+    state.stepping.dt += h * dtds;
     // Propagate the jacobian
     if (state.stepping.covTransport) {
-		// The step transport matrix in global coordinates
-		FreeMatrix D = FreeMatrix::Identity();
-		D.block<3, 3>(0, 4) = ActsSymMatrixD<3>::Identity() * h;
-		
-		// Extend the calculation by the time propagation
-			// Evaluate dt/dlambda
-			D(3, 7) = h * mass * mass / (mom * dtds);
-			// Set the derivative factor the time
-			state.stepping.derivative(3) = dtds;
-		
-		// Update jacobian and derivative
-		state.stepping.jacTransport = D * state.stepping.jacTransport;
-		state.stepping.derivative.template head<3>() = state.stepping.dir;
-	}
+      // The step transport matrix in global coordinates
+      FreeMatrix D = FreeMatrix::Identity();
+      D.block<3, 3>(0, 4) = ActsSymMatrixD<3>::Identity() * h;
+
+      // Extend the calculation by the time propagation
+      // Evaluate dt/dlambda
+      D(3, 7) = h * mass * mass / (mom * dtds);
+      // Set the derivative factor the time
+      state.stepping.derivative(3) = dtds;
+
+      // Update jacobian and derivative
+      state.stepping.jacTransport = D * state.stepping.jacTransport;
+      state.stepping.derivative.template head<3>() = state.stepping.dir;
+    }
     // state the path length
     state.stepping.pathAccumulated += h;
 
