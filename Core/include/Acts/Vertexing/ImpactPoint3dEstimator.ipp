@@ -12,17 +12,20 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename input_track_t>
-double Acts::ImpactPoint3dEstimator<input_track_t>::calculateDistance(
-    const BoundParameters& params, const Vector3D& refPos) const {
+
+template <typename bfield_t, typename input_track_t, typename propagator_t>
+double Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
+    calculateDistance(const BoundParameters& trkParams,
+                      const Vector3D& refPos) const {
+
   // normalized momentum
-  const Vector3D normMomentum = params.momentum().normalized();
+  const Vector3D normMomentum = trkParams.momentum().normalized();
 
   // calculate the path length
-  double pathLength = (refPos - params.position()).dot(normMomentum);
+  double pathLength = (refPos - trkParams.position()).dot(normMomentum);
 
   // Point of closest approach in 3D
-  Vector3D closestApp = params.position() + pathLength * normMomentum;
+  Vector3D closestApp = trkParams.position() + pathLength * normMomentum;
   // Difference vector
   Vector3D deltaR = refPos - closestApp;
 
@@ -32,14 +35,12 @@ double Acts::ImpactPoint3dEstimator<input_track_t>::calculateDistance(
 
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Result<Acts::BoundParameters> Acts::ImpactPoint3dEstimator<
-    bfield_t, input_track_t,
-    propagator_t>::getParamsAtIP3d(const GeometryContext& gctx,
-                                   const MagneticFieldContext& mctx,
-                                   const BoundParameters& trkParams,
-                                   const Vector3D& vtxPos) const {
-  // BoundParameters trkParams = m_extractParameters(trk.originalTrack);
-
+Acts::Result<const std::unique_ptr<const Acts::BoundParameters>>
+Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
+    getParamsAtIP3d(const GeometryContext& gctx,
+                    const MagneticFieldContext& mctx,
+                    const BoundParameters& trkParams,
+                    const Vector3D& vtxPos) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
   double d0 = trkParams.parameters()[ParID_t::eLOC_D0];
@@ -80,9 +81,6 @@ Acts::Result<Acts::BoundParameters> Acts::ImpactPoint3dEstimator<
       vec0 + r * Vector3D(-std::sin(phi), std::cos(phi), -cotTheta * phi);
   Vector3D deltaR = pointCA3d - vtxPos;
 
-  // TODO: remove, debug statement
-  std::cout << "Distance: " << deltaR.norm() << std::endl;
-
   // normalize distance vector, TODO: can be removed after above debug statement
   // is removed and directly normalized at construction
   deltaR = deltaR.normalized();
@@ -101,21 +99,16 @@ Acts::Result<Acts::BoundParameters> Acts::ImpactPoint3dEstimator<
   // translation
   thePlane.matrix().block(0, 3, 3, 1) = vtxPos;
 
-  // TODO: check... these two surfaces should be the same I guess?
-  std::shared_ptr<PlaneSurface> planeSurface1 =
-      Surface::makeShared<PlaneSurface>(vtxPos, momDir.normalized());
-
-  std::shared_ptr<PlaneSurface> planeSurface2 =
+  std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(
           std::make_shared<Transform3D>(thePlane));
 
   PropagatorOptions pOptions(gctx, mctx);
 
   // Do the propagation to linPointPos
-  auto result = m_cfg.propagator.propagate(trkParams, *planeSurface1, pOptions);
+  auto result = m_cfg.propagator.propagate(trkParams, *planeSurface, pOptions);
   if (result.ok()) {
-    const auto& propRes = *result;
-    return propRes.endParameters->parameters();
+    return std::move((*result).endParameters);
   } else {
     return result.error();
   }
