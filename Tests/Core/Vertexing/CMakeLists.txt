@@ -45,3 +45,9 @@ target_include_directories (MultiAdaptiveVertexFitterTests PRIVATE ${Boost_INCLU
 target_link_libraries (MultiAdaptiveVertexFitterTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME MultiAdaptiveVertexFitterUnitTests COMMAND MultiAdaptiveVertexFitterTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST MultiAdaptiveVertexFitterUnitTests TARGETS MultiAdaptiveVertexFitterTests)
+
+add_executable (ImpactPoint3dEstimatorTests ImpactPoint3dEstimatorTests.cpp)
+target_include_directories (ImpactPoint3dEstimatorTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (ImpactPoint3dEstimatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME ImpactPoint3dEstimatorUnitTests COMMAND ImpactPoint3dEstimatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ImpactPoint3dEstimatorUnitTests TARGETS ImpactPoint3dEstimatorTests)
