@@ -49,11 +49,11 @@ class ImpactPoint3dEstimator {
 
   /// @brief Calculates 3D distance between a track and a 3D point
   ///
-  /// @param params Track parameters
+  /// @param trkParams Track parameters
   /// @param refPos Position to calculate distance to
   ///
   /// @return Distance
-  double calculateDistance(const BoundParameters& params,
+  double calculateDistance(const BoundParameters& trkParams,
                            const Vector3D& refPos) const;
 
   /// @brief Creates track parameters bound to plane
@@ -69,17 +69,23 @@ class ImpactPoint3dEstimator {
   /// @param vtxPos Reference position (vertex)
   ///
   /// @return New track params
-  Result<BoundParameters> getParamsAtIP3d(const GeometryContext& gctx,
-                                          const MagneticFieldContext& mctx,
-                                          const BoundParameters& trkParams,
-                                          const Vector3D& vtxPos) const;
+  Result<const std::unique_ptr<const BoundParameters>> getParamsAtIP3d(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      const BoundParameters& trkParams, const Vector3D& vtxPos) const;
 
  private:
   /// Configuration object
   const Config m_cfg;
 
-  // TODO: add docs
-
+  /// @brief: Performs a Newton approxation to retrieve a point
+  /// of closest approach in 3D to a reference position
+  ///
+  /// @param trkPos Initial position
+  /// @param vtxPos Reference position
+  /// @param newPhi Phi along the helix which will be changed by
+  ///        the Newton method
+  /// @param theta Track theta
+  /// @param r     Helix radius
   Result<void> performNewtonApproximation(const Vector3D& trkPos,
                                           const Vector3D& vtxPos,
                                           double& newPhi, double theta,
