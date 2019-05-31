@@ -138,7 +138,7 @@ class AtlasStepper {
         pVector[50] = 0.;  // dZ /
 
         pVector[11] = 0.;
-        pVector[29] = 0.;
+        pVector[19] = 0.;
         pVector[27] = 0.;
         pVector[35] = 0.;
         pVector[43] = 0.;
