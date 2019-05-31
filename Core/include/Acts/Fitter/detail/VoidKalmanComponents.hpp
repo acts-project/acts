@@ -58,6 +58,8 @@ struct VoidMeasurementCalibrator {
   /// will copy it before returning. If it is already returned by-value (for
   /// instance for a newly created measurement instance), return value
   /// optimizitaion should auto-move the result.
+  /// @note This will not make the "calibrated" measurement point to the
+  /// uncalibrated measurement via sourcelink, it's just a copy.
   template <typename source_link_t, typename parameters_t>
   FittableMeasurement<source_link_t> operator()(
       const source_link_t& sl, const parameters_t& /*pars*/) const {

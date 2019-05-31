@@ -4,8 +4,12 @@ target_link_libraries (KalmanFitterTests PRIVATE ActsCore ActsTestsCommonHelpers
 add_test (NAME KalmanFitterUnitTests COMMAND KalmanFitterTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFitterUnitTests TARGETS KalmanFitterTests)
 
-add_executable (GainMatrixTests GainMatrixTests.cpp)
-target_include_directories (GainMatrixTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (GainMatrixTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (NAME GainMatrixUnitTest COMMAND GainMatrixTests)
-acts_add_test_to_cdash_project (PROJECT ACore TEST GainMatrixUnitTest TARGETS GainMatrixTests)
+add_executable (GainMatrixUpdatorTests GainMatrixUpdatorTests.cpp)
+target_include_directories (GainMatrixUpdatorTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (GainMatrixUpdatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME GainMatrixUpdatorTest COMMAND GainMatrixUpdatorTests)
+
+add_executable (GainMatrixSmootherTests GainMatrixSmootherTests.cpp)
+target_include_directories (GainMatrixSmootherTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (GainMatrixSmootherTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME GainMatrixSmootherTest COMMAND GainMatrixSmootherTests)
