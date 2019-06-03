@@ -70,7 +70,7 @@ class ImpactPoint3dEstimator {
   /// @param vtxPos Reference position (vertex)
   ///
   /// @return New track params
-  Result<const std::unique_ptr<const BoundParameters>> getParamsAtIP3d(
+  Result<std::unique_ptr<const BoundParameters>> getParamsAtIP3d(
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       const BoundParameters& trkParams, const Vector3D& vtxPos) const;
 
