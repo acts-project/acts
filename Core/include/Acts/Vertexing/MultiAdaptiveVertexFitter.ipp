@@ -13,6 +13,9 @@ Acts::Result<void>
 Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     State& state,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+  auto& geoContext = vFitterOptions.geoContext;
+  auto& mfContext = vFitterOptions.magFieldContext;
+
   // reset annealing tool
   m_cfg.annealingTool.reset(state.annealingState);
 
@@ -36,14 +39,14 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         std::cout
             << "Candidate already has a position: storing it in oldpositions"
             << std::endl;
-        currentVtxInfo.oldPosition = currentVtx.position();
+        currentVtxInfo.oldPosition = currentVtx.fullPosition();
       } else {
         // vertex will now be initialized
         currentVtxInfo.isInitialized = true;
         std::cout << "Candidate has no position so far: using as old position "
                      "the seedVertex"
                   << std::endl;
-        if (currentVtxInfo.seedPos == Vector3D()) {
+        if (currentVtxInfo.seedPos == SpacePointVector()) {
           std::cout << "seed not set.. something went wrong I guess. Why not "
                        "directly use the seed position from seeds in "
                        "vertexCollection?"
@@ -52,7 +55,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         currentVtxInfo.oldPosition = currentVtxInfo.seedPos;
       }  // end not isInitialized
 
-      if (currentVtxInfo.linPoint == Vector3D()) {
+      if (currentVtxInfo.linPoint == SpacePointVector()) {
         std::cout << "Candidate has no linearization point. where should this "
                      "be set?!"
                   << std::endl;
@@ -61,8 +64,20 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
           m_cfg.maxDistToLinPoint) {
         // relinearization needed, distance too big
         currentVtxInfo.relinearize = true;
+        // prepare for fit with new vertex position
         prepareVtxForFit(state, currentVtx, vFitterOptions);
       }
+
+      currentVtx.setFullPosition(
+          currentVtxInfo.constraintVertex.fullPosition());
+      currentVtx.setFullCovariance(
+          currentVtxInfo.constraintVertex.fullCovariance() * 1. /
+          m_cfg.annealingTool.getWeight(state.annealingState, 1.));
+      currentVtx.setFitQuality(currentVtxInfo.constraintVertex.fitQuality());
+
+      // set vertexCompatibility for all TrackAtVertex objects
+      // at current vertex
+      setAllVtxCompatibilities(state, geoContext, mfContext, currentVtx);
     }
 
     // TODO: dostuff
@@ -171,5 +186,57 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     // set ip3dParams for current trackAtVertex
     state.trkInfoMap[&trkAtVtx].ip3dParams = std::move(res.value());
   }
+  return {};
+}
+
+template <typename bfield_t, typename input_track_t, typename propagator_t>
+Acts::Result<void>
+Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
+    setAllVtxCompatibilities(State& state, const GeometryContext& geoContext,
+                             const MagneticFieldContext& mfContext,
+                             Vertex<input_track_t>& currentVtx) const {
+  MAVFVertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[&currentVtx];
+  // create empty list of new TrackAtVertex objects
+  // to be filled below. Needed due to constness of
+  // tracksAtVertex list at vertex
+  std::vector<TrackAtVertex<input_track_t>> newTracks;
+
+  // loop over tracks at current vertex and
+  // estimate compatibility with vertex
+  for (auto& trkAtVtx : currentVtx.tracks()) {
+    // TODO: DO I NEED THE ipEst.getParams stuff below?
+    // recover from cases where linearization point != 0 but
+    // more tracks were added later on
+    if (!state.trkInfoMap[&trkAtVtx].ip3dParams) {
+      auto res = m_cfg.ipEst.getParamsAtIP3d(
+          geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
+          VectorHelpers::position(currentVtxInfo.linPoint));
+      if (!res.ok()) {
+        return res.error();
+      }
+      // set ip3dParams for current trackAtVertex
+      state.trkInfoMap[&trkAtVtx].ip3dParams = std::move(res.value());
+    }
+
+    // create copy of current trackAtVertex in order
+    // to modify it below
+    TrackAtVertex<input_track_t> newTrkAtVtx = trkAtVtx;
+
+    // update trkInfoMap accordingly
+    state.trkInfoMap[&newTrkAtVtx] = std::move(state.trkInfoMap[&trkAtVtx]);
+    state.trkInfoMap.erase(&trkAtVtx);
+
+    // set compatibility with current vertex
+    // TODO: is that where the ip3d step beforehand is needed for?
+    // not using any of these here
+    m_cfg.trackCompEst.setTrackCompatibility(
+        geoContext, newTrkAtVtx,
+        VectorHelpers::position(currentVtxInfo.oldPosition),
+        m_extractParameters);
+
+    newTracks.push_back(newTrkAtVtx);
+  }
+  // set list of updated tracks to current vertex
+  currentVtx.setTracksAtVertex(newTracks);
   return {};
 }

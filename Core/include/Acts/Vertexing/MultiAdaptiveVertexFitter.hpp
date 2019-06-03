@@ -168,6 +168,18 @@ class MultiAdaptiveVertexFitter {
   Result<void> prepareVtxForFit(
       State& state, Vertex<input_track_t>& vtx,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+
+  /// @brief Sets vertexCompatibility for all TrackAtVertex objects
+  /// at current vertex
+  ///
+  /// @param state The state object
+  /// @param geoContext The geometry context
+  /// @param mfContext The magnetic field context
+  /// @param currentVtx Current vertex
+  Result<void> setAllVtxCompatibilities(
+      State& state, const GeometryContext& geoContext,
+      const MagneticFieldContext& mfContext,
+      Vertex<input_track_t>& currentVtx) const;
 };
 
 }  // namespace Acts

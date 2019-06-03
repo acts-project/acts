@@ -107,6 +107,9 @@ class Vertex {
   /// @param numberDoF Number of degrees of freedom
   void setFitQuality(double chiSquared, double numberDoF);
 
+  /// @param fitQuality pair of (chi2, numberDoF)
+  void setFitQuality(std::pair<double, double> fitQuality);
+
  private:
   SpacePointVector m_position = SpacePointVector::Zero();
   SpacePointSymMatrix m_covariance = SpacePointSymMatrix::Zero();

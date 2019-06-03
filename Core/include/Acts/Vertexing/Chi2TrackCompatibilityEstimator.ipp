@@ -47,7 +47,6 @@ void Acts::Chi2TrackCompatibilityEstimator<input_track_t>::
                           const Vector3D& vertexPos,
                           const std::function<BoundParameters(input_track_t)>
                               extractParameters) const {
-  trackAtVertex.vertexCompatibility(
-      compatibility(gctx, extractParameters(trackAtVertex.originalTrack)),
-      vertexPos);
+  trackAtVertex.vertexCompatibility = getCompatibility(
+      gctx, extractParameters(trackAtVertex.originalTrack), vertexPos);
 }
