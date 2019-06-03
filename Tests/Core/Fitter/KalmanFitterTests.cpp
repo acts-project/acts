@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -223,7 +223,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // Build propagator for the measurement creation
   MeasurementPropagator mPropagator(mStepper, mNavigator);
   Vector3D mPos(-3. * units::_m, 0., 0.), mMom(1. * units::_GeV, 0., 0);
-  SingleCurvilinearTrackParameters<NeutralPolicy> mStart(nullptr, mPos, mMom);
+  SingleCurvilinearTrackParameters<NeutralPolicy> mStart(nullptr, mPos, mMom,
+                                                         42.);
 
   // Create action list for the measurement creation
   using MeasurementActions = ActionList<MeasurementCreator, DebugOutput>;
@@ -308,7 +309,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                 0.025 * units::_GeV * gauss(generator));
 
   SingleCurvilinearTrackParameters<ChargedPolicy> rStart(std::move(covPtr),
-                                                         rPos, rMom, 1.);
+                                                         rPos, rMom, 1., 42.);
 
   const Surface* rSurface = &rStart.referenceSurface();
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -231,7 +231,8 @@ struct MaterialInteractor {
             stepper.update(
                 state.stepping, stepper.position(state.stepping),
                 stepper.direction(state.stepping),
-                std::copysign(newP, stepper.momentum(state.stepping)));
+                std::copysign(newP, stepper.momentum(state.stepping)),
+                stepper.time(state.stepping));
           }
           // Transfer this into energy loss straggling and apply to
           // covariance:

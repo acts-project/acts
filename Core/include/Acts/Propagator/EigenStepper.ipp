@@ -23,7 +23,7 @@ auto Acts::EigenStepper<B, C, E, A>::boundState(State& state,
   }
   // Create the bound parameters
   BoundParameters parameters(state.geoContext, std::move(covPtr), state.pos,
-                             state.p * state.dir, state.q,
+                             state.p * state.dir, state.q, state.t0 + state.dt,
                              surface.getSharedPtr());
   // Create the bound state
   BoundState bState{std::move(parameters), state.jacobian,
@@ -48,7 +48,8 @@ auto Acts::EigenStepper<B, C, E, A>::curvilinearState(State& state,
   }
   // Create the curvilinear parameters
   CurvilinearParameters parameters(std::move(covPtr), state.pos,
-                                   state.p * state.dir, state.q);
+                                   state.p * state.dir, state.q,
+                                   state.t0 + state.dt);
   // Create the bound state
   CurvilinearState curvState{std::move(parameters), state.jacobian,
                              state.pathAccumulated};
@@ -67,6 +68,7 @@ void Acts::EigenStepper<B, C, E, A>::update(State& state,
   state.pos = pars.position();
   state.dir = mom.normalized();
   state.p = mom.norm();
+  state.dt = pars.time();
   if (pars.covariance() != nullptr) {
     state.cov = (*(pars.covariance()));
   }
@@ -76,10 +78,11 @@ template <typename B, typename C, typename E, typename A>
 void Acts::EigenStepper<B, C, E, A>::update(State& state,
                                             const Vector3D& uposition,
                                             const Vector3D& udirection,
-                                            double up) const {
+                                            double up, double time) const {
   state.pos = uposition;
   state.dir = udirection;
   state.p = up;
+  state.dt = time;
 }
 
 template <typename B, typename C, typename E, typename A>
@@ -115,12 +118,13 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
     jacToCurv(1, 1) = -x * y * invC;
     jacToCurv(1, 2) = -x * z * invC;
   }
+  // Time parameter
+  jacToCurv(5, 3) = 1;
   // Directional and momentum parameters for curvilinear
-  jacToCurv(2, 3) = -sinPhi * invSinTheta;
-  jacToCurv(2, 4) = cosPhi * invSinTheta;
-  jacToCurv(3, 5) = -invSinTheta;
-  jacToCurv(4, 6) = 1;
-  jacToCurv(5, 7) = 1;
+  jacToCurv(2, 4) = -sinPhi * invSinTheta;
+  jacToCurv(2, 5) = cosPhi * invSinTheta;
+  jacToCurv(3, 6) = -invSinTheta;
+  jacToCurv(4, 7) = 1;
   // Apply the transport from the steps on the jacobian
   state.jacToGlobal = state.jacTransport * state.jacToGlobal;
   // Transport the covariance
@@ -144,13 +148,13 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
     state.jacToGlobal(1, eLOC_0) = cosPhi;
     state.jacToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
     state.jacToGlobal(2, eLOC_1) = sinTheta;
-    state.jacToGlobal(3, ePHI) = -sinTheta * sinPhi;
-    state.jacToGlobal(3, eTHETA) = cosTheta * cosPhi;
-    state.jacToGlobal(4, ePHI) = sinTheta * cosPhi;
-    state.jacToGlobal(4, eTHETA) = cosTheta * sinPhi;
-    state.jacToGlobal(5, eTHETA) = -sinTheta;
-    state.jacToGlobal(6, eQOP) = 1;
-    state.jacToGlobal(7, eT) = 1;
+    state.jacToGlobal(3, eT) = 1.;
+    state.jacToGlobal(4, ePHI) = -sinTheta * sinPhi;
+    state.jacToGlobal(4, eTHETA) = cosTheta * cosPhi;
+    state.jacToGlobal(5, ePHI) = sinTheta * cosPhi;
+    state.jacToGlobal(5, eTHETA) = cosTheta * sinPhi;
+    state.jacToGlobal(6, eTHETA) = -sinTheta;
+    state.jacToGlobal(7, eQOP) = 1.;
   }
   // Store The global and bound jacobian (duplication for the moment)
   state.jacobian = jacFull * state.jacobian;
@@ -189,7 +193,7 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
     surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
     BoundVector pars;
     pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-        state.q / state.p, 0.;
+        state.q / state.p, state.t0 + state.dt;
     surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, state.pos,
                                  state.dir, pars);
   }
@@ -301,7 +305,7 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
   state.stepping.dir += h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
   state.stepping.dir /= state.stepping.dir.norm();
   state.stepping.derivative.template head<3>() = state.stepping.dir;
-  state.stepping.derivative.template segment<3>(3) = sd.k4;
+  state.stepping.derivative.template segment<3>(4) = sd.k4;
   state.stepping.pathAccumulated += h;
 
   return h;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -101,6 +101,9 @@ struct PropagatorOptions {
     eoptions.debugString = debugString;
     eoptions.debugPfxWidth = debugPfxWidth;
     eoptions.debugMsgWidth = debugMsgWidth;
+    // Stepper options
+    eoptions.tolerance = tolerance;
+    eoptions.stepSizeCutOff = stepSizeCutOff;
     // Action / abort list
     eoptions.actionList = std::move(actionList);
     eoptions.abortList = std::move(aborters);

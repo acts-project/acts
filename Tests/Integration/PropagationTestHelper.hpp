@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -82,7 +82,8 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
 template <typename Propagator_type>
 Vector3D constant_field_propagation(const Propagator_type& propagator,
                                     double pT, double phi, double theta,
-                                    double charge, int /*index*/, double Bz,
+                                    double charge, double time, int /*index*/,
+                                    double Bz,
                                     double disttol = 0.1 * units::_um,
                                     bool debug = false) {
   namespace VH = VectorHelpers;
@@ -103,7 +104,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   double q = charge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters pars(nullptr, pos, mom, q);
+  CurvilinearParameters pars(nullptr, pos, mom, q, time);
 
   // do propagation
   const auto& tp = propagator.propagate(pars, options).value().endParameters;
@@ -191,9 +192,10 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q);
+  CurvilinearParameters start(nullptr, pos, mom, q, time);
 
   // do forward-backward propagation
   const auto& fwdResult = propagator.propagate(start, fwdOptions).value();
@@ -249,6 +251,7 @@ std::pair<Vector3D, double> to_cylinder(
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
@@ -258,11 +261,11 @@ std::pair<Vector3D, double> to_cylinder(
     // take some major correlations (off-diagonals)
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
         0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // do propagation of the start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
@@ -303,6 +306,7 @@ std::pair<Vector3D, double> to_surface(
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
@@ -312,11 +316,11 @@ std::pair<Vector3D, double> to_surface(
     // take some major correlations (off-diagonals)
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
         0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // Create curvilinear start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
   const auto result_s = propagator.propagate(start, options).value();
   const auto& tp_s = result_s.endParameters;
 
@@ -369,11 +373,10 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
-  // setup propagation options
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
   options.debug = debug;
-  options.tolerance = 1e-7;
+  options.tolerance = 1e-9;
 
   // define start parameters
   double x = 1.;
@@ -383,6 +386,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
@@ -390,12 +394,12 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   // take some major correlations (off-diagonals)
   cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
       0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // do propagation of the start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
-  CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
+  CurvilinearParameters start_wo_c(nullptr, pos, mom, q, time);
 
   const auto result = propagator.propagate(start, options).value();
   const auto& tp = result.endParameters;
@@ -403,23 +407,10 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   // get numerically propagated covariance matrix
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
+
   Covariance obtained_cov = (*(tp->covariance()));
 
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> obt_cov =
-      obtained_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> calc_cov =
-      calculated_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-
-  // TODO: Replace the following line by the following block
-  // CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
-  CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
-  for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
-    for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
-      if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
-        CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
-      }
-    }
-  }
+  CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
 }
 
 template <typename Propagator_type, typename StartSurface_type,
@@ -444,24 +435,19 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
   double q = charge;
+  double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   Covariance cov;
 
-  // take some major correlations (off-diagonals)
-  // cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162,
-  // 0,
-  //     0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-  //     1. / (10 * units::_GeV);
-
   cov << 10. * units::_mm, 0, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0,
       0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV), 0,
-      0, 0, 0, 0, 0, 0;
+      0, 0, 0, 0, 0, 1e-6 * units::_s;
 
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // create curvilinear start parameters
-  CurvilinearParameters start_c(nullptr, pos, mom, q);
+  CurvilinearParameters start_c(nullptr, pos, mom, q, time);
   const auto result_c = propagator.propagate(start_c, options).value();
   const auto& tp_c = result_c.endParameters;
 
@@ -478,9 +464,10 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
 
   auto startSurface =
       Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
-  BoundParameters start(tgContext, std::move(covPtr), pos, mom, q,
+  BoundParameters start(tgContext, std::move(covPtr), pos, mom, q, time,
                         startSurface);
-  BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, startSurface);
+  BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, time,
+                             startSurface);
 
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
@@ -496,21 +483,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
 
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> obt_cov =
-      obtained_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-  ActsSymMatrix<ParValue_t, BoundParsDim - 1> calc_cov =
-      calculated_cov.template block<BoundParsDim - 1, BoundParsDim - 1>(0, 0);
-
-  // TODO: Replace the following line by the following block
-  // CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
-  CHECK_CLOSE_COVARIANCE(calc_cov, obt_cov, reltol);
-  for (unsigned int i = 0; i < calculated_cov.rows(); i++) {
-    for (unsigned int j = 0; j < calculated_cov.cols(); j++) {
-      if (i == calculated_cov.rows() - 1 || j == calculated_cov.cols() - 1) {
-        CHECK_CLOSE_ABS(calculated_cov(i, j), obtained_cov(i, j), 1e-6);
-      }
-    }
-  }
+  CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
 }
 }  // namespace IntegrationTest
 }  // namespace Acts

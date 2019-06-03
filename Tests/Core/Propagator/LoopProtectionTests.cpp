@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -180,7 +180,7 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q);
+  CurvilinearParameters start(nullptr, pos, mom, q, 42.);
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.maxSteps = 1e6;

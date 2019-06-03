@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -126,6 +126,7 @@ constexpr double _el_charge = _e / _C;
 constexpr double _c2 = _c * _c;
 constexpr double _c3 = _c * _c * _c;
 constexpr double _c4 = _c2 * _c2;
+constexpr double _c2inv = 1. / _c2;
 /// @}
 
 /// @cond

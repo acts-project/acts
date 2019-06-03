@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
   if (withCov) {
     covPtr = std::make_unique<const Covariance>(cov);
   }
-  CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
+  CurvilinearParameters pars(std::move(covPtr), pos, mom, +1, 0.);
 
   double totalPathLength = 0;
   for (unsigned int i = 0; i < toys; ++i) {

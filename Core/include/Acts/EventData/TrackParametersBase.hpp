@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -118,6 +118,11 @@ class TrackParametersBase {
   ///
   /// @return value of electric charge
   virtual double charge() const = 0;
+
+  /// @brief retrieve time
+  ///
+  /// @return value of time
+  virtual double time() const = 0;
 
   /// @brief access associated surface defining the coordinate system for track
   ///        parameters and their covariance

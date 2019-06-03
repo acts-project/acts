@@ -68,14 +68,15 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   const auto rframe = referenceFrame(gctx, gpos, dir);
   // the local error components - given by reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
+  // the time component
+  jacobian(3, eT) = 1;
   // the momentum components
-  jacobian(3, ePHI) = (-sin_theta) * sin_phi;
-  jacobian(3, eTHETA) = cos_theta * cos_phi;
-  jacobian(4, ePHI) = sin_theta * cos_phi;
-  jacobian(4, eTHETA) = cos_theta * sin_phi;
-  jacobian(5, eTHETA) = (-sin_theta);
-  jacobian(6, eQOP) = 1;
-  jacobian(7, eT) = 1;
+  jacobian(4, ePHI) = (-sin_theta) * sin_phi;
+  jacobian(4, eTHETA) = cos_theta * cos_phi;
+  jacobian(5, ePHI) = sin_theta * cos_phi;
+  jacobian(5, eTHETA) = cos_theta * sin_phi;
+  jacobian(6, eTHETA) = (-sin_theta);
+  jacobian(7, eQOP) = 1;
 }
 
 inline const RotationMatrix3D Surface::initJacobianToLocal(
@@ -93,12 +94,13 @@ inline const RotationMatrix3D Surface::initJacobianToLocal(
   RotationMatrix3D rframeT = referenceFrame(gctx, gpos, dir).transpose();
   // given by the refernece frame
   jacobian.block<2, 3>(0, 0) = rframeT.block<2, 3>(0, 0);
+  // Time component
+  jacobian(eT, 3) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 3) = -sin_phi_over_sin_theta;
-  jacobian(ePHI, 4) = cos_phi_over_sin_theta;
-  jacobian(eTHETA, 5) = -inv_sin_theta;
-  jacobian(eQOP, 6) = 1;
-  jacobian(eT, 7) = 1;
+  jacobian(ePHI, 4) = -sin_phi_over_sin_theta;
+  jacobian(ePHI, 5) = cos_phi_over_sin_theta;
+  jacobian(eTHETA, 6) = -inv_sin_theta;
+  jacobian(eQOP, 7) = 1;
   // return the frame where this happened
   return rframeT;
 }

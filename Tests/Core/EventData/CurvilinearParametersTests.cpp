@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,9 +37,11 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   Vector3D dir(mom.normalized());
   Vector3D z_axis_global(0., 0., 1.);
   /// create curvilinear parameters without covariance +1/-1 charge
-  CurvilinearParameters curvilinear_pos(nullptr, pos, mom, 1. * units::_e);
-  CurvilinearParameters curvilinear_neg(nullptr, pos, mom, -1. * units::_e);
-  NeutralCurvilinearParameters curvilinear_neut(nullptr, pos, mom);
+  CurvilinearParameters curvilinear_pos(nullptr, pos, mom, 1. * units::_e,
+                                        1. * units::_s);
+  CurvilinearParameters curvilinear_neg(nullptr, pos, mom, -1. * units::_e,
+                                        2.5 * units::_s);
+  NeutralCurvilinearParameters curvilinear_neut(nullptr, pos, mom, 33.33);
 
   /// check local coordinates
   const auto fphi = phi(mom);
@@ -47,12 +49,12 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   const double oOp = 1. / mom.norm();
 
   // check parameters
-  consistencyCheck(curvilinear_pos, pos, mom, +1. * units::_e,
-                   {{0., 0., fphi, ftheta, oOp, 0.}});
-  consistencyCheck(curvilinear_neg, pos, mom, -1. * units::_e,
-                   {{0., 0., fphi, ftheta, -oOp, 0.}});
-  consistencyCheck(curvilinear_neut, pos, mom, 0.,
-                   {{0., 0., fphi, ftheta, oOp, 0.}});
+  consistencyCheck(curvilinear_pos, pos, mom, +1. * units::_e, 1. * units::_s,
+                   {{0., 0., fphi, ftheta, oOp, 1. * units::_s}});
+  consistencyCheck(curvilinear_neg, pos, mom, -1. * units::_e, 2.5 * units::_s,
+                   {{0., 0., fphi, ftheta, -oOp, 2.5 * units::_s}});
+  consistencyCheck(curvilinear_neut, pos, mom, 0., 33.33 * units::_s,
+                   {{0., 0., fphi, ftheta, oOp, 33.33 * units::_s}});
 
   // check that the created surface is at the position
   CHECK_CLOSE_REL(curvilinear_pos.referenceSurface().center(tgContext), pos,

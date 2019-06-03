@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -91,7 +91,7 @@ bool debugModeBwdStep = false;
 /// @param index is the run index from the test
 template <typename propagator_t>
 void runTest(const propagator_t& prop, double pT, double phi, double theta,
-             int charge, int index) {
+             int charge, double time, int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {
@@ -108,7 +108,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q);
+  CurvilinearParameters start(nullptr, pos, mom, q, time);
 
   using DebugOutput = detail::DebugOutputActor;
 
@@ -423,10 +423,13 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 24,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
-  runTest(epropagator, pT, phi, theta, charge, index);
-  runTest(slpropagator, pT, phi, theta, charge, index);
+    pT, phi, theta, charge, time, index) {
+  runTest(epropagator, pT, phi, theta, charge, time, index);
+  runTest(slpropagator, pT, phi, theta, charge, time, index);
 }
 
 }  // namespace Test

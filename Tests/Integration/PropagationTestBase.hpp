@@ -87,6 +87,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
+
   // just make sure we can reach it
   double r = rfrac * std::abs(Nat2SI<units::MOMENTUM>(pT) / (1. * Bz));
   r = (r > 2.5 * Acts::units::_m) ? 2.5 * Acts::units::_m : r;
@@ -134,6 +135,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
+
   // to a plane with the atlas stepper
   auto a_at_plane = to_surface<AtlasPropagatorType, PlaneSurface>(
       apropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m, rand1,
@@ -180,6 +182,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
+
   // to a disc with the  atlas stepper
   auto a_at_disc = to_surface<AtlasPropagatorType, DiscSurface>(
       apropagator, pT, phi, theta, dcharge, pfrac * Acts::units::_m, rand1,
@@ -315,6 +318,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   double dcharge = -1 + 2 * charge;
+
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
       apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, rand1,
@@ -448,14 +452,14 @@ BOOST_DATA_TEST_CASE(
 
   // covariance check for eigen stepper in dense environment
   DensePropagatorType dpropagator = setupDensePropagator();
-  covariance_curvilinear(dpropagator, pT, 0., M_PI / 2., 1,
+  covariance_curvilinear(dpropagator, pT, 0., M_PI / 2., 1.,
                          plimit * Acts::units::_m, index);
 
   covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1, plimit * Acts::units::_m, rand1, rand2,
-      rand3, index, true, true, 1e-1);
+      dpropagator, pT, 0., M_PI / 2., 1., plimit * Acts::units::_m, rand1,
+      rand2, rand3, index, true, true, 1e-1);
 
   covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
-      dpropagator, pT, 0., M_PI / 2., 1, plimit * Acts::units::_m, rand1, rand2,
-      rand3, index);
+      dpropagator, pT, 0., M_PI / 2., 1., plimit * Acts::units::_m, rand1,
+      rand2, rand3, index);
 }

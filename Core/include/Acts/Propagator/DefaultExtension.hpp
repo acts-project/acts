@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -73,10 +73,14 @@ struct DefaultExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagation
+  /// @param [in] h Step size
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool finalize(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                const double /*unused*/) const {
+  bool finalize(propagator_state_t& state, const stepper_t& stepper,
+                const double h) const {
+    propagateTime(state, stepper, h);
     return true;
   }
 
@@ -94,10 +98,36 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h, FreeMatrix& D) const {
+    propagateTime(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
   }
 
  private:
+  /// @brief Propagation function for the time coordinate
+  ///
+  /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
+  /// @param [in, out] state State of the propagator
+  /// @param [in] stepper Stepper of the propagation
+  /// @param [in] h Step size
+  template <typename propagator_state_t, typename stepper_t>
+  void propagateTime(propagator_state_t& state, const stepper_t& stepper,
+                     const double h) const {
+    /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
+    /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
+    /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
+
+    const double mom =
+        units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+    const double mass = units::Nat2SI<units::MASS>(state.options.mass);
+    state.stepping.dt +=
+        h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+    if (state.stepping.covTransport) {
+      state.stepping.derivative(3) =
+          std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+    }
+  }
+
   /// @brief Calculates the transport matrix D for the jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
@@ -137,11 +167,11 @@ struct DefaultExtension {
     double half_h = h * 0.5;
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) idendity
-    auto dFdT = D.block<3, 3>(0, 3);
-    auto dFdL = D.block<3, 1>(0, 6);
+    auto dFdT = D.block<3, 3>(0, 4);
+    auto dFdL = D.block<3, 1>(0, 7);
     // dGdx is already initialised as (3x3) zero
-    auto dGdT = D.block<3, 3>(3, 3);
-    auto dGdL = D.block<3, 1>(3, 6);
+    auto dGdT = D.block<3, 3>(4, 4);
+    auto dGdL = D.block<3, 1>(4, 7);
 
     ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
     ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -68,6 +68,9 @@ class EigenStepper {
   /// It contains the stepping information and is provided thread local
   /// by the propagator
   struct State {
+    /// Default constructor - deleted
+    State() = delete;
+
     /// Constructor from the initial track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
@@ -86,6 +89,7 @@ class EigenStepper {
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
           q(par.charge()),
+          t0(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           fieldCache(mctx),
@@ -122,6 +126,12 @@ class EigenStepper {
 
     /// The charge
     double q = 1.;
+
+    /// @note The time is split into a starting and a propagated time to avoid
+    /// machine precision related errors Starting time
+    const double t0;
+    /// Propagated time
+    double dt = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -204,6 +214,9 @@ class EigenStepper {
   /// Charge access
   double charge(const State& state) const { return state.q; }
 
+  /// Time access
+  double time(const State& state) const { return state.t0 + state.dt; }
+
   /// Tests if the state reached a surface
   ///
   /// @param [in] state State that is tests
@@ -263,7 +276,7 @@ class EigenStepper {
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
   void update(State& state, const Vector3D& uposition,
-              const Vector3D& udirection, double up) const;
+              const Vector3D& udirection, double up, double time) const;
 
   /// Return a corrector
   corrector_t corrector(State& state) const {
