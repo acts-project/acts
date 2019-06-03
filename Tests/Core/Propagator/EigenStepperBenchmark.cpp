@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
          0, 0, 0, 0, 1. / (10 * units::_GeV), 0,
          0, 0, 0, 0, 0, 0;
   // clang-format on
-  
+
   std::unique_ptr<const Covariance> covPtr = nullptr;
   if (withCov) {
     covPtr = std::make_unique<const Covariance>(cov);
