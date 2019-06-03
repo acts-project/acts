@@ -34,6 +34,13 @@ class MultiAdaptiveVertexFitter {
 
     // Annealing state
     VertexAnnealingTool::State annealingState;
+
+    // map to store vertices information
+    std::map<Vertex<input_track_t>*, MAVFVertexInfo<input_track_t>> vtxInfoMap;
+
+    // map to store tracks information
+    std::map<TrackAtVertex<input_track_t>*, MAVFTrackAtVtxInfo<input_track_t>>
+        trkInfoMap;
   };
 
   struct Config {
@@ -126,7 +133,6 @@ class MultiAdaptiveVertexFitter {
   /// @return Result<void> object
   Result<void> addVertexToFit(
       State& state, Vertex<input_track_t> newVertex,
-      MAVFTrackAtVtxInfo<input_track_t> trackAtVtxInfo,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
  private:
@@ -149,6 +155,18 @@ class MultiAdaptiveVertexFitter {
   bool isAlreadyInList(
       Vertex<input_track_t>* vtx,
       const std::vector<Vertex<input_track_t>*>& verticesVec) const;
+
+  /// @brief Prepares vertex object for the actual fit, i.e.
+  /// all TrackAtVertex objects at current vertex will obtain
+  /// `ip3dParams` from ImpactPoint3dEstimator::getParamsAtIP3d
+  /// in order to later faster estimate compatibilities of track
+  /// with different vertices
+  ///
+  /// @param vtx The vertex object
+  /// @param vFitterOptions Vertex fitter options
+  Result<void> prepareVtxForFit(
+      Vertex<input_track_t>& vtx,
+      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 };
 
 }  // namespace Acts
