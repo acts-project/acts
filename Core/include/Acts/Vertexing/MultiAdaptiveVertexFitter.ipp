@@ -27,7 +27,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     // initial loop over all vertices in state.vertexCollection
     for (auto& currentVtx : state.vertexCollection) {
       MAVFVertexInfo<input_track_t>& currentVtxInfo =
-          state.vtxInfoMap[*currentVtx];
+          state.vtxInfoMap[&currentVtx];
       currentVtxInfo.relinearize = false;
 
       // TODO: where is this init set? in finder or in else directly below? (->
@@ -57,10 +57,11 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
                      "be set?!"
                   << std::endl;
       }
-      if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).perp() >
+      if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).norm() >
           m_cfg.maxDistToLinPoint) {
         // relinearization needed, distance too big
         currentVtxInfo.relinearize = true;
+        prepareVtxForFit(state, currentVtx, vFitterOptions);
       }
     }
 
@@ -83,10 +84,12 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
 
   std::vector<Vertex<input_track_t>*> verticesToFit;
 
-  // prepares tracks for fast estimation method of their
+  // prepares vtx and tracks for fast estimation method of their
   // compatibility with vertex
-  // TODO: uncomment
-  // prepareCompatibility(newVertex);
+  auto res = prepareVtxForFit(state, newVertex, vFitterOptions);
+  if (!res.ok()) {
+    return res.error();
+  }
 
   // list of vertices added in last iteration
   std::vector<Vertex<input_track_t>*> lastIterAddedVertices = {&newVertex};
@@ -96,9 +99,10 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
   // loop as long as new vertices are found that share tracks with
   // previously added vertices
   while (!lastIterAddedVertices.empty()) {
-    for (auto lastVtxIter : lastIterAddedVertices) {
+    for (auto& lastVtxIter : lastIterAddedVertices) {
       // loop over all track at current lastVtxIter
-      for (auto& trackIter : lastVtxIter->tracks()) {
+      for (const TrackAtVertex<input_track_t>& trackIter :
+           lastVtxIter->tracks()) {
         // retrieve list of links to all vertices that currently use the current
         // track
         std::vector<Vertex<input_track_t>*>& linksToVertices =
@@ -142,13 +146,14 @@ bool Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
         Vertex<input_track_t>* vtx,
         const std::vector<Vertex<input_track_t>*>& verticesVec) const {
   return std::find_if(verticesVec.begin(), verticesVec.end(),
-                      [vtx](Vertex<input_track_t>* v) { return v == vtx; });
+                      [vtx](Vertex<input_track_t>* v) { return v == vtx; }) !=
+         verticesVec.end();
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     bfield_t, input_track_t,
-    propagator_t>::prepareVtxForFit(Vertex<input_track_t>& vtx,
+    propagator_t>::prepareVtxForFit(State& state, Vertex<input_track_t>& vtx,
                                     const VertexFitterOptions<input_track_t>&
                                         vFitterOptions) const {
   const Vector3D& refPos = vtx.position();
@@ -156,14 +161,15 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
   auto& mfContext = vFitterOptions.magFieldContext;
 
   // loop over all tracks at current vertex
-  for (auto& trkAtVtx : vtx.tracks()) {
+  for (const auto& trkAtVtx : vtx.tracks()) {
     auto res = m_cfg.ipEst.getParamsAtIP3d(
         geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
         refPos);
     if (!res.ok()) {
       return res.error();
     }
-    // trkAtVtx.ip3dParams = std::move(**res);
+    // set ip3dParams for current trackAtVertex
+    state.trkInfoMap[&trkAtVtx].ip3dParams = std::move(res.value());
   }
   return {};
 }

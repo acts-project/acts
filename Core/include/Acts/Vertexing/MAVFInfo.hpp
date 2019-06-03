@@ -41,7 +41,7 @@ struct MAVFTrackAtVtxInfo {
 
   // Track parameters at point of closest approach in 3d as
   // retrieved by ImpactPoint3dEstimator::getParamsAtIP3d
-  std::unique_ptr<BoundParameters> ip3dParams;
+  std::unique_ptr<const BoundParameters> ip3dParams;
 };
 
 }  // namespace Acts

@@ -39,7 +39,8 @@ class MultiAdaptiveVertexFitter {
     std::map<Vertex<input_track_t>*, MAVFVertexInfo<input_track_t>> vtxInfoMap;
 
     // map to store tracks information
-    std::map<TrackAtVertex<input_track_t>*, MAVFTrackAtVtxInfo<input_track_t>>
+    std::map<const TrackAtVertex<input_track_t>*,
+             MAVFTrackAtVtxInfo<input_track_t>>
         trkInfoMap;
   };
 
@@ -165,7 +166,7 @@ class MultiAdaptiveVertexFitter {
   /// @param vtx The vertex object
   /// @param vFitterOptions Vertex fitter options
   Result<void> prepareVtxForFit(
-      Vertex<input_track_t>& vtx,
+      State& state, Vertex<input_track_t>& vtx,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 };
 
