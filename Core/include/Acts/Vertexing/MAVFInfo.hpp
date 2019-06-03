@@ -36,10 +36,12 @@ struct MAVFVertexInfo {
 /// related TrackAtVertex infos
 template <typename input_track_t>
 struct MAVFTrackAtVtxInfo {
-  // Map to store a vector of links to all vertices that use the key
-  // TrackAtVertex object
-  std::map<TrackAtVertex<input_track_t>*, std::vector<Vertex<input_track_t>*>>
-      linkMapToVertices;
+  // Links to vertices currently using the TrackAtVertex object
+  std::vector<Vertex<input_track_t>*> linksToVertices;
+
+  // Track parameters at point of closest approach in 3d as
+  // retrieved by ImpactPoint3dEstimator::getParamsAtIP3d
+  std::unique_ptr<BoundParameters> ip3dParams;
 };
 
 }  // namespace Acts

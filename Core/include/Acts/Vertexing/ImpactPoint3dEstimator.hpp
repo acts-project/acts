@@ -19,7 +19,8 @@ namespace Acts {
 /// @class ImpactPoint3dEstimator
 ///
 /// @brief Estimates point of closest approach in 3D
-template <typename input_track_t>
+/// together with corresponding track parameters
+template <typename bfield_t, typename input_track_t, typename propagator_t>
 class ImpactPoint3dEstimator {
  public:
 

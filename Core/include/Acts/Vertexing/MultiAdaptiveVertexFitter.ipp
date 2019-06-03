@@ -16,9 +16,6 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
   // reset annealing tool
   m_cfg.annealingTool.reset(state.annealingState);
 
-  // create some maps to store important information
-  std::map<Vertex<input_track_t>*, MAVFVertexInfo<input_track_t>> infoMap;
-
   bool isSmallShift = true;
 
   // number of iterations counter
@@ -29,40 +26,41 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // initial loop over all vertices in state.vertexCollection
     for (auto& currentVtx : state.vertexCollection) {
-      MAVFVertexInfo<input_track_t>& currentFitInfo = infoMap[*currentVtx];
-      currentFitInfo.relinearize = false;
+      MAVFVertexInfo<input_track_t>& currentVtxInfo =
+          state.vtxInfoMap[*currentVtx];
+      currentVtxInfo.relinearize = false;
 
       // TODO: where is this init set? in finder or in else directly below? (->
       // defaulted in Info)
-      if (currentFitInfo.isInitialized) {
+      if (currentVtxInfo.isInitialized) {
         std::cout
             << "Candidate already has a position: storing it in oldpositions"
             << std::endl;
-        currentFitInfo.oldPosition = currentVtx.position();
+        currentVtxInfo.oldPosition = currentVtx.position();
       } else {
         // vertex will now be initialized
-        currentFitInfo.isInitialized = true;
+        currentVtxInfo.isInitialized = true;
         std::cout << "Candidate has no position so far: using as old position "
                      "the seedVertex"
                   << std::endl;
-        if (currentFitInfo.seedPos == Vector3D()) {
+        if (currentVtxInfo.seedPos == Vector3D()) {
           std::cout << "seed not set.. something went wrong I guess. Why not "
                        "directly use the seed position from seeds in "
                        "vertexCollection?"
                     << std::endl;
         }
-        currentFitInfo.oldPosition = currentFitInfo.seedPos;
+        currentVtxInfo.oldPosition = currentVtxInfo.seedPos;
       }  // end not isInitialized
 
-      if (currentFitInfo.linPoint == Vector3D()) {
+      if (currentVtxInfo.linPoint == Vector3D()) {
         std::cout << "Candidate has no linearization point. where should this "
                      "be set?!"
                   << std::endl;
       }
-      if ((currentFitInfo.oldPosition - currentFitInfo.linPoint).perp() >
+      if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).perp() >
           m_cfg.maxDistToLinPoint) {
         // relinearization needed, distance too big
-        currentFitInfo.relinearize = true;
+        currentVtxInfo.relinearize = true;
       }
     }
 
@@ -74,13 +72,11 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Result<void>
-Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
-    addVertexToFit(
-        State& state, Vertex<input_track_t> newVertex,
-        // TODO: pass by const ref?
-        MAVFTrackAtVtxInfo<input_track_t> trackAtVtxInfo,
-        const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
+    bfield_t, input_track_t,
+    propagator_t>::addVertexToFit(State& state, Vertex<input_track_t> newVertex,
+                                  const VertexFitterOptions<input_track_t>&
+                                      vFitterOptions) const {
   if (newVertex.tracks().empty()) {
     return VertexingError::EmptyInput;
   }
@@ -106,7 +102,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
         // retrieve list of links to all vertices that currently use the current
         // track
         std::vector<Vertex<input_track_t>*>& linksToVertices =
-            trackAtVtxInfo.linkMapToVertices[&trackIter];
+            state.trkInfoMap[&trackIter].linksToVertices;
 
         // loop over all attached vertices and add those to vertex fit
         // which are not already in `verticesToFit`
@@ -147,4 +143,27 @@ bool Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
         const std::vector<Vertex<input_track_t>*>& verticesVec) const {
   return std::find_if(verticesVec.begin(), verticesVec.end(),
                       [vtx](Vertex<input_track_t>* v) { return v == vtx; });
+}
+
+template <typename bfield_t, typename input_track_t, typename propagator_t>
+Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
+    bfield_t, input_track_t,
+    propagator_t>::prepareVtxForFit(Vertex<input_track_t>& vtx,
+                                    const VertexFitterOptions<input_track_t>&
+                                        vFitterOptions) const {
+  const Vector3D& refPos = vtx.position();
+  auto& geoContext = vFitterOptions.geoContext;
+  auto& mfContext = vFitterOptions.magFieldContext;
+
+  // loop over all tracks at current vertex
+  for (auto& trkAtVtx : vtx.tracks()) {
+    auto res = m_cfg.ipEst.getParamsAtIP3d(
+        geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
+        refPos);
+    if (!res.ok()) {
+      return res.error();
+    }
+    // trkAtVtx.ip3dParams = std::move(**res);
+  }
+  return {};
 }
