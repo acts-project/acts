@@ -23,7 +23,7 @@
 ///   keeping all compatible tracks with a track weight of 1.
 ///   Ref. (1): CERN-THESIS-2010-027, Author: Piacquadio, Giacinto:
 ///   `Identification of b-jets and investigation of the discovery potential
-///   of a Higgs boson in the WH−−>lνbb¯ channel with the ATLAS experiment`
+///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
 class VertexAnnealingTool {
  public:
   struct State {
