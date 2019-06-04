@@ -78,7 +78,11 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       // set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
       setAllVtxCompatibilities(state, geoContext, mfContext, currentVtx);
-    }
+    }  // end loop over vertex collection
+
+    // now after having estimated all compatibilities of all tracks at
+    // all vertices, run again over all vertices to compute weights
+    setAllTrackWeights(state);
 
     // TODO: dostuff
     ++nIter;
@@ -200,6 +204,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
   // to be filled below. Needed due to constness of
   // tracksAtVertex list at vertex
   std::vector<TrackAtVertex<input_track_t>> newTracks;
+  newTracks.reserve(currentVtx.tracks().size());
 
   // loop over tracks at current vertex and
   // estimate compatibility with vertex
@@ -239,4 +244,75 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
   // set list of updated tracks to current vertex
   currentVtx.setTracksAtVertex(newTracks);
   return {};
+}
+
+template <typename bfield_t, typename input_track_t, typename propagator_t>
+Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
+    bfield_t, input_track_t, propagator_t>::setAllTrackWeights(State& state)
+    const {
+  for (auto& vtx : state.vertexCollection) {
+    // create empty list of new TrackAtVertex objects
+    // to be filled below. Needed due to constness of
+    // tracksAtVertex list at vertex
+    std::vector<TrackAtVertex<input_track_t>> newTracks;
+    newTracks.reserve(vtx.tracks().size());
+
+    for (const auto& trkAtVtx : vtx.tracks()) {
+      // create copy of current trackAtVertex in order
+      // to modify it below
+      TrackAtVertex<input_track_t> newTrkAtVtx = trkAtVtx;
+
+      auto collectRes = collectTrkToVtxCompatibilities(state, trkAtVtx);
+      if (!collectRes.ok()) {
+        return collectRes.error();
+      }
+
+      // set vertexCompatibility for current track
+      newTrkAtVtx.vertexCompatibility = m_cfg.annealingTool.getWeight(
+          state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
+
+      // update trkInfoMap accordingly
+      state.trkInfoMap[&newTrkAtVtx] = std::move(state.trkInfoMap[&trkAtVtx]);
+      state.trkInfoMap.erase(&trkAtVtx);
+
+      newTracks.push_back(newTrkAtVtx);
+    }  // end loop over tracks at vertex
+
+    // update tracks at current vertex
+    vtx.setTracksAtVertex(newTracks);
+  }  // end loop over vertex collection
+
+  return {};
+}
+
+template <typename bfield_t, typename input_track_t, typename propagator_t>
+Acts::Result<std::vector<double>>
+Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
+    collectTrkToVtxCompatibilities(
+        State& state, const TrackAtVertex<input_track_t>& trk) const {
+  // All vertices that currently hold the track `trk`
+  std::vector<Vertex<input_track_t>*> vertices =
+      state.trkInfoMap[&trk].linksToVertices;
+
+  // Vector to store all compatibility values, it will have
+  // exactly the size of `vertices`(one value for each vertex
+  // the track is attached to)
+  std::vector<double> trkToVtxCompatibilities;
+  trkToVtxCompatibilities.reserve(vertices.size());
+
+  for (Vertex<input_track_t>* vtxPtr : vertices) {
+    // find current track in list of tracks at vertex
+    const auto& trkIter = std::find_if(
+        vtxPtr->tracks().begin(), vtxPtr->tracks().end(),
+        [&trk, this](auto& trkAtVtx) {
+          return this->m_extractParameters(trkAtVtx.originalTrack) ==
+                 this->m_extractParameters(trk.originalTrack);
+        });
+    if (trkIter == vtxPtr->tracks().end()) {
+      return VertexingError::ElementNotFound;
+    }
+    // store vertexCompatibility of track to current vertex
+    trkToVtxCompatibilities.push_back(trkIter->vertexCompatibility);
+  }
+  return trkToVtxCompatibilities;
 }

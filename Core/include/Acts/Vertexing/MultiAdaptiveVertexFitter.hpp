@@ -180,6 +180,20 @@ class MultiAdaptiveVertexFitter {
       State& state, const GeometryContext& geoContext,
       const MagneticFieldContext& mfContext,
       Vertex<input_track_t>& currentVtx) const;
+
+  // TODO
+  Result<void> setAllTrackWeights(State& state) const;
+
+  /// @brief Collects all compatibility values of the track `trk`
+  /// at all vertices it is currently attached to and outputs
+  /// these values in a vector
+  ///
+  /// @param state The state object
+  /// @param trk The track
+  ///
+  /// @return Vector of compatibility values
+  Result<std::vector<double>> collectTrkToVtxCompatibilities(
+      State& state, const TrackAtVertex<input_track_t>& trk) const;
 };
 
 }  // namespace Acts
