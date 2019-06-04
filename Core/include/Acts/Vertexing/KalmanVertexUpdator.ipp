@@ -69,7 +69,7 @@ template <typename input_track_t>
 float Acts::KalmanVertexUpdator<input_track_t>::vertexPositionChi2(
     const Vertex<input_track_t>& oldVtx,
     const Vertex<input_track_t>& newVtx) const {
-  BoundSymMatrix oldWeight = oldVtx.fullCovariance().inverse();
+  SpacePointSymMatrix oldWeight = oldVtx.fullCovariance().inverse();
   SpacePointVector posDiff = newVtx.fullPosition() - oldVtx.fullPosition();
 
   // calculate and return corresponding chi2
