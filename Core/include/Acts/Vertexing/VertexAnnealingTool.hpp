@@ -14,6 +14,16 @@
 // TODO remove
 #include <iostream>
 
+/// @brief Implements a thermodynamic annealing scheme for the track
+///   weight factors used in the MultiAdaptiveVertexFitter in such a way
+///   that with high temperature values (at the beginning) only a slight
+///   preference is given to tracks compatible with the estimated vertex
+///   position. With lower temperatures the weighting get stricter such
+///   that all incompatible tracks will be dropped at the end while
+///   keeping all compatible tracks with a track weight of 1.
+///   Ref. (1): CERN-THESIS-2010-027, Author: Piacquadio, Giacinto:
+///   `Identification of b-jets and investigation of the discovery potential
+///   of a Higgs boson in the WH−−>lνbb¯ channel with the ATLAS experiment`
 class VertexAnnealingTool {
  public:
   struct State {
@@ -58,10 +68,12 @@ class VertexAnnealingTool {
 
   /// @brief Weight access
   ///
-  /// @param chi2 Chi^2
-  /// @param allChi2 Vector of all chi^2
+  /// @param chi2 Chi^2 for current track, i.e. compatibility
+  /// of track to current vertex candidate
+  /// @param allChi2 Vector of all chi^2 values, i.e. compatibilities
+  /// of current track to all vertices it is currently attached to
   ///
-  /// @return Calculated weight
+  /// @return Calculated weight according to Eq.(5.46) in Ref.(1)
   double getWeight(State& state, double chi2,
                    const std::vector<double>& allChi2) const;
 
@@ -78,11 +90,11 @@ class VertexAnnealingTool {
 
   /// @brief Gaussian function for weight calculation
   ///
-  /// @param val1 Value 1
-  /// @param val2 Value 2
+  /// @param chi2 Chi^2 value
+  /// @param temp Temperature value
   ///
-  /// @return exp(-1./2. * val1 / val2)
-  double gaussFunc(const double val1, const double val2) const {
-    return std::exp(-1. / 2. * val1 / val2);
+  /// @return exp(-1./2. * chi2 / temp)
+  double gaussFunc(const double chi2, const double temp) const {
+    return std::exp(-1. / 2. * chi2 / temp);
   }
 };
