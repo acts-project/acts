@@ -25,6 +25,9 @@
 namespace Acts {
 
 // TODO: add docs
+///   Ref. (1): CERN-THESIS-2010-027, Author: Piacquadio, Giacinto:
+///   `Identification of b-jets and investigation of the discovery potential
+///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 class MultiAdaptiveVertexFitter {
  public:
@@ -51,12 +54,16 @@ class MultiAdaptiveVertexFitter {
     /// @param bIn The magnetic field
     /// @param propagatorIn The propagator
     Config(const bfield_t& bIn, const propagator_t& propagatorIn)
-        : linFactory(
+        : propagator(propagatorIn),
+
+          linFactory(
               typename LinearizedTrackFactory<bfield_t, propagator_t>::Config(
                   bIn)),
           ipEst(typename ImpactPoint3dEstimator<
                 bfield_t, input_track_t, propagator_t>::Config(bIn,
                                                                propagatorIn)) {}
+    /// Propagator
+    propagator_t propagator;
 
     /// Linearized track factory
     LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
@@ -72,6 +79,7 @@ class MultiAdaptiveVertexFitter {
 
     /// SequentialVertexSmoother
     SequentialVertexSmoother<input_track_t> vertexSmoother;
+
     /// Annealing tool
     VertexAnnealingTool annealingTool;
 
@@ -81,6 +89,15 @@ class MultiAdaptiveVertexFitter {
     /// Max distance to linearization point allowed
     /// without relinearization
     double maxDistToLinPoint{0.5};
+
+    /// Minimum track weight needed for track to be considered
+    double minWeight{0.001};
+
+    /// Max relative shift of vertex during one iteration
+    double maxRelativeShift{0.01};
+
+    /// Do smoothing after multivertex fit
+    bool doSmoothing{false};
   };
 
   /// @brief Constructor used if input_track_t type == BoundParameters
@@ -181,8 +198,14 @@ class MultiAdaptiveVertexFitter {
       const MagneticFieldContext& mfContext,
       Vertex<input_track_t>& currentVtx) const;
 
-  // TODO
-  Result<void> setAllTrackWeights(State& state) const;
+  /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
+  ///  and updates the vertices by calling the VertexUpdator
+  ///
+  /// @param state The state object
+  /// @param vFitterOptions Vertex fitter options
+  Result<void> setWeightsAndUpdate(
+      State& state,
+      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
   /// @brief Collects all compatibility values of the track `trk`
   /// at all vertices it is currently attached to and outputs
@@ -194,6 +217,14 @@ class MultiAdaptiveVertexFitter {
   /// @return Vector of compatibility values
   Result<std::vector<double>> collectTrkToVtxCompatibilities(
       State& state, const TrackAtVertex<input_track_t>& trk) const;
+
+  /// @brief Determines if vertex position has shifted more than
+  /// m_cfg.maxRelativeShift in last iteration
+  ///
+  /// @param state The state object
+  ///
+  /// @return False if shift was larger than maxRelativeShift
+  bool checkSmallShift(State& state) const;
 };
 
 }  // namespace Acts
