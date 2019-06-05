@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
   // Set initial parameters for the particle track
   Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(nullptr, startParams,
-                                                       startMom, 1.);
+                                                       startMom, 1., 0.);
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
   // Set initial parameters for the particle track
   Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(nullptr, startParams,
-                                                       startMom, 1.);
+                                                       startMom, 1., 0.);
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
