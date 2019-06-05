@@ -246,21 +246,21 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
 
     // Create copy of current trackAtVertex in order
     // to modify it below
-    TrackAtVertex<input_track_t> newTrkAtVtx = trkAtVtx;
-
-    // Update trkInfoMap accordingly
-    state.trkInfoMap[&newTrkAtVtx] = std::move(state.trkInfoMap[&trkAtVtx]);
-    state.trkInfoMap.erase(&trkAtVtx);
+    newTracks.push_back(trkAtVtx);
+    TrackAtVertex<input_track_t>* newTrkPtr = &(newTracks.back());
 
     // Set compatibility with current vertex
     // TODO: is that where the ip3d step beforehand is needed for?
     // not using any of these here
     m_cfg.trackCompEst.setTrackCompatibility(
-        geoContext, newTrkAtVtx,
+        geoContext, *newTrkPtr,
         VectorHelpers::position(currentVtxInfo.oldPosition),
         m_extractParameters);
 
-    newTracks.push_back(newTrkAtVtx);
+    // Update trkInfoMap accordingly (change map key)
+    auto nodeHandle = state.trkInfoMap.extract(&trkAtVtx);
+    nodeHandle.key() = newTrkPtr;
+    state.trkInfoMap.insert(std::move(nodeHandle));
   }
   // Set list of updated tracks to current vertex
   currentVtx.setTracksAtVertex(newTracks);
@@ -283,7 +283,13 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     for (const auto& trkAtVtx : vtx.tracks()) {
       // Create copy of current trackAtVertex in order
       // to modify it below
-      TrackAtVertex<input_track_t> newTrkAtVtx = trkAtVtx;
+      newTracks.push_back(trkAtVtx);
+      TrackAtVertex<input_track_t>* newTrkPtr = &(newTracks.back());
+
+      // Update trkInfoMap accordingly (change map key)
+      auto nodeHandle = state.trkInfoMap.extract(&trkAtVtx);
+      nodeHandle.key() = newTrkPtr;
+      state.trkInfoMap.insert(std::move(nodeHandle));
 
       // Get all compatibilities of track to all vertices it is attached to
       auto collectRes = collectTrkToVtxCompatibilities(state, trkAtVtx);
@@ -292,20 +298,16 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
       }
 
       // Set trackWeight for current track
-      newTrkAtVtx.trackWeight = m_cfg.annealingTool.getWeight(
+      newTrkPtr->trackWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
 
-      // Update trkInfoMap accordingly
-      state.trkInfoMap[&newTrkAtVtx] = std::move(state.trkInfoMap[&trkAtVtx]);
-      state.trkInfoMap.erase(&trkAtVtx);
-
-      if (newTrkAtVtx.trackWeight > m_cfg.minWeight) {
+      if (newTrkPtr->trackWeight > m_cfg.minWeight) {
         // check if linearization state exists or need to be relinearized
-        if (newTrkAtVtx.linearizedState.covarianceAtPCA ==
+        if (newTrkPtr->linearizedState.covarianceAtPCA ==
                 BoundSymMatrix::Zero() ||
             state.vtxInfoMap[&vtx].relinearize) {
           const auto& origParams =
-              m_extractParameters(newTrkAtVtx.originalTrack);
+              m_extractParameters(newTrkPtr->originalTrack);
           auto result = m_cfg.linFactory.linearizeTrack(
               vFitterOptions.geoContext, vFitterOptions.magFieldContext,
               &origParams, state.vtxInfoMap[&vtx].oldPosition,
@@ -313,19 +315,16 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
           if (!result.ok()) {
             return result.error();
           }
-          newTrkAtVtx.linearizedState = *result;
+          newTrkPtr->linearizedState = *result;
           state.vtxInfoMap[&vtx].linPoint = state.vtxInfoMap[&vtx].oldPosition;
         }
         // update the vertex with the new track
-        m_cfg.vertexUpdator.addAndUpdate(vtx, newTrkAtVtx);
+        m_cfg.vertexUpdator.addAndUpdate(vtx, (*newTrkPtr));
       } else {
         // TODO: change to Logging verbose
         std::cout << "Track weight too low. Skip track." << std::endl;
       }
-      // TODO: change that, push_back copies but mechanism with state.trkInfoMap
-      // relies on pointer to track as key -> currently wrong! Check everywhere
-      // that consistent and valid pointers are used!
-      newTracks.push_back(newTrkAtVtx);
+
     }  // end loop over tracks at vertex
 
     // update tracks at current vertex
