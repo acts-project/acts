@@ -42,9 +42,7 @@ class MultiAdaptiveVertexFitter {
     std::map<Vertex<input_track_t>*, MAVFVertexInfo<input_track_t>> vtxInfoMap;
 
     // map to store tracks information
-    std::map<const TrackAtVertex<input_track_t>*,
-             MAVFTrackAtVtxInfo<input_track_t>>
-        trkInfoMap;
+    std::map<unsigned long, MAVFTrackAtVtxInfo<input_track_t>> trkInfoMap;
   };
 
   struct Config {

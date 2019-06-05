@@ -61,9 +61,8 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 /// @brief Unit test for MultiAdaptiveVertexFitter
 ///
 BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
-
-	// Set up RNG
-	int mySeed = 31415;
+  // Set up RNG
+  int mySeed = 31415;
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
@@ -90,51 +89,51 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
       state;
 
   // Create position of vertex and perigee surface
-    double x = vXYDist(gen);
-    double y = vXYDist(gen);
-    double z = vZDist(gen);
+  double x = vXYDist(gen);
+  double y = vXYDist(gen);
+  double z = vZDist(gen);
 
-    Vector3D vertexPosition(x, y, z);
-    std::shared_ptr<PerigeeSurface> perigeeSurface =
-        Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+  Vector3D vertexPosition(x, y, z);
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-    // Calculate d0 and z0 corresponding to vertex position
-    double d0V = sqrt(x * x + y * y);
-    double z0V = z;
+  // Calculate d0 and z0 corresponding to vertex position
+  double d0V = sqrt(x * x + y * y);
+  double z0V = z;
 
-    // Start constructing nTracks tracks in the following
-    std::vector<TrackAtVertex<BoundParameters>> tracks;
+  // Start constructing nTracks tracks in the following
+  std::vector<TrackAtVertex<BoundParameters>> tracks;
 
-    unsigned int nTracks = 3;
-    // Construct random track emerging from vicinity of vertex position
-    // Vector to store track objects used for vertex fit
-    for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
-      // Construct positive or negative charge randomly
-      double q = qDist(gen) < 0 ? -1. : 1.;
+  unsigned int nTracks = 3;
+  // Construct random track emerging from vicinity of vertex position
+  // Vector to store track objects used for vertex fit
+  for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
+    // Construct positive or negative charge randomly
+    double q = qDist(gen) < 0 ? -1. : 1.;
 
-      // Construct random track parameters
-      TrackParametersBase::ParVector_t paramVec;
-      paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
-          thetaDist(gen), q / pTDist(gen), 0.;
+    // Construct random track parameters
+    TrackParametersBase::ParVector_t paramVec;
+    paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
+        thetaDist(gen), q / pTDist(gen), 0.;
 
-      // Fill vector of track objects with simple covariance matrix
-      std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-      // Resolutions
-      double resD0 = resIPDist(gen);
-      double resZ0 = resIPDist(gen);
-      double resPh = resAngDist(gen);
-      double resTh = resAngDist(gen);
-      double resQp = resQoPDist(gen);
+    // Fill vector of track objects with simple covariance matrix
+    std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
+    // Resolutions
+    double resD0 = resIPDist(gen);
+    double resZ0 = resIPDist(gen);
+    double resPh = resAngDist(gen);
+    double resTh = resAngDist(gen);
+    double resQp = resQoPDist(gen);
 
-      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
-          0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-          0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
+        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
+        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-    auto trk = BoundParameters(tgContext, std::move(covMat), paramVec,
-                                       perigeeSurface);
+    auto trk =
+        BoundParameters(tgContext, std::move(covMat), paramVec, perigeeSurface);
 
-      tracks.push_back(TrackAtVertex(1., trk, trk));
-    }
+    tracks.push_back(TrackAtVertex(1., trk, trk));
+  }
 
   Vertex<BoundParameters> vtx(vertexPosition);
   vtx.setTracksAtVertex(tracks);
@@ -145,29 +144,10 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
 
   BOOST_CHECK(res1.ok());
 
-  //auto res2 = fitter.fit(state, fitterOptions);
+  // auto res2 = fitter.fit(state, fitterOptions);
 
-
-//BOOST_CHECK(res2.ok());
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // BOOST_CHECK(res2.ok());
 }
 
 }  // namespace Test
 }  // namespace Acts
-
-
