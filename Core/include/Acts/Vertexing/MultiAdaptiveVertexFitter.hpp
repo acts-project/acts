@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/Chi2TrackCompatibilityEstimator.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdator.hpp"
@@ -16,9 +19,6 @@
 #include "Acts/Vertexing/SequentialVertexSmoother.hpp"
 #include "Acts/Vertexing/VertexAnnealingTool.hpp"
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
-
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 #include <functional>
 
@@ -102,19 +102,28 @@ class MultiAdaptiveVertexFitter {
 
   /// @brief Constructor used if input_track_t type == BoundParameters
   ///
-  /// @param cfg Configuration object
+  /// @param config Configuration object
+  /// @param logger The logging instance
   template <typename T = input_track_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
-  MultiAdaptiveVertexFitter(const Config& config)
-      : m_cfg(config), m_extractParameters([](T params) { return params; }) {}
+  MultiAdaptiveVertexFitter(const Config& config,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("MultiAdaptiveVertexFitter",
+                                                 Logging::INFO))
+      : m_cfg(config),
+        m_extractParameters([](T params) { return params; }),
+        m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined input_track_t type =! BoundParameters
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from input_track_t object
   MultiAdaptiveVertexFitter(const Config& config,
-                            std::function<BoundParameters(input_track_t)> func)
-      : m_cfg(config), m_extractParameters(func) {}
+                            std::function<BoundParameters(input_track_t)> func,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("MultiAdaptiveVertexFitter",
+                                                 Logging::INFO))
+      : m_cfg(config), m_extractParameters(func), m_logger(std::move(logger)) {}
 
   /// @brief The actual fit function
   ///
@@ -163,6 +172,12 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @param input_track_t object to extract track parameters from
   const std::function<BoundParameters(input_track_t)> m_extractParameters;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
+
+  /// Private access to logging instance
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Tests if vertex is already in list of vertices or not
   ///

@@ -321,8 +321,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
         // update the vertex with the new track
         m_cfg.vertexUpdator.addAndUpdate(vtx, (*newTrkPtr));
       } else {
-        // TODO: change to Logging verbose
-        std::cout << "Track weight too low. Skip track." << std::endl;
+        ACTS_VERBOSE("Track weight too low. Skip track.");
       }
 
     }  // end loop over tracks at vertex
@@ -330,8 +329,8 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     // update tracks at current vertex
     vtx.setTracksAtVertex(newTracks);
 
-    // TODO: change to Logging verbose
-    std::cout << "New vertex position: " << vtx.fullPosition() << std::endl;
+    ACTS_VERBOSE("New vertex position: " << vtx.fullPosition());
+
   }  // end loop over vertex collection
 
   return {};
