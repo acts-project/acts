@@ -146,7 +146,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
         // Retrieve list of links to all vertices that currently use the current
         // track
         std::vector<Vertex<input_track_t>*>& linksToVertices =
-            state.trkInfoMap[&trackIter].linksToVertices;
+            state.trkInfoMap[trackIter.id].linksToVertices;
 
         // Loop over all attached vertices and add those to vertex fit
         // which are not already in `verticesToFit`
@@ -209,7 +209,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
       return res.error();
     }
     // Set ip3dParams for current trackAtVertex
-    state.trkInfoMap[&trkAtVtx].ip3dParams = std::move(res.value());
+    state.trkInfoMap[trkAtVtx.id].ip3dParams = std::move(res.value());
   }
   return {};
 }
@@ -233,7 +233,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
     // TODO: DO I NEED THE ipEst.getParams stuff below?
     // recover from cases where linearization point != 0 but
     // more tracks were added later on
-    if (!state.trkInfoMap[&trkAtVtx].ip3dParams) {
+    if (!state.trkInfoMap[trkAtVtx.id].ip3dParams) {
       auto res = m_cfg.ipEst.getParamsAtIP3d(
           geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
           VectorHelpers::position(currentVtxInfo.linPoint));
@@ -241,7 +241,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
         return res.error();
       }
       // Set ip3dParams for current trackAtVertex
-      state.trkInfoMap[&trkAtVtx].ip3dParams = std::move(res.value());
+      state.trkInfoMap[trkAtVtx.id].ip3dParams = std::move(res.value());
     }
 
     // Create copy of current trackAtVertex in order
@@ -256,11 +256,6 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
         geoContext, *newTrkPtr,
         VectorHelpers::position(currentVtxInfo.oldPosition),
         m_extractParameters);
-
-    // Update trkInfoMap accordingly (change map key)
-    auto nodeHandle = state.trkInfoMap.extract(&trkAtVtx);
-    nodeHandle.key() = newTrkPtr;
-    state.trkInfoMap.insert(std::move(nodeHandle));
   }
   // Set list of updated tracks to current vertex
   currentVtx.setTracksAtVertex(newTracks);
@@ -285,11 +280,6 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
       // to modify it below
       newTracks.push_back(trkAtVtx);
       TrackAtVertex<input_track_t>* newTrkPtr = &(newTracks.back());
-
-      // Update trkInfoMap accordingly (change map key)
-      auto nodeHandle = state.trkInfoMap.extract(&trkAtVtx);
-      nodeHandle.key() = newTrkPtr;
-      state.trkInfoMap.insert(std::move(nodeHandle));
 
       // Get all compatibilities of track to all vertices it is attached to
       auto collectRes = collectTrkToVtxCompatibilities(state, trkAtVtx);
@@ -343,7 +333,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
         State& state, const TrackAtVertex<input_track_t>& trk) const {
   // All vertices that currently hold the track `trk`
   std::vector<Vertex<input_track_t>*> vertices =
-      state.trkInfoMap[&trk].linksToVertices;
+      state.trkInfoMap[trk.id].linksToVertices;
 
   // Vector to store all compatibility values, it will have
   // exactly the size of `vertices`(one value for each vertex

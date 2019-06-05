@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 
@@ -38,7 +39,9 @@ struct TrackAtVertex {
         fittedParams(paramsAtVertex),
         originalTrack(originalParams),
         trackWeight(1.),
-        vertexCompatibility(0.) {}
+        vertexCompatibility(0.) {
+    id = std::hash<TrackAtVertex*>{}(this);
+  }
 
   /// Chi2 of track
   double chi2Track;
@@ -61,6 +64,9 @@ struct TrackAtVertex {
   /// Value of the compatibility of the track to the actual vertex, based
   /// on the estimation on the distance between the track and the vertex
   double vertexCompatibility;
+
+  /// Unique ID
+  unsigned long id;
 };
 
 }  // namespace Acts
