@@ -79,6 +79,7 @@ include_guards:
     expire_in: 6 hours
 
 .integration_tests: &template_integration_tests
+  allow_failure: true
   stage: test
   tags:
     - cvmfs
