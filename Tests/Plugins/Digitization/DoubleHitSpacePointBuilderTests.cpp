@@ -108,14 +108,14 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   std::cout << "Store both hits" << std::endl;
 
-  std::vector<DoubleHitSpacePoint> resultSP;
-  std::vector<std::pair<Acts::PlanarModuleCluster const*,
-                        Acts::PlanarModuleCluster const*>>
+  std::vector<DoubleHitSpacePoint<PlanarModuleCluster>> resultSP;
+  std::vector<std::pair<PlanarModuleCluster const*,
+                        PlanarModuleCluster const*>>
       clusterPairs;
-  SpacePointBuilder<DoubleHitSpacePoint>::DoubleHitSpacePointConfig dhsp_cfg;
+  SpacePointBuilder<DoubleHitSpacePoint<PlanarModuleCluster>>::DoubleHitSpacePointConfig dhsp_cfg;
 
   // Combine two PlanarModuleClusters
-  SpacePointBuilder<DoubleHitSpacePoint> dhsp(dhsp_cfg);
+  SpacePointBuilder<DoubleHitSpacePoint<PlanarModuleCluster>> dhsp(dhsp_cfg);
   dhsp.makeClusterPairs(tgContext, {pmc}, {pmc2}, clusterPairs);
 
   BOOST_CHECK_EQUAL(clusterPairs.size(), 1);
