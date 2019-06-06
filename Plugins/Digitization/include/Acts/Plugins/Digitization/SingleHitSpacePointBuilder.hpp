@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,9 +15,10 @@
 namespace Acts {
 
 /// @brief Structure for easier bookkeeping of clusters.
+template <typename Cluster>
 struct SingleHitSpacePoint {
   /// Storage of the cluster on a surface
-  const PlanarModuleCluster* clusterModule;
+  const Cluster* clusterModule;
   /// Storage of a space point.
   Vector3D spacePoint;
 
@@ -42,10 +43,11 @@ struct SingleHitSpacePoint {
 /// corresponding space point.
 ///
 template <>
-class SpacePointBuilder<SingleHitSpacePoint> {
+template <typename Cluster>
+class SpacePointBuilder<SingleHitSpacePoint<Cluster>> {
  public:
   /// Default constructor
-  SpacePointBuilder<SingleHitSpacePoint>() = default;
+  SpacePointBuilder<SingleHitSpacePoint<Cluster>>() = default;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// and stores the results
@@ -55,8 +57,8 @@ class SpacePointBuilder<SingleHitSpacePoint> {
   /// @param spacePointStorage storage of the results
   void calculateSpacePoints(
       const GeometryContext& gctx,
-      const std::vector<const PlanarModuleCluster*>& clusters,
-      std::vector<SingleHitSpacePoint>& spacePointStorage) const;
+      const std::vector<const Cluster*>& clusters,
+      std::vector<SingleHitSpacePoint<Cluster>>& spacePointStorage) const;
 
  protected:
   /// @brief Getter method for the local coordinates of a cluster
@@ -65,7 +67,7 @@ class SpacePointBuilder<SingleHitSpacePoint> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2D localCoords(const PlanarModuleCluster& cluster) const;
+  Vector2D localCoords(const Cluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   ///
@@ -74,7 +76,8 @@ class SpacePointBuilder<SingleHitSpacePoint> {
   /// information
   /// @return vector of the global coordinates of the cluster
   Vector3D globalCoords(const GeometryContext& gctx,
-                        const PlanarModuleCluster& cluster) const;
+                        const Cluster& cluster) const;
 };
 
+#include "Acts/Plugins/Digitization/detail/SingleHitSpacePointBuilder.ipp"
 }  // namespace Acts
