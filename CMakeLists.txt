@@ -74,6 +74,7 @@ if(ACTS_BUILD_TGEO_PLUGIN)
 endif()
 if(ACTS_BUILD_DOC)
   find_package(Doxygen 1.8.11 REQUIRED)
+  find_package(Sphinx REQUIRED)
 endif()
 
 # core library, core plugins, and other components
