@@ -15,7 +15,7 @@
 namespace Acts {
 
 /// @brief Structure for easier bookkeeping of clusters.
-template<typename Cluster>
+template <typename Cluster>
 struct DoubleHitSpacePoint {
   /// Storage of the hit cluster on a surface
   const Cluster* clusterFront;
@@ -48,7 +48,7 @@ struct DoubleHitSpacePoint {
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 template <>
-template<typename Cluster>
+template <typename Cluster>
 class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
  public:
   /// @brief Configuration of the class to steer its behaviour
@@ -82,12 +82,11 @@ class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
   /// @param clusterPairs storage of the cluster pairs
   /// @note The structure of @p clustersFront and @p clustersBack is meant to be
   /// clusters[Independent clusters on a single surface]
-  void makeClusterPairs(
-      const GeometryContext& gctx,
-      const std::vector<const Cluster*>& clustersFront,
-      const std::vector<const Cluster*>& clustersBack,
-      std::vector<std::pair<const Cluster*,
-                            const Cluster*>>& clusterPairs) const;
+  void makeClusterPairs(const GeometryContext& gctx,
+                        const std::vector<const Cluster*>& clustersFront,
+                        const std::vector<const Cluster*>& clustersBack,
+                        std::vector<std::pair<const Cluster*, const Cluster*>>&
+                            clusterPairs) const;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
@@ -98,8 +97,8 @@ class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
   /// @note If no configuration is set, the default values will be used
   void calculateSpacePoints(
       const GeometryContext& gctx,
-      const std::vector<std::pair<const Cluster*,
-                                  const Cluster*>>& clusterPairs,
+      const std::vector<std::pair<const Cluster*, const Cluster*>>&
+          clusterPairs,
       std::vector<DoubleHitSpacePoint<Cluster>>& spacePoints) const;
 
  private:
@@ -124,8 +123,8 @@ class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
   /// that corresponds to a given hit
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
-  std::pair<Vector3D, Vector3D> endsOfStrip(
-      const GeometryContext& gctx, const Cluster& cluster) const;
+  std::pair<Vector3D, Vector3D> endsOfStrip(const GeometryContext& gctx,
+                                            const Cluster& cluster) const;
 };
 #include "Acts/Plugins/Digitization/detail/DoubleHitSpacePointBuilder.ipp"
 }  // namespace Acts

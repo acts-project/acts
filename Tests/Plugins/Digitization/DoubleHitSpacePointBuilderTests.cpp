@@ -109,10 +109,10 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   std::cout << "Store both hits" << std::endl;
 
   std::vector<DoubleHitSpacePoint<PlanarModuleCluster>> resultSP;
-  std::vector<std::pair<PlanarModuleCluster const*,
-                        PlanarModuleCluster const*>>
+  std::vector<std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>>
       clusterPairs;
-  SpacePointBuilder<DoubleHitSpacePoint<PlanarModuleCluster>>::DoubleHitSpacePointConfig dhsp_cfg;
+  SpacePointBuilder<DoubleHitSpacePoint<PlanarModuleCluster>>::
+      DoubleHitSpacePointConfig dhsp_cfg;
 
   // Combine two PlanarModuleClusters
   SpacePointBuilder<DoubleHitSpacePoint<PlanarModuleCluster>> dhsp(dhsp_cfg);

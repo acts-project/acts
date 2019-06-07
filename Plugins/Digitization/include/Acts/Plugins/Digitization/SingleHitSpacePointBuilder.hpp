@@ -56,8 +56,7 @@ class SpacePointBuilder<SingleHitSpacePoint<Cluster>> {
   /// @param cluster vector of clusters
   /// @param spacePointStorage storage of the results
   void calculateSpacePoints(
-      const GeometryContext& gctx,
-      const std::vector<const Cluster*>& clusters,
+      const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,
       std::vector<SingleHitSpacePoint<Cluster>>& spacePointStorage) const;
 
  protected:

@@ -8,8 +8,9 @@
 
 #include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
 
-template<typename Cluster>
-Acts::Vector2D Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::localCoords(
+template <typename Cluster>
+Acts::Vector2D
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
@@ -17,8 +18,9 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::loca
   return local;
 }
 
-template<typename Cluster>
-Acts::Vector3D Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::globalCoords(
+template <typename Cluster>
+Acts::Vector3D
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -30,11 +32,12 @@ Acts::Vector3D Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::glob
   return pos;
 }
 
-template<typename Cluster>
-void Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::calculateSpacePoints(
-    const GeometryContext& gctx,
-    const std::vector<const Cluster*>& clusters,
-    std::vector<Acts::SingleHitSpacePoint<Cluster>>& spacePointStorage) const {
+template <typename Cluster>
+void Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::
+    calculateSpacePoints(const GeometryContext& gctx,
+                         const std::vector<const Cluster*>& clusters,
+                         std::vector<Acts::SingleHitSpacePoint<Cluster>>&
+                             spacePointStorage) const {
   // Set the space point for all stored hits
   for (const auto& c : clusters) {
     Acts::SingleHitSpacePoint<Cluster> spacePoint;
