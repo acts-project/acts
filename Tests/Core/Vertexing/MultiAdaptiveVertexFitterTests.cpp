@@ -61,6 +61,8 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 /// @brief Unit test for MultiAdaptiveVertexFitter
 ///
 BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
+  bool debugMode = true;
+
   // Set up RNG
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -88,33 +90,31 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
                             Propagator<EigenStepper<ConstantBField>>>::State
       state;
 
-  // Create position of vertex and perigee surface
-  double x = vXYDist(gen);
-  double y = vXYDist(gen);
-  double z = vZDist(gen);
+  // Create positions of three vertices, two of which (1 and 2) are
+  // close to one another and will share a common track later
+  Vector3D vtxPos1(0.1 * units::_mm, 0.1 * units::_mm, -0.5 * units::_mm);
+  Vector3D vtxPos2(0.1 * units::_mm, 0.1 * units::_mm, -1. * units::_mm);
+  Vector3D vtxPos3(0.2 * units::_mm, 0.4 * units::_mm, 7. * units::_mm);
 
-  Vector3D vertexPosition(x, y, z);
+  std::vector<Vector3D> vtxVec{vtxPos1, vtxPos2, vtxPos3};
+
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  // Calculate d0 and z0 corresponding to vertex position
-  double d0V = sqrt(x * x + y * y);
-  double z0V = z;
+  // Vector to store vectors of Tracks at vertex for every vertex
+  std::vector<std::vector<TrackAtVertex<BoundParameters>>> trackVtxVec(
+      vtxVec.size());
 
-  // Start constructing nTracks tracks in the following
-  std::vector<TrackAtVertex<BoundParameters>> tracks;
+  // only for debugging
+  std::vector<TrackAtVertex<BoundParameters>> allTracks;
 
-  unsigned int nTracks = 3;
-  // Construct random track emerging from vicinity of vertex position
-  // Vector to store track objects used for vertex fit
-  for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
+  unsigned int nTracksPerVtx = 4;
+  // Construct nTracksPerVtx * 3 (3 vertices) random track emerging
+  // from vicinity of vertex positions
+  for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxVec.size();
+       iTrack++) {
     // Construct positive or negative charge randomly
     double q = qDist(gen) < 0 ? -1. : 1.;
-
-    // Construct random track parameters
-    TrackParametersBase::ParVector_t paramVec;
-    paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
-        thetaDist(gen), q / pTDist(gen), 0.;
 
     // Fill vector of track objects with simple covariance matrix
     std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
@@ -129,18 +129,69 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
         0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
         0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
+    // Index of current vertex
+    int vtxIdx = (int)(iTrack / nTracksPerVtx);
+
+    double d0V = std::sqrt(vtxVec[vtxIdx][0] * vtxVec[vtxIdx][0] +
+                           vtxVec[vtxIdx][1] * vtxVec[vtxIdx][1]);
+    double z0V = vtxVec[vtxIdx][2];
+
+    // Construct random track parameters
+    TrackParametersBase::ParVector_t paramVec;
+    paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
+        thetaDist(gen), q / pTDist(gen), 0.;
+
     auto trk =
         BoundParameters(tgContext, std::move(covMat), paramVec, perigeeSurface);
 
-    tracks.push_back(TrackAtVertex(1., trk, trk));
+    TrackAtVertex<BoundParameters> trkAtVtx(1., trk, trk);
+
+    trackVtxVec[vtxIdx].push_back(trkAtVtx);
+
+    // Use first track also for second vertex to let vtx1 and vtx2
+    // share this track
+    if (iTrack == 0) {
+      trackVtxVec[1].push_back(trkAtVtx);
+    }
+
+    if (debugMode) {
+      allTracks.push_back(trkAtVtx);
+      std::cout << "iTrack: " << iTrack << ", " << trackVtxVec[0].size() << " "
+                << trackVtxVec[1].size() << " " << trackVtxVec[2].size()
+                << std::endl;
+    }
   }
 
-  Vertex<BoundParameters> vtx(vertexPosition);
-  vtx.setTracksAtVertex(tracks);
+  int idx = 0;
+  for (auto& vtxPos : vtxVec) {
+    Vertex<BoundParameters> vtx(vtxPos);
+    vtx.setTracksAtVertex(trackVtxVec[idx]);
 
-  state.vertexCollection.push_back(vtx);
+    // Add vertex link to each track
+    for (auto& trkAtVtx : vtx.tracks()) {
+      state.trkInfoMap[trkAtVtx.id].linksToVertices.push_back(&vtx);
+    }
 
-  auto res1 = fitter.addVertexToFit(state, vtx, fitterOptions);
+    if (debugMode) {
+      std::cout << "Number of tracks at vertex " << idx + 1 << ": "
+                << vtx.tracks().size() << std::endl;
+    }
+
+    idx++;
+  }
+
+  if (debugMode) {
+    for (auto& trkAtVtx : allTracks) {
+      auto links = state.trkInfoMap[trkAtVtx.id].linksToVertices;
+      for (auto vtxLink : links) {
+        std::cout << "track with ID: " << trkAtVtx.id << " used by vertex "
+                  << vtxLink << std::endl;
+      }
+    }
+  }
+
+  auto res1 =
+      fitter.addVertexToFit(state, state.vertexCollection[0], fitterOptions);
 
   BOOST_CHECK(res1.ok());
 
