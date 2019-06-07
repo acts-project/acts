@@ -12,6 +12,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace{
+  /// @brief Storage container for variables related to the calculation of space
+  /// points
   struct SpacePointParameters {
     /// Vector pointing from bottom to top end of first SDE
     Vector3D q;
@@ -41,6 +43,15 @@ namespace{
     double limitExtended;
   };
   
+  /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
+  ///
+  /// @param [in] pos1 position of the first cluster
+  /// @param [in] pos2 position the second cluster
+  /// @param [in] maxDistance Maximum distance between two clusters
+  /// @param [in] maxAngleTheta2 Maximum squared theta angle between two clusters
+  /// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
+  ///
+  /// @return The squared sum within configuration parameters, otherwise -1
 double
 differenceOfClustersChecked(
     const Vector3D& pos1, const Vector3D& pos2, const Vector3D& posVertex, const double maxDistance, const double maxAngleTheta2, const double maxAnglePhi2) {
@@ -72,6 +83,12 @@ differenceOfClustersChecked(
   return diffTheta2 + diffPhi2;
 }
 
+/// @brief This function finds the top and bottom end of a detector segment in local coordinates
+///
+/// @param [in] local Local position of the cluster
+/// @param [in] segment Segmentation of the detector element
+///
+/// @return Pair containing the top and bottom end
 std::pair<Acts::Vector2D, Acts::Vector2D>
 findLocalTopAndBottomEnd(const Acts::Vector2D local, const Acts::CartesianSegmentation* segment)
 {
@@ -103,6 +120,16 @@ findLocalTopAndBottomEnd(const Acts::Vector2D local, const Acts::CartesianSegmen
   return topBottomLocal;
 }
 
+  /// @brief Calculates a space point whithout using the vertex
+  /// @note This is mostly to resolve space points from cosmic data
+  /// @param a vector to the top end of the first SDE
+  /// @param c vector to the top end of the second SDE
+  /// @param q vector from the bottom to the top end of the first SDE
+  /// @param r vector from the bottom to the top end of the second SDE
+  /// @return parameter that indicates the location of the space point; returns
+  /// 1. if it failed
+  /// @note The meaning of the parameter is explained in more detail in the
+  /// function body
 double 
 calcPerpendicularProjection(
     const Acts::Vector3D& a, const Acts::Vector3D& c, const Acts::Vector3D& q,
@@ -130,6 +157,15 @@ calcPerpendicularProjection(
   return 1.;
 }
 
+  /// @brief This function tests if a space point can be estimated by a more
+  /// tolerant treatment of construction. In fact, this function indirectly
+  /// allows shifts of the vertex.
+  ///
+  /// @param [in] spaPoPa container that stores geometric parameters and rules of the
+  /// space point formation
+  /// @param [in] stripLengthGapTolerance Tolerance scaling factor of the gap between strip detector elements
+  ///
+  /// @return indicator if the test was successful
 bool recoverSpacePoint(
     SpacePointParameters& spaPoPa, double stripLengthGapTolerance) {
   /// Consider some cases that would allow an easy exit
@@ -209,9 +245,40 @@ bool recoverSpacePoint(
   return false;
 }
 
+/// @brief This function performs a straight forward calculation of a space point and returns whether it was succesful or not.
+///
+/// @param [in] stripEnds1 Top and bottom end of the first strip detector element
+/// @param [in] stripEnds1 Top and bottom end of the second strip detector element
+/// @param [in] posVertex Position of the vertex
+/// @param [in, out] spaPoPa Data container of the calculations
+/// @param [in] stripLengthTolerance Tolerance scaling factor on the strip detector element length
+///
+/// @return Boolean statement whether the space point calculation was succesful
 bool
-calculateSpacePoint(const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds1, const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds2, const Acts::Vector3D& posVertex, SpacePointParameters& spaPoPa, const double stripLengthTolerance)
+calculateSpacePoint(const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds1, const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds2, const Acts::Vector3D& posVertex, 
+	SpacePointParameters& spaPoPa, const double stripLengthTolerance)
 {
+	/// The following algorithm is meant for finding the position on the first
+    /// strip if there is a corresponding cluster on the second strip. The
+    /// resulting point is a point x on the first surfaces. This point is
+    /// along a line between the points a (top end of the strip)
+    /// and b (bottom end of the strip). The location can be parametrized as
+    /// 	2 * x = (1 + m) a + (1 - m) b
+    /// as function of the scalar m. m is a parameter in the interval
+    /// -1 < m < 1 since the hit was on the strip. Furthermore, the vector
+    /// from the vertex to the cluster on the second strip y is needed to be a
+    /// multiple k of the vector from vertex to the hit on the first strip x.
+    /// As a consequence of this demand y = k * x needs to be on the
+    /// connecting line between the top (c) and bottom (d) end of
+    /// the second strip. If both clusters correspond to each other, the
+    /// condition
+    /// 	y * (c X d) = k * x (c X d) = 0 ("X" represents a cross product)
+    /// needs to be fulfilled. Inserting the first equation into this
+    /// equation leads to the condition for m as given in the following
+    /// algorithm and therefore to the calculation of x.
+    /// The same calculation can be repeated for y. Its corresponding
+    /// parameter will be named n.
+    
     spaPoPa.s = stripEnds1.first + stripEnds1.second - 2 * posVertex;
     spaPoPa.t = stripEnds2.first + stripEnds2.second - 2 * posVertex;
     spaPoPa.qs = spaPoPa.q.cross(spaPoPa.s);
@@ -351,27 +418,6 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calculateSpace
     // Calculate the ends of the SDEs
     const auto& ends1 = endsOfStrip(gctx, *(cp.first));
     const auto& ends2 = endsOfStrip(gctx, *(cp.second));
-
-    /// The following algorithm is meant for finding the position on the first
-    /// strip if there is a corresponding cluster on the second strip. The
-    /// resulting point is a point x on the first surfaces. This point is
-    /// along a line between the points a (top end of the strip)
-    /// and b (bottom end of the strip). The location can be parametrized as
-    /// 	2 * x = (1 + m) a + (1 - m) b
-    /// as function of the scalar m. m is a parameter in the interval
-    /// -1 < m < 1 since the hit was on the strip. Furthermore, the vector
-    /// from the vertex to the cluster on the second strip y is needed to be a
-    /// multiple k of the vector from vertex to the hit on the first strip x.
-    /// As a consequence of this demand y = k * x needs to be on the
-    /// connecting line between the top (c) and bottom (d) end of
-    /// the second strip. If both clusters correspond to each other, the
-    /// condition
-    /// 	y * (c X d) = k * x (c X d) = 0 ("X" represents a cross product)
-    /// needs to be fulfilled. Inserting the first equation into this
-    /// equation leads to the condition for m as given in the following
-    /// algorithm and therefore to the calculation of x.
-    /// The same calculation can be repeated for y. Its corresponding
-    /// parameter will be named n.
 
     spaPoPa.q = ends1.first - ends1.second;
     spaPoPa.r = ends2.first - ends2.second;
