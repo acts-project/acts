@@ -11,40 +11,60 @@
 #include <limits>
 #include "Acts/Utilities/Helpers.hpp"
 
-///
-/// @note Used abbreviation: "Strip Detector Element" -> SDE
-///
-template<typename Cluster>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::SpacePointBuilder(
-    Acts::SpacePointBuilder<
-        Acts::DoubleHitSpacePoint<Cluster>>::DoubleHitSpacePointConfig cfg)
-    : m_cfg(std::move(cfg)) {}
-
-template<typename Cluster>
+namespace{
+  struct SpacePointParameters {
+    /// Vector pointing from bottom to top end of first SDE
+    Vector3D q;
+    /// Vector pointing from bottom to top end of second SDE
+    Vector3D r;
+    /// Twice the vector pointing from vertex to to midpoint of first SDE
+    Vector3D s;
+    /// Twice the vector pointing from vertex to to midpoint of second SDE
+    Vector3D t;
+    /// Cross product between SpacePointParameters::q and
+    /// SpacePointParameters::s
+    Vector3D qs;
+    /// Cross product between SpacePointParameters::r and
+    /// SpacePointParameters::t
+    Vector3D rt;
+    /// Magnitude of SpacePointParameters::q
+    double qmag;
+    /// Parameter that determines the hit position on the first SDE
+    double m;
+    /// Parameter that determines the hit position on the second SDE
+    double n;
+    /// Regular limit of the absolut values of SpacePointParameters::m and
+    /// SpacePointParameters::n
+    double limit = 1.;
+    /// Limit of SpacePointParameters::m and SpacePointParameters::n in case of
+    /// variable vertex
+    double limitExtended;
+  };
+  
 double
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::differenceOfClustersChecked(
-    const Vector3D& pos1, const Vector3D& pos2) const {
+differenceOfClustersChecked(
+    const Vector3D& pos1, const Vector3D& pos2, const Vector3D& posVertex, const double maxDistance, const double maxAngleTheta2, const double maxAnglePhi2) {
   // Check if measurements are close enough to each other
-  if ((pos1 - pos2).norm() > m_cfg.diffDist) {
+  if ((pos1 - pos2).norm() > maxDistance) {
     return -1.;
   }
 
   // Calculate the angles of the vectors
   double phi1, theta1, phi2, theta2;
-  phi1 = VectorHelpers::phi(pos1 - m_cfg.vertex);
-  theta1 = VectorHelpers::theta(pos1 - m_cfg.vertex);
-  phi2 = VectorHelpers::phi(pos2 - m_cfg.vertex);
-  theta2 = VectorHelpers::theta(pos2 - m_cfg.vertex);
+  phi1 = VectorHelpers::phi(pos1 - posVertex);
+  theta1 = VectorHelpers::theta(pos1 - posVertex);
+  phi2 = VectorHelpers::phi(pos2 - posVertex);
+  theta2 = VectorHelpers::theta(pos2 - posVertex);
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
-  if (diffTheta2 > m_cfg.diffTheta2) {
+  if (diffTheta2 > maxAngleTheta2) {
     return -1.;
   }
 
   // Calculate the squared difference between the phi angles
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
-  if (diffPhi2 > m_cfg.diffPhi2) {
+  if (diffPhi2 > maxAnglePhi2) {
     return -1.;
   }
 
@@ -52,88 +72,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::differenceOfCluster
   return diffTheta2 + diffPhi2;
 }
 
-template<typename Cluster>
-Acts::Vector2D Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::localCoords(
-    const Cluster& cluster) const {
-  // Local position information
-  auto par = cluster.parameters();
-  Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
-  return local;
-}
-
-template<typename Cluster>
-Acts::Vector3D Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::globalCoords(
-    const GeometryContext& gctx, const Cluster& cluster) const {
-  // Receive corresponding surface
-  auto& clusterSurface = cluster.referenceSurface();
-
-  // Transform local into global position information
-  Acts::Vector3D pos, mom;
-  clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
-
-  return pos;
-}
-
-template<typename Cluster>
-void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::makeClusterPairs(
-    const GeometryContext& gctx,
-    const std::vector<const Cluster*>& clustersFront,
-    const std::vector<const Cluster*>& clustersBack,
-    std::vector<std::pair<const Cluster*,
-                          const Cluster*>>& clusterPairs) const {
-  // Return if no clusters are given in a vector
-  if (clustersFront.empty() || clustersBack.empty()) {
-    return;
-  }
-
-  // Declare helper variables
-  double currentDiff;
-  double diffMin;
-  unsigned int clusterMinDist;
-
-  // Walk through all clusters on both surfaces
-  for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size();
-       iClustersFront++) {
-    // Set the closest distance to the maximum of double
-    diffMin = std::numeric_limits<double>::max();
-    // Set the corresponding index to an element not in the list of clusters
-    clusterMinDist = clustersBack.size();
-    for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
-         iClustersBack++) {
-      // Calculate the distances between the hits
-      currentDiff = differenceOfClustersChecked(
-          globalCoords(gctx, *(clustersFront[iClustersFront])),
-          globalCoords(gctx, *(clustersBack[iClustersBack])));
-      // Store the closest clusters (distance and index) calculated so far
-      if (currentDiff < diffMin && currentDiff >= 0.) {
-        diffMin = currentDiff;
-        clusterMinDist = iClustersBack;
-      }
-    }
-
-    // Store the best (=closest) result
-    if (clusterMinDist < clustersBack.size()) {
-      std::pair<const Cluster*,
-                const Cluster*>
-          clusterPair;
-      clusterPair = std::make_pair(clustersFront[iClustersFront],
-                                   clustersBack[clusterMinDist]);
-      clusterPairs.push_back(clusterPair);
-    }
-  }
-}
-
-template<typename Cluster>
-std::pair<Acts::Vector3D, Acts::Vector3D>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::endsOfStrip(
-    const GeometryContext& gctx,
-    const Cluster& cluster) const {
-  // Calculate the local coordinates of the cluster
-  const Acts::Vector2D local = localCoords(cluster);
-
-  // Receive the binning
-  auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-      &(cluster.digitizationModule()->segmentation()));
+std::pair<Acts::Vector2D, Acts::Vector2D>
+findLocalTopAndBottomEnd(const Acts::Vector2D local, const Acts::CartesianSegmentation* segment)
+{
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
@@ -142,37 +83,30 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::endsOfStrip(
   size_t binX = binData[0].searchLocal(local);
   size_t binY = binData[1].searchLocal(local);
 
-  Acts::Vector2D topLocal, bottomLocal;
+  // Storage of the local top (first) and bottom (second) end
+  std::pair<Acts::Vector2D, Acts::Vector2D> topBottomLocal;
 
   if (boundariesX[binX + 1] - boundariesX[binX] <
       boundariesY[binY + 1] - boundariesY[binY]) {
     // Set the top and bottom end of the strip in local coordinates
-    topLocal = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+    topBottomLocal.first = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
                 boundariesY[binY + 1]};
-    bottomLocal = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
+    topBottomLocal.second = {(boundariesX[binX] + boundariesX[binX + 1]) / 2,
                    boundariesY[binY]};
   } else {
     // Set the top and bottom end of the strip in local coordinates
-    topLocal = {boundariesX[binX],
+    topBottomLocal.first = {boundariesX[binX],
                 (boundariesY[binY] + boundariesY[binY + 1]) / 2};
-    bottomLocal = {boundariesX[binX + 1],
+    topBottomLocal.second = {boundariesX[binX + 1],
                    (boundariesY[binY] + boundariesY[binY + 1]) / 2};
   }
-
-  // Calculate the global coordinates of the top and bottom end of the strip
-  Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
-  const auto* sur = &cluster.referenceSurface();
-  sur->localToGlobal(gctx, topLocal, mom, topGlobal);
-  sur->localToGlobal(gctx, bottomLocal, mom, bottomGlobal);
-
-  // Return the top and bottom end of the strip in global coordinates
-  return std::make_pair(topGlobal, bottomGlobal);
+  return topBottomLocal;
 }
 
-template<typename Cluster>
-double Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calcPerpProj(
+double 
+calcPerpendicularProjection(
     const Acts::Vector3D& a, const Acts::Vector3D& c, const Acts::Vector3D& q,
-    const Acts::Vector3D& r) const {
+    const Acts::Vector3D& r) {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
   /// The underlying assumption is that the best point is given by the closest
@@ -196,20 +130,18 @@ double Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calcPerpProj
   return 1.;
 }
 
-template<typename Cluster>
-bool Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::recoverSpacePoint(
-    Acts::SpacePointBuilder<DoubleHitSpacePoint<Cluster>>::SpacePointParameters& spaPoPa)
-    const {
+bool recoverSpacePoint(
+    SpacePointParameters& spaPoPa, double stripLengthGapTolerance) {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
-  if (m_cfg.stripLengthGapTolerance <= 0.) {
+  if (stripLengthGapTolerance <= 0.) {
     return false;
   }
   spaPoPa.qmag = spaPoPa.q.norm();
   // Increase the limits. This allows a check if the point is just slightly
   // outside the SDE
   spaPoPa.limitExtended =
-      spaPoPa.limit + m_cfg.stripLengthGapTolerance / spaPoPa.qmag;
+      spaPoPa.limit + stripLengthGapTolerance / spaPoPa.qmag;
   // Check if m is just slightly outside
   if (fabs(spaPoPa.m) > spaPoPa.limitExtended) {
     return false;
@@ -277,6 +209,132 @@ bool Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::recoverSpacePo
   return false;
 }
 
+bool
+calculateSpacePoint(const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds1, const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds2, const Acts::Vector3D& posVertex, SpacePointParameters& spaPoPa, const double stripLengthTolerance)
+{
+    spaPoPa.s = stripEnds1.first + stripEnds1.second - 2 * posVertex;
+    spaPoPa.t = stripEnds2.first + stripEnds2.second - 2 * posVertex;
+    spaPoPa.qs = spaPoPa.q.cross(spaPoPa.s);
+    spaPoPa.rt = spaPoPa.r.cross(spaPoPa.t);
+    spaPoPa.m = -spaPoPa.s.dot(spaPoPa.rt) / spaPoPa.q.dot(spaPoPa.rt);
+
+    // Set the limit for the parameter
+    if (spaPoPa.limit == 1. && stripLengthTolerance != 0.) {
+      spaPoPa.limit = 1. + stripLengthTolerance;
+    }
+
+    // Check if m and n can be resolved in the interval (-1, 1)
+    return (fabs(spaPoPa.m) <= spaPoPa.limit &&
+        fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /
+                         spaPoPa.r.dot(spaPoPa.qs)) <= spaPoPa.limit);
+}
+}
+
+///
+/// @note Used abbreviation: "Strip Detector Element" -> SDE
+///
+template<typename Cluster>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::SpacePointBuilder(
+    Acts::SpacePointBuilder<
+        Acts::DoubleHitSpacePoint<Cluster>>::DoubleHitSpacePointConfig cfg)
+    : m_cfg(std::move(cfg)) {}
+
+template<typename Cluster>
+Acts::Vector2D Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::localCoords(
+    const Cluster& cluster) const {
+  // Local position information
+  auto par = cluster.parameters();
+  Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
+  return local;
+}
+
+template<typename Cluster>
+Acts::Vector3D Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::globalCoords(
+    const GeometryContext& gctx, const Cluster& cluster) const {
+  // Receive corresponding surface
+  auto& clusterSurface = cluster.referenceSurface();
+
+  // Transform local into global position information
+  Acts::Vector3D pos, mom;
+  clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
+
+  return pos;
+}
+
+template<typename Cluster>
+void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::makeClusterPairs(
+    const GeometryContext& gctx,
+    const std::vector<const Cluster*>& clustersFront,
+    const std::vector<const Cluster*>& clustersBack,
+    std::vector<std::pair<const Cluster*,
+                          const Cluster*>>& clusterPairs) const {
+  // Return if no clusters are given in a vector
+  if (clustersFront.empty() || clustersBack.empty()) {
+    return;
+  }
+
+  // Declare helper variables
+  double currentDiff;
+  double diffMin;
+  unsigned int clusterMinDist;
+
+  // Walk through all clusters on both surfaces
+  for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size();
+       iClustersFront++) {
+    // Set the closest distance to the maximum of double
+    diffMin = std::numeric_limits<double>::max();
+    // Set the corresponding index to an element not in the list of clusters
+    clusterMinDist = clustersBack.size();
+    for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
+         iClustersBack++) {
+      // Calculate the distances between the hits
+      currentDiff = differenceOfClustersChecked(
+          globalCoords(gctx, *(clustersFront[iClustersFront])),
+          globalCoords(gctx, *(clustersBack[iClustersBack])), m_cfg.vertex, m_cfg.diffDist, m_cfg.diffPhi2, m_cfg.diffTheta2);
+      // Store the closest clusters (distance and index) calculated so far
+      if (currentDiff < diffMin && currentDiff >= 0.) {
+        diffMin = currentDiff;
+        clusterMinDist = iClustersBack;
+      }
+    }
+
+    // Store the best (=closest) result
+    if (clusterMinDist < clustersBack.size()) {
+      std::pair<const Cluster*,
+                const Cluster*>
+          clusterPair;
+      clusterPair = std::make_pair(clustersFront[iClustersFront],
+                                   clustersBack[clusterMinDist]);
+      clusterPairs.push_back(clusterPair);
+    }
+  }
+}
+
+template<typename Cluster>
+std::pair<Acts::Vector3D, Acts::Vector3D>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::endsOfStrip(
+    const GeometryContext& gctx,
+    const Cluster& cluster) const {
+  // Calculate the local coordinates of the cluster
+  const Acts::Vector2D local = localCoords(cluster);
+
+  // Receive the binning
+  auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
+      &(cluster.digitizationModule()->segmentation()));
+
+  std::pair<Vector2D, Vector2D> topBottomLocal = findLocalTopAndBottomEnd(local, segment);
+  
+  // Calculate the global coordinates of the top and bottom end of the strip
+  Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
+  const auto* sur = &cluster.referenceSurface();
+  sur->localToGlobal(gctx, topBottomLocal.first, mom, topGlobal);
+  sur->localToGlobal(gctx, topBottomLocal.second, mom, bottomGlobal);
+
+  // Return the top and bottom end of the strip in global coordinates
+  return std::make_pair(topGlobal, bottomGlobal);
+}
+
+
 template<typename Cluster>
 void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calculateSpacePoints(
     const GeometryContext& gctx,
@@ -286,7 +344,7 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calculateSpace
     std::vector<Acts::DoubleHitSpacePoint<Cluster>>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
-  Acts::SpacePointBuilder<DoubleHitSpacePoint<Cluster>>::SpacePointParameters spaPoPa;
+  SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
   for (const auto& cp : clusterPairs) {
@@ -322,7 +380,7 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calculateSpace
     double resultPerpProj;
     if (m_cfg.usePerpProj) {
       resultPerpProj =
-          calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
+          calcPerpendicularProjection(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
         Acts::DoubleHitSpacePoint<Cluster> sp;
         sp.clusterFront = cp.first;
@@ -333,21 +391,8 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calculateSpace
       }
     }
 
-    spaPoPa.s = ends1.first + ends1.second - 2 * m_cfg.vertex;
-    spaPoPa.t = ends2.first + ends2.second - 2 * m_cfg.vertex;
-    spaPoPa.qs = spaPoPa.q.cross(spaPoPa.s);
-    spaPoPa.rt = spaPoPa.r.cross(spaPoPa.t);
-    spaPoPa.m = -spaPoPa.s.dot(spaPoPa.rt) / spaPoPa.q.dot(spaPoPa.rt);
-
-    // Set the limit for the parameter
-    if (spaPoPa.limit == 1. && m_cfg.stripLengthTolerance != 0.) {
-      spaPoPa.limit = 1. + m_cfg.stripLengthTolerance;
-    }
-
-    // Check if m and n can be resolved in the interval (-1, 1)
-    if (fabs(spaPoPa.m) <= spaPoPa.limit &&
-        fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /
-                         spaPoPa.r.dot(spaPoPa.qs)) <= spaPoPa.limit) {
+	if(calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa, m_cfg.stripLengthTolerance))
+	{
       // Store the space point
       Acts::DoubleHitSpacePoint<Cluster> sp;
       sp.clusterFront = cp.first;
@@ -363,7 +408,7 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::calculateSpace
       /// @note This procedure is an indirect variation of the vertex
       /// position.
       // Check if a recovery the point(s) and store them if successful
-      if (recoverSpacePoint(spaPoPa)) {
+      if (recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance)) {
         Acts::DoubleHitSpacePoint<Cluster> sp;
         sp.clusterFront = cp.first;
         sp.clusterBack = cp.second;
