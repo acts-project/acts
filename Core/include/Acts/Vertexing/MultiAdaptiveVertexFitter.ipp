@@ -42,29 +42,26 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       // TODO: where is this init set? in finder or in else directly below? (->
       // defaulted in Info)
       if (currentVtxInfo.isInitialized) {
-        std::cout
-            << "Candidate already has a position: storing it in oldpositions"
-            << std::endl;
+        ACTS_VERBOSE(
+            "Candidate already has a position: storing it in oldpositions");
         currentVtxInfo.oldPosition = currentVtx->fullPosition();
       } else {
         // Vertex will now be initialized
         currentVtxInfo.isInitialized = true;
-        std::cout << "Candidate has no position so far: using as old position "
-                     "the seedVertex"
-                  << std::endl;
+        ACTS_VERBOSE(
+            "Candidate has no position so far: using seedVertex as old "
+            "position ");
         if (currentVtxInfo.seedPos == SpacePointVector()) {
-          std::cout << "seed not set.. something went wrong I guess. Why not "
-                       "directly use the seed position from seeds in "
-                       "vertexCollection?"
-                    << std::endl;
+          // TODO: Why not directly use the seed position from seeds in
+          // vertexCollection?
+          ACTS_WARNING("Seed not set.. something went wrong I guess.");
         }
         currentVtxInfo.oldPosition = currentVtxInfo.seedPos;
       }  // End not isInitialized
 
       if (currentVtxInfo.linPoint == SpacePointVector()) {
-        std::cout << "Candidate has no linearization point. where should this "
-                     "be set?!"
-                  << std::endl;
+        // TODO: where should this be set?!
+        ACTS_VERBOSE("Candidate has no linearization point.");
       }
       if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).norm() >
           m_cfg.maxDistToLinPoint) {
