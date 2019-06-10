@@ -12,8 +12,8 @@
 template <typename input_track_t>
 void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
     const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
-    const Vertex<input_track_t>& vtx) const {
-  const SpacePointVector& vtxPos = vtx.fullPosition();
+    const Vertex<input_track_t>* vtx) const {
+  const SpacePointVector& vtxPos = vtx->fullPosition();
   // TODO: const ref or ref?
   LinearizedTrack& linTrack = track.linearizedState;
 
@@ -59,7 +59,7 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   newTrkParams(ParID_t::eQOP) = newTrkMomentum(2);           // qOverP
 
   // vertex covariance and weight matrices
-  const SpacePointSymMatrix& vtxCov = vtx.fullCovariance();
+  const SpacePointSymMatrix& vtxCov = vtx->fullCovariance();
   const SpacePointSymMatrix vtxWeight = vtxCov.inverse();
 
   // new track covariance matrix
@@ -76,10 +76,10 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
       reducedVtx.fullCovariance().inverse();
 
   // difference in positions
-  SpacePointVector posDiff = vtx.fullPosition() - reducedVtx.fullPosition();
+  SpacePointVector posDiff = vtx->fullPosition() - reducedVtx.fullPosition();
 
   // get smoothed params
-  BoundVector smParams = trkParams - (residual + posJac * vtx.fullPosition() +
+  BoundVector smParams = trkParams - (residual + posJac * vtx->fullPosition() +
                                       momJac * newTrkMomentum);
 
   // new chi2 to be set later

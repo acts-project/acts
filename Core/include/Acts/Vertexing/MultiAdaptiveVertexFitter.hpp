@@ -33,7 +33,7 @@ class MultiAdaptiveVertexFitter {
  public:
   struct State {
     // Vertex collection to be fitted
-    std::vector<Vertex<input_track_t>> vertexCollection;
+    std::vector<Vertex<input_track_t>*> vertexCollection;
 
     // Annealing state
     VertexAnnealingTool::State annealingState;
@@ -157,7 +157,7 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @return Result<void> object
   Result<void> addVertexToFit(
-      State& state, Vertex<input_track_t> newVertex,
+      State& state, Vertex<input_track_t>& newVertex,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
  private:
@@ -196,7 +196,7 @@ class MultiAdaptiveVertexFitter {
   /// @param vtx The vertex object
   /// @param vFitterOptions Vertex fitter options
   Result<void> prepareVtxForFit(
-      State& state, Vertex<input_track_t>& vtx,
+      State& state, Vertex<input_track_t>* vtx,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
   /// @brief Sets vertexCompatibility for all TrackAtVertex objects
@@ -209,7 +209,7 @@ class MultiAdaptiveVertexFitter {
   Result<void> setAllVtxCompatibilities(
       State& state, const GeometryContext& geoContext,
       const MagneticFieldContext& mfContext,
-      Vertex<input_track_t>& currentVtx) const;
+      Vertex<input_track_t>* currentVtx) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdator

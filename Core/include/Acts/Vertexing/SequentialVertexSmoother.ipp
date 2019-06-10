@@ -8,12 +8,12 @@
 
 template <typename input_track_t>
 void Acts::SequentialVertexSmoother<input_track_t>::smooth(
-    const Acts::GeometryContext& gctx, Acts::Vertex<input_track_t>& vtx) const {
-  std::vector<TrackAtVertex<input_track_t>> tracks = vtx.tracks();
+    const Acts::GeometryContext& gctx, Acts::Vertex<input_track_t>* vtx) const {
+  std::vector<TrackAtVertex<input_track_t>> tracks = vtx->tracks();
   for (auto& trk : tracks) {
     // update trk
     m_cfg.trackUpdator.update(gctx, trk, vtx);
   }
 
-  vtx.setTracksAtVertex(tracks);
+  vtx->setTracksAtVertex(tracks);
 }

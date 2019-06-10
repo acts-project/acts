@@ -37,7 +37,7 @@ class SequentialVertexSmoother {
   ///
   /// @param gctx The Geometry Context
   /// @param vtx The vertex
-  void smooth(const GeometryContext& gctx, Vertex<input_track_t>& vtx) const;
+  void smooth(const GeometryContext& gctx, Vertex<input_track_t>* vtx) const;
 
  private:
   /// Configuration object

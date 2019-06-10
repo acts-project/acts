@@ -33,7 +33,7 @@ class KalmanVertexUpdator {
   ///
   /// @param vtx Vertex to be updated
   /// @param trk Track to be added to vtx
-  void addAndUpdate(Vertex<input_track_t>& vtx,
+  void addAndUpdate(Vertex<input_track_t>* vtx,
                     TrackAtVertex<input_track_t> trk) const;
 
   // TODO: remove method needed?
@@ -49,7 +49,7 @@ class KalmanVertexUpdator {
   /// @param sign Sign parameter
   ///
   /// TODO: change return value to void and use input ref
-  Vertex<input_track_t> updatePosition(const Vertex<input_track_t>& vtx,
+  Vertex<input_track_t> updatePosition(const Vertex<input_track_t>* vtx,
                                        const LinearizedTrack& linTrack,
                                        double trackWeight, int sign) const;
 
@@ -61,8 +61,8 @@ class KalmanVertexUpdator {
   /// @param newVtx New vertex
   ///
   /// @return Chi2
-  float vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
-                           const Vertex<input_track_t>& newVtx) const;
+  float vertexPositionChi2(const Vertex<input_track_t>* oldVtx,
+                           const Vertex<input_track_t>* newVtx) const;
 
   // TODO: add docs
   /// @brief
@@ -75,7 +75,7 @@ class KalmanVertexUpdator {
   /// @param vtx Vertex to be updated
   /// @param trk Track to be added to/removed from vtx
   /// @param sign +1 (add track) or -1 (remove track)
-  void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t> trk,
+  void update(Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk,
               int sign) const;
 };
 
