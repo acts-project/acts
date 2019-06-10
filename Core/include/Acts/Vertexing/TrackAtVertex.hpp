@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <boost/functional/hash.hpp>
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
