@@ -67,7 +67,7 @@ class KalmanVertexUpdator {
   // TODO: add docs
   /// @brief
   float trackParametersChi2(const Vertex<input_track_t>& vtx,
-                            const LinearizedTrack& linTrk) const;
+                            const LinearizedTrack& linTrack) const;
 
   /// @brief Adds or removes (depending on `sign`) tracks from vertex
   /// and updates the vertex
