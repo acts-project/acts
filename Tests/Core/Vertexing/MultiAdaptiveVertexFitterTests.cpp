@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE ZScanVertexFinder Tests
+#define BOOST_TEST_MODULE MultiAdaptiveVertexFitter Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -146,6 +146,8 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
 
     TrackAtVertex<BoundParameters> trkAtVtx(1., trk, trk);
 
+    std::cout << "track " << iTrack << " with ID " << trkAtVtx.id << std::endl;
+
     trackVtxVec[vtxIdx].push_back(trkAtVtx);
 
     // Use first track also for second vertex to let vtx1 and vtx2
@@ -162,22 +164,30 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     }
   }
 
+  std::vector<Vertex<BoundParameters>> vtxList;
+
   int idx = 0;
   for (auto& vtxPos : vtxVec) {
     Vertex<BoundParameters> vtx(vtxPos);
     vtx.setTracksAtVertex(trackVtxVec[idx]);
+    vtxList.push_back(vtx);
+    idx++;
+  }
 
+  for (auto& vtx : vtxList) {
+    std::cout << &vtx << std::endl;
+  }
+
+  for (auto& vtx : vtxList) {
     // Add vertex link to each track
     for (auto& trkAtVtx : vtx.tracks()) {
       state.trkInfoMap[trkAtVtx.id].linksToVertices.push_back(&vtx);
     }
 
     if (debugMode) {
-      std::cout << "Number of tracks at vertex " << idx + 1 << ": "
+      std::cout << "Number of tracks at vertex " << &vtx << ": "
                 << vtx.tracks().size() << std::endl;
     }
-
-    idx++;
   }
 
   if (debugMode) {
@@ -190,8 +200,7 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     }
   }
 
-  auto res1 =
-      fitter.addVertexToFit(state, state.vertexCollection[0], fitterOptions);
+  auto res1 = fitter.addVertexToFit(state, vtxList[0], fitterOptions);
 
   BOOST_CHECK(res1.ok());
 

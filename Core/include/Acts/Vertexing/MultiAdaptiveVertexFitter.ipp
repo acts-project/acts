@@ -34,9 +34,9 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
   while (nIter < m_cfg.maxIterations &&
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
-    for (auto& currentVtx : state.vertexCollection) {
+    for (auto currentVtx : state.vertexCollection) {
       MAVFVertexInfo<input_track_t>& currentVtxInfo =
-          state.vtxInfoMap[&currentVtx];
+          state.vtxInfoMap[currentVtx];
       currentVtxInfo.relinearize = false;
 
       // TODO: where is this init set? in finder or in else directly below? (->
@@ -45,7 +45,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         std::cout
             << "Candidate already has a position: storing it in oldpositions"
             << std::endl;
-        currentVtxInfo.oldPosition = currentVtx.fullPosition();
+        currentVtxInfo.oldPosition = currentVtx->fullPosition();
       } else {
         // Vertex will now be initialized
         currentVtxInfo.isInitialized = true;
@@ -74,12 +74,12 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         prepareVtxForFit(state, currentVtx, vFitterOptions);
       }
 
-      currentVtx.setFullPosition(
+      currentVtx->setFullPosition(
           currentVtxInfo.constraintVertex.fullPosition());
-      currentVtx.setFullCovariance(
+      currentVtx->setFullCovariance(
           currentVtxInfo.constraintVertex.fullCovariance() * 1. /
           m_cfg.annealingTool.getWeight(state.annealingState, 1.));
-      currentVtx.setFitQuality(currentVtxInfo.constraintVertex.fitQuality());
+      currentVtx->setFitQuality(currentVtxInfo.constraintVertex.fitQuality());
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
@@ -103,7 +103,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
 
   // Check if smoothing is required
   if (m_cfg.doSmoothing) {
-    for (auto& vtx : state.vertexCollection) {
+    for (auto vtx : state.vertexCollection) {
       // Smooth all tracks at vertex `vtx`
       m_cfg.vertexSmoother.smooth(geoContext, vtx);
     }
@@ -113,11 +113,11 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
-    bfield_t, input_track_t,
-    propagator_t>::addVertexToFit(State& state, Vertex<input_track_t> newVertex,
-                                  const VertexFitterOptions<input_track_t>&
-                                      vFitterOptions) const {
+Acts::Result<void>
+Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
+    addVertexToFit(
+        State& state, Vertex<input_track_t>& newVertex,
+        const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   if (newVertex.tracks().empty()) {
     return VertexingError::EmptyInput;
   }
@@ -126,7 +126,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
 
   // Prepares vtx and tracks for fast estimation method of their
   // compatibility with vertex
-  auto res = prepareVtxForFit(state, newVertex, vFitterOptions);
+  auto res = prepareVtxForFit(state, &newVertex, vFitterOptions);
   if (!res.ok()) {
     return res.error();
   }
@@ -169,10 +169,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     currentIterAddedVertices.clear();
   }  // End while loop
 
-  // Add vertices to fit to vertexCollection in state
-  std::transform(verticesToFit.begin(), verticesToFit.end(),
-                 state.vertexCollection.begin(),
-                 [](Vertex<input_track_t>* vtx) { return *vtx; });
+  state.vertexCollection = verticesToFit;
 
   // Perform fit on all added vertices
   fit(state, vFitterOptions);
@@ -193,15 +190,15 @@ bool Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     bfield_t, input_track_t,
-    propagator_t>::prepareVtxForFit(State& state, Vertex<input_track_t>& vtx,
+    propagator_t>::prepareVtxForFit(State& state, Vertex<input_track_t>* vtx,
                                     const VertexFitterOptions<input_track_t>&
                                         vFitterOptions) const {
-  const Vector3D& refPos = vtx.position();
+  const Vector3D& refPos = vtx->position();
   auto& geoContext = vFitterOptions.geoContext;
   auto& mfContext = vFitterOptions.magFieldContext;
 
   // Loop over all tracks at current vertex
-  for (const auto& trkAtVtx : vtx.tracks()) {
+  for (const auto& trkAtVtx : vtx->tracks()) {
     auto res = m_cfg.ipEst.getParamsAtIP3d(
         geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
         refPos);
@@ -219,17 +216,17 @@ Acts::Result<void>
 Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
     setAllVtxCompatibilities(State& state, const GeometryContext& geoContext,
                              const MagneticFieldContext& mfContext,
-                             Vertex<input_track_t>& currentVtx) const {
-  MAVFVertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[&currentVtx];
+                             Vertex<input_track_t>* currentVtx) const {
+  MAVFVertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
   // Create empty list of new TrackAtVertex objects
   // to be filled below. Needed due to constness of
   // tracksAtVertex list at vertex
   std::vector<TrackAtVertex<input_track_t>> newTracks;
-  newTracks.reserve(currentVtx.tracks().size());
+  newTracks.reserve(currentVtx->tracks().size());
 
   // Loop over tracks at current vertex and
   // estimate compatibility with vertex
-  for (auto& trkAtVtx : currentVtx.tracks()) {
+  for (auto& trkAtVtx : currentVtx->tracks()) {
     // TODO: DO I NEED THE ipEst.getParams stuff below?
     // recover from cases where linearization point != 0 but
     // more tracks were added later on
@@ -258,7 +255,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
         m_extractParameters);
   }
   // Set list of updated tracks to current vertex
-  currentVtx.setTracksAtVertex(newTracks);
+  currentVtx->setTracksAtVertex(newTracks);
   return {};
 }
 
@@ -268,14 +265,14 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     propagator_t>::setWeightsAndUpdate(State& state,
                                        const VertexFitterOptions<input_track_t>&
                                            vFitterOptions) const {
-  for (auto& vtx : state.vertexCollection) {
+  for (auto vtx : state.vertexCollection) {
     // Create empty list of new TrackAtVertex objects
     // to be filled below. Needed due to constness of
     // tracksAtVertex list at vertex
     std::vector<TrackAtVertex<input_track_t>> newTracks;
-    newTracks.reserve(vtx.tracks().size());
+    newTracks.reserve(vtx->tracks().size());
 
-    for (const auto& trkAtVtx : vtx.tracks()) {
+    for (const auto& trkAtVtx : vtx->tracks()) {
       // Create copy of current trackAtVertex in order
       // to modify it below
       newTracks.push_back(trkAtVtx);
@@ -295,18 +292,17 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
         // check if linearization state exists or need to be relinearized
         if (newTrkPtr->linearizedState.covarianceAtPCA ==
                 BoundSymMatrix::Zero() ||
-            state.vtxInfoMap[&vtx].relinearize) {
+            state.vtxInfoMap[vtx].relinearize) {
           const auto& origParams =
               m_extractParameters(newTrkPtr->originalTrack);
           auto result = m_cfg.linFactory.linearizeTrack(
               vFitterOptions.geoContext, vFitterOptions.magFieldContext,
-              &origParams, state.vtxInfoMap[&vtx].oldPosition,
-              m_cfg.propagator);
+              &origParams, state.vtxInfoMap[vtx].oldPosition, m_cfg.propagator);
           if (!result.ok()) {
             return result.error();
           }
           newTrkPtr->linearizedState = *result;
-          state.vtxInfoMap[&vtx].linPoint = state.vtxInfoMap[&vtx].oldPosition;
+          state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
         // update the vertex with the new track
         m_cfg.vertexUpdator.addAndUpdate(vtx, (*newTrkPtr));
@@ -317,9 +313,9 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     }  // end loop over tracks at vertex
 
     // update tracks at current vertex
-    vtx.setTracksAtVertex(newTracks);
+    vtx->setTracksAtVertex(newTracks);
 
-    ACTS_VERBOSE("New vertex position: " << vtx.fullPosition());
+    ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
 
   }  // end loop over vertex collection
 
@@ -361,10 +357,10 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 bool Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
     checkSmallShift(State& state) const {
-  for (auto& vtx : state.vertexCollection) {
+  for (auto vtx : state.vertexCollection) {
     SpacePointVector diff =
-        state.vtxInfoMap[&vtx].oldPosition - vtx.fullPosition();
-    const SpacePointSymMatrix& vtxWgt = vtx.fullCovariance().inverse();
+        state.vtxInfoMap[vtx].oldPosition - vtx->fullPosition();
+    const SpacePointSymMatrix& vtxWgt = vtx->fullCovariance().inverse();
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;

@@ -49,7 +49,7 @@ class KalmanVertexTrackUpdator {
   /// @param track Track to update
   /// @param vtx Vertex `track` belongs to
   void update(const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
-              const Vertex<input_track_t>& vtx) const;
+              const Vertex<input_track_t>* vtx) const;
 
  private:
   /// Configuration object

@@ -8,14 +8,14 @@
 
 template <typename input_track_t>
 void Acts::KalmanVertexUpdator<input_track_t>::addAndUpdate(
-    Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t> trk) const {
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk) const {
   update(vtx, trk, 1);
 }
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>
 Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
-    const Acts::Vertex<input_track_t>& vtx,
+    const Acts::Vertex<input_track_t>* vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign) const {
   // Retrieve linTrack information
   const SpacePointToBoundMatrix& posJac = linTrack.positionJacobian;
@@ -27,8 +27,8 @@ Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
       linTrack.covarianceAtPCA.inverse();  // G_k in comments below
 
   // Vertex to be updated
-  const SpacePointVector& oldVtxPos = vtx.fullPosition();
-  const SpacePointSymMatrix& oldVtxWeight = vtx.fullCovariance().inverse();
+  const SpacePointVector& oldVtxPos = vtx->fullPosition();
+  const SpacePointSymMatrix& oldVtxWeight = vtx->fullCovariance().inverse();
 
   // W_k matrix
   ActsSymMatrixD<3> wMat =
@@ -60,17 +60,17 @@ Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
   // set cov
   returnVertex.setFullCovariance(newVtxCov);
   // set fit quality
-  returnVertex.setFitQuality(vtx.fitQuality().first, vtx.fitQuality().second);
+  returnVertex.setFitQuality(vtx->fitQuality().first, vtx->fitQuality().second);
 
   return returnVertex;
 }
 
 template <typename input_track_t>
 float Acts::KalmanVertexUpdator<input_track_t>::vertexPositionChi2(
-    const Vertex<input_track_t>& oldVtx,
-    const Vertex<input_track_t>& newVtx) const {
-  SpacePointSymMatrix oldWeight = oldVtx.fullCovariance().inverse();
-  SpacePointVector posDiff = newVtx.fullPosition() - oldVtx.fullPosition();
+    const Vertex<input_track_t>* oldVtx,
+    const Vertex<input_track_t>* newVtx) const {
+  SpacePointSymMatrix oldWeight = oldVtx->fullCovariance().inverse();
+  SpacePointVector posDiff = newVtx->fullPosition() - oldVtx->fullPosition();
 
   // calculate and return corresponding chi2
   return posDiff.transpose() * (oldWeight * posDiff);
@@ -108,7 +108,7 @@ float Acts::KalmanVertexUpdator<input_track_t>::trackParametersChi2(
 
 template <typename input_track_t>
 void Acts::KalmanVertexUpdator<input_track_t>::update(
-    Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t> trk,
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk,
     int sign) const {
   if (sign < 0) {
     std::cout << "Error: Removal not supported yet. Returning." << std::endl;
@@ -121,7 +121,7 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
       updatePosition(vtx, trk.linearizedState, trackWeight, sign);
 
   // get fit quality parameters wrt to old vertex
-  std::pair fitQuality = vtx.fitQuality();
+  std::pair fitQuality = vtx->fitQuality();
   double chi2 = fitQuality.first;
   double ndf = fitQuality.second;
 
@@ -129,22 +129,22 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   double trkChi2 = trackParametersChi2(tempVtx, trk.linearizedState);
 
   // calculate new chi2
-  chi2 += sign * (vertexPositionChi2(vtx, tempVtx) + trackWeight * trkChi2);
+  chi2 += sign * (vertexPositionChi2(vtx, &tempVtx) + trackWeight * trkChi2);
 
   ndf += sign * trackWeight * 2;
 
   // updating the vertex
-  vtx.setFullPosition(tempVtx.fullPosition());
-  vtx.setFullCovariance(tempVtx.fullCovariance());
-  vtx.setFitQuality(chi2, ndf);
+  vtx->setFullPosition(tempVtx.fullPosition());
+  vtx->setFullCovariance(tempVtx.fullCovariance());
+  vtx->setFitQuality(chi2, ndf);
 
   // add track to existing list of tracks at vertex
   if (sign > 1) {
-    auto tracksAtVertex = vtx.tracks();
+    auto tracksAtVertex = vtx->tracks();
     // update track and add to list
     trk.chi2Track = trkChi2;
     trk.ndf = 2 * trackWeight;
     tracksAtVertex.push_back(trk);
-    vtx.setTracksAtVertex(tracksAtVertex);
+    vtx->setTracksAtVertex(tracksAtVertex);
   }
 }
