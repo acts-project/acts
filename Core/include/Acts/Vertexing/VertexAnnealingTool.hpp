@@ -27,14 +27,11 @@
 class VertexAnnealingTool {
  public:
   struct State {
-    /// Constructor
-    State() : currentTemperatureIndex(0), equilibriumReached(false) {}
-
     /// Points to current temperature value in m_cfg.setOfTemperatures
-    unsigned int currentTemperatureIndex;
+    unsigned int currentTemperatureIndex = 0;
 
     /// Checks if equilibrium is reached
-    bool equilibriumReached;
+    bool equilibriumReached = false;
   };
 
   struct Config {
