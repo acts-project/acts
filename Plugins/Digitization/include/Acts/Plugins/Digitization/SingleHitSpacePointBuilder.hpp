@@ -42,7 +42,6 @@ struct SingleHitSpacePoint {
 /// the digitized clusters on a pixel detector element and provides the
 /// corresponding space point.
 ///
-template <>
 template <typename Cluster>
 class SpacePointBuilder<SingleHitSpacePoint<Cluster>> {
  public:

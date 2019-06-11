@@ -47,7 +47,6 @@ struct DoubleHitSpacePoint {
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
-template <>
 template <typename Cluster>
 class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
  public:
