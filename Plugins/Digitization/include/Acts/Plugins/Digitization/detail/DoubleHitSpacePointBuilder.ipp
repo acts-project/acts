@@ -30,17 +30,17 @@ struct SpacePointParameters {
   /// SpacePointParameters::t
   Vector3D rt;
   /// Magnitude of SpacePointParameters::q
-  double qmag;
+  double qmag = 0.;
   /// Parameter that determines the hit position on the first SDE
-  double m;
+  double m = 0.;
   /// Parameter that determines the hit position on the second SDE
-  double n;
+  double n = 0.;
   /// Regular limit of the absolut values of SpacePointParameters::m and
   /// SpacePointParameters::n
   double limit = 1.;
   /// Limit of SpacePointParameters::m and SpacePointParameters::n in case of
   /// variable vertex
-  double limitExtended;
+  double limitExtended = 0.;
 };
 
 /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
