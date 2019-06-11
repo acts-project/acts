@@ -93,7 +93,7 @@ double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
 ///
 /// @return Pair containing the top and bottom end
 std::pair<Acts::Vector2D, Acts::Vector2D> findLocalTopAndBottomEnd(
-    const Acts::Vector2D local, const Acts::CartesianSegmentation* segment) {
+    const Acts::Vector2D& local, const Acts::CartesianSegmentation* segment) {
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
