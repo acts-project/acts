@@ -1,0 +1,77 @@
+# Configuration file for the Sphinx documentation builder.
+#
+# This file only contains a selection of the most common options. For a full
+# list see the documentation:
+# http://www.sphinx-doc.org/en/master/config
+
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
+
+import sphinx_bootstrap_theme
+
+# -- Project information ------------------------------------------------------
+
+project = '@PROJECT_NAME@'
+author = 'The Acts authors'
+copyright = '2014–2019 CERN for the benefit of the Acts project'
+version = '@PROJECT_VERSION@'
+release = '@PROJECT_VERSION@'
+
+# -- General configuration ----------------------------------------------------
+
+extensions = ['sphinx.ext.mathjax', 'recommonmark', 'breathe']
+master_doc = 'index'
+# cpp as default language
+primary_domain = 'cpp'
+highlight_language = 'cpp'
+smartquotes = True
+
+# -- Breathe Doxygen/Sphinx bridge configuration ------------------------------
+
+breathe_projects = { '@PROJECT_NAME@': '@CMAKE_CURRENT_BINARY_DIR@/xml/' }
+breathe_default_project = '@PROJECT_NAME@'
+breathe_domain_by_extension = {
+    'cpp': 'cpp',
+    'hpp': 'cpp',
+    'ipp': 'cpp',
+}
+breathe_default_members = ('members', 'undoc-members')
+
+# -- Exhale Doxygen API documentation generation configuratio -----------------
+
+exhale_args = {
+    'containmentFolder': '@CMAKE_CURRENT_SOURCE_DIR@/api',
+    'rootFileName': 'api.rst',
+    'rootFileTitle': 'API',
+    'doxygenStripFromPath': '@PROJECT_SOURCE_DIR@',
+    # 'createTreeView': True,
+    # "treeViewIsBootstrap": True,
+}
+
+# -- Options for HTML output --------------------------------------------------
+
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+html_theme_options = {
+  'navbar_links': [
+    ('API', 'doxygen/annotated.html', True),
+  ],
+}
+html_logo = 'figures/ActsLogo.gif'
+html_static_path = []
+# html_sidebars = {
+#     '**': [
+#         'about.html',
+#         'navigation.html',
+#         'relations.html',
+#     ],
+# }
+html_show_sourcelink = False
+html_show_sphinx = False
