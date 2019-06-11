@@ -39,30 +39,12 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
           state.vtxInfoMap[currentVtx];
       currentVtxInfo.relinearize = false;
 
-      // TODO: where is this init set? in finder or in else directly below? (->
-      // defaulted in Info)
-      if (currentVtxInfo.isInitialized) {
-        ACTS_VERBOSE(
-            "Candidate already has a position: storing it in oldpositions");
-        currentVtxInfo.oldPosition = currentVtx->fullPosition();
-      } else {
-        // Vertex will now be initialized
-        currentVtxInfo.isInitialized = true;
-        ACTS_VERBOSE(
-            "Candidate has no position so far: using seedVertex as old "
-            "position ");
-        if (currentVtxInfo.seedPos == SpacePointVector()) {
-          // TODO: Why not directly use the seed position from seeds in
-          // vertexCollection?
-          ACTS_WARNING("Seed not set.. something went wrong I guess.");
-        }
-        currentVtxInfo.oldPosition = currentVtxInfo.seedPos;
-      }  // End not isInitialized
+      // Store old position of vertex, i.e. seed position
+      // in case of first iteration or position determined
+      // in previous iteration afterwards
+      currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
-      if (currentVtxInfo.linPoint == SpacePointVector()) {
-        // TODO: where should this be set?!
-        ACTS_VERBOSE("Candidate has no linearization point.");
-      }
+      // Determine if relinearization is needed
       if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).norm() >
           m_cfg.maxDistToLinPoint) {
         // Relinearization needed, distance too big
@@ -71,12 +53,25 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         prepareVtxForFit(state, currentVtx, vFitterOptions);
       }
 
-      currentVtx->setFullPosition(
-          currentVtxInfo.constraintVertex.fullPosition());
+      // Determine if a constraint fit is performed
+      if (vFitterOptions.vertexConstraint.fullCovariance().determinant() != 0) {
+        // TODO: do I really want only the position and cov of the constraint
+        // itself and not some vertex seed where the constraint was used
+        currentVtx->setFullPosition(
+            vFitterOptions.vertexConstraint.fullPosition());
+        currentVtx->setFullCovariance(
+            vFitterOptions.vertexConstraint.fullCovariance());
+        currentVtx->setFitQuality(vFitterOptions.vertexConstraint.fitQuality());
+      } else {
+        // Use vertex from vertexCollection, i.e. the vertex seed
+        // with a very loose covariance
+        // TODO: what's a good covariance here?
+        currentVtx->setFullCovariance(SpacePointSymMatrix::Identity());
+      }
+
       currentVtx->setFullCovariance(
-          currentVtxInfo.constraintVertex.fullCovariance() * 1. /
+          currentVtx->fullCovariance() * 1. /
           m_cfg.annealingTool.getWeight(state.annealingState, 1.));
-      currentVtx->setFitQuality(currentVtxInfo.constraintVertex.fitQuality());
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
@@ -270,6 +265,10 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     newTracks.reserve(vtx->tracks().size());
 
     for (const auto& trkAtVtx : vtx->tracks()) {
+      std::cout << "setWeightsAndUpdate:\tOld vtx pos: " << vtx->fullPosition()
+                << std::endl;
+      std::cout << "setWeightsAndUpdate: \t fullCovariance: "
+                << vtx->fullCovariance() << std::endl;
       // Create copy of current trackAtVertex in order
       // to modify it below
       newTracks.push_back(trkAtVtx);
@@ -313,7 +312,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     vtx->setTracksAtVertex(newTracks);
 
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
-
+    std::cout << "New pos after fit: " << vtx->fullPosition() << std::endl;
   }  // end loop over vertex collection
 
   return {};

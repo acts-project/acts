@@ -11,9 +11,6 @@
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 
-// TODO remove
-#include <iostream>
-
 /// @brief Implements a thermodynamic annealing scheme for the track
 ///   weight factors used in the MultiAdaptiveVertexFitter in such a way
 ///   that with high temperature values (at the beginning) only a slight
@@ -38,12 +35,7 @@ class VertexAnnealingTool {
     // Config constructor with default temperature list: {64.,16.,4.,2.,1.5,1.}
     Config(const std::vector<double>& temperatures = {64., 16., 4., 2., 1.5,
                                                       1.})
-        : setOfTemperatures(temperatures) {
-      if (setOfTemperatures.empty()) {
-        // TODO: error handling, error msg
-        std::cout << "ERROR: setOfTemperatures must not be empty" << std::endl;
-      }
-    }
+        : setOfTemperatures(temperatures) {}
 
     /// Insensitivity of calculated weight at cutoff
     double cutOff = 9.;

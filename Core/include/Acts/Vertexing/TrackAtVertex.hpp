@@ -41,6 +41,7 @@ struct TrackAtVertex {
         originalTrack(originalParams),
         trackWeight(1.),
         vertexCompatibility(0.) {
+    // Create unique ID for this object
     boost::hash_combine(id, this);
     boost::hash_combine(id, paramsAtVertex.parameters()[0]);
     boost::hash_combine(id, paramsAtVertex.parameters()[1]);

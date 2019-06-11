@@ -18,16 +18,15 @@ namespace Acts {
 /// related vertex infos
 template <typename input_track_t>
 struct MAVFVertexInfo {
-  // The seed vertex position
-  Acts::SpacePointVector seedPos;
   // The linearization point
-  Acts::SpacePointVector linPoint;
+  Acts::SpacePointVector linPoint{Acts::SpacePointVector::Zero()};
+
   // The constraint vertex
   Acts::Vertex<input_track_t> constraintVertex;
-  // Is initialized bool
-  bool isInitialized;
+
   // Old position from last iteration
   Acts::SpacePointVector oldPosition;
+
   // Needs relinearization bool
   bool relinearize;
 };

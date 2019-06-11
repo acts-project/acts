@@ -146,7 +146,11 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
 
     TrackAtVertex<BoundParameters> trkAtVtx(1., trk, trk);
 
-    std::cout << "track " << iTrack << " with ID " << trkAtVtx.id << std::endl;
+    if (debugMode) {
+      std::cout << "Adding track " << iTrack << " with ID " << trkAtVtx.id
+                << std::endl;
+      allTracks.push_back(trkAtVtx);
+    }
 
     trackVtxVec[vtxIdx].push_back(trkAtVtx);
 
@@ -154,13 +158,6 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     // share this track
     if (iTrack == 0) {
       trackVtxVec[1].push_back(trkAtVtx);
-    }
-
-    if (debugMode) {
-      allTracks.push_back(trkAtVtx);
-      std::cout << "iTrack: " << iTrack << ", " << trackVtxVec[0].size() << " "
-                << trackVtxVec[1].size() << " " << trackVtxVec[2].size()
-                << std::endl;
     }
   }
 
@@ -194,15 +191,34 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     for (auto& trkAtVtx : allTracks) {
       auto links = state.trkInfoMap[trkAtVtx.id].linksToVertices;
       for (auto vtxLink : links) {
-        std::cout << "track with ID: " << trkAtVtx.id << " used by vertex "
+        std::cout << "Track with ID: " << trkAtVtx.id << " used by vertex "
                   << vtxLink << std::endl;
       }
     }
   }
 
+  // Copy vertex seeds from state.vertexCollection to new
+  // list in order to be able to compare later
+  std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
+
   auto res1 = fitter.addVertexToFit(state, vtxList[0], fitterOptions);
 
   BOOST_CHECK(res1.ok());
+
+  if (debugMode) {
+    std::cout << "Vtx 1, seed position:\n " << seedListCopy[0].fullPosition()
+              << "\nnew position:\n " << vtxList[0].fullPosition() << std::endl;
+    std::cout << "Vtx 2, seed position:\n " << seedListCopy[1].fullPosition()
+              << "\nnew position:\n " << vtxList[1].fullPosition() << std::endl;
+    std::cout << "Vtx 3, seed position:\n " << seedListCopy[2].fullPosition()
+              << "\nnew position:\n " << vtxList[2].fullPosition() << std::endl;
+  }
+
+  // After fit of first vertex, only first and second vertex seed
+  // should have been touched while third vertex should remain untouched
+  BOOST_CHECK_NE(vtxList[0].fullPosition(), seedListCopy[0].fullPosition());
+  BOOST_CHECK_NE(vtxList[1].fullPosition(), seedListCopy[1].fullPosition());
+  BOOST_CHECK_EQUAL(vtxList[2].fullPosition(), seedListCopy[2].fullPosition());
 
   // auto res2 = fitter.fit(state, fitterOptions);
 
