@@ -14,6 +14,10 @@
 
 namespace Acts {
 
+/// @brief Structure for easier bookkeeping of clusters.
+template <typename Cluster>
+using SingleHitSpacePoint = SpacePoint<const Cluster*>;
+
 /// @class OneHitSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
@@ -22,10 +26,10 @@ namespace Acts {
 /// corresponding space point.
 ///
 template <typename Cluster>
-class SpacePointBuilder<SpacePoint<Cluster>> {
+class SpacePointBuilder<SingleHitSpacePoint<Cluster>> {
  public:
   /// Default constructor
-  SpacePointBuilder<SpacePoint<Cluster>>() = default;
+  SpacePointBuilder<SingleHitSpacePoint<Cluster>>() = default;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// and stores the results
@@ -35,7 +39,7 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param spacePointStorage storage of the results
   void calculateSpacePoints(
       const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,
-      std::vector<SpacePoint<Cluster>>& spacePointStorage) const;
+      std::vector<SingleHitSpacePoint<Cluster>>& spacePointStorage) const;
 
  protected:
   /// @brief Getter method for the local coordinates of a cluster

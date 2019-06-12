@@ -14,6 +14,10 @@
 
 namespace Acts {
 
+template <typename Cluster>
+using DoubleHitSpacePoint =
+    SpacePoint<std::pair<const Cluster*, const Cluster*>>;
+
 /// @class TwoHitsSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
@@ -25,7 +29,7 @@ namespace Acts {
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 template <typename Cluster>
-class SpacePointBuilder<SpacePoint<Cluster>> {
+class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
  public:
   /// @brief Configuration of the class to steer its behaviour
   struct DoubleHitSpacePointConfig {
@@ -75,7 +79,7 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
       const GeometryContext& gctx,
       const std::vector<std::pair<const Cluster*, const Cluster*>>&
           clusterPairs,
-      std::vector<SpacePoint<Cluster>>& spacePoints) const;
+      std::vector<DoubleHitSpacePoint<Cluster>>& spacePoints) const;
 
  private:
   /// Config
