@@ -61,7 +61,7 @@ Acts::ZScanVertexFinder<bfield_t, input_track_t, propagator_t>::find(
       }
     } else {
       ACTS_DEBUG(
-          "No constraint set, unable to compute IP significance. "
+          "Unable to compute IP significance. "
           "Setting IP weight to 1.");
 
       z0AndWeight.first = params.position()[eZ];
