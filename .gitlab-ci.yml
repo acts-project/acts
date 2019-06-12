@@ -252,14 +252,18 @@ clang_tidy:
       - report
     when: always
 
-doc_deploy:
+.deploy_base: &deploy_base
   image: alpine:3.8
+  before_script:
+    - apk --no-cache add python3 py3-cffi alpine-sdk python3-dev libffi-dev libxml2-dev libxslt-dev py3-lxml openssl-dev py3-pynacl
+    - pip3 install --upgrade pip
+    - pip3 install -r CI/requirements.txt
+
+doc_deploy:
+  <<: *deploy_base
   stage: deploy
   dependencies:
     - doc
-  before_script:
-    - apk --no-cache add python3 py3-pynacl py3-pip py3-cryptography py3-bcrypt
-    - pip3 install -r CI/requirements.txt
   script:
     - CI/deploy_tag.py --doc-source build/doc/html --ref=$CI_COMMIT_TAG
   only:
@@ -275,13 +279,10 @@ website_deploy:
     - tags
 
 coverage_deploy:
+  <<: *deploy_base
   stage: deploy
   dependencies:
     - unit_tests_slc6_lcg94
-  image: alpine:3.8
-  before_script:
-    - apk --no-cache add python3 py3-pynacl py3-pip py3-cryptography py3-bcrypt
-    - pip3 install -r CI/requirements.txt
   script:
     - CI/publish_coverage.py --coverage-source=build/coverage --project-id=$CI_PROJECT_ID
   only:
@@ -289,12 +290,8 @@ coverage_deploy:
     - tags
 
 sync_releases:
+  <<: *deploy_base
   stage: deploy
-  image: alpine:3.8
-  before_script:
-    - apk --no-cache add python3 py3-cffi alpine-sdk python3-dev libffi-dev libxml2-dev libxslt-dev py3-lxml openssl-dev py3-pynacl
-    - pip3 install --upgrade pip
-    - pip3 install -r CI/requirements.txt
   script:
     - CI/sync_releases.py
   only:
