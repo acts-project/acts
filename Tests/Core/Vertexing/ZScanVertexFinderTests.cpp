@@ -131,9 +131,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     }
 
     ZScanVertexFinder<ConstantBField, BoundParameters,
-                      Propagator<EigenStepper<ConstantBField>>>::Config cfg;
-    ZScanVertexFinder<ConstantBField, BoundParameters,
-                      Propagator<EigenStepper<ConstantBField>>>::State state;
+                      Propagator<EigenStepper<ConstantBField>>>::Config
+        cfg(propagator);
 
     ZScanVertexFinder<ConstantBField, BoundParameters,
                       Propagator<EigenStepper<ConstantBField>>>
@@ -141,12 +140,13 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracks, state, propagator, vFinderOptions);
+    auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
     if (res.ok()) {
-      Vector3D result = state.vertexCollection[0].position();
+      BOOST_CHECK(!(*res).empty());
+      Vector3D result = (*res).back().position();
       CHECK_CLOSE_ABS(result[eZ], z, 1 * units::_mm);
     }
   }
@@ -233,9 +233,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     }
 
     ZScanVertexFinder<ConstantBField, InputTrack,
-                      Propagator<EigenStepper<ConstantBField>>>::Config cfg;
-    ZScanVertexFinder<ConstantBField, InputTrack,
-                      Propagator<EigenStepper<ConstantBField>>>::State state;
+                      Propagator<EigenStepper<ConstantBField>>>::Config
+        cfg(propagator);
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack
@@ -248,12 +247,13 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracks, state, propagator, vFinderOptions);
+    auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
     if (res.ok()) {
-      Vector3D result = state.vertexCollection[0].position();
+      BOOST_CHECK(!(*res).empty());
+      Vector3D result = (*res).back().position();
       CHECK_CLOSE_ABS(result[eZ], z, 1 * units::_mm);
     }
   }

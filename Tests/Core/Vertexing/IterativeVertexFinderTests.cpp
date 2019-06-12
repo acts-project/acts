@@ -108,7 +108,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         VertexFinder;
     VertexFinder::Config cfg(bField, std::move(bFitterPtr), propagator);
     cfg.reassignTracksAfterFirstFit = true;
-    VertexFinder::State state;
 
     VertexFinder finder(cfg);
 
@@ -191,18 +190,21 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
     // find vertices
-    auto res = finder.find(tracks, state, vFinderOptions);
+    auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
+    // Retrieve vertices found by vertex finder
+    auto vertexCollection = *res;
+
     // check if same amount of vertices has been found with tolerance of 2
-    CHECK_CLOSE_ABS(state.vertexCollection.size(), nVertices, 2);
+    CHECK_CLOSE_ABS(vertexCollection.size(), nVertices, 2);
 
     if (debug) {
       std::cout << "########## RESULT: ########## Event " << iEvent
                 << std::endl;
       std::cout << "Number of true vertices: " << nVertices << std::endl;
-      std::cout << "Number of reco vertices: " << state.vertexCollection.size()
+      std::cout << "Number of reco vertices: " << vertexCollection.size()
                 << std::endl;
 
       int count = 1;
@@ -218,7 +220,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       }
       std::cout << "----- Reco vertices -----" << std::endl;
       count = 1;
-      for (const auto& vertex : state.vertexCollection) {
+      for (const auto& vertex : vertexCollection) {
         Vector3D pos = vertex.position();
         std::cout << count << ". Reco Vertex:\t Position:"
                   << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
@@ -234,7 +236,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     for (const auto& trueVertex : trueVertices) {
       SpacePointVector truePos = trueVertex.fullPosition();
       bool currentVertexFound = false;
-      for (const auto& recoVertex : state.vertexCollection) {
+      for (const auto& recoVertex : vertexCollection) {
         SpacePointVector recoPos = recoVertex.fullPosition();
         // check only for close z distance
         double zDistance = std::abs(truePos[eZ] - recoPos[eZ]);
