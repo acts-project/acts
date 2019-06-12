@@ -128,11 +128,6 @@ class IterativeVertexFinder {
     double cutOffTrackWeight = 0.01;
   };
 
-  struct State {
-    // Empty vertex collection, to be filled by finder
-    std::vector<Vertex<input_track_t>> vertexCollection;
-  };
-
   /// @brief Constructor used if input_track_t type == BoundParameters
   ///
   /// @param cfg Configuration object
@@ -162,11 +157,11 @@ class IterativeVertexFinder {
   /// @brief Finds vertices corresponding to input trackVector
   ///
   /// @param trackVector Input tracks
-  /// @param state Vertexing state, holding the vertex collection
-  /// with all found vertices
   /// @param vFinderOptions Vertex finder options
-  Result<void> find(
-      const std::vector<input_track_t>& trackVector, State& state,
+  ///
+  /// @return Collection of vertices found by finder
+  Result<std::vector<Vertex<input_track_t>>> find(
+      const std::vector<input_track_t>& trackVector,
       const VertexFinderOptions<input_track_t>& vFinderOptions) const;
 
  private:
@@ -244,7 +239,7 @@ class IterativeVertexFinder {
   /// @brief Function that reassigns tracks from other vertices
   ///        to the current vertex if they are more compatible
   ///
-  /// @param state State object
+  /// @param vertexCollection Collection of vertices
   /// @param currentVertex Current vertex to assign tracks to
   /// @param perigeesToFit Perigees to fit vector
   /// @param seedTracks Seed tracks vector
@@ -254,7 +249,8 @@ class IterativeVertexFinder {
   ///
   /// @return Bool if currentVertex is still a good vertex
   Result<bool> reassignTracksToNewVertex(
-      State& state, Vertex<input_track_t>& currentVertex,
+      std::vector<Vertex<input_track_t>>& vertexCollection,
+      Vertex<input_track_t>& currentVertex,
       std::vector<input_track_t>& perigeesToFit,
       std::vector<input_track_t>& seedTracks,
       const std::vector<input_track_t>& origTracks,

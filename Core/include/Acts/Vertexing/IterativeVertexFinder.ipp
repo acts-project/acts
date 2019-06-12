@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Result<void>
+Acts::Result<std::vector<Acts::Vertex<input_track_t>>>
 Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
-    const std::vector<input_track_t>& trackVector, State& state,
+    const std::vector<input_track_t>& trackVector,
     const VertexFinderOptions<input_track_t>& vFinderOptions) const {
   // Original tracks
   const std::vector<input_track_t>& origTracks = trackVector;
@@ -30,6 +30,9 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
   VertexFitterOptions<input_track_t> vFitterOptions(
       vFinderOptions.geoContext, vFinderOptions.magFieldContext,
       vFinderOptions.vertexConstraint);
+
+  // List of vertices to be filled below
+  std::vector<Vertex<input_track_t>> vertexCollection;
 
   int nInterations = 0;
   // begin iterating
@@ -107,8 +110,8 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
         // but add tracks which may have been missed
 
         auto result = reassignTracksToNewVertex(
-            state, currentVertex, perigeesToFit, seedTracks, origTracks,
-            vFitterOptions, vFinderOptions);
+            vertexCollection, currentVertex, perigeesToFit, seedTracks,
+            origTracks, vFitterOptions, vFinderOptions);
         if (!result.ok()) {
           return result.error();
         }
@@ -143,17 +146,17 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
 
     // Now fill vertex collection with vertex
     if (isGoodVertex) {
-      state.vertexCollection.push_back(currentVertex);
+      vertexCollection.push_back(currentVertex);
     }
     if (isGoodSplitVertex && m_cfg.createSplitVertices) {
-      state.vertexCollection.push_back(currentSplitVertex);
+      vertexCollection.push_back(currentSplitVertex);
     }
 
     nInterations++;
 
   }  // end while loop
 
-  return {};
+  return vertexCollection;
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
@@ -449,7 +452,8 @@ template <typename bfield_t, typename input_track_t, typename propagator_t>
 Acts::Result<bool>
 Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::
     reassignTracksToNewVertex(
-        State& state, Vertex<input_track_t>& currentVertex,
+        std::vector<Vertex<input_track_t>>& vertexCollection,
+        Vertex<input_track_t>& currentVertex,
         std::vector<input_track_t>& perigeesToFit,
         std::vector<input_track_t>& seedTracks,
         const std::vector<input_track_t>& origTracks,
@@ -459,7 +463,7 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::
 
   // iterate over all vertices and check if tracks need to be reassigned
   // to new (current) vertex
-  for (auto& vertexIt : state.vertexCollection) {
+  for (auto& vertexIt : vertexCollection) {
     // tracks at vertexIt
     std::vector<TrackAtVertex<input_track_t>> tracksAtVertex =
         vertexIt.tracks();
