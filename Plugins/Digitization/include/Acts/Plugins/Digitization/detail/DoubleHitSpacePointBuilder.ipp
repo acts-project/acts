@@ -437,8 +437,7 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
                                                    spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
         Acts::DoubleHitSpacePoint<Cluster> sp;
-        sp.clusterFront = cp.first;
-        sp.clusterBack = cp.second;
+        sp.clusterModule = std::make_pair(cp.first, cp.second);
         sp.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
         spacePoints.push_back(std::move(sp));
         continue;
@@ -449,8 +448,7 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
                             m_cfg.stripLengthTolerance)) {
       // Store the space point
       Acts::DoubleHitSpacePoint<Cluster> sp;
-      sp.clusterFront = cp.first;
-      sp.clusterBack = cp.second;
+      sp.clusterModule = std::make_pair(cp.first, cp.second);
       sp.spacePoint =
           0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
       spacePoints.push_back(std::move(sp));
@@ -464,8 +462,7 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
       // Check if a recovery the point(s) and store them if successful
       if (recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance)) {
         Acts::DoubleHitSpacePoint<Cluster> sp;
-        sp.clusterFront = cp.first;
-        sp.clusterBack = cp.second;
+        sp.clusterModule = std::make_pair(cp.first, cp.second);
         sp.spacePoint =
             0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
         spacePoints.push_back(std::move(sp));

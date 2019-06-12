@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,27 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 
 namespace Acts {
+
+/// @brief Structure for easier bookkeeping of space points.
+template <typename ClusterLink>
+struct SpacePoint {
+  /// Storage of the cluster on a surface
+  ClusterLink clusterModule;
+  /// Storage of a space point.
+  Vector3D spacePoint;
+
+  /// @brief Getter of the first element in @p spacePoint
+  /// @return First element in @p spacePoint
+  double x() const { return spacePoint(0); }
+
+  /// @brief Getter of the second element in @p spacePoint
+  /// @return Second element in @p spacePoint
+  double y() const { return spacePoint(1); }
+
+  /// @brief Getter of the third element in @p spacePoint
+  /// @return Third element in @p spacePoint
+  double z() const { return spacePoint(2); }
+};
 
 /// @struct SpacePointBuilder
 ///
