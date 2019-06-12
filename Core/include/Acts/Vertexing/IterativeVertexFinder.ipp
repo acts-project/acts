@@ -155,40 +155,25 @@ Acts::Result<Acts::Vertex<input_track_t>> Acts::
     IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::getVertexSeed(
         const std::vector<input_track_t>& seedTracks,
         const VertexFinderOptions<input_track_t>& vFinderOptions) const {
-  if (m_cfg.useBeamConstraint) {
-    // `vFinderOptions.vertexConstraint` is beamspot constraint here
-    auto res = m_cfg.seedFinder.find(seedTracks, vFinderOptions);
-    if (res.ok()) {
-      // current seed is last element in collection
-      Vertex<input_track_t> seedVertex = (*res).back();
-      ACTS_DEBUG("Seed found at position: ("
-                 << seedVertex.fullPosition()[eX] << ", "
-                 << seedVertex.fullPosition()[eY] << ", "
-                 << seedVertex.fullPosition()[eZ] << ", " << seedVertex.time()
-                 << "). Number of input tracks: " << seedTracks.size());
-      return seedVertex;
-    } else {
+  auto res = m_cfg.seedFinder.find(seedTracks, vFinderOptions);
+  if (res.ok()) {
+    auto vertexCollection = *res;
+    if (vertexCollection.empty()) {
       ACTS_DEBUG(
           "No seed found. Number of input tracks: " << seedTracks.size());
       return VertexingError::SeedingError;
     }
-  } else {  // seeding without constraint
-    auto res = m_cfg.seedFinder.find(seedTracks, vFinderOptions);
-    if (res.ok()) {
-      // current seed is last element in collection
-      Vertex<input_track_t> seedVertex = (*res).back();
-      ACTS_DEBUG("No constraint. Seed found at position: ("
-                 << seedVertex.fullPosition()[eX] << ", "
-                 << seedVertex.fullPosition()[eY] << ", "
-                 << seedVertex.fullPosition()[eZ] << ", " << seedVertex.time()
-                 << "). Number of input tracks: " << seedTracks.size());
-      return seedVertex;
-
-    } else {
-      ACTS_DEBUG("No constraint. No seed found. Number of input tracks: "
-                 << seedTracks.size());
-      return VertexingError::SeedingError;
-    }
+    // current seed is last element in collection
+    Vertex<input_track_t> seedVertex = vertexCollection.back();
+    ACTS_DEBUG("Seed found at position: ("
+               << seedVertex.fullPosition()[eX] << ", "
+               << seedVertex.fullPosition()[eY] << ", "
+               << seedVertex.fullPosition()[eZ] << ", " << seedVertex.time()
+               << "). Number of input tracks: " << seedTracks.size());
+    return seedVertex;
+  } else {
+    ACTS_DEBUG("No seed found. Number of input tracks: " << seedTracks.size());
+    return VertexingError::SeedingError;
   }
 }
 
