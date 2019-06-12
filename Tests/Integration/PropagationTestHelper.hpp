@@ -264,8 +264,13 @@ std::pair<Vector3D, double> to_cylinder(
         1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
     covPtr = std::make_unique<const Covariance>(cov);
   }
+
   // do propagation of the start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
+  TrackParametersBase* start;
+  if (q == 0.)
+    start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
+  else
+    start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
@@ -275,7 +280,8 @@ std::pair<Vector3D, double> to_cylinder(
 
   // Increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
-  const auto result = propagator.propagate(start, *endSurface, options).value();
+  const auto result =
+      propagator.propagate(*start, *endSurface, options).value();
   const auto& tp = result.endParameters;
   // check for null pointer
   BOOST_CHECK(tp != nullptr);
@@ -320,8 +326,13 @@ std::pair<Vector3D, double> to_surface(
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // Create curvilinear start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
-  const auto result_s = propagator.propagate(start, options).value();
+  TrackParametersBase* start;
+  if (q == 0.)
+    start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
+  else
+    start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
+
+  const auto result_s = propagator.propagate(*start, options).value();
   const auto& tp_s = result_s.endParameters;
 
   // The transform at the destination
@@ -341,7 +352,7 @@ std::pair<Vector3D, double> to_surface(
               << options.pathLimit << std::endl;
   }
 
-  auto result = propagator.propagate(start, *endSurface, options);
+  auto result = propagator.propagate(*start, *endSurface, options);
   const auto& propRes = *result;
   const auto& tp = propRes.endParameters;
   // check the result for nullptr

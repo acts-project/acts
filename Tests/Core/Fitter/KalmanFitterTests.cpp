@@ -365,6 +365,10 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // Count one hole
   BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1);
   // And the parameters should be different
+  //~
+  // BOOST_CHECK(!Acts::Test::checkCloseRel(fittedParameters.parameters().template
+  // head<5>(), ~ fittedWithHoleParameters.parameters().template head<5>(), ~
+  // 1e-6));
   BOOST_CHECK(!Acts::Test::checkCloseRel(fittedParameters.parameters(),
                                          fittedWithHoleParameters.parameters(),
                                          1e-6));

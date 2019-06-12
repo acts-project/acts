@@ -57,7 +57,6 @@ struct DefaultExtension {
       // Store qop, it is always used if valid
       qop = stepper.charge(state.stepping) /
             units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
-
       // Evaluate the k_i
       knew = qop * stepper.direction(state.stepping).cross(bField);
     } else {

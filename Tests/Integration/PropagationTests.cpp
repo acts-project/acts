@@ -34,6 +34,7 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 
 #include "PropagationTestHelper.hpp"
 
@@ -53,6 +54,7 @@ using AtlasStepperType = AtlasStepper<BFieldType>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 using DensePropagatorType = Propagator<DenseStepperType, Navigator>;
 using AtlasPropagatorType = Propagator<AtlasStepperType>;
+using StraightPropagatorType = Propagator<StraightLineStepper>;
 
 // number of tests
 const int ntests = 100;
@@ -68,6 +70,8 @@ DenseStepperType dstepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
 AtlasStepperType astepper(bField);
 AtlasPropagatorType apropagator(std::move(astepper));
+StraightLineStepper sstepper;
+StraightPropagatorType spropagator(std::move(sstepper));
 
 DensePropagatorType setupDensePropagator() {
   CuboidVolumeBuilder::VolumeConfig vConf;
