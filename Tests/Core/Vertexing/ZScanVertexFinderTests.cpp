@@ -145,6 +145,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     BOOST_CHECK(res.ok());
 
     if (res.ok()) {
+      BOOST_CHECK(!(*res).empty());
       Vector3D result = (*res).back().position();
       CHECK_CLOSE_ABS(result[eZ], z, 1 * units::_mm);
     }
@@ -251,6 +252,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     BOOST_CHECK(res.ok());
 
     if (res.ok()) {
+      BOOST_CHECK(!(*res).empty());
       Vector3D result = (*res).back().position();
       CHECK_CLOSE_ABS(result[eZ], z, 1 * units::_mm);
     }
