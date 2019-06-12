@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
 
 template <typename bfield_t, typename input_track_t, typename propagator_t,
@@ -154,14 +153,13 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
   return vertexCollection;
 }
 
-
 template <typename bfield_t, typename input_track_t, typename propagator_t,
           typename vfitter_t>
-Acts::Result<Acts::Vertex<input_track_t>>
-Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
-    getVertexSeed(
-        const std::vector<input_track_t>& seedTracks,
-        const VertexFinderOptions<input_track_t>& vFinderOptions) const {
+Acts::Result<Acts::Vertex<input_track_t>> Acts::IterativeVertexFinder<
+    bfield_t, input_track_t, propagator_t,
+    vfitter_t>::getVertexSeed(const std::vector<input_track_t>& seedTracks,
+                              const VertexFinderOptions<input_track_t>&
+                                  vFinderOptions) const {
   auto res = m_cfg.seedFinder.find(seedTracks, vFinderOptions);
   if (res.ok()) {
     auto vertexCollection = *res;
