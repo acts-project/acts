@@ -84,8 +84,8 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   std::cout << "Hit created" << std::endl;
 
-  std::vector<SingleHitSpacePoint<PlanarModuleCluster>> data;
-  SpacePointBuilder<SingleHitSpacePoint<PlanarModuleCluster>> shsp;
+  std::vector<SpacePoint<PlanarModuleCluster>> data;
+  SpacePointBuilder<SpacePoint<PlanarModuleCluster>> shsp;
 
   std::cout << "Hit added to storage" << std::endl;
 

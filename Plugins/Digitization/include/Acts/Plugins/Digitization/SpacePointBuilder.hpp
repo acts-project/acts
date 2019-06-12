@@ -14,10 +14,10 @@
 namespace Acts {
 
 /// @brief Structure for easier bookkeeping of space points.
-template <typename ClusterLink>
+template <typename Cluster>
 struct SpacePoint {
   /// Storage of the cluster on a surface
-  ClusterLink clusterModule;
+  std::vector<const Cluster*> clusterModule;
   /// Storage of a space point.
   Vector3D spacePoint;
 

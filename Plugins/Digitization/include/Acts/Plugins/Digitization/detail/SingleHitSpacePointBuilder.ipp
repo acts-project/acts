@@ -10,7 +10,7 @@
 
 template <typename Cluster>
 Acts::Vector2D
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::localCoords(
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
@@ -20,7 +20,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::localCoords(
 
 template <typename Cluster>
 Acts::Vector3D
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::globalCoords(
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -33,16 +33,16 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::globalCoords(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SingleHitSpacePoint<Cluster>>::
+void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::
     calculateSpacePoints(const GeometryContext& gctx,
                          const std::vector<const Cluster*>& clusters,
-                         std::vector<Acts::SingleHitSpacePoint<Cluster>>&
+                         std::vector<Acts::SpacePoint<Cluster>>&
                              spacePointStorage) const {
   // Set the space point for all stored hits
   for (const auto& c : clusters) {
-    Acts::SingleHitSpacePoint<Cluster> spacePoint;
+    Acts::SpacePoint<Cluster> spacePoint;
     spacePoint.spacePoint = globalCoords(gctx, *c);
-    spacePoint.clusterModule = c;
+    spacePoint.clusterModule.push_back(c);
     spacePointStorage.push_back(std::move(spacePoint));
   }
 }

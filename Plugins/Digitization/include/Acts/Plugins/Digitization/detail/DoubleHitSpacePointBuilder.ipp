@@ -309,14 +309,14 @@ bool calculateSpacePoint(
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 template <typename Cluster>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::SpacePointBuilder(
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::SpacePointBuilder(
     Acts::SpacePointBuilder<
-        Acts::DoubleHitSpacePoint<Cluster>>::DoubleHitSpacePointConfig cfg)
+        Acts::SpacePoint<Cluster>>::DoubleHitSpacePointConfig cfg)
     : m_cfg(std::move(cfg)) {}
 
 template <typename Cluster>
 Acts::Vector2D
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::localCoords(
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
@@ -326,7 +326,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::localCoords(
 
 template <typename Cluster>
 Acts::Vector3D
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::globalCoords(
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -339,7 +339,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::globalCoords(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
+void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::
     makeClusterPairs(const GeometryContext& gctx,
                      const std::vector<const Cluster*>& clustersFront,
                      const std::vector<const Cluster*>& clustersBack,
@@ -388,7 +388,7 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
 
 template <typename Cluster>
 std::pair<Acts::Vector3D, Acts::Vector3D>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::endsOfStrip(
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Calculate the local coordinates of the cluster
   const Acts::Vector2D local = localCoords(cluster);
@@ -411,12 +411,12 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::endsOfStrip(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
+void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::
     calculateSpacePoints(
         const GeometryContext& gctx,
         const std::vector<std::pair<const Cluster*, const Cluster*>>&
             clusterPairs,
-        std::vector<Acts::DoubleHitSpacePoint<Cluster>>& spacePoints) const {
+        std::vector<Acts::SpacePoint<Cluster>>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   SpacePointParameters spaPoPa;
@@ -436,8 +436,9 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
       resultPerpProj = calcPerpendicularProjection(ends1.first, ends2.first,
                                                    spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
-        Acts::DoubleHitSpacePoint<Cluster> sp;
-        sp.clusterModule = std::make_pair(cp.first, cp.second);
+        Acts::SpacePoint<Cluster> sp;
+        sp.clusterModule.push_back(cp.first);
+        sp.clusterModule.push_back(cp.second);
         sp.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
         spacePoints.push_back(std::move(sp));
         continue;
@@ -447,8 +448,9 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
     if (calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa,
                             m_cfg.stripLengthTolerance)) {
       // Store the space point
-      Acts::DoubleHitSpacePoint<Cluster> sp;
-      sp.clusterModule = std::make_pair(cp.first, cp.second);
+      Acts::SpacePoint<Cluster> sp;
+      sp.clusterModule.push_back(cp.first);
+      sp.clusterModule.push_back(cp.second);
       sp.spacePoint =
           0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
       spacePoints.push_back(std::move(sp));
@@ -461,8 +463,9 @@ void Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint<Cluster>>::
       /// position.
       // Check if a recovery the point(s) and store them if successful
       if (recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance)) {
-        Acts::DoubleHitSpacePoint<Cluster> sp;
-        sp.clusterModule = std::make_pair(cp.first, cp.second);
+        Acts::SpacePoint<Cluster> sp;
+        sp.clusterModule.push_back(cp.first);
+        sp.clusterModule.push_back(cp.second);
         sp.spacePoint =
             0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
         spacePoints.push_back(std::move(sp));
