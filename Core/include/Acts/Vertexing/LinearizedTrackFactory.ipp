@@ -161,7 +161,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
   BoundVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
                           momentumJacobian * momentumAtPCA;
 
-  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPointPos,
+  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPoint,
                          positionJacobian, momentumJacobian, positionAtPCA,
                          momentumAtPCA, constTerm);
 }

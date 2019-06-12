@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-  Vector3D vecSPZero = Vector3D::Zero();
+  SpacePointVector vecSPZero = SpacePointVector::Zero();
   SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
   ActsMatrixD<BoundParsDim, 3> matBound2MomZero =
       ActsMatrixD<BoundParsDim, 3>::Zero();
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-  Vector3D vecSPZero = Vector3D::Zero();
+  SpacePointVector vecSPZero = SpacePointVector::Zero();
   SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
   ActsMatrixD<BoundParsDim, 3> matBound2MomZero =
       ActsMatrixD<BoundParsDim, 3>::Zero();
