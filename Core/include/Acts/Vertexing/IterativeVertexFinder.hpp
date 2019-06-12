@@ -51,7 +51,7 @@ namespace Acts {
 ///   removes all used tracks that are compatible with the fitted vertex
 ///   from `perigeesToFit` and `seedTracks`. It also removes outliers tracks
 ///   from tracksAtVertex if not compatible.
-/// 5. Add vertex to state.vertexCollection
+/// 5. Add vertex to vertexCollection
 /// 6. Repeat until no seedTracks are left or max. number of vertices found
 ///
 ////////////////////////////////////////////////////////////
@@ -81,8 +81,9 @@ class IterativeVertexFinder {
               typename LinearizedTrackFactory<bfield_t, propagator_t>::Config(
                   bField)),
           propagator(propagatorIn),
-          zScanFinderCfg(typename ZScanVertexFinder<bfield_t, BoundParameters,
-                                                    propagator_t>::Config()),
+          zScanFinderCfg(
+              typename ZScanVertexFinder<bfield_t, BoundParameters,
+                                         propagator_t>::Config(propagator)),
           seedFinder(ZScanVertexFinder<bfield_t, BoundParameters, propagator_t>(
               std::move(zScanFinderCfg))) {}
 
@@ -184,13 +185,9 @@ class IterativeVertexFinder {
   /// @brief Method that calls seed finder to retrieve a vertex seed
   ///
   /// @param seedTracks Seeding tracks
-  /// @param seedState Seeding state, will contain the vertex seed
-  ///        as the last element in seedState.vertexCollection
   /// @param vFinderOptions Vertex finder options
-  Result<void> getVertexSeed(
+  Result<Vertex<input_track_t>> getVertexSeed(
       const std::vector<input_track_t>& seedTracks,
-      typename ZScanVertexFinder<bfield_t, BoundParameters,
-                                 propagator_t>::State& seedState,
       const VertexFinderOptions<input_track_t>& vFinderOptions) const;
 
   /// @brief Removes all tracks in perigeesToFit from seedTracks

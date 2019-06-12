@@ -22,10 +22,6 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
   // vector<input_track_t> and hence a lot of copying would be required.
   std::vector<input_track_t> seedTracks = trackVector;
 
-  // Vertex seed finder state
-  typename ZScanVertexFinder<bfield_t, BoundParameters, propagator_t>::State
-      seedState;
-
   // Construct the vertex fitter options from vertex finder options
   VertexFitterOptions<input_track_t> vFitterOptions(
       vFinderOptions.geoContext, vFinderOptions.magFieldContext,
@@ -38,15 +34,14 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
   // begin iterating
   while (seedTracks.size() > 1 && nInterations < m_cfg.maxVertices) {
     /// Begin seeding
-    auto seedRes = getVertexSeed(seedTracks, seedState, vFinderOptions);
-    if (seedRes.error()) {
+    auto seedRes = getVertexSeed(seedTracks, vFinderOptions);
+    if (!seedRes.ok()) {
       return seedRes.error();
     }
     // retrieve the seed vertex as the last element in
-    // seedState.vertexCollection
-    Vertex<input_track_t>& seedVertex = seedState.vertexCollection.back();
+    // the seed vertexCollection
+    Vertex<input_track_t>& seedVertex = *seedRes;
     /// End seeding
-
     /// Now take only tracks compatible with current seed
     // Tracks used for the fit in this iteration
     std::vector<input_track_t> perigeesToFit;
@@ -55,7 +50,6 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
     // Fill vector with tracks to fit, only compatible with seed:
     fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
                       perigeesToFitSplitVertex);
-
     ACTS_DEBUG("Perigees used for fit: " << perigeesToFit.size());
 
     /// Begin vertex fit
@@ -87,7 +81,6 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
       }
     }
     /// End vertex fit
-
     ACTS_DEBUG("Vertex position after fit: " << currentVertex.fullPosition());
 
     // Number degrees of freedom
@@ -118,8 +111,7 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
         isGoodVertex = *result;
 
       }  // end reassignTracksAfterFirstFit case
-
-      // still good vertex? might have changed in the meanwhile
+         // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
         removeUsedCompatibleTracks(currentVertex, perigeesToFit, seedTracks,
                                    vFinderOptions);
@@ -143,7 +135,6 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
                                    seedTracks, vFinderOptions);
       }
     }
-
     // Now fill vertex collection with vertex
     if (isGoodVertex) {
       vertexCollection.push_back(currentVertex);
@@ -160,44 +151,38 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::find(
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Result<void> Acts::
+Acts::Result<Acts::Vertex<input_track_t>> Acts::
     IterativeVertexFinder<bfield_t, input_track_t, propagator_t>::getVertexSeed(
         const std::vector<input_track_t>& seedTracks,
-        typename ZScanVertexFinder<bfield_t, BoundParameters,
-                                   propagator_t>::State& seedState,
         const VertexFinderOptions<input_track_t>& vFinderOptions) const {
   if (m_cfg.useBeamConstraint) {
     // `vFinderOptions.vertexConstraint` is beamspot constraint here
-    auto res = m_cfg.seedFinder.find(seedTracks, seedState, m_cfg.propagator,
-                                     vFinderOptions);
+    auto res = m_cfg.seedFinder.find(seedTracks, vFinderOptions);
     if (res.ok()) {
       // current seed is last element in collection
-      Vertex<input_track_t>& seedVertex = seedState.vertexCollection.back();
+      Vertex<input_track_t> seedVertex = (*res).back();
       ACTS_DEBUG("Seed found at position: ("
                  << seedVertex.fullPosition()[eX] << ", "
                  << seedVertex.fullPosition()[eY] << ", "
                  << seedVertex.fullPosition()[eZ] << ", " << seedVertex.time()
                  << "). Number of input tracks: " << seedTracks.size());
-      return {};
+      return seedVertex;
     } else {
       ACTS_DEBUG(
           "No seed found. Number of input tracks: " << seedTracks.size());
       return VertexingError::SeedingError;
     }
   } else {  // seeding without constraint
-
-    auto res = m_cfg.seedFinder.find(seedTracks, seedState, m_cfg.propagator,
-                                     vFinderOptions);
+    auto res = m_cfg.seedFinder.find(seedTracks, vFinderOptions);
     if (res.ok()) {
       // current seed is last element in collection
-      Vertex<input_track_t>& seedVertex = seedState.vertexCollection.back();
-
+      Vertex<input_track_t> seedVertex = (*res).back();
       ACTS_DEBUG("No constraint. Seed found at position: ("
                  << seedVertex.fullPosition()[eX] << ", "
                  << seedVertex.fullPosition()[eY] << ", "
                  << seedVertex.fullPosition()[eZ] << ", " << seedVertex.time()
                  << "). Number of input tracks: " << seedTracks.size());
-      return {};
+      return seedVertex;
 
     } else {
       ACTS_DEBUG("No constraint. No seed found. Number of input tracks: "
