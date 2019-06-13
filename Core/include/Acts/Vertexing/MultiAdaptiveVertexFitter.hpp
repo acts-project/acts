@@ -78,7 +78,7 @@ class MultiAdaptiveVertexFitter {
     VertexAnnealingTool annealingTool;
 
     /// Number of max iterations
-    int maxIterations{30};
+    int maxIterations{50};
 
     /// Max distance to linearization point allowed
     /// without relinearization
