@@ -15,21 +15,28 @@
 
 namespace Acts {
 
+/// @class Chi2TrackCompatibilityEstimator
+///
+/// @brief Estimates the compatibility of a track
+///        to a vertex position based on the 3d
+///        distance between the track and the vertex
 template <typename input_track_t>
 class Chi2TrackCompatibilityEstimator {
  public:
   /// Default constructor
   Chi2TrackCompatibilityEstimator() = default;
 
-  double getCompatibility(const GeometryContext& gctx,
-                          const BoundParameters& track,
-                          const Vector3D& vertexPos) const;
-
-  void setTrackCompatibility(const GeometryContext& gctx,
-                             TrackAtVertex<input_track_t>& trackAtVertex,
-                             const Vector3D& vertexPos,
-                             const std::function<BoundParameters(input_track_t)>
-                                 extractParameters) const;
+  /// @brief Estimates the compatibility value
+  ///
+  /// @param gctx The Geometry context
+  /// @param track Track parameters at point of closest approach in
+  ///   3d as retrieved by ImpactPoint3dEstimator::getParamsAtIP3d
+  /// @param vertexPos The vertex position
+  ///
+  /// @return The compatibility value
+  double getVtxCompatibility(const GeometryContext& gctx,
+                             const BoundParameters* track,
+                             const Vector3D& vertexPos) const;
 };
 
 }  // namespace Acts

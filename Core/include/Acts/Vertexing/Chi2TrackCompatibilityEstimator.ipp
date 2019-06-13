@@ -7,15 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename input_track_t>
-double Acts::Chi2TrackCompatibilityEstimator<input_track_t>::getCompatibility(
-    const GeometryContext& gctx, const BoundParameters& track,
+double
+Acts::Chi2TrackCompatibilityEstimator<input_track_t>::getVtxCompatibility(
+    const GeometryContext& gctx, const BoundParameters* track,
     const Vector3D& vertexPos) const {
   // surface rotation
   RotationMatrix3D myRotation =
-      track.referenceSurface().transform(gctx).rotation();
+      track->referenceSurface().transform(gctx).rotation();
   // surface translation
   Vector3D myTranslation =
-      track.referenceSurface().transform(gctx).translation();
+      track->referenceSurface().transform(gctx).translation();
 
   // x and y direction of plane
   Vector3D xDirPlane = myRotation.col(0);
@@ -29,24 +30,13 @@ double Acts::Chi2TrackCompatibilityEstimator<input_track_t>::getCompatibility(
                        vertexLocPlane.dot(yDirPlane)};
 
   // track covariance
-  auto cov = track.covariance();
+  auto cov = track->covariance();
   ActsSymMatrixD<2> myWeightXY = (*cov).block<2, 2>(0, 0).inverse();
 
   // TODO: is parameters()[eX] etc correct?
   Vector2D myXYpos =
-      Vector2D(track.parameters()[eX], track.parameters()[eY]) - vertexLocXY;
+      Vector2D(track->parameters()[eX], track->parameters()[eY]) - vertexLocXY;
 
   // return chi2
   return myXYpos.dot(myWeightXY * myXYpos);
-}
-
-template <typename input_track_t>
-void Acts::Chi2TrackCompatibilityEstimator<input_track_t>::
-    setTrackCompatibility(const GeometryContext& gctx,
-                          TrackAtVertex<input_track_t>& trackAtVertex,
-                          const Vector3D& vertexPos,
-                          const std::function<BoundParameters(input_track_t)>
-                              extractParameters) const {
-  trackAtVertex.vertexCompatibility = getCompatibility(
-      gctx, extractParameters(trackAtVertex.originalTrack), vertexPos);
 }
