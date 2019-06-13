@@ -314,8 +314,7 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::SpacePointBuilder(
     : m_cfg(std::move(cfg)) {}
 
 template <typename Cluster>
-Acts::Vector2D
-Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
+Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
@@ -324,8 +323,7 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
 }
 
 template <typename Cluster>
-Acts::Vector3D
-Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
+Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -338,12 +336,12 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::
-    makeClusterPairs(const GeometryContext& gctx,
-                     const std::vector<const Cluster*>& clustersFront,
-                     const std::vector<const Cluster*>& clustersBack,
-                     std::vector<std::pair<const Cluster*, const Cluster*>>&
-                         clusterPairs) const {
+void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::makeClusterPairs(
+    const GeometryContext& gctx,
+    const std::vector<const Cluster*>& clustersFront,
+    const std::vector<const Cluster*>& clustersBack,
+    std::vector<std::pair<const Cluster*, const Cluster*>>& clusterPairs)
+    const {
   // Return if no clusters are given in a vector
   if (clustersFront.empty() || clustersBack.empty()) {
     return;
@@ -410,12 +408,10 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::
-    calculateSpacePoints(
-        const GeometryContext& gctx,
-        const std::vector<std::pair<const Cluster*, const Cluster*>>&
-            clusterPairs,
-        std::vector<Acts::SpacePoint<Cluster>>& spacePoints) const {
+void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
+    const GeometryContext& gctx,
+    const std::vector<std::pair<const Cluster*, const Cluster*>>& clusterPairs,
+    std::vector<Acts::SpacePoint<Cluster>>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   SpacePointParameters spaPoPa;

@@ -31,7 +31,7 @@ Vector3D vertex = {0., 0., 0.};
 /// Perform the perpendicular projection for space point finding
 bool usePerpProj = false;
 };
-  
+
 /// @class TwoHitsSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
@@ -45,7 +45,6 @@ bool usePerpProj = false;
 template <typename Cluster>
 class SpacePointBuilder<SpacePoint<Cluster>> {
  public:
- 
   /// Constructor
   /// @param cfg Specific config that will be used instead of the default values
   SpacePointBuilder(DoubleHitSpacePointConfig cfg);
