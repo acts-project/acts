@@ -71,6 +71,7 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
           std::make_shared<Transform3D>(thePlane));
 
   PropagatorOptions pOptions(gctx, mctx);
+  pOptions.direction = backward;
 
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator.propagate(trkParams, *planeSurface, pOptions);
@@ -79,6 +80,42 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
   } else {
     return result.error();
   }
+}
+
+template <typename bfield_t, typename input_track_t, typename propagator_t>
+double Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
+    getVtxCompatibility(const GeometryContext& gctx,
+                        const BoundParameters* trkParams,
+                        const Vector3D& vertexPos) const {
+  // surface rotation
+  RotationMatrix3D myRotation =
+      trkParams->referenceSurface().transform(gctx).rotation();
+  // Surface translation
+  Vector3D myTranslation =
+      trkParams->referenceSurface().transform(gctx).translation();
+
+  // x and y direction of plane
+  Vector3D xDirPlane = myRotation.col(0);
+  Vector3D yDirPlane = myRotation.col(1);
+
+  // transform vertex position in local plane reference frame
+  Vector3D vertexLocPlane = vertexPos - myTranslation;
+
+  // local x/y vertex position
+  Vector2D vertexLocXY{vertexLocPlane.dot(xDirPlane),
+                       vertexLocPlane.dot(yDirPlane)};
+
+  // track covariance
+  auto cov = trkParams->covariance();
+  ActsSymMatrixD<2> myWeightXY = (*cov).block<2, 2>(0, 0).inverse();
+
+  // 2-dim residual
+  Vector2D myXYpos =
+      Vector2D(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
+      vertexLocXY;
+
+  // return chi2
+  return myXYpos.dot(myWeightXY * myXYpos);
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
@@ -134,42 +171,6 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
     return VertexingError::NotConverged;
   }
   return phi;
-}
-
-template <typename bfield_t, typename input_track_t, typename propagator_t>
-double Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
-    getVtxCompatibility(const GeometryContext& gctx,
-                        const BoundParameters* trkParams,
-                        const Vector3D& vertexPos) const {
-  // surface rotation
-  RotationMatrix3D myRotation =
-      trkParams->referenceSurface().transform(gctx).rotation();
-  // Surface translation
-  Vector3D myTranslation =
-      trkParams->referenceSurface().transform(gctx).translation();
-
-  // x and y direction of plane
-  Vector3D xDirPlane = myRotation.col(0);
-  Vector3D yDirPlane = myRotation.col(1);
-
-  // transform vertex position in local plane reference frame
-  Vector3D vertexLocPlane = vertexPos - myTranslation;
-
-  // local x/y vertex position
-  Vector2D vertexLocXY{vertexLocPlane.dot(xDirPlane),
-                       vertexLocPlane.dot(yDirPlane)};
-
-  // track covariance
-  auto cov = trkParams->covariance();
-  ActsSymMatrixD<2> myWeightXY = (*cov).block<2, 2>(0, 0).inverse();
-
-  // 2-dim residual
-  Vector2D myXYpos =
-      Vector2D(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
-      vertexLocXY;
-
-  // return chi2
-  return myXYpos.dot(myWeightXY * myXYpos);
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
