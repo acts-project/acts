@@ -110,14 +110,6 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   trkJac(1, 1) = -std::sin(newTrkParams[2]) / tan(newTrkParams[3]);
 
   trkJac.block<5, 5>(1, 2) = ActsSymMatrixD<5>::Identity();
-  // TODO remove:
-  /*
-  trkJac(1, 2) = 1.;
-  trkJac(2, 3) = 1.;
-  trkJac(3, 4) = 1.;
-  trkJac(4, 5) = 1.;
-  trkJac(5, 6) = 1.;
-  */
 
   // full perigee track covariance
   std::unique_ptr<BoundMatrix> fullPerTrackCov =

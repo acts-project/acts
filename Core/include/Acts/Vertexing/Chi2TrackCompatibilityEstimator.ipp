@@ -14,7 +14,7 @@ Acts::Chi2TrackCompatibilityEstimator<input_track_t>::getVtxCompatibility(
   // surface rotation
   RotationMatrix3D myRotation =
       track->referenceSurface().transform(gctx).rotation();
-  // surface translation
+  // Surface translation
   Vector3D myTranslation =
       track->referenceSurface().transform(gctx).translation();
 
@@ -33,7 +33,7 @@ Acts::Chi2TrackCompatibilityEstimator<input_track_t>::getVtxCompatibility(
   auto cov = track->covariance();
   ActsSymMatrixD<2> myWeightXY = (*cov).block<2, 2>(0, 0).inverse();
 
-  // TODO: is parameters()[eX] etc correct?
+  // 2-dim residual
   Vector2D myXYpos =
       Vector2D(track->parameters()[eX], track->parameters()[eY]) - vertexLocXY;
 

@@ -17,7 +17,7 @@ Acts::Vertex<input_track_t>
 Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
     const Acts::Vertex<input_track_t>* vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign) const {
-  std::cout << "KalmanVertexUpdator::updatePosition: " << std::endl;
+  // std::cout << "KalmanVertexUpdator::updatePosition: " << std::endl;
 
   // Retrieve linTrack information
   const SpacePointToBoundMatrix& posJac = linTrack.positionJacobian;
@@ -28,19 +28,19 @@ Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
   const BoundSymMatrix& trkParamWeight =
       linTrack.covarianceAtPCA.inverse();  // G_k in comments below
 
-  std::cout << "\tlinTrack pos jac: " << posJac << std::endl;
-  std::cout << "\tlinTrack mom jac: " << momJac << std::endl;
-  std::cout << "\tlinTrack trkParams: " << trkParams << std::endl;
-  std::cout << "\tlinTrack constTerm: " << constTerm << std::endl;
-  std::cout << "\tlinTrack trkParamWeight: " << trkParamWeight << std::endl;
+  // std::cout << "\tlinTrack pos jac: " << posJac << std::endl;
+  // std::cout << "\tlinTrack mom jac: " << momJac << std::endl;
+  // std::cout << "\tlinTrack trkParams: " << trkParams << std::endl;
+  // std::cout << "\tlinTrack constTerm: " << constTerm << std::endl;
+  // std::cout << "\tlinTrack trkParamWeight: " << trkParamWeight << std::endl;
 
   // Vertex to be updated
   const SpacePointVector& oldVtxPos = vtx->fullPosition();
   const SpacePointSymMatrix& oldVtxWeight = vtx->fullCovariance().inverse();
 
-  std::cout << "\tOld vtx pos: " << vtx->fullPosition() << std::endl;
-  std::cout << "\t fullCovariance: " << vtx->fullCovariance() << std::endl;
-  std::cout << "\toldVtxWeight: " << oldVtxWeight << std::endl;
+  // std::cout << "\tOld vtx pos: " << vtx->fullPosition() << std::endl;
+  // std::cout << "\t fullCovariance: " << vtx->fullCovariance() << std::endl;
+  // std::cout << "\toldVtxWeight: " << oldVtxWeight << std::endl;
 
   // W_k matrix
   ActsSymMatrixD<3> wMat =
@@ -123,7 +123,7 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
     Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk,
     int sign) const {
   if (sign < 0) {
-    std::cout << "Error: Removal not supported yet. Returning." << std::endl;
+    // std::cout << "Error: Removal not supported yet. Returning." << std::endl;
     return;
   }
 
