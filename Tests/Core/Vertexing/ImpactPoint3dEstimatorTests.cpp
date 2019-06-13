@@ -208,18 +208,22 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   // Reference position
   Vector3D refPosition(0., 0., 0.);
 
+  // Lists to store distances and comp values
   std::vector<double> distancesList;
   std::vector<double> compatibilityList;
+
+  // Generate covariance matrix values once
+  // for all cov matrices below
+  // Resolutions
+  double resD0 = resIPDist(gen);
+  double resZ0 = resIPDist(gen);
+  double resPh = resAngDist(gen);
+  double resTh = resAngDist(gen);
+  double resQp = resQoPDist(gen);
 
   // Start running tests
   for (unsigned int i = 0; i < nTests; i++) {
     // Create a track
-    // Resolutions
-    double resD0 = resIPDist(gen);
-    double resZ0 = resIPDist(gen);
-    double resPh = resAngDist(gen);
-    double resTh = resAngDist(gen);
-    double resQp = resQoPDist(gen);
 
     // Covariance matrix
     std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
@@ -292,7 +296,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
       // should always be positive
       double res = relDiffComp * relDiffDist;
 
-      // BOOST_CHECK(res > 0.);
+      BOOST_CHECK(res > 0.);
     }
   }
 }
