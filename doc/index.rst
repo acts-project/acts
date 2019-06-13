@@ -1,12 +1,5 @@
-ACTS --- A Common Tracking Software
-===================================
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   annotated_api
-   grid_axis
+A Common Tracking Software
+==========================
 
 
 This project contains an experiment-independent set of track reconstruction
@@ -27,3 +20,13 @@ Key features of this project include:
 *   simple and efficient event data model,
 *   performant and highly flexible algorithms for track propagation and fitting,
 *   basic seed finding algorithms.
+
+
+.. toctree::
+    :maxdepth: 2
+
+    modules/modules
+    plugins/plugins
+    annotated_api
+    grid_axis
+    logging

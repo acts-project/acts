@@ -15,6 +15,7 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 import sphinx_bootstrap_theme
+from recommonmark.transform import AutoStructify
 
 # -- Project information ------------------------------------------------------
 
@@ -26,7 +27,16 @@ release = '@PROJECT_VERSION@'
 
 # -- General configuration ----------------------------------------------------
 
-extensions = ['sphinx.ext.mathjax', 'recommonmark', 'breathe']
+extensions = [
+    'sphinx.ext.mathjax',
+    'recommonmark',
+    'sphinx_markdown_tables',
+    'breathe',
+]
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 master_doc = 'index'
 # cpp as default language
 primary_domain = 'cpp'
@@ -60,18 +70,24 @@ exhale_args = {
 html_theme = 'bootstrap'
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 html_theme_options = {
+  'navbar_sidebarrel': False, # no prev/next links in navigation bar
   'navbar_links': [
+    ('Modules', 'modules/modules'),
+    ('Plugins', 'plugins/plugins'),
     ('API', 'doxygen/annotated.html', True),
   ],
+  'navbar_fixed_top': False,
 }
-html_logo = 'figures/ActsLogo.gif'
+html_logo = '@CMAKE_CURRENT_SOURCE_DIR@/figures/ActsLogo.gif'
 html_static_path = []
-# html_sidebars = {
-#     '**': [
-#         'about.html',
-#         'navigation.html',
-#         'relations.html',
-#     ],
-# }
 html_show_sourcelink = False
 html_show_sphinx = False
+
+# -- Markdown bridge setup hook (must come last, not sure why) ----------------
+
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+        'enable_math': True,
+        'enable_inline_math': True,
+        }, True)
+    app.add_transform(AutoStructify)
