@@ -65,19 +65,19 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   // //redundant test
   //
   /// Test minHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.minHalflengthX(), minHalfX);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.x1(), minHalfX);
   //
   /// Test medHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.medHalflengthX(), midHalfX);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.x2(), midHalfX);
   //
   /// Test maxHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.maxHalflengthX(), maxHalfX);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.x3(), maxHalfX);
   //
   /// Test halflengthY1() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.halflengthY1(), halfY1);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.y1(), halfY1);
   //
   /// Test halflengthY2() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.halflengthY2(), halfY2);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.y2(), halfY2);
   //
   /// Test boundingBox
   BOOST_CHECK_EQUAL(diamondBoundsObject.boundingBox(),
@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   diamondBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::DiamondBounds:  (minHlengthX, medHlengthX, "
-                         "maxHlengthX, hlengthY1, hlengthY2 ) = (10.0000000, "
+      dumpOuput.is_equal("Acts::DiamondBounds:  (x1, x2, "
+                         "x3, y1, y2 ) = (10.0000000, "
                          "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
   //
   /// Test inside
