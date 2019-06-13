@@ -53,9 +53,9 @@ std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 // Track charge helper distribution
 std::uniform_real_distribution<> qDist(-1, 1);
 
-/// @brief Unit test for ImpactPoint3dEstimator
+/// @brief Unit test for ImpactPoint3dEstimator params and distance
 ///
-BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_test) {
+BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   // Debug mode
   bool debugMode = false;
   // Number of tests
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_test) {
 
     // Corresponding surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
-        Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+        Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
     BoundParameters myTrack(tgContext, std::move(covMat), paramVec,
@@ -169,6 +169,116 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_test) {
                 << trackIP3dParams << std::endl;
     }
   }  // end for loop tests
+}
+
+/// @brief Unit test for ImpactPoint3dEstimator
+///  compatibility estimator
+BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
+  // Debug mode
+  bool debugMode = true;
+  // Number of tests
+  unsigned int nTests = 10;
+
+  // Set up RNG
+  int mySeed = 31415;
+  std::mt19937 gen(mySeed);
+
+  // Set up constant B-Field
+  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+
+  // Set up Eigenstepper
+  EigenStepper<ConstantBField> stepper(bField);
+
+  // Set up propagator with void navigator
+  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+
+  // Set up the ImpactPoint3dEstimator
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
+                         Propagator<EigenStepper<ConstantBField>>>::Config
+      ipEstCfg(bField, propagator);
+
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
+                         Propagator<EigenStepper<ConstantBField>>>
+      ipEstimator(ipEstCfg);
+
+  // Reference position
+  Vector3D refPosition(0., 0., 0.);
+
+  std::vector<double> distancesList;
+  std::vector<double> compatibilityList;
+
+  // Start running tests
+  for (unsigned int i = 0; i < nTests; i++) {
+    // Create a track
+    // Resolutions
+    double resD0 = resIPDist(gen);
+    double resZ0 = resIPDist(gen);
+    double resPh = resAngDist(gen);
+    double resTh = resAngDist(gen);
+    double resQp = resQoPDist(gen);
+
+    // Covariance matrix
+    std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
+    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
+        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
+        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+
+    // The charge
+    double q = qDist(gen) < 0 ? -1. : 1.;
+
+    // Impact parameters (IP)
+    double d0 = d0Dist(gen);
+    double z0 = z0Dist(gen);
+
+    // The track parameters
+    TrackParametersBase::ParVector_t paramVec;
+    paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
+
+    // Corresponding surface
+    std::shared_ptr<PerigeeSurface> perigeeSurface =
+        Surface::makeShared<PerigeeSurface>(refPosition);
+
+    // Creating the track
+    BoundParameters myTrack(tgContext, std::move(covMat), paramVec,
+                            perigeeSurface);
+
+    // Estimate 3D distance
+    double distance = ipEstimator.calculateDistance(myTrack, refPosition);
+    distancesList.push_back(distance);
+
+    auto res =
+        ipEstimator.getParamsAtIP3d(tgContext, mfContext, myTrack, refPosition);
+
+    BOOST_CHECK(res.ok());
+
+    BoundParameters params = std::move(**res);
+    double comp =
+        ipEstimator.getVtxCompatibility(tgContext, &params, refPosition);
+    compatibilityList.push_back(comp);
+
+  }  // end create tracks loop
+
+  // Now test for all above constructed tracks
+  // if distances and compatibility values are
+  // compatible with one another
+  for (unsigned int i = 0; i < nTests; i++) {
+    for (unsigned int j = i + 1; j < nTests; j++) {
+      if (debugMode) {
+        std::cout << "Comparing track " << i << " with track " << j
+                  << std::endl;
+        std::cout << "\t" << i << ": Comp.: " << compatibilityList[i]
+                  << ", dist.: " << distancesList[i] << std::endl;
+        std::cout << "\t" << j << ": Comp.: " << compatibilityList[j]
+                  << ", dist.: " << distancesList[j] << std::endl;
+        std::cout << "\t Rel.diff.: Comp(1-2)/1: "
+                  << (compatibilityList[i] - compatibilityList[j]) /
+                         compatibilityList[i]
+                  << ", Dist(1-2)/1: "
+                  << (distancesList[i] - distancesList[j]) / distancesList[i]
+                  << std::endl;
+      }
+    }
+  }
 }
 
 }  // namespace Test
