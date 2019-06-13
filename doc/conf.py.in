@@ -32,6 +32,7 @@ extensions = [
     'recommonmark',
     'sphinx_markdown_tables',
     'breathe',
+    'exhale'
 ]
 source_suffix = {
     '.rst': 'restructuredtext',
@@ -61,8 +62,8 @@ exhale_args = {
     'rootFileName': 'api.rst',
     'rootFileTitle': 'API',
     'doxygenStripFromPath': '@PROJECT_SOURCE_DIR@',
-    # 'createTreeView': True,
-    # "treeViewIsBootstrap": True,
+    'createTreeView': True,
+    'treeViewIsBootstrap': True,
 }
 
 # -- Options for HTML output --------------------------------------------------
@@ -74,12 +75,13 @@ html_theme_options = {
   'navbar_links': [
     ('Modules', 'modules/modules'),
     ('Plugins', 'plugins/plugins'),
-    ('API', 'doxygen/annotated.html', True),
+    ('API', 'api/api'),
   ],
   'navbar_fixed_top': False,
 }
 html_logo = '@CMAKE_CURRENT_SOURCE_DIR@/figures/ActsLogo.gif'
 html_static_path = []
+html_copy_source = False
 html_show_sourcelink = False
 html_show_sphinx = False
 

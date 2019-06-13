@@ -27,6 +27,6 @@ Key features of this project include:
 
     modules/modules
     plugins/plugins
-    annotated_api
+    api/api
     grid_axis
     logging
