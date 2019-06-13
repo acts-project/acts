@@ -42,7 +42,7 @@ std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
 // Track z0 distribution
 std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+std::uniform_real_distribution<> pTDist(1. * units::_GeV, 30. * units::_GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
@@ -92,14 +92,11 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
 
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later
-  Vector3D vtxPos1(0.1 * units::_mm, 0.1 * units::_mm, -0.5 * units::_mm);
-  Vector3D vtxPos2(0.1 * units::_mm, 0.1 * units::_mm, -1. * units::_mm);
-  Vector3D vtxPos3(0.2 * units::_mm, 0.4 * units::_mm, 7. * units::_mm);
+  Vector3D vtxPos1(-0.15 * units::_mm, -0.1 * units::_mm, -1.5 * units::_mm);
+  Vector3D vtxPos2(-0.1 * units::_mm, -0.15 * units::_mm, -3. * units::_mm);
+  Vector3D vtxPos3(0.2 * units::_mm, 0.2 * units::_mm, 10. * units::_mm);
 
   std::vector<Vector3D> vtxVec{vtxPos1, vtxPos2, vtxPos3};
-
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
   // Vector to store vectors of Tracks at vertex for every vertex
   std::vector<std::vector<TrackAtVertex<BoundParameters>>> trackVtxVec(
@@ -132,14 +129,19 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     // Index of current vertex
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
 
-    double d0V = std::sqrt(vtxVec[vtxIdx][0] * vtxVec[vtxIdx][0] +
-                           vtxVec[vtxIdx][1] * vtxVec[vtxIdx][1]);
-    double z0V = vtxVec[vtxIdx][2];
+    // TODO: is this how I produce tracks originating from this vertex?!
+
+    // double d0V = std::sqrt(vtxVec[vtxIdx][0] * vtxVec[vtxIdx][0] +
+    // vtxVec[vtxIdx][1] * vtxVec[vtxIdx][1]);
+    // double z0V = vtxVec[vtxIdx][2];
 
     // Construct random track parameters
     TrackParametersBase::ParVector_t paramVec;
-    paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
-        thetaDist(gen), q / pTDist(gen), 0.;
+    paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
+        q / pTDist(gen), 0.;
+
+    std::shared_ptr<PerigeeSurface> perigeeSurface =
+        Surface::makeShared<PerigeeSurface>(vtxVec[vtxIdx]);
 
     auto trk =
         BoundParameters(tgContext, std::move(covMat), paramVec, perigeeSurface);
@@ -147,8 +149,9 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     TrackAtVertex<BoundParameters> trkAtVtx(1., trk, trk);
 
     if (debugMode) {
-      std::cout << "Adding track " << iTrack << " with ID " << trkAtVtx.id
-                << std::endl;
+      std::cout << "Adding track " << iTrack << " for vertex " << vtxIdx
+                << "\n\twith ID: " << trkAtVtx.id
+                << "\n\tparams:  " << trk.parameters() << std::endl;
       allTracks.push_back(trkAtVtx);
     }
 
@@ -206,23 +209,50 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   BOOST_CHECK(res1.ok());
 
   if (debugMode) {
+    std::cout << "Vertex positions after fit of vertex 1 and 2:" << std::endl;
     std::cout << "Vtx 1, seed position:\n " << seedListCopy[0].fullPosition()
-              << "\nnew position:\n " << vtxList[0].fullPosition() << std::endl;
+              << "\nFitted position:\n " << vtxList[0].fullPosition()
+              << std::endl;
     std::cout << "Vtx 2, seed position:\n " << seedListCopy[1].fullPosition()
-              << "\nnew position:\n " << vtxList[1].fullPosition() << std::endl;
+              << "\nFitted position:\n " << vtxList[1].fullPosition()
+              << std::endl;
     std::cout << "Vtx 3, seed position:\n " << seedListCopy[2].fullPosition()
-              << "\nnew position:\n " << vtxList[2].fullPosition() << std::endl;
+              << "\nFitted position:\n " << vtxList[2].fullPosition()
+              << std::endl;
   }
 
   // After fit of first vertex, only first and second vertex seed
-  // should have been touched while third vertex should remain untouched
+  // should have been modified while third vertex should remain untouched
   BOOST_CHECK_NE(vtxList[0].fullPosition(), seedListCopy[0].fullPosition());
   BOOST_CHECK_NE(vtxList[1].fullPosition(), seedListCopy[1].fullPosition());
   BOOST_CHECK_EQUAL(vtxList[2].fullPosition(), seedListCopy[2].fullPosition());
 
-  // auto res2 = fitter.fit(state, fitterOptions);
+  CHECK_CLOSE_ABS(vtxList[0].fullPosition(), seedListCopy[0].fullPosition(),
+                  1 * units::_mm);
+  CHECK_CLOSE_ABS(vtxList[1].fullPosition(), seedListCopy[1].fullPosition(),
+                  1 * units::_mm);
 
-  // BOOST_CHECK(res2.ok());
+  auto res2 = fitter.addVertexToFit(state, vtxList[2], fitterOptions);
+
+  BOOST_CHECK(res2.ok());
+
+  // Now also the third vertex should have been modified and fitted
+  BOOST_CHECK_NE(vtxList[2].fullPosition(), seedListCopy[2].fullPosition());
+  CHECK_CLOSE_ABS(vtxList[2].fullPosition(), seedListCopy[2].fullPosition(),
+                  1 * units::_mm);
+
+  if (debugMode) {
+    std::cout << "Vertex positions after fit of vertex 3:" << std::endl;
+    std::cout << "Vtx 1, seed position:\n " << seedListCopy[0].fullPosition()
+              << "\nFitted position:\n " << vtxList[0].fullPosition()
+              << std::endl;
+    std::cout << "Vtx 2, seed position:\n " << seedListCopy[1].fullPosition()
+              << "\nFitted position:\n " << vtxList[1].fullPosition()
+              << std::endl;
+    std::cout << "Vtx 3, seed position:\n " << seedListCopy[2].fullPosition()
+              << "\nFitted position:\n " << vtxList[2].fullPosition()
+              << std::endl;
+  }
 }
 
 }  // namespace Test
