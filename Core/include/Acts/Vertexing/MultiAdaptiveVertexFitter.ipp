@@ -263,10 +263,6 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     newTracks.reserve(vtx->tracks().size());
 
     for (const auto& trkAtVtx : vtx->tracks()) {
-      std::cout << "setWeightsAndUpdate:\tOld vtx pos: " << vtx->fullPosition()
-                << std::endl;
-      std::cout << "setWeightsAndUpdate: \t fullCovariance: "
-                << vtx->fullCovariance() << std::endl;
       // Create copy of current trackAtVertex in order
       // to modify it below
       newTracks.push_back(trkAtVtx);
@@ -281,7 +277,11 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
       // Set trackWeight for current track
       newTrkPtr->trackWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
-
+      std::cout << "current vertex: " << vtx << " track id " << newTrkPtr->id
+                << ", weight: " << newTrkPtr->trackWeight << std::endl;
+      std::cout << "trkAtVtx.vertexCompatibility: "
+                << trkAtVtx.vertexCompatibility << std::endl
+                << std::endl;
       if (newTrkPtr->trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
         if (newTrkPtr->linearizedState.covarianceAtPCA ==
@@ -310,7 +310,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     vtx->setTracksAtVertex(newTracks);
 
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
-    std::cout << "New pos after fit: " << vtx->fullPosition() << std::endl;
+    // std::cout << "New pos after fit: " << vtx->fullPosition() << std::endl;
   }  // End loop over vertex collection
 
   return {};

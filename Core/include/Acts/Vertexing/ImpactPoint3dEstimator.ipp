@@ -79,11 +79,7 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
   // point of closest approach in 3D
   Vector3D pointCA3d =
       vec0 + r * Vector3D(-std::sin(phi), std::cos(phi), -cotTheta * phi);
-  Vector3D deltaR = pointCA3d - vtxPos;
-
-  // normalize distance vector, TODO: can be removed after above debug statement
-  // is removed and directly normalized at construction
-  deltaR = deltaR.normalized();
+  Vector3D deltaR = (pointCA3d - vtxPos).normalized();
 
   // corrected deltaR for small deviations from orthogonality
   Vector3D corrDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
