@@ -23,6 +23,7 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 
 template <typename input_track_t>
+// TODO: add docs
 class KalmanVertexUpdator {
  public:
   /// Default constructor
@@ -36,19 +37,7 @@ class KalmanVertexUpdator {
   void addAndUpdate(Vertex<input_track_t>* vtx,
                     TrackAtVertex<input_track_t> trk) const;
 
-  // TODO: remove method needed?
-  // Method removing single track from vertex estimate
-  // Vertex<input_track_t> remove(const Vertex<input_track_t>& vtx, const
-  // TrackAtVertex<input_track_t>& trk) const;
-
-  /// @brief Position update function
-  ///
-  /// @param vtx Vertex to be updated
-  /// @param linTrack Linearized track
-  /// @param trackWeight Track weight
-  /// @param sign Sign parameter
-  ///
-  /// TODO: change return value to void and use input ref
+  // TODO: add docs
   Vertex<input_track_t> updatePosition(const Vertex<input_track_t>* vtx,
                                        const LinearizedTrack& linTrack,
                                        double trackWeight, int sign) const;
