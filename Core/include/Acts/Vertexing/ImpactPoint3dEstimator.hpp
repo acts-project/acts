@@ -34,12 +34,10 @@ class ImpactPoint3dEstimator {
     propagator_t propagator;
 
     /// Max. number of iterations in Newton method
-    // TODO: correct value
-    int maxIterations = 10;
+    int maxIterations = 20;
 
-    /// Desired precision in Newton method
-    // TODO: correct value
-    double precision = 1.e-4;
+    /// Desired precision in deltaPhi in Newton method
+    double precision = 1.e-10;
   };
 
   /// @brief Constructor
