@@ -72,7 +72,7 @@ add_executable (ProtoLayerTests ProtoLayerTests.cpp)
 target_link_libraries (ProtoLayerTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME ProtoLayerUnitTest COMMAND ProtoLayerTests)
 
-add_executable (AlignmentContextTests AlingmentContextTests.cpp)
+add_executable (AlignmentContextTests AlignmentContextTests.cpp)
 target_link_libraries (AlignmentContextTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME AlignmentContextUnitTest COMMAND AlignmentContextTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST AlignmentContextUnitTest TARGETS AlignmentContextTests)
