@@ -198,6 +198,7 @@ class IterativeVertexFinder {
   /// @param seedVertex Seed vertex
   /// @param perigeesToFitOut Perigees to fit
   /// @param perigeesToFitSplitVertexOut Perigees to fit split vertex
+  /// @param vFinderOptions Vertex finder options
   Result<void> fillPerigeesToFit(
       const std::vector<InputTrack_t>& perigeeList,
       const Vertex<InputTrack_t>& seedVertex,

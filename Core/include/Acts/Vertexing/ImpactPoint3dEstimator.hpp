@@ -48,12 +48,14 @@ class ImpactPoint3dEstimator {
 
   /// @brief Calculates 3D distance between a track and a 3D point
   ///
+  /// @param gctx The geometry context
   /// @param trkParams Track parameters
-  /// @param refPos Position to calculate distance to
+  /// @param vtxPos Position to calculate distance to
   ///
   /// @return Distance
-  double calculateDistance(const BoundParameters& trkParams,
-                           const Vector3D& refPos) const;
+  Result<double> calculateDistance(const GeometryContext& gctx,
+                                   const BoundParameters& trkParams,
+                                   const Vector3D& vtxPos) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3d to given
@@ -95,15 +97,31 @@ class ImpactPoint3dEstimator {
   ///
   /// @param trkPos Initial position
   /// @param vtxPos Reference position
-  /// @param newPhi Phi along the helix which will be changed by
+  /// @param phi Phi along the helix which will be changed by
   ///        the Newton method
   /// @param theta Track theta
   /// @param r     Helix radius
-  Result<void> performNewtonApproximation(const Vector3D& trkPos,
-                                          const Vector3D& vtxPos,
-                                          double& newPhi, double theta,
-                                          double r) const;
+  ///
+  /// @return New phi value
+  Result<double> performNewtonApproximation(const Vector3D& trkPos,
+                                            const Vector3D& vtxPos, double phi,
+                                            double theta, double r) const;
 
+  /// @brief Helper function to calculate relative
+  /// distance between track and vtxPos and the
+  /// direction of the momentum
+  ///
+  /// @param gctx The geometry context
+  /// @param trkParams Track parameters
+  /// @param vtxPos The vertex position
+  /// @param deltaR Relative position between
+  ///   track and vtxPos, to be determined by method
+  /// @param momDir Momentum direction, to be
+  ///   determined by method
+  Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
+                                      const BoundParameters& trkParams,
+                                      const Vector3D& vtxPos, Vector3D& deltaR,
+                                      Vector3D& momDir) const;
 };
 
 }  // namespace Acts
