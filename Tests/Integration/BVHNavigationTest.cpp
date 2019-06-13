@@ -45,7 +45,7 @@
 namespace Acts {
 namespace IntegrationTest {
 
-#define NBOXES 49
+#define NBOXES 29
 #define NTESTS 100
 #include "../Core/Geometry/BVHDataTestCase.hpp"
 
