@@ -263,6 +263,12 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   // compatible with one another
   for (unsigned int i = 0; i < nTests; i++) {
     for (unsigned int j = i + 1; j < nTests; j++) {
+      double relDiffComp =
+          (compatibilityList[i] - compatibilityList[j]) / compatibilityList[i];
+
+      double relDiffDist =
+          (distancesList[i] - distancesList[j]) / distancesList[i];
+
       if (debugMode) {
         std::cout << "Comparing track " << i << " with track " << j
                   << std::endl;
@@ -270,13 +276,16 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
                   << ", dist.: " << distancesList[i] << std::endl;
         std::cout << "\t" << j << ": Comp.: " << compatibilityList[j]
                   << ", dist.: " << distancesList[j] << std::endl;
-        std::cout << "\t Rel.diff.: Comp(1-2)/1: "
-                  << (compatibilityList[i] - compatibilityList[j]) /
-                         compatibilityList[i]
-                  << ", Dist(1-2)/1: "
-                  << (distancesList[i] - distancesList[j]) / distancesList[i]
-                  << std::endl;
+        std::cout << "\t Rel.diff.: Comp(1-2)/1: " << relDiffComp
+                  << ", Dist(1-2)/1: " << relDiffDist << std::endl;
       }
+
+      // Relative differences of compatibility values and distances
+      // should have the same sign, i.e. the following product
+      // should always be positive
+      double res = relDiffComp * relDiffDist;
+
+      BOOST_CHECK(res > 0.);
     }
   }
 }
