@@ -18,10 +18,10 @@ double Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
     calculateDistance(const BoundParameters& trkParams,
                       const Vector3D& refPos) const {
 
-  // normalized momentum
+  // Normalized momentum
   const Vector3D normMomentum = trkParams.momentum().normalized();
 
-  // calculate the path length
+  // Calculate the path length
   double pathLength = (refPos - trkParams.position()).dot(normMomentum);
 
   // Point of closest approach in 3D
@@ -29,7 +29,7 @@ double Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
   // Difference vector
   Vector3D deltaR = refPos - closestApp;
 
-  // return distance
+  // Return distance
   return deltaR.norm();
 }
 
@@ -52,7 +52,7 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
   double cotTheta = 1. / std::tan(theta);
   double bZ = m_cfg.bField.getField(trkSurfaceCenter)[eZ];
 
-  // the radius
+  // The radius
   double r;
   // Curvature is infinite w/o b field
   if (bZ == 0. || std::abs(qOvP) < 1.e-15) {
@@ -66,7 +66,7 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
                                               (d0 - r) * std::cos(phi),
                                               z0 + r * phi * cotTheta);
 
-  // perform newton approximation method
+  // Perform newton approximation method
   // this will change the value of phi
   auto res = performNewtonApproximation(vec0, vtxPos, phi, theta, r);
   if (!res.ok()) {

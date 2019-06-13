@@ -219,8 +219,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
   // Loop over tracks at current vertex and
   // estimate compatibility with vertex
   for (auto& trkAtVtx : currentVtx->tracks()) {
-    // TODO: DO I NEED THE ipEst.getParams stuff below?
-    // recover from cases where linearization point != 0 but
+    // Recover from cases where linearization point != 0 but
     // more tracks were added later on
     if (!state.trkInfoMap[trkAtVtx.id].ip3dParams) {
       auto res = m_cfg.ipEst.getParamsAtIP3d(
@@ -239,12 +238,11 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
     TrackAtVertex<input_track_t>* newTrkPtr = &(newTracks.back());
 
     // Set compatibility with current vertex
-    // TODO: is that where the ip3d step beforehand is needed for?
-    // not using any of these here
-    m_cfg.trackCompEst.setTrackCompatibility(
-        geoContext, *newTrkPtr,
-        VectorHelpers::position(currentVtxInfo.oldPosition),
-        m_extractParameters);
+    newTrkPtr->vertexCompatibility =
+
+        m_cfg.trackCompEst.getVtxCompatibility(
+            geoContext, state.trkInfoMap[trkAtVtx.id].ip3dParams.get(),
+            VectorHelpers::position(currentVtxInfo.oldPosition));
   }
   // Set list of updated tracks to current vertex
   currentVtx->setTracksAtVertex(newTracks);
@@ -285,7 +283,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
 
       if (newTrkPtr->trackWeight > m_cfg.minWeight) {
-        // check if linearization state exists or need to be relinearized
+        // Check if linearization state exists or need to be relinearized
         if (newTrkPtr->linearizedState.covarianceAtPCA ==
                 BoundSymMatrix::Zero() ||
             state.vtxInfoMap[vtx].relinearize) {
@@ -300,20 +298,20 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
           newTrkPtr->linearizedState = *result;
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
-        // update the vertex with the new track
+        // Update the vertex with the new track
         m_cfg.vertexUpdator.addAndUpdate(vtx, (*newTrkPtr));
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
 
-    }  // end loop over tracks at vertex
+    }  // End loop over tracks at vertex
 
-    // update tracks at current vertex
+    // Update tracks at current vertex
     vtx->setTracksAtVertex(newTracks);
 
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
     std::cout << "New pos after fit: " << vtx->fullPosition() << std::endl;
-  }  // end loop over vertex collection
+  }  // End loop over vertex collection
 
   return {};
 }

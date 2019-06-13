@@ -66,7 +66,7 @@ struct TrackAtVertex {
   LinearizedTrack linearizedState;
 
   /// Value of the compatibility of the track to the actual vertex, based
-  /// on the estimation on the distance between the track and the vertex
+  /// on the estimation of the 3d distance between the track and the vertex
   double vertexCompatibility;
 
   /// Unique ID
