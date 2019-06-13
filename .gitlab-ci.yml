@@ -310,8 +310,14 @@ integration_tests_cc7_lcg95:
 doc:
   stage: build
   needs: ["no_needs"]
+  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
   tags:
     - cvmfs
+  before_script:
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_95apython3/x86_64-centos7-gcc8-opt/setup.sh
+    - python3 -m venv --clear env
+    - source env/bin/activate
+    - pip install -r doc/requirements.txt
   script:
     - mkdir build
     - cd build
