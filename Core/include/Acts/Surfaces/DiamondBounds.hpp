@@ -44,6 +44,8 @@ class DiamondBounds : public PlanarBounds {
   /// @param x3 is the halflength in x at maximal y
   /// @param y1 is the halflength into y < 0
   /// @param y2 is the halflength into y > 0
+  ///
+  /// @image html DiamondBounds.svg
   DiamondBounds(double x1, double x2, double x3, double y1, double y2);
 
   ~DiamondBounds() override;
