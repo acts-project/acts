@@ -57,7 +57,7 @@ std::uniform_real_distribution<> qDist(-1, 1);
 ///
 BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   // Debug mode
-  bool debugMode = true;
+  bool debugMode = false;
   // Number of tests
   unsigned int nTests = 10;
 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
 ///  compatibility estimator
 BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   // Debug mode
-  bool debugMode = true;
+  bool debugMode = false;
   // Number of tests
   unsigned int nTests = 10;
 
