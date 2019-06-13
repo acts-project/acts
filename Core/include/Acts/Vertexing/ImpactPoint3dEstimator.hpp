@@ -74,6 +74,20 @@ class ImpactPoint3dEstimator {
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       const BoundParameters& trkParams, const Vector3D& vtxPos) const;
 
+  /// @brief Estimates the compatibility of a
+  /// track to a vertex position based on the 3d
+  /// distance between the track and the vertex
+  ///
+  /// @param gctx The Geometry context
+  /// @param track Track parameters at point of closest
+  /// approach in 3d as retrieved by getParamsAtIP3d
+  /// @param vertexPos The vertex position
+  ///
+  /// @return The compatibility value
+  double getVtxCompatibility(const GeometryContext& gctx,
+                             const BoundParameters* trkParams,
+                             const Vector3D& vertexPos) const;
+
  private:
   /// Configuration object
   const Config m_cfg;

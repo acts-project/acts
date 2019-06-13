@@ -240,7 +240,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
     // Set compatibility with current vertex
     newTrkPtr->vertexCompatibility =
 
-        m_cfg.trackCompEst.getVtxCompatibility(
+        m_cfg.ipEst.getVtxCompatibility(
             geoContext, state.trkInfoMap[trkAtVtx.id].ip3dParams.get(),
             VectorHelpers::position(currentVtxInfo.oldPosition));
   }
