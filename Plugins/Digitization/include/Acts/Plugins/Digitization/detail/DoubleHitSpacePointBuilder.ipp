@@ -310,8 +310,7 @@ bool calculateSpacePoint(
 ///
 template <typename Cluster>
 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::SpacePointBuilder(
-    Acts::SpacePointBuilder<
-        Acts::SpacePoint<Cluster>>::DoubleHitSpacePointConfig cfg)
+    DoubleHitSpacePointConfig cfg)
     : m_cfg(std::move(cfg)) {}
 
 template <typename Cluster>

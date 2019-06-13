@@ -14,10 +14,24 @@
 
 namespace Acts {
 
-template <typename Cluster>
-using DoubleHitSpacePoint =
-    SpacePoint<std::pair<const Cluster*, const Cluster*>>;
-
+/// @brief Configuration of the class to steer its behaviour
+struct DoubleHitSpacePointConfig {
+/// Accepted difference in eta for two clusters
+double diffTheta2 = 1.;
+/// Accepted difference in phi for two clusters
+double diffPhi2 = 1.;
+/// Accepted distance between two clusters
+double diffDist = 100. * UnitConstants::mm;
+/// Allowed increase of strip length
+double stripLengthTolerance = 0.01;
+/// Allowed increase of strip length wrt gaps between strips
+double stripLengthGapTolerance = 0.01;
+/// Assumed position of the vertex
+Vector3D vertex = {0., 0., 0.};
+/// Perform the perpendicular projection for space point finding
+bool usePerpProj = false;
+};
+  
 /// @class TwoHitsSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
@@ -29,26 +43,9 @@ using DoubleHitSpacePoint =
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 template <typename Cluster>
-class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
+class SpacePointBuilder<SpacePoint<Cluster>> {
  public:
-  /// @brief Configuration of the class to steer its behaviour
-  struct DoubleHitSpacePointConfig {
-    /// Accepted difference in eta for two clusters
-    double diffTheta2 = 1.;
-    /// Accepted difference in phi for two clusters
-    double diffPhi2 = 1.;
-    /// Accepted distance between two clusters
-    double diffDist = 100. * UnitConstants::mm;
-    /// Allowed increase of strip length
-    double stripLengthTolerance = 0.01;
-    /// Allowed increase of strip length wrt gaps between strips
-    double stripLengthGapTolerance = 0.01;
-    /// Assumed position of the vertex
-    Vector3D vertex = {0., 0., 0.};
-    /// Perform the perpendicular projection for space point finding
-    bool usePerpProj = false;
-  };
-
+ 
   /// Constructor
   /// @param cfg Specific config that will be used instead of the default values
   SpacePointBuilder(DoubleHitSpacePointConfig cfg);
@@ -79,7 +76,7 @@ class SpacePointBuilder<DoubleHitSpacePoint<Cluster>> {
       const GeometryContext& gctx,
       const std::vector<std::pair<const Cluster*, const Cluster*>>&
           clusterPairs,
-      std::vector<DoubleHitSpacePoint<Cluster>>& spacePoints) const;
+      std::vector<SpacePoint<Cluster>>& spacePoints) const;
 
  private:
   /// Config
