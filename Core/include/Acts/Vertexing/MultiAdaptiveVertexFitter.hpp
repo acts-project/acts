@@ -11,7 +11,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/Chi2TrackCompatibilityEstimator.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdator.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
@@ -65,9 +64,6 @@ class MultiAdaptiveVertexFitter {
 
     /// Linearized track factory
     LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
-
-    /// Track compatibility estimator
-    Chi2TrackCompatibilityEstimator<input_track_t> trackCompEst;
 
     /// ImpactPoint3dEstimator
     ImpactPoint3dEstimator<input_track_t> ipEst;
