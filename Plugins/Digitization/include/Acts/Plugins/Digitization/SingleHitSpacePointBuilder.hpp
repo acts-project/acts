@@ -52,7 +52,7 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  Vector3D globalCoords(const GeometryContext& gctx,
+  SpacePointVector globalCoords(const GeometryContext& gctx,
                         const Cluster& cluster) const;
 };
 

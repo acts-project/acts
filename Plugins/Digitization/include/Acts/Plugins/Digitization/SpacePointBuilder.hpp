@@ -19,7 +19,7 @@ struct SpacePoint {
   /// Storage of the cluster on a surface
   std::vector<const Cluster*> clusterModule;
   /// Storage of a space point.
-  Vector3D spacePoint;
+  SpacePointVector spacePoint;
 
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint

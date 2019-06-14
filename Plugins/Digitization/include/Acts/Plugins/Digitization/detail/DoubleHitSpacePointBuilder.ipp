@@ -434,7 +434,9 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
         Acts::SpacePoint<Cluster> sp;
         sp.clusterModule.push_back(cp.first);
         sp.clusterModule.push_back(cp.second);
-        sp.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
+        Vector3D pos = ends1.first + resultPerpProj * spaPoPa.q;
+        // TODO: Clusters should deliver timestamp
+        sp.spacePoint = {pos.x(), pos.y(), pos.z(), 0.};
         spacePoints.push_back(std::move(sp));
         continue;
       }
@@ -446,8 +448,9 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
       Acts::SpacePoint<Cluster> sp;
       sp.clusterModule.push_back(cp.first);
       sp.clusterModule.push_back(cp.second);
-      sp.spacePoint =
-          0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+      Vector3D pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+      // TODO: Clusters should deliver timestamp
+      sp.spacePoint = {pos.x(), pos.y(), pos.z(), 0.};
       spacePoints.push_back(std::move(sp));
     } else {
       /// If this point is reached then it was not possible to resolve both
@@ -461,8 +464,9 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
         Acts::SpacePoint<Cluster> sp;
         sp.clusterModule.push_back(cp.first);
         sp.clusterModule.push_back(cp.second);
-        sp.spacePoint =
-            0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+        Vector3D pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+        // TODO: Clusters should deliver timestamp
+        sp.spacePoint = {pos.x(), pos.y(), pos.z(), 0.};
         spacePoints.push_back(std::move(sp));
       }
     }
