@@ -1,7 +1,5 @@
 set(doc_sources
   index.rst
-  grid_axis.md
-  logging.rst
   modules/magnetic_field.rst
   modules/material.rst
   modules/modules.rst
@@ -10,6 +8,12 @@ set(doc_sources
   plugins/identification.rst
   plugins/plugins.rst
   plugins/tgeo.rst
+  grid_axis.md
+  logging.rst
+  authors.rst
+  ../AUTHORS
+  license.rst
+  ../LICENSE
 )
 
 configure_file(conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
