@@ -1,5 +1,9 @@
 set(doc_sources
   index.rst
+  authors.rst
+  ../AUTHORS
+  license.rst
+  ../LICENSE
   integration/atlas.md
   integration/fcc.md
   integration/integration.rst
@@ -14,13 +18,10 @@ set(doc_sources
   plugins/identification.rst
   plugins/plugins.rst
   plugins/tgeo.rst
-  grid_axis.md
-  logging.rst
-  authors.rst
-  ../AUTHORS
-  license.rst
-  ../LICENSE
-  units
+  utilities/grid_axis.md
+  utilities/logging.rst
+  utilities/units.rst
+  utilities/utilities.rst
 )
 
 configure_file(conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
