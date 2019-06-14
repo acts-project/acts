@@ -1,7 +1,6 @@
 A Common Tracking Software
 ==========================
 
-
 This project contains an experiment-independent set of track reconstruction
 tools. The main philosophy is to provide high-level track reconstruction modules
 that can be used for any tracking detector. The description of the tracking
@@ -27,14 +26,8 @@ Key features of this project include:
 
     modules/modules
     plugins/plugins
-
-.. toctree::
-    :maxdepth: 1
-
+    utilities/utilities
     integration/integration
     api/api
-    units
-    grid_axis
-    logging
     authors
     license
