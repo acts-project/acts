@@ -31,6 +31,7 @@ Key features of this project include:
 .. toctree::
     :maxdepth: 1
 
+    integration/integration
     api/api
     grid_axis
     logging

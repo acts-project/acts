@@ -1,8 +1,14 @@
 set(doc_sources
   index.rst
+  integration/atlas.md
+  integration/fcc.md
+  integration/integration.rst
+  modules/eventdata.md
+  modules/geometry.md
   modules/magnetic_field.rst
   modules/material.rst
   modules/modules.rst
+  modules/propagation.md
   plugins/dd4hep.rst
   plugins/digitization.rst
   plugins/identification.rst
