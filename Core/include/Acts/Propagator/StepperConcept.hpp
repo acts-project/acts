@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 

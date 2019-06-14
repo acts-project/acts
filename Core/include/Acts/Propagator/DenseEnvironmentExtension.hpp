@@ -27,13 +27,11 @@ struct DenseEnvironmentExtension {
   double currentMomentum = 0.;
   /// Particles momentum at k1
   double initialMomentum = 0.;
-  /// Particles mass in SI units
-  double massSI = 0.;
   /// Material that will be passed
   Material const* material = nullptr;
   /// Derivatives dLambda''dlambda at each sub-step point
   std::array<double, 4> dLdl;
-  /// q/p at each sub-step in SI units
+  /// q/p at each sub-step
   std::array<double, 4> qop;
   /// Derivatives dPds at each sub-step
   std::array<double, 4> dPds;
@@ -47,8 +45,6 @@ struct DenseEnvironmentExtension {
   std::array<double, 4> Lambdappi;
   /// Energy at each sub-step
   std::array<double, 4> energy;
-  /// Local store for conversion of momentum from SI to natural units
-  const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
   /// Energy loss calculator
   static const detail::IonisationLoss ionisationLoss;
@@ -67,8 +63,7 @@ struct DenseEnvironmentExtension {
   int bid(const propagator_state_t& state, const stepper_t& stepper) const {
     // Check for valid particle properties
     if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
-        stepper.momentum(state.stepping) <
-            conv * state.options.momentumCutOff) {
+        stepper.momentum(state.stepping) < state.options.momentumCutOff) {
       return 0;
     }
 
@@ -101,10 +96,8 @@ struct DenseEnvironmentExtension {
       // Set up container for energy loss
       auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
       Vector3D position = stepper.position(state.stepping);
-      massSI = units::Nat2SI<units::MASS>(state.options.mass);
       material = &(volumeMaterial->material(position));
-      initialMomentum =
-          units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+      initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = stepper.charge(state.stepping) / initialMomentum;
       initializeEnergyLoss(state);
@@ -114,11 +107,10 @@ struct DenseEnvironmentExtension {
       Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] /
                      (stepper.charge(state.stepping) *
                       stepper.charge(state.stepping) * units::_C * units::_C);
-      tKi[0] = std::sqrt(massSI * massSI / (initialMomentum * initialMomentum) +
-                         units::_c2inv);
+      tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
     } else {
       // Update parameters and check for momentum condition
-      updateEnergyLoss(h, state.stepping, stepper, i);
+      updateEnergyLoss(state.options.mass, h, state.stepping, stepper, i);
       if (currentMomentum < state.options.momentumCutOff) {
         return false;
       }
@@ -130,7 +122,7 @@ struct DenseEnvironmentExtension {
       Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
                      (stepper.charge(state.stepping) *
                       stepper.charge(state.stepping) * units::_C * units::_C);
-      tKi[i] = std::sqrt(massSI * massSI / (qopNew * qopNew) + units::_c2inv);
+      tKi[i] = std::hypot(1, state.options.mass / qopNew);
     }
     return true;
   }
@@ -151,11 +143,10 @@ struct DenseEnvironmentExtension {
     // Evaluate the new momentum
     double newMomentum =
         stepper.momentum(state.stepping) +
-        conv * (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
+        (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
 
     // Break propagation if momentum becomes below cut-off
-    if (units::Nat2SI<units::MOMENTUM>(newMomentum) <
-        state.options.momentumCutOff) {
+    if (newMomentum < state.options.momentumCutOff) {
       return false;
     }
 
@@ -163,19 +154,13 @@ struct DenseEnvironmentExtension {
     state.stepping.derivative(7) =
         -std::sqrt(state.options.mass * state.options.mass +
                    newMomentum * newMomentum) *
-        units::SI2Nat<units::ENERGY>(g) /
-        (newMomentum * newMomentum * newMomentum);
+        g / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.stepping.p = newMomentum;
-
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
     state.stepping.derivative(3) =
-        std::sqrt(massSI * massSI /
-                      (units::Nat2SI<units::MOMENTUM>(newMomentum) *
-                       units::Nat2SI<units::MOMENTUM>(newMomentum)) +
-                  units::_c2inv);
-
+        std::hypot(1, state.options.mass / newMomentum);
     // Update time
     state.stepping.dt += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
 
@@ -297,30 +282,35 @@ struct DenseEnvironmentExtension {
     dFdT += h / 6. * (dk1dT + dk2dT + dk3dT);
     dFdT *= h;
 
-    dFdL = conv * h * h / 6. * (dk1dL + dk2dL + dk3dL);
+    dFdL = h * h / 6. * (dk1dL + dk2dL + dk3dL);
 
     dGdT += h / 6. * (dk1dT + 2. * (dk2dT + dk3dT) + dk4dT);
 
-    dGdL = conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
+    dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
     // Evaluation of the dLambda''/dlambda term
     D(7, 7) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
 
-    double dtpp1dl =
-        -massSI * massSI * qop[0] * qop[0] *
-        (3. * g + qop[0] * dgdqop(energy[0], state.options.absPdgCode,
-                                  state.options.meanEnergyLoss));
+    double dtpp1dl = -state.options.mass * state.options.mass * qop[0] *
+                     qop[0] *
+                     (3. * g + qop[0] * dgdqop(energy[0], state.options.mass,
+                                               state.options.absPdgCode,
+                                               state.options.meanEnergyLoss));
 
     double qopNew = qop[0] + half_h * Lambdappi[0];
-    double dtpp2dl = -massSI * massSI * qopNew * qopNew *
+    double dtpp2dl = -state.options.mass * state.options.mass * qopNew *
+                     qopNew *
                      (3. * g * (1. + half_h * jdL[0]) +
-                      qopNew * dgdqop(energy[1], state.options.absPdgCode,
+                      qopNew * dgdqop(energy[1], state.options.mass,
+                                      state.options.absPdgCode,
                                       state.options.meanEnergyLoss));
 
     qopNew = qop[0] + half_h * Lambdappi[1];
-    double dtpp3dl = -massSI * massSI * qopNew * qopNew *
+    double dtpp3dl = -state.options.mass * state.options.mass * qopNew *
+                     qopNew *
                      (3. * g * (1. + half_h * jdL[1]) +
-                      qopNew * dgdqop(energy[2], state.options.absPdgCode,
+                      qopNew * dgdqop(energy[2], state.options.mass,
+                                      state.options.absPdgCode,
                                       state.options.meanEnergyLoss));
 
     D(3, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
@@ -330,17 +320,16 @@ struct DenseEnvironmentExtension {
   /// @brief This function calculates the energy loss dE per path length ds of
   /// a particle through material. The energy loss consists of ionisation and
   /// radiation.
-  /// @note The calculations use SI units and it is assumed that the arguments
-  /// are given in SI units.
   ///
-  /// @param [in] momentum Initial momentum of the particle
-  /// @param [in] cEnergy Initial energy of the particle
-  /// @param [in] pdg PDG code of the particle
+  /// @param [in] energy_        Particle energy
+  /// @param [in] momentum       Particle momentum
+  /// @param [in] mass           Particle mass
+  /// @param [in] pdg            Particle PDG code to identify the type
   /// @param [in] meanEnergyLoss Boolean indicator if mean or mode of the energy
   /// loss will be evaluated
   /// @return Infinitesimal energy loss
-  double dEds(const double momentum, const double cEnergy, const int pdg,
-              const bool meanEnergyLoss) const {
+  double dEds(const double energy_, const double momentum, const double mass,
+              const int pdg, const bool meanEnergyLoss) const {
     // Easy exit if material is invalid
     if (material->X0() == 0 || material->Z() == 0) {
       return 0.;
@@ -350,13 +339,12 @@ struct DenseEnvironmentExtension {
     // a) ionisation
     double ionisationEnergyLoss =
         ionisationLoss
-            .dEds(massSI, momentum * units::_c / cEnergy,
-                  cEnergy / (massSI * units::_c2), *(material), 1.,
-                  meanEnergyLoss, true)
+            .dEds(mass, momentum / energy_, energy_ / mass, *(material), 1.,
+                  meanEnergyLoss)
             .first;
     // b) radiation
     double radiationEnergyLoss =
-        radiationLoss.dEds(cEnergy, massSI, *(material), pdg, 1., true);
+        radiationLoss.dEds(energy_, mass, *(material), pdg, 1.);
 
     // Rescaling for mode evaluation.
     // C.f. ATL-SOFT-PUB-2008-003 section 3. The mode evaluation for the energy
@@ -371,13 +359,13 @@ struct DenseEnvironmentExtension {
 
   /// @brief This function calculates the derivation of g=dE/dx by d(q/p)
   ///
-  /// @param [in] cEnergy Initial energy of the particle
-  /// @param [in] pdg PDG code of the particle
-  /// @param [in] meanEnergyLoss Boolean indicator if mean or mode of the energy
-  /// loss will be evaluated
+  /// @param [in] energy_        Particle energy
+  /// @param [in] mass           Particle mass
+  /// @param [in] pdg            Particle PDG code to identify the type
+  /// @param [in] meanEnergyLoss Return mean or mode of the energy loss
   /// @return Derivative evaluated at the point defined by the
   /// function parameters
-  double dgdqop(const double cEnergy, const int pdg,
+  double dgdqop(const double energy_, const double mass, const int pdg,
                 const bool meanEnergyLoss) const {
     // Fast exit if material is invalid
     if (material->X0() == 0. || material->Z() == 0. ||
@@ -387,11 +375,10 @@ struct DenseEnvironmentExtension {
 
     // Bethe-Bloch
     const double betheBlochDerivative =
-        ionisationLoss.dqop(cEnergy, qop[0], massSI, *(material), true, true);
-
+        ionisationLoss.dqop(energy_, qop[0], mass, *(material), true);
     // Bethe-Heitler (+ pair production & photonuclear interaction for muons)
     const double radiationDerivative =
-        radiationLoss.dqop(massSI, *(material), qop[0], cEnergy, pdg, true);
+        radiationLoss.dqop(mass, *(material), qop[0], energy_, pdg);
 
     // Return the total derivative
     if (meanEnergyLoss) {
@@ -409,29 +396,27 @@ struct DenseEnvironmentExtension {
   /// @param [in] state Deliverer of configurations
   template <typename propagator_state_t>
   void initializeEnergyLoss(const propagator_state_t& state) {
-    energy[0] = std::sqrt(initialMomentum * initialMomentum * units::_c2 +
-                          massSI * massSI * units::_c4);
+    energy[0] = std::hypot(initialMomentum, state.options.mass);
     // Use the same energy loss throughout the step.
-    g = dEds(initialMomentum, energy[0], state.options.absPdgCode,
-             state.options.meanEnergyLoss);
+    g = dEds(energy[0], initialMomentum, state.options.mass,
+             state.options.absPdgCode, state.options.meanEnergyLoss);
     // Change of the momentum per path length
     // dPds = dPdE * dEds
-    dPds[0] = g * energy[0] / (initialMomentum * units::_c2);
+    dPds[0] = g * energy[0] / initialMomentum;
     if (state.stepping.covTransport) {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
       if (state.options.includeGgradient) {
         dgdqopValue =
-            dgdqop(energy[0], state.options.absPdgCode,
+            dgdqop(energy[0], state.options.mass, state.options.absPdgCode,
                    state.options
                        .meanEnergyLoss);  // Use this value throughout the step.
       }
       // Calculate term for later error propagation
       dLdl[0] = (-qop[0] * qop[0] * g * energy[0] *
-                     (3. - (initialMomentum * initialMomentum * units::_c2) /
+                     (3. - (initialMomentum * initialMomentum) /
                                (energy[0] * energy[0])) -
-                 qop[0] * qop[0] * qop[0] * energy[0] * dgdqopValue) /
-                units::_c2;
+                 qop[0] * qop[0] * qop[0] * energy[0] * dgdqopValue);
     }
   }
 
@@ -444,22 +429,20 @@ struct DenseEnvironmentExtension {
   /// @param [in] state State of the stepper
   /// @param [in] i Index of the sub-step (1-3)
   template <typename stepper_state_t, typename stepper_t>
-  void updateEnergyLoss(const double h, const stepper_state_t& state,
-                        const stepper_t& stepper, const int i) {
+  void updateEnergyLoss(const double mass, const double h,
+                        const stepper_state_t& state, const stepper_t& stepper,
+                        const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
-
-    energy[i] = std::sqrt(currentMomentum * currentMomentum * units::_c2 +
-                          massSI * massSI * units::_c4);
-    dPds[i] = g * energy[i] / (currentMomentum * units::_c2);
+    energy[i] = std::sqrt(currentMomentum * currentMomentum + mass * mass);
+    dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state) / currentMomentum;
     // Calculate term for later error propagation
     if (state.covTransport) {
       dLdl[i] = (-qop[i] * qop[i] * g * energy[i] *
-                     (3. - (currentMomentum * currentMomentum * units::_c2) /
+                     (3. - (currentMomentum * currentMomentum) /
                                (energy[i] * energy[i])) -
-                 qop[i] * qop[i] * qop[i] * energy[i] * dgdqopValue) /
-                units::_c2;
+                 qop[i] * qop[i] * qop[i] * energy[i] * dgdqopValue);
     }
   }
 };

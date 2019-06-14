@@ -18,12 +18,6 @@ struct DefaultExtension {
   /// @brief Default constructor
   DefaultExtension() = default;
 
-  /// Local store for q/p in SI units
-  double qop = 0.;
-
-  /// Local store for conversion of momentum from SI to natural units
-  const double conv = units::SI2Nat<units::MOMENTUM>(1);
-
   /// @brief Control function if the step evaluation would be valid
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
@@ -52,12 +46,10 @@ struct DefaultExtension {
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          Vector3D& knew, const Vector3D& bField, const int i = 0,
          const double h = 0., const Vector3D& kprev = Vector3D()) {
+    auto qop =
+        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
-      // Store qop, it is always used if valid
-      qop = stepper.charge(state.stepping) /
-            units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
-      // Evaluate the k_i
       knew = qop * stepper.direction(state.stepping).cross(bField);
     } else {
       knew =
@@ -115,15 +107,11 @@ struct DefaultExtension {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
-
-    const double mom =
-        units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
-    const double mass = units::Nat2SI<units::MASS>(state.options.mass);
-    state.stepping.dt +=
-        h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+    auto derivative =
+        std::hypot(1, state.options.mass / stepper.momentum(state.stepping));
+    state.stepping.dt += h * derivative;
     if (state.stepping.covTransport) {
-      state.stepping.derivative(3) =
-          std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
+      state.stepping.derivative(3) = derivative;
     }
   }
 
@@ -160,6 +148,8 @@ struct DefaultExtension {
 
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
+    auto qop =
+        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
 
     D = FreeMatrix::Identity();
 
@@ -212,11 +202,11 @@ struct DefaultExtension {
     dFdT += h / 6. * (dk1dT + dk2dT + dk3dT);
     dFdT *= h;
 
-    dFdL = conv * (h * h) / 6. * (dk1dL + dk2dL + dk3dL);
+    dFdL = (h * h) / 6. * (dk1dL + dk2dL + dk3dL);
 
     dGdT += h / 6. * (dk1dT + 2. * (dk2dT + dk3dT) + dk4dT);
 
-    dGdL = conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
+    dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
     return true;
   }

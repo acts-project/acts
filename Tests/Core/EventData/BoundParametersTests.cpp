@@ -421,6 +421,8 @@ BOOST_DATA_TEST_CASE(
             bdata::distribution = std::uniform_real_distribution<>(0., M_PI))) ^
         bdata::xrange(100),
     x, y, z, a, b, c, index) {
+  using namespace Acts::UnitLiterals;
+
   (void)index;
 
   Vector3D center{x, y, z};
@@ -433,8 +435,7 @@ BOOST_DATA_TEST_CASE(
   transform->pretranslate(center);
 
   // the straw surface
-  auto sSurface = Surface::makeShared<StrawSurface>(
-      transform, 2. * Acts::units::_mm, 1. * Acts::units::_m);
+  auto sSurface = Surface::makeShared<StrawSurface>(transform, 2_mm, 1_m);
 
   // now create parameters on this surface
   // r, z, phi, theta, q/p (1/p), t

@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <vector>
+
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -59,7 +61,7 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                      materialVectorToGridMapper,
                  std::vector<double> rPos, std::vector<double> zPos,
                  std::vector<Material> material,
-                 double lengthUnit = units::_mm);
+                 double lengthUnit = UnitConstants::mm);
 
 /// Method to setup the MaterialMapper
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
@@ -109,5 +111,6 @@ materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                       materialVectorToGridMapper,
                   std::vector<double> xPos, std::vector<double> yPos,
                   std::vector<double> zPos, std::vector<Material> material,
-                  double lengthUnit = units::_mm);
+                  double lengthUnit = UnitConstants::mm);
+
 }  // namespace Acts

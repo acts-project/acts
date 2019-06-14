@@ -14,9 +14,11 @@
 
 #include <iostream>
 #include <utility>
+
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
+
+using namespace Acts::UnitLiterals;
 
 Acts::Volume::Volume()
     : GeometryObject(),
@@ -34,8 +36,7 @@ Acts::Volume::Volume(const std::shared_ptr<const Transform3D>& htrans,
       m_center(s_origin),
       m_volumeBounds(std::move(volbounds)),
       m_orientedBoundingBox(m_volumeBounds->boundingBox(
-          nullptr, {0.05 * units::_mm, 0.05 * units::_mm, 0.05 * units::_mm},
-          this)) {
+          nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {
   if (htrans) {
     m_center = htrans->translation();
   }
@@ -49,8 +50,7 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
       m_center(s_origin),
       m_volumeBounds(vol.m_volumeBounds),
       m_orientedBoundingBox(m_volumeBounds->boundingBox(
-          nullptr, {0.05 * units::_mm, 0.05 * units::_mm, 0.05 * units::_mm},
-          this)) {
+          nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {
   // apply the shift if it exists
   if (shift != nullptr) {
     m_transform = std::make_shared<const Transform3D>(transform() * (*shift));

@@ -25,17 +25,17 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
-double halfX = 5 * units::_mm;
-double halfY = 10 * units::_mm;
+double halfX = 5_mm;
+double halfY = 10_mm;
 size_t ntests = 100;
 size_t nbinsx = 100;
 size_t nbinsy = 200;
-double hThickness = 75 * units::_um;
+double hThickness = 75_um;
 double lAngle = 0.1;
 double tanAlpha = tan(lAngle);
 double sguardX = 2 * hThickness * abs(tanAlpha);

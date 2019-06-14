@@ -9,10 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
-
 namespace detail {
 
 template <typename path_arborter_t>
@@ -31,9 +29,7 @@ struct LoopProtection {
       // Get the field at the start position
       Vector3D field =
           stepper.getField(state.stepping, stepper.position(state.stepping));
-      // Momentum in SI units and B field
-      const double p =
-          units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+      const double p = stepper.momentum(state.stepping);
       const double B = field.norm();
       const double helixPath = 2 * M_PI * p / B;
       // now set the new loop limit

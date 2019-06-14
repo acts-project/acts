@@ -25,9 +25,9 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
@@ -35,22 +35,21 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   MagneticFieldContext mfContext = MagneticFieldContext();
 
   SolenoidBField::Config cfg;
-  cfg.length = 5.8 * Acts::units::_m;
-  cfg.radius = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
+  cfg.length = 5.8_m;
+  cfg.radius = (2.56 + 2.46) * 0.5 * 0.5_m;
   cfg.nCoils = 1154;
-  cfg.bMagCenter = 2. * Acts::units::_T;
+  cfg.bMagCenter = 2_T;
   SolenoidBField bField(cfg);
 
   SolenoidBField::Cache cache(mfContext);
-  CHECK_CLOSE_ABS(bField.getField({0, 0, 0}, cache),
-                  Vector3D(0, 0, 2.0 * Acts::units::_T),
-                  1e-6 * Acts::units::_T);
+  CHECK_CLOSE_ABS(bField.getField({0, 0, 0}, cache), Vector3D(0, 0, 2.0_T),
+                  1e-6_T);
 
   // std::ofstream outf("solenoid.csv");
   // outf << "x;y;z;B_x;B_y;B_z" << std::endl;
 
   double tol = 1e-6;
-  double tol_B = 1e-6 * Acts::units::_T;
+  double tol_B = 1e-6_T;
   size_t steps = 20;
   for (size_t i = 0; i < steps; i++) {
     double r = 1.5 * cfg.radius / steps * i;
@@ -117,5 +116,4 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
 }
 
 }  // namespace Test
-
 }  // namespace Acts

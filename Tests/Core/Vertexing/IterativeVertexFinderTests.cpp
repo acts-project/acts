@@ -20,10 +20,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
@@ -31,6 +29,7 @@
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
@@ -42,15 +41,15 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
+std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20 * units::_mm, 20 * units::_mm);
+std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
@@ -58,7 +57,7 @@ std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
 std::uniform_real_distribution<> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
+std::uniform_real_distribution<> resIPDist(0., 100_um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
   for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up constant B-Field
-    ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+    ConstantBField bField(0.0, 0.0, 1_T);
 
     // Set up Eigenstepper
     EigenStepper<ConstantBField> stepper(bField);
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         SpacePointVector recoPos = recoVertex.fullPosition();
         // check only for close z distance
         double zDistance = std::abs(truePos[eZ] - recoPos[eZ]);
-        if (zDistance < 2 * units::_mm) {
+        if (zDistance < 2_mm) {
           currentVertexFound = true;
         }
       }

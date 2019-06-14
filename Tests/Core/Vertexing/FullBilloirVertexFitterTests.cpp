@@ -27,6 +27,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
@@ -49,7 +50,7 @@ Vertex<InputTrack_t> myFitWrapper(
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -97,15 +98,15 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
 }
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
+std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20 * units::_mm, 20 * units::_mm);
+std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
@@ -113,7 +114,7 @@ std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
 std::uniform_real_distribution<> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
+std::uniform_real_distribution<> resIPDist(0., 100_um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -210,20 +211,19 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     Vertex<BoundParameters> fittedVertex =
         billoirFitter.fit(tracks, vfOptions).value();
     if (fittedVertex.tracks().size() > 0) {
-      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
+      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1_mm);
     }
     // Do the fit with a constraint
     Vertex<BoundParameters> fittedVertexConstraint =
         billoirFitter.fit(tracks, vfOptionsConstr).value();
     if (fittedVertexConstraint.tracks().size() > 0) {
-      CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition,
-                      1 * units::_mm);
+      CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
     // Test the IVertexFitter interface
     Vertex<BoundParameters> testVertex =
         myFitWrapper(&billoirFitter, tracks, vfOptions);
     if (testVertex.tracks().size() > 0) {
-      CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
+      CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1_mm);
     }
 
     if (debugMode) {
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(0.0, 0.0, 1_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -350,21 +350,20 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     Vertex<InputTrack> fittedVertex =
         billoirFitter.fit(tracks, vfOptions).value();
     if (fittedVertex.tracks().size() > 0) {
-      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
+      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1_mm);
     }
     // Do the fit with a constraint
     Vertex<InputTrack> fittedVertexConstraint =
         billoirFitter.fit(tracks, vfOptionsConstr).value();
     if (fittedVertexConstraint.tracks().size() > 0) {
-      CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition,
-                      1 * units::_mm);
+      CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
 
     // Test the IVertexFitter interface
     Vertex<InputTrack> testVertex =
         myFitWrapper(&billoirFitter, tracks, vfOptions);
 
-    CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
+    CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1_mm);
 
     if (debugMode) {
       std::cout << "Fitting nTracks: " << nTracks << std::endl;

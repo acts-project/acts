@@ -7,12 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 class TGeoMatrix;
 
@@ -70,7 +72,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
     ///       the material will have the'real' thickness.
     /// @attention The default thickness should be set thin enough that no
     ///            touching or overlapping with the next layer can happen.
-    double defaultThickness = 10e-10 * Acts::units::_mm;
+    double defaultThickness = UnitConstants::fm;
   };
 
   /// Constructor

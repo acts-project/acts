@@ -19,13 +19,12 @@
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
-
 namespace Test {
+
+using namespace Acts::UnitLiterals;
 
 // the maximum tolerance is half the accuracy
 float elMaxTolerance = 0.5 / float(UCHAR_MAX);
-
-namespace au = Acts::units;
 
 // first test correct boolean behavior
 BOOST_AUTO_TEST_CASE(Material_boolean_test) {
@@ -39,19 +38,19 @@ BOOST_AUTO_TEST_CASE(Material_boolean_test) {
 // now test thge construction and units
 BOOST_AUTO_TEST_CASE(Material_construction_and_units) {
   // density at room temperature
-  float X0 = 9.370 * au::_cm;
-  float L0 = 46.52 * au::_cm;
+  float X0 = 9.370_cm;
+  float L0 = 46.52_cm;
   float A = 28.0855;
   float Z = 14.;
-  float rho = 2.329 * au::_g / (au::_cm * au::_cm * au::_cm);
+  float rho = 2.329_g / std::pow(UnitConstants::cm, 3.0);
 
   Material silicon(X0, L0, A, Z, rho);
-  CHECK_CLOSE_REL(silicon.X0(), 93.70 * au::_mm, 0.001);
-  CHECK_CLOSE_REL(silicon.L0(), 465.2 * au::_mm, 0.001);
+  CHECK_CLOSE_REL(silicon.X0(), 93.70_mm, 0.001);
+  CHECK_CLOSE_REL(silicon.L0(), 465.2_mm, 0.001);
   CHECK_CLOSE_REL(silicon.Z(), 14., 0.001);
   CHECK_CLOSE_REL(silicon.A(), 28.0855, 0.001);
-  CHECK_CLOSE_REL(silicon.rho(),
-                  0.002329 * au::_g / (au::_mm * au::_mm * au::_mm), 0.001);
+  CHECK_CLOSE_REL(silicon.rho(), 0.002329_g / std::pow(UnitConstants::cm, 3.0),
+                  0.001);
   CHECK_CLOSE_REL(silicon.zOverAtimesRho(), 14. / 28.0855 * 0.002329, 0.0001);
 
   ActsVectorF<5> siliconValues;

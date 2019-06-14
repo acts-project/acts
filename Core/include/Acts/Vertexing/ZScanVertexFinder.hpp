@@ -14,11 +14,10 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-
+#include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
 
 namespace Acts {
@@ -59,7 +58,7 @@ class ZScanVertexFinder {
     // use pt for weighting
     bool usePt = false;
     // minimum pt
-    double minPt = 0.4 * units::_GeV;
+    double minPt = 0.4 * UnitConstants::GeV;
     // exponent used for weighting if usePt
     double expPt = 1.;
     // minimum required weight

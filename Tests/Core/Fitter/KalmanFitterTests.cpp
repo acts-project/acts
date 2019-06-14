@@ -43,6 +43,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts {
 namespace Test {
 
@@ -194,7 +196,7 @@ struct MaterialScattering {
            std::sin(theta + dTheta) * std::sin(phi + dPhi),
            std::cos(theta + dTheta)},
           std::max(stepper.momentum(state.stepping) -
-                       std::abs(gauss(generator)) * units::_MeV,
+                       std::abs(gauss(generator)) * UnitConstants::MeV,
                    0.));
     }
   }
@@ -222,18 +224,18 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Build propagator for the measurement creation
   MeasurementPropagator mPropagator(mStepper, mNavigator);
-  Vector3D mPos(-3. * units::_m, 0., 0.), mMom(1. * units::_GeV, 0., 0);
+  Vector3D mPos(-3_m, 0., 0.), mMom(1_GeV, 0., 0);
   SingleCurvilinearTrackParameters<NeutralPolicy> mStart(nullptr, mPos, mMom,
-                                                         42.);
+                                                         42_ns);
 
   // Create action list for the measurement creation
   using MeasurementActions = ActionList<MeasurementCreator, DebugOutput>;
   using MeasurementAborters = AbortList<detail::EndOfWorldReached>;
 
-  auto pixelResX = Resolution(eLOC_0, 25. * units::_um);
-  auto pixelResY = Resolution(eLOC_1, 50. * units::_um);
-  auto stripResX = Resolution(eLOC_0, 100. * units::_um);
-  auto stripResY = Resolution(eLOC_1, 150. * units::_um);
+  auto pixelResX = Resolution(eLOC_0, 25_um);
+  auto pixelResY = Resolution(eLOC_1, 50_um);
+  auto stripResX = Resolution(eLOC_0, 100_um);
+  auto stripResY = Resolution(eLOC_1, 150_um);
 
   ElementResolution pixelElementRes = {pixelResX, pixelResY};
   ElementResolution stripElementResI = {stripResX};
@@ -297,16 +299,15 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Set initial parameters for the particle track
   Covariance cov;
-  cov << 1000. * units::_um, 0., 0., 0., 0., 0., 0., 1000. * units::_um, 0., 0.,
-      0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0.,
-      0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
+  cov << 1000_um, 0., 0., 0., 0., 0., 0., 1000_um, 0., 0., 0., 0., 0., 0., 0.05,
+      0., 0., 0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0., 0., 0.01, 0., 0., 0.,
+      0., 0., 0., 1.;
 
   auto covPtr = std::make_unique<const Covariance>(cov);
 
-  Vector3D rPos(-3. * units::_m, 10. * units::_um * gauss(generator),
-                100. * units::_um * gauss(generator));
-  Vector3D rMom(1. * units::_GeV, 0.025 * units::_GeV * gauss(generator),
-                0.025 * units::_GeV * gauss(generator));
+  Vector3D rPos(-3_m, 10_um * gauss(generator), 100_um * gauss(generator));
+  Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
+                0.025_GeV * gauss(generator));
 
   SingleCurvilinearTrackParameters<ChargedPolicy> rStart(std::move(covPtr),
                                                          rPos, rMom, 1., 42.);

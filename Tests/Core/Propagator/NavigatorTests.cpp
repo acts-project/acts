@@ -31,11 +31,10 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
+using Acts::VectorHelpers::perp;
 
 namespace Acts {
-
-using VectorHelpers::perp;
-
 namespace Test {
 
 // Create a test context
@@ -82,7 +81,7 @@ struct PropagatorState {
       double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
-      Cstep stepSize = Cstep(100 * units::_cm);
+      Cstep stepSize = Cstep(100_cm);
     };
 
     /// Global particle position accessor

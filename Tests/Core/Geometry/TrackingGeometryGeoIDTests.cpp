@@ -8,15 +8,16 @@
 
 ///  Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
-
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "TrackingVolumeCreation.hpp"
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
+namespace Acts {
 namespace Test {
 
 // Create a test context
@@ -24,22 +25,22 @@ GeometryContext tgContext = GeometryContext();
 
 ///  create three cylinder surfaces
 ///  the surface radius (will also be the layer radius)
-double iVsurfaceHalfLengthZ = 50 * Acts::units::_mm;
-double iVsurfaceRadius = 25. * Acts::units::_mm;
-double iVsurfaceRstagger = 5. * Acts::units::_mm;
-double iVsurfaceZoverlap = 10. * Acts::units::_mm;
-double iVlayerEnvelope = 0.5 * Acts::units::_mm;
-double iVvolumeEnvelope = 10. * Acts::units::_mm;
+double iVsurfaceHalfLengthZ = 50_mm;
+double iVsurfaceRadius = 25_mm;
+double iVsurfaceRstagger = 5_mm;
+double iVsurfaceZoverlap = 10_mm;
+double iVlayerEnvelope = 0.5_mm;
+double iVvolumeEnvelope = 10_mm;
 double iVvolumeRadius = iVsurfaceRadius + 0.5 * iVsurfaceRstagger +
                         iVlayerEnvelope + iVvolumeEnvelope;
 
 ///  the surface radius (will also be the layer radius)
-double oVsurfaceHalfLengthZ = 50. * Acts::units::_mm;
-double oVsurfaceRadius = 100. * Acts::units::_mm;
-double oVsurfaceRstagger = 5. * Acts::units::_mm;
-double oVsurfaceZoverlap = 10. * Acts::units::_mm;
-double oVlayerEnvelope = 0.5 * Acts::units::_mm;
-double oVvolumeEnvelope = 10. * Acts::units::_mm;
+double oVsurfaceHalfLengthZ = 50_mm;
+double oVsurfaceRadius = 100_mm;
+double oVsurfaceRstagger = 5_mm;
+double oVsurfaceZoverlap = 10_mm;
+double oVlayerEnvelope = 0.5_mm;
+double oVvolumeEnvelope = 10_mm;
 double oVvolumeRadius = oVsurfaceRadius + 0.5 * oVsurfaceRstagger +
                         oVlayerEnvelope + oVvolumeEnvelope;
 

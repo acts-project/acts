@@ -27,6 +27,7 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
@@ -34,13 +35,12 @@ namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 
 namespace Acts {
-
 namespace IntegrationTest {
 
-const double L = 5.8 * Acts::units::_m;
-const double R = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
+const double L = 5.8_m;
+const double R = (2.56 + 2.46) * 0.5 * 0.5_m;
 const size_t nCoils = 1154;
-const double bMagCenter = 2. * Acts::units::_T;
+const double bMagCenter = 2_T;
 const size_t nBinsR = 150;
 const size_t nBinsZ = 200;
 
@@ -121,8 +121,8 @@ BOOST_DATA_TEST_CASE(
   }
 
   Vector3D pos(r * std::cos(phi), r * std::sin(phi), z);
-  Vector3D B = bSolenoidField.getField(pos) / Acts::units::_T;
-  Vector3D Bm = bFieldMap.getField(pos) / Acts::units::_T;
+  Vector3D B = bSolenoidField.getField(pos) / Acts::UnitConstants::T;
+  Vector3D Bm = bFieldMap.getField(pos) / Acts::UnitConstants::T;
 
   // test less than 5% deviation
   if (std::abs(r - R) > 10 && (std::abs(z) < L / 3. || r > 20)) {
@@ -138,5 +138,4 @@ BOOST_DATA_TEST_CASE(
 }
 
 }  // namespace IntegrationTest
-
 }  // namespace Acts

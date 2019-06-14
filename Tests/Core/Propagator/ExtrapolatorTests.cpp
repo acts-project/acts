@@ -34,9 +34,9 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -60,8 +60,7 @@ using EigenStepperType = EigenStepper<BFieldType>;
 using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
 using Covariance = BoundSymMatrix;
 
-const double Bz = 2. * units::_T;
-BFieldType bField(0, 0, Bz);
+BFieldType bField(0, 0, 2_T);
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
@@ -82,8 +81,8 @@ struct PlaneSelector {
 BOOST_DATA_TEST_CASE(
     test_extrapolation_,
     bdata::random((bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 1,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -114,15 +113,15 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
   PropagatorOptions<> options(tgContext, mfContext);
-  options.maxStepSize = 10. * units::_cm;
-  options.pathLimit = 25 * units::_cm;
+  options.maxStepSize = 10_cm;
+  options.pathLimit = 25_cm;
 
   BOOST_CHECK(epropagator.propagate(start, options).value().endParameters !=
               nullptr);
@@ -133,8 +132,8 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     test_surface_collection_,
     bdata::random((bdata::seed = 10,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 11,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -165,9 +164,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
@@ -176,8 +175,8 @@ BOOST_DATA_TEST_CASE(
 
   PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext);
 
-  options.maxStepSize = 10. * units::_cm;
-  options.pathLimit = 25 * units::_cm;
+  options.maxStepSize = 10_cm;
+  options.pathLimit = 25_cm;
   options.debug = debugMode;
 
   const auto& result = epropagator.propagate(start, options).value();
@@ -186,7 +185,7 @@ BOOST_DATA_TEST_CASE(
   // step through the surfaces and go step by step
   PropagatorOptions<> optionsEmpty(tgContext, mfContext);
 
-  optionsEmpty.maxStepSize = 25. * units::_cm;
+  optionsEmpty.maxStepSize = 25_cm;
   optionsEmpty.debug = true;
   // Try propagation from start to each surface
   for (const auto& colsf : collector_result.collected) {
@@ -209,8 +208,8 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     test_material_interactor_,
     bdata::random((bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -241,9 +240,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
@@ -252,8 +251,8 @@ BOOST_DATA_TEST_CASE(
   PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
       tgContext, mfContext);
   options.debug = debugMode;
-  options.maxStepSize = 25. * units::_cm;
-  options.pathLimit = 25 * units::_cm;
+  options.maxStepSize = 25_cm;
+  options.pathLimit = 25_cm;
 
   const auto& result = epropagator.propagate(start, options).value();
   if (result.endParameters) {
@@ -274,8 +273,8 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     loop_protection_test,
     bdata::random((bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.1 * units::_GeV, 0.5 * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.1_GeV, 0.5_GeV))) ^
         bdata::random((bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -306,9 +305,9 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
   CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
 
@@ -317,14 +316,13 @@ BOOST_DATA_TEST_CASE(
 
   PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
       tgContext, mfContext);
-  options.maxStepSize = 25. * units::_cm;
-  options.pathLimit = 1500. * units::_mm;
+  options.maxStepSize = 25_cm;
+  options.pathLimit = 1500_mm;
 
   const auto& status = epropagator.propagate(start, options).value();
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
-  double pmax = units::SI2Nat<units::MOMENTUM>(
-      options.pathLimit * bField.getField(pos).norm() / M_PI);
+  double pmax = options.pathLimit * bField.getField(pos).norm() / M_PI;
   if (mom.norm() < pmax) {
     BOOST_CHECK_LT(status.pathLength, options.pathLimit);
   } else {

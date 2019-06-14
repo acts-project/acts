@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <vector>
+
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -23,6 +24,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 namespace Test {
@@ -33,8 +35,10 @@ struct CubicTrackingGeometry {
   /// @param gctx the geometry context for this geometry at building time
   CubicTrackingGeometry(std::reference_wrapper<const GeometryContext> gctx)
       : geoContext(gctx) {
+    using namespace UnitLiterals;
+
     // Construct the rotation
-    double rotationAngle = M_PI * 0.5;
+    double rotationAngle = 90_degree;
     Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3D yPos(0., 1., 0.);
     Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -43,27 +47,28 @@ struct CubicTrackingGeometry {
     rotation.col(2) = zPos;
 
     // Boundaries of the surfaces
-    rBounds = std::make_shared<const RectangleBounds>(
-        RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+    rBounds =
+        std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3,
-                               0.5 * units::_mm);
+    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
     surfaceMaterial = std::shared_ptr<const ISurfaceMaterial>(
         new HomogeneousSurfaceMaterial(matProp));
   }
 
   /// Call operator to build the standard cubic tracking geometry
   std::shared_ptr<const TrackingGeometry> operator()() {
+    using namespace UnitLiterals;
+
     // Set translation vectors
-    double eps = 1. * units::_mm;
+    double eps = 1_mm;
     std::vector<Vector3D> translations;
-    translations.push_back({-2. * units::_m, 0., 0.});
-    translations.push_back({-1. * units::_m, 0., 0.});
-    translations.push_back({1. * units::_m - eps, 0., 0.});
-    translations.push_back({1. * units::_m + eps, 0., 0.});
-    translations.push_back({2. * units::_m - eps, 0., 0.});
-    translations.push_back({2. * units::_m + eps, 0., 0.});
+    translations.push_back({-2_m, 0., 0.});
+    translations.push_back({-1_m, 0., 0.});
+    translations.push_back({1_m - eps, 0., 0.});
+    translations.push_back({1_m + eps, 0., 0.});
+    translations.push_back({2_m - eps, 0., 0.});
+    translations.push_back({2_m + eps, 0., 0.});
 
     // Construct surfaces
     std::array<std::shared_ptr<const Surface>, 6> surfaces;
@@ -73,7 +78,7 @@ struct CubicTrackingGeometry {
       trafo.translation() = translations[i];
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
-          std::make_shared<const Transform3D>(trafo), rBounds, 1. * units::_um,
+          std::make_shared<const Transform3D>(trafo), rBounds, 1._um,
           surfaceMaterial);
       // And remember the surface
       surfaces[i] = detElement->surface().getSharedPtr();
@@ -89,9 +94,8 @@ struct CubicTrackingGeometry {
 
       std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surfaces[i]));
 
-      layers[i] =
-          PlaneLayer::create(std::make_shared<const Transform3D>(trafo),
-                             rBounds, std::move(surArray), 1. * units::_mm);
+      layers[i] = PlaneLayer::create(std::make_shared<const Transform3D>(trafo),
+                                     rBounds, std::move(surArray), 1._mm);
 
       auto mutableSurface = const_cast<Surface*>(surfaces[i].get());
       mutableSurface->associateLayer(*layers[i]);
@@ -99,10 +103,10 @@ struct CubicTrackingGeometry {
 
     // Build volume for surfaces with negative x-values
     Transform3D trafoVol1(Transform3D::Identity());
-    trafoVol1.translation() = Vector3D(-1.5 * units::_m, 0., 0.);
+    trafoVol1.translation() = Vector3D(-1.5_m, 0., 0.);
 
-    auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        1.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+    auto boundsVol =
+        std::make_shared<const CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
 
     LayerArrayCreator::Config lacConfig;
     LayerArrayCreator layArrCreator(
@@ -112,8 +116,7 @@ struct CubicTrackingGeometry {
     layVec.push_back(layers[0]);
     layVec.push_back(layers[1]);
     std::unique_ptr<const LayerArray> layArr1(layArrCreator.layerArray(
-        geoContext, layVec, -2. * units::_m - 1. * units::_mm,
-        -1. * units::_m + 1. * units::_mm, BinningType::arbitrary,
+        geoContext, layVec, -2_m - 1._mm, -1._m + 1._mm, BinningType::arbitrary,
         BinningValue::binX));
 
     auto trackVolume1 = TrackingVolume::create(
@@ -123,15 +126,14 @@ struct CubicTrackingGeometry {
 
     // Build volume for surfaces with positive x-values
     Transform3D trafoVol2(Transform3D::Identity());
-    trafoVol2.translation() = Vector3D(1.5 * units::_m, 0., 0.);
+    trafoVol2.translation() = Vector3D(1.5_m, 0., 0.);
 
     layVec.clear();
     for (i = 2; i < 6; i++)
       layVec.push_back(layers[i]);
-    std::unique_ptr<const LayerArray> layArr2(layArrCreator.layerArray(
-        geoContext, layVec, 1. * units::_m - 2. * units::_mm,
-        2. * units::_m + 2. * units::_mm, BinningType::arbitrary,
-        BinningValue::binX));
+    std::unique_ptr<const LayerArray> layArr2(
+        layArrCreator.layerArray(geoContext, layVec, 1._m - 2._mm, 2._m + 2._mm,
+                                 BinningType::arbitrary, BinningValue::binX));
 
     auto trackVolume2 = TrackingVolume::create(
         std::make_shared<const Transform3D>(trafoVol2), boundsVol, nullptr,
@@ -152,17 +154,15 @@ struct CubicTrackingGeometry {
     Transform3D trafoWorld(Transform3D::Identity());
     trafoWorld.translation() = Vector3D(0., 0., 0.);
 
-    auto worldVol = std::make_shared<const CuboidVolumeBounds>(
-        3. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+    auto worldVol =
+        std::make_shared<const CuboidVolumeBounds>(3._m, 0.5_m, 0.5_m);
 
     std::vector<std::pair<TrackingVolumePtr, Vector3D>> tapVec;
 
-    tapVec.push_back(
-        std::make_pair(trackVolume1, Vector3D(-1.5 * units::_m, 0., 0.)));
-    tapVec.push_back(
-        std::make_pair(trackVolume2, Vector3D(1.5 * units::_m, 0., 0.)));
+    tapVec.push_back(std::make_pair(trackVolume1, Vector3D(-1.5_m, 0., 0.)));
+    tapVec.push_back(std::make_pair(trackVolume2, Vector3D(1.5_m, 0., 0.)));
 
-    std::vector<float> binBoundaries = {-3. * units::_m, 0., 3. * units::_m};
+    std::vector<float> binBoundaries = {-3._m, 0., 3._m};
 
     BinningData binData(BinningOption::open, BinningValue::binX, binBoundaries);
     std::unique_ptr<const BinUtility> bu(new BinUtility(binData));

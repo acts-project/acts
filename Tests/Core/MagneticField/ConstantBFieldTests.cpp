@@ -7,23 +7,24 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// @file ConstantBField_tests.cpp
-#define BOOST_TEST_MODULE Constant magnetic field tests
 
 // clang-format off
+#define BOOST_TEST_MODULE Constant magnetic field tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Utilities/Units.hpp"
 // clang-format on
+
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -37,13 +38,10 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// -# ConstantBField::getField(const double* xyz, double* B) const
 /// -# ConstantBField::getField(const Vector3D& pos) const
 BOOST_DATA_TEST_CASE(ConstantBField_components,
-                     bdata::random(-2. * units::_T, 2. * units::_T) ^
-                         bdata::random(-1. * units::_T, 4. * units::_T) ^
-                         bdata::random(0. * units::_T, 10. * units::_T) ^
-                         bdata::random(-10. * units::_m, 10. * units::_m) ^
-                         bdata::random(-10. * units::_m, 10. * units::_m) ^
-                         bdata::random(-10. * units::_m, 10. * units::_m) ^
-                         bdata::xrange(10),
+                     bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
+                         bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
+                         bdata::random(-10_m, 10_m) ^
+                         bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
                      x, y, z, bx, by, bz, index) {
   (void)index;
   BOOST_TEST_CONTEXT("Eigen interface") {
@@ -87,13 +85,10 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
 /// -# ConstantBField::getField(const double* xyz, double* B) const
 /// -# ConstantBField::getField(const Vector3D& pos) const
 BOOST_DATA_TEST_CASE(ConstantBField_update,
-                     bdata::random(-2. * units::_T, 2. * units::_T) ^
-                         bdata::random(-1. * units::_T, 4. * units::_T) ^
-                         bdata::random(0. * units::_T, 10. * units::_T) ^
-                         bdata::random(-10. * units::_m, 10. * units::_m) ^
-                         bdata::random(-10. * units::_m, 10. * units::_m) ^
-                         bdata::random(-10. * units::_m, 10. * units::_m) ^
-                         bdata::xrange(10),
+                     bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
+                         bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
+                         bdata::random(-10_m, 10_m) ^
+                         bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
                      x, y, z, bx, by, bz, index) {
   (void)index;
   ConstantBField BField(0, 0, 0);
@@ -130,6 +125,6 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
     BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
   }
 }
-}  // namespace Test
 
+}  // namespace Test
 }  // namespace Acts

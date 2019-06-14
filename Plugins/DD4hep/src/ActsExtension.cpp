@@ -7,13 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
+
+#include <DD4hep/CartesianGridXY.h>
 #include <boost/algorithm/string.hpp>
+
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "DD4hep/CartesianGridXY.h"
 
 Acts::ActsExtension::ActsExtension(const Config& cfg)
     : Acts::IActsExtension(), m_material(nullptr) {
@@ -39,12 +41,12 @@ Acts::ActsExtension::ActsExtension(
   std::vector<Acts::MaterialProperties> partialMaterial;
   partialMaterial.reserve(materials.size());
   for (auto& mat : materials) {
-    Acts::Material pm{float(mat.first.radLength() * units::_cm),
-                      float(mat.first.intLength() * units::_cm),
+    Acts::Material pm{float(mat.first.radLength() * UnitConstants::cm),
+                      float(mat.first.intLength() * UnitConstants::cm),
                       float(mat.first.A()), float(mat.first.Z()),
-                      float(mat.first.density() / pow(Acts::units::_cm, 3))};
+                      float(mat.first.density() / pow(UnitConstants::cm, 3))};
     partialMaterial.push_back(
-        Acts::MaterialProperties(pm, mat.second * units::_mm));
+        Acts::MaterialProperties(pm, mat.second * UnitConstants::mm));
   }
   //  Create homogenous surface material with averaged material properties
   Acts::MaterialProperties matprop(partialMaterial);

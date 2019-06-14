@@ -11,8 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -23,7 +25,6 @@
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
-
 namespace Test {
 struct SurfaceArrayCreatorFixture;
 }
@@ -230,7 +231,8 @@ class SurfaceArrayCreator {
   static bool isSurfaceEquivalent(const GeometryContext& gctx,
                                   BinningValue bValue, const Surface* a,
                                   const Surface* b) {
-    using Acts::VectorHelpers::perp;
+    using namespace UnitLiterals;
+    using VectorHelpers::perp;
 
     if (bValue == Acts::binPhi) {
       // Take the two binning positions
@@ -252,13 +254,12 @@ class SurfaceArrayCreator {
 
     if (bValue == Acts::binZ) {
       return (std::abs(a->binningPosition(gctx, binR).z() -
-                       b->binningPosition(gctx, binR).z()) < Acts::units::_um);
+                       b->binningPosition(gctx, binR).z()) < 1_um);
     }
 
     if (bValue == Acts::binR) {
       return (std::abs(perp(a->binningPosition(gctx, binR)) -
-                       perp(b->binningPosition(gctx, binR))) <
-              Acts::units::_um);
+                       perp(b->binningPosition(gctx, binR))) < 1_um);
     }
 
     return false;

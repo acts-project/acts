@@ -85,15 +85,15 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::negativeLayers(
           ACTS_ERROR(
               "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
-        double rMin = tube->GetRmin() * units::_cm;
-        double rMax = tube->GetRmax() * units::_cm;
+        double rMin = tube->GetRmin() * UnitConstants::cm;
+        double rMax = tube->GetRmax() * UnitConstants::cm;
         double zMin =
             (transform->translation() -
-             transform->rotation().col(2) * tube->GetDz() * units::_cm)
+             transform->rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
         double zMax =
             (transform->translation() +
-             transform->rotation().col(2) * tube->GetDz() * units::_cm)
+             transform->rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
         if (zMin > zMax) {
           std::swap(zMin, zMax);
@@ -237,10 +237,11 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::negativeLayers(
 
       dd4hep::Material ddmaterial = detElement.volume().material();
       if (!boost::iequals(ddmaterial.name(), "vacuum")) {
-        Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
-                               ddmaterial.intLength() * Acts::units::_cm,
-                               ddmaterial.A(), ddmaterial.Z(),
-                               ddmaterial.density() / pow(Acts::units::_cm, 3));
+        Material layerMaterial(
+            ddmaterial.radLength() * Acts::UnitConstants::cm,
+            ddmaterial.intLength() * Acts::UnitConstants::cm, ddmaterial.A(),
+            ddmaterial.Z(),
+            ddmaterial.density() / pow(Acts::UnitConstants::cm, 3));
 
         MaterialProperties materialProperties(layerMaterial,
                                               fabs(pl.maxR - pl.minR));
@@ -300,9 +301,9 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
               "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
 
         // extract the boundaries
-        double rMin = tube->GetRmin() * units::_cm;
-        double rMax = tube->GetRmax() * units::_cm;
-        double dz = tube->GetDz() * units::_cm;
+        double rMin = tube->GetRmin() * UnitConstants::cm;
+        double rMax = tube->GetRmax() * UnitConstants::cm;
+        double dz = tube->GetDz() * UnitConstants::cm;
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
           // in case no surfaces are handed over the layer thickness will be set
@@ -431,10 +432,11 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
 
       dd4hep::Material ddmaterial = detElement.volume().material();
       if (!boost::iequals(ddmaterial.name(), "vacuum")) {
-        Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
-                               ddmaterial.intLength() * Acts::units::_cm,
-                               ddmaterial.A(), ddmaterial.Z(),
-                               ddmaterial.density() / pow(Acts::units::_cm, 3));
+        Material layerMaterial(
+            ddmaterial.radLength() * Acts::UnitConstants::cm,
+            ddmaterial.intLength() * Acts::UnitConstants::cm, ddmaterial.A(),
+            ddmaterial.Z(),
+            ddmaterial.density() / pow(Acts::UnitConstants::cm, 3));
 
         MaterialProperties materialProperties(layerMaterial,
                                               fabs(pl.maxR - pl.minR));
@@ -494,15 +496,15 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
           ACTS_ERROR(
               "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
-        double rMin = tube->GetRmin() * units::_cm;
-        double rMax = tube->GetRmax() * units::_cm;
+        double rMin = tube->GetRmin() * UnitConstants::cm;
+        double rMax = tube->GetRmax() * UnitConstants::cm;
         double zMin =
             (transform->translation() -
-             transform->rotation().col(2) * tube->GetDz() * units::_cm)
+             transform->rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
         double zMax =
             (transform->translation() +
-             transform->rotation().col(2) * tube->GetDz() * units::_cm)
+             transform->rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
         if (zMin > zMax) {
           std::swap(zMin, zMax);
@@ -643,10 +645,11 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
 
       dd4hep::Material ddmaterial = detElement.volume().material();
       if (!boost::iequals(ddmaterial.name(), "vacuum")) {
-        Material layerMaterial(ddmaterial.radLength() * Acts::units::_cm,
-                               ddmaterial.intLength() * Acts::units::_cm,
-                               ddmaterial.A(), ddmaterial.Z(),
-                               ddmaterial.density() / pow(Acts::units::_cm, 3));
+        Material layerMaterial(
+            ddmaterial.radLength() * Acts::UnitConstants::cm,
+            ddmaterial.intLength() * Acts::UnitConstants::cm, ddmaterial.A(),
+            ddmaterial.Z(),
+            ddmaterial.density() / pow(Acts::UnitConstants::cm, 3));
 
         MaterialProperties materialProperties(layerMaterial,
                                               fabs(pl.maxR - pl.minR));
@@ -701,8 +704,8 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   auto digiModule = detExtension->digitizationModule();
   // create the corresponding detector element
   Acts::DD4hepDetectorElement* dd4hepDetElement =
-      new Acts::DD4hepDetectorElement(detElement, axes, units::_cm, isDisc,
-                                      material, digiModule);
+      new Acts::DD4hepDetectorElement(detElement, axes, UnitConstants::cm,
+                                      isDisc, material, digiModule);
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();
@@ -718,8 +721,8 @@ Acts::DD4hepLayerBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const {
           Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
           Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
           Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-          Acts::Vector3D(translation[0] * units::_cm,
-                         translation[1] * units::_cm,
-                         translation[2] * units::_cm)));
+          Acts::Vector3D(translation[0] * UnitConstants::cm,
+                         translation[1] * UnitConstants::cm,
+                         translation[2] * UnitConstants::cm)));
   return (transform);
 }

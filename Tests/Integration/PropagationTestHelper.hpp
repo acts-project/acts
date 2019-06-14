@@ -19,9 +19,6 @@
 namespace tt = boost::test_tools;
 
 namespace Acts {
-
-using units::Nat2SI;
-
 namespace IntegrationTest {
 
 using Covariance = BoundSymMatrix;
@@ -82,16 +79,17 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
 template <typename Propagator_type>
 Vector3D constant_field_propagation(const Propagator_type& propagator,
                                     double pT, double phi, double theta,
-                                    double charge, double time, int /*index*/,
-                                    double Bz,
-                                    double disttol = 0.1 * units::_um,
+                                    double charge, double time, double Bz,
+                                    double disttol = 0.1 *
+                                                     Acts::UnitConstants::um,
                                     bool debug = false) {
+  using namespace Acts::UnitLiterals;
   namespace VH = VectorHelpers;
 
   // setup propagation options
   PropagatorOptions<> options(tgContext, mfContext);
-  options.pathLimit = 5 * units::_m;
-  options.maxStepSize = 1 * units::_cm;
+  options.pathLimit = 5_m;
+  options.maxStepSize = 1_cm;
   options.debug = debug;
 
   // define start parameters
@@ -111,12 +109,12 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
   // test propagation invariants
   // clang-format off
-    CHECK_CLOSE_ABS(pT, VH::perp(tp->momentum()), 1 * units::_keV);
-    CHECK_CLOSE_ABS(pz, tp->momentum()(2), 1 * units::_keV);
+    CHECK_CLOSE_ABS(pT, VH::perp(tp->momentum()), 1_keV);
+    CHECK_CLOSE_ABS(pz, tp->momentum()(2), 1_keV);
     CHECK_CLOSE_ABS(theta, VH::theta(tp->momentum()), 1e-4);
   // clang-format on
 
-  double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
+  double r = std::abs(pT / (q * Bz));
 
   // calculate number of turns of helix
   double turns = options.pathLimit / (2 * M_PI * r) * sin(theta);
@@ -165,9 +163,12 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
 template <typename Propagator_type>
 void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double plimit, int /*index*/,
-                     double disttol = 1. * units::_um,
-                     double momtol = 10. * units::_keV, bool debug = false) {
+                     double theta, double charge, double plimit,
+                     double disttol = 1 * Acts::UnitConstants::um,
+                     double momtol = 10 * Acts::UnitConstants::keV,
+                     bool debug = false) {
+  using namespace Acts::UnitLiterals;
+
   // setup propagation options
   // Action list and abort list
   using DebugOutput = Acts::detail::DebugOutputActor;
@@ -175,13 +176,13 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
 
   PropagatorOptions<ActionList> fwdOptions(tgContext, mfContext);
   fwdOptions.pathLimit = plimit;
-  fwdOptions.maxStepSize = 1 * units::_cm;
+  fwdOptions.maxStepSize = 1_cm;
   fwdOptions.debug = debug;
 
   PropagatorOptions<ActionList> bwdOptions(tgContext, mfContext);
   bwdOptions.direction = backward;
   bwdOptions.pathLimit = -plimit;
-  bwdOptions.maxStepSize = 1 * units::_cm;
+  bwdOptions.maxStepSize = 1_cm;
   bwdOptions.debug = debug;
 
   // define start parameters
@@ -236,6 +237,8 @@ std::pair<Vector3D, double> to_cylinder(
     const Propagator_type& propagator, double pT, double phi, double theta,
     double charge, double plimit, double rand1, double rand2, double /*rand3*/,
     bool covtransport = false, bool debug = false) {
+  using namespace Acts::UnitLiterals;
+
   // setup propagation options
   PropagatorOptions<> options(tgContext, mfContext);
   // setup propagation options
@@ -259,9 +262,15 @@ std::pair<Vector3D, double> to_cylinder(
   if (covtransport) {
     Covariance cov;
     // take some major correlations (off-diagonals)
-    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
-        0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
+    // clang-format off
+    cov <<
+     10_mm, 0, 0.123, 0, 0.5, 0,
+     0, 10_mm, 0, 0.162, 0, 0,
+     0.123, 0, 0.1, 0, 0, 0,
+     0, 0.162, 0, 0.1, 0, 0,
+     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
+     0, 0, 0, 0, 0, 1_us;
+    // clang-format on
     covPtr = std::make_unique<const Covariance>(cov);
   }
 
@@ -276,7 +285,7 @@ std::pair<Vector3D, double> to_cylinder(
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
                                               0.05 * rand1, 0.05 * rand2);
   auto endSurface = Surface::makeShared<CylinderSurface>(
-      seTransform, plimit * units::_m, std::numeric_limits<double>::max());
+      seTransform, plimit, std::numeric_limits<double>::max());
 
   // Increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
@@ -295,6 +304,7 @@ std::pair<Vector3D, double> to_surface(
     const Propagator_type& propagator, double pT, double phi, double theta,
     double charge, double plimit, double rand1, double rand2, double rand3,
     bool planar = true, bool covtransport = false, bool debug = false) {
+  using namespace Acts::UnitLiterals;
   using DebugOutput = detail::DebugOutputActor;
 
   // setup propagation options
@@ -320,9 +330,15 @@ std::pair<Vector3D, double> to_surface(
   if (covtransport) {
     Covariance cov;
     // take some major correlations (off-diagonals)
-    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162,
-        0, 0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
+    // clang-format off
+    cov <<
+     10_mm, 0, 0.123, 0, 0.5, 0,
+     0, 10_mm, 0, 0.162, 0, 0,
+     0.123, 0, 0.1, 0, 0, 0,
+     0, 0.162, 0, 0.1, 0, 0,
+     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
+     0, 0, 0, 0, 0, 1_us;
+    // clang-format on
     covPtr = std::make_unique<const Covariance>(cov);
   }
   // Create curvilinear start parameters
@@ -379,8 +395,10 @@ std::pair<Vector3D, double> to_surface(
 template <typename Propagator_type>
 void covariance_curvilinear(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
-                            double plimit, int /*index*/, double reltol = 1e-3,
+                            double plimit, double reltol = 1e-3,
                             bool debug = false) {
+  using namespace Acts::UnitLiterals;
+
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
@@ -403,9 +421,15 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
 
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 1e-6 * units::_s;
+  // clang-format off
+  cov <<
+   10_mm, 0, 0.123, 0, 0.5, 0,
+   0, 10_mm, 0, 0.162, 0, 0,
+   0.123, 0, 0.1, 0, 0, 0,
+   0, 0.162, 0, 0.1, 0, 0,
+   0.5, 0, 0, 0, 1_e / 10_GeV, 0,
+   0, 0, 0, 0, 0, 1_us;
+  // clang-format on
   auto covPtr = std::make_unique<const Covariance>(cov);
 
   // do propagation of the start parameters
@@ -428,9 +452,11 @@ template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
 void covariance_bound(const Propagator_type& propagator, double pT, double phi,
                       double theta, double charge, double plimit, double rand1,
-                      double rand2, double rand3, int /*index*/,
-                      bool startPlanar = true, bool destPlanar = true,
-                      double reltol = 1e-3, bool debug = false) {
+                      double rand2, double rand3, bool startPlanar = true,
+                      bool destPlanar = true, double reltol = 1e-3,
+                      bool debug = false) {
+  using namespace Acts::UnitLiterals;
+
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
@@ -451,9 +477,16 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   Vector3D mom(px, py, pz);
   Covariance cov;
 
-  cov << 10. * units::_mm, 0, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0,
-      0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV), 0,
-      0, 0, 0, 0, 0, 1e-6 * units::_s;
+  // take some major correlations (off-diagonals)
+  // clang-format off
+  cov <<
+   10_mm, 0, 0.123, 0, 0.5, 0,
+   0, 10_mm, 0, 0.162, 0, 0,
+   0.123, 0, 0.1, 0, 0, 0,
+   0, 0.162, 0, 0.1, 0, 0,
+   0.5, 0, 0, 0, 1_e / 10_GeV, 0,
+   0, 0, 0, 0, 0, 1_us;
+  // clang-format on
 
   auto covPtr = std::make_unique<const Covariance>(cov);
 

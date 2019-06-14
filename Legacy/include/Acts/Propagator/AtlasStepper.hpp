@@ -17,7 +17,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -1031,8 +1030,7 @@ class AtlasStepper {
     double* A = &(state.stepping.pVector[4]);  // Directions
     double* sA = &(state.stepping.pVector[56]);
     // Invert mometum/2.
-    double Pi =
-        0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.stepping.pVector[7]);
+    double Pi = 0.5 * state.stepping.pVector[7];
     //    double dltm = 0.0002 * .03;
     Vector3D f0, f;
 
@@ -1133,12 +1131,8 @@ class AtlasStepper {
       sA[2] = C6 * Sl;
 
       // Evaluate the time propagation
-      const double mom =
-          units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
-      const double mass = units::Nat2SI<units::MASS>(state.options.mass);
       state.stepping.pVector[3] +=
-          h * std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
-
+          h * std::hypot(1, state.options.mass / momentum(state.stepping));
       state.stepping.field = f;
       state.stepping.newfield = false;
 

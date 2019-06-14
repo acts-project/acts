@@ -163,7 +163,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                    .ptr()
                    ->GetMatrix()
                    ->GetTranslation()[2] *
-               units::_cm;
+               UnitConstants::cm;
       } else {
         throw std::logic_error(std::string("Volume of DetElement: ") +
                                volumeDetElement.name() +
@@ -301,9 +301,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           "Beampipe has wrong shape - needs to be TGeoTubeSeg!");
     }
     // get the dimension of TGeo and convert lengths
-    double rMin = tube->GetRmin() * units::_cm + layerEnvelopeR;
-    double rMax = tube->GetRmax() * units::_cm - layerEnvelopeR;
-    double halfZ = tube->GetDz() * units::_cm - layerEnvelopeZ;
+    double rMin = tube->GetRmin() * UnitConstants::cm + layerEnvelopeR;
+    double rMax = tube->GetRmax() * UnitConstants::cm - layerEnvelopeR;
+    double halfZ = tube->GetDz() * UnitConstants::cm - layerEnvelopeZ;
     ACTS_VERBOSE(
         "[V] Extracting cylindrical volume bounds ( rmin / rmax / "
         "halfZ )=  ( "
@@ -312,10 +312,10 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     // get the possible material of the surounding volume
     dd4hep::Material ddmaterial = subDetector.volume().material();
     Acts::MaterialProperties bpMaterial(
-        ddmaterial.radLength() * units::_cm,
-        ddmaterial.intLength() * units::_cm, ddmaterial.A(), ddmaterial.Z(),
-        ddmaterial.density() / pow(Acts::units::_cm, 3),
-        fabs(tube->GetRmax() - tube->GetRmin()) * units::_cm);
+        ddmaterial.radLength() * UnitConstants::cm,
+        ddmaterial.intLength() * UnitConstants::cm, ddmaterial.A(),
+        ddmaterial.Z(), ddmaterial.density() / pow(Acts::UnitConstants::cm, 3),
+        fabs(tube->GetRmax() - tube->GetRmin()) * UnitConstants::cm);
 
     // configure the beam pipe layer builder
     Acts::PassiveLayerBuilder::Config bplConfig;

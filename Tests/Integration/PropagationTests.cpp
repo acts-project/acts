@@ -40,9 +40,9 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace IntegrationTest {
 
 using BFieldType = ConstantBField;
@@ -63,7 +63,7 @@ const bool covtpr = true;
 const bool debug = false;
 
 // setup propagator with constant B-field
-const double Bz = 2. * units::_T;
+const double Bz = 2_T;
 BFieldType bField(0, 0, Bz);
 EigenStepperType estepper(bField);
 DenseStepperType dstepper(bField);
@@ -75,14 +75,14 @@ StraightPropagatorType spropagator(std::move(sstepper));
 
 DensePropagatorType setupDensePropagator() {
   CuboidVolumeBuilder::VolumeConfig vConf;
-  vConf.position = {1.5 * units::_m, 0., 0.};
-  vConf.length = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+  vConf.position = {1.5_m, 0., 0.};
+  vConf.length = {3_m, 1_m, 1_m};
   vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(352.8, 407., 9.012, 4., 1.848e-3));
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
-  conf.position = {1.5 * units::_m, 0., 0.};
-  conf.length = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+  conf.position = {1.5_m, 0., 0.};
+  conf.length = {3_m, 1_m, 1_m};
   CuboidVolumeBuilder cvb(conf);
   TrackingGeometryBuilder::Config tgbCfg;
   tgbCfg.trackingVolumeBuilders.push_back(
@@ -101,8 +101,8 @@ DensePropagatorType setupDensePropagator() {
 BOOST_DATA_TEST_CASE(
     constant_bfieldforward_propagation_,
     bdata::random((bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 1,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -137,5 +137,4 @@ BOOST_DATA_TEST_CASE(
 #include "PropagationTestBase.hpp"
 
 }  // namespace IntegrationTest
-
 }  // namespace Acts

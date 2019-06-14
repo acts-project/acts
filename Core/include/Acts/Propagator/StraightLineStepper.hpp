@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <functional>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
@@ -17,7 +18,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -444,28 +444,23 @@ class StraightLineStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const {
     // use the adjusted step size
-    const double h = state.stepping.stepSize;
+    const auto h = state.stepping.stepSize;
+    // time propagates along distance as 1/b = sqrt(1 + m²/p²)
+    const auto dtds = std::hypot(1, state.options.mass / state.stepping.p);
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
-
-    // SI momentum and mass
-    const double mom = units::Nat2SI<units::MOMENTUM>(momentum(state.stepping));
-    const double mass = units::Nat2SI<units::MASS>(state.options.mass);
-    // Propagate the time
-    double dtds = std::sqrt(mass * mass / (mom * mom) + units::_c2inv);
     state.stepping.dt += h * dtds;
     // Propagate the jacobian
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
       FreeMatrix D = FreeMatrix::Identity();
       D.block<3, 3>(0, 4) = ActsSymMatrixD<3>::Identity() * h;
-
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
-      D(3, 7) = h * mass * mass / (mom * dtds);
+      D(3, 7) = h * state.options.mass * state.options.mass /
+                (state.stepping.p * dtds);
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;
-
       // Update jacobian and derivative
       state.stepping.jacTransport = D * state.stepping.jacTransport;
       state.stepping.derivative.template head<3>() = state.stepping.dir;

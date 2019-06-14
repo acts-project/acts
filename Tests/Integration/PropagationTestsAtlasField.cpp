@@ -90,8 +90,8 @@ std::shared_ptr<const InterpolatedBFieldMap> atlasBField(
     std::string fieldMapFile = "Field.txt") {
   // Declare the mapper
   concept ::AnyFieldLookup<> mapper;
-  double lengthUnit = units::_mm;
-  double BFieldUnit = units::_T;
+  double lengthUnit = UnitConstants::mm;
+  double BFieldUnit = UnitConstants::T;
   // read the field x,y,z from a text file
   mapper = readFieldXYZ(
       [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
@@ -107,7 +107,7 @@ std::shared_ptr<const InterpolatedBFieldMap> atlasBField(
   return std::make_shared<const InterpolatedBFieldMap>(std::move(config));
 }
 
-double Bz = 2. * units::_T;
+double Bz = 2_T;
 
 using BFieldType = InterpolatedBFieldMap;
 using SharedFieldType = SharedBField<InterpolatedBFieldMap>;

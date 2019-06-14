@@ -6,15 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <chrono>
+#include <iostream>
+#include <random>
+#include <string>
+
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include <chrono>
-#include <iostream>
-#include <random>
-#include <string>
+using namespace Acts::UnitLiterals;
 
 int main(int argc, char* argv[]) {
   size_t n = 1e6;
@@ -22,10 +24,10 @@ int main(int argc, char* argv[]) {
     n = std::stoi(argv[1]);
   }
 
-  const double L = 5.8 * Acts::units::_m;
-  const double R = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
+  const double L = 5.8_m;
+  const double R = (2.56 + 2.46) * 0.5 * 0.5_m;
   const size_t nCoils = 1154;
-  const double bMagCenter = 2. * Acts::units::_T;
+  const double bMagCenter = 2_T;
   const size_t nBinsR = 150;
   const size_t nBinsZ = 200;
 

@@ -7,13 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include <DD4hep/DetElement.h>
+
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "DD4hep/DetElement.h"
 
 namespace Acts {
 
@@ -82,9 +84,9 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     dd4hep::DetElement worldDetElement,
     Logging::Level loggingLevel = Logging::Level::INFO,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
-    BinningType bTypeZ = equidistant, double layerEnvelopeR = 1. * units::_mm,
-    double layerEnvelopeZ = 1. * units::_mm,
-    double defaultLayerThickness = 10e-10 * units::_mm,
+    BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
+    double layerEnvelopeZ = UnitConstants::mm,
+    double defaultLayerThickness = UnitConstants::fm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
     const GeometryContext& gctx = GeometryContext());
@@ -132,9 +134,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     dd4hep::DetElement subDetector,
     Logging::Level loggingLevel = Logging::Level::INFO,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
-    BinningType bTypeZ = equidistant, double layerEnvelopeR = 1. * units::_mm,
-    double layerEnvelopeZ = 1. * units::_mm,
-    double defaultLayerThickness = 10e-10 * units::_mm);
+    BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
+    double layerEnvelopeZ = UnitConstants::mm,
+    double defaultLayerThickness = UnitConstants::fm);
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
