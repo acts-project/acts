@@ -18,7 +18,8 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
 }
 
 template <typename Cluster>
-Acts::SpacePointVector Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
+Acts::SpacePointVector
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -26,7 +27,7 @@ Acts::SpacePointVector Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globa
   // Transform local into global position information
   Acts::Vector3D pos, mom;
   clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
-  
+
   // TODO: Demand that the cluster provides a time stamp
   return {pos.x(), pos.y(), pos.z(), 0.};
 }

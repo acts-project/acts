@@ -53,7 +53,7 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// information
   /// @return vector of the global coordinates of the cluster
   SpacePointVector globalCoords(const GeometryContext& gctx,
-                        const Cluster& cluster) const;
+                                const Cluster& cluster) const;
 };
 
 #include "Acts/Plugins/Digitization/detail/SingleHitSpacePointBuilder.ipp"

@@ -16,20 +16,20 @@ namespace Acts {
 
 /// @brief Configuration of the class to steer its behaviour
 struct DoubleHitSpacePointConfig {
-/// Accepted difference in eta for two clusters
-double diffTheta2 = 1.;
-/// Accepted difference in phi for two clusters
-double diffPhi2 = 1.;
-/// Accepted distance between two clusters
-double diffDist = 100. * UnitConstants::mm;
-/// Allowed increase of strip length
-double stripLengthTolerance = 0.01;
-/// Allowed increase of strip length wrt gaps between strips
-double stripLengthGapTolerance = 0.01;
-/// Assumed position of the vertex
-Vector3D vertex = {0., 0., 0.};
-/// Perform the perpendicular projection for space point finding
-bool usePerpProj = false;
+  /// Accepted difference in eta for two clusters
+  double diffTheta2 = 1.;
+  /// Accepted difference in phi for two clusters
+  double diffPhi2 = 1.;
+  /// Accepted distance between two clusters
+  double diffDist = 100. * UnitConstants::mm;
+  /// Allowed increase of strip length
+  double stripLengthTolerance = 0.01;
+  /// Allowed increase of strip length wrt gaps between strips
+  double stripLengthGapTolerance = 0.01;
+  /// Assumed position of the vertex
+  Vector3D vertex = {0., 0., 0.};
+  /// Perform the perpendicular projection for space point finding
+  bool usePerpProj = false;
 };
 
 /// @class TwoHitsSpacePointBuilder

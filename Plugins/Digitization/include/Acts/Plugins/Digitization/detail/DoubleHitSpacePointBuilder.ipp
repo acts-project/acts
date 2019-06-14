@@ -464,7 +464,8 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
         Acts::SpacePoint<Cluster> sp;
         sp.clusterModule.push_back(cp.first);
         sp.clusterModule.push_back(cp.second);
-        Vector3D pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+        Vector3D pos =
+            0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
         // TODO: Clusters should deliver timestamp
         sp.spacePoint = {pos.x(), pos.y(), pos.z(), 0.};
         spacePoints.push_back(std::move(sp));
