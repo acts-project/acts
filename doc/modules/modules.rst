@@ -8,5 +8,8 @@ vertexing.
 .. toctree::
     :maxdepth: 1
 
+    eventdata
+    geometry
     magnetic_field
     material
+    propagation
