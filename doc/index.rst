@@ -27,6 +27,12 @@ Key features of this project include:
 
     modules/modules
     plugins/plugins
+
+.. toctree::
+    :maxdepth: 1
+
     api/api
     grid_axis
     logging
+    authors
+    license
