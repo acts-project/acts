@@ -20,6 +20,7 @@ set(doc_sources
   ../AUTHORS
   license.rst
   ../LICENSE
+  units
 )
 
 configure_file(conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
