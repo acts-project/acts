@@ -26,16 +26,16 @@ Here, the following native units are used:
 
     .. math::
         
-        radius = - (momentum / charge) / magnetic_field
+        radius = - (momentum / charge) / field
 
     With the chosen magnetic field unit the expression above stays the
     same and no additional conversion factors are necessary.
 
 Depending on the context a physical quantity might not be given in the native
 units. In this case we need to convert to the native unit first before the value
-can be used. The necessary conversion factors are defined in the
-:ref:`namespace_Acts__UnitConstants` namespace. Multiplying a value with the
-unit constant produces the equivalent value in the native unit, e.g.
+can be used. The necessary conversion factors are defined in
+:ref:`namespace_Acts__UnitConstants`. Multiplying a value with the unit constant
+produces the equivalent value in the native unit, e.g.
 
 .. code-block:: cpp
 
@@ -52,7 +52,7 @@ specific other unit is computed by dividing with the relevant unit, e.g.
 
 To further simplify the usage, physical quantities can also be expressed via
 `C++ user literals <https://en.cppreference.com/w/cpp/language/user_literal>`_
-define in the :ref:`namespace_Acts__UnitLiterals` namespace. This allows us to
+define in :ref:`namespace_Acts__UnitLiterals`. This allows us to
 express quantities in a concise way:
 
 .. code-block:: cpp
@@ -66,7 +66,7 @@ express quantities in a concise way:
 
 Since this requires a namespace import of :ref:`namespace_Acts__UnitLiterals` it
 should not be used in headers since it would (accidentally) modify the namespace
-wherever the namespace is included.
+wherever the header is included.
 
 To ensure consistent computations and results the following guidelines **must**
 be followed when handling physical quantities with units:
