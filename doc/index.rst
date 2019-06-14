@@ -33,6 +33,7 @@ Key features of this project include:
 
     integration/integration
     api/api
+    units
     grid_axis
     logging
     authors
