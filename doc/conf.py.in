@@ -73,9 +73,8 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 html_theme_options = {
   'navbar_sidebarrel': False, # no prev/next links in navigation bar
   'navbar_links': [
-    ('Modules', 'modules/modules'),
-    ('Plugins', 'plugins/plugins'),
     ('API', 'api/api'),
+    ('Gitlab', 'https://gitlab.cern.ch/acts/acts-core', True),
   ],
   'navbar_fixed_top': False,
 }
