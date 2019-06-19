@@ -45,9 +45,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   std::vector<Seed<external_spacepoint_t>> outputVec;
   auto middleSpIt = middle.first;
   auto mEnd = middle.second;
-  for (; !(middleSpIt == mEnd); middleSpIt++) {
+  for (; !(middleSpIt == mEnd); ++middleSpIt) {
     const InternalSpacePoint<external_spacepoint_t>* spM
-        = middleSpIt->get();
+        = (*middleSpIt);
 
     float rM = spM->radius();
     float zM = spM->z();
@@ -60,7 +60,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>
         compatBottomSP;
 
-    for (; !(bottomSpIt == bEnd); bottomSpIt++){
+    for (; !(bottomSpIt == bEnd); ++bottomSpIt){
       float rB     = (*bottomSpIt)->radius();
       float deltaR = rM - rB;
       // if r-distance is too big, try next SP in bin
@@ -82,7 +82,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           || zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      compatBottomSP.push_back((*bottomSpIt).get());
+      compatBottomSP.push_back((*bottomSpIt));
     }
     // no bottom SP found -> try next spM
     if (compatBottomSP.empty()) {
@@ -93,7 +93,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     auto topSpIt = top.first;
     auto tEnd    = top.second;
 
-    for (; !(topSpIt == tEnd); topSpIt++){
+    for (; !(topSpIt == tEnd); ++topSpIt){
       float rT     = (*topSpIt)->radius();
       float deltaR = rT - rM;
       // this condition is the opposite of the condition for bottom SP
@@ -113,7 +113,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           || zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      compatTopSP.push_back((*topSpIt).get());
+      compatTopSP.push_back((*topSpIt));
     }
     if (compatTopSP.empty()) {
       continue;

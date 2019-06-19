@@ -11,7 +11,6 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Seeding/SeedfinderState.hpp"
 
 #include <array>
 #include <list>

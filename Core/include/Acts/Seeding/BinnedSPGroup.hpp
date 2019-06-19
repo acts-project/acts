@@ -66,8 +66,6 @@ class NeighborhoodIterator
       return;
     } else {
       m_curInd++;
-      m_curIt = nullptr;
-      m_binEnd = nullptr;
     }
     if(m_indices.size() > m_curInd){
       m_curIt = std::begin(m_grid->at(m_indices[m_curInd]));
@@ -109,7 +107,7 @@ public:
     }
     // set current & neighbor bins only if bin indices valid
     if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {
-      currentBin = std::vector<size_t>{grid->getGlobalBinIndex({phiIndex, zIndex})};
+      currentBin = std::vector<size_t>{grid->globalBinFromLocalBins({phiIndex, zIndex})};
       bottomBinIndices = m_bottomBinFinder->findBins(phiIndex, zIndex, grid);
       topBinIndices    = m_topBinFinder->findBins(phiIndex, zIndex, grid);
       outputIndex++;
@@ -133,7 +131,7 @@ public:
 
   NeighborhoodIterator<external_spacepoint_t>
   middleEnd(){
-    return NeighborhoodIterator<external_spacepoint_t>(currentBin, grid, currentBin.size(), nullptr);
+    return NeighborhoodIterator<external_spacepoint_t>(currentBin, grid, currentBin.size(), std::end(grid->at(currentBin.back())));
   }
 
   NeighborhoodIterator<external_spacepoint_t>
@@ -143,7 +141,7 @@ public:
 
   NeighborhoodIterator<external_spacepoint_t>
   bottomEnd(){
-    return NeighborhoodIterator<external_spacepoint_t>(bottomBinIndices, grid, bottomBinIndices.size(), nullptr);
+    return NeighborhoodIterator<external_spacepoint_t>(bottomBinIndices, grid, bottomBinIndices.size(), std::end(grid->at(bottomBinIndices.back())));
   }
 
   NeighborhoodIterator<external_spacepoint_t>
@@ -153,13 +151,13 @@ public:
 
   NeighborhoodIterator<external_spacepoint_t>
   topEnd(){
-    return NeighborhoodIterator<external_spacepoint_t>(topBinIndices, grid, topBinIndices.size(), nullptr);
+    return NeighborhoodIterator<external_spacepoint_t>(topBinIndices, grid, topBinIndices.size(), std::end(grid->at(topBinIndices.back())));
   }
 
   BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
                         BinFinder<external_spacepoint_t>*           botBinFinder,
                         BinFinder<external_spacepoint_t>*           tBinFinder)
-    : currentBin({spgrid->getGlobalBinIndex({1, 1})})
+    : currentBin({spgrid->globalBinFromLocalBins({1, 1})})
   {
     grid             = spgrid;
     m_bottomBinFinder  = botBinFinder;
@@ -177,7 +175,7 @@ public:
                           BinFinder<external_spacepoint_t>*           tBinFinder,
                           size_t                            phiInd,
                           size_t                            zInd)
-    : currentBin({spgrid->getGlobalBinIndex({phiInd, zInd})})
+    : currentBin({spgrid->globalBinFromLocalBins({phiInd, zInd})})
   {
     m_bottomBinFinder = botBinFinder;
     m_topBinFinder    = tBinFinder;
