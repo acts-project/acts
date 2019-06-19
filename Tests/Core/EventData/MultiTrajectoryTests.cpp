@@ -40,7 +40,7 @@ CurvilinearParameters make_params() {
   Covariance rnd = Covariance::Random();
   Covariance cov = rnd.transpose() * rnd;
   return {std::make_unique<Covariance>(cov), Vector3D(0, 0, 1),
-          Vector3D(100, 1000, 400), -1};
+          Vector3D(100, 1000, 400), -1, 0};
 }
 
 TrackState<SourceLink, CurvilinearParameters> make_rand_trackstate() {
