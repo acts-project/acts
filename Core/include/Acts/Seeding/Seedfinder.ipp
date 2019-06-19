@@ -10,7 +10,6 @@
 #include <numeric>
 #include <type_traits>
 
-#include "Acts/Seeding/IBinFinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 
 namespace Acts {
@@ -36,148 +35,54 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
 }
 
 template <typename external_spacepoint_t>
-template <typename spacepoint_iterator_t>
-Acts::SeedfinderState<external_spacepoint_t>
-Seedfinder<external_spacepoint_t>::initState(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    std::function<Acts::Vector2D(const external_spacepoint_t&, float, float,
-                                 float)>
-        covTool,
-    std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> bottomBinFinder,
-    std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder)
-    const {
-  static_assert(
-      std::is_same<
-          typename std::iterator_traits<spacepoint_iterator_t>::value_type,
-          const external_spacepoint_t*>::value,
-      "Iterator does not contain type this class was templated with");
-  auto state = Acts::SeedfinderState<external_spacepoint_t>();
-  // setup spacepoint grid config
-  SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ = m_config.bFieldInZ;
-  gridConf.minPt = m_config.minPt;
-  gridConf.rMax = m_config.rMax;
-  gridConf.zMax = m_config.zMax;
-  gridConf.zMin = m_config.zMin;
-  gridConf.deltaRMax = m_config.deltaRMax;
-  gridConf.cotThetaMax = m_config.cotThetaMax;
-  // create grid with bin sizes according to the configured geometry
-  std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid =
-      SpacePointGridCreator::createGrid<external_spacepoint_t>(gridConf);
-
-  // get region of interest (or full detector if configured accordingly)
-  float phiMin = m_config.phiMin;
-  float phiMax = m_config.phiMax;
-  float zMin = m_config.zMin;
-  float zMax = m_config.zMax;
-
-  // sort by radius
-  // add magnitude of beamPos to rMax to avoid excluding measurements
-  // create number of bins equal to number of millimeters rMax
-  // (worst case minR: configured minR + 1mm)
-  size_t numRBins = (m_config.rMax + m_config.beamPos.norm());
-  std::vector<std::vector<
-      std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>>
-      rBins(numRBins);
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
-    if (*it == nullptr) {
-      continue;
-    }
-    const external_spacepoint_t& sp = **it;
-    float spX = sp.x();
-    float spY = sp.y();
-    float spZ = sp.z();
-
-    if (spZ > zMax || spZ < zMin) {
-      continue;
-    }
-    float spPhi = std::atan2(spY, spX);
-    if (spPhi > phiMax || spPhi < phiMin) {
-      continue;
-    }
-
-    // covariance tool provided by user
-    Acts::Vector2D cov =
-        covTool(sp, m_config.zAlign, m_config.rAlign, m_config.sigmaError);
-    Acts::Vector3D spPosition(spX, spY, spZ);
-    auto isp =
-        std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
-            sp, spPosition, m_config.beamPos, cov);
-    // calculate r-Bin index and protect against overflow (underflow not
-    // possible)
-    size_t rIndex = isp->radius();
-    // if index out of bounds, the SP is outside the region of interest
-    if (rIndex >= numRBins) {
-      continue;
-    }
-    rBins[rIndex].push_back(std::move(isp));
-  }
-  // fill rbins into grid such that each grid bin is sorted in r
-  // space points with delta r < rbin size can be out of order
-  for (auto& rbin : rBins) {
-    for (auto& isp : rbin) {
-      Acts::Vector2D spLocation(isp->phi(), isp->z());
-      std::vector<
-          std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
-          bin = grid->atPosition(spLocation);
-      bin.push_back(std::move(isp));
-    }
-  }
-  state.binnedSP = std::move(grid);
-  state.bottomBinFinder = bottomBinFinder;
-  state.topBinFinder = topBinFinder;
-  std::array<size_t, 2> numBins = state.binnedSP->numLocalBins();
-  for (size_t i = 0; i < numBins[0] * numBins[1]; i++) {
-    state.outputVec.push_back({});
-  }
-  return std::move(state);
-}
-
-template <typename external_spacepoint_t>
-void Seedfinder<external_spacepoint_t>::createSeedsForRegion(
-    SeedfinderStateIterator<external_spacepoint_t> it,
-    Acts::SeedfinderState<external_spacepoint_t>& state) const {
-  for (size_t spIndex = 0; spIndex < it.currentBin->size(); spIndex++) {
-    const InternalSpacePoint<external_spacepoint_t>* spM =
-        (*(it.currentBin))[spIndex].get();
+template <typename internal_sp_iterator_t>
+std::vector<Seed<external_spacepoint_t>>
+Seedfinder<external_spacepoint_t>::createSeedsForGroup(
+    std::pair<internal_sp_iterator_t, internal_sp_iterator_t> bottom,
+    std::pair<internal_sp_iterator_t, internal_sp_iterator_t> middle,
+    std::pair<internal_sp_iterator_t, internal_sp_iterator_t> top) const
+{
+  std::vector<Seed<external_spacepoint_t>> outputVec;
+  auto middleSpIt = middle.first;
+  auto mEnd = middle.second;
+  for (; !(middleSpIt == mEnd); middleSpIt++) {
+    const InternalSpacePoint<external_spacepoint_t>* spM
+        = middleSpIt->get();
 
     float rM = spM->radius();
     float zM = spM->z();
     float covrM = spM->covr();
     float covzM = spM->covz();
 
-    std::vector<size_t>& bottomBinIndices = it.bottomBinIndices;
-    std::vector<size_t>& topBinIndices = it.topBinIndices;
+    // bottom space point
+    auto bottomSpIt = bottom.first;
+    auto bEnd = bottom.second;
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>
         compatBottomSP;
 
-    // bottom space point
-    for (auto bottomBinIndex : bottomBinIndices) {
-      auto& bottomBin = it.grid->at(bottomBinIndex);
-      for (auto& spB : bottomBin) {
-        float rB = spB->radius();
-        float deltaR = rM - rB;
-        // if r-distance is too big, try next SP in r-sorted bin
-        if (deltaR > m_config.deltaRMax) {
-          continue;
-        }
-        // if r-distance is too small, break because bins are r-sorted
-        if (deltaR < m_config.deltaRMin) {
-          break;
-        }
-        // ratio Z/R (forward angle) of space point duplet
-        float cotTheta = (zM - spB->z()) / deltaR;
-        if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-          continue;
-        }
-        // check if duplet origin on z axis within collision region
-        float zOrigin = zM - rM * cotTheta;
-        if (zOrigin < m_config.collisionRegionMin ||
-            zOrigin > m_config.collisionRegionMax) {
-          continue;
-        }
-        compatBottomSP.push_back(spB.get());
+    for (; !(bottomSpIt == bEnd); bottomSpIt++){
+      float rB     = (*bottomSpIt)->radius();
+      float deltaR = rM - rB;
+      // if r-distance is too big, try next SP in bin
+      if (deltaR > m_config.deltaRMax) {
+        continue;
       }
+      // if r-distance is too small, break because bins are NOT r-sorted
+      if (deltaR < m_config.deltaRMin) {
+        continue;
+      }
+      // ratio Z/R (forward angle) of space point duplet
+      float cotTheta = (zM - (*bottomSpIt)->z()) / deltaR;
+      if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+        continue;
+      }
+      // check if duplet origin on z axis within collision region
+      float zOrigin = zM - rM * cotTheta;
+      if (zOrigin < m_config.collisionRegionMin
+          || zOrigin > m_config.collisionRegionMax) {
+        continue;
+      }
+      compatBottomSP.push_back((*bottomSpIt).get());
     }
     // no bottom SP found -> try next spM
     if (compatBottomSP.empty()) {
@@ -185,31 +90,30 @@ void Seedfinder<external_spacepoint_t>::createSeedsForRegion(
     }
 
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
+    auto topSpIt = top.first;
+    auto tEnd    = top.second;
 
-    for (auto topBinIndex : topBinIndices) {
-      auto& topBin = it.grid->at(topBinIndex);
-      for (auto& spT : topBin) {
-        float rT = spT->radius();
-        float deltaR = rT - rM;
-        // this condition is the opposite of the condition for bottom SP
-        if (deltaR < m_config.deltaRMin) {
-          continue;
-        }
-        if (deltaR > m_config.deltaRMax) {
-          break;
-        }
-
-        float cotTheta = (spT->z() - zM) / deltaR;
-        if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-          continue;
-        }
-        float zOrigin = zM - rM * cotTheta;
-        if (zOrigin < m_config.collisionRegionMin ||
-            zOrigin > m_config.collisionRegionMax) {
-          continue;
-        }
-        compatTopSP.push_back(spT.get());
+    for (; !(topSpIt == tEnd); topSpIt++){
+      float rT     = (*topSpIt)->radius();
+      float deltaR = rT - rM;
+      // this condition is the opposite of the condition for bottom SP
+      if (deltaR < m_config.deltaRMin) {
+        continue;
       }
+      if (deltaR > m_config.deltaRMax) {
+        break;
+      }
+
+      float cotTheta = ((*topSpIt)->z() - zM) / deltaR;
+      if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+        continue;
+      }
+      float zOrigin = zM - rM * cotTheta;
+      if (zOrigin < m_config.collisionRegionMin
+          || zOrigin > m_config.collisionRegionMax) {
+        continue;
+      }
+      compatTopSP.push_back((*topSpIt).get());
     }
     if (compatTopSP.empty()) {
       continue;
@@ -349,8 +253,9 @@ void Seedfinder<external_spacepoint_t>::createSeedsForRegion(
       }
     }
     m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM,
-                                              state.outputVec[it.outputIndex]);
+                                              outputVec);
   }
+  return outputVec;
 }
 
 template <typename external_spacepoint_t>

@@ -50,35 +50,19 @@ class Seedfinder {
       const Seedfinder<external_spacepoint_t>&) = delete;
   //@}
 
-  /// @brief Create a new space point grid, fill all space points from input
-  /// parameter
-  /// into the grid and save grid in the state.
-  /// @param spBegin begin iterator to retrieve all input space points
-  /// @param spEnd end iterator where to stop adding space points
-  /// @param covTool covariance tool which is applied to each space point
-  /// @param bottomBinFinder IBinFinder tool to store in the returned state
-  /// @param topBinFinder IBinFinder tool to store in the returned state
-  /// @return the state object containing all space points and container for
-  /// found seeds
-  template <typename spacepoint_iterator_t>
-  Acts::SeedfinderState<external_spacepoint_t> initState(
-      spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-      std::function<Acts::Vector2D(const external_spacepoint_t&, float, float,
-                                   float)>
-          covTool,
-      std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> bottomBinFinder,
-      std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder)
-      const;
-
-  /// Create all seeds from the grid bin referenced by "it"
-  /// This method can be called in parallel.
-  /// @param it caches and updates the current space point and its
-  /// neighbors. Iterator must be separate object for each parallel call.
-  /// @param state the state object in which all found seeds are stored.
-  /// state object can be shared between all parallel calls
-  void createSeedsForRegion(
-      SeedfinderStateIterator<external_spacepoint_t> it,
-      Acts::SeedfinderState<external_spacepoint_t>& state) const;
+  /// Create all seeds from the space points in the three iterators.
+  /// Can be used to parallelize the seed creation
+  /// @param bottom group of space points to be used as innermost SP in a seed.
+  /// @param middle group of space points to be used as middle SP in a seed.
+  /// @param top group of space points to be used as outermost SP in a seed.
+  /// Iterators must be separate objects for each parallel call.
+  /// @return vector in which all found seeds for this group are stored.
+  template<typename internal_sp_iterator_t> 
+  std::vector<Seed<external_spacepoint_t>>
+  createSeedsForGroup(
+      std::pair<internal_sp_iterator_t, internal_sp_iterator_t> bottom,
+      std::pair<internal_sp_iterator_t, internal_sp_iterator_t> middle,
+      std::pair<internal_sp_iterator_t, internal_sp_iterator_t> top) const;
 
  private:
   void transformCoordinates(

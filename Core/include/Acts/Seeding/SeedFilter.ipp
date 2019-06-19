@@ -10,23 +10,29 @@
 
 namespace Acts {
 // constructor
-template <typename SpacePoint>
-SeedFilter<SpacePoint>::SeedFilter(
-    SeedFilterConfig config, IExperimentCuts<SpacePoint>* expCuts /* = 0*/)
-    : m_cfg(config), m_experimentCuts(expCuts) {}
+template <typename external_spacepoint_t>
+SeedFilter<external_spacepoint_t>::SeedFilter(
+    SeedFilterConfig             config,
+    IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
+  : m_cfg(config), m_experimentCuts(expCuts)
+{
+}
 
 // function to filter seeds based on all seeds with same bottom- and
 // middle-spacepoint.
 // return vector must contain weight of each seed
-template <typename SpacePoint>
-std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-SeedFilter<SpacePoint>::filterSeeds_2SpFixed(
-    const InternalSpacePoint<SpacePoint>& bottomSP,
-    const InternalSpacePoint<SpacePoint>& middleSP,
-    std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
-    std::vector<float>& invHelixDiameterVec,
-    std::vector<float>& impactParametersVec, float zOrigin) const {
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+template <typename external_spacepoint_t>
+std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
+    const InternalSpacePoint<external_spacepoint_t>&               bottomSP,
+    const InternalSpacePoint<external_spacepoint_t>&               middleSP,
+    std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+    std::vector<float>&                                 invHelixDiameterVec,
+    std::vector<float>&                                 impactParametersVec,
+    float                                               zOrigin) const
+{
+
+  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       selectedSeeds;
 
   for (size_t i = 0; i < topSpVec.size(); i++) {
@@ -90,26 +96,33 @@ SeedFilter<SpacePoint>::filterSeeds_2SpFixed(
       }
     }
     selectedSeeds.push_back(
-        std::make_pair(weight, std::make_unique<const InternalSeed<SpacePoint>>(
-                                   bottomSP, middleSP, *topSpVec[i], zOrigin)));
+        std::make_pair(weight,
+                       std::make_unique<const InternalSeed<external_spacepoint_t>>(
+                           bottomSP, middleSP, *topSpVec[i], zOrigin)));
   }
   return selectedSeeds;
 }
 
 // after creating all seeds with a common middle space point, filter again
-template <typename SpacePoint>
-void SeedFilter<SpacePoint>::filterSeeds_1SpFixed(
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<SpacePoint>>>>& seedsPerSpM,
-    std::vector<std::unique_ptr<Seed<SpacePoint>>>& outVec) const {
+template <typename external_spacepoint_t>
+void
+SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+    std::vector<std::pair<float,
+                          std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+                                                    seedsPerSpM,
+    std::vector<Seed<external_spacepoint_t>>& outVec) const
+{
+
   // sort by weight and iterate only up to configured max number of seeds per
   // middle SP
   std::sort(
-      (seedsPerSpM.begin()), (seedsPerSpM.end()),
-      [](const std::pair<
-             float, std::unique_ptr<const Acts::InternalSeed<SpacePoint>>>& i1,
+      (seedsPerSpM.begin()),
+      (seedsPerSpM.end()),
+      [](const std::pair<float,
+                         std::unique_ptr<const Acts::InternalSeed<external_spacepoint_t>>>&
+             i1,
          const std::pair<float,
-                         std::unique_ptr<const Acts::InternalSeed<SpacePoint>>>&
+                         std::unique_ptr<const Acts::InternalSeed<external_spacepoint_t>>>&
              i2) { return i1.first > i2.first; });
   if (m_experimentCuts != nullptr) {
     seedsPerSpM = m_experimentCuts->cutPerMiddleSP(std::move(seedsPerSpM));
@@ -124,9 +137,10 @@ void SeedFilter<SpacePoint>::filterSeeds_1SpFixed(
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
   for (; it < itBegin + maxSeeds; ++it) {
-    outVec.push_back(std::make_unique<Seed<SpacePoint>>(
-        (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
-        (*it).second->sp[2]->sp(), (*it).second->z()));
+    outVec.push_back(Seed<external_spacepoint_t>((*it).second->sp[0]->sp(),
+                                                 (*it).second->sp[1]->sp(),
+                                                 (*it).second->sp[2]->sp(),
+                                                 (*it).second->z()));
   }
 }
 

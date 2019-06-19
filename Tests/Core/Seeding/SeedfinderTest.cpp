@@ -11,6 +11,9 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/Seed.hpp"
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
@@ -86,6 +89,8 @@ int main() {
   config.beamPos = {-.5, -.5};
   config.impactMax = 10.;
 
+
+
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
@@ -101,26 +106,52 @@ int main() {
     return {sp.covr, sp.covz};
   };
 
-  Acts::SeedfinderState<SpacePoint> state = a.initState(
-      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder);
+  // setup spacepoint grid config
+  Acts::SpacePointGridConfig gridConf;
+  gridConf.bFieldInZ   = config.bFieldInZ;
+  gridConf.minPt       = config.minPt;
+  gridConf.rMax        = config.rMax;
+  gridConf.zMax        = config.zMax;
+  gridConf.zMin        = config.zMin;
+  gridConf.deltaRMax   = config.deltaRMax;
+  gridConf.cotThetaMax = config.cotThetaMax;
+  // create grid with bin sizes according to the configured geometry
+  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid
+      = Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+      spVec.begin(),
+      spVec.end(),
+      ct,
+      bottomBinFinder,
+      topBinFinder,
+      std::move(grid),
+      config);
+
+  std::vector<std::vector<Acts::Seed<SpacePoint> > > seedVector;
   auto start = std::chrono::system_clock::now();
-  for (Acts::SeedfinderStateIterator<SpacePoint> it = state.begin();
-       !(it == state.end()); ++it) {
-    a.createSeedsForRegion(it, state);
+  auto groupIt = spGroup.begin();
+  auto endOfGroups = spGroup.end();
+  for (;
+       !(groupIt == endOfGroups);
+       ++groupIt) {
+
+    seedVector.push_back(a.createSeedsForGroup(std::make_pair(groupIt.bottomBegin(), groupIt.bottomEnd()),
+                                               std::make_pair(groupIt.middleBegin(), groupIt.middleEnd()),
+                                               std::make_pair(groupIt.topBegin(), groupIt.topEnd())));
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
-  std::cout << "Number of regions: " << state.outputVec.size() << std::endl;
+  std::cout << "Number of regions: " << seedVector.size() << std::endl;
   int numSeeds = 0;
-  for (auto& outVec : state.outputVec) {
+  for (auto& outVec : seedVector) {
     numSeeds += outVec.size();
   }
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
-  for (auto& regionVec : state.outputVec) {
+  for (auto& regionVec : seedVector) {
     for (size_t i = 0; i < regionVec.size(); i++) {
-      const Acts::Seed<SpacePoint>* seed = regionVec[i].get();
-      const SpacePoint* sp = seed->sp()[0];
+      const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+      const SpacePoint*             sp   = seed->sp()[0];
       std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                 << ") ";
       sp = seed->sp()[1];
