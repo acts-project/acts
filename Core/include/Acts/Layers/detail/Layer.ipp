@@ -213,11 +213,11 @@ Layer::compatibleSurfaces(const GeometryContext& gctx,
     // get the canditates
     std::vector<const Surface*> sensitiveSurfaces
         = m_surfaceArray->neighbors(position);
-    
-    sensitiveSurfaces.erase( std::unique( sensitiveSurfaces.begin(), 
-                                          sensitiveSurfaces.end() ), 
-                                          sensitiveSurfaces.end() );
-    
+
+    sensitiveSurfaces.erase(
+        std::unique(sensitiveSurfaces.begin(), sensitiveSurfaces.end()),
+        sensitiveSurfaces.end());
+
     // loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected
