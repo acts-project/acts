@@ -129,7 +129,7 @@ def main():
 
     raw = """// This file is part of the Acts project.
 //
-// Copyright (C) {year} CERN for the benefit of the Acts project
+// Copyright (C) {year} Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -137,13 +137,13 @@ def main():
 
     reg = (
         r"\A// This file is part of the Acts project.\n"
-        + r"//\n"
-        + r"// Copyright \(C\) (?P<year>.*) CERN for the benefit of the Acts project\n"
-        + r"//\n"
-        + r"// This Source Code Form is subject to the terms of the Mozilla Public\n"
-        + r"// License, v\. 2\.0\. If a copy of the MPL was not distributed with this\n"
-        + r"// file, You can obtain one at http://mozilla.org/MPL/2.0/.\Z"
-    )
+        +r"//\n"
+        +r"// Copyright \(C\) (?P<year>.*) Acts project team\n"
+        +r"//\n"
+        +r"// This Source Code Form is subject to the terms of the Mozilla Public\n"
+        +r"// License, v\. 2\.0\. If a copy of the MPL was not distributed with this\n"
+        +r"// file, You can obtain one at http://mozilla.org/MPL/2.0/.\Z"
+        )
 
     ref = re.compile(reg, re.M)
     clean_re = re.compile(r"(\(C\)) (.*) (Acts)", re.M)
