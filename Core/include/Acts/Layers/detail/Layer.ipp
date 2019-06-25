@@ -101,17 +101,17 @@ Layer::compatibleSurfaces(const GeometryContext& gctx,
                           const options_t&       options,
                           const corrector_t&     corrfnc) const
 {
-  // the list of valid intersection
+  // The list of valid intersection
   std::vector<SurfaceIntersection> sIntersections;
-  // remember the surfaces for duplicate removal
+  // Remember the surfaces for duplicate removal
   std::map<const Surface*, bool> accepted;
 
-  // fast exit - there is nothing to
+  // Fast exit - there is nothing to
   if (!m_surfaceArray || !m_approachDescriptor || !options.navDir) {
     return sIntersections;
   }
 
-  // reserve a few bins
+  // Seserve a few bins
   sIntersections.reserve(20);
 
   // (0) End surface check
@@ -211,8 +211,13 @@ Layer::compatibleSurfaces(const GeometryContext& gctx,
   if (m_surfaceArray && (options.resolveMaterial || options.resolvePassive
                          || options.resolveSensitive)) {
     // get the canditates
-    const std::vector<const Surface*>& sensitiveSurfaces
+    std::vector<const Surface*> sensitiveSurfaces
         = m_surfaceArray->neighbors(position);
+
+    sensitiveSurfaces.erase(
+        std::unique(sensitiveSurfaces.begin(), sensitiveSurfaces.end()),
+        sensitiveSurfaces.end());
+
     // loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected
@@ -233,7 +238,6 @@ Layer::compatibleSurfaces(const GeometryContext& gctx,
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
   }
-
   return sIntersections;
 }
 
