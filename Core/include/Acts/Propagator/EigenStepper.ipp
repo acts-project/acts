@@ -258,6 +258,7 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
 
   double stepSizeScaling;
 
+  unsigned int stepAttempts = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (!tryRungeKuttaStep(state.stepping.stepSize)) {
@@ -270,6 +271,14 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
       break;
     }
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
+
+    // @HOTFIX to break the RK step trying, @TODO will be replaced
+    // by proper overstepping mechanism
+    if (++stepAttempts == 100) {
+      // step in mm steps, costly but should do
+      state.stepping.stepSize = state.stepping.navDir * 1. * Acts::units::_mm;
+      break;
+    }
 
     // If step size becomes too small the particle remains at the initial
     // place
