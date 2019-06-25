@@ -205,6 +205,8 @@ template <typename B, typename C, typename E, typename A>
 template <typename propagator_state_t>
 Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
     propagator_state_t& state) const {
+  using namespace Acts::UnitLiterals;
+
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
   double error_estimate = 0.;
@@ -276,7 +278,7 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
     // by proper overstepping mechanism
     if (++stepAttempts == 100) {
       // step in mm steps, costly but should do
-      state.stepping.stepSize = state.stepping.navDir * 1. * Acts::units::_mm;
+      state.stepping.stepSize = state.stepping.navDir * 1_mm;
       break;
     }
 
