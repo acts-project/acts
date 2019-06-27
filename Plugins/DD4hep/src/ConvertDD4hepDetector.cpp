@@ -301,9 +301,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           "Beampipe has wrong shape - needs to be TGeoTubeSeg!");
     }
     // get the dimension of TGeo and convert lengths
-    double rMin = tube->GetRmin() * UnitConstants::cm + layerEnvelopeR;
-    double rMax = tube->GetRmax() * UnitConstants::cm - layerEnvelopeR;
-    double halfZ = tube->GetDz() * UnitConstants::cm - layerEnvelopeZ;
+    double rMin = tube->GetRmin() * UnitConstants::cm - layerEnvelopeR;
+    double rMax = tube->GetRmax() * UnitConstants::cm + layerEnvelopeR;
+    double halfZ = tube->GetDz() * UnitConstants::cm + layerEnvelopeZ;
     ACTS_VERBOSE(
         "[V] Extracting cylindrical volume bounds ( rmin / rmax / "
         "halfZ )=  ( "
