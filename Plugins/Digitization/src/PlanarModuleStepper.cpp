@@ -45,7 +45,7 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&    gctx,
   for (auto& sSurface : stepSurfaces) {
     // try it out by intersecting, but do not force the direction
     Acts::Intersection sIntersection = sSurface->intersectionEstimate(
-        gctx, startPoint, trackDirection, forward, true);
+        gctx, startPoint, trackDirection, anyDirection, true);
     if (sIntersection.valid) {
       // now record
       stepIntersections.push_back(sIntersection);
