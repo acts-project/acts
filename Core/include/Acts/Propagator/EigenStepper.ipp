@@ -205,6 +205,8 @@ template <typename B, typename C, typename E, typename A>
 template <typename propagator_state_t>
 Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
     propagator_state_t& state) const {
+  using namespace Acts::UnitLiterals;
+
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
   double error_estimate = 0.;
@@ -258,6 +260,7 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
 
   double stepSizeScaling;
 
+  unsigned int stepAttempts = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (!tryRungeKuttaStep(state.stepping.stepSize)) {
@@ -270,6 +273,14 @@ Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
       break;
     }
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
+
+    // @HOTFIX to break the RK step trying, @TODO will be replaced
+    // by proper overstepping mechanism
+    if (++stepAttempts == 100) {
+      // step in mm steps, costly but should do
+      state.stepping.stepSize = state.stepping.navDir * 1_mm;
+      break;
+    }
 
     // If step size becomes too small the particle remains at the initial
     // place
