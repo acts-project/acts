@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,6 +31,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
@@ -47,7 +48,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 ///
 struct EndOfWorld {
   /// Maximum value in x-direction of the detector
-  double maxX = 1. * units::_m;
+  double maxX = 1_m;
 
   /// @brief Constructor
   EndOfWorld() = default;
@@ -63,8 +64,8 @@ struct EndOfWorld {
   bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
-        std::abs(stepper.position(state.stepping).y()) >= 0.5 * units::_m ||
-        std::abs(stepper.position(state.stepping).z()) >= 0.5 * units::_m)
+        std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
+        std::abs(stepper.position(state.stepping).z()) >= 0.5_m)
       return true;
     return false;
   }
@@ -117,12 +118,12 @@ struct StepCollector {
 BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::VolumeConfig vConf;
-  vConf.position = {0.5 * units::_m, 0., 0.};
-  vConf.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+  vConf.position = {0.5_m, 0., 0.};
+  vConf.length = {1_m, 1_m, 1_m};
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
-  conf.position = {0.5 * units::_m, 0., 0.};
-  conf.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+  conf.position = {0.5_m, 0., 0.};
+  conf.length = {1_m, 1_m, 1_m};
 
   // Build detector
   cvb.setConfig(conf);
@@ -144,9 +145,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   auto covPtr = std::make_unique<const Covariance>(cov);
-  Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+  Vector3D startParams(0., 0., 0.), startMom(1_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
-      std::move(covPtr), startParams, startMom, 1.);
+      std::move(covPtr), startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
-  propOpts.maxStepSize = 0.5 * units::_m;
+  propOpts.maxStepSize = 0.5_m;
 
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));
@@ -182,13 +183,13 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Check that the propagation happend without interactions
   for (const auto& pos : stepResult.position) {
-    CHECK_SMALL(pos.y(), 1. * units::_um);
-    CHECK_SMALL(pos.z(), 1. * units::_um);
+    CHECK_SMALL(pos.y(), 1_um);
+    CHECK_SMALL(pos.z(), 1_um);
     if (pos == stepResult.position.back())
-      CHECK_CLOSE_ABS(pos.x(), 1. * units::_m, 1. * units::_um);
+      CHECK_CLOSE_ABS(pos.x(), 1_m, 1_um);
   }
   for (const auto& mom : stepResult.momentum) {
-    CHECK_CLOSE_ABS(mom, startMom, 1. * units::_keV);
+    CHECK_CLOSE_ABS(mom, startMom, 1_keV);
   }
 
   // Rebuild and check the choice of extension
@@ -200,7 +201,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOptsDef.actionList = aListDef;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
-  propOptsDef.maxStepSize = 0.5 * units::_m;
+  propOptsDef.maxStepSize = 0.5_m;
 
   EigenStepper<ConstantBField, VoidIntersectionCorrector,
                StepperExtensionList<DefaultExtension>>
@@ -219,27 +220,25 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // If chosen correctly, the number of elements should be identical
   BOOST_TEST(stepResult.position.size() == stepResultDef.position.size());
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    CHECK_CLOSE_ABS(stepResult.position[i], stepResultDef.position[i],
-                    1. * units::_um);
+    CHECK_CLOSE_ABS(stepResult.position[i], stepResultDef.position[i], 1_um);
   }
   BOOST_TEST(stepResult.momentum.size() == stepResultDef.momentum.size());
   for (unsigned int i = 0; i < stepResult.momentum.size(); i++) {
-    CHECK_CLOSE_ABS(stepResult.momentum[i], stepResultDef.momentum[i],
-                    1. * units::_keV);
+    CHECK_CLOSE_ABS(stepResult.momentum[i], stepResultDef.momentum[i], 1_keV);
   }
 }
 // Test case b). The DefaultExtension should state that it is invalid here.
 BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::VolumeConfig vConf;
-  vConf.position = {0.5 * units::_m, 0., 0.};
-  vConf.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+  vConf.position = {0.5_m, 0., 0.};
+  vConf.length = {1_m, 1_m, 1_m};
   vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(352.8, 394.133, 9.012, 4., 1.848e-3));
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
-  conf.position = {0.5 * units::_m, 0., 0.};
-  conf.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+  conf.position = {0.5_m, 0., 0.};
+  conf.length = {1_m, 1_m, 1_m};
 
   // Build detector
   cvb.setConfig(conf);
@@ -261,9 +260,9 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   auto covPtr = std::make_unique<const Covariance>(cov);
-  Vector3D startParams(0., 0., 0.), startMom(5. * units::_GeV, 0., 0.);
+  Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
-      std::move(covPtr), startParams, startMom, 1.);
+      std::move(covPtr), startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -276,7 +275,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
-  propOpts.maxStepSize = 0.5 * units::_m;
+  propOpts.maxStepSize = 0.5_m;
   propOpts.debug = true;
 
   // Build stepper and propagator
@@ -300,21 +299,21 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Check that there occured interaction
   for (const auto& pos : stepResult.position) {
-    CHECK_SMALL(pos.y(), 1. * units::_um);
-    CHECK_SMALL(pos.z(), 1. * units::_um);
+    CHECK_SMALL(pos.y(), 1_um);
+    CHECK_SMALL(pos.z(), 1_um);
     if (pos == stepResult.position.front()) {
-      CHECK_SMALL(pos.x(), 1. * units::_um);
+      CHECK_SMALL(pos.x(), 1_um);
     } else {
-      BOOST_CHECK_GT(std::abs(pos.x()), 1. * units::_um);
+      BOOST_CHECK_GT(std::abs(pos.x()), 1_um);
     }
   }
   for (const auto& mom : stepResult.momentum) {
-    CHECK_SMALL(mom.y(), 1. * units::_keV);
-    CHECK_SMALL(mom.z(), 1. * units::_keV);
+    CHECK_SMALL(mom.y(), 1_keV);
+    CHECK_SMALL(mom.z(), 1_keV);
     if (mom == stepResult.momentum.front()) {
-      CHECK_CLOSE_ABS(mom.x(), 5. * units::_GeV, 1. * units::_keV);
+      CHECK_CLOSE_ABS(mom.x(), 5_GeV, 1_keV);
     } else {
-      BOOST_CHECK_LT(mom.x(), 5. * units::_GeV);
+      BOOST_CHECK_LT(mom.x(), 5_GeV);
     }
   }
 
@@ -326,7 +325,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 100;
-  propOptsDense.maxStepSize = 0.5 * units::_m;
+  propOptsDense.maxStepSize = 0.5_m;
   propOptsDense.debug = true;
 
   // Build stepper and propagator
@@ -347,19 +346,17 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // If chosen correctly, the number of elements should be identical
   BOOST_TEST(stepResult.position.size() == stepResultDense.position.size());
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    CHECK_CLOSE_ABS(stepResult.position[i], stepResultDense.position[i],
-                    1. * units::_um);
+    CHECK_CLOSE_ABS(stepResult.position[i], stepResultDense.position[i], 1_um);
   }
   BOOST_TEST(stepResult.momentum.size() == stepResultDense.momentum.size());
   for (unsigned int i = 0; i < stepResult.momentum.size(); i++) {
-    CHECK_CLOSE_ABS(stepResult.momentum[i], stepResultDense.momentum[i],
-                    1. * units::_keV);
+    CHECK_CLOSE_ABS(stepResult.momentum[i], stepResultDense.momentum[i], 1_keV);
   }
 
   ////////////////////////////////////////////////////////////////////
 
   // Re-launch the configuration with magnetic field
-  bField.setField(0., 1. * units::_T, 0.);
+  bField.setField(0., 1_T, 0.);
   EigenStepper<
       ConstantBField, VoidIntersectionCorrector,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
@@ -379,19 +376,19 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Check that there occured interaction
   for (const auto& pos : stepResultB.position) {
     if (pos == stepResultB.position.front()) {
-      CHECK_SMALL(pos, 1. * units::_um);
+      CHECK_SMALL(pos, 1_um);
     } else {
-      BOOST_CHECK_GT(std::abs(pos.x()), 1. * units::_um);
-      CHECK_SMALL(pos.y(), 1. * units::_um);
-      BOOST_CHECK_GT(std::abs(pos.z()), 1. * units::_um);
+      BOOST_CHECK_GT(std::abs(pos.x()), 1_um);
+      CHECK_SMALL(pos.y(), 1_um);
+      BOOST_CHECK_GT(std::abs(pos.z()), 1_um);
     }
   }
   for (const auto& mom : stepResultB.momentum) {
     if (mom == stepResultB.momentum.front()) {
-      CHECK_CLOSE_ABS(mom, startMom, 1. * units::_keV);
+      CHECK_CLOSE_ABS(mom, startMom, 1_keV);
     } else {
-      BOOST_CHECK_NE(mom.x(), 5. * units::_GeV);
-      CHECK_SMALL(mom.y(), 1. * units::_keV);
+      BOOST_CHECK_NE(mom.x(), 5_GeV);
+      CHECK_SMALL(mom.y(), 1_keV);
       BOOST_CHECK_NE(mom.z(), 0.);
     }
   }
@@ -400,23 +397,23 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::VolumeConfig vConfVac1;
-  vConfVac1.position = {0.5 * units::_m, 0., 0.};
-  vConfVac1.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+  vConfVac1.position = {0.5_m, 0., 0.};
+  vConfVac1.length = {1_m, 1_m, 1_m};
   vConfVac1.name = "First vacuum volume";
   CuboidVolumeBuilder::VolumeConfig vConfMat;
-  vConfMat.position = {1.5 * units::_m, 0., 0.};
-  vConfMat.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+  vConfMat.position = {1.5_m, 0., 0.};
+  vConfMat.length = {1_m, 1_m, 1_m};
   vConfMat.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(352.8, 394.133, 9.012, 4., 1.848e-3));
   vConfMat.name = "Material volume";
   CuboidVolumeBuilder::VolumeConfig vConfVac2;
-  vConfVac2.position = {2.5 * units::_m, 0., 0.};
-  vConfVac2.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+  vConfVac2.position = {2.5_m, 0., 0.};
+  vConfVac2.length = {1_m, 1_m, 1_m};
   vConfVac2.name = "Second vacuum volume";
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg = {vConfVac1, vConfMat, vConfVac2};
-  conf.position = {1.5 * units::_m, 0., 0.};
-  conf.length = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+  conf.position = {1.5_m, 0., 0.};
+  conf.length = {3_m, 1_m, 1_m};
 
   // Build detector
   cvb.setConfig(conf);
@@ -437,14 +434,14 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   auto covPtr = std::make_unique<const Covariance>(cov);
-  Vector3D startParams(0., 0., 0.), startMom(5. * units::_GeV, 0., 0.);
+  Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
-      std::move(covPtr), startParams, startMom, 1.);
+      std::move(covPtr), startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
   AbortList<EndOfWorld> abortList;
-  abortList.get<EndOfWorld>().maxX = 3. * units::_m;
+  abortList.get<EndOfWorld>().maxX = 3_m;
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
@@ -453,10 +450,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
-  propOpts.maxStepSize = 0.5 * units::_m;
+  propOpts.maxStepSize = 0.5_m;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3D(0., 1. * units::_T, 0.));
+  ConstantBField bField(Vector3D(0., 1_T, 0.));
   EigenStepper<
       ConstantBField, VoidIntersectionCorrector,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
@@ -479,27 +476,26 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Collect boundaries
   std::vector<Surface const*> surs;
   std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-      boundaries =
-          det->lowestTrackingVolume(tgContext, {0.5 * units::_m, 0., 0.})
-              ->boundarySurfaces();
+      boundaries = det->lowestTrackingVolume(tgContext, {0.5_m, 0., 0.})
+                       ->boundarySurfaces();
   for (auto& b : boundaries) {
-    if (b->surfaceRepresentation().center(tgContext).x() == 1. * units::_m) {
+    if (b->surfaceRepresentation().center(tgContext).x() == 1_m) {
       surs.push_back(&(b->surfaceRepresentation()));
       break;
     }
   }
-  boundaries = det->lowestTrackingVolume(tgContext, {1.5 * units::_m, 0., 0.})
-                   ->boundarySurfaces();
+  boundaries =
+      det->lowestTrackingVolume(tgContext, {1.5_m, 0., 0.})->boundarySurfaces();
   for (auto& b : boundaries) {
-    if (b->surfaceRepresentation().center(tgContext).x() == 2. * units::_m) {
+    if (b->surfaceRepresentation().center(tgContext).x() == 2_m) {
       surs.push_back(&(b->surfaceRepresentation()));
       break;
     }
   }
-  boundaries = det->lowestTrackingVolume(tgContext, {2.5 * units::_m, 0., 0.})
-                   ->boundarySurfaces();
+  boundaries =
+      det->lowestTrackingVolume(tgContext, {2.5_m, 0., 0.})->boundarySurfaces();
   for (auto& b : boundaries) {
-    if (b->surfaceRepresentation().center(tgContext).x() == 3. * units::_m) {
+    if (b->surfaceRepresentation().center(tgContext).x() == 3_m) {
       surs.push_back(&(b->surfaceRepresentation()));
       break;
     }
@@ -511,11 +507,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
       propOptsDef(tgContext, mfContext);
-  abortList.get<EndOfWorld>().maxX = 1. * units::_m;
+  abortList.get<EndOfWorld>().maxX = 1_m;
   propOptsDef.actionList = aListDef;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
-  propOptsDef.maxStepSize = 0.5 * units::_m;
+  propOptsDef.maxStepSize = 0.5_m;
 
   // Build stepper and propagator
   EigenStepper<ConstantBField, VoidIntersectionCorrector,
@@ -535,22 +531,22 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Check the exit situation of the first volume
   std::pair<Vector3D, Vector3D> endParams, endParamsControl;
   for (unsigned int i = 0; i < stepResultDef.position.size(); i++) {
-    if (1. * units::_m - stepResultDef.position[i].x() < 1e-4) {
+    if (1_m - stepResultDef.position[i].x() < 1e-4) {
       endParams =
           std::make_pair(stepResultDef.position[i], stepResultDef.momentum[i]);
       break;
     }
   }
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    if (1. * units::_m - stepResult.position[i].x() < 1e-4) {
+    if (1_m - stepResult.position[i].x() < 1e-4) {
       endParamsControl =
           std::make_pair(stepResult.position[i], stepResult.momentum[i]);
       break;
     }
   }
 
-  CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1. * units::_um);
-  CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1. * units::_um);
+  CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1_um);
+  CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1_um);
 
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
@@ -559,17 +555,17 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   startParams = endParams.first;
   startMom = endParams.second;
   SingleCurvilinearTrackParameters<ChargedPolicy> sbtpPiecewise(
-      std::move(covPtr), startParams, startMom, 1.);
+      std::move(covPtr), startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
       propOptsDense(tgContext, mfContext);
-  abortList.get<EndOfWorld>().maxX = 2. * units::_m;
+  abortList.get<EndOfWorld>().maxX = 2_m;
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 100;
-  propOptsDense.maxStepSize = 0.5 * units::_m;
+  propOptsDense.maxStepSize = 0.5_m;
   propOptsDense.tolerance = 1e-8;
 
   // Build stepper and propagator
@@ -589,22 +585,22 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   // Check the exit situation of the second volume
   for (unsigned int i = 0; i < stepResultDense.position.size(); i++) {
-    if (2. * units::_m - stepResultDense.position[i].x() < 1e-4) {
+    if (2_m - stepResultDense.position[i].x() < 1e-4) {
       endParams = std::make_pair(stepResultDense.position[i],
                                  stepResultDense.momentum[i]);
       break;
     }
   }
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    if (2. * units::_m - stepResult.position[i].x() < 1e-4) {
+    if (2_m - stepResult.position[i].x() < 1e-4) {
       endParamsControl =
           std::make_pair(stepResult.position[i], stepResult.momentum[i]);
       break;
     }
   }
 
-  CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1. * units::_um);
-  CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1. * units::_um);
+  CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1_um);
+  CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1_um);
 }
 }  // namespace Test
 }  // namespace Acts

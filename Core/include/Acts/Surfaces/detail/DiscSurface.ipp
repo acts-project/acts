@@ -58,14 +58,15 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian.block<3, 1>(0, eLOC_1) =
       lrad * (lcos_phi * rframe.block<3, 1>(0, 1) -
               lsin_phi * rframe.block<3, 1>(0, 0));
+  // the time component
+  jacobian(3, eT) = 1;
   // the momentum components
-  jacobian(3, ePHI) = (-sin_theta) * sin_phi;
-  jacobian(3, eTHETA) = cos_theta * cos_phi;
-  jacobian(4, ePHI) = sin_theta * cos_phi;
-  jacobian(4, eTHETA) = cos_theta * sin_phi;
-  jacobian(5, eTHETA) = (-sin_theta);
-  jacobian(6, eQOP) = 1;
-  jacobian(7, eT) = 1;
+  jacobian(4, ePHI) = (-sin_theta) * sin_phi;
+  jacobian(4, eTHETA) = cos_theta * cos_phi;
+  jacobian(5, ePHI) = sin_theta * cos_phi;
+  jacobian(5, eTHETA) = cos_theta * sin_phi;
+  jacobian(6, eTHETA) = (-sin_theta);
+  jacobian(7, eQOP) = 1;
 }
 
 inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
@@ -94,12 +95,13 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
   auto ly = rframeT.block<1, 3>(1, 0);
   jacobian.block<1, 3>(0, 0) = lcphi * lx + lsphi * ly;
   jacobian.block<1, 3>(1, 0) = (lcphi * ly - lsphi * lx) / lr;
+  // Time element
+  jacobian(eT, 3) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 3) = -sin_phi_over_sin_theta;
-  jacobian(ePHI, 4) = cos_phi_over_sin_theta;
-  jacobian(eTHETA, 5) = -inv_sin_theta;
-  jacobian(eQOP, 6) = 1;
-  jacobian(eT, 7) = 1;
+  jacobian(ePHI, 4) = -sin_phi_over_sin_theta;
+  jacobian(ePHI, 5) = cos_phi_over_sin_theta;
+  jacobian(eTHETA, 6) = -inv_sin_theta;
+  jacobian(eQOP, 7) = 1;
   // return the transposed reference frame
   return rframeT;
 }

@@ -15,88 +15,81 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-using namespace Acts::units;
 namespace utf = boost::unit_test;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 BOOST_AUTO_TEST_SUITE(unit_conversion)
 
 BOOST_AUTO_TEST_CASE(length_conversions) {
-  CHECK_CLOSE_REL(_m, 1e-3 * _km, 1e-15);
-  CHECK_CLOSE_REL(_m, 1e3 * _mm, 1e-15);
-  CHECK_CLOSE_REL(_m, 1e6 * _um, 1e-15);
-  CHECK_CLOSE_REL(_m, 1e9 * _nm, 1e-15);
-  CHECK_CLOSE_REL(_m, 1e12 * _pm, 1e-15);
-  CHECK_CLOSE_REL(_m, 1e15 * _fm, 1e-15);
-}
-
-BOOST_AUTO_TEST_CASE(mass_conversions) {
-  CHECK_CLOSE_REL(_kg, 1e3 * _g, 1e-15);
-  CHECK_CLOSE_REL(_kg, 1e6 * _mg, 1e-15);
-  CHECK_CLOSE_REL(1.660539040e-27 * _kg, _u, 1e-15);
+  CHECK_CLOSE_REL(1_m, 1e-3_km, 1e-15);
+  CHECK_CLOSE_REL(1_m, 1e3_mm, 1e-15);
+  CHECK_CLOSE_REL(1_m, 1e6_um, 1e-15);
+  CHECK_CLOSE_REL(1_m, 1e9_nm, 1e-15);
+  CHECK_CLOSE_REL(1_m, 1e12_pm, 1e-15);
+  CHECK_CLOSE_REL(1_m, 1e15_fm, 1e-15);
 }
 
 BOOST_AUTO_TEST_CASE(time_conversions) {
-  CHECK_CLOSE_REL(_s, 1e3 * _ms, 1e-15);
-  CHECK_CLOSE_REL(3600 * _s, _h, 1e-15);
+  CHECK_CLOSE_REL(1_h, 60_min, 1e-15);
+  CHECK_CLOSE_REL(1_h, 3600_s, 1e-15);
+  CHECK_CLOSE_REL(1_min, 60_s, 1e-15);
+  CHECK_CLOSE_REL(1_s, 1e3_ms, 1e-15);
+  CHECK_CLOSE_REL(1_s, 1e6_us, 1e-15);
+  CHECK_CLOSE_REL(1_s, 1e9_ns, 1e-15);
+  CHECK_CLOSE_REL(1_s, 1e12_ps, 1e-15);
+  CHECK_CLOSE_REL(1_s, 1e15_fs, 1e-15);
+}
+
+BOOST_AUTO_TEST_CASE(angle_conversions) {
+  CHECK_CLOSE_REL(45_degree, M_PI / 4 * 1_rad, 1e-15);
+  CHECK_CLOSE_REL(90_degree, M_PI / 2 * 1_rad, 1e-15);
+  CHECK_CLOSE_REL(180_degree, M_PI * 1_rad, 1e-15);
+  CHECK_CLOSE_REL(360_degree, 2 * M_PI * 1_rad, 1e-15);
+  CHECK_CLOSE_REL(1_mm / 1_m, 1_mrad, 1e-15);
+  CHECK_CLOSE_REL(1_um / 1_mm, 1_mrad, 1e-15);
 }
 
 BOOST_AUTO_TEST_CASE(energy_conversions) {
-  CHECK_CLOSE_REL(_MeV, 1e-3 * _GeV, 1e-15);
-  CHECK_CLOSE_REL(_MeV, 1e-6 * _TeV, 1e-15);
-  CHECK_CLOSE_REL(_MeV, 1e3 * _keV, 1e-15);
-  CHECK_CLOSE_REL(_MeV, 1e6 * _eV, 1e-15);
+  CHECK_CLOSE_REL(1_MeV, 1e6_eV, 1e-15);
+  CHECK_CLOSE_REL(1_MeV, 1e3_keV, 1e-15);
+  CHECK_CLOSE_REL(1_MeV, 1e-3_GeV, 1e-15);
+  CHECK_CLOSE_REL(1_MeV, 1e-6_TeV, 1e-15);
 }
 
-// clang-format off
-BOOST_AUTO_TEST_CASE(si_nat_conversions)
-{
-  CHECK_CLOSE_REL(SI2Nat<ENERGY>(1 * _J), 1. / 1.60217733e-19 * _eV, 1e-8);
-  CHECK_CLOSE_REL(SI2Nat<ENERGY>(1 * _g * _m * _m / (_s * _s)),
-                  1. / 1.60217733e-16 * _eV,
-                  1e-8);
-  CHECK_CLOSE_REL(SI2Nat<ENERGY>(1 * _J), 1. / 1.60217733e-10 * _GeV, 1e-8);
-  CHECK_CLOSE_REL(Nat2SI<ENERGY>(100 * _keV), 1.60217733e-14 * _J, 1e-8);
-  CHECK_CLOSE_REL(Nat2SI<ENERGY>(SI2Nat<ENERGY>(100 * _J)), 100 * _J, 1e-8);
-  CHECK_CLOSE_REL(SI2Nat<ENERGY>(Nat2SI<ENERGY>(57.3 * _MeV)),
-                  57300 * _keV,
-                  1e-8);
-
-  CHECK_CLOSE_REL(SI2Nat<LENGTH>(1 * _m), 5.0677289e15 / _GeV, 1e-8);
-  CHECK_CLOSE_REL(Nat2SI<LENGTH>(1. / (197.3270523 * _MeV)), 1 * _fm, 1e-8);
-  CHECK_CLOSE_REL(Nat2SI<LENGTH>(SI2Nat<LENGTH>(10 * _m)), 1e-2 * _km, 1e-8);
-  CHECK_CLOSE_REL(SI2Nat<LENGTH>(Nat2SI<LENGTH>(1. / _keV)),
-                  1 / (1e-3 * _MeV),
-                  1e-8);
-
-  CHECK_CLOSE_REL(SI2Nat<MOMENTUM>(2 * _g * _m / _s),
-                  3.742313068429198e15 * _GeV,
-                  1e-8);
-  CHECK_CLOSE_REL(Nat2SI<MOMENTUM>(13 * _TeV),
-                  6.947574808569e-15 * _kg * _m / _s,
-                  1e-8);
-  CHECK_CLOSE_REL(Nat2SI<MOMENTUM>(SI2Nat<MOMENTUM>(3.6 * _mg * _km / _h)),
-                  1e-6 * _kg * _m / _s,
-                  1e-8);
-  CHECK_CLOSE_REL(SI2Nat<MOMENTUM>(Nat2SI<MOMENTUM>(6.5 * _GeV)),
-                  6.5e6 * _keV,
-                  1e-8);
-
-  CHECK_CLOSE_REL(SI2Nat<MASS>(1.67262263806e-27 * _kg),
-                  938.2720813 * _MeV,
-                  1e-8);
-  CHECK_CLOSE_REL(Nat2SI<MASS>(125.09 * _GeV), 2.229932766466e-19 * _mg, 1e-8);
-  CHECK_CLOSE_REL(Nat2SI<MASS>(SI2Nat<MASS>(3 * _mg)), 3e-3 * _g, 1e-8);
-  CHECK_CLOSE_REL(SI2Nat<MASS>(Nat2SI<MASS>(1.77 * _GeV)), 1770 * _MeV, 1e-8);
-
-  CHECK_CLOSE_REL(SI2Nat<ENERGY>(_hbar * _c),
-                  0.197327052356 * _fm * _GeV,
-                  1e-8);
-
-  CHECK_CLOSE_REL(Nat2SI<MOMENTUM>(_GeV) / (_el_charge * _C * 2 * _T),
-              10./6. * _m,
-              1e-3);
+BOOST_AUTO_TEST_CASE(mass_conversions) {
+  CHECK_CLOSE_REL(1_kg, 1000_g, 1e-15);
+  CHECK_CLOSE_REL(0.001_kg, 1_g, 1e-15);
 }
-// clang-format on
+
+BOOST_AUTO_TEST_CASE(mass_energy_conversions) {
+  // always assumes c == 1
+  CHECK_CLOSE_REL(1.782662e-36_kg, 1_eV, 1e-15);
+  CHECK_CLOSE_REL(1.782662e-33_kg, 1_keV, 1e-15);
+  CHECK_CLOSE_REL(1.782662e-30_kg, 1_MeV, 1e-15);
+  CHECK_CLOSE_REL(1.782662e-27_kg, 1_GeV, 1e-15);
+  CHECK_CLOSE_REL(1.782662e-33_g, 1_eV, 1e-15);
+  CHECK_CLOSE_REL(1.782662e-30_g, 1_keV, 1e-15);
+  CHECK_CLOSE_REL(1.782662e-27_g, 1_MeV, 1e-15);
+  CHECK_CLOSE_REL(1.782662e-24_g, 1_GeV, 1e-15);
+}
+
+BOOST_AUTO_TEST_CASE(charge_conversions) {
+  CHECK_CLOSE_REL(1_C, 1.602176634e19_e, 1e-15);
+}
+
+BOOST_AUTO_TEST_CASE(magnetic_field_conversions) {
+  CHECK_CLOSE_REL(10_kGauss, 1_T, 1e-15);
+  CHECK_CLOSE_REL(1_kGauss, 1000_Gauss, 1e-15);
+}
+
+BOOST_AUTO_TEST_CASE(momentum_to_radius_conversion) {
+  // note: no conversion factors necessary
+  CHECK_CLOSE_REL(1_GeV / (1_e * 1_T), 3.3336_m, 1e-3);
+  CHECK_CLOSE_REL(1_GeV / (1_e * 2_T), 166.8_cm, 1e-3);
+  CHECK_CLOSE_REL(1_GeV / (2_e * 1_T), 166.8_cm, 1e-3);
+  CHECK_CLOSE_REL(1_GeV / (1_e * 4_T), 83.39_cm, 1e-3);
+  CHECK_CLOSE_REL(1_GeV / (2_e * 2_T), 83.39_cm, 1e-3);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

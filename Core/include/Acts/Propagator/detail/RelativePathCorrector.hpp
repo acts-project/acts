@@ -11,12 +11,12 @@
 #include <limits>
 #include <sstream>
 #include <string>
+
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
-
 namespace detail {
 
 using Cstep = ConstrainedStep;
@@ -37,7 +37,7 @@ struct RelativePathCorrector {
   /// Path length where this corrector is created
   double pathLength = 0.;
   /// Below here do only straight line estimate
-  double straightLineStep = 100 * units::_um;
+  double straightLineStep = 100 * UnitConstants::um;
   /// Step modification factor
   double stepModification = 0.5;
 

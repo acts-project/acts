@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <vector>
+
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -33,7 +34,6 @@
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
-
 namespace Test {
 
 struct CylindricalTrackingGeometry {
@@ -80,6 +80,8 @@ struct CylindricalTrackingGeometry {
 
   // @brief Call operator for the creation method of the tracking geometry
   std::shared_ptr<const TrackingGeometry> operator()() {
+    using namespace Acts::UnitLiterals;
+
     Logging::Level surfaceLLevel = Logging::INFO;
     Logging::Level layerLLevel = Logging::INFO;
     Logging::Level volumeLLevel = Logging::INFO;
@@ -126,7 +128,7 @@ struct CylindricalTrackingGeometry {
     bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
     bpvConfig.volumeName = "BeamPipe";
     bpvConfig.layerBuilder = beamPipeBuilder;
-    bpvConfig.layerEnvelopeR = {1. * units::_mm, 1. * units::_mm};
+    bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
     bpvConfig.buildToRadiusZero = true;
     bpvConfig.volumeSignature = 0;
     auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
@@ -141,8 +143,7 @@ struct CylindricalTrackingGeometry {
     //-------------------------------------------------------------------------------------
     // some prep work for the material
     // Layer material properties - thickness, X0, L0, A, Z, Rho
-    MaterialProperties lProperties(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                   1.5 * units::_mm);
+    MaterialProperties lProperties(95.7, 465.2, 28.03, 14., 2.32e-3, 1.5_mm);
 
     std::shared_ptr<const ISurfaceMaterial> layerMaterialPtr =
         std::shared_ptr<const ISurfaceMaterial>(
@@ -177,8 +178,7 @@ struct CylindricalTrackingGeometry {
                                                        pModuleHalfY[ilp]);
       // Create the module centers
       auto moduleCenters = modulePositionsCylinder(
-          pLayerRadii[ilp], 2. * units::_mm, pModuleHalfY[ilp], 5. * units::_mm,
-          pLayerBinning[ilp]);
+          pLayerRadii[ilp], 2_mm, pModuleHalfY[ilp], 5_mm, pLayerBinning[ilp]);
 
       for (auto& mCenter : moduleCenters) {
         // The association transform

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,9 +38,9 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -64,7 +64,7 @@ using EigenStepper = EigenStepper<BField, StepCorrector>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-const double Bz = 2. * units::_T;
+const double Bz = 2_T;
 BField bField(0, 0, Bz);
 EigenStepper estepper(bField);
 EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
@@ -91,7 +91,7 @@ bool debugModeBwdStep = false;
 /// @param index is the run index from the test
 template <typename propagator_t>
 void runTest(const propagator_t& prop, double pT, double phi, double theta,
-             int charge, int index) {
+             int charge, double time, int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {
@@ -108,7 +108,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q);
+  CurvilinearParameters start(nullptr, pos, mom, q, time);
 
   using DebugOutput = detail::DebugOutputActor;
 
@@ -119,8 +119,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   using Options = PropagatorOptions<ActionListType, AbortListType>;
   Options fwdOptions(tgContext, mfContext);
 
-  fwdOptions.maxStepSize = 25. * units::_cm;
-  fwdOptions.pathLimit = 25 * units::_cm;
+  fwdOptions.maxStepSize = 25_cm;
+  fwdOptions.pathLimit = 25_cm;
   fwdOptions.debug = debugModeFwd;
 
   // get the material collector and configure it
@@ -165,8 +165,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // backward material test
   Options bwdOptions(tgContext, mfContext);
-  bwdOptions.maxStepSize = -25 * units::_cm;
-  bwdOptions.pathLimit = -25 * units::_cm;
+  bwdOptions.maxStepSize = -25_cm;
+  bwdOptions.pathLimit = -25_cm;
   bwdOptions.direction = backward;
   bwdOptions.debug = debugModeBwd;
 
@@ -231,8 +231,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // stepping from one surface to the next
   // now go from surface to surface and check
   Options fwdStepOptions(tgContext, mfContext);
-  fwdStepOptions.maxStepSize = 25. * units::_cm;
-  fwdStepOptions.pathLimit = 25 * units::_cm;
+  fwdStepOptions.maxStepSize = 25_cm;
+  fwdStepOptions.pathLimit = 25_cm;
   fwdStepOptions.debug = debugModeFwdStep;
 
   // get the material collector and configure it
@@ -321,8 +321,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
 
-  bwdStepOptions.maxStepSize = -25 * units::_cm;
-  bwdStepOptions.pathLimit = -25 * units::_cm;
+  bwdStepOptions.maxStepSize = -25_cm;
+  bwdStepOptions.pathLimit = -25_cm;
   bwdStepOptions.direction = backward;
   bwdStepOptions.debug = debugModeBwdStep;
 
@@ -412,8 +412,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 BOOST_DATA_TEST_CASE(
     test_material_collector,
     bdata::random((bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.5 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -423,10 +423,13 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 24,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
-  runTest(epropagator, pT, phi, theta, charge, index);
-  runTest(slpropagator, pT, phi, theta, charge, index);
+    pT, phi, theta, charge, time, index) {
+  runTest(epropagator, pT, phi, theta, charge, time, index);
+  runTest(slpropagator, pT, phi, theta, charge, time, index);
 }
 
 }  // namespace Test

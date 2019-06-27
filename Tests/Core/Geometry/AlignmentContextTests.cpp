@@ -11,6 +11,9 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
+#include <array>
+#include <memory>
+
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -19,11 +22,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include <array>
-#include <memory>
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 /// @class AlignmentContext
@@ -115,13 +116,11 @@ inline double AlignableDetectorElement::thickness() const {
 /// Unit test for creating compliant/non-compliant Surface object
 BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   // The nominal and alingments
-  //
   Vector3D nominalCenter(0., 0., 0.);
   Vector3D negativeCenter(0., 0., -1.);
   Vector3D positiveCenter(0., 0., 1.);
 
   // Checkpoints
-  //
   Vector3D onNominal(3., 3., 0.);
   Vector3D onNegative(3., 3., -1.);
   Vector3D onPositive(3., 3., 1.);
@@ -130,8 +129,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   Vector2D localPosition(3., 3.);
 
   // A position place holder and dymmy momentum
-  //
-  Vector3D globalPosition(100., 100., 100.);
+  Vector3D globalPosition(100_cm, 100_cm, 100_cm);
   Vector3D dummyMomentum(4., 4., 4.);
 
   Transform3D negativeTransform = Transform3D::Identity();
@@ -149,9 +147,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   // The detector element at nominal position
   AlignableDetectorElement alignedElement(
       std::make_shared<const Transform3D>(Transform3D::Identity()),
-      std::make_shared<const RectangleBounds>(100. * units::_cm,
-                                              100. * units::_cm),
-      1. * units::_mm);
+      std::make_shared<const RectangleBounds>(100_cm, 100_cm), 1_mm);
 
   const auto& alignedSurface = alignedElement.surface();
 

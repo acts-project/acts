@@ -29,23 +29,24 @@ class DiamondBounds : public PlanarBounds {
  public:
   /// @enum BoundValues for better readability
   enum BoundValues {
-    bv_minHalfX = 0,
-    bv_medHalfX = 1,
-    bv_maxHalfX = 2,
-    bv_halfY1 = 3,
-    bv_halfY2 = 4,
+    bv_x1 = 0,
+    bv_x2 = 1,
+    bv_x3 = 2,
+    bv_y1 = 3,
+    bv_y2 = 4,
     bv_length = 5
   };
 
   /// Constructor for convex hexagon symmetric about the y axis
   ///
-  /// @param minhalex is the halflength in x at minimal y
-  /// @param medhalex is the halflength in x at y = 0
-  /// @param maxhalex is the halflength in x at maximal y
-  /// @param haley1 is the halflength into y < 0
-  /// @param haley2 is the halflength into y > 0
-  DiamondBounds(double minhalex, double medhalex, double maxhalex,
-                double haley1, double haley2);
+  /// @param x1 is the halflength in x at minimal y
+  /// @param x2 is the halflength in x at y = 0
+  /// @param x3 is the halflength in x at maximal y
+  /// @param y1 is the halflength into y < 0
+  /// @param y2 is the halflength into y > 0
+  ///
+  /// @image html DiamondBounds.svg
+  DiamondBounds(double x1, double x2, double x3, double y1, double y2);
 
   ~DiamondBounds() override;
 
@@ -83,46 +84,46 @@ class DiamondBounds : public PlanarBounds {
 
   /// This method returns the halflength in X at minimal Y
   /// (first coordinate of local surface frame)
-  double minHalflengthX() const;
+  double x1() const;
 
   /// This method returns the (maximal) halflength in X
   /// (first coordinate of local surface frame)
-  double medHalflengthX() const;
+  double x2() const;
 
   /// This method returns the halflength in X at maximal Y
   /// (first coordinate of local surface frame)
-  double maxHalflengthX() const;
+  double x3() const;
 
   /// This method returns the halflength in Y of trapezoid at negative Y
-  double halflengthY1() const;
+  double y1() const;
 
   /// This method returns the halflength in Y of trapezoid at positive Y
-  double halflengthY2() const;
+  double y2() const;
 
  private:
-  double m_minHalfX, m_medHalfX, m_maxHalfX;
-  double m_minY, m_maxY;
+  double m_x1, m_x2, m_x3;
+  double m_y1, m_y2;
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
-inline double DiamondBounds::minHalflengthX() const {
-  return m_minHalfX;
+inline double DiamondBounds::x1() const {
+  return m_x1;
 }
 
-inline double DiamondBounds::medHalflengthX() const {
-  return m_medHalfX;
+inline double DiamondBounds::x2() const {
+  return m_x2;
 }
 
-inline double DiamondBounds::maxHalflengthX() const {
-  return m_maxHalfX;
+inline double DiamondBounds::x3() const {
+  return m_x3;
 }
 
-inline double DiamondBounds::halflengthY1() const {
-  return m_minY;
+inline double DiamondBounds::y1() const {
+  return m_y1;
 }
 
-inline double DiamondBounds::halflengthY2() const {
-  return m_maxY;
+inline double DiamondBounds::y2() const {
+  return m_y2;
 }
 
 }  // namespace Acts

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -41,11 +41,11 @@ class SingleCurvilinearTrackParameters
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(CovPtr_t cov, const ActsVectorD<3>& position,
                                    const ActsVectorD<3>& momentum,
-                                   double dCharge)
+                                   double dCharge, double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2curvilinear(
-                position, momentum, dCharge),
+                position, momentum, dCharge, dTime),
             position, momentum),
         m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum)) {}
 
@@ -59,11 +59,11 @@ class SingleCurvilinearTrackParameters
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(CovPtr_t cov, const ActsVectorD<3>& position,
-                                   const ActsVectorD<3>& momentum)
+                                   const ActsVectorD<3>& momentum, double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
-            detail::coordinate_transformation::global2curvilinear(position,
-                                                                  momentum, 0),
+            detail::coordinate_transformation::global2curvilinear(
+                position, momentum, 0, dTime),
             position, momentum),
         m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum)) {}
 

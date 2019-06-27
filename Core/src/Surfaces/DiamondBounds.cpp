@@ -17,18 +17,16 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::DiamondBounds::DiamondBounds(double minhalex, double medhalex,
-                                   double maxhalex, double haley1,
-                                   double haley2)
-    : m_minHalfX(std::abs(minhalex)),
-      m_medHalfX(std::abs(medhalex)),
-      m_maxHalfX(std::abs(maxhalex)),
-      m_minY(std::abs(haley1)),
-      m_maxY(std::abs(haley2)),
-      m_boundingBox(std::max(std::max(minhalex, medhalex), maxhalex),
-                    std::max(haley1, haley2)) {
-  throw_assert((minhalex <= medhalex), "Hexagon must be a convex polygon");
-  throw_assert((maxhalex <= medhalex), "Hexagon must be a convex polygon");
+Acts::DiamondBounds::DiamondBounds(double x1, double x2, double x3, double y1,
+                                   double y2)
+    : m_x1(std::abs(x1)),
+      m_x2(std::abs(x2)),
+      m_x3(std::abs(x3)),
+      m_y1(std::abs(y1)),
+      m_y2(std::abs(y2)),
+      m_boundingBox(std::max(std::max(x1, x2), x3), std::max(y1, y2)) {
+  throw_assert((x1 <= x2), "Hexagon must be a convex polygon");
+  throw_assert((x3 <= x2), "Hexagon must be a convex polygon");
 }
 
 Acts::DiamondBounds::~DiamondBounds() = default;
@@ -43,11 +41,11 @@ Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
 
 std::vector<TDD_real_t> Acts::DiamondBounds::valueStore() const {
   std::vector<TDD_real_t> values(DiamondBounds::bv_length);
-  values[DiamondBounds::bv_minHalfX] = minHalflengthX();
-  values[DiamondBounds::bv_medHalfX] = medHalflengthX();
-  values[DiamondBounds::bv_maxHalfX] = maxHalflengthX();
-  values[DiamondBounds::bv_halfY1] = halflengthY1();
-  values[DiamondBounds::bv_halfY2] = halflengthY2();
+  values[DiamondBounds::bv_x1] = x1();
+  values[DiamondBounds::bv_x2] = x2();
+  values[DiamondBounds::bv_x3] = x3();
+  values[DiamondBounds::bv_y1] = y1();
+  values[DiamondBounds::bv_y2] = y2();
   return values;
 }
 
@@ -63,12 +61,8 @@ double Acts::DiamondBounds::distanceToBoundary(
 
 std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices() const {
   // vertices starting from lower right in clock-wise order
-  return {{minHalflengthX(), -halflengthY1()},
-          {medHalflengthX(), 0},
-          {maxHalflengthX(), halflengthY2()},
-          {-maxHalflengthX(), halflengthY2()},
-          {-medHalflengthX(), 0},
-          {-minHalflengthX(), -halflengthY1()}};
+  return {{x1(), -y1()}, {x2(), 0},  {x3(), y2()},
+          {-x3(), y2()}, {-x2(), 0}, {-x1(), -y1()}};
 }
 
 const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
@@ -79,11 +73,10 @@ const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
 std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::DiamondBounds:  (minHlengthX, medHlengthX, maxHlengthX, "
-        "hlengthY1, hlengthY2 ) = ";
-  sl << "(" << minHalflengthX() << ", " << medHalflengthX() << ", "
-     << maxHalflengthX() << ", " << halflengthY1() << ", " << halflengthY2()
-     << ")";
+  sl << "Acts::DiamondBounds:  (x1, x2, x3, "
+        "y1, y2 ) = ";
+  sl << "(" << x1() << ", " << x2() << ", " << x3() << ", " << y1() << ", "
+     << y2() << ")";
   sl << std::setprecision(-1);
   return sl;
 }

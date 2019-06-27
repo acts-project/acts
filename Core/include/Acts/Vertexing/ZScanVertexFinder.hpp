@@ -14,11 +14,10 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-
+#include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
 
 namespace Acts {
@@ -32,38 +31,17 @@ namespace Acts {
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 class ZScanVertexFinder {
- private:
-  // functor to compare two unordered_map Key values for equality
-  struct pred_perigee {
-    bool operator()(const BoundParameters& left,
-                    const BoundParameters& right) const {
-      return (left.parameters()[ParID_t::eLOC_D0] ==
-              right.parameters()[ParID_t::eLOC_D0]) &&
-             (left.parameters()[ParID_t::eLOC_Z0] ==
-              right.parameters()[ParID_t::eLOC_Z0]) &&
-             (left.parameters()[ParID_t::ePHI] ==
-              right.parameters()[ParID_t::ePHI]) &&
-             (left.parameters()[ParID_t::eTHETA] ==
-              right.parameters()[ParID_t::eTHETA]) &&
-             (left.parameters()[ParID_t::eQOP] ==
-              right.parameters()[ParID_t::eQOP]);
-    }
-  };
-
-  // functor to hash key for unordered_map
-  struct hash_perigee {
-    size_t operator()(const BoundParameters& perigee) const {
-      return std::hash<double>()(perigee.parameters()[ParID_t::eLOC_D0]) ^
-             std::hash<double>()(perigee.parameters()[ParID_t::eLOC_Z0]) ^
-             std::hash<double>()(perigee.parameters()[ParID_t::ePHI]) ^
-             std::hash<double>()(perigee.parameters()[ParID_t::eTHETA]) ^
-             std::hash<double>()(perigee.parameters()[ParID_t::eQOP]);
-    }
-  };
-
  public:
   /// @struct Config Configuration struct
   struct Config {
+    /// @brief Finder configuration
+    ///
+    /// @param propagatorIn Propagator
+    Config(const propagator_t& propagatorIn) : propagator(propagatorIn) {}
+
+    // Propagator
+    propagator_t propagator;
+
     // TrackToVertexIPEstimator
     TrackToVertexIPEstimator<input_track_t, propagator_t> ipEstimator;
 
@@ -80,26 +58,11 @@ class ZScanVertexFinder {
     // use pt for weighting
     bool usePt = false;
     // minimum pt
-    double minPt = 0.4 * units::_GeV;
+    double minPt = 0.4 * UnitConstants::GeV;
     // exponent used for weighting if usePt
     double expPt = 1.;
-    // cache weights
-    bool cacheWeights = true;
     // minimum required weight
     double minWeight = 0.01;
-  };
-
-  struct State {
-    // Empty vertex collection, to be filled by finder
-    // ZScanVertexFinder always returns only one single seed,
-    // hence this collection will always only be filled with
-    // a single vertex candidate
-    std::vector<Vertex<input_track_t>> vertexCollection;
-
-    // hashtable to avoid computing perigee more than once per track
-    std::unordered_map<BoundParameters, std::pair<double, double>, hash_perigee,
-                       pred_perigee>
-        weightMap;
   };
 
   /// @brief Constructor used if input_track_t type == BoundParameters
@@ -133,16 +96,12 @@ class ZScanVertexFinder {
   /// using a Half Sample Mode algorithm
   ///
   /// @param trackVector Input track collection
-  /// @param state The state object, to be filled with the determined vertex in
-  /// vertexCollection
-  /// @param propagator Propagator
   /// @param vFinderOptions Vertex finder options
   ///
-  /// @return Result void object, empty in case of success,
-  /// otherwise holding error
-  Result<void> find(
-      const std::vector<input_track_t>& trackVector, State& state,
-      const propagator_t& propagator,
+  /// @return Vector of vertices, filled with a single
+  ///         vertex (for consistent interfaces)
+  Result<std::vector<Vertex<input_track_t>>> find(
+      const std::vector<input_track_t>& trackVector,
       const VertexFinderOptions<input_track_t>& vFinderOptions) const;
 
  private:

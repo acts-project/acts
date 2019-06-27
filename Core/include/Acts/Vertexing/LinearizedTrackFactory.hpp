@@ -9,11 +9,10 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 

@@ -29,6 +29,7 @@
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
@@ -40,15 +41,15 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
+std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20 * units::_mm, 20 * units::_mm);
+std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
@@ -56,7 +57,7 @@ std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
 std::uniform_real_distribution<> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
+std::uniform_real_distribution<> resIPDist(0., 100_um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
-    ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+    ConstantBField bField(0.0, 0.0, 1_T);
 
     // Set up Eigenstepper
     EigenStepper<ConstantBField> stepper(bField);
@@ -131,9 +132,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     }
 
     ZScanVertexFinder<ConstantBField, BoundParameters,
-                      Propagator<EigenStepper<ConstantBField>>>::Config cfg;
-    ZScanVertexFinder<ConstantBField, BoundParameters,
-                      Propagator<EigenStepper<ConstantBField>>>::State state;
+                      Propagator<EigenStepper<ConstantBField>>>::Config
+        cfg(propagator);
 
     ZScanVertexFinder<ConstantBField, BoundParameters,
                       Propagator<EigenStepper<ConstantBField>>>
@@ -141,13 +141,14 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracks, state, propagator, vFinderOptions);
+    auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
     if (res.ok()) {
-      Vector3D result = state.vertexCollection[0].position();
-      CHECK_CLOSE_ABS(result[eZ], z, 1 * units::_mm);
+      BOOST_CHECK(!(*res).empty());
+      Vector3D result = (*res).back().position();
+      CHECK_CLOSE_ABS(result[eZ], z, 1_mm);
     }
   }
 }
@@ -179,7 +180,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
-    ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+    ConstantBField bField(0.0, 0.0, 1_T);
 
     // Set up Eigenstepper
     EigenStepper<ConstantBField> stepper(bField);
@@ -233,9 +234,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     }
 
     ZScanVertexFinder<ConstantBField, InputTrack,
-                      Propagator<EigenStepper<ConstantBField>>>::Config cfg;
-    ZScanVertexFinder<ConstantBField, InputTrack,
-                      Propagator<EigenStepper<ConstantBField>>>::State state;
+                      Propagator<EigenStepper<ConstantBField>>>::Config
+        cfg(propagator);
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack
@@ -248,13 +248,14 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracks, state, propagator, vFinderOptions);
+    auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
     if (res.ok()) {
-      Vector3D result = state.vertexCollection[0].position();
-      CHECK_CLOSE_ABS(result[eZ], z, 1 * units::_mm);
+      BOOST_CHECK(!(*res).empty());
+      Vector3D result = (*res).back().position();
+      CHECK_CLOSE_ABS(result[eZ], z, 1_mm);
     }
   }
 }

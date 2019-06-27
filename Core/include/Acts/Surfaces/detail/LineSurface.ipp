@@ -163,22 +163,23 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   const auto rframe = referenceFrame(gctx, gpos, dir);
   // the local error components - given by the reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
+  // the time component
+  jacobian(3, eT) = 1;
   // the momentum components
-  jacobian(3, ePHI) = (-sin_theta) * sin_phi;
-  jacobian(3, eTHETA) = cos_theta * cos_phi;
-  jacobian(4, ePHI) = sin_theta * cos_phi;
-  jacobian(4, eTHETA) = cos_theta * sin_phi;
-  jacobian(5, eTHETA) = (-sin_theta);
-  jacobian(6, eQOP) = 1;
-  jacobian(7, eT) = 1;
+  jacobian(4, ePHI) = (-sin_theta) * sin_phi;
+  jacobian(4, eTHETA) = cos_theta * cos_phi;
+  jacobian(5, ePHI) = sin_theta * cos_phi;
+  jacobian(5, eTHETA) = cos_theta * sin_phi;
+  jacobian(6, eTHETA) = (-sin_theta);
+  jacobian(7, eQOP) = 1;
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / dir.dot(rframe.col(2));
   // build the cross product of d(D)/d(ePHI) components with y axis
-  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(3, ePHI));
+  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, ePHI));
   // and the same for the d(D)/d(eTheta) components
   auto dDThetaY =
-      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(3, eTHETA));
+      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eTHETA));
   // and correct for the x axis components
   dDPhiY -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDPhiY));
   dDThetaY -=
@@ -201,7 +202,7 @@ inline const BoundRowVector LineSurface::derivativeFactors(
   // calculate the s factors for the dependency on X
   const BoundRowVector s_vec = norm_vec * jac.topLeftCorner<3, BoundParsDim>();
   // calculate the d factors for the dependency on Tx
-  const BoundRowVector d_vec = locz * jac.block<3, BoundParsDim>(3, 0);
+  const BoundRowVector d_vec = locz * jac.block<3, BoundParsDim>(4, 0);
   // normalisation of normal & longitudinal components
   double norm = 1. / (1. - long_c * long_c);
   // create a matrix representation
@@ -209,5 +210,5 @@ inline const BoundRowVector LineSurface::derivativeFactors(
   long_mat.colwise() += locz.transpose();
   // build the combined normal & longitudinal components
   return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -
-                                jac.block<3, BoundParsDim>(3, 0))));
+                                jac.block<3, BoundParsDim>(4, 0))));
 }

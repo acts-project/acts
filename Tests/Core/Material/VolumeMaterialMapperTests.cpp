@@ -228,34 +228,36 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
 /// @brief Test case for comparison between the mapped material and the
 /// associated material by propagation
 BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
+  using namespace Acts::UnitLiterals;
+
   // Build a vacuum volume
   CuboidVolumeBuilder::VolumeConfig vCfg1;
-  vCfg1.position = Vector3D(0.5 * units::_m, 0., 0.);
-  vCfg1.length = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
+  vCfg1.position = Vector3D(0.5_m, 0., 0.);
+  vCfg1.length = Vector3D(1_m, 1_m, 1_m);
   vCfg1.name = "Vacuum volume";
   vCfg1.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(352.8, 407., 9.012, 4., 1.848e-3));
 
   // Build a material volume
   CuboidVolumeBuilder::VolumeConfig vCfg2;
-  vCfg2.position = Vector3D(1.5 * units::_m, 0., 0.);
-  vCfg2.length = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
+  vCfg2.position = Vector3D(1.5_m, 0., 0.);
+  vCfg2.length = Vector3D(1_m, 1_m, 1_m);
   vCfg2.name = "First material volume";
   vCfg2.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(95.7, 465.2, 28.03, 14., 2.32e-3));
 
   // Build another material volume with different material
   CuboidVolumeBuilder::VolumeConfig vCfg3;
-  vCfg3.position = Vector3D(2.5 * units::_m, 0., 0.);
-  vCfg3.length = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
+  vCfg3.position = Vector3D(2.5_m, 0., 0.);
+  vCfg3.length = Vector3D(1_m, 1_m, 1_m);
   vCfg3.name = "Second material volume";
   vCfg3.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(352.8, 407., 9.012, 4., 1.848e-3));
 
   // Configure world
   CuboidVolumeBuilder::Config cfg;
-  cfg.position = Vector3D(1.5 * units::_m, 0., 0.);
-  cfg.length = Vector3D(3. * units::_m, 1. * units::_m, 1. * units::_m);
+  cfg.position = Vector3D(1.5_m, 0., 0.);
+  cfg.length = Vector3D(3_m, 1_m, 1_m);
   cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
 
   GeometryContext gc;
@@ -271,15 +273,15 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(gc);
 
   // Set up the grid axes
-  std::array<double, 3> xAxis{0. * units::_m, 3. * units::_m, 7};
-  std::array<double, 3> yAxis{-0.5 * units::_m, 0.5 * units::_m, 7};
-  std::array<double, 3> zAxis{-0.5 * units::_m, 0.5 * units::_m, 7};
+  std::array<double, 3> xAxis{0_m, 3_m, 7};
+  std::array<double, 3> yAxis{-0.5_m, 0.5_m, 7};
+  std::array<double, 3> zAxis{-0.5_m, 0.5_m, 7};
 
   // Set up a random engine for sampling material
   std::random_device rd;
   std::mt19937 gen(42);
-  std::uniform_real_distribution<> disX(0., 3. * units::_m);
-  std::uniform_real_distribution<> disYZ(-0.5 * units::_m, 0.5 * units::_m);
+  std::uniform_real_distribution<> disX(0., 3_m);
+  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
   RecordedMaterial matRecord;
@@ -304,8 +306,9 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   // Set some start parameters
   Vector3D pos(0., 0., 0.);
-  Vector3D mom(1. * units::_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(nullptr, pos, mom);
+  Vector3D mom(1_GeV, 0., 0.);
+  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(nullptr, pos, mom,
+                                                       42_ns);
 
   MagneticFieldContext mc;
 
@@ -313,7 +316,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   PropagatorOptions<ActionList<MaterialCollector>,
                     AbortList<detail::EndOfWorldReached>>
       po(gc, mc);
-  po.maxStepSize = 1. * units::_mm;
+  po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
   const auto& result = prop.propagate(sctp, po).value();
   const MaterialCollector::this_result& stepResult =

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,12 +17,6 @@ namespace Acts {
 struct DefaultExtension {
   /// @brief Default constructor
   DefaultExtension() = default;
-
-  /// Local store for q/p in SI units
-  double qop = 0.;
-
-  /// Local store for conversion of momentum from SI to natural units
-  const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
   /// @brief Control function if the step evaluation would be valid
   ///
@@ -52,13 +46,10 @@ struct DefaultExtension {
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          Vector3D& knew, const Vector3D& bField, const int i = 0,
          const double h = 0., const Vector3D& kprev = Vector3D()) {
+    auto qop =
+        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
-      // Store qop, it is always used if valid
-      qop = stepper.charge(state.stepping) /
-            units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
-
-      // Evaluate the k_i
       knew = qop * stepper.direction(state.stepping).cross(bField);
     } else {
       knew =
@@ -73,10 +64,14 @@ struct DefaultExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagation
+  /// @param [in] h Step size
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool finalize(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                const double /*unused*/) const {
+  bool finalize(propagator_state_t& state, const stepper_t& stepper,
+                const double h) const {
+    propagateTime(state, stepper, h);
     return true;
   }
 
@@ -94,10 +89,32 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h, FreeMatrix& D) const {
+    propagateTime(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
   }
 
  private:
+  /// @brief Propagation function for the time coordinate
+  ///
+  /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
+  /// @param [in, out] state State of the propagator
+  /// @param [in] stepper Stepper of the propagation
+  /// @param [in] h Step size
+  template <typename propagator_state_t, typename stepper_t>
+  void propagateTime(propagator_state_t& state, const stepper_t& stepper,
+                     const double h) const {
+    /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
+    /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
+    /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
+    auto derivative =
+        std::hypot(1, state.options.mass / stepper.momentum(state.stepping));
+    state.stepping.dt += h * derivative;
+    if (state.stepping.covTransport) {
+      state.stepping.derivative(3) = derivative;
+    }
+  }
+
   /// @brief Calculates the transport matrix D for the jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
@@ -131,17 +148,19 @@ struct DefaultExtension {
 
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
+    auto qop =
+        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
 
     D = FreeMatrix::Identity();
 
     double half_h = h * 0.5;
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) idendity
-    auto dFdT = D.block<3, 3>(0, 3);
-    auto dFdL = D.block<3, 1>(0, 6);
+    auto dFdT = D.block<3, 3>(0, 4);
+    auto dFdL = D.block<3, 1>(0, 7);
     // dGdx is already initialised as (3x3) zero
-    auto dGdT = D.block<3, 3>(3, 3);
-    auto dGdL = D.block<3, 1>(3, 6);
+    auto dGdT = D.block<3, 3>(4, 4);
+    auto dGdL = D.block<3, 1>(4, 7);
 
     ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
     ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
@@ -183,11 +202,11 @@ struct DefaultExtension {
     dFdT += h / 6. * (dk1dT + dk2dT + dk3dT);
     dFdT *= h;
 
-    dFdL = conv * (h * h) / 6. * (dk1dL + dk2dL + dk3dL);
+    dFdL = (h * h) / 6. * (dk1dL + dk2dL + dk3dL);
 
     dGdT += h / 6. * (dk1dT + 2. * (dk2dT + dk3dT) + dk4dT);
 
-    dGdL = conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
+    dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
     return true;
   }

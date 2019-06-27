@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,11 +31,10 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
+using Acts::VectorHelpers::perp;
 
 namespace Acts {
-
-using VectorHelpers::perp;
-
 namespace Test {
 
 // Create a test context
@@ -72,6 +71,9 @@ struct PropagatorState {
       /// Charge
       double q;
 
+      /// Time
+      double t;
+
       /// the navigation direction
       NavigationDirection navDir = forward;
 
@@ -79,7 +81,7 @@ struct PropagatorState {
       double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
-      Cstep stepSize = Cstep(100 * units::_cm);
+      Cstep stepSize = Cstep(100_cm);
     };
 
     /// Global particle position accessor
@@ -93,6 +95,9 @@ struct PropagatorState {
 
     /// Charge access
     double charge(const State& state) const { return state.q; }
+
+    /// Time access
+    double time(const State& state) const { return state.t; }
 
     /// Return a corrector
     VoidIntersectionCorrector corrector(State& /*unused*/) const {
@@ -109,7 +114,7 @@ struct PropagatorState {
       // suppress unused warning
       (void)reinitialize;
       BoundParameters parameters(tgContext, nullptr, state.pos,
-                                 state.p * state.dir, state.q,
+                                 state.p * state.dir, state.q, state.t,
                                  surface.getSharedPtr());
       BoundState bState{std::move(parameters), Jacobian::Identity(),
                         state.pathAccumulated};
@@ -120,7 +125,7 @@ struct PropagatorState {
                                       bool reinitialize = true) const {
       (void)reinitialize;
       CurvilinearParameters parameters(nullptr, state.pos, state.p * state.dir,
-                                       state.q);
+                                       state.q, state.t);
       // Create the bound state
       CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                  state.pathAccumulated};
@@ -130,7 +135,8 @@ struct PropagatorState {
     void update(State& /*state*/, const BoundParameters& /*pars*/) const {}
 
     void update(State& /*state*/, const Vector3D& /*uposition*/,
-                const Vector3D& /*udirection*/, double /*up*/) const {}
+                const Vector3D& /*udirection*/, double /*up*/,
+                double /*time*/) const {}
 
     void covarianceTransport(State& /*state*/,
                              bool /*reinitialize = false*/) const {}

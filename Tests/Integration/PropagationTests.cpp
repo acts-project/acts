@@ -34,14 +34,15 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 
 #include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace IntegrationTest {
 
 using BFieldType = ConstantBField;
@@ -53,6 +54,7 @@ using AtlasStepperType = AtlasStepper<BFieldType>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 using DensePropagatorType = Propagator<DenseStepperType, Navigator>;
 using AtlasPropagatorType = Propagator<AtlasStepperType>;
+using StraightPropagatorType = Propagator<StraightLineStepper>;
 
 // number of tests
 const int ntests = 100;
@@ -61,24 +63,26 @@ const bool covtpr = true;
 const bool debug = false;
 
 // setup propagator with constant B-field
-const double Bz = 2. * units::_T;
+const double Bz = 2_T;
 BFieldType bField(0, 0, Bz);
 EigenStepperType estepper(bField);
 DenseStepperType dstepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
 AtlasStepperType astepper(bField);
 AtlasPropagatorType apropagator(std::move(astepper));
+StraightLineStepper sstepper;
+StraightPropagatorType spropagator(std::move(sstepper));
 
 DensePropagatorType setupDensePropagator() {
   CuboidVolumeBuilder::VolumeConfig vConf;
-  vConf.position = {1.5 * units::_m, 0., 0.};
-  vConf.length = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+  vConf.position = {1.5_m, 0., 0.};
+  vConf.length = {3_m, 1_m, 1_m};
   vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(352.8, 407., 9.012, 4., 1.848e-3));
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
-  conf.position = {1.5 * units::_m, 0., 0.};
-  conf.length = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+  conf.position = {1.5_m, 0., 0.};
+  conf.length = {3_m, 1_m, 1_m};
   CuboidVolumeBuilder cvb(conf);
   TrackingGeometryBuilder::Config tgbCfg;
   tgbCfg.trackingVolumeBuilders.push_back(
@@ -97,8 +101,8 @@ DensePropagatorType setupDensePropagator() {
 BOOST_DATA_TEST_CASE(
     constant_bfieldforward_propagation_,
     bdata::random((bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 1,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -108,8 +112,11 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 3,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 4,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   if (index < skip) {
     return;
   }
@@ -117,10 +124,10 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
   // constant field propagation atlas stepper
   auto aposition = constant_field_propagation(apropagator, pT, phi, theta,
-                                              dcharge, index, Bz);
+                                              dcharge, time, index, Bz);
   // constant field propagation eigen stepper
   auto eposition = constant_field_propagation(epropagator, pT, phi, theta,
-                                              dcharge, index, Bz);
+                                              dcharge, time, index, Bz);
   // check consistency
   CHECK_CLOSE_REL(eposition, aposition, 1e-6);
 }
@@ -130,5 +137,4 @@ BOOST_DATA_TEST_CASE(
 #include "PropagationTestBase.hpp"
 
 }  // namespace IntegrationTest
-
 }  // namespace Acts

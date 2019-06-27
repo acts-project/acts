@@ -56,7 +56,7 @@ class SpacePointBuilder<DoubleHitSpacePoint> {
     /// Accepted difference in phi for two clusters
     double diffPhi2 = 1.;
     /// Accepted distance between two clusters
-    double diffDist = 100. * units::_mm;
+    double diffDist = 100. * UnitConstants::mm;
     /// Allowed increase of strip length
     double stripLengthTolerance = 0.01;
     /// Allowed increase of strip length wrt gaps between strips

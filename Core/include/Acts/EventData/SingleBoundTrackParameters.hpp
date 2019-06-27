@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -76,11 +76,12 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   SingleBoundTrackParameters(const GeometryContext& gctx, CovPtr_t cov,
                              const ActsVectorD<3>& position,
                              const ActsVectorD<3>& momentum, double dCharge,
+                             double dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2parameters(
-                gctx, position, momentum, dCharge, *surface),
+                gctx, position, momentum, dCharge, dTime, *surface),
             position, momentum),
         m_pSurface(std::move(surface)) {
     assert(m_pSurface);
@@ -134,12 +135,12 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx, CovPtr_t cov,
                              const ActsVectorD<3>& position,
-                             const ActsVectorD<3>& momentum,
+                             const ActsVectorD<3>& momentum, double dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2parameters(
-                gctx, position, momentum, 0, *surface),
+                gctx, position, momentum, 0, dTime, *surface),
             position, momentum),
         m_pSurface(std::move(surface)) {}
 

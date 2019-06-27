@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -95,6 +95,8 @@ struct MaterialInteractor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    using namespace Acts::UnitLiterals;
+
     // If we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
@@ -210,14 +212,14 @@ struct MaterialInteractor {
           const double lgamma = E / m;
           // Energy loss and straggling - per unit length
           std::pair<double, double> eLoss =
-              ionisationloss.dEds(m, lbeta, lgamma, mat, 1. * units::_mm);
+              ionisationloss.dEds(m, lbeta, lgamma, mat, 1_mm);
           // Apply the energy loss
           const double dEdl = state.stepping.navDir * eLoss.first;
           const double dE = mProperties.thickness() * dEdl;
           // Screen output
           debugLog(state, [&] {
             std::stringstream dstream;
-            dstream << "Energy loss calculated to " << dE << " GeV";
+            dstream << "Energy loss calculated to " << dE / 1_GeV << " GeV";
             return dstream.str();
           });
           // Check for energy conservation, and only apply momentum change
@@ -231,7 +233,8 @@ struct MaterialInteractor {
             stepper.update(
                 state.stepping, stepper.position(state.stepping),
                 stepper.direction(state.stepping),
-                std::copysign(newP, stepper.momentum(state.stepping)));
+                std::copysign(newP, stepper.momentum(state.stepping)),
+                stepper.time(state.stepping));
           }
           // Transfer this into energy loss straggling and apply to
           // covariance:

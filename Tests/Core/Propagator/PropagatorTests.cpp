@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,11 +30,10 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
-
+using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -120,15 +119,13 @@ using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<BFieldType>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 
-const double Bz = 2. * units::_T;
+const double Bz = 2_T;
 BFieldType bField(0, 0, Bz);
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
 
-auto mSurface =
-    Surface::makeShared<CylinderSurface>(nullptr, 10., 1000. * units::_mm);
-auto cSurface =
-    Surface::makeShared<CylinderSurface>(nullptr, 150., 1000. * units::_mm);
+auto mSurface = Surface::makeShared<CylinderSurface>(nullptr, 10., 1000_mm);
+auto cSurface = Surface::makeShared<CylinderSurface>(nullptr, 150., 1000_mm);
 
 const int ntests = 5;
 
@@ -149,8 +146,8 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
 BOOST_DATA_TEST_CASE(
     cylinder_passage_observer_,
     bdata::random((bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 1,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -160,8 +157,11 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 3,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 4,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -173,8 +173,8 @@ BOOST_DATA_TEST_CASE(
   PropagatorOptions<ActionListType, AbortConditionsType> options(tgContext,
                                                                  mfContext);
 
-  options.pathLimit = 20 * units::_m;
-  options.maxStepSize = 1 * units::_cm;
+  options.pathLimit = 20_m;
+  options.maxStepSize = 1_cm;
 
   // set the surface to be passed by
   options.actionList.get<CylinderObserver>().surface = mSurface.get();
@@ -191,7 +191,7 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q);
+  CurvilinearParameters start(nullptr, pos, mom, q, time);
   // propagate to the cylinder surface
   const auto& result = epropagator.propagate(start, *cSurface, options).value();
   auto& sor = result.get<so_result>();
@@ -203,8 +203,8 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     curvilinear_additive_,
     bdata::random((bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 1,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -214,15 +214,18 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 3,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 4,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
   // setup propagation options - the tow step options
   PropagatorOptions<> options_2s(tgContext, mfContext);
-  options_2s.pathLimit = 50 * units::_cm;
-  options_2s.maxStepSize = 1 * units::_cm;
+  options_2s.pathLimit = 50_cm;
+  options_2s.maxStepSize = 1_cm;
 
   // define start parameters
   double x = 0;
@@ -237,11 +240,11 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
   // propagate to a path length of 100 with two steps of 50
   const auto& mid_parameters =
       epropagator.propagate(start, options_2s).value().endParameters;
@@ -250,8 +253,8 @@ BOOST_DATA_TEST_CASE(
 
   // setup propagation options - the one step options
   PropagatorOptions<> options_1s(tgContext, mfContext);
-  options_1s.pathLimit = 100 * units::_cm;
-  options_1s.maxStepSize = 1 * units::_cm;
+  options_1s.pathLimit = 100_cm;
+  options_1s.maxStepSize = 1_cm;
   // propagate to a path length of 100 in one step
   const auto& end_parameters_1s =
       epropagator.propagate(start, options_1s).value().endParameters;
@@ -274,8 +277,8 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     cylinder_additive_,
     bdata::random((bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.4 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 1,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -285,15 +288,18 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::seed = 3,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 4,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
   // setup propagation options - 2 setp options
   PropagatorOptions<> options_2s(tgContext, mfContext);
-  options_2s.pathLimit = 10 * units::_m;
-  options_2s.maxStepSize = 1 * units::_cm;
+  options_2s.pathLimit = 10_m;
+  options_2s.maxStepSize = 1_cm;
 
   // define start parameters
   double x = 0;
@@ -308,11 +314,11 @@ BOOST_DATA_TEST_CASE(
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
-  cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 0, 10 * units::_mm, 0, 0.162, 0,
-      0, 0.123, 0, 0.1, 0, 0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0,
-      1. / (10 * units::_GeV), 0, 0, 0, 0, 0, 0, 0;
+  cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
+      0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
+      0, 0;
   auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
   // propagate to a final surface with one stop in between
   const auto& mid_parameters =
       epropagator.propagate(start, *mSurface, options_2s).value().endParameters;
@@ -324,8 +330,8 @@ BOOST_DATA_TEST_CASE(
 
   // setup propagation options - one step options
   PropagatorOptions<> options_1s(tgContext, mfContext);
-  options_1s.pathLimit = 10 * units::_m;
-  options_1s.maxStepSize = 1 * units::_cm;
+  options_1s.pathLimit = 10_m;
+  options_1s.maxStepSize = 1_cm;
   // propagate to a final surface in one stop
   const auto& end_parameters_1s =
       epropagator.propagate(start, *cSurface, options_1s).value().endParameters;

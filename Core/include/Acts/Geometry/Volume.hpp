@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 #pragma once
 #include <memory>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"

@@ -11,8 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <limits>
 #include <string>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
@@ -479,11 +481,10 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     /// needed to build layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
     /// the additional envelope in R to create rMin, rMax
-    std::pair<double, double> layerEnvelopeR = {1. * Acts::units::_mm,
-                                                1. * Acts::units::_mm};
+    std::pair<double, double> layerEnvelopeR = {1. * UnitConstants::mm,
+                                                1. * UnitConstants::mm};
     /// the additional envelope in Z to create zMin, zMax
-    double layerEnvelopeZ = 10. * Acts::units::_mm;
-
+    double layerEnvelopeZ = 10. * UnitConstants::mm;
     /// the volume signature
     int volumeSignature = -1;
   };

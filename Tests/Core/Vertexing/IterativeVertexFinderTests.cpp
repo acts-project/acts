@@ -20,10 +20,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
@@ -31,6 +29,7 @@
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
@@ -42,15 +41,15 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
+std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20 * units::_mm, 20 * units::_mm);
+std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
@@ -58,7 +57,7 @@ std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
 std::uniform_real_distribution<> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
+std::uniform_real_distribution<> resIPDist(0., 100_um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
   for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up constant B-Field
-    ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+    ConstantBField bField(0.0, 0.0, 1_T);
 
     // Set up Eigenstepper
     EigenStepper<ConstantBField> stepper(bField);
@@ -108,7 +107,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         VertexFinder;
     VertexFinder::Config cfg(bField, std::move(bFitterPtr), propagator);
     cfg.reassignTracksAfterFirstFit = true;
-    VertexFinder::State state;
 
     VertexFinder finder(cfg);
 
@@ -191,18 +189,21 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
     // find vertices
-    auto res = finder.find(tracks, state, vFinderOptions);
+    auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
+    // Retrieve vertices found by vertex finder
+    auto vertexCollection = *res;
+
     // check if same amount of vertices has been found with tolerance of 2
-    CHECK_CLOSE_ABS(state.vertexCollection.size(), nVertices, 2);
+    CHECK_CLOSE_ABS(vertexCollection.size(), nVertices, 2);
 
     if (debug) {
       std::cout << "########## RESULT: ########## Event " << iEvent
                 << std::endl;
       std::cout << "Number of true vertices: " << nVertices << std::endl;
-      std::cout << "Number of reco vertices: " << state.vertexCollection.size()
+      std::cout << "Number of reco vertices: " << vertexCollection.size()
                 << std::endl;
 
       int count = 1;
@@ -218,7 +219,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       }
       std::cout << "----- Reco vertices -----" << std::endl;
       count = 1;
-      for (const auto& vertex : state.vertexCollection) {
+      for (const auto& vertex : vertexCollection) {
         Vector3D pos = vertex.position();
         std::cout << count << ". Reco Vertex:\t Position:"
                   << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
@@ -234,11 +235,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     for (const auto& trueVertex : trueVertices) {
       SpacePointVector truePos = trueVertex.fullPosition();
       bool currentVertexFound = false;
-      for (const auto& recoVertex : state.vertexCollection) {
+      for (const auto& recoVertex : vertexCollection) {
         SpacePointVector recoPos = recoVertex.fullPosition();
         // check only for close z distance
         double zDistance = std::abs(truePos[eZ] - recoPos[eZ]);
-        if (zDistance < 2 * units::_mm) {
+        if (zDistance < 2_mm) {
           currentVertexFound = true;
         }
       }

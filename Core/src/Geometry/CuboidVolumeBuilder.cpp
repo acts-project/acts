@@ -72,16 +72,17 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
     const GeometryContext& /*gctx*/,
     const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
+  using namespace UnitLiterals;
   // Construct return value
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
   for (const auto& layercfg : cfg.layerCfg) {
     // Test if new extreme is found and set it
-    if (layercfg.surfaceCfg.position.x() - 1. * units::_um < minMax.first) {
-      minMax.first = layercfg.surfaceCfg.position.x() - 1. * units::_um;
+    if (layercfg.surfaceCfg.position.x() - 1_um < minMax.first) {
+      minMax.first = layercfg.surfaceCfg.position.x() - 1_um;
     }
-    if (layercfg.surfaceCfg.position.x() + 1. * units::_um > minMax.second) {
-      minMax.second = layercfg.surfaceCfg.position.x() + 1. * units::_um;
+    if (layercfg.surfaceCfg.position.x() + 1_um > minMax.second) {
+      minMax.second = layercfg.surfaceCfg.position.x() + 1_um;
     }
   }
   return minMax;

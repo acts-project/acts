@@ -32,9 +32,9 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 // the constrained step class
@@ -86,7 +86,7 @@ struct Stepper {};
 
 /// A distance observer struct as an actor
 struct DistanceObserver {
-  double path_to_go = 100. * units::_mm;
+  double path_to_go = 100_mm;
 
   struct this_result {
     double distance = std::numeric_limits<double>::max();
@@ -140,16 +140,16 @@ BOOST_AUTO_TEST_CASE(ActionListTest_Distance) {
   detail::Extendable<distance_result> result;
 
   ActionList<DistanceObserver> action_list;
-  action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
+  action_list.get<DistanceObserver>().path_to_go = 100_mm;
 
   // observe and check
   action_list(state, stepper, result);
-  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 100. * units::_mm);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 100_mm);
 
   // now move the cache and check again
-  state.stepping.pathAccumulated = 50. * units::_mm;
+  state.stepping.pathAccumulated = 50_mm;
   action_list(state, stepper, result);
-  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50_mm);
 }
 
 // This tests the implementation of the ActionList
@@ -163,19 +163,19 @@ BOOST_AUTO_TEST_CASE(ActionListTest_TwoActions) {
   using distance_result = typename DistanceObserver::result_type;
   using caller_result = typename CallCounter::result_type;
   ActionList<DistanceObserver, CallCounter> action_list;
-  action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
+  action_list.get<DistanceObserver>().path_to_go = 100_mm;
 
   detail::Extendable<distance_result, caller_result> result;
 
   //// observe and check
   action_list(state, stepper, result);
-  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 100. * units::_mm);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 100_mm);
   BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
 
   // now move the cache and check again
-  state.stepping.pathAccumulated = 50. * units::_mm;
+  state.stepping.pathAccumulated = 50_mm;
   action_list(state, stepper, result);
-  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50_mm);
   BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
 }
 

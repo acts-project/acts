@@ -216,7 +216,6 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     SpacePointSymMatrix covDeltaVmat = VwgtMat.inverse();
     // deltaV = cov_(deltaV) * Vdel;
     SpacePointVector deltaV = covDeltaVmat * Vdel;
-
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 

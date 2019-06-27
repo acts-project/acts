@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,6 +28,7 @@
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 
@@ -44,12 +45,12 @@ struct SteppingState {
   /// Parameters
   Vector3D pos = Vector3D(0., 0., 0.);
   Vector3D dir = Vector3D(0., 0., 1);
-  double p = 100. * units::_MeV;
+  double p = 100_MeV;
 };
 
 /// @brief mockup of stepping state
 struct Stepper {
-  Vector3D field = Vector3D(0., 0., 2. * units::_T);
+  Vector3D field = Vector3D(0., 0., 2_T);
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
@@ -117,7 +118,7 @@ BOOST_DATA_TEST_CASE(
 
   PropagatorState pState;
   pState.stepping.dir = Vector3D(cos(phi), sin(phi), 0.);
-  pState.stepping.p = 100. * units::_MeV;
+  pState.stepping.p = 100_MeV;
 
   Stepper pStepper;
 
@@ -144,8 +145,8 @@ const int skip = 0;
 BOOST_DATA_TEST_CASE(
     propagator_loop_protection_test,
     bdata::random((bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<>(
-                       0.5 * units::_GeV, 10. * units::_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -163,7 +164,7 @@ BOOST_DATA_TEST_CASE(
 
   double dcharge = -1 + 2 * charge;
 
-  const double Bz = 2. * units::_T;
+  const double Bz = 2_T;
   BField bField(0, 0, Bz);
 
   EigenStepper estepper(bField);
@@ -180,7 +181,7 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q);
+  CurvilinearParameters start(nullptr, pos, mom, q, 42.);
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.maxSteps = 1e6;
