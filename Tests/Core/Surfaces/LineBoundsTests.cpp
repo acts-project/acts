@@ -63,6 +63,17 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   // This fails because the bounds are not inclusive.
   BOOST_CHECK(
       !lineBoundsObject.inside(atRadius, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(
+      !lineBoundsObject.inside(beyondEnd, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(lineBoundsObject.inside(unitZ, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(!lineBoundsObject.inside(unitR, trueBoundaryCheckWithTolerance));
+
+  /// Test negative redius inside
+
+  BOOST_CHECK(lineBoundsObject.inside(Vector2D{-0.2, 10},
+                                      trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(!lineBoundsObject.inside(Vector2D{-0.8, 10},
+                                       trueBoundaryCheckWithTolerance));
 
   /// test for distanceToBoundary
   CHECK_CLOSE_REL(lineBoundsObject.distanceToBoundary(unitR), 1.,
