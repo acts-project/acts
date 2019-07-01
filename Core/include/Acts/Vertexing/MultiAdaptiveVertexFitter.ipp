@@ -53,24 +53,12 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         prepareVtxForFit(state, currentVtx, vFitterOptions);
       }
 
-      // Determine if a constraint fit is performed
-      if (vFitterOptions.vertexConstraint.fullCovariance().determinant() != 0) {
-        // TODO: do I really want only the position and cov of the constraint
-        // itself and not some vertex seed where the constraint was used
-        currentVtx->setFullPosition(
-            vFitterOptions.vertexConstraint.fullPosition());
-        currentVtx->setFullCovariance(
-            vFitterOptions.vertexConstraint.fullCovariance());
-        currentVtx->setFitQuality(vFitterOptions.vertexConstraint.fitQuality());
-      } else {
-        // Use vertex from vertexCollection, i.e. the vertex seed
-        // with a very loose covariance
-        // TODO: what's a good covariance here?
-        currentVtx->setFullCovariance(SpacePointSymMatrix::Identity());
-      }
-
+      currentVtx->setFullPosition(
+          state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
+      currentVtx->setFitQuality(
+          state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
       currentVtx->setFullCovariance(
-          currentVtx->fullCovariance() * 1. /
+          state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() * 1. /
           m_cfg.annealingTool.getWeight(state.annealingState, 1.));
 
       // Set vertexCompatibility for all TrackAtVertex objects
@@ -277,11 +265,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
       // Set trackWeight for current track
       newTrkPtr->trackWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
-      std::cout << "current vertex: " << vtx << " track id " << newTrkPtr->id
-                << ", weight: " << newTrkPtr->trackWeight << std::endl;
-      std::cout << "trkAtVtx.vertexCompatibility: "
-                << trkAtVtx.vertexCompatibility << std::endl
-                << std::endl;
+
       if (newTrkPtr->trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
         if (newTrkPtr->linearizedState.covarianceAtPCA ==
@@ -310,7 +294,6 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     vtx->setTracksAtVertex(newTracks);
 
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
-    // std::cout << "New pos after fit: " << vtx->fullPosition() << std::endl;
   }  // End loop over vertex collection
 
   return {};
