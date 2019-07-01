@@ -14,20 +14,13 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
     const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
     const Vertex<input_track_t>* vtx) const {
   const SpacePointVector& vtxPos = vtx->fullPosition();
-  // TODO: const ref or ref?
-  LinearizedTrack& linTrack = track.linearizedState;
 
-  // check if lin state exists // TODO: different check?
+  // Get the linearized track
+  const LinearizedTrack& linTrack = track.linearizedState;
+
+  // Check if linearized state exists
   if (linTrack.covarianceAtPCA.trace() == 0.) {
-    if (track.trackWeight > m_cfg.maxWeight) {
-      std::cout << "Current track does not have a LinearizedTrack. \n"
-                << "Track returned not refitted." << std::endl;
-    } else {
-      std::cout << "Current track does not have a LinearizedTrack. \n"
-                << "Track weight however smaller than " << m_cfg.maxWeight
-                << "Track returned not refitted." << std::endl;
-    }
-
+    // Track has no linearized state, returning w/o update
     return;
   }
 
@@ -37,17 +30,17 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   const BoundVector& trkParams = linTrack.parametersAtPCA;
   const BoundSymMatrix& trkParamWeight = linTrack.covarianceAtPCA.inverse();
 
-  // Calculate S matrix // TODO: check paper
+  // Calculate S matrix
   ActsSymMatrixD<3> sMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   const BoundVector& residual = linTrack.constantTerm;
 
-  // refit track momentum
+  // Refit track momentum
   Vector3D newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
                             (trkParams - residual - posJac * vtxPos);
 
-  // refit track parameters
+  // Refit track parameters
   BoundVector newTrkParams(BoundVector::Zero());
 
   // Get phi and theta and correct for possible periodicity changes
@@ -58,39 +51,39 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   newTrkParams(ParID_t::eTHETA) = correctedPhiTheta.second;  // theta
   newTrkParams(ParID_t::eQOP) = newTrkMomentum(2);           // qOverP
 
-  // vertex covariance and weight matrices
+  // Vertex covariance and weight matrices
   const SpacePointSymMatrix& vtxCov = vtx->fullCovariance();
   const SpacePointSymMatrix vtxWeight = vtxCov.inverse();
 
-  // new track covariance matrix
+  // New track covariance matrix
   ActsMatrixD<SpacePointDim, 3> newTrkCov =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
 
-  // now determine the smoothed chi2 of the track in the following
+  // Now determine the smoothed chi2 of the track in the following
   // get updated position, this removes track from vtx
   Vertex<input_track_t> reducedVtx =
       m_cfg.vtx_updator.updatePosition(vtx, linTrack, track.trackWeight, -1);
 
-  // corresponding weight matrix
+  // Corresponding weight matrix
   const SpacePointSymMatrix reducedVtxWeight =
       reducedVtx.fullCovariance().inverse();
 
-  // difference in positions
+  // Difference in positions
   SpacePointVector posDiff = vtx->fullPosition() - reducedVtx.fullPosition();
 
-  // get smoothed params
+  // Get smoothed params
   BoundVector smParams = trkParams - (residual + posJac * vtx->fullPosition() +
                                       momJac * newTrkMomentum);
 
-  // new chi2 to be set later
+  // New chi2 to be set later
   double chi2 = posDiff.dot(reducedVtxWeight * posDiff) +
                 smParams.dot(trkParamWeight * smParams);
 
-  // now new momentum covariance
+  // Now new momentum covariance
   ActsSymMatrixD<3> momCov =
       sMat + newTrkCov.transpose() * (vtxWeight * newTrkCov);
 
-  // full (x,y,z,phi, theta, q/p) covariance matrix
+  // Full (x,y,z,phi, theta, q/p, t) covariance matrix
   ActsSymMatrixD<7> fullTrkCov(ActsSymMatrixD<7>::Zero());
 
   fullTrkCov.block<4, 4>(0, 0) = vtxCov;
@@ -98,36 +91,35 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   fullTrkCov.block<3, 4>(4, 0) = newTrkCov.transpose();
   fullTrkCov.block<3, 3>(4, 4) = momCov;
 
-  // following is 'temporary hack', as implemented and used in athena
+  // Combined track jacobian
   ActsMatrixD<BoundParsDim, 7> trkJac(ActsMatrixD<BoundParsDim, 7>::Zero());
 
-  // first row
+  // First row
   trkJac(0, 0) = -std::sin(newTrkParams[2]);
   trkJac(0, 1) = std::cos(newTrkParams[2]);
 
-  // second row
-  trkJac(1, 0) = -std::cos(newTrkParams[2]) / tan(newTrkParams[3]);
-  trkJac(1, 1) = -std::sin(newTrkParams[2]) / tan(newTrkParams[3]);
+  // Second row
+  trkJac(1, 0) = -std::cos(newTrkParams[2]) / std::tan(newTrkParams[3]);
+  trkJac(1, 1) = -std::sin(newTrkParams[2]) / std::tan(newTrkParams[3]);
 
   trkJac.block<5, 5>(1, 2) = ActsSymMatrixD<5>::Identity();
 
-  // full perigee track covariance
+  // Full perigee track covariance
   std::unique_ptr<BoundMatrix> fullPerTrackCov =
       std::make_unique<BoundMatrix>(trkJac * (fullTrkCov * trkJac.transpose()));
 
-  // TODO: why at vtxPos and not at updated position?
+  // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(VectorHelpers::position(vtxPos));
 
   BoundParameters refittedPerigee = BoundParameters(
       gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
 
-  // set new properties
+  // Set new properties
   track.fittedParams = refittedPerigee;
   track.chi2Track = chi2;
-  track.trackWeight = 2 * track.trackWeight;  // TODO: is that factor correct?
-                                              // If yes, why, if not, just do
-                                              // not touch trackWeight
+  track.trackWeight =
+      2 * track.trackWeight;  // TODO: where is this factor coming from?
 }
 
 template <typename input_track_t>

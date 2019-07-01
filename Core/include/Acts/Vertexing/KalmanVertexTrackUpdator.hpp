@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -17,7 +18,7 @@ namespace Acts {
 /// @class KalmanVertexTrackUpdator
 ///
 /// @brief Refits a single track with the knowledge of
-/// the vertex it's originated from
+/// the vertex it has originated from
 /// Based on R. Frühwirth et al.
 /// Vertex reconstruction and track bundling at the lep collider using
 /// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
@@ -29,12 +30,6 @@ class KalmanVertexTrackUpdator {
  public:
   /// @struct Config Configuration struct
   struct Config {
-    /// Constructor with default maxWeight
-    Config(double maxweight = 0.001) : maxWeight(maxweight) {}
-
-    /// Max track weight
-    double maxWeight;
-
     /// Kalman vertex updator
     KalmanVertexUpdator<input_track_t> vtx_updator;
   };
