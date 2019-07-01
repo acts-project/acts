@@ -28,19 +28,9 @@ Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
   const BoundSymMatrix& trkParamWeight =
       linTrack.covarianceAtPCA.inverse();  // G_k in comments below
 
-  // std::cout << "\tlinTrack pos jac: " << posJac << std::endl;
-  // std::cout << "\tlinTrack mom jac: " << momJac << std::endl;
-  // std::cout << "\tlinTrack trkParams: " << trkParams << std::endl;
-  // std::cout << "\tlinTrack constTerm: " << constTerm << std::endl;
-  // std::cout << "\tlinTrack trkParamWeight: " << trkParamWeight << std::endl;
-
   // Vertex to be updated
   const SpacePointVector& oldVtxPos = vtx->fullPosition();
   const SpacePointSymMatrix& oldVtxWeight = vtx->fullCovariance().inverse();
-
-  // std::cout << "\tOld vtx pos: " << vtx->fullPosition() << std::endl;
-  // std::cout << "\t fullCovariance: " << vtx->fullCovariance() << std::endl;
-  // std::cout << "\toldVtxWeight: " << oldVtxWeight << std::endl;
 
   // W_k matrix
   ActsSymMatrixD<3> wMat =
@@ -78,7 +68,7 @@ Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
 }
 
 template <typename input_track_t>
-float Acts::KalmanVertexUpdator<input_track_t>::vertexPositionChi2(
+double Acts::KalmanVertexUpdator<input_track_t>::vertexPositionChi2(
     const Vertex<input_track_t>* oldVtx,
     const Vertex<input_track_t>* newVtx) const {
   SpacePointSymMatrix oldWeight = oldVtx->fullCovariance().inverse();
@@ -89,7 +79,7 @@ float Acts::KalmanVertexUpdator<input_track_t>::vertexPositionChi2(
 }
 
 template <typename input_track_t>
-float Acts::KalmanVertexUpdator<input_track_t>::trackParametersChi2(
+double Acts::KalmanVertexUpdator<input_track_t>::trackParametersChi2(
     const Vertex<input_track_t>& vtx, const LinearizedTrack& linTrack) const {
   const SpacePointVector& vtxPos = vtx.fullPosition();
 
