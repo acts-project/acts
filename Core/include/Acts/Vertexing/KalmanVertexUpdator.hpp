@@ -21,9 +21,7 @@ namespace Acts {
 /// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
 ///
 /// @tparam input_track_t Track object type
-
 template <typename input_track_t>
-// TODO: add docs
 class KalmanVertexUpdator {
  public:
   /// Default constructor
@@ -37,26 +35,37 @@ class KalmanVertexUpdator {
   void addAndUpdate(Vertex<input_track_t>* vtx,
                     TrackAtVertex<input_track_t> trk) const;
 
-  // TODO: add docs
+  /// @brief Updates vertex position
+  ///
+  /// @param vtx Old vertex
+  /// @param linTrack Linearized version of track to be added or removed
+  /// @param trackWeight Track weight
+  /// @param sign +1 (add track) or -1 (remove track)
+  ///
+  /// @return Vertex with updated position and covariance
   Vertex<input_track_t> updatePosition(const Vertex<input_track_t>* vtx,
                                        const LinearizedTrack& linTrack,
                                        double trackWeight, int sign) const;
 
  private:
-  /// TODO: fully understand this
   /// @brief Takes old and new vtx and calculates position chi2
   ///
   /// @param oldVtx Old vertex
   /// @param newVtx New vertex
   ///
   /// @return Chi2
-  float vertexPositionChi2(const Vertex<input_track_t>* oldVtx,
-                           const Vertex<input_track_t>* newVtx) const;
+  double vertexPositionChi2(const Vertex<input_track_t>* oldVtx,
+                            const Vertex<input_track_t>* newVtx) const;
 
-  // TODO: add docs
-  /// @brief
-  float trackParametersChi2(const Vertex<input_track_t>& vtx,
-                            const LinearizedTrack& linTrack) const;
+  /// @brief Calculates chi2 of refitted track parameters
+  /// w.r.t. updated vertex
+  ///
+  /// @param vtx The already updated vertex
+  /// @param linTrack Linearized version of track
+  ///
+  /// @return Chi2
+  double trackParametersChi2(const Vertex<input_track_t>& vtx,
+                             const LinearizedTrack& linTrack) const;
 
   /// @brief Adds or removes (depending on `sign`) tracks from vertex
   /// and updates the vertex
