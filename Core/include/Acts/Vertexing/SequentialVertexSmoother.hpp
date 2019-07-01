@@ -30,7 +30,7 @@ class SequentialVertexSmoother {
   };
 
   /// @brief Default constructor
-  SequentialVertexSmoother(const Config& cfg = Config()) : m_cfg(cfg) {}
+  SequentialVertexSmoother(Config cfg = Config()) : m_cfg(std::move(cfg)) {}
 
   /// @brief Updates all tracks at vertex
   /// with knowledge of the vertex position
