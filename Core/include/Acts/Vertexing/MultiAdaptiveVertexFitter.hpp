@@ -96,15 +96,15 @@ class MultiAdaptiveVertexFitter {
 
   /// @brief Constructor used if input_track_t type == BoundParameters
   ///
-  /// @param config Configuration object
+  /// @param cfg Configuration object
   /// @param logger The logging instance
   template <typename T = input_track_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
-  MultiAdaptiveVertexFitter(const Config& config,
+  MultiAdaptiveVertexFitter(Config& cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("MultiAdaptiveVertexFitter",
                                                  Logging::INFO))
-      : m_cfg(config),
+      : m_cfg(std::move(cfg)),
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
@@ -112,12 +112,14 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from input_track_t object
-  MultiAdaptiveVertexFitter(const Config& config,
+  MultiAdaptiveVertexFitter(Config& cfg,
                             std::function<BoundParameters(input_track_t)> func,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("MultiAdaptiveVertexFitter",
                                                  Logging::INFO))
-      : m_cfg(config), m_extractParameters(func), m_logger(std::move(logger)) {}
+      : m_cfg(std::move(cfg)),
+        m_extractParameters(func),
+        m_logger(std::move(logger)) {}
 
   /// @brief The actual fit function
   ///
