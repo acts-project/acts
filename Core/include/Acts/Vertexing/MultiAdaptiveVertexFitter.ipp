@@ -28,7 +28,7 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
   bool isSmallShift = true;
 
   // Number of iterations counter
-  int nIter = 0;
+  unsigned int nIter = 0;
 
   // Start iterating
   while (nIter < m_cfg.maxIterations &&
@@ -53,12 +53,24 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         prepareVtxForFit(state, currentVtx, vFitterOptions);
       }
 
-      currentVtx->setFullPosition(
-          state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
-      currentVtx->setFitQuality(
-          state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
+      // Determine if constraint vertex exist
+      if (state.vtxInfoMap[currentVtx]
+              .constraintVertex.fullCovariance()
+              .determinant() != 0) {
+        currentVtx->setFullPosition(
+            state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
+        currentVtx->setFitQuality(
+            state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
+        currentVtx->setFullCovariance(
+            state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
+      }
+
+      else if (currentVtx->fullCovariance().determinant() == 0.) {
+        return VertexingError::NoCovariance;
+      }
+
       currentVtx->setFullCovariance(
-          state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() * 1. /
+          currentVtx->fullCovariance() * 1. /
           m_cfg.annealingTool.getWeight(state.annealingState, 1.));
 
       // Set vertexCompatibility for all TrackAtVertex objects
@@ -152,7 +164,11 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
   state.vertexCollection = verticesToFit;
 
   // Perform fit on all added vertices
-  fit(state, vFitterOptions);
+  auto fitRes = fit(state, vFitterOptions);
+
+  if (!fitRes.ok()) {
+    return fitRes.error();
+  }
 
   return {};
 }

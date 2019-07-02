@@ -173,7 +173,12 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   int idx = 0;
   for (auto& vtxPos : vtxVec) {
     Vertex<BoundParameters> vtx(vtxPos);
+    // Set track for current vertex
     vtx.setTracksAtVertex(trackVtxVec[idx]);
+    // Set some vertex covariance
+    SpacePointSymMatrix posCovariance(SpacePointSymMatrix::Identity());
+    vtx.setFullCovariance(posCovariance);
+    // Add to vertex list
     vtxList.push_back(vtx);
     idx++;
   }
