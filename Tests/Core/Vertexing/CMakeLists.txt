@@ -57,3 +57,9 @@ target_include_directories (KalmanVertexTrackUpdatorTests PRIVATE ${Boost_INCLUD
 target_link_libraries (KalmanVertexTrackUpdatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME KalmanVertexTrackUpdatorUnitTests COMMAND KalmanVertexTrackUpdatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanVertexTrackUpdatorUnitTests TARGETS KalmanVertexTrackUpdatorTests)
+
+add_executable (KalmanVertexUpdatorTests KalmanVertexUpdatorTests.cpp)
+target_include_directories (KalmanVertexUpdatorTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (KalmanVertexUpdatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME KalmanVertexUpdatorUnitTests COMMAND KalmanVertexUpdatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanVertexUpdatorUnitTests TARGETS KalmanVertexUpdatorTests)
