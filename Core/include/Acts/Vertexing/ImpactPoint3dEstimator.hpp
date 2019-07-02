@@ -24,7 +24,12 @@ template <typename bfield_t, typename input_track_t, typename propagator_t>
 class ImpactPoint3dEstimator {
  public:
 
+  /// @struct Configuration struct
   struct Config {
+    /// @brief Configuration constructor
+    ///
+    /// @param bIn The magnetic field
+    /// @param propagatorIn The propagator
     Config(const bfield_t& bIn, const propagator_t& propagatorIn)
         : bField(bIn), propagator(propagatorIn) {}
     /// Magnetic field
@@ -61,7 +66,7 @@ class ImpactPoint3dEstimator {
   /// at point of closest approach in 3d to given
   /// reference position. The parameters and errors
   /// are defined on the plane intersecting the track
-  /// at point of closest approach, with track ortogonal
+  /// at point of closest approach, with track orthogonal
   /// to the plane and center of the plane defined as the
   /// given reference point (vertex).
   ///
@@ -92,7 +97,7 @@ class ImpactPoint3dEstimator {
   /// Configuration object
   const Config m_cfg;
 
-  /// @brief: Performs a Newton approxation to retrieve a point
+  /// @brief Performs a Newton approximation to retrieve a point
   /// of closest approach in 3D to a reference position
   ///
   /// @param trkPos Initial position

@@ -28,7 +28,7 @@ namespace Acts {
 template <typename input_track_t>
 class KalmanVertexTrackUpdator {
  public:
-  /// @struct Config Configuration struct
+  /// @struct Configuration struct
   struct Config {
     /// Kalman vertex updator
     KalmanVertexUpdator<input_track_t> vtx_updator;
@@ -38,7 +38,7 @@ class KalmanVertexTrackUpdator {
   KalmanVertexTrackUpdator(const Config& config = Config()) : m_cfg(config) {}
 
   /// @brief Refits a single track with the knowledge of
-  /// the vertex it's originated from
+  /// the vertex it has originated from
   ///
   /// @param gctx The Geometry Context
   /// @param track Track to update

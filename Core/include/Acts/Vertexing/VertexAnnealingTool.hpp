@@ -23,25 +23,27 @@
 ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
 class VertexAnnealingTool {
  public:
+  /// @brief The annealing state
   struct State {
-    /// Points to current temperature value in m_cfg.setOfTemperatures
+    // Points to current temperature value in m_cfg.setOfTemperatures
     unsigned int currentTemperatureIndex = 0;
 
-    /// Checks if equilibrium is reached
+    // Checks if equilibrium is reached
     bool equilibriumReached = false;
   };
 
+  /// @brief The configuration struct
   struct Config {
     // Config constructor with default temperature list: {64.,16.,4.,2.,1.5,1.}
     Config(const std::vector<double>& temperatures = {64., 16., 4., 2., 1.5,
                                                       1.})
         : setOfTemperatures(temperatures) {}
 
-    /// Insensitivity of calculated weight at cutoff
+    // Insensitivity of calculated weight at cutoff
     double cutOff = 9.;
 
-    /// Set of temperatures, annealing starts at setOfTemperatures[0]
-    /// and anneals towards setOfTemperatures[last]
+    // Set of temperatures, annealing starts at setOfTemperatures[0]
+    // and anneals towards setOfTemperatures[last]
     std::vector<double> setOfTemperatures;
   };
 

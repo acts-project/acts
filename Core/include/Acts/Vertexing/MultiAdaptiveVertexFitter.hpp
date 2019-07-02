@@ -38,6 +38,7 @@ namespace Acts {
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 class MultiAdaptiveVertexFitter {
  public:
+  /// @brief The fitter state
   struct State {
     // Vertex collection to be fitted
     std::vector<Vertex<input_track_t>*> vertexCollection;
@@ -67,38 +68,38 @@ class MultiAdaptiveVertexFitter {
           ipEst(typename ImpactPoint3dEstimator<
                 bfield_t, input_track_t, propagator_t>::Config(bIn,
                                                                propagatorIn)) {}
-    /// Propagator
+    // Propagator
     propagator_t propagator;
 
-    /// Linearized track factory
+    // Linearized track factory
     LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
 
-    /// ImpactPoint3dEstimator
-    ImpactPoint3dEstimator<input_track_t> ipEst;
+    // ImpactPoint3dEstimator
+    ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t> ipEst;
 
-    /// Vertex updator
+    // Vertex updator
     KalmanVertexUpdator<input_track_t> vertexUpdator;
 
-    /// SequentialVertexSmoother
+    // SequentialVertexSmoother
     SequentialVertexSmoother<input_track_t> vertexSmoother;
 
-    /// Annealing tool
+    // Annealing tool
     VertexAnnealingTool annealingTool;
 
-    /// Number of max iterations
+    // Number of max iterations
     unsigned int maxIterations{50};
 
-    /// Max distance to linearization point allowed
-    /// without relinearization
+    // Max distance to linearization point allowed
+    // without relinearization
     double maxDistToLinPoint{0.5};
 
-    /// Minimum track weight needed for track to be considered
+    // Minimum track weight needed for track to be considered
     double minWeight{0.001};
 
-    /// Max relative shift of vertex during one iteration
+    // Max relative shift of vertex during one iteration
     double maxRelativeShift{0.01};
 
-    /// Do smoothing after multivertex fit
+    // Do smoothing after multivertex fit
     bool doSmoothing{false};
   };
 
@@ -120,6 +121,7 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from input_track_t object
+  /// @param logger The logging instance
   MultiAdaptiveVertexFitter(Config& cfg,
                             std::function<BoundParameters(input_track_t)> func,
                             std::unique_ptr<const Logger> logger =
@@ -129,7 +131,8 @@ class MultiAdaptiveVertexFitter {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
-  /// @brief The actual fit function
+  /// @brief The actual fit function, performs a simulateous
+  ///   fit of all vertices in state.vertexCollection
   ///
   /// @param state The state object
   /// @param vFitterOptions Vertex fitter options
@@ -140,25 +143,24 @@ class MultiAdaptiveVertexFitter {
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
   /// @brief Adds new vertex to a previous multi-vertex fit
-  /// and fits everything together:
-  /// 1. The new vertex is added to the fit (all the tracks get initialized,
-  /// so that the plane through their IP point and the seed vertex
-  /// (IP3dAtAPlane) is created, to be later able to estimate in a fast way the
-  /// compatibility of the tracks to their respective vertices.
+  /// and fits everything together (by invoking the fit method):
+  /// 1. The new vertex is added to the fit: all associated tracks get
+  /// initialized, i.e. ParamsAtIP3d are created (from ImpactPoint3dEstimator)
+  /// to be later able to estimate in a fast way the compatibility of the tracks
+  /// to their respective vertices.
   /// 2. All tracks belonging to the new vertex are scanned and all the vertices
-  ///  which shares tracks with the new vertex to be fit are also added to the
+  ///  which share tracks with the new vertex to be fit are also added to the
   ///  fit.
   /// 3. The multivertex fit is performed with all involved vertices.
   ///
   /// This has the advantage that only vertices that are affected by adding the
-  /// new vertex get refitted.
+  /// new vertex are refitted.
   ///
   /// Note: newVertex has to be properly initialized (seed vertex,
   /// constraint vertex, list of MAV)
   ///
   /// @param state The state object
   /// @param newVertex New vertex to be added to fit
-  /// @param MAVFTrackAtVtxInfo TrackAtVertex info object
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object

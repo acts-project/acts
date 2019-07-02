@@ -61,7 +61,7 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 /// @brief Unit test for MultiAdaptiveVertexFitter
 ///
 BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
-  bool debugMode = true;
+  bool debugMode = false;
 
   // Set up RNG
   int mySeed = 31415;
