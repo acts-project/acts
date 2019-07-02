@@ -133,12 +133,6 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     // Index of current vertex
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
 
-    // TODO: is this how I produce tracks originating from this vertex?!
-
-    // double d0V = std::sqrt(vtxVec[vtxIdx][0] * vtxVec[vtxIdx][0] +
-    // vtxVec[vtxIdx][1] * vtxVec[vtxIdx][1]);
-    // double z0V = vtxVec[vtxIdx][2];
-
     // Construct random track parameters
     TrackParametersBase::ParVector_t paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
