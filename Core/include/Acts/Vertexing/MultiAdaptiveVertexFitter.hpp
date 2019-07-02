@@ -23,10 +23,18 @@
 
 namespace Acts {
 
-// TODO: add docs
+/// @class MultiAdaptiveVertexFitter
+/// @brief Implements an adaptive multi-vertex fitter as described
+///   in detail in Section 5.3.5 in:
 ///   Ref. (1): CERN-THESIS-2010-027, Author: Piacquadio, Giacinto:
 ///   `Identification of b-jets and investigation of the discovery potential
 ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
+///
+///////////////////////////////////////////////////////////////////////////
+///
+/// @tparam bfield_t Magnetic field type
+/// @tparam input_track_t Track object type
+/// @tparam propagator_t Propagator type
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 class MultiAdaptiveVertexFitter {
  public:
@@ -37,10 +45,10 @@ class MultiAdaptiveVertexFitter {
     // Annealing state
     VertexAnnealingTool::State annealingState;
 
-    // map to store vertices information
+    // Map to store vertices information
     std::map<Vertex<input_track_t>*, MAVFVertexInfo<input_track_t>> vtxInfoMap;
 
-    // map to store tracks information
+    // Map to store tracks information
     std::map<unsigned long, MAVFTrackAtVtxInfo<input_track_t>> trkInfoMap;
   };
 
