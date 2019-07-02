@@ -199,7 +199,7 @@ Acts::Result<void> Acts::ImpactPoint3dEstimator<
     r = std::numeric_limits<double>::max();
   } else {
     // signed(!) r
-    r = std::sin(theta) * units::Nat2SI<units::MOMENTUM>(1 / qOvP) / bZ;
+    r = std::sin(theta) * (1 / qOvP) / bZ;
   }
 
   Vector3D vec0 = trkSurfaceCenter + Vector3D(-(d0 - r) * std::sin(phi),
