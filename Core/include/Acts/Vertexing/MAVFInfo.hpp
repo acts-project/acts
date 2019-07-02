@@ -14,8 +14,8 @@
 
 namespace Acts {
 
-/// @brief Helper struct for storing MultiAdaptiveVertexing
-/// related vertex infos
+/// @brief Helper struct for storing vertex related information
+/// needed for multi adaptive vertexing
 template <typename input_track_t>
 struct MAVFVertexInfo {
   // The linearization point
@@ -31,8 +31,8 @@ struct MAVFVertexInfo {
   bool relinearize;
 };
 
-/// @brief Helper struct for storing MultiAdaptiveVertexing
-/// related TrackAtVertex infos
+/// @brief Helper struct for storing TrackAtVertex related
+/// information needed for multi adaptive vertexing
 template <typename input_track_t>
 struct MAVFTrackAtVtxInfo {
   // Links to vertices currently using the TrackAtVertex object
