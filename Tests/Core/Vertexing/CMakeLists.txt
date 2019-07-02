@@ -51,3 +51,9 @@ target_include_directories (ImpactPoint3dEstimatorTests PRIVATE ${Boost_INCLUDE_
 target_link_libraries (ImpactPoint3dEstimatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME ImpactPoint3dEstimatorUnitTests COMMAND ImpactPoint3dEstimatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST ImpactPoint3dEstimatorUnitTests TARGETS ImpactPoint3dEstimatorTests)
+
+add_executable (KalmanVertexTrackUpdatorTests KalmanVertexTrackUpdatorTests.cpp)
+target_include_directories (KalmanVertexTrackUpdatorTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (KalmanVertexTrackUpdatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME KalmanVertexTrackUpdatorUnitTests COMMAND KalmanVertexTrackUpdatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanVertexTrackUpdatorUnitTests TARGETS KalmanVertexTrackUpdatorTests)
