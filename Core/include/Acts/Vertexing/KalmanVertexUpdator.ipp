@@ -137,7 +137,7 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   vtx->setFitQuality(chi2, ndf);
 
   // Add track to existing list of tracks at vertex
-  if (sign > 1) {
+  if (sign > 0) {
     auto tracksAtVertex = vtx->tracks();
     // Update track and add to list
     trk.chi2Track = trkChi2;
@@ -146,7 +146,7 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
     vtx->setTracksAtVertex(tracksAtVertex);
   }
   // Remove trk from current vertex
-  if (sign < 1) {
+  if (sign < 0) {
     auto tracksAtVertex = vtx->tracks();
     auto removeIter =
         std::remove_if(tracksAtVertex.begin(), tracksAtVertex.end(),
