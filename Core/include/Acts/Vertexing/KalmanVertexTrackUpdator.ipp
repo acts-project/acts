@@ -19,7 +19,7 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   const LinearizedTrack& linTrack = track.linearizedState;
 
   // Check if linearized state exists
-  if (linTrack.covarianceAtPCA.trace() == 0.) {
+  if (linTrack.covarianceAtPCA.determinant() == 0.) {
     // Track has no linearized state, returning w/o update
     return;
   }
