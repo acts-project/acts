@@ -51,7 +51,10 @@ struct TrackAtVertex {
   double chi2Track;
 
   /// Number degrees of freedom
-  int ndf;
+  /// Note: Can be different from integer value
+  /// since annealing can result in effective
+  /// non-interger values
+  double ndf;
 
   /// Fitted perigee
   BoundParameters fittedParams;
