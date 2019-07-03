@@ -10,7 +10,7 @@
 
 template <typename input_track_t>
 void Acts::KalmanVertexUpdator<input_track_t>::addAndUpdate(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk) const {
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) const {
   update(vtx, trk, 1);
 }
 
@@ -110,7 +110,7 @@ double Acts::KalmanVertexUpdator<input_track_t>::trackParametersChi2(
 
 template <typename input_track_t>
 void Acts::KalmanVertexUpdator<input_track_t>::update(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk,
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk,
     int sign) const {
   double trackWeight = trk.trackWeight;
 

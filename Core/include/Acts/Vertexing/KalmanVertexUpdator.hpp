@@ -33,7 +33,7 @@ class KalmanVertexUpdator {
   /// @param vtx Vertex to be updated
   /// @param trk Track to be added to vtx
   void addAndUpdate(Vertex<input_track_t>* vtx,
-                    TrackAtVertex<input_track_t> trk) const;
+                    TrackAtVertex<input_track_t>& trk) const;
 
   /// @brief Updates vertex position
   ///
@@ -73,7 +73,7 @@ class KalmanVertexUpdator {
   /// @param vtx Vertex to be updated
   /// @param trk Track to be added to/removed from vtx
   /// @param sign +1 (add track) or -1 (remove track)
-  void update(Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk,
+  void update(Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk,
               int sign) const;
 
   /// @brief Removes track from vertex if it is attached
