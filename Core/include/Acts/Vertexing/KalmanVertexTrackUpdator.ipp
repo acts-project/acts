@@ -118,8 +118,7 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   // Set new properties
   track.fittedParams = refittedPerigee;
   track.chi2Track = chi2;
-  track.trackWeight =
-      2 * track.trackWeight;  // TODO: where is this factor coming from?
+  track.ndf = 2 * track.trackWeight;
 }
 
 template <typename input_track_t>
