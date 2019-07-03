@@ -266,7 +266,9 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
     std::vector<TrackAtVertex<input_track_t>> newTracks;
     newTracks.reserve(vtx->tracks().size());
 
-    for (const auto& trkAtVtx : vtx->tracks()) {
+    auto oldTracks = vtx->tracks();
+
+    for (const auto& trkAtVtx : oldTracks) {
       // Create copy of current trackAtVertex in order
       // to modify it below
       newTracks.push_back(trkAtVtx);
@@ -305,9 +307,6 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
       }
 
     }  // End loop over tracks at vertex
-
-    // Update tracks at current vertex
-    vtx->setTracksAtVertex(newTracks);
 
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
   }  // End loop over vertex collection
