@@ -160,12 +160,13 @@ template <typename input_track_t>
 void Acts::KalmanVertexUpdator<input_track_t>::remove_track_if(
     Vertex<input_track_t>* vtx, const TrackAtVertex<input_track_t>& trk) const {
   auto tracksAtVertex = vtx->tracks();
-  auto removeIter =
-      std::remove_if(tracksAtVertex.begin(), tracksAtVertex.end(),
-                     [&trk](const auto& trkAtVertex) {
-                       return trk.fittedParams.parameters() ==
-                              trkAtVertex.fittedParams.parameters();
-                     });
-  tracksAtVertex.erase(removeIter);
+  auto removeIter = std::find_if(tracksAtVertex.begin(), tracksAtVertex.end(),
+                                 [&trk](const auto& trkAtVertex) {
+                                   return trk.fittedParams.parameters() ==
+                                          trkAtVertex.fittedParams.parameters();
+                                 });
+  if (removeIter != tracksAtVertex.end()) {
+    tracksAtVertex.erase(removeIter);
+  }
   vtx->setTracksAtVertex(tracksAtVertex);
 }
