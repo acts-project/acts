@@ -136,8 +136,13 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   vtx->setFullCovariance(tempVtx.fullCovariance());
   vtx->setFitQuality(chi2, ndf);
 
-  // Add track to existing list of tracks at vertex
+  // Updates track at vertex if already there
+  // by removing it first and adding new one.
+  // Otherwise just adds track to existing list of tracks at vertex
   if (sign > 0) {
+    // Remove old track if already there
+    remove_track_if(vtx, trk);
+    // Add track with updated ndf
     auto tracksAtVertex = vtx->tracks();
     // Update track and add to list
     trk.chi2Track = trkChi2;
@@ -147,14 +152,20 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   }
   // Remove trk from current vertex
   if (sign < 0) {
-    auto tracksAtVertex = vtx->tracks();
-    auto removeIter =
-        std::remove_if(tracksAtVertex.begin(), tracksAtVertex.end(),
-                       [&trk](const auto& trkAtVertex) {
-                         return trk.fittedParams.parameters() ==
-                                trkAtVertex.fittedParams.parameters();
-                       });
-    tracksAtVertex.erase(removeIter);
-    vtx->setTracksAtVertex(tracksAtVertex);
+    remove_track_if(vtx, trk);
   }
+}
+
+template <typename input_track_t>
+void Acts::KalmanVertexUpdator<input_track_t>::remove_track_if(
+    Vertex<input_track_t>* vtx, const TrackAtVertex<input_track_t>& trk) const {
+  auto tracksAtVertex = vtx->tracks();
+  auto removeIter =
+      std::remove_if(tracksAtVertex.begin(), tracksAtVertex.end(),
+                     [&trk](const auto& trkAtVertex) {
+                       return trk.fittedParams.parameters() ==
+                              trkAtVertex.fittedParams.parameters();
+                     });
+  tracksAtVertex.erase(removeIter);
+  vtx->setTracksAtVertex(tracksAtVertex);
 }

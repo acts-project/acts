@@ -75,6 +75,13 @@ class KalmanVertexUpdator {
   /// @param sign +1 (add track) or -1 (remove track)
   void update(Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t> trk,
               int sign) const;
+
+  /// @brief Removes track from vertex if it is attached
+  ///
+  /// @param vtx The vertex
+  /// @param trk The track
+  void remove_track_if(Vertex<input_track_t>* vtx,
+                       const TrackAtVertex<input_track_t>& trk) const;
 };
 
 }  // Namespace Acts
