@@ -36,6 +36,8 @@ template <typename bfield_t, typename input_track_t,
           typename propagator_t = Propagator<EigenStepper<bfield_t>>>
 class FullBilloirVertexFitter {
  public:
+  using InputTrack = input_track_t;
+
   struct Config {
     /// Magnetic field
     bfield_t bField;

@@ -18,9 +18,9 @@
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/ZScanVertexFinder.hpp"
-
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
+#include "Acts/Vertexing/VertexFitterConcept.hpp"
+#include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
 namespace Acts {
 
@@ -63,6 +63,9 @@ template <typename bfield_t, typename input_track_t, typename propagator_t,
           typename vfitter_t = Acts::FullBilloirVertexFitter<
               bfield_t, input_track_t, propagator_t>>
 class IterativeVertexFinder {
+  static_assert(VertexFitterConcept<vfitter_t>,
+                "Vertex fitter does not fulfill vertex fitter concept.");
+
  public:
   /// @struct Config Configuration struct
   struct Config {
