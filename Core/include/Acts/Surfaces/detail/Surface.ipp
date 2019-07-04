@@ -158,6 +158,12 @@ Surface::surfaceMaterial() const
   return m_surfaceMaterial.get();
 }
 
+inline const std::shared_ptr<const ISurfaceMaterial>
+Surface::surfaceMaterialPtr() const
+{
+  return m_surfaceMaterial;
+}
+
 inline void
 Surface::assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material)
 {

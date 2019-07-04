@@ -270,9 +270,13 @@ public:
   const std::vector<TrackingVolumeBoundaryPtr>&
   boundarySurfaces() const;
 
-  /// Return the material of the volume
-  std::shared_ptr<const IVolumeMaterial>
+  /// Return the material of the volume as plain pointer
+  const IVolumeMaterial*
   volumeMaterial() const;
+
+  /// Return the material of the volume as hared pointer
+  std::shared_ptr<const IVolumeMaterial>
+  volumeMaterialPtr() const;
 
   /// Set the volume material description
   ///
@@ -486,8 +490,14 @@ TrackingVolume::volumeName() const
   return m_name;
 }
 
-inline std::shared_ptr<const IVolumeMaterial>
+inline const IVolumeMaterial*
 TrackingVolume::volumeMaterial() const
+{
+  return m_volumeMaterial.get();
+}
+
+inline std::shared_ptr<const IVolumeMaterial>
+TrackingVolume::volumeMaterialPtr() const
 {
   return m_volumeMaterial;
 }
