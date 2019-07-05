@@ -440,7 +440,7 @@ class TrackStateProxy {
   /// @return the chi2 value of the track state
   double chi2() const { return data().chi2; }
 
-  /// Getter fot the path length associated with the track state.
+  /// Getter for the path length associated with the track state.
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return Mutable reference to the pathlength.
