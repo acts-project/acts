@@ -25,8 +25,6 @@ namespace Test {
 // the maximum tolerance is half the accuracy
 float elMaxTolerance = 0.5 / float(UCHAR_MAX);
 
-namespace au = Acts::units;
-
 BOOST_AUTO_TEST_CASE(ElementFraction_construction_test) {
   // carbon parameters, atomic charge is Z
   unsigned char carbonZ = 12;
