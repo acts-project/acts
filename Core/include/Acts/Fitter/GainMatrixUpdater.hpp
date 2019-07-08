@@ -118,7 +118,7 @@ class GainMatrixUpdater {
               (residual.transpose() *
                ((cov_t::Identity() - H * K) * calibrated_covariance).inverse() *
                residual)
-                  .eval()(0, 0);
+                  .value();
         });
 
     return Result<void>::success();
