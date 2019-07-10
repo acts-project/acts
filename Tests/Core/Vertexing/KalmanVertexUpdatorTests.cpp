@@ -155,7 +155,9 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updator) {
     vtx.setFullCovariance(SpacePointSymMatrix::Identity());
 
     // Update trkAtVertex with assumption of originating from vtx
-    updator.addAndUpdate(&vtx, trkAtVtx);
+    auto res = updator.addAndUpdate(&vtx, trkAtVtx);
+
+    BOOST_CHECK(res.ok());
 
     if (debug) {
       std::cout << "Old vertex position: " << vtxPos << std::endl;

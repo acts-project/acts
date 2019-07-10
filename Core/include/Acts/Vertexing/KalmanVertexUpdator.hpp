@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -32,8 +33,8 @@ class KalmanVertexUpdator {
   ///
   /// @param vtx Vertex to be updated
   /// @param trk Track to be added to vtx
-  void addAndUpdate(Vertex<input_track_t>* vtx,
-                    TrackAtVertex<input_track_t>& trk) const;
+  Result<void> addAndUpdate(Vertex<input_track_t>* vtx,
+                            TrackAtVertex<input_track_t>& trk) const;
 
   /// @brief Updates vertex position
   ///
@@ -43,9 +44,10 @@ class KalmanVertexUpdator {
   /// @param sign +1 (add track) or -1 (remove track)
   ///
   /// @return Vertex with updated position and covariance
-  Vertex<input_track_t> updatePosition(const Vertex<input_track_t>* vtx,
-                                       const LinearizedTrack& linTrack,
-                                       double trackWeight, int sign) const;
+  Result<Vertex<input_track_t>> updatePosition(const Vertex<input_track_t>* vtx,
+                                               const LinearizedTrack& linTrack,
+                                               double trackWeight,
+                                               int sign) const;
 
  private:
   /// @brief Takes old and new vtx and calculates position chi2
@@ -73,8 +75,8 @@ class KalmanVertexUpdator {
   /// @param vtx Vertex to be updated
   /// @param trk Track to be added to/removed from vtx
   /// @param sign +1 (add track) or -1 (remove track)
-  void update(Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk,
-              int sign) const;
+  Result<void> update(Vertex<input_track_t>* vtx,
+                      TrackAtVertex<input_track_t>& trk, int sign) const;
 
   /// @brief Removes track from vertex if it is attached
   ///
