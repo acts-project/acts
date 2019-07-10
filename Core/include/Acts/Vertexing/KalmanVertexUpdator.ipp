@@ -141,7 +141,7 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   // Otherwise just adds track to existing list of tracks at vertex
   if (sign > 0) {
     // Remove old track if already there
-    remove_track_if(vtx, trk);
+    removeTrackIf(vtx, trk);
     // Add track with updated ndf
     auto tracksAtVertex = vtx->tracks();
     // Update track and add to list
@@ -152,12 +152,12 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   }
   // Remove trk from current vertex
   if (sign < 0) {
-    remove_track_if(vtx, trk);
+    removeTrackIf(vtx, trk);
   }
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdator<input_track_t>::remove_track_if(
+void Acts::KalmanVertexUpdator<input_track_t>::removeTrackIf(
     Vertex<input_track_t>* vtx, const TrackAtVertex<input_track_t>& trk) const {
   auto tracksAtVertex = vtx->tracks();
   auto removeIter = std::find_if(tracksAtVertex.begin(), tracksAtVertex.end(),

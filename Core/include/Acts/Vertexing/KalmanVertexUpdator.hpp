@@ -80,8 +80,8 @@ class KalmanVertexUpdator {
   ///
   /// @param vtx The vertex
   /// @param trk The track
-  void remove_track_if(Vertex<input_track_t>* vtx,
-                       const TrackAtVertex<input_track_t>& trk) const;
+  void removeTrackIf(Vertex<input_track_t>* vtx,
+                     const TrackAtVertex<input_track_t>& trk) const;
 };
 
 }  // Namespace Acts
