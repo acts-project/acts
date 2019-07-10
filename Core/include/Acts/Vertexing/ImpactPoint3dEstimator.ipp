@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 Acts::Result<double> Acts::ImpactPoint3dEstimator<
     bfield_t, input_track_t,
@@ -31,7 +30,6 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
   // Return distance
   return deltaR.norm();
 }
-
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 Acts::Result<std::unique_ptr<const Acts::BoundParameters>>

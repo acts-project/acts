@@ -23,7 +23,6 @@ namespace Acts {
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 class ImpactPoint3dEstimator {
  public:
-
   /// @struct Configuration struct
   struct Config {
     /// @brief Configuration constructor
@@ -49,7 +48,6 @@ class ImpactPoint3dEstimator {
   ///
   /// @param cfg Configuration object
   ImpactPoint3dEstimator(const Config& cfg) : m_cfg(cfg) {}
-
 
   /// @brief Calculates 3D distance between a track and a 3D point
   ///
