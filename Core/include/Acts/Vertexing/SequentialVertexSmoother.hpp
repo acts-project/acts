@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/KalmanVertexTrackUpdator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -37,7 +38,8 @@ class SequentialVertexSmoother {
   ///
   /// @param gctx The Geometry Context
   /// @param vtx The vertex
-  void smooth(const GeometryContext& gctx, Vertex<input_track_t>* vtx) const;
+  Result<void> smooth(const GeometryContext& gctx,
+                      Vertex<input_track_t>* vtx) const;
 
  private:
   /// Configuration object

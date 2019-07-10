@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -43,8 +44,9 @@ class KalmanVertexTrackUpdator {
   /// @param gctx The Geometry Context
   /// @param track Track to update
   /// @param vtx Vertex `track` belongs to
-  void update(const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
-              const Vertex<input_track_t>* vtx) const;
+  Result<void> update(const GeometryContext& gctx,
+                      TrackAtVertex<input_track_t>& track,
+                      const Vertex<input_track_t>* vtx) const;
 
  private:
   /// Configuration object

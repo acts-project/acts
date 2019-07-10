@@ -81,10 +81,15 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
-double Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
-    getVtxCompatibility(const GeometryContext& gctx,
-                        const BoundParameters* trkParams,
-                        const Vector3D& vertexPos) const {
+Acts::Result<double> Acts::ImpactPoint3dEstimator<
+    bfield_t, input_track_t,
+    propagator_t>::getVtxCompatibility(const GeometryContext& gctx,
+                                       const BoundParameters* trkParams,
+                                       const Vector3D& vertexPos) const {
+  if (trkParams == nullptr) {
+    return VertexingError::EmptyInput;
+  }
+
   // surface rotation
   RotationMatrix3D myRotation =
       trkParams->referenceSurface().transform(gctx).rotation();

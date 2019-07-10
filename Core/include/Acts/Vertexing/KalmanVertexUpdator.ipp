@@ -7,18 +7,33 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
+#include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdator<input_track_t>::addAndUpdate(
+Acts::Result<void> Acts::KalmanVertexUpdator<input_track_t>::addAndUpdate(
     Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) const {
-  update(vtx, trk, 1);
+  if (vtx == nullptr) {
+    return VertexingError::EmptyInput;
+  }
+
+  auto res = update(vtx, trk, 1);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  return {};
 }
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>
+Acts::Result<Acts::Vertex<input_track_t>>
 Acts::KalmanVertexUpdator<input_track_t>::updatePosition(
     const Acts::Vertex<input_track_t>* vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign) const {
+  if (vtx == nullptr) {
+    return VertexingError::EmptyInput;
+  }
+
   // Retrieve linTrack information
   const SpacePointToBoundMatrix& posJac = linTrack.positionJacobian;
   const ActsMatrixD<BoundParsDim, 3>& momJac =
@@ -109,13 +124,18 @@ double Acts::KalmanVertexUpdator<input_track_t>::trackParametersChi2(
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdator<input_track_t>::update(
+Acts::Result<void> Acts::KalmanVertexUpdator<input_track_t>::update(
     Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk,
     int sign) const {
   double trackWeight = trk.trackWeight;
 
-  Vertex<input_track_t> tempVtx =
-      updatePosition(vtx, trk.linearizedState, trackWeight, sign);
+  auto res = updatePosition(vtx, trk.linearizedState, trackWeight, sign);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  Vertex<input_track_t> tempVtx = *res;
 
   // Get fit quality parameters wrt to old vertex
   std::pair fitQuality = vtx->fitQuality();
@@ -128,7 +148,7 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   // Calculate new chi2
   chi2 += sign * (vertexPositionChi2(vtx, &tempVtx) + trackWeight * trkChi2);
 
-  // TODO: why is this a double?!
+  // Calculate ndf
   ndf += sign * trackWeight * 2.;
 
   // Updating the vertex
@@ -154,6 +174,8 @@ void Acts::KalmanVertexUpdator<input_track_t>::update(
   if (sign < 0) {
     removeTrackIf(vtx, trk);
   }
+
+  return {};
 }
 
 template <typename input_track_t>
