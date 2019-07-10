@@ -82,12 +82,36 @@ struct RiddersPropagatorOptions : PropagatorOptions<action_list_t, aborter_list_
 template <typename propagator_t>
 class RiddersPropagator
 {
+
+private:
+  ///
+  /// @note The result_type_helper struct and the action_list_t_result_t are here to allow a look'n'feel of this class like the Propagator itself
+  ///
+  
+  /// @copydoc Propagator::result_type_helper
+  template <typename parameters_t, typename action_list_t>
+  struct result_type_helper {
+    /// @copydoc Propagator::result_type_helper::this_result_type
+    template <typename... args>
+    using this_result_type = PropagatorResult<parameters_t, args...>;
+
+    /// @copydoc Propagator::result_type_helper::type
+    using type = typename action_list_t::template result_type<this_result_type>;
+  };
+
+   /// @copydoc Propagator::action_list_t_result_t
+  template <typename parameters_t, typename action_list_t>
+  using action_list_t_result_t =
+      typename result_type_helper<parameters_t, action_list_t>::type;
+      
+
 public:
 	RiddersPropagator(propagator_t& propagator) : m_propagator(propagator){}
 	
 	template<typename stepper_t, typename navigator_t>
 	RiddersPropagator(stepper_t stepper, navigator_t navigator  = navigator_t()) : m_propagator(Propagator(stepper, navigator)) {}
 	
+	//TODO: Propagation without target surface
 //~ template <typename parameters_t, typename action_list_t,
 		//~ typename aborter_list_t,
 		//~ template <typename, typename> class propagator_options_t,
@@ -108,12 +132,15 @@ public:
             template <typename, typename> class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t = detail::PathLimitReached>
-  Covariance
+  Result<
+      action_list_t_result_t<typename propagator_t::Stepper::template return_parameter_type<
+                                 parameters_t, surface_t>,
+                             action_list_t>>
   propagate(
       const parameters_t& start, const surface_t& target,
       const RiddersPropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
-	 
+	// Launch nominal propagation and collect results
 	const auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options).value().endParameters;
 	const BoundVector& nominalParameters = nominalResult->parameters();
 	
@@ -126,24 +153,43 @@ public:
 	// in the reference frame that re-aligns with a slightly different
 	// intersection solution
 	
+	// Allow larger distances for the oscillation
 	options.pathLimit *= 2.;
 	
+	// Derivations of each parameter around the nominal parameters
 	std::array<std::vector<BoundVector>, Acts::BoundParsDim> derivatives;
 
+	// Wiggle each dimension individually
 	for(unsigned int i = 0; i < Acts::BoundParsDim; i++)
 	{
 		derivatives[i] = wiggleDimension(options, start, i, target, nominalParameters);
 	}
 	
-	return calculateCovariance(derivatives, start.covariance());
+	// Calculate the covariance at the target surface
+	calculateCovariance(derivatives, start.covariance());
+	
+	// TODO: return type
   }
 
-private:
-	template <typename action_list_t, typename aborter_list_t, typename parameters_t, typename surface_t> // TODO: Is the templated surface needed?
+private:  
+     
+    /// @brief This function wiggles one dimension of the starting parameters, performs the propagation to a surface and collects for each change of the start parameters the slope
+    ///
+    /// @tparam options_t PropagatorOptions object
+    /// @tparam parameters+t Type of the parameters to start the propagation with
+    ///
+    /// @param [in] options Options do define how to wiggle
+    /// @param [in] startPart Start parameters that are modified
+    /// @param [in] param Index to get the parameter that will be modified
+    /// @param [in] target Target surface
+    /// @param [in] nominal Nominal end parameters
+    ///
+    /// @return Vector containing each slope
+	template <typename options_t, typename parameters_t>
 	std::vector<BoundVector>
-	wiggleDimension(RiddersPropagatorOptions<action_list_t, aborter_list_t>& options, const parameters_t& startPars, const unsigned int param, const surface_t& target, const BoundVector& nominal) const
+	wiggleDimension(const options_t& options, const parameters_t& startPars, const unsigned int param, const Surface& target, const BoundVector& nominal) const
 	{
-		// variation in x/y/phi/qop/t
+		// Storage of the results
 		std::vector<BoundVector> derivatives;
 		derivatives.reserve(options.deviations.size());
 		for (double h : options.deviations) {
@@ -158,21 +204,32 @@ private:
 			  }
 			  if (current_theta + h < 0) {
 				h = -current_theta;
-			  } 
-			  
+			  }
 		  }
 		  
+		  // Modify start parameter and propagate
 		  tp.template set<param>(options.geoContext,
 										tp.template get<param>() + h);
 		  const auto& r = m_propagator.propagate(tp, target, options).value();
+		  
+		  // Collect the slope
 		  derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 		}
 		return derivatives;
 	}
 
-	template <typename action_list_t, typename aborter_list_t>
+	/// @brief This function propagates the covariance matrix
+	///
+	/// @tparam options_t PropagatorOptions object
+	///
+	/// @param [in] options Options that store the variations
+	/// @param [in] derivatives Slopes of each modification of the parameters
+	/// @param [in] startCov Starting covariance
+	///
+	/// @return Propagated covariance matrix
+	template <typename options_t>
 	Covariance
-	calculateCovariance(RiddersPropagatorOptions<action_list_t, aborter_list_t>& options, const std::array<std::vector<BoundVector>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
+	calculateCovariance(const options_t& options, const std::array<std::vector<BoundVector>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
 	{
 		Jacobian jacobian;
 		jacobian.setIdentity();
@@ -186,7 +243,7 @@ private:
     }
 
   template <unsigned long int N>
-  static BoundVector fitLinear(const std::vector<BoundVector>& values,
+  BoundVector fitLinear(const std::vector<BoundVector>& values,
                                const std::array<double, N>& h) {
     BoundVector A;
     BoundVector C;
@@ -208,6 +265,7 @@ private:
     return a;
   }
 
+	/// Propagator
 	propagator_t m_propagator;
 };
 
