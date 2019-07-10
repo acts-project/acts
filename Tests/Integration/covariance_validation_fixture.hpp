@@ -13,10 +13,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 
 namespace Acts {
 
 namespace IntegrationTest {
+
+using Jacobian = BoundMatrix;
+using Covariance = BoundSymMatrix;
 
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
@@ -36,7 +40,7 @@ struct RiddersPropagatorOptions : PropagatorOptions<action_list_t, aborter_list_
       std::reference_wrapper<const MagneticFieldContext> mctx)
       : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx) {}
       
-  std::vector<double> relativDeviations = {-2e-4, -1e-4, 1e-4, 2e-4};
+  std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
   
   /// @brief Expand the Options with extended aborters
   ///
@@ -47,29 +51,29 @@ struct RiddersPropagatorOptions : PropagatorOptions<action_list_t, aborter_list_
   RiddersPropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     RiddersPropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        geoContext, magFieldContext);
+        this->geoContext, this->magFieldContext);
     // Copy the options over
-    eoptions.direction = direction;
-    eoptions.absPdgCode = absPdgCode;
-    eoptions.mass = mass;
-    eoptions.maxSteps = maxSteps;
-    eoptions.maxStepSize = maxStepSize;
-    eoptions.targetTolerance = targetTolerance;
-    eoptions.pathLimit = pathLimit;
-    eoptions.loopProtection = loopProtection;
-    eoptions.loopFraction = loopFraction;
+    eoptions.direction = this->direction;
+    eoptions.absPdgCode = this->absPdgCode;
+    eoptions.mass = this->mass;
+    eoptions.maxSteps = this->maxSteps;
+    eoptions.maxStepSize = this->maxStepSize;
+    eoptions.targetTolerance = this->targetTolerance;
+    eoptions.pathLimit = this->pathLimit;
+    eoptions.loopProtection = this->loopProtection;
+    eoptions.loopFraction = this->loopFraction;
     // Output option
-    eoptions.debug = debug;
-    eoptions.debugString = debugString;
-    eoptions.debugPfxWidth = debugPfxWidth;
-    eoptions.debugMsgWidth = debugMsgWidth;
+    eoptions.debug = this->debug;
+    eoptions.debugString = this->debugString;
+    eoptions.debugPfxWidth = this->debugPfxWidth;
+    eoptions.debugMsgWidth = this->debugMsgWidth;
     // Stepper options
-    eoptions.tolerance = tolerance;
-    eoptions.stepSizeCutOff = stepSizeCutOff;
+    eoptions.tolerance = this->tolerance;
+    eoptions.stepSizeCutOff = this->stepSizeCutOff;
     // Action / abort list
-    eoptions.actionList = std::move(actionList);
+    eoptions.actionList = std::move(this->actionList);
     eoptions.abortList = std::move(aborters);
-    eoptions.relativDeviations = std::move(deviations);
+    eoptions.deviations = std::move(this->deviations);
     // And return the options
     return eoptions;
   }
@@ -104,16 +108,13 @@ public:
             template <typename, typename> class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t = detail::PathLimitReached>
-  Result<
-      action_list_t_result_t<typename stepper_t::template return_parameter_type<
-                                 parameters_t, surface_t>,
-                             action_list_t>>
+  Covariance
   propagate(
       const parameters_t& start, const surface_t& target,
       const RiddersPropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 	 
-	const auto& nominalResult = m_propagator.propagate(start, target, options).value().endParameters;
+	const auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options).value().endParameters;
 	const BoundVector& nominalParameters = nominalResult->parameters();
 	
     // - for planar surfaces the dest surface is a perfect destination
@@ -146,7 +147,7 @@ private:
 		std::vector<BoundVector> derivatives;
 		derivatives.reserve(options.deviations.size());
 		for (double h : options.deviations) {
-		  StartParameters tp = startPars;
+		  parameters_t tp = startPars;
 		  
 		  // Treatment for theta
 		  if(param == Acts::eTHETA)
@@ -169,17 +170,18 @@ private:
 		return derivatives;
 	}
 
+	template <typename action_list_t, typename aborter_list_t>
 	Covariance
-	calculateCovariance(const std::array<std::vector<BoundVector>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
+	calculateCovariance(RiddersPropagatorOptions<action_list_t, aborter_list_t>& options, const std::array<std::vector<BoundVector>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
 	{
 		Jacobian jacobian;
 		jacobian.setIdentity();
-		jacobian.col(Acts::eLOC_0) = fitLinear(derivatives[Acts::eLOC_0], h_steps);
-		jacobian.col(Acts::eLOC_1) = fitLinear(derivatives[Acts::eLOC_1], h_steps);
-		jacobian.col(Acts::ePHI) = fitLinear(derivatives[Acts::ePHI], h_steps);
-		jacobian.col(Acts::eTHETA) = fitLinear(derivatives[Acts::eTHETA], h_steps);
-		jacobian.col(Acts::eQOP) = fitLinear(derivatives[Acts::eQOP], h_steps);
-		jacobian.col(Acts::eT) = fitLinear(derivatives[Acts::eT], h_steps);
+		jacobian.col(Acts::eLOC_0) = fitLinear(derivatives[Acts::eLOC_0], options.deviations);
+		jacobian.col(Acts::eLOC_1) = fitLinear(derivatives[Acts::eLOC_1], options.deviations);
+		jacobian.col(Acts::ePHI) = fitLinear(derivatives[Acts::ePHI], options.deviations);
+		jacobian.col(Acts::eTHETA) = fitLinear(derivatives[Acts::eTHETA], options.deviations);
+		jacobian.col(Acts::eQOP) = fitLinear(derivatives[Acts::eQOP], options.deviations);
+		jacobian.col(Acts::eT) = fitLinear(derivatives[Acts::eT], options.deviations);
 		return jacobian * startCov * jacobian.transpose();
     }
 
@@ -209,8 +211,7 @@ private:
 	propagator_t m_propagator;
 };
 
-using Jacobian = BoundMatrix;
-using Covariance = BoundSymMatrix;
+
 
 template <typename T>
 struct covariance_validation_fixture {
