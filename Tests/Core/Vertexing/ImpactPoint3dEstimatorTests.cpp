@@ -263,9 +263,13 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
     BOOST_CHECK(res.ok());
 
     BoundParameters params = std::move(**res);
-    double comp =
+
+    auto compRes =
         ipEstimator.getVtxCompatibility(tgContext, &params, refPosition);
-    compatibilityList.push_back(comp);
+
+    BOOST_CHECK(compRes.ok());
+
+    compatibilityList.push_back(*compRes);
 
   }  // end create tracks loop
 

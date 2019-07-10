@@ -87,9 +87,9 @@ class ImpactPoint3dEstimator {
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
-  double getVtxCompatibility(const GeometryContext& gctx,
-                             const BoundParameters* trkParams,
-                             const Vector3D& vertexPos) const;
+  Result<double> getVtxCompatibility(const GeometryContext& gctx,
+                                     const BoundParameters* trkParams,
+                                     const Vector3D& vertexPos) const;
 
  private:
   /// Configuration object

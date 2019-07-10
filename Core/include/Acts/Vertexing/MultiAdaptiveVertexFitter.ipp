@@ -97,7 +97,10 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
   if (m_cfg.doSmoothing) {
     for (auto vtx : state.vertexCollection) {
       // Smooth all tracks at vertex `vtx`
-      m_cfg.vertexSmoother.smooth(geoContext, vtx);
+      auto smoothRes = m_cfg.vertexSmoother.smooth(geoContext, vtx);
+      if (!smoothRes.ok()) {
+        return smoothRes.error();
+      }
     }
   }
 
@@ -242,11 +245,15 @@ Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
     TrackAtVertex<input_track_t>* newTrkPtr = &(newTracks.back());
 
     // Set compatibility with current vertex
-    newTrkPtr->vertexCompatibility =
+    auto compRes = m_cfg.ipEst.getVtxCompatibility(
+        geoContext, state.trkInfoMap[trkAtVtx.id].ip3dParams.get(),
+        VectorHelpers::position(currentVtxInfo.oldPosition));
 
-        m_cfg.ipEst.getVtxCompatibility(
-            geoContext, state.trkInfoMap[trkAtVtx.id].ip3dParams.get(),
-            VectorHelpers::position(currentVtxInfo.oldPosition));
+    if (!compRes.ok()) {
+      return compRes.error();
+    }
+
+    newTrkPtr->vertexCompatibility = *compRes;
   }
   // Set list of updated tracks to current vertex
   currentVtx->setTracksAtVertex(newTracks);
@@ -301,7 +308,10 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
         // Update the vertex with the new track
-        m_cfg.vertexUpdator.addAndUpdate(vtx, (*newTrkPtr));
+        auto updateRes = m_cfg.vertexUpdator.addAndUpdate(vtx, (*newTrkPtr));
+        if (!updateRes.ok()) {
+          return updateRes.error();
+        }
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }

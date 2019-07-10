@@ -8,11 +8,16 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
+Acts::Result<void> Acts::KalmanVertexTrackUpdator<input_track_t>::update(
     const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
     const Vertex<input_track_t>* vtx) const {
+  if (vtx == nullptr) {
+    return VertexingError::EmptyInput;
+  }
+
   const SpacePointVector& vtxPos = vtx->fullPosition();
 
   // Get the linearized track
@@ -21,7 +26,7 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   // Check if linearized state exists
   if (linTrack.covarianceAtPCA.determinant() == 0.) {
     // Track has no linearized state, returning w/o update
-    return;
+    return {};
   }
 
   // Retrieve linTrack information
@@ -61,8 +66,14 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
 
   // Now determine the smoothed chi2 of the track in the following
   // get updated position, this removes track from vtx
-  Vertex<input_track_t> reducedVtx =
+  auto res =
       m_cfg.vtx_updator.updatePosition(vtx, linTrack, track.trackWeight, -1);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  Vertex<input_track_t> reducedVtx = *res;
 
   // Corresponding weight matrix
   const SpacePointSymMatrix reducedVtxWeight =
@@ -119,6 +130,8 @@ void Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   track.fittedParams = refittedPerigee;
   track.chi2Track = chi2;
   track.ndf = 2 * track.trackWeight;
+
+  return {};
 }
 
 template <typename input_track_t>
