@@ -69,7 +69,6 @@ class IterativeVertexFinder {
 
   /// @struct Config Configuration struct
   struct Config {
-
     /// @brief Config constructor
     ///
     /// @param fitter Vertex fitter
@@ -87,7 +86,7 @@ class IterativeVertexFinder {
     Linearizer_t linearizer;
 
     /// ImpactPoint3dEstimator
-    ImpactPoint3dEstimator<input_track_t> ipEst;
+    ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t> ipEst;
 
     /// Vertex seed finder
     sfinder_t seedFinder;

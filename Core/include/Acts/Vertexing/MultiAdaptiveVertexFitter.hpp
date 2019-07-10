@@ -54,7 +54,6 @@ class MultiAdaptiveVertexFitter {
   };
 
   struct Config {
-
     /// @brief Config constructor
     ///
     /// @param bIn The magnetic field
