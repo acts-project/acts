@@ -130,7 +130,7 @@ class MultiAdaptiveVertexFitter {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
-  /// @brief The actual fit function, performs a simulateous
+  /// @brief The actual fit function, performs a simulaneous
   ///   fit of all vertices in state.vertexCollection
   ///
   /// @param state The state object
