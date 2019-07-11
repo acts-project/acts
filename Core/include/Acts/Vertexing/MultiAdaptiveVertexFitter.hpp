@@ -141,7 +141,7 @@ class MultiAdaptiveVertexFitter {
       State& state,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
-  /// @brief Adds new vertex to a previous multi-vertex fit
+  /// @brief Adds new vertex to an existing multi-vertex fit
   /// and fits everything together (by invoking the fit method):
   /// 1. The new vertex is added to the fit: all associated tracks get
   /// initialized, i.e. ParamsAtIP3d are created (from ImpactPoint3dEstimator)
