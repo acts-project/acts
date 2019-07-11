@@ -181,8 +181,7 @@ bool Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t, propagator_t>::
     isAlreadyInList(
         Vertex<input_track_t>* vtx,
         const std::vector<Vertex<input_track_t>*>& verticesVec) const {
-  return std::find_if(verticesVec.begin(), verticesVec.end(),
-                      [vtx](Vertex<input_track_t>* v) { return v == vtx; }) !=
+  return std::find(verticesVec.begin(), verticesVec.end(), vtx) !=
          verticesVec.end();
 }
 
