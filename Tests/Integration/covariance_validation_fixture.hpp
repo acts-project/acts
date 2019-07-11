@@ -111,20 +111,19 @@ public:
 	template<typename stepper_t, typename navigator_t>
 	RiddersPropagator(stepper_t stepper, navigator_t navigator  = navigator_t()) : m_propagator(Propagator(stepper, navigator)) {}
 	
-	//TODO: Propagation without target surface
-template <typename parameters_t, typename action_list_t,
+template <typename parameters_t, typename surface_t, typename action_list_t,
 		typename aborter_list_t,
 		template <typename, typename> class propagator_options_t,
 		typename path_aborter_t = detail::PathLimitReached>
 Result<action_list_t_result_t<
-  typename stepper_t::template return_parameter_type<parameters_t>,
+  typename propagator_t::Stepper::template return_parameter_type<parameters_t>,
   action_list_t>>
 propagate(
   const parameters_t& start,
   const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
 	// Launch nominal propagation and collect results
-	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options).value();
+	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, path_aborter_t>(start, options).value();
 	const BoundVector& nominalParameters = nominalResult.endParameters->parameters();
 	const Surface& surface = nominalResult.endParameters->referenceSurface();
 
@@ -132,12 +131,12 @@ propagate(
 	options.pathLimit *= 2.;
 	
 	// Derivations of each parameter around the nominal parameters
-	std::array<std::vector<BoundVector>, Acts::BoundParsDim> derivatives;
+	std::array<std::vector<BoundVector>, BoundParsDim> derivatives;
 	
 	// Wiggle each dimension individually
-	for(unsigned int i = 0; i < Acts::BoundParsDim; i++)
+	for(unsigned int i = 0; i < BoundParsDim; i++)
 	{
-		derivatives[i] = wiggleDimension(options, start, i, target, nominalParameters);
+		derivatives[i] = wiggleDimension(options, start, i, surface, nominalParameters);
 	}
 	
 	// Calculate the covariance at the target surface
@@ -147,7 +146,6 @@ propagate(
   template <typename parameters_t, typename surface_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t,
-            typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t = detail::PathLimitReached>
   Result<
       action_list_t_result_t<typename propagator_t::Stepper::template return_parameter_type<
@@ -158,7 +156,7 @@ propagate(
       const RiddersPropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 	// Launch nominal propagation and collect results
-	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options).value();
+	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, path_aborter_t>(start, target, options).value(); // TODO: get rid of templates
 	const BoundVector& nominalParameters = nominalResult.endParameters->parameters();
 	
     // - for planar surfaces the dest surface is a perfect destination
@@ -174,10 +172,10 @@ propagate(
 	options.pathLimit *= 2.;
 	
 	// Derivations of each parameter around the nominal parameters
-	std::array<std::vector<BoundVector>, Acts::BoundParsDim> derivatives;
+	std::array<std::vector<BoundVector>, BoundParsDim> derivatives;
 
 	// Wiggle each dimension individually
-	for(unsigned int i = 0; i < Acts::BoundParsDim; i++)
+	for(unsigned int i = 0; i < BoundParsDim; i++)
 	{
 		derivatives[i] = wiggleDimension(options, start, i, target, nominalParameters);
 	}
@@ -185,6 +183,7 @@ propagate(
 	// Calculate the covariance at the target surface
 	calculateCovariance(derivatives, start.covariance());
 	
+	//~ nominalResult.endParameters = std::make_unique<const BoundParameters>(
 	// TODO: return type
   }
 
@@ -213,7 +212,7 @@ private:
 		  parameters_t tp = startPars;
 		  
 		  // Treatment for theta
-		  if(param == Acts::eTHETA)
+		  if(param == eTHETA)
 		  {
 			  const double current_theta = tp.template get<Acts::eTHETA>();
 			  if (current_theta + h > M_PI) {
@@ -250,18 +249,18 @@ private:
 	{
 		Jacobian jacobian;
 		jacobian.setIdentity();
-		jacobian.col(Acts::eLOC_0) = fitLinear(derivatives[Acts::eLOC_0], options.deviations);
-		jacobian.col(Acts::eLOC_1) = fitLinear(derivatives[Acts::eLOC_1], options.deviations);
-		jacobian.col(Acts::ePHI) = fitLinear(derivatives[Acts::ePHI], options.deviations);
-		jacobian.col(Acts::eTHETA) = fitLinear(derivatives[Acts::eTHETA], options.deviations);
-		jacobian.col(Acts::eQOP) = fitLinear(derivatives[Acts::eQOP], options.deviations);
-		jacobian.col(Acts::eT) = fitLinear(derivatives[Acts::eT], options.deviations);
+		jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0], options.deviations);
+		jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1], options.deviations);
+		jacobian.col(ePHI) = fitLinear(derivatives[ePHI], options.deviations);
+		jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA], options.deviations);
+		jacobian.col(eQOP) = fitLinear(derivatives[eQOP], options.deviations);
+		jacobian.col(eT) = fitLinear(derivatives[eT], options.deviations);
 		return jacobian * startCov * jacobian.transpose();
     }
 
   template <unsigned long int N>
   BoundVector fitLinear(const std::vector<BoundVector>& values,
-                               const std::array<double, N>& h) {
+                               const std::array<double, N>& h) const {
     BoundVector A;
     BoundVector C;
     A.setZero();
@@ -284,9 +283,8 @@ private:
 
 	/// Propagator
 	propagator_t m_propagator;
+
 };
-
-
 
 template <typename T>
 struct covariance_validation_fixture {
