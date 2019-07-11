@@ -14,7 +14,7 @@
 
 namespace Acts {
 
-/// @class KalmanVertexUpdator
+/// @class KalmanVertexUpdater
 ///
 /// @brief adds or removes track from or updates current vertex
 /// Based on R. Frühwirth et al.
@@ -23,10 +23,10 @@ namespace Acts {
 ///
 /// @tparam input_track_t Track object type
 template <typename input_track_t>
-class KalmanVertexUpdator {
+class KalmanVertexUpdater {
  public:
   /// Default constructor
-  KalmanVertexUpdator() = default;
+  KalmanVertexUpdater() = default;
 
   /// @brief Method adding single track to vertex estimate
   /// and updates vertex
@@ -88,4 +88,4 @@ class KalmanVertexUpdator {
 
 }  // Namespace Acts
 
-#include "KalmanVertexUpdator.ipp"
+#include "KalmanVertexUpdater.ipp"

@@ -308,7 +308,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
         // Update the vertex with the new track
-        auto updateRes = m_cfg.vertexUpdator.addAndUpdate(vtx, (*newTrkPtr));
+        auto updateRes = m_cfg.vertexUpdater.addAndUpdate(vtx, (*newTrkPtr));
         if (!updateRes.ok()) {
           return updateRes.error();
         }

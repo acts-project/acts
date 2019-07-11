@@ -18,7 +18,7 @@ Acts::Result<void> Acts::SequentialVertexSmoother<input_track_t>::smooth(
   std::vector<TrackAtVertex<input_track_t>> tracks = vtx->tracks();
   for (auto& trk : tracks) {
     // update trk
-    auto res = m_cfg.trackUpdator.update(gctx, trk, vtx);
+    auto res = m_cfg.trackUpdater.update(gctx, trk, vtx);
     if (!res.ok()) {
       return res.error();
     }

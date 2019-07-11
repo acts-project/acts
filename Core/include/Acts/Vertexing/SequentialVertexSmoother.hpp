@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/KalmanVertexTrackUpdator.hpp"
+#include "Acts/Vertexing/KalmanVertexTrackUpdater.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -27,7 +27,7 @@ template <typename input_track_t>
 class SequentialVertexSmoother {
  public:
   struct Config {
-    KalmanVertexTrackUpdator<input_track_t> trackUpdator;
+    KalmanVertexTrackUpdater<input_track_t> trackUpdater;
   };
 
   /// @brief Default constructor
