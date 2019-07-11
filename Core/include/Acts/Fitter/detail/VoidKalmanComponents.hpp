@@ -76,9 +76,9 @@ struct VoidMeasurementCalibrator {
   }
 };
 
-/// @brief void Kalman updator
-struct VoidKalmanUpdator {
-  /// @brief Public call mimicking an updator
+/// @brief void Kalman updater
+struct VoidKalmanUpdater {
+  /// @brief Public call mimicking an updater
   ///
   /// @tparam measurement_t Type of the measurement to be used
   /// @tpredicted_state_t Type of the (bound) predicted state
@@ -96,7 +96,7 @@ struct VoidKalmanUpdator {
 
 /// @brief void Kalman smoother
 struct VoidKalmanSmoother {
-  /// @brief Public call mimicking an updator
+  /// @brief Public call mimicking an updater
   ///
   /// @tparam track_states_t Type of the track states
   ///

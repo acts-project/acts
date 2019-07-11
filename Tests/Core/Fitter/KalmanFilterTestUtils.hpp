@@ -22,7 +22,7 @@
 #include "Acts/Extrapolation/StaticEngine.hpp"
 #include "Acts/Extrapolation/StaticNavigationEngine.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
-#include "Acts/Fitter/KalmanUpdator.hpp"
+#include "Acts/Fitter/KalmanUpdater.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
