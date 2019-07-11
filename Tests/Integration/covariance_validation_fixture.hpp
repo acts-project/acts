@@ -125,6 +125,7 @@ propagate(
 	// Launch nominal propagation and collect results
 	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, path_aborter_t>(start, options).value();
 	const BoundVector& nominalParameters = nominalResult.endParameters->parameters();
+	// Pick the surface of the propagation as target
 	const Surface& surface = nominalResult.endParameters->referenceSurface();
 
 	// Allow larger distances for the oscillation
@@ -137,10 +138,14 @@ propagate(
 	for(unsigned int i = 0; i < BoundParsDim; i++)
 	{
 		derivatives[i] = wiggleDimension(options, start, i, surface, nominalParameters);
-	}
+	}	
 	
-	// Calculate the covariance at the target surface
-	calculateCovariance(derivatives, start.covariance());
+	// Exchange the result by Ridders Covariance
+	if(nominalResult.endParameters->charge() == 0.)
+		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1));
+	else	
+		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1));
+	return nominalResult;
   }
   
   template <typename parameters_t, typename surface_t, typename action_list_t,
@@ -180,11 +185,12 @@ propagate(
 		derivatives[i] = wiggleDimension(options, start, i, target, nominalParameters);
 	}
 	
-	// Calculate the covariance at the target surface
-	calculateCovariance(derivatives, start.covariance());
-	
-	//~ nominalResult.endParameters = std::make_unique<const BoundParameters>(
-	// TODO: return type
+	// Exchange the result by Ridders Covariance
+	if(nominalResult.endParameter->charge() == 0.)
+		nominalResult.endParameters = std::make_unique<const BoundParameters>(options.geoContext, calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1), target.getSharedPtr());
+	else
+		nominalResult.endParameters = std::make_unique<const BoundParameters>(options.geoContext, calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1), target.getSharedPtr());
+	return nominalResult;
   }
 
 private:  
@@ -244,7 +250,7 @@ private:
 	///
 	/// @return Propagated covariance matrix
 	template <typename options_t>
-	Covariance
+	std::unique_ptr<const Covariance>
 	calculateCovariance(const options_t& options, const std::array<std::vector<BoundVector>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
 	{
 		Jacobian jacobian;
@@ -255,7 +261,7 @@ private:
 		jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA], options.deviations);
 		jacobian.col(eQOP) = fitLinear(derivatives[eQOP], options.deviations);
 		jacobian.col(eT) = fitLinear(derivatives[eT], options.deviations);
-		return jacobian * startCov * jacobian.transpose();
+		return std::make_unique<const Covariance>(jacobian * startCov * jacobian.transpose());
     }
 
   template <unsigned long int N>
