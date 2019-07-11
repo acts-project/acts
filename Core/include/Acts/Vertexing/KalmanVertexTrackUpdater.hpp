@@ -10,13 +10,13 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/KalmanVertexUpdator.hpp"
+#include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
 
-/// @class KalmanVertexTrackUpdator
+/// @class KalmanVertexTrackUpdater
 ///
 /// @brief Refits a single track with the knowledge of
 /// the vertex it has originated from
@@ -27,16 +27,16 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 
 template <typename input_track_t>
-class KalmanVertexTrackUpdator {
+class KalmanVertexTrackUpdater {
  public:
   /// @struct Configuration struct
   struct Config {
-    /// Kalman vertex updator
-    KalmanVertexUpdator<input_track_t> vtx_updator;
+    /// Kalman vertex updater
+    KalmanVertexUpdater<input_track_t> vtx_updater;
   };
 
   /// Constructor
-  KalmanVertexTrackUpdator(const Config& config = Config()) : m_cfg(config) {}
+  KalmanVertexTrackUpdater(const Config& config = Config()) : m_cfg(config) {}
 
   /// @brief Refits a single track with the knowledge of
   /// the vertex it has originated from
@@ -64,4 +64,4 @@ class KalmanVertexTrackUpdator {
 
 }  // Namespace Acts
 
-#include "Acts/Vertexing/KalmanVertexTrackUpdator.ipp"
+#include "Acts/Vertexing/KalmanVertexTrackUpdater.ipp"

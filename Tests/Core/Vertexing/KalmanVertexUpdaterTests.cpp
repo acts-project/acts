@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE KalmanVertexTrackUpdator Tests
+#define BOOST_TEST_MODULE KalmanVertexUpdater Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -18,9 +18,8 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Vertexing/KalmanVertexTrackUpdator.hpp"
+#include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
-#include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -61,11 +60,12 @@ std::uniform_real_distribution<> resIPDist(0., 100_um);
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
 std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
+// Number of vertices per test event distribution
 
 ///
-/// @brief Unit test for KalmanVertexTrackUpdator
+/// @brief Unit test for KalmanVertexUpdater
 ///
-BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdator) {
+BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   bool debug = true;
 
   // Number of tests
@@ -84,15 +84,6 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdator) {
   // Set up propagator with void navigator
   Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
-  // Set up ImpactPoint3dEstimator, used for comparisons later
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator<EigenStepper<ConstantBField>>>::Config
-      ip3dEstConfig(bField, propagator);
-
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator<EigenStepper<ConstantBField>>>
-      ip3dEst(ip3dEstConfig);
-
   // Set up LinearizedTrackFactory, needed for linearizing the tracks
   LinearizedTrackFactory<ConstantBField,
                          Propagator<EigenStepper<ConstantBField>>>::Config
@@ -101,22 +92,24 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdator) {
                          Propagator<EigenStepper<ConstantBField>>>
       linFactory(ltConfig);
 
-  // The track updator to be tested
-  KalmanVertexTrackUpdator<BoundParameters> updator;
+  // The track updater to be tested
+  KalmanVertexUpdater<BoundParameters> updater;
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  // Create random tracks around origin and a random vertex.
-  // Update tracks with the assumption that they originate from
-  // the vertex position and check if they are closer to the
-  // vertex after the update process
+  // Creates a random tracks around origin and a random vertex.
+  // VertexUpdater adds track to vertex and updates the position
+  // which should afterwards be closer to the origin/track
   for (unsigned int i = 0; i < nTests; ++i) {
+    if (debug) {
+      std::cout << "Test " << i + 1 << std::endl;
+    }
     // Construct positive or negative charge randomly
     double q = qDist(gen) < 0 ? -1. : 1.;
 
-    // Construct random track parameters
+    // Construct random track parameters around origin
     TrackParametersBase::ParVector_t paramVec;
 
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
@@ -156,37 +149,34 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdator) {
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
 
-    // Copy track for later comparison of old and new version
-    TrackAtVertex<BoundParameters> trkCopy = trkAtVtx;
-
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundParameters> vtx(vtxPos);
+    vtx.setFullCovariance(SpacePointSymMatrix::Identity());
 
     // Update trkAtVertex with assumption of originating from vtx
-    auto res = updator.update(tgContext, trkAtVtx, &vtx);
+    auto res = updater.addAndUpdate(&vtx, trkAtVtx);
 
     BOOST_CHECK(res.ok());
 
-    // The old distance
-    double oldDistance =
-        ip3dEst.calculateDistance(tgContext, trkCopy.fittedParams, vtxPos)
-            .value();
+    if (debug) {
+      std::cout << "Old vertex position: " << vtxPos << std::endl;
+      std::cout << "New vertex position: " << vtx.position() << std::endl;
+    }
 
-    // The new distance after update
-    double newDistance =
-        ip3dEst.calculateDistance(tgContext, trkAtVtx.fittedParams, vtxPos)
-            .value();
+    double oldDistance = vtxPos.norm();
+    double newDistance = vtx.position().norm();
+
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;
       std::cout << "New distance: " << newDistance << std::endl;
     }
 
-    // Parameters should have changed
-    BOOST_CHECK_NE(trkCopy.fittedParams, trkAtVtx.fittedParams);
-
-    // After update, track should be closer to the vertex
+    // After update, vertex should be closer to the track
     BOOST_CHECK(newDistance < oldDistance);
+
+    // Track should have been added to the vertex
+    BOOST_CHECK(vtx.tracks().size() > 0);
 
   }  // end for loop
 

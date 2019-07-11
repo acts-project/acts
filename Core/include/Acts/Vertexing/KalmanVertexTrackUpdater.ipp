@@ -11,7 +11,7 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-Acts::Result<void> Acts::KalmanVertexTrackUpdator<input_track_t>::update(
+Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
     const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
     const Vertex<input_track_t>* vtx) const {
   if (vtx == nullptr) {
@@ -67,7 +67,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdator<input_track_t>::update(
   // Now determine the smoothed chi2 of the track in the following
   // get updated position, this removes track from vtx
   auto res =
-      m_cfg.vtx_updator.updatePosition(vtx, linTrack, track.trackWeight, -1);
+      m_cfg.vtx_updater.updatePosition(vtx, linTrack, track.trackWeight, -1);
 
   if (!res.ok()) {
     return res.error();
@@ -136,7 +136,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdator<input_track_t>::update(
 
 template <typename input_track_t>
 std::pair<double, double>
-Acts::KalmanVertexTrackUpdator<input_track_t>::correctPhiThetaPeriodicity(
+Acts::KalmanVertexTrackUpdater<input_track_t>::correctPhiThetaPeriodicity(
     double phiIn, double thetaIn) const {
   double tmpPhi = std::fmod(phiIn, 2 * M_PI);  // temp phi
   if (tmpPhi > M_PI) {

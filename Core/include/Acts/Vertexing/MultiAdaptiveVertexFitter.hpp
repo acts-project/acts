@@ -12,7 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
-#include "Acts/Vertexing/KalmanVertexUpdator.hpp"
+#include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/MAVFInfo.hpp"
 #include "Acts/Vertexing/SequentialVertexSmoother.hpp"
@@ -76,8 +76,8 @@ class MultiAdaptiveVertexFitter {
     // ImpactPoint3dEstimator
     ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t> ipEst;
 
-    // Vertex updator
-    KalmanVertexUpdator<input_track_t> vertexUpdator;
+    // Vertex updater
+    KalmanVertexUpdater<input_track_t> vertexUpdater;
 
     // SequentialVertexSmoother
     SequentialVertexSmoother<input_track_t> vertexSmoother;
@@ -219,7 +219,7 @@ class MultiAdaptiveVertexFitter {
       Vertex<input_track_t>* currentVtx) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
-  ///  and updates the vertices by calling the VertexUpdator
+  ///  and updates the vertices by calling the VertexUpdater
   ///
   /// @param state The state object
   /// @param vFitterOptions Vertex fitter options
