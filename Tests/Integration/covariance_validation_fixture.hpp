@@ -112,20 +112,37 @@ public:
 	RiddersPropagator(stepper_t stepper, navigator_t navigator  = navigator_t()) : m_propagator(Propagator(stepper, navigator)) {}
 	
 	//TODO: Propagation without target surface
-//~ template <typename parameters_t, typename action_list_t,
-		//~ typename aborter_list_t,
-		//~ template <typename, typename> class propagator_options_t,
-		//~ typename path_aborter_t = detail::PathLimitReached>
-//~ Result<action_list_t_result_t<
-  //~ typename stepper_t::template return_parameter_type<parameters_t>,
-  //~ action_list_t>>
-//~ propagate(
-  //~ const parameters_t& start,
-  //~ const propagator_options_t<action_list_t, aborter_list_t>& options) const
-  //~ {
-	  	//~ const Surface& surface = nominalResult->referenceSurface();
+template <typename parameters_t, typename action_list_t,
+		typename aborter_list_t,
+		template <typename, typename> class propagator_options_t,
+		typename path_aborter_t = detail::PathLimitReached>
+Result<action_list_t_result_t<
+  typename stepper_t::template return_parameter_type<parameters_t>,
+  action_list_t>>
+propagate(
+  const parameters_t& start,
+  const propagator_options_t<action_list_t, aborter_list_t>& options) const
+  {
+	// Launch nominal propagation and collect results
+	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options).value();
+	const BoundVector& nominalParameters = nominalResult.endParameters->parameters();
+	const Surface& surface = nominalResult.endParameters->referenceSurface();
 
-  //~ }
+	// Allow larger distances for the oscillation
+	options.pathLimit *= 2.;
+	
+	// Derivations of each parameter around the nominal parameters
+	std::array<std::vector<BoundVector>, Acts::BoundParsDim> derivatives;
+	
+	// Wiggle each dimension individually
+	for(unsigned int i = 0; i < Acts::BoundParsDim; i++)
+	{
+		derivatives[i] = wiggleDimension(options, start, i, target, nominalParameters);
+	}
+	
+	// Calculate the covariance at the target surface
+	calculateCovariance(derivatives, start.covariance());
+  }
   
   template <typename parameters_t, typename surface_t, typename action_list_t,
             typename aborter_list_t,
@@ -141,8 +158,8 @@ public:
       const RiddersPropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 	// Launch nominal propagation and collect results
-	const auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options).value().endParameters;
-	const BoundVector& nominalParameters = nominalResult->parameters();
+	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options).value();
+	const BoundVector& nominalParameters = nominalResult.endParameters->parameters();
 	
     // - for planar surfaces the dest surface is a perfect destination
 	// surface for the numerical propagation, as reference frame
