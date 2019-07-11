@@ -277,7 +277,8 @@ class TrackingVolume : public Volume {
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& gp, const double tol = 0.) const;
+                                             const Vector3D& gp,
+                                             const double tol = 0.) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists
