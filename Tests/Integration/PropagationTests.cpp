@@ -55,6 +55,9 @@ using EigenPropagatorType = Propagator<EigenStepperType>;
 using DensePropagatorType = Propagator<DenseStepperType, Navigator>;
 using AtlasPropagatorType = Propagator<AtlasStepperType>;
 using StraightPropagatorType = Propagator<StraightLineStepper>;
+using RiddersStraightPropagatorType = RiddersPropagator<StraightPropagatorType>;
+using RiddersEigenPropagatorType = RiddersPropagator<EigenPropagatorType>;
+using RiddersAtlasPropagatorType = RiddersPropagator<AtlasPropagatorType>;
 
 // number of tests
 const int ntests = 100;
@@ -72,6 +75,13 @@ AtlasStepperType astepper(bField);
 AtlasPropagatorType apropagator(std::move(astepper));
 StraightLineStepper sstepper;
 StraightPropagatorType spropagator(std::move(sstepper));
+
+StraightLineStepper rsstepper;
+RiddersStraightPropagatorType rspropagator(std::move(rsstepper));
+EigenStepperType restepper;
+RiddersEigenPropagatorType repropagator(std::move(restepper));
+AtlasStepperType rastepper;
+RiddersAtlasPropagatorType rapropagator(std::move(rastepper));
 
 DensePropagatorType setupDensePropagator() {
   CuboidVolumeBuilder::VolumeConfig vConf;

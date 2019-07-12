@@ -187,6 +187,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
   covariance_curvilinear(apropagator, pT, phi, theta, charge, plimit);
   // covariance check for straight line stepper
   covariance_curvilinear(spropagator, pT, phi, theta, charge, plimit);
+  
+  covariance_curvilinear(rspropagator, pT, phi, theta, charge, plimit);
+  covariance_curvilinear(repropagator, pT, phi, theta, charge, plimit);
+  covariance_curvilinear(rapropagator, pT, phi, theta, charge, plimit);
 }
 
 // test correct covariance transport from disc to disc

@@ -22,63 +22,6 @@ namespace IntegrationTest {
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 
-template <typename action_list_t = ActionList<>,
-          typename aborter_list_t = AbortList<>>
-struct RiddersPropagatorOptions : PropagatorOptions<action_list_t, aborter_list_t>{
-	
-	/// Copy Constructor
-  RiddersPropagatorOptions(
-      const RiddersPropagatorOptions<action_list_t, aborter_list_t>&
-          rpo) = default;
-
-  /// Constructor with GeometryContext
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param mctx The current magnetic fielc context object
-  RiddersPropagatorOptions(
-      std::reference_wrapper<const GeometryContext> gctx,
-      std::reference_wrapper<const MagneticFieldContext> mctx)
-      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx) {}
-      
-  std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
-  
-  /// @brief Expand the Options with extended aborters
-  ///
-  /// @tparam extended_aborter_list_t Type of the new aborter list
-  ///
-  /// @param aborters The new aborter list to be used (internally)
-  template <typename extended_aborter_list_t>
-  RiddersPropagatorOptions<action_list_t, extended_aborter_list_t> extend(
-      extended_aborter_list_t aborters) const {
-    RiddersPropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        this->geoContext, this->magFieldContext);
-    // Copy the options over
-    eoptions.direction = this->direction;
-    eoptions.absPdgCode = this->absPdgCode;
-    eoptions.mass = this->mass;
-    eoptions.maxSteps = this->maxSteps;
-    eoptions.maxStepSize = this->maxStepSize;
-    eoptions.targetTolerance = this->targetTolerance;
-    eoptions.pathLimit = this->pathLimit;
-    eoptions.loopProtection = this->loopProtection;
-    eoptions.loopFraction = this->loopFraction;
-    // Output option
-    eoptions.debug = this->debug;
-    eoptions.debugString = this->debugString;
-    eoptions.debugPfxWidth = this->debugPfxWidth;
-    eoptions.debugMsgWidth = this->debugMsgWidth;
-    // Stepper options
-    eoptions.tolerance = this->tolerance;
-    eoptions.stepSizeCutOff = this->stepSizeCutOff;
-    // Action / abort list
-    eoptions.actionList = std::move(this->actionList);
-    eoptions.abortList = std::move(aborters);
-    eoptions.deviations = std::move(this->deviations);
-    // And return the options
-    return eoptions;
-  }
-};
-
 template <typename propagator_t>
 class RiddersPropagator
 {
@@ -106,15 +49,18 @@ private:
       
 
 public:
+
+	const unsigned int n = 4;
+	std::array<double, n> deviations = {-2e-4, -1e-4, 1e-4, 2e-4}; // TODO: get rid of fixed dimension
+
 	RiddersPropagator(propagator_t& propagator) : m_propagator(propagator){}
 	
-	template<typename stepper_t, typename navigator_t>
+	template<typename stepper_t, typename navigator_t = detail::VoidNavigator>
 	RiddersPropagator(stepper_t stepper, navigator_t navigator  = navigator_t()) : m_propagator(Propagator(stepper, navigator)) {}
 	
-template <typename parameters_t, typename surface_t, typename action_list_t,
+template <typename parameters_t, typename action_list_t,
 		typename aborter_list_t,
-		template <typename, typename> class propagator_options_t,
-		typename path_aborter_t = detail::PathLimitReached>
+		template <typename, typename> class propagator_options_t>
 Result<action_list_t_result_t<
   typename propagator_t::Stepper::template return_parameter_type<parameters_t>,
   action_list_t>>
@@ -123,45 +69,45 @@ propagate(
   const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
 	// Launch nominal propagation and collect results
-	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, path_aborter_t>(start, options).value();
+	auto nominalResult = m_propagator.propagate(start, options).value();
 	const BoundVector& nominalParameters = nominalResult.endParameters->parameters();
 	// Pick the surface of the propagation as target
 	const Surface& surface = nominalResult.endParameters->referenceSurface();
 
 	// Allow larger distances for the oscillation
-	options.pathLimit *= 2.;
+	propagator_options_t<action_list_t, aborter_list_t> opts = options;
+	opts.pathLimit *= 2.;
 	
 	// Derivations of each parameter around the nominal parameters
-	std::array<std::vector<BoundVector>, BoundParsDim> derivatives;
+	std::array<std::array<BoundVector, n>, BoundParsDim> derivatives;
 	
 	// Wiggle each dimension individually
 	for(unsigned int i = 0; i < BoundParsDim; i++)
 	{
-		derivatives[i] = wiggleDimension(options, start, i, surface, nominalParameters);
-	}	
+		derivatives[i] = wiggleDimension(opts, start, i, surface, nominalParameters);
+	}
 	
 	// Exchange the result by Ridders Covariance
 	if(nominalResult.endParameters->charge() == 0.)
-		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1));
+		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1));
 	else	
-		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1));
+		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1));
 	return nominalResult;
   }
   
   template <typename parameters_t, typename surface_t, typename action_list_t,
             typename aborter_list_t,
-            template <typename, typename> class propagator_options_t,
-            typename path_aborter_t = detail::PathLimitReached>
+            template <typename, typename> class propagator_options_t>
   Result<
       action_list_t_result_t<typename propagator_t::Stepper::template return_parameter_type<
                                  parameters_t, surface_t>,
                              action_list_t>>
   propagate(
       const parameters_t& start, const surface_t& target,
-      const RiddersPropagatorOptions<action_list_t, aborter_list_t>& options) const
+      const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
 	// Launch nominal propagation and collect results
-	auto& nominalResult = m_propagator.template propagate<parameters_t, surface_t, action_list_t, aborter_list_t, propagator_options_t, path_aborter_t>(start, target, options).value(); // TODO: get rid of templates
+	auto nominalResult = m_propagator.propagate(start, target, options).value();
 	const BoundVector& nominalParameters = nominalResult.endParameters->parameters();
 	
     // - for planar surfaces the dest surface is a perfect destination
@@ -174,22 +120,23 @@ propagate(
 	// intersection solution
 	
 	// Allow larger distances for the oscillation
-	options.pathLimit *= 2.;
+	propagator_options_t<action_list_t, aborter_list_t> opts = options;
+	opts.pathLimit *= 2.;
 	
 	// Derivations of each parameter around the nominal parameters
-	std::array<std::vector<BoundVector>, BoundParsDim> derivatives;
+	std::array<std::array<BoundVector, n>, BoundParsDim> derivatives;
 
 	// Wiggle each dimension individually
 	for(unsigned int i = 0; i < BoundParsDim; i++)
 	{
-		derivatives[i] = wiggleDimension(options, start, i, target, nominalParameters);
+		derivatives[i] = wiggleDimension(opts, start, i, target, nominalParameters);
 	}
 	
 	// Exchange the result by Ridders Covariance
-	if(nominalResult.endParameter->charge() == 0.)
-		nominalResult.endParameters = std::make_unique<const BoundParameters>(options.geoContext, calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1), target.getSharedPtr());
+	if(nominalResult.endParameters->charge() == 0.)
+		nominalResult.endParameters = std::make_unique<const BoundParameters>(opts.geoContext, calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1), target.getSharedPtr());
 	else
-		nominalResult.endParameters = std::make_unique<const BoundParameters>(options.geoContext, calculateCovariance(derivatives, start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1), target.getSharedPtr());
+		nominalResult.endParameters = std::make_unique<const BoundParameters>(opts.geoContext, calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1), target.getSharedPtr());
 	return nominalResult;
   }
 
@@ -212,9 +159,11 @@ private:
 	wiggleDimension(const options_t& options, const parameters_t& startPars, const unsigned int param, const Surface& target, const BoundVector& nominal) const
 	{
 		// Storage of the results
-		std::vector<BoundVector> derivatives;
-		derivatives.reserve(options.deviations.size());
-		for (double h : options.deviations) {
+		std::array<BoundVector, n> derivatives;
+		derivatives.reserve(deviations.size());
+		//~ for (double h : deviations) {
+		for (unsigned int i = 0; i < n; i++) {
+			double h = deviations[i];
 		  parameters_t tp = startPars;
 		  
 		  // Treatment for theta
@@ -235,32 +184,31 @@ private:
 		  const auto& r = m_propagator.propagate(tp, target, options).value();
 		  
 		  // Collect the slope
-		  derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+		  derivatives[i] = (r.endParameters->parameters() - nominal) / h;
 		}
 		return derivatives;
 	}
 
-	/// @brief This function propagates the covariance matrix
-	///
-	/// @tparam options_t PropagatorOptions object
-	///
-	/// @param [in] options Options that store the variations
-	/// @param [in] derivatives Slopes of each modification of the parameters
-	/// @param [in] startCov Starting covariance
-	///
-	/// @return Propagated covariance matrix
-	template <typename options_t>
+	//~ /// @brief This function propagates the covariance matrix
+	//~ ///
+	//~ /// @tparam options_t PropagatorOptions object
+	//~ ///
+	//~ /// @param [in] options Options that store the variations
+	//~ /// @param [in] derivatives Slopes of each modification of the parameters
+	//~ /// @param [in] startCov Starting covariance
+	//~ ///
+	//~ /// @return Propagated covariance matrix
 	std::unique_ptr<const Covariance>
-	calculateCovariance(const options_t& options, const std::array<std::vector<BoundVector>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
+	calculateCovariance(const std::array<std::array<BoundVector, n>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
 	{
 		Jacobian jacobian;
 		jacobian.setIdentity();
-		jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0], options.deviations);
-		jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1], options.deviations);
-		jacobian.col(ePHI) = fitLinear(derivatives[ePHI], options.deviations);
-		jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA], options.deviations);
-		jacobian.col(eQOP) = fitLinear(derivatives[eQOP], options.deviations);
-		jacobian.col(eT) = fitLinear(derivatives[eT], options.deviations);
+		jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0], deviations);
+		jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1], deviations);
+		jacobian.col(ePHI) = fitLinear(derivatives[ePHI], deviations);
+		jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA], deviations);
+		jacobian.col(eQOP) = fitLinear(derivatives[eQOP], deviations);
+		jacobian.col(eT) = fitLinear(derivatives[eT], deviations);
 		return std::make_unique<const Covariance>(jacobian * startCov * jacobian.transpose());
     }
 
