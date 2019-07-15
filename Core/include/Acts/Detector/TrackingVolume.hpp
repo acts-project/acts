@@ -275,8 +275,8 @@ public:
   volumeMaterial() const;
 
   /// Return the material of the volume as hared pointer
-  std::shared_ptr<const IVolumeMaterial>
-  volumeMaterialPtr() const;
+  const std::shared_ptr<const IVolumeMaterial>&
+  volumeMaterialSharedPtr() const;
 
   /// Set the volume material description
   ///
@@ -496,8 +496,8 @@ TrackingVolume::volumeMaterial() const
   return m_volumeMaterial.get();
 }
 
-inline std::shared_ptr<const IVolumeMaterial>
-TrackingVolume::volumeMaterialPtr() const
+inline const std::shared_ptr<const IVolumeMaterial>&
+TrackingVolume::volumeMaterialSharedPtr() const
 {
   return m_volumeMaterial;
 }
