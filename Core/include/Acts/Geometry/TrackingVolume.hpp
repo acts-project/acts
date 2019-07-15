@@ -293,7 +293,10 @@ class TrackingVolume : public Volume {
   const std::vector<TrackingVolumeBoundaryPtr>& boundarySurfaces() const;
 
   /// Return the material of the volume
-  std::shared_ptr<const IVolumeMaterial> volumeMaterial() const;
+  const IVolumeMaterial* volumeMaterial() const;
+
+  /// Return the material of the volume as shared pointer
+  const std::shared_ptr<const IVolumeMaterial>& volumeMaterialSharedPtr() const;
 
   /// Set the volume material description
   ///
@@ -506,8 +509,12 @@ inline const std::string& TrackingVolume::volumeName() const {
   return m_name;
 }
 
-inline std::shared_ptr<const IVolumeMaterial> TrackingVolume::volumeMaterial()
-    const {
+inline const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
+  return m_volumeMaterial.get();
+}
+
+inline const std::shared_ptr<const IVolumeMaterial>&
+TrackingVolume::volumeMaterialSharedPtr() const {
   return m_volumeMaterial;
 }
 
