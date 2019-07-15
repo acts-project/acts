@@ -274,7 +274,7 @@ public:
   const IVolumeMaterial*
   volumeMaterial() const;
 
-  /// Return the material of the volume as hared pointer
+  /// Return the material of the volume as shared pointer
   const std::shared_ptr<const IVolumeMaterial>&
   volumeMaterialSharedPtr() const;
 
