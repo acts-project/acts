@@ -624,8 +624,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3D yPos(0., 1., 0.);
   Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-  MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3,
-                             0.5_mm);
+  MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
 
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::SurfaceConfig sConf1;
@@ -633,8 +632,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   sConf1.rotation.col(0) = xPos;
   sConf1.rotation.col(1) = yPos;
   sConf1.rotation.col(2) = zPos;
-  sConf1.rBounds = std::make_shared<const RectangleBounds>(
-      RectangleBounds(0.5_m, 0.5_m));
+  sConf1.rBounds =
+      std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
   sConf1.surMat = std::shared_ptr<const ISurfaceMaterial>(
       new HomogeneousSurfaceMaterial(matProp));
   sConf1.thickness = 1._mm;
@@ -646,8 +645,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   sConf2.rotation.col(0) = xPos;
   sConf2.rotation.col(1) = yPos;
   sConf2.rotation.col(2) = zPos;
-  sConf2.rBounds = std::make_shared<const RectangleBounds>(
-      RectangleBounds(0.5_m, 0.5_m));
+  sConf2.rBounds =
+      std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
   sConf2.surMat = std::shared_ptr<const ISurfaceMaterial>(
       new HomogeneousSurfaceMaterial(matProp));
   sConf2.thickness = 1._mm;
