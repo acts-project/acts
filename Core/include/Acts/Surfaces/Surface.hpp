@@ -272,8 +272,8 @@ public:
 
   /// Return method for the shared pointer to the associated Material
   /// @return SurfaceMaterial as shared_pointer, can be nullptr
-  const std::shared_ptr<const ISurfaceMaterial>
-  surfaceMaterialPtr() const;
+  const std::shared_ptr<const ISurfaceMaterial>&
+  surfaceMaterialSharedPtr() const;
 
   /// Assign the surface material description
   ///
