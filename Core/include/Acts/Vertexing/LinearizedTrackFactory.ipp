@@ -38,6 +38,8 @@ Acts::LinearizedTrackFactory<bfield_t,
 
   PropagatorOptions<action_list_t, aborter_list_t> pOptions(gctx, mctx);
 
+  pOptions.direction = backward;
+
   // Do the propagation to linPoint
   auto result = propagator.propagate(*params, *perigeeSurface, pOptions);
   if (result.ok()) {
