@@ -50,8 +50,7 @@ private:
 
 public:
 
-	const unsigned int n = 4;
-	std::array<double, n> deviations = {-2e-4, -1e-4, 1e-4, 2e-4}; // TODO: get rid of fixed dimension
+	std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
 
 	RiddersPropagator(propagator_t& propagator) : m_propagator(propagator){}
 	
@@ -79,19 +78,18 @@ propagate(
 	opts.pathLimit *= 2.;
 	
 	// Derivations of each parameter around the nominal parameters
-	std::array<std::array<BoundVector, n>, BoundParsDim> derivatives;
-	
+	std::array<std::vector<BoundVector>, BoundParsDim> derivatives;
+
 	// Wiggle each dimension individually
 	for(unsigned int i = 0; i < BoundParsDim; i++)
 	{
 		derivatives[i] = wiggleDimension(opts, start, i, surface, nominalParameters);
 	}
-	
 	// Exchange the result by Ridders Covariance
-	if(nominalResult.endParameters->charge() == 0.)
-		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1));
-	else	
-		nominalResult.endParameters = std::make_unique<const CurvilinearParameters>(calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1));
+	const FullParameterSet& parSet = nominalResult.endParameters->getParameterSet();
+	FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
+	mParSet->setCovariance((start.covariance() != nullptr) ? calculateCovariance(derivatives, *start.covariance()) : nullptr);
+
 	return nominalResult;
   }
   
@@ -124,19 +122,18 @@ propagate(
 	opts.pathLimit *= 2.;
 	
 	// Derivations of each parameter around the nominal parameters
-	std::array<std::array<BoundVector, n>, BoundParsDim> derivatives;
+	std::array<std::vector<BoundVector>, BoundParsDim> derivatives;
 
 	// Wiggle each dimension individually
 	for(unsigned int i = 0; i < BoundParsDim; i++)
 	{
 		derivatives[i] = wiggleDimension(opts, start, i, target, nominalParameters);
 	}
-	
 	// Exchange the result by Ridders Covariance
-	if(nominalResult.endParameters->charge() == 0.)
-		nominalResult.endParameters = std::make_unique<const BoundParameters>(opts.geoContext, calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalParameters.tail(1), target.getSharedPtr());
-	else
-		nominalResult.endParameters = std::make_unique<const BoundParameters>(opts.geoContext, calculateCovariance(derivatives, *start.covariance()), nominalParameters.head(3), nominalParameters.template segment<3>(3), nominalResult.endParameters->charge(), nominalParameters.tail(1), target.getSharedPtr());
+	const FullParameterSet& parSet = nominalResult.endParameters->getParameterSet();
+	FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
+	mParSet->setCovariance((start.covariance() != nullptr) ? calculateCovariance(derivatives, *start.covariance()) : nullptr);
+
 	return nominalResult;
   }
 
@@ -159,17 +156,15 @@ private:
 	wiggleDimension(const options_t& options, const parameters_t& startPars, const unsigned int param, const Surface& target, const BoundVector& nominal) const
 	{
 		// Storage of the results
-		std::array<BoundVector, n> derivatives;
+		std::vector<BoundVector> derivatives;
 		derivatives.reserve(deviations.size());
-		//~ for (double h : deviations) {
-		for (unsigned int i = 0; i < n; i++) {
-			double h = deviations[i];
+		for (double h : deviations) {
 		  parameters_t tp = startPars;
 		  
 		  // Treatment for theta
 		  if(param == eTHETA)
 		  {
-			  const double current_theta = tp.template get<Acts::eTHETA>();
+			  const double current_theta = tp.template get<eTHETA>();
 			  if (current_theta + h > M_PI) {
 				h = M_PI - current_theta;
 			  }
@@ -179,12 +174,50 @@ private:
 		  }
 		  
 		  // Modify start parameter and propagate
-		  tp.template set<param>(options.geoContext,
-										tp.template get<param>() + h);
+		  switch(param)
+		  {
+			  case 0:
+			  {
+				tp.template set<eLOC_0>(options.geoContext,
+											tp.template get<eLOC_0>() + h);
+				break;
+			  }
+			  case 1:
+			  {
+				tp.template set<eLOC_1>(options.geoContext,
+											tp.template get<eLOC_1>() + h);
+				break;
+			  }
+			  case 2:
+			  {
+				tp.template set<ePHI>(options.geoContext,
+											tp.template get<ePHI>() + h);
+				break;
+			  }
+			  case 3:
+			  {
+				tp.template set<eTHETA>(options.geoContext,
+											tp.template get<eTHETA>() + h);
+				break;
+			  }
+			  case 4:
+			  {
+				tp.template set<eQOP>(options.geoContext,
+											tp.template get<eQOP>() + h);
+				break;
+			  }
+			  case 5:
+			  {
+				tp.template set<eT>(options.geoContext,
+											tp.template get<eT>() + h);
+				break;
+			  }
+			  default:
+				return {};
+		  }
 		  const auto& r = m_propagator.propagate(tp, target, options).value();
-		  
 		  // Collect the slope
-		  derivatives[i] = (r.endParameters->parameters() - nominal) / h;
+		  derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 		}
 		return derivatives;
 	}
@@ -199,7 +232,7 @@ private:
 	//~ ///
 	//~ /// @return Propagated covariance matrix
 	std::unique_ptr<const Covariance>
-	calculateCovariance(const std::array<std::array<BoundVector, n>, Acts::BoundParsDim>& derivatives, const Covariance& startCov) const
+	calculateCovariance(const std::array<std::vector<BoundVector>, BoundParsDim>& derivatives, const Covariance& startCov) const
 	{
 		Jacobian jacobian;
 		jacobian.setIdentity();
@@ -211,16 +244,16 @@ private:
 		jacobian.col(eT) = fitLinear(derivatives[eT], deviations);
 		return std::make_unique<const Covariance>(jacobian * startCov * jacobian.transpose());
     }
-
-  template <unsigned long int N>
+    
   BoundVector fitLinear(const std::vector<BoundVector>& values,
-                               const std::array<double, N>& h) const {
+                               const std::vector<double>& h) const {
     BoundVector A;
     BoundVector C;
     A.setZero();
     C.setZero();
     double B = 0;
     double D = 0;
+    const unsigned int N = h.size();
 
     for (unsigned int i = 0; i < N; ++i) {
       A += h.at(i) * values.at(i);
