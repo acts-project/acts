@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE GainMatrixUpdator Tests
+#define BOOST_TEST_MODULE GainMatrixUpdater Tests
 #include <boost/optional/optional_io.hpp>
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
@@ -16,7 +16,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
-#include "Acts/Fitter/GainMatrixUpdator.hpp"
+#include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
@@ -36,7 +36,7 @@ using TrackState = TrackState<SourceLink, BoundParameters>;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
+BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   // Make dummy measurement
   auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updator) {
   mState.parameter.pathLength = 0.;
 
   // Gain matrix update and filtered state
-  GainMatrixUpdator<BoundParameters> gmu;
+  GainMatrixUpdater<BoundParameters> gmu;
 
   BOOST_CHECK(!mState.parameter.filtered);
   BOOST_CHECK(!mState.measurement.calibrated);
