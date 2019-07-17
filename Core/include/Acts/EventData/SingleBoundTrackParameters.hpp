@@ -70,6 +70,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] position The global position of the track parameterisation
   /// @param[in] momentum The global momentum of the track parameterisation
   /// @param[in] dCharge The charge of the particle track parameterisation
+  /// @param[in] dTime The time component of the parameters
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
