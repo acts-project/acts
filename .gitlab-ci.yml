@@ -107,7 +107,7 @@ build_slc6_lcg94_incremental:
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
   script:
-    - source CI/incremental_build_setup.sh || true
+    - export prev_tag=$(CI/incremental_prev_tag.py)
     - export current_head=$(git rev-parse HEAD)
     - git checkout $prev_tag
     - mkdir build

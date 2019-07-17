@@ -250,6 +250,11 @@ class Surface : public virtual GeometryObject,
   /// @return SurfaceMaterial as plain pointer, can be nullptr
   const ISurfaceMaterial* surfaceMaterial() const;
 
+  /// Return method for the shared pointer to the associated Material
+  /// @return SurfaceMaterial as shared_pointer, can be nullptr
+  const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterialSharedPtr()
+      const;
+
   /// Assign the surface material description
   ///
   /// The material is usually derived in a complicated way and loaded from

@@ -104,9 +104,10 @@ struct DenseEnvironmentExtension {
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
-      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] /
-                     (stepper.charge(state.stepping) *
-                      stepper.charge(state.stepping) * units::_C * units::_C);
+      Lambdappi[0] =
+          -qop[0] * qop[0] * qop[0] * g * energy[0] /
+          (stepper.charge(state.stepping) * stepper.charge(state.stepping) *
+           UnitConstants::C * UnitConstants::C);
       tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
     } else {
       // Update parameters and check for momentum condition
@@ -119,9 +120,10 @@ struct DenseEnvironmentExtension {
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
       double qopNew = qop[0] + h * Lambdappi[i - 1];
-      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
-                     (stepper.charge(state.stepping) *
-                      stepper.charge(state.stepping) * units::_C * units::_C);
+      Lambdappi[i] =
+          -qopNew * qopNew * qopNew * g * energy[i] /
+          (stepper.charge(state.stepping) * stepper.charge(state.stepping) *
+           UnitConstants::C * UnitConstants::C);
       tKi[i] = std::hypot(1, state.options.mass / qopNew);
     }
     return true;

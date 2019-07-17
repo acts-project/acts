@@ -10,19 +10,19 @@
 
 namespace Acts {
 
-/// @brief Vertex Finder Options
+/// @brief Vertex Fitter Options
 ///
 template <typename input_track_t>
-struct VertexFinderOptions {
+struct VertexFitterOptions {
   /// Default contstructor is deleted
-  VertexFinderOptions() = delete;
+  VertexFitterOptions() = delete;
 
-  /// VertexFinderOptions with context
+  /// VertexFitterOptions with context
   ///
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param vconstr The pointing contraint to a vertex
-  VertexFinderOptions(
+  VertexFitterOptions(
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> mctx,
       const Vertex<input_track_t>& vconstr = Vertex<input_track_t>())

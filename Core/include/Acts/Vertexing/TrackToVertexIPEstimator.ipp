@@ -30,6 +30,7 @@ Acts::TrackToVertexIPEstimator<
 
   PropagatorOptions<action_list_t, aborter_list_t> propagatorOptions(gctx,
                                                                      mctx);
+  propagatorOptions.direction = backward;
 
   // Do the propagation to linPoint
   auto result = propagator.propagate(track, *perigeeSurface, propagatorOptions);

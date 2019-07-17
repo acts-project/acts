@@ -69,7 +69,7 @@ struct KalmanFitterOptions {
 /// to the Propgator
 ///
 /// @tparam propagator_t Type of the propagation class
-/// @tparam updator_t Type of the kalman updator class
+/// @tparam updater_t Type of the kalman updater class
 /// @tparam smoother_t Type of the kalman smoother class
 /// @tparam calibrator_t Type of the calibrator class
 /// @tparam input_converter_t Type of the input converter class
@@ -80,9 +80,9 @@ struct KalmanFitterOptions {
 /// in order to initialize and provide the measurement surfaces.
 ///
 /// The Actor is part of the Propagation call and does the Kalman update
-/// and eventually the smoothing.  Updator, Smoother and Calibrator are
+/// and eventually the smoothing.  Updater, Smoother and Calibrator are
 /// given to the Actor for further use:
-/// - The Updator is the implemented kalman updator formalism, it
+/// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
 /// - The Smoother is called at the end of the forward fit by the Actor.
 /// - The Calibrator is a dedicated calibration algorithm that allows
@@ -100,7 +100,7 @@ struct KalmanFitterOptions {
 /// set of track states into a given track/track particle class
 ///
 /// The void components are provided mainly for unit testing.
-template <typename propagator_t, typename updator_t = VoidKalmanUpdator,
+template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
           typename calibrator_t = VoidMeasurementCalibrator,
           typename input_converter_t = VoidKalmanComponents,
@@ -212,10 +212,10 @@ class KalmanFitter {
    public:
     using TrackStateType = TrackState<source_link_t, parameters_t>;
 
-    /// Explicit constructor with updator and calibrator
-    Actor(updator_t pUpdator = updator_t(), smoother_t pSmoother = smoother_t(),
+    /// Explicit constructor with updater and calibrator
+    Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
           calibrator_t pCalibrator = calibrator_t())
-        : m_updator(std::move(pUpdator)),
+        : m_updater(std::move(pUpdater)),
           m_smoother(std::move(pSmoother)),
           m_calibrator(std::move(pCalibrator)) {}
 
@@ -352,7 +352,7 @@ class KalmanFitter {
         trackState.parameter.pathLength = std::get<2>(boundState);
 
         // If the update is successful, set covariance and
-        if (m_updator(state.geoContext, trackState)) {
+        if (m_updater(state.geoContext, trackState)) {
           // Update the stepping state
           ACTS_VERBOSE("Filtering step successful, updated parameters are : \n"
                        << *trackState.parameter.filtered);
@@ -413,8 +413,8 @@ class KalmanFitter {
     /// Getter for the logger, to support logging macros
     const Logger& logger() const { return *m_logger; }
 
-    /// The Kalman updator
-    updator_t m_updator;
+    /// The Kalman updater
+    updater_t m_updater;
 
     /// The Kalman smoother
     smoother_t m_smoother;

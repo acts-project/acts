@@ -25,7 +25,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
-#include "Acts/Fitter/GainMatrixUpdator.hpp"
+#include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -314,9 +314,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   const Surface* rSurface = &rStart.referenceSurface();
 
-  using Updator = GainMatrixUpdator<BoundParameters>;
+  using Updater = GainMatrixUpdater<BoundParameters>;
   using Smoother = GainMatrixSmoother<BoundParameters>;
-  using KalmanFitter = KalmanFitter<RecoPropagator, Updator, Smoother>;
+  using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
 
   KalmanFitter kFitter(rPropagator,
                        getDefaultLogger("KalmanFilter", Logging::VERBOSE));

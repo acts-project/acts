@@ -21,7 +21,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -37,14 +36,6 @@ using Covariance = BoundSymMatrix;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
-
-template <typename InputTrack_t, typename Propagator_t>
-Vertex<InputTrack_t> myFitWrapper(
-    IVertexFitter<InputTrack_t, Propagator_t>* fitter,
-    std::vector<InputTrack_t>& tracks,
-    VertexFitterOptions<InputTrack_t> vfOptions) {
-  return fitter->fit(tracks, vfOptions).value();
-}
 
 /// @brief Unit test for FullBilloirVertexFitter
 ///
@@ -219,12 +210,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     if (fittedVertexConstraint.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
-    // Test the IVertexFitter interface
-    Vertex<BoundParameters> testVertex =
-        myFitWrapper(&billoirFitter, tracks, vfOptions);
-    if (testVertex.tracks().size() > 0) {
-      CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1_mm);
-    }
 
     if (debugMode) {
       std::cout << "Fitting nTracks: " << nTracks << std::endl;
@@ -358,12 +343,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     if (fittedVertexConstraint.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
-
-    // Test the IVertexFitter interface
-    Vertex<InputTrack> testVertex =
-        myFitWrapper(&billoirFitter, tracks, vfOptions);
-
-    CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1_mm);
 
     if (debugMode) {
       std::cout << "Fitting nTracks: " << nTracks << std::endl;

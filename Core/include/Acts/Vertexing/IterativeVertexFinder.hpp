@@ -14,14 +14,13 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/ZScanVertexFinder.hpp"
-
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
+#include "Acts/Vertexing/VertexFitterConcept.hpp"
+#include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
 namespace Acts {
 
@@ -59,8 +58,14 @@ namespace Acts {
 /// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
 /// @tparam propagator_t Propagator type
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+/// @tparam vfitter_t Vertex fitter type
+template <typename bfield_t, typename input_track_t, typename propagator_t,
+          typename vfitter_t = Acts::FullBilloirVertexFitter<
+              bfield_t, input_track_t, propagator_t>>
 class IterativeVertexFinder {
+  static_assert(VertexFitterConcept<vfitter_t>,
+                "Vertex fitter does not fulfill vertex fitter concept.");
+
  public:
   /// @struct Config Configuration struct
   struct Config {
@@ -72,8 +77,7 @@ class IterativeVertexFinder {
     ///
     /// @note Initializes default LinearizedTrackFactory and ZScanVertexFinder
     /// as seed finder
-    Config(const bfield_t& bIn,
-           std::unique_ptr<IVertexFitter<input_track_t, propagator_t>> fitter,
+    Config(const bfield_t& bIn, vfitter_t fitter,
            const propagator_t& propagatorIn)
         : bField(bIn),
           vertexFitter(std::move(fitter)),
@@ -91,7 +95,7 @@ class IterativeVertexFinder {
     bfield_t bField;
 
     /// Vertex fitter
-    std::unique_ptr<IVertexFitter<input_track_t, propagator_t>> vertexFitter;
+    vfitter_t vertexFitter;
 
     /// Linearized track factory
     LinearizedTrackFactory<bfield_t, propagator_t> linFactory;

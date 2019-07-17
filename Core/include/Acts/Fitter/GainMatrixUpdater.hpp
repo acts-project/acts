@@ -27,7 +27,7 @@ namespace Acts {
 /// boost variant container
 template <typename parameters_t,
           typename calibrator_t = VoidMeasurementCalibrator>
-class GainMatrixUpdator {
+class GainMatrixUpdater {
   using jacobian_t = typename parameters_t::CovMatrix_t;
 
  public:
@@ -35,7 +35,7 @@ class GainMatrixUpdator {
   ///
   /// @param calibrator is the calibration struct/class that converts
   /// uncalibrated measurements into calibrated ones
-  GainMatrixUpdator(calibrator_t calibrator = calibrator_t())
+  GainMatrixUpdater(calibrator_t calibrator = calibrator_t())
       : m_mCalibrator(std::move(calibrator)) {}
 
   /// @brief Public call operator for the boost visitor pattern
