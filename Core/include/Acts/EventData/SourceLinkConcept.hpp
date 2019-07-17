@@ -40,7 +40,7 @@ namespace concept {
         surface_method_exists,
         "Source link does not have compliant referenceSurface method");
 
-    constexpr static bool copyable = std::is_trivially_copyable_v<T>;
+    constexpr static bool copyable = std::is_copy_constructible_v<T>;
     static_assert(copyable, "Source link must be trivially copyable");
 
     constexpr static bool value =
