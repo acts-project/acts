@@ -165,6 +165,43 @@ build_slc6_lcg94_no_legacy:
     - cmake --build . -- -j${ACTS_NCPUS}
     - find . -name "*.o" -delete
 
+# SLC6, LCG95
+
+build_slc6_lcg95:
+  <<: *template_build
+  variables:
+    BUILD_TYPE: Debug # for coverage check
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
+  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  before_script:
+    - set +e && source CI/setup_lcg95.sh; set -e
+
+unit_tests_slc6_lcg95:
+  <<: *template_unit_tests
+  dependencies:
+    - build_slc6_lcg95
+  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  before_script:
+    - set +e && source CI/setup_lcg95.sh; set -e
+  # replace script to also calculate code coverage
+  script:
+    - cmake --build build -- test
+    - cd build
+    # we need a clean environment so we can install gcovr (pip), but we need to use gcov from lcg
+    - env -i bash ../CI/coverage_environment.sh "../CI/test_coverage --gcov $(which gcov)"
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
+  artifacts:
+    paths:
+      - build/coverage
+
+integration_tests_slc6_lcg95:
+  <<: *template_integration_tests
+  dependencies:
+    - build_slc6_lcg95
+  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  before_script:
+    - set +e && source CI/setup_lcg95.sh; set -e
+
 # SLC, LCG94, LLVM60
 
 build_ubuntu1804_llvm70:
@@ -212,6 +249,30 @@ integration_tests_cc7_lcg94:
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
+
+# CC7, LCG95
+
+build_cc7_lcg95:
+  <<: *template_build
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg95.sh; set -e
+
+unit_tests_cc7_lcg95:
+  <<: *template_unit_tests
+  dependencies:
+    - build_cc7_lcg95
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg95.sh; set -e
+
+integration_tests_cc7_lcg95:
+  <<: *template_integration_tests
+  dependencies:
+    - build_cc7_lcg95
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg95.sh; set -e
 
 doc:
   stage: build
