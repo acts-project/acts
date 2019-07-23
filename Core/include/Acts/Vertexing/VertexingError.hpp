@@ -16,8 +16,11 @@ namespace Acts {
 // This is the custom error code enum
 enum class VertexingError {
   NumericFailure = 1,
-  EmptyInput = 2,
-  SeedingError = 3
+  EmptyInput,
+  SeedingError,
+  NotConverged,
+  ElementNotFound,
+  NoCovariance
 };
 
 namespace detail {
@@ -35,6 +38,12 @@ class VertexingErrorCategory : public std::error_category {
         return "Empty input provided.";
       case VertexingError::SeedingError:
         return "Error while finding vertex seed.";
+      case VertexingError::NotConverged:
+        return "Unable to converge.";
+      case VertexingError::ElementNotFound:
+        return "Unable to find element.";
+      case VertexingError::NoCovariance:
+        return "No covariance provided.";
       default:
         return "unknown";
     }

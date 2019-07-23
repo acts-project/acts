@@ -50,9 +50,12 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
     std::vector<input_track_t> perigeesToFit;
     std::vector<input_track_t> perigeesToFitSplitVertex;
 
-    // Fill vector with tracks to fit, only compatible with seed:
-    fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
-                      perigeesToFitSplitVertex);
+    // Fill vector with tracks to fit, only compatible with seed
+    auto fillRes = fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
+                                     perigeesToFitSplitVertex);
+    if (!fillRes.ok()) {
+      return fillRes.error();
+    }
     ACTS_DEBUG("Perigees used for fit: " << perigeesToFit.size());
 
     /// Begin vertex fit
@@ -370,7 +373,7 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
 
 template <typename bfield_t, typename input_track_t, typename propagator_t,
           typename vfitter_t>
-void Acts::IterativeVertexFinder<
+Acts::Result<void> Acts::IterativeVertexFinder<
     bfield_t, input_track_t, propagator_t,
     vfitter_t>::fillPerigeesToFit(const std::vector<input_track_t>& perigeeList,
                                   const Vertex<input_track_t>& seedVertex,
@@ -407,6 +410,10 @@ void Acts::IterativeVertexFinder<
       double distance =
           m_cfg.ipEst.calculateDistance(sTrackParams, seedVertex.position());
 
+      if (sTrackParams.covariance() == nullptr) {
+        return VertexingError::NoCovariance;
+      }
+
       double error = sqrt((*(sTrackParams.covariance()))(eLOC_D0, eLOC_D0) +
                           (*(sTrackParams.covariance()))(eLOC_Z0, eLOC_Z0));
 
@@ -427,6 +434,7 @@ void Acts::IterativeVertexFinder<
       }
     }
   }
+  return {};
 }
 
 template <typename bfield_t, typename input_track_t, typename propagator_t,
