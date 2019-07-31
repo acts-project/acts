@@ -75,9 +75,7 @@ class GainMatrixUpdater {
 
     // read-only handles. Types are eigen maps to backing storage
     const auto predicted = trackState.predicted();
-    // const auto predicted = *trackState.parameter.predicted;
     const auto predicted_covariance = trackState.predictedCovariance();
-    // const CovMatrix_t& predicted_covariance = *predicted.covariance();
 
     // ParVector_t filtered_parameters;
     // CovMatrix_t filtered_covariance;
