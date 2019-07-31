@@ -10,10 +10,10 @@
 // SurfaceMaterialMapper.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
