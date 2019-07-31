@@ -10,10 +10,10 @@
 // SurfaceMaterialMapper.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -148,7 +148,7 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, const RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
-  NeutralCurvilinearParameters start(nullptr, mTrack.first.first,
+  NeutralCurvilinearParameters start(std::nullopt, mTrack.first.first,
                                      mTrack.first.second, 0.);
 
   // Prepare Action list and abort list

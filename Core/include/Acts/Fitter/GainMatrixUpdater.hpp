@@ -111,9 +111,7 @@ class GainMatrixUpdater {
               (CovMatrix_t::Identity() - K * H) * predicted_covariance;
 
           // Create new filtered parameters and covariance
-          parameters_t filtered(gctx,
-                                std::make_unique<const CovMatrix_t>(
-                                    std::move(filtered_covariance)),
+          parameters_t filtered(gctx, std::move(filtered_covariance),
                                 filtered_parameters,
                                 predicted.referenceSurface().getSharedPtr());
 

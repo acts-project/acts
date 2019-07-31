@@ -104,7 +104,7 @@ class TrackParametersBase {
   /// @return raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const CovMatrix_t* covariance() const {
+  const std::optional<CovMatrix_t> covariance() const {
     return getParameterSet().getCovariance();
   }
 

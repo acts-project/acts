@@ -206,13 +206,13 @@ class StraightLineStepper {
   BoundState boundState(State& state, const Surface& surface,
                         bool reinitialize) const {
     // Transport the covariance to here
-    std::unique_ptr<const Covariance> covPtr = nullptr;
+    std::optional<Covariance> cov = std::nullopt;
     if (state.covTransport) {
       covarianceTransport(state, surface, reinitialize);
-      covPtr = std::make_unique<const Covariance>(state.cov);
+      cov = state.cov;
     }
     // Create the bound parameters
-    BoundParameters parameters(state.geoContext, std::move(covPtr), state.pos,
+    BoundParameters parameters(state.geoContext, cov, state.pos,
                                state.p * state.dir, state.q,
                                state.t0 + state.dt, surface.getSharedPtr());
     // Create the bound state
@@ -240,15 +240,14 @@ class StraightLineStepper {
   ///   - and the path length (from start - for ordering)
   CurvilinearState curvilinearState(State& state, bool reinitialize) const {
     // Transport the covariance to here
-    std::unique_ptr<const Covariance> covPtr = nullptr;
+    std::optional<Covariance> cov = std::nullopt;
     if (state.covTransport) {
       covarianceTransport(state, reinitialize);
-      covPtr = std::make_unique<const Covariance>(state.cov);
+      cov = state.cov;
     }
     // Create the curvilinear parameters
-    CurvilinearParameters parameters(std::move(covPtr), state.pos,
-                                     state.p * state.dir, state.q,
-                                     state.t0 + state.dt);
+    CurvilinearParameters parameters(cov, state.pos, state.p * state.dir,
+                                     state.q, state.t0 + state.dt);
     // Create the bound state
     CurvilinearState curvState{std::move(parameters), state.jacobian,
                                state.pathAccumulated};
@@ -271,7 +270,7 @@ class StraightLineStepper {
     state.p = mom.norm();
     state.dt = pars.time();
 
-    if (pars.covariance() != nullptr) {
+    if (pars.covariance()) {
       state.cov = (*(pars.covariance()));
     }
   }

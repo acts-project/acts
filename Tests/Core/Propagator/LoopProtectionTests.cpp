@@ -181,7 +181,7 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q, 42.);
+  CurvilinearParameters start(std::nullopt, pos, mom, q, 42.);
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.maxSteps = 1e6;

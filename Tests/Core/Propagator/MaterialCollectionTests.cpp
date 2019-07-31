@@ -108,7 +108,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q, time);
+  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
 
   using DebugOutput = detail::DebugOutputActor;
 

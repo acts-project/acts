@@ -61,8 +61,8 @@ void check_residuals_for_bound_parameters() {
   dTheta << (theta_1 - theta_2);
 
   // both parameters inside bounds, difference is positive
-  ParameterSet<ParID_t::eTHETA> bound1(nullptr, theta_1);
-  ParameterSet<ParID_t::eTHETA> bound2(nullptr, theta_2);
+  ParameterSet<ParID_t::eTHETA> bound1(std::nullopt, theta_1);
+  ParameterSet<ParID_t::eTHETA> bound2(std::nullopt, theta_2);
   CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 
   // both parameters inside bound, difference negative
@@ -123,8 +123,8 @@ void check_residuals_for_cyclic_parameters() {
   ActsVectorD<1> dPhi;
   dPhi << (phi_1 - phi_2);
 
-  ParameterSet<ParID_t::ePHI> cyclic1(nullptr, phi_1);
-  ParameterSet<ParID_t::ePHI> cyclic2(nullptr, phi_2);
+  ParameterSet<ParID_t::ePHI> cyclic1(std::nullopt, phi_1);
+  ParameterSet<ParID_t::ePHI> cyclic2(std::nullopt, phi_2);
 
   // no boundary crossing, difference is positive
   CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
@@ -161,8 +161,8 @@ void random_residual_tests() {
 
   BoundVector parValues_1;
   BoundVector parValues_2;
-  FullParameterSet parSet_1(nullptr, parValues_1);
-  FullParameterSet parSet_2(nullptr, parValues_2);
+  FullParameterSet parSet_1(std::nullopt, parValues_1);
+  FullParameterSet parSet_2(std::nullopt, parValues_2);
   BoundVector residual;
   const unsigned int toys = 1000;
   for (unsigned int i = 0; i < toys; ++i) {
@@ -251,7 +251,6 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   // covariance matrix
   ActsSymMatrixD<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
-  auto pCovMatrix = std::make_unique<const ActsSymMatrixD<3>>(cov);
 
   // parameter values
   double loc0 = 0.5;
@@ -262,7 +261,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
 
   // parameter set with covariance matrix
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> parSet_with_cov(
-      std::move(pCovMatrix), loc0, loc1, phi);
+      cov, loc0, loc1, phi);
 
   // check number and type of stored parameters
   BOOST_CHECK(parSet_with_cov.size() == 3);
@@ -280,7 +279,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   BOOST_CHECK(parSet_with_cov.getParameters() == parValues);
 
   // check stored covariance
-  BOOST_CHECK(parSet_with_cov.getCovariance() != 0);
+  BOOST_CHECK(parSet_with_cov.getCovariance());
   BOOST_CHECK(*parSet_with_cov.getCovariance() == cov);
   BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::eLOC_0>() ==
               sqrt(cov(0, 0)));
@@ -291,9 +290,9 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
 
   // same parameter set without covariance matrix
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI>
-      parSet_without_cov(nullptr, parValues);
+      parSet_without_cov(std::nullopt, parValues);
 
-  BOOST_CHECK(parSet_without_cov.getCovariance() == 0);
+  BOOST_CHECK(!parSet_without_cov.getCovariance());
   BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::eLOC_0>() < 0);
   BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::eLOC_1>() < 0);
   BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::ePHI>() < 0);
@@ -301,10 +300,9 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
               parSet_with_cov.getParameters());
 
   // set new covariance matrix
-  parSet_without_cov.setCovariance(
-      std::make_unique<const ActsSymMatrixD<3>>(cov));
+  parSet_without_cov.setCovariance(cov);
 
-  BOOST_CHECK(parSet_without_cov.getCovariance() != 0);
+  BOOST_CHECK(parSet_without_cov.getCovariance());
   BOOST_CHECK(*parSet_without_cov.getCovariance() == cov);
 
   // set new parameter values
@@ -334,7 +332,6 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   // covariance matrix
   ActsSymMatrixD<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
-  auto pCovMatrix = std::make_unique<const ActsSymMatrixD<3>>(cov);
 
   // parameter values
   double loc0 = 0.5;
@@ -345,7 +342,7 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
 
   // parameter set with covariance matrix
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> first(
-      std::move(pCovMatrix), loc0, loc1, phi);
+      cov, loc0, loc1, phi);
 
   // check copy constructor
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> copy(first);
@@ -362,7 +359,7 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   BOOST_CHECK(assigned == moved);
 
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> other(
-      nullptr, 0, 1.7, -0.15);
+      std::nullopt, 0, 1.7, -0.15);
   BOOST_CHECK(assigned != other);
   assigned = other;
   BOOST_CHECK(assigned == other);
@@ -374,10 +371,10 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   BOOST_CHECK(first == assigned);
 
   // check swap method
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> lhs(
-      std::move(pCovMatrix), loc0, loc1, phi);
+  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> lhs(cov, loc0,
+                                                                    loc1, phi);
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> rhs(
-      nullptr, 2 * loc0, 2 * loc1, 2 * phi);
+      std::nullopt, 2 * loc0, 2 * loc1, 2 * phi);
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> lhs_copy = lhs;
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> rhs_copy = rhs;
 
@@ -396,7 +393,6 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
   // covariance matrix
   ActsSymMatrixD<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
-  auto pCovMatrix = std::make_unique<const ActsSymMatrixD<3>>(cov);
 
   // parameter values
   double loc0 = 0.5;
@@ -406,9 +402,9 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
 
   // parameter set with covariance matrix
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> first(
-      std::move(pCovMatrix), loc0, loc1, phi);
+      cov, loc0, loc1, phi);
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> second(
-      nullptr, 2 * loc0, 2 * loc1, 2 * phi);
+      std::nullopt, 2 * loc0, 2 * loc1, 2 * phi);
 
   // check self comparison
   BOOST_CHECK(first == first);
@@ -437,13 +433,13 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
   BOOST_CHECK(first == second);
 
   // check that comparison fails for unequal covariance matrices
-  second.setCovariance(std::make_unique<const ActsSymMatrixD<3>>(cov));
+  second.setCovariance(cov);
   BOOST_CHECK(first != second);
   first = second;
   BOOST_CHECK(first == second);
 
   cov(0, 0) = 2 * cov(0, 0);
-  second.setCovariance(std::make_unique<const ActsSymMatrixD<3>>(cov));
+  second.setCovariance(cov);
   BOOST_CHECK(first != second);
   first = second;
   BOOST_CHECK(first == second);
@@ -519,13 +515,13 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   const double small_number = -924342675;
   const double normal_number = 1.234;
   ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::eQOP> unbound(
-      nullptr, small_number, large_number, normal_number);
+      std::nullopt, small_number, large_number, normal_number);
   BOOST_CHECK(unbound.getParameter<ParID_t::eLOC_0>() == small_number);
   BOOST_CHECK(unbound.getParameter<ParID_t::eLOC_1>() == large_number);
   BOOST_CHECK(unbound.getParameter<ParID_t::eQOP>() == normal_number);
 
   // check bound parameter type
-  ParameterSet<ParID_t::eTHETA> bound(nullptr, small_number);
+  ParameterSet<ParID_t::eTHETA> bound(std::nullopt, small_number);
   BOOST_CHECK((bound.getParameter<ParID_t::eTHETA>() ==
                par_type_t<ParID_t::eTHETA>::min));
   bound.setParameter<ParID_t::eTHETA>(large_number);
@@ -535,7 +531,7 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   BOOST_CHECK((bound.getParameter<ParID_t::eTHETA>() == normal_number));
 
   // check cyclic parameter type
-  ParameterSet<ParID_t::ePHI> cyclic(nullptr, small_number);
+  ParameterSet<ParID_t::ePHI> cyclic(std::nullopt, small_number);
   // calculate expected results
   const double min = par_type_t<ParID_t::ePHI>::min;
   const double max = par_type_t<ParID_t::ePHI>::max;
@@ -580,9 +576,9 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   ActsVectorD<3> residuals(delta_loc0, delta_phi, delta_theta);
 
   ParameterSet<ParID_t::eLOC_0, ParID_t::ePHI, ParID_t::eTHETA> first(
-      nullptr, first_loc0, first_phi, first_theta);
+      std::nullopt, first_loc0, first_phi, first_theta);
   ParameterSet<ParID_t::eLOC_0, ParID_t::ePHI, ParID_t::eTHETA> second(
-      nullptr, second_loc0, second_phi, second_theta);
+      std::nullopt, second_loc0, second_phi, second_theta);
   CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
   // some more checks for bound variables
