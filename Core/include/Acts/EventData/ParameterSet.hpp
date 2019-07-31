@@ -122,7 +122,10 @@ class ParameterSet {
   ParameterSet(std::optional<CovMatrix_t> cov,
                std::enable_if_t<sizeof...(Tail) + 1 == NPars, ParValue_t> head,
                Tail... values)
-      : m_vValues(NPars), m_pCovariance(std::move(cov)) {
+      : m_vValues(NPars) {
+    if (cov) {
+      m_pCovariance = std::move(*cov);
+    }
     detail::initialize_parset<ParID_t, params...>::init(*this, head, values...);
   }
 
@@ -139,7 +142,10 @@ class ParameterSet {
    * @param values vector with parameter values
    */
   ParameterSet(std::optional<CovMatrix_t> cov, const ParVector_t& values)
-      : m_vValues(NPars), m_pCovariance(std::move(cov)) {
+      : m_vValues(NPars) {
+    if (cov) {
+      m_pCovariance = std::move(*cov);
+    }
     detail::initialize_parset<ParID_t, params...>::init(*this, values);
   }
 
@@ -158,9 +164,11 @@ class ParameterSet {
    * @param copy object whose content is moved into the new @c ParameterSet
    * object
    */
-  ParameterSet(ParSet_t&& copy)
-      : m_vValues(std::move(copy.m_vValues)),
-        m_pCovariance(std::move(copy.m_pCovariance)) {}
+  ParameterSet(ParSet_t&& copy) : m_vValues(std::move(copy.m_vValues)) {
+    if (copy.m_pCovariance) {
+      m_pCovariance = std::move(*copy.m_pCovariance);
+    }
+  }
 
   /**
    * @brief standard destructor
@@ -525,9 +533,10 @@ class ParameterSet {
   }
 
  private:
-  ParVector_t
-      m_vValues;  ///< column vector containing values of local parameters
-  std::optional<CovMatrix_t> m_pCovariance;  ///< an optional covariance matrix
+  ParVector_t m_vValues{ParVector_t::Zero()};  ///< column vector containing
+                                               ///< values of local parameters
+  std::optional<CovMatrix_t> m_pCovariance{
+      std::nullopt};  ///< an optional covariance matrix
 
   static const Projection_t sProjector;  ///< matrix to project full parameter
                                          /// vector onto local parameter space
