@@ -21,10 +21,10 @@ std::ostream& FreeParametersBase::print(std::ostream& sl) const {
   sl << " * TrackParameters: ";
   sl << parameters().transpose() << std::endl;
   sl << " * charge: " << charge() << std::endl;
-  if (covariance() != nullptr) {
+  if (covariance()) {
     sl << " * covariance matrix:\n" << *covariance() << std::endl;
   } else {
-    sl << " * covariance matrix:\n" << covariance() << std::endl;
+    sl << " * covariance matrix:\nnull" << std::endl;
   }
   sl << " * corresponding global parameters:" << std::endl;
   sl << " *    position  (x y z) = (" << position().transpose() << ")"

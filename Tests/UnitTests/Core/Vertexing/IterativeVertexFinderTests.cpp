@@ -238,6 +238,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     auto res = finder.find(tracksPtr, vertexingOptions, state);
 
     BOOST_CHECK(res.ok());
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     if (!res.ok()) {
       std::cout << res.error().message() << std::endl;
