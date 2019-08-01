@@ -90,7 +90,7 @@ propagate(
 	FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
 	mParSet->setCovariance((start.covariance() != nullptr) ? calculateCovariance(derivatives, *start.covariance()) : nullptr);
 
-	return nominalResult;
+	return std::move(nominalResult);
   }
   
   template <typename parameters_t, typename surface_t, typename action_list_t,
@@ -134,7 +134,7 @@ propagate(
 	FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
 	mParSet->setCovariance((start.covariance() != nullptr) ? calculateCovariance(derivatives, *start.covariance()) : nullptr);
 
-	return nominalResult;
+	return std::move(nominalResult);
   }
 
 private:  
