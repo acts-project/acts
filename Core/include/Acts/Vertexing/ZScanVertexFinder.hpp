@@ -32,6 +32,8 @@ namespace Acts {
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 class ZScanVertexFinder {
  public:
+  using InputTrack = input_track_t;
+
   /// @struct Config Configuration struct
   struct Config {
     /// @brief Finder configuration

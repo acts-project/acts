@@ -28,6 +28,8 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 
+#include "Acts/Vertexing/VertexFinderConcept.hpp"
+
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
@@ -104,6 +106,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
                                   Propagator<EigenStepper<ConstantBField>>,
                                   BilloirFitter>
         VertexFinder;
+
+    static_assert(VertexFinderConcept<VertexFinder>,
+                  "Vertex finder does not fulfill vertex finder concept.");
+
     VertexFinder::Config cfg(bField, std::move(bFitter), propagator);
     cfg.reassignTracksAfterFirstFit = true;
 
