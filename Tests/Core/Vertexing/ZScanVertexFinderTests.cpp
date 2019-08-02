@@ -133,9 +133,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                                        perigeeSurface));
     }
 
-    typedef ZScanVertexFinder<ConstantBField, BoundParameters,
-                              Propagator<EigenStepper<ConstantBField>>>
-        VertexFinder;
+    using VertexFinder =
+        ZScanVertexFinder<ConstantBField, BoundParameters,
+                          Propagator<EigenStepper<ConstantBField>>>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
@@ -238,9 +238,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                                                   paramVec, perigeeSurface)));
     }
 
-    typedef ZScanVertexFinder<ConstantBField, InputTrack,
-                              Propagator<EigenStepper<ConstantBField>>>
-        VertexFinder;
+    using VertexFinder =
+        ZScanVertexFinder<ConstantBField, InputTrack,
+                          Propagator<EigenStepper<ConstantBField>>>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
