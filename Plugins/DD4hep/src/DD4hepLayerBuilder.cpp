@@ -700,12 +700,11 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   if (detExtension != nullptr) {
     material = detExtension->material();
   }
-  // Get the digitiztion module and provide it to the detector element
-  auto digiModule = detExtension->digitizationModule();
-  // create the corresponding detector element
+  // Create the corresponding detector element
   Acts::DD4hepDetectorElement* dd4hepDetElement =
-      new Acts::DD4hepDetectorElement(detElement, axes, UnitConstants::cm,
-                                      isDisc, material, digiModule);
+      new Acts::DD4hepDetectorElement(
+          detElement, axes, UnitConstants::cm, isDisc, material,
+          (detExtension ? detExtension->digitizationModule() : nullptr));
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();
