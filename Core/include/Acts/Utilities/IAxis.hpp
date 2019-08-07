@@ -7,13 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+
 #include <vector>
 
 namespace Acts {
-
-namespace detail {
-enum class AxisBoundaryType;
-}
 
 /// Common base class for all Axis instance. This allows generice handling
 /// such as for inspection.
