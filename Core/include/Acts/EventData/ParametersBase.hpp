@@ -56,28 +56,6 @@ class ParametersBase {
   /// @return 3D vector with global momentum
   virtual ActsVectorD<3> momentum() const = 0;
 
-  /// @brief access track parameter
-  ///
-  /// @tparam par identifier of track parameter which is to be retrieved
-  ///
-  /// @return value of the requested track parameter
-  ///
-  /// @sa ParameterSet::get
-  template <ParID_t par>
-  ParValue_t get() const {
-    return getParameterSet().template getParameter<par>();
-  }
-
-  /// @brief access track parameter uncertainty
-  ///
-  /// @tparam par identifier of track parameter which is to be retrieved
-  ///
-  /// @return value of the requested track parameter uncertainty
-  template <ParID_t par>
-  ParValue_t uncertainty() const {
-    return getParameterSet().template getUncertainty<par>();
-  }
-
   /// @brief convenience method to retrieve transverse momentum
   double pT() const { return VectorHelpers::perp(momentum()); }
 
@@ -106,12 +84,6 @@ class ParametersBase {
     tp.print(out);
     return out;
   }
-
-  /// @brief access to the internally stored ParameterSet
-  ///
-  /// @return ParameterSet object holding parameter values and their covariance
-  /// matrix
-  virtual const FullParameterSet& getParameterSet() const = 0;
 
  protected:
   /// @brief print information to output stream

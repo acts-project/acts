@@ -45,6 +45,28 @@ class TrackParametersBase : public ParametersBase {
   ///         (in the order as defined by the ParID_t enumeration)
   ParVector_t parameters() const { return getParameterSet().getParameters(); }
 
+  /// @brief access track parameter
+  ///
+  /// @tparam par identifier of track parameter which is to be retrieved
+  ///
+  /// @return value of the requested track parameter
+  ///
+  /// @sa ParameterSet::get
+  template <ParID_t par>
+  ParValue_t get() const {
+    return getParameterSet().template getParameter<par>();
+  }
+
+  /// @brief access track parameter uncertainty
+  ///
+  /// @tparam par identifier of track parameter which is to be retrieved
+  ///
+  /// @return value of the requested track parameter uncertainty
+  template <ParID_t par>
+  ParValue_t uncertainty() const {
+    return getParameterSet().template getUncertainty<par>();
+  }
+  
   /// @brief access covariance matrix of track parameters
   ///
   /// @note The ownership of the covariance matrix is @b not transferred with
@@ -77,7 +99,13 @@ class TrackParametersBase : public ParametersBase {
   /// cylindrical surfaces this is (by convention) the tangential plane.
   virtual RotationMatrix3D referenceFrame(
       const GeometryContext& gctx) const = 0;
-      
+
+  /// @brief access to the internally stored ParameterSet
+  ///
+  /// @return ParameterSet object holding parameter values and their covariance
+  /// matrix
+  virtual const FullParameterSet& getParameterSet() const = 0;
+       
 protected:
   /// @brief print information to output stream
   ///

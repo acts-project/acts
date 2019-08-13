@@ -35,14 +35,14 @@ enum ParDef : unsigned int {
 };
 
 enum FreeDef : unsigned int {
-  eX = 0,  ///< First position coordinate in global frame
-  eY = 1,  ///< Second position coordinate in global frame
-  eZ = 2, ///< Third position coordinate in global frame 
-  eT = 3, /// < The time of the particle
-  eTx = 4, ///< First direction coordinate in global frame
-  eTy = 5, ///< Second direction coordinate in global frame
-  eTz = 6, ///< Third direction coordinate in global frame
-  eQOP = 7,    ///< charge/momentum for charged tracks, for neutral tracks it is
+  eGLOB_X = 0,  ///< First position coordinate in global frame
+  eGLOB_Y = 1,  ///< Second position coordinate in global frame
+  eGLOB_Z = 2, ///< Third position coordinate in global frame 
+  eGLOB_T = 3, /// < The time of the particle
+  eGLOB_Tx = 4, ///< First direction coordinate in global frame
+  eGLOB_Ty = 5, ///< Second direction coordinate in global frame
+  eGLOB_Tz = 6, ///< Third direction coordinate in global frame
+  eGLOB_QOP = 7,    ///< charge/momentum for charged tracks, for neutral tracks it is
                /// 1/momentum
   FreeParsDim  /// < The local dimensions
 };
