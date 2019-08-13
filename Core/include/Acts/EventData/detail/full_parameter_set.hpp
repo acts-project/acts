@@ -18,8 +18,6 @@ namespace Acts {
 // forward declaration
 template <ParID_t... params>
 class ParameterSet;
-template <FreeID_t... params>
-class FreeParameterSet;
 /// @endcond
 
 /// @cond detail
@@ -31,7 +29,6 @@ namespace detail {
 ///         is a @c typedef to `Policy::par_id_type` and @c N is the total
 ///         number of parameters
 struct full_parset {
-
   template <ParID_t v, typename C>
   struct add_to_value_container;
 
@@ -53,47 +50,14 @@ struct full_parset {
 
   template <typename T>
   struct converter;
-  
+
   template <ParID_t... values>
   struct converter<std::integer_sequence<ParID_t, values...>> {
     using type = ParameterSet<values...>;
   };
-  
+
   using type = typename converter<
       typename tparam_generator<ParID_t, BoundParsDim - 1>::type>::type;
-};
-
-struct full_freeparset {
-
-  template <FreeID_t v, typename C>
-  struct add_to_value_container;
-
-  template <FreeID_t v, FreeID_t... others>
-  struct add_to_value_container<v, std::integer_sequence<FreeID_t, others...>> {
-    using type = std::integer_sequence<FreeID_t, others..., v>;
-  };
-
-  template <typename T, unsigned int N>
-  struct tparam_generator {
-    using type = typename add_to_value_container<
-        static_cast<T>(N), typename tparam_generator<T, N - 1>::type>::type;
-  };
-
-  template <typename T>
-  struct tparam_generator<T, 0> {
-    using type = std::integer_sequence<T, static_cast<T>(0)>;
-  };
-
-  template <typename T>
-  struct converter;
-
-  template <FreeID_t... values>
-  struct converter<std::integer_sequence<FreeID_t, values...>> {
-    using type = FreeParameterSet<values...>;
-  };
-  
-  using type = typename converter<
-      typename tparam_generator<FreeID_t, FreeParsDim - 1>::type>::type;
 };
 }  // namespace detail
 /// @endcond
