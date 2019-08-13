@@ -62,7 +62,7 @@ class SingleTrackParameters : public TrackParametersBase {
   ///
   /// @return @c true of both objects have the same charge policy, parameter
   /// values, position and momentum, otherwise @c false
-  bool operator==(const TrackParametersBase& rhs) const override {
+  bool operator==(const ParametersBase& rhs) const override {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
     if (!casted) {
       return false;
