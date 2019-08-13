@@ -12,6 +12,7 @@
 
 // Acts includes
 #include "Acts/EventData/ParametersBase.hpp"
+#include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 

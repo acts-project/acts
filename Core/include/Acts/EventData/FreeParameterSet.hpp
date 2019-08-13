@@ -29,7 +29,7 @@
 namespace Acts {
 /// @cond
 // forward type declaration for full parameter set
-using FullParameterSet = typename detail::full_freeparset::type;
+using FullFreeParameterSet = typename detail::full_freeparset::type;
 /// @endcond
 
 /**
@@ -88,20 +88,20 @@ class FreeParameterSet {
   static_assert(detail::are_sorted<true, true, FreeID_t, params...>::value,
                 "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int, 0, BoundParsDim,
+      detail::are_within<unsigned int, 0, FreeParsDim,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
   static_assert(NPars > 0, "number of stored parameters can not be zero");
   static_assert(
-      NPars <= BoundParsDim,
+      NPars <= FreeParsDim,
       "number of stored parameters can not exceed number of total parameters");
 
  public:
   // public typedefs
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
-  using Projection_t = ActsMatrix<ParValue_t, NPars, BoundParsDim>;
+  using Projection_t = ActsMatrix<ParValue_t, NPars, FreeParsDim>;
   /// vector type for stored parameters
   using ParVector_t = ActsVector<ParValue_t, NPars>;
   /// type of covariance matrix
@@ -269,8 +269,7 @@ class FreeParameterSet {
    */
   template <FreeID_t parameter>
   void setParameter(ParValue_t value) {
-    using parameter_type = typename par_type<parameter>::type;
-    m_vValues(getIndex<parameter>()) = parameter_type::getValue(value);
+    m_vValues(getIndex<parameter>()) = unbound_parameter::getValue(value);
   }
 
   /**
@@ -500,10 +499,10 @@ class FreeParameterSet {
    * the sub-space
    * spanned by the parameters defined in this FreeParameterSet object.
    *
-   * @return constant matrix with @c #NPars rows and @c #Acts::BoundParsDim
+   * @return constant matrix with @c #NPars rows and @c #Acts::FreeParsDim
    * columns
    */
-  static const ActsMatrix<ParValue_t, NPars, BoundParsDim> projector() {
+  static const ActsMatrix<ParValue_t, NPars, FreeParsDim> projector() {
     return sProjector;
   }
 
@@ -546,5 +545,5 @@ constexpr unsigned int FreeParameterSet<params...>::NPars;
 template <FreeID_t... params>
 const typename FreeParameterSet<params...>::Projection_t
     FreeParameterSet<params...>::sProjector = detail::make_projection_matrix<
-        BoundParsDim, static_cast<unsigned int>(params)...>::init();
+        FreeParsDim, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts

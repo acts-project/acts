@@ -12,6 +12,7 @@
 
 // Acts includes
 #include "Acts/EventData/ParametersBase.hpp"
+#include "Acts/EventData/FreeParameterSet.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -40,8 +41,26 @@ class FreeParametersBase : public ParametersBase {
   /// @return Eigen vector of dimension Acts::BoundParsDim with values of the
   /// track parameters
   ///         (in the order as defined by the ParID_t enumeration)
-  ParVector_t parameters() const { return getParameterSet().getParameters(); }
+  ParVector_t parameters() const = 0;
 
+  /// @brief access track parameter
+  ///
+  /// @tparam par identifier of track parameter which is to be retrieved
+  ///
+  /// @return value of the requested track parameter
+  ///
+  /// @sa ParameterSet::get
+  template <FreeID_t par>
+  ParValue_t get() const  = 0;
+
+  /// @brief access track parameter uncertainty
+  ///
+  /// @tparam par identifier of track parameter which is to be retrieved
+  ///
+  /// @return value of the requested track parameter uncertainty
+  template <FreeID_t par>
+  ParValue_t uncertainty() const = 0;
+  
   /// @brief access covariance matrix of track parameters
   ///
   /// @note The ownership of the covariance matrix is @b not transferred with
@@ -50,10 +69,8 @@ class FreeParametersBase : public ParametersBase {
   /// @return raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const CovMatrix_t* covariance() const {
-    return getParameterSet().getCovariance();
-  }
-   
+  const CovMatrix_t* covariance() const = 0;
+  
 protected:
   /// @brief print information to output stream
   ///
