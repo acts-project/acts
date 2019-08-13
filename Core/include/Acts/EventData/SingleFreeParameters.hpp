@@ -1,62 +1,97 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <type_traits>
-#include "Acts/EventData/FreeParametersBase.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
+// STL include(s)
+#include <ostream>
+
+// Acts includes
+#include "Acts/EventData/ParametersBase.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
-/// @class SingleFreeParameters
+/// @class TrackParametersBase
 ///
-/// @brief base class for a single set of track parameters
+/// @brief base class for track parameters
 ///
-/// This class implements the interface for charged/neutral track parameters for
-/// the case that it represents a single set of track parameters
-/// (opposed to a list of different sets of track parameters as used by
-/// e.g. GSF or multi-track fitters).
-///
-/// The track parameters and their uncertainty are defined in local reference
-/// frame which depends on the associated surface of the track parameters.
-///
-/// @tparam ChargePolicy type for distinguishing charged and neutral
-/// tracks/particles
-///         (must be either ChargedPolicy or NeutralPolicy)
+/// This is a base class for neutral and charged track parameters.
+/// The position and the momentum are both given in the global coordinate
+/// system. The track parameters and their uncertainty are defined in local
+/// reference frame which depends on the associated surface
+/// of the track parameters.
 template <class ChargePolicy>
-class SingleFreeParameters : public FreeParametersBase {
-  static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
+class SingleFreeparameters : public ParametersBase {
+
+static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
                     std::is_same<ChargePolicy, NeutralPolicy>::value,
                 "ChargePolicy must either be 'Acts::ChargedPolicy' or "
                 "'Acts::NeutralPolicy");
-
  public:
   // public typedef's
 
   /// vector type for stored track parameters
-  using ParVector_t = typename FreeParametersBase::ParVector_t;
+  using ParVector_t = FreeVector;
 
   /// type of covariance matrix
-  using CovMatrix_t = typename FreeParametersBase::CovMatrix_t;
+  using CovMatrix_t = FreeSymMatrix;
 
   /// type for unique pointer to covariance matrix
   using CovPtr_t = std::unique_ptr<const CovMatrix_t>;
-
-  /// @brief default virtual destructor
-  ~SingleFreeParameters() override = default;
+ 
+   /// @brief default virtual destructor
+  ~SingleFreeparameters() override = default;
 
   /// @brief virtual constructor
-  SingleFreeParameters<ChargePolicy>* clone() const override = 0;
+  SingleFreeparameters<ChargePolicy>* clone() const override = 0;
+   
+  /// @brief access track parameters
+  ///
+  /// @return Eigen vector of dimension Acts::BoundParsDim with values of the
+  /// track parameters
+  ///         (in the order as defined by the ParID_t enumeration)
+  ParVector_t parameters() const = 0;
 
-  /// @copydoc FreeParametersBase::position
+  /// @brief access track parameter
+  ///
+  /// @tparam par identifier of track parameter which is to be retrieved
+  ///
+  /// @return value of the requested track parameter
+  ///
+  /// @sa ParameterSet::get
+  template <unsigned int par>
+  ParValue_t get() const  = 0;
+
+  /// @brief access track parameter uncertainty
+  ///
+  /// @tparam par identifier of track parameter which is to be retrieved
+  ///
+  /// @return value of the requested track parameter uncertainty
+  template <unsigned int par>
+  ParValue_t uncertainty() const = 0;
+  
+  /// @brief access covariance matrix of track parameters
+  ///
+  /// @note The ownership of the covariance matrix is @b not transferred with
+  /// this call.
+  ///
+  /// @return raw pointer to covariance matrix (can be a nullptr)
+  ///
+  /// @sa ParameterSet::getCovariance
+  const CovMatrix_t* covariance() const = 0;
+
+
+
+
+  /// @copydoc TrackParametersBase::position
   ActsVectorD<3> position() const final { return m_vPosition; }
 
-  /// @copydoc FreeParametersBase::momentum
+  /// @copydoc TrackParametersBase::momentum
   ActsVectorD<3> momentum() const final { return m_vMomentum; }
 
   /// @brief equality operator
@@ -76,16 +111,14 @@ class SingleFreeParameters : public FreeParametersBase {
             m_vMomentum == casted->m_vMomentum);
   }
 
-  /// @copydoc FreeParametersBase::charge
+  /// @copydoc TrackParametersBase::charge
   double charge() const final { return m_oChargePolicy.getCharge(); }
 
-  /// @copydoc FreeParametersBase::time
+  /// @copydoc TrackParametersBase::time
   double time() const final { return m_oTime; }
 
-  /// @copydoc FreeParametersBase::getParameterSet
-  const FullParameterSet& getParameterSet() const final {
-    return m_oParameters;
-  }
+
+
 
  protected:
   /// @brief standard constructor for track parameters of charged particles
@@ -96,10 +129,10 @@ class SingleFreeParameters : public FreeParametersBase {
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleFreeParameters(CovPtr_t cov, const ParVector_t& parValues,
+  SingleFreeparameters(CovPtr_t cov, const ParVector_t& parValues,
                         const ActsVectorD<3>& position,
                         const ActsVectorD<3>& momentum)
-      : FreeParametersBase(),
+      : TrackParametersBase(),
         m_oChargePolicy(
             detail::coordinate_transformation::parameters2charge(parValues)),
         m_oTime(detail::coordinate_transformation::parameters2time(parValues)),
@@ -115,10 +148,10 @@ class SingleFreeParameters : public FreeParametersBase {
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeParameters(CovPtr_t cov, const ParVector_t& parValues,
+  SingleFreeparameters(CovPtr_t cov, const ParVector_t& parValues,
                         const ActsVectorD<3>& position,
                         const ActsVectorD<3>& momentum)
-      : FreeParametersBase(),
+      : TrackParametersBase(),
         m_oChargePolicy(),
         m_oTime(detail::coordinate_transformation::parameters2time(parValues)),
         m_oParameters(std::move(cov), parValues),
@@ -126,17 +159,17 @@ class SingleFreeParameters : public FreeParametersBase {
         m_vMomentum(momentum) {}
 
   /// @brief default copy constructor
-  SingleFreeParameters(const SingleFreeParameters<ChargePolicy>& copy) =
+  SingleFreeparameters(const SingleTrackParameters<ChargePolicy>& copy) =
       default;
 
   /// @brief default move constructor
-  SingleFreeParameters(SingleFreeParameters<ChargePolicy>&& copy) = default;
+  SingleFreeparameters(SingleTrackParameters<ChargePolicy>&& copy) = default;
 
   /// @brief copy assignment operator
   ///
   /// @param rhs object to be copied
-  SingleFreeParameters<ChargePolicy>& operator=(
-      const SingleFreeParameters<ChargePolicy>& rhs) {
+  SingleFreeparameters<ChargePolicy>& operator=(
+      const SingleFreeparameters<ChargePolicy>& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       m_oChargePolicy = rhs.m_oChargePolicy;
@@ -152,8 +185,8 @@ class SingleFreeParameters : public FreeParametersBase {
   /// @brief move assignment operator
   ///
   /// @param rhs object to be movied into `*this`
-  SingleFreeParameters<ChargePolicy>& operator=(
-      SingleFreeParameters<ChargePolicy>&& rhs) {
+  SingleFreeparameters<ChargePolicy>& operator=(
+      SingleFreeparameters<ChargePolicy>&& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       m_oChargePolicy = std::move(rhs.m_oChargePolicy);
@@ -165,9 +198,6 @@ class SingleFreeParameters : public FreeParametersBase {
 
     return *this;
   }
-
-  /// @copydoc FreeParametersBase::getParameterSet
-  virtual FullFreeParameterSet& getParameterSet() final { return m_oParameters; }
 
   /// @brief update global momentum from current parameter values
   ///
@@ -196,13 +226,19 @@ class SingleFreeParameters : public FreeParametersBase {
         gctx, getParameterSet().getParameters(), this->referenceSurface());
   }
 
+
+
+   
+protected:
+  /// @brief print information to output stream
+  ///
+  /// @return modified output stream object
+  virtual std::ostream& print(std::ostream& sl) const;
+  
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing
-                                   /// between charged and neutral tracks
-  double m_oTime;                  ///< time of the track parametrisation
-  FullFreeParameterSet m_oParameters;  ///< ParameterSet object holding the
-                                   /// parameter values and covariance matrix
-  FreeVector
-  ActsVectorD<3> m_vPosition;      ///< 3D vector with global position
-  ActsVectorD<3> m_vMomentum;      ///< 3D vector with global momentum
+                                   /// between charged and neutral tracks                        
+  ParVector_t m_parameters; ///< Parameter vector
+  CovMatrix_t m_covariance; ///< Covariance matrix
+  
 };
 }  // namespace Acts

@@ -34,24 +34,13 @@ enum ParDef : unsigned int {
   BoundParsDim  /// < The local dimensions
 };
 
-enum FreeDef : unsigned int {
-  eGLOB_X = 0,  ///< First position coordinate in global frame
-  eGLOB_Y = 1,  ///< Second position coordinate in global frame
-  eGLOB_Z = 2, ///< Third position coordinate in global frame 
-  eGLOB_T = 3, /// < The time of the particle
-  eGLOB_Tx = 4, ///< First direction coordinate in global frame
-  eGLOB_Ty = 5, ///< Second direction coordinate in global frame
-  eGLOB_Tz = 6, ///< Third direction coordinate in global frame
-  eGLOB_QOP = 7,    ///< charge/momentum for charged tracks, for neutral tracks it is
-               /// 1/momentum
-  FreeParsDim  /// < The local dimensions
-};
+/// The dimensions of tracks in free coordinates
+constexpr unsigned int FreeParsDim = 8;
 
 /// The dimension of a space point
 constexpr unsigned int SpacePointDim = 4;
 
 using ParID_t = ParDef;
-using FreeID_t = FreeDef;
 using ParValue_t = double;
 
 ///
@@ -75,7 +64,7 @@ using BoundSymMatrix = ActsSymMatrix<ParValue_t, BoundParsDim>;
 using FreeVector = ActsVector<ParValue_t, FreeParsDim>;
 /// Matrix of free-to-free parameters
 using FreeMatrix = ActsMatrix<ParValue_t, FreeParsDim, FreeParsDim>;
-/// Symmetical matrix of bound-to-bound parameters
+/// Symmetical matrix of free-to-free parameters
 using FreeSymMatrix = ActsSymMatrix<ParValue_t, FreeParsDim>;
 
 ///
