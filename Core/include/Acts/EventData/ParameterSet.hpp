@@ -310,7 +310,7 @@ class ParameterSet {
    *
    * @return raw pointer to covariance matrix (can be a nullptr)
    */
-  const std::optional<CovMatrix_t> getCovariance() const {
+  const std::optional<CovMatrix_t>& getCovariance() const {
     return m_optCovariance;
   }
 

@@ -153,9 +153,9 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] copy The source parameters
   SingleBoundTrackParameters(
       const SingleBoundTrackParameters<ChargePolicy>& copy)
-      : SingleTrackParameters<ChargePolicy>(copy),
-        m_pSurface(copy.m_pSurface)  // copy shared_ptr
-  {}
+      : SingleTrackParameters<ChargePolicy>(copy) {
+    m_pSurface = copy.m_pSurface;
+  }
 
   /// @brief move constructor - charged/neutral
   /// @param[in] other The source parameters
