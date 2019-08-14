@@ -52,10 +52,10 @@ class SingleTrackParameters : public TrackParametersBase {
   /// @brief virtual constructor
   SingleTrackParameters<ChargePolicy>* clone() const override = 0;
 
-  /// @copydoc TrackParametersBase::position
+  /// @copydoc ParametersBase::position
   ActsVectorD<3> position() const final { return m_vPosition; }
 
-  /// @copydoc TrackParametersBase::momentum
+  /// @copydoc ParametersBase::momentum
   ActsVectorD<3> momentum() const final { return m_vMomentum; }
 
   /// @brief equality operator
@@ -75,13 +75,13 @@ class SingleTrackParameters : public TrackParametersBase {
             m_vMomentum == casted->m_vMomentum);
   }
 
-  /// @copydoc TrackParametersBase::charge
+  /// @copydoc ParametersBase::charge
   double charge() const final { return m_oChargePolicy.getCharge(); }
 
   /// @copydoc TrackParametersBase::time
   double time() const final { return m_oTime; }
 
-  /// @copydoc TrackParametersBase::getParameterSet
+  /// @copydoc ParametersBase::getParameterSet
   const FullParameterSet& getParameterSet() const final {
     return m_oParameters;
   }

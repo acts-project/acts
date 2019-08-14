@@ -17,15 +17,11 @@
 
 namespace Acts {
 
-/// @class TrackParametersBase
+/// @class ParametersBase
 ///
-/// @brief base class for track parameters
+/// @brief Base class for parameters
 ///
-/// This is a base class for neutral and charged track parameters.
-/// The position and the momentum are both given in the global coordinate
-/// system. The track parameters and their uncertainty are defined in local
-/// reference frame which depends on the associated surface
-/// of the track parameters.
+/// This is a base class for neutral and charged parameters.
 class ParametersBase {
  public:
 
@@ -75,7 +71,7 @@ class ParametersBase {
   ///
   /// Prints information about this object to the output stream using the
   /// virtual
-  /// TrackParameters::print method.
+  /// TrackParameters::print or SingleFreeParameters::print method.
   ///
   /// @return modified output stream object
   friend std::ostream& operator<<(std::ostream& out,

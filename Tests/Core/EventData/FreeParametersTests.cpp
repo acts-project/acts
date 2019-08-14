@@ -16,9 +16,7 @@
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-
 
 namespace Acts {
 namespace Test {
@@ -26,7 +24,6 @@ namespace Test {
 /// @brief Unit test for free parameters
 ///
 BOOST_AUTO_TEST_CASE(free_initialization) {
-  using namespace Acts::UnitLiterals;
 
   Vector3D pos(0., 1., 2.);
   double t = 3.;
@@ -45,13 +42,14 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   
   // Test if the object can be create with covariance
   FreeSymMatrix cov;
-  cov << 1., 0., 0., 0., 0., 0., 0.,
-		 0., 2., 0., 0., 0., 0., 0.,
-		 0., 0., 3., 0., 0., 0., 0.,
-		 0., 0., 0., 4., 0., 0., 0.,
-		 0., 0., 0., 0., 5., 0., 0.,
-		 0., 0., 0., 0., 0., 6., 0.,
-		 0., 0., 0., 0., 0., 0., 7.;
+  cov << 1., 0., 0., 0., 0., 0., 0., 0.,
+		 0., 2., 0., 0., 0., 0., 0., 0.,
+		 0., 0., 3., 0., 0., 0., 0., 0.,
+		 0., 0., 0., 4., 0., 0., 0., 0.,
+		 0., 0., 0., 0., 5., 0., 0., 0.,
+		 0., 0., 0., 0., 0., 6., 0., 0.,
+		 0., 0., 0., 0., 0., 0., 7., 0.,
+		 0., 0., 0., 0., 0., 0., 0., 8.;
   covPtr = std::make_unique<FreeSymMatrix>(cov);
   FreeParameters fp(std::move(covPtr), params);
   CHECK_CLOSE_COVARIANCE(*fp.covariance(), cov, 1e-6);
@@ -85,7 +83,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   BOOST_CHECK_EQUAL(nfpwoCov.covariance(), nullptr);
   CHECK_CLOSE_ABS(nfpwoCov.parameters(), params, 1e-6);
   
-  NeutralFreeParameters nfp(std::move(covPtr), params);
+  NeutralFreeParameters nfp(std::make_unique<FreeSymMatrix>(cov), params);
   CHECK_CLOSE_COVARIANCE(*nfp.covariance(), cov, 1e-6);
   CHECK_CLOSE_ABS(nfp.parameters(), params, 1e-6);
   
@@ -153,9 +151,6 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.get<5>(), 13., 1e-6);
   CHECK_CLOSE_ABS(fp.get<6>(), 14., 1e-6);
   CHECK_CLOSE_ABS(fp.get<7>(), 15., 1e-6);
-  
-  
-  // TODO: same with neutral
 }
 }  // namespace Test
 }  // namespace Acts
