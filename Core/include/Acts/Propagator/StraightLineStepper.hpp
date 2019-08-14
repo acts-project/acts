@@ -35,7 +35,7 @@ namespace Acts {
 class StraightLineStepper {
  public:
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
