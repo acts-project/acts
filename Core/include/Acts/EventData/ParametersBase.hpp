@@ -29,7 +29,6 @@ namespace Acts {
 /// of the track parameters.
 class ParametersBase {
  public:
-
   /// @brief virtual default destructor to allow for inheritance
   virtual ~ParametersBase() = default;
 
@@ -42,9 +41,7 @@ class ParametersBase {
   /// @brief inequality operator
   ///
   /// @return `not (*this == rhs)`
-  bool operator!=(const ParametersBase& rhs) const {
-    return !(*this == rhs);
-  }
+  bool operator!=(const ParametersBase& rhs) const { return !(*this == rhs); }
 
   /// @brief access position in global coordinate system
   ///
@@ -101,8 +98,7 @@ class ParametersBase {
   /// TrackParameters::print method.
   ///
   /// @return modified output stream object
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const ParametersBase& tp) {
+  friend std::ostream& operator<<(std::ostream& out, const ParametersBase& tp) {
     tp.print(out);
     return out;
   }
