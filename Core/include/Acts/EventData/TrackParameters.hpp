@@ -10,8 +10,8 @@
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/EventData/SingleFreeParameters.hpp"
+#include "Acts/EventData/SingleTrackParameters.hpp"
 
 namespace Acts {
 using TrackParameters = SingleTrackParameters<ChargedPolicy>;

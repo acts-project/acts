@@ -11,10 +11,10 @@
 #include <ostream>
 
 // Acts includes
-#include "Acts/EventData/ParametersBase.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/EventData/ParametersBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 // forward declarations
@@ -67,7 +67,7 @@ class TrackParametersBase : public ParametersBase {
   ParValue_t uncertainty() const {
     return getParameterSet().template getUncertainty<par>();
   }
-  
+
   /// @brief access covariance matrix of track parameters
   ///
   /// @note The ownership of the covariance matrix is @b not transferred with
@@ -79,13 +79,13 @@ class TrackParametersBase : public ParametersBase {
   const std::optional<CovMatrix_t>& covariance() const {
     return getParameterSet().getCovariance();
   }
-  
+
   /// @brief access associated surface defining the coordinate system for track
   ///        parameters and their covariance
   ///
   /// @return associated surface
   virtual const Surface& referenceSurface() const = 0;
-  
+
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
   /// is described.
@@ -106,8 +106,8 @@ class TrackParametersBase : public ParametersBase {
   /// @return ParameterSet object holding parameter values and their covariance
   /// matrix
   virtual const FullParameterSet& getParameterSet() const = 0;
-       
-protected:
+
+ protected:
   /// @brief print information to output stream
   ///
   /// @return modified output stream object
