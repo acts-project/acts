@@ -120,8 +120,8 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
     }
 
     return *this;
-  }
-
+  }  
+  
   /// @brief access track parameters
   ///
   /// @return Eigen vector of dimension Acts::BoundParsDim with values of the
@@ -136,7 +136,8 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   /// @return value of the requested track parameter
   ///
   /// @sa ParameterSet::get
-  template <unsigned int par>
+  template <unsigned int par,
+            std::enable_if_t<par < FreeParsDim, int> = 0>
   ParValue_t get() const  { return m_parameters(par);}
 
   /// @brief access track parameter uncertainty
@@ -144,7 +145,8 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   /// @tparam par identifier of track parameter which is to be retrieved
   ///
   /// @return value of the requested track parameter uncertainty
-  template <unsigned int par>
+  template <unsigned int par,
+            std::enable_if_t<par < FreeParsDim, int> = 0>
   ParValue_t uncertainty() const { return m_covariance->coeff(par, par);}
   
   /// @brief access covariance matrix of track parameters
@@ -194,65 +196,53 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   /// @copydoc TrackParametersBase::time
   double time() const final { return m_parameters(3); }
 
-
-  
-  //~ /// @brief update global momentum from current parameter values
-  //~ ///
-  //~ ///
-  //~ /// @param[in] gctx is the Context object that is forwarded to the surface
-  //~ ///            for local to global coordinate transformation
-  //~ ///
-  //~ /// @note This function is triggered when called with an argument of a type
-  //~ ///       different from Acts::local_parameter
-  //~ template <typename T>
-  //~ void updateGlobalCoordinates(const GeometryContext& /*gctx*/,
-                               //~ const T& /*unused*/) {
-    //~ m_vMomentum = detail::coordinate_transformation::parameters2globalMomentum(
-        //~ getParameterSet().getParameters());
-    //~ m_oTime = detail::coordinate_transformation::parameters2time(
-        //~ getParameterSet().getParameters());
-  //~ }
-
-  //~ /// @brief update global position from current parameter values
-  //~ ///
-  //~ /// @note This function is triggered when called with an argument of a type
-  //~ /// Acts::local_parameter
-  //~ void updateGlobalCoordinates(const GeometryContext& gctx,
-                               //~ const local_parameter& /*unused*/) {
-    //~ m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
-        //~ gctx, getParameterSet().getParameters(), this->referenceSurface());
-  //~ }
+  /// @brief update of the track parameterisation
+  /// only possible on non-const objects, enable for local parameters
+  ///
+  /// @tparam ParID_t The parameter type
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param newValue The new updaed value
+  ///
+  /// For curvilinear parameters the local parameters are forced to be
+  /// (0,0), hence an update is an effective shift of the reference
+  template <unsigned int par,
+            std::enable_if_t<par < FreeParsDim, int> = 0>
+  void set(const GeometryContext& /*unused*/, ParValue_t newValue) {
+	m_parameters(par) = newValue;
+  }
 
   /// @brief print information to output stream
   ///
   /// @return modified output stream object
   std::ostream& print(std::ostream& sl) const {
-  // set stream output format
-  auto old_precision = sl.precision(7);
-  auto old_flags = sl.setf(std::ios::fixed);
+	  // set stream output format
+	  auto old_precision = sl.precision(7);
+	  auto old_flags = sl.setf(std::ios::fixed);
 
-  sl << " * FreeTrackParameters: ";
-  sl << parameters().transpose() << std::endl;
-  sl << " * charge: " << charge() << std::endl;
-  if (covariance() != nullptr) {
-    sl << " * covariance matrix:\n" << *covariance() << std::endl;
-  } else {
-    sl << " * covariance matrix:\n" << covariance() << std::endl;
+	  sl << " * FreeTrackParameters: ";
+	  sl << parameters().transpose() << std::endl;
+	  sl << " * charge: " << charge() << std::endl;
+	  if (covariance() != nullptr) {
+		sl << " * covariance matrix:\n" << *covariance() << std::endl;
+	  } else {
+		sl << " * covariance matrix:\n" << covariance() << std::endl;
+	  }
+
+	  // reset stream format
+	  sl.precision(old_precision);
+	  sl.setf(old_flags);
+
+	  return sl;
   }
 
-  // reset stream format
-  sl.precision(old_precision);
-  sl.setf(old_flags);
-
-  return sl;
-  }
-  
 private:
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing
                                    /// between charged and neutral tracks                        
   ParVector_t m_parameters; ///< Parameter vector // TODO: Could there be 3D references to position/direction?
   CovPtr_t m_covariance; ///< Covariance matrix
-  
+  Vector3D& m_position = m_parameters.template head<3>(); // TODO: test these two lines
+  Vector3D& m_direction = m_parameters.template segment<3>(4);
 };
 
 }  // namespace Acts
