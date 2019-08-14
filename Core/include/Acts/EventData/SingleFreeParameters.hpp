@@ -110,7 +110,6 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   {
   }
       
-
   /// @brief default move constructor
   SingleFreeParameters(SingleFreeParameters<ChargePolicy>&& copy) { this->operator=(std::forward<const SingleFreeParameters<ChargePolicy>>(copy));}
   
@@ -157,10 +156,10 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   const CovMatrix_t* covariance() const { return m_covariance.get();}
 
   /// @copydoc TrackParametersBase::position
-  Vector3D position() const final { return m_position; }
+  Vector3D position() const final { return m_parameters.template head<3>(); }
 
   /// @copydoc TrackParametersBase::momentum
-  Vector3D momentum() const final { return m_direction; } // TODO: this is not the momentum
+  Vector3D momentum() const final { return m_parameters.template segment<3>(4) / std::abs(get<7>()); }
 
   /// @copydoc TrackParametersBase::charge
   double charge() const final { return m_oChargePolicy.getCharge(); }
@@ -239,10 +238,6 @@ private:
                                    /// between charged and neutral tracks                        
   CovPtr_t m_covariance; ///< Covariance matrix
   FreeVector m_parameters; ///< Parameter vector
-  //~ Vector3D& m_position = m_parameters.template head<3>(); // TODO: test these two lines
-  //~ Vector3D& m_direction = m_parameters.template segment<3>(4);
-  Vector3D m_position = Vector3D::Zero();
-  Vector3D m_direction = Vector3D::Zero();
 };
 
 }  // namespace Acts

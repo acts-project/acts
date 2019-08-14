@@ -67,6 +67,9 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   FreeParameters fpMoveConstr(FreeParameters(std::make_unique<FreeSymMatrix>(cov), params));
   BOOST_TEST(fpMoveConstr == fp);
   
+  FreeParameters* fpCopy = fp.clone();
+  BOOST_TEST(*fpCopy == fp);
+  
   // Test copy assignment
   FreeParameters fpCopyAssignment = fp;
   BOOST_TEST(fpCopyAssignment == fp);
@@ -74,6 +77,36 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   // Test move assignment
   FreeParameters fpMoveAssignment = FreeParameters(std::make_unique<FreeSymMatrix>(cov), params);
   BOOST_TEST(fpMoveAssignment == fp);
+  
+  /// Repeat constructing and assignment with neutral parameters
+  
+  // Test if the object can be created w/o covariance
+  NeutralFreeParameters nfpwoCov(nullptr, params);
+  BOOST_CHECK_EQUAL(nfpwoCov.covariance(), nullptr);
+  CHECK_CLOSE_ABS(nfpwoCov.parameters(), params, 1e-6);
+  
+  NeutralFreeParameters nfp(std::move(covPtr), params);
+  CHECK_CLOSE_COVARIANCE(*nfp.covariance(), cov, 1e-6);
+  CHECK_CLOSE_ABS(nfp.parameters(), params, 1e-6);
+  
+  NeutralFreeParameters nfpCopyConstr(nfp);
+  BOOST_TEST(nfpCopyConstr == nfp);
+  
+  NeutralFreeParameters nfpMoveConstr(NeutralFreeParameters(std::make_unique<FreeSymMatrix>(cov), params));
+  BOOST_TEST(nfpMoveConstr == nfp);
+  
+  NeutralFreeParameters* nfpCopy = nfp.clone();
+  BOOST_TEST(*nfpCopy == nfp);
+  
+  // Test copy assignment
+  NeutralFreeParameters nfpCopyAssignment = nfp;
+  BOOST_TEST(nfpCopyAssignment == nfp);
+  
+  // Test move assignment
+  NeutralFreeParameters nfpMoveAssignment = NeutralFreeParameters(std::make_unique<FreeSymMatrix>(cov), params);
+  BOOST_TEST(nfpMoveAssignment == nfp);
+  
+  /// Test getters/setters
   
   // Test getter of single elements
   CHECK_CLOSE_ABS(fp.get<0>(), pos.x(), 1e-6);
@@ -99,6 +132,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.position(), pos, 1e-6);
   CHECK_CLOSE_ABS(fp.momentum(), dir / qop, 1e-6);
   CHECK_CLOSE_ABS(fp.charge(), +1., 1e-6);
+  BOOST_TEST(nfp.charge() == 0.);
   CHECK_CLOSE_ABS(fp.time(), t, 1e-6);
   
   // Test setters
@@ -120,9 +154,8 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.get<6>(), 14., 1e-6);
   CHECK_CLOSE_ABS(fp.get<7>(), 15., 1e-6);
   
-
+  
   // TODO: same with neutral
-  // TODO: pt & eta
 }
 }  // namespace Test
 }  // namespace Acts
