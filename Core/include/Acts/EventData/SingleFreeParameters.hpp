@@ -36,10 +36,6 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
                 "'Acts::NeutralPolicy");
  public:
   // public typedef's
-
-  /// vector type for stored track parameters
-  using ParVector_t = FreeVector;
-
   /// type of covariance matrix
   using CovMatrix_t = FreeSymMatrix;
 
@@ -48,11 +44,6 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
  
    /// @brief default virtual destructor
   ~SingleFreeParameters() override = default;
-
-  /// @brief virtual constructor
-  SingleFreeParameters<ChargePolicy>* clone() const override {
-	return new SingleFreeParameters<ChargePolicy>(*this);
-  } // TODO: This probably requires copying from curvilinear/bound, too
   
   /// @brief standard constructor for track parameters of charged particles
   ///
@@ -62,10 +53,9 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleFreeParameters(CovPtr_t cov, const ParVector_t& parValues)
+  SingleFreeParameters(CovPtr_t cov, const FreeVector& parValues)
       : ParametersBase(),
-        m_oChargePolicy(
-            detail::coordinate_transformation::parameters2charge(parValues)),
+        m_oChargePolicy((parValues(FreeParsDim - 1) > 0.) ? 1. : -1.),
         m_covariance(std::move(cov)),
         m_parameters(parValues) {}
 
@@ -77,18 +67,11 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeParameters(CovPtr_t cov, const ParVector_t& parValues)
+  SingleFreeParameters(CovPtr_t cov, const FreeVector parValues)
       : ParametersBase(),
         m_oChargePolicy(),
         m_covariance(std::move(cov)),
         m_parameters(parValues) {}
-
-  /// @brief default copy constructor
-  SingleFreeParameters(const SingleFreeParameters<ChargePolicy>& copy) =
-      default;
-
-  /// @brief default move constructor
-  SingleFreeParameters(SingleFreeParameters<ChargePolicy>&& copy) = default;
 
   /// @brief copy assignment operator
   ///
@@ -121,13 +104,27 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
 
     return *this;
   }  
+
+  /// @brief default copy constructor
+  SingleFreeParameters(const SingleFreeParameters<ChargePolicy>& copy) : ParametersBase(), m_oChargePolicy(copy.m_oChargePolicy), m_covariance(std::make_unique<const CovMatrix_t>(*copy.m_covariance)), m_parameters(copy.m_parameters)
+  {
+  }
+      
+
+  /// @brief default move constructor
+  SingleFreeParameters(SingleFreeParameters<ChargePolicy>&& copy) { this->operator=(std::forward<const SingleFreeParameters<ChargePolicy>>(copy));}
   
+  /// @brief virtual constructor
+  SingleFreeParameters<ChargePolicy>* clone() const override {
+	return new SingleFreeParameters<ChargePolicy>(*this);
+  }
+    
   /// @brief access track parameters
   ///
   /// @return Eigen vector of dimension Acts::BoundParsDim with values of the
   /// track parameters
   ///         (in the order as defined by the ParID_t enumeration)
-  ParVector_t parameters() const { return m_parameters;}
+  FreeVector parameters() const { return m_parameters;}
 
   /// @brief access track parameter
   ///
@@ -147,7 +144,7 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   /// @return value of the requested track parameter uncertainty
   template <unsigned int par,
             std::enable_if_t<par < FreeParsDim, int> = 0>
-  ParValue_t uncertainty() const { return m_covariance->coeff(par, par);}
+  ParValue_t uncertainty() const { return std::sqrt(m_covariance->coeff(par, par));}
   
   /// @brief access covariance matrix of track parameters
   ///
@@ -157,13 +154,20 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
   /// @return raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const CovMatrix_t* covariance() const { return m_covariance;}
+  const CovMatrix_t* covariance() const { return m_covariance.get();}
 
   /// @copydoc TrackParametersBase::position
-  ActsVectorD<3> position() const final { return m_parameters.template head<3>(); }
+  Vector3D position() const final { return m_position; }
 
   /// @copydoc TrackParametersBase::momentum
-  ActsVectorD<3> momentum() const final { return m_parameters.template segment<3>(4); } // TODO: this is the direction, not the momentum
+  Vector3D momentum() const final { return m_direction; } // TODO: this is not the momentum
+
+  /// @copydoc TrackParametersBase::charge
+  double charge() const final { return m_oChargePolicy.getCharge(); }
+
+  /// @copydoc TrackParametersBase::time
+  double time() const final { return m_parameters(3); }
+
 
   /// @brief equality operator
   ///
@@ -189,12 +193,6 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
     return (m_oChargePolicy == casted->m_oChargePolicy &&
             m_parameters == casted->m_parameters);
   }
-
-  /// @copydoc TrackParametersBase::charge
-  double charge() const final { return m_oChargePolicy.getCharge(); }
-
-  /// @copydoc TrackParametersBase::time
-  double time() const final { return m_parameters(3); }
 
   /// @brief update of the track parameterisation
   /// only possible on non-const objects, enable for local parameters
@@ -226,7 +224,7 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
 	  if (covariance() != nullptr) {
 		sl << " * covariance matrix:\n" << *covariance() << std::endl;
 	  } else {
-		sl << " * covariance matrix:\n" << covariance() << std::endl;
+		sl << " * no covariance matrix stored" << std::endl;
 	  }
 
 	  // reset stream format
@@ -239,10 +237,12 @@ static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
 private:
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing
                                    /// between charged and neutral tracks                        
-  ParVector_t m_parameters; ///< Parameter vector // TODO: Could there be 3D references to position/direction?
   CovPtr_t m_covariance; ///< Covariance matrix
-  Vector3D& m_position = m_parameters.template head<3>(); // TODO: test these two lines
-  Vector3D& m_direction = m_parameters.template segment<3>(4);
+  FreeVector m_parameters; ///< Parameter vector
+  //~ Vector3D& m_position = m_parameters.template head<3>(); // TODO: test these two lines
+  //~ Vector3D& m_direction = m_parameters.template segment<3>(4);
+  Vector3D m_position = Vector3D::Zero();
+  Vector3D m_direction = Vector3D::Zero();
 };
 
 }  // namespace Acts
