@@ -175,7 +175,7 @@ build_slc6_lcg95:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
-  allow_failure: true
+  when: manual
 
 unit_tests_slc6_lcg95:
   <<: *template_unit_tests
@@ -194,7 +194,7 @@ unit_tests_slc6_lcg95:
   artifacts:
     paths:
       - build/coverage
-  allow_failure: true
+  when: manual
 
 integration_tests_slc6_lcg95:
   <<: *template_integration_tests
