@@ -48,8 +48,9 @@ template <typename bfield_t,
 class EigenStepper {
  public:
   /// Jacobian, Covariance and State defintions
-  using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
+                                BoundToFreeMatrix, FreeMatrix>;
+  using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
