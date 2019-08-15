@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE LinearizedTrackFactory Tests
+#define BOOST_TEST_MODULE HelicalTrackLinearizer Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -20,7 +20,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 
@@ -60,7 +60,7 @@ std::uniform_real_distribution<> resAngDist(0., 0.1);
 std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 
 ///
-/// @brief Unit test for LinearizedTrackFactory
+/// @brief Unit test for HelicalTrackLinearizer
 ///
 BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Number of tracks
@@ -123,10 +123,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
                                      perigeeSurface));
   }
 
-  LinearizedTrackFactory<ConstantBField,
+  HelicalTrackLinearizer<ConstantBField,
                          Propagator<EigenStepper<ConstantBField>>>::Config
       ltConfig(bField);
-  LinearizedTrackFactory<ConstantBField,
+  HelicalTrackLinearizer<ConstantBField,
                          Propagator<EigenStepper<ConstantBField>>>
       linFactory(ltConfig);
 
@@ -162,10 +162,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
   // Set up propagator with void navigator
   Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
-  LinearizedTrackFactory<ConstantBField,
+  HelicalTrackLinearizer<ConstantBField,
                          Propagator<EigenStepper<ConstantBField>>>::Config
       ltConfig(bField);
-  LinearizedTrackFactory<ConstantBField,
+  HelicalTrackLinearizer<ConstantBField,
                          Propagator<EigenStepper<ConstantBField>>>
       linFactory(ltConfig);
 

@@ -11,7 +11,7 @@
 template <typename bfield_t, typename propagator_t, typename action_list_t,
           typename aborter_list_t>
 
-Acts::Result<Acts::LinearizedTrack> Acts::LinearizedTrackFactory<
+Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
     bfield_t, propagator_t, action_list_t,
     aborter_list_t>::linearizeTrack(const GeometryContext& gctx,
                                     const MagneticFieldContext& mctx,

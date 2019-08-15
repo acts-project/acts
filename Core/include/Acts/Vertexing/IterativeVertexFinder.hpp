@@ -15,7 +15,7 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
@@ -76,14 +76,14 @@ class IterativeVertexFinder {
     /// @param fitter Vertex fitter
     /// @param propagatorIn Propagator
     ///
-    /// @note Initializes default LinearizedTrackFactory and ZScanVertexFinder
+    /// @note Initializes default HelicalTrackLinearizer and ZScanVertexFinder
     /// as seed finder
     Config(const bfield_t& bIn, vfitter_t fitter,
            const propagator_t& propagatorIn)
         : bField(bIn),
           vertexFitter(std::move(fitter)),
           linFactory(
-              typename LinearizedTrackFactory<bfield_t, propagator_t>::Config(
+              typename HelicalTrackLinearizer<bfield_t, propagator_t>::Config(
                   bField)),
           propagator(propagatorIn),
           zScanFinderCfg(
@@ -99,7 +99,7 @@ class IterativeVertexFinder {
     vfitter_t vertexFitter;
 
     /// Linearized track factory
-    LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
+    HelicalTrackLinearizer<bfield_t, propagator_t> linFactory;
 
     /// ImpactPoint3dEstimator
     ImpactPoint3dEstimator ipEst;

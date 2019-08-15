@@ -11,7 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
 
@@ -46,8 +46,8 @@ class FullBilloirVertexFitter {
     int maxIterations = 5;
 
     /// Set up factory for linearizing tracks
-    typename LinearizedTrackFactory<bfield_t, propagator_t>::Config ltConfig;
-    LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
+    typename HelicalTrackLinearizer<bfield_t, propagator_t>::Config ltConfig;
+    HelicalTrackLinearizer<bfield_t, propagator_t> linFactory;
 
     /// Propagator
     propagator_t propagator;
