@@ -371,6 +371,26 @@ class Surface : public virtual GeometryObject,
   virtual FreeRowVector freeToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 
+  /// Calculate the form factors for the derivatives
+  /// the calculation is identical for all surfaces where the
+  /// reference frame does not depend on the direction
+  ///
+  ///
+  /// @todo this mixes track parameterisation and geometry
+  /// should move to :
+  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the position of the paramters in global
+  /// @param direction is the direction of the track
+  /// @param rft is the transposed reference frame (avoids recalculation)
+  /// @param jacobian is the transport jacobian
+  ///
+  /// @return a 8-dim vector
+  virtual const FreeRowVector derivativeFactors(
+      const GeometryContext& gctx, const Vector3D& position, const Vector3D& direction,
+      const RotationMatrix3D& rft, const FreeMatrix& jacobian) const;
+
   /// Calucation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment

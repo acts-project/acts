@@ -261,3 +261,27 @@ LineSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
+
+inline const FreeRowVector LineSurface::derivativeFactors(
+    const GeometryContext& gctx, const Vector3D& position, const Vector3D& direction,
+    const RotationMatrix3D& rft, const FreeMatrix& jacobian) const {
+  // the vector between position and center
+  ActsRowVectorD<3> pc = (pos - center(gctx)).transpose();
+  // the longitudinal component vector (alogn local z)
+  ActsRowVectorD<3> locz = rft.block<1, 3>(1, 0);
+  // build the norm vector comonent by subtracting the longitudinal one
+  double long_c = locz * dir;
+  ActsRowVectorD<3> norm_vec = dir.transpose() - long_c * locz;
+  // calculate the s factors for the dependency on X
+  const FreeRowVector s_vec = norm_vec * jac.topLeftCorner<3, FreeParsDim>();
+  // calculate the d factors for the dependency on Tx
+  const FreeRowVector d_vec = locz * jac.block<3, FreeParsDim>(4, 0);
+  // normalisation of normal & longitudinal components
+  double norm = 1. / (1. - long_c * long_c);
+  // create a matrix representation
+  ActsMatrixD<3, FreeParsDim> long_mat = ActsMatrixD<3, FreeParsDim>::Zero();
+  long_mat.colwise() += locz.transpose();
+  // build the combined normal & longitudinal components
+  return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -
+                                jac.block<3, FreeParsDim>(4, 0))));
+}
