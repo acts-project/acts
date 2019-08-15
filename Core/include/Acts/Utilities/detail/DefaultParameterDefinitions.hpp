@@ -53,7 +53,7 @@ using BoundVector = ActsVector<ParValue_t, BoundParsDim>;
 using BoundRowVector = ActsRowVector<ParValue_t, BoundParsDim>;
 /// Matrix of bound-to-bound parameters
 using BoundMatrix = ActsMatrix<ParValue_t, BoundParsDim, BoundParsDim>;
-/// Symmetical matrix of bound-to-bound parameters
+/// Symmetrical matrix of bound-to-bound parameters
 using BoundSymMatrix = ActsSymMatrix<ParValue_t, BoundParsDim>;
 
 ///
@@ -64,7 +64,7 @@ using BoundSymMatrix = ActsSymMatrix<ParValue_t, BoundParsDim>;
 using FreeVector = ActsVector<ParValue_t, FreeParsDim>;
 /// Matrix of free-to-free parameters
 using FreeMatrix = ActsMatrix<ParValue_t, FreeParsDim, FreeParsDim>;
-/// Symmetical matrix of free-to-free parameters
+/// Symmetrical matrix of free-to-free parameters
 using FreeSymMatrix = ActsSymMatrix<ParValue_t, FreeParsDim>;
 
 ///

@@ -39,7 +39,7 @@ class SingleFreeParameters : public ParametersBase {
                 "'Acts::NeutralPolicy");
 
  public:
-  /// Public typedef's
+  /// Public typedefs
   /// Type of covariance matrix
   using CovMatrix_t = FreeSymMatrix;
 
@@ -160,12 +160,12 @@ class SingleFreeParameters : public ParametersBase {
     return std::sqrt(m_covariance->coeff(par, par));
   }
 
-  /// @brief access covariance matrix of track parameters
+  /// @brief Access covariance matrix of track parameters
   ///
   /// @note The ownership of the covariance matrix is @b not transferred with
   /// this call.
   ///
-  /// @return raw pointer to covariance matrix (can be a nullptr)
+  /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
   const CovMatrix_t* covariance() const { return m_covariance.get(); }
@@ -184,7 +184,7 @@ class SingleFreeParameters : public ParametersBase {
   /// @copydoc ParametersBase::time
   double time() const final { return m_parameters(3); }
 
-  /// @brief equality operator
+  /// @brief Equality operator
   ///
   /// @param [in] rhs Object to compare `*this` to
   ///
