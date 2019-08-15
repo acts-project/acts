@@ -126,26 +126,28 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         constexpr static bool output_step_size_exists = has_method<const S, std::string, output_step_size_t, const state&>;
         static_assert(output_step_size_exists, "outputStepSize method not found");
 
-        constexpr static bool value = require<state_exists,
-                                              jacobian_exists,
-                                              covariance_exists,
-                                              bound_state_exists,
-                                              curvilinear_state_exists,
-                                              bfield_exists,
-                                              get_field_exists,
-                                              position_exists,
-                                              direction_exists,
-                                              momentum_exists,
-                                              charge_exists,
-                                              time_exists,
-                                              bound_state_method_exists,
-                                              curvilinear_state_method_exists,
-                                              update_method_exists,
-                                              covariance_transport_exists,
-                                              update_surface_exists,
-                                              set_step_size_exists,
-                                              release_step_size_exists,
-                                              output_step_size_exists>;
+        //~ constexpr static bool value = require<state_exists,
+                                              //~ jacobian_exists,
+                                              //~ covariance_exists,
+                                              //~ bound_state_exists,
+                                              //~ curvilinear_state_exists,
+                                              //~ bfield_exists,
+                                              //~ get_field_exists,
+                                              //~ position_exists,
+                                              //~ direction_exists,
+                                              //~ momentum_exists,
+                                              //~ charge_exists,
+                                              //~ time_exists,
+                                              //~ bound_state_method_exists,
+                                              //~ curvilinear_state_method_exists,
+                                              //~ update_method_exists,
+                                              //~ covariance_transport_exists,
+                                              //~ update_surface_exists,
+                                              //~ set_step_size_exists,
+                                              //~ release_step_size_exists,
+                                              //~ output_step_size_exists>;
+
+         constexpr static bool value = require<>;
       };
 // clang-format on
 }  // namespace Stepper
