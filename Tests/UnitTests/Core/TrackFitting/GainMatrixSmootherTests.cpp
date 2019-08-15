@@ -23,7 +23,7 @@
 namespace Acts {
 namespace Test {
 
-using Jacobian = BoundMatrix;
+using Jacobian = FreeMatrix;
 using Covariance = BoundSymMatrix;
 template <BoundIndices... params>
 using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
