@@ -14,8 +14,8 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
@@ -57,17 +57,18 @@ namespace Acts {
 ///
 /// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
-/// @tparam propagator_t Propagator type
 /// @tparam vfitter_t Vertex fitter type
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t = Acts::FullBilloirVertexFitter<
-              bfield_t, input_track_t, propagator_t>>
+template <typename bfield_t, typename input_track_t, typename vfitter_t>
 class IterativeVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
 
  public:
+
   using InputTrack = input_track_t;
+  using Propagator_t = typename vfitter_t::Propagator_t;
+  using Linearizer_t = typename vfitter_t::Linearizer_t;
+
   /// @struct Config Configuration struct
   struct Config {
     /// @brief Finder configuration
@@ -79,17 +80,15 @@ class IterativeVertexFinder {
     /// @note Initializes default HelicalTrackLinearizer and ZScanVertexFinder
     /// as seed finder
     Config(const bfield_t& bIn, vfitter_t fitter,
-           const propagator_t& propagatorIn)
+           const Propagator_t& propagatorIn)
         : bField(bIn),
           vertexFitter(std::move(fitter)),
-          linFactory(
-              typename HelicalTrackLinearizer<bfield_t, propagator_t>::Config(
-                  bField)),
+          linFactory(typename Linearizer_t::Config(bField)),
           propagator(propagatorIn),
           zScanFinderCfg(
               typename ZScanVertexFinder<bfield_t, BoundParameters,
-                                         propagator_t>::Config(propagator)),
-          seedFinder(ZScanVertexFinder<bfield_t, BoundParameters, propagator_t>(
+                                         vfitter_t>::Config(propagator)),
+          seedFinder(ZScanVertexFinder<bfield_t, BoundParameters, vfitter_t>(
               std::move(zScanFinderCfg))) {}
 
     /// Magnetic field
@@ -99,27 +98,27 @@ class IterativeVertexFinder {
     vfitter_t vertexFitter;
 
     /// Linearized track factory
-    HelicalTrackLinearizer<bfield_t, propagator_t> linFactory;
+    Linearizer_t linFactory;
 
     /// ImpactPoint3dEstimator
     ImpactPoint3dEstimator ipEst;
 
     /// Propagator
-    propagator_t propagator;
+    Propagator_t propagator;
 
     /// ZScanVertexFinder configuration below
     /// TrackToVertexIPEstimator for ZScanVertexFinder
-    TrackToVertexIPEstimator<BoundParameters, propagator_t> trackToVertexEst;
+    TrackToVertexIPEstimator<BoundParameters, Propagator_t> trackToVertexEst;
 
     /// FsmwMode1dFinder for ZScanVertexFinder
     FsmwMode1dFinder modeFinder;
 
     /// ZScanVertexFinder config
-    typename ZScanVertexFinder<bfield_t, BoundParameters, propagator_t>::Config
+    typename ZScanVertexFinder<bfield_t, BoundParameters, vfitter_t>::Config
         zScanFinderCfg;
 
     /// ZScanVertexFinder as default vertex seed finder
-    ZScanVertexFinder<bfield_t, BoundParameters, propagator_t> seedFinder;
+    ZScanVertexFinder<bfield_t, BoundParameters, vfitter_t> seedFinder;
 
     /// Vertex finder configuration variables
     bool useBeamConstraint = false;

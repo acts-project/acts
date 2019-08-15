@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -39,11 +40,14 @@ namespace Acts {
 /// @tparam propagator_t Propagator type
 /// @tparam action_list_t Propagator action list type
 /// @tparam aborter_list_t Propagator aborter list type
-template <typename bfield_t, typename propagator_t,
+template <typename bfield_t,
+          typename propagator_t = Propagator<EigenStepper<bfield_t>>,
           typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
 class HelicalTrackLinearizer {
  public:
+  using Propagator_t = propagator_t;
+
   struct Config {
     bfield_t bField;
     Config(const bfield_t& bIn) : bField(bIn){};

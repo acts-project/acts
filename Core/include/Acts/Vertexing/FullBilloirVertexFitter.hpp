@@ -30,13 +30,15 @@ namespace Acts {
 ///
 /// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
-/// @tparam propagator_t Propagator type
+/// @tparam linearizer_t Track linearizer type
 
 template <typename bfield_t, typename input_track_t,
-          typename propagator_t = Propagator<EigenStepper<bfield_t>>>
+          typename linearizer_t = HelicalTrackLinearizer<bfield_t>>
 class FullBilloirVertexFitter {
  public:
   using InputTrack = input_track_t;
+  using Propagator_t = typename linearizer_t::Propagator_t;
+  using Linearizer_t = linearizer_t;
 
   struct Config {
     /// Magnetic field
@@ -46,28 +48,28 @@ class FullBilloirVertexFitter {
     int maxIterations = 5;
 
     /// Set up factory for linearizing tracks
-    typename HelicalTrackLinearizer<bfield_t, propagator_t>::Config ltConfig;
-    HelicalTrackLinearizer<bfield_t, propagator_t> linFactory;
+    typename linearizer_t::Config linConfig;
+    linearizer_t linearizer;
 
     /// Propagator
-    propagator_t propagator;
+    Propagator_t propagator;
 
     /// Constructor with propagator input
-    Config(const bfield_t& bIn, const propagator_t& propagatorIn)
+    Config(const bfield_t& bIn, const Propagator_t& propagatorIn)
         : bField(bIn),
-          ltConfig(bIn),
-          linFactory(ltConfig),
+          linConfig(bIn),
+          linearizer(linConfig),
           propagator(propagatorIn) {}
 
     /// Constructor with default propagator
-    template <typename T = propagator_t,
+    template <typename T = Propagator_t,
               std::enable_if_t<
                   std::is_same<T, Propagator<EigenStepper<bfield_t>>>::value,
                   int> = 0>
     Config(const bfield_t& bIn)
         : bField(bIn),
-          ltConfig(bIn),
-          linFactory(ltConfig),
+          linConfig(bIn),
+          linearizer(linConfig),
           propagator(
               Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bIn))) {
     }

@@ -50,12 +50,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
   // Set up Billoir Vertex Fitter
-  FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                          Propagator<EigenStepper<ConstantBField>>>::Config
+  FullBilloirVertexFitter<ConstantBField, BoundParameters>::Config
       vertexFitterCfg(bField, propagator);
-  FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                          Propagator<EigenStepper<ConstantBField>>>
-      billoirFitter(vertexFitterCfg);
+  FullBilloirVertexFitter<ConstantBField, BoundParameters> billoirFitter(
+      vertexFitterCfg);
 
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
@@ -137,12 +135,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     unsigned int nTracks = nTracksDist(gen);
 
     // Set up Billoir Vertex Fitter
-    FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                            Propagator<EigenStepper<ConstantBField>>>::Config
+    FullBilloirVertexFitter<ConstantBField, BoundParameters>::Config
         vertexFitterCfg(bField, propagator);
-    FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                            Propagator<EigenStepper<ConstantBField>>>
-        billoirFitter(vertexFitterCfg);
+    FullBilloirVertexFitter<ConstantBField, BoundParameters> billoirFitter(
+        vertexFitterCfg);
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
     // Some abitrary values
@@ -265,12 +261,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
         [](InputTrack params) { return params.parameters(); };
 
     // Set up Billoir Vertex Fitter
-    FullBilloirVertexFitter<ConstantBField, InputTrack,
-                            Propagator<EigenStepper<ConstantBField>>>::Config
-        vertexFitterCfg(bField, propagator);
-    FullBilloirVertexFitter<ConstantBField, InputTrack,
-                            Propagator<EigenStepper<ConstantBField>>>
-        billoirFitter(vertexFitterCfg, extractParameters);
+    FullBilloirVertexFitter<ConstantBField, InputTrack>::Config vertexFitterCfg(
+        bField, propagator);
+    FullBilloirVertexFitter<ConstantBField, InputTrack> billoirFitter(
+        vertexFitterCfg, extractParameters);
 
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;

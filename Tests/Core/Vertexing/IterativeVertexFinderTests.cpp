@@ -93,8 +93,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
     using BilloirFitter =
-        FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                                Propagator<EigenStepper<ConstantBField>>>;
+        FullBilloirVertexFitter<ConstantBField, BoundParameters>;
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg(bField, propagator);
@@ -104,8 +103,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Vertex Finder
     using VertexFinder =
         IterativeVertexFinder<ConstantBField, BoundParameters,
-                              Propagator<EigenStepper<ConstantBField>>,
-                              BilloirFitter>;
+                                  BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");

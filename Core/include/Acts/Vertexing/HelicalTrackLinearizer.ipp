@@ -159,6 +159,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
   momentumJacobian(3, 1) = 1.;
   momentumJacobian(4, 2) = 1.;
 
+  FreeToBoundMatrix jac(FreeToBoundMatrix::Zero());
+  jac.block<BoundParsDim, SpacePointDim>(0, 0) = positionJacobian;
+  jac.block<BoundParsDim, 3>(SpacePointDim, 0) = momentumJacobian;
+
   // const term F(V_0, p_0) in Talyor expansion
   BoundVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
                           momentumJacobian * momentumAtPCA;

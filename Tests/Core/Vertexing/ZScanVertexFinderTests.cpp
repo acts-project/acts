@@ -27,6 +27,7 @@
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 
@@ -88,6 +89,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Set up propagator with void navigator
     Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
+    typedef FullBilloirVertexFitter<ConstantBField, BoundParameters>
+        BilloirFitter;
+
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -134,8 +138,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     }
 
     using VertexFinder =
-        ZScanVertexFinder<ConstantBField, BoundParameters,
-                          Propagator<EigenStepper<ConstantBField>>>;
+        ZScanVertexFinder<ConstantBField, BoundParameters, BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
@@ -193,6 +196,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Set up propagator with void navigator
     Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
+    typedef FullBilloirVertexFitter<ConstantBField, BoundParameters>
+        BilloirFitter;
+
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -239,8 +245,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     }
 
     using VertexFinder =
-        ZScanVertexFinder<ConstantBField, InputTrack,
-                          Propagator<EigenStepper<ConstantBField>>>;
+        ZScanVertexFinder<ConstantBField, InputTrack, BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
@@ -251,6 +256,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // user-defined InputTrack
     std::function<BoundParameters(InputTrack)> extractParameters =
         [](InputTrack params) { return params.parameters(); };
+
 
     VertexFinder finder(std::move(cfg), extractParameters);
 

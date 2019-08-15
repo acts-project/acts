@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename bfield_t, typename input_track_t, typename vfitter_t>
 Acts::Result<std::vector<Acts::Vertex<input_track_t>>>
-Acts::ZScanVertexFinder<bfield_t, input_track_t, propagator_t>::find(
+Acts::ZScanVertexFinder<bfield_t, input_track_t, vfitter_t>::find(
     const std::vector<input_track_t>& trackVector,
     const VertexFinderOptions<input_track_t>& vFinderOptions) const {
   // Determine if we use constraint or not
