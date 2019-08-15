@@ -69,7 +69,7 @@ class SingleFreeParameters : public ParametersBase {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeParameters(CovPtr_t cov, const FreeVector parValues)
+  SingleFreeParameters(CovPtr_t cov, const FreeVector& parValues)
       : ParametersBase(),
         m_oChargePolicy(),
         m_covariance(std::move(cov)),
@@ -230,7 +230,7 @@ class SingleFreeParameters : public ParametersBase {
   /// @param [in, out] sl The output stream
   ///
   /// @return The modified output stream object @p sl
-  std::ostream& print(std::ostream& sl) const {
+  std::ostream& print(std::ostream& sl) const override {
     // Set stream output format
     auto old_precision = sl.precision(7);
     auto old_flags = sl.setf(std::ios::fixed);

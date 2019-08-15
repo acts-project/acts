@@ -111,6 +111,6 @@ class TrackParametersBase : public ParametersBase {
   /// @brief print information to output stream
   ///
   /// @return modified output stream object
-  virtual std::ostream& print(std::ostream& sl) const;
+  std::ostream& print(std::ostream& sl) const override;
 };
 }  // namespace Acts
