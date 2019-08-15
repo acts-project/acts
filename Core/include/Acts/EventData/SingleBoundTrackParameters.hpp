@@ -227,6 +227,15 @@ class SingleBoundTrackParameters {
   RotationMatrix3D referenceFrame(const GeometryContext& geoCtx) const {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
+  
+  /// @copydoc TrackParametersBase::globalCovariance
+  FreeSymMatrix globalCovariance(GeometryContext& gctx) const final
+  {
+	  BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+      m_pSurface->initJacobianToGlobal(gctx, jacToGlobal,
+                                   this->position(), this->momentum().normalized(), this->parameters());
+      return jacToGlobal * (*this->covariance()) * jacToGlobal.transpose();
+  }
 
  private:
   /// parameter set holding parameters vector and covariance.
