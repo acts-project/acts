@@ -19,18 +19,38 @@ namespace Acts {
 namespace concept {
   namespace VertexFitter {
 
+  template <typename T>
+  using track_t = typename T::InputTrack;
+  template <typename T>
+  using propagator_t = typename T::Propagator_t;
+  template <typename T>
+  using linearizer_t = typename T::Linearizer_t;
+  template <typename T>
+  using bfield_t = typename T::Bfield_t;
+
   METHOD_TRAIT(fit_t, fit);
 
   // clang-format off
     template <typename S>
       struct VertexFitterConcept {
-        
         constexpr static bool fit_exists = has_method<const S, Result<Vertex<typename S::InputTrack>>,
          fit_t, const std::vector<typename S::InputTrack>&, 
          const VertexFitterOptions<typename S::InputTrack>&>;
         static_assert(fit_exists, "fit method not found");
+        constexpr static bool track_exists = exists<track_t, S>;
+        static_assert(track_exists, "Track type not found");
+        constexpr static bool propagator_exists = exists<propagator_t, S>;
+        static_assert(propagator_exists, "Propagator type not found");
+        constexpr static bool linearizer_exists = exists<linearizer_t, S>;
+        static_assert(linearizer_exists, "Linearizer type not found");
+        constexpr static bool bfield_exists = exists<bfield_t, S>;
+        static_assert(bfield_exists, "BField type not found");
 
-        constexpr static bool value = require<fit_exists>;
+        constexpr static bool value = require<fit_exists,
+                                              track_exists,
+                                              propagator_exists,
+                                              linearizer_exists,
+                                              bfield_exists>;
       };
   // clang-format on
   }  // namespace VertexFitter
