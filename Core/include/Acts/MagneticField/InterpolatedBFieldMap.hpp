@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
 namespace Acts {
 
