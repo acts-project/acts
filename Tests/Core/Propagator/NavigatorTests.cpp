@@ -113,7 +113,7 @@ struct PropagatorState {
                           bool reinitialize = true) const {
       // suppress unused warning
       (void)reinitialize;
-      BoundParameters parameters(tgContext, nullptr, state.pos,
+      BoundParameters parameters(tgContext, std::nullopt, state.pos,
                                  state.p * state.dir, state.q, state.t,
                                  surface.getSharedPtr());
       BoundState bState{std::move(parameters), Jacobian::Identity(),
@@ -124,8 +124,8 @@ struct PropagatorState {
     CurvilinearState curvilinearState(State& state,
                                       bool reinitialize = true) const {
       (void)reinitialize;
-      CurvilinearParameters parameters(nullptr, state.pos, state.p * state.dir,
-                                       state.q, state.t);
+      CurvilinearParameters parameters(std::nullopt, state.pos,
+                                       state.p * state.dir, state.q, state.t);
       // Create the bound state
       CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                  state.pathAccumulated};

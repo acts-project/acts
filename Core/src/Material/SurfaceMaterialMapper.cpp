@@ -148,7 +148,7 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, const RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
-  NeutralCurvilinearParameters start(nullptr, mTrack.first.first,
+  NeutralCurvilinearParameters start(std::nullopt, mTrack.first.first,
                                      mTrack.first.second, 0.);
 
   // Prepare Action list and abort list

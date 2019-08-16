@@ -55,8 +55,8 @@ class GainMatrixSmoother {
       assert(ts.parameter.filtered);
       assert(ts.parameter.predicted);
       assert(ts.parameter.jacobian);
-      assert(ts.parameter.predicted->covariance() != nullptr);
-      assert(ts.parameter.filtered->covariance() != nullptr);
+      assert(ts.parameter.predicted->covariance());
+      assert(ts.parameter.filtered->covariance());
 
       assert(prev_ts->parameter.smoothed);
       assert(prev_ts->parameter.predicted);
@@ -81,9 +81,9 @@ class GainMatrixSmoother {
       // clang-format on
 
       // Create smoothed track parameters
-      ts.parameter.smoothed = parameters_t(
-          gctx, std::make_unique<CovMatrix_t>(std::move(smoothedCov)),
-          smoothedPars, ts.referenceSurface().getSharedPtr());
+      ts.parameter.smoothed =
+          parameters_t(gctx, smoothedCov, smoothedPars,
+                       ts.referenceSurface().getSharedPtr());
 
       // Point prev state to current state
       prev_ts = &ts;

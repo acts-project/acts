@@ -27,7 +27,7 @@ class SingleCurvilinearTrackParameters
     : public SingleTrackParameters<ChargePolicy> {
  public:
   /// type of covariance matrix
-  using CovPtr_t = typename SingleTrackParameters<ChargePolicy>::CovPtr_t;
+  using CovMatrix_t = typename SingleTrackParameters<ChargePolicy>::CovMatrix_t;
 
   /// @brief constructor for curvilienear representation
   /// This is the constructor from global parameters, enabled only
@@ -39,7 +39,8 @@ class SingleCurvilinearTrackParameters
   /// @param[in] dCharge The charge of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleCurvilinearTrackParameters(CovPtr_t cov, const ActsVectorD<3>& position,
+  SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
+                                   const ActsVectorD<3>& position,
                                    const ActsVectorD<3>& momentum,
                                    double dCharge, double dTime)
       : SingleTrackParameters<ChargePolicy>(
@@ -58,7 +59,8 @@ class SingleCurvilinearTrackParameters
   /// @param[in] momentum The global momentum of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleCurvilinearTrackParameters(CovPtr_t cov, const ActsVectorD<3>& position,
+  SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
+                                   const ActsVectorD<3>& position,
                                    const ActsVectorD<3>& momentum, double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),

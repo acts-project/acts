@@ -68,16 +68,10 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
-  BoundParameters pars(
-      tgContext,
-      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-      parValues, plane1);
+  BoundParameters pars(tgContext, covTrk, parValues, plane1);
 
   parValues << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
-  BoundParameters filt(
-      tgContext,
-      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-      parValues, plane1);
+  BoundParameters filt(tgContext, covTrk, parValues, plane1);
 
   TrackState ts{SourceLink{&meas1}};
 
@@ -91,15 +85,9 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts = TrackState{SourceLink{&meas2}};
 
   parValues << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
-  pars = BoundParameters(
-      tgContext,
-      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-      parValues, plane2);
+  pars = BoundParameters(tgContext, covTrk, parValues, plane2);
   parValues << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
-  filt = BoundParameters(
-      tgContext,
-      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-      parValues, plane2);
+  filt = BoundParameters(tgContext, covTrk, parValues, plane2);
 
   ts.parameter.predicted = std::move(pars);
   ts.parameter.filtered = std::move(filt);
@@ -111,15 +99,9 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts = TrackState{SourceLink{&meas3}};
 
   parValues << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
-  pars = BoundParameters(
-      tgContext,
-      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-      parValues, plane3);
+  pars = BoundParameters(tgContext, covTrk, parValues, plane3);
   parValues << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
-  filt = BoundParameters(
-      tgContext,
-      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-      parValues, plane3);
+  filt = BoundParameters(tgContext, covTrk, parValues, plane3);
 
   ts.parameter.predicted = std::move(pars);
   ts.parameter.filtered = std::move(filt);

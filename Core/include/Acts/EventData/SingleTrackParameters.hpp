@@ -46,9 +46,6 @@ class SingleTrackParameters : public TrackParametersBase {
   /// type of covariance matrix
   using CovMatrix_t = typename TrackParametersBase::CovMatrix_t;
 
-  /// type for unique pointer to covariance matrix
-  using CovPtr_t = std::unique_ptr<const CovMatrix_t>;
-
   /// @brief default virtual destructor
   ~SingleTrackParameters() override = default;
 
@@ -98,7 +95,8 @@ class SingleTrackParameters : public TrackParametersBase {
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleTrackParameters(CovPtr_t cov, const ParVector_t& parValues,
+  SingleTrackParameters(std::optional<CovMatrix_t> cov,
+                        const ParVector_t& parValues,
                         const ActsVectorD<3>& position,
                         const ActsVectorD<3>& momentum)
       : TrackParametersBase(),
@@ -117,7 +115,8 @@ class SingleTrackParameters : public TrackParametersBase {
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleTrackParameters(CovPtr_t cov, const ParVector_t& parValues,
+  SingleTrackParameters(std::optional<CovMatrix_t> cov,
+                        const ParVector_t& parValues,
                         const ActsVectorD<3>& position,
                         const ActsVectorD<3>& momentum)
       : TrackParametersBase(),

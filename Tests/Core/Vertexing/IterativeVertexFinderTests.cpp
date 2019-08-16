@@ -155,9 +155,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
             q / pTDist(gen), 0.;
 
-        // Fill vector of track objects with simple covariance matrix
-        std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-
         // Resolutions
         double res_d0 = resIPDist(gen);
         double res_z0 = resIPDist(gen);
@@ -165,8 +162,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         double res_th = resAngDist(gen);
         double res_qp = resQoPDist(gen);
 
-        (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0,
-            0., 0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
+        // Fill vector of track objects with simple covariance matrix
+        Covariance covMat;
+        covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0.,
+            0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto params = BoundParameters(tgContext, std::move(covMat), paramVec,
@@ -191,6 +190,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     // Retrieve vertices found by vertex finder
     auto vertexCollection = *res;

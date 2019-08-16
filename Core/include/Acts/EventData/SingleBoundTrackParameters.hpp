@@ -27,7 +27,7 @@ template <class ChargePolicy>
 class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
  public:
   using ParVector_t = typename SingleTrackParameters<ChargePolicy>::ParVector_t;
-  using CovPtr_t = typename SingleTrackParameters<ChargePolicy>::CovPtr_t;
+  using CovMatrix_t = typename SingleTrackParameters<ChargePolicy>::CovMatrix_t;
 
   /// @brief Constructor of track parameters bound to a surface
   /// This is the constructor from global parameters, enabled only
@@ -43,7 +43,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx, CovPtr_t cov,
+  SingleBoundTrackParameters(const GeometryContext& gctx,
+                             std::optional<CovMatrix_t> cov,
                              const ParVector_t& parValues,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
@@ -74,7 +75,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx, CovPtr_t cov,
+  SingleBoundTrackParameters(const GeometryContext& gctx,
+                             std::optional<CovMatrix_t> cov,
                              const ActsVectorD<3>& position,
                              const ActsVectorD<3>& momentum, double dCharge,
                              double dTime,
@@ -103,7 +105,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx, CovPtr_t cov,
+  SingleBoundTrackParameters(const GeometryContext& gctx,
+                             std::optional<CovMatrix_t> cov,
                              const ParVector_t& parValues,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
@@ -134,7 +137,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx, CovPtr_t cov,
+  SingleBoundTrackParameters(const GeometryContext& gctx,
+                             std::optional<CovMatrix_t> cov,
                              const ActsVectorD<3>& position,
                              const ActsVectorD<3>& momentum, double dTime,
                              std::shared_ptr<const Surface> surface)
@@ -149,9 +153,9 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] copy The source parameters
   SingleBoundTrackParameters(
       const SingleBoundTrackParameters<ChargePolicy>& copy)
-      : SingleTrackParameters<ChargePolicy>(copy),
-        m_pSurface(copy.m_pSurface)  // copy shared_ptr
-  {}
+      : SingleTrackParameters<ChargePolicy>(copy) {
+    m_pSurface = copy.m_pSurface;
+  }
 
   /// @brief move constructor - charged/neutral
   /// @param[in] other The source parameters

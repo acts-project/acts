@@ -410,7 +410,7 @@ Acts::Result<void> Acts::IterativeVertexFinder<
       double distance =
           m_cfg.ipEst.calculateDistance(sTrackParams, seedVertex.position());
 
-      if (sTrackParams.covariance() == nullptr) {
+      if (!sTrackParams.covariance()) {
         return VertexingError::NoCovariance;
       }
 

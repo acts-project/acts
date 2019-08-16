@@ -95,8 +95,7 @@ class Measurement {
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
-      : m_oParameters(std::make_unique<const CovMatrix_t>(std::move(cov)), head,
-                      values...),
+      : m_oParameters(std::move(cov), head, values...),
         m_pSurface(std::move(surface)),
         m_sourceLink(source) {
     assert(m_pSurface);
