@@ -19,6 +19,7 @@
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
+#include "Acts/Vertexing/VertexFitterConcept.hpp"
 
 namespace Acts {
 
@@ -31,6 +32,9 @@ namespace Acts {
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
 template <typename vfitter_t>
 class ZScanVertexFinder {
+  static_assert(VertexFitterConcept<vfitter_t>,
+                "Vertex fitter does not fulfill vertex fitter concept.");
+
   using InputTrack_t = typename vfitter_t::InputTrack;
   using Propagator_t = typename vfitter_t::Propagator_t;
 
