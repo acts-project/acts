@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/SpacePointBuilder.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -53,7 +53,7 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// information
   /// @return vector of the global coordinates of the cluster
   Vector3D globalCoords(const GeometryContext& gctx,
-                                const Cluster& cluster) const;
+                        const Cluster& cluster) const;
 };
 }  // namespace Acts
 #include "Acts/Plugins/Digitization/detail/SingleHitSpacePointBuilder.ipp"

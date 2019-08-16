@@ -51,7 +51,8 @@ struct SpacePointParameters {
 /// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
-double differenceOfClustersChecked(const Acts::Vector3D& pos1, const Acts::Vector3D& pos2,
+double differenceOfClustersChecked(const Acts::Vector3D& pos1,
+                                   const Acts::Vector3D& pos2,
                                    const Acts::Vector3D& posVertex,
                                    const double maxDistance,
                                    const double maxAngleTheta2,
