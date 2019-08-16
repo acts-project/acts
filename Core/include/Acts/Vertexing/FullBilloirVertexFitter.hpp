@@ -12,9 +12,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
-
 namespace Acts {
 
 /// @class FullBilloirVertexFitter
@@ -31,10 +31,12 @@ namespace Acts {
 /// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-
 template <typename bfield_t, typename input_track_t,
           typename linearizer_t = HelicalTrackLinearizer<bfield_t>>
 class FullBilloirVertexFitter {
+  static_assert(LinearizerConcept<linearizer_t>,
+                "Linearizer does not fulfill linearizer concept.");
+
  public:
   using InputTrack = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
