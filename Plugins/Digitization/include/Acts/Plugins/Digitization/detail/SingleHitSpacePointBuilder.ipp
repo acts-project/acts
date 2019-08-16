@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
-
 template <typename Cluster>
 Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
@@ -18,7 +16,7 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
 }
 
 template <typename Cluster>
-Acts::SpacePointVector
+Acts::Vector3D
 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
@@ -28,8 +26,7 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
   Acts::Vector3D pos, mom;
   clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
 
-  // TODO: Demand that the cluster provides a time stamp
-  return {pos.x(), pos.y(), pos.z(), 0.};
+  return pos;
 }
 
 template <typename Cluster>
@@ -39,7 +36,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
   // Set the space point for all stored hits
   for (const auto& c : clusters) {
     Acts::SpacePoint<Cluster> spacePoint;
-    spacePoint.spacePoint = globalCoords(gctx, *c);
+    spacePoint.vector = globalCoords(gctx, *c);
     spacePoint.clusterModule.push_back(c);
     spacePointStorage.push_back(std::move(spacePoint));
   }

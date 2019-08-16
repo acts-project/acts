@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/SpacePointBuilder.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -16,9 +17,9 @@ namespace Acts {
 
 /// @brief Configuration of the class to steer its behaviour
 struct DoubleHitSpacePointConfig {
-  /// Accepted difference in eta for two clusters
+  /// Accepted squared difference in theta for two clusters
   double diffTheta2 = 1.;
-  /// Accepted difference in phi for two clusters
+  /// Accepted squared difference in phi for two clusters
   double diffPhi2 = 1.;
   /// Accepted distance between two clusters
   double diffDist = 100. * UnitConstants::mm;
@@ -102,5 +103,5 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   std::pair<Vector3D, Vector3D> endsOfStrip(const GeometryContext& gctx,
                                             const Cluster& cluster) const;
 };
-#include "Acts/Plugins/Digitization/detail/DoubleHitSpacePointBuilder.ipp"
 }  // namespace Acts
+#include "Acts/Plugins/Digitization/detail/DoubleHitSpacePointBuilder.ipp"

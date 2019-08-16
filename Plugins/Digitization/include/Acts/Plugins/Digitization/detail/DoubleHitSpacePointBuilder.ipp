@@ -8,7 +8,6 @@
 
 #include <cmath>
 #include <limits>
-#include "Acts/Plugins/Digitization/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace {
@@ -16,19 +15,19 @@ namespace {
 /// points
 struct SpacePointParameters {
   /// Vector pointing from bottom to top end of first SDE
-  Vector3D q;
+  Acts::Vector3D q;
   /// Vector pointing from bottom to top end of second SDE
-  Vector3D r;
+  Acts::Vector3D r;
   /// Twice the vector pointing from vertex to to midpoint of first SDE
-  Vector3D s;
+  Acts::Vector3D s;
   /// Twice the vector pointing from vertex to to midpoint of second SDE
-  Vector3D t;
+  Acts::Vector3D t;
   /// Cross product between SpacePointParameters::q and
   /// SpacePointParameters::s
-  Vector3D qs;
+  Acts::Vector3D qs;
   /// Cross product between SpacePointParameters::r and
   /// SpacePointParameters::t
-  Vector3D rt;
+  Acts::Vector3D rt;
   /// Magnitude of SpacePointParameters::q
   double qmag = 0.;
   /// Parameter that determines the hit position on the first SDE
@@ -52,8 +51,8 @@ struct SpacePointParameters {
 /// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
-double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
-                                   const Vector3D& posVertex,
+double differenceOfClustersChecked(const Acts::Vector3D& pos1, const Acts::Vector3D& pos2,
+                                   const Acts::Vector3D& posVertex,
                                    const double maxDistance,
                                    const double maxAngleTheta2,
                                    const double maxAnglePhi2) {
@@ -64,10 +63,10 @@ double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
 
   // Calculate the angles of the vectors
   double phi1, theta1, phi2, theta2;
-  phi1 = VectorHelpers::phi(pos1 - posVertex);
-  theta1 = VectorHelpers::theta(pos1 - posVertex);
-  phi2 = VectorHelpers::phi(pos2 - posVertex);
-  theta2 = VectorHelpers::theta(pos2 - posVertex);
+  phi1 = Acts::VectorHelpers::phi(pos1 - posVertex);
+  theta1 = Acts::VectorHelpers::theta(pos1 - posVertex);
+  phi2 = Acts::VectorHelpers::phi(pos2 - posVertex);
+  theta2 = Acts::VectorHelpers::theta(pos2 - posVertex);
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
@@ -435,8 +434,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
         sp.clusterModule.push_back(cp.first);
         sp.clusterModule.push_back(cp.second);
         Vector3D pos = ends1.first + resultPerpProj * spaPoPa.q;
-        // TODO: Clusters should deliver timestamp
-        sp.spacePoint = {pos.x(), pos.y(), pos.z(), 0.};
+        sp.vector = pos;
         spacePoints.push_back(std::move(sp));
         continue;
       }
@@ -450,7 +448,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
       sp.clusterModule.push_back(cp.second);
       Vector3D pos = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
       // TODO: Clusters should deliver timestamp
-      sp.spacePoint = {pos.x(), pos.y(), pos.z(), 0.};
+      sp.vector = pos;
       spacePoints.push_back(std::move(sp));
     } else {
       /// If this point is reached then it was not possible to resolve both
@@ -466,8 +464,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
         sp.clusterModule.push_back(cp.second);
         Vector3D pos =
             0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-        // TODO: Clusters should deliver timestamp
-        sp.spacePoint = {pos.x(), pos.y(), pos.z(), 0.};
+        sp.vector = pos;
         spacePoints.push_back(std::move(sp));
       }
     }

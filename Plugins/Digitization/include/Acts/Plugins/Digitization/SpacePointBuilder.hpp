@@ -9,7 +9,7 @@
 #pragma once
 
 #include <vector>
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -18,20 +18,20 @@ template <typename Cluster>
 struct SpacePoint {
   /// Storage of the cluster on a surface
   std::vector<const Cluster*> clusterModule;
-  /// Storage of a space point.
-  SpacePointVector spacePoint;
+  /// Storage of a point in space.
+  Vector3D vector;
 
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
-  double x() const { return spacePoint(0); }
+  double x() const { return vector(0); }
 
   /// @brief Getter of the second element in @p spacePoint
   /// @return Second element in @p spacePoint
-  double y() const { return spacePoint(1); }
+  double y() const { return vector(1); }
 
   /// @brief Getter of the third element in @p spacePoint
   /// @return Third element in @p spacePoint
-  double z() const { return spacePoint(2); }
+  double z() const { return vector(2); }
 };
 
 /// @struct SpacePointBuilder
