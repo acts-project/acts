@@ -70,7 +70,7 @@ class IterativeVertexFinder {
 
   /// @struct Config Configuration struct
   struct Config {
-    /// @brief Finder configuration
+    /// @brief Finder configuration for InputTrack_t == BoundParameters
     ///
     /// @param bIn Bfield_t
     /// @param fitter Vertex fitter
@@ -78,6 +78,9 @@ class IterativeVertexFinder {
     ///
     /// @note Initializes default ZScanVertexFinder
     /// as seed finder
+    template <
+        typename T = InputTrack_t,
+        std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
     Config(const Bfield_t& bIn, vfitter_t fitter,
            const Propagator_t& propagatorIn)
         : bField(bIn),
@@ -87,6 +90,27 @@ class IterativeVertexFinder {
           zScanFinderCfg(
               typename ZScanVertexFinder<vfitter_t>::Config(propagator)),
           seedFinder(ZScanVertexFinder<vfitter_t>(std::move(zScanFinderCfg))) {}
+
+    /// @brief Finder configuration for InputTrack_t != BoundParameters
+    ///
+    /// @param bIn Bfield_t
+    /// @param fitter Vertex fitter
+    /// @param propagatorIn Propagator
+    /// @param func Function extracting BoundParameters from InputTrack_t object
+    ///
+    /// @note Initializes default ZScanVertexFinder
+    /// as seed finder
+    Config(const Bfield_t& bIn, vfitter_t fitter,
+           const Propagator_t& propagatorIn,
+           std::function<BoundParameters(InputTrack_t)> func)
+        : bField(bIn),
+          vertexFitter(std::move(fitter)),
+          linFactory(typename Linearizer_t::Config(bField)),
+          propagator(propagatorIn),
+          zScanFinderCfg(
+              typename ZScanVertexFinder<vfitter_t>::Config(propagator)),
+          seedFinder(
+              ZScanVertexFinder<vfitter_t>(std::move(zScanFinderCfg), func)) {}
 
     /// Magnetic field
     Bfield_t bField;
