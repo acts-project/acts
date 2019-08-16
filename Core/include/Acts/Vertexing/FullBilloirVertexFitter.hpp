@@ -38,7 +38,7 @@ class FullBilloirVertexFitter {
                 "Linearizer does not fulfill linearizer concept.");
 
  public:
-  using InputTrack = input_track_t;
+  using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
   using Bfield_t = bfield_t;

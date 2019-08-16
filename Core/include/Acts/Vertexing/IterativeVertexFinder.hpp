@@ -62,7 +62,7 @@ class IterativeVertexFinder {
                 "Vertex fitter does not fulfill vertex fitter concept.");
 
 public:
-  using InputTrack_t = typename vfitter_t::InputTrack;
+  using InputTrack_t = typename vfitter_t::InputTrack_t;
   using Bfield_t = typename vfitter_t::Bfield_t;
   using Propagator_t = typename vfitter_t::Propagator_t;
   using Linearizer_t = typename vfitter_t::Linearizer_t;

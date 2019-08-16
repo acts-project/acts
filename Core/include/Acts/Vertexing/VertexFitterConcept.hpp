@@ -20,7 +20,7 @@ namespace concept {
   namespace VertexFitter {
 
   template <typename T>
-  using track_t = typename T::InputTrack;
+  using track_t = typename T::InputTrack_t;
   template <typename T>
   using propagator_t = typename T::Propagator_t;
   template <typename T>
@@ -33,10 +33,11 @@ namespace concept {
   // clang-format off
     template <typename S>
       struct VertexFitterConcept {
-        constexpr static bool fit_exists = has_method<const S, Result<Vertex<typename S::InputTrack>>,
-         fit_t, const std::vector<typename S::InputTrack>&, 
-         const VertexFitterOptions<typename S::InputTrack>&>;
+        constexpr static bool fit_exists = has_method<const S, Result<Vertex<typename S::InputTrack_t>>,
+         fit_t, const std::vector<typename S::InputTrack_t>&, 
+         const VertexFitterOptions<typename S::InputTrack_t>&>;
         static_assert(fit_exists, "fit method not found");
+        
         constexpr static bool track_exists = exists<track_t, S>;
         static_assert(track_exists, "Track type not found");
         constexpr static bool propagator_exists = exists<propagator_t, S>;
