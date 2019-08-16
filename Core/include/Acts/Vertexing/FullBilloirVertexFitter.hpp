@@ -39,6 +39,7 @@ class FullBilloirVertexFitter {
   using InputTrack = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
+  using Bfield_t = bfield_t;
 
   struct Config {
     /// Magnetic field

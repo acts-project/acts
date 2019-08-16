@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     }
 
     using VertexFinder =
-        ZScanVertexFinder<ConstantBField, BoundParameters, BilloirFitter>;
+        ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
@@ -196,8 +196,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Set up propagator with void navigator
     Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
-    typedef FullBilloirVertexFitter<ConstantBField, BoundParameters>
-        BilloirFitter;
+    typedef FullBilloirVertexFitter<ConstantBField, InputTrack> BilloirFitter;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -245,7 +244,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     }
 
     using VertexFinder =
-        ZScanVertexFinder<ConstantBField, InputTrack, BilloirFitter>;
+        ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
@@ -259,6 +258,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
 
     VertexFinder finder(std::move(cfg), extractParameters);
+
 
     VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
 

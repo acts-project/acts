@@ -102,11 +102,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     // Vertex Finder
     using VertexFinder =
-        IterativeVertexFinder<ConstantBField, BoundParameters,
-                                  BilloirFitter>;
+        IterativeVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
+
 
     VertexFinder::Config cfg(bField, std::move(bFitter), propagator);
     cfg.reassignTracksAfterFirstFit = true;

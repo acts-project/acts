@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename bfield_t, typename input_track_t, typename vfitter_t>
-Acts::Result<std::vector<Acts::Vertex<input_track_t>>>
-Acts::ZScanVertexFinder<bfield_t, input_track_t, vfitter_t>::find(
-    const std::vector<input_track_t>& trackVector,
-    const VertexFinderOptions<input_track_t>& vFinderOptions) const {
+template <typename vfitter_t>
+auto Acts::ZScanVertexFinder<vfitter_t>::find(
+    const std::vector<InputTrack_t>& trackVector,
+    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
+    -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Determine if we use constraint or not
   bool useConstraint = false;
   if (vFinderOptions.vertexConstraint.fullCovariance().determinant() != 0) {
@@ -23,7 +23,7 @@ Acts::ZScanVertexFinder<bfield_t, input_track_t, vfitter_t>::find(
   std::vector<std::pair<double, double>> zPositions;
 
   for (auto& iTrk : trackVector) {
-    // Extract BoundParameters from input_track_t object
+    // Extract BoundParameters from InputTrack_t object
     const BoundParameters& params = m_extractParameters(iTrk);
 
     std::pair<double, double> z0AndWeight;
@@ -100,10 +100,10 @@ Acts::ZScanVertexFinder<bfield_t, input_track_t, vfitter_t>::find(
   SpacePointVector output(vFinderOptions.vertexConstraint.position().x(),
                           vFinderOptions.vertexConstraint.position().y(),
                           ZResult, vFinderOptions.vertexConstraint.time());
-  Vertex<input_track_t> vtxResult = Vertex<input_track_t>(output);
+  Vertex<InputTrack_t> vtxResult = Vertex<InputTrack_t>(output);
 
   // Vector to be filled with one single vertex
-  std::vector<Vertex<input_track_t>> vertexCollection;
+  std::vector<Vertex<InputTrack_t>> vertexCollection;
 
   // Add vertex to vertexCollection
   vertexCollection.push_back(vtxResult);
