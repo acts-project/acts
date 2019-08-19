@@ -177,10 +177,8 @@ public:
   ///
   /// @param params Track parameters
   /// @param vertex Vertex
-  /// @param vFinderOptions Vertex finder options
-  Result<double> getCompatibility(
-      const BoundParameters& params, const Vertex<InputTrack_t>& vertex,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+  Result<double> getCompatibility(const BoundParameters& params,
+                                  const Vertex<InputTrack_t>& vertex) const;
 
   /// @brief Function that removes used tracks compatible with
   /// current vertex (`myVertex`) from `perigeesToFit` and `seedTracks`
@@ -189,11 +187,9 @@ public:
   /// @param myVertex Current vertex
   /// @param perigeesToFit Tracks used to fit `myVertex`
   /// @param seedTracks Tracks used for vertex seeding
-  /// @param vFinderOptions Vertex finder options
   Result<void> removeUsedCompatibleTracks(
       Vertex<InputTrack_t>& myVertex, std::vector<InputTrack_t>& perigeesToFit,
-      std::vector<InputTrack_t>& seedTracks,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+      std::vector<InputTrack_t>& seedTracks) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///
@@ -225,8 +221,7 @@ public:
       std::vector<InputTrack_t>& perigeesToFit,
       std::vector<InputTrack_t>& seedTracks,
       const std::vector<InputTrack_t>& origTracks,
-      const VertexFitterOptions<InputTrack_t>& vFitterOptions,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Counts all tracks that are significant for a vertex
   ///

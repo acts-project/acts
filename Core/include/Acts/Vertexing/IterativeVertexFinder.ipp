@@ -109,9 +109,9 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
         // vertex is good vertex here
         // but add tracks which may have been missed
 
-        auto result = reassignTracksToNewVertex(
-            vertexCollection, currentVertex, perigeesToFit, seedTracks,
-            origTracks, vFitterOptions, vFinderOptions);
+        auto result = reassignTracksToNewVertex(vertexCollection, currentVertex,
+                                                perigeesToFit, seedTracks,
+                                                origTracks, vFitterOptions);
         if (!result.ok()) {
           return result.error();
         }
@@ -120,8 +120,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
       }  // end reassignTracksAfterFirstFit case
          // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
-        removeUsedCompatibleTracks(currentVertex, perigeesToFit, seedTracks,
-                                   vFinderOptions);
+        removeUsedCompatibleTracks(currentVertex, perigeesToFit, seedTracks);
 
         ACTS_DEBUG(
             "Number of seed tracks after removal of compatible tracks "
@@ -139,7 +138,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
         removeAllTracks(perigeesToFitSplitVertex, seedTracks);
       } else {
         removeUsedCompatibleTracks(currentSplitVertex, perigeesToFitSplitVertex,
-                                   seedTracks, vFinderOptions);
+                                   seedTracks);
       }
     }
     // Now fill vertex collection with vertex
@@ -215,8 +214,7 @@ void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
 template <typename vfitter_t, typename sfinder_t>
 Acts::Result<double>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
-    const BoundParameters& params, const Vertex<InputTrack_t>& vertex,
-    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const {
+    const BoundParameters& params, const Vertex<InputTrack_t>& vertex) const {
   // Linearize track
   auto result = m_cfg.linearizer.linearizeTrack(&params, vertex.fullPosition());
   if (!result.ok()) {
@@ -249,8 +247,7 @@ template <typename vfitter_t, typename sfinder_t>
 Acts::Result<void>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     Vertex<InputTrack_t>& myVertex, std::vector<InputTrack_t>& perigeesToFit,
-    std::vector<InputTrack_t>& seedTracks,
-    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const {
+    std::vector<InputTrack_t>& seedTracks) const {
   std::vector<TrackAtVertex<InputTrack_t>> tracksAtVertex = myVertex.tracks();
 
   auto seedBegin = seedTracks.begin();
@@ -311,8 +308,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
 
   for (const auto& myPerigeeToFit : perigeesToFit) {
     // calculate chi2 w.r.t. last fitted vertex
-    auto result = getCompatibility(m_extractParameters(myPerigeeToFit),
-                                   myVertex, vFinderOptions);
+    auto result =
+        getCompatibility(m_extractParameters(myPerigeeToFit), myVertex);
 
     if (!result.ok()) {
       return result.error();
@@ -433,8 +430,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     std::vector<InputTrack_t>& perigeesToFit,
     std::vector<InputTrack_t>& seedTracks,
     const std::vector<InputTrack_t>& origTracks,
-    const VertexFitterOptions<InputTrack_t>& vFitterOptions,
-    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const {
+    const VertexFitterOptions<InputTrack_t>& vFitterOptions) const {
   int numberOfAddedTracks = 0;
 
   // iterate over all vertices and check if tracks need to be reassigned
@@ -457,14 +453,13 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
           m_extractParameters(tracksIter->originalTrack);
 
       // compute compatibility
-      auto resultNew =
-          getCompatibility(trackPerigee, currentVertex, vFinderOptions);
+      auto resultNew = getCompatibility(trackPerigee, currentVertex);
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
       double chi2NewVtx = *resultNew;
 
-      auto resultOld = getCompatibility(trackPerigee, vertexIt, vFinderOptions);
+      auto resultOld = getCompatibility(trackPerigee, vertexIt);
       if (!resultOld.ok()) {
         return Result<bool>::failure(resultOld.error());
       }
