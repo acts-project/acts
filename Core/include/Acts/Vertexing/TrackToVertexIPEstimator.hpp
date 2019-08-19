@@ -38,12 +38,16 @@ template <typename input_track_t, typename propagator_t,
 /// errors of a given track w.r.t. a vertex
 class TrackToVertexIPEstimator {
  public:
+  /// @brief Configuration struct
+  ///
+  /// @param p The propagator
+  /// @param propOptions The propagator options
   struct Config {
-    Config(const propagator_t& p,
+    Config(std::shared_ptr<propagator_t> p,
            const PropagatorOptions<action_list_t, aborter_list_t>& propOptions)
-        : propagator(p), pOptions(propOptions) {}
+        : propagator(std::move(p)), pOptions(propOptions) {}
 
-    propagator_t propagator;
+    std::shared_ptr<propagator_t> propagator;
 
     PropagatorOptions<action_list_t, aborter_list_t> pOptions;
   };

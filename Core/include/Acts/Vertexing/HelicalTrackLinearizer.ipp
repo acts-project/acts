@@ -31,7 +31,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
 
   // Do the propagation to linPointPos
   auto result =
-      m_cfg.propagator.propagate(*params, *perigeeSurface, m_cfg.pOptions);
+      m_cfg.propagator->propagate(*params, *perigeeSurface, m_cfg.pOptions);
   if (result.ok()) {
     const auto& propRes = *result;
     paramsAtPCA = propRes.endParameters->parameters();

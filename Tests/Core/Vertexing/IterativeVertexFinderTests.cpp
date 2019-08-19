@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator propagator(stepper);
+    auto propagator = std::make_shared<Propagator>(stepper);
 
     PropagatorOptions<ActionList<>, AbortList<>> pOptions =
         Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator propagator(stepper);
+    auto propagator = std::make_shared<Propagator>(stepper);
 
     PropagatorOptions<ActionList<>, AbortList<>> pOptions =
         Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);

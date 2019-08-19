@@ -64,16 +64,21 @@ class HelicalTrackLinearizer {
     return options;
   }
 
+  /// @brief Configuration struct
+  ///
+  /// @param bIn The magnetic field
+  /// @param prop The propagator
+  /// @param propOptions The propagator options
   struct Config {
-    Config(const bfield_t& bIn, const Propagator_t& prop,
+    Config(const bfield_t& bIn, std::shared_ptr<Propagator_t> prop,
            PropagatorOptions<action_list_t, aborter_list_t> propOptions)
-        : bField(bIn), propagator(prop), pOptions(propOptions) {
+        : bField(bIn), propagator(std::move(prop)), pOptions(propOptions) {
       assert(pOptions.direction == backward);
     }
 
     bfield_t bField;
 
-    Propagator_t propagator;
+    std::shared_ptr<Propagator_t> propagator;
 
     PropagatorOptions<action_list_t, aborter_list_t> pOptions;
   };

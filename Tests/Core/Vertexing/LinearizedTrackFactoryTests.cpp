@@ -80,7 +80,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   EigenStepper<ConstantBField> stepper(bField);
 
   // Set up propagator with void navigator
-  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+  auto propagator =
+      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
       Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
@@ -159,7 +160,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
   EigenStepper<ConstantBField> stepper(bField);
 
   // Set up propagator with void navigator
-  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+  auto propagator =
+      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
       Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);

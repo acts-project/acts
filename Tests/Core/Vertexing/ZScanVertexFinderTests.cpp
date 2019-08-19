@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator propagator(stepper);
+    auto propagator = std::make_shared<Propagator>(stepper);
     PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<BoundParameters, Linearizer_t>
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator propagator(stepper);
+    auto propagator = std::make_shared<Propagator>(stepper);
     PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;

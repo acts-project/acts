@@ -81,7 +81,8 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   EigenStepper<ConstantBField> stepper(bField);
 
   // Set up propagator with void navigator
-  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+  auto propagator =
+      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
   PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
 
