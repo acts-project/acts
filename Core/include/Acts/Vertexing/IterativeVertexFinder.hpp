@@ -56,88 +56,40 @@ namespace Acts {
 ////////////////////////////////////////////////////////////
 ///
 /// @tparam vfitter_t Vertex fitter type
-template <typename vfitter_t>
+/// @tparam sfinder_t Seed finder type
+template <typename vfitter_t, typename sfinder_t>
 class IterativeVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
 
 public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using Bfield_t = typename vfitter_t::Bfield_t;
   using Propagator_t = typename vfitter_t::Propagator_t;
   using Linearizer_t = typename vfitter_t::Linearizer_t;
 
   /// @struct Config Configuration struct
   struct Config {
-    /// @brief Finder configuration for InputTrack_t == BoundParameters
+    /// @brief Finder configuration
     ///
-    /// @param bIn Bfield_t
     /// @param fitter Vertex fitter
-    /// @param propagatorIn Propagator
-    ///
-    /// @note Initializes default ZScanVertexFinder
-    /// as seed finder
-    template <
-        typename T = InputTrack_t,
-        std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
-    Config(const Bfield_t& bIn, vfitter_t fitter,
-           const Propagator_t& propagatorIn)
-        : bField(bIn),
-          vertexFitter(std::move(fitter)),
-          linFactory(typename Linearizer_t::Config(bField)),
-          propagator(propagatorIn),
-          zScanFinderCfg(
-              typename ZScanVertexFinder<vfitter_t>::Config(propagator)),
-          seedFinder(ZScanVertexFinder<vfitter_t>(std::move(zScanFinderCfg))) {}
-
-    /// @brief Finder configuration for InputTrack_t != BoundParameters
-    ///
-    /// @param bIn Bfield_t
-    /// @param fitter Vertex fitter
-    /// @param propagatorIn Propagator
-    /// @param func Function extracting BoundParameters from InputTrack_t object
-    ///
-    /// @note Initializes default ZScanVertexFinder
-    /// as seed finder
-    Config(const Bfield_t& bIn, vfitter_t fitter,
-           const Propagator_t& propagatorIn,
-           std::function<BoundParameters(InputTrack_t)> func)
-        : bField(bIn),
-          vertexFitter(std::move(fitter)),
-          linFactory(typename Linearizer_t::Config(bField)),
-          propagator(propagatorIn),
-          zScanFinderCfg(
-              typename ZScanVertexFinder<vfitter_t>::Config(propagator)),
-          seedFinder(
-              ZScanVertexFinder<vfitter_t>(std::move(zScanFinderCfg), func)) {}
-
-    /// Magnetic field
-    Bfield_t bField;
+    /// @param lin Track linearizer
+    /// @param sfinder The seed finder
+    Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder)
+        : vertexFitter(std::move(fitter)),
+          linearizer(std::move(lin)),
+          seedFinder(std::move(sfinder)) {}
 
     /// Vertex fitter
     vfitter_t vertexFitter;
 
     /// Linearized track factory
-    Linearizer_t linFactory;
+    Linearizer_t linearizer;
 
     /// ImpactPoint3dEstimator
     ImpactPoint3dEstimator ipEst;
 
-    /// Propagator
-    Propagator_t propagator;
-
-    /// ZScanVertexFinder configuration below
-    /// TrackToVertexIPEstimator for ZScanVertexFinder
-    TrackToVertexIPEstimator<BoundParameters, Propagator_t> trackToVertexEst;
-
-    /// FsmwMode1dFinder for ZScanVertexFinder
-    FsmwMode1dFinder modeFinder;
-
-    /// ZScanVertexFinder config
-    typename ZScanVertexFinder<vfitter_t>::Config zScanFinderCfg;
-
-    /// ZScanVertexFinder as default vertex seed finder
-    ZScanVertexFinder<vfitter_t> seedFinder;
+    /// Vertex seed finder
+    sfinder_t seedFinder;
 
     /// Vertex finder configuration variables
     bool useBeamConstraint = false;

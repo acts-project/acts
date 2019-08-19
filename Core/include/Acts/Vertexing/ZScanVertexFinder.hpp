@@ -34,22 +34,18 @@ template <typename vfitter_t>
 class ZScanVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
-
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
   using Propagator_t = typename vfitter_t::Propagator_t;
 
  public:
-  using InputTrack = input_track_t;
+  using InputTrack_t = typename vfitter_t::InputTrack_t;
 
   /// @struct Config Configuration struct
   struct Config {
     /// @brief Finder configuration
     ///
-    /// @param propagatorIn Propagator
-    Config(const Propagator_t& propagatorIn) : propagator(propagatorIn) {}
-
-    // Propagator
-    Propagator_t propagator;
+    /// @param ipEst TrackToVertexIPEstimator
+    Config(TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEst)
+        : ipEstimator(std::move(ipEst)) {}
 
     // TrackToVertexIPEstimator
     TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEstimator;

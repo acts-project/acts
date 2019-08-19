@@ -30,9 +30,8 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     std::unique_ptr<ImpactParametersAndSigma> ipas = nullptr;
     if (useConstraint &&
         vFinderOptions.vertexConstraint.covariance()(0, 0) != 0) {
-      auto estRes = m_cfg.ipEstimator.estimate(
-          vFinderOptions.geoContext, vFinderOptions.magFieldContext, params,
-          vFinderOptions.vertexConstraint, m_cfg.propagator);
+      auto estRes =
+          m_cfg.ipEstimator.estimate(params, vFinderOptions.vertexConstraint);
       if (estRes.ok()) {
         ipas = std::move(*estRes);
       } else {

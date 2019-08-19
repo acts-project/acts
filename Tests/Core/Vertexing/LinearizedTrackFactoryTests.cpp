@@ -31,6 +31,9 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
+using Linearizer_t =
+    HelicalTrackLinearizer<ConstantBField,
+                           Propagator<EigenStepper<ConstantBField>>>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -79,6 +82,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Set up propagator with void navigator
   Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
+  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
+      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -123,12 +128,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
                                      perigeeSurface));
   }
 
-  HelicalTrackLinearizer<ConstantBField,
-                         Propagator<EigenStepper<ConstantBField>>>::Config
-      ltConfig(bField);
-  HelicalTrackLinearizer<ConstantBField,
-                         Propagator<EigenStepper<ConstantBField>>>
-      linFactory(ltConfig);
+  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
+  Linearizer_t linFactory(ltConfig);
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
@@ -139,9 +140,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
-        linFactory
-            .linearizeTrack(tgContext, mfContext, &parameters,
-                            SpacePointVector::Zero(), propagator)
+        linFactory.linearizeTrack(&parameters, SpacePointVector::Zero())
             .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
@@ -162,12 +161,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
   // Set up propagator with void navigator
   Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
-  HelicalTrackLinearizer<ConstantBField,
-                         Propagator<EigenStepper<ConstantBField>>>::Config
-      ltConfig(bField);
-  HelicalTrackLinearizer<ConstantBField,
-                         Propagator<EigenStepper<ConstantBField>>>
-      linFactory(ltConfig);
+  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
+      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+
+  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
+  Linearizer_t linFactory(ltConfig);
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
@@ -177,9 +175,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
       ActsMatrixD<BoundParsDim, 3>::Zero();
 
   LinearizedTrack linTrack =
-      linFactory
-          .linearizeTrack(tgContext, mfContext, nullptr,
-                          SpacePointVector(1., 2., 3., 4.), propagator)
+      linFactory.linearizeTrack(nullptr, SpacePointVector(1., 2., 3., 4.))
           .value();
 
   BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vecBoundZero);

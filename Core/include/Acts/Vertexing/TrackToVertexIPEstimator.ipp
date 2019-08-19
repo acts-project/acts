@@ -13,11 +13,8 @@ template <typename input_track_t, typename propagator_t, typename action_list_t,
 Acts::Result<std::unique_ptr<Acts::ImpactParametersAndSigma>>
 Acts::TrackToVertexIPEstimator<
     input_track_t, propagator_t, action_list_t,
-    aborter_list_t>::estimate(const GeometryContext& gctx,
-                              const MagneticFieldContext& mctx,
-                              const BoundParameters& track,
-                              const Vertex<input_track_t>& vtx,
-                              const propagator_t& propagator) const {
+    aborter_list_t>::estimate(const BoundParameters& track,
+                              const Vertex<input_track_t>& vtx) const {
   // estimating the d0 and its significance by propagating the trajectory state
   // towards
   // the vertex position. By this time the vertex should NOT contain this
@@ -28,12 +25,12 @@ Acts::TrackToVertexIPEstimator<
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(lp);
 
-  PropagatorOptions<action_list_t, aborter_list_t> propagatorOptions(gctx,
-                                                                     mctx);
-  propagatorOptions.direction = backward;
+  // Set the propagation direction to be backward as needed below
+  auto options = m_cfg.pOptions;
+  options.direction = backward;
 
   // Do the propagation to linPoint
-  auto result = propagator.propagate(track, *perigeeSurface, propagatorOptions);
+  auto result = m_cfg.propagator.propagate(track, *perigeeSurface, options);
 
   if (!result.ok()) {
     return result.error();

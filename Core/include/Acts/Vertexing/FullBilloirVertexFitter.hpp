@@ -41,41 +41,10 @@ class FullBilloirVertexFitter {
   using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
-  using Bfield_t = bfield_t;
 
   struct Config {
-    /// Magnetic field
-    bfield_t bField;
-
     /// Maximum number of interations in fitter
     int maxIterations = 5;
-
-    /// Set up factory for linearizing tracks
-    typename linearizer_t::Config linConfig;
-    linearizer_t linearizer;
-
-    /// Propagator
-    Propagator_t propagator;
-
-    /// Constructor with propagator input
-    Config(const bfield_t& bIn, const Propagator_t& propagatorIn)
-        : bField(bIn),
-          linConfig(bIn),
-          linearizer(linConfig),
-          propagator(propagatorIn) {}
-
-    /// Constructor with default propagator
-    template <typename T = Propagator_t,
-              std::enable_if_t<
-                  std::is_same<T, Propagator<EigenStepper<bfield_t>>>::value,
-                  int> = 0>
-    Config(const bfield_t& bIn)
-        : bField(bIn),
-          linConfig(bIn),
-          linearizer(linConfig),
-          propagator(
-              Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bIn))) {
-    }
   };
 
   /// @brief Constructor used if input_track_t type == BoundParameters
@@ -97,11 +66,13 @@ class FullBilloirVertexFitter {
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
+  /// @param linearizer The track linearizer
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Fitted vertex
   Result<Vertex<input_track_t>> fit(
       const std::vector<input_track_t>& paramVector,
+      const linearizer_t& linearizer,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
  private:

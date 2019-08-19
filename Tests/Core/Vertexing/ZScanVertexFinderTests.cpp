@@ -38,6 +38,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
+using Propagator = Propagator<EigenStepper<ConstantBField>>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -87,7 +88,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+    Propagator propagator(stepper);
+    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<ConstantBField, BoundParameters>
         BilloirFitter;
@@ -143,6 +145,13 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
+    TrackToVertexIPEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+        propagator, pOptions);
+    TrackToVertexIPEstimator<BoundParameters, Propagator> ipEst(ipEstCfg);
+
+    ZScanVertexFinder<BilloirFitter>::Config cfg(std::move(ipEst));
+
+
     VertexFinder::Config cfg(propagator);
 
     VertexFinder finder(std::move(cfg));
@@ -194,7 +203,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+    Propagator propagator(stepper);
+    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<ConstantBField, InputTrack> BilloirFitter;
 
@@ -250,6 +260,13 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     VertexFinder::Config cfg(propagator);
+
+    TrackToVertexIPEstimator<InputTrack, Propagator>::Config ipEstCfg(
+        propagator, pOptions);
+    TrackToVertexIPEstimator<InputTrack, Propagator> ipEst(ipEstCfg);
+
+    ZScanVertexFinder<BilloirFitter>::Config cfg(std::move(ipEst));
+
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack

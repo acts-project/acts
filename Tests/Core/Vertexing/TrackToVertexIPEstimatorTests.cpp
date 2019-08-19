@@ -83,6 +83,8 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   // Set up propagator with void navigator
   Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
+  PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -109,10 +111,14 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   double d0_v = sqrt(x * x + y * y);
   double z0_v = z;
 
+  using IPEst_t =
+      TrackToVertexIPEstimator<BoundParameters,
+                               Propagator<EigenStepper<ConstantBField>>>;
+
+  IPEst_t::Config ipEstCfg(propagator, pOptions);
+
   // Create TrackToVertexIPEstimator
-  TrackToVertexIPEstimator<BoundParameters,
-                           Propagator<EigenStepper<ConstantBField>>>
-      ipEst;
+  IPEst_t ipEst(ipEstCfg);
 
   // Construct random track emerging from vicinity of vertex position
   // Vector to store track objects used for vertex fit
@@ -142,8 +148,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
 
     // Check if IP are retrieved
     std::unique_ptr<ImpactParametersAndSigma> output =
-        ipEst.estimate(tgContext, mfContext, track, myConstraint, propagator)
-            .value();
+        ipEst.estimate(track, myConstraint).value();
     BOOST_CHECK_NE(output->IPd0, 0.);
     BOOST_CHECK_NE(output->IPz0, 0.);
   }

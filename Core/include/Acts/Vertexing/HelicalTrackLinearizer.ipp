@@ -13,11 +13,8 @@ template <typename bfield_t, typename propagator_t, typename action_list_t,
 
 Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
     bfield_t, propagator_t, action_list_t,
-    aborter_list_t>::linearizeTrack(const GeometryContext& gctx,
-                                    const MagneticFieldContext& mctx,
-                                    const BoundParameters* params,
-                                    const SpacePointVector& linPoint,
-                                    const propagator_t& propagator) const {
+    aborter_list_t>::linearizeTrack(const BoundParameters* params,
+                                    const SpacePointVector& linPoint) const {
   if (params == nullptr) {
     return LinearizedTrack();
   }
@@ -32,12 +29,9 @@ Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
   SpacePointVector positionAtPCA{SpacePointVector::Zero()};
   BoundSymMatrix parCovarianceAtPCA;
 
-  PropagatorOptions<action_list_t, aborter_list_t> pOptions(gctx, mctx);
-
-  pOptions.direction = backward;
-
   // Do the propagation to linPointPos
-  auto result = propagator.propagate(*params, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator.propagate(*params, *perigeeSurface, m_cfg.pOptions);
   if (result.ok()) {
     const auto& propRes = *result;
     paramsAtPCA = propRes.endParameters->parameters();
@@ -73,7 +67,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
     rho = std::numeric_limits<double>::max();
   } else {
     // signed(!) rho
-    rho = sinTh * (1 / qOvP) / Bz;
+    rho = sinTh * (1. / qOvP) / Bz;
   }
 
   // Eq. 5.34 in Ref(1) (see .hpp)

@@ -38,33 +38,43 @@ template <typename input_track_t, typename propagator_t,
 /// errors of a given track w.r.t. a vertex
 class TrackToVertexIPEstimator {
  public:
+  struct Config {
+    Config(const propagator_t& p,
+           const PropagatorOptions<action_list_t, aborter_list_t>& propOptions)
+        : propagator(p), pOptions(propOptions) {}
+
+    propagator_t propagator;
+
+    PropagatorOptions<action_list_t, aborter_list_t> pOptions;
+  };
+
   /// @brief Default constructor
   ///
+  /// @param cfg The configuration object
   /// @param logger Logging instance
-  TrackToVertexIPEstimator(std::unique_ptr<const Logger> logger =
+  TrackToVertexIPEstimator(const Config& cfg,
+                           std::unique_ptr<const Logger> logger =
                                getDefaultLogger("TrackToVertexIPEstimator",
                                                 Logging::INFO))
-      : m_logger(std::move(logger)) {}
+      : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   /// @brief Move constructor
   TrackToVertexIPEstimator(TrackToVertexIPEstimator&& other)
-      : m_logger(std::move(other.m_logger)) {}
+      : m_cfg(std::move(other.m_cfg)), m_logger(std::move(other.m_logger)) {}
 
   /// @brief Estimates the impact parameters and their errors of a given
   /// track w.r.t. a vertex by propagating the trajectory state
   /// towards the vertex position.
   ///
-  /// @param gctx The Geometry Context
-  /// @param mctx The MagneticField Context
   /// @param track Track to estimate IP from
   /// @param vtx Vertex the track belongs to
-  /// @param propagator Propagator
   Result<std::unique_ptr<ImpactParametersAndSigma>> estimate(
-      const GeometryContext& gctx, const MagneticFieldContext& mctx,
-      const BoundParameters& track, const Vertex<input_track_t>& vtx,
-      const propagator_t& propagator) const;
+      const BoundParameters& track, const Vertex<input_track_t>& vtx) const;
 
  private:
+  /// Config
+  Config m_cfg;
+
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 

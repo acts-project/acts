@@ -48,12 +48,37 @@ class HelicalTrackLinearizer {
  public:
   using Propagator_t = propagator_t;
 
+  /// @brief Helper function to set up the correct PropagatorOptions with
+  /// propagation direction set to backward. To be used when setting up the
+  /// propagator options for the HelicalTrackLinearizer Config.
+  ///
+  /// @param gc The GeometryContext
+  /// @param mv The MagneticFieldContext
+  ///
+  /// @return The PropagatorOptions with direction = backward
+  static PropagatorOptions<action_list_t, aborter_list_t>
+  getDefaultPropagatorOptions(const GeometryContext& gc,
+                              const MagneticFieldContext& mc) {
+    PropagatorOptions<action_list_t, aborter_list_t> options(gc, mc);
+    options.direction = backward;
+    return options;
+  }
+
   struct Config {
+    Config(const bfield_t& bIn, const Propagator_t& prop,
+           PropagatorOptions<action_list_t, aborter_list_t> propOptions)
+        : bField(bIn), propagator(prop), pOptions(propOptions) {
+      assert(pOptions.direction == backward);
+    }
+
     bfield_t bField;
-    Config(const bfield_t& bIn) : bField(bIn){};
+
+    Propagator_t propagator;
+
+    PropagatorOptions<action_list_t, aborter_list_t> pOptions;
   };
 
-  /// @brief Constructor with bfield_t
+  /// @brief Constructor
   ///
   /// @param config Configuration object
   HelicalTrackLinearizer(const Config& config) : m_cfg(config) {}
@@ -61,22 +86,16 @@ class HelicalTrackLinearizer {
   /// @brief Function that linearizes BoundParameters at
   /// given linearization point
   ///
-  /// @param gctx the Geometry context (i.e. detector conditions)
-  /// @param mctx the magnetic field context (conditions)
   /// @param params Parameters to linearize
   /// @param linPoint Linearization point
-  /// @param propagator Propagator
   ///
   /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(const GeometryContext& gctx,
-                                         const MagneticFieldContext& mctx,
-                                         const BoundParameters* params,
-                                         const SpacePointVector& linPoint,
-                                         const propagator_t& propagator) const;
+  Result<LinearizedTrack> linearizeTrack(
+      const BoundParameters* params, const SpacePointVector& linPoint) const;
 
  private:
-  // Configuration object
-  Config m_cfg;
+  /// Configuration object
+  const Config m_cfg;
 };
 
 }  // namespace Acts
