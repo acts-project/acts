@@ -60,9 +60,9 @@ struct BilloirVertex {
 
 }  // end anonymous namespace
 
-template <typename bfield_t, typename input_track_t, typename linearizer_t>
+template <typename input_track_t, typename linearizer_t>
 Acts::Result<Acts::Vertex<input_track_t>>
-Acts::FullBilloirVertexFitter<bfield_t, input_track_t, linearizer_t>::fit(
+Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     const std::vector<input_track_t>& paramVector,
     const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
@@ -345,11 +345,11 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, linearizer_t>::fit(
   return std::move(fittedVertex);
 }
 
-template <typename bfield_t, typename input_track_t, typename linearizer_t>
+template <typename input_track_t, typename linearizer_t>
 std::pair<double, double> Acts::FullBilloirVertexFitter<
-    bfield_t, input_track_t,
-    linearizer_t>::correctPhiThetaPeriodicity(double phiIn,
-                                              double thetaIn) const {
+    input_track_t, linearizer_t>::correctPhiThetaPeriodicity(double phiIn,
+                                                             double thetaIn)
+    const {
   double tmpPhi = std::fmod(phiIn, 2 * M_PI);  // temp phi
   if (tmpPhi > M_PI) {
     tmpPhi -= 2 * M_PI;

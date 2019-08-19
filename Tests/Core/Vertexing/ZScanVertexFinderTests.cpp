@@ -28,6 +28,7 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 
@@ -38,6 +39,9 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
+using Linearizer_t =
+    HelicalTrackLinearizer<ConstantBField,
+                           Propagator<EigenStepper<ConstantBField>>>;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
 
 // Create a test context
@@ -91,7 +95,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     Propagator propagator(stepper);
     PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
 
-    typedef FullBilloirVertexFitter<ConstantBField, BoundParameters>
+    typedef FullBilloirVertexFitter<BoundParameters, Linearizer_t>
         BilloirFitter;
 
     // Create perigee surface
@@ -206,7 +210,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     Propagator propagator(stepper);
     PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
 
-    typedef FullBilloirVertexFitter<ConstantBField, InputTrack> BilloirFitter;
+    typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =

@@ -60,10 +60,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   Linearizer_t linearizer(ltConfig);
 
   // Set up Billoir Vertex Fitter
-  FullBilloirVertexFitter<ConstantBField, BoundParameters, Linearizer_t>::Config
+  FullBilloirVertexFitter<BoundParameters, Linearizer_t>::Config
       vertexFitterCfg;
-  FullBilloirVertexFitter<ConstantBField, BoundParameters, Linearizer_t>
-      billoirFitter(vertexFitterCfg);
+  FullBilloirVertexFitter<BoundParameters, Linearizer_t> billoirFitter(
+      vertexFitterCfg);
 
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
@@ -151,10 +151,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     unsigned int nTracks = nTracksDist(gen);
 
     // Set up Billoir Vertex Fitter
-    FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                            Linearizer_t>::Config vertexFitterCfg;
-    FullBilloirVertexFitter<ConstantBField, BoundParameters, Linearizer_t>
-        billoirFitter(vertexFitterCfg);
+    FullBilloirVertexFitter<BoundParameters, Linearizer_t>::Config
+        vertexFitterCfg;
+    FullBilloirVertexFitter<BoundParameters, Linearizer_t> billoirFitter(
+        vertexFitterCfg);
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
     // Some abitrary values
@@ -283,10 +283,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
         [](InputTrack params) { return params.parameters(); };
 
     // Set up Billoir Vertex Fitter
-    FullBilloirVertexFitter<ConstantBField, InputTrack, Linearizer_t>::Config
-        vertexFitterCfg;
-    FullBilloirVertexFitter<ConstantBField, InputTrack, Linearizer_t>
-        billoirFitter(vertexFitterCfg, extractParameters);
+    FullBilloirVertexFitter<InputTrack, Linearizer_t>::Config vertexFitterCfg;
+    FullBilloirVertexFitter<InputTrack, Linearizer_t> billoirFitter(
+        vertexFitterCfg, extractParameters);
 
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;

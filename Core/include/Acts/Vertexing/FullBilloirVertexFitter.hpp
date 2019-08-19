@@ -28,11 +28,9 @@ namespace Acts {
 /// In: Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI 10.1016/0168-9002(92)90859-3
 ///
-/// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-template <typename bfield_t, typename input_track_t,
-          typename linearizer_t = HelicalTrackLinearizer<bfield_t>>
+template <typename input_track_t, typename linearizer_t>
 class FullBilloirVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");

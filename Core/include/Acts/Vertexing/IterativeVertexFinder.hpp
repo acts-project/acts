@@ -212,7 +212,6 @@ public:
   /// @param seedTracks Seed tracks vector
   /// @param origTracks Vector of original track objects
   /// @param vFitterOptions Vertex fitter options
-  /// @param vFinderOptions Vertex finder options
   ///
   /// @return Bool if currentVertex is still a good vertex
   Result<bool> reassignTracksToNewVertex(
