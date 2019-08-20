@@ -700,7 +700,8 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   if (detExtension != nullptr) {
     material = detExtension->material();
   }
-  // Create the corresponding detector element
+
+  // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(
           detElement, axes, UnitConstants::cm, isDisc, material,

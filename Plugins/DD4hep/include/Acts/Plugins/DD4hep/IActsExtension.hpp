@@ -90,12 +90,14 @@ class IActsExtension {
   virtual ~IActsExtension() = default;
   /// Indicates if the DD4hep::DetElement is the beampipe
   virtual bool isBeampipe() const = 0;
-  /// Indicates that the DD4hep::DetElement is a barrel
+  /// Indicates that the DD4hep::DetElement is a sensitive barrel
   virtual bool isBarrel() const = 0;
-  /// Indicates that the DD4hep::DetElement is an endcap
+  /// Indicates that the DD4hep::DetElement is an sensitive endcap
   virtual bool isEndcap() const = 0;
   /// Indicates that the DD4hep::DetElement is a layer
   virtual bool isLayer() const = 0;
+  /// Indicates that the DD4hep::DetElement is a passive cylinder layer
+  virtual bool isPassiveCylinder() const = 0;
   /// Bool returning true if the layers should carry material using material
   /// mapping
   /// @note automatically set when the material bins are set

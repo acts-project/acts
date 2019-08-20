@@ -113,6 +113,8 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param material Possible material of detector element
   /// @param digitizationModule Shared pointer to the geometric digitization
   /// description
+  ///
+  /// Note - it calles the construct() method directly
   TGeoDetectorElement(
       const Identifier& identifier, const TGeoMatrix& transform,
       TGeoNode* tGeoDetElement, const std::string& axes = "XYZ",
@@ -141,6 +143,14 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
       const final;
+
+ protected:
+  /// Construct methdo called from the constructor directly
+  /// @note parameter definitions are given in the constructor
+  void construct(
+      const Double_t* rotation = nullptr, const Double_t* translation = nullptr,
+      const std::string& axes = "XYZ", double scalor = 1., bool isDisc = false,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
  private:
   /// DD4hep detector element, just linked - not owned

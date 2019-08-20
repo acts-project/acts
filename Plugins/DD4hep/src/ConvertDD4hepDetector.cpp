@@ -288,17 +288,22 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
             Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
     return cylinderVolumeBuilder;
 
-  } else if ((subDetExtension != nullptr) && subDetExtension->isBeampipe()) {
-    ACTS_VERBOSE("[D] Subdetector : "
-                 << subDetector.name()
-                 << " is the beampipe - building beam pipe.");
+  } else if ((subDetExtension != nullptr) &&
+             (subDetExtension->isPassiveCylinder() ||
+              subDetExtension->isBeampipe())) {
+    ACTS_VERBOSE("[D] Subdetector : " << subDetector.name()
+                                      << " - building a passive cylinder.");
+    if (subDetExtension->isBeampipe()) {
+      ACTS_VERBOSE("This is the beam pipe - will be built to r->0.");
+    }
+
     // get the dimensions of the volume
     TGeoShape* geoShape =
         subDetector.placement().ptr()->GetVolume()->GetShape();
     TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
     if (tube == nullptr) {
       throw std::logic_error(
-          "Beampipe has wrong shape - needs to be TGeoTubeSeg!");
+          "Cylinder has wrong shape - needs to be TGeoTubeSeg!");
     }
     // get the dimension of TGeo and convert lengths
     double rMin = tube->GetRmin() * UnitConstants::cm - layerEnvelopeR;
@@ -311,7 +316,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
 
     // get the possible material of the surounding volume
     dd4hep::Material ddmaterial = subDetector.volume().material();
-    Acts::MaterialProperties bpMaterial(
+    Acts::MaterialProperties pcMaterial(
         ddmaterial.radLength() * UnitConstants::cm,
         ddmaterial.intLength() * UnitConstants::cm, ddmaterial.A(),
         ddmaterial.Z(), ddmaterial.density() / pow(Acts::UnitConstants::cm, 3),
@@ -324,8 +329,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     bplConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
     bplConfig.centralLayerThickness = std::vector<double>(1, fabs(rMax - rMin));
     bplConfig.centralLayerMaterial = {
-        std::make_shared<const HomogeneousSurfaceMaterial>(bpMaterial)};
-    auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
+        std::make_shared<const HomogeneousSurfaceMaterial>(pcMaterial)};
+    auto pcLayerBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         bplConfig, Acts::getDefaultLogger(subDetector.name(), loggingLevel));
 
     // the configuration object of the volume builder
@@ -333,23 +338,22 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.trackingVolumeHelper = volumeHelper;
     cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
-    cvbConfig.layerBuilder = beamPipeBuilder;
+    cvbConfig.layerBuilder = pcLayerBuilder;
     cvbConfig.layerEnvelopeR = {layerEnvelopeR, layerEnvelopeR};
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-    cvbConfig.buildToRadiusZero = true;
+    cvbConfig.buildToRadiusZero = subDetExtension->isBeampipe();
 
-    // beam pipe volume builder
-    auto beamPipeVolumeBuilder =
-        std::make_shared<const Acts::CylinderVolumeBuilder>(
-            cvbConfig, Acts::getDefaultLogger(
-                           subDetector.name() + std::string("VolumdeBuilder"),
-                           loggingLevel));
-    return beamPipeVolumeBuilder;
+    // beam pipe / passive cylinder volume builder
+    auto pcVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
+        cvbConfig,
+        Acts::getDefaultLogger(
+            subDetector.name() + std::string("VolumdeBuilder"), loggingLevel));
+    return pcVolumeBuilder;
 
   } else if ((subDetExtension != nullptr) && subDetExtension->isBarrel()) {
     ACTS_VERBOSE("[D] Subdetector: "
                  << subDetector.name()
-                 << " is a Barrel volume - building barrel.");
+                 << " is a (sensitive) Barrel volume - building barrel.");
     /// the dd4hep::DetElements of the layers of the central volume
     std::vector<dd4hep::DetElement> centralLayers;
     collectLayers_dd4hep(subDetector, centralLayers);
