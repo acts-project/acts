@@ -31,6 +31,7 @@ namespace Acts {
 /// DD4hep (TGeo) element is oriented with respect to the Acts definition
 class ActsExtension {
  public:
+
   /// Minimal constructor, sets the defail of the axis
   ///
   // @param axes is the definition of the TGeo axes system w.r.t Acts
