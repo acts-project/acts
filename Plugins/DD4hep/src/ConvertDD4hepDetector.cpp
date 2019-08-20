@@ -19,8 +19,8 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
-#include "Acts/Plugins/DD4hep/IActsExtension.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -117,10 +117,10 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
   ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
 
-  Acts::IActsExtension* subDetExtension = nullptr;
+  Acts::ActsExtension* subDetExtension = nullptr;
   // at this stage not every DetElement needs to have an Extension attached
   try {
-    subDetExtension = subDetector.extension<Acts::IActsExtension>();
+    subDetExtension = subDetector.extension<Acts::ActsExtension>();
   } catch (std::runtime_error& e) {
   }
   if (subDetector.type() == "compound") {
@@ -171,9 +171,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       }
       // check if it has a volume extension telling if it is a barrel or an
       // endcap
-      IActsExtension* volumeExtension = nullptr;
+      ActsExtension* volumeExtension = nullptr;
       try {
-        volumeExtension = volumeDetElement.extension<IActsExtension>();
+        volumeExtension = volumeDetElement.extension<ActsExtension>();
       } catch (std::runtime_error& e) {
         throw std::logic_error(
             std::string("[V] Current DetElement: ") + volumeDetElement.name() +
@@ -182,7 +182,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                         "check your detector construction."));
       }
 
-      if (volumeExtension->isEndcap()) {
+      if (volumeExtension->hasType("endcap", "detector")) {
         ACTS_VERBOSE(
             std::string("[V] Subvolume : '") + volumeDetElement.name() +
             std::string("' is a disc volume -> handling as an endcap"));
@@ -209,7 +209,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           ACTS_VERBOSE("[V]       ->is positive endcap");
           collectLayers_dd4hep(volumeDetElement, positiveLayers);
         }
-      } else if (volumeExtension->isBarrel()) {
+      } else if (volumeExtension->hasType("barrel", "detector")) {
         if (barrel) {
           throw std::logic_error(
               "[V] Barrel was already given for this "
@@ -289,12 +289,12 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     return cylinderVolumeBuilder;
 
   } else if ((subDetExtension != nullptr) &&
-             (subDetExtension->isPassiveCylinder() ||
-              subDetExtension->isBeampipe())) {
+             (subDetExtension->hasType("passive cylinder", "layer") ||
+              subDetExtension->hasType("beampipe", "layer"))) {
     ACTS_VERBOSE("[D] Subdetector : " << subDetector.name()
                                       << " - building a passive cylinder.");
-    if (subDetExtension->isBeampipe()) {
-      ACTS_VERBOSE("This is the beam pipe - will be built to r->0.");
+    if (subDetExtension->hasType("beampipe", "layer")) {
+      ACTS_VERBOSE("This is the beam pipe - will be built to r -> 0.");
     }
 
     // get the dimensions of the volume
@@ -341,7 +341,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.layerBuilder = pcLayerBuilder;
     cvbConfig.layerEnvelopeR = {layerEnvelopeR, layerEnvelopeR};
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
-    cvbConfig.buildToRadiusZero = subDetExtension->isBeampipe();
+    cvbConfig.buildToRadiusZero = subDetExtension->hasType("beampipe", "layer");
 
     // beam pipe / passive cylinder volume builder
     auto pcVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
@@ -350,7 +350,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
             subDetector.name() + std::string("VolumdeBuilder"), loggingLevel));
     return pcVolumeBuilder;
 
-  } else if ((subDetExtension != nullptr) && subDetExtension->isBarrel()) {
+  } else if ((subDetExtension != nullptr) &&
+             subDetExtension->hasType("barrel", "detector")) {
     ACTS_VERBOSE("[D] Subdetector: "
                  << subDetector.name()
                  << " is a (sensitive) Barrel volume - building barrel.");
@@ -454,13 +455,14 @@ void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;
-    Acts::IActsExtension* detExtension = nullptr;
+    Acts::ActsExtension* detExtension = nullptr;
     try {
-      detExtension = childDetElement.extension<Acts::IActsExtension>();
+      detExtension = childDetElement.extension<Acts::ActsExtension>();
     } catch (std::runtime_error& e) {
     }
     if ((detExtension != nullptr) &&
-        (detExtension->isBarrel() || detExtension->isEndcap())) {
+        (detExtension->hasType("barrel", "detector") ||
+         detExtension->hasType("endcap", "detector"))) {
       compounds.push_back(childDetElement);
       continue;
     }
@@ -473,9 +475,9 @@ void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;
-    Acts::IActsExtension* detExtension = nullptr;
+    Acts::ActsExtension* detExtension = nullptr;
     try {
-      detExtension = childDetElement.extension<Acts::IActsExtension>();
+      detExtension = childDetElement.extension<Acts::ActsExtension>();
     } catch (std::runtime_error& e) {
       if (childDetElement.type() == "compound") {
         subdetectors.push_back(childDetElement);
@@ -483,7 +485,8 @@ void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
       }
     }
     if ((detExtension != nullptr) &&
-        (detExtension->isBarrel() || detExtension->isBeampipe())) {
+        (detExtension->hasType("barrel", "detector") ||
+         detExtension->hasType("beampipe", "layer"))) {
       subdetectors.push_back(childDetElement);
       continue;
     }
@@ -496,12 +499,12 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;
-    Acts::IActsExtension* detExtension = nullptr;
+    Acts::ActsExtension* detExtension = nullptr;
     try {
-      detExtension = childDetElement.extension<Acts::IActsExtension>();
+      detExtension = childDetElement.extension<Acts::ActsExtension>();
     } catch (std::runtime_error& e) {
     }
-    if ((detExtension != nullptr) && detExtension->isLayer()) {
+    if ((detExtension != nullptr) && detExtension->hasType("layer")) {
       layers.push_back(childDetElement);
       continue;
     }

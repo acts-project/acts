@@ -8,54 +8,58 @@
 
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 
-#include <DD4hep/CartesianGridXY.h>
-#include <boost/algorithm/string.hpp>
-
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/Units.hpp"
-
-Acts::ActsExtension::ActsExtension(const Config& cfg)
-    : Acts::IActsExtension(), m_material(nullptr) {
-  setConfiguration(cfg);
+Acts::ActsExtension::ActsExtension(const std::string& axes) {
+  addType("axes", "definitions", axes);
 }
 
-Acts::ActsExtension::ActsExtension(const ActsExtension& det,
+Acts::ActsExtension::ActsExtension(const ActsExtension& ext,
                                    const dd4hep::DetElement& /*elem*/)
-    : Acts::IActsExtension(), m_cfg(det.m_cfg), m_material(det.m_material) {}
+    : m_flagStore(ext.m_flagStore), m_valueStore(ext.m_valueStore) {}
 
-Acts::ActsExtension::ActsExtension(
-    std::shared_ptr<const DigitizationModule> digiModule)
-    : Acts::IActsExtension(),
-      m_material(nullptr),
-      m_digitizationModule(std::move(digiModule)) {}
-
-Acts::ActsExtension::ActsExtension(
-    const std::vector<std::pair<dd4hep::Material, double>>& materials,
-    std::shared_ptr<const DigitizationModule> digiModule)
-    : Acts::IActsExtension(),
-      m_material(nullptr),
-      m_digitizationModule(std::move(digiModule)) {
-  std::vector<Acts::MaterialProperties> partialMaterial;
-  partialMaterial.reserve(materials.size());
-  for (auto& mat : materials) {
-    Acts::Material pm{float(mat.first.radLength() * UnitConstants::cm),
-                      float(mat.first.intLength() * UnitConstants::cm),
-                      float(mat.first.A()), float(mat.first.Z()),
-                      float(mat.first.density() / pow(UnitConstants::cm, 3))};
-    partialMaterial.push_back(
-        Acts::MaterialProperties(pm, mat.second * UnitConstants::mm));
-  }
-  //  Create homogenous surface material with averaged material properties
-  Acts::MaterialProperties matprop(partialMaterial);
-  m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
+double Acts::ActsExtension::getValue(const std::string& tag,
+                                     const std::string& category) const
+    noexcept(false) {
+  return getT(m_valueStore, tag, category);
 }
 
-void Acts::ActsExtension::setConfiguration(
-    const Acts::ActsExtension::Config& config) {
-  // @todo check consistency
-  // copy the configuration
-  m_cfg = config;
+void Acts::ActsExtension::addValue(double value, const std::string& tag,
+                                   const std::string& category) {
+  addT(m_valueStore, value, tag, category, 0.0);
+}
+
+bool Acts::ActsExtension::hasValue(const std::string& tag,
+                                   const std::string& category) const {
+  return hasT(m_valueStore, tag, category);
+}
+
+bool Acts::ActsExtension::hasType(const std::string& type,
+                                  const std::string& category) const {
+  return hasT(m_flagStore, type, category);
+}
+
+void Acts::ActsExtension::addType(const std::string& type,
+                                  const std::string& category,
+                                  const std::string& word) {
+  std::string catDec = "<-- category -->";
+  addT(m_flagStore, word, type, category, catDec);
+}
+
+const std::string Acts::ActsExtension::getType(
+    const std::string& type, const std::string& category) const
+    noexcept(false) {
+  return getT(m_flagStore, type, category);
+}
+
+std::string Acts::ActsExtension::toString() const {
+  std::string rString = "--------------- Acts::ActsExtension --------------- ";
+  rString += '\n';
+  rString += "- type store: ";
+  rString += '\n';
+  for (auto const& [key, value] : m_flagStore) {
+    rString += key;
+    rString += " : ";
+    rString += value;
+    rString += '\n';
+  }
+  return rString;
 }

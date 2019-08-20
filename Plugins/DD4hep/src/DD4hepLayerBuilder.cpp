@@ -14,8 +14,8 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/DD4hep/IActsExtension.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -61,12 +61,10 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::negativeLayers(
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
-      Acts::IActsExtension* detExtension =
-          detElement.extension<Acts::IActsExtension>();
-      // access the axis orienation of the modules
-      std::string axes = detExtension->axes();
+      Acts::ActsExtension* detExtension =
+          detElement.extension<Acts::ActsExtension>();
       // collect the sensitive detector elements possibly contained by the layer
-      resolveSensitive(detElement, layerSurfaces, axes);
+      resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
       auto transform =
           convertTransform(&(detElement.nominal().worldTransformation()));
@@ -75,15 +73,19 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::negativeLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
-      if (detExtension->buildEnvelope()) {
+      if (detExtension->hasValue("r", "envelope") &&
+          detExtension->hasValue("z", "envelope")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
-        pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
+        pl.envR = {detExtension->getValue("r", "envelope"),
+                   detExtension->getValue("r", "envelope")};
+        pl.envZ = {detExtension->getValue("z", "envelope"),
+                   detExtension->getValue("z", "envelope")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (tube == nullptr)
+        if (tube == nullptr) {
           ACTS_ERROR(
               "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
+        }
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
         double rMax = tube->GetRmax() * UnitConstants::cm;
@@ -126,88 +128,6 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::negativeLayers(
                         "constructor!"));
       }
 
-      // if the layer should carry material it will be marked by assigning a
-      // ProtoSurfaceMaterial
-      std::shared_ptr<const ProtoSurfaceMaterial> materialProxy(nullptr);
-      // the approachdescriptor telling where the material sits on the layer
-      // (inner, middle, outer) Surface
-      std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
-      // material position on the layer canbe inner, outer or center and will
-      // be accessed from the ActsExtensions
-      Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
-      // check if layer should have material
-      if (detExtension->hasSupportMaterial()) {
-        std::pair<size_t, size_t> materialBins = detExtension->materialBins();
-        size_t bins1 = materialBins.first;
-        size_t bins2 = materialBins.second;
-        Acts::BinUtility materialBinUtil(bins1, -M_PI, M_PI, Acts::closed,
-                                         Acts::binPhi);
-        materialBinUtil += Acts::BinUtility(bins2, pl.minR, pl.maxR, Acts::open,
-                                            Acts::binR, transform);
-        // and create material proxy to mark layer for material mapping
-        materialProxy =
-            std::make_shared<const ProtoSurfaceMaterial>(materialBinUtil);
-        // access the material position
-        layerPos = detExtension->layerMaterialPosition();
-        ACTS_VERBOSE(
-            "[L] Layer is marked to carry support material on Surface ( "
-            "inner=0 / center=1 / outer=2 ) :   "
-            << layerPos << "    with binning: [" << bins1 << ", " << bins2
-            << "]");
-        // Create an approachdescriptor for the layer
-        // create the new surfaces for the approachdescriptor
-        std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
-        // The layer thicknesses
-        auto layerThickness =
-            std::fabs(pl.minZ - pl.maxZ) + pl.envZ.first + pl.envZ.second;
-        // create the inner and outer boundary surfaces
-        // first create the positions
-        Vector3D innerPos = transform->translation() -
-                            transform->rotation().col(2) * layerThickness * 0.5;
-        Vector3D outerPos = transform->translation() +
-                            transform->rotation().col(2) * layerThickness * 0.5;
-
-        if (innerPos.z() > outerPos.z()) {
-          std::swap(innerPos, outerPos);
-        }
-
-        std::shared_ptr<Acts::DiscSurface> innerBoundary =
-            Surface::makeShared<Acts::DiscSurface>(
-                std::make_shared<const Transform3D>(Translation3D(innerPos) *
-                                                    transform->rotation()),
-                pl.minR, pl.maxR);
-
-        std::shared_ptr<Acts::DiscSurface> outerBoundary =
-            Surface::makeShared<Acts::DiscSurface>(
-                std::make_shared<const Transform3D>(Translation3D(outerPos) *
-                                                    transform->rotation()),
-                pl.minR, pl.maxR);
-
-        std::shared_ptr<Acts::DiscSurface> centralSurface =
-            Surface::makeShared<Acts::DiscSurface>(transform, pl.minR, pl.maxR);
-
-        // set material surface
-        if (layerPos == Acts::LayerMaterialPos::inner) {
-          innerBoundary->assignSurfaceMaterial(materialProxy);
-        }
-
-        if (layerPos == Acts::LayerMaterialPos::outer) {
-          outerBoundary->assignSurfaceMaterial(materialProxy);
-        }
-
-        if (layerPos == Acts::LayerMaterialPos::central) {
-          centralSurface->assignSurfaceMaterial(materialProxy);
-        }
-
-        // collect approach surfaces
-        aSurfaces.push_back(innerBoundary);
-        aSurfaces.push_back(outerBoundary);
-        aSurfaces.push_back(centralSurface);
-        // create an ApproachDescriptor with standard surfaces - these
-        // will be deleted by the approach descriptor
-        approachDescriptor = std::make_unique<Acts::GenericApproachDescriptor>(
-            std::move(aSurfaces));
-      }
       std::shared_ptr<Layer> negativeLayer = nullptr;
       // In case the layer is sensitive
       if (detElement.volume().isSensitive()) {
@@ -222,14 +142,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::negativeLayers(
         auto dBounds = std::make_shared<const RadialBounds>(pl.minR, pl.maxR);
         double thickness = std::fabs(pl.maxZ - pl.minZ);
         // Create the layer containing the sensitive surface
-        negativeLayer =
-            DiscLayer::create(transform, dBounds, std::move(sArray), thickness,
-                              std::move(approachDescriptor), Acts::active);
+        negativeLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
+                                          thickness, nullptr, Acts::active);
 
       } else {
         negativeLayer = m_cfg.layerCreator->discLayer(
             gctx, layerSurfaces, m_cfg.bTypeR, m_cfg.bTypePhi, pl, transform,
-            std::move(approachDescriptor));
+            nullptr);
       }
 
       // get the possible material if no surfaces are handed over
@@ -276,12 +195,10 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
-      Acts::IActsExtension* detExtension =
-          detElement.extension<Acts::IActsExtension>();
-      // access the axis orienation of the modules
-      std::string axes = detExtension->axes();
+      Acts::ActsExtension* detExtension =
+          detElement.extension<Acts::ActsExtension>();
       // collect the sensitive detector elements possibly contained by the layer
-      resolveSensitive(detElement, layerSurfaces, axes);
+      resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
       auto transform =
           convertTransform(&(detElement.nominal().worldTransformation()));
@@ -290,10 +207,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
-      if (detExtension->buildEnvelope()) {
+      if (detExtension->hasValue("r", "envelope") &&
+          detExtension->hasValue("z", "envelope")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
-        pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
+        pl.envR = {detExtension->getValue("r", "envelope"),
+                   detExtension->getValue("r", "envelope")};
+        pl.envZ = {detExtension->getValue("z", "envelope"),
+                   detExtension->getValue("z", "envelope")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr)
@@ -333,75 +253,6 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
 
       double halfZ = (pl.minZ - pl.maxZ) * 0.5;
 
-      // if the layer should carry material it will be marked by assigning a
-      // ProtoSurfaceMaterial
-      std::shared_ptr<const ProtoSurfaceMaterial> materialProxy(nullptr);
-      // the approachdescriptor telling where the material sits on the layer
-      // (inner, middle, outer) Surface
-      std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
-      // material position on the layer can be inner, outer or center and will
-      // be accessed from the ActsExtensions
-      Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
-
-      // check if layer should have material
-      if (detExtension->hasSupportMaterial()) {
-        // Create an approachdescriptor for the layer
-        // create the new surfaces for the approachdescriptor
-        std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
-        // create the inner boundary surface
-        auto innerBoundary = Surface::makeShared<Acts::CylinderSurface>(
-            transform, pl.minR, halfZ);
-        // create outer boundary surface
-        auto outerBoundary = Surface::makeShared<Acts::CylinderSurface>(
-            transform, pl.maxR, halfZ);
-        // create the central surface
-        auto centralSurface = Surface::makeShared<Acts::CylinderSurface>(
-            transform, (pl.minR + pl.maxR) * 0.5, halfZ);
-
-        std::pair<size_t, size_t> materialBins = detExtension->materialBins();
-
-        size_t bins1 = materialBins.first;
-        size_t bins2 = materialBins.second;
-        Acts::BinUtility materialBinUtil(bins1, -M_PI, M_PI, Acts::closed,
-                                         Acts::binPhi);
-        materialBinUtil += Acts::BinUtility(bins2, -halfZ, halfZ, Acts::open,
-                                            Acts::binZ, transform);
-        // and create material proxy to mark layer for material mapping
-        materialProxy =
-            std::make_shared<const ProtoSurfaceMaterial>(materialBinUtil);
-        // access the material position
-        layerPos = detExtension->layerMaterialPosition();
-        ACTS_VERBOSE(
-            "[L] Layer is marked to carry support material on Surface ( "
-            "inner=0 / center=1 / outer=2 ) :   "
-            << layerPos << "    with binning: [" << bins1 << ", " << bins2
-            << "]");
-
-        // check if the material should be set to the inner or outer boundary
-        // and set it in case
-        if (layerPos == Acts::LayerMaterialPos::inner) {
-          innerBoundary->assignSurfaceMaterial(materialProxy);
-        }
-
-        if (layerPos == Acts::LayerMaterialPos::outer) {
-          outerBoundary->assignSurfaceMaterial(materialProxy);
-        }
-
-        if (layerPos == Acts::LayerMaterialPos::central) {
-          centralSurface->assignSurfaceMaterial(materialProxy);
-        }
-
-        // collect the surfaces
-        aSurfaces.push_back(innerBoundary);
-        aSurfaces.push_back(centralSurface);
-        aSurfaces.push_back(outerBoundary);
-
-        // create an ApproachDescriptor with standard surfaces - these
-        // will be deleted by the approach descriptor
-        approachDescriptor = std::make_unique<Acts::GenericApproachDescriptor>(
-            std::move(aSurfaces));
-      }
-
       std::shared_ptr<Layer> centralLayer = nullptr;
       // In case the layer is sensitive
       if (detElement.volume().isSensitive()) {
@@ -417,14 +268,14 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         std::shared_ptr<const CylinderBounds> cBounds(
             new CylinderBounds(layerR, halfZ));
         // Create the layer containing the sensitive surface
-        centralLayer = CylinderLayer::create(
-            transform, cBounds, std::move(sArray), thickness,
-            std::move(approachDescriptor), Acts::active);
+        centralLayer =
+            CylinderLayer::create(transform, cBounds, std::move(sArray),
+                                  thickness, nullptr, Acts::active);
 
       } else {
         centralLayer = m_cfg.layerCreator->cylinderLayer(
             gctx, layerSurfaces, m_cfg.bTypePhi, m_cfg.bTypeZ, pl, transform,
-            std::move(approachDescriptor));
+            nullptr);
       }
 
       // get the possible material if no surfaces are handed over
@@ -472,12 +323,10 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
-      Acts::IActsExtension* detExtension =
-          detElement.extension<Acts::IActsExtension>();
-      // access the axis orienation of the modules
-      std::string axes = detExtension->axes();
+      Acts::ActsExtension* detExtension =
+          detElement.extension<Acts::ActsExtension>();
       // collect the sensitive detector elements possibly contained by the layer
-      resolveSensitive(detElement, layerSurfaces, axes);
+      resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
       auto transform =
           convertTransform(&(detElement.nominal().worldTransformation()));
@@ -486,10 +335,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
-      if (detExtension->buildEnvelope()) {
+      if (detExtension->hasValue("r", "envelope") &&
+          detExtension->hasValue("z", "envelope")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
-        pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
+        pl.envR = {detExtension->getValue("r", "envelope"),
+                   detExtension->getValue("r", "envelope")};
+        pl.envZ = {detExtension->getValue("z", "envelope"),
+                   detExtension->getValue("z", "envelope")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr)
@@ -537,86 +389,6 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
                         "constructor!"));
       }
 
-      // if the layer should carry material it will be marked by assigning a
-      // ProtoSurfaceMaterial
-      std::shared_ptr<const ProtoSurfaceMaterial> materialProxy(nullptr);
-      // the approachdescriptor telling where the material sits on the layer
-      // (inner, middle, outer) Surface
-      std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
-      // material position on the layer can be inner, outer or center and will
-      // be accessed from the ActsExtensions
-      Acts::LayerMaterialPos layerPos = LayerMaterialPos::inner;
-      // check if layer should have material
-      if (detExtension->hasSupportMaterial()) {
-        std::pair<size_t, size_t> materialBins = detExtension->materialBins();
-        size_t bins1 = materialBins.first;
-        size_t bins2 = materialBins.second;
-        Acts::BinUtility materialBinUtil(bins1, -M_PI, M_PI, Acts::closed,
-                                         Acts::binPhi);
-        materialBinUtil += Acts::BinUtility(bins2, pl.minR, pl.maxR, Acts::open,
-                                            Acts::binR, transform);
-        // and create material proxy to mark layer for material mapping
-        materialProxy =
-            std::make_shared<const ProtoSurfaceMaterial>(materialBinUtil);
-        // access the material position
-        layerPos = detExtension->layerMaterialPosition();
-        ACTS_VERBOSE(
-            "[L] Layer is marked to carry support material on Surface ( "
-            "inner=0 / center=1 / outer=2 ) :   "
-            << layerPos << "    with binning: [" << bins1 << ", " << bins2
-            << "]");
-        // Create an approachdescriptor for the layer
-        // create the new surfaces for the approachdescriptor
-        std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
-        // The layer thicknesses
-        auto layerThickness =
-            std::fabs(pl.minZ - pl.maxZ) + pl.envZ.first + pl.envZ.second;
-        // create the inner and outer boundary surfaces
-        // first create the positions
-        Vector3D innerPos = transform->translation() -
-                            transform->rotation().col(2) * layerThickness * 0.5;
-        Vector3D outerPos = transform->translation() +
-                            transform->rotation().col(2) * layerThickness * 0.5;
-
-        if (innerPos.z() > outerPos.z()) {
-          std::swap(innerPos, outerPos);
-        }
-
-        auto innerBoundary = Surface::makeShared<Acts::DiscSurface>(
-            std::make_shared<const Transform3D>(Translation3D(innerPos) *
-                                                transform->rotation()),
-            pl.minR, pl.maxR);
-
-        auto outerBoundary = Surface::makeShared<Acts::DiscSurface>(
-            std::make_shared<const Transform3D>(Translation3D(outerPos) *
-                                                transform->rotation()),
-            pl.minR, pl.maxR);
-
-        auto centralSurface =
-            Surface::makeShared<Acts::DiscSurface>(transform, pl.minR, pl.maxR);
-
-        // set material surface
-        if (layerPos == Acts::LayerMaterialPos::inner) {
-          innerBoundary->assignSurfaceMaterial(materialProxy);
-        }
-
-        if (layerPos == Acts::LayerMaterialPos::outer) {
-          outerBoundary->assignSurfaceMaterial(materialProxy);
-        }
-
-        if (layerPos == Acts::LayerMaterialPos::central) {
-          centralSurface->assignSurfaceMaterial(materialProxy);
-        }
-        // collect approach surfaces
-        aSurfaces.push_back(innerBoundary);
-        aSurfaces.push_back(centralSurface);
-        aSurfaces.push_back(outerBoundary);
-        // create an ApproachDescriptor with standard surfaces - these
-        // will be deleted by the approach descriptor
-        approachDescriptor =
-            std::make_unique<Acts::GenericApproachDescriptor>(aSurfaces);
-      }
-
       std::shared_ptr<Layer> positiveLayer = nullptr;
       // In case the layer is sensitive
       if (detElement.volume().isSensitive()) {
@@ -630,14 +402,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
         auto dBounds = std::make_shared<const RadialBounds>(pl.minR, pl.maxR);
         double thickness = std::fabs(pl.maxZ - pl.minZ);
         // Create the layer containing the sensitive surface
-        positiveLayer =
-            DiscLayer::create(transform, dBounds, std::move(sArray), thickness,
-                              std::move(approachDescriptor), Acts::active);
+        positiveLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
+                                          thickness, nullptr, Acts::active);
 
       } else {
         positiveLayer = m_cfg.layerCreator->discLayer(
             gctx, layerSurfaces, m_cfg.bTypeR, m_cfg.bTypePhi, pl, transform,
-            std::move(approachDescriptor));
+            nullptr);
       }
 
       // get the possible material if no surfaces are handed over
@@ -669,44 +440,37 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
 
 void Acts::DD4hepLayerBuilder::resolveSensitive(
     const dd4hep::DetElement& detElement,
-    std::vector<std::shared_ptr<const Acts::Surface>>& surfaces,
-    const std::string& axes) const {
+    std::vector<std::shared_ptr<const Acts::Surface>>& surfaces) const {
   const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
     for (auto& child : children) {
       dd4hep::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
         // create the surface
-        surfaces.push_back(
-            createSensitiveSurface(childDetElement, false, axes));
+        surfaces.push_back(createSensitiveSurface(childDetElement, false));
       }
-      resolveSensitive(childDetElement, surfaces, axes);
+      resolveSensitive(childDetElement, surfaces);
     }
   }
 }
 
 std::shared_ptr<const Acts::Surface>
 Acts::DD4hepLayerBuilder::createSensitiveSurface(
-    const dd4hep::DetElement& detElement, bool isDisc,
-    const std::string& axes) const {
+    const dd4hep::DetElement& detElement, bool isDisc) const {
   // access the possible material
   std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr;
   // access the possible extension of the DetElement
-  Acts::IActsExtension* detExtension = nullptr;
+  Acts::ActsExtension* detExtension = nullptr;
   try {
-    detExtension = detElement.extension<Acts::IActsExtension>();
+    detExtension = detElement.extension<Acts::ActsExtension>();
   } catch (std::runtime_error& e) {
   }
-  if (detExtension != nullptr) {
-    material = detExtension->material();
-  }
 
+  auto detAxis = detExtension->getType("axes", "definitions");
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
-      new Acts::DD4hepDetectorElement(
-          detElement, axes, UnitConstants::cm, isDisc, material,
-          ((detExtension != nullptr) ? detExtension->digitizationModule()
-                                     : nullptr));
+      new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
+                                      isDisc, material, nullptr);
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();
