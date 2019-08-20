@@ -465,19 +465,6 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
     detExtension = detElement.extension<Acts::ActsExtension>();
   } catch (std::runtime_error& e) {
   }
-<<<<<<< HEAD
-=======
-  if (detExtension != nullptr) {
-    material = detExtension->material();
-  }
-
-  // Create the corresponding detector element !- memory leak --!
-  Acts::DD4hepDetectorElement* dd4hepDetElement =
-      new Acts::DD4hepDetectorElement(
-          detElement, axes, UnitConstants::cm, isDisc, material,
-          ((detExtension != nullptr) ? detExtension->digitizationModule()
-                                     : nullptr));
->>>>>>> 5f0f1a34... remove implicit bool cast
 
   auto detAxis = detExtension->getType("axes", "definitions");
   // Create the corresponding detector element !- memory leak --!

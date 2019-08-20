@@ -119,13 +119,14 @@ class ActsExtension {
   std::map<std::string, double> m_valueStore;
 };
 
+
 // Templated helper method to get from the value/type store
 template <typename T>
 const T ActsExtension::getT(const std::map<std::string, T>& map,
                             const std::string& tag,
                             const std::string& category) const noexcept(false) {
   std::string ctag = "/";
-  if (category != "") {
+  if (!category.empty()) {
     ctag += category;
     ctag += "/";
   }

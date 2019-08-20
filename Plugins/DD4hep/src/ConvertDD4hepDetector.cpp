@@ -289,7 +289,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     return cylinderVolumeBuilder;
 
   } else if ((subDetExtension != nullptr) &&
-
              (subDetExtension->hasType("passive cylinder", "layer") ||
               subDetExtension->hasType("beampipe", "layer"))) {
     ACTS_VERBOSE("[D] Subdetector : " << subDetector.name()
