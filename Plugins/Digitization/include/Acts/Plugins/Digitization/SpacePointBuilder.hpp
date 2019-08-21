@@ -16,10 +16,10 @@ namespace Acts {
 /// @brief Structure for easier bookkeeping of space points.
 template <typename Cluster>
 struct SpacePoint {
-  /// Storage of the cluster on a surface
-  std::vector<const Cluster*> clusterModule;
   /// Storage of a point in space.
   Vector3D vector;
+  /// Storage of the cluster on a surface
+  std::vector<const Cluster*> clusterModule;
 
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
