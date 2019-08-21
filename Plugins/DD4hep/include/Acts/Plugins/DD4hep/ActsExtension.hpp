@@ -23,18 +23,27 @@ namespace Acts {
 /// @brief Extension of the \a %DD4hep \a DetElement needed for translation
 /// into the Acts tracking geometry
 ///
-/// This is a simple value / value container to be:
-/// - filled by the Detector constructors if ACTS is needed
+/// This is a simple value / flag container to be:
+/// - filled by the Detector constructors if Acts is needed
 /// - interpreted by the DD4Hep layer builders and detector converters
+///
+/// The minimal requirement for an ActsExtension is to define how the
+/// DD4hep (TGeo) element is oriented with respect to the Acts definition
 class ActsExtension {
  public:
   /// Minimal constructor, sets the defail of the axis
+  ///
+  // @param axes is the definition of the TGeo axes system w.r.t Acts
   ActsExtension(const std::string& axes = "XYZ");
 
   /// Standard copy constructor
+  ///
+  /// @param ext the source extension
   ActsExtension(const ActsExtension& ext) = default;
 
-  /// Copy constructor with element
+  /// Copy constructor with element for DD4hep::DetElement::clone
+  ///
+  /// @param ext the source extension
   ActsExtension(const ActsExtension& ext, const dd4hep::DetElement& elem);
 
   /// Destructor
@@ -127,7 +136,7 @@ const T ActsExtension::getT(const std::map<std::string, T>& map,
     throw std::runtime_error(error_message.c_str());
   }
   return search->second;
-};
+}
 
 // Templated helper method to set from the value/type store
 template <typename T>
