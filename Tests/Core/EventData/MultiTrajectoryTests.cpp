@@ -39,8 +39,7 @@ CurvilinearParameters make_params() {
   // generate arbitrary positive, definite matrix
   Covariance rnd = Covariance::Random();
   Covariance cov = rnd.transpose() * rnd;
-  return {std::make_unique<Covariance>(cov), Vector3D(0, 0, 1),
-          Vector3D(100, 1000, 400), -1, 0};
+  return {cov, Vector3D(0, 0, 1), Vector3D(100, 1000, 400), -1, 0};
 }
 
 TrackState<SourceLink, CurvilinearParameters> make_rand_trackstate() {
@@ -79,8 +78,7 @@ auto make_trackstate() {
   CovMat_t predCov;
   predCov.setRandom();
 
-  BoundParameters pred(gctx, std::make_unique<CovMat_t>(predCov), predPar,
-                       plane);
+  BoundParameters pred(gctx, predCov, predPar, plane);
 
   ts.parameter.predicted = pred;
 
@@ -91,8 +89,7 @@ auto make_trackstate() {
   CovMat_t filtCov;
   filtCov.setRandom();
 
-  BoundParameters filt(gctx, std::make_unique<CovMat_t>(filtCov), filtPar,
-                       plane);
+  BoundParameters filt(gctx, filtCov, filtPar, plane);
 
   ts.parameter.filtered = filt;
 
@@ -103,8 +100,7 @@ auto make_trackstate() {
   CovMat_t smotCov;
   smotCov.setRandom();
 
-  BoundParameters smot(gctx, std::make_unique<CovMat_t>(smotCov), smotPar,
-                       plane);
+  BoundParameters smot(gctx, smotCov, smotPar, plane);
 
   ts.parameter.smoothed = smot;
 
