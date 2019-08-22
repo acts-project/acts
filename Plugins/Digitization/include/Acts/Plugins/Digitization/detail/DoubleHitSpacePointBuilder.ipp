@@ -52,8 +52,7 @@ struct SpacePointParameters {
 /// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
-double differenceOfClustersChecked(const Vector3D& pos1,
-                                   const Vector3D& pos2,
+double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
                                    const Vector3D& posVertex,
                                    const double maxDistance,
                                    const double maxAngleTheta2,
@@ -133,10 +132,8 @@ std::pair<Vector2D, Vector2D> findLocalTopAndBottomEnd(
 /// 1. if it failed
 /// @note The meaning of the parameter is explained in more detail in the
 /// function body
-double calcPerpendicularProjection(const Vector3D& a,
-                                   const Vector3D& c,
-                                   const Vector3D& q,
-                                   const Vector3D& r) {
+double calcPerpendicularProjection(const Vector3D& a, const Vector3D& c,
+                                   const Vector3D& q, const Vector3D& r) {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
   /// The underlying assumption is that the best point is given by the closest
@@ -262,11 +259,11 @@ bool recoverSpacePoint(SpacePointParameters& spaPoPa,
 /// detector element length
 ///
 /// @return Boolean statement whether the space point calculation was succesful
-bool calculateSpacePoint(
-    const std::pair<Vector3D, Vector3D>& stripEnds1,
-    const std::pair<Vector3D, Vector3D>& stripEnds2,
-    const Vector3D& posVertex, SpacePointParameters& spaPoPa,
-    const double stripLengthTolerance) {
+bool calculateSpacePoint(const std::pair<Vector3D, Vector3D>& stripEnds1,
+                         const std::pair<Vector3D, Vector3D>& stripEnds2,
+                         const Vector3D& posVertex,
+                         SpacePointParameters& spaPoPa,
+                         const double stripLengthTolerance) {
   /// The following algorithm is meant for finding the position on the first
   /// strip if there is a corresponding cluster on the second strip. The
   /// resulting point is a point x on the first surfaces. This point is
@@ -430,8 +427,8 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
     // Fast skipping if a perpendicular projection should be used
     double resultPerpProj;
     if (m_cfg.usePerpProj) {
-      resultPerpProj = detail::calcPerpendicularProjection(ends1.first, ends2.first,
-                                                   spaPoPa.q, spaPoPa.r);
+      resultPerpProj = detail::calcPerpendicularProjection(
+          ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
         Acts::SpacePoint<Cluster> sp;
         sp.clusterModule.push_back(cp.first);
