@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -105,10 +106,10 @@ class RiddersPropagator {
     const FullParameterSet& parSet =
         nominalResult.endParameters->getParameterSet();
     FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
-    mParSet->setCovariance(
-        (start.covariance() != nullptr)
-            ? calculateCovariance(derivatives, *start.covariance())
-            : nullptr);
+    if(start.covariance())
+    {
+		mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance()));
+    }
 
     return std::move(nominalResult);
   }
@@ -153,11 +154,10 @@ class RiddersPropagator {
     const FullParameterSet& parSet =
         nominalResult.endParameters->getParameterSet();
     FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
-    mParSet->setCovariance(
-        (start.covariance() != nullptr)
-            ? calculateCovariance(derivatives, *start.covariance())
-            : nullptr);
-
+    if(start.covariance())
+    {
+		mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance()));
+    }
     return std::move(nominalResult);
   }
 
@@ -246,7 +246,7 @@ class RiddersPropagator {
   /// @param [in] startCov Starting covariance
   ///
   /// @return Propagated covariance matrix
-  std::unique_ptr<const Covariance> calculateCovariance(
+  const Covariance calculateCovariance(
       const std::array<std::vector<BoundVector>, BoundParsDim>& derivatives,
       const Covariance& startCov) const {
     Jacobian jacobian;
@@ -257,8 +257,7 @@ class RiddersPropagator {
     jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA]);
     jacobian.col(eQOP) = fitLinear(derivatives[eQOP]);
     jacobian.col(eT) = fitLinear(derivatives[eT]);
-    return std::make_unique<const Covariance>(jacobian * startCov *
-                                              jacobian.transpose());
+    return jacobian * startCov * jacobian.transpose();
   }
 
   /// @brief This function fits a linear function through the final state
