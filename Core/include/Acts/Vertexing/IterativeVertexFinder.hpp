@@ -67,6 +67,7 @@ class IterativeVertexFinder {
                 "Vertex fitter does not fulfill vertex fitter concept.");
 
  public:
+  using InputTrack = input_track_t;
   /// @struct Config Configuration struct
   struct Config {
     /// @brief Finder configuration
