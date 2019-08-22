@@ -10,24 +10,25 @@
 #include <limits>
 #include "Acts/Utilities/Helpers.hpp"
 
-namespace {
+namespace Acts {
+namespace detail {
 /// @brief Storage container for variables related to the calculation of space
 /// points
 struct SpacePointParameters {
   /// Vector pointing from bottom to top end of first SDE
-  Acts::Vector3D q;
+  Vector3D q;
   /// Vector pointing from bottom to top end of second SDE
-  Acts::Vector3D r;
+  Vector3D r;
   /// Twice the vector pointing from vertex to to midpoint of first SDE
-  Acts::Vector3D s;
+  Vector3D s;
   /// Twice the vector pointing from vertex to to midpoint of second SDE
-  Acts::Vector3D t;
+  Vector3D t;
   /// Cross product between SpacePointParameters::q and
   /// SpacePointParameters::s
-  Acts::Vector3D qs;
+  Vector3D qs;
   /// Cross product between SpacePointParameters::r and
   /// SpacePointParameters::t
-  Acts::Vector3D rt;
+  Vector3D rt;
   /// Magnitude of SpacePointParameters::q
   double qmag = 0.;
   /// Parameter that determines the hit position on the first SDE
@@ -51,9 +52,9 @@ struct SpacePointParameters {
 /// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
-double differenceOfClustersChecked(const Acts::Vector3D& pos1,
-                                   const Acts::Vector3D& pos2,
-                                   const Acts::Vector3D& posVertex,
+double differenceOfClustersChecked(const Vector3D& pos1,
+                                   const Vector3D& pos2,
+                                   const Vector3D& posVertex,
                                    const double maxDistance,
                                    const double maxAngleTheta2,
                                    const double maxAnglePhi2) {
@@ -64,10 +65,10 @@ double differenceOfClustersChecked(const Acts::Vector3D& pos1,
 
   // Calculate the angles of the vectors
   double phi1, theta1, phi2, theta2;
-  phi1 = Acts::VectorHelpers::phi(pos1 - posVertex);
-  theta1 = Acts::VectorHelpers::theta(pos1 - posVertex);
-  phi2 = Acts::VectorHelpers::phi(pos2 - posVertex);
-  theta2 = Acts::VectorHelpers::theta(pos2 - posVertex);
+  phi1 = VectorHelpers::phi(pos1 - posVertex);
+  theta1 = VectorHelpers::theta(pos1 - posVertex);
+  phi2 = VectorHelpers::phi(pos2 - posVertex);
+  theta2 = VectorHelpers::theta(pos2 - posVertex);
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
@@ -92,8 +93,8 @@ double differenceOfClustersChecked(const Acts::Vector3D& pos1,
 /// @param [in] segment Segmentation of the detector element
 ///
 /// @return Pair containing the top and bottom end
-std::pair<Acts::Vector2D, Acts::Vector2D> findLocalTopAndBottomEnd(
-    const Acts::Vector2D& local, const Acts::CartesianSegmentation* segment) {
+std::pair<Vector2D, Vector2D> findLocalTopAndBottomEnd(
+    const Vector2D& local, const CartesianSegmentation* segment) {
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
@@ -103,7 +104,7 @@ std::pair<Acts::Vector2D, Acts::Vector2D> findLocalTopAndBottomEnd(
   size_t binY = binData[1].searchLocal(local);
 
   // Storage of the local top (first) and bottom (second) end
-  std::pair<Acts::Vector2D, Acts::Vector2D> topBottomLocal;
+  std::pair<Vector2D, Vector2D> topBottomLocal;
 
   if (boundariesX[binX + 1] - boundariesX[binX] <
       boundariesY[binY + 1] - boundariesY[binY]) {
@@ -132,10 +133,10 @@ std::pair<Acts::Vector2D, Acts::Vector2D> findLocalTopAndBottomEnd(
 /// 1. if it failed
 /// @note The meaning of the parameter is explained in more detail in the
 /// function body
-double calcPerpendicularProjection(const Acts::Vector3D& a,
-                                   const Acts::Vector3D& c,
-                                   const Acts::Vector3D& q,
-                                   const Acts::Vector3D& r) {
+double calcPerpendicularProjection(const Vector3D& a,
+                                   const Vector3D& c,
+                                   const Vector3D& q,
+                                   const Vector3D& r) {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
   /// The underlying assumption is that the best point is given by the closest
@@ -146,7 +147,7 @@ double calcPerpendicularProjection(const Acts::Vector3D& a,
   /// lambda1 * r.
   /// x get resolved by resolving lambda0 from the condition that |x-y| is the
   /// shortest distance between two skew lines.
-  Acts::Vector3D ac = c - a;
+  Vector3D ac = c - a;
   double qr = q.dot(r);
   double denom = q.dot(q) - qr * qr;
 
@@ -262,9 +263,9 @@ bool recoverSpacePoint(SpacePointParameters& spaPoPa,
 ///
 /// @return Boolean statement whether the space point calculation was succesful
 bool calculateSpacePoint(
-    const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds1,
-    const std::pair<Acts::Vector3D, Acts::Vector3D>& stripEnds2,
-    const Acts::Vector3D& posVertex, SpacePointParameters& spaPoPa,
+    const std::pair<Vector3D, Vector3D>& stripEnds1,
+    const std::pair<Vector3D, Vector3D>& stripEnds2,
+    const Vector3D& posVertex, SpacePointParameters& spaPoPa,
     const double stripLengthTolerance) {
   /// The following algorithm is meant for finding the position on the first
   /// strip if there is a corresponding cluster on the second strip. The
@@ -303,7 +304,8 @@ bool calculateSpacePoint(
           fabs(spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) /
                            spaPoPa.r.dot(spaPoPa.qs)) <= spaPoPa.limit);
 }
-}  // namespace
+}  // namespace detail
+}  // namespace Acts
 
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
@@ -362,7 +364,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::makeClusterPairs(
     for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
          iClustersBack++) {
       // Calculate the distances between the hits
-      currentDiff = differenceOfClustersChecked(
+      currentDiff = detail::differenceOfClustersChecked(
           globalCoords(gctx, *(clustersFront[iClustersFront])),
           globalCoords(gctx, *(clustersBack[iClustersBack])), m_cfg.vertex,
           m_cfg.diffDist, m_cfg.diffPhi2, m_cfg.diffTheta2);
@@ -395,7 +397,7 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
       &(cluster.digitizationModule()->segmentation()));
 
   std::pair<Vector2D, Vector2D> topBottomLocal =
-      findLocalTopAndBottomEnd(local, segment);
+      detail::findLocalTopAndBottomEnd(local, segment);
 
   // Calculate the global coordinates of the top and bottom end of the strip
   Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
@@ -414,7 +416,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
     std::vector<Acts::SpacePoint<Cluster>>& spacePoints) const {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
-  SpacePointParameters spaPoPa;
+  detail::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
   for (const auto& cp : clusterPairs) {
@@ -428,7 +430,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
     // Fast skipping if a perpendicular projection should be used
     double resultPerpProj;
     if (m_cfg.usePerpProj) {
-      resultPerpProj = calcPerpendicularProjection(ends1.first, ends2.first,
+      resultPerpProj = detail::calcPerpendicularProjection(ends1.first, ends2.first,
                                                    spaPoPa.q, spaPoPa.r);
       if (resultPerpProj <= 0.) {
         Acts::SpacePoint<Cluster> sp;
@@ -459,7 +461,7 @@ void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
       /// @note This procedure is an indirect variation of the vertex
       /// position.
       // Check if a recovery the point(s) and store them if successful
-      if (recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance)) {
+      if (detail::recoverSpacePoint(spaPoPa, m_cfg.stripLengthGapTolerance)) {
         Acts::SpacePoint<Cluster> sp;
         sp.clusterModule.push_back(cp.first);
         sp.clusterModule.push_back(cp.second);
