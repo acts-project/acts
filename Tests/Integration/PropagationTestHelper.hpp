@@ -395,13 +395,11 @@ std::pair<Vector3D, double> to_surface(
 }
 
 template <typename Propagator_type>
-void covariance_curvilinear(const Propagator_type& propagator, double pT,
+Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
-                            double plimit, double reltol = 1e-3,
-                            bool debug = false) {
+                            double plimit, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
-  covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = plimit;
@@ -440,25 +438,17 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   const auto result = propagator.propagate(start, options).value();
   const auto& tp = result.endParameters;
 
-  // get numerically propagated covariance matrix
-  Covariance calculated_cov = fixture.calculateCovariance(
-      start_wo_c, *(start.covariance()), *tp, options);
-
-  Covariance obtained_cov = (*(tp->covariance()));
-
-  CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
+  return *(tp->covariance());
 }
 
 template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
-void covariance_bound(const Propagator_type& propagator, double pT, double phi,
+Covariance covariance_bound(const Propagator_type& propagator, double pT, double phi,
                       double theta, double charge, double plimit, double rand1,
                       double rand2, double rand3, bool startPlanar = true,
-                      bool destPlanar = true, double reltol = 1e-3,
-                      bool debug = false) {
+                      bool destPlanar = true, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
-  covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = 0.1 * plimit;
@@ -519,17 +509,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   const auto& tp = result.endParameters;
 
   // get obtained covariance matrix
-  Covariance obtained_cov = (*(tp->covariance()));
-
-  // get numerically propagated covariance matrix
-  Covariance calculated_cov = fixture.calculateCovariance(
-      start_wo_c, *(start.covariance()), *tp, options);
-
-  if (calculated_cov == *(start.covariance())) {
-    return;
-  }
-
-  CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
+  return *(tp->covariance());
 }
 }  // namespace IntegrationTest
 }  // namespace Acts

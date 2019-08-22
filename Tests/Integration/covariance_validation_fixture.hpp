@@ -22,6 +22,9 @@ namespace IntegrationTest {
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 
+/// @brief This class performs the Ridders algorithm to estimate the propagation of the covariance to a certain point in space.
+///
+/// The algorithm is based on the small deviations of the start parameters based on their uncertainty at the beginning of the propgation. This deviation is represented here by a vector of relative deviations of these parameters and fix for all parameters. So, a common choice has to be found that is able to actually fit into the order of magnitude of the uncertainty of each parameter. Using these deviations, the propagation is repeated multiple times and the final covariance matrix at a given target surface is afterwards evaluated by first order derivatives of the final state parameters wrt. the inital parameters. Therefore this evaluation represents a first order approximation of the transport jacobian. Since performing multiple propagations and a numerical evaluation of the covariance requires more time than a single propagation towards a target + a common propagation of the covariance, this class just serves to verify the results of the latter classes.
 template <typename propagator_t>
 class RiddersPropagator
 {
@@ -222,44 +225,45 @@ private:
 		return derivatives;
 	}
 
-	//~ /// @brief This function propagates the covariance matrix
-	//~ ///
-	//~ /// @tparam options_t PropagatorOptions object
-	//~ ///
-	//~ /// @param [in] options Options that store the variations
-	//~ /// @param [in] derivatives Slopes of each modification of the parameters
-	//~ /// @param [in] startCov Starting covariance
-	//~ ///
-	//~ /// @return Propagated covariance matrix
+	/// @brief This function propagates the covariance matrix
+	///
+	/// @param [in] derivatives Slopes of each modification of the parameters
+	/// @param [in] startCov Starting covariance
+	///
+	/// @return Propagated covariance matrix
 	std::unique_ptr<const Covariance>
 	calculateCovariance(const std::array<std::vector<BoundVector>, BoundParsDim>& derivatives, const Covariance& startCov) const
 	{
 		Jacobian jacobian;
 		jacobian.setIdentity();
-		jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0], deviations);
-		jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1], deviations);
-		jacobian.col(ePHI) = fitLinear(derivatives[ePHI], deviations);
-		jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA], deviations);
-		jacobian.col(eQOP) = fitLinear(derivatives[eQOP], deviations);
-		jacobian.col(eT) = fitLinear(derivatives[eT], deviations);
+		jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0]);
+		jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1]);
+		jacobian.col(ePHI) = fitLinear(derivatives[ePHI]);
+		jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA]);
+		jacobian.col(eQOP) = fitLinear(derivatives[eQOP]);
+		jacobian.col(eT) = fitLinear(derivatives[eT]);
 		return std::make_unique<const Covariance>(jacobian * startCov * jacobian.transpose());
     }
     
-  BoundVector fitLinear(const std::vector<BoundVector>& values,
-                               const std::vector<double>& h) const {
+  /// @brief This function fits a linear function through the final state parametrisations
+  ///
+  /// @param [in] values Vector containing the final state parametrisations
+  ///
+  /// @return Vector containing the linear fit
+  BoundVector fitLinear(const std::vector<BoundVector>& values) const {
     BoundVector A;
     BoundVector C;
     A.setZero();
     C.setZero();
     double B = 0;
     double D = 0;
-    const unsigned int N = h.size();
+    const unsigned int N = deviations.size();
 
     for (unsigned int i = 0; i < N; ++i) {
-      A += h.at(i) * values.at(i);
-      B += h.at(i);
+      A += deviations.at(i) * values.at(i);
+      B += deviations.at(i);
       C += values.at(i);
-      D += h.at(i) * h.at(i);
+      D += deviations.at(i) * deviations.at(i);
     }
 
     BoundVector b = (N * A - B * C) / (N * D - B * B);
@@ -469,7 +473,6 @@ struct covariance_validation_fixture {
 
   T m_propagator;
 };
-
 }  // namespace IntegrationTest
 
 }  // namespace Acts
