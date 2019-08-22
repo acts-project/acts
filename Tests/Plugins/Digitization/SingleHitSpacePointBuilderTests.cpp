@@ -84,13 +84,13 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   std::cout << "Hit created" << std::endl;
 
-  std::vector<SingleHitSpacePoint> data;
-  SpacePointBuilder<SingleHitSpacePoint> shsp;
+  std::vector<SpacePoint<PlanarModuleCluster>> data;
+  SpacePointBuilder<SpacePoint<PlanarModuleCluster>> shsp;
 
   std::cout << "Hit added to storage" << std::endl;
 
   shsp.calculateSpacePoints(tgContext, {pmc}, data);
-  BOOST_CHECK_NE(data[0].spacePoint, Vector3D::Zero(3));
+  BOOST_CHECK_NE(data[0].vector, Vector3D::Zero());
 
   std::cout << "Space point calculated" << std::endl;
 }
