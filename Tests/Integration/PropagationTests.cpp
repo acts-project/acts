@@ -124,17 +124,17 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
   // constant field propagation atlas stepper
   auto aposition = constant_field_propagation(apropagator, pT, phi, theta,
-                                              dcharge, time, index, Bz);
+                                              dcharge, time, Bz);
   // constant field propagation eigen stepper
   auto eposition = constant_field_propagation(epropagator, pT, phi, theta,
-                                              dcharge, time, index, Bz);
+                                              dcharge, time, Bz);
   // check consistency
   CHECK_CLOSE_REL(eposition, aposition, 1e-6);
 }
 
 // The actual test - needs to be included to avoid
 // template inside template definition through boost
-#include "PropagationTestBase.hpp"
+//~ #include "PropagationTestBase.hpp"
 
 }  // namespace IntegrationTest
 }  // namespace Acts

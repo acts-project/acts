@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <limits>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
@@ -114,7 +115,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
     CHECK_CLOSE_ABS(theta, VH::theta(tp->momentum()), 1e-4);
   // clang-format on
 
-  double r = std::abs(pT / (q * Bz));
+  double r = (q * Bz != 0.) ? std::abs(pT / (q * Bz)) : std::numeric_limits<double>::max();
 
   // calculate number of turns of helix
   double turns = options.pathLimit / (2 * M_PI * r) * sin(theta);
