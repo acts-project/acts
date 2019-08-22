@@ -396,8 +396,8 @@ std::pair<Vector3D, double> to_surface(
 
 template <typename Propagator_type>
 Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
-                            double phi, double theta, double charge,
-                            double plimit, bool debug = false) {
+                                  double phi, double theta, double charge,
+                                  double plimit, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -443,10 +443,11 @@ Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
 
 template <typename Propagator_type, typename StartSurface_type,
           typename DestSurface_type>
-Covariance covariance_bound(const Propagator_type& propagator, double pT, double phi,
-                      double theta, double charge, double plimit, double rand1,
-                      double rand2, double rand3, bool startPlanar = true,
-                      bool destPlanar = true, bool debug = false) {
+Covariance covariance_bound(const Propagator_type& propagator, double pT,
+                            double phi, double theta, double charge,
+                            double plimit, double rand1, double rand2,
+                            double rand3, bool startPlanar = true,
+                            bool destPlanar = true, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
