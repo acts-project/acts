@@ -65,7 +65,11 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   SurfaceArrayCreator sac;
   size_t binsX(2), binsY(4);
   auto pSurfaceArray =
-      sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX, binsY);
+      sac.surfaceArrayOnPlane(tgContext,
+                              aSurfaces,
+                              binsX,
+                              binsY,
+                              BinningValue::binZ);
   auto pPlaneLayerFromSurfaces =
       PlaneLayer::create(pTransform, pRectangle, std::move(pSurfaceArray));
   BOOST_CHECK_EQUAL(pPlaneLayerFromSurfaces->layerType(), LayerType::active);
