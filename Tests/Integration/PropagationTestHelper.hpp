@@ -284,7 +284,7 @@ std::pair<Vector3D, double> to_cylinder(
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
-                                              0.05 * rand1, 0.05 * rand2);
+                                              0.04 * rand1, 0.04 * rand2);
   auto endSurface = Surface::makeShared<CylinderSurface>(
       seTransform, plimit, std::numeric_limits<double>::max());
 

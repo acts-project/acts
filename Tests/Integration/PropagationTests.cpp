@@ -96,45 +96,45 @@ DensePropagatorType setupDensePropagator() {
   return DensePropagatorType(dstepper, std::move(navi));
 }
 
-// The constant field test
-/// test forward propagation in constant magnetic field
-BOOST_DATA_TEST_CASE(
-    constant_bfieldforward_propagation_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
-        bdata::random(
-            (bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
-        bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
-  if (index < skip) {
-    return;
-  }
+//~ // The constant field test
+//~ /// test forward propagation in constant magnetic field
+//~ BOOST_DATA_TEST_CASE(
+    //~ constant_bfieldforward_propagation_,
+    //~ bdata::random((bdata::seed = 0,
+                   //~ bdata::distribution =
+                       //~ std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
+        //~ bdata::random((bdata::seed = 1,
+                       //~ bdata::distribution =
+                           //~ std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+        //~ bdata::random((bdata::seed = 2,
+                       //~ bdata::distribution =
+                           //~ std::uniform_real_distribution<>(0.1, M_PI - 0.1))) ^
+        //~ bdata::random(
+            //~ (bdata::seed = 3,
+             //~ bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        //~ bdata::random(
+            //~ (bdata::seed = 4,
+             //~ bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+        //~ bdata::xrange(ntests),
+    //~ pT, phi, theta, charge, time, index) {
+  //~ if (index < skip) {
+    //~ return;
+  //~ }
 
-  double dcharge = -1 + 2 * charge;
-  // constant field propagation atlas stepper
-  auto aposition = constant_field_propagation(apropagator, pT, phi, theta,
-                                              dcharge, time, Bz);
-  // constant field propagation eigen stepper
-  auto eposition = constant_field_propagation(epropagator, pT, phi, theta,
-                                              dcharge, time, Bz);
-  // check consistency
-  CHECK_CLOSE_REL(eposition, aposition, 1e-6);
-}
+  //~ double dcharge = -1 + 2 * charge;
+  //~ // constant field propagation atlas stepper
+  //~ auto aposition = constant_field_propagation(apropagator, pT, phi, theta,
+                                              //~ dcharge, time, Bz);
+  //~ // constant field propagation eigen stepper
+  //~ auto eposition = constant_field_propagation(epropagator, pT, phi, theta,
+                                              //~ dcharge, time, Bz);
+  //~ // check consistency
+  //~ CHECK_CLOSE_REL(eposition, aposition, 1e-6);
+//~ }
 
 // The actual test - needs to be included to avoid
 // template inside template definition through boost
-//~ #include "PropagationTestBase.hpp"
+#include "PropagationTestBase.hpp"
 
 }  // namespace IntegrationTest
 }  // namespace Acts

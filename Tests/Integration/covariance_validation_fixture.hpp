@@ -86,6 +86,14 @@ struct covariance_validation_fixture {
                                   tp.template get<Acts::ePHI>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       phi_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+      
+      double phi0 = nominal(Acts::ePHI);
+      double phi1 = r.endParameters->parameters()(Acts::ePHI);
+      if(std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+		phi_derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
+	  else
+		if(std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+			phi_derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
     }
 
     // variation in theta
