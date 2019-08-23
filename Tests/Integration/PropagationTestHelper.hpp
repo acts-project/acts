@@ -358,7 +358,7 @@ std::pair<Vector3D, double> to_surface(
                                                  tp_s->momentum().normalized(),
                                                  0.1 * rand3, 0.1 * rand1)
                          : createCylindricTransform(tp_s->position(),
-                                                    0.05 * rand1, 0.05 * rand2);
+                                                    0.04 * rand1, 0.04 * rand2);
 
   auto endSurface = Surface::makeShared<Surface_type>(seTransform, nullptr);
   // Increase the path limit - to be safe hitting the surface
@@ -404,7 +404,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = plimit;
-  options.pathLimit = plimit;
+  options.pathLimit = 0.1 * plimit;
   options.debug = debug;
   options.tolerance = 1e-9;
 
@@ -496,13 +496,13 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   auto ssTransform =
       startPlanar ? createPlanarTransform(pos, mom.normalized(), 0.1 * rand1,
                                           0.1 * rand2)
-                  : createCylindricTransform(pos, 0.05 * rand1, 0.05 * rand2);
+                  : createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
   auto seTransform = destPlanar
                          ? createPlanarTransform(tp_c->position(),
                                                  tp_c->momentum().normalized(),
                                                  0.1 * rand3, 0.1 * rand1)
                          : createCylindricTransform(tp_c->position(),
-                                                    0.05 * rand1, 0.05 * rand2);
+                                                    0.01 * rand1, 0.01 * rand2);
 
   auto startSurface =
       Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
