@@ -61,11 +61,11 @@ template <typename vfitter_t, typename sfinder_t>
 class IterativeVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
+  using Propagator_t = typename vfitter_t::Propagator_t;
+  using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using Propagator_t = typename vfitter_t::Propagator_t;
-  using Linearizer_t = typename vfitter_t::Linearizer_t;
 
   /// @struct Config Configuration struct
   struct Config {
