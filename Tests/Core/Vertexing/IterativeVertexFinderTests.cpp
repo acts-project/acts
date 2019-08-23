@@ -138,8 +138,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     ZScanSeedFinder sFinder(std::move(sFcfg));
 
     // Vertex Finder
-    using VertexFinder =
-        IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
+    using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
@@ -414,14 +413,14 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
         double res_qp = resQoPDist(gen);
 
         // Fill vector of track objects now for user track type
-        std::unique_ptr<Covariance> covMatUT = std::make_unique<Covariance>();
+        Covariance covMat;
 
-        (*covMatUT) << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0,
-            0., 0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
+        covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0.,
+            0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto paramsUT = InputTrack(BoundParameters(
-            tgContext, std::move(covMatUT), paramVec, perigeeSurface));
+        auto paramsUT = InputTrack(BoundParameters(tgContext, std::move(covMat),
+                                                   paramVec, perigeeSurface));
 
         tracks.push_back(paramsUT);
 
@@ -446,6 +445,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     auto res = finder.find(tracks, vFinderOptionsUT);
 
     BOOST_CHECK(res.ok());
+
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     // Retrieve vertices found by vertex finder
     auto vertexCollectionUT = *res;

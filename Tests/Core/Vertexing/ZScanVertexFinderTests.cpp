@@ -143,8 +143,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                                        perigeeSurface));
     }
 
-    using VertexFinder =
-        ZScanVertexFinder<BilloirFitter>;
+    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
@@ -153,10 +152,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
         propagator, pOptions);
     TrackToVertexIPEstimator<BoundParameters, Propagator> ipEst(ipEstCfg);
 
-    ZScanVertexFinder<BilloirFitter>::Config cfg(std::move(ipEst));
-
-
-    VertexFinder::Config cfg(propagator);
+    VertexFinder::Config cfg(std::move(ipEst));
 
     VertexFinder finder(std::move(cfg));
 
@@ -165,6 +161,10 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
+
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     if (res.ok()) {
       BOOST_CHECK(!(*res).empty());
@@ -257,35 +257,33 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                                                   paramVec, perigeeSurface)));
     }
 
-    using VertexFinder =
-        ZScanVertexFinder<BilloirFitter>;
+    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
-
-    VertexFinder::Config cfg(propagator);
 
     TrackToVertexIPEstimator<InputTrack, Propagator>::Config ipEstCfg(
         propagator, pOptions);
     TrackToVertexIPEstimator<InputTrack, Propagator> ipEst(ipEstCfg);
 
-    ZScanVertexFinder<BilloirFitter>::Config cfg(std::move(ipEst));
-
+    VertexFinder::Config cfg(std::move(ipEst));
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack
     std::function<BoundParameters(InputTrack)> extractParameters =
         [](InputTrack params) { return params.parameters(); };
 
-
     VertexFinder finder(std::move(cfg), extractParameters);
-
 
     VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
 
     auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
+
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     if (res.ok()) {
       BOOST_CHECK(!(*res).empty());
