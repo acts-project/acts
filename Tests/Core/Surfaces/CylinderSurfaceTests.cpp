@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
   double radius(1.0), halfZ(10.), halfPhiSector(M_PI / 8.);
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
-  auto pNullTransform = std::make_shared<const Transform3D>();
+  std::shared_ptr<const Transform3D> pNullTransform{};
   BOOST_CHECK_EQUAL(
       Surface::makeShared<CylinderSurface>(pNullTransform, radius, halfZ)
           ->type(),
@@ -90,7 +90,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   double radius(1.0), halfZ(10.);
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
-  // auto pNullTransform = std::make_shared<const Transform3D>();
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
   //
