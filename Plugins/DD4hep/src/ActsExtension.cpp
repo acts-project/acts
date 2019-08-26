@@ -53,12 +53,20 @@ const std::string Acts::ActsExtension::getType(
 std::string Acts::ActsExtension::toString() const {
   std::string rString = "--------------- Acts::ActsExtension --------------- ";
   rString += '\n';
-  rString += "- type store: ";
+  rString += "- flag store: ";
   rString += '\n';
   for (auto const& [key, value] : m_flagStore) {
     rString += key;
     rString += " : ";
     rString += value;
+    rString += '\n';
+  }
+  rString += "- value store: ";
+  rString += '\n';
+  for (auto const& [key, value] : m_valueStore) {
+    rString += key;
+    rString += " : ";
+    rString += std::to_string(value);
     rString += '\n';
   }
   return rString;
