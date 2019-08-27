@@ -315,7 +315,10 @@ struct DenseEnvironmentExtension {
                                       state.options.absPdgCode,
                                       state.options.meanEnergyLoss));
 
-    D(3, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
+    D(3, 7) = h * state.options.mass * state.options.mass * qop[0] /
+                std::hypot(1., state.options.mass * qop[0])
+                + h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
+    //~ D(3, 7) = h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
     return true;
   }
 

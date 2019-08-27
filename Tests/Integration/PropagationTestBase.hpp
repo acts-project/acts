@@ -61,30 +61,30 @@ auto threeRandom = (rand1 ^ rand2 ^ rand2);
                   //~ debug);
 //~ }
 
-/// test consistency of propagators when approaching a cylinder
-BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
-                     ds::trackParameters* ds::propagationFraction ^
-                         ds::threeRandom,
-                     pT, phi, theta, charge, pfrac, rand1, rand2, rand3) {
-  // just make sure we can reach it
-  double r = pfrac * std::abs(pT / Bz);
-  r = (r > 2.5_m) ? 2.5_m : r;
-  // check atlas stepper
-  auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, charge, r,
-                                   rand1, rand2, rand3, covtpr, debug);
-  // check eigen stepper
-  auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, charge, r,
-                                   rand1, rand2, rand3, covtpr, debug);
-  CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10_um);
+//~ /// test consistency of propagators when approaching a cylinder
+//~ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
+                     //~ ds::trackParameters* ds::propagationFraction ^
+                         //~ ds::threeRandom,
+                     //~ pT, phi, theta, charge, pfrac, rand1, rand2, rand3) {
+  //~ // just make sure we can reach it
+  //~ double r = pfrac * std::abs(pT / Bz);
+  //~ r = (r > 2.5_m) ? 2.5_m : r;
+  //~ // check atlas stepper
+  //~ auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, charge, r,
+                                   //~ rand1, rand2, rand3, covtpr, debug);
+  //~ // check eigen stepper
+  //~ auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, charge, r,
+                                   //~ rand1, rand2, rand3, covtpr, debug);
+  //~ CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10_um);
 
-  // check without charge
-  auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1,
-                                   rand2, rand3, covtpr, debug);
-  e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1, rand2,
-                              rand3, covtpr, debug);
+  //~ // check without charge
+  //~ auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1,
+                                   //~ rand2, rand3, covtpr, debug);
+  //~ e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1, rand2,
+                              //~ rand3, covtpr, debug);
 
-  CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 10_um);
-}
+  //~ CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 1_um);
+//~ }
 
 //~ /// test consistency of propagators to a plane
 //~ BOOST_DATA_TEST_CASE(propagation_to_plane_,
@@ -158,7 +158,7 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
   //~ auto e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
       //~ epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
       //~ covtpr, debug);
-  //~ CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1_um);
+  //~ CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 10_um);
 
   //~ if (debug) {
     //~ std::cout << "[ >>>> Testing Neutral Propagators <<<< ]" << std::endl;
@@ -202,7 +202,7 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
   //~ covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
       //~ epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
       //~ true, 1e-1);
-  //~ // covariance check for straight line stepper
+  // covariance check for straight line stepper
   //~ covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
       //~ spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
       //~ true, 1e-1);
@@ -245,19 +245,19 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
       //~ false, 1e-1);
 //~ }
 
-//~ /// test correct covariance transport for curvilinear parameters in dense
-//~ /// environment
-//~ /// this test only works within the
-//~ /// s_curvilinearProjTolerance (in: Definitions.hpp)
-//~ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
-                     //~ ds::pT* ds::propagationLimit ^ ds::threeRandom, pT, plimit,
-                     //~ rand1, rand2, rand3) {
-  //~ // covariance check for eigen stepper in dense environment
-  //~ DensePropagatorType dpropagator = setupDensePropagator();
-  //~ covariance_curvilinear(dpropagator, pT, 0_degree, 45_degree, 1_e, plimit);
+/// test correct covariance transport for curvilinear parameters in dense
+/// environment
+/// this test only works within the
+/// s_curvilinearProjTolerance (in: Definitions.hpp)
+BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
+                     ds::pT* ds::propagationLimit ^ ds::threeRandom, pT, plimit,
+                     rand1, rand2, rand3) {
+  // covariance check for eigen stepper in dense environment
+  DensePropagatorType dpropagator = setupDensePropagator();
+  covariance_curvilinear(dpropagator, pT, 0_degree, 45_degree, 1_e, plimit);
   //~ covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
       //~ dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2, rand3,
       //~ true, true, 1e-1);
   //~ covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
       //~ dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3);
-//~ }
+}

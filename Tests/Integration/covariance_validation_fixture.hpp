@@ -41,7 +41,7 @@ struct covariance_validation_fixture {
     // nominal propagation
     const auto& nominal = endPars.parameters();
     const Surface& dest = endPars.referenceSurface();
-
+//~ std::cout << "nominal: " << nominal.transpose() << " | " << endPars.momentum().norm() << std::endl;
     // - for planar surfaces the dest surface is a perfect destination
     // surface for the numerical propagation, as reference frame
     // aligns with the referenceSurface.transform().rotation() at
@@ -64,6 +64,7 @@ struct covariance_validation_fixture {
                                     tp.template get<Acts::eLOC_0>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+//~ std::cout << "x: " << r.endParameters->parameters().transpose() << " | " << x_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in y
@@ -145,6 +146,9 @@ struct covariance_validation_fixture {
     jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
     jacobian.col(Acts::eQOP) = fitLinear(qop_derivatives, h_steps);
     jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
+//~ std::cout << "jac:\n" << jacobian << std::endl;
+//~ std::cout << "initial cov:\n" << startCov << std::endl;
+//~ std::cout << "cov:\n" << jacobian * startCov * jacobian.transpose() << std::endl;
     return jacobian * startCov * jacobian.transpose();
   }
 
