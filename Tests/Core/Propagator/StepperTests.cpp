@@ -710,8 +710,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1._GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
-      cov, startParams, startMom, 1., 0.);
+  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
+                                                       startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
