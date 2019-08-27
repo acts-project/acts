@@ -144,7 +144,7 @@ void ActsExtension::addT(std::map<std::string, T>& map, const T& val,
                          const std::string& tag, const std::string& category,
                          const T& catDeco) {
   std::string ctag = "/";
-  if (category != "") {
+  if (!category.empty()) {
     ctag += category;
     map[ctag] = catDeco;
     ctag += "/";
@@ -159,7 +159,7 @@ bool ActsExtension::hasT(const std::map<std::string, T>& map,
                          const std::string& tag,
                          const std::string& category) const {
   std::string ctag = "/";
-  if (category != "") {
+  if (!category.empty()) {
     ctag += category;
     ctag += "/";
   }
