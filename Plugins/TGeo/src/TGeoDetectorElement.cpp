@@ -59,7 +59,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     rotation = (nodeTransform->GetRotationMatrix());
   }
   // Simply call the construct method
-  construct(rotation, translation, axes, scalor, isDisc, material);
+  construct(rotation, translation, axes, scalor, isDisc, std::move(material));
 }
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
@@ -75,7 +75,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   const Double_t* rotation = transform.GetRotationMatrix();
   const Double_t* translation = transform.GetTranslation();
   // Simply call the construct method
-  construct(rotation, translation, axes, scalor, isDisc, material);
+  construct(rotation, translation, axes, scalor, isDisc, std::move(material));
 }
 
 void Acts::TGeoDetectorElement::construct(
