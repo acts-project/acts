@@ -471,7 +471,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
                                       isDisc, material, nullptr);
-                                      
+
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();
 }
