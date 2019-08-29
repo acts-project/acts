@@ -174,6 +174,7 @@ class AtlasStepper {
         pVector[56] = 0.;
         pVector[57] = 0.;
         pVector[58] = 0.;
+        pVector[59] = 0.;
 
         // special treatment for surface types
         const auto& surface = pars.referenceSurface();
@@ -265,7 +266,7 @@ class AtlasStepper {
     /// Ay ->P[5]  dAy/   P[13]   P[21]   P[29]   P[37]   P[45]  P[53]
     /// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]
     /// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]
-    /// Cache: P[56] - P[58]
+    /// Cache: P[56] - P[59]
 
     // result
     double parameters[BoundParsDim] = {0., 0., 0., 0., 0., 0.};
@@ -519,6 +520,7 @@ class AtlasStepper {
       state.pVector[56] = 0.;
       state.pVector[57] = 0.;
       state.pVector[58] = 0.;
+      state.pVector[59] = 0.;
 
       // special treatment for surface types
       const auto& surface = pars.referenceSurface();
@@ -620,8 +622,8 @@ class AtlasStepper {
   ///
   /// @return the full transport jacobian
   void covarianceTransport(State& state, bool /*unused*/) const {
-    double P[59];
-    for (unsigned int i = 0; i < 59; ++i) {
+    double P[60];
+    for (unsigned int i = 0; i < 60; ++i) {
       P[i] = state.pVector[i];
     }
 
@@ -661,38 +663,44 @@ class AtlasStepper {
     double s2 = P[24] * S[0] + P[25] * S[1] + P[26] * S[2];
     double s3 = P[32] * S[0] + P[33] * S[1] + P[34] * S[2];
     double s4 = P[40] * S[0] + P[41] * S[1] + P[42] * S[2];
+    //~ double s5 = P[48] * S[0] + P[49] * S[1] + P[50] * S[2]; //
 
     P[8] -= (s0 * P[4]);
     P[9] -= (s0 * P[5]);
     P[10] -= (s0 * P[6]);
+    P[11] -= (s0 * P[59]); //
     P[12] -= (s0 * P[56]);
     P[13] -= (s0 * P[57]);
     P[14] -= (s0 * P[58]);
     P[16] -= (s1 * P[4]);
     P[17] -= (s1 * P[5]);
     P[18] -= (s1 * P[6]);
+    P[19] -= (s1 * P[59]); //
     P[20] -= (s1 * P[56]);
     P[21] -= (s1 * P[57]);
     P[22] -= (s1 * P[58]);
     P[24] -= (s2 * P[4]);
     P[25] -= (s2 * P[5]);
     P[26] -= (s2 * P[6]);
+    P[27] -= (s2 * P[59]); //
     P[28] -= (s2 * P[56]);
     P[29] -= (s2 * P[57]);
     P[30] -= (s2 * P[58]);
     P[32] -= (s3 * P[4]);
     P[33] -= (s3 * P[5]);
     P[34] -= (s3 * P[6]);
+    P[35] -= (s3 * P[59]);
     P[36] -= (s3 * P[56]);
     P[37] -= (s3 * P[57]);
     P[38] -= (s3 * P[58]);
     P[40] -= (s4 * P[4]);
     P[41] -= (s4 * P[5]);
     P[42] -= (s4 * P[6]);
+    P[43] -= (s4 * P[59]);
     P[44] -= (s4 * P[56]);
     P[45] -= (s4 * P[57]);
     P[46] -= (s4 * P[58]);
-
+	
     double P3, P4, C = P[4] * P[4] + P[5] * P[5];
     if (C > 1.e-20) {
       C = 1. / C;
@@ -746,12 +754,12 @@ class AtlasStepper {
     state.jacobian[28] = P[47];  // dCM /dCM
     state.jacobian[29] = 0.;     // dCM/dT
 
-    state.jacobian[30] = 0.;  // dT/dL0
-    state.jacobian[31] = 0.;  // dT/dL1
-    state.jacobian[32] = 0.;  // dT/dPhi
-    state.jacobian[33] = 0.;  // dT/dThe
-    state.jacobian[34] = 0.;  // dT/dCM
-    state.jacobian[35] = 1.;  // dT/dT
+    state.jacobian[30] = P[11];  // dT/dL0
+    state.jacobian[31] = P[19];  // dT/dL1
+    state.jacobian[32] = P[27];  // dT/dPhi
+    state.jacobian[33] = P[35];  // dT/dThe
+    state.jacobian[34] = P[43];  // dT/dCM
+    state.jacobian[35] = P[51];  // dT/dT
 
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
@@ -1134,10 +1142,22 @@ class AtlasStepper {
       // Evaluate the time propagation
       state.stepping.pVector[3] +=
           h * std::hypot(1, state.options.mass / momentum(state.stepping));
+      state.stepping.pVector[59] = std::hypot(1, state.options.mass / momentum(state.stepping));
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
+		  
+		double dtdl = h * state.options.mass * state.options.mass * charge(state.stepping) /
+                (momentum(state.stepping) * std::hypot(1., state.options.mass / momentum(state.stepping)));
+        //~ state.stepping.pVector[11] = 1. * state.stepping.pVector[11] + dtdl * state.stepping.pVector[15];
+        //~ state.stepping.pVector[19] = 1. * state.stepping.pVector[19] + dtdl * state.stepping.pVector[23];
+        //~ state.stepping.pVector[27] = 1. * state.stepping.pVector[27] + dtdl * state.stepping.pVector[31];
+        //~ state.stepping.pVector[35] = 1. * state.stepping.pVector[35] + dtdl * state.stepping.pVector[39];
+        //~ state.stepping.pVector[43] = 1. * state.stepping.pVector[43] + dtdl * state.stepping.pVector[47];
+        //~ state.stepping.pVector[51] = 1. * state.stepping.pVector[51] + dtdl * state.stepping.pVector[55];
+        state.stepping.pVector[43] += dtdl;
+        
         // Jacobian calculation
         //
         double* d2A = &state.stepping.pVector[28];
