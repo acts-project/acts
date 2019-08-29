@@ -124,7 +124,7 @@ struct covariance_validation_fixture {
                                   tp.template get<Acts::eQOP>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       qop_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-//~ std::cout << "qop: " << r.endParameters->parameters().transpose() << " | " << qop_derivatives.back().transpose() << " | " << std::endl;
+//~ std::cout << "qop: " << tp.template get<Acts::eQOP>() << " | " << r.endParameters->parameters().transpose() << " | " << qop_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in t
@@ -146,7 +146,7 @@ struct covariance_validation_fixture {
     jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
     jacobian.col(Acts::eQOP) = fitLinear(qop_derivatives, h_steps);
     jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
-//~ std::cout << "jac:\n" << jacobian << std::endl;
+std::cout << "jac:\n" << jacobian << std::endl;
 //~ std::cout << "initial cov:\n" << startCov << std::endl;
 //~ std::cout << "cov:\n" << jacobian * startCov * jacobian.transpose() << std::endl;
     return jacobian * startCov * jacobian.transpose();

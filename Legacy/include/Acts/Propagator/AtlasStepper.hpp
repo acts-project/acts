@@ -663,26 +663,25 @@ class AtlasStepper {
     double s2 = P[24] * S[0] + P[25] * S[1] + P[26] * S[2];
     double s3 = P[32] * S[0] + P[33] * S[1] + P[34] * S[2];
     double s4 = P[40] * S[0] + P[41] * S[1] + P[42] * S[2];
-    //~ double s5 = P[48] * S[0] + P[49] * S[1] + P[50] * S[2]; //
 
     P[8] -= (s0 * P[4]);
     P[9] -= (s0 * P[5]);
     P[10] -= (s0 * P[6]);
-    P[11] -= (s0 * P[59]); //
+    P[11] -= (s0 * P[59]);
     P[12] -= (s0 * P[56]);
     P[13] -= (s0 * P[57]);
     P[14] -= (s0 * P[58]);
     P[16] -= (s1 * P[4]);
     P[17] -= (s1 * P[5]);
     P[18] -= (s1 * P[6]);
-    P[19] -= (s1 * P[59]); //
+    P[19] -= (s1 * P[59]);
     P[20] -= (s1 * P[56]);
     P[21] -= (s1 * P[57]);
     P[22] -= (s1 * P[58]);
     P[24] -= (s2 * P[4]);
     P[25] -= (s2 * P[5]);
     P[26] -= (s2 * P[6]);
-    P[27] -= (s2 * P[59]); //
+    P[27] -= (s2 * P[59]);
     P[28] -= (s2 * P[56]);
     P[29] -= (s2 * P[57]);
     P[30] -= (s2 * P[58]);
@@ -893,6 +892,7 @@ class AtlasStepper {
     state.pVector[8] -= (s0 * state.pVector[4]);
     state.pVector[9] -= (s0 * state.pVector[5]);
     state.pVector[10] -= (s0 * state.pVector[6]);
+    state.pVector[11] -= (s0 * state.pVector[59]);
     state.pVector[12] -= (s0 * state.pVector[56]);
     state.pVector[13] -= (s0 * state.pVector[57]);
     state.pVector[14] -= (s0 * state.pVector[58]);
@@ -900,6 +900,7 @@ class AtlasStepper {
     state.pVector[16] -= (s1 * state.pVector[4]);
     state.pVector[17] -= (s1 * state.pVector[5]);
     state.pVector[18] -= (s1 * state.pVector[6]);
+    state.pVector[19] -= (s1 * state.pVector[59]);
     state.pVector[20] -= (s1 * state.pVector[56]);
     state.pVector[21] -= (s1 * state.pVector[57]);
     state.pVector[22] -= (s1 * state.pVector[58]);
@@ -907,6 +908,7 @@ class AtlasStepper {
     state.pVector[24] -= (s2 * state.pVector[4]);
     state.pVector[25] -= (s2 * state.pVector[5]);
     state.pVector[26] -= (s2 * state.pVector[6]);
+    state.pVector[27] -= (s2 * state.pVector[59]);
     state.pVector[28] -= (s2 * state.pVector[56]);
     state.pVector[29] -= (s2 * state.pVector[57]);
     state.pVector[30] -= (s2 * state.pVector[58]);
@@ -914,6 +916,7 @@ class AtlasStepper {
     state.pVector[32] -= (s3 * state.pVector[4]);
     state.pVector[33] -= (s3 * state.pVector[5]);
     state.pVector[34] -= (s3 * state.pVector[6]);
+    state.pVector[35] -= (s3 * state.pVector[59]);
     state.pVector[36] -= (s3 * state.pVector[56]);
     state.pVector[37] -= (s3 * state.pVector[57]);
     state.pVector[38] -= (s3 * state.pVector[58]);
@@ -921,6 +924,8 @@ class AtlasStepper {
     state.pVector[40] -= (s4 * state.pVector[4]);
     state.pVector[41] -= (s4 * state.pVector[5]);
     state.pVector[42] -= (s4 * state.pVector[6]);
+    std::cout << "pvec: " << state.pVector[43] << " " << s4 * state.pVector[59] << std::endl;
+    state.pVector[43] -= (s4 * state.pVector[59]);
     state.pVector[44] -= (s4 * state.pVector[56]);
     state.pVector[45] -= (s4 * state.pVector[57]);
     state.pVector[46] -= (s4 * state.pVector[58]);
@@ -1012,17 +1017,17 @@ class AtlasStepper {
     state.jacobian[28] = state.pVector[47];  // dCM /dCM
     state.jacobian[29] = 0.;                 // dCM/dT
 
-    state.jacobian[30] = 0.;  // dT/dL0
-    state.jacobian[31] = 0.;  // dT/dL1
-    state.jacobian[32] = 0.;  // dT/dPhi
-    state.jacobian[33] = 0.;  // dT/dThe
-    state.jacobian[34] = 0.;  // dT/dCM
-    state.jacobian[35] = 1.;  // dT/dT
+    state.jacobian[30] = state.pVector[11];  // dT/dL0
+    state.jacobian[31] = state.pVector[19];  // dT/dL1
+    state.jacobian[32] = state.pVector[27];  // dT/dPhi
+    state.jacobian[33] = state.pVector[35];  // dT/dThe
+    state.jacobian[34] = state.pVector[43];  // dT/dCM
+    state.jacobian[35] = state.pVector[51];  // dT/dT
 
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
-
+std::cout << "atlas:\n" << J << std::endl;
     state.cov = J * (*state.covariance) * J.transpose();
   }
 
@@ -1109,7 +1114,7 @@ class AtlasStepper {
       double EST = 2. * (std::abs((A1 + A6) - (A3 + A4)) +
                          std::abs((B1 + B6) - (B3 + B4)) +
                          std::abs((C1 + C6) - (C3 + C4)));
-      if (EST > 0.0002) {
+      if (EST > 0.0001) {
         h *= .5;
         //        dltm = 0.;
         continue;
