@@ -460,7 +460,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
-  options.maxStepSize = plimit;
+  options.maxStepSize = 0.1 * plimit;
   options.pathLimit = plimit;
   options.debug = debug;
 
@@ -494,13 +494,13 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   const auto& tp_c = result_c.endParameters;
 
   auto ssTransform =
-      startPlanar ? createPlanarTransform(pos, mom.normalized(), 0.1 * rand1,
-                                          0.1 * rand2)
+      startPlanar ? createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
+                                          0.05 * rand2)
                   : createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
   auto seTransform = destPlanar
                          ? createPlanarTransform(tp_c->position(),
                                                  tp_c->momentum().normalized(),
-                                                 0.1 * rand3, 0.1 * rand1)
+                                                 0.05 * rand3, 0.05 * rand1)
                          : createCylindricTransform(tp_c->position(),
                                                     0.01 * rand1, 0.01 * rand2);
 

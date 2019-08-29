@@ -64,7 +64,6 @@ struct covariance_validation_fixture {
                                     tp.template get<Acts::eLOC_0>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-//~ std::cout << "x: " << r.endParameters->parameters().transpose() << " | " << x_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in y
@@ -125,6 +124,7 @@ struct covariance_validation_fixture {
                                   tp.template get<Acts::eQOP>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       qop_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+//~ std::cout << "qop: " << r.endParameters->parameters().transpose() << " | " << qop_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in t
