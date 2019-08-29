@@ -145,7 +145,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
       const final;
 
  protected:
-  /// Construct methdo called from the constructor directly
+  /// Construct method called from the constructor directly
   /// @note parameter definitions are given in the constructor
   void construct(
       const Double_t* rotation = nullptr, const Double_t* translation = nullptr,
