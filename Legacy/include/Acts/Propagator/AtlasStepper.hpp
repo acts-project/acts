@@ -254,7 +254,7 @@ class AtlasStepper {
     bool newfield;
     // internal parameters to be used
     Vector3D field;
-    double pVector[60];
+    std::array<double, 59> pVector;
 
     /// Storage pattern of pVector
     ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
@@ -377,7 +377,7 @@ class AtlasStepper {
       covarianceTransport(state, surface, true);
       covOpt = state.cov;
     }
-std::cout << "result: " << gp.transpose() << " | " << mom.transpose() << std::endl;
+    
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(covOpt), gp, mom,
                                charge(state), state.t0 + state.pVector[3],
@@ -890,7 +890,6 @@ std::cout << "result: " << gp.transpose() << " | " << mom.transpose() << std::en
     state.pVector[8] -= (s0 * state.pVector[4]);
     state.pVector[9] -= (s0 * state.pVector[5]);
     state.pVector[10] -= (s0 * state.pVector[6]);
-//~ std::cout << "pVec11: " << state.pVector[11] << " " << s0 << " " << state.pVector[59] << " " << s0 * state.pVector[59] << std::endl;
     state.pVector[11] -= (s0 * state.pVector[59]);
     state.pVector[12] -= (s0 * state.pVector[56]);
     state.pVector[13] -= (s0 * state.pVector[57]);
@@ -923,7 +922,6 @@ std::cout << "result: " << gp.transpose() << " | " << mom.transpose() << std::en
     state.pVector[40] -= (s4 * state.pVector[4]);
     state.pVector[41] -= (s4 * state.pVector[5]);
     state.pVector[42] -= (s4 * state.pVector[6]);
-//~ std::cout << "pvec: " << state.pVector[43] << " " << s4 * state.pVector[59] << std::endl;
     state.pVector[43] -= (s4 * state.pVector[59]);
     state.pVector[44] -= (s4 * state.pVector[56]);
     state.pVector[45] -= (s4 * state.pVector[57]);
@@ -1026,7 +1024,6 @@ std::cout << "result: " << gp.transpose() << " | " << mom.transpose() << std::en
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
-std::cout << "atlas:\n" << J << std::endl;
     state.cov = J * (*state.covariance) * J.transpose();
   }
 

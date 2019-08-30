@@ -27,20 +27,28 @@ struct covariance_validation_fixture {
   covariance_validation_fixture(T propagator)
       : m_propagator(std::move(propagator)) {}
 
+	/// @brief This function tests whether the variations on a disc as target surface lead to results on different sides wrt the center of the disc. This would lead to a flip of the phi value on the surface and therewith to a huge variance in that parameter. It can only occur in this algorithm since the ridders algorithm is unaware of the target surface.
+	///
+	/// @param [in] derivatives Derivatives of a single parameter
+	///
+	/// @return Boolean result whether a phi jump occured
 	bool
 	inconsistentDerivativesOnDisc(std::vector<BoundVector>& derivatives) const
 	{
+		// Test each component with each other
 		for(unsigned int i = 0; i < derivatives.size(); i++)
 		{
 			bool jumpedAngle = true;
 			for(unsigned int j = 0; j < derivatives.size(); j++)
 			{
+				// If there is at least one with a similar angle then it seems to work properly
 				if(i != j && std::abs(derivatives[i](1) - derivatives[j](1)) < 0.5 * M_PI)
 				{
 					jumpedAngle = false;
 					break;
 				}
 			}
+			// Break if a jump was detected
 			if(jumpedAngle)
 			{
 				return true;
@@ -57,13 +65,17 @@ struct covariance_validation_fixture {
                                  const Covariance& startCov,
                                  const EndParameters& endPars,
                                  const U& options) const {
-    // steps for estimating derivatives
-    const std::array<double, 4> h_steps = {{-4e-4, -2e-4, 2e-4, 4e-4}};
-
     // nominal propagation
     const auto& nominal = endPars.parameters();
     const Surface& dest = endPars.referenceSurface();
-std::cout << "nominal: " << nominal.transpose() << " | " << endPars.momentum().norm() << " | " << dest.center(options.geoContext).transpose() << std::endl;
+    
+    // steps for estimating derivatives
+    std::array<double, 4> h_steps = {{-4e-4, -2e-4, 2e-4, 4e-4}};
+    if(dest.type() == Surface::Disc)
+    {
+      h_steps = {{-3e-5, -1e-5, 1e-5, 3e-5}};
+	}
+
     // - for planar surfaces the dest surface is a perfect destination
     // surface for the numerical propagation, as reference frame
     // aligns with the referenceSurface.transform().rotation() at
@@ -116,7 +128,6 @@ std::cout << "nominal: " << nominal.transpose() << " | " << endPars.momentum().n
 	  else
 		if(std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
 			phi_derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
-std::cout << "phi: " << tp.template get<Acts::ePHI>() << " | " << r.endParameters->parameters().transpose() << " | " <<  phi_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in theta
@@ -179,9 +190,6 @@ std::cout << "phi: " << tp.template get<Acts::ePHI>() << " | " << r.endParameter
     jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
     jacobian.col(Acts::eQOP) = fitLinear(qop_derivatives, h_steps);
     jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
-std::cout << "jac:\n" << jacobian << std::endl;
-//~ std::cout << "initial cov:\n" << startCov << std::endl;
-//~ std::cout << "cov:\n" << jacobian * startCov * jacobian.transpose() << std::endl;
     return jacobian * startCov * jacobian.transpose();
   }
 
