@@ -36,7 +36,7 @@ struct covariance_validation_fixture {
                                  const EndParameters& endPars,
                                  const U& options) const {
     // steps for estimating derivatives
-    const std::array<double, 4> h_steps = {{-2e-4, -1e-4, 1e-4, 2e-4}};
+    const std::array<double, 4> h_steps = {{-4e-4, -2e-4, 2e-4, 4e-4}};
 
     // nominal propagation
     const auto& nominal = endPars.parameters();
@@ -64,6 +64,7 @@ struct covariance_validation_fixture {
                                     tp.template get<Acts::eLOC_0>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+//~ std::cout << "x: " << tp.template get<Acts::eLOC_0>() << " | " << r.endParameters->parameters().transpose() << " | " << r.endParameters->parameters() - nominal << " | " << x_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in y
@@ -124,7 +125,6 @@ struct covariance_validation_fixture {
                                   tp.template get<Acts::eQOP>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       qop_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-//~ std::cout << "qop: " << tp.template get<Acts::eQOP>() << " | " << r.endParameters->parameters().transpose() << " | " << qop_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in t
@@ -146,7 +146,7 @@ struct covariance_validation_fixture {
     jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
     jacobian.col(Acts::eQOP) = fitLinear(qop_derivatives, h_steps);
     jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
-std::cout << "jac:\n" << jacobian << std::endl;
+//~ std::cout << "jac:\n" << jacobian << std::endl;
 //~ std::cout << "initial cov:\n" << startCov << std::endl;
 //~ std::cout << "cov:\n" << jacobian * startCov * jacobian.transpose() << std::endl;
     return jacobian * startCov * jacobian.transpose();

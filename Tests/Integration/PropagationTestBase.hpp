@@ -189,15 +189,15 @@ auto threeRandom = (rand1 ^ rand2 ^ rand2);
   //~ covariance_curvilinear(spropagator, pT, phi, theta, charge, plimit);
 //~ }
 
-//~ // test correct covariance transport from disc to disc
-//~ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
-                     //~ ds::trackParameters* ds::propagationLimit ^
-                         //~ ds::threeRandom,
-                     //~ pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
-  //~ // covariance check for atlas stepper
-  //~ covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
-      //~ apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
-      //~ true, 1e-1);
+// test correct covariance transport from disc to disc
+BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
+                     ds::trackParameters* ds::propagationLimit ^
+                         ds::threeRandom,
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+  // covariance check for atlas stepper
+  covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
+      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
+      true, 1e-1);
   //~ // covariance check for eigen stepper
   //~ covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
       //~ epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
@@ -206,23 +206,23 @@ auto threeRandom = (rand1 ^ rand2 ^ rand2);
   //~ covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
       //~ spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
       //~ true, 1e-1);
-//~ }
+}
 
-// test correct covariance transport from plane to plane
-BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
-                     ds::trackParameters* ds::propagationLimit ^
-                         ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
-  // covariance check for atlas stepper
-  covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
+//~ // test correct covariance transport from plane to plane
+//~ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
+                     //~ ds::trackParameters* ds::propagationLimit ^
+                         //~ ds::threeRandom,
+                     //~ pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+  //~ // covariance check for atlas stepper
+  //~ covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
+      //~ apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   //~ // covariance check for eigen stepper
   //~ covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
       //~ epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   //~ // covariance check for straight line stepper
   //~ covariance_bound<StraightPropagatorType, PlaneSurface, PlaneSurface>(
       //~ spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-}
+//~ }
 
 //~ // test correct covariance transport from straw to straw
 //~ // for straw surfaces the numerical fixture is actually more difficult

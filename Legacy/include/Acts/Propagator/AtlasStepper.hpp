@@ -254,7 +254,7 @@ class AtlasStepper {
     bool newfield;
     // internal parameters to be used
     Vector3D field;
-    double pVector[59];
+    double pVector[60];
 
     /// Storage pattern of pVector
     ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
@@ -770,8 +770,6 @@ class AtlasStepper {
   /// to a new curvilinear frame at current position,
   /// or direction of the state
   ///
-  /// @tparam surface_t the Surface type
-  ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @param [in] reinitialize is a flag to steer whether the state should be
@@ -892,6 +890,7 @@ class AtlasStepper {
     state.pVector[8] -= (s0 * state.pVector[4]);
     state.pVector[9] -= (s0 * state.pVector[5]);
     state.pVector[10] -= (s0 * state.pVector[6]);
+//~ std::cout << "pVec11: " << state.pVector[11] << " " << s0 << " " << state.pVector[59] << " " << s0 * state.pVector[59] << std::endl;
     state.pVector[11] -= (s0 * state.pVector[59]);
     state.pVector[12] -= (s0 * state.pVector[56]);
     state.pVector[13] -= (s0 * state.pVector[57]);
@@ -924,7 +923,7 @@ class AtlasStepper {
     state.pVector[40] -= (s4 * state.pVector[4]);
     state.pVector[41] -= (s4 * state.pVector[5]);
     state.pVector[42] -= (s4 * state.pVector[6]);
-    std::cout << "pvec: " << state.pVector[43] << " " << s4 * state.pVector[59] << std::endl;
+//~ std::cout << "pvec: " << state.pVector[43] << " " << s4 * state.pVector[59] << std::endl;
     state.pVector[43] -= (s4 * state.pVector[59]);
     state.pVector[44] -= (s4 * state.pVector[56]);
     state.pVector[45] -= (s4 * state.pVector[57]);
@@ -1027,7 +1026,7 @@ class AtlasStepper {
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
-std::cout << "atlas:\n" << J << std::endl;
+//~ std::cout << "atlas:\n" << J << std::endl;
     state.cov = J * (*state.covariance) * J.transpose();
   }
 
@@ -1250,6 +1249,7 @@ std::cout << "atlas:\n" << J << std::endl;
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
+      
       state.stepping.pathAccumulated += h;
       return h;
     }
