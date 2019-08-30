@@ -27,6 +27,28 @@ struct covariance_validation_fixture {
   covariance_validation_fixture(T propagator)
       : m_propagator(std::move(propagator)) {}
 
+	bool
+	inconsistentDerivativesOnDisc(std::vector<BoundVector>& derivatives) const
+	{
+		for(unsigned int i = 0; i < derivatives.size(); i++)
+		{
+			bool jumpedAngle = true;
+			for(unsigned int j = 0; j < derivatives.size(); j++)
+			{
+				if(i != j && std::abs(derivatives[i](1) - derivatives[j](1)) < 0.5 * M_PI)
+				{
+					jumpedAngle = false;
+					break;
+				}
+			}
+			if(jumpedAngle)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
   /// Numerical transport of covariance using the ridder's algorithm
   /// this is for covariance propagation validation
   /// it can either be used for curvilinear transport
@@ -41,7 +63,7 @@ struct covariance_validation_fixture {
     // nominal propagation
     const auto& nominal = endPars.parameters();
     const Surface& dest = endPars.referenceSurface();
-//~ std::cout << "nominal: " << nominal.transpose() << " | " << endPars.momentum().norm() << std::endl;
+std::cout << "nominal: " << nominal.transpose() << " | " << endPars.momentum().norm() << " | " << dest.center(options.geoContext).transpose() << std::endl;
     // - for planar surfaces the dest surface is a perfect destination
     // surface for the numerical propagation, as reference frame
     // aligns with the referenceSurface.transform().rotation() at
@@ -64,7 +86,6 @@ struct covariance_validation_fixture {
                                     tp.template get<Acts::eLOC_0>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-//~ std::cout << "x: " << tp.template get<Acts::eLOC_0>() << " | " << r.endParameters->parameters().transpose() << " | " << r.endParameters->parameters() - nominal << " | " << x_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in y
@@ -95,6 +116,7 @@ struct covariance_validation_fixture {
 	  else
 		if(std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
 			phi_derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
+std::cout << "phi: " << tp.template get<Acts::ePHI>() << " | " << r.endParameters->parameters().transpose() << " | " <<  phi_derivatives.back().transpose() << " | " << std::endl;
     }
 
     // variation in theta
@@ -138,6 +160,17 @@ struct covariance_validation_fixture {
       t_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     }
 
+	if(dest.type() == Surface::Disc &&
+		(inconsistentDerivativesOnDisc(x_derivatives) ||
+		inconsistentDerivativesOnDisc(y_derivatives) ||
+		inconsistentDerivativesOnDisc(phi_derivatives) ||
+		inconsistentDerivativesOnDisc(theta_derivatives) ||
+		inconsistentDerivativesOnDisc(qop_derivatives) ||
+		inconsistentDerivativesOnDisc(t_derivatives)))
+		{
+		return startCov;
+	}
+	
     Jacobian jacobian;
     jacobian.setIdentity();
     jacobian.col(Acts::eLOC_0) = fitLinear(x_derivatives, h_steps);
@@ -146,7 +179,7 @@ struct covariance_validation_fixture {
     jacobian.col(Acts::eTHETA) = fitLinear(theta_derivatives, h_steps);
     jacobian.col(Acts::eQOP) = fitLinear(qop_derivatives, h_steps);
     jacobian.col(Acts::eT) = fitLinear(t_derivatives, h_steps);
-//~ std::cout << "jac:\n" << jacobian << std::endl;
+std::cout << "jac:\n" << jacobian << std::endl;
 //~ std::cout << "initial cov:\n" << startCov << std::endl;
 //~ std::cout << "cov:\n" << jacobian * startCov * jacobian.transpose() << std::endl;
     return jacobian * startCov * jacobian.transpose();

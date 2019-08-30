@@ -377,7 +377,7 @@ class AtlasStepper {
       covarianceTransport(state, surface, true);
       covOpt = state.cov;
     }
-
+std::cout << "result: " << gp.transpose() << " | " << mom.transpose() << std::endl;
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(covOpt), gp, mom,
                                charge(state), state.t0 + state.pVector[3],
@@ -1026,7 +1026,7 @@ class AtlasStepper {
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
-//~ std::cout << "atlas:\n" << J << std::endl;
+std::cout << "atlas:\n" << J << std::endl;
     state.cov = J * (*state.covariance) * J.transpose();
   }
 
