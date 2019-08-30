@@ -257,8 +257,8 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
   covariance_curvilinear(dpropagator, pT, 0_degree, 45_degree, 1_e, plimit);
   covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
       dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2, rand3,
-      true, true, 5e-1);
+      true, true, 8e-1);
   covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
       dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3,
-      true, true, 5e-3);
+      true, true, 8e-1);
 }
