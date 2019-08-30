@@ -115,7 +115,8 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
     CHECK_CLOSE_ABS(theta, VH::theta(tp->momentum()), 1e-4);
   // clang-format on
 
-  double r = (q * Bz != 0.) ? std::abs(pT / (q * Bz)) : std::numeric_limits<double>::max();
+  double r = (q * Bz != 0.) ? std::abs(pT / (q * Bz))
+                            : std::numeric_limits<double>::max();
 
   // calculate number of turns of helix
   double turns = options.pathLimit / (2 * M_PI * r) * sin(theta);
@@ -524,10 +525,10 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
 
-	if(calculated_cov == *(start.covariance()))
-		{return;
-		}
-		
+  if (calculated_cov == *(start.covariance())) {
+    return;
+  }
+
   CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
 }
 }  // namespace IntegrationTest

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -259,5 +259,6 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
       dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2, rand3,
       true, true, 5e-1);
   covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
-      dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3, true, true, 5e-3);
+      dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3,
+      true, true, 5e-3);
 }

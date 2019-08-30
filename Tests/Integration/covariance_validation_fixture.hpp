@@ -27,35 +27,36 @@ struct covariance_validation_fixture {
   covariance_validation_fixture(T propagator)
       : m_propagator(std::move(propagator)) {}
 
-	/// @brief This function tests whether the variations on a disc as target surface lead to results on different sides wrt the center of the disc. This would lead to a flip of the phi value on the surface and therewith to a huge variance in that parameter. It can only occur in this algorithm since the ridders algorithm is unaware of the target surface.
-	///
-	/// @param [in] derivatives Derivatives of a single parameter
-	///
-	/// @return Boolean result whether a phi jump occured
-	bool
-	inconsistentDerivativesOnDisc(std::vector<BoundVector>& derivatives) const
-	{
-		// Test each component with each other
-		for(unsigned int i = 0; i < derivatives.size(); i++)
-		{
-			bool jumpedAngle = true;
-			for(unsigned int j = 0; j < derivatives.size(); j++)
-			{
-				// If there is at least one with a similar angle then it seems to work properly
-				if(i != j && std::abs(derivatives[i](1) - derivatives[j](1)) < 0.5 * M_PI)
-				{
-					jumpedAngle = false;
-					break;
-				}
-			}
-			// Break if a jump was detected
-			if(jumpedAngle)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
+  /// @brief This function tests whether the variations on a disc as target
+  /// surface lead to results on different sides wrt the center of the disc.
+  /// This would lead to a flip of the phi value on the surface and therewith to
+  /// a huge variance in that parameter. It can only occur in this algorithm
+  /// since the ridders algorithm is unaware of the target surface.
+  ///
+  /// @param [in] derivatives Derivatives of a single parameter
+  ///
+  /// @return Boolean result whether a phi jump occured
+  bool inconsistentDerivativesOnDisc(
+      std::vector<BoundVector>& derivatives) const {
+    // Test each component with each other
+    for (unsigned int i = 0; i < derivatives.size(); i++) {
+      bool jumpedAngle = true;
+      for (unsigned int j = 0; j < derivatives.size(); j++) {
+        // If there is at least one with a similar angle then it seems to work
+        // properly
+        if (i != j &&
+            std::abs(derivatives[i](1) - derivatives[j](1)) < 0.5 * M_PI) {
+          jumpedAngle = false;
+          break;
+        }
+      }
+      // Break if a jump was detected
+      if (jumpedAngle) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /// Numerical transport of covariance using the ridder's algorithm
   /// this is for covariance propagation validation
@@ -68,13 +69,12 @@ struct covariance_validation_fixture {
     // nominal propagation
     const auto& nominal = endPars.parameters();
     const Surface& dest = endPars.referenceSurface();
-    
+
     // steps for estimating derivatives
     std::array<double, 4> h_steps = {{-4e-4, -2e-4, 2e-4, 4e-4}};
-    if(dest.type() == Surface::Disc)
-    {
+    if (dest.type() == Surface::Disc) {
       h_steps = {{-3e-5, -1e-5, 1e-5, 3e-5}};
-	}
+    }
 
     // - for planar surfaces the dest surface is a perfect destination
     // surface for the numerical propagation, as reference frame
@@ -120,14 +120,13 @@ struct covariance_validation_fixture {
                                   tp.template get<Acts::ePHI>() + h);
       const auto& r = m_propagator.propagate(tp, dest, var_options).value();
       phi_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-      
+
       double phi0 = nominal(Acts::ePHI);
       double phi1 = r.endParameters->parameters()(Acts::ePHI);
-      if(std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-		phi_derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
-	  else
-		if(std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-			phi_derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
+      if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+        phi_derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
+      else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+        phi_derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
     }
 
     // variation in theta
@@ -171,17 +170,16 @@ struct covariance_validation_fixture {
       t_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     }
 
-	if(dest.type() == Surface::Disc &&
-		(inconsistentDerivativesOnDisc(x_derivatives) ||
-		inconsistentDerivativesOnDisc(y_derivatives) ||
-		inconsistentDerivativesOnDisc(phi_derivatives) ||
-		inconsistentDerivativesOnDisc(theta_derivatives) ||
-		inconsistentDerivativesOnDisc(qop_derivatives) ||
-		inconsistentDerivativesOnDisc(t_derivatives)))
-		{
-		return startCov;
-	}
-	
+    if (dest.type() == Surface::Disc &&
+        (inconsistentDerivativesOnDisc(x_derivatives) ||
+         inconsistentDerivativesOnDisc(y_derivatives) ||
+         inconsistentDerivativesOnDisc(phi_derivatives) ||
+         inconsistentDerivativesOnDisc(theta_derivatives) ||
+         inconsistentDerivativesOnDisc(qop_derivatives) ||
+         inconsistentDerivativesOnDisc(t_derivatives))) {
+      return startCov;
+    }
+
     Jacobian jacobian;
     jacobian.setIdentity();
     jacobian.col(Acts::eLOC_0) = fitLinear(x_derivatives, h_steps);

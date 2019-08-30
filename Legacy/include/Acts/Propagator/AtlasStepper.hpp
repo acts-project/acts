@@ -377,7 +377,7 @@ class AtlasStepper {
       covarianceTransport(state, surface, true);
       covOpt = state.cov;
     }
-    
+
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(covOpt), gp, mom,
                                charge(state), state.t0 + state.pVector[3],
@@ -699,7 +699,7 @@ class AtlasStepper {
     P[44] -= (s4 * P[56]);
     P[45] -= (s4 * P[57]);
     P[46] -= (s4 * P[58]);
-	
+
     double P3, P4, C = P[4] * P[4] + P[5] * P[5];
     if (C > 1.e-20) {
       C = 1. / C;
@@ -1143,22 +1143,28 @@ class AtlasStepper {
       // Evaluate the time propagation
       state.stepping.pVector[3] +=
           h * std::hypot(1, state.options.mass / momentum(state.stepping));
-      state.stepping.pVector[59] = std::hypot(1, state.options.mass / momentum(state.stepping));
+      state.stepping.pVector[59] =
+          std::hypot(1, state.options.mass / momentum(state.stepping));
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-		  
-		double dtdl = h * state.options.mass * state.options.mass * charge(state.stepping) /
-                (momentum(state.stepping) * std::hypot(1., state.options.mass / momentum(state.stepping)));
-        //~ state.stepping.pVector[11] = 1. * state.stepping.pVector[11] + dtdl * state.stepping.pVector[15];
-        //~ state.stepping.pVector[19] = 1. * state.stepping.pVector[19] + dtdl * state.stepping.pVector[23];
-        //~ state.stepping.pVector[27] = 1. * state.stepping.pVector[27] + dtdl * state.stepping.pVector[31];
-        //~ state.stepping.pVector[35] = 1. * state.stepping.pVector[35] + dtdl * state.stepping.pVector[39];
-        //~ state.stepping.pVector[43] = 1. * state.stepping.pVector[43] + dtdl * state.stepping.pVector[47];
-        //~ state.stepping.pVector[51] = 1. * state.stepping.pVector[51] + dtdl * state.stepping.pVector[55];
+        double dtdl =
+            h * state.options.mass * state.options.mass *
+            charge(state.stepping) /
+            (momentum(state.stepping) *
+             std::hypot(1., state.options.mass / momentum(state.stepping)));
+        //~ state.stepping.pVector[11] = 1. * state.stepping.pVector[11] + dtdl
+        //* state.stepping.pVector[15]; ~ state.stepping.pVector[19] = 1. *
+        //state.stepping.pVector[19] + dtdl * state.stepping.pVector[23]; ~
+        //state.stepping.pVector[27] = 1. * state.stepping.pVector[27] + dtdl *
+        //state.stepping.pVector[31]; ~ state.stepping.pVector[35] = 1. *
+        //state.stepping.pVector[35] + dtdl * state.stepping.pVector[39]; ~
+        //state.stepping.pVector[43] = 1. * state.stepping.pVector[43] + dtdl *
+        //state.stepping.pVector[47]; ~ state.stepping.pVector[51] = 1. *
+        //state.stepping.pVector[51] + dtdl * state.stepping.pVector[55];
         state.stepping.pVector[43] += dtdl;
-        
+
         // Jacobian calculation
         //
         double* d2A = &state.stepping.pVector[28];
@@ -1246,7 +1252,7 @@ class AtlasStepper {
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
-      
+
       state.stepping.pathAccumulated += h;
       return h;
     }

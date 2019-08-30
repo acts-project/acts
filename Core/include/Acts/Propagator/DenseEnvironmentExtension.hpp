@@ -166,7 +166,7 @@ struct DenseEnvironmentExtension {
         std::hypot(1, state.options.mass / newMomentum);
     // Update time
     state.stepping.dt += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
-    
+
     return true;
   }
 
@@ -294,41 +294,47 @@ struct DenseEnvironmentExtension {
     // Evaluation of the dLambda''/dlambda term
     D(7, 7) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
 
-	// The following comment lines refer to the application of the time being treated as a position. Since t and qop are treated independently for now, this just serves as entry point for building their relation
+    // The following comment lines refer to the application of the time being
+    // treated as a position. Since t and qop are treated independently for now,
+    // this just serves as entry point for building their relation
     //~ double dtpp1dl = -state.options.mass * state.options.mass * qop[0] *
-                     //~ qop[0] *
-                     //~ (3. * g + qop[0] * dgdqop(energy[0], state.options.mass,
-                                               //~ state.options.absPdgCode,
-                                               //~ state.options.meanEnergyLoss));
+    //~ qop[0] *
+    //~ (3. * g + qop[0] * dgdqop(energy[0], state.options.mass,
+    //~ state.options.absPdgCode,
+    //~ state.options.meanEnergyLoss));
 
-	double dtp1dl = qop[0] * state.options.mass * state.options.mass / std::hypot(1, qop[0] * state.options.mass);
+    double dtp1dl = qop[0] * state.options.mass * state.options.mass /
+                    std::hypot(1, qop[0] * state.options.mass);
     double qopNew = qop[0] + half_h * Lambdappi[0];
-    
-    //~ double dtpp2dl = -state.options.mass * state.options.mass * qopNew *
-                     //~ qopNew *
-                     //~ (3. * g * (1. + half_h * jdL[0]) +
-                      //~ qopNew * dgdqop(energy[1], state.options.mass,
-                                      //~ state.options.absPdgCode,
-                                      //~ state.options.meanEnergyLoss));
-                                 
-	double dtp2dl = qopNew * state.options.mass * state.options.mass / std::hypot(1, qopNew * state.options.mass);
-    qopNew = qop[0] + half_h * Lambdappi[1];
-    
-    //~ double dtpp3dl = -state.options.mass * state.options.mass * qopNew *
-                     //~ qopNew *
-                     //~ (3. * g * (1. + half_h * jdL[1]) +
-                      //~ qopNew * dgdqop(energy[2], state.options.mass,
-                                      //~ state.options.absPdgCode,
-                                      //~ state.options.meanEnergyLoss));
 
-    double dtp3dl = qopNew * state.options.mass * state.options.mass / std::hypot(1, qopNew * state.options.mass);
-	qopNew = qop[0] + half_h * Lambdappi[2];
-	double dtp4dl = qopNew * state.options.mass * state.options.mass / std::hypot(1, qopNew * state.options.mass);
-    
+    //~ double dtpp2dl = -state.options.mass * state.options.mass * qopNew *
+    //~ qopNew *
+    //~ (3. * g * (1. + half_h * jdL[0]) +
+    //~ qopNew * dgdqop(energy[1], state.options.mass,
+    //~ state.options.absPdgCode,
+    //~ state.options.meanEnergyLoss));
+
+    double dtp2dl = qopNew * state.options.mass * state.options.mass /
+                    std::hypot(1, qopNew * state.options.mass);
+    qopNew = qop[0] + half_h * Lambdappi[1];
+
+    //~ double dtpp3dl = -state.options.mass * state.options.mass * qopNew *
+    //~ qopNew *
+    //~ (3. * g * (1. + half_h * jdL[1]) +
+    //~ qopNew * dgdqop(energy[2], state.options.mass,
+    //~ state.options.absPdgCode,
+    //~ state.options.meanEnergyLoss));
+
+    double dtp3dl = qopNew * state.options.mass * state.options.mass /
+                    std::hypot(1, qopNew * state.options.mass);
+    qopNew = qop[0] + half_h * Lambdappi[2];
+    double dtp4dl = qopNew * state.options.mass * state.options.mass /
+                    std::hypot(1, qopNew * state.options.mass);
+
     //~ D(3, 7) = h * state.options.mass * state.options.mass * qop[0] /
-                //~ std::hypot(1., state.options.mass * qop[0])
-                //~ + h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
-                
+    //~ std::hypot(1., state.options.mass * qop[0])
+    //~ + h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
+
     D(3, 7) = (h / 6.) * (dtp1dl + 2. * (dtp2dl + dtp3dl) + dtp4dl);
     return true;
   }

@@ -208,8 +208,11 @@ struct DefaultExtension {
 
     dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
-	D(3, 7) = h * state.options.mass * state.options.mass * stepper.charge(state.stepping) /
-                (stepper.momentum(state.stepping) * std::hypot(1., state.options.mass / stepper.momentum(state.stepping)));
+    D(3, 7) =
+        h * state.options.mass * state.options.mass *
+        stepper.charge(state.stepping) /
+        (stepper.momentum(state.stepping) *
+         std::hypot(1., state.options.mass / stepper.momentum(state.stepping)));
     return true;
   }
 };
