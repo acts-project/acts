@@ -35,6 +35,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/RiddersPropagator.hpp"
 
 #include "PropagationTestHelper.hpp"
 

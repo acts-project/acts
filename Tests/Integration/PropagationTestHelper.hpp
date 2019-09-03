@@ -15,8 +15,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include "RiddersPropagator.hpp"
-
 namespace tt = boost::test_tools;
 
 namespace Acts {
