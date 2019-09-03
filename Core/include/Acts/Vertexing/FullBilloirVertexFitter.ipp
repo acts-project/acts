@@ -219,7 +219,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
-    std::vector<std::unique_ptr<BoundSymMatrix>> covDeltaPmat(nTracks);
+    std::vector<std::optional<BoundSymMatrix>> covDeltaPmat(nTracks);
 
     iTrack = 0;
     for (auto& bTrack : billoirTracks) {
@@ -274,8 +274,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       covMat.block<3, 3>(4, 4) = PPmat;
 
       // covdelta_P calculation
-      covDeltaPmat[iTrack] = std::make_unique<BoundSymMatrix>(
-          transMat * covMat * transMat.transpose());
+      covDeltaPmat[iTrack] = transMat * covMat * transMat.transpose();
       // Calculate chi2 per track.
       bTrack.chi2 =
           ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
@@ -334,8 +333,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
             trackMomenta[iTrack](2), 0.;
 
         BoundParameters refittedParams(vFitterOptions.geoContext,
-                                       std::move(covDeltaPmat[iTrack]),
-                                       paramVec, perigee);
+                                       covDeltaPmat[iTrack], paramVec, perigee);
 
         TrackAtVertex<input_track_t> trackVx(bTrack.chi2, refittedParams,
                                              bTrack.originalTrack);

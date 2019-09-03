@@ -39,7 +39,6 @@ BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
 }
 
 /// Unit tests for LineBounds properties
-BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(LineBoundsProperties, 1)
 BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   // LineBounds object of radius 0.5 and halfz 20
   double nominalRadius{0.5};
@@ -61,8 +60,20 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   const Vector2D unitZ{0.0, 1.0};
   const Vector2D unitR{1.0, 0.0};
   const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
+  // This fails because the bounds are not inclusive.
   BOOST_CHECK(
-      lineBoundsObject.inside(atRadius, trueBoundaryCheckWithTolerance));
+      !lineBoundsObject.inside(atRadius, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(
+      !lineBoundsObject.inside(beyondEnd, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(lineBoundsObject.inside(unitZ, trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(!lineBoundsObject.inside(unitR, trueBoundaryCheckWithTolerance));
+
+  /// Test negative redius inside
+
+  BOOST_CHECK(lineBoundsObject.inside(Vector2D{-0.2, 10},
+                                      trueBoundaryCheckWithTolerance));
+  BOOST_CHECK(!lineBoundsObject.inside(Vector2D{-0.8, 10},
+                                       trueBoundaryCheckWithTolerance));
 
   /// test for distanceToBoundary
   CHECK_CLOSE_REL(lineBoundsObject.distanceToBoundary(unitR), 1.,

@@ -106,9 +106,6 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     paramVec << d0v + d0Dist(gen), z0v + z0Dist(gen), phiDist(gen),
         thetaDist(gen), q / pTDist(gen), 0.;
 
-    // Fill vector of track objects with simple covariance matrix
-    std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-
     // Resolutions
     double resD0 = resIPDist(gen);
     double resZ0 = resIPDist(gen);
@@ -116,9 +113,12 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     double resTh = resAngDist(gen);
     double resQp = resQoPDist(gen);
 
-    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
-        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+    // Fill vector of track objects with simple covariance matrix
+    Covariance covMat;
+
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
     tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                      perigeeSurface));
   }

@@ -28,6 +28,8 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 
+#include "Acts/Vertexing/VertexFinderConcept.hpp"
+
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
@@ -114,9 +116,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
           q / pTDist(gen), 0.;
 
-      // Fill vector of track objects with simple covariance matrix
-      std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-
       // Resolutions
       double resD0 = resIPDist(gen);
       double resZ0 = resIPDist(gen);
@@ -124,20 +123,26 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       double resTh = resAngDist(gen);
       double resQp = resQoPDist(gen);
 
-      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
+      // Fill vector of track objects with simple covariance matrix
+      Covariance covMat;
+
+      covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
       tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
 
-    ZScanVertexFinder<ConstantBField, BoundParameters,
-                      Propagator<EigenStepper<ConstantBField>>>::Config
-        cfg(propagator);
+    using VertexFinder =
+        ZScanVertexFinder<ConstantBField, BoundParameters,
+                          Propagator<EigenStepper<ConstantBField>>>;
 
-    ZScanVertexFinder<ConstantBField, BoundParameters,
-                      Propagator<EigenStepper<ConstantBField>>>
-        finder(std::move(cfg));
+    static_assert(VertexFinderConcept<VertexFinder>,
+                  "Vertex finder does not fulfill vertex finder concept.");
+
+    VertexFinder::Config cfg(propagator);
+
+    VertexFinder finder(std::move(cfg));
 
     VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
@@ -216,9 +221,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
       paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
           q / pTDist(gen), 0.;
 
-      // Fill vector of track objects with simple covariance matrix
-      std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-
       // Resolutions
       double resD0 = resIPDist(gen);
       double resZ0 = resIPDist(gen);
@@ -226,25 +228,31 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
       double resTh = resAngDist(gen);
       double resQp = resQoPDist(gen);
 
-      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
+      // Fill vector of track objects with simple covariance matrix
+      Covariance covMat;
+
+      covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
       tracks.push_back(InputTrack(BoundParameters(tgContext, std::move(covMat),
                                                   paramVec, perigeeSurface)));
     }
 
-    ZScanVertexFinder<ConstantBField, InputTrack,
-                      Propagator<EigenStepper<ConstantBField>>>::Config
-        cfg(propagator);
+    using VertexFinder =
+        ZScanVertexFinder<ConstantBField, InputTrack,
+                          Propagator<EigenStepper<ConstantBField>>>;
+
+    static_assert(VertexFinderConcept<VertexFinder>,
+                  "Vertex finder does not fulfill vertex finder concept.");
+
+    VertexFinder::Config cfg(propagator);
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack
     std::function<BoundParameters(InputTrack)> extractParameters =
         [](InputTrack params) { return params.parameters(); };
 
-    ZScanVertexFinder<ConstantBField, InputTrack,
-                      Propagator<EigenStepper<ConstantBField>>>
-        finder(std::move(cfg), extractParameters);
+    VertexFinder finder(std::move(cfg), extractParameters);
 
     VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
 

@@ -28,6 +28,8 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 
+#include "Acts/Vertexing/VertexFinderConcept.hpp"
+
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
@@ -90,9 +92,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Set up propagator with void navigator
     Propagator<EigenStepper<ConstantBField>> propagator(stepper);
 
-    typedef FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                                    Propagator<EigenStepper<ConstantBField>>>
-        BilloirFitter;
+    using BilloirFitter =
+        FullBilloirVertexFitter<ConstantBField, BoundParameters,
+                                Propagator<EigenStepper<ConstantBField>>>;
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg(bField, propagator);
@@ -100,10 +102,14 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     BilloirFitter bFitter(vertexFitterCfg);
 
     // Vertex Finder
-    typedef IterativeVertexFinder<ConstantBField, BoundParameters,
-                                  Propagator<EigenStepper<ConstantBField>>,
-                                  BilloirFitter>
-        VertexFinder;
+    using VertexFinder =
+        IterativeVertexFinder<ConstantBField, BoundParameters,
+                              Propagator<EigenStepper<ConstantBField>>,
+                              BilloirFitter>;
+
+    static_assert(VertexFinderConcept<VertexFinder>,
+                  "Vertex finder does not fulfill vertex finder concept.");
+
     VertexFinder::Config cfg(bField, std::move(bFitter), propagator);
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -155,9 +161,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
             q / pTDist(gen), 0.;
 
-        // Fill vector of track objects with simple covariance matrix
-        std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-
         // Resolutions
         double res_d0 = resIPDist(gen);
         double res_z0 = resIPDist(gen);
@@ -165,8 +168,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         double res_th = resAngDist(gen);
         double res_qp = resQoPDist(gen);
 
-        (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0,
-            0., 0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
+        // Fill vector of track objects with simple covariance matrix
+        Covariance covMat;
+        covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0.,
+            0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto params = BoundParameters(tgContext, std::move(covMat), paramVec,
@@ -191,6 +196,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     // Retrieve vertices found by vertex finder
     auto vertexCollection = *res;

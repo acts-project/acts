@@ -116,8 +116,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
+  CurvilinearParameters start(cov, pos, mom, q, time);
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = 10_cm;
@@ -167,8 +166,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
+  CurvilinearParameters start(cov, pos, mom, q, time);
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -243,8 +241,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
+  CurvilinearParameters start(cov, pos, mom, q, time);
 
   using DebugOutput = detail::DebugOutputActor;
 
@@ -308,8 +305,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  auto covPtr = std::make_unique<const Covariance>(cov);
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
+  CurvilinearParameters start(cov, pos, mom, q, time);
 
   // Action list and abort list
   using DebugOutput = detail::DebugOutputActor;

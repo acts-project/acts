@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector3D pos(0., 0., 0.);
   Vector3D mom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(nullptr, pos, mom,
+  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(std::nullopt, pos, mom,
                                                        42_ns);
 
   MagneticFieldContext mc;

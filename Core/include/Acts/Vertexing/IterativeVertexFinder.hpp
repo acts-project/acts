@@ -67,6 +67,7 @@ class IterativeVertexFinder {
                 "Vertex fitter does not fulfill vertex fitter concept.");
 
  public:
+  using InputTrack = input_track_t;
   /// @struct Config Configuration struct
   struct Config {
     /// @brief Finder configuration
@@ -231,7 +232,7 @@ class IterativeVertexFinder {
   /// @param seedVertex Seed vertex
   /// @param perigeesToFitOut Perigees to fit
   /// @param perigeesToFitSplitVertexOut Perigees to fit split vertex
-  void fillPerigeesToFit(
+  Result<void> fillPerigeesToFit(
       const std::vector<input_track_t>& perigeeList,
       const Vertex<input_track_t>& seedVertex,
       std::vector<input_track_t>& perigeesToFitOut,

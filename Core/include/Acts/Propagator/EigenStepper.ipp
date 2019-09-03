@@ -16,13 +16,13 @@ auto Acts::EigenStepper<B, C, E, A>::boundState(State& state,
                                                 bool reinitialize) const
     -> BoundState {
   // Transport the covariance to here
-  std::unique_ptr<const Covariance> covPtr = nullptr;
+  std::optional<Covariance> covOpt = std::nullopt;
   if (state.covTransport) {
     covarianceTransport(state, surface, reinitialize);
-    covPtr = std::make_unique<const Covariance>(state.cov);
+    covOpt = state.cov;
   }
   // Create the bound parameters
-  BoundParameters parameters(state.geoContext, std::move(covPtr), state.pos,
+  BoundParameters parameters(state.geoContext, std::move(covOpt), state.pos,
                              state.p * state.dir, state.q, state.t0 + state.dt,
                              surface.getSharedPtr());
   // Create the bound state
@@ -41,13 +41,13 @@ auto Acts::EigenStepper<B, C, E, A>::curvilinearState(State& state,
                                                       bool reinitialize) const
     -> CurvilinearState {
   // Transport the covariance to here
-  std::unique_ptr<const Covariance> covPtr = nullptr;
+  std::optional<Covariance> covOpt = std::nullopt;
   if (state.covTransport) {
     covarianceTransport(state, reinitialize);
-    covPtr = std::make_unique<const Covariance>(state.cov);
+    covOpt = state.cov;
   }
   // Create the curvilinear parameters
-  CurvilinearParameters parameters(std::move(covPtr), state.pos,
+  CurvilinearParameters parameters(std::move(state.cov), state.pos,
                                    state.p * state.dir, state.q,
                                    state.t0 + state.dt);
   // Create the bound state
@@ -69,7 +69,7 @@ void Acts::EigenStepper<B, C, E, A>::update(State& state,
   state.dir = mom.normalized();
   state.p = mom.norm();
   state.dt = pars.time();
-  if (pars.covariance() != nullptr) {
+  if (pars.covariance()) {
     state.cov = (*(pars.covariance()));
   }
 }

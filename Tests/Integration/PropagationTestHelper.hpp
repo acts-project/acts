@@ -102,7 +102,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   double q = charge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters pars(nullptr, pos, mom, q, time);
+  CurvilinearParameters pars(std::nullopt, pos, mom, q, time);
 
   // do propagation
   const auto& tp = propagator.propagate(pars, options).value().endParameters;
@@ -196,7 +196,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
   double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(nullptr, pos, mom, q, time);
+  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
 
   // do forward-backward propagation
   const auto& fwdResult = propagator.propagate(start, fwdOptions).value();
@@ -258,7 +258,7 @@ std::pair<Vector3D, double> to_cylinder(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
-  std::unique_ptr<const Covariance> covPtr = nullptr;
+  std::optional<Covariance> covOpt = std::nullopt;
   if (covtransport) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -271,15 +271,15 @@ std::pair<Vector3D, double> to_cylinder(
      0.5, 0, 0, 0, 1_e / 10_GeV, 0,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
-    covPtr = std::make_unique<const Covariance>(cov);
+    covOpt = cov;
   }
 
   // do propagation of the start parameters
   TrackParametersBase* start;
   if (q == 0.)
-    start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
+    start = new NeutralCurvilinearParameters(covOpt, pos, mom, time);
   else
-    start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
+    start = new CurvilinearParameters(covOpt, pos, mom, q, time);
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
@@ -326,7 +326,7 @@ std::pair<Vector3D, double> to_surface(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
 
-  std::unique_ptr<const Covariance> covPtr = nullptr;
+  std::optional<Covariance> covOpt = std::nullopt;
   if (covtransport) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -339,14 +339,14 @@ std::pair<Vector3D, double> to_surface(
      0.5, 0, 0, 0, 1_e / 10_GeV, 0,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
-    covPtr = std::make_unique<const Covariance>(cov);
+    covOpt = cov;
   }
   // Create curvilinear start parameters
   TrackParametersBase* start;
   if (q == 0.)
-    start = new NeutralCurvilinearParameters(std::move(covPtr), pos, mom, time);
+    start = new NeutralCurvilinearParameters(covOpt, pos, mom, time);
   else
-    start = new CurvilinearParameters(std::move(covPtr), pos, mom, q, time);
+    start = new CurvilinearParameters(covOpt, pos, mom, q, time);
 
   const auto result_s = propagator.propagate(*start, options).value();
   const auto& tp_s = result_s.endParameters;
@@ -430,11 +430,10 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
    0.5, 0, 0, 0, 1_e / 10_GeV, 0,
    0, 0, 0, 0, 0, 1_us;
   // clang-format on
-  auto covPtr = std::make_unique<const Covariance>(cov);
 
   // do propagation of the start parameters
-  CurvilinearParameters start(std::move(covPtr), pos, mom, q, time);
-  CurvilinearParameters start_wo_c(nullptr, pos, mom, q, time);
+  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearParameters start_wo_c(std::nullopt, pos, mom, q, time);
 
   const auto result = propagator.propagate(start, options).value();
   const auto& tp = result.endParameters;
@@ -488,10 +487,8 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
    0, 0, 0, 0, 0, 1_us;
   // clang-format on
 
-  auto covPtr = std::make_unique<const Covariance>(cov);
-
   // create curvilinear start parameters
-  CurvilinearParameters start_c(nullptr, pos, mom, q, time);
+  CurvilinearParameters start_c(std::nullopt, pos, mom, q, time);
   const auto result_c = propagator.propagate(start_c, options).value();
   const auto& tp_c = result_c.endParameters;
 
@@ -508,9 +505,8 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
 
   auto startSurface =
       Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
-  BoundParameters start(tgContext, std::move(covPtr), pos, mom, q, time,
-                        startSurface);
-  BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, time,
+  BoundParameters start(tgContext, cov, pos, mom, q, time, startSurface);
+  BoundParameters start_wo_c(tgContext, std::nullopt, pos, mom, q, time,
                              startSurface);
 
   // increase the path limit - to be safe hitting the surface

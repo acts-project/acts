@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
       pars_array[4], pars_array[5];
 
   // constructor from parameter vector: predicted filtered, smoothed
-  BoundParameters ataPlane(tgContext, nullptr, pars, plane);
+  BoundParameters ataPlane(tgContext, std::nullopt, pars, plane);
 
   // The parameter track state from the parameters
   BoundTrackState pts(std::move(ataPlane));
@@ -129,9 +129,9 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   }
 
   // Create predicted, filtered and smoothed parameters
-  BoundParameters ataPlaneUpdt(tgContext, nullptr, pars, plane);
-  BoundParameters ataPlanePred(tgContext, nullptr, pars, plane);
-  BoundParameters ataPlaneSmth(tgContext, nullptr, pars, plane);
+  BoundParameters ataPlaneUpdt(tgContext, std::nullopt, pars, plane);
+  BoundParameters ataPlanePred(tgContext, std::nullopt, pars, plane);
+  BoundParameters ataPlaneSmth(tgContext, std::nullopt, pars, plane);
 
   // Get the predicted parameters back from the trackState
   auto& ptsfList = trackStates[2];
@@ -157,11 +157,11 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   BOOST_CHECK(ataPlanefListPred2D);
 
   // Test the sorting helper
-  BoundParameters ataPlaneAt1(tgContext, nullptr, pars, plane);
+  BoundParameters ataPlaneAt1(tgContext, std::nullopt, pars, plane);
   BoundTrackState ataPlaneState1(std::move(ataPlaneAt1));
   ataPlaneState1.parameter.pathLength = 1.;
 
-  BoundParameters ataPlaneAt2(tgContext, nullptr, pars, plane);
+  BoundParameters ataPlaneAt2(tgContext, std::nullopt, pars, plane);
   BoundTrackState ataPlaneState2(std::move(ataPlaneAt2));
   ataPlaneState2.parameter.pathLength = 2.;
 

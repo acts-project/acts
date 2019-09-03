@@ -9,6 +9,7 @@
 #pragma once
 // STL include(s)
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <utility>
 
@@ -106,8 +107,6 @@ class ParameterSet {
   using ParVector_t = ActsVector<ParValue_t, NPars>;
   /// type of covariance matrix
   using CovMatrix_t = ActsSymMatrix<ParValue_t, NPars>;
-  /// type for unique pointer to covariance matrix
-  using CovPtr_t = std::unique_ptr<const CovMatrix_t>;
 
   /**
    * @brief initialize values of stored parameters and their covariance matrix
@@ -120,10 +119,13 @@ class ParameterSet {
    * @param values values for the remaining stored parameters
    */
   template <typename... Tail>
-  ParameterSet(CovPtr_t cov,
+  ParameterSet(std::optional<CovMatrix_t> cov,
                std::enable_if_t<sizeof...(Tail) + 1 == NPars, ParValue_t> head,
                Tail... values)
-      : m_vValues(NPars), m_pCovariance(std::move(cov)) {
+      : m_vValues(NPars) {
+    if (cov) {
+      m_optCovariance = std::move(*cov);
+    }
     detail::initialize_parset<ParID_t, params...>::init(*this, head, values...);
   }
 
@@ -139,8 +141,11 @@ class ParameterSet {
    * @param cov unique pointer to covariance matrix (nullptr is accepted)
    * @param values vector with parameter values
    */
-  ParameterSet(CovPtr_t cov, const ParVector_t& values)
-      : m_vValues(NPars), m_pCovariance(std::move(cov)) {
+  ParameterSet(std::optional<CovMatrix_t> cov, const ParVector_t& values)
+      : m_vValues(NPars) {
+    if (cov) {
+      m_optCovariance = std::move(*cov);
+    }
     detail::initialize_parset<ParID_t, params...>::init(*this, values);
   }
 
@@ -151,11 +156,7 @@ class ParameterSet {
    * object
    */
   ParameterSet(const ParSet_t& copy)
-      : m_vValues(copy.m_vValues), m_pCovariance(nullptr) {
-    if (copy.m_pCovariance) {
-      m_pCovariance = std::make_unique<const CovMatrix_t>(*copy.m_pCovariance);
-    }
-  }
+      : m_vValues(copy.m_vValues), m_optCovariance(copy.m_optCovariance) {}
 
   /**
    * @brief move constructor
@@ -163,9 +164,11 @@ class ParameterSet {
    * @param copy object whose content is moved into the new @c ParameterSet
    * object
    */
-  ParameterSet(ParSet_t&& copy)
-      : m_vValues(std::move(copy.m_vValues)),
-        m_pCovariance(std::move(copy.m_pCovariance)) {}
+  ParameterSet(ParSet_t&& copy) : m_vValues(std::move(copy.m_vValues)) {
+    if (copy.m_optCovariance) {
+      m_optCovariance = std::move(*copy.m_optCovariance);
+    }
+  }
 
   /**
    * @brief standard destructor
@@ -179,10 +182,7 @@ class ParameterSet {
    */
   ParSet_t& operator=(const ParSet_t& rhs) {
     m_vValues = rhs.m_vValues;
-    m_pCovariance =
-        (rhs.m_pCovariance
-             ? std::make_unique<const CovMatrix_t>(*rhs.m_pCovariance)
-             : nullptr);
+    m_optCovariance = rhs.m_optCovariance;
     return *this;
   }
 
@@ -193,7 +193,7 @@ class ParameterSet {
    */
   ParSet_t& operator=(ParSet_t&& rhs) {
     m_vValues = std::move(rhs.m_vValues);
-    m_pCovariance = std::move(rhs.m_pCovariance);
+    m_optCovariance = std::move(rhs.m_optCovariance);
     return *this;
   }
 
@@ -203,7 +203,7 @@ class ParameterSet {
   friend void swap(ParSet_t& first, ParSet_t& second) noexcept {
     using std::swap;
     swap(first.m_vValues, second.m_vValues);
-    swap(first.m_pCovariance, second.m_pCovariance);
+    swap(first.m_optCovariance, second.m_optCovariance);
   }
 
   /**
@@ -310,7 +310,9 @@ class ParameterSet {
    *
    * @return raw pointer to covariance matrix (can be a nullptr)
    */
-  const CovMatrix_t* getCovariance() const { return m_pCovariance.get(); }
+  const std::optional<CovMatrix_t>& getCovariance() const {
+    return m_optCovariance;
+  }
 
   /**
    * @brief access uncertainty for individual parameter
@@ -326,9 +328,9 @@ class ParameterSet {
    */
   template <ParID_t parameter>
   ParValue_t getUncertainty() const {
-    if (m_pCovariance) {
+    if (m_optCovariance) {
       size_t index = getIndex<parameter>();
-      return sqrt((*m_pCovariance)(index, index));
+      return sqrt((*m_optCovariance)(index, index));
     } else {
       return -1;
     }
@@ -341,7 +343,7 @@ class ParameterSet {
    *
    * @param cov unique pointer to new covariance matrix (nullptr is accepted)
    */
-  void setCovariance(CovPtr_t cov) { m_pCovariance = std::move(cov); }
+  void setCovariance(const CovMatrix_t& cov) { m_optCovariance = cov; }
 
   /**
    * @brief equality operator
@@ -361,13 +363,13 @@ class ParameterSet {
       return false;
     }
     // both have covariance matrices set
-    if ((m_pCovariance && rhs.m_pCovariance) &&
-        (*m_pCovariance != *rhs.m_pCovariance)) {
+    if ((m_optCovariance && rhs.m_optCovariance) &&
+        (*m_optCovariance != *rhs.m_optCovariance)) {
       return false;
     }
     // only one has a covariance matrix set
-    if ((m_pCovariance && !rhs.m_pCovariance) ||
-        (!m_pCovariance && rhs.m_pCovariance)) {
+    if ((m_optCovariance && !rhs.m_optCovariance) ||
+        (!m_optCovariance && rhs.m_optCovariance)) {
       return false;
     }
 
@@ -531,9 +533,10 @@ class ParameterSet {
   }
 
  private:
-  ParVector_t
-      m_vValues;  ///< column vector containing values of local parameters
-  CovPtr_t m_pCovariance;  ///< unique pointer to covariance matrix
+  ParVector_t m_vValues{ParVector_t::Zero()};  ///< column vector containing
+                                               ///< values of local parameters
+  std::optional<CovMatrix_t> m_optCovariance{
+      std::nullopt};  ///< an optional covariance matrix
 
   static const Projection_t sProjector;  ///< matrix to project full parameter
                                          /// vector onto local parameter space

@@ -54,10 +54,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
-  BoundParameters pars(
-      tgContext,
-      std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
-      parValues, cylinder);
+  BoundParameters pars(tgContext, covTrk, parValues, cylinder);
 
   // "update" track state with "prediction"
   mState.parameter.predicted = std::move(pars);

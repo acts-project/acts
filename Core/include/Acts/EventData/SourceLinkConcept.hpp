@@ -43,8 +43,14 @@ namespace concept {
     constexpr static bool copyable = std::is_copy_constructible_v<T>;
     static_assert(copyable, "Source link must be copy constructible");
 
+    constexpr static bool default_constructible =
+        std::is_default_constructible_v<T>;
+    static_assert(default_constructible,
+                  "Source link must be default-constructible");
+
     constexpr static bool value =
-        concept ::require<comparison_works, surface_method_exists, copyable>;
+        concept ::require<comparison_works, surface_method_exists, copyable,
+                          default_constructible>;
   };
   }  // namespace detail_slc
 }  // namespace concept

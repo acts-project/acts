@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/detail/GridFwd.hpp"
+
 #include <array>
 #include <numeric>
 #include <set>

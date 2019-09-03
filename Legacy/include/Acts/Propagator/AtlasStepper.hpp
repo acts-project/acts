@@ -371,13 +371,14 @@ class AtlasStepper {
 
     // The transport of the covariance
     std::unique_ptr<const Covariance> cov = nullptr;
+    std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport) {
       covarianceTransport(state, surface, true);
-      cov = std::make_unique<const Covariance>(state.cov);
+      covOpt = state.cov;
     }
 
     // Fill the end parameters
-    BoundParameters parameters(state.geoContext, std::move(cov), gp, mom,
+    BoundParameters parameters(state.geoContext, std::move(covOpt), gp, mom,
                                charge(state), state.t0 + state.pVector[3],
                                surface.getSharedPtr());
 
@@ -404,13 +405,13 @@ class AtlasStepper {
     Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);
 
-    std::unique_ptr<const Covariance> cov = nullptr;
+    std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport) {
       covarianceTransport(state, true);
-      cov = std::make_unique<const Covariance>(state.cov);
+      covOpt = state.cov;
     }
 
-    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state),
+    CurvilinearParameters parameters(std::move(covOpt), gp, mom, charge(state),
                                      state.t0 + state.pVector[3]);
 
     return CurvilinearState(std::move(parameters), state.jacobian,

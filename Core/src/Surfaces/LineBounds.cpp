@@ -37,7 +37,7 @@ std::vector<TDD_real_t> Acts::LineBounds::valueStore() const {
 
 bool Acts::LineBounds::inside(const Acts::Vector2D& lpos,
                               const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lpos, Vector2D(0, -halflengthZ()),
+  return bcheck.isInside(lpos, Vector2D(-r(), -halflengthZ()),
                          Vector2D(r(), halflengthZ()));
 }
 

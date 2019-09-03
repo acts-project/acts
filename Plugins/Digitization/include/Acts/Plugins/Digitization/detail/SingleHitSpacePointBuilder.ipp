@@ -1,23 +1,23 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
-
-Acts::Vector2D Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::localCoords(
-    const PlanarModuleCluster& cluster) const {
+template <typename Cluster>
+Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
+    const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
   Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
   return local;
 }
 
-Acts::Vector3D Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::globalCoords(
-    const GeometryContext& gctx, const PlanarModuleCluster& cluster) const {
+template <typename Cluster>
+Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
+    const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
 
@@ -28,15 +28,15 @@ Acts::Vector3D Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::globalCoords(
   return pos;
 }
 
-void Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::calculateSpacePoints(
-    const GeometryContext& gctx,
-    const std::vector<const Acts::PlanarModuleCluster*>& clusters,
-    std::vector<Acts::SingleHitSpacePoint>& spacePointStorage) const {
+template <typename Cluster>
+void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
+    const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,
+    std::vector<Acts::SpacePoint<Cluster>>& spacePointStorage) const {
   // Set the space point for all stored hits
   for (const auto& c : clusters) {
-    Acts::SingleHitSpacePoint spacePoint;
-    spacePoint.spacePoint = globalCoords(gctx, *c);
-    spacePoint.clusterModule = c;
+    Acts::SpacePoint<Cluster> spacePoint;
+    spacePoint.vector = globalCoords(gctx, *c);
+    spacePoint.clusterModule.push_back(c);
     spacePointStorage.push_back(std::move(spacePoint));
   }
 }

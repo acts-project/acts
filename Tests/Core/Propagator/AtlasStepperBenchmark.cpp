@@ -89,11 +89,11 @@ int main(int argc, char* argv[]) {
          0, 0, 0, 0, 0, 0;
   // clang-format on
 
-  std::unique_ptr<const Covariance> covPtr = nullptr;
+  std::optional<Covariance> optCov = std::nullopt;
   if (withCov) {
-    covPtr = std::make_unique<const Covariance>(cov);
+    optCov = cov;
   }
-  CurvilinearParameters pars(std::move(covPtr), pos, mom, +1, 0.);
+  CurvilinearParameters pars(optCov, pos, mom, +1, 0.);
 
   double totalPathLength = 0;
   for (unsigned int i = 0; i < toys; ++i) {
