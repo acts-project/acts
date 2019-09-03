@@ -45,6 +45,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace IntegrationTest {
 
+using Covariance = BoundSymMatrix;
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<BFieldType>;
 using DenseStepperType =

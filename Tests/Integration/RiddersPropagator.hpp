@@ -64,15 +64,65 @@ class RiddersPropagator {
   using action_list_t_result_t =
       typename result_type_helper<parameters_t, action_list_t>::type;
 
- public:
-  std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
+  /// @brief This function tests whether the variations on a disc as target
+  /// surface lead to results on different sides wrt the center of the disc.
+  /// This would lead to a flip of the phi value on the surface and therewith to
+  /// a huge variance in that parameter. It can only occur in this algorithm
+  /// since the ridders algorithm is unaware of the target surface.
+  ///
+  /// @param [in] derivatives Derivatives of a single parameter
+  ///
+  /// @return Boolean result whether a phi jump occured
+  bool inconsistentDerivativesOnDisc(
+      const std::vector<BoundVector>& derivatives) const {
+    // Test each component with each other
+    for (unsigned int i = 0; i < derivatives.size(); i++) {
+      bool jumpedAngle = true;
+      for (unsigned int j = 0; j < derivatives.size(); j++) {
+        // If there is at least one with a similar angle then it seems to work
+        // properly
+        if (i != j &&
+            std::abs(derivatives[i](1) - derivatives[j](1)) < 0.5 * M_PI) {
+          jumpedAngle = false;
+          break;
+        }
+      }
+      // Break if a jump was detected
+      if (jumpedAngle) {
+        return true;
+      }
+    }
+    return false;
+  }
 
+ public:
+  /// @brief Constructor using a propagator
+  ///
+  /// @param [in] propagator Underlying propagator that will be used
   RiddersPropagator(propagator_t& propagator) : m_propagator(propagator) {}
 
+	/// @brief Constructor building a propagator
+	///
+	/// @tparam stepper_t Type of the stepper
+	/// @tparam navigator_t Type of the navigator
+	///
+	/// @param [in] stepper Stepper that will be used
+	/// @param [in] navigator Navigator that will be used
   template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
   RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t())
       : m_propagator(Propagator(stepper, navigator)) {}
 
+	/// @brief Propagation method targeting curvilinear parameters
+	///
+	/// @tparam parameters_t Type of the start parameters
+	/// @tparam action_list_t Type of the action list
+	/// @tparam aborter_list_t Type of the aborter list
+	/// @tparam propagator_options_t Type of the propagator options
+	///
+	/// @param [in] start Start parameters
+	/// @param [in] options Options of the propagations
+	///
+	/// @return Result of the propagation
   template <typename parameters_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t>
@@ -90,6 +140,9 @@ class RiddersPropagator {
     // Pick the surface of the propagation as target
     const Surface& surface = nominalResult.endParameters->referenceSurface();
 
+    // Steps for estimating derivatives
+	std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
+
     // Allow larger distances for the oscillation
     propagator_options_t<action_list_t, aborter_list_t> opts = options;
     opts.pathLimit *= 2.;
@@ -100,7 +153,7 @@ class RiddersPropagator {
     // Wiggle each dimension individually
     for (unsigned int i = 0; i < BoundParsDim; i++) {
       derivatives[i] =
-          wiggleDimension(opts, start, i, surface, nominalParameters);
+          wiggleDimension(opts, start, i, surface, nominalParameters, deviations);
     }
     // Exchange the result by Ridders Covariance
     const FullParameterSet& parSet =
@@ -108,12 +161,25 @@ class RiddersPropagator {
     FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
     if(start.covariance())
     {
-		mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance()));
+		mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance(), deviations));
     }
 
     return std::move(nominalResult);
   }
 
+	/// @brief Propagation method targeting bound parameters
+	///
+	/// @tparam parameters_t Type of the start parameters
+	/// @tparam surface_t Type of target surface
+	/// @tparam action_list_t Type of the action list
+	/// @tparam aborter_list_t Type of the aborter list
+	/// @tparam propagator_options_t Type of the propagator options
+	///
+	/// @param [in] start Start parameters
+	/// @param [in] options Options of the propagations
+	///
+	/// @return Result of the propagation
+	/// @note If the target surface is a disc, the resulting covariance may be inconsistent. In this case a zero matrix is returned.
   template <typename parameters_t, typename surface_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t>
@@ -125,9 +191,16 @@ class RiddersPropagator {
             const propagator_options_t<action_list_t, aborter_list_t>& options)
       const {
     // Launch nominal propagation and collect results
+    //~ Result<action_list_t_result_t<typename propagator_t::Stepper::template return_parameter_type<parameters_t>, action_list_t>> nominalResult = m_propagator.propagate(start, target, options);
     auto nominalResult = m_propagator.propagate(start, target, options).value();
     const BoundVector& nominalParameters =
         nominalResult.endParameters->parameters();
+
+    // Steps for estimating derivatives
+    std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
+    if (target.type() == Surface::Disc) {
+      deviations = {{-3e-5, -1e-5, 1e-5, 3e-5}};
+    }
 
     // - for planar surfaces the dest surface is a perfect destination
     // surface for the numerical propagation, as reference frame
@@ -148,7 +221,7 @@ class RiddersPropagator {
     // Wiggle each dimension individually
     for (unsigned int i = 0; i < BoundParsDim; i++) {
       derivatives[i] =
-          wiggleDimension(opts, start, i, target, nominalParameters);
+          wiggleDimension(opts, start, i, target, nominalParameters, deviations);
     }
     // Exchange the result by Ridders Covariance
     const FullParameterSet& parSet =
@@ -156,7 +229,21 @@ class RiddersPropagator {
     FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
     if(start.covariance())
     {
-		mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance()));
+		// Test if target is disc - this may lead to inconsistent results
+	  if (target.type() == Surface::Disc)
+	  {
+		  for(const std::vector<BoundVector>& deriv : derivatives)
+		  {
+			 if(inconsistentDerivativesOnDisc(deriv))
+			 {
+				 // Set covariance to zero and return
+				 // TODO: This should be changed to indicate that something went wrong
+				mParSet->setCovariance(Covariance::Zero());
+				return std::move(nominalResult);
+			 }
+		  }
+	  }
+	  mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance(), deviations));
     }
     return std::move(nominalResult);
   }
@@ -181,7 +268,8 @@ class RiddersPropagator {
                                            const parameters_t& startPars,
                                            const unsigned int param,
                                            const Surface& target,
-                                           const BoundVector& nominal) const {
+                                           const BoundVector& nominal,
+                                           const std::vector<double>& deviations) const {
     // Storage of the results
     std::vector<BoundVector> derivatives;
     derivatives.reserve(deviations.size());
@@ -236,6 +324,17 @@ class RiddersPropagator {
       const auto& r = m_propagator.propagate(tp, target, options).value();
       // Collect the slope
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+      
+      // Correct for a possible variation of phi around
+      if(param == 2)
+      {
+		  double phi0 = nominal(Acts::ePHI);
+		  double phi1 = r.endParameters->parameters()(Acts::ePHI);
+		  if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+			derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
+		  else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+			derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
+		}
     }
     return derivatives;
   }
@@ -248,15 +347,15 @@ class RiddersPropagator {
   /// @return Propagated covariance matrix
   const Covariance calculateCovariance(
       const std::array<std::vector<BoundVector>, BoundParsDim>& derivatives,
-      const Covariance& startCov) const {
+      const Covariance& startCov, const std::vector<double>& deviations) const {
     Jacobian jacobian;
     jacobian.setIdentity();
-    jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0]);
-    jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1]);
-    jacobian.col(ePHI) = fitLinear(derivatives[ePHI]);
-    jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA]);
-    jacobian.col(eQOP) = fitLinear(derivatives[eQOP]);
-    jacobian.col(eT) = fitLinear(derivatives[eT]);
+    jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0], deviations);
+    jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1], deviations);
+    jacobian.col(ePHI) = fitLinear(derivatives[ePHI], deviations);
+    jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA], deviations);
+    jacobian.col(eQOP) = fitLinear(derivatives[eQOP], deviations);
+    jacobian.col(eT) = fitLinear(derivatives[eT], deviations);
     return jacobian * startCov * jacobian.transpose();
   }
 
@@ -266,7 +365,7 @@ class RiddersPropagator {
   /// @param [in] values Vector containing the final state parametrisations
   ///
   /// @return Vector containing the linear fit
-  BoundVector fitLinear(const std::vector<BoundVector>& values) const {
+  BoundVector fitLinear(const std::vector<BoundVector>& values, const std::vector<double>& deviations) const {
     BoundVector A;
     BoundVector C;
     A.setZero();
