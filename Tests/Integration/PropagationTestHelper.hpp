@@ -497,8 +497,7 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
 
   auto startSurface =
       Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
-  BoundParameters start(tgContext, cov, pos, mom, q, time,
-                        startSurface);
+  BoundParameters start(tgContext, cov, pos, mom, q, time, startSurface);
 
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;

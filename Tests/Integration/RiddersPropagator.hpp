@@ -101,28 +101,28 @@ class RiddersPropagator {
   /// @param [in] propagator Underlying propagator that will be used
   RiddersPropagator(propagator_t& propagator) : m_propagator(propagator) {}
 
-	/// @brief Constructor building a propagator
-	///
-	/// @tparam stepper_t Type of the stepper
-	/// @tparam navigator_t Type of the navigator
-	///
-	/// @param [in] stepper Stepper that will be used
-	/// @param [in] navigator Navigator that will be used
+  /// @brief Constructor building a propagator
+  ///
+  /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
+  /// @param [in] stepper Stepper that will be used
+  /// @param [in] navigator Navigator that will be used
   template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
   RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t())
       : m_propagator(Propagator(stepper, navigator)) {}
 
-	/// @brief Propagation method targeting curvilinear parameters
-	///
-	/// @tparam parameters_t Type of the start parameters
-	/// @tparam action_list_t Type of the action list
-	/// @tparam aborter_list_t Type of the aborter list
-	/// @tparam propagator_options_t Type of the propagator options
-	///
-	/// @param [in] start Start parameters
-	/// @param [in] options Options of the propagations
-	///
-	/// @return Result of the propagation
+  /// @brief Propagation method targeting curvilinear parameters
+  ///
+  /// @tparam parameters_t Type of the start parameters
+  /// @tparam action_list_t Type of the action list
+  /// @tparam aborter_list_t Type of the aborter list
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] start Start parameters
+  /// @param [in] options Options of the propagations
+  ///
+  /// @return Result of the propagation
   template <typename parameters_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t>
@@ -141,7 +141,7 @@ class RiddersPropagator {
     const Surface& surface = nominalResult.endParameters->referenceSurface();
 
     // Steps for estimating derivatives
-	std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
+    std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
 
     // Allow larger distances for the oscillation
     propagator_options_t<action_list_t, aborter_list_t> opts = options;
@@ -152,34 +152,35 @@ class RiddersPropagator {
 
     // Wiggle each dimension individually
     for (unsigned int i = 0; i < BoundParsDim; i++) {
-      derivatives[i] =
-          wiggleDimension(opts, start, i, surface, nominalParameters, deviations);
+      derivatives[i] = wiggleDimension(opts, start, i, surface,
+                                       nominalParameters, deviations);
     }
     // Exchange the result by Ridders Covariance
     const FullParameterSet& parSet =
         nominalResult.endParameters->getParameterSet();
     FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
-    if(start.covariance())
-    {
-		mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance(), deviations));
+    if (start.covariance()) {
+      mParSet->setCovariance(
+          calculateCovariance(derivatives, *start.covariance(), deviations));
     }
 
     return std::move(nominalResult);
   }
 
-	/// @brief Propagation method targeting bound parameters
-	///
-	/// @tparam parameters_t Type of the start parameters
-	/// @tparam surface_t Type of target surface
-	/// @tparam action_list_t Type of the action list
-	/// @tparam aborter_list_t Type of the aborter list
-	/// @tparam propagator_options_t Type of the propagator options
-	///
-	/// @param [in] start Start parameters
-	/// @param [in] options Options of the propagations
-	///
-	/// @return Result of the propagation
-	/// @note If the target surface is a disc, the resulting covariance may be inconsistent. In this case a zero matrix is returned.
+  /// @brief Propagation method targeting bound parameters
+  ///
+  /// @tparam parameters_t Type of the start parameters
+  /// @tparam surface_t Type of target surface
+  /// @tparam action_list_t Type of the action list
+  /// @tparam aborter_list_t Type of the aborter list
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] start Start parameters
+  /// @param [in] options Options of the propagations
+  ///
+  /// @return Result of the propagation
+  /// @note If the target surface is a disc, the resulting covariance may be
+  /// inconsistent. In this case a zero matrix is returned.
   template <typename parameters_t, typename surface_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t>
@@ -191,7 +192,9 @@ class RiddersPropagator {
             const propagator_options_t<action_list_t, aborter_list_t>& options)
       const {
     // Launch nominal propagation and collect results
-    //~ Result<action_list_t_result_t<typename propagator_t::Stepper::template return_parameter_type<parameters_t>, action_list_t>> nominalResult = m_propagator.propagate(start, target, options);
+    //~ Result<action_list_t_result_t<typename propagator_t::Stepper::template
+    //return_parameter_type<parameters_t>, action_list_t>> nominalResult =
+    //m_propagator.propagate(start, target, options);
     auto nominalResult = m_propagator.propagate(start, target, options).value();
     const BoundVector& nominalParameters =
         nominalResult.endParameters->parameters();
@@ -220,30 +223,28 @@ class RiddersPropagator {
 
     // Wiggle each dimension individually
     for (unsigned int i = 0; i < BoundParsDim; i++) {
-      derivatives[i] =
-          wiggleDimension(opts, start, i, target, nominalParameters, deviations);
+      derivatives[i] = wiggleDimension(opts, start, i, target,
+                                       nominalParameters, deviations);
     }
     // Exchange the result by Ridders Covariance
     const FullParameterSet& parSet =
         nominalResult.endParameters->getParameterSet();
     FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
-    if(start.covariance())
-    {
-		// Test if target is disc - this may lead to inconsistent results
-	  if (target.type() == Surface::Disc)
-	  {
-		  for(const std::vector<BoundVector>& deriv : derivatives)
-		  {
-			 if(inconsistentDerivativesOnDisc(deriv))
-			 {
-				 // Set covariance to zero and return
-				 // TODO: This should be changed to indicate that something went wrong
-				mParSet->setCovariance(Covariance::Zero());
-				return std::move(nominalResult);
-			 }
-		  }
-	  }
-	  mParSet->setCovariance(calculateCovariance(derivatives, *start.covariance(), deviations));
+    if (start.covariance()) {
+      // Test if target is disc - this may lead to inconsistent results
+      if (target.type() == Surface::Disc) {
+        for (const std::vector<BoundVector>& deriv : derivatives) {
+          if (inconsistentDerivativesOnDisc(deriv)) {
+            // Set covariance to zero and return
+            // TODO: This should be changed to indicate that something went
+            // wrong
+            mParSet->setCovariance(Covariance::Zero());
+            return std::move(nominalResult);
+          }
+        }
+      }
+      mParSet->setCovariance(
+          calculateCovariance(derivatives, *start.covariance(), deviations));
     }
     return std::move(nominalResult);
   }
@@ -264,12 +265,10 @@ class RiddersPropagator {
   ///
   /// @return Vector containing each slope
   template <typename options_t, typename parameters_t>
-  std::vector<BoundVector> wiggleDimension(const options_t& options,
-                                           const parameters_t& startPars,
-                                           const unsigned int param,
-                                           const Surface& target,
-                                           const BoundVector& nominal,
-                                           const std::vector<double>& deviations) const {
+  std::vector<BoundVector> wiggleDimension(
+      const options_t& options, const parameters_t& startPars,
+      const unsigned int param, const Surface& target,
+      const BoundVector& nominal, const std::vector<double>& deviations) const {
     // Storage of the results
     std::vector<BoundVector> derivatives;
     derivatives.reserve(deviations.size());
@@ -324,17 +323,16 @@ class RiddersPropagator {
       const auto& r = m_propagator.propagate(tp, target, options).value();
       // Collect the slope
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-      
+
       // Correct for a possible variation of phi around
-      if(param == 2)
-      {
-		  double phi0 = nominal(Acts::ePHI);
-		  double phi1 = r.endParameters->parameters()(Acts::ePHI);
-		  if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-			derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
-		  else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-			derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
-		}
+      if (param == 2) {
+        double phi0 = nominal(Acts::ePHI);
+        double phi1 = r.endParameters->parameters()(Acts::ePHI);
+        if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+          derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
+        else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+          derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
+      }
     }
     return derivatives;
   }
@@ -365,7 +363,8 @@ class RiddersPropagator {
   /// @param [in] values Vector containing the final state parametrisations
   ///
   /// @return Vector containing the linear fit
-  BoundVector fitLinear(const std::vector<BoundVector>& values, const std::vector<double>& deviations) const {
+  BoundVector fitLinear(const std::vector<BoundVector>& values,
+                        const std::vector<double>& deviations) const {
     BoundVector A;
     BoundVector C;
     A.setZero();

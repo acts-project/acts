@@ -212,8 +212,9 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
       covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
           spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
           true, true);
-  if(covCalculated != Covariance::Zero()){
-	CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);}
+  if (covCalculated != Covariance::Zero()) {
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  }
 
   // covariance check for eigen stepper
   covCalculated =
@@ -233,8 +234,9 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
   covObtained = covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
       apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
       true);
-        if(covCalculated != Covariance::Zero()){
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);}
+  if (covCalculated != Covariance::Zero()) {
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  }
 }
 
 // test correct covariance transport from plane to plane
@@ -332,8 +334,9 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
       covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
           dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2,
           rand3, true, true);
-            if(covCalculated != Covariance::Zero()){
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);}
+  if (covCalculated != Covariance::Zero()) {
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  }
 
   covCalculated = covariance_bound<RiddersPropagator<DensePropagatorType>,
                                    PlaneSurface, PlaneSurface>(
