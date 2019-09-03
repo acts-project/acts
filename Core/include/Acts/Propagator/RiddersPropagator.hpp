@@ -35,9 +35,8 @@ namespace Acts {
 /// latter classes.
 template <typename propagator_t>
 class RiddersPropagator {
-	
-	using Jacobian = BoundMatrix;
-	using Covariance = BoundSymMatrix;
+  using Jacobian = BoundMatrix;
+  using Covariance = BoundSymMatrix;
 
  private:
   ///
@@ -96,10 +95,10 @@ class RiddersPropagator {
       action_list_t_result_t<typename propagator_t::Stepper::
                                  template return_parameter_type<parameters_t>,
                              action_list_t>>
-  propagate(const parameters_t& start,
-            const propagator_options_t<action_list_t, aborter_list_t>& options)
-      const;
-      
+  propagate(
+      const parameters_t& start,
+      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
+
   /// @brief Propagation method targeting bound parameters
   ///
   /// @tparam parameters_t Type of the start parameters
@@ -121,9 +120,9 @@ class RiddersPropagator {
       typename propagator_t::Stepper::template return_parameter_type<
           parameters_t, surface_t>,
       action_list_t>>
-  propagate(const parameters_t& start, const surface_t& target,
-            const propagator_options_t<action_list_t, aborter_list_t>& options)
-      const;
+  propagate(
+      const parameters_t& start, const surface_t& target,
+      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
 
  private:
   /// @brief This function tests whether the variations on a disc as target
@@ -137,7 +136,7 @@ class RiddersPropagator {
   /// @return Boolean result whether a phi jump occured
   bool inconsistentDerivativesOnDisc(
       const std::vector<BoundVector>& derivatives) const;
-      
+
   /// @brief This function wiggles one dimension of the starting parameters,
   /// performs the propagation to a surface and collects for each change of the
   /// start parameters the slope
