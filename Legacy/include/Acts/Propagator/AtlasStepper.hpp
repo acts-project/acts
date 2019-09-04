@@ -1154,15 +1154,6 @@ class AtlasStepper {
             charge(state.stepping) /
             (momentum(state.stepping) *
              std::hypot(1., state.options.mass / momentum(state.stepping)));
-        //~ state.stepping.pVector[11] = 1. * state.stepping.pVector[11] + dtdl
-        //* state.stepping.pVector[15]; ~ state.stepping.pVector[19] = 1. *
-        // state.stepping.pVector[19] + dtdl * state.stepping.pVector[23]; ~
-        // state.stepping.pVector[27] = 1. * state.stepping.pVector[27] + dtdl *
-        // state.stepping.pVector[31]; ~ state.stepping.pVector[35] = 1. *
-        // state.stepping.pVector[35] + dtdl * state.stepping.pVector[39]; ~
-        // state.stepping.pVector[43] = 1. * state.stepping.pVector[43] + dtdl *
-        // state.stepping.pVector[47]; ~ state.stepping.pVector[51] = 1. *
-        // state.stepping.pVector[51] + dtdl * state.stepping.pVector[55];
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation

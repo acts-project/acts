@@ -183,7 +183,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
                      charge, plimit) {
   // covariance check for eigen stepper
   covariance_curvilinear(epropagator, pT, phi, theta, charge, plimit);
-  //~ // covariance check fo atlas stepper
+  // covariance check fo atlas stepper
   covariance_curvilinear(apropagator, pT, phi, theta, charge, plimit);
   // covariance check for straight line stepper
   covariance_curvilinear(spropagator, pT, phi, theta, charge, plimit);
