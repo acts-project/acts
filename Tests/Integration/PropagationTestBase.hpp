@@ -335,7 +335,7 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
           dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2,
           rand3, true, true);
   if (covCalculated != Covariance::Zero()) {
-    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 8e-1);
   }
 
   covCalculated = covariance_bound<RiddersPropagator<DensePropagatorType>,
@@ -344,5 +344,5 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
   covObtained =
       covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
           dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 8e-1);
 }

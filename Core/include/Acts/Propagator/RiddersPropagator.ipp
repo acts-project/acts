@@ -25,7 +25,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   const Surface& surface = nominalResult.endParameters->referenceSurface();
 
   // Steps for estimating derivatives
-  std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
+  std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
 
   // Allow larger distances for the oscillation
   propagator_options_t<action_list_t, aborter_list_t> opts = options;
@@ -68,7 +68,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       nominalResult.endParameters->parameters();
 
   // Steps for estimating derivatives
-  std::vector<double> deviations = {-2e-4, -1e-4, 1e-4, 2e-4};
+  std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
   if (target.type() == Surface::Disc) {
     deviations = {{-3e-5, -1e-5, 1e-5, 3e-5}};
   }
