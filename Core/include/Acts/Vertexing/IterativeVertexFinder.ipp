@@ -187,26 +187,19 @@ template <typename vfitter_t, typename sfinder_t>
 void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
     const std::vector<InputTrack_t>& perigeesToFit,
     std::vector<InputTrack_t>& seedTracks) const {
-  auto seedBegin = seedTracks.begin();
-  auto seedEnd = seedTracks.end();
-
   for (const auto& fitPerigee : perigeesToFit) {
     const BoundParameters& fitPerigeeParams = m_extractParameters(fitPerigee);
-
-    bool trackFound = false;
-    for (auto seedIter = seedBegin; seedIter != seedEnd; seedIter++) {
-      const BoundParameters& seedParams = m_extractParameters(*seedIter);
-      if (fitPerigeeParams == seedParams) {
-        seedIter = seedTracks.erase(seedIter);
-        seedBegin = seedTracks.begin();
-        seedEnd = seedTracks.end();
-        trackFound = true;
-        break;
-      }
-    }
-
-    if (!trackFound) {
-      ACTS_WARNING("Track (perigeeToFit) not found in seedTracks!");
+    // Find track in seedTracks
+    auto foundIter =
+        std::find_if(seedTracks.begin(), seedTracks.end(),
+                     [&fitPerigeeParams, this](auto seedTrk) {
+                       return fitPerigeeParams == m_extractParameters(seedTrk);
+                     });
+    if (foundIter != seedTracks.end()) {
+      // Remove track from seed tracks
+      seedTracks.erase(foundIter);
+    } else {
+      ACTS_WARNING("Track to be removed not found in seed tracks.")
     }
   }
 }
@@ -250,47 +243,36 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     std::vector<InputTrack_t>& seedTracks) const {
   std::vector<TrackAtVertex<InputTrack_t>> tracksAtVertex = myVertex.tracks();
 
-  auto seedBegin = seedTracks.begin();
-  auto seedEnd = seedTracks.end();
-
-  auto perigeesToFitBegin = perigeesToFit.begin();
-  auto perigeesToFitEnd = perigeesToFit.end();
-
   for (const auto& trackAtVtx : tracksAtVertex) {
-    // remove track from seedTracks if compatible
-    bool found = false;
-    for (auto seedIter = seedBegin; seedIter != seedEnd; ++seedIter) {
-      if (m_extractParameters(*seedIter) ==
-          m_extractParameters(trackAtVtx.originalTrack)) {
-        found = true;
-        if (trackAtVtx.trackWeight > m_cfg.cutOffTrackWeight) {
-          seedTracks.erase(seedIter);
-          seedBegin = seedTracks.begin();
-          seedEnd = seedTracks.end();
-        }
-        break;
-      }
+    // Check compatibility
+    if (trackAtVtx.trackWeight < m_cfg.cutOffTrackWeight) {
+      // Do not remove track here, since it is not compatible with the vertex
+      continue;
     }
-    if (!found) {
+
+    auto trkAtVtxParam = m_extractParameters(trackAtVtx.originalTrack);
+
+    // Find and remove track from seedTracks
+    auto foundSeedIter =
+        std::find_if(seedTracks.begin(), seedTracks.end(),
+                     [&trkAtVtxParam, this](auto seedTrk) {
+                       return trkAtVtxParam == m_extractParameters(seedTrk);
+                     });
+    if (foundSeedIter != seedTracks.end()) {
+      seedTracks.erase(foundSeedIter);
+    } else {
       ACTS_WARNING("Track trackAtVtx not found in seedTracks!");
     }
 
-    // remove track from perigeesToFit if compatible
-    found = false;
-    for (auto perigeesToFitIter = perigeesToFitBegin;
-         perigeesToFitIter != perigeesToFitEnd; ++perigeesToFitIter) {
-      if (m_extractParameters(*perigeesToFitIter) ==
-          m_extractParameters(trackAtVtx.originalTrack)) {
-        found = true;
-        if (trackAtVtx.trackWeight > m_cfg.cutOffTrackWeight) {
-          perigeesToFit.erase(perigeesToFitIter);
-          perigeesToFitBegin = perigeesToFit.begin();
-          perigeesToFitEnd = perigeesToFit.end();
-        }
-        break;
-      }
-    }
-    if (!found) {
+    // Find and remove track from perigeesToFit
+    auto foundFitIter =
+        std::find_if(perigeesToFit.begin(), perigeesToFit.end(),
+                     [&trkAtVtxParam, this](auto fitTrk) {
+                       return trkAtVtxParam == m_extractParameters(fitTrk);
+                     });
+    if (foundFitIter != perigeesToFit.end()) {
+      perigeesToFit.erase(foundFitIter);
+    } else {
       ACTS_WARNING("Track trackAtVtx not found in perigeesToFit!");
     }
   }  // end iteration over tracksAtVertex
@@ -303,13 +285,10 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
   // m_cfg.cutOffTrackWeight threshold and are hence outliers
   ACTS_DEBUG("Number of outliers: " << perigeesToFit.size());
 
-  auto trackAtVtxBegin = tracksAtVertex.begin();
-  auto trackAtVtxEnd = tracksAtVertex.end();
-
   for (const auto& myPerigeeToFit : perigeesToFit) {
     // calculate chi2 w.r.t. last fitted vertex
-    auto result =
-        getCompatibility(m_extractParameters(myPerigeeToFit), myVertex);
+    auto fitPerigeeParams = m_extractParameters(myPerigeeToFit);
+    auto result = getCompatibility(fitPerigeeParams, myVertex);
 
     if (!result.ok()) {
       return result.error();
@@ -320,34 +299,27 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
     if (chi2 < m_cfg.maximumChi2cutForSeeding) {
-      for (auto seedIter = seedBegin; seedIter != seedEnd; ++seedIter) {
-        if (m_extractParameters(*seedIter) ==
-            m_extractParameters(myPerigeeToFit)) {
-          seedTracks.erase(seedIter);
-          seedBegin = seedTracks.begin();
-          seedEnd = seedTracks.end();
-
-          ACTS_DEBUG(
-              "Outlier track found. However, still sufficiently "
-              "compatible with last fitted vertex. Remove from seeds.");
-          break;
-        }
+      auto foundIter = std::find_if(seedTracks.begin(), seedTracks.end(),
+                                    [&fitPerigeeParams, this](auto seedTrk) {
+                                      return fitPerigeeParams ==
+                                             m_extractParameters(seedTrk);
+                                    });
+      if (foundIter != seedTracks.end()) {
+        // Remove track from seed tracks
+        seedTracks.erase(foundIter);
       }
-    } else {
-      // Remove track from current vertex
-      for (auto trackAtVtxIter = trackAtVtxBegin;
-           trackAtVtxIter != trackAtVtxEnd; ++trackAtVtxIter) {
-        if (m_extractParameters(trackAtVtxIter->originalTrack) ==
-            m_extractParameters(myPerigeeToFit)) {
-          ACTS_DEBUG(
-              "Outlier track found which is not compatible with last "
-              "fitted vertex. Remove from tracksAtVertex.");
 
-          tracksAtVertex.erase(trackAtVtxIter);
-          trackAtVtxBegin = tracksAtVertex.begin();
-          trackAtVtxEnd = tracksAtVertex.end();
-          break;
-        }
+    } else {
+      // Track not compatible with vertex
+      // Remove track from current vertex
+      auto foundIter = std::find_if(
+          tracksAtVertex.begin(), tracksAtVertex.end(),
+          [&fitPerigeeParams, this](auto trk) {
+            return fitPerigeeParams == m_extractParameters(trk.originalTrack);
+          });
+      if (foundIter != tracksAtVertex.end()) {
+        // Remove track from seed tracks
+        tracksAtVertex.erase(foundIter);
       }
     }
   }
