@@ -194,7 +194,7 @@ void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
     const BoundParameters& fitPerigeeParams = m_extractParameters(fitPerigee);
 
     bool trackFound = false;
-    for (auto seedIter = seedBegin; seedIter != seedEnd;) {
+    for (auto seedIter = seedBegin; seedIter != seedEnd; seedIter++) {
       const BoundParameters& seedParams = m_extractParameters(*seedIter);
       if (fitPerigeeParams == seedParams) {
         seedIter = seedTracks.erase(seedIter);
