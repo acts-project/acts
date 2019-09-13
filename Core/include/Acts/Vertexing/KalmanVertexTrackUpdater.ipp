@@ -116,8 +116,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
   trkJac.block<5, 5>(1, 2) = ActsSymMatrixD<5>::Identity();
 
   // Full perigee track covariance
-  std::unique_ptr<BoundMatrix> fullPerTrackCov =
-      std::make_unique<BoundMatrix>(trkJac * (fullTrkCov * trkJac.transpose()));
+  BoundMatrix fullPerTrackCov(trkJac * (fullTrkCov * trkJac.transpose()));
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =

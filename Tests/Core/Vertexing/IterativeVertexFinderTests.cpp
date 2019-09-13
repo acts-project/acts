@@ -27,7 +27,7 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
-
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 
 namespace bdata = boost::unit_test::data;

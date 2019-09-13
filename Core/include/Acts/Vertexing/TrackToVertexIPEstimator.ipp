@@ -29,8 +29,6 @@ Acts::TrackToVertexIPEstimator<
   auto options = m_cfg.pOptions;
   options.direction = backward;
 
-  propagatorOptions.direction = backward;
-
   // Do the propagation to linPoint
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, options);
 

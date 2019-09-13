@@ -47,6 +47,7 @@ template <typename bfield_t,
 class HelicalTrackLinearizer {
  public:
   using Propagator_t = propagator_t;
+  using BField_t = bfield_t;
 
   /// @brief Helper function to set up the correct PropagatorOptions with
   /// propagation direction set to backward. To be used when setting up the
@@ -70,13 +71,13 @@ class HelicalTrackLinearizer {
   /// @param prop The propagator
   /// @param propOptions The propagator options
   struct Config {
-    Config(const bfield_t& bIn, std::shared_ptr<Propagator_t> prop,
+    Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop,
            PropagatorOptions<action_list_t, aborter_list_t> propOptions)
         : bField(bIn), propagator(std::move(prop)), pOptions(propOptions) {
       assert(pOptions.direction == backward);
     }
 
-    bfield_t bField;
+    BField_t bField;
 
     std::shared_ptr<Propagator_t> propagator;
 
