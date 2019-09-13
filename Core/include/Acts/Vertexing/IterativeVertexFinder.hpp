@@ -66,6 +66,7 @@ class IterativeVertexFinder {
 
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
+  using BField_t = typename vfitter_t::BField_t;
 
   /// @struct Config Configuration struct
   struct Config {
@@ -86,7 +87,7 @@ class IterativeVertexFinder {
     Linearizer_t linearizer;
 
     /// ImpactPoint3dEstimator
-    ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t> ipEst;
+    ImpactPoint3dEstimator<BField_t, InputTrack_t, Propagator_t> ipEst;
 
     /// Vertex seed finder
     sfinder_t seedFinder;

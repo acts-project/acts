@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -28,6 +29,8 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
+using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Linearizer = HelicalTrackLinearizer<ConstantBField, Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -74,23 +77,27 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   EigenStepper<ConstantBField> stepper(bField);
 
   // Set up propagator with void navigator
-  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+  auto propagator = std::make_shared<Propagator>(stepper);
 
   VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
 
-  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters,
-                            Propagator<EigenStepper<ConstantBField>>>::Config
-      config(bField, propagator);
+  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters, Propagator, Linearizer>::Config
+      config(bField);
+
+  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
+      Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
+
+  // Linearizer for BoundParameters type test
+  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer linearizer(ltConfig);
 
   // Test smoothing
   config.doSmoothing = true;
 
-  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters,
-                            Propagator<EigenStepper<ConstantBField>>>
-      fitter(config);
+  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters, Propagator, Linearizer> fitter(
+      config);
 
-  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters,
-                            Propagator<EigenStepper<ConstantBField>>>::State
+  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters, Propagator, Linearizer>::State
       state;
 
   // Create positions of three vertices, two of which (1 and 2) are
@@ -207,7 +214,7 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
-  auto res1 = fitter.addVertexToFit(state, vtxList[0], fitterOptions);
+  auto res1 = fitter.addVertexToFit(state, vtxList[0], linearizer, fitterOptions);
 
   BOOST_CHECK(res1.ok());
 

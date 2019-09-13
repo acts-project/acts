@@ -72,7 +72,7 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
   pOptions.direction = backward;
 
   // Do the propagation to linPointPos
-  auto result = m_cfg.propagator.propagate(trkParams, *planeSurface, pOptions);
+  auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
   if (result.ok()) {
     return std::move((*result).endParameters);
   } else {

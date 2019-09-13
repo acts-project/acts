@@ -25,10 +25,12 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include <Acts/Vertexing/SequentialVertexSmoother.hpp>
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
 namespace Acts {
 namespace Test {
+
+using Propagator = Propagator<EigenStepper<ConstantBField>>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -78,14 +80,22 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
   EigenStepper<ConstantBField> stepper(bField);
 
   // Set up propagator with void navigator
-  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  // Set up LinearizedTrackFactory, needed for linearizing the tracks
+  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
+        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+
+    // Linearizer for BoundParameters type test
+    Linearizer_t::Config ltConfig(bField, propagator, pOptions);
+    Linearizer_t linearizer(ltConfig);
 
   // Set up Billoir Vertex Fitter
-  FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                          Propagator<EigenStepper<ConstantBField>>>::Config
-      vertexFitterCfg(bField, propagator);
-  FullBilloirVertexFitter<ConstantBField, BoundParameters,
-                          Propagator<EigenStepper<ConstantBField>>>
+  FullBilloirVertexFitter<BoundParameters,
+                          Linearizer_t>::Config
+      vertexFitterCfg;
+  FullBilloirVertexFitter<BoundParameters,
+                          Linearizer_t>
       billoirFitter(vertexFitterCfg);
 
   VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
@@ -136,7 +146,7 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
   }
 
   Vertex<BoundParameters> fittedVertex =
-      billoirFitter.fit(tracks, vfOptions).value();
+      billoirFitter.fit(tracks, linearizer, vfOptions).value();
 
   // copy vertex for later comparison
   Vertex<BoundParameters> vertexBeforeSmoothing = fittedVertex;
@@ -150,22 +160,13 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
   BOOST_CHECK_EQUAL(vertexBeforeSmoothing.tracks().size(),
                     fittedVertex.tracks().size());
 
-  // Linearize the tracks at vertex just for fun...
-  LinearizedTrackFactory<ConstantBField,
-                         Propagator<EigenStepper<ConstantBField>>>::Config
-      ltConfig(bField);
-  LinearizedTrackFactory<ConstantBField,
-                         Propagator<EigenStepper<ConstantBField>>>
-      linFactory(ltConfig);
-
   std::vector<TrackAtVertex<BoundParameters>> tracksWithLinState;
   for (auto trackAtVtx : fittedVertex.tracks()) {
     BoundParameters fittedParams = trackAtVtx.fittedParams;
 
     LinearizedTrack linTrack =
-        linFactory
-            .linearizeTrack(tgContext, mfContext, &fittedParams, vertexPosition,
-                            propagator)
+        linearizer
+            .linearizeTrack(&fittedParams, vertexPosition)
             .value();
     trackAtVtx.linearizedState = linTrack;
     tracksWithLinState.push_back(trackAtVtx);

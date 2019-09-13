@@ -13,7 +13,6 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/MAVFInfo.hpp"
 #include "Acts/Vertexing/SequentialVertexSmoother.hpp"
 #include "Acts/Vertexing/VertexAnnealingTool.hpp"
@@ -35,7 +34,9 @@ namespace Acts {
 /// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
 /// @tparam propagator_t Propagator type
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+/// @tparam linearizer_t Track linearizer type
+template <typename bfield_t, typename input_track_t, typename propagator_t,
+          typename linearizer_t>
 class MultiAdaptiveVertexFitter {
  public:
   /// @brief The fitter state
@@ -57,21 +58,10 @@ class MultiAdaptiveVertexFitter {
     /// @brief Config constructor
     ///
     /// @param bIn The magnetic field
-    /// @param propagatorIn The propagator
-    Config(const bfield_t& bIn, const propagator_t& propagatorIn)
-        : propagator(propagatorIn),
-
-          linFactory(
-              typename LinearizedTrackFactory<bfield_t, propagator_t>::Config(
-                  bIn)),
-          ipEst(typename ImpactPoint3dEstimator<
+    Config(const bfield_t& bIn)
+        : ipEst(typename ImpactPoint3dEstimator<
                 bfield_t, input_track_t, propagator_t>::Config(bIn,
                                                                propagatorIn)) {}
-    // Propagator
-    propagator_t propagator;
-
-    // Linearized track factory
-    LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
 
     // ImpactPoint3dEstimator
     ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t> ipEst;
@@ -134,11 +124,12 @@ class MultiAdaptiveVertexFitter {
   ///   fit of all vertices in state.vertexCollection
   ///
   /// @param state The state object
+  /// @param linearizer The track linearizer
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object
   Result<void> fit(
-      State& state,
+      State& state, const linearizer_t& linearizer,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
   /// @brief Adds new vertex to an existing multi-vertex fit
@@ -160,11 +151,13 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @param state The state object
   /// @param newVertex New vertex to be added to fit
+  /// @param linearizer The track linearizer
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object
   Result<void> addVertexToFit(
       State& state, Vertex<input_track_t>& newVertex,
+      const linearizer_t& linearizer,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
  private:
@@ -222,10 +215,9 @@ class MultiAdaptiveVertexFitter {
   ///  and updates the vertices by calling the VertexUpdater
   ///
   /// @param state The state object
-  /// @param vFitterOptions Vertex fitter options
+  /// @param linearizer The track linearizer
   Result<void> setWeightsAndUpdate(
-      State& state,
-      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+      State& state, const linearizer_t& linearizer) const;
 
   /// @brief Collects all compatibility values of the track `trk`
   /// at all vertices it is currently attached to and outputs

@@ -339,7 +339,6 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
     const Vertex<InputTrack_t>& seedVertex,
     std::vector<InputTrack_t>& perigeesToFitOut,
     std::vector<InputTrack_t>& perigeesToFitSplitVertexOut) const {
-
   int numberOfTracks = perigeeList.size();
 
   // Count how many tracks are used for fit

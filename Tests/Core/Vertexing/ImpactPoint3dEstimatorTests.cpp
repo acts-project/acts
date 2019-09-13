@@ -29,7 +29,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-
+using Propagator = Propagator<EigenStepper<ConstantBField>>;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -72,15 +72,15 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   EigenStepper<ConstantBField> stepper(bField);
 
   // Set up propagator with void navigator
-  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+  auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up the ImpactPoint3dEstimator
   ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator<EigenStepper<ConstantBField>>>::Config
+                         Propagator>::Config
       ipEstCfg(bField, propagator);
 
   ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator<EigenStepper<ConstantBField>>>
+                         Propagator>
       ipEstimator(ipEstCfg);
 
   // Reference position
@@ -97,10 +97,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
     double resQp = resQoPDist(gen);
 
     // Covariance matrix
-    std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
-        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+    Covariance covMat;
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
     // The charge
     double q = qDist(gen) < 0 ? -1. : 1.;
@@ -194,15 +194,15 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   EigenStepper<ConstantBField> stepper(bField);
 
   // Set up propagator with void navigator
-  Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+  auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up the ImpactPoint3dEstimator
   ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator<EigenStepper<ConstantBField>>>::Config
+                         Propagator>::Config
       ipEstCfg(bField, propagator);
 
   ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator<EigenStepper<ConstantBField>>>
+                         Propagator>
       ipEstimator(ipEstCfg);
 
   // Reference position
@@ -226,10 +226,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
     // Create a track
 
     // Covariance matrix
-    std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
-    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
-        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+    Covariance covMat;
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
     // The charge
     double q = qDist(gen) < 0 ? -1. : 1.;

@@ -28,14 +28,14 @@ class ImpactPoint3dEstimator {
     /// @brief Configuration constructor
     ///
     /// @param bIn The magnetic field
-    /// @param propagatorIn The propagator
-    Config(const bfield_t& bIn, const propagator_t& propagatorIn)
-        : bField(bIn), propagator(propagatorIn) {}
+    /// @param prop The propagator
+    Config(const bfield_t& bIn, std::shared_ptr<propagator_t> prop)
+        : bField(bIn), propagator(std::move(prop)) {}
     /// Magnetic field
     bfield_t bField;
 
     /// Propagator
-    propagator_t propagator;
+    std::shared_ptr<propagator_t> propagator;
 
     /// Max. number of iterations in Newton method
     int maxIterations = 20;

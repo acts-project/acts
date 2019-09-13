@@ -38,6 +38,7 @@ class FullBilloirVertexFitter {
  public:
   using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
+  using BField_t = typename linearizer_t::BField_t;
   using Linearizer_t = linearizer_t;
 
   struct Config {
