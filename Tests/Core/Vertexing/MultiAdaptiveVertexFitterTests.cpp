@@ -221,8 +221,7 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
-  auto res1 =
-      fitter.addVertexToFit(state, vtxList[0], linearizer, fitterOptions);
+  auto res1 = fitter.fit(state, vtxList[0], linearizer, fitterOptions);
 
   BOOST_CHECK(res1.ok());
 
@@ -250,8 +249,7 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   CHECK_CLOSE_ABS(vtxList[1].fullPosition(), seedListCopy[1].fullPosition(),
                   1_mm);
 
-  auto res2 =
-      fitter.addVertexToFit(state, vtxList[2], linearizer, fitterOptions);
+  auto res2 = fitter.fit(state, vtxList[2], linearizer, fitterOptions);
 
   BOOST_CHECK(res2.ok());
 
