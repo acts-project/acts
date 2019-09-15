@@ -132,7 +132,7 @@ class MultiAdaptiveVertexFitter {
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object
-  Result<void> fit(
+  Result<void> fit_impl(
       State& state, const linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
@@ -159,7 +159,7 @@ class MultiAdaptiveVertexFitter {
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object
-  Result<void> addVertexToFit(
+  Result<void> fit(
       State& state, Vertex<InputTrack_t>& newVertex,
       const linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
