@@ -124,20 +124,8 @@ class MultiAdaptiveVertexFitter {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
-  /// @brief The actual fit function, performs a simulaneous
-  ///   fit of all vertices in state.vertexCollection
-  ///
-  /// @param state The state object
-  /// @param linearizer The track linearizer
-  /// @param vFitterOptions Vertex fitter options
-  ///
-  /// @return Result<void> object
-  Result<void> fit_impl(
-      State& state, const linearizer_t& linearizer,
-      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
-
   /// @brief Adds new vertex to an existing multi-vertex fit
-  /// and fits everything together (by invoking the fit method):
+  /// and fits everything together (by invoking the fit_impl method):
   /// 1. The new vertex is added to the fit: all associated tracks get
   /// initialized, i.e. ParamsAtIP3d are created (from ImpactPoint3dEstimator)
   /// to be later able to estimate in a fast way the compatibility of the tracks
@@ -180,6 +168,18 @@ class MultiAdaptiveVertexFitter {
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
+
+  /// @brief The actual fit function, performs a simulaneous
+  ///   fit of all vertices in state.vertexCollection
+  ///
+  /// @param state The state object
+  /// @param linearizer The track linearizer
+  /// @param vFitterOptions Vertex fitter options
+  ///
+  /// @return Result<void> object
+  Result<void> fit_impl(
+      State& state, const linearizer_t& linearizer,
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Tests if vertex is already in list of vertices or not
   ///
