@@ -35,9 +35,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator>;
+using Linearizer_t = HelicalTrackLinearizer<ConstantBField, Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -89,21 +87,19 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPoint3dEstimator, used for comparisons later
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator>::Config
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
       ip3dEstConfig(bField, propagator);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator>
-      ip3dEst(ip3dEstConfig);
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator> ip3dEst(
+      ip3dEstConfig);
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
 
-    // Linearizer for BoundParameters type test
-    Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-    Linearizer_t linearizer(ltConfig);
+  // Linearizer for BoundParameters type test
+  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
+  Linearizer_t linearizer(ltConfig);
 
   // The track updater to be tested
   KalmanVertexTrackUpdater<BoundParameters> updater;
@@ -140,8 +136,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     double res_th = resAngDist(gen);
     double res_qp = resQoPDist(gen);
 
-    covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0.,
-        0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
+    covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
+        0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
     BoundParameters params(tgContext, std::move(covMat), paramVec,
@@ -149,10 +145,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer
-            .linearizeTrack(&params,
-                            SpacePointVector::Zero())
-            .value();
+        linearizer.linearizeTrack(&params, SpacePointVector::Zero()).value();
 
     // Create TrackAtVertex
     TrackAtVertex<BoundParameters> trkAtVtx(0., params, params);

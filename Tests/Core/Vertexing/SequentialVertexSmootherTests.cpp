@@ -30,7 +30,9 @@
 namespace Acts {
 namespace Test {
 
+using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Linearizer_t = HelicalTrackLinearizer<ConstantBField, Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -84,19 +86,17 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
 
   // Set up LinearizedTrackFactory, needed for linearizing the tracks
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
 
-    // Linearizer for BoundParameters type test
-    Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-    Linearizer_t linearizer(ltConfig);
+  // Linearizer for BoundParameters type test
+  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
+  Linearizer_t linearizer(ltConfig);
 
   // Set up Billoir Vertex Fitter
-  FullBilloirVertexFitter<BoundParameters,
-                          Linearizer_t>::Config
+  FullBilloirVertexFitter<BoundParameters, Linearizer_t>::Config
       vertexFitterCfg;
-  FullBilloirVertexFitter<BoundParameters,
-                          Linearizer_t>
-      billoirFitter(vertexFitterCfg);
+  FullBilloirVertexFitter<BoundParameters, Linearizer_t> billoirFitter(
+      vertexFitterCfg);
 
   VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
         thetaDist(gen), q / pTDist(gen), 0.;
 
     // Fill vector of track objects with simple covariance matrix
-    std::unique_ptr<BoundSymMatrix> covMat = std::make_unique<BoundSymMatrix>();
+    Covariance covMat;
 
     // Resolutions
     double resD0 = resIPDist(gen);
@@ -138,9 +138,9 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
     double resTh = resAngDist(gen);
     double resQp = resQoPDist(gen);
 
-    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
-        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
     tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                      perigeeSurface));
   }
@@ -165,9 +165,7 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
     BoundParameters fittedParams = trackAtVtx.fittedParams;
 
     LinearizedTrack linTrack =
-        linearizer
-            .linearizeTrack(&fittedParams, vertexPosition)
-            .value();
+        linearizer.linearizeTrack(&fittedParams, vertexPosition).value();
     trackAtVtx.linearizedState = linTrack;
     tracksWithLinState.push_back(trackAtVtx);
   }

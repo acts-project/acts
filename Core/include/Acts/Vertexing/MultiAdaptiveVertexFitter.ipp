@@ -8,12 +8,11 @@
 
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
-Acts::Result<void> Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t,
-                                                   propagator_t, linearizer_t>::
-    fit(State& state, const linearizer_t& linearizer,
-        const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+template <typename input_track_t, typename linearizer_t>
+Acts::Result<void>
+Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit(
+    State& state, const linearizer_t& linearizer,
+    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   auto& geoContext = vFitterOptions.geoContext;
   auto& mfContext = vFitterOptions.magFieldContext;
 
@@ -108,15 +107,12 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t,
   return {};
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
-Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
-    bfield_t, input_track_t, propagator_t,
-    linearizer_t>::addVertexToFit(State& state,
-                                  Vertex<input_track_t>& newVertex,
-                                  const linearizer_t& linearizer,
-                                  const VertexFitterOptions<input_track_t>&
-                                      vFitterOptions) const {
+template <typename input_track_t, typename linearizer_t>
+Acts::Result<void>
+Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::addVertexToFit(
+    State& state, Vertex<input_track_t>& newVertex,
+    const linearizer_t& linearizer,
+    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   if (newVertex.tracks().empty()) {
     return VertexingError::EmptyInput;
   }
@@ -171,7 +167,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
   state.vertexCollection = verticesToFit;
 
   // Perform fit on all added vertices
-  auto fitRes = fit(state, vFitterOptions, linearizer);
+  auto fitRes = fit(state, linearizer, vFitterOptions);
 
   if (!fitRes.ok()) {
     return fitRes.error();
@@ -180,24 +176,20 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
   return {};
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
-bool Acts::MultiAdaptiveVertexFitter<
-    bfield_t, input_track_t, propagator_t,
-    linearizer_t>::isAlreadyInList(Vertex<input_track_t>* vtx,
-                                   const std::vector<Vertex<input_track_t>*>&
-                                       verticesVec) const {
+template <typename input_track_t, typename linearizer_t>
+bool Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
+    isAlreadyInList(
+        Vertex<input_track_t>* vtx,
+        const std::vector<Vertex<input_track_t>*>& verticesVec) const {
   return std::find(verticesVec.begin(), verticesVec.end(), vtx) !=
          verticesVec.end();
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
-Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
-    bfield_t, input_track_t, propagator_t,
-    linearizer_t>::prepareVtxForFit(State& state, Vertex<input_track_t>* vtx,
-                                    const VertexFitterOptions<input_track_t>&
-                                        vFitterOptions) const {
+template <typename input_track_t, typename linearizer_t>
+Acts::Result<void>
+Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::prepareVtxForFit(
+    State& state, Vertex<input_track_t>* vtx,
+    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   const Vector3D& refPos = vtx->position();
   auto& geoContext = vFitterOptions.geoContext;
   auto& mfContext = vFitterOptions.magFieldContext;
@@ -216,10 +208,9 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
   return {};
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
-Acts::Result<void> Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t,
-                                                   propagator_t, linearizer_t>::
+template <typename input_track_t, typename linearizer_t>
+Acts::Result<void>
+Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     setAllVtxCompatibilities(State& state, const GeometryContext& geoContext,
                              const MagneticFieldContext& mfContext,
                              Vertex<input_track_t>* currentVtx) const {
@@ -267,12 +258,11 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<bfield_t, input_track_t,
   return {};
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
+template <typename input_track_t, typename linearizer_t>
 Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
-    bfield_t, input_track_t, propagator_t,
-    linearizer_t>::setWeightsAndUpdate(State& state,
-                                       const linearizer_t& linearizer) const {
+    input_track_t, linearizer_t>::setWeightsAndUpdate(State& state,
+                                                      const linearizer_t&
+                                                          linearizer) const {
   for (auto vtx : state.vertexCollection) {
     // Create empty list of new TrackAtVertex objects
     // to be filled below. Needed due to constness of
@@ -330,10 +320,9 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
   return {};
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
-Acts::Result<std::vector<double>> Acts::MultiAdaptiveVertexFitter<
-    bfield_t, input_track_t, propagator_t, linearizer_t>::
+template <typename input_track_t, typename linearizer_t>
+Acts::Result<std::vector<double>>
+Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     collectTrkToVtxCompatibilities(
         State& state, const TrackAtVertex<input_track_t>& trk) const {
   // All vertices that currently hold the track `trk`
@@ -363,11 +352,9 @@ Acts::Result<std::vector<double>> Acts::MultiAdaptiveVertexFitter<
   return trkToVtxCompatibilities;
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
+template <typename input_track_t, typename linearizer_t>
 bool Acts::MultiAdaptiveVertexFitter<
-    bfield_t, input_track_t, propagator_t,
-    linearizer_t>::checkSmallShift(State& state) const {
+    input_track_t, linearizer_t>::checkSmallShift(State& state) const {
   for (auto vtx : state.vertexCollection) {
     SpacePointVector diff =
         state.vtxInfoMap[vtx].oldPosition - vtx->fullPosition();

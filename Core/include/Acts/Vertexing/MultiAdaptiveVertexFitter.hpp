@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
+#include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/MAVFInfo.hpp"
 #include "Acts/Vertexing/SequentialVertexSmoother.hpp"
 #include "Acts/Vertexing/VertexAnnealingTool.hpp"
@@ -31,46 +32,49 @@ namespace Acts {
 ///
 ///////////////////////////////////////////////////////////////////////////
 ///
-/// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
-/// @tparam propagator_t Propagator type
 /// @tparam linearizer_t Track linearizer type
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename linearizer_t>
+template <typename input_track_t, typename linearizer_t>
 class MultiAdaptiveVertexFitter {
+  static_assert(LinearizerConcept<linearizer_t>,
+                "Linearizer does not fulfill linearizer concept.");
+
+  using InputTrack_t = input_track_t;
+  using Propagator_t = typename linearizer_t::Propagator_t;
+  using BField_t = typename linearizer_t::BField_t;
+  using IPEstimator =
+      ImpactPoint3dEstimator<BField_t, InputTrack_t, Propagator_t>;
+
  public:
   /// @brief The fitter state
   struct State {
     // Vertex collection to be fitted
-    std::vector<Vertex<input_track_t>*> vertexCollection;
+    std::vector<Vertex<InputTrack_t>*> vertexCollection;
 
     // Annealing state
     VertexAnnealingTool::State annealingState;
 
     // Map to store vertices information
-    std::map<Vertex<input_track_t>*, MAVFVertexInfo<input_track_t>> vtxInfoMap;
+    std::map<Vertex<InputTrack_t>*, MAVFVertexInfo<InputTrack_t>> vtxInfoMap;
 
     // Map to store tracks information
-    std::map<unsigned long, MAVFTrackAtVtxInfo<input_track_t>> trkInfoMap;
+    std::map<unsigned long, MAVFTrackAtVtxInfo<InputTrack_t>> trkInfoMap;
   };
 
   struct Config {
     /// @brief Config constructor
     ///
-    /// @param bIn The magnetic field
-    Config(const bfield_t& bIn)
-        : ipEst(typename ImpactPoint3dEstimator<
-                bfield_t, input_track_t, propagator_t>::Config(bIn,
-                                                               propagatorIn)) {}
+    /// @param est ImpactPoint3dEstimator
+    Config(IPEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPoint3dEstimator
-    ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t> ipEst;
+    IPEstimator ipEst;
 
     // Vertex updater
-    KalmanVertexUpdater<input_track_t> vertexUpdater;
+    KalmanVertexUpdater<InputTrack_t> vertexUpdater;
 
     // SequentialVertexSmoother
-    SequentialVertexSmoother<input_track_t> vertexSmoother;
+    SequentialVertexSmoother<InputTrack_t> vertexSmoother;
 
     // Annealing tool
     VertexAnnealingTool annealingTool;
@@ -92,11 +96,11 @@ class MultiAdaptiveVertexFitter {
     bool doSmoothing{false};
   };
 
-  /// @brief Constructor used if input_track_t type == BoundParameters
+  /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
   /// @param cfg Configuration object
   /// @param logger The logging instance
-  template <typename T = input_track_t,
+  template <typename T = InputTrack_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   MultiAdaptiveVertexFitter(Config& cfg,
                             std::unique_ptr<const Logger> logger =
@@ -106,13 +110,13 @@ class MultiAdaptiveVertexFitter {
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
-  /// @brief Constructor for user-defined input_track_t type =! BoundParameters
+  /// @brief Constructor for user-defined InputTrack_t type =! BoundParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from input_track_t object
+  /// @param func Function extracting BoundParameters from InputTrack_t object
   /// @param logger The logging instance
   MultiAdaptiveVertexFitter(Config& cfg,
-                            std::function<BoundParameters(input_track_t)> func,
+                            std::function<BoundParameters(InputTrack_t)> func,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("MultiAdaptiveVertexFitter",
                                                  Logging::INFO))
@@ -130,7 +134,7 @@ class MultiAdaptiveVertexFitter {
   /// @return Result<void> object
   Result<void> fit(
       State& state, const linearizer_t& linearizer,
-      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Adds new vertex to an existing multi-vertex fit
   /// and fits everything together (by invoking the fit method):
@@ -156,20 +160,20 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @return Result<void> object
   Result<void> addVertexToFit(
-      State& state, Vertex<input_track_t>& newVertex,
+      State& state, Vertex<InputTrack_t>& newVertex,
       const linearizer_t& linearizer,
-      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
  private:
   /// Configuration object
   const Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// input_track_t objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other input_track_t objects.
+  /// InputTrack_t objects are BoundParameters by default, function to be
+  /// overwritten to return BoundParameters for other InputTrack_t objects.
   ///
-  /// @param input_track_t object to extract track parameters from
-  const std::function<BoundParameters(input_track_t)> m_extractParameters;
+  /// @param InputTrack_t object to extract track parameters from
+  const std::function<BoundParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -184,8 +188,8 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @return True if vtx is already in verticesVec
   bool isAlreadyInList(
-      Vertex<input_track_t>* vtx,
-      const std::vector<Vertex<input_track_t>*>& verticesVec) const;
+      Vertex<InputTrack_t>* vtx,
+      const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
 
   /// @brief Prepares vertex object for the actual fit, i.e.
   /// all TrackAtVertex objects at current vertex will obtain
@@ -196,8 +200,8 @@ class MultiAdaptiveVertexFitter {
   /// @param vtx The vertex object
   /// @param vFitterOptions Vertex fitter options
   Result<void> prepareVtxForFit(
-      State& state, Vertex<input_track_t>* vtx,
-      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+      State& state, Vertex<InputTrack_t>* vtx,
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Sets vertexCompatibility for all TrackAtVertex objects
   /// at current vertex
@@ -206,18 +210,18 @@ class MultiAdaptiveVertexFitter {
   /// @param geoContext The geometry context
   /// @param mfContext The magnetic field context
   /// @param currentVtx Current vertex
-  Result<void> setAllVtxCompatibilities(
-      State& state, const GeometryContext& geoContext,
-      const MagneticFieldContext& mfContext,
-      Vertex<input_track_t>* currentVtx) const;
+  Result<void> setAllVtxCompatibilities(State& state,
+                                        const GeometryContext& geoContext,
+                                        const MagneticFieldContext& mfContext,
+                                        Vertex<InputTrack_t>* currentVtx) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater
   ///
   /// @param state The state object
   /// @param linearizer The track linearizer
-  Result<void> setWeightsAndUpdate(
-      State& state, const linearizer_t& linearizer) const;
+  Result<void> setWeightsAndUpdate(State& state,
+                                   const linearizer_t& linearizer) const;
 
   /// @brief Collects all compatibility values of the track `trk`
   /// at all vertices it is currently attached to and outputs
@@ -228,7 +232,7 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @return Vector of compatibility values
   Result<std::vector<double>> collectTrkToVtxCompatibilities(
-      State& state, const TrackAtVertex<input_track_t>& trk) const;
+      State& state, const TrackAtVertex<InputTrack_t>& trk) const;
 
   /// @brief Determines if vertex position has shifted more than
   /// m_cfg.maxRelativeShift in last iteration
