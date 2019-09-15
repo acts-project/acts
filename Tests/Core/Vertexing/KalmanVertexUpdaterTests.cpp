@@ -34,9 +34,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator>;
+using Linearizer_t = HelicalTrackLinearizer<ConstantBField, Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -90,11 +88,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
   // Set up LinearizedTrackFactory, needed for linearizing the tracks
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
 
-    // Linearizer for BoundParameters type test
-    Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-    Linearizer_t linearizer(ltConfig);
+  // Linearizer for BoundParameters type test
+  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
+  Linearizer_t linearizer(ltConfig);
 
   // The track updater to be tested
   KalmanVertexUpdater<BoundParameters> updater;
@@ -142,10 +140,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer
-            .linearizeTrack(&params,
-                            SpacePointVector::Zero())
-            .value();
+        linearizer.linearizeTrack(&params, SpacePointVector::Zero()).value();
 
     // Create TrackAtVertex
     TrackAtVertex<BoundParameters> trkAtVtx(0., params, params);

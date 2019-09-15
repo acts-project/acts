@@ -67,6 +67,8 @@ class IterativeVertexFinder {
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
   using BField_t = typename vfitter_t::BField_t;
+  using IPEstimator =
+      ImpactPoint3dEstimator<BField_t, InputTrack_t, Propagator_t>;
 
   /// @struct Config Configuration struct
   struct Config {
@@ -75,10 +77,13 @@ class IterativeVertexFinder {
     /// @param fitter Vertex fitter
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
-    Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder)
+    /// @param est ImpactPoint3dEstimator
+    Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
+           IPEstimator est)
         : vertexFitter(std::move(fitter)),
           linearizer(std::move(lin)),
-          seedFinder(std::move(sfinder)) {}
+          seedFinder(std::move(sfinder)),
+          ipEst(std::move(est)) {}
 
     /// Vertex fitter
     vfitter_t vertexFitter;
@@ -86,11 +91,11 @@ class IterativeVertexFinder {
     /// Linearized track factory
     Linearizer_t linearizer;
 
-    /// ImpactPoint3dEstimator
-    ImpactPoint3dEstimator<BField_t, InputTrack_t, Propagator_t> ipEst;
-
     /// Vertex seed finder
     sfinder_t seedFinder;
+
+    /// ImpactPoint3dEstimator
+    IPEstimator ipEst;
 
     /// Vertex finder configuration variables
     bool useBeamConstraint = false;
@@ -203,7 +208,8 @@ class IterativeVertexFinder {
       const std::vector<InputTrack_t>& perigeeList,
       const Vertex<InputTrack_t>& seedVertex,
       std::vector<InputTrack_t>& perigeesToFitOut,
-      std::vector<InputTrack_t>& perigeesToFitSplitVertexOut) const;
+      std::vector<InputTrack_t>& perigeesToFitSplitVertexOut,
+      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
   /// @brief Function that reassigns tracks from other vertices
   ///        to the current vertex if they are more compatible

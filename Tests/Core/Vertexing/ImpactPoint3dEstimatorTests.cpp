@@ -75,12 +75,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator>::Config
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
       ipEstCfg(bField, propagator);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator>
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>
       ipEstimator(ipEstCfg);
 
   // Reference position
@@ -197,12 +195,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator>::Config
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
       ipEstCfg(bField, propagator);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters,
-                         Propagator>
+  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>
       ipEstimator(ipEstCfg);
 
   // Reference position

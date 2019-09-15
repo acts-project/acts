@@ -28,6 +28,8 @@
 namespace Acts {
 namespace Test {
 
+using namespace Acts::UnitLiterals;
+
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
 using Linearizer = HelicalTrackLinearizer<ConstantBField, Propagator>;
@@ -37,15 +39,15 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
+std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20 * units::_mm, 20 * units::_mm);
+std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(1. * units::_GeV, 30. * units::_GeV);
+std::uniform_real_distribution<> pTDist(1._GeV, 30._GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
@@ -53,7 +55,7 @@ std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
 std::uniform_real_distribution<> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
+std::uniform_real_distribution<> resIPDist(0., 100._um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
@@ -71,7 +73,7 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 1._T));
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -81,8 +83,15 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
 
   VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
 
-  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters, Propagator, Linearizer>::Config
-      config(bField);
+  // IP 3D Estimator
+  using IPEstimator =
+      ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>;
+
+  IPEstimator::Config ip3dEstCfg(bField, propagator);
+  IPEstimator ip3dEst(ip3dEstCfg);
+
+  MultiAdaptiveVertexFitter<BoundParameters, Linearizer>::Config fitterCfg(
+      ip3dEst);
 
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
       Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
@@ -92,19 +101,17 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
-  config.doSmoothing = true;
+  fitterCfg.doSmoothing = true;
 
-  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters, Propagator, Linearizer> fitter(
-      config);
+  MultiAdaptiveVertexFitter<BoundParameters, Linearizer> fitter(fitterCfg);
 
-  MultiAdaptiveVertexFitter<ConstantBField, BoundParameters, Propagator, Linearizer>::State
-      state;
+  MultiAdaptiveVertexFitter<BoundParameters, Linearizer>::State state;
 
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later
-  Vector3D vtxPos1(-0.15 * units::_mm, -0.1 * units::_mm, -1.5 * units::_mm);
-  Vector3D vtxPos2(-0.1 * units::_mm, -0.15 * units::_mm, -3. * units::_mm);
-  Vector3D vtxPos3(0.2 * units::_mm, 0.2 * units::_mm, 10. * units::_mm);
+  Vector3D vtxPos1(-0.15_mm, -0.1_mm, -1.5_mm);
+  Vector3D vtxPos2(-0.1_mm, -0.15_mm, -3._mm);
+  Vector3D vtxPos3(0.2_mm, 0.2_mm, 10._mm);
 
   std::vector<Vector3D> vtxVec{vtxPos1, vtxPos2, vtxPos3};
 
@@ -131,11 +138,11 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Fill vector of track objects with simple covariance matrix
-    std::unique_ptr<Covariance> covMat = std::make_unique<Covariance>();
+    Covariance covMat;
 
-    (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
-        0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-        0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
     // Index of current vertex
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
@@ -214,7 +221,8 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
-  auto res1 = fitter.addVertexToFit(state, vtxList[0], linearizer, fitterOptions);
+  auto res1 =
+      fitter.addVertexToFit(state, vtxList[0], linearizer, fitterOptions);
 
   BOOST_CHECK(res1.ok());
 
@@ -238,18 +246,19 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   BOOST_CHECK_EQUAL(vtxList[2].fullPosition(), seedListCopy[2].fullPosition());
 
   CHECK_CLOSE_ABS(vtxList[0].fullPosition(), seedListCopy[0].fullPosition(),
-                  1 * units::_mm);
+                  1_mm);
   CHECK_CLOSE_ABS(vtxList[1].fullPosition(), seedListCopy[1].fullPosition(),
-                  1 * units::_mm);
+                  1_mm);
 
-  auto res2 = fitter.addVertexToFit(state, vtxList[2], fitterOptions);
+  auto res2 =
+      fitter.addVertexToFit(state, vtxList[2], linearizer, fitterOptions);
 
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
   BOOST_CHECK_NE(vtxList[2].fullPosition(), seedListCopy[2].fullPosition());
   CHECK_CLOSE_ABS(vtxList[2].fullPosition(), seedListCopy[2].fullPosition(),
-                  1 * units::_mm);
+                  1_mm);
 
   if (debugMode) {
     std::cout << "Vertex positions after fit of vertex 3:" << std::endl;
