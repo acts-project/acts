@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   ply.clear();
 
   Vector3D origin(10, -20, 6);
-  Vector3D centroid;
+  Vector3D centroid(0., 0., 0.);
 
   for (const auto& vtx_ : vertices) {
     Vector3D vtx = *trf * vtx_;
