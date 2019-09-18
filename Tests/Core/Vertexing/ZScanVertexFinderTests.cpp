@@ -27,6 +27,8 @@
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 
@@ -37,6 +39,10 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
+using Linearizer_t =
+    HelicalTrackLinearizer<ConstantBField,
+                           Propagator<EigenStepper<ConstantBField>>>;
+using Propagator = Propagator<EigenStepper<ConstantBField>>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -86,7 +92,11 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+    auto propagator = std::make_shared<Propagator>(stepper);
+    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+
+    typedef FullBilloirVertexFitter<BoundParameters, Linearizer_t>
+        BilloirFitter;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -133,14 +143,16 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                                        perigeeSurface));
     }
 
-    using VertexFinder =
-        ZScanVertexFinder<ConstantBField, BoundParameters,
-                          Propagator<EigenStepper<ConstantBField>>>;
+    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(propagator);
+    TrackToVertexIPEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+        propagator, pOptions);
+    TrackToVertexIPEstimator<BoundParameters, Propagator> ipEst(ipEstCfg);
+
+    VertexFinder::Config cfg(std::move(ipEst));
 
     VertexFinder finder(std::move(cfg));
 
@@ -149,6 +161,10 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
+
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     if (res.ok()) {
       BOOST_CHECK(!(*res).empty());
@@ -191,7 +207,10 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     EigenStepper<ConstantBField> stepper(bField);
 
     // Set up propagator with void navigator
-    Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+    auto propagator = std::make_shared<Propagator>(stepper);
+    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+
+    typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -238,14 +257,16 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                                                   paramVec, perigeeSurface)));
     }
 
-    using VertexFinder =
-        ZScanVertexFinder<ConstantBField, InputTrack,
-                          Propagator<EigenStepper<ConstantBField>>>;
+    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(propagator);
+    TrackToVertexIPEstimator<InputTrack, Propagator>::Config ipEstCfg(
+        propagator, pOptions);
+    TrackToVertexIPEstimator<InputTrack, Propagator> ipEst(ipEstCfg);
+
+    VertexFinder::Config cfg(std::move(ipEst));
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack
@@ -259,6 +280,10 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     auto res = finder.find(tracks, vFinderOptions);
 
     BOOST_CHECK(res.ok());
+
+    if (!res.ok()) {
+      std::cout << res.error().message() << std::endl;
+    }
 
     if (res.ok()) {
       BOOST_CHECK(!(*res).empty());

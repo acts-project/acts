@@ -11,10 +11,10 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
-
 namespace Acts {
 
 /// @class FullBilloirVertexFitter
@@ -28,49 +28,21 @@ namespace Acts {
 /// In: Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI 10.1016/0168-9002(92)90859-3
 ///
-/// @tparam bfield_t Magnetic field type
 /// @tparam input_track_t Track object type
-/// @tparam propagator_t Propagator type
-
-template <typename bfield_t, typename input_track_t,
-          typename propagator_t = Propagator<EigenStepper<bfield_t>>>
+/// @tparam linearizer_t Track linearizer type
+template <typename input_track_t, typename linearizer_t>
 class FullBilloirVertexFitter {
+  static_assert(LinearizerConcept<linearizer_t>,
+                "Linearizer does not fulfill linearizer concept.");
+
  public:
-  using InputTrack = input_track_t;
+  using InputTrack_t = input_track_t;
+  using Propagator_t = typename linearizer_t::Propagator_t;
+  using Linearizer_t = linearizer_t;
 
   struct Config {
-    /// Magnetic field
-    bfield_t bField;
-
     /// Maximum number of interations in fitter
     int maxIterations = 5;
-
-    /// Set up factory for linearizing tracks
-    typename LinearizedTrackFactory<bfield_t, propagator_t>::Config ltConfig;
-    LinearizedTrackFactory<bfield_t, propagator_t> linFactory;
-
-    /// Propagator
-    propagator_t propagator;
-
-    /// Constructor with propagator input
-    Config(const bfield_t& bIn, const propagator_t& propagatorIn)
-        : bField(bIn),
-          ltConfig(bIn),
-          linFactory(ltConfig),
-          propagator(propagatorIn) {}
-
-    /// Constructor with default propagator
-    template <typename T = propagator_t,
-              std::enable_if_t<
-                  std::is_same<T, Propagator<EigenStepper<bfield_t>>>::value,
-                  int> = 0>
-    Config(const bfield_t& bIn)
-        : bField(bIn),
-          ltConfig(bIn),
-          linFactory(ltConfig),
-          propagator(
-              Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bIn))) {
-    }
   };
 
   /// @brief Constructor used if input_track_t type == BoundParameters
@@ -92,11 +64,13 @@ class FullBilloirVertexFitter {
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
+  /// @param linearizer The track linearizer
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Fitted vertex
   Result<Vertex<input_track_t>> fit(
       const std::vector<input_track_t>& paramVector,
+      const linearizer_t& linearizer,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
  private:

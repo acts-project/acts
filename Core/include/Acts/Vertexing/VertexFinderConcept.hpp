@@ -25,9 +25,9 @@ namespace concept {
     template <typename S>
       struct VertexFinderConcept {
         
-        constexpr static bool find_exists = has_method<const S, Result<std::vector<Vertex<typename S::InputTrack>>>,
-         find_t, const std::vector<typename S::InputTrack>&, 
-         const VertexFinderOptions<typename S::InputTrack>&>;
+        constexpr static bool find_exists = has_method<const S, Result<std::vector<Vertex<typename S::InputTrack_t>>>,
+         find_t, const std::vector<typename S::InputTrack_t>&, 
+         const VertexFinderOptions<typename S::InputTrack_t>&>;
         static_assert(find_exists, "find method not found");
 
         constexpr static bool value = require<find_exists>;
