@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   bool symmetric(false);
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
-  auto pNullTransform = std::make_shared<const Transform3D>();
+  std::shared_ptr<const Transform3D> pNullTransform{};
   BOOST_CHECK_EQUAL(
       Surface::makeShared<ConeSurface>(pNullTransform, alpha, symmetric)
           ->type(),
@@ -94,7 +94,6 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   bool symmetric(false);
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
-  // auto pNullTransform = std::make_shared<const Transform3D>();
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
   //

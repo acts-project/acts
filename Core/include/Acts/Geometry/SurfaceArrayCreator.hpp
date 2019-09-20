@@ -218,7 +218,7 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-      size_t bins2, BinningValue bValue = BinningValue::binX,
+      size_t bins2, BinningValue bValue,
       boost::optional<ProtoLayer> protoLayerOpt = boost::none,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 

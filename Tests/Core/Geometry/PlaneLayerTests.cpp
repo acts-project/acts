@@ -57,15 +57,15 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
   /// Constructor with transform pointer
-  auto pNullTransform = std::make_shared<const Transform3D>();
+  std::shared_ptr<const Transform3D> pNullTransform{};
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
   const double thickness(1.0);
   SurfaceArrayCreator sac;
   size_t binsX(2), binsY(4);
-  auto pSurfaceArray =
-      sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX, binsY);
+  auto pSurfaceArray = sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX,
+                                               binsY, BinningValue::binZ);
   auto pPlaneLayerFromSurfaces =
       PlaneLayer::create(pTransform, pRectangle, std::move(pSurfaceArray));
   BOOST_CHECK_EQUAL(pPlaneLayerFromSurfaces->layerType(), LayerType::active);

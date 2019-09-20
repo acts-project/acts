@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   /// indicator
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
-  auto pNullTransform = std::make_shared<const Transform3D>();
+  std::shared_ptr<const Transform3D> pNullTransform{};
   // constructor with nullptr transform
   BOOST_CHECK_EQUAL(
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)->type(),
@@ -80,7 +80,6 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   /// Test clone method
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
-  // auto pNullTransform = std::make_shared<const Transform3D>();
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   //
