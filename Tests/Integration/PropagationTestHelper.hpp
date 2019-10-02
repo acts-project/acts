@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <limits>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
@@ -114,7 +115,8 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
     CHECK_CLOSE_ABS(theta, VH::theta(tp->momentum()), 1e-4);
   // clang-format on
 
-  double r = std::abs(pT / (q * Bz));
+  double r = (q * Bz != 0.) ? std::abs(pT / (q * Bz))
+                            : std::numeric_limits<double>::max();
 
   // calculate number of turns of helix
   double turns = options.pathLimit / (2 * M_PI * r) * sin(theta);
@@ -283,7 +285,7 @@ std::pair<Vector3D, double> to_cylinder(
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
-                                              0.05 * rand1, 0.05 * rand2);
+                                              0.04 * rand1, 0.04 * rand2);
   auto endSurface = Surface::makeShared<CylinderSurface>(
       seTransform, plimit, std::numeric_limits<double>::max());
 
@@ -357,7 +359,7 @@ std::pair<Vector3D, double> to_surface(
                                                  tp_s->momentum().normalized(),
                                                  0.1 * rand3, 0.1 * rand1)
                          : createCylindricTransform(tp_s->position(),
-                                                    0.05 * rand1, 0.05 * rand2);
+                                                    0.04 * rand1, 0.04 * rand2);
 
   auto endSurface = Surface::makeShared<Surface_type>(seTransform, nullptr);
   // Increase the path limit - to be safe hitting the surface
@@ -403,7 +405,7 @@ void covariance_curvilinear(const Propagator_type& propagator, double pT,
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = plimit;
-  options.pathLimit = plimit;
+  options.pathLimit = 0.1 * plimit;
   options.debug = debug;
   options.tolerance = 1e-9;
 
@@ -459,7 +461,7 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   covariance_validation_fixture<Propagator_type> fixture(propagator);
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
-  options.maxStepSize = plimit;
+  options.maxStepSize = 0.1 * plimit;
   options.pathLimit = plimit;
   options.debug = debug;
 
@@ -493,15 +495,15 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   const auto& tp_c = result_c.endParameters;
 
   auto ssTransform =
-      startPlanar ? createPlanarTransform(pos, mom.normalized(), 0.1 * rand1,
-                                          0.1 * rand2)
-                  : createCylindricTransform(pos, 0.05 * rand1, 0.05 * rand2);
+      startPlanar ? createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
+                                          0.05 * rand2)
+                  : createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
   auto seTransform = destPlanar
                          ? createPlanarTransform(tp_c->position(),
                                                  tp_c->momentum().normalized(),
-                                                 0.1 * rand3, 0.1 * rand1)
+                                                 0.05 * rand3, 0.05 * rand1)
                          : createCylindricTransform(tp_c->position(),
-                                                    0.05 * rand1, 0.05 * rand2);
+                                                    0.01 * rand1, 0.01 * rand2);
 
   auto startSurface =
       Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
@@ -522,6 +524,10 @@ void covariance_bound(const Propagator_type& propagator, double pT, double phi,
   // get numerically propagated covariance matrix
   Covariance calculated_cov = fixture.calculateCovariance(
       start_wo_c, *(start.covariance()), *tp, options);
+
+  if (calculated_cov == *(start.covariance())) {
+    return;
+  }
 
   CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
 }

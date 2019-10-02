@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -77,6 +77,7 @@ DensePropagatorType setupDensePropagator() {
   CuboidVolumeBuilder::VolumeConfig vConf;
   vConf.position = {1.5_m, 0., 0.};
   vConf.length = {3_m, 1_m, 1_m};
+
   vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
       Material(352.8, 407., 9.012, 4., 1.848e-3));
   CuboidVolumeBuilder::Config conf;
@@ -124,10 +125,10 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
   // constant field propagation atlas stepper
   auto aposition = constant_field_propagation(apropagator, pT, phi, theta,
-                                              dcharge, time, index, Bz);
+                                              dcharge, time, Bz);
   // constant field propagation eigen stepper
   auto eposition = constant_field_propagation(epropagator, pT, phi, theta,
-                                              dcharge, time, index, Bz);
+                                              dcharge, time, Bz);
   // check consistency
   CHECK_CLOSE_REL(eposition, aposition, 1e-6);
 }

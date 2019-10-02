@@ -72,7 +72,7 @@ class StraightLineStepper {
         : pos(par.position()),
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
-          q(par.charge()),
+          q((par.charge() != 0.) ? par.charge() : 1.),
           t0(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
@@ -445,7 +445,7 @@ class StraightLineStepper {
     // use the adjusted step size
     const auto h = state.stepping.stepSize;
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = std::hypot(1, state.options.mass / state.stepping.p);
+    const auto dtds = std::hypot(1., state.options.mass / state.stepping.p);
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
     state.stepping.dt += h * dtds;
@@ -456,7 +456,7 @@ class StraightLineStepper {
       D.block<3, 3>(0, 4) = ActsSymMatrixD<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
-      D(3, 7) = h * state.options.mass * state.options.mass /
+      D(3, 7) = h * state.options.mass * state.options.mass * state.stepping.q /
                 (state.stepping.p * dtds);
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;

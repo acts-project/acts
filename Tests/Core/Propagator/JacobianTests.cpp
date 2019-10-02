@@ -109,7 +109,7 @@ std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
 /// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]
 /// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]
 
-BoundToFreeMatrix convertToMatrix(const double* P) {
+BoundToFreeMatrix convertToMatrix(const std::array<double, 59> P) {
   // initialize to zero
   BoundToFreeMatrix jMatrix = BoundToFreeMatrix::Zero();
   for (size_t j = 0; j < BoundParsDim; ++j) {

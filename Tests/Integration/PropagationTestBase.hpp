@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -83,7 +83,7 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
   e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1, rand2,
                               rand3, covtpr, debug);
 
-  CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 10_um);
+  CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 1_um);
 }
 
 /// test consistency of propagators to a plane
@@ -158,7 +158,7 @@ BOOST_DATA_TEST_CASE(propagation_to_line_,
   auto e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
       epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
       covtpr, debug);
-  CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1_um);
+  CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 10_um);
 
   if (debug) {
     std::cout << "[ >>>> Testing Neutral Propagators <<<< ]" << std::endl;
@@ -257,7 +257,8 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
   covariance_curvilinear(dpropagator, pT, 0_degree, 45_degree, 1_e, plimit);
   covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
       dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2, rand3,
-      true, true, 1e-1);
+      true, true, 8e-1);
   covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
-      dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3);
+      dpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3,
+      true, true, 8e-1);
 }
