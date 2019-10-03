@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <array>
 #include <limits>
 #include <string>
 
@@ -37,6 +38,7 @@ namespace Acts {
 class TrackingVolume;
 class VolumeBounds;
 class IVolumeMaterial;
+class ISurfaceMaterial;
 
 /// @enum WrappingCondition
 enum WrappingCondition {
@@ -311,7 +313,7 @@ struct WrappingConfig {
       } else {
         // full wrapping or full insertion case
         if (existingVolumeConfig.rMax < containerVolumeConfig.rMin) {
-          // full wrapping case
+          // Full wrapping case
           // - set the rMin
           nVolumeConfig.rMin = existingVolumeConfig.rMax;
           cVolumeConfig.rMin = existingVolumeConfig.rMax;
@@ -485,6 +487,14 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
                                                 1. * UnitConstants::mm};
     /// the additional envelope in Z to create zMin, zMax
     double layerEnvelopeZ = 10. * UnitConstants::mm;
+
+    // The potential boundary material (MB) options - there are 6 at maximium
+    /// -------------------- MB (outer [1]) ---------------
+    /// | MB [2]  NEC  MB [3] |  B |  MB [4]  PEC  MB [5] |
+    /// -------------------- MB (inner [0]) ---------------
+    std::array<std::shared_ptr<const ISurfaceMaterial>, 6> boundaryMaterial{
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+
     /// the volume signature
     int volumeSignature = -1;
   };

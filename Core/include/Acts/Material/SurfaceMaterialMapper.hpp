@@ -71,6 +71,8 @@ class SurfaceMaterialMapper {
   struct Config {
     /// Mapping range
     std::array<double, 2> etaRange = {{-6., 6.}};
+    /// Correct for empty bins (recommended)
+    bool emptyBinCorrection = true;
     /// Mapping output to debug stream
     bool mapperDebugOutput = false;
   };
