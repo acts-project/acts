@@ -128,6 +128,16 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   /// Private access to the logger
   const Logger& logger() const { return *m_logger; }
 
+  /// Private helper method to be called for endcap layers
+  ///
+  /// @param gctx the geometry context for this build call
+  ///
+  /// @return  the layers for either endcap side
+  const LayerVector endcapLayers(
+      const GeometryContext& gctx,
+      const std::vector<dd4hep::DetElement>& dendcapLayers,
+      const std::string& side) const;
+
   /// Private helper function collecting all sensitive detector elements of a
   /// layer
   /// @param gctx the geometry context of this call
@@ -148,9 +158,8 @@ class DD4hepLayerBuilder : public ILayerBuilder {
       const dd4hep::DetElement& detElement, bool isDisc = false) const;
 
   // Private helper function to convert the TGeo transformation matrix into
-  // a
-  // Acts transformation matrix
-  /// @param tGeoTrans TGeo transformation matrix which should be converted
+  // an Acts transformation matrix
+  // @param tGeoTrans TGeo transformation matrix which should be converted
   std::shared_ptr<const Acts::Transform3D> convertTransform(
       const TGeoMatrix* tGeoTrans) const;
 };

@@ -60,7 +60,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   // the layer array
   std::unique_ptr<const LayerArray> layerArray = nullptr;
 
-  // cases are:
+  // Cases are:
   // (1) volumeBounds && transform   : use both information
   // (2) volumeBounds && !transform  : centered around 0, but with given bounds
   // (3) !volumeBounds && transform  : estimate size from layers, use transform
@@ -320,12 +320,11 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
         "(required) - returning 0 ");
     return nullptr;
   }
-  // check whether it is a r-binned case or a z-binned case
+  // Check whether it is a r-binned case or a z-binned case
   bool rCase = std::abs(firstVolumeBounds->innerRadius() -
                         lastVolumeBounds->innerRadius()) > 0.1;
 
-  // fill these ones depending on the rCase though assignment - no parsing at
-  // that stage
+  // Fill these ones depending on the rCase though assignment
   double zMin = 0.;
   double zMax = 0.;
   double rMin = 0.;
@@ -349,14 +348,14 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     rMin = firstVolumeBounds->innerRadius();
     rMax = firstVolumeBounds->outerRadius();
   }
-  // estimate the z - position
+  // Estimate the z - position
   double zPos = 0.5 * (zMin + zMax);
-  // create the HEP transform from the stuff known so far
+  // Create the transform from the stuff known so far
   std::shared_ptr<const Transform3D> topVolumeTransform =
       (std::abs(zPos) > 0.1)
           ? std::make_shared<const Transform3D>(Translation3D(0., 0., zPos))
           : nullptr;
-  // create the bounds from the information gathered so far
+  // Create the bounds from the information gathered so far
   CylinderVolumeBounds* topVolumeBounds =
       std::abs(rMin) > 0.1
           ? new CylinderVolumeBounds(rMin, rMax, 0.5 * std::abs(zMax - zMin))
@@ -607,8 +606,8 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
         }
       }
     } else {
-      // volumes in increasing z
-      // loop over the volumes
+      // Volumes in increasing z
+      // Loop over the volumes
       for (; tVolIter != tVolEnd;) {
         // screen output
         ACTS_VERBOSE("z-binning: Processing volume '"
@@ -772,7 +771,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
                  << tvolOne->volumeName() << " @ " << faceOne << " ]-to-many[ "
                  << tvolTwo->volumeName() << " @ " << faceTwo << " ]");
 
-    // create the BoundarySurface as shared pointer
+    // Create a new BoundarySurface as shared pointer
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> boundarySurface =
         nullptr;
 
@@ -786,8 +785,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
     }
     // 2 cases: r-Binning and zBinning
     if (faceOne == cylinderCover || faceOne == tubeOuterCover) {
-      // (1) create the BoundaryCylinderSurface
-      // now create the CylinderSurface
+      // (1) create the Boundary CylinderSurface
       std::shared_ptr<const Surface> cSurface =
           Surface::makeShared<CylinderSurface>(transform, rGlueMin,
                                                0.5 * (zMax - zMin));
@@ -827,20 +825,54 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
               std::move(dSurface), gvDescriptorOne.glueVolumes(faceOne),
               gvDescriptorTwo.glueVolumes(faceTwo));
     }
-    // update the volume with the boundary surface accordingly
+
+    // Collect the material - might be ambiguous, first one wins
+    std::shared_ptr<const ISurfaceMaterial> boundaryMaterial = nullptr;
+
+    ACTS_VERBOSE("New Boundary surface setting for countainers");
+    ACTS_VERBOSE(" - at first volume: " << tvolOne->volumeName());
+    // Update the volume with the boundary surface accordingly
     // it's safe to access directly, they can not be nullptr
     for (auto& oneVolume :
          gvDescriptorOne.glueVolumes(faceOne)->arrayObjects()) {
       auto mutableOneVolume =
           std::const_pointer_cast<TrackingVolume>(oneVolume);
+      // Look out for surface material
+      if (boundaryMaterial == nullptr) {
+        auto oneBSurface = mutableOneVolume->boundarySurfaces()[faceOne];
+        boundaryMaterial =
+            oneBSurface->surfaceRepresentation().surfaceMaterialSharedPtr();
+      }
       mutableOneVolume->updateBoundarySurface(faceOne, boundarySurface);
+      ACTS_VERBOSE(" -> setting boundary surface to volume: "
+                   << mutableOneVolume->volumeName());
     }
+    ACTS_VERBOSE(" - at second volume: " << tvolTwo->volumeName());
     for (auto& twoVolume :
          gvDescriptorTwo.glueVolumes(faceTwo)->arrayObjects()) {
       auto mutableTwoVolume =
           std::const_pointer_cast<TrackingVolume>(twoVolume);
+      // Look out for surface material
+      if (boundaryMaterial == nullptr) {
+        auto twoBSurface = mutableTwoVolume->boundarySurfaces()[faceTwo];
+        boundaryMaterial =
+            twoBSurface->surfaceRepresentation().surfaceMaterialSharedPtr();
+      }
       mutableTwoVolume->updateBoundarySurface(faceTwo, boundarySurface);
+      ACTS_VERBOSE(" -> setting boundary surface to volume: "
+                   << mutableTwoVolume->volumeName());
     }
+
+    // If we have boundary material, let's assign it
+    if (boundaryMaterial != nullptr) {
+      // Adapt the boundary material
+      ACTS_VERBOSE("- the new boundary surface has boundary material: ");
+      ACTS_VERBOSE("    " << *boundaryMaterial);
+      Surface* newSurface =
+          const_cast<Surface*>(&(boundarySurface->surfaceRepresentation()));
+      newSurface->assignSurfaceMaterial(boundaryMaterial);
+    }
+
   }  // end of case (iv)
 }
 
