@@ -8,9 +8,6 @@
 
 #pragma once
 
-//~ #include <array>
-//~ #include "Acts/EventData/TrackParameters.hpp"
-//~ #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 

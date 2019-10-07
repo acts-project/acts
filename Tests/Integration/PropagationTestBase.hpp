@@ -224,8 +224,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
   covObtained = covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
       epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
       true);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
-
+  if (covCalculated != Covariance::Zero()) {
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  }
+  
   // covariance check for atlas stepper
   covCalculated =
       covariance_bound<RiddersAtlasPropagatorType, DiscSurface, DiscSurface>(

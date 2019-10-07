@@ -80,9 +80,9 @@ StraightPropagatorType spropagator(std::move(sstepper));
 
 StraightLineStepper rsstepper;
 RiddersStraightPropagatorType rspropagator(std::move(rsstepper));
-EigenStepperType restepper;
+EigenStepperType restepper(bField);
 RiddersEigenPropagatorType repropagator(std::move(restepper));
-AtlasStepperType rastepper;
+AtlasStepperType rastepper(bField);
 RiddersAtlasPropagatorType rapropagator(std::move(rastepper));
 
 DensePropagatorType setupDensePropagator() {
