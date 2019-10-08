@@ -302,6 +302,8 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   try {
     detExtension = detElement.extension<Acts::ActsExtension>();
   } catch (std::runtime_error& e) {
+    ACTS_WARNING("Could not get Acts::Extension");
+    return nullptr;
   }
 
   auto detAxis = detExtension->getType("axes", "definitions");
