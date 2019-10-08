@@ -91,7 +91,7 @@ DensePropagatorType setupDensePropagator() {
   vConf.length = {3_m, 1_m, 1_m};
 
   vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(352.8, 407., 9.012, 4., 1.848e-3));
+      Material(0.1 * 352.8, 0.1 * 407., 0.1 * 9.012, 0.1 * 4., 0.1 * 1.848e-3));
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
   conf.position = {1.5_m, 0., 0.};

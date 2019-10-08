@@ -251,7 +251,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
                                         PlaneSurface, PlaneSurface>(
       rspropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   auto covObtained =
-      covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
+      covariance_bound<StraightPropagatorType, PlaneSurface, PlaneSurface>(
           spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
@@ -259,7 +259,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   covCalculated =
       covariance_bound<RiddersEigenPropagatorType, PlaneSurface, PlaneSurface>(
           repropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  covObtained = covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
+  covObtained = covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
       epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
@@ -267,7 +267,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   covCalculated =
       covariance_bound<RiddersAtlasPropagatorType, PlaneSurface, PlaneSurface>(
           rapropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  covObtained = covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
+  covObtained = covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
       apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 }
@@ -285,7 +285,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
                        StrawSurface>(rspropagator, pT, phi, theta, charge,
                                      plimit, rand1, rand2, rand3, false, false);
   auto covObtained =
-      covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
+      covariance_bound<StraightPropagatorType, StrawSurface, StrawSurface>(
           spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
           false, false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
@@ -295,7 +295,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
       covariance_bound<RiddersEigenPropagatorType, StrawSurface, StrawSurface>(
           repropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
           false, false);
-  covObtained = covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
+  covObtained = covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
       epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
       false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
@@ -305,7 +305,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
       covariance_bound<RiddersAtlasPropagatorType, StrawSurface, StrawSurface>(
           rapropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
           false, false);
-  covObtained = covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
+  covObtained = covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
       apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
       false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
