@@ -6,11 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 template <typename external_spacepoint_t>
-std::vector<size_t>
-Acts::BinFinder<external_spacepoint_t>::findBins(
-    size_t                                  phiBin,
-    size_t                                  zBin,
-    const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP)
-{
+std::vector<size_t> Acts::BinFinder<external_spacepoint_t>::findBins(
+    size_t phiBin, size_t zBin,
+    const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP) {
   return binnedSP->neighborHoodIndices({phiBin, zBin}).collect();
 }

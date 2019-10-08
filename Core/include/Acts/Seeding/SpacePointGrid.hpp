@@ -36,19 +36,19 @@ struct SpacePointGridConfig {
   float cotThetaMax;
 };
 template <typename external_spacepoint_t>
-using SpacePointGrid = detail::
-    Grid<std::vector<std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>,
-         detail::Axis<detail::AxisType::Equidistant,
-                      detail::AxisBoundaryType::Closed>,
-         detail::Axis<detail::AxisType::Equidistant,
-                      detail::AxisBoundaryType::Bound>>;
+using SpacePointGrid =
+    detail::Grid<std::vector<std::unique_ptr<
+                     const InternalSpacePoint<external_spacepoint_t>>>,
+                 detail::Axis<detail::AxisType::Equidistant,
+                              detail::AxisBoundaryType::Closed>,
+                 detail::Axis<detail::AxisType::Equidistant,
+                              detail::AxisBoundaryType::Bound>>;
 
-class SpacePointGridCreator
-{
-public:
+class SpacePointGridCreator {
+ public:
   template <typename external_spacepoint_t>
-  static std::unique_ptr<SpacePointGrid<external_spacepoint_t>>
-  createGrid(const Acts::SpacePointGridConfig& config);
+  static std::unique_ptr<SpacePointGrid<external_spacepoint_t>> createGrid(
+      const Acts::SpacePointGridConfig& config);
 };
 }  // namespace Acts
 #include "Acts/Seeding/SpacePointGrid.ipp"

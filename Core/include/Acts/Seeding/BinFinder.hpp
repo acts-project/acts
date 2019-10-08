@@ -8,7 +8,6 @@
 
 #pragma once
 
-
 #include <vector>
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
@@ -20,9 +19,8 @@ namespace Acts {
 /// be top bins, which are assumed to be the same bins. Does not take
 /// interaction region into account to limit z-bins.
 template <typename external_spacepoint_t>
-class BinFinder
-{
-public:
+class BinFinder {
+ public:
   /// destructor
   ~BinFinder() = default;
 
@@ -31,10 +29,9 @@ public:
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  std::vector<size_t>
-  findBins(size_t                            phiBin,
-           size_t                            zBin,
-           const SpacePointGrid<external_spacepoint_t>* binnedSP);
+  std::vector<size_t> findBins(
+      size_t phiBin, size_t zBin,
+      const SpacePointGrid<external_spacepoint_t>* binnedSP);
 };
 }  // namespace Acts
 #include "Acts/Seeding/BinFinder.ipp"
