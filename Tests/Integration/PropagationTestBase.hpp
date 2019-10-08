@@ -227,7 +227,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
   }
-  
+
   // covariance check for atlas stepper
   covCalculated =
       covariance_bound<RiddersAtlasPropagatorType, DiscSurface, DiscSurface>(
@@ -259,16 +259,18 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   covCalculated =
       covariance_bound<RiddersEigenPropagatorType, PlaneSurface, PlaneSurface>(
           repropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  covObtained = covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
+  covObtained =
+      covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
+          epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
   // covariance check for atlas stepper
   covCalculated =
       covariance_bound<RiddersAtlasPropagatorType, PlaneSurface, PlaneSurface>(
           rapropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  covObtained = covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
+  covObtained =
+      covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
+          apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 }
 
@@ -295,9 +297,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
       covariance_bound<RiddersEigenPropagatorType, StrawSurface, StrawSurface>(
           repropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
           false, false);
-  covObtained = covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
-      false);
+  covObtained =
+      covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
+          epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
+          false, false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
   // covariance check for atlas stepper
@@ -305,9 +308,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
       covariance_bound<RiddersAtlasPropagatorType, StrawSurface, StrawSurface>(
           rapropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
           false, false);
-  covObtained = covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
-      false);
+  covObtained =
+      covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
+          apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
+          false, false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 }
 
