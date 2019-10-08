@@ -253,7 +253,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   auto covObtained =
       covariance_bound<StraightPropagatorType, PlaneSurface, PlaneSurface>(
           spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-3);
 
   // covariance check for eigen stepper
   covCalculated =
@@ -262,7 +262,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   covObtained =
       covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
           epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-3);
 
   // covariance check for atlas stepper
   covCalculated =
@@ -271,7 +271,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   covObtained =
       covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
           apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-3);
 }
 
 // test correct covariance transport from straw to straw
