@@ -213,7 +213,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
           spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
           true, true);
   if (covCalculated != Covariance::Zero()) {
-    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
 
   // covariance check for eigen stepper
@@ -262,7 +262,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   covObtained =
       covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
           epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-3);
+  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-2);
 
   // covariance check for atlas stepper
   covCalculated =
@@ -271,7 +271,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
   covObtained =
       covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
           apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-3);
+  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-2);
 }
 
 // test correct covariance transport from straw to straw
@@ -330,7 +330,7 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
       covariance_curvilinear(rdpropagator, pT, 0_degree, 45_degree, 1_e,
                              plimit),
       covariance_curvilinear(dpropagator, pT, 0_degree, 45_degree, 1_e, plimit),
-      1e-3);
+      3e-1);
 
   auto covCalculated =
       covariance_bound<RiddersPropagator<DensePropagatorType>, DiscSurface,
