@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
+#include <boost/foreach.hpp>
+#include <boost/tokenizer.hpp>
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
@@ -97,48 +99,28 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
 }
 
-void Acts::xmlToProtoMaterial(
-    const xml_comp_t& x_material, ActsExtension& actsExtension,
-    const std::string& baseTag, const std::vector<std::string>& materialOptions,
-    const std::pair<std::string, std::string>& binOptions) {
+void Acts::xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
+                                     ActsExtension& actsExtension,
+                                     const std::string& baseTag) {
   // Add the layer material flag
   actsExtension.addType(baseTag);
-
-  // Loop over the material options, check if they exist, and add
-  // to the extension
-  for (auto& materialOpt : materialOptions) {
-    // Explicit conversion to XmlChar
-    const dd4hep::xml::XmlChar* materialAttr =
-        (const dd4hep::xml::XmlChar*)materialOpt.c_str();
-    // Check if the attribute exists
-    if (x_material.hasAttr(materialAttr)) {
-      std::string materialTag = baseTag + std::string("_") + materialOpt;
-      std::string bin0 = binOptions.first;
-      actsExtension.addValue(x_material.attr<int>(bin0.c_str()), bin0,
-                             materialTag);
-      std::string bin1 = binOptions.second;
-      // We need to evaluate bin1 - we have a blind token
-      if (bin1 == "*") {
-        // inner/outer are cylinder surfaces, others are disks
-        bin1 = (materialOpt == "inner" || materialOpt == "outer") ? "binZ"
-                                                                  : "binR";
-      }
-
-      actsExtension.addValue(x_material.attr<int>(bin1.c_str()), bin1,
-                             materialTag);
-    }
-  }
-}
-
-void Acts::xmlToCylinderProtoMaterial(const xml_comp_t& x_layer,
-                                      ActsExtension& actsExtension) {
-  // Only continue if the layer has a material tag
-  if (x_layer.hasChild(_Unicode(layer_material))) {
-    xml_comp_t x_layer_material = x_layer.child(_Unicode(layer_material));
-    // create the entries to the proto material
-    xmlToProtoMaterial(x_layer_material, actsExtension, "layer_material",
-                       {"inner", "representing", "outer"},
-                       std::pair<std::string, std::string>{"binPhi", "binZ"});
+  // prepare everything here
+  std::string mSurface = x_material.attr<std::string>("surface");
+  std::string mBinning = x_material.attr<std::string>("binning");
+  boost::char_separator<char> sep(",");
+  boost::tokenizer binTokens(mBinning, sep);
+  const auto n = std::distance(binTokens.begin(), binTokens.end());
+  if (n == 2) {
+    // Fill the bins
+    auto bin = binTokens.begin();
+    std::string bin0 = *(bin);
+    std::string bin1 = *(++bin);
+    size_t nBins0 = x_material.attr<int>("bins0");
+    size_t nBins1 = x_material.attr<int>("bins1");
+    // Add the material tags
+    std::string btmSurface = baseTag + std::string("_") + mSurface;
+    actsExtension.addValue(nBins0, bin0, btmSurface);
+    actsExtension.addValue(nBins1, bin1, btmSurface);
   }
 }
 
@@ -157,16 +139,5 @@ void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
   if (actsExtension != nullptr and actsExtension->hasType("layer_material")) {
     addLayerProtoMaterial(*actsExtension, discLayer,
                           {{"binPhi", Acts::closed}, {"binR", Acts::open}});
-  }
-}
-
-void Acts::xmlToDiscProtoMaterial(const xml_comp_t& x_layer,
-                                  ActsExtension& actsExtension) {
-  if (x_layer.hasChild(_Unicode(layer_material))) {
-    xml_comp_t x_layer_material = x_layer.child(_Unicode(layer_material));
-    // create the entries to the proto material
-    xmlToProtoMaterial(x_layer_material, actsExtension, "layer_material",
-                       {"inner", "representing", "outer"},
-                       std::pair<std::string, std::string>{"binPhi", "binR"});
   }
 }

@@ -133,6 +133,8 @@ const T ActsExtension::getT(const std::map<std::string, T>& map,
   if (search == map.end()) {
     std::string error_message = "Acts::ActsExtension does not contain: ";
     error_message += ctag;
+    error_message += '\n';
+    error_message += toString();
     throw std::runtime_error(error_message.c_str());
   }
   return search->second;

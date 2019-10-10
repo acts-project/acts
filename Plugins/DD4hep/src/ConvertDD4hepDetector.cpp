@@ -381,10 +381,13 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         "halfZ )=  ( "
         << rMin << " / " << rMax << " / " << halfZ << " )");
 
-    // get the possible material of the surounding volume
-    auto plMaterial = Acts::createProtoMaterial(
-        *subDetExtension, "layer_material_representing",
-        {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
+    std::shared_ptr<Acts::ISurfaceMaterial> plMaterial = nullptr;
+    if (subDetExtension->hasType("layer_material")) {
+      // get the possible material of the surounding volume
+      plMaterial = Acts::createProtoMaterial(
+          *subDetExtension, "layer_material_representing",
+          {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
+    }
 
     // configure the passive layer builder
     Acts::PassiveLayerBuilder::Config plbConfig;
