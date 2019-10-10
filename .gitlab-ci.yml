@@ -88,7 +88,6 @@ include_guards:
     expire_in: 6 hours
 
 .integration_tests: &template_integration_tests
-  allow_failure: true
   stage: test
   tags:
     - cvmfs
@@ -192,7 +191,6 @@ integration_tests_slc6_lcg95:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
-  allow_failure: true
 
 # SLC, LCG94, LLVM60
 
