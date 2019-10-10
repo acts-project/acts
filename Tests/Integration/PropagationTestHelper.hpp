@@ -242,7 +242,7 @@ std::pair<Vector3D, double> to_cylinder(
   // setup propagation options
   PropagatorOptions<> options(tgContext, mfContext);
   // setup propagation options
-  options.maxStepSize = plimit;
+  options.maxStepSize = plimit * 0.1;
   options.pathLimit = plimit;
   options.debug = debug;
 
