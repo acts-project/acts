@@ -149,15 +149,6 @@ unit_tests_slc6_lcg94:
     paths:
       - build/coverage
 
-integration_tests_slc6_lcg94:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg94
-  needs: ["build_slc6_lcg94"]
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
 # SLC6, LCG94, build w/ legacy disabled
 
 build_slc6_lcg94_no_legacy:
