@@ -226,6 +226,7 @@ build_ubuntu1804_llvm70:
   before_script:
     - source CI/env_info.sh
   variables:
+    BUILD_TYPE: Release
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DCMAKE_CXX_FLAGS="-stdlib=libc++"
 
 unit_tests_ubuntu1804_llvm70:
