@@ -18,6 +18,7 @@ before_script:
 
 no_needs:
   stage: check
+  before_script: []
   script:
     - echo "This build is a workaround for 'https://gitlab.com/gitlab-org/gitlab/issues/30631'"
   dependencies: []
