@@ -1,4 +1,5 @@
 stages:
+  - check
   - build
   - test
   - analysis
@@ -15,8 +16,15 @@ before_script:
 
 # pre-build checks
 
+no_needs:
+  stage: check
+  before_script: []
+  script:
+    - echo "This build is a workaround for 'https://gitlab.com/gitlab-org/gitlab/issues/30631'"
+  dependencies: []
+
 format:
-  stage: build
+  stage: check
   image: gitlab-registry.cern.ch/acts/machines/check_llvm8:latest
   before_script: []
   script:
@@ -27,7 +35,7 @@ format:
     when: on_failure
 
 license:
-  stage: build
+  stage: check
   image: python:alpine3.6
   before_script: []
   script:
@@ -35,7 +43,7 @@ license:
     - CI/check_license.py .
 
 include_guards:
-  stage: build
+  stage: check
   image: python:alpine3.6
   before_script: []
   script:
@@ -49,6 +57,7 @@ include_guards:
 
 .build: &template_build
   stage: build
+  needs: ["no_needs"]
   tags:
     - cvmfs
   variables:
@@ -125,6 +134,7 @@ unit_tests_slc6_lcg94:
   <<: *template_unit_tests
   dependencies:
     - build_slc6_lcg94
+  needs: ["build_slc6_lcg94"]
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
@@ -143,6 +153,7 @@ integration_tests_slc6_lcg94:
   <<: *template_integration_tests
   dependencies:
     - build_slc6_lcg94
+  needs: ["build_slc6_lcg94"]
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
@@ -181,6 +192,7 @@ unit_tests_slc6_lcg95:
   <<: *template_unit_tests
   dependencies:
     - build_slc6_lcg95
+  needs: ["build_slc6_lcg95"]
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
@@ -200,6 +212,7 @@ integration_tests_slc6_lcg95:
   <<: *template_integration_tests
   dependencies:
     - build_slc6_lcg95
+  needs: ["build_slc6_lcg95"]
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
@@ -219,6 +232,7 @@ unit_tests_ubuntu1804_llvm70:
   <<: *template_unit_tests
   dependencies:
     - build_ubuntu1804_llvm70
+  needs: ["build_ubuntu1804_llvm70"]
   image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
   before_script: []
 
@@ -226,6 +240,7 @@ integration_tests_ubuntu1804_llvm70:
   <<: *template_integration_tests
   dependencies:
     - build_ubuntu1804_llvm70
+  needs: ["build_ubuntu1804_llvm70"]
   image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
   before_script: []
 
@@ -241,6 +256,7 @@ unit_tests_cc7_lcg94:
   <<: *template_unit_tests
   dependencies:
     - build_cc7_lcg94
+  needs: ["build_cc7_lcg94"]
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
@@ -249,6 +265,7 @@ integration_tests_cc7_lcg94:
   <<: *template_integration_tests
   dependencies:
     - build_cc7_lcg94
+  needs: ["build_cc7_lcg94"]
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
@@ -265,6 +282,7 @@ unit_tests_cc7_lcg95:
   <<: *template_unit_tests
   dependencies:
     - build_cc7_lcg95
+  needs: ["build_cc7_lcg95"]
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
@@ -273,12 +291,14 @@ integration_tests_cc7_lcg95:
   <<: *template_integration_tests
   dependencies:
     - build_cc7_lcg95
+  needs: ["build_cc7_lcg95"]
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
 
 doc:
   stage: build
+  needs: ["no_needs"]
   tags:
     - cvmfs
   script:
@@ -294,6 +314,7 @@ doc:
 
 clang_tidy:
   stage: analysis
+  needs: ["no_needs"]
   dependencies: []
   tags:
     - cvmfs
