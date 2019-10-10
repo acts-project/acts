@@ -183,16 +183,6 @@ unit_tests_slc6_lcg95:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
-  # replace script to also calculate code coverage
-  script:
-    - cmake --build build -- test
-    - cd build
-    # we need a clean environment so we can install gcovr (pip), but we need to use gcov from lcg
-    - env -i bash ../CI/coverage_environment.sh "../CI/test_coverage --gcov $(which gcov)"
-  coverage: '/^TOTAL.*\s+(\d+\%)$/'
-  artifacts:
-    paths:
-      - build/coverage
 
 integration_tests_slc6_lcg95:
   <<: *template_integration_tests
