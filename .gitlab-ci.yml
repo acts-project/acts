@@ -149,15 +149,6 @@ unit_tests_slc6_lcg94:
     paths:
       - build/coverage
 
-integration_tests_slc6_lcg94:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg94
-  needs: ["build_slc6_lcg94"]
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
 # SLC6, LCG94, build w/ legacy disabled
 
 build_slc6_lcg94_no_legacy:
@@ -180,13 +171,9 @@ build_slc6_lcg94_no_legacy:
 
 build_slc6_lcg95:
   <<: *template_build
-  variables:
-    BUILD_TYPE: Debug # for coverage check
-    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
-  when: manual
 
 unit_tests_slc6_lcg95:
   <<: *template_unit_tests
@@ -196,17 +183,6 @@ unit_tests_slc6_lcg95:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
-  # replace script to also calculate code coverage
-  script:
-    - cmake --build build -- test
-    - cd build
-    # we need a clean environment so we can install gcovr (pip), but we need to use gcov from lcg
-    - env -i bash ../CI/coverage_environment.sh "../CI/test_coverage --gcov $(which gcov)"
-  coverage: '/^TOTAL.*\s+(\d+\%)$/'
-  artifacts:
-    paths:
-      - build/coverage
-  when: manual
 
 integration_tests_slc6_lcg95:
   <<: *template_integration_tests
@@ -226,6 +202,7 @@ build_ubuntu1804_llvm70:
   before_script:
     - source CI/env_info.sh
   variables:
+    BUILD_TYPE: Release
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DCMAKE_CXX_FLAGS="-stdlib=libc++"
 
 unit_tests_ubuntu1804_llvm70:
