@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
@@ -46,6 +47,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, TrackingVolumePtr existingVolume,
     VolumeBoundsPtr externalBounds) const {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
+  if (existingVolume) {
+    ACTS_DEBUG("- will wrap/enclose : " << existingVolume->volumeName());
+  }
 
   // the return volume
   // -----------------------------------------------------------------------------
@@ -217,14 +221,48 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     if (nEndcap) {
       volumesContainer.push_back(nEndcap);
       volume = nEndcap;
+      // Set the inner or outer material
+      if (not m_cfg.buildToRadiusZero) {
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
+                                       Acts::tubeInnerCover);
+      }
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
+                                     Acts::tubeOuterCover);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[2],
+                                     Acts::negativeFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3],
+                                     Acts::positiveFaceXY);
     }
     if (barrel) {
+      // Assign boundary material if existing
       volumesContainer.push_back(barrel);
       volume = barrel;
+      // Set the inner or outer material
+      if (not m_cfg.buildToRadiusZero) {
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
+                                       Acts::tubeInnerCover);
+      }
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
+                                     Acts::tubeOuterCover);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[3],
+                                     Acts::negativeFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4],
+                                     Acts::positiveFaceXY);
     }
     if (pEndcap) {
       volumesContainer.push_back(pEndcap);
       volume = pEndcap;
+      // Set the inner or outer material
+      if (not m_cfg.buildToRadiusZero) {
+        volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
+                                       Acts::tubeInnerCover);
+      }
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[1],
+                                     Acts::tubeOuterCover);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[4],
+                                     Acts::negativeFaceXY);
+      volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[5],
+                                     Acts::positiveFaceXY);
     }
     // and low lets create the new volume
     volume =

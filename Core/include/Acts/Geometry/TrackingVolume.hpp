@@ -298,6 +298,17 @@ class TrackingVolume : public Volume {
   /// Return the material of the volume as shared pointer
   const std::shared_ptr<const IVolumeMaterial>& volumeMaterialSharedPtr() const;
 
+  /// Set the boundary surface material description
+  ///
+  /// The material is usually derived in a complicated way and loaded from
+  /// a framework given source. As various volumes could potentially share the
+  /// the same material description, it is provided as a shared object
+  ///
+  /// @param material Material description of this volume
+  void assignBoundaryMaterial(
+      std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
+      BoundarySurfaceFace bsFace);
+
   /// Set the volume material description
   ///
   /// The material is usually derived in a complicated way and loaded from
@@ -335,12 +346,16 @@ class TrackingVolume : public Volume {
 
   /// Provide a new BoundarySurface from the glueing
   ///
-  ///
   /// @param bsf is the boundary face indicater where to glue
   /// @param bs is the new boudnary surface
+  /// @param checkmaterial is a flag how to deal with material, if true:
+  /// - if the old boundary surface had a material description
+  ///   but the new one has not, keep the current one
+  /// - in all other cases just assign the new boundary surface
   void updateBoundarySurface(
       BoundarySurfaceFace bsf,
-      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs);
+      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs,
+      bool checkmaterial = true);
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:

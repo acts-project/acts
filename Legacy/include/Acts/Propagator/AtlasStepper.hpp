@@ -174,6 +174,7 @@ class AtlasStepper {
         pVector[56] = 0.;
         pVector[57] = 0.;
         pVector[58] = 0.;
+        pVector[59] = 0.;
 
         // special treatment for surface types
         const auto& surface = pars.referenceSurface();
@@ -253,7 +254,7 @@ class AtlasStepper {
     bool newfield;
     // internal parameters to be used
     Vector3D field;
-    double pVector[59];
+    std::array<double, 59> pVector;
 
     /// Storage pattern of pVector
     ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
@@ -265,7 +266,7 @@ class AtlasStepper {
     /// Ay ->P[5]  dAy/   P[13]   P[21]   P[29]   P[37]   P[45]  P[53]
     /// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]
     /// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]
-    /// Cache: P[56] - P[58]
+    /// Cache: P[56] - P[59]
 
     // result
     double parameters[BoundParsDim] = {0., 0., 0., 0., 0., 0.};
@@ -519,6 +520,7 @@ class AtlasStepper {
       state.pVector[56] = 0.;
       state.pVector[57] = 0.;
       state.pVector[58] = 0.;
+      state.pVector[59] = 0.;
 
       // special treatment for surface types
       const auto& surface = pars.referenceSurface();
@@ -620,8 +622,8 @@ class AtlasStepper {
   ///
   /// @return the full transport jacobian
   void covarianceTransport(State& state, bool /*unused*/) const {
-    double P[59];
-    for (unsigned int i = 0; i < 59; ++i) {
+    double P[60];
+    for (unsigned int i = 0; i < 60; ++i) {
       P[i] = state.pVector[i];
     }
 
@@ -665,30 +667,35 @@ class AtlasStepper {
     P[8] -= (s0 * P[4]);
     P[9] -= (s0 * P[5]);
     P[10] -= (s0 * P[6]);
+    P[11] -= (s0 * P[59]);
     P[12] -= (s0 * P[56]);
     P[13] -= (s0 * P[57]);
     P[14] -= (s0 * P[58]);
     P[16] -= (s1 * P[4]);
     P[17] -= (s1 * P[5]);
     P[18] -= (s1 * P[6]);
+    P[19] -= (s1 * P[59]);
     P[20] -= (s1 * P[56]);
     P[21] -= (s1 * P[57]);
     P[22] -= (s1 * P[58]);
     P[24] -= (s2 * P[4]);
     P[25] -= (s2 * P[5]);
     P[26] -= (s2 * P[6]);
+    P[27] -= (s2 * P[59]);
     P[28] -= (s2 * P[56]);
     P[29] -= (s2 * P[57]);
     P[30] -= (s2 * P[58]);
     P[32] -= (s3 * P[4]);
     P[33] -= (s3 * P[5]);
     P[34] -= (s3 * P[6]);
+    P[35] -= (s3 * P[59]);
     P[36] -= (s3 * P[56]);
     P[37] -= (s3 * P[57]);
     P[38] -= (s3 * P[58]);
     P[40] -= (s4 * P[4]);
     P[41] -= (s4 * P[5]);
     P[42] -= (s4 * P[6]);
+    P[43] -= (s4 * P[59]);
     P[44] -= (s4 * P[56]);
     P[45] -= (s4 * P[57]);
     P[46] -= (s4 * P[58]);
@@ -746,12 +753,12 @@ class AtlasStepper {
     state.jacobian[28] = P[47];  // dCM /dCM
     state.jacobian[29] = 0.;     // dCM/dT
 
-    state.jacobian[30] = 0.;  // dT/dL0
-    state.jacobian[31] = 0.;  // dT/dL1
-    state.jacobian[32] = 0.;  // dT/dPhi
-    state.jacobian[33] = 0.;  // dT/dThe
-    state.jacobian[34] = 0.;  // dT/dCM
-    state.jacobian[35] = 1.;  // dT/dT
+    state.jacobian[30] = P[11];  // dT/dL0
+    state.jacobian[31] = P[19];  // dT/dL1
+    state.jacobian[32] = P[27];  // dT/dPhi
+    state.jacobian[33] = P[35];  // dT/dThe
+    state.jacobian[34] = P[43];  // dT/dCM
+    state.jacobian[35] = P[51];  // dT/dT
 
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
@@ -762,8 +769,6 @@ class AtlasStepper {
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
   /// or direction of the state
-  ///
-  /// @tparam surface_t the Surface type
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
@@ -885,6 +890,7 @@ class AtlasStepper {
     state.pVector[8] -= (s0 * state.pVector[4]);
     state.pVector[9] -= (s0 * state.pVector[5]);
     state.pVector[10] -= (s0 * state.pVector[6]);
+    state.pVector[11] -= (s0 * state.pVector[59]);
     state.pVector[12] -= (s0 * state.pVector[56]);
     state.pVector[13] -= (s0 * state.pVector[57]);
     state.pVector[14] -= (s0 * state.pVector[58]);
@@ -892,6 +898,7 @@ class AtlasStepper {
     state.pVector[16] -= (s1 * state.pVector[4]);
     state.pVector[17] -= (s1 * state.pVector[5]);
     state.pVector[18] -= (s1 * state.pVector[6]);
+    state.pVector[19] -= (s1 * state.pVector[59]);
     state.pVector[20] -= (s1 * state.pVector[56]);
     state.pVector[21] -= (s1 * state.pVector[57]);
     state.pVector[22] -= (s1 * state.pVector[58]);
@@ -899,6 +906,7 @@ class AtlasStepper {
     state.pVector[24] -= (s2 * state.pVector[4]);
     state.pVector[25] -= (s2 * state.pVector[5]);
     state.pVector[26] -= (s2 * state.pVector[6]);
+    state.pVector[27] -= (s2 * state.pVector[59]);
     state.pVector[28] -= (s2 * state.pVector[56]);
     state.pVector[29] -= (s2 * state.pVector[57]);
     state.pVector[30] -= (s2 * state.pVector[58]);
@@ -906,6 +914,7 @@ class AtlasStepper {
     state.pVector[32] -= (s3 * state.pVector[4]);
     state.pVector[33] -= (s3 * state.pVector[5]);
     state.pVector[34] -= (s3 * state.pVector[6]);
+    state.pVector[35] -= (s3 * state.pVector[59]);
     state.pVector[36] -= (s3 * state.pVector[56]);
     state.pVector[37] -= (s3 * state.pVector[57]);
     state.pVector[38] -= (s3 * state.pVector[58]);
@@ -913,6 +922,7 @@ class AtlasStepper {
     state.pVector[40] -= (s4 * state.pVector[4]);
     state.pVector[41] -= (s4 * state.pVector[5]);
     state.pVector[42] -= (s4 * state.pVector[6]);
+    state.pVector[43] -= (s4 * state.pVector[59]);
     state.pVector[44] -= (s4 * state.pVector[56]);
     state.pVector[45] -= (s4 * state.pVector[57]);
     state.pVector[46] -= (s4 * state.pVector[58]);
@@ -1004,17 +1014,16 @@ class AtlasStepper {
     state.jacobian[28] = state.pVector[47];  // dCM /dCM
     state.jacobian[29] = 0.;                 // dCM/dT
 
-    state.jacobian[30] = 0.;  // dT/dL0
-    state.jacobian[31] = 0.;  // dT/dL1
-    state.jacobian[32] = 0.;  // dT/dPhi
-    state.jacobian[33] = 0.;  // dT/dThe
-    state.jacobian[34] = 0.;  // dT/dCM
-    state.jacobian[35] = 1.;  // dT/dT
+    state.jacobian[30] = state.pVector[11];  // dT/dL0
+    state.jacobian[31] = state.pVector[19];  // dT/dL1
+    state.jacobian[32] = state.pVector[27];  // dT/dPhi
+    state.jacobian[33] = state.pVector[35];  // dT/dThe
+    state.jacobian[34] = state.pVector[43];  // dT/dCM
+    state.jacobian[35] = state.pVector[51];  // dT/dT
 
     Eigen::Map<
         Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
         J(state.jacobian);
-
     state.cov = J * (*state.covariance) * J.transpose();
   }
 
@@ -1101,7 +1110,7 @@ class AtlasStepper {
       double EST = 2. * (std::abs((A1 + A6) - (A3 + A4)) +
                          std::abs((B1 + B6) - (B3 + B4)) +
                          std::abs((C1 + C6) - (C3 + C4)));
-      if (EST > 0.0002) {
+      if (EST > 0.0001) {
         h *= .5;
         //        dltm = 0.;
         continue;
@@ -1134,10 +1143,19 @@ class AtlasStepper {
       // Evaluate the time propagation
       state.stepping.pVector[3] +=
           h * std::hypot(1, state.options.mass / momentum(state.stepping));
+      state.stepping.pVector[59] =
+          std::hypot(1, state.options.mass / momentum(state.stepping));
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
+        double dtdl =
+            h * state.options.mass * state.options.mass *
+            charge(state.stepping) /
+            (momentum(state.stepping) *
+             std::hypot(1., state.options.mass / momentum(state.stepping)));
+        state.stepping.pVector[43] += dtdl;
+
         // Jacobian calculation
         //
         double* d2A = &state.stepping.pVector[28];
@@ -1225,6 +1243,7 @@ class AtlasStepper {
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
+
       state.stepping.pathAccumulated += h;
       return h;
     }

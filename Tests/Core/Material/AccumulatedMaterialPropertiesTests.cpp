@@ -159,7 +159,6 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
 
   /// Test:
   /// average a + 3a + v
-
   AccumulatedMaterialProperties aa3v;
   aa3v.accumulate(a);
   aa3v.trackAverage();
@@ -186,6 +185,20 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
 
   CHECK_CLOSE_REL(doubleA.thicknessInX0(), matA4V.thicknessInX0(), 0.00001);
   BOOST_CHECK_EQUAL(2, averageA4V.second);
+
+  /// Test:
+  /// average: a + 3a + emptyhit
+  AccumulatedMaterialProperties aa3e;
+  aa3e.accumulate(a);
+  aa3e.trackAverage();
+  aa3e.accumulate(a3);
+  aa3e.trackAverage();
+  aa3e.trackAverage(true);
+  auto averageAA3E = aa3e.totalAverage();
+  auto matAA3E = averageAA3E.first;
+
+  CHECK_CLOSE_REL(4. / 3., matAA3E.thicknessInX0(), 0.00001);
+  BOOST_CHECK_EQUAL(3, averageAA3E.second);
 }
 
 }  // namespace Test

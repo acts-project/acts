@@ -71,6 +71,8 @@ void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// collectSubDetectors()) from bottom to top to ensure correct wrapping of the
 /// volumes, which is needed for navigation. Therefore the different hierachies
 /// need to be sorted ascending. The default is sorting by ID.
+/// @param matDetcroator is the material decorator that loads material maps
+///
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full TrackingGeometry
 
@@ -89,7 +91,8 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     double defaultLayerThickness = UnitConstants::fm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
-    const GeometryContext& gctx = GeometryContext());
+    const GeometryContext& gctx = GeometryContext(),
+    std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr);
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
 ///

@@ -56,19 +56,36 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
   return bTriple;
 }
 
+// Void average for vacuum assignment
+void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3D& gp,
+                                                    bool emptyHit) {
+  if (m_binUtility.dimensions() == 0) {
+    m_accumulatedMaterial[0][0].trackAverage();
+  }
+  std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
+  std::vector<std::array<size_t, 3>> trackBins = {bTriple};
+  trackAverage(trackBins, emptyHit);
+}
+
 // Average the information accumulated during one event
 void Acts::AccumulatedSurfaceMaterial::trackAverage(
-    const std::vector<std::array<size_t, 3>>& trackBins) {
+    const std::vector<std::array<size_t, 3>>& trackBins, bool emptyHit) {
+  // the homogeneous material case
+  if (m_binUtility.dimensions() == 0) {
+    m_accumulatedMaterial[0][0].trackAverage(emptyHit);
+    return;
+  }
+
   // The touched bins are known, so you can access them directly
   if (not trackBins.empty()) {
     for (auto bin : trackBins) {
-      m_accumulatedMaterial[bin[1]][bin[0]].trackAverage();
+      m_accumulatedMaterial[bin[1]][bin[0]].trackAverage(emptyHit);
     }
   } else {
-    // Run over all bins
+    // Touched bins are not known: Run over all bins
     for (auto& matVec : m_accumulatedMaterial) {
       for (auto& mat : matVec) {
-        mat.trackAverage();
+        mat.trackAverage(emptyHit);
       }
     }
   }

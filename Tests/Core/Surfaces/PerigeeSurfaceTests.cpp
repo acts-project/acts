@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction) {
   /// Constructor with transform pointer, null or valid
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
-  auto pNullTransform = std::make_shared<const Transform3D>();
+  std::shared_ptr<const Transform3D> pNullTransform{};
   BOOST_CHECK_EQUAL(Surface::makeShared<PerigeeSurface>(pNullTransform)->type(),
                     Surface::Perigee);
   BOOST_CHECK_EQUAL(Surface::makeShared<PerigeeSurface>(pTransform)->type(),
