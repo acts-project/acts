@@ -53,12 +53,12 @@ class SingleFreeParameters : public ParametersBase {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleFreeParameters(std::optional<CovMatrix_t> cov, const FreeVector& parValues)
+  SingleFreeParameters(std::optional<CovMatrix_t> cov,
+                       const FreeVector& parValues)
       : ParametersBase(),
-      m_parameters(parValues),
+        m_parameters(parValues),
         m_oChargePolicy((parValues(FreeParsDim - 1) > 0.) ? 1. : -1.),
-        m_covariance(std::move(cov))
-         {}
+        m_covariance(std::move(cov)) {}
 
   /// @brief Standard constructor for track parameters of neutral particles
   ///
@@ -67,12 +67,12 @@ class SingleFreeParameters : public ParametersBase {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeParameters(std::optional<CovMatrix_t> cov, const FreeVector& parValues)
+  SingleFreeParameters(std::optional<CovMatrix_t> cov,
+                       const FreeVector& parValues)
       : ParametersBase(),
-		m_parameters(parValues),
+        m_parameters(parValues),
         m_oChargePolicy(),
-        m_covariance(std::move(cov))
-         {}
+        m_covariance(std::move(cov)) {}
 
   /// @brief Copy assignment operator
   ///
@@ -111,10 +111,9 @@ class SingleFreeParameters : public ParametersBase {
   /// @param [in] copy The object to copy from
   SingleFreeParameters(const SingleFreeParameters<ChargePolicy>& copy)
       : ParametersBase(),
-      m_parameters(copy.m_parameters),
+        m_parameters(copy.m_parameters),
         m_oChargePolicy(copy.m_oChargePolicy),
-        m_covariance(copy.m_covariance)
-         {}
+        m_covariance(copy.m_covariance) {}
 
   /// @brief Default move constructor
   ///
@@ -253,7 +252,7 @@ class SingleFreeParameters : public ParametersBase {
   FreeVector m_parameters;       ///< Parameter vector
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
-  std::optional<CovMatrix_t> m_covariance;         ///< Covariance matrix
+  std::optional<CovMatrix_t> m_covariance;  ///< Covariance matrix
 };
 
 }  // namespace Acts

@@ -97,8 +97,8 @@ class SingleTrackParameters : public TrackParametersBase {
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleTrackParameters(std::optional<CovMatrix_t> cov,
                         const ParVector_t& parValues,
-                        const ActsVectorD<3>& position,
-                        const ActsVectorD<3>& momentum)
+                        const Vector3D& position,
+                        const Vector3D& momentum)
       : TrackParametersBase(),
         m_oChargePolicy(
             detail::coordinate_transformation::parameters2charge(parValues)),
@@ -117,8 +117,8 @@ class SingleTrackParameters : public TrackParametersBase {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleTrackParameters(std::optional<CovMatrix_t> cov,
                         const ParVector_t& parValues,
-                        const ActsVectorD<3>& position,
-                        const ActsVectorD<3>& momentum)
+                        const Vector3D& position,
+                        const Vector3D& momentum)
       : TrackParametersBase(),
         m_oChargePolicy(),
         m_oTime(detail::coordinate_transformation::parameters2time(parValues)),
@@ -202,7 +202,7 @@ class SingleTrackParameters : public TrackParametersBase {
   double m_oTime;                  ///< time of the track parametrisation
   FullParameterSet m_oParameters;  ///< ParameterSet object holding the
                                    /// parameter values and covariance matrix
-  Vector3D m_vPosition;      ///< 3D vector with global position
-  Vector3D m_vMomentum;      ///< 3D vector with global momentum
+  Vector3D m_vPosition;            ///< 3D vector with global position
+  Vector3D m_vMomentum;            ///< 3D vector with global momentum
 };
 }  // namespace Acts

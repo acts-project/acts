@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fpwoCov.parameters(), params, 1e-6);
 
   // Test if the object can be create with covariance
-  *cov << 1., 0., 0., 0., 0., 0., 0., 0., 0., 2., 0., 0., 0., 0., 0., 0., 0., 0.,
-      3., 0., 0., 0., 0., 0., 0., 0., 0., 4., 0., 0., 0., 0., 0., 0., 0., 0.,
-      5., 0., 0., 0., 0., 0., 0., 0., 0., 6., 0., 0., 0., 0., 0., 0., 0., 0.,
-      7., 0., 0., 0., 0., 0., 0., 0., 0., 8.;
+  *cov << 1., 0., 0., 0., 0., 0., 0., 0., 0., 2., 0., 0., 0., 0., 0., 0., 0.,
+      0., 3., 0., 0., 0., 0., 0., 0., 0., 0., 4., 0., 0., 0., 0., 0., 0., 0.,
+      0., 5., 0., 0., 0., 0., 0., 0., 0., 0., 6., 0., 0., 0., 0., 0., 0., 0.,
+      0., 7., 0., 0., 0., 0., 0., 0., 0., 0., 8.;
   std::optional<FreeSymMatrix> covCpy = *cov;
 
   FreeParameters fp(covCpy, params);
@@ -58,8 +58,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   BOOST_TEST(fpCopyConstr == fp);
 
   covCpy = *cov;
-  FreeParameters fpMoveConstr(
-      FreeParameters(covCpy, params));
+  FreeParameters fpMoveConstr(FreeParameters(covCpy, params));
   BOOST_TEST(fpMoveConstr == fp);
 
   FreeParameters* fpCopy = fp.clone();
@@ -71,8 +70,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
 
   // Test move assignment
   covCpy = *cov;
-  FreeParameters fpMoveAssignment =
-      FreeParameters(covCpy, params);
+  FreeParameters fpMoveAssignment = FreeParameters(covCpy, params);
   BOOST_TEST(fpMoveAssignment == fp);
 
   /// Repeat constructing and assignment with neutral parameters
@@ -91,8 +89,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   BOOST_TEST(nfpCopyConstr == nfp);
 
   covCpy = *cov;
-  NeutralFreeParameters nfpMoveConstr(
-      NeutralFreeParameters(covCpy, params));
+  NeutralFreeParameters nfpMoveConstr(NeutralFreeParameters(covCpy, params));
   BOOST_TEST(nfpMoveConstr == nfp);
 
   NeutralFreeParameters* nfpCopy = nfp.clone();
