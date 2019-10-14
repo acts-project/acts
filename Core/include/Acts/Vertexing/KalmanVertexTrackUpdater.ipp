@@ -109,9 +109,11 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
   trkJac(0, 0) = -std::sin(newTrkParams[2]);
   trkJac(0, 1) = std::cos(newTrkParams[2]);
 
+  double tanTheta = std::tan(newTrkParams[3]);
+
   // Second row
-  trkJac(1, 0) = -std::cos(newTrkParams[2]) / std::tan(newTrkParams[3]);
-  trkJac(1, 1) = -std::sin(newTrkParams[2]) / std::tan(newTrkParams[3]);
+  trkJac(1, 0) = -trkJac(0,1) / tanTheta;
+  trkJac(1, 1) = trkJac(0,0) / tanTheta;
 
   trkJac.block<5, 5>(1, 2) = ActsSymMatrixD<5>::Identity();
 
