@@ -112,8 +112,8 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
   double tanTheta = std::tan(newTrkParams[3]);
 
   // Second row
-  trkJac(1, 0) = -trkJac(0,1) / tanTheta;
-  trkJac(1, 1) = trkJac(0,0) / tanTheta;
+  trkJac(1, 0) = -trkJac(0, 1) / tanTheta;
+  trkJac(1, 1) = trkJac(0, 0) / tanTheta;
 
   trkJac.block<5, 5>(1, 2) = ActsSymMatrixD<5>::Identity();
 
