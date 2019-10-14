@@ -53,10 +53,10 @@ class SingleTrackParameters : public TrackParametersBase {
   SingleTrackParameters<ChargePolicy>* clone() const override = 0;
 
   /// @copydoc ParametersBase::position
-  ActsVectorD<3> position() const final { return m_vPosition; }
+  Vector3D position() const final { return m_vPosition; }
 
   /// @copydoc ParametersBase::momentum
-  ActsVectorD<3> momentum() const final { return m_vMomentum; }
+  Vector3D momentum() const final { return m_vMomentum; }
 
   /// @brief equality operator
   ///
@@ -202,7 +202,7 @@ class SingleTrackParameters : public TrackParametersBase {
   double m_oTime;                  ///< time of the track parametrisation
   FullParameterSet m_oParameters;  ///< ParameterSet object holding the
                                    /// parameter values and covariance matrix
-  ActsVectorD<3> m_vPosition;      ///< 3D vector with global position
-  ActsVectorD<3> m_vMomentum;      ///< 3D vector with global momentum
+  Vector3D m_vPosition;      ///< 3D vector with global position
+  Vector3D m_vMomentum;      ///< 3D vector with global momentum
 };
 }  // namespace Acts

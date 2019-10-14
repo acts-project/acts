@@ -32,22 +32,22 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   FreeVector params;
   params << pos.x(), pos.y(), pos.z(), t, dir.x(), dir.y(), dir.z(), qop;
 
-  std::unique_ptr<FreeSymMatrix> covPtr = nullptr;
+  std::optional<FreeSymMatrix> cov = std::nullopt;
 
   // Test if the object can be created w/o covariance
-  FreeParameters fpwoCov(nullptr, params);
-  BOOST_CHECK_EQUAL(fpwoCov.covariance(), nullptr);
+  FreeParameters fpwoCov(cov, params);
+  BOOST_TEST(!fpwoCov.covariance().has_value());
   CHECK_CLOSE_ABS(fpwoCov.parameters(), params, 1e-6);
 
   // Test if the object can be create with covariance
-  FreeSymMatrix cov;
-  cov << 1., 0., 0., 0., 0., 0., 0., 0., 0., 2., 0., 0., 0., 0., 0., 0., 0., 0.,
+  *cov << 1., 0., 0., 0., 0., 0., 0., 0., 0., 2., 0., 0., 0., 0., 0., 0., 0., 0.,
       3., 0., 0., 0., 0., 0., 0., 0., 0., 4., 0., 0., 0., 0., 0., 0., 0., 0.,
       5., 0., 0., 0., 0., 0., 0., 0., 0., 6., 0., 0., 0., 0., 0., 0., 0., 0.,
       7., 0., 0., 0., 0., 0., 0., 0., 0., 8.;
-  covPtr = std::make_unique<FreeSymMatrix>(cov);
-  FreeParameters fp(std::move(covPtr), params);
-  CHECK_CLOSE_COVARIANCE(*fp.covariance(), cov, 1e-6);
+  std::optional<FreeSymMatrix> covCpy = *cov;
+
+  FreeParameters fp(covCpy, params);
+  CHECK_CLOSE_COVARIANCE(*fp.covariance(), *cov, 1e-6);
   CHECK_CLOSE_ABS(fp.parameters(), params, 1e-6);
 
   // Test == comparison
@@ -57,8 +57,9 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   FreeParameters fpCopyConstr(fp);
   BOOST_TEST(fpCopyConstr == fp);
 
+  covCpy = *cov;
   FreeParameters fpMoveConstr(
-      FreeParameters(std::make_unique<FreeSymMatrix>(cov), params));
+      FreeParameters(covCpy, params));
   BOOST_TEST(fpMoveConstr == fp);
 
   FreeParameters* fpCopy = fp.clone();
@@ -69,26 +70,29 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   BOOST_TEST(fpCopyAssignment == fp);
 
   // Test move assignment
+  covCpy = *cov;
   FreeParameters fpMoveAssignment =
-      FreeParameters(std::make_unique<FreeSymMatrix>(cov), params);
+      FreeParameters(covCpy, params);
   BOOST_TEST(fpMoveAssignment == fp);
 
   /// Repeat constructing and assignment with neutral parameters
 
   // Test if the object can be created w/o covariance
-  NeutralFreeParameters nfpwoCov(nullptr, params);
-  BOOST_CHECK_EQUAL(nfpwoCov.covariance(), nullptr);
+  NeutralFreeParameters nfpwoCov(std::nullopt, params);
+  BOOST_TEST(!nfpwoCov.covariance().has_value());
   CHECK_CLOSE_ABS(nfpwoCov.parameters(), params, 1e-6);
 
-  NeutralFreeParameters nfp(std::make_unique<FreeSymMatrix>(cov), params);
-  CHECK_CLOSE_COVARIANCE(*nfp.covariance(), cov, 1e-6);
+  covCpy = *cov;
+  NeutralFreeParameters nfp(covCpy, params);
+  CHECK_CLOSE_COVARIANCE(*nfp.covariance(), *cov, 1e-6);
   CHECK_CLOSE_ABS(nfp.parameters(), params, 1e-6);
 
   NeutralFreeParameters nfpCopyConstr(nfp);
   BOOST_TEST(nfpCopyConstr == nfp);
 
+  covCpy = *cov;
   NeutralFreeParameters nfpMoveConstr(
-      NeutralFreeParameters(std::make_unique<FreeSymMatrix>(cov), params));
+      NeutralFreeParameters(covCpy, params));
   BOOST_TEST(nfpMoveConstr == nfp);
 
   NeutralFreeParameters* nfpCopy = nfp.clone();
@@ -99,8 +103,9 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   BOOST_TEST(nfpCopyAssignment == nfp);
 
   // Test move assignment
+  covCpy = *cov;
   NeutralFreeParameters nfpMoveAssignment =
-      NeutralFreeParameters(std::make_unique<FreeSymMatrix>(cov), params);
+      NeutralFreeParameters(covCpy, params);
   BOOST_TEST(nfpMoveAssignment == nfp);
 
   /// Test getters/setters
@@ -116,14 +121,14 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.get<7>(), qop, 1e-6);
 
   // Test getter of uncertainties
-  CHECK_CLOSE_ABS(fp.uncertainty<0>(), std::sqrt(cov(0, 0)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<1>(), std::sqrt(cov(1, 1)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<2>(), std::sqrt(cov(2, 2)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<3>(), std::sqrt(cov(3, 3)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<4>(), std::sqrt(cov(4, 4)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<5>(), std::sqrt(cov(5, 5)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<6>(), std::sqrt(cov(6, 6)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<7>(), std::sqrt(cov(7, 7)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<0>(), std::sqrt((*cov)(0, 0)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<1>(), std::sqrt((*cov)(1, 1)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<2>(), std::sqrt((*cov)(2, 2)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<3>(), std::sqrt((*cov)(3, 3)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<4>(), std::sqrt((*cov)(4, 4)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<5>(), std::sqrt((*cov)(5, 5)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<6>(), std::sqrt((*cov)(6, 6)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<7>(), std::sqrt((*cov)(7, 7)), 1e-6);
 
   // Test getter of parts of the parameters by their meaning
   CHECK_CLOSE_ABS(fp.position(), pos, 1e-6);

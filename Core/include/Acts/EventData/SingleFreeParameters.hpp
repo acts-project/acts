@@ -43,37 +43,36 @@ class SingleFreeParameters : public ParametersBase {
   /// Type of covariance matrix
   using CovMatrix_t = FreeSymMatrix;
 
-  /// Type for unique pointer to covariance matrix
-  using CovPtr_t = std::unique_ptr<const CovMatrix_t>;
-
   /// @brief Default virtual destructor
   ~SingleFreeParameters() override = default;
 
   /// @brief Standard constructor for track parameters of charged particles
   ///
   /// @tparam T Type of the charge policy (ChargedPolicy)
-  /// @param [in] cov Unique pointer to covariance matrix (nullptr is accepted)
+  /// @param [in] cov The covariance matrix
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleFreeParameters(CovPtr_t cov, const FreeVector& parValues)
+  SingleFreeParameters(std::optional<CovMatrix_t> cov, const FreeVector& parValues)
       : ParametersBase(),
+      m_parameters(parValues),
         m_oChargePolicy((parValues(FreeParsDim - 1) > 0.) ? 1. : -1.),
-        m_covariance(std::move(cov)),
-        m_parameters(parValues) {}
+        m_covariance(std::move(cov))
+         {}
 
   /// @brief Standard constructor for track parameters of neutral particles
   ///
   /// @tparam T Type of the charge policy (NeutralPolicy)
-  /// @param [in] cov Unique pointer to covariance matrix (nullptr is accepted)
+  /// @param [in] cov The covariance matrix
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeParameters(CovPtr_t cov, const FreeVector& parValues)
+  SingleFreeParameters(std::optional<CovMatrix_t> cov, const FreeVector& parValues)
       : ParametersBase(),
+		m_parameters(parValues),
         m_oChargePolicy(),
-        m_covariance(std::move(cov)),
-        m_parameters(parValues) {}
+        m_covariance(std::move(cov))
+         {}
 
   /// @brief Copy assignment operator
   ///
@@ -86,10 +85,7 @@ class SingleFreeParameters : public ParametersBase {
     if (this != &rhs) {
       m_oChargePolicy = rhs.m_oChargePolicy;
       m_parameters = rhs.m_parameters;
-      m_covariance =
-          (rhs.m_covariance
-               ? std::make_unique<const CovMatrix_t>(*rhs.m_covariance)
-               : nullptr);
+      m_covariance = rhs.m_covariance;
     }
     return *this;
   }
@@ -115,9 +111,10 @@ class SingleFreeParameters : public ParametersBase {
   /// @param [in] copy The object to copy from
   SingleFreeParameters(const SingleFreeParameters<ChargePolicy>& copy)
       : ParametersBase(),
+      m_parameters(copy.m_parameters),
         m_oChargePolicy(copy.m_oChargePolicy),
-        m_covariance(std::make_unique<const CovMatrix_t>(*copy.m_covariance)),
-        m_parameters(copy.m_parameters) {}
+        m_covariance(copy.m_covariance)
+         {}
 
   /// @brief Default move constructor
   ///
@@ -168,7 +165,7 @@ class SingleFreeParameters : public ParametersBase {
   /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const CovMatrix_t* covariance() const { return m_covariance.get(); }
+  const std::optional<CovMatrix_t>& covariance() const { return m_covariance; }
 
   /// @copydoc ParametersBase::position
   Vector3D position() const final { return m_parameters.template head<3>(); }
@@ -197,13 +194,13 @@ class SingleFreeParameters : public ParametersBase {
     }
 
     // Both have covariance matrices set
-    if ((m_covariance && casted->m_covariance) &&
+    if ((m_covariance.has_value() && casted->m_covariance.has_value()) &&
         (*m_covariance != *casted->m_covariance)) {
       return false;
     }
     // Only one has a covariance matrix set
-    if ((m_covariance && !casted->m_covariance) ||
-        (!m_covariance && casted->m_covariance)) {
+    if ((m_covariance.has_value() && !casted->m_covariance.has_value()) ||
+        (!m_covariance.has_value() && casted->m_covariance.has_value())) {
       return false;
     }
 
@@ -239,7 +236,7 @@ class SingleFreeParameters : public ParametersBase {
     sl << " * FreeTrackParameters: ";
     sl << parameters().transpose() << std::endl;
     sl << " * charge: " << charge() << std::endl;
-    if (covariance() != nullptr) {
+    if (covariance().has_value()) {
       sl << " * covariance matrix:\n" << *covariance() << std::endl;
     } else {
       sl << " * no covariance matrix stored" << std::endl;
@@ -253,10 +250,10 @@ class SingleFreeParameters : public ParametersBase {
   }
 
  private:
+  FreeVector m_parameters;       ///< Parameter vector
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
-  CovPtr_t m_covariance;         ///< Covariance matrix
-  FreeVector m_parameters;       ///< Parameter vector
+  std::optional<CovMatrix_t> m_covariance;         ///< Covariance matrix
 };
 
 }  // namespace Acts
