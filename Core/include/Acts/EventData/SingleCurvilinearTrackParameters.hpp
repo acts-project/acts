@@ -85,7 +85,7 @@ class SingleCurvilinearTrackParameters
         m_upSurface(std::move(other.m_upSurface)) {}
 
   /// @brief desctructor
-  ~SingleCurvilinearTrackParameters() override = default;
+  ~SingleCurvilinearTrackParameters() = default;
 
   /// @brief copy assignment operator - charged/netural
   /// virtual constructor for type creation without casting
@@ -114,7 +114,7 @@ class SingleCurvilinearTrackParameters
 
   /// @brief clone - charged/netural
   /// virtual constructor for type creation without casting
-  SingleTrackParameters<ChargePolicy>* clone() const override {
+  SingleTrackParameters<ChargePolicy>* clone() const {
     return new SingleCurvilinearTrackParameters<ChargePolicy>(*this);
   }
 

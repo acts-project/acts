@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -328,7 +327,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       iTrack = 0;
       for (auto& bTrack : billoirTracks) {
         // new refitted trackparameters
-        TrackParametersBase::ParVector_t paramVec;
+        BoundVector paramVec;
         paramVec << 0., 0., trackMomenta[iTrack](0), trackMomenta[iTrack](1),
             trackMomenta[iTrack](2), 0.;
 

@@ -12,7 +12,7 @@
 
 // Acts includes
 #include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/EventData/ParametersBase.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -29,7 +29,7 @@ class Surface;
 /// system. The track parameters and their uncertainty are defined in local
 /// reference frame which depends on the associated surface
 /// of the track parameters.
-class TrackParametersBase : public ParametersBase {
+class TrackParametersBase{
  public:
   // public typedef's
 
@@ -107,10 +107,51 @@ class TrackParametersBase : public ParametersBase {
   /// matrix
   virtual const FullParameterSet& getParameterSet() const = 0;
 
+  /// @brief equality operator
+  virtual bool operator==(const TrackParametersBase& rhs) const = 0;
+  
+  /// @brief inequality operator
+  ///
+  /// @return `not (*this == rhs)`
+  bool operator!=(const TrackParametersBase& rhs) const { return !(*this == rhs); }
+  
+  /// @brief convenience method to retrieve transverse momentum
+  double pT() const { return VectorHelpers::perp(momentum()); }
+
+  /// @brief convenience method to retrieve pseudorapidity
+  double eta() const { return VectorHelpers::eta(momentum()); }
+
+  /// @brief access position in global coordinate system
+  ///
+  /// @return 3D vector with global position
+  virtual ActsVectorD<3> position() const = 0;
+  
+  /// @brief access momentum in global coordinate system
+  ///
+  /// @return 3D vector with global momentum
+  virtual ActsVectorD<3> momentum() const = 0;
+ 
+   /// @brief retrieve electric charge
+  ///
+  /// @return value of electric charge
+  virtual double charge() const = 0;
+  
+    /// @brief output stream operator
+  ///
+  /// Prints information about this object to the output stream using the
+  /// virtual
+  /// TrackParameters::print or SingleFreeParameters::print method.
+  ///
+  /// @return modified output stream object
+  friend std::ostream& operator<<(std::ostream& out, const TrackParametersBase& tp) {
+    tp.print(out);
+    return out;
+  }
+  
  protected:
   /// @brief print information to output stream
   ///
   /// @return modified output stream object
-  std::ostream& print(std::ostream& sl) const override;
+  std::ostream& print(std::ostream& sl) const;
 };
 }  // namespace Acts

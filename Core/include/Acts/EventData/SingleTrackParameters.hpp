@@ -47,22 +47,19 @@ class SingleTrackParameters : public TrackParametersBase {
   using CovMatrix_t = typename TrackParametersBase::CovMatrix_t;
 
   /// @brief default virtual destructor
-  ~SingleTrackParameters() override = default;
-
-  /// @brief virtual constructor
-  SingleTrackParameters<ChargePolicy>* clone() const override = 0;
+  ~SingleTrackParameters() = default;
 
   /// @copydoc ParametersBase::position
-  Vector3D position() const final { return m_vPosition; }
+  Vector3D position() const { return m_vPosition; }
 
   /// @copydoc ParametersBase::momentum
-  Vector3D momentum() const final { return m_vMomentum; }
+  Vector3D momentum() const override { return m_vMomentum; }
 
   /// @brief equality operator
   ///
   /// @return @c true of both objects have the same charge policy, parameter
   /// values, position and momentum, otherwise @c false
-  bool operator==(const ParametersBase& rhs) const override {
+  bool operator==(const TrackParametersBase& rhs) const override{
     auto casted = dynamic_cast<decltype(this)>(&rhs);
     if (!casted) {
       return false;
@@ -76,10 +73,10 @@ class SingleTrackParameters : public TrackParametersBase {
   }
 
   /// @copydoc ParametersBase::charge
-  double charge() const final { return m_oChargePolicy.getCharge(); }
+  double charge() const { return m_oChargePolicy.getCharge(); }
 
   /// @copydoc TrackParametersBase::time
-  double time() const final { return m_oTime; }
+  double time() const { return m_oTime; }
 
   /// @copydoc ParametersBase::getParameterSet
   const FullParameterSet& getParameterSet() const final {
