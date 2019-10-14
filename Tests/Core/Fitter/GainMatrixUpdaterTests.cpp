@@ -91,9 +91,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   Vector3D expMomentum;
   expMomentum << 0.0000000, 80.9016994, 58.7785252;
 
-  BoundParameters filtered(
-      tgContext, std::make_unique<Covariance>(ts.filteredCovariance()),
-      ts.filtered(), cylinder);
+  BoundParameters filtered(tgContext, ts.filteredCovariance(), ts.filtered(),
+                           cylinder);
 
   double expChi2 = 1.33958;
 

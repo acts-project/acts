@@ -342,8 +342,7 @@ class KalmanFitter {
           // a bit awkward.
           // @TODO: Make this unnecessary
           BoundParameters bPars(state.options.geoContext,
-                                std::make_unique<BoundParameters::CovMatrix_t>(
-                                    trackState.filteredCovariance()),
+                                trackState.filteredCovariance(),
                                 trackState.filtered(), surface->getSharedPtr());
           stepper.update(state.stepping, bPars);
         }

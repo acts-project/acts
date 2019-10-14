@@ -87,9 +87,9 @@ class GainMatrixSmoother {
     });
 
     // construct parameters from last track state
-    parameters_t lastSmoothed(
-        gctx, std::make_unique<CovMatrix_t>(prev_ts.smoothedCovariance()),
-        prev_ts.smoothed(), prev_ts.referenceSurface().getSharedPtr());
+    parameters_t lastSmoothed(gctx, prev_ts.smoothedCovariance(),
+                              prev_ts.smoothed(),
+                              prev_ts.referenceSurface().getSharedPtr());
 
     return lastSmoothed;
   }
