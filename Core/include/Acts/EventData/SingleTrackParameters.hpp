@@ -49,10 +49,14 @@ class SingleTrackParameters : public TrackParametersBase {
   /// @brief default virtual destructor
   ~SingleTrackParameters() = default;
 
-  /// @copydoc ParametersBase::position
+  /// @brief access position in global coordinate system
+  ///
+  /// @return 3D vector with global position
   Vector3D position() const { return m_vPosition; }
 
-  /// @copydoc ParametersBase::momentum
+  /// @brief access momentum in global coordinate system
+  ///
+  /// @return 3D vector with global momentum
   Vector3D momentum() const override { return m_vMomentum; }
 
   /// @brief equality operator
@@ -72,13 +76,20 @@ class SingleTrackParameters : public TrackParametersBase {
             m_vMomentum == casted->m_vMomentum);
   }
 
-  /// @copydoc ParametersBase::charge
+  /// @brief retrieve electric charge
+  ///
+  /// @return value of electric charge
   double charge() const { return m_oChargePolicy.getCharge(); }
 
-  /// @copydoc TrackParametersBase::time
+  /// @brief retrieve time
+  ///
+  /// @return value of time
   double time() const { return m_oTime; }
 
-  /// @copydoc ParametersBase::getParameterSet
+  /// @brief access to the internally stored ParameterSet
+  ///
+  /// @return ParameterSet object holding parameter values and their covariance
+  /// matrix
   const FullParameterSet& getParameterSet() const final {
     return m_oParameters;
   }

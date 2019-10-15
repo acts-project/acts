@@ -32,7 +32,7 @@ namespace Acts {
 /// neutral
 /// @note It is assumed that a charged particle has a charge of +/-1
 template <class ChargePolicy>
-class SingleFreeParameters : public ParametersBase {
+class SingleFreeParameters {
   static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
                     std::is_same<ChargePolicy, NeutralPolicy>::value,
                 "ChargePolicy must either be 'Acts::ChargedPolicy' or "
@@ -44,7 +44,7 @@ class SingleFreeParameters : public ParametersBase {
   using CovMatrix_t = FreeSymMatrix;
 
   /// @brief Default virtual destructor
-  ~SingleFreeParameters() override = default;
+  ~SingleFreeParameters() = default;
 
   /// @brief Standard constructor for track parameters of charged particles
   ///
@@ -55,7 +55,7 @@ class SingleFreeParameters : public ParametersBase {
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleFreeParameters(std::optional<CovMatrix_t> cov,
                        const FreeVector& parValues)
-      : ParametersBase(),
+      : 
         m_parameters(parValues),
         m_oChargePolicy((parValues(FreeParsDim - 1) > 0.) ? 1. : -1.),
         m_covariance(std::move(cov)) {}
@@ -69,7 +69,7 @@ class SingleFreeParameters : public ParametersBase {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleFreeParameters(std::optional<CovMatrix_t> cov,
                        const FreeVector& parValues)
-      : ParametersBase(),
+      : 
         m_parameters(parValues),
         m_oChargePolicy(),
         m_covariance(std::move(cov)) {}
@@ -110,8 +110,7 @@ class SingleFreeParameters : public ParametersBase {
   ///
   /// @param [in] copy The object to copy from
   SingleFreeParameters(const SingleFreeParameters<ChargePolicy>& copy)
-      : ParametersBase(),
-        m_parameters(copy.m_parameters),
+      : m_parameters(copy.m_parameters),
         m_oChargePolicy(copy.m_oChargePolicy),
         m_covariance(copy.m_covariance) {}
 
@@ -126,7 +125,7 @@ class SingleFreeParameters : public ParametersBase {
   /// @brief Heap copy constructor
   ///
   /// @return Heap allocated copy of `*this`
-  SingleFreeParameters<ChargePolicy>* clone() const override {
+  SingleFreeParameters<ChargePolicy>* clone() const {
     return new SingleFreeParameters<ChargePolicy>(*this);
   }
 
@@ -166,19 +165,27 @@ class SingleFreeParameters : public ParametersBase {
   /// @sa ParameterSet::getCovariance
   const std::optional<CovMatrix_t>& covariance() const { return m_covariance; }
 
-  /// @copydoc ParametersBase::position
-  Vector3D position() const final { return m_parameters.template head<3>(); }
+  /// @brief access position in global coordinate system
+  ///
+  /// @return 3D vector with global position
+  Vector3D position() const { return m_parameters.template head<3>(); }
 
-  /// @copydoc ParametersBase::momentum
-  Vector3D momentum() const final {
+  /// @brief access momentum in global coordinate system
+  ///
+  /// @return 3D vector with global momentum
+  Vector3D momentum() const {
     return m_parameters.template segment<3>(4) / std::abs(get<7>());
   }
 
-  /// @copydoc ParametersBase::charge
-  double charge() const final { return m_oChargePolicy.getCharge(); }
+  /// @brief retrieve electric charge
+  ///
+  /// @return value of electric charge
+  double charge() const { return m_oChargePolicy.getCharge(); }
 
-  /// @copydoc ParametersBase::time
-  double time() const final { return m_parameters(3); }
+  /// @brief retrieve time
+  ///
+  /// @return value of time
+  double time() const { return m_parameters(3); }
 
   /// @brief Equality operator
   ///
@@ -186,7 +193,7 @@ class SingleFreeParameters : public ParametersBase {
   ///
   /// @return Boolean value whether the objects can be casted into each other
   /// and the content of the member variables is the same
-  bool operator==(const ParametersBase& rhs) const override {
+  bool operator==(const SingleFreeParameters& rhs) const {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
     if (!casted) {
       return false;
@@ -207,6 +214,11 @@ class SingleFreeParameters : public ParametersBase {
             m_parameters == casted->m_parameters);
   }
 
+  /// @brief inequality operator
+  ///
+  /// @return `not (*this == rhs)`
+  bool operator!=(const SingleFreeParameters& rhs) const { return !(*this == rhs); }
+  
   /// @brief Update of the parameterisation
   ///
   /// @tparam par The parameter index
@@ -226,7 +238,7 @@ class SingleFreeParameters : public ParametersBase {
   /// @param [in, out] sl The output stream
   ///
   /// @return The modified output stream object @p sl
-  std::ostream& print(std::ostream& sl) const override {
+  std::ostream& print(std::ostream& sl) const {
     // Set stream output format
     auto old_precision = sl.precision(7);
     auto old_flags = sl.setf(std::ios::fixed);
@@ -248,6 +260,18 @@ class SingleFreeParameters : public ParametersBase {
     return sl;
   }
 
+  /// @brief output stream operator
+  ///
+  /// Prints information about this object to the output stream using the
+  /// virtual
+  /// TrackParameters::print or SingleFreeParameters::print method.
+  ///
+  /// @return modified output stream object
+  friend std::ostream& operator<<(std::ostream& out, const SingleFreeParameters& sfp) {
+    sfp.print(out);
+    return out;
+  }
+  
  private:
   FreeVector m_parameters;       ///< Parameter vector
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
