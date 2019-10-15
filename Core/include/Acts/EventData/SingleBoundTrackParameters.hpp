@@ -209,7 +209,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   }
 
   /// @brief access method to the reference surface
-  const Surface& referenceSurface() const final { return *m_pSurface; }
+  const Surface& referenceSurface() const { return *m_pSurface; }
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
@@ -222,7 +222,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// surface frame, for measurements with respect to a line this has to be
   /// constructed by the point of clostest approach to the line, for
   /// cylindrical surfaces this is (by convention) the tangential plane.
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const final {
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const {
     return std::move(
         m_pSurface->referenceFrame(gctx, this->position(), this->momentum()));
   }

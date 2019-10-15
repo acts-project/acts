@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   // Construct the parameter
   std::array<double, 6> pars_array = {
       {-0.1234, 9.8765, 0.45, 0.888, 0.001, 0.}};
-  TrackParametersBase::ParVector_t pars;
+  BoundVector pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 

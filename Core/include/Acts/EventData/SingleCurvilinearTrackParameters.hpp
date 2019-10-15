@@ -166,7 +166,7 @@ class SingleCurvilinearTrackParameters
   }
 
   /// @brief access to the reference surface
-  const Surface& referenceSurface() const final { return *m_upSurface; }
+  const Surface& referenceSurface() const { return *m_upSurface; }
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
@@ -177,7 +177,7 @@ class SingleCurvilinearTrackParameters
   ///
   /// @note For a curvilinear track parameterisation this is identical to
   /// the rotation matrix of the intrinsic planar surface.
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const final {
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const {
     return m_upSurface->transform(gctx).linear();
   }
 

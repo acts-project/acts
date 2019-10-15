@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       double q = qDist(gen) < 0 ? -1. : 1.;
 
       // Construct random track parameters
-      TrackParametersBase::ParVector_t paramVec;
+      BoundVector paramVec;
       double z0track = z0_v + z0Dist(gen);
       paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
           q / pTDist(gen), 0.;
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
       double q = qDist(gen) < 0 ? -1. : 1.;
 
       // Construct random track parameters
-      TrackParametersBase::ParVector_t paramVec;
+      BoundVector paramVec;
       double z0track = z0_v + z0Dist(gen);
       paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
           q / pTDist(gen), 0.;

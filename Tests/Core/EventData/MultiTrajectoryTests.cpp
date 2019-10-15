@@ -32,8 +32,8 @@ namespace Test {
 GeometryContext gctx;
 
 using SourceLink = MinimalSourceLink;
-using Parameters = TrackParametersBase::ParVector_t;
-using Covariance = TrackParametersBase::CovMatrix_t;
+using Parameters = BoundVector;
+using Covariance = BoundSymMatrix;
 
 CurvilinearParameters make_params() {
   // generate arbitrary positive, definite matrix

@@ -12,7 +12,6 @@
 #include <ostream>
 
 // Acts includes
-#include "Acts/EventData/ParametersBase.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -260,13 +259,13 @@ class SingleFreeParameters {
     return sl;
   }
 
-  /// @brief output stream operator
+  /// @brief Output stream operator
   ///
-  /// Prints information about this object to the output stream using the
-  /// virtual
-  /// TrackParameters::print or SingleFreeParameters::print method.
+  /// Prints information about this object to the output stream
+  /// @param [in, out] out The output stream
+  /// @param [in] sfp The object that will be printed
   ///
-  /// @return modified output stream object
+  /// @return Modified output stream object
   friend std::ostream& operator<<(std::ostream& out, const SingleFreeParameters& sfp) {
     sfp.print(out);
     return out;
