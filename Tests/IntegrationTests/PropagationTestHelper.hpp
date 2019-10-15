@@ -274,14 +274,7 @@ std::pair<Vector3D, double> to_cylinder(
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-  }
-
-  // do propagation of the start parameters
-  TrackParametersBase* start;
-  if (q == 0.)
-    start = new NeutralCurvilinearParameters(covOpt, pos, mom, time);
-  else
-    start = new CurvilinearParameters(covOpt, pos, mom, q, time);
+  }  
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
@@ -313,6 +306,19 @@ std::pair<Vector3D, double> to_cylinder(
     // The position and path length
     return std::pair<Vector3D, double>(tp->position(), result.pathLength);
   }
+}
+    else
+    {
+    auto start = new CurvilinearParameters(covOpt, pos, mom, q, time);
+    
+      const auto result =
+      propagator.propagate(*start, *endSurface, options).value();
+  const auto& tp = result.endParameters;
+  // check for null pointer
+  BOOST_CHECK(tp != nullptr);
+  // The position and path length
+  return std::pair<Vector3D, double>(tp->position(), result.pathLength);
+}
 }
 
 // test propagation to most surfaces
