@@ -77,17 +77,35 @@ class GainMatrixSmoother {
         assert(prev_ts.hasSmoothed());
         assert(prev_ts.hasPredicted());
 
+        ACTS_VERBOSE("Calculate smoothing matrix:");
+        ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
+        ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
+        ACTS_VERBOSE("Prev. predicted covariance\n"
+                     << prev_ts.predictedCovariance() << "\n, inverse: \n"
+                     << prev_ts.predictedCovariance().inverse());
+
         // Gain smoothing matrix
         G = ts.filteredCovariance() * ts.jacobian().transpose() *
             prev_ts.predictedCovariance().inverse();
 
-        ACTS_VERBOSE("Gain smoothing matrix is:\n" << G);
+        ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
+
+        ACTS_VERBOSE("Calculate smoothed parameters:");
+        ACTS_VERBOSE("Filtered parameters: " << ts.filtered().transpose());
+        ACTS_VERBOSE(
+            "Prev. smoothed parameters: " << prev_ts.smoothed().transpose());
+        ACTS_VERBOSE(
+            "Prev. predicted parameters: " << prev_ts.predicted().transpose());
 
         // Calculate the smoothed parameters
         ts.smoothed() =
             ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
 
         ACTS_VERBOSE("Smoothed parameters are: " << ts.smoothed().transpose());
+
+        ACTS_VERBOSE("Calculate smoothed covariance:");
+        ACTS_VERBOSE("Prev. smoothed covariance:\n"
+                     << prev_ts.smoothedCovariance());
 
         // And the smoothed covariance
         ts.smoothedCovariance() =
