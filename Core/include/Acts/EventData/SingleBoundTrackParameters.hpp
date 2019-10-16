@@ -209,7 +209,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   }
 
   /// @brief access method to the reference surface
-  const Surface& referenceSurface() const { return *m_pSurface; }
+  const Surface& referenceSurface() const final { return *m_pSurface; }
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
