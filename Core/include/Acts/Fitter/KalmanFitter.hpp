@@ -194,6 +194,10 @@ class KalmanFitter {
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
     kalmanActor.targetSurface = kfOptions.referenceSurface;
 
+    // also set logger on updater and smoother
+    kalmanActor.m_updater.m_logger = kalmanActor.m_logger;
+    kalmanActor.m_smoother.m_logger = kalmanActor.m_logger;
+
     // Run the fitter
     const auto& result =
         m_propagator.template propagate(sParameters, kalmanOptions).value();

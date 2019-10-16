@@ -11,6 +11,7 @@
 #include <boost/range/adaptors.hpp>
 #include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -26,9 +27,13 @@ class GainMatrixSmoother {
   /// @brief Gain Matrix smoother implementation
   ///
 
+  /// Constructor with (non-owning) logger
+  GainMatrixSmoother(const Logger* logger = nullptr) : m_logger(logger) {}
+
   template <typename track_states_t>
   boost::optional<parameters_t> operator()(
       const GeometryContext& gctx, track_states_t& filteredStates) const {
+    ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
     using track_state_t = typename track_states_t::value_type;
@@ -41,6 +46,7 @@ class GainMatrixSmoother {
     CovMatrix_t smoothedCov;
 
     // For the last state: smoothed is filtered - also: switch to next
+    ACTS_VERBOSE("Getting previous track state");
     auto* prev_ts = &filteredStates.back();
     assert(prev_ts->parameter.filtered);
     prev_ts->parameter.smoothed = *prev_ts->parameter.filtered;
@@ -67,16 +73,19 @@ class GainMatrixSmoother {
       G = (*ts.parameter.filtered->covariance())
           * ts.parameter.jacobian->transpose()
           * (*prev_ts->parameter.predicted->covariance()).inverse();
+      ACTS_VERBOSE("Gain smoothing matrix is:\n" << G);
       // Calculate the smoothed parameters
       smoothedPars = ts.parameter.filtered->parameters()
                      + G * (prev_ts->parameter.smoothed->parameters()
                             - prev_ts->parameter.predicted->parameters());
+      ACTS_VERBOSE("Smoothed parameters are: " << smoothedPars.transpose());
 
       // And the smoothed covariance
       smoothedCov = (*ts.parameter.filtered->covariance())
                     - G * (*(prev_ts->parameter.predicted->covariance())
                            - (*prev_ts->parameter.smoothed->covariance()))
                            * G.transpose();
+      ACTS_VERBOSE("Smoothed covariance is: \n" << smoothedCov);
 
       // clang-format on
 
@@ -91,5 +100,11 @@ class GainMatrixSmoother {
     // The result is the pointer to the last smoothed state - for the cache
     return prev_ts->parameter.smoothed;
   }
+
+  /// Pointer to a logger that is owned by the parent, KalmanFilter
+  const Logger* m_logger{nullptr};
+
+  /// Getter for the logger, to support logging macros
+  const Logger& logger() const { return *m_logger; }
 };
 }  // namespace Acts
