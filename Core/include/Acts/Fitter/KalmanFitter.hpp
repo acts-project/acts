@@ -65,6 +65,27 @@ struct KalmanFitterOptions {
   const Surface* referenceSurface = nullptr;
 };
 
+template <typename source_link_t>
+struct KalmanFitterResult {
+  // Fitted states that the actor has handled.
+  std::vector<TrackStateType> fittedStates = {};
+
+  // The optional Parameters at the provided surface
+  boost::optional<BoundParameters> fittedParameters;
+
+  // Counter for handled states
+  size_t processedStates = 0;
+
+  // Indicator if smoothing has been done.
+  bool smoothed = false;
+
+  // Indicator if initialization has been performed.
+  bool initialized = false;
+
+  // Measurement surfaces without hits
+  std::vector<const Surface*> missedActiveSurfaces = {};
+};
+
 /// @brief Kalman fitter implementation of Acts as a plugin
 /// to the Propgator
 ///
@@ -219,31 +240,8 @@ class KalmanFitter {
           m_smoother(std::move(pSmoother)),
           m_calibrator(std::move(pCalibrator)) {}
 
-    /// Simple result struct to be returned
-    /// It mainly acts as an internal state which is
-    /// created for every propagation/extrapolation step
-    struct this_result {
-      // Fitted states that the actor has handled.
-      std::vector<TrackStateType> fittedStates = {};
-
-      // The optional Parameters at the provided surface
-      boost::optional<BoundParameters> fittedParameters;
-
-      // Counter for handled states
-      size_t processedStates = 0;
-
-      // Indicator if smoothing has been done.
-      bool smoothed = false;
-
-      // Indicator if initialization has been performed.
-      bool initialized = false;
-
-      // Measurement surfaces without hits
-      std::vector<const Surface*> missedActiveSurfaces = {};
-    };
-
     /// Broadcast the result_type
-    using result_type = this_result;
+    using result_type = KalmanFitterResult<source_link_t>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
