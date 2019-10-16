@@ -13,8 +13,8 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -41,7 +41,7 @@ class GainMatrixSmoother {
   parameters_t operator()(const GeometryContext& gctx,
                           MultiTrajectory<source_link_t>& trajectory,
                           size_t entryIndex) const {
-    ACTS_VERBOSE("Invoked GainMatrixSmoother");
+    ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
     // using ParVector_t = typename parameters_t::ParVector_t;
@@ -58,33 +58,48 @@ class GainMatrixSmoother {
     // Smoothing gain matrix
     gain_matrix_t G;
 
-    trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G](auto ts) {
-      // should have filtered and predicted, this should also include the
-      // covariances.
-      assert(ts.hasFiltered());
-      assert(ts.hasPredicted());
-      assert(ts.hasJacobian());
+    // make sure there is more than one track state
+    if (prev_ts.previous() == Acts::detail_lt::IndexData::kInvalid) {
+      ACTS_VERBOSE("Only one track state given, smoothing terminates early");
+    } else {
+      ACTS_VERBOSE("Start smoothing from previous track state at index: "
+                   << prev_ts.previous());
 
-      // previous trackstate should have smoothed and predicted
-      assert(prev_ts.hasSmoothed());
-      assert(prev_ts.hasPredicted());
+      trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G,
+                                                     this](auto ts) {
+        // should have filtered and predicted, this should also include the
+        // covariances.
+        assert(ts.hasFiltered());
+        assert(ts.hasPredicted());
+        assert(ts.hasJacobian());
 
-      // Gain smoothing matrix
-      G = ts.filteredCovariance() * ts.jacobian().transpose() *
-          prev_ts.predictedCovariance().inverse();
+        // previous trackstate should have smoothed and predicted
+        assert(prev_ts.hasSmoothed());
+        assert(prev_ts.hasPredicted());
 
-      // Calculate the smoothed parameters
-      ts.smoothed() =
-          ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
+        // Gain smoothing matrix
+        G = ts.filteredCovariance() * ts.jacobian().transpose() *
+            prev_ts.predictedCovariance().inverse();
 
-      // And the smoothed covariance
-      ts.smoothedCovariance() =
-          ts.filteredCovariance() -
-          G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
-              G.transpose();
+        ACTS_VERBOSE("Gain smoothing matrix is:\n" << G);
 
-      prev_ts = ts;
-    });
+        // Calculate the smoothed parameters
+        ts.smoothed() =
+            ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
+
+        ACTS_VERBOSE("Smoothed parameters are: " << ts.smoothed().transpose());
+
+        // And the smoothed covariance
+        ts.smoothedCovariance() =
+            ts.filteredCovariance() -
+            G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
+                G.transpose();
+
+        ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
+
+        prev_ts = ts;
+      });
+    }
 
     // construct parameters from last track state
     parameters_t lastSmoothed(gctx, prev_ts.smoothedCovariance(),

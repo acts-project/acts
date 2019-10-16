@@ -77,8 +77,9 @@ class GainMatrixUpdater {
     const auto predicted = trackState.predicted();
     const auto predicted_covariance = trackState.predictedCovariance();
 
-    // ParVector_t filtered_parameters;
-    // CovMatrix_t filtered_covariance;
+    ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
+    ACTS_VERBOSE("Predicted covariance:\n" << predicted_covariance);
+
     // read-write handles. Types are eigen maps into backing storage.
     // This writes directly into the trajectory storage
     auto filtered = trackState.filtered();
@@ -92,14 +93,23 @@ class GainMatrixUpdater {
           using cov_t = ActsSymMatrixD<measdim>;
           using par_t = ActsVectorD<measdim>;
 
+          ACTS_VERBOSE("Measurement dimension: " << measdim);
+          ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
+          ACTS_VERBOSE("Calibrated measurement covariance:\n"
+                       << calibrated_covariance);
+
           const ActsMatrixD<measdim, BoundParsDim> H =
               trackState.projector()
                   .template topLeftCorner<measdim, BoundParsDim>();
+
+          ACTS_VERBOSE("Measurement projector H:\n" << H);
 
           const ActsMatrixD<BoundParsDim, measdim> K =
               predicted_covariance * H.transpose() *
               (H * predicted_covariance * H.transpose() + calibrated_covariance)
                   .inverse();
+
+          ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
           filtered = predicted + K * (calibrated - H * predicted);
           filtered_covariance =
@@ -107,16 +117,21 @@ class GainMatrixUpdater {
                    MultiTrajectory<SourceLink>::ParametersSize>::Identity() -
                K * H) *
               predicted_covariance;
+          ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
+          ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
 
           // calculate filtered residual
           par_t residual(trackState.calibratedSize());
           residual = (calibrated - H * filtered);
+          ACTS_VERBOSE("Residual: " << residual.transpose());
 
           trackState.chi2() =
               (residual.transpose() *
                ((cov_t::Identity() - H * K) * calibrated_covariance).inverse() *
                residual)
                   .value();
+
+          ACTS_VERBOSE("Chi2: " << trackState.chi2());
         });
 
     return Result<void>::success();
@@ -130,6 +145,12 @@ class GainMatrixUpdater {
     assert(m_logger);
     return *m_logger;
   }
+
+  /// Pointer to a logger that is owned by the parent, KalmanFilter
+  const Logger* m_logger{nullptr};
+
+  /// Getter for the logger, to support logging macros
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts
