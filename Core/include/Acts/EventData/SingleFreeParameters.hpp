@@ -54,8 +54,7 @@ class SingleFreeParameters {
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleFreeParameters(std::optional<CovMatrix_t> cov,
                        const FreeVector& parValues)
-      : 
-        m_parameters(parValues),
+      : m_parameters(parValues),
         m_oChargePolicy((parValues(FreeParsDim - 1) > 0.) ? 1. : -1.),
         m_covariance(std::move(cov)) {}
 
@@ -68,8 +67,7 @@ class SingleFreeParameters {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleFreeParameters(std::optional<CovMatrix_t> cov,
                        const FreeVector& parValues)
-      : 
-        m_parameters(parValues),
+      : m_parameters(parValues),
         m_oChargePolicy(),
         m_covariance(std::move(cov)) {}
 
@@ -216,8 +214,10 @@ class SingleFreeParameters {
   /// @brief inequality operator
   ///
   /// @return `not (*this == rhs)`
-  bool operator!=(const SingleFreeParameters& rhs) const { return !(*this == rhs); }
-  
+  bool operator!=(const SingleFreeParameters& rhs) const {
+    return !(*this == rhs);
+  }
+
   /// @brief Update of the parameterisation
   ///
   /// @tparam par The parameter index
@@ -266,11 +266,12 @@ class SingleFreeParameters {
   /// @param [in] sfp The object that will be printed
   ///
   /// @return Modified output stream object
-  friend std::ostream& operator<<(std::ostream& out, const SingleFreeParameters& sfp) {
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const SingleFreeParameters& sfp) {
     sfp.print(out);
     return out;
   }
-  
+
  private:
   FreeVector m_parameters;       ///< Parameter vector
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing

@@ -8,11 +8,11 @@
 
 #pragma once
 #include <type_traits>
+#include "Acts/EventData/ChargePolicy.hpp"
+#include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/EventData/ChargePolicy.hpp"
-#include "Acts/EventData/ParameterSet.hpp"
 
 namespace Acts {
 
@@ -91,16 +91,14 @@ class SingleTrackParameters {
   ///
   /// @return ParameterSet object holding parameter values and their covariance
   /// matrix
-  const FullParameterSet& getParameterSet() const {
-    return m_oParameters;
-  }
+  const FullParameterSet& getParameterSet() const { return m_oParameters; }
 
   /// @brief access associated surface defining the coordinate system for track
   ///        parameters and their covariance
   ///
   /// @return associated surface
   virtual const Surface& referenceSurface() const = 0;
-  
+
   /// @brief access covariance matrix of track parameters
   ///
   /// @note The ownership of the covariance matrix is @b not transferred with
@@ -112,15 +110,14 @@ class SingleTrackParameters {
   const std::optional<CovMatrix_t>& covariance() const {
     return getParameterSet().getCovariance();
   }
- 
+
   /// @brief access track parameters
   ///
   /// @return Eigen vector of dimension Acts::BoundParsDim with values of the
   /// track parameters
   ///         (in the order as defined by the ParID_t enumeration)
   ParVector_t parameters() const { return getParameterSet().getParameters(); }
- 
- 
+
   /// @brief access track parameter
   ///
   /// @tparam par identifier of track parameter which is to be retrieved
@@ -142,28 +139,28 @@ class SingleTrackParameters {
   ParValue_t uncertainty() const {
     return getParameterSet().template getUncertainty<par>();
   }
- 
-   
+
   /// @brief convenience method to retrieve transverse momentum
   double pT() const { return VectorHelpers::perp(momentum()); }
 
   /// @brief convenience method to retrieve pseudorapidity
   double eta() const { return VectorHelpers::eta(momentum()); }
-  
+
   FullParameterSet& getParameterSet() { return m_oParameters; }
-   
-       /// @brief output stream operator
+
+  /// @brief output stream operator
   ///
   /// Prints information about this object to the output stream using the
   /// virtual
   /// TrackParameters::print or SingleFreeParameters::print method.
   ///
   /// @return modified output stream object
-  friend std::ostream& operator<<(std::ostream& out, const SingleTrackParameters& stp) {
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const SingleTrackParameters& stp) {
     stp.print(out);
     return out;
   }
-  
+
  protected:
   /// @brief standard constructor for track parameters of charged particles
   ///
@@ -176,7 +173,7 @@ class SingleTrackParameters {
   SingleTrackParameters(std::optional<CovMatrix_t> cov,
                         const ParVector_t& parValues, const Vector3D& position,
                         const Vector3D& momentum)
-      :     m_oChargePolicy(
+      : m_oChargePolicy(
             detail::coordinate_transformation::parameters2charge(parValues)),
         m_oTime(detail::coordinate_transformation::parameters2time(parValues)),
         m_oParameters(std::move(cov), parValues),
@@ -194,8 +191,7 @@ class SingleTrackParameters {
   SingleTrackParameters(std::optional<CovMatrix_t> cov,
                         const ParVector_t& parValues, const Vector3D& position,
                         const Vector3D& momentum)
-      :
-        m_oChargePolicy(),
+      : m_oChargePolicy(),
         m_oTime(detail::coordinate_transformation::parameters2time(parValues)),
         m_oParameters(std::move(cov), parValues),
         m_vPosition(position),
@@ -268,35 +264,35 @@ class SingleTrackParameters {
     m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
         gctx, getParameterSet().getParameters(), this->referenceSurface());
   }
-  
-    /// @brief print information to output stream
+
+  /// @brief print information to output stream
   ///
   /// @return modified output stream object
-std::ostream& print(std::ostream& sl) const {
-  // set stream output format
-  auto old_precision = sl.precision(7);
-  auto old_flags = sl.setf(std::ios::fixed);
+  std::ostream& print(std::ostream& sl) const {
+    // set stream output format
+    auto old_precision = sl.precision(7);
+    auto old_flags = sl.setf(std::ios::fixed);
 
-  sl << " * TrackParameters: ";
-  sl << parameters().transpose() << std::endl;
-  sl << " * charge: " << charge() << std::endl;
-  if (covariance()) {
-    sl << " * covariance matrix:\n" << *covariance() << std::endl;
-  } else {
-    sl << " * covariance matrix:\nnull" << std::endl;
+    sl << " * TrackParameters: ";
+    sl << parameters().transpose() << std::endl;
+    sl << " * charge: " << charge() << std::endl;
+    if (covariance()) {
+      sl << " * covariance matrix:\n" << *covariance() << std::endl;
+    } else {
+      sl << " * covariance matrix:\nnull" << std::endl;
+    }
+    sl << " * corresponding global parameters:" << std::endl;
+    sl << " *    position  (x y z) = (" << position().transpose() << ")"
+       << std::endl;
+    sl << " *    momentum  (px py pz) = (" << momentum().transpose() << ")"
+       << std::endl;
+
+    // reset stream format
+    sl.precision(old_precision);
+    sl.setf(old_flags);
+
+    return sl;
   }
-  sl << " * corresponding global parameters:" << std::endl;
-  sl << " *    position  (x y z) = (" << position().transpose() << ")"
-     << std::endl;
-  sl << " *    momentum  (px py pz) = (" << momentum().transpose() << ")"
-     << std::endl;
-
-  // reset stream format
-  sl.precision(old_precision);
-  sl.setf(old_flags);
-
-  return sl;
-}
 
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing
                                    /// between charged and neutral tracks
