@@ -16,7 +16,6 @@
 #include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/EventData/NeutralParameters.hpp"
 
 namespace tt = boost::test_tools;
 
