@@ -45,7 +45,7 @@ namespace detail {
  */
 
 /**
- * Helper struct which cannot be constructe (or destroyes)d at all.
+ * Helper struct which cannot be constructed (or destroyed) at all.
  */
 struct nonesuch {
   ~nonesuch() = delete;
