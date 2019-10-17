@@ -159,9 +159,9 @@ auto Acts::Propagator<S, N>::propagate(
     -> Result<action_list_t_result_t<
         typename S::template return_parameter_type<parameters_t, Surface>,
         typename propagator_options_t::action_list_type>> {
-			  static_assert(ParameterConcept<parameters_t>,
+  static_assert(ParameterConcept<parameters_t>,
                 "Parameters do not fulfill parameter concept.");
-                
+
   // Type of track parameters produced at the end of the propagation
   using return_parameter_type =
       typename S::template return_parameter_type<parameters_t, Surface>;

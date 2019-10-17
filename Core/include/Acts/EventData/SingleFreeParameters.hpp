@@ -14,6 +14,7 @@
 // Acts includes
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 
 namespace Acts {
 
@@ -231,6 +232,11 @@ class SingleFreeParameters {
                 const GeometryContext& /*gctx*/, ParValue_t newValue) {
     m_parameters(par) = newValue;
   }
+
+  /// @brief Build a reference surface and return it
+  const Surface& referenceSurface() const final { return Surface::makeShared<PlaneSurface>(
+        position(), momentum().normalized()); }
+
 
   /// @brief Print information to output stream
   ///

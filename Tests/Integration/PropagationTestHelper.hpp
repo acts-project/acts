@@ -9,12 +9,12 @@
 #pragma once
 
 #include <limits>
+#include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/EventData/NeutralParameters.hpp"
 
 namespace tt = boost::test_tools;
 

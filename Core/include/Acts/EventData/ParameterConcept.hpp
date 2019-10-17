@@ -21,7 +21,7 @@ namespace concept {
   using covmat_t = typename T::CovMatrix_t;
 
   METHOD_TRAIT(reference_surface_t, referenceSurface);
-  
+
   template <typename T>
   using position_t = decltype(std::declval<T>().position());
   template <typename T>
