@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SourceLinkConcept.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
@@ -25,8 +26,8 @@ struct VoidKalmanComponents {
   ///
   /// @return void-calibrated measurement
   template <typename measurement_t, typename parameters_t>
-  measurement_t operator()(measurement_t m,
-                           const parameters_t& /*pars*/) const {
+  Result<measurement_t> operator()(measurement_t m,
+                                   const parameters_t& /*pars*/) const {
     return m;
   }
 
@@ -39,7 +40,7 @@ struct VoidKalmanComponents {
   ///
   /// @return moved measurements
   template <typename measurements_t>
-  measurements_t operator()(measurements_t ms) const {
+  Result<measurements_t> operator()(measurements_t ms) const {
     return std::move(ms);
   }
 };

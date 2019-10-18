@@ -15,6 +15,7 @@
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -54,8 +55,8 @@ class GainMatrixUpdater {
   /// @note Non-'successful' updates could be holes or outliers,
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  bool operator()(const GeometryContext& gctx,
-                  track_state_t& trackState) const {
+  Result<void> operator()(const GeometryContext& gctx,
+                          track_state_t& trackState) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
     using CovMatrix_t = typename parameters_t::CovMatrix_t;
     using ParVector_t = typename parameters_t::ParVector_t;
@@ -161,7 +162,7 @@ class GainMatrixUpdater {
         *trackState.measurement.calibrated);
 
     // always succeed, no outlier logic yet
-    return true;
+    return Result<void>::success();
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
