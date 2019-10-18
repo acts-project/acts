@@ -29,7 +29,7 @@ template <ParID_t... params>
 using Measurement_t = Measurement<Identifier, params...>;
 
 class PlanarModuleCluster
-    : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1> {
+    : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1, ParDef::eT> {
  public:
   /// Constructor from DigitizationCells
   ///
@@ -38,15 +38,16 @@ class PlanarModuleCluster
   /// @param [in] cov is the covariance matrix
   /// @param [in] loc0 is the local position in the first coordinate
   /// @param [in] loc1 is the local position in the second coordinate
+  /// @param [in] t Timestamp of the cluster
   /// @param [in] dCells is the vector of digitization cells
   PlanarModuleCluster(std::shared_ptr<const Surface> mSurface,
-                      const Identifier& identifier, ActsSymMatrixD<2> cov,
-                      double loc0, double loc1,
+                      const Identifier& identifier, ActsSymMatrixD<3> cov,
+                      double loc0, double loc1, double t,
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
-      : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(
+      : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1, ParDef::eT>(
             std::move(mSurface), identifier,  // original measurement
-            std::move(cov), loc0, loc1),
+            std::move(cov), loc0, loc1, t),
         m_digitizationCells(std::move(dCells)),
         m_digitizationModule(dModule) {}
 
