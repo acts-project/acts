@@ -65,10 +65,10 @@ struct KalmanFitterOptions {
   const Surface* referenceSurface = nullptr;
 };
 
-template <typename source_link_t>
+template <typename source_link_t, typename parameters_t>
 struct KalmanFitterResult {
   // Fitted states that the actor has handled.
-  std::vector<TrackStateType> fittedStates = {};
+  std::vector<TrackState<source_link_t, parameters_t>> fittedStates = {};
 
   // The optional Parameters at the provided surface
   boost::optional<BoundParameters> fittedParameters;
@@ -241,7 +241,7 @@ class KalmanFitter {
           m_calibrator(std::move(pCalibrator)) {}
 
     /// Broadcast the result_type
-    using result_type = KalmanFitterResult<source_link_t>;
+    using result_type = KalmanFitterResult<source_link_t, parameters_t>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
