@@ -13,8 +13,8 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -38,9 +38,9 @@ class GainMatrixSmoother {
       : m_logger(std::move(logger)) {}
 
   template <typename source_link_t>
-  parameters_t operator()(const GeometryContext& gctx,
-                          MultiTrajectory<source_link_t>& trajectory,
-                          size_t entryIndex) const {
+  Result<parameters_t> operator()(const GeometryContext& gctx,
+                                  MultiTrajectory<source_link_t>& trajectory,
+                                  size_t entryIndex) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
@@ -59,13 +59,14 @@ class GainMatrixSmoother {
     gain_matrix_t G;
 
     // make sure there is more than one track state
+    std::optional<std::error_code> error{std::nullopt};  // assume ok
     if (prev_ts.previous() == Acts::detail_lt::IndexData::kInvalid) {
       ACTS_VERBOSE("Only one track state given, smoothing terminates early");
     } else {
       ACTS_VERBOSE("Start smoothing from previous track state at index: "
                    << prev_ts.previous());
 
-      trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G,
+      trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G, &error,
                                                      this](auto ts) {
         // should have filtered and predicted, this should also include the
         // covariances.
@@ -87,6 +88,11 @@ class GainMatrixSmoother {
         // Gain smoothing matrix
         G = ts.filteredCovariance() * ts.jacobian().transpose() *
             prev_ts.predictedCovariance().inverse();
+
+        if (G.hasNaN()) {
+          error = KalmanFitterError::SmoothFailed;  // set to error
+          return false;                             // abort execution
+        }
 
         ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
 
@@ -116,7 +122,12 @@ class GainMatrixSmoother {
         ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
 
         prev_ts = ts;
+        return true;  // continue execution
       });
+    }
+    if (error) {
+      // error is set, return result
+      return *error;
     }
 
     // construct parameters from last track state

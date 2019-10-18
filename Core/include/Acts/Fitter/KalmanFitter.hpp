@@ -174,6 +174,29 @@ class KalmanFitter {
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
 
+  template <typename source_link_t>
+  class Aborter {
+   public:
+    /// Broadcast the result_type
+    using result_type = KalmanFitterResult<source_link_t>;
+
+    template <typename propagator_state_t, typename stepper_t>
+    bool operator()(propagator_state_t& /*state*/,
+                    const stepper_t& /*unused*/) const {
+      return false;
+    }
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename result_t>
+    bool operator()(const result_t& result, propagator_state_t& /*state*/,
+                    const stepper_t& /*stepper*/) const {
+      if (!result.result.ok()) {
+        return true;
+      }
+      return false;
+    }
+  };
+
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
@@ -383,7 +406,7 @@ class KalmanFitter {
                                            << " filtered track states.");
       }
       // Smooth the track states and obtain the last smoothed track parameters
-      auto smoothRes = 
+      auto smoothRes =
           m_smoother(state.geoContext, result.fittedStates, result.trackTip);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
@@ -458,7 +481,7 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename parameters_t = BoundParameters>
-  Result<KalmanFitterResult<source_link_t, parameters_t>> fit(
+  Result<KalmanFitterResult<source_link_t>> fit(
       const std::vector<source_link_t>& sourcelinks,
       const start_parameters_t& sParameters,
       const KalmanFitterOptions& kfOptions) const {
@@ -475,7 +498,7 @@ class KalmanFitter {
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<source_link_t, parameters_t>;
+    using KalmanAborter = Aborter<source_link_t>;
     using KalmanActor = Actor<source_link_t, parameters_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
@@ -490,6 +513,10 @@ class KalmanFitter {
     kalmanActor.m_logger = m_logger.get();
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
     kalmanActor.targetSurface = kfOptions.referenceSurface;
+
+    // also set logger on updater and smoother
+    kalmanActor.m_updater.m_logger = kalmanActor.m_logger;
+    kalmanActor.m_smoother.m_logger = kalmanActor.m_logger;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);

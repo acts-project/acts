@@ -134,6 +134,7 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Chi2: " << trackState.chi2());
         });
 
+    // always succeed, no outlier logic yet
     return Result<void>::success();
   }
 
