@@ -54,7 +54,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
         // pass error to caller
         return res.error();
       }
-      // Post-step
+      // Post-stepping:
       // navigator status call - action list - aborter list - target call
       m_navigator.status(state, m_stepper);
       state.options.actionList(state, m_stepper, result);
@@ -69,6 +69,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
   if (!terminatedNormally) {
+    debugLog(state, [&] { return std::string("Terminated with failure."); });
     state.navigation.navigationBreak = true;
   }
 
@@ -100,8 +101,6 @@ auto Acts::Propagator<S, N>::propagate(
 
   static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                 "return track parameter type must be copy-constructible");
-
-  // Initialize the propagation result object
 
   // Expand the abort list with a path aborter
   path_aborter_t pathAborter;

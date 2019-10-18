@@ -65,8 +65,7 @@ class AtlasStepper {
           std::reference_wrapper<const MagneticFieldContext> mctx,
           const Parameters& pars, NavigationDirection ndir = forward,
           double ssize = std::numeric_limits<double>::max())
-        : state_ready(false),
-          navDir(ndir),
+        : navDir(ndir),
           useJacobian(false),
           step(0.),
           maxPathLength(0.),
@@ -254,7 +253,7 @@ class AtlasStepper {
     bool newfield;
     // internal parameters to be used
     Vector3D field;
-    std::array<double, 59> pVector;
+    std::array<double, 60> pVector;
 
     /// Storage pattern of pVector
     ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
