@@ -302,11 +302,11 @@ void MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable) {
   while (true) {
     if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
                                  bool>) {
-      bool ret = callable(getTrackState(iendpoint));
+      bool proceed = callable(getTrackState(iendpoint));
       // this point has no parent and ends the trajectory, or a break was
       // requested
       if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid ||
-          !ret) {
+          !proceed) {
         break;
       }
     } else {
