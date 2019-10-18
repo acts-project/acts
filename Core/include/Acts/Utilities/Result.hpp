@@ -217,12 +217,12 @@ class Result<void, E> {
   /**
    * The copy constructor is deleted.
    */
-  Result(const Result<void, E>& other) = delete;
+  Result(const Result<void, E>& other) = default;
 
   /**
    * The (self) assignment operator is deleted.
    */
-  Result<void, E>& operator=(const Result<void, E>& other) = delete;
+  Result<void, E>& operator=(const Result<void, E>& other) = default;
 
   /**
    * Move constructor
