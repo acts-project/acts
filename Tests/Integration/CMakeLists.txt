@@ -10,12 +10,8 @@ macro(add_integration_test)
 endmacro()
 
 add_executable (PropagationTests PropagationTests.cpp)
-target_link_libraries (PropagationTests PRIVATE ActsCore ActsLegacy ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries (PropagationTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_integration_test(PropagationTests)
-
-add_executable (SeedingTest ATLSeedingIntegrationTest.cpp)
-target_link_libraries (SeedingTest PRIVATE ActsLegacy ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_integration_test(SeedingTest)
 
 add_executable (InterpolatedSolenoidBFieldTest InterpolatedSolenoidBFieldTest.cpp)
 target_link_libraries (InterpolatedSolenoidBFieldTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -24,3 +20,9 @@ add_integration_test(InterpolatedSolenoidBFieldTest)
 add_executable (BVHNavigationTest BVHNavigationTest.cpp)
 target_link_libraries (BVHNavigationTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_integration_test(BVHNavigationTest)
+
+if (ACTS_BUILD_LEGACY)
+  add_executable (SeedingTest ATLSeedingIntegrationTest.cpp)
+  target_link_libraries (SeedingTest PRIVATE ActsLegacy ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+  add_integration_test(SeedingTest)
+endif()
