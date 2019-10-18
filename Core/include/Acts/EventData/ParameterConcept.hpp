@@ -16,11 +16,11 @@ class Surface;
 
 namespace concept {
   namespace Parameter {
-  
+
   /// Typedef of CovMatrix_t required
   template <typename T>
   using covmat_t = typename T::CovMatrix_t;
-  
+
   /// The following lines define functions for surface bound parametrisations
   METHOD_TRAIT(reference_surface_t, referenceSurface);
 
@@ -44,7 +44,7 @@ namespace concept {
   METHOD_TRAIT(timet, time);
   METHOD_TRAIT(covariance_t, covariance);
   METHOD_TRAIT(parameters_t, parameters);
-  
+
   // clang-format off
     template <typename P>
       struct ParameterConcept {
