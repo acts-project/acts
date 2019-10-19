@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
                 << std::endl;
     }
 
-    auto res =
-        ipEstimator.getParamsAtIP3d(tgContext, mfContext, myTrack, refPosition);
+    auto res = ipEstimator.getParamsAtClosestApproach(tgContext, mfContext,
+                                                      myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
 
@@ -253,15 +253,15 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 
     distancesList.push_back(*distanceRes);
 
-    auto res =
-        ipEstimator.getParamsAtIP3d(tgContext, mfContext, myTrack, refPosition);
+    auto res = ipEstimator.getParamsAtClosestApproach(tgContext, mfContext,
+                                                      myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
 
     BoundParameters params = std::move(**res);
 
     auto compRes =
-        ipEstimator.getVtxCompatibility(tgContext, &params, refPosition);
+        ipEstimator.getVertexCompatibility(tgContext, &params, refPosition);
 
     BOOST_CHECK(compRes.ok());
 
