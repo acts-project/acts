@@ -193,7 +193,7 @@ class MultiAdaptiveVertexFitter {
 
   /// @brief Prepares vertex object for the actual fit, i.e.
   /// all TrackAtVertex objects at current vertex will obtain
-  /// `ip3dParams` from ImpactPoint3dEstimator::getParamsAtIP3d
+  /// `ip3dParams` from ImpactPoint3dEstimator::getParamsAtClosestApproach
   /// in order to later faster estimate compatibilities of track
   /// with different vertices
   ///

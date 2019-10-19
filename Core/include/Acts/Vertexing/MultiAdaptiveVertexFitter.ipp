@@ -196,7 +196,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::prepareVtxForFit(
 
   // Loop over all tracks at current vertex
   for (const auto& trkAtVtx : vtx->tracks()) {
-    auto res = m_cfg.ipEst.getParamsAtIP3d(
+    auto res = m_cfg.ipEst.getParamsAtClosestApproach(
         geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
         refPos);
     if (!res.ok()) {
@@ -227,7 +227,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     // Recover from cases where linearization point != 0 but
     // more tracks were added later on
     if (!state.trkInfoMap[trkAtVtx.id].ip3dParams) {
-      auto res = m_cfg.ipEst.getParamsAtIP3d(
+      auto res = m_cfg.ipEst.getParamsAtClosestApproach(
           geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
           VectorHelpers::position(currentVtxInfo.linPoint));
       if (!res.ok()) {
@@ -243,7 +243,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     TrackAtVertex<input_track_t>* newTrkPtr = &(newTracks.back());
 
     // Set compatibility with current vertex
-    auto compRes = m_cfg.ipEst.getVtxCompatibility(
+    auto compRes = m_cfg.ipEst.getVertexCompatibility(
         geoContext, state.trkInfoMap[trkAtVtx.id].ip3dParams.get(),
         VectorHelpers::position(currentVtxInfo.oldPosition));
 

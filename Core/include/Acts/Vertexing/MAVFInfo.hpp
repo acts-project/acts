@@ -39,7 +39,7 @@ struct MAVFTrackAtVtxInfo {
   std::vector<Vertex<input_track_t>*> linksToVertices;
 
   // Track parameters at point of closest approach in 3d as
-  // retrieved by ImpactPoint3dEstimator::getParamsAtIP3d
+  // retrieved by ImpactPoint3dEstimator::getParamsAtClosestApproach
   std::unique_ptr<const BoundParameters> ip3dParams;
 };
 

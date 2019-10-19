@@ -34,10 +34,10 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
 Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
-    getParamsAtIP3d(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const BoundParameters& trkParams,
-                    const Vector3D& vtxPos) const {
+    getParamsAtClosestApproach(const GeometryContext& gctx,
+                               const MagneticFieldContext& mctx,
+                               const BoundParameters& trkParams,
+                               const Vector3D& vtxPos) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -83,9 +83,9 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
 template <typename bfield_t, typename input_track_t, typename propagator_t>
 Acts::Result<double> Acts::ImpactPoint3dEstimator<
     bfield_t, input_track_t,
-    propagator_t>::getVtxCompatibility(const GeometryContext& gctx,
-                                       const BoundParameters* trkParams,
-                                       const Vector3D& vertexPos) const {
+    propagator_t>::getVertexCompatibility(const GeometryContext& gctx,
+                                          const BoundParameters* trkParams,
+                                          const Vector3D& vertexPos) const {
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
