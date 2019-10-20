@@ -35,7 +35,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto currentVtx : state.vertexCollection) {
-      MAVFVertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
+      VertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
       currentVtxInfo.relinearize = false;
 
       // Store old position of vertex, i.e. seed position
@@ -213,7 +213,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     setAllVtxCompatibilities(State& state, const GeometryContext& geoContext,
                              const MagneticFieldContext& mfContext,
                              Vertex<input_track_t>* currentVtx) const {
-  MAVFVertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
+  VertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
   // Create empty list of new TrackAtVertex objects
   // to be filled below. Needed due to constness of
   // tracksAtVertex list at vertex

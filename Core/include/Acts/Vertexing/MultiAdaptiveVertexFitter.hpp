@@ -50,7 +50,7 @@ class MultiAdaptiveVertexFitter {
 
  public:
   /// @brief Helper struct for storing vertex related information
-  struct MAVFVertexInfo {
+  struct VertexInfo {
     // The linearization point
     Acts::SpacePointVector linPoint{Acts::SpacePointVector::Zero()};
 
@@ -65,7 +65,7 @@ class MultiAdaptiveVertexFitter {
   };
 
   /// @brief Helper struct for storing TrackAtVertex related
-  struct MAVFTrackAtVtxInfo {
+  struct TrackAtVertexInfo {
     // Links to vertices currently using the TrackAtVertex object
     std::vector<Vertex<input_track_t>*> linksToVertices;
 
@@ -83,10 +83,10 @@ class MultiAdaptiveVertexFitter {
     VertexAnnealingTool::State annealingState;
 
     // Map to store vertices information
-    std::map<Vertex<InputTrack_t>*, MAVFVertexInfo> vtxInfoMap;
+    std::map<Vertex<InputTrack_t>*, VertexInfo> vtxInfoMap;
 
     // Map to store tracks information
-    std::map<unsigned long, MAVFTrackAtVtxInfo> trkInfoMap;
+    std::map<unsigned long, TrackAtVertexInfo> trkInfoMap;
   };
 
   struct Config {
