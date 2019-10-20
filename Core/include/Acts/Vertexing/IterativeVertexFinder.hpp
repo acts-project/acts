@@ -67,7 +67,7 @@ class IterativeVertexFinder {
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
   using BField_t = typename vfitter_t::BField_t;
-  using IPEstimator =
+  using ImpactPointEstimator =
       ImpactPoint3dEstimator<BField_t, InputTrack_t, Propagator_t>;
 
   /// @struct Config Configuration struct
@@ -79,7 +79,7 @@ class IterativeVertexFinder {
     /// @param sfinder The seed finder
     /// @param est ImpactPoint3dEstimator
     Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
-           IPEstimator est)
+           ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
           linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
@@ -95,7 +95,7 @@ class IterativeVertexFinder {
     sfinder_t seedFinder;
 
     /// ImpactPoint3dEstimator
-    IPEstimator ipEst;
+    ImpactPointEstimator ipEst;
 
     /// Vertex finder configuration variables
     bool useBeamConstraint = false;

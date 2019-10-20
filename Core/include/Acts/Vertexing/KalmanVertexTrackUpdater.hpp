@@ -25,7 +25,6 @@ namespace Acts {
 /// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
 ///
 /// @tparam input_track_t Track object type
-
 template <typename input_track_t>
 class KalmanVertexTrackUpdater {
  public:

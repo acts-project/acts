@@ -10,7 +10,8 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-Acts::Result<void> Acts::KalmanVertexUpdater<input_track_t>::addAndUpdate(
+Acts::Result<void>
+Acts::KalmanVertexUpdater<input_track_t>::updateVertexWithTrack(
     Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) const {
   if (vtx == nullptr) {
     return VertexingError::EmptyInput;

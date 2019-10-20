@@ -33,8 +33,8 @@ class KalmanVertexUpdater {
   ///
   /// @param vtx Vertex to be updated
   /// @param trk Track to be added to vtx
-  Result<void> addAndUpdate(Vertex<input_track_t>* vtx,
-                            TrackAtVertex<input_track_t>& trk) const;
+  Result<void> updateVertexWithTrack(Vertex<input_track_t>* vtx,
+                                     TrackAtVertex<input_track_t>& trk) const;
 
   /// @brief Updates vertex position
   ///

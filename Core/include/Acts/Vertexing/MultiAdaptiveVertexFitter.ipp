@@ -35,8 +35,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto currentVtx : state.vertexCollection) {
-      MAVFVertexInfo<input_track_t>& currentVtxInfo =
-          state.vtxInfoMap[currentVtx];
+      MAVFVertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
       currentVtxInfo.relinearize = false;
 
       // Store old position of vertex, i.e. seed position
@@ -214,7 +213,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     setAllVtxCompatibilities(State& state, const GeometryContext& geoContext,
                              const MagneticFieldContext& mfContext,
                              Vertex<input_track_t>* currentVtx) const {
-  MAVFVertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
+  MAVFVertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
   // Create empty list of new TrackAtVertex objects
   // to be filled below. Needed due to constness of
   // tracksAtVertex list at vertex
@@ -304,7 +303,8 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
         // Update the vertex with the new track
-        auto updateRes = m_cfg.vertexUpdater.addAndUpdate(vtx, (*newTrkPtr));
+        auto updateRes =
+            m_cfg.vertexUpdater.updateVertexWithTrack(vtx, (*newTrkPtr));
         if (!updateRes.ok()) {
           return updateRes.error();
         }

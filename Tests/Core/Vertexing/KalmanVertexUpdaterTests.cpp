@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     vtx.setFullCovariance(SpacePointSymMatrix::Identity());
 
     // Update trkAtVertex with assumption of originating from vtx
-    auto res = updater.addAndUpdate(&vtx, trkAtVtx);
+    auto res = updater.updateVertexWithTrack(&vtx, trkAtVtx);
 
     BOOST_CHECK(res.ok());
 
