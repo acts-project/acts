@@ -6,14 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Vertexing/VertexAnnealingTool.hpp"
+#include "Acts/Utilities/AnnealingUtility.hpp"
 
-void VertexAnnealingTool::reset(State& state) const {
-  state.currentTemperatureIndex = 0;
-  state.equilibriumReached = false;
+/// @brief Gaussian function for weight calculation
+///
+/// @param chi2 Chi^2 value
+/// @param temp Temperature value
+///
+/// @return exp(-1./2. * chi2 / temp)
+static double gaussFunc(double chi2, double temp) {
+  return std::exp(-1. / 2. * chi2 / temp);
 }
 
-void VertexAnnealingTool::anneal(State& state) const {
+void AnnealingUtility::anneal(State& state) const {
   if (state.currentTemperatureIndex < m_cfg.setOfTemperatures.size() - 1) {
     ++state.currentTemperatureIndex;
   } else {
@@ -21,8 +26,8 @@ void VertexAnnealingTool::anneal(State& state) const {
   }
 }
 
-double VertexAnnealingTool::getWeight(
-    State& state, double chi2, const std::vector<double>& allChi2) const {
+double AnnealingUtility::getWeight(State& state, double chi2,
+                                   const std::vector<double>& allChi2) const {
   const double currentTemp =
       m_cfg.setOfTemperatures[state.currentTemperatureIndex];
 
@@ -36,7 +41,7 @@ double VertexAnnealingTool::getWeight(
   return actualWeight / (gaussFunc(m_cfg.cutOff, currentTemp) + allWeights);
 }
 
-double VertexAnnealingTool::getWeight(State& state, double chi2) const {
+double AnnealingUtility::getWeight(State& state, double chi2) const {
   const double currentTemp =
       m_cfg.setOfTemperatures[state.currentTemperatureIndex];
 

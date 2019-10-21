@@ -28,12 +28,6 @@ target_link_libraries (IterativeVertexFinderTests PRIVATE ActsCore ActsTestsComm
 add_test (NAME IterativeVertexFinderUnitTests COMMAND IterativeVertexFinderTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST IterativeVertexFinderUnitTests TARGETS IterativeVertexFinderTests)
 
-add_executable (VertexAnnealingToolTests VertexAnnealingToolTests.cpp)
-target_include_directories (VertexAnnealingToolTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (VertexAnnealingToolTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (NAME VertexAnnealingToolUnitTests COMMAND VertexAnnealingToolTests)
-acts_add_test_to_cdash_project (PROJECT ACore TEST VertexAnnealingToolUnitTests TARGETS VertexAnnealingToolTests)
-
 add_executable (SequentialVertexSmootherTests SequentialVertexSmootherTests.cpp)
 target_include_directories (SequentialVertexSmootherTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (SequentialVertexSmootherTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

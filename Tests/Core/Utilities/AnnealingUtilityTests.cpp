@@ -7,26 +7,26 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE VertexAnnealingTool Tests
+#define BOOST_TEST_MODULE AnnealingUtility Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/output_test_stream.hpp>
 // clang-format on
 
-#include "Acts/Vertexing/VertexAnnealingTool.hpp"
+#include "Acts/Utilities/AnnealingUtility.hpp"
 
 #include <iostream>
 
 namespace Acts {
 namespace Test {
 
-BOOST_AUTO_TEST_CASE(vertex_annealing_tool_singleChi2_tests) {
+BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
   std::vector<double> temperatures{64., 16., 4., 2., 1.5, 1.};
-  VertexAnnealingTool::Config config(temperatures);
-  VertexAnnealingTool annealingTool(config);
+  AnnealingUtility::Config config(temperatures);
+  AnnealingUtility annealingTool(config);
 
-  VertexAnnealingTool::State state;
+  AnnealingUtility::State state;
 
   // Test weight decrease when annealing for chi2>cutOff
   // choose a chi2 greater than default config.cutOff (=9.),
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(vertex_annealing_tool_singleChi2_tests) {
   BOOST_CHECK_EQUAL(state.equilibriumReached, true);
 
   // test reset
-  annealingTool.reset(state);
+  state = AnnealingUtility::State();
 
   BOOST_CHECK_EQUAL(state.currentTemperatureIndex, 0);
   BOOST_CHECK_EQUAL(state.equilibriumReached, false);
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(vertex_annealing_tool_singleChi2_tests) {
   }
 
   // reset for last test
-  annealingTool.reset(state);
+  state = AnnealingUtility::State();
 
   // Test weight insensitivity when annealing for chi2==cutOff
   // choose a chi2 equal default config.cutOff (=9.),
@@ -110,16 +110,16 @@ BOOST_AUTO_TEST_CASE(vertex_annealing_tool_singleChi2_tests) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(vertex_annealing_tool_multiChi2_tests) {
+BOOST_AUTO_TEST_CASE(annealing_tool_multiChi2_tests) {
   // vector of different chi2
   std::vector<double> allChi2{1.3, 4.5, 8.4,  0.4, 10.3, 12.3,
                               3.5, 5.8, 11.0, 1.1, 3.5,  6.7};
 
   std::vector<double> temperatures{64., 16., 4., 2., 1.5, 1.};
-  VertexAnnealingTool::Config config(temperatures);
-  VertexAnnealingTool annealingTool(config);
+  AnnealingUtility::Config config(temperatures);
+  AnnealingUtility annealingTool(config);
 
-  VertexAnnealingTool::State state;
+  AnnealingUtility::State state;
 
   // Test weight decrease when annealing for chi2>cutOff
   // choose a chi2 greater than default config.cutOff (=9.),
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(vertex_annealing_tool_multiChi2_tests) {
   BOOST_CHECK_EQUAL(state.equilibriumReached, true);
 
   // test reset
-  annealingTool.reset(state);
+  state = AnnealingUtility::State();
 
   BOOST_CHECK_EQUAL(state.currentTemperatureIndex, 0);
   BOOST_CHECK_EQUAL(state.equilibriumReached, false);

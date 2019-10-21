@@ -15,11 +15,11 @@
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 //#include "Acts/Vertexing/MAVFInfo.hpp"
+#include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Vertexing/SequentialVertexSmoother.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexAnnealingTool.hpp"
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
 
 #include <functional>
@@ -80,7 +80,7 @@ class MultiAdaptiveVertexFitter {
     std::vector<Vertex<InputTrack_t>*> vertexCollection;
 
     // Annealing state
-    VertexAnnealingTool::State annealingState;
+    AnnealingUtility::State annealingState;
 
     // Map to store vertices information
     std::map<Vertex<InputTrack_t>*, VertexInfo> vtxInfoMap;
@@ -104,8 +104,16 @@ class MultiAdaptiveVertexFitter {
     // SequentialVertexSmoother
     SequentialVertexSmoother<InputTrack_t> vertexSmoother;
 
-    // Annealing tool
-    VertexAnnealingTool annealingTool;
+    /// Annealing tool used for a thermodynamic annealing scheme for the
+    /// track weight factors in such a way that with high temperature values
+    /// (at the beginning) only a slight preference is given to tracks
+    /// compatible with the estimated vertex position. With lower temperatures
+    /// the weighting get stricter such that all incompatible tracks will be
+    /// dropped at the end while keeping all compatible tracks with a weight=1.
+    ///   Ref. (1): CERN-THESIS-2010-027, Author: Piacquadio, Giacinto:
+    ///   `Identification of b-jets and investigation of the discovery potential
+    ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
+    AnnealingUtility annealingTool;
 
     // Number of max iterations
     unsigned int maxIterations{50};

@@ -17,7 +17,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
   auto& mfContext = vFitterOptions.magFieldContext;
 
   // Reset annealing tool
-  m_cfg.annealingTool.reset(state.annealingState);
+  state.annealingState = AnnealingUtility::State();
 
   // Indicates how much the vertex positions have shifted
   // in last fit iteration. Will be false if vertex position

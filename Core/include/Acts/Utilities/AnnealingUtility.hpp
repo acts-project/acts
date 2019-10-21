@@ -11,19 +11,12 @@
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 
-/// @brief Implements a thermodynamic annealing scheme for the track
-///   weight factors used in the MultiAdaptiveVertexFitter in such a way
-///   that with high temperature values (at the beginning) only a slight
-///   preference is given to tracks compatible with the estimated vertex
-///   position. With lower temperatures the weighting get stricter such
-///   that all incompatible tracks will be dropped at the end while
-///   keeping all compatible tracks with a track weight of 1.
-///   Ref. (1): CERN-THESIS-2010-027, Author: Piacquadio, Giacinto:
-///   `Identification of b-jets and investigation of the discovery potential
-///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
-class VertexAnnealingTool {
+/// @brief Implements a deterministic thermodynamic annealing scheme
+/// Ref. (1): CERN-THESIS-2010-027
+class AnnealingUtility {
  public:
   /// @brief The annealing state
+  /// Resetting the state is done by just creating a new instance
   struct State {
     // Points to current temperature value in m_cfg.setOfTemperatures
     unsigned int currentTemperatureIndex = 0;
@@ -40,7 +33,7 @@ class VertexAnnealingTool {
         : setOfTemperatures(temperatures) {}
 
     // Insensitivity of calculated weight at cutoff
-    double cutOff = 9.;
+    double cutOff{9.};
 
     // Set of temperatures, annealing starts at setOfTemperatures[0]
     // and anneals towards setOfTemperatures[last]
@@ -48,20 +41,16 @@ class VertexAnnealingTool {
   };
 
   /// Constructor
-  VertexAnnealingTool(const Config& cfg = Config()) : m_cfg(cfg) {}
-
-  /// Resets the annealing process
-  void reset(State& state) const;
+  AnnealingUtility(const Config& cfg = Config()) : m_cfg(cfg) {}
 
   /// Does the actual annealing step
-  ///
   void anneal(State& state) const;
 
   /// @brief Weight access
   ///
-  /// @param chi2 Chi^2 for current track, i.e. compatibility
+  /// @param chi2 Chi^2 for e.g. current track, i.e. compatibility
   /// of track to current vertex candidate
-  /// @param allChi2 Vector of all chi^2 values, i.e. compatibilities
+  /// @param allChi2 Vector of all chi^2 values, i.e. e.g. compatibilities
   /// of current track to all vertices it is currently attached to
   ///
   /// @return Calculated weight according to Eq.(5.46) in Ref.(1)
@@ -78,14 +67,4 @@ class VertexAnnealingTool {
  private:
   /// Configuration object
   Config m_cfg;
-
-  /// @brief Gaussian function for weight calculation
-  ///
-  /// @param chi2 Chi^2 value
-  /// @param temp Temperature value
-  ///
-  /// @return exp(-1./2. * chi2 / temp)
-  double gaussFunc(const double chi2, const double temp) const {
-    return std::exp(-1. / 2. * chi2 / temp);
-  }
 };
