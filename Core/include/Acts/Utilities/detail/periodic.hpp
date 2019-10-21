@@ -39,7 +39,7 @@ inline T radian_sym(T x) {
 /// in the [-pi, pi) and [0, pi] ranges by ensuring
 /// the correct theta bounds
 template <typename T>
-std::pair<T, T> ensureThetaBounds(T phi, T theta) {
+inline std::pair<T, T> ensureThetaBounds(T phi, T theta) {
   T tmpPhi = radian_sym(phi);
 
   T tmpTht = std::fmod(theta, 2 * M_PI);
