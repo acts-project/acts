@@ -36,9 +36,12 @@ class GainMatrixUpdater {
   ///
   /// @param calibrator is the calibration struct/class that converts
   /// uncalibrated measurements into calibrated ones
-  GainMatrixUpdater(calibrator_t calibrator = calibrator_t(),
-                    const Logger* logger = nullptr)
-      : m_mCalibrator(std::move(calibrator)), m_logger(logger) {}
+  /// @param logger a logger instance
+  GainMatrixUpdater(
+      calibrator_t calibrator = calibrator_t(),
+      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
+          getDefaultLogger("GainMatrixUpdater", Logging::INFO).release()))
+      : m_mCalibrator(std::move(calibrator)), m_logger(std::move(logger)) {}
 
   /// @brief Public call operator for the boost visitor pattern
   ///
@@ -166,10 +169,13 @@ class GainMatrixUpdater {
   calibrator_t m_mCalibrator;
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
-  const Logger* m_logger{nullptr};
+  std::shared_ptr<const Logger> m_logger{nullptr};
 
   /// Getter for the logger, to support logging macros
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const {
+    assert(m_logger);
+    return *m_logger;
+  }
 };
 
 }  // namespace Acts

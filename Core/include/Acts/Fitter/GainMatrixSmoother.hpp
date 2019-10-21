@@ -28,7 +28,11 @@ class GainMatrixSmoother {
   ///
 
   /// Constructor with (non-owning) logger
-  GainMatrixSmoother(const Logger* logger = nullptr) : m_logger(logger) {}
+  /// @param logger a logger instance
+  GainMatrixSmoother(
+      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
+          getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()))
+      : m_logger(std::move(logger)) {}
 
   template <typename track_states_t>
   boost::optional<parameters_t> operator()(
@@ -124,9 +128,12 @@ class GainMatrixSmoother {
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
-  const Logger* m_logger{nullptr};
+  std::shared_ptr<const Logger> m_logger{nullptr};
 
   /// Getter for the logger, to support logging macros
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const {
+    assert(m_logger);
+    return *m_logger;
+  }
 };
 }  // namespace Acts

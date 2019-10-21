@@ -143,7 +143,7 @@ class KalmanFitter {
       : m_propagator(std::move(pPropagator)),
         m_inputConverter(std::move(pInputCnv)),
         m_outputConverter(std::move(pOutputCnv)),
-        m_logger(std::move(logger)) {}
+        m_logger(logger.release()) {}
 
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
@@ -195,8 +195,8 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
 
     // also set logger on updater and smoother
-    kalmanActor.m_updater.m_logger = kalmanActor.m_logger;
-    kalmanActor.m_smoother.m_logger = kalmanActor.m_logger;
+    kalmanActor.m_updater.m_logger = m_logger;
+    kalmanActor.m_smoother.m_logger = m_logger;
 
     // Run the fitter
     const auto& result =
@@ -223,7 +223,7 @@ class KalmanFitter {
   const Logger& logger() const { return *m_logger; }
 
   /// Owned logging instance
-  std::unique_ptr<const Logger> m_logger;
+  std::shared_ptr<const Logger> m_logger;
 
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
