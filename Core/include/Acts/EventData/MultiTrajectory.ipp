@@ -273,10 +273,21 @@ void MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
                 "Callable needs to satisfy VisitorConcept");
 
   while (true) {
-    callable(getTrackState(iendpoint));
-    // this point has no parent and ends the trajectory
-    if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
-      break;
+    if constexpr (std::is_same_v<std::invoke_result_t<F, ConstTrackStateProxy>,
+                                 bool>) {
+      bool proceed = callable(getTrackState(iendpoint));
+      // this point has no parent and ends the trajectory, or a break was
+      // requested
+      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid ||
+          !proceed) {
+        break;
+      }
+    } else {
+      callable(getTrackState(iendpoint));
+      // this point has no parent and ends the trajectory
+      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
+        break;
+      }
     }
     iendpoint = m_index[iendpoint].iprevious;
   }
@@ -287,11 +298,23 @@ template <typename F>
 void MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable) {
   static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
+
   while (true) {
-    callable(getTrackState(iendpoint));
-    // this point has no parent and ends the trajectory
-    if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
-      break;
+    if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
+                                 bool>) {
+      bool proceed = callable(getTrackState(iendpoint));
+      // this point has no parent and ends the trajectory, or a break was
+      // requested
+      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid ||
+          !proceed) {
+        break;
+      }
+    } else {
+      callable(getTrackState(iendpoint));
+      // this point has no parent and ends the trajectory
+      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
+        break;
+      }
     }
     iendpoint = m_index[iendpoint].iprevious;
   }
