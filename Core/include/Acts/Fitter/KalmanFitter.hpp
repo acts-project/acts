@@ -399,8 +399,8 @@ class KalmanFitter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
-    bool operator()(const result_t& result, propagator_state_t& /*state*/,
-                    const stepper_t& /*stepper*/) const {
+    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const result_t& result) const {
       if (!result.result.ok()) {
         return true;
       }
