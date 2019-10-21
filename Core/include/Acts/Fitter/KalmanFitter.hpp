@@ -166,29 +166,6 @@ class KalmanFitter {
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
 
-  template <typename source_link_t>
-  class Aborter {
-   public:
-    /// Broadcast the result_type
-    using result_type = KalmanFitterResult<source_link_t>;
-
-    template <typename propagator_state_t, typename stepper_t>
-    bool operator()(propagator_state_t& /*state*/,
-                    const stepper_t& /*unused*/) const {
-      return false;
-    }
-
-    template <typename propagator_state_t, typename stepper_t,
-              typename result_t>
-    bool operator()(const result_t& result, propagator_state_t& /*state*/,
-                    const stepper_t& /*stepper*/) const {
-      if (!result.result.ok()) {
-        return true;
-      }
-      return false;
-    }
-  };
-
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
@@ -414,6 +391,23 @@ class KalmanFitter {
     detail::SurfaceReached targetReached;
   };
 
+  template <typename source_link_t, typename parameters_t>
+  class Aborter {
+   public:
+    /// Broadcast the result_type
+    using action_type = Actor<source_link_t, parameters_t>;
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename result_t>
+    bool operator()(const result_t& result, propagator_state_t& /*state*/,
+                    const stepper_t& /*stepper*/) const {
+      if (!result.result.ok()) {
+        return true;
+      }
+      return false;
+    }
+  };
+
  public:
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
@@ -450,7 +444,7 @@ class KalmanFitter {
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<source_link_t>;
+    using KalmanAborter = Aborter<source_link_t, parameters_t>;
     using KalmanActor = Actor<source_link_t, parameters_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
@@ -477,6 +471,10 @@ class KalmanFitter {
 
     /// Get the result of the fit
     auto kalmanResult = propRes.template get<KalmanResult>();
+
+    if (!kalmanResult.result.ok()) {
+      return kalmanResult.result.error();
+    }
 
     // Return the converted Track
     return m_outputConverter(std::move(kalmanResult));
