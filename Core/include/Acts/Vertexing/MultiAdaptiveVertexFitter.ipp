@@ -49,7 +49,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
         // Relinearization needed, distance too big
         currentVtxInfo.relinearize = true;
         // Prepare for fit with new vertex position
-        prepareVtxForFit(state, currentVtx, vFitterOptions);
+        prepareVertexForFit(state, currentVtx, vFitterOptions);
       }
 
       // Determine if constraint vertex exist
@@ -74,7 +74,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
-      setAllVtxCompatibilities(state, geoContext, mfContext, currentVtx);
+      setAllVertexCompatibilities(state, geoContext, mfContext, currentVtx);
     }  // End loop over vertex collection
 
     // Now after having estimated all compatibilities of all tracks at
@@ -120,7 +120,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit(
 
   // Prepares vtx and tracks for fast estimation method of their
   // compatibility with vertex
-  auto res = prepareVtxForFit(state, &newVertex, vFitterOptions);
+  auto res = prepareVertexForFit(state, &newVertex, vFitterOptions);
   if (!res.ok()) {
     return res.error();
   }
@@ -185,10 +185,10 @@ bool Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void>
-Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::prepareVtxForFit(
-    State& state, Vertex<input_track_t>* vtx,
-    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+Acts::Result<void> Acts::
+    MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
+        State& state, Vertex<input_track_t>* vtx,
+        const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   const Vector3D& refPos = vtx->position();
   auto& geoContext = vFitterOptions.geoContext;
   auto& mfContext = vFitterOptions.magFieldContext;
@@ -210,9 +210,9 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::prepareVtxForFit(
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
-    setAllVtxCompatibilities(State& state, const GeometryContext& geoContext,
-                             const MagneticFieldContext& mfContext,
-                             Vertex<input_track_t>* currentVtx) const {
+    setAllVertexCompatibilities(State& state, const GeometryContext& geoContext,
+                                const MagneticFieldContext& mfContext,
+                                Vertex<input_track_t>* currentVtx) const {
   VertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
   // Create empty list of new TrackAtVertex objects
   // to be filled below. Needed due to constness of
@@ -278,7 +278,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
       TrackAtVertex<input_track_t>* newTrkPtr = &(newTracks.back());
 
       // Get all compatibilities of track to all vertices it is attached to
-      auto collectRes = collectTrkToVtxCompatibilities(state, trkAtVtx);
+      auto collectRes = collectTrackToVertexCompatibilities(state, trkAtVtx);
       if (!collectRes.ok()) {
         return collectRes.error();
       }
@@ -323,7 +323,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<std::vector<double>>
 Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
-    collectTrkToVtxCompatibilities(
+    collectTrackToVertexCompatibilities(
         State& state, const TrackAtVertex<input_track_t>& trk) const {
   // All vertices that currently hold the track `trk`
   std::vector<Vertex<input_track_t>*> vertices =

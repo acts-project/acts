@@ -45,7 +45,7 @@ class MultiAdaptiveVertexFitter {
   using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
   using BField_t = typename linearizer_t::BField_t;
-  using IPEstimator =
+  using ImpactPointEstimator =
       ImpactPoint3dEstimator<BField_t, InputTrack_t, Propagator_t>;
 
  public:
@@ -93,10 +93,10 @@ class MultiAdaptiveVertexFitter {
     /// @brief Config constructor
     ///
     /// @param est ImpactPoint3dEstimator
-    Config(IPEstimator est) : ipEst(std::move(est)) {}
+    Config(ImpactPointEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPoint3dEstimator
-    IPEstimator ipEst;
+    ImpactPointEstimator ipEst;
 
     // Vertex updater
     KalmanVertexUpdater<InputTrack_t> vertexUpdater;
@@ -227,7 +227,7 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @param vtx The vertex object
   /// @param vFitterOptions Vertex fitter options
-  Result<void> prepareVtxForFit(
+  Result<void> prepareVertexForFit(
       State& state, Vertex<InputTrack_t>* vtx,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
@@ -238,10 +238,10 @@ class MultiAdaptiveVertexFitter {
   /// @param geoContext The geometry context
   /// @param mfContext The magnetic field context
   /// @param currentVtx Current vertex
-  Result<void> setAllVtxCompatibilities(State& state,
-                                        const GeometryContext& geoContext,
-                                        const MagneticFieldContext& mfContext,
-                                        Vertex<InputTrack_t>* currentVtx) const;
+  Result<void> setAllVertexCompatibilities(
+      State& state, const GeometryContext& geoContext,
+      const MagneticFieldContext& mfContext,
+      Vertex<InputTrack_t>* currentVtx) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater
@@ -259,7 +259,7 @@ class MultiAdaptiveVertexFitter {
   /// @param trk The track
   ///
   /// @return Vector of compatibility values
-  Result<std::vector<double>> collectTrkToVtxCompatibilities(
+  Result<std::vector<double>> collectTrackToVertexCompatibilities(
       State& state, const TrackAtVertex<InputTrack_t>& trk) const;
 
   /// @brief Determines if vertex position has shifted more than

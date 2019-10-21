@@ -144,11 +144,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     // IP 3D Estimator
-    using IPEstimator =
+    using ImpactPointEstimator =
         ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>;
 
-    IPEstimator::Config ip3dEstCfg(bField, propagator);
-    IPEstimator ip3dEst(ip3dEstCfg);
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+    ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
     VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
                              std::move(sFinder), std::move(ip3dEst));
@@ -359,11 +359,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     ZScanSeedFinder sFinder(std::move(sFcfg), extractParameters);
 
     // IP 3D Estimator
-    using IPEstimator =
+    using ImpactPointEstimator =
         ImpactPoint3dEstimator<ConstantBField, InputTrack, Propagator>;
 
-    IPEstimator::Config ip3dEstCfg(bField, propagator);
-    IPEstimator ip3dEst(ip3dEstCfg);
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+    ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
