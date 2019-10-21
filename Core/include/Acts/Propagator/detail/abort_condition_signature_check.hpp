@@ -25,7 +25,7 @@ namespace Acts {
 /// template <typename propagator_state_t, typename stepper_t,
 ///           typename result_t>
 /// bool
-/// operator()(const propagator_state_t& state,
+/// operator()(propagator_state_t& state,
 ///            const stepper_t, const result_t& r) const
 /// {
 ///   return false;
@@ -39,7 +39,7 @@ namespace Acts {
 ///
 /// template <typename propagator_state_t, typename stepper_t>
 /// bool
-/// operator()(const propagator_state_t& state, const stepper_t& stepper) const
+/// operator()(propagator_state_t& state, const stepper_t& stepper) const
 /// {
 ///   return false;
 /// }
