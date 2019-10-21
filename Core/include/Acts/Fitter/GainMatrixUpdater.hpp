@@ -41,7 +41,7 @@ class GainMatrixUpdater {
       calibrator_t calibrator = calibrator_t(),
       std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
           getDefaultLogger("GainMatrixUpdater", Logging::INFO).release()))
-      : m_mCalibrator(std::move(calibrator)), m_logger(std::move(logger)) {}
+      : m_logger(std::move(logger)), m_mCalibrator(std::move(calibrator)) {}
 
   /// @brief Public call operator for the boost visitor pattern
   ///
@@ -154,7 +154,7 @@ class GainMatrixUpdater {
                residual)
                   .value();
 
-          ACTS_VERBOSE("Chi2: " << trackState.parameter.chi2());
+          ACTS_VERBOSE("Chi2: " << trackState.parameter.chi2);
 
           trackState.parameter.filtered = std::move(filtered);
         },
@@ -164,10 +164,6 @@ class GainMatrixUpdater {
     return true;
   }
 
- private:
-  /// The measurement calibrator
-  calibrator_t m_mCalibrator;
-
   /// Pointer to a logger that is owned by the parent, KalmanFilter
   std::shared_ptr<const Logger> m_logger{nullptr};
 
@@ -176,6 +172,10 @@ class GainMatrixUpdater {
     assert(m_logger);
     return *m_logger;
   }
+
+ private:
+  /// The measurement calibrator
+  calibrator_t m_mCalibrator;
 };
 
 }  // namespace Acts

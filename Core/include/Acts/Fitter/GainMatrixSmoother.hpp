@@ -37,7 +37,7 @@ class GainMatrixSmoother {
   template <typename track_states_t>
   boost::optional<parameters_t> operator()(
       const GeometryContext& gctx, track_states_t& filteredStates) const {
-    ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
+    ACTS_VERBOSE("Invoked GainMatrixSmoother");
     using namespace boost::adaptors;
 
     using track_state_t = typename track_states_t::value_type;
