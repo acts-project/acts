@@ -9,28 +9,37 @@
 #pragma once
 
 #include <type_traits>
-#include "Acts/Propagator/detail/condition_uses_result_type.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 namespace Acts {
 
-/// The following operators have to be inplemented in order to satisfy
+/// The following operators have to be implemented in order to satisfy
 /// as an abort condition
 ///
 /// clang-format off
 ///
+/// IF the aborter declares an `action_type` upon whose result it will depend:
 /// @code
 ///
-/// template <typename propagator_state_t, typename result_t>
+/// template <typename propagator_state_t, typename stepper_t,
+///           typename result_t>
 /// bool
-/// operator()(const result_t& r, propagator_state_t& state) const
+/// operator()(const propagator_state_t& state,
+///            const stepper_t, const result_t& r) const
 /// {
 ///   return false;
 /// }
 ///
-/// template <typename propagator_state_t>
+/// @endcode
+///
+/// IF the aborter does NOT declare an `action_type`:
+///
+/// @code
+///
+/// template <typename propagator_state_t, typename stepper_t>
 /// bool
-/// operator()(propagator_state_t& state) const
+/// operator()(const propagator_state_t& state, const stepper_t& stepper) const
 /// {
 ///   return false;
 /// }
@@ -38,52 +47,59 @@ namespace Acts {
 /// @endcode
 ///
 /// clang-format off
-namespace detail {
 
-namespace {
-template <typename T, typename propagator_state_t, typename stepper_t,
-          typename result_t,
-          typename = decltype(std::declval<const T>().operator()(
-                                  std::declval<const result_t&>(),
-                                  std::declval<const propagator_state_t&>()),
-                              std::declval<const stepper_t&>())>
-std::true_type test_condition_with_result(int);
+namespace concept {
+  namespace detail_aborter {
 
-template <typename, typename, typename, typename>
-std::false_type test_condition_with_result(...);
+  /// Detection helper for call operator WITHOUT result
+  template <typename A, typename propagator_state_t, typename stepper_t>
+  using call_op_no_result_t = decltype(std::declval<const A>()(
+      std::declval<propagator_state_t&>(), std::declval<const stepper_t&>()));
 
-template <typename T, typename propagator_state_t, typename stepper_t,
-          typename = decltype(std::declval<const T>().operator()(
-              std::declval<const propagator_state_t&>(),
-              std::declval<const stepper_t&>()))>
-std::true_type test_condition_without_result(int);
+  /// Detection helper for call operator WITH result
+  template <typename A, typename result_t, typename propagator_state_t,
+            typename stepper_t>
+  using call_op_with_result_t = decltype(std::declval<const A>()(
+      std::declval<propagator_state_t&>(), std::declval<const stepper_t&>(),
+      std::declval<const result_t&>()));
 
-template <typename, typename>
-std::false_type test_condition_without_result(...);
+  // This is basically an if:
+  // if ( !Aborter.hasResult() ) { // has no result
+  template <typename T, typename propagator_state_t, typename stepper_t,
+            bool has_result = false>
+  struct ConceptConditional {
+    // check the existence of the correct call operator
+    constexpr static bool value =
+        Acts::concept ::exists<call_op_no_result_t, T, propagator_state_t,
+                               stepper_t>;
+  };
 
-template <typename T, typename propagator_state_t, typename stepper_t,
-          bool has_result = false>
-struct condition_signature_check_impl
-    : decltype(
-          test_condition_without_result<T, propagator_state_t, stepper_t>(0)) {
-};
+  // } else { // has a result
+  template <typename T, typename propagator_state_t, typename stepper_t>
+  struct ConceptConditional<T, propagator_state_t, stepper_t, true> {
+    // unpack the result type from the action contained in the aborter type
+    using result_type =
+        Acts::detail::result_type_t<Acts::detail::action_type_t<T>>;
+    // check the existence of the correct call operator
+    constexpr static bool value =
+        Acts::concept ::exists<call_op_with_result_t, T, result_type,
+                               propagator_state_t, stepper_t>;
+  };
+  // } // endif
 
-template <typename T, typename propagator_state_t, typename stepper_t>
-struct condition_signature_check_impl<T, propagator_state_t, stepper_t, true>
-    : decltype(test_condition_with_result<T, propagator_state_t, stepper_t,
-                                          result_type_t<action_type_t<T>>>(0)) {
-};
+  // Calls the 'if' above, depending on the value of `has_action_type_v`.
+  template <typename T, typename propagator_state_t, typename stepper_t>
+  struct Concept {
+    constexpr static bool value =
+        ConceptConditional<T, propagator_state_t, stepper_t,
+                           Acts::detail::has_action_type_v<T>>::value;
+  };
 
-template <typename T, typename propagator_state_t, typename stepper_t>
-struct abort_condition_signature_check
-    : condition_signature_check_impl<T, propagator_state_t, stepper_t,
-                                     condition_uses_result_type<T>::value> {};
-// clang-format on
-}  // end of anonymous namespace
+  }  // namespace detail_aborter
 
-template <typename T, typename propagator_state_t, typename stepper_t>
-constexpr bool abort_condition_signature_check_v =
-    abort_condition_signature_check<T, propagator_state_t, stepper_t>::value;
-}  // namespace detail
-
+  /// Meta function for checking if an aborter has a valid interface
+  template <typename T, typename propagator_state_t, typename stepper_t>
+  constexpr bool abort_condition_signature_check_v =
+      detail_aborter::Concept<T, propagator_state_t, stepper_t>::value;
+}  // namespace concept
 }  // namespace Acts

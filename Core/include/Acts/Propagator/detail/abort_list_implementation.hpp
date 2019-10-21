@@ -27,7 +27,7 @@ struct condition_caller {
     using action_type = action_type_t<condition>;
     using result_type = result_type_t<action_type>;
 
-    return c(r.template get<result_type>(), state, stepper);
+    return c(state, stepper, r.template get<result_type>());
   }
 };
 
