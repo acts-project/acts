@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/SequentialVertexSmoother.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t, typename linearizer_t>
@@ -96,7 +97,8 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
   if (m_cfg.doSmoothing) {
     for (auto vtx : state.vertexCollection) {
       // Smooth all tracks at vertex `vtx`
-      auto smoothRes = m_cfg.vertexSmoother.smooth(geoContext, vtx);
+      auto smoothRes =
+          SequentialVertexSmoother<input_track_t>::smooth(geoContext, vtx);
       if (!smoothRes.ok()) {
         return smoothRes.error();
       }

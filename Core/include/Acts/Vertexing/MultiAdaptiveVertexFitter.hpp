@@ -9,15 +9,13 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/AnnealingUtility.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
-//#include "Acts/Vertexing/MAVFInfo.hpp"
-#include "Acts/Utilities/AnnealingUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Vertexing/SequentialVertexSmoother.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
@@ -100,9 +98,6 @@ class MultiAdaptiveVertexFitter {
 
     // Vertex updater
     KalmanVertexUpdater<InputTrack_t> vertexUpdater;
-
-    // SequentialVertexSmoother
-    SequentialVertexSmoother<InputTrack_t> vertexSmoother;
 
     /// Annealing tool used for a thermodynamic annealing scheme for the
     /// track weight factors in such a way that with high temperature values

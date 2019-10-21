@@ -151,8 +151,7 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
   // copy vertex for later comparison
   Vertex<BoundParameters> vertexBeforeSmoothing = fittedVertex;
 
-  SequentialVertexSmoother<BoundParameters> vtxSmoother;
-  vtxSmoother.smooth(tgContext, &fittedVertex);
+  SequentialVertexSmoother<BoundParameters>::smooth(tgContext, &fittedVertex);
 
   // Billoirfitter does not provide the TracksAtVertex with a linearized
   // state,
@@ -172,7 +171,7 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
 
   // set tracks with linearized state to vertex
   fittedVertex.setTracksAtVertex(tracksWithLinState);
-  vtxSmoother.smooth(tgContext, &fittedVertex);
+  SequentialVertexSmoother<BoundParameters>::smooth(tgContext, &fittedVertex);
 
   BOOST_CHECK_EQUAL(vertexBeforeSmoothing.tracks().size(),
                     fittedVertex.tracks().size());

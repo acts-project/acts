@@ -22,30 +22,37 @@ namespace Acts {
 /// vertex position
 ///
 /// @tparam input_track_t Track object type
-
 template <typename input_track_t>
 class SequentialVertexSmoother {
  public:
-  struct Config {
-    KalmanVertexTrackUpdater<input_track_t> trackUpdater;
-  };
-
   /// @brief Default constructor
-  SequentialVertexSmoother(Config cfg = Config()) : m_cfg(std::move(cfg)) {}
+  SequentialVertexSmoother() = default;
 
   /// @brief Updates all tracks at vertex
   /// with knowledge of the vertex position
   ///
   /// @param gctx The Geometry Context
   /// @param vtx The vertex
-  Result<void> smooth(const GeometryContext& gctx,
-                      Vertex<input_track_t>* vtx) const;
+  static Result<void> smooth(const GeometryContext& gctx,
+                             Vertex<input_track_t>* vtx) {
+    KalmanVertexTrackUpdater<input_track_t> trackUpdater;
+    if (vtx == nullptr) {
+      return VertexingError::EmptyInput;
+    }
 
- private:
-  /// Configuration object
-  const Config m_cfg;
+    std::vector<TrackAtVertex<input_track_t>> tracks = vtx->tracks();
+    for (auto& trk : tracks) {
+      // update trk
+      auto res = trackUpdater.update(gctx, trk, vtx);
+      if (!res.ok()) {
+        return res.error();
+      }
+    }
+
+    vtx->setTracksAtVertex(tracks);
+
+    return {};
+  }
 };
 
 }  // Namespace Acts
-
-#include "SequentialVertexSmoother.ipp"
