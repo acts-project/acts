@@ -94,9 +94,6 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   Linearizer_t::Config ltConfig(bField, propagator, pOptions);
   Linearizer_t linearizer(ltConfig);
 
-  // The track updater to be tested
-  KalmanVertexUpdater<BoundParameters> updater;
-
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -154,7 +151,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     vtx.setFullCovariance(SpacePointSymMatrix::Identity());
 
     // Update trkAtVertex with assumption of originating from vtx
-    auto res = updater.updateVertexWithTrack(&vtx, trkAtVtx);
+    auto res = KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(
+        &vtx, trkAtVtx);
 
     BOOST_CHECK(res.ok());
 

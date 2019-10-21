@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexSmoother.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -306,7 +307,8 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
         }
         // Update the vertex with the new track
         auto updateRes =
-            m_cfg.vertexUpdater.updateVertexWithTrack(vtx, (*newTrkPtr));
+            KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(
+                vtx, (*newTrkPtr));
         if (!updateRes.ok()) {
           return updateRes.error();
         }

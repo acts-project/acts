@@ -12,9 +12,9 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
+Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
     const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
-    const Vertex<input_track_t>* vtx) const {
+    const Vertex<input_track_t>* vtx) {
   if (vtx == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -51,7 +51,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
 
   // Get phi and theta and correct for possible periodicity changes
   auto correctedPhiTheta =
-      detail::ensureThetaBounds(newTrkMomentum(0), newTrkMomentum(1));
+      Acts::detail::ensureThetaBounds(newTrkMomentum(0), newTrkMomentum(1));
 
   newTrkParams(ParID_t::ePHI) = correctedPhiTheta.first;     // phi
   newTrkParams(ParID_t::eTHETA) = correctedPhiTheta.second;  // theta
@@ -67,8 +67,8 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
 
   // Now determine the smoothed chi2 of the track in the following
   // get updated position, this removes track from vtx
-  auto res =
-      m_cfg.vtx_updater.updatePosition(vtx, linTrack, track.trackWeight, -1);
+  auto res = KalmanVertexUpdater::updatePosition<input_track_t>(
+      vtx, linTrack, track.trackWeight, -1);
 
   if (!res.ok()) {
     return res.error();
@@ -91,6 +91,30 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
   double chi2 = posDiff.dot(reducedVtxWeight * posDiff) +
                 smParams.dot(trkParamWeight * smParams);
 
+  const BoundMatrix& fullPerTrackCov = detail::createFullTrackCovariance(
+      sMat, newTrkCov, vtxWeight, vtxCov, newTrkParams);
+
+  // Create new refitted parameters
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(VectorHelpers::position(vtxPos));
+
+  BoundParameters refittedPerigee = BoundParameters(
+      gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
+
+  // Set new properties
+  track.fittedParams = refittedPerigee;
+  track.chi2Track = chi2;
+  track.ndf = 2 * track.trackWeight;
+
+  return {};
+}
+
+Acts::BoundMatrix
+Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
+    const ActsSymMatrixD<3>& sMat,
+    const ActsMatrixD<SpacePointDim, 3>& newTrkCov,
+    const SpacePointSymMatrix& vtxWeight, const SpacePointSymMatrix& vtxCov,
+    const BoundVector& newTrkParams) {
   // Now new momentum covariance
   ActsSymMatrixD<3> momCov =
       sMat + newTrkCov.transpose() * (vtxWeight * newTrkCov);
@@ -121,17 +145,5 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
   // Full perigee track covariance
   BoundMatrix fullPerTrackCov(trkJac * (fullTrkCov * trkJac.transpose()));
 
-  // Create new refitted parameters
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(VectorHelpers::position(vtxPos));
-
-  BoundParameters refittedPerigee = BoundParameters(
-      gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
-
-  // Set new properties
-  track.fittedParams = refittedPerigee;
-  track.chi2Track = chi2;
-  track.ndf = 2 * track.trackWeight;
-
-  return {};
+  return fullPerTrackCov;
 }

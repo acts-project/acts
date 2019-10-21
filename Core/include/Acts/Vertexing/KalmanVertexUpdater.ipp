@@ -10,14 +10,13 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-Acts::Result<void>
-Acts::KalmanVertexUpdater<input_track_t>::updateVertexWithTrack(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) const {
+Acts::Result<void> Acts::KalmanVertexUpdater::updateVertexWithTrack(
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) {
   if (vtx == nullptr) {
     return VertexingError::EmptyInput;
   }
 
-  auto res = update(vtx, trk, 1);
+  auto res = detail::update<input_track_t>(vtx, trk, 1);
 
   if (!res.ok()) {
     return res.error();
@@ -28,9 +27,9 @@ Acts::KalmanVertexUpdater<input_track_t>::updateVertexWithTrack(
 
 template <typename input_track_t>
 Acts::Result<Acts::Vertex<input_track_t>>
-Acts::KalmanVertexUpdater<input_track_t>::updatePosition(
+Acts::KalmanVertexUpdater::updatePosition(
     const Acts::Vertex<input_track_t>* vtx,
-    const Acts::LinearizedTrack& linTrack, double trackWeight, int sign) const {
+    const Acts::LinearizedTrack& linTrack, double trackWeight, int sign) {
   if (vtx == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -84,9 +83,8 @@ Acts::KalmanVertexUpdater<input_track_t>::updatePosition(
 }
 
 template <typename input_track_t>
-double Acts::KalmanVertexUpdater<input_track_t>::vertexPositionChi2(
-    const Vertex<input_track_t>* oldVtx,
-    const Vertex<input_track_t>* newVtx) const {
+double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
+    const Vertex<input_track_t>* oldVtx, const Vertex<input_track_t>* newVtx) {
   SpacePointSymMatrix oldWeight = oldVtx->fullCovariance().inverse();
   SpacePointVector posDiff = newVtx->fullPosition() - oldVtx->fullPosition();
 
@@ -95,8 +93,8 @@ double Acts::KalmanVertexUpdater<input_track_t>::vertexPositionChi2(
 }
 
 template <typename input_track_t>
-double Acts::KalmanVertexUpdater<input_track_t>::trackParametersChi2(
-    const Vertex<input_track_t>& vtx, const LinearizedTrack& linTrack) const {
+double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
+    const Vertex<input_track_t>& vtx, const LinearizedTrack& linTrack) {
   const SpacePointVector& vtxPos = vtx.fullPosition();
 
   // Track properties
@@ -125,9 +123,8 @@ double Acts::KalmanVertexUpdater<input_track_t>::trackParametersChi2(
 }
 
 template <typename input_track_t>
-Acts::Result<void> Acts::KalmanVertexUpdater<input_track_t>::update(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk,
-    int sign) const {
+Acts::Result<void> Acts::KalmanVertexUpdater::detail::update(
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk, int sign) {
   double trackWeight = trk.trackWeight;
 
   auto res = updatePosition(vtx, trk.linearizedState, trackWeight, sign);
@@ -144,10 +141,12 @@ Acts::Result<void> Acts::KalmanVertexUpdater<input_track_t>::update(
   double ndf = fitQuality.second;
 
   // Chi2 wrt to track parameters
-  double trkChi2 = trackParametersChi2(tempVtx, trk.linearizedState);
+  double trkChi2 =
+      detail::trackParametersChi2<input_track_t>(tempVtx, trk.linearizedState);
 
   // Calculate new chi2
-  chi2 += sign * (vertexPositionChi2(vtx, &tempVtx) + trackWeight * trkChi2);
+  chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, &tempVtx) +
+                  trackWeight * trkChi2);
 
   // Calculate ndf
   ndf += sign * trackWeight * 2.;
@@ -162,7 +161,7 @@ Acts::Result<void> Acts::KalmanVertexUpdater<input_track_t>::update(
   // Otherwise just adds track to existing list of tracks at vertex
   if (sign > 0) {
     // Remove old track if already there
-    removeTrackIf(vtx, trk);
+    detail::removeTrackIf<input_track_t>(vtx, trk);
     // Add track with updated ndf
     auto tracksAtVertex = vtx->tracks();
     // Update track and add to list
@@ -173,15 +172,15 @@ Acts::Result<void> Acts::KalmanVertexUpdater<input_track_t>::update(
   }
   // Remove trk from current vertex
   if (sign < 0) {
-    removeTrackIf(vtx, trk);
+    detail::removeTrackIf<input_track_t>(vtx, trk);
   }
 
   return {};
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater<input_track_t>::removeTrackIf(
-    Vertex<input_track_t>* vtx, const TrackAtVertex<input_track_t>& trk) const {
+void Acts::KalmanVertexUpdater::detail::removeTrackIf(
+    Vertex<input_track_t>* vtx, const TrackAtVertex<input_track_t>& trk) {
   auto tracksAtVertex = vtx->tracks();
   auto removeIter = std::find_if(tracksAtVertex.begin(), tracksAtVertex.end(),
                                  [&trk](const auto& trkAtVertex) {

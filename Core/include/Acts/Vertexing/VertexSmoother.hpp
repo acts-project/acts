@@ -26,7 +26,6 @@ namespace VertexSmoothing {
 template <typename input_track_t>
 static Result<void> smoothVertexSequentially(const GeometryContext& gctx,
                                              Vertex<input_track_t>* vtx) {
-  KalmanVertexTrackUpdater<input_track_t> trackUpdater;
   if (vtx == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -34,7 +33,7 @@ static Result<void> smoothVertexSequentially(const GeometryContext& gctx,
   std::vector<TrackAtVertex<input_track_t>> tracks = vtx->tracks();
   for (auto& trk : tracks) {
     // update trk
-    auto res = trackUpdater.update(gctx, trk, vtx);
+    auto res = KalmanVertexTrackUpdater::update<input_track_t>(gctx, trk, vtx);
     if (!res.ok()) {
       return res.error();
     }

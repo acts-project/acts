@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
-#include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -95,9 +94,6 @@ class MultiAdaptiveVertexFitter {
 
     // ImpactPoint3dEstimator
     ImpactPointEstimator ipEst;
-
-    // Vertex updater
-    KalmanVertexUpdater<InputTrack_t> vertexUpdater;
 
     /// Annealing tool used for a thermodynamic annealing scheme for the
     /// track weight factors in such a way that with high temperature values
