@@ -19,6 +19,7 @@
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
+#include "Acts/Vertexing/VertexFitterConcept.hpp"
 
 namespace Acts {
 
@@ -29,23 +30,25 @@ namespace Acts {
 /// 2. If no contraint is given, returns (0,0, z0_mode) as vertex position
 /// 3. If vertex contraint is given with x=x_constr and y=y_constr,
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename vfitter_t>
 class ZScanVertexFinder {
+  static_assert(VertexFitterConcept<vfitter_t>,
+                "Vertex fitter does not fulfill vertex fitter concept.");
+  using Propagator_t = typename vfitter_t::Propagator_t;
+
  public:
-  using InputTrack = input_track_t;
+  using InputTrack_t = typename vfitter_t::InputTrack_t;
 
   /// @struct Config Configuration struct
   struct Config {
     /// @brief Finder configuration
     ///
-    /// @param propagatorIn Propagator
-    Config(const propagator_t& propagatorIn) : propagator(propagatorIn) {}
-
-    // Propagator
-    propagator_t propagator;
+    /// @param ipEst TrackToVertexIPEstimator
+    Config(TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEst)
+        : ipEstimator(std::move(ipEst)) {}
 
     // TrackToVertexIPEstimator
-    TrackToVertexIPEstimator<input_track_t, propagator_t> ipEstimator;
+    TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEstimator;
 
     // FsmwMode1dFinder
     FsmwMode1dFinder mode1dFinder;
@@ -67,11 +70,11 @@ class ZScanVertexFinder {
     double minWeight = 0.01;
   };
 
-  /// @brief Constructor used if input_track_t type == BoundParameters
+  /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
   /// @param cfg Configuration object
   /// @param logger The logging instance
-  template <typename T = input_track_t,
+  template <typename T = InputTrack_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   ZScanVertexFinder(Config cfg,
                     std::unique_ptr<const Logger> logger =
@@ -80,13 +83,13 @@ class ZScanVertexFinder {
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
-  /// @brief Constructor for user-defined input_track_t type =! BoundParameters
+  /// @brief Constructor for user-defined InputTrack_t type =! BoundParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from input_track_t object
+  /// @param func Function extracting BoundParameters from InputTrack_t object
   /// @param logger Logging instance
   ZScanVertexFinder(Config cfg,
-                    std::function<BoundParameters(input_track_t)> func,
+                    std::function<BoundParameters(InputTrack_t)> func,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
@@ -102,19 +105,19 @@ class ZScanVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<input_track_t>>> find(
-      const std::vector<input_track_t>& trackVector,
-      const VertexFinderOptions<input_track_t>& vFinderOptions) const;
+  Result<std::vector<Vertex<InputTrack_t>>> find(
+      const std::vector<InputTrack_t>& trackVector,
+      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
  private:
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// input_track_t objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other input_track_t objects.
+  /// InputTrack_t objects are BoundParameters by default, function to be
+  /// overwritten to return BoundParameters for other InputTrack_t objects.
   ///
-  /// @param input_track_t object to extract track parameters from
-  std::function<BoundParameters(input_track_t)> m_extractParameters;
+  /// @param InputTrack_t object to extract track parameters from
+  std::function<BoundParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

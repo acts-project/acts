@@ -70,5 +70,6 @@ std::ostream& Acts::BinnedSurfaceMaterial::toStream(std::ostream& sl) const {
     }
     ++imat1;
   }
+  sl << "  - BinUtility: " << m_binUtility << std::endl;
   return sl;
 }

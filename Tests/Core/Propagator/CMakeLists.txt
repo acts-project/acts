@@ -54,20 +54,19 @@ add_test(NAME KalmanExtrapolatorUnitTests COMMAND KalmanExtrapolatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanExtrapolatorUnitTests TARGETS KalmanExtrapolatorTests)
 
 # these tests rely on the Legacy code
-if (ACTS_BUILD_LEGACY)
-  add_executable (JacobianTests JacobianTests.cpp)
-  target_link_libraries (JacobianTests PRIVATE ActsCore ActsLegacy ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-  add_test(NAME JacobianUnitTests COMMAND JacobianTests)
-  
-  add_executable (PropagatorTests PropagatorTests.cpp)
-  target_link_libraries (PropagatorTests PRIVATE ActsCore ActsLegacy ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-  add_test(NAME PropagatorUnitTests COMMAND PropagatorTests)
-  
-  # define executables
-  add_executable (AtlasStepperBenchmark AtlasStepperBenchmark.cpp)
-  target_include_directories (AtlasStepperBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
-  target_link_libraries (AtlasStepperBenchmark PRIVATE ActsCore ActsLegacy)
-  target_link_libraries (AtlasStepperBenchmark PRIVATE ${Boost_LIBRARIES})
-  
-  install (TARGETS AtlasStepperBenchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
-endif()
+add_executable (JacobianTests JacobianTests.cpp)
+target_link_libraries (JacobianTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME JacobianUnitTests COMMAND JacobianTests)
+
+add_executable (PropagatorTests PropagatorTests.cpp)
+target_link_libraries (PropagatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME PropagatorUnitTests COMMAND PropagatorTests)
+
+# define executables
+add_executable (AtlasStepperBenchmark AtlasStepperBenchmark.cpp)
+target_include_directories (AtlasStepperBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (AtlasStepperBenchmark PRIVATE ActsCore)
+target_link_libraries (AtlasStepperBenchmark PRIVATE ${Boost_LIBRARIES})
+
+install (TARGETS AtlasStepperBenchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
+

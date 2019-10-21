@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
   /// Constructor with transform pointer
-  auto pNullTransform = std::make_shared<const Transform3D>();
+  std::shared_ptr<const Transform3D> pNullTransform{};
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerProperties /*, *utf::expected_failures(1)*/) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
   /// Constructor with transform pointer
-  auto pNullTransform = std::make_shared<const Transform3D>();
+  std::shared_ptr<const Transform3D> pNullTransform{};
   auto pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),

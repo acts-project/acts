@@ -8,30 +8,29 @@
 
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
-Acts::Result<std::vector<Acts::Vertex<input_track_t>>>
-Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
-    find(const std::vector<input_track_t>& trackVector,
-         const VertexFinderOptions<input_track_t>& vFinderOptions) const {
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
+    const std::vector<InputTrack_t>& trackVector,
+    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
+    -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Original tracks
-  const std::vector<input_track_t>& origTracks = trackVector;
+  const std::vector<InputTrack_t>& origTracks = trackVector;
   // Tracks for seeding
   // Note: Remains to be investigated if another container (e.g. std::list)
-  // or also std::vector<input_track_t*> is a faster option since erasures
+  // or also std::vector<InputTrack_t*> is a faster option since erasures
   // of tracks is quite expensive with std::vector.
-  // std::vector<input_track_t*> would however also come with an overhead
+  // std::vector<InputTrack_t*> would however also come with an overhead
   // since m_cfg.vertexFitter.fit and m_cfg.seedFinder.find take
-  // vector<input_track_t> and hence a lot of copying would be required.
-  std::vector<input_track_t> seedTracks = trackVector;
+  // vector<InputTrack_t> and hence a lot of copying would be required.
+  std::vector<InputTrack_t> seedTracks = trackVector;
 
   // Construct the vertex fitter options from vertex finder options
-  VertexFitterOptions<input_track_t> vFitterOptions(
+  VertexFitterOptions<InputTrack_t> vFitterOptions(
       vFinderOptions.geoContext, vFinderOptions.magFieldContext,
       vFinderOptions.vertexConstraint);
 
   // List of vertices to be filled below
-  std::vector<Vertex<input_track_t>> vertexCollection;
+  std::vector<Vertex<InputTrack_t>> vertexCollection;
 
   int nInterations = 0;
   // begin iterating
@@ -43,12 +42,12 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
     }
     // retrieve the seed vertex as the last element in
     // the seed vertexCollection
-    Vertex<input_track_t>& seedVertex = *seedRes;
+    Vertex<InputTrack_t>& seedVertex = *seedRes;
     /// End seeding
     /// Now take only tracks compatible with current seed
     // Tracks used for the fit in this iteration
-    std::vector<input_track_t> perigeesToFit;
-    std::vector<input_track_t> perigeesToFitSplitVertex;
+    std::vector<InputTrack_t> perigeesToFit;
+    std::vector<InputTrack_t> perigeesToFitSplitVertex;
 
     // Fill vector with tracks to fit, only compatible with seed
     auto fillRes = fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
@@ -59,18 +58,20 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
     ACTS_DEBUG("Perigees used for fit: " << perigeesToFit.size());
 
     /// Begin vertex fit
-    Vertex<input_track_t> currentVertex;
-    Vertex<input_track_t> currentSplitVertex;
+    Vertex<InputTrack_t> currentVertex;
+    Vertex<InputTrack_t> currentSplitVertex;
 
     if (m_cfg.useBeamConstraint && !perigeesToFit.empty()) {
-      auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, vFitterOptions);
+      auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer,
+                                              vFitterOptions);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
         return fitResult.error();
       }
     } else if (!m_cfg.useBeamConstraint && perigeesToFit.size() > 1) {
-      auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, vFitterOptions);
+      auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer,
+                                              vFitterOptions);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -78,8 +79,8 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
       }
     }
     if (m_cfg.createSplitVertices && perigeesToFitSplitVertex.size() > 1) {
-      auto fitResult =
-          m_cfg.vertexFitter.fit(perigeesToFitSplitVertex, vFitterOptions);
+      auto fitResult = m_cfg.vertexFitter.fit(perigeesToFitSplitVertex,
+                                              m_cfg.linearizer, vFitterOptions);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
       } else {
@@ -108,9 +109,9 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
         // vertex is good vertex here
         // but add tracks which may have been missed
 
-        auto result = reassignTracksToNewVertex(
-            vertexCollection, currentVertex, perigeesToFit, seedTracks,
-            origTracks, vFitterOptions, vFinderOptions);
+        auto result = reassignTracksToNewVertex(vertexCollection, currentVertex,
+                                                perigeesToFit, seedTracks,
+                                                origTracks, vFitterOptions);
         if (!result.ok()) {
           return result.error();
         }
@@ -119,8 +120,7 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
       }  // end reassignTracksAfterFirstFit case
          // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
-        removeUsedCompatibleTracks(currentVertex, perigeesToFit, seedTracks,
-                                   vFinderOptions);
+        removeUsedCompatibleTracks(currentVertex, perigeesToFit, seedTracks);
 
         ACTS_DEBUG(
             "Number of seed tracks after removal of compatible tracks "
@@ -138,7 +138,7 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
         removeAllTracks(perigeesToFitSplitVertex, seedTracks);
       } else {
         removeUsedCompatibleTracks(currentSplitVertex, perigeesToFitSplitVertex,
-                                   seedTracks, vFinderOptions);
+                                   seedTracks);
       }
     }
     // Now fill vertex collection with vertex
@@ -156,13 +156,11 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
   return vertexCollection;
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
-Acts::Result<Acts::Vertex<input_track_t>> Acts::IterativeVertexFinder<
-    bfield_t, input_track_t, propagator_t,
-    vfitter_t>::getVertexSeed(const std::vector<input_track_t>& seedTracks,
-                              const VertexFinderOptions<input_track_t>&
-                                  vFinderOptions) const {
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
+    const std::vector<InputTrack_t>& seedTracks,
+    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
+    -> Result<Vertex<InputTrack_t>> {
   auto res = m_cfg.seedFinder.find(seedTracks, vFinderOptions);
   if (res.ok()) {
     auto vertexCollection = *res;
@@ -172,7 +170,7 @@ Acts::Result<Acts::Vertex<input_track_t>> Acts::IterativeVertexFinder<
       return VertexingError::SeedingError;
     }
     // current seed is last element in collection
-    Vertex<input_track_t> seedVertex = vertexCollection.back();
+    Vertex<InputTrack_t> seedVertex = vertexCollection.back();
     ACTS_DEBUG("Seed found at position: ("
                << seedVertex.fullPosition()[eX] << ", "
                << seedVertex.fullPosition()[eY] << ", "
@@ -185,47 +183,33 @@ Acts::Result<Acts::Vertex<input_track_t>> Acts::IterativeVertexFinder<
   }
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
-void Acts::IterativeVertexFinder<
-    bfield_t, input_track_t, propagator_t,
-    vfitter_t>::removeAllTracks(const std::vector<input_track_t>& perigeesToFit,
-                                std::vector<input_track_t>& seedTracks) const {
-  auto seedBegin = seedTracks.begin();
-  auto seedEnd = seedTracks.end();
-
+template <typename vfitter_t, typename sfinder_t>
+void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
+    const std::vector<InputTrack_t>& perigeesToFit,
+    std::vector<InputTrack_t>& seedTracks) const {
   for (const auto& fitPerigee : perigeesToFit) {
     const BoundParameters& fitPerigeeParams = m_extractParameters(fitPerigee);
-
-    bool trackFound = false;
-    for (auto seedIter = seedBegin; seedIter != seedEnd;) {
-      const BoundParameters& seedParams = m_extractParameters(*seedIter);
-      if (fitPerigeeParams == seedParams) {
-        seedIter = seedTracks.erase(seedIter);
-        seedBegin = seedTracks.begin();
-        seedEnd = seedTracks.end();
-        trackFound = true;
-        break;
-      }
-    }
-
-    if (!trackFound) {
-      ACTS_WARNING("Track (perigeeToFit) not found in seedTracks!");
+    // Find track in seedTracks
+    auto foundIter =
+        std::find_if(seedTracks.begin(), seedTracks.end(),
+                     [&fitPerigeeParams, this](auto seedTrk) {
+                       return fitPerigeeParams == m_extractParameters(seedTrk);
+                     });
+    if (foundIter != seedTracks.end()) {
+      // Remove track from seed tracks
+      seedTracks.erase(foundIter);
+    } else {
+      ACTS_WARNING("Track to be removed not found in seed tracks.")
     }
   }
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
+template <typename vfitter_t, typename sfinder_t>
 Acts::Result<double>
-Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
-    getCompatibility(
-        const BoundParameters& params, const Vertex<input_track_t>& vertex,
-        const VertexFinderOptions<input_track_t>& vFinderOptions) const {
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
+    const BoundParameters& params, const Vertex<InputTrack_t>& vertex) const {
   // Linearize track
-  auto result = m_cfg.linFactory.linearizeTrack(
-      vFinderOptions.geoContext, vFinderOptions.magFieldContext, &params,
-      vertex.fullPosition(), m_cfg.propagator);
+  auto result = m_cfg.linearizer.linearizeTrack(&params, vertex.fullPosition());
   if (!result.ok()) {
     return result.error();
   }
@@ -252,58 +236,43 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
   return compatibility;
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
+template <typename vfitter_t, typename sfinder_t>
 Acts::Result<void>
-Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
-    removeUsedCompatibleTracks(
-        Vertex<input_track_t>& myVertex,
-        std::vector<input_track_t>& perigeesToFit,
-        std::vector<input_track_t>& seedTracks,
-        const VertexFinderOptions<input_track_t>& vFinderOptions) const {
-  std::vector<TrackAtVertex<input_track_t>> tracksAtVertex = myVertex.tracks();
-
-  auto seedBegin = seedTracks.begin();
-  auto seedEnd = seedTracks.end();
-
-  auto perigeesToFitBegin = perigeesToFit.begin();
-  auto perigeesToFitEnd = perigeesToFit.end();
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
+    Vertex<InputTrack_t>& myVertex, std::vector<InputTrack_t>& perigeesToFit,
+    std::vector<InputTrack_t>& seedTracks) const {
+  std::vector<TrackAtVertex<InputTrack_t>> tracksAtVertex = myVertex.tracks();
 
   for (const auto& trackAtVtx : tracksAtVertex) {
-    // remove track from seedTracks if compatible
-    bool found = false;
-    for (auto seedIter = seedBegin; seedIter != seedEnd; ++seedIter) {
-      if (m_extractParameters(*seedIter) ==
-          m_extractParameters(trackAtVtx.originalTrack)) {
-        found = true;
-        if (trackAtVtx.trackWeight > m_cfg.cutOffTrackWeight) {
-          seedTracks.erase(seedIter);
-          seedBegin = seedTracks.begin();
-          seedEnd = seedTracks.end();
-        }
-        break;
-      }
+    // Check compatibility
+    if (trackAtVtx.trackWeight < m_cfg.cutOffTrackWeight) {
+      // Do not remove track here, since it is not compatible with the vertex
+      continue;
     }
-    if (!found) {
+
+    auto trkAtVtxParam = m_extractParameters(trackAtVtx.originalTrack);
+
+    // Find and remove track from seedTracks
+    auto foundSeedIter =
+        std::find_if(seedTracks.begin(), seedTracks.end(),
+                     [&trkAtVtxParam, this](auto seedTrk) {
+                       return trkAtVtxParam == m_extractParameters(seedTrk);
+                     });
+    if (foundSeedIter != seedTracks.end()) {
+      seedTracks.erase(foundSeedIter);
+    } else {
       ACTS_WARNING("Track trackAtVtx not found in seedTracks!");
     }
 
-    // remove track from perigeesToFit if compatible
-    found = false;
-    for (auto perigeesToFitIter = perigeesToFitBegin;
-         perigeesToFitIter != perigeesToFitEnd; ++perigeesToFitIter) {
-      if (m_extractParameters(*perigeesToFitIter) ==
-          m_extractParameters(trackAtVtx.originalTrack)) {
-        found = true;
-        if (trackAtVtx.trackWeight > m_cfg.cutOffTrackWeight) {
-          perigeesToFit.erase(perigeesToFitIter);
-          perigeesToFitBegin = perigeesToFit.begin();
-          perigeesToFitEnd = perigeesToFit.end();
-        }
-        break;
-      }
-    }
-    if (!found) {
+    // Find and remove track from perigeesToFit
+    auto foundFitIter =
+        std::find_if(perigeesToFit.begin(), perigeesToFit.end(),
+                     [&trkAtVtxParam, this](auto fitTrk) {
+                       return trkAtVtxParam == m_extractParameters(fitTrk);
+                     });
+    if (foundFitIter != perigeesToFit.end()) {
+      perigeesToFit.erase(foundFitIter);
+    } else {
       ACTS_WARNING("Track trackAtVtx not found in perigeesToFit!");
     }
   }  // end iteration over tracksAtVertex
@@ -316,13 +285,10 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
   // m_cfg.cutOffTrackWeight threshold and are hence outliers
   ACTS_DEBUG("Number of outliers: " << perigeesToFit.size());
 
-  auto trackAtVtxBegin = tracksAtVertex.begin();
-  auto trackAtVtxEnd = tracksAtVertex.end();
-
   for (const auto& myPerigeeToFit : perigeesToFit) {
     // calculate chi2 w.r.t. last fitted vertex
-    auto result = getCompatibility(m_extractParameters(myPerigeeToFit),
-                                   myVertex, vFinderOptions);
+    auto fitPerigeeParams = m_extractParameters(myPerigeeToFit);
+    auto result = getCompatibility(fitPerigeeParams, myVertex);
 
     if (!result.ok()) {
       return result.error();
@@ -333,34 +299,27 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
     if (chi2 < m_cfg.maximumChi2cutForSeeding) {
-      for (auto seedIter = seedBegin; seedIter != seedEnd; ++seedIter) {
-        if (m_extractParameters(*seedIter) ==
-            m_extractParameters(myPerigeeToFit)) {
-          seedTracks.erase(seedIter);
-          seedBegin = seedTracks.begin();
-          seedEnd = seedTracks.end();
-
-          ACTS_DEBUG(
-              "Outlier track found. However, still sufficiently "
-              "compatible with last fitted vertex. Remove from seeds.");
-          break;
-        }
+      auto foundIter = std::find_if(seedTracks.begin(), seedTracks.end(),
+                                    [&fitPerigeeParams, this](auto seedTrk) {
+                                      return fitPerigeeParams ==
+                                             m_extractParameters(seedTrk);
+                                    });
+      if (foundIter != seedTracks.end()) {
+        // Remove track from seed tracks
+        seedTracks.erase(foundIter);
       }
-    } else {
-      // Remove track from current vertex
-      for (auto trackAtVtxIter = trackAtVtxBegin;
-           trackAtVtxIter != trackAtVtxEnd; ++trackAtVtxIter) {
-        if (m_extractParameters(trackAtVtxIter->originalTrack) ==
-            m_extractParameters(myPerigeeToFit)) {
-          ACTS_DEBUG(
-              "Outlier track found which is not compatible with last "
-              "fitted vertex. Remove from tracksAtVertex.");
 
-          tracksAtVertex.erase(trackAtVtxIter);
-          trackAtVtxBegin = tracksAtVertex.begin();
-          trackAtVtxEnd = tracksAtVertex.end();
-          break;
-        }
+    } else {
+      // Track not compatible with vertex
+      // Remove track from current vertex
+      auto foundIter = std::find_if(
+          tracksAtVertex.begin(), tracksAtVertex.end(),
+          [&fitPerigeeParams, this](auto trk) {
+            return fitPerigeeParams == m_extractParameters(trk.originalTrack);
+          });
+      if (foundIter != tracksAtVertex.end()) {
+        // Remove track from seed tracks
+        tracksAtVertex.erase(foundIter);
       }
     }
   }
@@ -371,15 +330,13 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
   return {};
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
-Acts::Result<void> Acts::IterativeVertexFinder<
-    bfield_t, input_track_t, propagator_t,
-    vfitter_t>::fillPerigeesToFit(const std::vector<input_track_t>& perigeeList,
-                                  const Vertex<input_track_t>& seedVertex,
-                                  std::vector<input_track_t>& perigeesToFitOut,
-                                  std::vector<input_track_t>&
-                                      perigeesToFitSplitVertexOut) const {
+template <typename vfitter_t, typename sfinder_t>
+Acts::Result<void>
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
+    const std::vector<InputTrack_t>& perigeeList,
+    const Vertex<InputTrack_t>& seedVertex,
+    std::vector<InputTrack_t>& perigeesToFitOut,
+    std::vector<InputTrack_t>& perigeesToFitSplitVertexOut) const {
   int numberOfTracks = perigeeList.size();
 
   // Count how many tracks are used for fit
@@ -437,26 +394,22 @@ Acts::Result<void> Acts::IterativeVertexFinder<
   return {};
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
+template <typename vfitter_t, typename sfinder_t>
 Acts::Result<bool>
-Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
-    reassignTracksToNewVertex(
-        std::vector<Vertex<input_track_t>>& vertexCollection,
-        Vertex<input_track_t>& currentVertex,
-        std::vector<input_track_t>& perigeesToFit,
-        std::vector<input_track_t>& seedTracks,
-        const std::vector<input_track_t>& origTracks,
-        const VertexFitterOptions<input_track_t>& vFitterOptions,
-        const VertexFinderOptions<input_track_t>& vFinderOptions) const {
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
+    std::vector<Vertex<InputTrack_t>>& vertexCollection,
+    Vertex<InputTrack_t>& currentVertex,
+    std::vector<InputTrack_t>& perigeesToFit,
+    std::vector<InputTrack_t>& seedTracks,
+    const std::vector<InputTrack_t>& origTracks,
+    const VertexFitterOptions<InputTrack_t>& vFitterOptions) const {
   int numberOfAddedTracks = 0;
 
   // iterate over all vertices and check if tracks need to be reassigned
   // to new (current) vertex
   for (auto& vertexIt : vertexCollection) {
     // tracks at vertexIt
-    std::vector<TrackAtVertex<input_track_t>> tracksAtVertex =
-        vertexIt.tracks();
+    std::vector<TrackAtVertex<InputTrack_t>> tracksAtVertex = vertexIt.tracks();
     auto tracksBegin = tracksAtVertex.begin();
     auto tracksEnd = tracksAtVertex.end();
 
@@ -472,14 +425,13 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
           m_extractParameters(tracksIter->originalTrack);
 
       // compute compatibility
-      auto resultNew =
-          getCompatibility(trackPerigee, currentVertex, vFinderOptions);
+      auto resultNew = getCompatibility(trackPerigee, currentVertex);
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
       double chi2NewVtx = *resultNew;
 
-      auto resultOld = getCompatibility(trackPerigee, vertexIt, vFinderOptions);
+      auto resultOld = getCompatibility(trackPerigee, vertexIt);
       if (!resultOld.ok()) {
         return Result<bool>::failure(resultOld.error());
       }
@@ -525,16 +477,18 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
   // override current vertex with new fit
   // set first to default vertex to be able to check if still good vertex
   // later
-  currentVertex = Vertex<input_track_t>();
+  currentVertex = Vertex<InputTrack_t>();
   if (m_cfg.useBeamConstraint && !perigeesToFit.empty()) {
-    auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, vFitterOptions);
+    auto fitResult =
+        m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer, vFitterOptions);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
       return Result<bool>::success(false);
     }
   } else if (!m_cfg.useBeamConstraint && perigeesToFit.size() > 1) {
-    auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, vFitterOptions);
+    auto fitResult =
+        m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer, vFitterOptions);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
@@ -562,13 +516,11 @@ Acts::IterativeVertexFinder<bfield_t, input_track_t, propagator_t, vfitter_t>::
   return Result<bool>::success(isGoodVertex);
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t,
-          typename vfitter_t>
-int Acts::IterativeVertexFinder<
-    bfield_t, input_track_t, propagator_t,
-    vfitter_t>::countSignificantTracks(const Vertex<input_track_t>& vtx) const {
+template <typename vfitter_t, typename sfinder_t>
+int Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::countSignificantTracks(
+    const Vertex<InputTrack_t>& vtx) const {
   return std::count_if(vtx.tracks().begin(), vtx.tracks().end(),
-                       [this](TrackAtVertex<input_track_t> trk) {
+                       [this](TrackAtVertex<InputTrack_t> trk) {
                          return trk.trackWeight > m_cfg.cutOffTrackWeight;
                        });
 }

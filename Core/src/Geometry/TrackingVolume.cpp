@@ -16,7 +16,6 @@
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -148,7 +147,7 @@ void Acts::TrackingVolume::glueTrackingVolume(
     const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolume>& neighbor,
     BoundarySurfaceFace bsfNeighbor) {
-  // find the connection of the two tracking volumes : binR returns the center
+  // Find the connection of the two tracking volumes: binR returns the center
   // except for cylindrical volumes
   Vector3D bPosition(binningPosition(gctx, binR));
   Vector3D distance =
@@ -158,20 +157,31 @@ void Acts::TrackingVolume::glueTrackingVolume(
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D normal =
+  Vector3D nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   BoundaryOrientation bOrientation =
-      (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
-  // the easy case :
+      (nvector.dot(distance) > 0.) ? outsideVolume : insideVolume;
+  // The easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
-      !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
+      m_glueVolumeDescriptor->glueVolumes(bsfMine) == nullptr) {
     // the boundary orientation
     auto mutableBSurfaceMine =
         std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(bSurfaceMine);
     mutableBSurfaceMine->attachVolume(neighbor, bOrientation);
-    // now set it to the neighbor volume - the optised way
+    // Make sure you keep the boundary material if there
+    const Surface& neighborSurface =
+        neighbor->m_boundarySurfaces.at(bsfNeighbor)->surfaceRepresentation();
+    auto neighborMaterial = neighborSurface.surfaceMaterialSharedPtr();
+    const Surface& mySurface = bSurfaceMine->surfaceRepresentation();
+    auto myMaterial = mySurface.surfaceMaterialSharedPtr();
+    // Keep the neighbor material
+    if (myMaterial == nullptr and neighborMaterial != nullptr) {
+      Surface* myMutbableSurface = const_cast<Surface*>(&mySurface);
+      myMutbableSurface->assignSurfaceMaterial(neighborMaterial);
+    }
+    // Now set it to the neighbor volume
     (neighbor->m_boundarySurfaces).at(bsfNeighbor) = bSurfaceMine;
   }
 }
@@ -193,11 +203,11 @@ void Acts::TrackingVolume::glueTrackingVolumes(
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D normal =
+  Vector3D nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   BoundaryOrientation bOrientation =
-      (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
+      (nvector.dot(distance) > 0.) ? outsideVolume : insideVolume;
   // the easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -214,9 +224,28 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   }
 }
 
+void Acts::TrackingVolume::assignBoundaryMaterial(
+    std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
+    BoundarySurfaceFace bsFace) {
+  auto bSurface = m_boundarySurfaces.at(bsFace);
+  Surface* surface = const_cast<Surface*>(&bSurface->surfaceRepresentation());
+  surface->assignSurfaceMaterial(std::move(surfaceMaterial));
+}
+
 void Acts::TrackingVolume::updateBoundarySurface(
     BoundarySurfaceFace bsf,
-    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs) {
+    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs,
+    bool checkmaterial) {
+  if (checkmaterial) {
+    auto cMaterialPtr = m_boundarySurfaces.at(bsf)
+                            ->surfaceRepresentation()
+                            .surfaceMaterialSharedPtr();
+    auto bsMaterial = bs->surfaceRepresentation().surfaceMaterial();
+    if (cMaterialPtr != nullptr && bsMaterial == nullptr) {
+      Surface* surface = const_cast<Surface*>(&bs->surfaceRepresentation());
+      surface->assignSurfaceMaterial(cMaterialPtr);
+    }
+  }
   m_boundarySurfaces.at(bsf) = std::move(bs);
 }
 
@@ -350,8 +379,7 @@ void Acts::TrackingVolume::closeGeometry(
     } else if (m_bvhTop != nullptr) {
       geo_id_value isurface = 0;
       for (const auto& descVol : m_descendantVolumes) {
-        // attempt to cast to AbstractVolume, that's the only one we'll handle
-        // here
+        // Attempt to cast to AbstractVolume: only one we'll handle
         const AbstractVolume* avol =
             dynamic_cast<const AbstractVolume*>(descVol.get());
         if (avol != nullptr) {

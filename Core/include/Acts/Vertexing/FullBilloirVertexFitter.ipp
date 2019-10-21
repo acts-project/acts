@@ -60,10 +60,11 @@ struct BilloirVertex {
 
 }  // end anonymous namespace
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename input_track_t, typename linearizer_t>
 Acts::Result<Acts::Vertex<input_track_t>>
-Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
+Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     const std::vector<input_track_t>& paramVector,
+    const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   double chi2 = std::numeric_limits<double>::max();
   double newChi2 = 0;
@@ -113,9 +114,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = m_cfg.linFactory.linearizeTrack(
-          vFitterOptions.geoContext, vFitterOptions.magFieldContext,
-          &trackParams, linPoint, m_cfg.propagator);
+      auto result = linearizer.linearizeTrack(&trackParams, linPoint);
       if (result.ok()) {
         const auto linTrack = *result;
         double d0 = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
@@ -346,11 +345,11 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
   return std::move(fittedVertex);
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename input_track_t, typename linearizer_t>
 std::pair<double, double> Acts::FullBilloirVertexFitter<
-    bfield_t, input_track_t,
-    propagator_t>::correctPhiThetaPeriodicity(double phiIn,
-                                              double thetaIn) const {
+    input_track_t, linearizer_t>::correctPhiThetaPeriodicity(double phiIn,
+                                                             double thetaIn)
+    const {
   double tmpPhi = std::fmod(phiIn, 2 * M_PI);  // temp phi
   if (tmpPhi > M_PI) {
     tmpPhi -= 2 * M_PI;

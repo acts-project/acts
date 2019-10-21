@@ -163,6 +163,39 @@ BOOST_AUTO_TEST_CASE(multitrajectory_build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 }
 
+BOOST_AUTO_TEST_CASE(visit_apply_abort) {
+  MultiTrajectory<SourceLink> t;
+
+  // construct trajectory with three components
+  auto i0 = t.addTrackState(make_rand_trackstate());
+  auto i1 = t.addTrackState(make_rand_trackstate(), i0);
+  auto i2 = t.addTrackState(make_rand_trackstate(), i1);
+
+  size_t n = 0;
+  t.applyBackwards(i2, [&](const auto&) {
+    n++;
+    return false;
+  });
+  BOOST_CHECK_EQUAL(n, 1);
+
+  n = 0;
+  t.applyBackwards(i2, [&](const auto& ts) {
+    n++;
+    if (ts.index() == i1) {
+      return false;
+    }
+    return true;
+  });
+  BOOST_CHECK_EQUAL(n, 2);
+
+  n = 0;
+  t.applyBackwards(i2, [&](const auto&) {
+    n++;
+    return true;
+  });
+  BOOST_CHECK_EQUAL(n, 3);
+}
+
 BOOST_AUTO_TEST_CASE(trackstate_add_bitmask) {
   namespace PM = TrackStatePropMask;
   auto bs1 = PM::Uncalibrated;

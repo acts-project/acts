@@ -469,8 +469,9 @@ template <typename T, typename TS>
 using call_operator_t = decltype(std::declval<T>()(std::declval<TS>()));
 
 template <typename T, typename TS>
-constexpr bool VisitorConcept =
-    concept ::require<concept ::exists<call_operator_t, T, TS>>;
+constexpr bool VisitorConcept = concept ::require<
+    concept ::either<concept ::identical_to<bool, call_operator_t, T, TS>,
+                     concept ::identical_to<void, call_operator_t, T, TS>>>;
 
 }  // namespace detail_lt
 
