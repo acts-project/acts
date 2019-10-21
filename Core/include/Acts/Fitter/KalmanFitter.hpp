@@ -427,7 +427,7 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename parameters_t = BoundParameters>
-  Result<KalmanFitterResult<source_link_t>> fit(
+  Result<KalmanFitterResult<source_link_t, parameters_t>> fit(
       const std::vector<source_link_t>& sourcelinks,
       const start_parameters_t& sParameters,
       const KalmanFitterOptions& kfOptions) const {

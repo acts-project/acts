@@ -131,7 +131,7 @@ class GainMatrixSmoother {
       prev_ts = &ts;
     }
     // The result is the pointer to the last smoothed state - for the cache
-    return prev_ts->parameter.smoothed;
+    return *prev_ts->parameter.smoothed;
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
