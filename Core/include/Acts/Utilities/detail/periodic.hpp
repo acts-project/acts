@@ -35,5 +35,29 @@ inline T radian_sym(T x) {
   return wrap_periodic<T>(x, T(-M_PI), T(2 * M_PI));
 }
 
+/// Calculates the equivalent angles phi and theta
+/// in the [-pi, pi) and [0, pi] ranges by ensuring
+/// the correct theta bounds
+template <typename T>
+std::pair<T, T> ensureThetaBounds(T phi, T theta) {
+  T tmpPhi = radian_sym(phi);
+
+  T tmpTht = std::fmod(theta, 2 * M_PI);
+  if (tmpTht < -M_PI) {
+    tmpTht = std::abs(tmpTht + 2 * M_PI);
+  } else if (tmpTht < 0) {
+    tmpTht *= -1;
+    tmpPhi += M_PI;
+    tmpPhi = tmpPhi > M_PI ? tmpPhi - 2 * M_PI : tmpPhi;
+  }
+  if (tmpTht > M_PI) {
+    tmpTht = 2 * M_PI - tmpTht;
+    tmpPhi += M_PI;
+    tmpPhi = tmpPhi > M_PI ? (tmpPhi - 2 * M_PI) : tmpPhi;
+  }
+
+  return std::pair<T, T>(tmpPhi, tmpTht);
+}
+
 }  // namespace detail
 }  // namespace Acts

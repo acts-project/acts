@@ -28,11 +28,11 @@ target_link_libraries (IterativeVertexFinderTests PRIVATE ActsCore ActsTestsComm
 add_test (NAME IterativeVertexFinderUnitTests COMMAND IterativeVertexFinderTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST IterativeVertexFinderUnitTests TARGETS IterativeVertexFinderTests)
 
-add_executable (SequentialVertexSmootherTests SequentialVertexSmootherTests.cpp)
-target_include_directories (SequentialVertexSmootherTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (SequentialVertexSmootherTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (NAME SequentialVertexSmootherUnitTests COMMAND SequentialVertexSmootherTests)
-acts_add_test_to_cdash_project (PROJECT ACore TEST SequentialVertexSmootherUnitTests TARGETS SequentialVertexSmootherTests)
+add_executable (VertexSmootherTests VertexSmootherTests.cpp)
+target_include_directories (VertexSmootherTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (VertexSmootherTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME SequentialVertexSmootherUnitTests COMMAND VertexSmootherTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST SequentialVertexSmootherUnitTests TARGETS VertexSmootherTests)
 
 add_executable (MultiAdaptiveVertexFitterTests MultiAdaptiveVertexFitterTests.cpp)
 target_include_directories (MultiAdaptiveVertexFitterTests PRIVATE ${Boost_INCLUDE_DIRS})

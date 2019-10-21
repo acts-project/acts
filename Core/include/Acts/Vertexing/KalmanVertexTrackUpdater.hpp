@@ -50,15 +50,6 @@ class KalmanVertexTrackUpdater {
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to correct 2-pi periodicity for phi and theta
-  ///
-  /// @param phiIn Phi
-  /// @param thetaIn Theta
-  ///
-  /// @return Pair of (corrected phi, corrected theta)
-  std::pair<double, double> correctPhiThetaPeriodicity(double phiIn,
-                                                       double thetaIn) const;
 };
 
 }  // Namespace Acts

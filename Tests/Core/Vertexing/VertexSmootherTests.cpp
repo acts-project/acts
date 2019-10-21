@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE SequentialVertexSmoother Tests
+#define BOOST_TEST_MODULE VertexSmoother Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -24,7 +24,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include <Acts/Vertexing/SequentialVertexSmoother.hpp>
+#include <Acts/Vertexing/VertexSmoother.hpp>
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
 namespace Acts {
@@ -63,7 +63,7 @@ std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 // Number of tracks distritbution
 std::uniform_int_distribution<> nTracksDist(3, 10);
 
-/// @brief Unit test for SequentialVertexSmoother
+/// @brief Unit test for VertexSmoother
 ///
 BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
   bool debugMode = false;
@@ -151,7 +151,8 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
   // copy vertex for later comparison
   Vertex<BoundParameters> vertexBeforeSmoothing = fittedVertex;
 
-  SequentialVertexSmoother<BoundParameters>::smooth(tgContext, &fittedVertex);
+  VertexSmoothing::smoothVertexSequentially<BoundParameters>(tgContext,
+                                                             &fittedVertex);
 
   // Billoirfitter does not provide the TracksAtVertex with a linearized
   // state,
@@ -171,7 +172,8 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
 
   // set tracks with linearized state to vertex
   fittedVertex.setTracksAtVertex(tracksWithLinState);
-  SequentialVertexSmoother<BoundParameters>::smooth(tgContext, &fittedVertex);
+  VertexSmoothing::smoothVertexSequentially<BoundParameters>(tgContext,
+                                                             &fittedVertex);
 
   BOOST_CHECK_EQUAL(vertexBeforeSmoothing.tracks().size(),
                     fittedVertex.tracks().size());

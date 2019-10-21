@@ -8,6 +8,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
@@ -50,7 +51,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
 
   // Get phi and theta and correct for possible periodicity changes
   auto correctedPhiTheta =
-      correctPhiThetaPeriodicity(newTrkMomentum(0), newTrkMomentum(1));
+      detail::ensureThetaBounds(newTrkMomentum(0), newTrkMomentum(1));
 
   newTrkParams(ParID_t::ePHI) = correctedPhiTheta.first;     // phi
   newTrkParams(ParID_t::eTHETA) = correctedPhiTheta.second;  // theta
@@ -133,33 +134,4 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater<input_track_t>::update(
   track.ndf = 2 * track.trackWeight;
 
   return {};
-}
-
-template <typename input_track_t>
-std::pair<double, double>
-Acts::KalmanVertexTrackUpdater<input_track_t>::correctPhiThetaPeriodicity(
-    double phiIn, double thetaIn) const {
-  double tmpPhi = std::fmod(phiIn, 2 * M_PI);  // temp phi
-  if (tmpPhi > M_PI) {
-    tmpPhi -= 2 * M_PI;
-  }
-  if (tmpPhi < -M_PI && tmpPhi > -2 * M_PI) {
-    tmpPhi += 2 * M_PI;
-  }
-
-  double tmpTht = std::fmod(thetaIn, 2 * M_PI);  // temp theta
-  if (tmpTht < -M_PI) {
-    tmpTht = std::abs(tmpTht + 2 * M_PI);
-  } else if (tmpTht < 0) {
-    tmpTht *= -1;
-    tmpPhi += M_PI;
-    tmpPhi = tmpPhi > M_PI ? tmpPhi - 2 * M_PI : tmpPhi;
-  }
-  if (tmpTht > M_PI) {
-    tmpTht = 2 * M_PI - tmpTht;
-    tmpPhi += M_PI;
-    tmpPhi = tmpPhi > M_PI ? (tmpPhi - 2 * M_PI) : tmpPhi;
-  }
-
-  return std::pair<double, double>(tmpPhi, tmpTht);
 }
