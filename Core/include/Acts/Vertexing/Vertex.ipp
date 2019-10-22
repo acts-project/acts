@@ -69,7 +69,6 @@ const Acts::SpacePointSymMatrix& Acts::Vertex<input_track_t>::fullCovariance()
 
 template <typename input_track_t>
 const std::vector<Acts::TrackAtVertex<input_track_t>>&
-
 Acts::Vertex<input_track_t>::tracks() const {
   return m_tracksAtVertex;
 }
@@ -120,4 +119,11 @@ void Acts::Vertex<input_track_t>::setFitQuality(double chiSquared,
                                                 double numberDoF) {
   m_chiSquared = chiSquared;
   m_numberDoF = numberDoF;
+}
+
+template <typename input_track_t>
+void Acts::Vertex<input_track_t>::setFitQuality(
+    std::pair<double, double> fitQuality) {
+  m_chiSquared = fitQuality.first;
+  m_numberDoF = fitQuality.second;
 }

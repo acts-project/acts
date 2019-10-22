@@ -49,12 +49,14 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     std::vector<InputTrack_t> perigeesToFit;
     std::vector<InputTrack_t> perigeesToFitSplitVertex;
 
-    // Fill vector with tracks to fit, only compatible with seed
-    auto fillRes = fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
-                                     perigeesToFitSplitVertex);
-    if (!fillRes.ok()) {
-      return fillRes.error();
+    // Fill vector with tracks to fit, only compatible with seed:
+    auto res = fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
+                                 perigeesToFitSplitVertex, vFinderOptions);
+
+    if (!res.ok()) {
+      return res.error();
     }
+
     ACTS_DEBUG("Perigees used for fit: " << perigeesToFit.size());
 
     /// Begin vertex fit
@@ -336,7 +338,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
     const std::vector<InputTrack_t>& perigeeList,
     const Vertex<InputTrack_t>& seedVertex,
     std::vector<InputTrack_t>& perigeesToFitOut,
-    std::vector<InputTrack_t>& perigeesToFitSplitVertexOut) const {
+    std::vector<InputTrack_t>& perigeesToFitSplitVertexOut,
+    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const {
   int numberOfTracks = perigeeList.size();
 
   // Count how many tracks are used for fit
@@ -364,8 +367,11 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
     else {
       // check first that distance is not too large
       const BoundParameters& sTrackParams = m_extractParameters(sTrack);
-      double distance =
-          m_cfg.ipEst.calculateDistance(sTrackParams, seedVertex.position());
+      auto distanceRes = m_cfg.ipEst.calculateDistance(
+          vFinderOptions.geoContext, sTrackParams, seedVertex.position());
+      if (!distanceRes.ok()) {
+        return distanceRes.error();
+      }
 
       if (!sTrackParams.covariance()) {
         return VertexingError::NoCovariance;
@@ -379,7 +385,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
         error = 1.;
       }
 
-      if (distance / error < m_cfg.significanceCutSeeding) {
+      if (*distanceRes / error < m_cfg.significanceCutSeeding) {
         if (count % m_cfg.splitVerticesTrkInvFraction == 0 ||
             !m_cfg.createSplitVertices) {
           perigeesToFitOut.push_back(sTrack);
