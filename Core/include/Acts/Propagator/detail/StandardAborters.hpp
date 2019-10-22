@@ -68,7 +68,6 @@ struct PathLimitReached {
   /// Boolean switch for Loop protection
   double internalLimit = std::numeric_limits<double>::max();
 
-
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -114,7 +113,6 @@ struct PathLimitReached {
 struct SurfaceReached {
   /// Default Constructor
   SurfaceReached() = default;
-
 
   /// boolean operator for abort condition without using the result
   ///
@@ -202,7 +200,6 @@ struct SurfaceReached {
 struct EndOfWorldReached {
   /// Default Constructor
   EndOfWorldReached() = default;
-
 
   /// boolean operator for abort condition without using the result
   ///
