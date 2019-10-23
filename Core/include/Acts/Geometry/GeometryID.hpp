@@ -17,15 +17,16 @@ namespace Acts {
 
 using geo_id_value = uint64_t;
 
-/// @class GeometryID
+/// Identifier for geometry nodes.
 ///
-///  Identifier for Geometry nodes - packing the
-///  - (Sensitive) Surfaces    - uses counting through sensitive surfaces
-///  - (Approach)  Surfaces    - uses counting approach surfaces
-///  - (Layer)     Surfaces    - uses counting confined layers
-///  - (Boundary)  Surfaces    - uses counting through boundary surfaces
-///  - Volumes                 - uses counting given by TrackingGeometry
-
+/// Each identifier can be split info the following components:
+///
+/// - Volumes                 - uses counting given by TrackingGeometry
+/// - (Boundary)  Surfaces    - counts through boundary surfaces
+/// - (Layer)     Surfaces    - counts confined layers
+/// - (Approach)  Surfaces    - counts approach surfaces
+/// - (Sensitive) Surfaces    - counts through sensitive surfaces
+///
 class GeometryID {
  public:
   /// Construct default GeometryID with all values set to zero.
