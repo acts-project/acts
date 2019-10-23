@@ -14,7 +14,6 @@
 #include <boost/test/output_test_stream.hpp>
 // clang-format on
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -114,7 +113,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters
-    TrackParametersBase::ParVector_t paramVec;
+    BoundParameters::ParVector_t paramVec;
 
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
