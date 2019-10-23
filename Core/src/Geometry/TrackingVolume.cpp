@@ -333,8 +333,7 @@ void Acts::TrackingVolume::closeGeometry(
   volumeMap[volumeName()] = this;
 
   // we can construct the volume ID from this
-  GeometryID volumeID(0);
-  volumeID.add(++vol, GeometryID::volume_mask);
+  auto volumeID = GeometryID().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeoID(volumeID);
@@ -351,8 +350,7 @@ void Acts::TrackingVolume::closeGeometry(
     // get the intersection soltuion
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    GeometryID boundaryID = volumeID;
-    boundaryID.add(++iboundary, GeometryID::boundary_mask);
+    auto boundaryID = GeometryID(volumeID).setBoundary(++iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
     mutableBSurface.assignGeoID(boundaryID);
@@ -370,8 +368,7 @@ void Acts::TrackingVolume::closeGeometry(
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
-        GeometryID layerID = volumeID;
-        layerID.add(++ilayer, GeometryID::layer_mask);
+        auto layerID = GeometryID(volumeID).setLayer(++ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID);
@@ -387,8 +384,7 @@ void Acts::TrackingVolume::closeGeometry(
           for (const auto& bnd : bndSrf) {
             const auto& srf = bnd->surfaceRepresentation();
             Surface* mutableSurfcePtr = const_cast<Surface*>(&srf);
-            GeometryID geoID = volumeID;
-            geoID.add(++isurface, GeometryID::sensitive_mask);
+            auto geoID = GeometryID(volumeID).setSensitive(++isurface);
             mutableSurfcePtr->assignGeoID(geoID);
           }
         }

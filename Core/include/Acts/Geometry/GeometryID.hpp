@@ -66,22 +66,6 @@ class GeometryID {
     return (*this);
   }
 
-  /// Add some stuff - a new GeometryID
-  ///
-  /// @param tddID is the geometry ID that will be added
-  GeometryID& operator+=(const GeometryID& tddID) {
-    m_value += tddID.value();
-    return (*this);
-  }
-
-  /// Add some stuff - a decoded value
-  ///
-  /// @param add_value is the fully decoded value to be added
-  GeometryID& operator+=(geo_id_value add_value) {
-    m_value += add_value;
-    return (*this);
-  }
-
   /// Equality operator
   ///
   /// @param tddID is the geometry ID that will be compared on equality
@@ -94,46 +78,71 @@ class GeometryID {
   /// @param tddID is the geometry ID that will be compared on equality
   bool operator!=(const GeometryID& tddID) const { return !operator==(tddID); }
 
-  /// Add some stuff
-  ///
-  /// @param type_id which identifier do you wanna add
-  /// @param type_mask the mask that is supposed to be applied
-  void add(geo_id_value type_id, geo_id_value type_mask) {
-    m_value += ACTS_BIT_ENCODE(type_id, type_mask);
+  /// Return the encoded value.
+  constexpr geo_id_value value() const { return m_value; }
+
+  /// Return the volume identifier.
+  constexpr geo_id_value volume() const {
+    return ACTS_BIT_DECODE(m_value, volume_mask);
+  }
+  /// Return the boundary identifier.
+  constexpr geo_id_value boundary() const {
+    return ACTS_BIT_DECODE(m_value, boundary_mask);
+  }
+  /// Return the layer identifier.
+  constexpr geo_id_value layer() const {
+    return ACTS_BIT_DECODE(m_value, layer_mask);
+  }
+  /// Return the approach identifier.
+  constexpr geo_id_value approach() const {
+    return ACTS_BIT_DECODE(m_value, approach_mask);
+  }
+  /// Return the sensitive identifier.
+  constexpr geo_id_value sensitive() const {
+    return ACTS_BIT_DECODE(m_value, sensitive_mask);
   }
 
-  /// return the value
-  ///
-  /// @param mask is the mask to be applied
-  geo_id_value value(geo_id_value mask = 0) const;
+  /// Set the volume identifier.
+  constexpr GeometryID& setVolume(geo_id_value volume) {
+    return setBits(volume_mask, volume);
+  }
+  /// Set the boundary identifier.
+  constexpr GeometryID& setBoundary(geo_id_value boundary) {
+    return setBits(boundary_mask, boundary);
+  }
+  /// Set the layer identifier.
+  constexpr GeometryID& setLayer(geo_id_value layer) {
+    return setBits(layer_mask, layer);
+  }
+  /// Set the approach identifier.
+  constexpr GeometryID& setApproach(geo_id_value approach) {
+    return setBits(approach_mask, approach);
+  }
+  /// Set the sensitive identifier.
+  constexpr GeometryID& setSensitive(geo_id_value sensitive) {
+    return setBits(sensitive_mask, sensitive);
+  }
 
   /// return the split value as string for debugging
   std::string toString() const;
 
  private:
   geo_id_value m_value = 0;
+
+  /// Set the subset of bits indicated by the mask
+  constexpr GeometryID& setBits(geo_id_value mask, geo_id_value id) {
+    m_value = (m_value & ~mask) | ACTS_BIT_ENCODE(id, mask);
+    return *this;
+  }
 };
 
-inline geo_id_value GeometryID::value(geo_id_value mask) const {
-  if (mask != 0u) {
-    return ACTS_BIT_DECODE(m_value, mask);
-  }
-  return m_value;
-}
-
 inline std::string GeometryID::toString() const {
-  geo_id_value volume_id = value(volume_mask);
-  geo_id_value boundary_id = value(boundary_mask);
-  geo_id_value layer_id = value(layer_mask);
-  geo_id_value approach_id = value(approach_mask);
-  geo_id_value sensitive_id = value(sensitive_mask);
-
   std::stringstream dstream;
-  dstream << "[ " << std::setw(3) << volume_id;
-  dstream << " | " << std::setw(3) << boundary_id;
-  dstream << " | " << std::setw(3) << layer_id;
-  dstream << " | " << std::setw(3) << approach_id;
-  dstream << " | " << std::setw(4) << sensitive_id << " ]";
+  dstream << "[ " << std::setw(3) << volume();
+  dstream << " | " << std::setw(3) << boundary();
+  dstream << " | " << std::setw(3) << layer();
+  dstream << " | " << std::setw(3) << approach();
+  dstream << " | " << std::setw(4) << sensitive() << " ]";
   return dstream.str();
 }
 

@@ -103,7 +103,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
   // Check if the surface has a proxy
   if (surfaceMaterial != nullptr) {
     auto geoID = surface.geoID();
-    size_t volumeID = geoID.value(GeometryID::volume_mask);
+    size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material surface found with volumeID " << volumeID);
     ACTS_DEBUG("       - surfaceID is " << geoID.toString());
 

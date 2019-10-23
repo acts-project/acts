@@ -103,8 +103,8 @@ struct MeasurementCreator {
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
       auto geoID = surface->geoID();
-      geo_id_value volumeID = geoID.value(GeometryID::volume_mask);
-      geo_id_value layerID = geoID.value(GeometryID::layer_mask);
+      geo_id_value volumeID = geoID.volume();
+      geo_id_value layerID = geoID.layer();
       // find volume and layer information for this
       auto vResolution = detectorResolution.find(volumeID);
       if (vResolution != detectorResolution.end()) {
