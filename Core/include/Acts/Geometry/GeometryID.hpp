@@ -37,18 +37,6 @@ class GeometryID {
   GeometryID& operator=(GeometryID&&) = default;
   GeometryID& operator=(const GeometryID&) = default;
 
-  /// Equality operator
-  ///
-  /// @param tddID is the geometry ID that will be compared on equality
-  bool operator==(const GeometryID& tddID) const {
-    return (m_value == tddID.value());
-  }
-
-  /// Non-equality operator
-  ///
-  /// @param tddID is the geometry ID that will be compared on equality
-  bool operator!=(const GeometryID& tddID) const { return !operator==(tddID); }
-
   /// Return the encoded value.
   constexpr geo_id_value value() const { return m_value; }
 
@@ -111,6 +99,12 @@ class GeometryID {
     return *this;
   }
 
+  friend constexpr bool operator==(GeometryID lhs, GeometryID rhs) {
+    return lhs.m_value == rhs.m_value;
+  }
+  friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
+    return lhs.m_value < rhs.m_value;
+  }
   friend inline std::ostream& operator<<(std::ostream& os, GeometryID id) {
     os << "[ " << std::setw(3) << id.volume();
     os << " | " << std::setw(3) << id.boundary();
@@ -120,11 +114,5 @@ class GeometryID {
     return os;
   }
 };
-
-/// Overload of operator< | <= | > | >=  for the usage in a map
-bool operator<(const GeometryID& one, const GeometryID& two);
-bool operator<=(const GeometryID& one, const GeometryID& two);
-bool operator>(const GeometryID& one, const GeometryID& two);
-bool operator>=(const GeometryID& one, const GeometryID& two);
 
 }  // namespace Acts

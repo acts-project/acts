@@ -226,7 +226,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     // get the current Surface ID
     currentID = sfIter->surface->geoID();
     // We have work to do: the assignemnt surface has changed
-    if (currentID != lastID) {
+    if (not(currentID == lastID)) {
       // Let's (re-)assess the information
       lastID = currentID;
       currentPos = (sfIter)->position;
