@@ -36,9 +36,8 @@ class GeometryID {
   constexpr static geo_id_value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
   // clang-format on
 
-  /// default constructor
-  ///
-  GeometryID() = default;
+  /// Construct default GeometryID with all values set to zero.
+  GeometryID() : m_value(0) {}
 
   /// constructor from a ready-made value
   ///
