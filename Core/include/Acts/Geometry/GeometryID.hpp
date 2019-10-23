@@ -9,7 +9,7 @@
 #pragma once
 
 #include <cstdint>
-#include <iostream>
+#include <ostream>
 
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -123,9 +123,6 @@ class GeometryID {
     return setBits(sensitive_mask, sensitive);
   }
 
-  /// return the split value as string for debugging
-  std::string toString() const;
-
  private:
   geo_id_value m_value = 0;
 
@@ -134,17 +131,16 @@ class GeometryID {
     m_value = (m_value & ~mask) | ACTS_BIT_ENCODE(id, mask);
     return *this;
   }
-};
 
-inline std::string GeometryID::toString() const {
-  std::stringstream dstream;
-  dstream << "[ " << std::setw(3) << volume();
-  dstream << " | " << std::setw(3) << boundary();
-  dstream << " | " << std::setw(3) << layer();
-  dstream << " | " << std::setw(3) << approach();
-  dstream << " | " << std::setw(4) << sensitive() << " ]";
-  return dstream.str();
-}
+  friend inline std::ostream& operator<<(std::ostream& os, GeometryID id) {
+    os << "[ " << std::setw(3) << id.volume();
+    os << " | " << std::setw(3) << id.boundary();
+    os << " | " << std::setw(3) << id.layer();
+    os << " | " << std::setw(3) << id.approach();
+    os << " | " << std::setw(4) << id.sensitive() << " ]";
+    return os;
+  }
+};
 
 /// Overload of operator< | <= | > | >=  for the usage in a map
 bool operator<(const GeometryID& one, const GeometryID& two);
@@ -152,6 +148,4 @@ bool operator<=(const GeometryID& one, const GeometryID& two);
 bool operator>(const GeometryID& one, const GeometryID& two);
 bool operator>=(const GeometryID& one, const GeometryID& two);
 
-/// Overload of << operator for std::ostream for debug output
-std::ostream& operator<<(std::ostream& sl, const GeometryID& tid);
 }  // namespace Acts

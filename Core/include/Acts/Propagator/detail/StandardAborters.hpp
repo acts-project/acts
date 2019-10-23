@@ -176,7 +176,7 @@ struct SurfaceReached {
       targetDebugLog(state, "x", [&] {
         std::stringstream dstream;
         dstream << "Current surface set to target surface  ";
-        dstream << state.navigation.currentSurface->geoID().toString();
+        dstream << state.navigation.currentSurface->geoID();
         return dstream.str();
       });
       // reaching the target calls a navigation break

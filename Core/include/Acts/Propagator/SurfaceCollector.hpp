@@ -101,8 +101,8 @@ struct SurfaceCollector {
       // Screen output
       debugLog(state, [&] {
         std::stringstream dstream;
-        dstream << "Collect surface  ";
-        dstream << state.navigation.currentSurface->geoID().toString();
+        dstream << "Collect surface  "
+                << state.navigation.currentSurface->geoID();
         return dstream.str();
       });
     }
