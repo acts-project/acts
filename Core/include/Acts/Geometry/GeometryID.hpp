@@ -28,43 +28,14 @@ using geo_id_value = uint64_t;
 
 class GeometryID {
  public:
-  // clang-format off
-  constexpr static geo_id_value volume_mask    = 0xff00000000000000; // 255 volumes
-  constexpr static geo_id_value boundary_mask  = 0x00ff000000000000; // 255 boundaries
-  constexpr static geo_id_value layer_mask     = 0x0000fff000000000; // 4095 layers
-  constexpr static geo_id_value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
-  constexpr static geo_id_value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
-  // clang-format on
-
   /// Construct default GeometryID with all values set to zero.
-  GeometryID() : m_value(0) {}
-
-  /// constructor from a ready-made value
-  ///
-  /// @param id_value is the full decoded value of the identifier
-  GeometryID(geo_id_value id_value) : m_value(id_value) {}
-
-  // constructor from a shift and a value
-  ///
-  /// @param id type_id numbered object
-  /// @param type_mask is necessary for the decoding
-  GeometryID(geo_id_value type_id, geo_id_value type_mask)
-      : m_value(ACTS_BIT_ENCODE(type_id, type_mask)) {}
-
-  /// Copy constructor
-  ///
-  /// @param tddID is the geometry ID that will be copied
-  GeometryID(const GeometryID& tddID) = default;
-
-  /// Assignement operator
-  ///
-  /// @param tddID is the geometry ID that will be assigned
-  GeometryID& operator=(const GeometryID& tddID) {
-    if (&tddID != this) {
-      m_value = tddID.m_value;
-    }
-    return (*this);
-  }
+  constexpr GeometryID() : m_value(0) {}
+  /// Construct from an already encoded value.
+  constexpr GeometryID(geo_id_value id_value) : m_value(id_value) {}
+  constexpr GeometryID(GeometryID&&) = default;
+  constexpr GeometryID(const GeometryID&) = default;
+  GeometryID& operator=(GeometryID&&) = default;
+  GeometryID& operator=(const GeometryID&) = default;
 
   /// Equality operator
   ///
@@ -124,6 +95,14 @@ class GeometryID {
   }
 
  private:
+  // clang-format off
+  constexpr static geo_id_value volume_mask    = 0xff00000000000000; // 255 volumes
+  constexpr static geo_id_value boundary_mask  = 0x00ff000000000000; // 255 boundaries
+  constexpr static geo_id_value layer_mask     = 0x0000fff000000000; // 4095 layers
+  constexpr static geo_id_value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
+  constexpr static geo_id_value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
+  // clang-format on
+
   geo_id_value m_value = 0;
 
   /// Set the subset of bits indicated by the mask
