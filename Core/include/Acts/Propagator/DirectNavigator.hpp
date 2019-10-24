@@ -148,8 +148,8 @@ class DirectNavigator {
       state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
       debugLog(state, [&] {
         std::stringstream dstream;
-        dstream << "Current surface set to  ";
-        dstream << state.navigation.currentSurface->geoID().toString();
+        dstream << "Current surface set to  "
+                << state.navigation.currentSurface->geoID();
         return dstream.str();
       });
       // Move the sequence to the next surface
