@@ -174,7 +174,7 @@ BOOST_DATA_TEST_CASE(
       continue;
     }
 
-    geo_id_value sensitiveID = step.surface->geoID().sensitive();
+    auto sensitiveID = step.surface->geoID().sensitive();
     if (sensitiveID != 0) {
       actHits.push_back(step.surface.get());
     }

@@ -92,41 +92,41 @@ auto world = tGeometry.highestTrackingVolume();
 
 BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test) {
   // the lambda for checking
-  auto check_vol = [](const TrackingVolume& vol, geo_id_value geoid) -> void {
+  auto check_vol = [](const TrackingVolume& vol, GeometryID::Value geoid) {
     // check the geometry id of the volume
     BOOST_CHECK_EQUAL(geoid, vol.geoID().volume());
     // check the geometry id of all boundary surfaces of the volume
     // - this is strictly only possible when glueing if OFF
-    geo_id_value bsurface_id = 0;
+    GeometryID::Value bsurface_id = 0;
     for (auto bSf : vol.boundarySurfaces()) {
       // check the bsurface volume id
-      geo_id_value bs_vol_id = bSf->surfaceRepresentation().geoID().volume();
+      auto bs_vol_id = bSf->surfaceRepresentation().geoID().volume();
       BOOST_CHECK_EQUAL(geoid, bs_vol_id);
       // check the bsurface boundary id
-      geo_id_value bs_bsf_id = bSf->surfaceRepresentation().geoID().boundary();
+      auto bs_bsf_id = bSf->surfaceRepresentation().geoID().boundary();
       BOOST_CHECK_EQUAL(++bsurface_id, bs_bsf_id);
     }
     // testing the layer and it's approach surfaces
     if (vol.confinedLayers() != nullptr) {
       // layers start are counted from 1 - n
-      geo_id_value layer_id = 0;
+      GeometryID::Value layer_id = 0;
       for (auto lay : vol.confinedLayers()->arrayObjects()) {
         // check the layer volume id and layer layer id
-        geo_id_value lay_vol_id = lay->geoID().volume();
-        geo_id_value lay_lay_id = lay->geoID().layer();
+        auto lay_vol_id = lay->geoID().volume();
+        auto lay_lay_id = lay->geoID().layer();
         BOOST_CHECK_EQUAL(++layer_id, lay_lay_id);
         BOOST_CHECK_EQUAL(geoid, lay_vol_id);
         // test the layer approach surfaces
         if (lay->approachDescriptor() != nullptr) {
           // approach surfacesare counted from 1 - n
-          geo_id_value asurface_id = 0;
+          GeometryID::Value asurface_id = 0;
           for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
             // id
-            geo_id_value asf_vol_id = asf->geoID().volume();
-            geo_id_value asf_lay_id = asf->geoID().layer();
-            geo_id_value asf_asf_id = asf->geoID().approach();
+            auto asf_vol_id = asf->geoID().volume();
+            auto asf_lay_id = asf->geoID().layer();
+            auto asf_asf_id = asf->geoID().approach();
             BOOST_CHECK_EQUAL(layer_id, asf_lay_id);
             BOOST_CHECK_EQUAL(geoid, asf_vol_id);
             BOOST_CHECK_EQUAL(++asurface_id, asf_asf_id);
@@ -135,14 +135,14 @@ BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test) {
         // test the sensitive surfaces
         if (lay->surfaceArray() != nullptr) {
           // sensitive surfaces are counted from 1 - n
-          geo_id_value ssurface_id = 0;
+          GeometryID::Value ssurface_id = 0;
           for (auto ssf : lay->surfaceArray()->surfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
             // id
-            geo_id_value ssf_vol_id = ssf->geoID().volume();
-            geo_id_value ssf_lay_id = ssf->geoID().layer();
-            geo_id_value ssf_ssf_id = ssf->geoID().sensitive();
+            auto ssf_vol_id = ssf->geoID().volume();
+            auto ssf_lay_id = ssf->geoID().layer();
+            auto ssf_ssf_id = ssf->geoID().sensitive();
             BOOST_CHECK_EQUAL(layer_id, ssf_lay_id);
             BOOST_CHECK_EQUAL(geoid, ssf_vol_id);
             BOOST_CHECK_EQUAL(++ssurface_id, ssf_ssf_id);

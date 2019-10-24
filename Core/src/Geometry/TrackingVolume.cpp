@@ -344,7 +344,7 @@ void Acts::TrackingVolume::closeGeometry(
   }
 
   // loop over the boundary surfaces
-  geo_id_value iboundary = 0;
+  GeometryID::Value iboundary = 0;
   // loop over the boundary surfaces
   for (auto& bSurfIter : boundarySurfaces()) {
     // get the intersection soltuion
@@ -364,7 +364,7 @@ void Acts::TrackingVolume::closeGeometry(
   if (!m_confinedVolumes) {
     // loop over the confined layers
     if (m_confinedLayers) {
-      geo_id_value ilayer = 0;
+      GeometryID::Value ilayer = 0;
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
@@ -374,7 +374,7 @@ void Acts::TrackingVolume::closeGeometry(
         mutableLayerPtr->closeGeometry(materialDecorator, layerID);
       }
     } else if (m_bvhTop != nullptr) {
-      geo_id_value isurface = 0;
+      GeometryID::Value isurface = 0;
       for (const auto& descVol : m_descendantVolumes) {
         // Attempt to cast to AbstractVolume: only one we'll handle
         const AbstractVolume* avol =
