@@ -9,11 +9,13 @@ if(NOT ${_json_dep_header_sha256} STREQUAL ${_json_dep_header_sha256_ref})
   message(FATAL_ERROR "json.hpp hash does not match reference!")
 endif()
 
-add_library(ActsJsonPlugin INTERFACE)
+add_library(
+  ActsJsonPlugin INTERFACE)
 target_include_directories(
   ActsJsonPlugin
-  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 install(
   TARGETS ActsJsonPlugin

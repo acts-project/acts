@@ -1,11 +1,16 @@
-file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
-
-add_library(ActsDigitizationPlugin SHARED ${src_files})
+add_library(
+  ActsDigitizationPlugin SHARED
+  src/CartesianSegmentation.cpp
+  src/DigitizationModule.cpp
+  src/PlanarModuleStepper.cpp)
 target_include_directories(
   ActsDigitizationPlugin
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(ActsDigitizationPlugin PUBLIC ActsCore)
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_link_libraries(
+  ActsDigitizationPlugin
+  PUBLIC ActsCore)
 
 install(
   TARGETS ActsDigitizationPlugin
