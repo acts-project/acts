@@ -51,7 +51,6 @@ endif()
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
 include(ActsCompilerOptions) # default compile options
-include(ActsFunctions) # Acts-specific helper functions
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 
 # required packages
@@ -76,7 +75,7 @@ add_component_if(Legacy Legacy ACTS_BUILD_LEGACY)
 add_subdirectory(Plugins)
 # examples and tests
 if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
-  include(CTest) # must be included from the main CMakeLists.txt
+  enable_testing() # must be set from the main CMakeLists.txt
 endif()
 add_subdirectory_if(Tests ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS OR ACTS_BUILD_EXAMPLES)
 # documentation

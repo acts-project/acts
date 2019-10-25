@@ -29,5 +29,3 @@ install(
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Acts)
-
-acts_add_targets_to_cdash_project(PROJECT ACore TARGETS ActsCore)

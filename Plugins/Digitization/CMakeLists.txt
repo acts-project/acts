@@ -14,5 +14,3 @@ install(
 install(
   DIRECTORY include/Acts
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-acts_add_targets_to_cdash_project(PROJECT ActsDigitizationPlugin TARGETS ActsDigitizationPlugin)
