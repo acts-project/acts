@@ -1,9 +1,10 @@
 file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 add_library(ActsDigitizationPlugin SHARED ${src_files})
-
-target_include_directories(ActsDigitizationPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_include_directories(ActsDigitizationPlugin PUBLIC ${ROOT_INCLUDE_DIRS})
+target_include_directories(
+  ActsDigitizationPlugin
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(ActsDigitizationPlugin PUBLIC ActsCore)
 
 install(

@@ -1,12 +1,12 @@
 file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 add_library(ActsTGeoPlugin SHARED ${src_files})
-
-target_include_directories(ActsTGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_include_directories(ActsTGeoPlugin PUBLIC ${ROOT_INCLUDE_DIRS})
-target_link_libraries(ActsTGeoPlugin PUBLIC ActsCore)
-target_link_libraries(ActsTGeoPlugin PUBLIC ROOT::Geom)
-target_link_libraries(ActsTGeoPlugin PUBLIC IdentificationPlugin)
+target_include_directories(
+  ActsTGeoPlugin
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_link_libraries(
+  ActsTGeoPlugin PUBLIC ActsCore IdentificationPlugin ROOT::Geom)
 
 install(
   TARGETS ActsTGeoPlugin
