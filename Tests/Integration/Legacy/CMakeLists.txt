@@ -1,0 +1,3 @@
+add_executable(SeedingTest ATLSeedingIntegrationTest.cpp)
+target_link_libraries(SeedingTest PRIVATE ActsLegacy ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_integration_test(SeedingTest)
