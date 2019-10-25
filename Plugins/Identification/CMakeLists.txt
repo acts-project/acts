@@ -1,12 +1,12 @@
-add_library(IdentificationPlugin INTERFACE)
+add_library(ActsIdentificationPlugin INTERFACE)
 target_include_directories(
-  IdentificationPlugin
+  ActsIdentificationPlugin
   INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(IdentificationPlugin INTERFACE ActsCore)
+target_link_libraries(ActsIdentificationPlugin INTERFACE ActsCore)
 
 install(
-  TARGETS IdentificationPlugin
+  TARGETS ActsIdentificationPlugin
   EXPORT ActsIdentificationPluginTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
