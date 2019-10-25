@@ -1,0 +1,15 @@
+target_sources_local(
+  ActsCore
+  PRIVATE
+    AccumulatedSurfaceMaterial.cpp
+    AccumulatedVolumeMaterial.cpp
+    BinnedSurfaceMaterial.cpp
+    HomogeneousSurfaceMaterial.cpp
+    Interactions.cpp
+    Material.cpp
+    MaterialMapUtils.cpp
+    MaterialProperties.cpp
+    ProtoSurfaceMaterial.cpp
+    SurfaceMaterialMapper.cpp
+    VolumeMaterialMapper.cpp
+)
