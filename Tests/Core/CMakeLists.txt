@@ -1,4 +1,3 @@
-add_subdirectory(CommonHelpers)
 add_subdirectory(EventData)
 add_subdirectory(Fitter)
 add_subdirectory(Geometry)
