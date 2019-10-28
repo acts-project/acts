@@ -12,9 +12,9 @@
 #include <sstream>
 #include <utility>
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Propagator/detail/InteractionFormulas.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/Material.hpp"
-#include "Acts/Propagator/detail/Constants.hpp"
+#include "Acts/Material/detail/Constants.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
