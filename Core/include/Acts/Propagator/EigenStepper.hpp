@@ -74,6 +74,7 @@ class EigenStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
+    template <typename parameters_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
                    const parameters_t& par, NavigationDirection ndir = forward,
@@ -369,14 +370,6 @@ class EigenStepper {
   Result<double> step(propagator_state_t& state) const;
 
  private:
- 
- 	/// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-	///
-	/// @param [in] state State that will be projected
-	///
-	/// @return Projection Jacobian
-  FreeToBoundMatrix freeToBoundJacobian(const State& state) const;
-
   /// Magnetic field inside of the detector
   BField m_bField;
 
