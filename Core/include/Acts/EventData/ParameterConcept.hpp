@@ -45,7 +45,6 @@ namespace concept {
   METHOD_TRAIT(covariance_t, covariance);
   METHOD_TRAIT(parameters_t, parameters);
 
-  // clang-format off
     template <typename P>
       struct ParameterConcept {
 		  
@@ -100,7 +99,6 @@ namespace concept {
 		/// Evaluate that everything required exists
         constexpr static bool value = require<covmat_exists, either<boundValue, freeValue>>;
       };
-  // clang-format on
   }  // namespace Parameter
 }  // namespace concept
 
