@@ -45,60 +45,76 @@ namespace concept {
   METHOD_TRAIT(covariance_t, covariance);
   METHOD_TRAIT(parameters_t, parameters);
 
-    template <typename P>
-      struct ParameterConcept {
-		  
-		/// Test if covariance matrix data type is defined
-        constexpr static bool covmat_exists = exists<covmat_t, const P>;
-        static_assert(covmat_exists, "Covariance matrix type not found");
-        
-        /// Tests related to surface bound parametrisations
-        constexpr static bool reference_surface_exists = has_method<const P, const Surface&, reference_surface_t>;
-		constexpr static bool surfacebound_position_exists = identical_to<Vector3D, position_returntype_t, const P>;
-		constexpr static bool surfacebound_momentum_exists = identical_to<Vector3D, momentum_returntype_t, const P>;
-		constexpr static bool surfacebound_charge_exists = identical_to<double, charge_returntype_t, const P>;
-		constexpr static bool surfacebound_time_exists = identical_to<double, time_returntype_t, const P>;
-		constexpr static bool surfacebound_covariance_exists = identical_to<const std::optional<BoundSymMatrix>&, covariance_returntype_t, const P>;
-		constexpr static bool surfacebound_parameters_exists = identical_to<BoundVector, parameters_returntype_t, const P>;
-		
-		/// Tie all surface bound results together
-		constexpr static bool boundValue = require<reference_surface_exists,
-													surfacebound_position_exists,
-													surfacebound_momentum_exists,
-													surfacebound_charge_exists,
-													surfacebound_time_exists,
-													surfacebound_covariance_exists,
-													surfacebound_parameters_exists>;
-		
-		/// Tests related to free parametrisations											
-		constexpr static bool free_position_exists = has_method<const P, Vector3D, position_t>;
-		constexpr static bool free_momentum_exists = has_method<const P, Vector3D, momentum_t>;
-		constexpr static bool free_charge_exists = has_method<const P, double, charge_t>;
-		constexpr static bool free_time_exists = has_method<const P, double, timet>;
-		constexpr static bool free_covariance_exists = has_method<const P, const std::optional<FreeSymMatrix>&, covariance_t>;
-		constexpr static bool free_parameters_exists = has_method<const P, FreeVector, parameters_t>;
-		
-		/// Tie all free results together
-		constexpr static bool freeValue = require<free_position_exists,						
-													free_momentum_exists,
-													free_charge_exists,
-													free_time_exists,
-													free_covariance_exists,
-													free_parameters_exists>;
+  template <typename P>
+  struct ParameterConcept {
+    /// Test if covariance matrix data type is defined
+    constexpr static bool covmat_exists = exists<covmat_t, const P>;
+    static_assert(covmat_exists, "Covariance matrix type not found");
 
-		/// Assert the individual results for easier error handling
-		// TODO: The surface getter should be tested but would be useless in this construction
-		// static_assert(reference_surface_exists, "referenceSurface method not found");
-		static_assert(surfacebound_position_exists || free_position_exists, "position method not found");        
-		static_assert(surfacebound_momentum_exists || free_momentum_exists, "momentum method not found");
-		static_assert(surfacebound_charge_exists || free_charge_exists, "charge method not found");
-		static_assert(surfacebound_time_exists || free_time_exists, "time method not found");
-		static_assert(surfacebound_covariance_exists || free_covariance_exists, "covariance method not found");
-		static_assert(surfacebound_parameters_exists || free_parameters_exists, "parameters method not found");
+    /// Tests related to surface bound parametrisations
+    constexpr static bool reference_surface_exists =
+        has_method<const P, const Surface&, reference_surface_t>;
+    constexpr static bool surfacebound_position_exists =
+        identical_to<Vector3D, position_returntype_t, const P>;
+    constexpr static bool surfacebound_momentum_exists =
+        identical_to<Vector3D, momentum_returntype_t, const P>;
+    constexpr static bool surfacebound_charge_exists =
+        identical_to<double, charge_returntype_t, const P>;
+    constexpr static bool surfacebound_time_exists =
+        identical_to<double, time_returntype_t, const P>;
+    constexpr static bool surfacebound_covariance_exists =
+        identical_to<const std::optional<BoundSymMatrix>&,
+                     covariance_returntype_t, const P>;
+    constexpr static bool surfacebound_parameters_exists =
+        identical_to<BoundVector, parameters_returntype_t, const P>;
 
-		/// Evaluate that everything required exists
-        constexpr static bool value = require<covmat_exists, either<boundValue, freeValue>>;
-      };
+    /// Tie all surface bound results together
+    constexpr static bool boundValue =
+        require<reference_surface_exists, surfacebound_position_exists,
+                surfacebound_momentum_exists, surfacebound_charge_exists,
+                surfacebound_time_exists, surfacebound_covariance_exists,
+                surfacebound_parameters_exists>;
+
+    /// Tests related to free parametrisations
+    constexpr static bool free_position_exists =
+        has_method<const P, Vector3D, position_t>;
+    constexpr static bool free_momentum_exists =
+        has_method<const P, Vector3D, momentum_t>;
+    constexpr static bool free_charge_exists =
+        has_method<const P, double, charge_t>;
+    constexpr static bool free_time_exists = has_method<const P, double, timet>;
+    constexpr static bool free_covariance_exists =
+        has_method<const P, const std::optional<FreeSymMatrix>&, covariance_t>;
+    constexpr static bool free_parameters_exists =
+        has_method<const P, FreeVector, parameters_t>;
+
+    /// Tie all free results together
+    constexpr static bool freeValue =
+        require<free_position_exists, free_momentum_exists, free_charge_exists,
+                free_time_exists, free_covariance_exists,
+                free_parameters_exists>;
+
+    /// Assert the individual results for easier error handling
+    // TODO: The surface getter should be tested but would be useless in this
+    // construction static_assert(reference_surface_exists, "referenceSurface
+    // method not found");
+    static_assert(surfacebound_position_exists || free_position_exists,
+                  "position method not found");
+    static_assert(surfacebound_momentum_exists || free_momentum_exists,
+                  "momentum method not found");
+    static_assert(surfacebound_charge_exists || free_charge_exists,
+                  "charge method not found");
+    static_assert(surfacebound_time_exists || free_time_exists,
+                  "time method not found");
+    static_assert(surfacebound_covariance_exists || free_covariance_exists,
+                  "covariance method not found");
+    static_assert(surfacebound_parameters_exists || free_parameters_exists,
+                  "parameters method not found");
+
+    /// Evaluate that everything required exists
+    constexpr static bool value =
+        require<covmat_exists, either<boundValue, freeValue>>;
+  };
   }  // namespace Parameter
 }  // namespace concept
 
