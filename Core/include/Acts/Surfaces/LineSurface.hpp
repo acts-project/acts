@@ -147,15 +147,15 @@ class LineSurface : public Surface {
   /// reference frame does not depend on the direction
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param pos is the position of the paramters in global
-  /// @param dir is the direction of the track
+  /// @param position is the position of the paramters in global
+  /// @param direction is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
-  /// @param jac is the transport jacobian
+  /// @param jacobian is the transport jacobian
   ///
   /// @return a 8-dim vector
   const FreeRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& pos, const Vector3D& dir,
-      const RotationMatrix3D& rft, const FreeMatrix& jac) const final;
+      const GeometryContext& gctx, const Vector3D& position, const Vector3D& direction,
+      const RotationMatrix3D& rft, const FreeMatrix& jacobian) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift

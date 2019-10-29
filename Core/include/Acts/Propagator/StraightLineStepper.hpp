@@ -39,7 +39,7 @@ class StraightLineStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-  using FreeState = std::tuple<FreeTrackParameters, FreeMatrix, double>;
+  using FreeState = std::tuple<FreeTrackParameters, std::variant<FreeMatrix, BoundToFreeMatrix>, double>;
   using BField = NullBField;
 
   /// State for track parameter propagation
@@ -401,6 +401,37 @@ private:
 			return jacToLocal;
 		}
 	}
+	
+	const FreeToBoundMatrix surfaceDerivative(const State& state, FreeMatrix& jac, const Surface* surface = nullptr) const
+	{
+		// Set the surface projection contributions
+		// If no surface is specified it is curvilinear
+		if(surface == nullptr)
+		{
+			// Transport the covariance
+			const ActsRowVectorD<3> normVec(state.dir);
+			const FreeRowVector sfactors =
+				normVec * jac.template topLeftCorner<3, FreeParsDim>();
+			jac -= state.derivative * sfactors;
+			// Since the jacobian to local needs to calculated for the bound parameters here, it is convenient to do the same here
+			return freeToCurvilinearJacobian(state);
+		}
+		// Else it is bound
+		else
+		{
+			// Initialize the transport final frame jacobian
+			FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
+			// Initalize the jacobian to local, returns the transposed ref frame
+		   auto rframeT = surface->initJacobianToLocal(state.geoContext, jacToLocal,
+						   state.pos, state.dir);
+			// Calculate the form factors for the derivatives
+			const FreeRowVector sVec = surface->derivativeFactors(
+				state.geoContext, state.pos, state.dir, rframeT, jac);
+			jac -= state.derivative * sVec;
+			// Return the jacobian to local
+			return jacToLocal;
+		}
+	}
 
 	/// @brief This function reinitialises the @p state member @p jacToGlobal.
 	///
@@ -419,30 +450,34 @@ private:
 		// If treating curvilinear parameters
 		if(surface == nullptr)
 		{
-			auto& jac = *state.jacToGlobal;
-			// Optimized trigonometry on the propagation direction
-			const double x = state.dir(0);  // == cos(phi) * sin(theta)
-			const double y = state.dir(1);  // == sin(phi) * sin(theta)
-			const double z = state.dir(2);  // == cos(theta)
-			// can be turned into cosine/sine
-			const double cosTheta = z;
-			const double sinTheta = sqrt(x * x + y * y);
-			const double invSinTheta = 1. / sinTheta;
-			const double cosPhi = x * invSinTheta;
-			const double sinPhi = y * invSinTheta;
+			if(state.jacToGlobal.has_value())
+			{
+				auto& jac = *state.jacToGlobal;
+				// TODO: This was calculated before - can it be reused?
+				// Optimized trigonometry on the propagation direction
+				const double x = state.dir(0);  // == cos(phi) * sin(theta)
+				const double y = state.dir(1);  // == sin(phi) * sin(theta)
+				const double z = state.dir(2);  // == cos(theta)
+				// can be turned into cosine/sine
+				const double cosTheta = z;
+				const double sinTheta = sqrt(x * x + y * y);
+				const double invSinTheta = 1. / sinTheta;
+				const double cosPhi = x * invSinTheta;
+				const double sinPhi = y * invSinTheta;
 
-		  jac(0, eLOC_0) = -sinPhi;
-		  jac(0, eLOC_1) = -cosPhi * cosTheta;
-		  jac(1, eLOC_0) = cosPhi;
-		  jac(1, eLOC_1) = -sinPhi * cosTheta;
-		  jac(2, eLOC_1) = sinTheta;
-		  jac(3, eT) = 1;
-		  jac(4, ePHI) = -sinTheta * sinPhi;
-		  jac(4, eTHETA) = cosTheta * cosPhi;
-		  jac(5, ePHI) = sinTheta * cosPhi;
-		  jac(5, eTHETA) = cosTheta * sinPhi;
-		  jac(6, eTHETA) = -sinTheta;
-		  jac(7, eQOP) = 1;
+			  jac(0, eLOC_0) = -sinPhi;
+			  jac(0, eLOC_1) = -cosPhi * cosTheta;
+			  jac(1, eLOC_0) = cosPhi;
+			  jac(1, eLOC_1) = -sinPhi * cosTheta;
+			  jac(2, eLOC_1) = sinTheta;
+			  jac(3, eT) = 1;
+			  jac(4, ePHI) = -sinTheta * sinPhi;
+			  jac(4, eTHETA) = cosTheta * cosPhi;
+			  jac(5, ePHI) = sinTheta * cosPhi;
+			  jac(5, eTHETA) = cosTheta * sinPhi;
+			  jac(6, eTHETA) = -sinTheta;
+			  jac(7, eQOP) = 1;
+			}
 		}
 		// If treating bound parameters
 		else
