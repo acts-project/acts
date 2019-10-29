@@ -39,6 +39,7 @@ class StraightLineStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+  using FreeState = std::tuple<FreeTrackParameters, FreeMatrix, double>;
   using BField = NullBField;
 
   /// State for track parameter propagation
