@@ -12,7 +12,7 @@ variables:
 before_script:
   # CI executor uses fail on error by default
   # setup scripts do not like that
-  - set +e && source CI/setup_lcg94.sh; set -e
+  - set +e && source CI/setup_lcg96.sh; set -e
 
 # pre-build checks
 
@@ -96,9 +96,9 @@ include_guards:
   script:
     - cmake --build build -- integration_tests
 
-# CC7, LCG94
+# CC7, LCG96
 
-build_cc7_lcg95:
+build_cc7_lcg96:
   <<: *template_build
   variables:
     BUILD_TYPE: Debug # for coverage check
@@ -317,7 +317,7 @@ coverage_deploy:
   <<: *deploy_base
   stage: deploy
   dependencies:
-    - unit_tests_slc6_lcg94
+    - unit_tests_cc7_lcg96
   script:
     - CI/publish_coverage.py --coverage-source=build/coverage --project-id=$CI_PROJECT_ID
   only:
