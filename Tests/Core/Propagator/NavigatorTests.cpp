@@ -244,11 +244,11 @@ BOOST_AUTO_TEST_CASE(Navigator_methods) {
   // Check that the currentSurface is reset to:
   BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
   // No layer has been found
-  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0);
+  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0u);
   // ACTORS-ABORTERS-TARGET
   navigator.target(state, stepper);
   // A layer has been found
-  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
+  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The iterator should points to the begin
   BOOST_CHECK(state.navigation.navLayerIter ==
               state.navigation.navLayers.begin());
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(Navigator_methods) {
   BOOST_CHECK_EQUAL(state.navigation.currentVolume,
                     state.navigation.startVolume);
   // The layer number has not changed
-  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
+  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The iterator still points to the begin
   BOOST_CHECK(
       (state.navigation.navLayerIter == state.navigation.navLayers.begin()));

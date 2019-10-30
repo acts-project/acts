@@ -170,13 +170,13 @@ BOOST_AUTO_TEST_CASE(ActionListTest_TwoActions) {
   //// observe and check
   action_list(state, stepper, result);
   BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 100_mm);
-  BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
+  BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1u);
 
   // now move the cache and check again
   state.stepping.pathAccumulated = 50_mm;
   action_list(state, stepper, result);
   BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50_mm);
-  BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
+  BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2u);
 }
 
 }  // namespace Test

@@ -41,17 +41,17 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_construction_test) {
   /// All of the material should be invalid (the accessible ones)
   auto averageA = a.totalAverage();
   BOOST_CHECK_EQUAL(bool(averageA.first), false);
-  BOOST_CHECK_EQUAL(averageA.second, 0);
+  BOOST_CHECK_EQUAL(averageA.second, 0u);
 
   /// All of the material should be invalid (the accessible ones)
   auto averageB = bMoved.totalAverage();
   BOOST_CHECK_EQUAL(bool(averageB.first), false);
-  BOOST_CHECK_EQUAL(averageB.second, 0);
+  BOOST_CHECK_EQUAL(averageB.second, 0u);
 
   /// All of the material should be invalid (the accessible ones)
   auto averageC = cMovedAssigned.totalAverage();
   BOOST_CHECK_EQUAL(bool(averageC.first), false);
-  BOOST_CHECK_EQUAL(averageC.second, 0);
+  BOOST_CHECK_EQUAL(averageC.second, 0u);
 }
 
 /// Test the event averaging behavior
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_trackaverage_test) {
   auto averageAbc = abc.totalAverage();
 
   // Both should have one event
-  BOOST_CHECK_EQUAL(averageAbc.second, 1);
+  BOOST_CHECK_EQUAL(averageAbc.second, 1u);
   auto mpAbc = averageAbc.first;
 
   // Thickness must be one for mapping
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   auto averageAA = aa.totalAverage();
 
   BOOST_CHECK_EQUAL(a, averageAA.first);
-  BOOST_CHECK_EQUAL(2, averageAA.second);
+  BOOST_CHECK_EQUAL(averageAA.second, 2u);
 
   // Test:
   // that the average of a and a vacuum
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   BOOST_CHECK_EQUAL(halfA.thicknessInL0(), matAV.thicknessInL0());
   CHECK_CLOSE_REL(halfA.averageRho() * halfA.thickness(),
                   matAV.averageRho() * matAV.thickness(), 0.0001);
-  BOOST_CHECK_EQUAL(2, averageAV.second);
+  BOOST_CHECK_EQUAL(averageAV.second, 2u);
 
   // Test:
   // average of a + 3*a -> 2*a
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   BOOST_CHECK_EQUAL(doubleA.thicknessInL0(), matAA3.thicknessInL0());
   CHECK_CLOSE_REL(doubleA.averageRho() * doubleA.thickness(),
                   matAA3.averageRho() * matAA3.thickness(), 0.0001);
-  BOOST_CHECK_EQUAL(2, averageAA3.second);
+  BOOST_CHECK_EQUAL(averageAA3.second, 2u);
 
   /// Test:
   /// average a + 3a + v
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   auto matAA3V = averageAA3V.first;
 
   CHECK_CLOSE_REL(4. / 3., matAA3V.thicknessInX0(), 0.00001);
-  BOOST_CHECK_EQUAL(3, averageAA3V.second);
+  BOOST_CHECK_EQUAL(averageAA3V.second, 3u);
 
   /// Test:
   /// average 4a + v
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   auto matA4V = averageA4V.first;
 
   CHECK_CLOSE_REL(doubleA.thicknessInX0(), matA4V.thicknessInX0(), 0.00001);
-  BOOST_CHECK_EQUAL(2, averageA4V.second);
+  BOOST_CHECK_EQUAL(averageA4V.second, 2u);
 
   /// Test:
   /// average: a + 3a + emptyhit
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   auto matAA3E = averageAA3E.first;
 
   CHECK_CLOSE_REL(4. / 3., matAA3E.thicknessInX0(), 0.00001);
-  BOOST_CHECK_EQUAL(3, averageAA3E.second);
+  BOOST_CHECK_EQUAL(averageAA3E.second, 3u);
 }
 
 }  // namespace Test

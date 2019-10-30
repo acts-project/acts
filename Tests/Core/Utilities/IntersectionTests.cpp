@@ -181,14 +181,14 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
   // This should give 6 different intersections
   std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
                  secondSet.end(), std::back_inserter(unionSetStd));
-  BOOST_CHECK_EQUAL(unionSetStd.size(), 6);
+  BOOST_CHECK_EQUAL(unionSetStd.size(), 6u);
 
   // This should give 5 different inteseciton attempts (for each surface 1)
   SameSurfaceIntersection onSameSurface;
   std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
                  secondSet.end(), std::back_inserter(unionSetCst),
                  onSameSurface);
-  BOOST_CHECK_EQUAL(unionSetCst.size(), 5);
+  BOOST_CHECK_EQUAL(unionSetCst.size(), 5u);
 }
 
 }  // namespace Test

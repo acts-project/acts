@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
   // test reset
   state = AnnealingUtility::State();
 
-  BOOST_CHECK_EQUAL(state.currentTemperatureIndex, 0);
+  BOOST_CHECK_EQUAL(state.currentTemperatureIndex, 0u);
   BOOST_CHECK_EQUAL(state.equilibriumReached, false);
 
   // Test weight increase when annealing for chi2<cutOff
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(annealing_tool_multiChi2_tests) {
   // test reset
   state = AnnealingUtility::State();
 
-  BOOST_CHECK_EQUAL(state.currentTemperatureIndex, 0);
+  BOOST_CHECK_EQUAL(state.currentTemperatureIndex, 0u);
   BOOST_CHECK_EQUAL(state.equilibriumReached, false);
 
   // Test weight increase when annealing for chi2<cutOff

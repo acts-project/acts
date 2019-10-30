@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   auto mState = smMapper.createState(gCtx, mfCtx, *tGeometry);
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3);
+  BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);
 }
 
 }  // namespace Test

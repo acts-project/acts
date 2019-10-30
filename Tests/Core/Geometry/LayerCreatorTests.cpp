@@ -260,8 +260,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
   BOOST_CHECK(checkBinning(tgContext, *layer->surfaceArray()));
   auto axes = layer->surfaceArray()->getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
@@ -280,8 +280,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
   BOOST_CHECK(checkBinning(tgContext, *layer->surfaceArray()));
   axes = layer->surfaceArray()->getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
@@ -297,8 +297,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   // since we now have multientry bins
   BOOST_CHECK(checkBinning(tgContext, *layer->surfaceArray()));
   axes = layer->surfaceArray()->getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 13);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 3);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 13u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 3u);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
@@ -323,8 +323,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   BOOST_CHECK(checkBinning(tgContext, *layer->surfaceArray()));
 
   axes = layer->surfaceArray()->getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -25, 1e-3);
@@ -355,8 +355,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   CHECK_CLOSE_REL(bounds->rMax(), 25, 1e-3);
   BOOST_CHECK(checkBinning(tgContext, *layer->surfaceArray()));
   auto axes = layer->surfaceArray()->getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 30);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 30u);
   CHECK_CLOSE_REL(axes.at(0)->getMin(), 5, 1e-3);
   CHECK_CLOSE_REL(axes.at(0)->getMax(), 25, 1e-3);
   CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
@@ -435,8 +435,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
           p_LC->cylinderLayer(tgContext, brl, equidistant, equidistant, pl));
 
   auto axes = layer->surfaceArray()->getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
 
   // check if binning is good!
   for (const auto& pr : barrel.second) {
@@ -450,7 +450,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
 
     Vector3D ctr = A->binningPosition(tgContext, binR);
     auto binContent = layer->surfaceArray()->at(ctr);
-    BOOST_CHECK_EQUAL(binContent.size(), 2);
+    BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;
     act.insert(binContent[0]);
     act.insert(binContent[1]);

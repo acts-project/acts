@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   size_t nSurfaces = 0;
   tGeometry.visitSurfaces([&nSurfaces](const auto*) { nSurfaces++; });
 
-  BOOST_CHECK_EQUAL(nSurfaces, 9);
+  BOOST_CHECK_EQUAL(nSurfaces, 9u);
 }
 
 }  //  end of namespace Test

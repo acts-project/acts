@@ -218,13 +218,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
     Vector3D ctr = srf->binningPosition(tgContext, binR);
     std::vector<const Surface*> binContent = sa.at(ctr);
 
-    BOOST_CHECK_EQUAL(binContent.size(), 1);
+    BOOST_CHECK_EQUAL(binContent.size(), 1u);
     BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
   }
 
   std::vector<const Surface*> neighbors =
       sa.neighbors(itransform(Vector2D(0, 0)));
-  BOOST_CHECK_EQUAL(neighbors.size(), 9);
+  BOOST_CHECK_EQUAL(neighbors.size(), 9u);
 
   auto sl2 = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
@@ -238,7 +238,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
     Vector3D ctr = srf->binningPosition(tgContext, binR);
     std::vector<const Surface*> binContent = sa2.at(ctr);
 
-    BOOST_CHECK_EQUAL(binContent.size(), 1);
+    BOOST_CHECK_EQUAL(binContent.size(), 1u);
     BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
   }
 }
@@ -252,9 +252,9 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   SurfaceArray sa(srf);
 
   auto binContent = sa.at(Vector3D(42, 42, 42));
-  BOOST_CHECK_EQUAL(binContent.size(), 1);
+  BOOST_CHECK_EQUAL(binContent.size(), 1u);
   BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
-  BOOST_CHECK_EQUAL(sa.surfaces().size(), 1);
+  BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);
   BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
 }
 

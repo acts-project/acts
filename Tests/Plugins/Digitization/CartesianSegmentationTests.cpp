@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   cSegmentation.createSegmentationSurfaces(boundariesPZL, segSurfacesXPZL,
                                            segSurfacesYPZL, hThickness, 1, 0.);
 
-  BOOST_CHECK_EQUAL(boundariesPZL.size(), 6);
+  BOOST_CHECK_EQUAL(boundariesPZL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
   BOOST_CHECK_EQUAL(segSurfacesXPZL.size(), size_t(nbinsx - 1));
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   cSegmentation.createSegmentationSurfaces(boundariesNZL, segSurfacesXNZL,
                                            segSurfacesYNZL, hThickness, -1, 0.);
 
-  BOOST_CHECK_EQUAL(boundariesNZL.size(), 6);
+  BOOST_CHECK_EQUAL(boundariesNZL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
   BOOST_CHECK_EQUAL(segSurfacesXNZL.size(), size_t(nbinsx - 1));
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   cSegmentation.createSegmentationSurfaces(
       boundariesPL, segSurfacesXPL, segSurfacesYPL, hThickness, 1, lAngle);
 
-  BOOST_CHECK_EQUAL(boundariesPL.size(), 6);
+  BOOST_CHECK_EQUAL(boundariesPL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
   BOOST_CHECK_EQUAL(segSurfacesXPL.size(), size_t(nbinsx - 1));

@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
 
   // Test the number of bins getter
   std::vector<size_t> nBins = matMap.getNBins();
-  BOOST_CHECK_EQUAL(nBins[0], 3);
-  BOOST_CHECK_EQUAL(nBins[1], 3);
+  BOOST_CHECK_EQUAL(nBins[0], 3u);
+  BOOST_CHECK_EQUAL(nBins[1], 3u);
 
   // Test the lower limits
   std::vector<double> limits = matMap.getMin();

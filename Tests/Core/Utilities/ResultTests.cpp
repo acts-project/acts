@@ -109,11 +109,11 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     Result res(42);
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 42.);
-    BOOST_CHECK_EQUAL(res.value(), 42);
+    BOOST_CHECK_EQUAL(res.value(), 42u);
     res = 46;
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 46.);
-    BOOST_CHECK_EQUAL(res.value(), 46);
+    BOOST_CHECK_EQUAL(res.value(), 46u);
 
     Result res2(ec);
     BOOST_CHECK(!res2.ok());
@@ -132,11 +132,11 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     Result res(42);
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 42.);
-    BOOST_CHECK_EQUAL(res.value(), 42);
+    BOOST_CHECK_EQUAL(res.value(), 42u);
     res = 46;
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 46.);
-    BOOST_CHECK_EQUAL(res.value(), 46);
+    BOOST_CHECK_EQUAL(res.value(), 46u);
 
     Result res2(ec);
     BOOST_CHECK(!res2.ok());

@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // This vector owns the measurements
   std::vector<FittableMeasurement<SourceLink>> measurements =
       std::move(mResult.template get<MeasurementCreator::result_type>());
-  BOOST_CHECK_EQUAL(measurements.size(), 6);
+  BOOST_CHECK_EQUAL(measurements.size(), 6u);
 
   // Make a vector of source links as input to the KF
   std::vector<SourceLink> sourcelinks;
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
   // Count one hole
-  BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1);
+  BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);
   // And the parameters should be different
   //~
   // BOOST_CHECK(!Acts::Test::checkCloseRel(fittedParameters.parameters().template

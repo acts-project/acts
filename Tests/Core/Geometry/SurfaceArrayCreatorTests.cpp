@@ -292,7 +292,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     auto axis = createEquidistantAxis(tgContext, surfacesRaw,
                                       BinningValue::binPhi, pl, tr);
 
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -308,7 +308,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                  pl, tr);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_2.obj");
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -324,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                  pl, tr);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_3.obj");
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -342,7 +342,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     surfacesRaw = unpack_shared_vector(surfaces);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -361,7 +361,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                       BinningValue::binPhi, pl, tr);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_1.obj");
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -377,7 +377,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                  pl, tr);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_2.obj");
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -394,7 +394,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                  pl, tr);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_3.obj");
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -411,7 +411,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                                  pl, tr);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_BRL_4.obj");
-    BOOST_CHECK_EQUAL(axis.nBins, 30);
+    BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
     CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -431,7 +431,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
   tr = Transform3D::Identity();
   auto axis = createEquidistantAxis(tgContext, surfacesRaw,
                                     BinningValue::binPhi, pl, tr);
-  BOOST_CHECK_EQUAL(axis.nBins, 1);
+  BOOST_CHECK_EQUAL(axis.nBins, 1u);
 
   CHECK_CLOSE_ABS(axis.max, phi(Vector3D(8, 1, 0)), 1e-3);
   CHECK_CLOSE_ABS(axis.min, phi(Vector3D(8, -1, 0)), 1e-3);
@@ -448,7 +448,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   auto axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binZ,
                                     pl, trf);
   draw_surfaces(surfaces, "SurfaceArrayCreator_createEquidistantAxis_Z_1.obj");
-  BOOST_CHECK_EQUAL(axis.nBins, 1);
+  BOOST_CHECK_EQUAL(axis.nBins, 1u);
   CHECK_CLOSE_ABS(axis.max, 3, 1e-6);
   CHECK_CLOSE_ABS(axis.min, 0, 1e-6);
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -468,7 +468,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
              "SurfaceArrayCreator_createEquidistantAxis_Z_2_%1%.obj") %
          i)
             .str());
-    BOOST_CHECK_EQUAL(axis.nBins, 10);
+    BOOST_CHECK_EQUAL(axis.nBins, 10u);
     CHECK_CLOSE_ABS(axis.max, 30 + z0, 1e-6);
     CHECK_CLOSE_ABS(axis.min, z0, 1e-6);
     BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -484,7 +484,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binZ, pl,
                                trf);
   draw_surfaces(surfaces, "SurfaceArrayCreator_createEquidistantAxis_Z_3.obj");
-  BOOST_CHECK_EQUAL(axis.nBins, 10);
+  BOOST_CHECK_EQUAL(axis.nBins, 10u);
   CHECK_CLOSE_ABS(axis.max, 30.9749, 1e-3);
   CHECK_CLOSE_ABS(axis.min, -0.974873, 1e-3);
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -500,7 +500,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
   ProtoLayer pl = ProtoLayer(tgContext, surfacesRaw);
   auto axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binR,
                                     pl, trf);
-  BOOST_CHECK_EQUAL(axis.nBins, 1);
+  BOOST_CHECK_EQUAL(axis.nBins, 1u);
   CHECK_CLOSE_ABS(axis.max, perp(Vector3D(17, 1, 0)), 1e-3);
   CHECK_CLOSE_ABS(axis.min, 13, 1e-3);
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -521,7 +521,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
   axis = createEquidistantAxis(tgContext, surfacesRaw, BinningValue::binR, pl,
                                trf);
 
-  BOOST_CHECK_EQUAL(axis.nBins, 3);
+  BOOST_CHECK_EQUAL(axis.nBins, 3u);
   CHECK_CLOSE_REL(axis.max, perp(Vector3D(20 + 2, 1, 0)), 1e-3);
   CHECK_CLOSE_ABS(axis.min, 8, 1e-3);
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
@@ -547,8 +547,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
   std::unique_ptr<SurfaceArray> sArray =
       m_SAC.surfaceArrayOnDisc(tgContext, surfaces, equidistant, equidistant);
   auto axes = sArray->getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 10);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 10u);
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
@@ -583,7 +583,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
     Vector3D ctr = srf->binningPosition(tgContext, binR);
     auto binContent = sa.at(ctr);
 
-    BOOST_CHECK_EQUAL(binContent.size(), 1);
+    BOOST_CHECK_EQUAL(binContent.size(), 1u);
     BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
   }
 }
@@ -623,8 +623,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
   auto axes = sa.getAxes();
-  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
-  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
+  BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
+  BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
 
   for (const auto& pr : barrel.second) {
     auto A = pr.first;
@@ -632,7 +632,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     Vector3D ctr = A->binningPosition(tgContext, binR);
     auto binContent = sa.at(ctr);
-    BOOST_CHECK_EQUAL(binContent.size(), 2);
+    BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;
     act.insert(binContent[0]);
     act.insert(binContent[1]);
@@ -670,8 +670,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     sl2->fill(tgContext, brlRaw);
     SurfaceArray sa2(std::move(sl2), brl);
     axes = sa2.getAxes();
-    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
-    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
 
     // check bin edges
     std::vector<double> phiEdgesExp = {
@@ -702,7 +702,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
       Vector3D ctr = A->binningPosition(tgContext, binR);
       auto binContent = sa2.at(ctr);
-      BOOST_CHECK_EQUAL(binContent.size(), 2);
+      BOOST_CHECK_EQUAL(binContent.size(), 2u);
       std::set<const Surface*> act;
       act.insert(binContent[0]);
       act.insert(binContent[1]);

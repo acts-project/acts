@@ -115,7 +115,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataPlane_from_pars.referenceSurface(), pSurface.get());
   BOOST_CHECK_EQUAL(&n_ataPlane_from_pars.referenceSurface(),
                     &n_ataPlane_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(pSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(pSurface.use_count(), 5u);
 
   // check that the reference frame is the rotation matrix
   CHECK_CLOSE_REL(ataPlane_from_pars.referenceFrame(tgContext), rot, 1e-6);
@@ -221,7 +221,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataDisc_from_pars.referenceSurface(), dSurface.get());
   BOOST_CHECK_EQUAL(&n_ataDisc_from_pars.referenceSurface(),
                     &n_ataDisc_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(dSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(dSurface.use_count(), 5u);
 
   // check that the reference frame is the
   // rotation matrix of the surface
@@ -313,7 +313,7 @@ BOOST_DATA_TEST_CASE(
                     cSurface.get());
   BOOST_CHECK_EQUAL(&n_ataCylinder_from_pars.referenceSurface(),
                     &n_ataCylinder_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(cSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(cSurface.use_count(), 5u);
 
   auto pPosition = ataCylinder_from_pars.position();
   // the reference frame is
@@ -395,7 +395,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataPerigee_from_pars.referenceSurface(), pSurface.get());
   BOOST_CHECK_EQUAL(&n_ataPerigee_from_pars.referenceSurface(),
                     &n_ataPerigee_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(pSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(pSurface.use_count(), 5u);
 }
 
 /// @brief Unit test for parameters at a line
@@ -470,7 +470,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataLine_from_pars.referenceSurface(), sSurface.get());
   BOOST_CHECK_EQUAL(&n_ataLine_from_pars.referenceSurface(),
                     &n_ataLine_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(sSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(sSurface.use_count(), 5u);
 }
 }  // namespace Test
 }  // namespace Acts

@@ -196,7 +196,7 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, *cSurface, options).value();
   auto& sor = result.get<so_result>();
 
-  BOOST_CHECK_EQUAL(sor.surfaces_passed, 1);
+  BOOST_CHECK_EQUAL(sor.surfaces_passed, 1u);
   CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);
 }
 
