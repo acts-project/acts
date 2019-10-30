@@ -99,12 +99,18 @@ include_guards:
 
 # CC7, LCG96
 
-build_cc7_lcg96:
+build_cc7_lcg96_debug:
   <<: *template_build
   variables:
     BUILD_TYPE: Debug # for coverage check
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
+
+build_cc7_lcg96:
+  <<: *template_build
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
 
@@ -112,7 +118,7 @@ build_cc7_lcg96:
 # from the last tag to this commit.
 build_cc7_lcg96_incremental:
   <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
   script:
@@ -130,12 +136,12 @@ build_cc7_lcg96_incremental:
     - find . -name "*.o" -delete
   allow_failure: true
 
-unit_tests_cc7_lcg96:
+unit_tests_cc7_lcg96_debug:
   <<: *template_unit_tests
   dependencies:
-    - build_cc7_lcg96
-  needs: ["build_cc7_lcg96"]
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+    - build_cc7_lcg96_debug
+  needs: ["build_cc7_lcg96_debug"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
   # replace script to also calculate code coverage
@@ -149,7 +155,25 @@ unit_tests_cc7_lcg96:
     paths:
       - build/coverage
 
-# SLC6, LCG94, build w/ legacy disabled
+unit_tests_cc7_lcg96:
+  <<: *template_unit_tests
+  dependencies:
+    - build_cc7_lcg96
+  needs: ["build_cc7_lcg96"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
+
+integration_tests_cc7_lcg96:
+  <<: *template_integration_tests
+  dependencies:
+    - build_cc7_lcg96
+  needs: ["build_cc7_lcg96"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
+
+# SLC6, LCG96, build w/ legacy disabled
 
 build_cc7_lcg96_no_legacy:
   <<: *template_build
@@ -157,7 +181,7 @@ build_cc7_lcg96_no_legacy:
   variables:
     BUILD_TYPE: Release
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
   script:
