@@ -107,6 +107,7 @@ build_cc7_lcg96_debug:
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
+    - export ACTS_NCPUS=4
 
 build_cc7_lcg96:
   <<: *template_build
