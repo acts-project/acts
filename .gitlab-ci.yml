@@ -136,7 +136,7 @@ build_cc7_lcg96_incremental:
     - find . -name "*.o" -delete
   allow_failure: true
 
-unit_tests_cc7_lcg96_debug:
+coverage:
   <<: *template_unit_tests
   dependencies:
     - build_cc7_lcg96_debug
@@ -342,7 +342,7 @@ coverage_deploy:
   <<: *deploy_base
   stage: deploy
   dependencies:
-    - unit_tests_cc7_lcg96
+    - coverage
   script:
     - CI/publish_coverage.py --coverage-source=build/coverage --project-id=$CI_PROJECT_ID
   only:
