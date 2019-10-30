@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.9)
 
+# LCG sets CPATH, which gets treated like -I by the compiler. We want to ignore
+# warnings from libraries, by unsetting it here, it gets processed by the usual
+# target_include_directories call, resulting in the desired -isystem flag.
+unset(ENV{CPATH})
+
 # read version number from file
 file(READ version_number _acts_version)
 string(STRIP ${_acts_version} _acts_version)
