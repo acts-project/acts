@@ -96,24 +96,24 @@ include_guards:
   script:
     - cmake --build build -- integration_tests
 
-# SLC6, LCG94
+# CC7, LCG94
 
-build_slc6_lcg94:
+build_cc7_lcg95:
   <<: *template_build
   variables:
     BUILD_TYPE: Debug # for coverage check
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
 
 # this build tests whether we can do an incremental build
 # from the last tag to this commit.
-build_slc6_lcg94_incremental:
+build_cc7_lcg96_incremental:
   <<: *template_build
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
   script:
     - export prev_tag=$(CI/incremental_prev_tag.py)
     - export current_head=$(git rev-parse HEAD)
@@ -129,14 +129,14 @@ build_slc6_lcg94_incremental:
     - find . -name "*.o" -delete
   allow_failure: true
 
-unit_tests_slc6_lcg94:
+unit_tests_cc7_lcg96:
   <<: *template_unit_tests
   dependencies:
-    - build_slc6_lcg94
-  needs: ["build_slc6_lcg94"]
+    - build_cc7_lcg96
+  needs: ["build_cc7_lcg96"]
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
   # replace script to also calculate code coverage
   script:
     - cmake --build build -- test
@@ -150,7 +150,7 @@ unit_tests_slc6_lcg94:
 
 # SLC6, LCG94, build w/ legacy disabled
 
-build_slc6_lcg94_no_legacy:
+build_cc7_lcg96_no_legacy:
   <<: *template_build
   # need to set all variables again since we are overriding the template section
   variables:
@@ -158,7 +158,7 @@ build_slc6_lcg94_no_legacy:
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
   script:
     - mkdir build
     - cd build
@@ -219,32 +219,6 @@ integration_tests_ubuntu1804_llvm70:
   image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
   before_script: []
 
-# CC7, LCG94
-
-build_cc7_lcg94:
-  <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
-unit_tests_cc7_lcg94:
-  <<: *template_unit_tests
-  dependencies:
-    - build_cc7_lcg94
-  needs: ["build_cc7_lcg94"]
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
-integration_tests_cc7_lcg94:
-  <<: *template_integration_tests
-  dependencies:
-    - build_cc7_lcg94
-  needs: ["build_cc7_lcg94"]
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
 # CC7, LCG95
 
 build_cc7_lcg95:
@@ -299,7 +273,7 @@ clang_tidy:
     - mkdir report
     - mkdir build && cd build
     # contain LCG to only where needed
-    - /bin/sh -c "set +e && source ../CI/setup_lcg94.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on"
+    - /bin/sh -c "set +e && source ../CI/setup_lcg96.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on"
     - cd ..
     - run-clang-tidy.py -p build -header-filter=.* -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
     - virtualenv civenv
