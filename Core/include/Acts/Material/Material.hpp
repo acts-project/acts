@@ -38,12 +38,11 @@ class Material {
  public:
   /// Index of the parameters in the encoded parameters vector.
   enum Param {
-    matX0 = 0,
-    matL0 = 1,
-    matA = 2,
-    matZ = 3,
-    matrho = 4,
-    matZ_AR = 5,
+    eX0 = 0,
+    eL0 = 1,
+    eA = 2,
+    eZ = 3,
+    eRho = 4,
   };
 
   /// Construct a vacuum representation.
@@ -55,15 +54,9 @@ class Material {
   /// @param iA   is the relative atomic mass
   /// @param iZ   is the atomic number
   /// @param iRho is the density
-  Material(float iX0, float iL0, float iA, float iZ, float iRho)
-      : m_vacuum(false), m_store({iX0, iL0, iA, iZ, iRho, 0.}) {
-    float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
-    m_store[5] = zOaTr;
-  }
+  Material(float iX0, float iL0, float iA, float iZ, float iRho);
   /// Construct from an encoded parameters vector.
-  Material(const ActsVectorF<5>& parameters)
-      : Material(parameters[0], parameters[1], parameters[2], parameters[3],
-                 parameters[4]) {}
+  Material(const ActsVectorF<5>& parameters);
   ~Material() = default;
 
   Material(Material&& mat) = default;
@@ -72,62 +65,45 @@ class Material {
   Material& operator=(const Material& mat) = default;
 
   /// Check if the material is valid, i.e. it is not vacuum.
-  operator bool() const { return (!m_vacuum); }
+  constexpr operator bool() const { return m_a != 0.0f; }
 
   /// Return the radition length. Infinity in case of vacuum.
-  float X0() const { return m_store[matX0]; }
+  constexpr float X0() const { return m_x0; }
   /// Return the nuclear interaction length. Infinity in case of vacuum.
-  float L0() const { return m_store[matL0]; }
+  constexpr float L0() const { return m_l0; }
   /// Return the relative atomic mass.
-  float A() const { return m_store[matA]; }
+  constexpr float A() const { return m_a; }
   /// Return the atomic number.
-  float Z() const { return m_store[matZ]; }
+  constexpr float Z() const { return m_z; }
   /// Return the density.
-  float rho() const { return m_store[matrho]; }
+  constexpr float rho() const { return m_rho; }
 
   /// Return the electron density in mol / (native length unit)³.
   ///
   /// Use mol instead of the real number of electrons to avoid large numbers
   /// which could result in numerical instabilities somewhere else.
-  float zOverAtimesRho() const { return m_store[matZ_AR]; }
+  constexpr float zOverAtimesRho() const { return m_ne; }
 
   /// Encode the properties into a parameter vector.
-  ActsVectorF<5> classificationNumbers() {
-    ActsVectorF<5> numbers;
-    numbers << X0(), L0(), A(), Z(), rho();
-    return numbers;
-  }
+  ActsVectorF<5> classificationNumbers();
 
   /// spit out as a string
-  std::string toString() const {
-    std::ostringstream sout;
-    sout << std::setiosflags(std::ios::fixed) << std::setprecision(4);
-    sout << " | ";
-    if (m_vacuum) {
-      sout << " vacuum | ";
-    } else {
-      for (auto& mat : m_store) {
-        sout << mat << " | ";
-      }
-    }
-    return sout.str();
-  }
+  std::string toString() const;
 
  private:
-  /// define it is vacuum or not
-  bool m_vacuum = true;
-  /// standard x0, l0, A, Z, rho description
-  std::array<float, 6> m_store = {std::numeric_limits<float>::infinity(),
-                                  std::numeric_limits<float>::infinity(),
-                                  0.,
-                                  0.,
-                                  0.,
-                                  0.};
+  float m_x0 = std::numeric_limits<float>::infinity();
+  float m_l0 = std::numeric_limits<float>::infinity();
+  float m_a = 0.0f;
+  float m_z = 0.0f;
+  float m_rho = 0.0f;
+  float m_ne = 0.0f;
 
-  friend bool operator==(const Material& lhs, const Material& rhs) {
-    return (lhs.m_store == rhs.m_store);
+  friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
+    return (lhs.m_x0 == rhs.m_x0) and (lhs.m_l0 == rhs.m_l0) and
+           (lhs.m_a == rhs.m_a) and (lhs.m_z == rhs.m_z) and
+           (lhs.m_rho == rhs.m_rho) and (lhs.m_ne == rhs.m_ne);
   }
-  friend bool operator!=(const Material& lhs, const Material& rhs) {
+  friend constexpr bool operator!=(const Material& lhs, const Material& rhs) {
     return !(lhs == rhs);
   }
 };
