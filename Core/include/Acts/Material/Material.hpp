@@ -21,109 +21,77 @@
 
 namespace Acts {
 
-/// @class Material
+/// Material definition for interactions with matter.
 ///
-/// A common object to be contained by
-/// - MaterialStep ( for mapping)
-/// - MaterialProperties ( for reconstruction )
-/// - it is optimized for T/P split
+/// The following parameters are used to specify the material and its
+/// interactions with traversing particles:
 ///
-///  X0 - radiation length
-///  L0 - nuclear interaction length
-///  A - nuclear mass
-///  Z - nuclear number
-///  rho - density
-///  Z/A*rho
+///     * X0:  radiation length (native length units)
+///     * L0:  nuclear interaction length (native length units)
+///     * A:   relative atomic mass (unitless number)
+///     * Z:   atomic number (unitless number)
+///     * rho: density (native mass unit / (native length unit)³)
+///
+/// The parameters can be effective or average parameters when e.g. a mixture
+/// of materials is described.
 class Material {
  public:
-  /// @brief Accessor enums
+  /// Index of the parameters in the encoded parameters vector.
   enum Param {
-    matX0 = 0,   ///< X0 - this is in mm
-    matL0 = 1,   ///< L0 - this is in mm
-    matA = 2,    ///< A - in au
-    matZ = 3,    ///< Z - in e
-    matrho = 4,  ///< rho - g/mm^3
-    matZ_AR = 5  ///< Z/A*rho
+    matX0 = 0,
+    matL0 = 1,
+    matA = 2,
+    matZ = 3,
+    matrho = 4,
+    matZ_AR = 5,
   };
 
-  /// @brief Default Constructor - vacuum material
+  /// Construct a vacuum representation.
   Material() = default;
-
-  /// @brief Constructor with arguments
+  /// Construct from material parameters.
   ///
-  /// @param iX0 is the radiation length parameter
-  /// @param iL0 is the nuclear interaction length
-  /// @param iA is the average atomic weight
-  /// @param iZ is the average atomic number
-  /// @param iRho is the average density
-  /// @param imc is the material composition
+  /// @param iX0  is the radiation length parameter
+  /// @param iL0  is the nuclear interaction length
+  /// @param iA   is the relative atomic mass
+  /// @param iZ   is the atomic number
+  /// @param iRho is the density
   Material(float iX0, float iL0, float iA, float iZ, float iRho)
       : m_vacuum(false), m_store({iX0, iL0, iA, iZ, iRho, 0.}) {
     float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
     m_store[5] = zOaTr;
   }
-
-  Material(ActsVectorF<5> iMatData)
-      : Material(iMatData[0], iMatData[1], iMatData[2], iMatData[3],
-                 iMatData[4]) {}
-
-  /// @brief Copy Constructor
-  ///
-  /// @param mat copy constructor
-  Material(const Material& mat) = default;
-
-  /// @brief Copy Move constructor
-  ///
-  /// @param  mat copy constructor
-  Material(Material&& mat) = default;
-
-  /// @brief Assignment operator
-  ///
-  /// @param mat is the source material
-  Material& operator=(const Material& mat) = default;
-
-  /// @brief Assignment Move operator
-  ///
-  /// @param mat is the source material
-  Material& operator=(Material&& mat) = default;
-
-  /// @brief Desctructor
+  /// Construct from an encoded parameters vector.
+  Material(const ActsVectorF<5>& parameters)
+      : Material(parameters[0], parameters[1], parameters[2], parameters[3],
+                 parameters[4]) {}
   ~Material() = default;
 
-  /// @brief Equality operator
-  ///
-  /// @param mat is the source material
-  bool operator==(const Material& mat) const;
+  Material(Material&& mat) = default;
+  Material(const Material& mat) = default;
+  Material& operator=(Material&& mat) = default;
+  Material& operator=(const Material& mat) = default;
 
-  /// @brief Inequality operator
-  ///
-  /// @param mat is the source material
-  bool operator!=(const Material& mat) const;
-
-  /// @brief Boolean operator to check if this is vacuum
+  /// Check if the material is valid, i.e. it is not vacuum.
   operator bool() const { return (!m_vacuum); }
 
-  /// @brief Access to X0
-  /// if it's vacuum, infinity
+  /// Return the radition length. Infinity in case of vacuum.
   float X0() const { return m_store[matX0]; }
-
-  /// @brief Access to L0
-  /// if it's vacuum, infinity
+  /// Return the nuclear interaction length. Infinity in case of vacuum.
   float L0() const { return m_store[matL0]; }
-
-  /// @brief Access to A
+  /// Return the relative atomic mass.
   float A() const { return m_store[matA]; }
-
-  /// @brief Access to Z
+  /// Return the atomic number.
   float Z() const { return m_store[matZ]; }
-
-  /// @brief Access to rho
+  /// Return the density.
   float rho() const { return m_store[matrho]; }
 
-  ///  @brief Access to z/A*tho
+  /// Return the electron density in mol / (native length unit)³.
+  ///
+  /// Use mol instead of the real number of electrons to avoid large numbers
+  /// which could result in numerical instabilities somewhere else.
   float zOverAtimesRho() const { return m_store[matZ_AR]; }
 
-  /// @brief Access to all classification numbers of the material
+  /// Encode the properties into a parameter vector.
   ActsVectorF<5> classificationNumbers() {
     ActsVectorF<5> numbers;
     numbers << X0(), L0(), A(), Z(), rho();
@@ -148,7 +116,6 @@ class Material {
  private:
   /// define it is vacuum or not
   bool m_vacuum = true;
-
   /// standard x0, l0, A, Z, rho description
   std::array<float, 6> m_store = {std::numeric_limits<float>::infinity(),
                                   std::numeric_limits<float>::infinity(),
@@ -156,14 +123,13 @@ class Material {
                                   0.,
                                   0.,
                                   0.};
+
+  friend bool operator==(const Material& lhs, const Material& rhs) {
+    return (lhs.m_store == rhs.m_store);
+  }
+  friend bool operator!=(const Material& lhs, const Material& rhs) {
+    return !(lhs == rhs);
+  }
 };
-
-inline bool Material::operator==(const Material& mat) const {
-  return (m_store == mat.m_store);
-}
-
-inline bool Material::operator!=(const Material& mat) const {
-  return !operator==(mat);
-}
 
 }  // namespace Acts
