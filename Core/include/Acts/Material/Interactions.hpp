@@ -35,7 +35,6 @@ std::pair<float, float> computeIonisationLossMean(const Material& material,
                                                   float thickness, float m,
                                                   float qOverP,
                                                   float q = UnitConstants::e);
-
 /// Derivative of the mean ionisation energy loss with respect to q/p.
 ///
 /// @see computeIonisationLossMean for parameters description
@@ -55,16 +54,34 @@ std::pair<float, float> computeIonisationLossMode(const Material& material,
                                                   float thickness, float m,
                                                   float qOverP,
                                                   float q = UnitConstants::e);
-
 /// Derivative of the most probable ionisation energy loss with respect to q/p.
 ///
-/// @see computeIonisationLossMode for parameters description
+/// @see computeIonisationLossMean for parameters description
 float deriveIonisationLossModeQOverP(const Material& material, float thickness,
                                      float m, float qOverP,
                                      float q = UnitConstants::e);
 
-namespace detail {
+/// Compute the expected energy loss due to radiation effects.
+///
+/// @param material  Properties of the traversed material
+/// @param thickness Thickness of the traversed material
+/// @param pdg       Particle type PDG identifier
+/// @param m         Particle mass
+/// @param qOverP    Particle charge divided by absolute momentum
+/// @param q         Particle charge
+///
+/// Bremsstrahlung is always included. Direct e+e- pair production and
+/// photo-nuclear interactions only for muons.
+float computeRadiationLoss(const Material& material, float thickness, int pdg,
+                           float m, float qOverP, float q = UnitConstants::e);
+/// Derivative of the expected radiation energy loss with respect to q/p.
+///
+/// @see computeRadiationLoss for parameters description
+float deriveRadiationLossQOverP(const Material& material, float thickness,
+                                int pdg, float m, float qOverP,
+                                float q = UnitConstants::e);
 
+namespace detail {
 /// @brief Multiple scattering as function of dInX0
 ///
 /// It supports MIP and electron scattering and return
@@ -106,83 +123,5 @@ struct HighlandScattering {
   }
 };
 
-/// @brief Structure for the energy loss of particles due to radiation in
-/// dense material. It combines the effect of bremsstrahlung with direct e+e-
-/// pair production and photonuclear interaction. The last two effects are
-/// just included for muons.
-struct RadiationLoss {
-  /// @brief Main call operator for the energy loss. The following equations
-  /// are provided by ATL-SOFT-PUB-2008-003.
-  ///
-  /// @tparam material_t Type of the material
-  /// @param [in] E      Energy of the particle
-  /// @param [in] m      Mass of the particle
-  /// @param [in] mat    Material that is penetrated
-  /// @param [in] pdg    PDG code of the particle
-  /// @param [in] path   Path length of the particle through the material
-  /// @return Radiation energy loss
-  template <typename material_t>
-  double dEds(double E, double m, const material_t& mat, int pdg,
-              double path = 1.) const {
-    using namespace Acts::UnitLiterals;
-
-    // Easy exit
-    if (mat.X0() == 0.) {
-      return 0.;
-    }
-
-    // Calculate the bremsstrahlung energy loss (eq. 6)
-    const double meOverm = constants::me / m;
-    double energyLoss = -E * (meOverm * meOverm);
-
-    // Calculate the energy loss due to direct e+e- pair production and
-    // photonuclear interaction (eq. 7, 8) if the particle is a muon
-    if ((pdg == 13 || pdg == -13) && E > 8_GeV) {
-      if (E < 1_TeV) {
-        energyLoss +=
-            0.5345 - 6.803e-5 * E - 2.278e-11 * E * E + 9.899e-18 * E * E * E;
-      } else {
-        energyLoss += 2.986 - 9.253e-5 * E;
-      }
-    }
-    return energyLoss * path / mat.X0();
-  }
-
-  /// @brief Evaluation of the energy loss dEds by radiation, direct e+e- pair
-  /// production and photonuclear interaction derived by q/p
-  /// (=d(dE/ds)/d(q/p)).
-  ///
-  /// @tparam material_t   Type of the material
-  /// @param [in] mass     Mass of the particle
-  /// @param [in] material Material that is penetrated
-  /// @param [in] qop      Charge over momentum of the particle
-  /// @param [in] energy   Energy of the particle
-  /// @param [in] pdg      PDG code of the particle
-  /// @return The evaluated derivative
-  template <typename material_t>
-  double dqop(const double mass, const material_t& material, const double qop,
-              const double energy, const int pdg) const {
-    using namespace Acts::UnitLiterals;
-
-    // Fast exit if material is invalid
-    if (material.X0() == 0.) {
-      return 0.;
-    }
-
-    const double invqop3X0 = 1. / (qop * qop * qop * material.X0());
-    double muonExpansion = 0.;
-    if ((pdg == 13 || pdg == -13) && energy > 8_GeV) {
-      if (energy < 1_TeV) {
-        muonExpansion = 6.803e-5 * invqop3X0 / energy +
-                        2. * 2.278e-11 * invqop3X0 -
-                        3. * 9.899e-18 * invqop3X0 * energy;
-      } else {
-        muonExpansion = 9.253e-5 * invqop3X0 / energy;
-      }
-    }
-    return constants::me * constants::me * invqop3X0 / (mass * mass * energy) +
-           muonExpansion;
-  }
-};
 }  // namespace detail
 }  // namespace Acts

@@ -264,3 +264,106 @@ float Acts::deriveIonisationLossModeQOverP(const Material& material,
                    logDerT + logDerEps - derBeta2 - 2 * derDHalf;
   return eps * rel;
 }
+
+namespace {
+
+constexpr int PdgMuon = 13;
+constexpr int PdgAntiMuon = -13;
+/// expansion coefficients for the muon radiation loss as a function of energy
+///
+/// taken from ATL-SOFT-PUB-2008-003 eq. 7,8 where the expansion is expressed
+/// with terms e^n/X0 with fixed units [e] = MeV and [X0] = mm. the evaluated
+/// expansion has units MeV/mm. In this implementation, the X0 dependence is
+/// factored out and the coefficients must be scaled to the native units such
+/// that the evaluated expansion with terms e^n has dimension energy in
+/// native units.
+constexpr float MuonHighLowThreshold = 1_TeV;
+// [low0 / X0] = MeV / mm -> [low0] = MeV
+constexpr double MuonLow0 = 0.5345_MeV;
+// [low1 * E / X0] = MeV / mm -> [low1] = 1
+constexpr double MuonLow1 = -6.803e-5;
+// [low2 * E^2 / X0] = MeV / mm -> [low2] = 1/MeV
+constexpr double MuonLow2 = -2.278e-11 / 1_MeV;
+// [low3 * E^3 / X0] = MeV / mm -> [low3] = 1/MeV^2
+constexpr double MuonLow3 = 9.899e-18 / (1_MeV * 1_MeV);
+// same as low0
+constexpr double MuonHigh0 = 2.986_MeV;
+// same as low1
+constexpr double MuonHigh1 = 9.253e-5;
+
+/// Compute mean energy loss from bremsstrahlung per radiation length.
+inline float computeBremsstrahlungLossMean(float m, float e) {
+  return e * (Me / m) * (Me / m);
+}
+/// Derivative of the bremsstrahlung loss per rad length with respect to energy.
+inline float deriveBremsstrahlungLossMeanE(float m) {
+  return (Me / m) * (Me / m);
+}
+
+/// Compute additional radiation energy loss for muons per radiation length.
+inline float computeMuonDirectPairPhotoNuclearLossMean(double e) {
+  if (e < MuonHighLowThreshold) {
+    return MuonLow0 + MuonLow1 * e + MuonLow2 * e * e + MuonLow3 * e * e * e;
+  } else {
+    return MuonHigh0 + MuonHigh1 * e;
+  }
+}
+/// Derivative of the additional rad loss per rad length with respect to energy.
+inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double e) {
+  if (e < MuonHighLowThreshold) {
+    return MuonLow1 + 2 * MuonLow2 * e + 3 * MuonLow3 * e * e;
+  } else {
+    return MuonHigh1;
+  }
+}
+
+}  // namespace
+
+float Acts::computeRadiationLoss(const Material& material, float thickness,
+                                 int pdg, float m, float qOverP, float q) {
+  // return early in case of vacuum
+  if (not material) {
+    return 0.0f;
+  }
+
+  // relative radiation length
+  const auto x = thickness / material.X0();
+  // particle momentum and energy
+  const auto p = q / qOverP;
+  const auto e = std::sqrt(m * m + p * p);
+
+  auto dEdx = computeBremsstrahlungLossMean(m, e);
+  if (((pdg == PdgMuon) or (pdg == PdgAntiMuon)) and (8_GeV < e)) {
+    dEdx += computeMuonDirectPairPhotoNuclearLossMean(e);
+  }
+  // scale from energy loss per unit radiation length to total energy
+  return dEdx * x;
+}
+
+float Acts::deriveRadiationLossQOverP(const Material& material, float thickness,
+                                      int pdg, float m, float qOverP, float q) {
+  // return early in case of vacuum
+  if (not material) {
+    return 0.0f;
+  }
+
+  // relative radiation length
+  const auto x = thickness / material.X0();
+  // particle momentum and energy
+  const auto p = q / qOverP;
+  const auto e = std::sqrt(m * m + p * p);
+
+  // compute derivative w/ respect to energy.
+  auto derE = deriveBremsstrahlungLossMeanE(m);
+  if (((pdg == PdgMuon) or (pdg == PdgAntiMuon)) and 8_GeV < e) {
+    derE += deriveMuonDirectPairPhotoNuclearLossMeanE(e);
+  }
+  // compute derivative w/ respect to q/p by using the chain rule
+  //     df(e)/d(q/p) = df(e)/de de/d(q/p)
+  // with
+  //     e = sqrt(m² + p²) = sqrt(m² + q²/(q/p)²)
+  // and the resulting derivative
+  //     de/d(q/p) = -q² / ((q/p)³ * e)
+  const auto derQOverP = -(q * q) / (qOverP * qOverP * qOverP * e);
+  return derE * derQOverP * x;
+}
