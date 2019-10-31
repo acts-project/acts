@@ -76,7 +76,9 @@ class Material {
   ///
   /// Use mol instead of the real number of electrons to avoid large numbers
   /// which could result in numerical instabilities somewhere else.
-  constexpr float zOverAtimesRho() const { return m_ne; }
+  float electronDensity() const;
+  /// Return the mean electron excitation energy.
+  float meanExcitationEnergy() const;
 
   /// Encode the properties into a parameter vector.
   ActsVectorF<5> classificationNumbers() const;
@@ -87,12 +89,11 @@ class Material {
   float m_a = 0.0f;
   float m_z = 0.0f;
   float m_rho = 0.0f;
-  float m_ne = 0.0f;
 
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) and (lhs.m_l0 == rhs.m_l0) and
            (lhs.m_a == rhs.m_a) and (lhs.m_z == rhs.m_z) and
-           (lhs.m_rho == rhs.m_rho) and (lhs.m_ne == rhs.m_ne);
+           (lhs.m_rho == rhs.m_rho);
   }
   friend constexpr bool operator!=(const Material& lhs, const Material& rhs) {
     return !(lhs == rhs);
