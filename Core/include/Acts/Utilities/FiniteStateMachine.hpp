@@ -38,7 +38,6 @@ class FiniteStateMachine {
 
   const StateVariant& getState() const noexcept { return m_state; }
 
-  StateVariant& getState() noexcept { return m_state; }
  private:
   template <typename T, typename S, typename... Args>
   using on_exit_t = decltype(
@@ -74,13 +73,18 @@ class FiniteStateMachine {
 
   template <typename S>
   bool is(const S& /*state*/) const noexcept {
+    return is<S>();
+  }
+
+  template <typename S>
+  bool is() const noexcept {
     if (std::get_if<S>(&m_state)) {
       return true;
     }
     return false;
   }
 
-  bool terminated() const noexcept { return is(Terminated{}); }
+  bool terminated() const noexcept { return is<Terminated>(); }
 
  private:
   template <typename T, typename S, typename E, typename... Args>
