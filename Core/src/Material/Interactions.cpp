@@ -141,14 +141,14 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
 
 }  // namespace
 
-#define ASSERT_IONISATION_INPUTS(thickness, m, qOverP, q) \
+#define ASSERT_INPUTS(thickness, m, qOverP, q)            \
   assert(0 < thickness and "Thickness must be positive"); \
   assert(0 < m and "Mass must be positive");              \
   assert(0 < (qOverP * q) and "Inconsistent q/p and q signs");
 
 std::pair<float, float> Acts::computeIonisationLossMean(
     const Material& material, float thickness, float m, float qOverP, float q) {
-  ASSERT_IONISATION_INPUTS(thickness, m, qOverP, q)
+  ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
   if (not material) {
@@ -174,7 +174,7 @@ std::pair<float, float> Acts::computeIonisationLossMean(
 float Acts::deriveIonisationLossMeanQOverP(const Material& material,
                                            float thickness, float m,
                                            float qOverP, float q) {
-  ASSERT_IONISATION_INPUTS(thickness, m, qOverP, q)
+  ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
   if (not material) {
@@ -211,7 +211,7 @@ float Acts::deriveIonisationLossMeanQOverP(const Material& material,
 
 std::pair<float, float> Acts::computeIonisationLossMode(
     const Material& material, float thickness, float m, float qOverP, float q) {
-  ASSERT_IONISATION_INPUTS(thickness, m, qOverP, q)
+  ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
   if (not material) {
@@ -232,7 +232,7 @@ std::pair<float, float> Acts::computeIonisationLossMode(
 float Acts::deriveIonisationLossModeQOverP(const Material& material,
                                            float thickness, float m,
                                            float qOverP, float q) {
-  ASSERT_IONISATION_INPUTS(thickness, m, qOverP, q)
+  ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
   if (not material) {
@@ -321,6 +321,8 @@ inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double e) {
 
 float Acts::computeRadiationLoss(const Material& material, float thickness,
                                  int pdg, float m, float qOverP, float q) {
+  ASSERT_INPUTS(thickness, m, qOverP, q)
+
   // return early in case of vacuum
   if (not material) {
     return 0.0f;
@@ -342,6 +344,8 @@ float Acts::computeRadiationLoss(const Material& material, float thickness,
 
 float Acts::deriveRadiationLossQOverP(const Material& material, float thickness,
                                       int pdg, float m, float qOverP, float q) {
+  ASSERT_INPUTS(thickness, m, qOverP, q)
+
   // return early in case of vacuum
   if (not material) {
     return 0.0f;
