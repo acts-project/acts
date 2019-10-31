@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <optional>
 #include <string_view>
 #include <variant>
@@ -37,21 +39,37 @@ class FiniteStateMachine {
   const StateVariant& getState() const noexcept { return m_state; }
 
   StateVariant& getState() noexcept { return m_state; }
+ private:
+  template <typename T, typename S, typename... Args>
+  using on_exit_t = decltype(
+      std::declval<T>().on_exit(std::declval<S&>(), std::declval<Args>()...));
 
-  template <typename... Args>
-  void setState(StateVariant state, Args&&... args) {
+  template <typename T, typename S, typename... Args>
+  using on_enter_t = decltype(
+      std::declval<T>().on_enter(std::declval<S&>(), std::declval<Args>()...));
+
+ public:
+  template <typename State, typename... Args>
+  void setState(State state, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
 
     // call on exit function
-    std::visit([&](auto& s) { child.on_exit(s, std::forward<Args>(args)...); },
-               m_state);
+    std::visit(
+        [&](auto& s) {
+          using state_type = decltype(s);
+          if constexpr (concept ::exists<on_exit_t, Derived, state_type,
+                                         Args...>) {
+            child.on_exit(s, std::forward<Args>(args)...);
+          }
+        },
+        m_state);
 
-    // no change state
     m_state = std::move(state);
 
-    // call on enter function
-    std::visit([&](auto& s) { child.on_enter(s, std::forward<Args>(args)...); },
-               m_state);
+    // call on enter function, the type is known from the template argument.
+    if constexpr (concept ::exists<on_enter_t, Derived, State, Args...>) {
+      child.on_enter(std::get<State>(m_state), std::forward<Args>(args)...);
+    }
   }
 
   template <typename S>
@@ -64,21 +82,57 @@ class FiniteStateMachine {
 
   bool terminated() const noexcept { return is(Terminated{}); }
 
+ private:
+  template <typename T, typename S, typename E, typename... Args>
+  using on_event_t = decltype(std::declval<T>().on_event(
+      std::declval<S&>(), std::declval<E&>(), std::declval<Args>()...));
+
+  template <typename T, typename... Args>
+  using on_process_t =
+      decltype(std::declval<T>().on_process(std::declval<Args>()...));
+
+ protected:
   template <typename Event, typename... Args>
   event_return process_event(Event&& event, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
-    child.log(event);
+
+    if constexpr (concept ::exists<on_process_t, Derived, Event>) {
+      child.on_process(event);
+    }
+
     auto new_state = std::visit(
         [&](auto& s) -> std::optional<StateVariant> {
-          auto s2 = child.on_event(s, std::forward<Event>(event),
-                                   std::forward<Args>(args)...);
+          using state_type = decltype(s);
 
-          if (s2) {
-            std::visit([&](auto& s2_) { child.log(s, event, s2_); }, *s2);
+          if constexpr (concept ::exists<on_event_t, Derived, state_type, Event,
+                                         Args...>) {
+            auto s2 = child.on_event(s, std::forward<Event>(event),
+                                     std::forward<Args>(args)...);
+
+            if (s2) {
+              std::visit(
+                  [&](auto& s2_) {
+                    if constexpr (concept ::exists<on_process_t, Derived,
+                                                   state_type, Event,
+                                                   decltype(s2_)>) {
+                      child.on_process(s, event, s2_);
+                    }
+                  },
+                  *s2);
+            } else {
+              if constexpr (concept ::exists<on_process_t, Derived, state_type,
+                                             Event>) {
+                child.on_process(s, event);
+              }
+            }
+            return std::move(s2);
           } else {
-            child.log(s, event);
+            if constexpr (concept ::exists<on_process_t, Derived, state_type,
+                                           Event, Terminated>) {
+              child.on_process(s, event, Terminated{});
+            }
+            return Terminated{};
           }
-          return std::move(s2);
         },
         m_state);
     return std::move(new_state);
@@ -88,7 +142,9 @@ class FiniteStateMachine {
   void dispatch(Event&& event, Args&&... args) {
     auto new_state = process_event(std::forward<Event>(event), args...);
     if (new_state) {
-      setState(std::move(*new_state), std::forward<Args>(args)...);
+      std::visit(
+          [&](auto& s) { setState(std::move(s), std::forward<Args>(args)...); },
+          *new_state);
     }
   }
 

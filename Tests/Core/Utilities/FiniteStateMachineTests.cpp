@@ -69,20 +69,6 @@ struct fsm : FiniteStateMachine<fsm, states::Disconnected, states::Connecting,
   event_return on_event(const states::Connected&, const events::Disconnect&) {
     return states::Disconnected{};
   }
-
-  template <typename State, typename Event>
-  event_return on_event(const State&, const Event&) const {
-    return Terminated{};
-  }
-
-  template <typename State, typename... Args>
-  void on_enter(const State&, Args&&...) {}
-
-  template <typename State, typename... Args>
-  void on_exit(const State&, Args&&...) {}
-
-  template <typename... Args>
-  void log(Args&&...) {}
 };
 
 BOOST_AUTO_TEST_SUITE(Utilities)
@@ -107,7 +93,7 @@ BOOST_AUTO_TEST_CASE(Transitions) {
   BOOST_CHECK(sm.is(states::Disconnected{}));
 }
 
-BOOST_AUTO_TEST_CASE(Terminted) {
+BOOST_AUTO_TEST_CASE(Terminated) {
   fsm sm{};
   BOOST_CHECK(sm.is(states::Disconnected{}));
 
@@ -139,14 +125,6 @@ struct fsm2
   void on_enter(const Terminated&, Args&&...) {
     throw std::runtime_error("FSM terminated!");
   }
-
-  template <typename State, typename... Args>
-  void on_enter(const State&, Args&&...) {}
-
-  template <typename State, typename... Args>
-  void on_exit(const State&, Args&&...) {}
-  template <typename... Args>
-  void log(Args&&...) {}
 };
 
 BOOST_AUTO_TEST_CASE(Arguments) {
@@ -187,9 +165,11 @@ struct E3 {};
 struct fsm3 : FiniteStateMachine<fsm3, S1, S2, S3> {
   bool on_exit_called = false;
   bool on_enter_called = false;
+  bool on_process_called = false;
   void reset() {
     on_exit_called = false;
     on_enter_called = false;
+    on_process_called = false;
   }
 
   // S1 + E1 = S2
@@ -210,13 +190,6 @@ struct fsm3 : FiniteStateMachine<fsm3, S1, S2, S3> {
   // external transition
   event_return on_event(const S2&, const E3&) { return S3{}; }
 
-  // catchers
-
-  template <typename State, typename Event, typename... Args>
-  event_return on_event(const State&, const Event&, Args&&...) const {
-    return Terminated{};
-  }
-
   template <typename State, typename... Args>
   void on_enter(const State&, Args&&...) {
     on_enter_called = true;
@@ -226,8 +199,11 @@ struct fsm3 : FiniteStateMachine<fsm3, S1, S2, S3> {
   void on_exit(const State&, Args&&...) {
     on_exit_called = true;
   }
+
   template <typename... Args>
-  void log(Args&&...) {}
+  void on_process(Args&&...) {
+    on_process_called = true;
+  }
 };
 
 BOOST_AUTO_TEST_CASE(InternalTransitions) {
@@ -238,6 +214,7 @@ BOOST_AUTO_TEST_CASE(InternalTransitions) {
   BOOST_CHECK(sm.is(S2{}));
   BOOST_CHECK(sm.on_exit_called);
   BOOST_CHECK(sm.on_enter_called);
+  BOOST_CHECK(sm.on_process_called);
 
   sm.reset();
 
@@ -247,6 +224,7 @@ BOOST_AUTO_TEST_CASE(InternalTransitions) {
   // on_enter / exit should have been called
   BOOST_CHECK(sm.on_exit_called);
   BOOST_CHECK(sm.on_enter_called);
+  BOOST_CHECK(sm.on_process_called);
   sm.reset();
 
   sm.dispatch(E2{});
@@ -255,6 +233,7 @@ BOOST_AUTO_TEST_CASE(InternalTransitions) {
   // on_enter / exit should NOT have been called
   BOOST_CHECK(!sm.on_exit_called);
   BOOST_CHECK(!sm.on_enter_called);
+  BOOST_CHECK(sm.on_process_called);
   sm.reset();
 
   sm.dispatch(E3{});
@@ -262,7 +241,19 @@ BOOST_AUTO_TEST_CASE(InternalTransitions) {
   // on_enter / exit should have been called
   BOOST_CHECK(sm.on_exit_called);
   BOOST_CHECK(sm.on_enter_called);
+  BOOST_CHECK(sm.on_process_called);
+
+  sm.setState(S1{});
   sm.reset();
+  BOOST_CHECK(sm.is(S1{}));
+  // dispatch invalid event
+  sm.dispatch(E3{});
+  // should be terminated now
+  BOOST_CHECK(sm.terminated());
+  // hooks should have fired
+  BOOST_CHECK(sm.on_exit_called);
+  BOOST_CHECK(sm.on_enter_called);
+  BOOST_CHECK(sm.on_process_called);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
