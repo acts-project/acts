@@ -68,13 +68,6 @@ struct PathLimitReached {
   /// Boolean switch for Loop protection
   double internalLimit = std::numeric_limits<double>::max();
 
-  /// boolean operator for abort condition using the result
-  template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const result_t& /*r*/, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    return operator()(state, stepper);
-  }
-
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -120,13 +113,6 @@ struct PathLimitReached {
 struct SurfaceReached {
   /// Default Constructor
   SurfaceReached() = default;
-
-  /// boolean operator for abort condition using the result (ignored)
-  template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const result_t& /*result*/, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    return operator()(state, stepper);
-  }
 
   /// boolean operator for abort condition without using the result
   ///
@@ -214,13 +200,6 @@ struct SurfaceReached {
 struct EndOfWorldReached {
   /// Default Constructor
   EndOfWorldReached() = default;
-
-  /// boolean operator for abort condition using the result (ignored)
-  template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const result_t& /*result*/, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    return operator()(state, stepper);
-  }
 
   /// boolean operator for abort condition without using the result
   ///

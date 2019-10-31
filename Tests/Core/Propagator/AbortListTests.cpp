@@ -142,8 +142,101 @@ BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit) {
   EndOfWorld eow;
   AbortList<PathLimit, EndOfWorld> pathWorld = abortList.append(eow);
   auto& path = pathWorld.get<PathLimit>();
-  BOOST_CHECK(path(result, state, stepper));
+  BOOST_CHECK(path(state, stepper));
+}
+
+struct ActorA {
+  struct result_type {
+    int a_number{42};
+  };
+
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t&, const stepper_t&, result_type&) const {}
+};
+
+struct ActorB {
+  struct result_type {
+    int a_number{42};
+  };
+
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t&, const stepper_t&, result_type&) const {}
+};
+
+struct AborterWithResultA {
+  using action_type = ActorA;
+
+  template <typename propagator_state_t, typename stepper_t, typename result_t>
+  bool operator()(const propagator_state_t&, const stepper_t&,
+                  const result_t&) const {
+    return true;
+  }
+};
+
+struct AborterWithResultInvalid {
+  using action_type = ActorA;
+
+  template <typename propagator_state_t, typename stepper_t>
+  bool operator()(const propagator_state_t&, const stepper_t&) const {
+    return true;
+  }
+};
+
+struct AborterWithResultB {
+  using action_type = ActorB;
+
+  template <typename propagator_state_t, typename stepper_t, typename result_t>
+  bool operator()(const propagator_state_t&, const stepper_t&,
+                  const result_t&) const {
+    return true;
+  }
+
+  template <typename propagator_state_t, typename stepper_t>
+  bool operator()(const propagator_state_t&, const stepper_t&) const {
+    return true;
+  }
+};
+
+struct AborterWithoutResult {
+  template <typename propagator_state_t, typename stepper_t>
+  bool operator()(const propagator_state_t&, const stepper_t&) const {
+    return true;
+  }
+};
+
+struct AborterWithoutResultInvalid {
+  template <typename propagator_state_t, typename stepper_t, typename result_t>
+  bool operator()(const propagator_state_t&, const stepper_t&,
+                  const result_t&) const {
+    return true;
+  }
+};
+
+template <typename P, typename S, typename... As>
+constexpr bool signature_check =
+    detail::all_of_v<concept ::abort_condition_signature_check_v<As, P, S>...>;
+
+BOOST_AUTO_TEST_CASE(AbortListSignatureTest) {
+  using P = PropagatorState;
+  using S = Stepper;
+
+  static_assert(signature_check<P, S, AborterWithoutResult>, "failed");
+  static_assert(signature_check<P, S, AborterWithResultA>, "failed");
+  static_assert(signature_check<P, S, AborterWithResultB>, "failed");
+
+  // combination of two valid aborters
+  static_assert(signature_check<P, S, AborterWithoutResult, AborterWithResultA,
+                                AborterWithResultB>,
+                "failed");
+
+  // declares an `action_type`, but call operator is invalid since it has no
+  // result argument
+  static_assert(!signature_check<P, S, AborterWithResultInvalid>, "failed");
+  // does not declare an `action_type` but the call operator expects a result
+  // argument
+  static_assert(!signature_check<P, S, AborterWithoutResultInvalid>, "failed");
 }
 
 }  // namespace Test
+
 }  // namespace Acts
