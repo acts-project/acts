@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/ParameterConcept.hpp"
-
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
@@ -140,7 +138,7 @@ auto Acts::Propagator<S, N>::propagate(
         std::move(curvParameters));
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
-      auto& tJacobian = std::get<1>(curvState);
+      auto& tJacobian = std::get<const Jacobian>(curvState);
       propRes.transportJacobian =
           std::make_unique<const Jacobian>(std::move(tJacobian));
     }
