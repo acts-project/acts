@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/ParameterConcept.hpp"
+
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
@@ -82,22 +84,25 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
 }
 
 template <typename S, typename N>
-template <typename parameters_t, typename action_list_t,
-          typename aborter_list_t,
-          template <typename, typename> class propagator_options_t,
-          typename path_aborter_t>
+template <typename parameters_t, 
+          typename propagator_options_t,
+          typename path_aborter_t = detail::PathLimitReached>
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start,
-    const propagator_options_t<action_list_t, aborter_list_t>& options) const
+    const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         typename S::template return_parameter_type<parameters_t>,
-        action_list_t>> {
+        typename propagator_options_t::action_type
+        >> {
+  static_assert(ParameterConcept<parameters_t>,
+                "Parameters do not fulfill parameter concept.");
+
   // Type of track parameters produced by the propagation
   using ReturnParameterType =
       typename S::template return_parameter_type<parameters_t>;
 
   // Type of the full propagation result, including output from actions
-  using ResultType = action_list_t_result_t<ReturnParameterType, action_list_t>;
+  using ResultType = action_list_t_result_t<ReturnParameterType, typename propagator_options_t::action_type>;
 
   static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                 "return track parameter type must be copy-constructible");
@@ -136,7 +141,7 @@ auto Acts::Propagator<S, N>::propagate(
         std::move(curvParameters));
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
-      auto& tJacobian = std::get<Jacobian>(curvState);
+      auto& tJacobian = std::get<1>(curvState);
       propRes.transportJacobian =
           std::make_unique<const Jacobian>(std::move(tJacobian));
     }
@@ -147,19 +152,22 @@ auto Acts::Propagator<S, N>::propagate(
 }
 
 template <typename S, typename N>
-template <typename parameters_t, typename surface_t, typename action_list_t,
-          typename aborter_list_t,
-          template <typename, typename> class propagator_options_t,
-          typename target_aborter_t, typename path_aborter_t>
+template <typename parameters_t,
+          typename propagator_options_t,
+          typename target_aborter_t = detail::SurfaceReached,
+            typename path_aborter_t = detail::PathLimitReached>
 auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const surface_t& target,
-    const propagator_options_t<action_list_t, aborter_list_t>& options) const
+    const parameters_t& start, const Surface& target,
+    const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        typename S::template return_parameter_type<parameters_t, surface_t>,
-        action_list_t>> {
+        typename S::template return_parameter_type<parameters_t, Surface>,
+         typename propagator_options_t::action_type>> {
+  static_assert(ParameterConcept<parameters_t>,
+                "Parameters do not fulfill parameter concept.");
+
   // Type of track parameters produced at the end of the propagation
   using return_parameter_type =
-      typename S::template return_parameter_type<parameters_t, surface_t>;
+      typename S::template return_parameter_type<parameters_t, Surface>;
 
   // Type of provided options
   target_aborter_t targetAborter;
@@ -172,7 +180,7 @@ auto Acts::Propagator<S, N>::propagate(
 
   // Type of the full propagation result, including output from actions
   using ResultType =
-      action_list_t_result_t<return_parameter_type, action_list_t>;
+      action_list_t_result_t<return_parameter_type, typename propagator_options_t::action_type>;
 
   // Initialize the internal propagator state
   using StateType = State<OptionsType>;
@@ -202,7 +210,7 @@ auto Acts::Propagator<S, N>::propagate(
         std::make_unique<const BoundParameters>(std::move(boundParameters));
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
-      auto& tJacobian = std::get<Jacobian>(bs);
+      auto& tJacobian = std::get<const Jacobian>(bs);
       propRes.transportJacobian =
           std::make_unique<const Jacobian>(std::move(tJacobian));
     }
