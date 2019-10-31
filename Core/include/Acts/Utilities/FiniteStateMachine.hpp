@@ -16,12 +16,91 @@
 
 namespace Acts {
 
+/// Implementation of a finite state machine engine
+///
+/// Allows setting up a system of states and transitions between them. States
+/// are definedd as empty structs (footprint: 1 byte). Tranitions call functions
+/// using overload resolution. This works by subclassing this class, providing
+/// the deriving type as the first template argument (CRTP) and providing
+/// methods like
+///
+/// ```cpp
+/// event_return on_event(const S&, const E&);
+/// ```
+///
+/// The arguments are the state `S` and the triggered event `E`. Their values
+/// can be discarded (you can attach values to events of course, if you like)
+/// The return type of these functions is effectively `std::optional<State>`, so
+/// you can either return `std::nullopt` to remain in the same state, or an
+/// instance of another state. That state will then become active.
+///
+/// You can also define a method template, which will serve as a catch-all
+/// handler (due to the fact that it will match any state/event combination):
+///
+/// ```cpp
+/// template <typename State, typename Event>
+///   event_return on_event(const State&, const Event&) const {
+///   return Terminated{};
+/// }
+/// ```
+///
+/// If for a given state and event no suitable overload of `on_event` (and you
+/// also haven't defined a catch-all as described above), a transition to
+/// `Terminated` will be triggered. This is essentially equivalent to the method
+/// template above.
+///
+/// If this triggers, it will switch to the `Terminated` state (which is always
+/// included in the FSM).
+///
+/// Additionally, the FSM will attempt to call functions like
+/// ```cpp
+/// void on_enter(const State&);
+/// void on_exit(const State&);
+/// ```
+/// when entering/exiting a state if they are implemented. This can be used to
+/// perform actions regardless of the source or destination state in a
+/// transition to a given state. This is also fired in case a transition to
+/// `Terminated` occurs.
+///
+/// If the derived class implements
+/// ```cpp
+/// void on_process(const Event&);
+/// void on_process(const State&, const Event&);
+/// void on_process(const State1& const Event&, const State2&);
+/// ```
+/// they are called during event processing, and allow for things like event and
+/// transition logging.
+///
+/// The public interface for the user of the FSM are the
+/// ```cpp
+/// template <typename... Args>
+/// void setState(StateVariant state, Args&&... args);
+///
+/// template <typename Event, typename... Args>
+/// void dispatch(Event&& event, Args&&... args) {
+/// ```
+///
+/// `setState` triggers a transition to a given state, `dispatch` triggers
+/// processing on an event from the given state. Both will call the appropriate
+/// `on_exit` and `on_enter` overloads. Both also accept an arbitrary number of
+/// additional arguments that are passed to the `on_event`, `on_exit` and
+/// `on_enter` overloads.
+///
+/// @tparam Derived Class deriving from the FSM
+/// @tparam States Argument pack with the state types that the FSM can be
+///         handled.
 template <typename Derived, typename... States>
 class FiniteStateMachine {
  public:
+  /// Contractual termination state. Is transitioned to if State+Event do not
+  /// have a transition defined.
   struct Terminated {
+    /// Name of this state (useful for logging)
     constexpr static std::string_view name = "Terminated";
   };
+
+  /// Variant type allowing tagged type erased storage of the current state of
+  /// the FSM.
   using StateVariant = std::variant<Terminated, States...>;
 
  protected:
@@ -30,24 +109,38 @@ class FiniteStateMachine {
   using event_return = std::optional<StateVariant>;
 
  public:
+  /// Default constructor. The default state is taken to be the first in the
+  /// `States` template arguments
   FiniteStateMachine()
       : m_state(
             typename std::tuple_element<0, std::tuple<States...>>::type{}){};
 
+  /// Constructor from an explicit state. The FSM is initialized to this state.
+  /// @param state Initial state for the FSM.
   FiniteStateMachine(StateVariant state) : m_state(std::move(state)){};
 
+  /// Get the current state of of the FSM (as a variant).
+  /// @return StateVariant The current state of the FSM.
   const StateVariant& getState() const noexcept { return m_state; }
 
  private:
+  /// Type inference helper template for the on_exit method
   template <typename T, typename S, typename... Args>
   using on_exit_t = decltype(
       std::declval<T>().on_exit(std::declval<S&>(), std::declval<Args>()...));
 
+  /// Type inference helper template for the on_enter method
   template <typename T, typename S, typename... Args>
   using on_enter_t = decltype(
       std::declval<T>().on_enter(std::declval<S&>(), std::declval<Args>()...));
 
  public:
+  /// Sets the state to a given one. Triggers `on_exit` and `on_enter` for the
+  /// given states.
+  /// @tparam State Type of the target state
+  /// @tparam Args Additional arguments passed through callback overloads.
+  /// @param state Instance of the target state
+  /// @param args The additional arguments
   template <typename State, typename... Args>
   void setState(State state, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
@@ -71,11 +164,19 @@ class FiniteStateMachine {
     }
   }
 
+  /// Returns whether the FSM is in the specified state
+  /// @tparam State type to check against
+  /// @param state State instance to check against
+  /// @return Whether the FSM is in the given state.
   template <typename S>
   bool is(const S& /*state*/) const noexcept {
     return is<S>();
   }
 
+  /// Returns whether the FSM is in the specified state. Alternative version
+  /// directly taking only the template argument.
+  /// @tparam State type to check against
+  /// @return Whether the FSM is in the given state.
   template <typename S>
   bool is() const noexcept {
     if (std::get_if<S>(&m_state)) {
@@ -84,18 +185,30 @@ class FiniteStateMachine {
     return false;
   }
 
+  /// Returns whether the FSM is in the terminated state.
+  /// @return Whether the FSM is in the terminated state.
   bool terminated() const noexcept { return is<Terminated>(); }
 
  private:
+  /// Type inference helper for the `on_event` overloads
   template <typename T, typename S, typename E, typename... Args>
   using on_event_t = decltype(std::declval<T>().on_event(
       std::declval<S&>(), std::declval<E&>(), std::declval<Args>()...));
 
+  /// Type inference helper for the `on_process` overloads
   template <typename T, typename... Args>
   using on_process_t =
       decltype(std::declval<T>().on_process(std::declval<Args>()...));
 
  protected:
+  /// Handles processing of an event.
+  /// @note This should only be called from inside the class Deriving from FSM.
+  /// @tparam Event Type of the event being processed
+  /// @tparam Args Arguments being passed to the overload handlers.
+  /// @param event Instance of the event
+  /// @param args Additional arguments
+  /// @return Variant state type, signifying if a transition is supposed to
+  ///         happen.
   template <typename Event, typename... Args>
   event_return process_event(Event&& event, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
@@ -142,6 +255,13 @@ class FiniteStateMachine {
     return std::move(new_state);
   }
 
+ public:
+  /// Public interface to handle an event. Will call the appropriate event
+  /// handlers and perform any required transitions.
+  /// @tparam Event Type of the event being triggered
+  /// @tparam Args Additional arguments being passed to overload handlers.
+  /// @param event Instance of the event being triggere
+  /// @param args Additional arguments
   template <typename Event, typename... Args>
   void dispatch(Event&& event, Args&&... args) {
     auto new_state = process_event(std::forward<Event>(event), args...);
