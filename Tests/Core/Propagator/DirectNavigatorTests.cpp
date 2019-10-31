@@ -30,6 +30,7 @@
 #include "Acts/Propagator/SurfaceCollector.hpp"
 
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -62,7 +63,7 @@ Stepper dstepper(bField);
 ReferencePropagator rpropagator(std::move(estepper), std::move(navigator));
 DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
-const int ntests = 10000;
+const int ntests = 1000;
 const int skip = 0;
 bool debugMode = false;
 bool referenceTiming = false;
@@ -122,6 +123,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   const auto& pResult = rprop.propagate(start, pOptions).value();
   auto& cSurfaces = pResult.template get<SurfaceCollector<>::result_type>();
   auto& cOutput = pResult.template get<DebugOutput::result_type>();
+  auto& cMaterial = pResult.template get<MaterialInteractor::result_type>();  
   const Surface& destination = pResult.endParameters->referenceSurface();
 
   if (debugMode) {
@@ -160,9 +162,11 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
         dprop.propagate(start, destination, dOptions).value();
     auto& ddSurfaces = ddResult.template get<SurfaceCollector<>::result_type>();
     auto& ddOutput = ddResult.template get<DebugOutput::result_type>();
+    auto& ddMaterial = ddResult.template get<MaterialInteractor::result_type>();  
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), ddSurfaces.collected.size());
+    CHECK_CLOSE_REL(cMaterial.materialInX0, ddMaterial.materialInX0, 1e-3);
 
     if (debugMode) {
       std::cout << ">>> Direct Navigator (with destination) output to come : "
@@ -183,13 +187,15 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), dwSurfaces.collected.size());
+    
+    
   }
 }
 
 // This test case checks that no segmentation fault appears
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
-    test_material_collector,
+    test_direct_navigator,
     bdata::random((bdata::seed = 20,
                    bdata::distribution =
                        std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^

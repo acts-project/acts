@@ -34,10 +34,12 @@ struct SurfaceSelector {
   ///
   /// @param surface is the test surface
   bool operator()(const Acts::Surface& surface) const {
-    if (selectSensitive && surface.associatedDetectorElement()) {
+    if (selectSensitive 
+        && surface.associatedDetectorElement() != nullptr) {
       return true;
     }
-    if (selectMaterial && surface.surfaceMaterial()) {
+    if (selectMaterial 
+      && surface.surfaceMaterial() != nullptr) {
       return true;
     }
     if (selectPassive) {
