@@ -64,10 +64,9 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
 struct PropagatorOptions {
-	
-	using action_type = action_list_t;
-	using aborter_type = aborter_list_t;
-	
+  using action_type = action_list_t;
+  using aborter_type = aborter_list_t;
+
   /// Delete default contructor
   PropagatorOptions() = delete;
 
@@ -198,7 +197,8 @@ template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final {
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<BoundParameters, const Jacobian, double>;
-  using CurvilinearState = std::tuple<CurvilinearParameters, const Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearParameters, const Jacobian, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");
@@ -334,16 +334,13 @@ class Propagator final {
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t, 
-            typename propagator_options_t,
+  template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
-       typename propagator_options_t::action_type
-       >>
-  propagate(
-      const parameters_t& start,
-      const propagator_options_t& options) const;
+      typename propagator_options_t::action_type>>
+  propagate(const parameters_t& start,
+            const propagator_options_t& options) const;
 
   /// @brief Propagate track parameters - User method
   ///
@@ -364,17 +361,14 @@ class Propagator final {
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t,
-            typename propagator_options_t,
+  template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t = detail::PathLimitReached>
-  Result<
-      action_list_t_result_t<typename stepper_t::template return_parameter_type<
-                                 parameters_t, Surface>,
-                              typename propagator_options_t::action_type>>
-  propagate(
-      const parameters_t& start, const Surface& target,
-      const propagator_options_t& options) const;
+  Result<action_list_t_result_t<
+      typename stepper_t::template return_parameter_type<parameters_t, Surface>,
+      typename propagator_options_t::action_type>>
+  propagate(const parameters_t& start, const Surface& target,
+            const propagator_options_t& options) const;
 
  private:
   /// Implementation of propagation algorithm
