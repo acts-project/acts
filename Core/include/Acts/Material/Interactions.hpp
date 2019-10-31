@@ -81,6 +81,35 @@ float deriveRadiationLossQOverP(const Material& material, float thickness,
                                 int pdg, float m, float qOverP,
                                 float q = UnitConstants::e);
 
+/// Compute the combined mean energy loss.
+///
+/// @param material  Properties of the traversed material
+/// @param thickness Thickness of the traversed material
+/// @param pdg       Particle type PDG identifier
+/// @param m         Particle mass
+/// @param qOverP    Particle charge divided by absolute momentum
+/// @param q         Particle charge
+float computeEnergyLossMean(const Material& material, float thickness, int pdg,
+                            float m, float qOverP, float q = UnitConstants::e);
+/// Derivative of the combined mean energy loss with respect to q/p.
+///
+/// @see computeEnergyLossMean for parameters description.
+float deriveEnergyLossMeanQOverP(const Material& material, float thickness,
+                                 int pdg, float m, float qOverP,
+                                 float q = UnitConstants::e);
+
+/// Compute the combined most probably energy loss.
+///
+/// @see computeEnergyLossMean for parameters description.
+float computeEnergyLossMode(const Material& material, float thickness, int pdg,
+                            float m, float qOverP, float q = UnitConstants::e);
+/// Derivative of the combined most probable energy loss with respect to q/p.
+///
+/// @see computeEnergyLossMean for parameters description.
+float deriveEnergyLossModeQOverP(const Material& material, float thickness,
+                                 int pdg, float m, float qOverP,
+                                 float q = UnitConstants::e);
+
 namespace detail {
 /// @brief Multiple scattering as function of dInX0
 ///

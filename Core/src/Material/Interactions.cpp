@@ -371,3 +371,36 @@ float Acts::deriveRadiationLossQOverP(const Material& material, float thickness,
   const auto derQOverP = -(q * q) / (qOverP * qOverP * qOverP * e);
   return derE * derQOverP * x;
 }
+
+float Acts::computeEnergyLossMean(const Material& material, float thickness,
+                                  int pdg, float m, float qOverP, float q) {
+  return computeIonisationLossMean(material, thickness, m, qOverP, q).first +
+         computeRadiationLoss(material, thickness, pdg, m, qOverP, q);
+}
+
+float Acts::deriveEnergyLossMeanQOverP(const Material& material,
+                                       float thickness, int pdg, float m,
+                                       float qOverP, float q) {
+  return deriveIonisationLossMeanQOverP(material, thickness, m, qOverP, q) +
+         deriveRadiationLossQOverP(material, thickness, pdg, m, qOverP, q);
+}
+
+float Acts::computeEnergyLossMode(const Material& material, float thickness,
+                                  int pdg, float m, float qOverP, float q) {
+  // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
+  // TODO this is inconsistent with the text of the note
+  return 0.9f * computeIonisationLossMode(material, thickness, m, qOverP, q)
+                    .first +
+         0.15f * computeRadiationLoss(material, thickness, pdg, m, qOverP, q);
+}
+
+float Acts::deriveEnergyLossModeQOverP(const Material& material,
+                                       float thickness, int pdg, float m,
+                                       float qOverP, float q) {
+  // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
+  // TODO this is inconsistent with the text of the note
+  return 0.9f *
+             deriveIonisationLossModeQOverP(material, thickness, m, qOverP, q) +
+         0.15f *
+             deriveRadiationLossQOverP(material, thickness, pdg, m, qOverP, q);
+}
