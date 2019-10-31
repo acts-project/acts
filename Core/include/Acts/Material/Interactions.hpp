@@ -11,8 +11,6 @@
 #include <utility>
 
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/detail/Constants.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
