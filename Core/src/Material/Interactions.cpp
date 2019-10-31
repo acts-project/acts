@@ -14,7 +14,6 @@
 using namespace Acts::UnitLiterals;
 
 namespace {
-
 // PDG particle type identifiers
 enum ParticleType : int {
   Electron = 11,
@@ -146,7 +145,6 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
   //     d(beta*gamma)/(beta*gamma)
   return (rq.betaGamma < 10.0f) ? 0.0f : (-1.0f / qOverP);
 }
-
 }  // namespace
 
 #define ASSERT_INPUTS(thickness, m, qOverP, q)            \
@@ -409,4 +407,45 @@ float Acts::deriveEnergyLossModeQOverP(const Material& material,
              deriveIonisationLossModeQOverP(material, thickness, m, qOverP, q) +
          0.15f *
              deriveRadiationLossQOverP(material, thickness, pdg, m, qOverP, q);
+}
+
+namespace {
+/// Multiple scattering theta0 for minimum ionizing particles.
+inline float theta0Highland(float xOverX0, float pInv, float q2OverBeta2) {
+  // RPP2018 eq. 33.15 (treats beta and q² consistenly)
+  const auto t = std::sqrt(xOverX0 * q2OverBeta2);
+  // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
+  //                          = 2 * log(sqrt(x/X0) * (q/beta))
+  return 13.6_MeV * pInv * t * (1.0f + 0.038f * 2 * std::log(t));
+}
+/// Multiple scattering thet0 for electrons.
+inline float theta0RossiGreisen(float xOverX0, float pInv, float q2OverBeta2) {
+  // TODO add source paper/ resource
+  const auto t = std::sqrt(xOverX0 * q2OverBeta2);
+  return 17.5_MeV * pInv * t * (1.0f + 0.125f * std::log10(10.0f * xOverX0));
+}
+}  // namespace
+
+float Acts::computeMultipleScatteringTheta0(const Material& material,
+                                            float thickness, int pdg, float m,
+                                            float qOverP, float q) {
+  ASSERT_INPUTS(thickness, m, qOverP, q)
+
+  // return early in case of vacuum
+  if (not material) {
+    return 0.0f;
+  }
+
+  // relative radiation length
+  const auto xOverX0 = thickness / material.X0();
+  // 1/p = q/(pq) = (q/p)/q
+  const auto pInv = std::abs(qOverP / q);
+  // q²/beta²; a smart compiler should be able to remove the unused computations
+  const auto q2OverBeta2 = RelativisticQuantities(m, qOverP, q).q2OverBeta2;
+
+  if ((pdg == ParticleType::Electron) or (pdg == ParticleType::Positron)) {
+    return theta0RossiGreisen(xOverX0, pInv, q2OverBeta2);
+  } else {
+    return theta0Highland(xOverX0, pInv, q2OverBeta2);
+  }
 }

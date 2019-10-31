@@ -110,47 +110,16 @@ float deriveEnergyLossModeQOverP(const Material& material, float thickness,
                                  int pdg, float m, float qOverP,
                                  float q = UnitConstants::e);
 
-namespace detail {
-/// @brief Multiple scattering as function of dInX0
+/// Compute the core width of the projected planar scattering distribution.
 ///
-/// It supports MIP and electron scattering and return
-/// the space angle which has to be transformed into actual
-/// scattering components for the azimuthal and polar angles,
-/// respectively (for reconstruction).
-struct HighlandScattering {
-  /// @brief call operator for the HighlandScattering formula
-  ///
-  /// @param p is the momentum
-  /// @param lbeta is the Lorentz beta parameter
-  /// @param dInX0 is the passed thickness expressed in units of X0
-  double operator()(double p, double lbeta, double dInX0,
-                    bool electron = false) const {
-    if (dInX0 == 0. || p == 0. || lbeta == 0.) {
-      return 0.;
-    }
-    // Highland formula - projected sigma_s
-    // ATL-SOFT-PUB-2008-003 equation (15)
-    if (!electron) {
-      double sigmaSpace = constants::main_RutherfordScott * std::sqrt(dInX0) /
-                          (lbeta * p) *
-                          (1. + 0.038 * std::log(dInX0 / (lbeta * lbeta)));
-      // return the space scattering angle
-      return sigmaSpace;
-    }
-    // Electron specification multiple scattering effects
-    // Source: Highland NIM 129 (1975)  p497-499
-    // (Highland extension to the Rossi-Greisen formulation)
-    // @note: The formula can be extended by replacing
-    // the momentum^2 term with pi * pf
-    double sigma2 = constants::main_RossiGreisen / (lbeta * p);
-    sigma2 *= (sigma2 * dInX0);
-    // logarithmic term
-    double factor = 1. + constants::log_RossiGreisen * std::log10(10. * dInX0);
-    factor *= factor;
-    sigma2 *= factor;
-    return std::sqrt(sigma2);
-  }
-};
+/// @param material  Properties of the traversed material
+/// @param thickness Thickness of the traversed material
+/// @param pdg       Particle type PDG identifier
+/// @param m         Particle mass
+/// @param qOverP    Particle charge divided by absolute momentum
+/// @param q         Particle charge
+float computeMultipleScatteringTheta0(const Material& material, float thickness,
+                                      int pdg, float m, float qOverP,
+                                      float q = UnitConstants::e);
 
-}  // namespace detail
 }  // namespace Acts
