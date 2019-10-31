@@ -26,12 +26,11 @@ enum ParticleType : int {
 // electron mass
 static constexpr float Me = 0.5109989461_MeV;
 // Bethe formular prefactor
+// the 1/mol component has been moved to the electron density
 static constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
 // Energy scale for plasma energy.
 static constexpr float PlasmaEnergyScale = 28.816_eV;
 
-// defined in ATL-SOFT-PUB-2008-003
-static constexpr float MeanExitationPotentialScale = 16_eV;
 // 4 * scaling factor for Landau FWHM to equivalent Gaussian sigma
 // values is 2 / sqrt(2 * log(2))
 static constexpr float Landau2Gauss = 2.577567883f;
@@ -95,13 +94,6 @@ inline float logDeriveWMax(float m, float qOverP,
   return -2 * (a * b - 2 + rq.beta2) / (qOverP * (a * b + 2));
 }
 
-/// Compute the mean excitation potential.
-///
-/// See ATL-SOFT-PUB-2008-003 equation (4)
-inline float computeMeanExcitationPotential(float nuclearCharge) {
-  return MeanExitationPotentialScale * std::pow(nuclearCharge, 0.9f);
-}
-
 /// Compute epsilon energy pre-factor for RPP2018 eq. 33.11.
 ///
 /// Defined as
@@ -161,10 +153,11 @@ std::pair<float, float> Acts::computeIonisationLossMean(
     return {0.0f, 0.0f};
   }
 
-  const auto I = computeMeanExcitationPotential(material.Z());
+  const auto I = material.meanExcitationEnergy();
+  const auto rho = material.electronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(material.zOverAtimesRho(), thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, material.zOverAtimesRho(), rq);
+  const auto eps = computeEpsilon(rho, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, rho, rq);
   const auto u = computeMassTerm(Me, rq);
   const auto wmax = computeWMax(m, rq);
   // uses RPP2018 eq. 33.5 scaled from mass stopping power to linear stopping
@@ -187,10 +180,11 @@ float Acts::deriveIonisationLossMeanQOverP(const Material& material,
     return 0.0f;
   }
 
-  const auto I = computeMeanExcitationPotential(material.Z());
+  const auto I = material.meanExcitationEnergy();
+  const auto rho = material.electronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(material.zOverAtimesRho(), thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, material.zOverAtimesRho(), rq);
+  const auto eps = computeEpsilon(rho, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, rho, rq);
   const auto u = computeMassTerm(Me, rq);
   const auto wmax = computeWMax(m, rq);
   // original equation is of the form
@@ -224,10 +218,11 @@ std::pair<float, float> Acts::computeIonisationLossMode(
     return {0.0f, 0.0f};
   }
 
-  const auto I = computeMeanExcitationPotential(material.Z());
+  const auto I = material.meanExcitationEnergy();
+  const auto rho = material.electronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(material.zOverAtimesRho(), thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, material.zOverAtimesRho(), rq);
+  const auto eps = computeEpsilon(rho, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, rho, rq);
   const auto t = computeMassTerm(m, rq);
   // uses RPP2018 eq. 33.11
   const auto running =
@@ -245,10 +240,11 @@ float Acts::deriveIonisationLossModeQOverP(const Material& material,
     return 0.0f;
   }
 
-  const auto I = computeMeanExcitationPotential(material.Z());
+  const auto I = material.meanExcitationEnergy();
+  const auto rho = material.electronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(material.zOverAtimesRho(), thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, material.zOverAtimesRho(), rq);
+  const auto eps = computeEpsilon(rho, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, rho, rq);
   const auto t = computeMassTerm(m, rq);
   // original equation is of the form
   //
