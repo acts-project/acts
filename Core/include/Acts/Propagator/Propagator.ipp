@@ -83,14 +83,12 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
 
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
-          typename path_aborter_t = detail::PathLimitReached>
+          typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         typename S::template return_parameter_type<parameters_t>,
         typename propagator_options_t::action_type>> {
-  static_assert(ParameterConcept<parameters_t>,
-                "Parameters do not fulfill parameter concept.");
 
   // Type of track parameters produced by the propagation
   using ReturnParameterType =
@@ -138,7 +136,7 @@ auto Acts::Propagator<S, N>::propagate(
         std::move(curvParameters));
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
-      auto& tJacobian = std::get<const Jacobian>(curvState);
+      auto& tJacobian = std::get<Jacobian>(curvState);
       propRes.transportJacobian =
           std::make_unique<const Jacobian>(std::move(tJacobian));
     }
@@ -150,16 +148,14 @@ auto Acts::Propagator<S, N>::propagate(
 
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
-          typename target_aborter_t = detail::SurfaceReached,
-          typename path_aborter_t = detail::PathLimitReached>
+          typename target_aborter_t,
+          typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         typename S::template return_parameter_type<parameters_t, Surface>,
         typename propagator_options_t::action_type>> {
-  static_assert(ParameterConcept<parameters_t>,
-                "Parameters do not fulfill parameter concept.");
 
   // Type of track parameters produced at the end of the propagation
   using return_parameter_type =
@@ -207,7 +203,7 @@ auto Acts::Propagator<S, N>::propagate(
         std::make_unique<const BoundParameters>(std::move(boundParameters));
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
-      auto& tJacobian = std::get<const Jacobian>(bs);
+      auto& tJacobian = std::get<Jacobian>(bs);
       propRes.transportJacobian =
           std::make_unique<const Jacobian>(std::move(tJacobian));
     }
