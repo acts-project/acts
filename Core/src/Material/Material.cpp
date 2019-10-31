@@ -21,6 +21,8 @@ Acts::Material::Material(const ActsVectorF<5>& parameters)
                parameters[eRho]) {}
 
 float Acts::Material::electronDensity() const {
+  using namespace Acts::UnitLiterals;
+
   // no material, no electron density
   if (!(*this)) {
     return 0.0f;
@@ -53,6 +55,7 @@ float Acts::Material::electronDensity() const {
 
 float Acts::Material::meanExcitationEnergy() const {
   using namespace Acts::UnitLiterals;
+
   // use approximative computation as defined in ATL-SOFT-PUB-2008-003
   return 16_eV * std::pow(m_z, 0.9f);
 }

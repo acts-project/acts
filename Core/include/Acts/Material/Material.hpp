@@ -15,16 +15,16 @@
 
 namespace Acts {
 
-/// Material definition for interactions with matter.
+/// Material description for interactions with matter.
 ///
 /// The following parameters are used to specify the material and its
 /// interactions with traversing particles:
 ///
-///     * X0:  radiation length (native length units)
-///     * L0:  nuclear interaction length (native length units)
-///     * A:   relative atomic mass (unitless number)
-///     * Z:   atomic number (unitless number)
-///     * rho: density (native mass unit / (native length unit)³)
+/// *   X0:  radiation length (native length units)
+/// *   L0:  nuclear interaction length (native length units)
+/// *   A:   relative atomic mass (unitless number)
+/// *   Z:   atomic number (unitless number)
+/// *   rho: density (native mass unit / (native length unit)³)
 ///
 /// The parameters can be effective or average parameters when e.g. a mixture
 /// of materials is described.
