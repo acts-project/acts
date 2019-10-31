@@ -123,7 +123,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   const auto& pResult = rprop.propagate(start, pOptions).value();
   auto& cSurfaces = pResult.template get<SurfaceCollector<>::result_type>();
   auto& cOutput = pResult.template get<DebugOutput::result_type>();
-  auto& cMaterial = pResult.template get<MaterialInteractor::result_type>();  
+  auto& cMaterial = pResult.template get<MaterialInteractor::result_type>();
   const Surface& destination = pResult.endParameters->referenceSurface();
 
   if (debugMode) {
@@ -162,7 +162,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
         dprop.propagate(start, destination, dOptions).value();
     auto& ddSurfaces = ddResult.template get<SurfaceCollector<>::result_type>();
     auto& ddOutput = ddResult.template get<DebugOutput::result_type>();
-    auto& ddMaterial = ddResult.template get<MaterialInteractor::result_type>();  
+    auto& ddMaterial = ddResult.template get<MaterialInteractor::result_type>();
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), ddSurfaces.collected.size());
@@ -187,8 +187,6 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), dwSurfaces.collected.size());
-    
-    
   }
 }
 
