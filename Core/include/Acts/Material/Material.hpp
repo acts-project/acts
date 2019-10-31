@@ -8,14 +8,8 @@
 
 #pragma once
 
-#include <climits>
-#include <iomanip>
-#include <iostream>
+#include <iosfwd>
 #include <limits>
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
 
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -85,10 +79,7 @@ class Material {
   constexpr float zOverAtimesRho() const { return m_ne; }
 
   /// Encode the properties into a parameter vector.
-  ActsVectorF<5> classificationNumbers();
-
-  /// spit out as a string
-  std::string toString() const;
+  ActsVectorF<5> classificationNumbers() const;
 
  private:
   float m_x0 = std::numeric_limits<float>::infinity();
@@ -107,5 +98,7 @@ class Material {
     return !(lhs == rhs);
   }
 };
+
+std::ostream& operator<<(std::ostream& os, const Material& material);
 
 }  // namespace Acts
