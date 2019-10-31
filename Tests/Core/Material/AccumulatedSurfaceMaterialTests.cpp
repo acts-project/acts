@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
   // HomogeneousSurfaceMaterial accumulation
   AccumulatedSurfaceMaterial material0D{};
   auto accMat0D = material0D.accumulatedMaterial();
-  BOOST_CHECK_EQUAL(accMat0D.size(), 1);
-  BOOST_CHECK_EQUAL(accMat0D[0].size(), 1);
+  BOOST_CHECK_EQUAL(accMat0D.size(), 1u);
+  BOOST_CHECK_EQUAL(accMat0D[0].size(), 1u);
   BOOST_CHECK_EQUAL(material0D.splitFactor(), 0.);
 
   // Test:
@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
   BinUtility binUtility1D(10, -5., 5., open, binX);
   AccumulatedSurfaceMaterial material1D{binUtility1D};
   auto accMat1D = material1D.accumulatedMaterial();
-  BOOST_CHECK_EQUAL(accMat1D.size(), 1);
-  BOOST_CHECK_EQUAL(accMat1D[0].size(), 10);
+  BOOST_CHECK_EQUAL(accMat1D.size(), 1u);
+  BOOST_CHECK_EQUAL(accMat1D[0].size(), 10u);
 
   // Test:
   // BinnesSurfaceMatieral accumulation - 2D
@@ -41,9 +41,9 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
   binUtility2D += BinUtility(20, -10., 10., open, binY);
   AccumulatedSurfaceMaterial material2D{binUtility2D};
   auto accMat2D = material2D.accumulatedMaterial();
-  BOOST_CHECK_EQUAL(accMat2D.size(), 20);
+  BOOST_CHECK_EQUAL(accMat2D.size(), 20u);
   for (size_t ib = 0; ib < accMat2D.size(); ++ib) {
-    BOOST_CHECK_EQUAL(accMat2D[ib].size(), 10);
+    BOOST_CHECK_EQUAL(accMat2D[ib].size(), 10u);
   }
 }
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
   auto accMatProp0D = accMat0D[0][0];
   auto matProp0D = accMatProp0D.totalAverage();
 
-  BOOST_CHECK_EQUAL(matProp0D.second, 2);
+  BOOST_CHECK_EQUAL(matProp0D.second, 2u);
   BOOST_CHECK_EQUAL(matProp0D.first.thicknessInX0(), two.thicknessInX0());
 }
 
@@ -108,10 +108,10 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
   auto accMatProp10 = accMat2D[1][0].totalAverage();
   auto accMatProp11 = accMat2D[1][1].totalAverage();
 
-  BOOST_CHECK_EQUAL(accMatProp00.second, 1);
-  BOOST_CHECK_EQUAL(accMatProp01.second, 2);
-  BOOST_CHECK_EQUAL(accMatProp10.second, 3);
-  BOOST_CHECK_EQUAL(accMatProp11.second, 4);
+  BOOST_CHECK_EQUAL(accMatProp00.second, 1u);
+  BOOST_CHECK_EQUAL(accMatProp01.second, 2u);
+  BOOST_CHECK_EQUAL(accMatProp10.second, 3u);
+  BOOST_CHECK_EQUAL(accMatProp11.second, 4u);
 
   BOOST_CHECK_EQUAL(accMatProp00.first.thicknessInX0(), one.thicknessInX0());
   BOOST_CHECK_EQUAL(accMatProp01.first.thicknessInX0(), two.thicknessInX0());

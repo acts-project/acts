@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
   CHECK_CLOSE_ABS(fr.dir(), Vector2F(0, 1), 1e-6);
 
   const auto& normals = fr.normals();
-  BOOST_CHECK_EQUAL(normals.size(), 3);
+  BOOST_CHECK_EQUAL(normals.size(), 3u);
 
   fr.svg(output, 200, 200);
   BOOST_CHECK(!output.is_empty(true));
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
   CHECK_CLOSE_ABS(fr33.dir(), Vector3F(0, 2, 1).normalized(), 1e-6);
 
   const auto& normals33 = fr33.normals();
-  BOOST_CHECK_EQUAL(normals33.size(), 4);
+  BOOST_CHECK_EQUAL(normals33.size(), 4u);
 
   PlyHelper<float> hlp;
   // compile call to draw, does not actually test anything
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
   CHECK_CLOSE_ABS(fr34.dir(), Vector3F(0, 2, 1).normalized(), 1e-6);
 
   const auto& normals34 = fr34.normals();
-  BOOST_CHECK_EQUAL(normals34.size(), 5);
+  BOOST_CHECK_EQUAL(normals34.size(), 5u);
 
   fr34.draw(hlp);
 }

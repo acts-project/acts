@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   // "calibrate" the measurement
   calibrate(mts1D);
 
-  BOOST_CHECK_EQUAL(*mts1D.size(), 1);
+  BOOST_CHECK_EQUAL(*mts1D.size(), 1u);
 
   // Test the copy construtor
   BoundTrackState mts1DCopy(mts1D);
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   BoundTrackState mts2D(SourceLink{&m2D});
   calibrate(mts2D);
 
-  BOOST_CHECK_EQUAL(*mts2D.size(), 2);
+  BOOST_CHECK_EQUAL(*mts2D.size(), 2u);
 
   // Construct the parameter
   std::array<double, 6> pars_array = {
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   std::vector<BoundTrackState> trackStates = {std::move(mts1DMoveAssigned),
                                               std::move(mts2D), std::move(pts)};
 
-  BOOST_CHECK_EQUAL(trackStates.size(), 3);
+  BOOST_CHECK_EQUAL(trackStates.size(), 3u);
 
   // Test is we can shuffle the track states
   // Test to extract the surface of these guys

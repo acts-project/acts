@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   }
 
   // Test that there are actually 4 surface configurations
-  BOOST_CHECK_EQUAL(surfaceConfig.size(), 4);
+  BOOST_CHECK_EQUAL(surfaceConfig.size(), 4u);
 
   // Test that 4 surfaces can be built
   for (const auto& cfg : surfaceConfig) {
@@ -99,14 +99,14 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   }
 
   // Test that there are actually 4 layer configurations
-  BOOST_CHECK_EQUAL(layerConfig.size(), 4);
+  BOOST_CHECK_EQUAL(layerConfig.size(), 4u);
 
   // Test that 4 layers with surfaces can be built
   for (auto& cfg : layerConfig) {
     LayerPtr layer = cvb.buildLayer(tgContext, cfg);
     BOOST_CHECK_NE(layer, nullptr);
     BOOST_CHECK_NE(cfg.surface, nullptr);
-    BOOST_CHECK_EQUAL(layer->surfaceArray()->surfaces().size(), 1);
+    BOOST_CHECK_EQUAL(layer->surfaceArray()->surfaces().size(), 1u);
     BOOST_CHECK_EQUAL(layer->layerType(), LayerType::active);
   }
 
@@ -127,20 +127,20 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Test the building
   std::shared_ptr<TrackingVolume> trVol =
       cvb.buildVolume(tgContext, volumeConfig);
-  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4u);
   BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
                     volumeConfig.layers.size() * 2 +
-                        1);  // #layers = navigation + material layers
+                        1u);  // #layers = navigation + material layers
   BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
   BOOST_CHECK_NE(trVol->volumeMaterial(), nullptr);
 
   // Test the building
   volumeConfig.layers.clear();
   trVol = cvb.buildVolume(tgContext, volumeConfig);
-  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4u);
   BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
                     volumeConfig.layers.size() * 2 +
-                        1);  // #layers = navigation + material layers
+                        1u);  // #layers = navigation + material layers
   BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
 
   volumeConfig.layers.clear();
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     lay.active = true;
   }
   trVol = cvb.buildVolume(tgContext, volumeConfig);
-  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4u);
   for (auto& lay : volumeConfig.layers) {
     BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
   }
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     lay.active = true;
   }
   trVol = cvb.buildVolume(tgContext, volumeConfig);
-  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+  BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4u);
   for (auto& lay : volumeConfig.layers) {
     BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
   }

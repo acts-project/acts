@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
                                                     std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
-  BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 2);
+  BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 2u);
 
   ActsSymMatrixD<3> cov3;
   cov.setRandom();
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
       cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
   fm = m2;
 
-  BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 3);
+  BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {

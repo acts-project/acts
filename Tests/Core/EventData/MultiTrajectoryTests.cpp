@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(visit_apply_abort) {
     n++;
     return false;
   });
-  BOOST_CHECK_EQUAL(n, 1);
+  BOOST_CHECK_EQUAL(n, 1u);
 
   n = 0;
   t.applyBackwards(i2, [&](const auto& ts) {
@@ -186,14 +186,14 @@ BOOST_AUTO_TEST_CASE(visit_apply_abort) {
     }
     return true;
   });
-  BOOST_CHECK_EQUAL(n, 2);
+  BOOST_CHECK_EQUAL(n, 2u);
 
   n = 0;
   t.applyBackwards(i2, [&](const auto&) {
     n++;
     return true;
   });
-  BOOST_CHECK_EQUAL(n, 3);
+  BOOST_CHECK_EQUAL(n, 3u);
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_add_bitmask) {
@@ -312,10 +312,10 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   auto ts = t.getTrackState(0);
 
   // assert expected value of chi2 and path length
-  BOOST_CHECK_EQUAL(cts.chi2(), 78);
-  BOOST_CHECK_EQUAL(ts.chi2(), 78);
-  BOOST_CHECK_EQUAL(cts.pathLength(), 42);
-  BOOST_CHECK_EQUAL(ts.pathLength(), 42);
+  BOOST_CHECK_EQUAL(cts.chi2(), 78u);
+  BOOST_CHECK_EQUAL(ts.chi2(), 78u);
+  BOOST_CHECK_EQUAL(cts.pathLength(), 42u);
+  BOOST_CHECK_EQUAL(ts.pathLength(), 42u);
 
   ParVec_t v;
   CovMat_t cov;
@@ -373,10 +373,10 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   BOOST_CHECK_EQUAL(cts.jacobian(), jac);
 
   ts.chi2() = 98;
-  BOOST_CHECK_EQUAL(cts.chi2(), 98);
+  BOOST_CHECK_EQUAL(cts.chi2(), 98u);
 
   ts.pathLength() = 66;
-  BOOST_CHECK_EQUAL(cts.pathLength(), 66);
+  BOOST_CHECK_EQUAL(cts.pathLength(), 66u);
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
 
   ts.setCalibrated(m2);
 
-  BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
+  BOOST_CHECK_EQUAL(ts.calibratedSize(), 2u);
   BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), mPar);
   BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(), mCov);
   BOOST_CHECK_EQUAL(ts.effectiveProjector(), m2.projector());

@@ -118,7 +118,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   SpacePointBuilder<SpacePoint<PlanarModuleCluster>> dhsp(dhsp_cfg);
   dhsp.makeClusterPairs(tgContext, {pmc}, {pmc2}, clusterPairs);
 
-  BOOST_CHECK_EQUAL(clusterPairs.size(), 1);
+  BOOST_CHECK_EQUAL(clusterPairs.size(), 1u);
   BOOST_CHECK_EQUAL(*(clusterPairs[0].first), *pmc);
   BOOST_CHECK_EQUAL(*(clusterPairs[0].second), *pmc2);
 
@@ -126,7 +126,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   dhsp.calculateSpacePoints(tgContext, clusterPairs, resultSP);
 
-  BOOST_CHECK_EQUAL(resultSP.size(), 1);
+  BOOST_CHECK_EQUAL(resultSP.size(), 1u);
 
   std::cout << "Create third hit" << std::endl;
 
@@ -147,7 +147,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   dhsp.makeClusterPairs(tgContext, {pmc}, {pmc3}, clusterPairs);
 
   // Test for rejecting unconnected hits
-  BOOST_CHECK_EQUAL(resultSP.size(), 1);
+  BOOST_CHECK_EQUAL(resultSP.size(), 1u);
 }
 
 }  // end of namespace Test

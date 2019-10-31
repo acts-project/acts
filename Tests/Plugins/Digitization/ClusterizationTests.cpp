@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
     for (auto& i : cells) {
       data7 += i.data;
     }
-    BOOST_CHECK_EQUAL(cells.size(), 3);
+    BOOST_CHECK_EQUAL(cells.size(), 3u);
   }
   CHECK_CLOSE_REL(data7, nCellsInClusters, 1e-5);
 
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
     for (auto& i : cells) {
       data8 += i.data;
     }
-    BOOST_CHECK_EQUAL(cells.size(), 3);
+    BOOST_CHECK_EQUAL(cells.size(), 3u);
   }
   CHECK_CLOSE_REL(data8, nCellsInClustersDuplicated, 1e-5);
 
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(create_Clusters2) {
     for (auto& i : cells) {
       data9 += i.data;
     }
-    BOOST_CHECK_EQUAL(cells.size(), 2);
+    BOOST_CHECK_EQUAL(cells.size(), 2u);
   }
   CHECK_CLOSE_REL(data9, (nClustersNoTouch * 2) * 2, 1e-5);
 }
