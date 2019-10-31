@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// Material.hpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -20,7 +16,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "Acts/Material/MaterialComposition.hpp"
+
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -61,18 +57,15 @@ class Material {
   /// @param iZ is the average atomic number
   /// @param iRho is the average density
   /// @param imc is the material composition
-  Material(float iX0, float iL0, float iA, float iZ, float iRho,
-           MaterialComposition imc = {})
-      : m_vacuum(false),
-        m_store({iX0, iL0, iA, iZ, iRho, 0.}),
-        m_composition(std::move(imc)) {
+  Material(float iX0, float iL0, float iA, float iZ, float iRho)
+      : m_vacuum(false), m_store({iX0, iL0, iA, iZ, iRho, 0.}) {
     float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
     m_store[5] = zOaTr;
   }
 
-  Material(ActsVectorF<5> iMatData, MaterialComposition imc = {})
+  Material(ActsVectorF<5> iMatData)
       : Material(iMatData[0], iMatData[1], iMatData[2], iMatData[3],
-                 iMatData[4], std::move(imc)) {}
+                 iMatData[4]) {}
 
   /// @brief Copy Constructor
   ///
@@ -163,16 +156,14 @@ class Material {
                                   0.,
                                   0.,
                                   0.};
-
-  /// optional composition parameter
-  MaterialComposition m_composition = MaterialComposition();
 };
 
 inline bool Material::operator==(const Material& mat) const {
-  return (m_store == mat.m_store && m_composition == mat.m_composition);
+  return (m_store == mat.m_store);
 }
 
 inline bool Material::operator!=(const Material& mat) const {
   return !operator==(mat);
 }
+
 }  // namespace Acts
