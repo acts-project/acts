@@ -117,12 +117,12 @@ inline void AccumulatedMaterialProperties::accumulate(
   m_eventPathInX0 += amp.thicknessInX0();
   m_eventPathInL0 += amp.thicknessInL0();
   double t = amp.thickness();
-  double r = amp.averageRho();
+  double r = amp.material().rho();
   m_eventPath += t;
   m_eventRho += r * t;
 
-  m_eventA += amp.averageA() * r * t;
-  m_eventZ += amp.averageZ() * r * t;
+  m_eventA += amp.material().A() * r * t;
+  m_eventZ += amp.material().Z() * r * t;
 
   m_eventPathCorrection += pathCorrection * t;
 }
