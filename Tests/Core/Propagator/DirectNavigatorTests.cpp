@@ -63,7 +63,11 @@ Stepper dstepper(bField);
 ReferencePropagator rpropagator(std::move(estepper), std::move(navigator));
 DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
+<<<<<<< HEAD
 const int ntests = 1000;
+=======
+const int ntests = 10000;
+>>>>>>> a0fcf177... Direct navigator and its test
 const int skip = 0;
 bool debugMode = false;
 bool referenceTiming = false;
