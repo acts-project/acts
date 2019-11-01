@@ -64,8 +64,8 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
 struct PropagatorOptions {
-  using action_type = action_list_t;
-  using aborter_type = aborter_list_t;
+  using action_list_type = action_list_t;
+  using aborter_list_type = aborter_list_t;
 
   /// Delete default contructor
   PropagatorOptions() = delete;
@@ -196,9 +196,9 @@ struct PropagatorOptions {
 template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final {
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<BoundParameters, const Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState =
-      std::tuple<CurvilinearParameters, const Jacobian, double>;
+      std::tuple<CurvilinearParameters, Jacobian, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");
@@ -338,7 +338,7 @@ class Propagator final {
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
-      typename propagator_options_t::action_type>>
+      typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
@@ -366,7 +366,7 @@ class Propagator final {
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t, Surface>,
-      typename propagator_options_t::action_type>>
+      typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
