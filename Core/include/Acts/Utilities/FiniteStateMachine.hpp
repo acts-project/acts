@@ -123,17 +123,6 @@ class FiniteStateMachine {
   /// @return StateVariant The current state of the FSM.
   const StateVariant& getState() const noexcept { return m_state; }
 
- private:
-  /// Type inference helper template for the on_exit method
-  template <typename T, typename S, typename... Args>
-  using on_exit_t = decltype(
-      std::declval<T>().on_exit(std::declval<S&>(), std::declval<Args>()...));
-
-  /// Type inference helper template for the on_enter method
-  template <typename T, typename S, typename... Args>
-  using on_enter_t = decltype(
-      std::declval<T>().on_enter(std::declval<S&>(), std::declval<Args>()...));
-
  public:
   /// Sets the state to a given one. Triggers `on_exit` and `on_enter` for the
   /// given states.
@@ -149,19 +138,14 @@ class FiniteStateMachine {
     std::visit(
         [&](auto& s) {
           using state_type = decltype(s);
-          if constexpr (concept ::exists<on_exit_t, Derived, state_type,
-                                         Args...>) {
-            child.on_exit(s, std::forward<Args>(args)...);
-          }
+          child.on_exit(s, std::forward<Args>(args)...);
         },
         m_state);
 
     m_state = std::move(state);
 
     // call on enter function, the type is known from the template argument.
-    if constexpr (concept ::exists<on_enter_t, Derived, State, Args...>) {
-      child.on_enter(std::get<State>(m_state), std::forward<Args>(args)...);
-    }
+    child.on_enter(std::get<State>(m_state), std::forward<Args>(args)...);
   }
 
   /// Returns whether the FSM is in the specified state
@@ -189,17 +173,6 @@ class FiniteStateMachine {
   /// @return Whether the FSM is in the terminated state.
   bool terminated() const noexcept { return is<Terminated>(); }
 
- private:
-  /// Type inference helper for the `on_event` overloads
-  template <typename T, typename S, typename E, typename... Args>
-  using on_event_t = decltype(std::declval<T>().on_event(
-      std::declval<S&>(), std::declval<E&>(), std::declval<Args>()...));
-
-  /// Type inference helper for the `on_process` overloads
-  template <typename T, typename... Args>
-  using on_process_t =
-      decltype(std::declval<T>().on_process(std::declval<Args>()...));
-
  protected:
   /// Handles processing of an event.
   /// @note This should only be called from inside the class Deriving from FSM.
@@ -213,43 +186,22 @@ class FiniteStateMachine {
   event_return process_event(Event&& event, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
 
-    if constexpr (concept ::exists<on_process_t, Derived, Event>) {
-      child.on_process(event);
-    }
+    child.on_process(event);
 
     auto new_state = std::visit(
         [&](auto& s) -> std::optional<StateVariant> {
           using state_type = decltype(s);
 
-          if constexpr (concept ::exists<on_event_t, Derived, state_type, Event,
-                                         Args...>) {
-            auto s2 = child.on_event(s, std::forward<Event>(event),
-                                     std::forward<Args>(args)...);
+          auto s2 = child.on_event(s, std::forward<Event>(event),
+                                   std::forward<Args>(args)...);
 
-            if (s2) {
-              std::visit(
-                  [&](auto& s2_) {
-                    if constexpr (concept ::exists<on_process_t, Derived,
-                                                   state_type, Event,
-                                                   decltype(s2_)>) {
-                      child.on_process(s, event, s2_);
-                    }
-                  },
-                  *s2);
-            } else {
-              if constexpr (concept ::exists<on_process_t, Derived, state_type,
-                                             Event>) {
-                child.on_process(s, event);
-              }
-            }
-            return std::move(s2);
+          if (s2) {
+            std::visit([&](auto& s2_) { child.on_process(s, event, s2_); },
+                       *s2);
           } else {
-            if constexpr (concept ::exists<on_process_t, Derived, state_type,
-                                           Event, Terminated>) {
-              child.on_process(s, event, Terminated{});
-            }
-            return Terminated{};
+            child.on_process(s, event);
           }
+          return std::move(s2);
         },
         m_state);
     return std::move(new_state);

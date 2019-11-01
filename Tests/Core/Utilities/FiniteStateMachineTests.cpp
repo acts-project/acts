@@ -69,6 +69,20 @@ struct fsm : FiniteStateMachine<fsm, states::Disconnected, states::Connecting,
   event_return on_event(const states::Connected&, const events::Disconnect&) {
     return states::Disconnected{};
   }
+
+  template <typename State, typename Event>
+  event_return on_event(const State&, const Event&) const {
+    return Terminated{};
+  }
+
+  template <typename State, typename... Args>
+  void on_enter(const State&, Args&&...) {}
+
+  template <typename State, typename... Args>
+  void on_exit(const State&, Args&&...) {}
+
+  template <typename... Args>
+  void on_process(Args&&...) {}
 };
 
 BOOST_AUTO_TEST_SUITE(Utilities)
@@ -93,7 +107,7 @@ BOOST_AUTO_TEST_CASE(Transitions) {
   BOOST_CHECK(sm.is(states::Disconnected{}));
 }
 
-BOOST_AUTO_TEST_CASE(Terminated) {
+BOOST_AUTO_TEST_CASE(Terminted) {
   fsm sm{};
   BOOST_CHECK(sm.is(states::Disconnected{}));
 
@@ -125,6 +139,14 @@ struct fsm2
   void on_enter(const Terminated&, Args&&...) {
     throw std::runtime_error("FSM terminated!");
   }
+
+  template <typename State, typename... Args>
+  void on_enter(const State&, Args&&...) {}
+
+  template <typename State, typename... Args>
+  void on_exit(const State&, Args&&...) {}
+  template <typename... Args>
+  void on_process(Args&&...) {}
 };
 
 BOOST_AUTO_TEST_CASE(Arguments) {
@@ -189,6 +211,13 @@ struct fsm3 : FiniteStateMachine<fsm3, S1, S2, S3> {
   // S2 + E3 = S3
   // external transition
   event_return on_event(const S2&, const E3&) { return S3{}; }
+
+  // catchers
+
+  template <typename State, typename Event, typename... Args>
+  event_return on_event(const State&, const Event&, Args&&...) const {
+    return Terminated{};
+  }
 
   template <typename State, typename... Args>
   void on_enter(const State&, Args&&...) {
