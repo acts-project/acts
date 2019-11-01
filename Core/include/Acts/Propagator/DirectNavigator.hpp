@@ -42,7 +42,7 @@ class DirectNavigator {
   /// Defaulted Constructed
   DirectNavigator() = default;
 
-  /// The tolerance used to defined "surface reached"
+  /// The tolerance used to define "surface reached"
   double tolerance = s_onSurfaceTolerance;
 
   /// Nested Navigation options struct
