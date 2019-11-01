@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -35,8 +36,12 @@ class GainMatrixUpdater {
   ///
   /// @param calibrator is the calibration struct/class that converts
   /// uncalibrated measurements into calibrated ones
-  GainMatrixUpdater(calibrator_t calibrator = calibrator_t())
-      : m_mCalibrator(std::move(calibrator)) {}
+  /// @param logger a logger instance
+  GainMatrixUpdater(
+      calibrator_t calibrator = calibrator_t(),
+      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
+          getDefaultLogger("GainMatrixUpdater", Logging::INFO).release()))
+      : m_logger(std::move(logger)), m_mCalibrator(std::move(calibrator)) {}
 
   /// @brief Public call operator for the boost visitor pattern
   ///
@@ -51,6 +56,7 @@ class GainMatrixUpdater {
   template <typename track_state_t>
   bool operator()(const GeometryContext& gctx,
                   track_state_t& trackState) const {
+    ACTS_VERBOSE("Invoked GainMatrixUpdater");
     using CovMatrix_t = typename parameters_t::CovMatrix_t;
     using ParVector_t = typename parameters_t::ParVector_t;
 
@@ -67,6 +73,10 @@ class GainMatrixUpdater {
     const parameters_t& predicted = *trackState.parameter.predicted;
 
     const CovMatrix_t& predicted_covariance = *predicted.covariance();
+
+    ACTS_VERBOSE(
+        "Predicted parameters: " << predicted.parameters().transpose());
+    ACTS_VERBOSE("Predicted covariance:\n" << predicted_covariance);
 
     ParVector_t filtered_parameters;
     CovMatrix_t filtered_covariance;
@@ -93,14 +103,24 @@ class GainMatrixUpdater {
           using gain_matrix_t = ActsMatrixD<projection_t::ColsAtCompileTime,
                                             projection_t::RowsAtCompileTime>;
 
+          ACTS_VERBOSE("Measurement dimension: " << meas_t::size());
+          ACTS_VERBOSE("Calibrated measurement: "
+                       << calibrated.parameters().transpose());
+          ACTS_VERBOSE("Calibrated measurement covariance:\n"
+                       << calibrated.covariance());
+
           // Take the projector (measurement mapping function)
           const projection_t& H = calibrated.projector();
+
+          ACTS_VERBOSE("Measurement projector H:\n" << H);
 
           // The Kalman gain matrix
           gain_matrix_t K = predicted_covariance * H.transpose() *
                             (H * predicted_covariance * H.transpose() +
                              calibrated.covariance())
                                 .inverse();
+
+          ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
           // filtered new parameters after update
           filtered_parameters =
@@ -109,6 +129,10 @@ class GainMatrixUpdater {
           // updated covariance after filtering
           filtered_covariance =
               (CovMatrix_t::Identity() - K * H) * predicted_covariance;
+
+          ACTS_VERBOSE(
+              "Filtered parameters: " << filtered_parameters.transpose());
+          ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
 
           // Create new filtered parameters and covariance
           parameters_t filtered(gctx, std::move(filtered_covariance),
@@ -120,12 +144,17 @@ class GainMatrixUpdater {
           // r is the residual of the filtered state
           // R is the covariance matrix of the filtered residual
           meas_par_t residual = calibrated.residual(filtered);
+
+          ACTS_VERBOSE("Residual: " << residual.transpose());
+
           trackState.parameter.chi2 =
               (residual.transpose() *
                ((meas_cov_t::Identity() - H * K) * calibrated.covariance())
                    .inverse() *
                residual)
-                  .eval()(0, 0);
+                  .value();
+
+          ACTS_VERBOSE("Chi2: " << trackState.parameter.chi2);
 
           trackState.parameter.filtered = std::move(filtered);
         },
@@ -133,6 +162,15 @@ class GainMatrixUpdater {
 
     // always succeed, no outlier logic yet
     return true;
+  }
+
+  /// Pointer to a logger that is owned by the parent, KalmanFilter
+  std::shared_ptr<const Logger> m_logger{nullptr};
+
+  /// Getter for the logger, to support logging macros
+  const Logger& logger() const {
+    assert(m_logger);
+    return *m_logger;
   }
 
  private:
