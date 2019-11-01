@@ -1287,7 +1287,7 @@ class Navigator {
   ///
   /// @param[in,out] state the propagator state for the debug flag,
   ///      prefix and length
-  /// @param logAction is a callable function that returns a stremable object
+  /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
   void debugLog(propagator_state_t& state,
                 const std::function<std::string()>& logAction) const {

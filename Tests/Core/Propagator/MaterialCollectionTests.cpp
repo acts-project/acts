@@ -19,7 +19,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
