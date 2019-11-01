@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,7 +25,6 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 
@@ -46,7 +45,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
-// create a navigator for this tracking geometry
+// Create a navigator for this tracking geometry
 Navigator navigator(tGeometry);
 DirectNavigator dnavigator;
 
@@ -68,13 +67,14 @@ const int skip = 0;
 bool debugMode = false;
 bool referenceTiming = false;
 
-/// the actual test nethod that runs the test
+/// The actual test nethod that runs the test
 /// can be used with several propagator types
 ///
 /// @tparam rpropagator_t is the reference propagator type
 /// @tparam dpropagator_t is the direct propagator type
 ///
-/// @param prop is the propagator instance
+/// @param rprop is the reference propagator instance
+/// @param dprop is the direct propagator instance
 /// @param pT the transverse momentum
 /// @param phi the azimuthal angle of the track at creation
 /// @param theta the polar angle of the track at creation
@@ -89,7 +89,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     return;
   }
 
-  // define start parameters from ranom input
+  // Define start parameters from ranom input
   double x = 0;
   double y = 0;
   double z = 0;

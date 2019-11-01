@@ -108,14 +108,16 @@ class DirectNavigator {
     /// along the path
     SurfaceSequence surfaceSequence = {};
 
+    /// Iterator the the next surface
     SurfaceIter nextSurfaceIter = surfaceSequence.begin();
+    /// Iterator to the end for the end sequence trigger
     SurfaceIter endSurfaceIter = surfaceSequence.end();
 
-    /// Navigation state - external interface: the current surface
+    /// Navigation state - external interface: the start surface
     const Surface* startSurface = nullptr;
     /// Navigation state - external interface: the current surface
     const Surface* currentSurface = nullptr;
-    /// Navigation state - external interface: the current surface
+    /// Navigation state - external interface: the target surface
     const Surface* targetSurface = nullptr;
 
     /// Navigation state - external interface: target is reached
@@ -136,7 +138,7 @@ class DirectNavigator {
     // Screen output
     debugLog(state, [&] { return std::string("Entering navigator::status."); });
 
-    // Navigator stauts always resets the current surface
+    // Navigator status always resets the current surface
     state.navigation.currentSurface = nullptr;
     // Check if we are on surface
     if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter &&
@@ -224,7 +226,7 @@ class DirectNavigator {
   ///
   /// @param[in,out] state the propagator state for the debug flag,
   ///      prefix and length
-  /// @param logAction is a callable function that returns a stremable object
+  /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
   void debugLog(propagator_state_t& state,
                 const std::function<std::string()>& logAction) const {

@@ -47,7 +47,7 @@ struct TargetOptions {
 /// when not needed.
 ///
 /// @param state the propagator cache for the debug flag, prefix/stream
-/// @param logAction is a callable function that returns a stremable object
+/// @param logAction is a callable function that returns a streamable object
 template <typename propagator_state_t>
 void targetDebugLog(propagator_state_t& state, const std::string& status,
                     const std::function<std::string()>& logAction) {

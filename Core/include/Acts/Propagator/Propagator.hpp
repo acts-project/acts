@@ -385,7 +385,7 @@ class Propagator final {
   /// @tparam propagator_state_t Type of the nested propagator state object
   ///
   /// @param state the propagator state for the debug flag, prefix/length
-  /// @param logAction is a callable function that returns a stremable object
+  /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
   void debugLog(propagator_state_t& state,
                 const std::function<std::string()>& logAction) const;
