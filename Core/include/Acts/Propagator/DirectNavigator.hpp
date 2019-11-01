@@ -39,12 +39,10 @@ class DirectNavigator {
   using SurfaceSequence = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::const_iterator;
 
-  /// Constructor with shared tracking geometry
-  ///
-  /// @param tGeometry The tracking geometry for the navigator
+  /// Defaulted Constructed
   DirectNavigator() = default;
 
-  /// The tolerance used to defined "reached"
+  /// The tolerance used to defined "surface reached"
   double tolerance = s_onSurfaceTolerance;
 
   /// Nested Navigation options struct
@@ -61,7 +59,7 @@ class DirectNavigator {
   /// This is needed for the initialization of the
   /// surface sequence
   struct Initializer {
-    /// Th Surface sequence
+    /// The Surface sequence
     SurfaceSequence surfaceSequence = {};
 
     /// Actor result / state
