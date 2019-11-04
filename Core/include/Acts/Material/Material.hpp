@@ -24,7 +24,7 @@ namespace Acts {
 /// *   L0:  nuclear interaction length (native length units)
 /// *   A:   relative atomic mass (unitless number)
 /// *   Z:   atomic number (unitless number)
-/// *   rho: density (native mass unit / (native length unit)³)
+/// *   rho: mass density (native mass unit / (native length unit)³)
 ///
 /// The parameters can be effective or average parameters when e.g. a mixture
 /// of materials is described.
@@ -43,11 +43,11 @@ class Material {
   Material() = default;
   /// Construct from material parameters.
   ///
-  /// @param iX0  is the radiation length parameter
+  /// @param iX0  is the radiation length
   /// @param iL0  is the nuclear interaction length
   /// @param iA   is the relative atomic mass
   /// @param iZ   is the atomic number
-  /// @param iRho is the density
+  /// @param iRho is the mass density
   Material(float iX0, float iL0, float iA, float iZ, float iRho);
   /// Construct from an encoded parameters vector.
   Material(const ActsVectorF<5>& parameters);
@@ -69,7 +69,7 @@ class Material {
   constexpr float A() const { return m_a; }
   /// Return the atomic number.
   constexpr float Z() const { return m_z; }
-  /// Return the density.
+  /// Return the mass density.
   constexpr float rho() const { return m_rho; }
 
   /// Return the electron density in mol / (native length unit)³.

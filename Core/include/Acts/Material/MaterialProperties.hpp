@@ -32,11 +32,11 @@ class MaterialProperties {
   MaterialProperties(float thickness);
   /// Construct from material parameters.
   ///
-  /// @param X0        is the radiation length parameter
+  /// @param X0        is the radiation length
   /// @param L0        is the nuclear interaction length
   /// @param A         is the relative atomic mass
   /// @param Z         is the atomic number
-  /// @param rho       is the density
+  /// @param rho       is the mass density
   /// @param thickness is the thickness of the material
   MaterialProperties(float X0, float L0, float A, float Z, float rho,
                      float thickness);
