@@ -57,19 +57,28 @@ namespace Acts {
 /// void on_enter(const State&);
 /// void on_exit(const State&);
 /// ```
-/// when entering/exiting a state if they are implemented. This can be used to
+/// when entering/exiting a state. This can be used to
 /// perform actions regardless of the source or destination state in a
 /// transition to a given state. This is also fired in case a transition to
 /// `Terminated` occurs.
 ///
-/// If the derived class implements
+/// The base class also calls
 /// ```cpp
 /// void on_process(const Event&);
 /// void on_process(const State&, const Event&);
 /// void on_process(const State1& const Event&, const State2&);
 /// ```
-/// they are called during event processing, and allow for things like event and
+/// during event processing, and allow for things like event and
 /// transition logging.
+///
+/// The `on_event`, `on_enter`, `on_exit` and `on_process` methods need to be
+/// implemented exhaustively, i.e. for all state/event combinations. This might
+/// require you to add catch-all no-op functions like
+/// ```cpp
+/// template <typename...Args>
+/// event_return on_event(Args&&...args) {} // noop
+/// ```
+/// and so on.
 ///
 /// The public interface for the user of the FSM are the
 /// ```cpp
