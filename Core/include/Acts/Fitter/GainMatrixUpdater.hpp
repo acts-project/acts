@@ -12,9 +12,11 @@
 #include <variant>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -54,8 +56,8 @@ class GainMatrixUpdater {
   /// @note Non-'successful' updates could be holes or outliers,
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  bool operator()(const GeometryContext& gctx,
-                  track_state_t& trackState) const {
+  Result<void> operator()(const GeometryContext& gctx,
+                          track_state_t& trackState) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
     using CovMatrix_t = typename parameters_t::CovMatrix_t;
     using ParVector_t = typename parameters_t::ParVector_t;
@@ -88,8 +90,8 @@ class GainMatrixUpdater {
 
     // we need to remove type-erasure on the measurement type
     // to access its methods
-    std::visit(
-        [&](const auto& calibrated) {
+    return std::visit(
+        [&](const auto& calibrated) -> Result<void> {
           // type of measurement
           using meas_t = typename std::remove_const<
               typename std::remove_reference<decltype(calibrated)>::type>::type;
@@ -121,6 +123,10 @@ class GainMatrixUpdater {
                                 .inverse();
 
           ACTS_VERBOSE("Gain Matrix K:\n" << K);
+
+          if (K.hasNaN()) {
+            return KalmanFitterError::UpdateFailed;
+          }
 
           // filtered new parameters after update
           filtered_parameters =
@@ -157,11 +163,11 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Chi2: " << trackState.parameter.chi2);
 
           trackState.parameter.filtered = std::move(filtered);
+
+          // if we get here: always succeed, no outlier logic yet
+          return Result<void>::success();
         },
         *trackState.measurement.calibrated);
-
-    // always succeed, no outlier logic yet
-    return true;
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter

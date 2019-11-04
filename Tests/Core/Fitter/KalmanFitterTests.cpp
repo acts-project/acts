@@ -322,11 +322,15 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, rSurface);
 
   // Fit the track
-  auto fittedTrack = kFitter.fit(sourcelinks, rStart, kfOptions);
+  auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedTrack = *fitRes;
   auto fittedParameters = fittedTrack.fittedParameters.get();
 
   // Make sure it is deterministic
-  auto fittedAgainTrack = kFitter.fit(sourcelinks, rStart, kfOptions);
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedAgainTrack = *fitRes;
   auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
@@ -340,8 +344,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       sourcelinks[4], sourcelinks[5], sourcelinks[0]};
 
   // Make sure it works for shuffled measurements as well
-  auto fittedShuffledTrack =
-      kFitter.fit(shuffledMeasurements, rStart, kfOptions);
+  fitRes = kFitter.fit(shuffledMeasurements, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedShuffledTrack = *fitRes;
   auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
@@ -357,8 +362,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       sourcelinks[5]};
 
   // Make sure it works for shuffled measurements as well
-  auto fittedWithHoleTrack =
-      kFitter.fit(measurementsWithHole, rStart, kfOptions);
+  fitRes = kFitter.fit(measurementsWithHole, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedWithHoleTrack = *fitRes;
   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
   // Count one hole

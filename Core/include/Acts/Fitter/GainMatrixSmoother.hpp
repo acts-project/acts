@@ -11,7 +11,9 @@
 #include <boost/range/adaptors.hpp>
 #include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -35,8 +37,8 @@ class GainMatrixSmoother {
       : m_logger(std::move(logger)) {}
 
   template <typename track_states_t>
-  boost::optional<parameters_t> operator()(
-      const GeometryContext& gctx, track_states_t& filteredStates) const {
+  Result<parameters_t> operator()(const GeometryContext& gctx,
+                                  track_states_t& filteredStates) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother");
     using namespace boost::adaptors;
 
@@ -87,6 +89,7 @@ class GainMatrixSmoother {
           * ts.parameter.jacobian->transpose()
           * (*prev_ts->parameter.predicted->covariance()).inverse();
       ACTS_VERBOSE("Gain smoothing matrix is:\n" << G);
+
       // Calculate the smoothed parameters
 
         ACTS_VERBOSE("Calculate smoothed parameters:");
@@ -95,6 +98,10 @@ class GainMatrixSmoother {
             "Prev. smoothed parameters: " << prev_ts->parameter.smoothed->parameters().transpose());
         ACTS_VERBOSE(
             "Prev. predicted parameters: " << prev_ts->parameter.predicted->parameters().transpose());
+
+      if (G.hasNaN()) {
+        return  KalmanFitterError::SmoothFailed;
+      }
 
       smoothedPars = ts.parameter.filtered->parameters()
                      + G * (prev_ts->parameter.smoothed->parameters()
@@ -124,7 +131,7 @@ class GainMatrixSmoother {
       prev_ts = &ts;
     }
     // The result is the pointer to the last smoothed state - for the cache
-    return prev_ts->parameter.smoothed;
+    return *prev_ts->parameter.smoothed;
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
