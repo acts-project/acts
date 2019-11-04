@@ -19,15 +19,37 @@ namespace utf = boost::unit_test;
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-BOOST_AUTO_TEST_SUITE(unit_conversion)
+BOOST_AUTO_TEST_SUITE(unit_conversions)
 
 BOOST_AUTO_TEST_CASE(length_conversions) {
   CHECK_CLOSE_REL(1_m, 1e-3_km, 1e-15);
+  CHECK_CLOSE_REL(1_m, 1e2_cm, 1e-15);
   CHECK_CLOSE_REL(1_m, 1e3_mm, 1e-15);
   CHECK_CLOSE_REL(1_m, 1e6_um, 1e-15);
   CHECK_CLOSE_REL(1_m, 1e9_nm, 1e-15);
   CHECK_CLOSE_REL(1_m, 1e12_pm, 1e-15);
   CHECK_CLOSE_REL(1_m, 1e15_fm, 1e-15);
+}
+
+BOOST_AUTO_TEST_CASE(area_conversions) {
+  CHECK_CLOSE_REL(1_mm * 1_mm, 1_mm2, 1e-15);
+  CHECK_CLOSE_REL(1_mm * 1_mm, 0.01_cm2, 1e-15);
+  CHECK_CLOSE_REL(1_mm * 1_mm, 0.000001_m2, 1e-15);
+  CHECK_CLOSE_REL(1_cm * 1_cm, 100_mm2, 1e-15);
+  CHECK_CLOSE_REL(1_cm * 1_cm, 1_cm2, 1e-15);
+  CHECK_CLOSE_REL(1_cm * 1_cm, 0.0001_m2, 1e-15);
+  CHECK_CLOSE_REL(1_m * 1_m, 1000000_mm2, 1e-15);
+  CHECK_CLOSE_REL(1_m * 1_m, 10000_cm2, 1e-15);
+  CHECK_CLOSE_REL(1_m * 1_m, 1_m2, 1e-15);
+}
+
+BOOST_AUTO_TEST_CASE(volume_conversions) {
+  CHECK_CLOSE_REL(1_mm * 1_mm * 1_mm, 1_mm3, 1e-15);
+  CHECK_CLOSE_REL(1_mm2 * 1_mm, 1_mm3, 1e-15);
+  CHECK_CLOSE_REL(1_cm * 1_cm * 1_cm, 1_cm3, 1e-15);
+  CHECK_CLOSE_REL(1_cm2 * 1_cm, 1_cm3, 1e-15);
+  CHECK_CLOSE_REL(1_m * 1_m * 1_m, 1_m3, 1e-15);
+  CHECK_CLOSE_REL(1_m2 * 1_m, 1_m3, 1e-15);
 }
 
 BOOST_AUTO_TEST_CASE(time_conversions) {
