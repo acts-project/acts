@@ -47,8 +47,8 @@ class MaterialProperties {
   MaterialProperties(const Material& material, float thickness);
   /// Construct by averaging over multiple layers.
   ///
-  /// @param layer     Input layers to average over.
-  /// @param normalize Wether to normalize the result to unit thickness.
+  /// @param layers    Input layers to average over.
+  /// @param normalize Whether to normalize the result to unit thickness.
   MaterialProperties(const std::vector<MaterialProperties>& layers,
                      bool normalize = true);
   ~MaterialProperties() = default;
@@ -61,24 +61,10 @@ class MaterialProperties {
   /// Scale the material thickness.
   MaterialProperties& operator*=(float scale);
 
-  /// Scale to unit thickness
-  ///
-  /// A helper method to allows to scale a material property
-  /// for unphysical/blended material to a unit thickness of 1.
-  /// This is safe for energy loss and multiple scattering
-  /// application in the material integration
-  ///
-  /// Scaling to unit thickness changes:
-  /// - X0,L0,rho of the material
-  ///
-  /// Leaves intact:
-  /// - tInX0, tInL0, A, Z
-  void scaleToUnitThickness();
-
   /// Check if the material is valid, i.e. it is not vacuum.
   constexpr operator bool() const { return m_material; }
 
-  /// Access the average material parameters.
+  /// Access the (average) material parameters.
   constexpr const Material& material() const { return m_material; }
   /// Return the thickness.
   constexpr float thickness() const { return m_thickness; }
@@ -95,7 +81,7 @@ class MaterialProperties {
 
   friend constexpr bool operator==(const MaterialProperties& lhs,
                                    const MaterialProperties& rhs) {
-    // d/X0 and l/X0 are fully defined by material and thickness
+    // t/X0 and t/L0 are dependent variables and need not be checked
     return (lhs.m_material == rhs.m_material) and
            (lhs.m_thickness == rhs.m_thickness);
   }

@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// MaterialProperties.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Material/MaterialProperties.hpp"
 
 #include <climits>
@@ -35,38 +31,56 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
       m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
                                                      : 0.) {}
 
+namespace {
+/// Scale material properties to unit thickness.
+///
+/// A helper method to allows to scale a material property for
+/// unphysical/blended material to a unit thickness of 1. This is safe for
+/// energy loss and multiple scattering application in the material integration
+///
+/// Scaling to unit thickness changes only X0, L0, and rho.
+Acts::Material makeUnitThicknessMaterial(double X0, double L0, double A,
+                                         double Z, double density,
+                                         double thickness) {
+  return {static_cast<float>(X0 / thickness),
+          static_cast<float>(L0 / thickness), static_cast<float>(A),
+          static_cast<float>(Z), static_cast<float>(density * thickness)};
+}
+}  // namespace
+
 Acts::MaterialProperties::MaterialProperties(
-    const std::vector<MaterialProperties>& matLayers, bool normalize)
+    const std::vector<MaterialProperties>& layers, bool normalize)
     : MaterialProperties() {
-  double rho = 0.;
+  // use double for computations to avoid precision loss
   double A = 0.;
   double Z = 0.;
-  double X0 = 0.;
-  double L0 = 0.;
-
-  for (auto& mat : matLayers) {
-    // thickness in X0 and L0 are strictly additive
-    m_dInX0 += mat.thicknessInX0();
-    m_dInL0 += mat.thicknessInL0();
-    double t = mat.thickness();
-    double r = mat.material().rho();
-    m_thickness += t;
-    // density scales with thickness
-    rho += r * t;
+  double density = 0.;
+  double thickness = 0.;
+  for (const auto& layer : layers) {
+    const auto& mat = layer.material();
     // A/Z scale with thickness * density
-    A += mat.material().A() * r * t;
-    Z += mat.material().Z() * r * t;
+    A += mat.A() * mat.rho() * layer.thickness();
+    Z += mat.Z() * mat.rho() * layer.thickness();
+    // density scales with thickness
+    density += mat.rho() * layer.thickness();
+    thickness += layer.thickness();
+    // relative thickness in X0 and L0 are strictly additive
+    m_dInX0 += layer.thicknessInX0();
+    m_dInL0 += layer.thicknessInL0();
   }
-  // Now create the average
-  X0 = m_thickness / m_dInX0;
-  L0 = m_thickness / m_dInL0;
-  A /= rho;
-  Z /= rho;
-  rho /= m_thickness;
+  // create the average
+  const double X0 = thickness / m_dInX0;
+  const double L0 = thickness / m_dInL0;
+  A /= density;
+  Z /= density;
+  density /= thickness;
   // set the material
-  m_material = Material(X0, L0, A, Z, rho);
   if (normalize) {
-    scaleToUnitThickness();
+    m_material = makeUnitThicknessMaterial(X0, L0, A, Z, density, thickness);
+    m_thickness = 1.0f;
+  } else {
+    m_material = Material(X0, L0, A, Z, density);
+    m_thickness = thickness;
   }
 }
 
@@ -76,18 +90,6 @@ Acts::MaterialProperties& Acts::MaterialProperties::operator*=(float scale) {
   m_dInL0 *= scale;
   m_thickness *= scale;
   return (*this);
-}
-
-void Acts::MaterialProperties::scaleToUnitThickness() {
-  // And 'condense to unit thickness' if configured
-  double t = thickness();
-  double X0 = m_material.X0() / t;
-  double L0 = m_material.L0() / t;
-  double A = m_material.A();
-  double Z = m_material.Z();
-  double rho = m_material.rho() * t;
-  m_material = Material(X0, L0, A, Z, rho);
-  m_thickness = 1.;
 }
 
 std::ostream& Acts::operator<<(std::ostream& os,
