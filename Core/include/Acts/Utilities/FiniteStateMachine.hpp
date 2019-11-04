@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Utilities/TypeTraits.hpp"
-
 #include <optional>
 #include <string_view>
 #include <variant>
+
+#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
 
@@ -135,12 +135,8 @@ class FiniteStateMachine {
     Derived& child = static_cast<Derived&>(*this);
 
     // call on exit function
-    std::visit(
-        [&](auto& s) {
-          using state_type = decltype(s);
-          child.on_exit(s, std::forward<Args>(args)...);
-        },
-        m_state);
+    std::visit([&](auto& s) { child.on_exit(s, std::forward<Args>(args)...); },
+               m_state);
 
     m_state = std::move(state);
 
@@ -190,8 +186,6 @@ class FiniteStateMachine {
 
     auto new_state = std::visit(
         [&](auto& s) -> std::optional<StateVariant> {
-          using state_type = decltype(s);
-
           auto s2 = child.on_event(s, std::forward<Event>(event),
                                    std::forward<Args>(args)...);
 
