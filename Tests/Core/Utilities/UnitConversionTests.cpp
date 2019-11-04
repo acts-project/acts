@@ -82,6 +82,8 @@ BOOST_AUTO_TEST_CASE(energy_conversions) {
 BOOST_AUTO_TEST_CASE(mass_conversions) {
   CHECK_CLOSE_REL(1_kg, 1000_g, 1e-15);
   CHECK_CLOSE_REL(0.001_kg, 1_g, 1e-15);
+  CHECK_CLOSE_REL(1_u, 931.49410242_MeV, 1e-15);
+  CHECK_CLOSE_REL(1_u, 1.66053906660e-24_g, 1e-7);
 }
 
 BOOST_AUTO_TEST_CASE(mass_energy_conversions) {

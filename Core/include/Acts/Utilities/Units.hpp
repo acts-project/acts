@@ -123,6 +123,8 @@ constexpr double keV = 1e-6;
 constexpr double MeV = 1e-3;
 constexpr double GeV = 1.0;
 constexpr double TeV = 1e3;
+// atomic mass unit u
+constexpr double u = 0.93149410242;
 //     1eV/c² == 1.782662e-36kg
 //    1GeV/c² == 1.782662e-27kg
 // ->     1kg == (1/1.782662e-27)GeV/c²
@@ -177,6 +179,7 @@ ACTS_DEFINE_UNIT_LITERAL(keV)
 ACTS_DEFINE_UNIT_LITERAL(MeV)
 ACTS_DEFINE_UNIT_LITERAL(GeV)
 ACTS_DEFINE_UNIT_LITERAL(TeV)
+ACTS_DEFINE_UNIT_LITERAL(u)
 ACTS_DEFINE_UNIT_LITERAL(g)
 ACTS_DEFINE_UNIT_LITERAL(kg)
 ACTS_DEFINE_UNIT_LITERAL(e)
