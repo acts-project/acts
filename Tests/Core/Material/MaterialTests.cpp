@@ -12,66 +12,80 @@
 #include <boost/test/unit_test.hpp>
 // clang-format on
 
-#include <climits>
+#include <limits>
 
 #include "Acts/Material/Material.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-namespace Acts {
-namespace Test {
-
 using namespace Acts::UnitLiterals;
 
-// the maximum tolerance is half the accuracy
-float elMaxTolerance = 0.5 / float(UCHAR_MAX);
+static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 
-// first test correct boolean behavior
-BOOST_AUTO_TEST_CASE(Material_boolean_test) {
-  Material vacuum;
-  BOOST_CHECK_EQUAL(bool(vacuum), false);
+BOOST_AUTO_TEST_SUITE(material)
 
-  Material something(1., 2., 3., 4., 5);
-  BOOST_CHECK_EQUAL(bool(something), true);
+BOOST_AUTO_TEST_CASE(construct_vacuum) {
+  // default constructor build invalid material a.k.a. vacuum
+  Acts::Material vacuum;
+  BOOST_TEST(!vacuum);
 }
 
-// now test thge construction and units
-BOOST_AUTO_TEST_CASE(Material_construction_and_units) {
-  // density at room temperature
-  float X0 = 9.370_cm;
-  float L0 = 46.52_cm;
-  float A = 28.0855;
-  float Z = 14.;
-  float rho = 2.329_g / std::pow(UnitConstants::cm, 3.0);
-
-  Material silicon(X0, L0, A, Z, rho);
-  CHECK_CLOSE_REL(silicon.X0(), 93.70_mm, 0.001);
-  CHECK_CLOSE_REL(silicon.L0(), 465.2_mm, 0.001);
-  CHECK_CLOSE_REL(silicon.Z(), 14., 0.001);
-  CHECK_CLOSE_REL(silicon.A(), 28.0855, 0.001);
-  CHECK_CLOSE_REL(silicon.rho(), 0.002329_g / std::pow(UnitConstants::cm, 3.0),
-                  0.001);
-  CHECK_CLOSE_REL(silicon.electronDensity(), 14. / 28.0855 * 0.002329, 0.0001);
-
-  ActsVectorF<5> siliconValues;
-  siliconValues << X0, L0, A, Z, rho;
-  Material siliconFromValues(siliconValues);
-  BOOST_CHECK_EQUAL(silicon, siliconFromValues);
-
-  Material copiedSilicon(silicon);
-  BOOST_CHECK_EQUAL(silicon, copiedSilicon);
-
-  Material moveCopiedSilicon(std::move(copiedSilicon));
-  BOOST_CHECK_EQUAL(silicon, moveCopiedSilicon);
-
-  Material assignedSilicon = silicon;
-  BOOST_CHECK_EQUAL(silicon, assignedSilicon);
-
-  Material moveAssignedSilicon = std::move(assignedSilicon);
-  BOOST_CHECK_EQUAL(silicon, moveAssignedSilicon);
-
-  ActsVectorF<5> decomposedSilicon = silicon.classificationNumbers();
-  CHECK_CLOSE_REL(decomposedSilicon, siliconValues, 1e-4);
+BOOST_AUTO_TEST_CASE(construct_something) {
+  // anything with non-zero A is valid material
+  Acts::Material notVacuum(1, 2, 3, 4, 5);
+  BOOST_TEST(!!notVacuum);
 }
-}  // namespace Test
-}  // namespace Acts
+
+// example values for silicon
+static constexpr float SiX0 = 9.370_cm;
+static constexpr float SiL0 = 46.52_cm;
+static constexpr float SiAr = 28.0855;
+static constexpr float SiZ = 14.0;
+static constexpr float SiRho = 2.329_g / 1_cm3;
+// manually calculated
+static constexpr float SiNe = 1.160954941 / 1_cm3;
+static constexpr float SiI = 172.042290036_eV;
+
+BOOST_AUTO_TEST_CASE(units) {
+  Acts::Material silicon(SiX0, SiL0, SiAr, SiZ, SiRho);
+
+  // check values directly
+  CHECK_CLOSE_REL(silicon.X0(), SiX0, eps);
+  CHECK_CLOSE_REL(silicon.L0(), SiL0, eps);
+  CHECK_CLOSE_REL(silicon.Ar(), SiAr, eps);
+  CHECK_CLOSE_REL(silicon.Z(), SiZ, eps);
+  CHECK_CLOSE_REL(silicon.rho(), SiRho, eps);
+  // check values w/ different units if possible
+  CHECK_CLOSE_REL(silicon.X0(), 93.70_mm, eps);
+  CHECK_CLOSE_REL(silicon.X0(), 0.09370_m, eps);
+  CHECK_CLOSE_REL(silicon.L0(), 465.2_mm, eps);
+  CHECK_CLOSE_REL(silicon.L0(), 0.4652_m, eps);
+  CHECK_CLOSE_REL(silicon.rho(), 0.002329_kg / 1_cm3, eps);
+  CHECK_CLOSE_REL(silicon.rho(), 0.002329_g / 1_mm3, eps);
+  // check derived values
+  CHECK_CLOSE_REL(silicon.molarElectronDensity(), SiNe, eps);
+  CHECK_CLOSE_REL(silicon.meanExcitationEnergy(), SiI, eps);
+}
+
+// encode values as classification vector
+static Acts::ActsVectorF<5> makeSiClassificationNumbers() {
+  Acts::ActsVectorF<5> values;
+  values[Acts::Material::eX0] = SiX0;
+  values[Acts::Material::eL0] = SiL0;
+  values[Acts::Material::eAr] = SiAr;
+  values[Acts::Material::eZ] = SiZ;
+  values[Acts::Material::eRho] = SiRho;
+  return values;
+}
+
+BOOST_AUTO_TEST_CASE(classification_numbers) {
+  const auto numbers = makeSiClassificationNumbers();
+  Acts::Material fromNumbers(numbers);
+  Acts::Material manual(SiX0, SiL0, SiAr, SiZ, SiRho);
+
+  BOOST_TEST(fromNumbers == manual);
+  CHECK_CLOSE_REL(fromNumbers.classificationNumbers(), numbers, eps);
+  CHECK_CLOSE_REL(manual.classificationNumbers(), numbers, eps);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
