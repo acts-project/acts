@@ -84,12 +84,10 @@ Acts::MaterialProperties::MaterialProperties(
   }
 }
 
-Acts::MaterialProperties& Acts::MaterialProperties::operator*=(float scale) {
-  // assuming rescaling of the material thickness
+void Acts::MaterialProperties::scaleThickness(float scale) {
   m_dInX0 *= scale;
   m_dInL0 *= scale;
   m_thickness *= scale;
-  return (*this);
 }
 
 std::ostream& Acts::operator<<(std::ostream& os,

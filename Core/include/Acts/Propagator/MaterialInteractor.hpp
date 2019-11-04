@@ -162,7 +162,7 @@ struct MaterialInteractor {
             stepper.direction(state.stepping));
 
         // Scale the material properties
-        mProperties *= pCorrection;
+        mProperties.scaleThickness(pCorrection);
 
         // The momentum at current position
         const double p = stepper.momentum(state.stepping);

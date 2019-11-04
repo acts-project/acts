@@ -58,8 +58,8 @@ class MaterialProperties {
   MaterialProperties& operator=(MaterialProperties&&) = default;
   MaterialProperties& operator=(const MaterialProperties&) = default;
 
-  /// Scale the material thickness.
-  MaterialProperties& operator*=(float scale);
+  /// Scale the material thickness by the given factor.
+  void scaleThickness(float scale);
 
   /// Check if the material is valid, i.e. it is not vacuum.
   constexpr operator bool() const { return m_material; }
