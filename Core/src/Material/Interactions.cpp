@@ -25,8 +25,7 @@ enum ParticleType : int {
 // values from RPP2018 table 33.1
 // electron mass
 static constexpr float Me = 0.5109989461_MeV;
-// Bethe formular prefactor
-// the 1/mol component has been moved to the electron density
+// Bethe formular prefactor. 1/mol unit is just a factor 1 here.
 static constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
 // Energy scale for plasma energy.
 static constexpr float PlasmaEnergyScale = 28.816_eV;
@@ -102,9 +101,9 @@ inline float logDeriveWMax(float m, float qOverP,
 ///
 /// where (Z/A)*rho it the electron density in the material and x is the
 /// traversed length (thickness) of the material.
-inline float computeEpsilon(float electronDensity, float thickness,
+inline float computeEpsilon(float molarElectronDensity, float thickness,
                             const RelativisticQuantities& rq) {
-  return 0.5f * K * electronDensity * thickness * rq.q2OverBeta2;
+  return 0.5f * K * molarElectronDensity * thickness * rq.q2OverBeta2;
 }
 /// Compute epsilon logarithmic derivative w/ respect to q/p.
 inline float logDeriveEpsilon(float qOverP, const RelativisticQuantities& rq) {
@@ -118,14 +117,14 @@ inline float logDeriveEpsilon(float qOverP, const RelativisticQuantities& rq) {
 ///
 /// @todo Should we use RPP2018 eq. 33.7 instead w/ tabulated constants?
 inline float computeDeltaHalf(float meanExitationPotential,
-                              float electronDensity,
+                              float molarElectronDensity,
                               const RelativisticQuantities& rq) {
   // only relevant for very high ernergies; use arbitrary cutoff
   if (rq.betaGamma < 10.0f) {
     return 0.0f;
   }
   // pre-factor according to RPP2019 table 33.1
-  const auto plasmaEnergy = PlasmaEnergyScale * std::sqrt(electronDensity);
+  const auto plasmaEnergy = PlasmaEnergyScale * std::sqrt(molarElectronDensity);
   return std::log(rq.betaGamma) +
          std::log(plasmaEnergy / meanExitationPotential) - 0.5f;
 }
@@ -154,10 +153,10 @@ std::pair<float, float> Acts::computeIonisationLossMean(
   }
 
   const auto I = material.meanExcitationEnergy();
-  const auto rho = material.electronDensity();
+  const auto Ne = material.molarElectronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(rho, thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, rho, rq);
+  const auto eps = computeEpsilon(Ne, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, Ne, rq);
   const auto u = computeMassTerm(Me, rq);
   const auto wmax = computeWMax(m, rq);
   // uses RPP2018 eq. 33.5 scaled from mass stopping power to linear stopping
@@ -181,10 +180,10 @@ float Acts::deriveIonisationLossMeanQOverP(const Material& material,
   }
 
   const auto I = material.meanExcitationEnergy();
-  const auto rho = material.electronDensity();
+  const auto Ne = material.molarElectronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(rho, thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, rho, rq);
+  const auto eps = computeEpsilon(Ne, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, Ne, rq);
   const auto u = computeMassTerm(Me, rq);
   const auto wmax = computeWMax(m, rq);
   // original equation is of the form
@@ -219,10 +218,10 @@ std::pair<float, float> Acts::computeIonisationLossMode(
   }
 
   const auto I = material.meanExcitationEnergy();
-  const auto rho = material.electronDensity();
+  const auto Ne = material.molarElectronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(rho, thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, rho, rq);
+  const auto eps = computeEpsilon(Ne, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, Ne, rq);
   const auto t = computeMassTerm(m, rq);
   // uses RPP2018 eq. 33.11
   const auto running =
@@ -241,10 +240,10 @@ float Acts::deriveIonisationLossModeQOverP(const Material& material,
   }
 
   const auto I = material.meanExcitationEnergy();
-  const auto rho = material.electronDensity();
+  const auto Ne = material.molarElectronDensity();
   const auto rq = RelativisticQuantities(m, qOverP, q);
-  const auto eps = computeEpsilon(rho, thickness, rq);
-  const auto dhalf = computeDeltaHalf(I, rho, rq);
+  const auto eps = computeEpsilon(Ne, thickness, rq);
+  const auto dhalf = computeDeltaHalf(I, Ne, rq);
   const auto t = computeMassTerm(m, rq);
   // original equation is of the form
   //

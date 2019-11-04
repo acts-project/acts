@@ -20,7 +20,7 @@ Acts::Material::Material(const ActsVectorF<5>& parameters)
     : Material(parameters[eX0], parameters[eL0], parameters[eA], parameters[eZ],
                parameters[eRho]) {}
 
-float Acts::Material::electronDensity() const {
+float Acts::Material::molarElectronDensity() const {
   using namespace Acts::UnitLiterals;
 
   // no material, no electron density
@@ -28,29 +28,21 @@ float Acts::Material::electronDensity() const {
     return 0.0f;
   }
 
-  // atomic mass constant to convert from relative atomic mass to native unit.
-  constexpr double Da = 931.49410242_MeV;
   // Avogadro constant
   constexpr double Na = 6.02214076e23;
-
-  // perform computations in double precision. due to our choice of native
-  // units we might and up with a ratio of large numbers and need to
-  // avoid precision loss.
-  const double A = m_a;
-  const double Z = m_z;
-  const double rho = m_rho;
-  // atomic mass in native units is A * Da
-  const auto atomMass = (A * Da);
-  // each atom has Z electrons, thus electrons per mass is Z / (A * Da)
-  // units are  [Z / (A * Da)] = 1 / (1 * mass)
-  const auto electronsPerMass = Z / atomMass;
-  // electrons are thus given by (Z / (A * Da)) * rho
-  // units are [(Z / (A * Da)) * rho] = (1/mass) * mass/volume = 1/volume
-  const auto electronDensity = electronsPerMass * rho;
-  // convert from numbers of electrons to mol.
-  const auto molDensity = electronDensity / Na;
-
-  return molDensity;
+  // perform computations in double precision. due to the native units we might
+  // and up with ratios of large numbers and need to keep precision.
+  // convert relativ atomic mass Ar to atom mass ma in native units
+  const double atomicMass = m_a * 1_u;
+  // compute molar atomic density
+  //   [mass density / atom mass / Avogadro constant]
+  //   [mass density / (atom mass * Avogadro constant)]
+  // = (mass / volume) / (mass * (1/mol))
+  // = (mass * mol) / (mass * volume)
+  const double molarAtomicDensity =
+      static_cast<double>(m_rho) / atomicMass / Na;
+  // each atom has Z electrons
+  return static_cast<float>(m_z * molarAtomicDensity);
 }
 
 float Acts::Material::meanExcitationEnergy() const {

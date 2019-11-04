@@ -76,7 +76,7 @@ class Material {
   ///
   /// Use mol instead of the real number of electrons to avoid large numbers
   /// which could result in numerical instabilities somewhere else.
-  float electronDensity() const;
+  float molarElectronDensity() const;
   /// Return the mean electron excitation energy.
   float meanExcitationEnergy() const;
 
