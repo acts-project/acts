@@ -10,7 +10,7 @@
 #define BOOST_TEST_MODULE AccumulatedVolumeMaterial Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include <vector>
+
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -18,57 +18,64 @@
 namespace Acts {
 namespace Test {
 
-BOOST_AUTO_TEST_CASE(AccumulatedMaterialMaterial_test) {
+BOOST_AUTO_TEST_SUITE(accumulated_material)
+
+BOOST_AUTO_TEST_CASE(vacuum) {
   AccumulatedVolumeMaterial avm;
 
-  // Try averaging without content
-  Material result = avm.average();
-  BOOST_CHECK_EQUAL(result, Material());
+  // averaging over nothing is vacuum
+  BOOST_TEST(avm.average() == Material());
 
-  // Test that the mean of a single material is the material itself
-  Material mat1(1., 2., 3., 4., 5.);
-  avm.accumulate(mat1);
-  result = avm.average();
-  CHECK_CLOSE_REL(result.X0(), mat1.X0(), 1e-4);
-  CHECK_CLOSE_REL(result.L0(), mat1.L0(), 1e-4);
-  CHECK_CLOSE_REL(result.A(), mat1.A(), 1e-4);
-  CHECK_CLOSE_REL(result.Z(), mat1.Z(), 1e-4);
-  CHECK_CLOSE_REL(result.rho(), mat1.rho(), 1e-4);
-
-  // Test that the mean is actually calculated
-  Material mat2(6., 7., 8., 9., 10.);
-  avm.accumulate(mat2);
-  result = avm.average();
-  CHECK_CLOSE_REL(result.X0(), 0.5 * (mat1.X0() + mat2.X0()), 1e-4);
-  CHECK_CLOSE_REL(result.L0(), 0.5 * (mat1.L0() + mat2.L0()), 1e-4);
-  CHECK_CLOSE_REL(result.A(), 0.5 * (mat1.A() + mat2.A()), 1e-4);
-  CHECK_CLOSE_REL(result.Z(), 0.5 * (mat1.Z() + mat2.Z()), 1e-4);
-  CHECK_CLOSE_REL(result.rho(), 0.5 * (mat1.rho() + mat2.rho()), 1e-4);
-
-  // Test that the mean of vacuums is a vacuum
-  AccumulatedVolumeMaterial avm2;
-  avm2.accumulate(Material());
-  avm2.accumulate(Material());
-  result = avm2.average();
-  BOOST_CHECK_EQUAL(result, Material());
-
-  // Add vacuum to the material and test it
+  // averaging over vacuum is still vacuum
   avm.accumulate(Material());
-  result = avm.average();
-  CHECK_CLOSE_REL(result.X0(), 0.25 * (mat1.X0() + mat2.X0()) * 3, 1e-4);
-  CHECK_CLOSE_REL(result.L0(), 0.25 * (mat1.L0() + mat2.L0()) * 3, 1e-4);
-  CHECK_CLOSE_REL(result.A(), (mat1.A() + mat2.A()) / 3, 1e-4);
-  CHECK_CLOSE_REL(result.Z(), (mat1.Z() + mat2.Z()) / 3, 1e-4);
-  CHECK_CLOSE_REL(result.rho(), (mat1.rho() + mat2.rho()) / 3, 1e-4);
-
-  // Add material to the vacuum and test it
-  avm2.accumulate(mat1);
-  result = avm2.average();
-  CHECK_CLOSE_REL(result.X0(), mat1.X0() * 3, 1e-4);
-  CHECK_CLOSE_REL(result.L0(), mat1.L0() * 3, 1e-4);
-  CHECK_CLOSE_REL(result.A(), mat1.A() / 3, 1e-4);
-  CHECK_CLOSE_REL(result.Z(), mat1.Z() / 3, 1e-4);
-  CHECK_CLOSE_REL(result.rho(), mat1.rho() / 3, 1e-4);
+  avm.accumulate(Material());
+  BOOST_TEST(avm.average() == Material());
 }
+
+BOOST_AUTO_TEST_CASE(single_material) {
+  Material mat(1., 2., 3., 4., 5.);
+
+  AccumulatedVolumeMaterial avm;
+  // mean of a single material should be the same material again
+  avm.accumulate(mat);
+  {
+    auto result = avm.average();
+    CHECK_CLOSE_REL(result.X0(), mat.X0(), 1e-4);
+    CHECK_CLOSE_REL(result.L0(), mat.L0(), 1e-4);
+    CHECK_CLOSE_REL(result.Ar(), mat.Ar(), 1e-4);
+    CHECK_CLOSE_REL(result.Z(), mat.Z(), 1e-4);
+    CHECK_CLOSE_REL(result.rho(), mat.rho(), 1e-4);
+  }
+  // adding a vacuum step changes the average
+  avm.accumulate(Material());
+  {
+    auto result = avm.average();
+    // less scattering in vacuum, larger radiation length
+    CHECK_CLOSE_REL(result.X0(), 2 * mat.X0(), 1e-4);
+    CHECK_CLOSE_REL(result.L0(), 2 * mat.L0(), 1e-4);
+    // less material, lower density
+    CHECK_CLOSE_REL(result.Ar(), 0.5 * mat.Ar(), 1e-4);
+    CHECK_CLOSE_REL(result.Z(), 0.5 * mat.Z(), 1e-4);
+    CHECK_CLOSE_REL(result.rho(), 0.5 * mat.rho(), 1e-4);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(two_materials) {
+  Material mat1(1., 2., 3., 4., 5.);
+  Material mat2(6., 7., 8., 9., 10.);
+
+  AccumulatedVolumeMaterial avm;
+  avm.accumulate(mat1);
+  avm.accumulate(mat2);
+  auto result = avm.average();
+  CHECK_CLOSE_REL(result.X0(), 0.5 * (1. + 6.), 1e-4);
+  CHECK_CLOSE_REL(result.L0(), 0.5 * (2. + 7.), 1e-4);
+  CHECK_CLOSE_REL(result.Ar(), 0.5 * (3. + 8.), 1e-4);
+  CHECK_CLOSE_REL(result.Z(), 0.5 * (4. + 9.), 1e-4);
+  CHECK_CLOSE_REL(result.rho(), 0.5 * (5. + 10.), 1e-4);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Test
 }  // namespace Acts
