@@ -364,10 +364,11 @@ class Propagator final {
   ///         track parameters, and output of actions (if they produce any)
   ///
   template <typename parameters_t, typename propagator_options_t,
+			typename return_parameters_t = CurvilinearParameters,
             typename path_aborter_t = PathLimitReached>
-  Result<
-      action_list_t_result_t<CurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>>
+  Result<action_list_t_result_t<
+      return_parameters_t,
+      typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
