@@ -11,8 +11,8 @@
 #include <boost/range/adaptors.hpp>
 #include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
