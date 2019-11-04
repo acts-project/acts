@@ -27,6 +27,42 @@
 
 namespace Acts {
 
+
+  template<bool S, bool E>
+  struct JacobianHelper {
+	  using type = int;
+  };
+  
+  //~ template<typename S, typename E, std::enable_if_t<S::is_local_representation and E::is_local_representation, int>>
+  //~ template<bool S, bool E,  std::enable_if_t<S and E, int>>
+  template<>
+  struct JacobianHelper<true, true> //<std::integral_constant<S, true>::value, std::is_same<std::bool_constant<E>, std::true_type>::value>
+  {
+	  using type = BoundMatrix;
+  };
+  
+  //~ template<typename S, typename E, std::enable_if_t<S::is_local_representation and not E::is_local_representation, int>>
+  template<>
+  struct JacobianHelper<true, false>
+  {
+	  using type = BoundToFreeMatrix;
+  };
+  
+  //~ template<typename S, typename E, std::enable_if_t<not S::is_local_representation and E::is_local_representation, int>>
+template<>
+  struct JacobianHelper<false, true>  
+  {
+	  using type = FreeToBoundMatrix;
+  };
+  
+  //~ template<typename S, typename E, std::enable_if_t<not S::is_local_representation and not E::is_local_representation, int>>
+template<>
+  struct JacobianHelper<false, false>  
+  {
+	  using type = FreeMatrix;
+  };
+  
+  
 /// @brief straight line stepper based on Surface intersection
 ///
 /// The straight line stepper is a simple navigation stepper

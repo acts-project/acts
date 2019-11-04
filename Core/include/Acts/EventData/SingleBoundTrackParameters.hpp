@@ -35,6 +35,7 @@ namespace Acts {
 template <class charge_t>
 class SingleBoundTrackParameters {
  public:
+  static constexpr bool is_local_representation = true;
   using Scalar = BoundScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
