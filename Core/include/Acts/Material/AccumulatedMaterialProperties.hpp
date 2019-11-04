@@ -97,7 +97,7 @@ class AccumulatedMaterialProperties {
  private:
   double m_eventPathInX0{0.};  //!< event: accumulate the thickness in X0
   double m_eventPathInL0{0.};  //!< event: accumulate the thickness in L0
-  double m_eventA{0.};         //!< event: accumulate the contribution to A
+  double m_eventAr{0.};        //!< event: accumulate the contribution to A
   double m_eventZ{0.};         //!< event: accumulate the contribution to Z
   double m_eventRho{0.};       //!< event: accumulate the contribution to rho
   double m_eventPath{0.};      //!< event: the event path for normalisation
@@ -105,7 +105,7 @@ class AccumulatedMaterialProperties {
 
   double m_totalPathInX0{0.};  //!< total: accumulate the thickness in X0
   double m_totalPathInL0{0.};  //!< total: accumulate the thickness in L0
-  double m_totalA{0.};         //!< total: accumulate the contribution to A
+  double m_totalAr{0.};        //!< total: accumulate the contribution to A
   double m_totalZ{0.};         //!< total: accumulate the contribution to Z
   double m_totalRho{0.};       //!< total: accumulate the contribution to rho
 
@@ -121,7 +121,7 @@ inline void AccumulatedMaterialProperties::accumulate(
   m_eventPath += t;
   m_eventRho += r * t;
 
-  m_eventA += amp.material().A() * r * t;
+  m_eventAr += amp.material().Ar() * r * t;
   m_eventZ += amp.material().Z() * r * t;
 
   m_eventPathCorrection += pathCorrection * t;
@@ -138,13 +138,13 @@ inline void AccumulatedMaterialProperties::trackAverage(bool emptyHit) {
     m_eventPathCorrection /= m_eventPath;
     m_totalPathInX0 += m_eventPathInX0 / m_eventPathCorrection;
     m_totalPathInL0 += m_eventPathInL0 / m_eventPathCorrection;
-    m_totalA += (m_eventA / m_eventRho);
+    m_totalAr += (m_eventAr / m_eventRho);
     m_totalZ += (m_eventZ / m_eventRho);
     m_totalRho += (m_eventRho);
   }
   m_eventPathInX0 = 0.;
   m_eventPathInL0 = 0.;
-  m_eventA = 0.;
+  m_eventAr = 0.;
   m_eventZ = 0.;
   m_eventRho = 0.;
   m_eventPath = 0.;
@@ -158,13 +158,13 @@ AccumulatedMaterialProperties::totalAverage() {
     m_totalPathInX0 *= eventScalor;
     m_totalPathInL0 *= eventScalor;
     m_totalRho *= eventScalor;
-    m_totalA *= eventScalor;
+    m_totalAr *= eventScalor;
     m_totalZ *= eventScalor;
     // Create the material
     double X0 = 1. / m_totalPathInX0;
     double L0 = 1. / m_totalPathInL0;
     // Create the material properties - fixed to unit path length
-    MaterialProperties averageMat(X0, L0, m_totalA, m_totalZ, m_totalRho, 1.);
+    MaterialProperties averageMat(X0, L0, m_totalAr, m_totalZ, m_totalRho, 1.);
     return std::pair<MaterialProperties, unsigned int>(std::move(averageMat),
                                                        m_totalEvents);
   }

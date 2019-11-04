@@ -14,6 +14,7 @@
 
 #include <array>
 #include <vector>
+
 #include "Acts/Material/AccumulatedMaterialProperties.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"

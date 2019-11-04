@@ -22,7 +22,7 @@ namespace Acts {
 ///
 /// *   X0:  radiation length (native length units)
 /// *   L0:  nuclear interaction length (native length units)
-/// *   A:   relative atomic mass (unitless number)
+/// *   Ar:  relative atomic mass (unitless number)
 /// *   Z:   atomic number (unitless number)
 /// *   rho: mass density (native mass unit / (native length unit)³)
 ///
@@ -34,7 +34,7 @@ class Material {
   enum Param {
     eX0 = 0,
     eL0 = 1,
-    eA = 2,
+    eAr = 2,
     eZ = 3,
     eRho = 4,
   };
@@ -43,12 +43,12 @@ class Material {
   Material() = default;
   /// Construct from material parameters.
   ///
-  /// @param iX0  is the radiation length
-  /// @param iL0  is the nuclear interaction length
-  /// @param iA   is the relative atomic mass
-  /// @param iZ   is the atomic number
-  /// @param iRho is the mass density
-  Material(float iX0, float iL0, float iA, float iZ, float iRho);
+  /// @param X0_  is the radiation length
+  /// @param L0_  is the nuclear interaction length
+  /// @param Ar_  is the relative atomic mass
+  /// @param Z_   is the atomic number
+  /// @param rho_ is the mass density
+  Material(float X0_, float L0_, float Ar_, float Z_, float rho_);
   /// Construct from an encoded parameters vector.
   Material(const ActsVectorF<5>& parameters);
   ~Material() = default;
@@ -59,14 +59,14 @@ class Material {
   Material& operator=(const Material& mat) = default;
 
   /// Check if the material is valid, i.e. it is not vacuum.
-  constexpr operator bool() const { return m_a != 0.0f; }
+  constexpr operator bool() const { return m_ar != 0.0f; }
 
   /// Return the radition length. Infinity in case of vacuum.
   constexpr float X0() const { return m_x0; }
   /// Return the nuclear interaction length. Infinity in case of vacuum.
   constexpr float L0() const { return m_l0; }
   /// Return the relative atomic mass.
-  constexpr float A() const { return m_a; }
+  constexpr float Ar() const { return m_ar; }
   /// Return the atomic number.
   constexpr float Z() const { return m_z; }
   /// Return the mass density.
@@ -86,13 +86,13 @@ class Material {
  private:
   float m_x0 = std::numeric_limits<float>::infinity();
   float m_l0 = std::numeric_limits<float>::infinity();
-  float m_a = 0.0f;
+  float m_ar = 0.0f;
   float m_z = 0.0f;
   float m_rho = 0.0f;
 
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) and (lhs.m_l0 == rhs.m_l0) and
-           (lhs.m_a == rhs.m_a) and (lhs.m_z == rhs.m_z) and
+           (lhs.m_ar == rhs.m_ar) and (lhs.m_z == rhs.m_z) and
            (lhs.m_rho == rhs.m_rho);
   }
   friend constexpr bool operator!=(const Material& lhs, const Material& rhs) {

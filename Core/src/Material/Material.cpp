@@ -13,12 +13,12 @@
 
 #include "Acts/Utilities/Units.hpp"
 
-Acts::Material::Material(float iX0, float iL0, float iA, float iZ, float iRho)
-    : m_x0(iX0), m_l0(iL0), m_a(iA), m_z(iZ), m_rho(iRho) {}
+Acts::Material::Material(float X0_, float L0_, float Ar_, float Z_, float rho_)
+    : m_x0(X0_), m_l0(L0_), m_ar(Ar_), m_z(Z_), m_rho(rho_) {}
 
 Acts::Material::Material(const ActsVectorF<5>& parameters)
-    : Material(parameters[eX0], parameters[eL0], parameters[eA], parameters[eZ],
-               parameters[eRho]) {}
+    : Material(parameters[eX0], parameters[eL0], parameters[eAr],
+               parameters[eZ], parameters[eRho]) {}
 
 float Acts::Material::molarElectronDensity() const {
   using namespace Acts::UnitLiterals;
@@ -32,8 +32,8 @@ float Acts::Material::molarElectronDensity() const {
   constexpr double Na = 6.02214076e23;
   // perform computations in double precision. due to the native units we might
   // and up with ratios of large numbers and need to keep precision.
-  // convert relativ atomic mass Ar to atom mass ma in native units
-  const double atomicMass = m_a * 1_u;
+  // convert relativ atomic mass Ar to atom mass in native units
+  const double atomicMass = m_ar * 1_u;
   // compute molar atomic density
   //   [mass density / atom mass / Avogadro constant]
   //   [mass density / (atom mass * Avogadro constant)]
@@ -56,7 +56,7 @@ Acts::ActsVectorF<5> Acts::Material::classificationNumbers() const {
   ActsVectorF<5> parameters;
   parameters[eX0] = m_x0;
   parameters[eL0] = m_l0;
-  parameters[eA] = m_a;
+  parameters[eAr] = m_ar;
   parameters[eZ] = m_z;
   parameters[eRho] = m_rho;
   return parameters;
@@ -68,7 +68,7 @@ std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
   } else {
     os << "X0=" << material.X0();
     os << "|L0=" << material.L0();
-    os << "|A=" << material.A();
+    os << "|Ar=" << material.Ar();
     os << "|Z=" << material.Z();
     os << "|rho=" << material.rho();
   }

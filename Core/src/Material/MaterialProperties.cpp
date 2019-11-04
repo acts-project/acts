@@ -14,22 +14,22 @@
 Acts::MaterialProperties::MaterialProperties(float thickness)
     : m_thickness(thickness) {}
 
-Acts::MaterialProperties::MaterialProperties(float Xo, float Lo, float averageA,
-                                             float averageZ, float averageRho,
+Acts::MaterialProperties::MaterialProperties(float X0, float L0, float Ar,
+                                             float Z, float rho,
                                              float thickness)
-    : m_material(Xo, Lo, averageA, averageZ, averageRho),
+    : m_material(X0, L0, Ar, Z, rho),
       m_thickness(thickness),
-      m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.),
-      m_dInL0(Lo * Lo > 10e-10 ? thickness / Lo : 0.) {}
+      m_dInX0(X0 * X0 > 10e-10 ? thickness / X0 : 0.0f),
+      m_dInL0(L0 * L0 > 10e-10 ? thickness / L0 : 0.0f) {}
 
 Acts::MaterialProperties::MaterialProperties(const Material& material,
                                              float thickness)
     : m_material(material),
       m_thickness(thickness),
       m_dInX0(material.X0() * material.X0() > 10e-10 ? thickness / material.X0()
-                                                     : 0.),
+                                                     : 0.0f),
       m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
-                                                     : 0.) {}
+                                                     : 0.0f) {}
 
 namespace {
 /// Scale material properties to unit thickness.
@@ -39,11 +39,11 @@ namespace {
 /// energy loss and multiple scattering application in the material integration
 ///
 /// Scaling to unit thickness changes only X0, L0, and rho.
-Acts::Material makeUnitThicknessMaterial(double X0, double L0, double A,
+Acts::Material makeUnitThicknessMaterial(double X0, double L0, double Ar,
                                          double Z, double density,
                                          double thickness) {
   return {static_cast<float>(X0 / thickness),
-          static_cast<float>(L0 / thickness), static_cast<float>(A),
+          static_cast<float>(L0 / thickness), static_cast<float>(Ar),
           static_cast<float>(Z), static_cast<float>(density * thickness)};
 }
 }  // namespace
@@ -52,14 +52,14 @@ Acts::MaterialProperties::MaterialProperties(
     const std::vector<MaterialProperties>& layers, bool normalize)
     : MaterialProperties() {
   // use double for computations to avoid precision loss
-  double A = 0.;
+  double Ar = 0.;
   double Z = 0.;
   double density = 0.;
   double thickness = 0.;
   for (const auto& layer : layers) {
     const auto& mat = layer.material();
     // A/Z scale with thickness * density
-    A += mat.A() * mat.rho() * layer.thickness();
+    Ar += mat.Ar() * mat.rho() * layer.thickness();
     Z += mat.Z() * mat.rho() * layer.thickness();
     // density scales with thickness
     density += mat.rho() * layer.thickness();
@@ -71,15 +71,15 @@ Acts::MaterialProperties::MaterialProperties(
   // create the average
   const double X0 = thickness / m_dInX0;
   const double L0 = thickness / m_dInL0;
-  A /= density;
+  Ar /= density;
   Z /= density;
   density /= thickness;
   // set the material
   if (normalize) {
-    m_material = makeUnitThicknessMaterial(X0, L0, A, Z, density, thickness);
+    m_material = makeUnitThicknessMaterial(X0, L0, Ar, Z, density, thickness);
     m_thickness = 1.0f;
   } else {
-    m_material = Material(X0, L0, A, Z, density);
+    m_material = Material(X0, L0, Ar, Z, density);
     m_thickness = thickness;
   }
 }
