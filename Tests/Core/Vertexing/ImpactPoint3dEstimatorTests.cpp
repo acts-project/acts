@@ -14,7 +14,6 @@
 #include <boost/test/output_test_stream.hpp>
 // clang-format on
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -112,7 +111,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
     }
 
     // The track parameters
-    TrackParametersBase::ParVector_t paramVec;
+    BoundParameters::ParVector_t paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface
@@ -235,7 +234,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
     double z0 = z0Dist(gen);
 
     // The track parameters
-    TrackParametersBase::ParVector_t paramVec;
+    BoundParameters::ParVector_t paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface

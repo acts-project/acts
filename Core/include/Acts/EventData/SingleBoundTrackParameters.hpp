@@ -165,7 +165,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
 
   /// @brief desctructor - charged/neutral
   /// checks if the surface is free and in such a case deletes it
-  ~SingleBoundTrackParameters() override = default;
+  ~SingleBoundTrackParameters() = default;
 
   /// @brief copy assignment operator - charged/neutral
   SingleBoundTrackParameters<ChargePolicy>& operator=(
@@ -193,7 +193,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
 
   /// @brief clone - charged/netural
   /// virtual constructor for type creation without casting
-  SingleBoundTrackParameters<ChargePolicy>* clone() const override {
+  SingleBoundTrackParameters<ChargePolicy>* clone() const {
     return new SingleBoundTrackParameters<ChargePolicy>(*this);
   }
 
@@ -222,7 +222,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// surface frame, for measurements with respect to a line this has to be
   /// constructed by the point of clostest approach to the line, for
   /// cylindrical surfaces this is (by convention) the tangential plane.
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const final {
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const {
     return std::move(
         m_pSurface->referenceFrame(gctx, this->position(), this->momentum()));
   }

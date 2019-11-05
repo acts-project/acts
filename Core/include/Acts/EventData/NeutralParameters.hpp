@@ -10,6 +10,7 @@
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/SingleFreeParameters.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
 
 namespace Acts {
@@ -17,4 +18,5 @@ using NeutralParameters = SingleTrackParameters<NeutralPolicy>;
 using NeutralCurvilinearParameters =
     SingleCurvilinearTrackParameters<NeutralPolicy>;
 using NeutralBoundParameters = SingleBoundTrackParameters<NeutralPolicy>;
+using NeutralFreeParameters = SingleFreeParameters<NeutralPolicy>;
 }  // namespace Acts

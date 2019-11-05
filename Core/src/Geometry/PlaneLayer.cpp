@@ -13,7 +13,6 @@
 // Geometry module
 #include <utility>
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Utilities/Definitions.hpp"

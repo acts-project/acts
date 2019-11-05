@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters
-    TrackParametersBase::ParVector_t paramVec;
+    BoundVector paramVec;
     paramVec << d0v + d0Dist(gen), z0v + z0Dist(gen), phiDist(gen),
         thetaDist(gen), q / pTDist(gen), 0.;
 

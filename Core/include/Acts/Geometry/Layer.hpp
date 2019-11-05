@@ -14,8 +14,6 @@
 
 // Core module
 #include <map>
-#include "Acts/EventData/NeutralParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
