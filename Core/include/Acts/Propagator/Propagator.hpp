@@ -226,8 +226,8 @@ class Propagator final {
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double>;
 
-  static_assert(StepperStateConcept<typename stepper_t::State>,
-                "Stepper does not fulfill stepper concept.");
+  //~ static_assert(StepperStateConcept<typename stepper_t::State>,
+                //~ "Stepper does not fulfill stepper concept.");
   static_assert(StepperConcept<stepper_t>,
                 "Stepper does not fulfill stepper concept.");
 

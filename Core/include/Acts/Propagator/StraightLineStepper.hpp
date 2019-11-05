@@ -22,12 +22,14 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Propagator/detail/StepperReturnState.hpp"
+#include "Acts/Propagator/CovarianceTransport.hpp"
+#include "Acts/Propagator/StepperState.hpp"
 
 #include <cmath>
 #include <functional>
 
 namespace Acts {
-
+  
 /// @brief straight line stepper based on Surface intersection
 ///
 /// The straight line stepper is a simple navigation stepper
@@ -160,7 +162,7 @@ class StraightLineStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
+  Vector3D getField(StepperState& /*state*/, const Vector3D& /*pos*/) const {
     // get the field from the cell
     return Vector3D(0., 0., 0.);
   }
@@ -255,16 +257,16 @@ class StraightLineStepper {
 
   template<typename start_parameters_t, typename end_parameters_t = start_parameters_t>
   auto 
-  buildState(State& state, bool reinitialize) const
+  buildState(StepperState& state, bool reinitialize) const
   {	  
 	  using return_type = detail::return_state_type<start_parameters_t, end_parameters_t>;
 	  if constexpr (end_parameters_t::is_local_representation)
 	  {
-		 return curvilinearState<return_type>(state, reinitialize);
+		 return covTransport.curvilinearState<return_type>(state, reinitialize);
 	  }
 	  else
 	  {
-		   return freeState<return_type>(state, reinitialize);
+		   return covTransport.freeState<return_type>(state, reinitialize);
 	  }
   }
 
@@ -376,182 +378,9 @@ class StraightLineStepper {
     // return h
     return h;
   }
-  
+
 private:
-
-	/// @brief This function treats the modifications of the jacobian related to the projection onto a surface. Since a variation of the start parameters within a given uncertainty would lead to a variation of the end parameters, these need to be propagated onto the target surface. This an approximated approach to treat the (assumed) small change.
-	///
-	/// @param [in] state The current state
-	/// @param [in, out] jacToFree The jacobian from the local start parameters to the propagated global end parameters
-	/// @param [in] surface The surface onto which the projection should be performed
-	/// @note The parameter @p surface is only required if projected to bound parameters. In the case of curvilinear parameters the geometry and the position is known and the calculation can be simplified
-	///
-	/// @return The projection jacobian from global end parameters to its local equivalent
-	const FreeToBoundMatrix surfaceDerivative(State& state, const Surface* surface = nullptr) const
-	{
-		if(state.jacToGlobal.has_value())
-		{
-			// Set the surface projection contributions
-			// If no surface is specified it is curvilinear
-			if(surface == nullptr)
-			{
-				// Transport the covariance
-				const ActsRowVectorD<3> normVec(state.dir);
-				const BoundRowVector sfactors =
-					normVec * (*state.jacToGlobal).template topLeftCorner<3, BoundParsDim>();
-				*state.jacToGlobal -= state.derivative * sfactors;
-				// Since the jacobian to local needs to calculated for the bound parameters here, it is convenient to do the same here
-				return freeToCurvilinearJacobian(state);
-			}
-			// Else it is bound
-			else
-			{
-				// Initialize the transport final frame jacobian
-				FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-				// Initalize the jacobian to local, returns the transposed ref frame
-			   auto rframeT = surface->initJacobianToLocal(state.geoContext, jacToLocal,
-							   state.pos, state.dir);
-				// Calculate the form factors for the derivatives
-				const BoundRowVector sVec = surface->derivativeFactors(
-					state.geoContext, state.pos, state.dir, rframeT, (*state.jacToGlobal));
-				*state.jacToGlobal -= state.derivative * sVec;
-				// Return the jacobian to local
-				return jacToLocal;
-			}
-		}
-		else
-		{
-			// Set the surface projection contributions
-			// If no surface is specified it is curvilinear
-			if(surface == nullptr)
-			{
-				// Transport the covariance
-				const ActsRowVectorD<3> normVec(state.dir);
-				const FreeRowVector sfactors =
-					normVec * state.jacTransport.template topLeftCorner<3, FreeParsDim>();
-				// Since the jacobian to local needs to calculated for the bound parameters here, it is convenient to do the same here
-				return freeToCurvilinearJacobian(state) * (state.jacTransport - state.derivative * sfactors);
-			}
-			// Else it is bound
-			else
-			{
-				// Initialize the transport final frame jacobian
-				FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-				// Initalize the jacobian to local, returns the transposed ref frame
-			   auto rframeT = surface->initJacobianToLocal(state.geoContext, jacToLocal,
-							   state.pos, state.dir);
-				// Calculate the form factors for the derivatives
-				const FreeRowVector sVec = surface->derivativeFactors(
-					state.geoContext, state.pos, state.dir, rframeT, state.jacTransport);
-				// Return the jacobian to local
-				return jacToLocal * (state.jacTransport - state.derivative * sVec);
-			}
-		}
-	}
-
-	/// @brief This function reinitialises the @p state member @p jacToGlobal.
-	///
-	/// @param [in, out] state The state object
-	/// @param [in] surface The surface the represents the local parametrisation
-	/// @note The surface is only required for bound parameters since it serves to derive the jacobian from it. In the case of curvilinear parameters this is not needed and can be evaluated without any surface.
-     void reinitializeJacToGlobal(State& state, const Surface* surface = nullptr) const
-     {
-		using VectorHelpers::phi;
-		using VectorHelpers::theta;
-		
-		 // Reset the jacobian
-		state.jacToGlobal = BoundToFreeMatrix::Zero();
-		
-		// Fill the jacobian to global for next transport
-		// If treating curvilinear parameters
-		if(surface == nullptr)
-		{
-			auto& jac = *state.jacToGlobal;
-			// TODO: This was calculated before - can it be reused?
-			// Optimized trigonometry on the propagation direction
-			const double x = state.dir(0);  // == cos(phi) * sin(theta)
-			const double y = state.dir(1);  // == sin(phi) * sin(theta)
-			const double z = state.dir(2);  // == cos(theta)
-			// can be turned into cosine/sine
-			const double cosTheta = z;
-			const double sinTheta = sqrt(x * x + y * y);
-			const double invSinTheta = 1. / sinTheta;
-			const double cosPhi = x * invSinTheta;
-			const double sinPhi = y * invSinTheta;
-
-		  jac(0, eLOC_0) = -sinPhi;
-		  jac(0, eLOC_1) = -cosPhi * cosTheta;
-		  jac(1, eLOC_0) = cosPhi;
-		  jac(1, eLOC_1) = -sinPhi * cosTheta;
-		  jac(2, eLOC_1) = sinTheta;
-		  jac(3, eT) = 1;
-		  jac(4, ePHI) = -sinTheta * sinPhi;
-		  jac(4, eTHETA) = cosTheta * cosPhi;
-		  jac(5, ePHI) = sinTheta * cosPhi;
-		  jac(5, eTHETA) = cosTheta * sinPhi;
-		  jac(6, eTHETA) = -sinTheta;
-		  jac(7, eQOP) = 1;
-		}
-		// If treating bound parameters
-		else
-		{
-		  Vector2D loc{0., 0.};
-		  surface->globalToLocal(state.geoContext, state.pos, state.dir, loc);
-		  BoundVector pars;
-		  pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-			  state.q / state.p, state.t0 + state.dt;
-		  surface->initJacobianToGlobal(state.geoContext, *state.jacToGlobal,
-									   state.pos, state.dir, pars);
-		}
-	 }
-	 
-	/// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-	///
-	/// @param [in] state State that will be projected
-	///
-	/// @return Projection Jacobian
-	FreeToBoundMatrix freeToCurvilinearJacobian(const State& state) const
-	{
-		// Optimized trigonometry on the propagation direction
-		const double x = state.dir(0);  // == cos(phi) * sin(theta)
-		const double y = state.dir(1);  // == sin(phi) * sin(theta)
-		const double z = state.dir(2);  // == cos(theta)
-		// can be turned into cosine/sine
-		const double cosTheta = z;
-		const double sinTheta = sqrt(x * x + y * y);
-		const double invSinTheta = 1. / sinTheta;
-		const double cosPhi = x * invSinTheta;
-		const double sinPhi = y * invSinTheta;
-		// prepare the jacobian to curvilinear
-		FreeToBoundMatrix jacToCurv = FreeToBoundMatrix::Zero();
-		if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
-		  // We normally operate in curvilinear coordinates defined as follows
-		  jacToCurv(0, 0) = -sinPhi;
-		  jacToCurv(0, 1) = cosPhi;
-		  jacToCurv(1, 0) = -cosPhi * cosTheta;
-		  jacToCurv(1, 1) = -sinPhi * cosTheta;
-		  jacToCurv(1, 2) = sinTheta;
-		} else {
-		  // Under grazing incidence to z, the above coordinate system definition
-		  // becomes numerically unstable, and we need to switch to another one
-		  const double c = sqrt(y * y + z * z);
-		  const double invC = 1. / c;
-		  jacToCurv(0, 1) = -z * invC;
-		  jacToCurv(0, 2) = y * invC;
-		  jacToCurv(1, 0) = c;
-		  jacToCurv(1, 1) = -x * y * invC;
-		  jacToCurv(1, 2) = -x * z * invC;
-		}
-		// Time parameter
-		jacToCurv(5, 3) = 1.;
-		// Directional and momentum parameters for curvilinear
-		jacToCurv(2, 4) = -sinPhi * invSinTheta;
-		jacToCurv(2, 5) = cosPhi * invSinTheta;
-		jacToCurv(3, 6) = -invSinTheta;
-		jacToCurv(4, 7) = 1.;
-		
-		return jacToCurv;
-	}
+	CovarianceTransport covTransport;
 };
 
 }  // namespace Acts
