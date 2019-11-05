@@ -26,42 +26,52 @@
 #include <functional>
 
 namespace Acts {
-
-
+	
+	/// @brief This is a helper struct to deduce the dimensions of the full Jacobian. It decides based on the start and end parameters which one it will be. This leads to four different cases ...
+	///
+	/// @tparam S The boolean expression whether the start parameters are in local representation
+	/// @tparam E The boolean expression whether the end parameters are in local representation
   template<bool S, bool E>
-  struct JacobianHelper {
-	  using type = int;
-  };
+  struct JacobianHelper;
+   //~ {
+	  //~ using type = int;
+  //~ };
   
-  //~ template<typename S, typename E, std::enable_if_t<S::is_local_representation and E::is_local_representation, int>>
-  //~ template<bool S, bool E,  std::enable_if_t<S and E, int>>
+  /// @brief Case: 
+  /// - start parameters are in local representation
+  /// - end parameters are in local representation
   template<>
-  struct JacobianHelper<true, true> //<std::integral_constant<S, true>::value, std::is_same<std::bool_constant<E>, std::true_type>::value>
+  struct JacobianHelper<true, true>
   {
 	  using type = BoundMatrix;
   };
   
-  //~ template<typename S, typename E, std::enable_if_t<S::is_local_representation and not E::is_local_representation, int>>
+  /// @brief Case: 
+  /// - start parameters are in local representation
+  /// - end parameters are in global representation  
   template<>
   struct JacobianHelper<true, false>
   {
 	  using type = BoundToFreeMatrix;
   };
-  
-  //~ template<typename S, typename E, std::enable_if_t<not S::is_local_representation and E::is_local_representation, int>>
+ 
+   /// @brief Case: 
+  /// - start parameters are in global representation
+  /// - end parameters are in local representation 
 template<>
   struct JacobianHelper<false, true>  
   {
 	  using type = FreeToBoundMatrix;
   };
   
-  //~ template<typename S, typename E, std::enable_if_t<not S::is_local_representation and not E::is_local_representation, int>>
+  /// @brief Case: 
+  /// - start parameters are in global representation
+  /// - end parameters are in global representation
 template<>
   struct JacobianHelper<false, false>  
   {
 	  using type = FreeMatrix;
   };
-  
   
 /// @brief straight line stepper based on Surface intersection
 ///
@@ -286,6 +296,21 @@ class StraightLineStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
+  }
+
+  template<typename start_parameters_t, typename end_parameters_t>
+  auto 
+  buildState(State& state, bool reinitialize) const
+  {
+	  return_state_type<start_parameters_t, end_parameters_t> result;
+	  
+	  //~ if constexpr (parameters_t::is_local_representation)
+	  //~ {
+		  //~ return freeState(state, reinitialize);
+	  //~ }
+	  //~ else
+		//~ return curvilinearState(state, reinitialize);
+	return result;
   }
 
   /// Create and return the bound state at the current position

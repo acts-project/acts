@@ -93,8 +93,10 @@ auto Acts::Propagator<S, N>::propagate(
     -> Result<action_list_t_result_t<
         CurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(Concepts::BoundTrackParametersConcept<parameters_t> or Concepts::FreeTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
+  static_assert(Concepts::BoundTrackParametersConcept<return_parameters_t> or Concepts::FreeTrackParametersConcept<return_parameters_t>,
+                "Return parameters do not fulfill parameter concept.");
 
   // Type of track parameters produced by the propagation
   using ReturnParameterType = return_parameters_t;
@@ -162,7 +164,7 @@ auto Acts::Propagator<S, N>::propagate(
     -> Result<action_list_t_result_t<
         BoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+  static_assert(Concepts::BoundTrackParametersConcept<parameters_t> or Concepts::FreeTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced at the end of the propagation
