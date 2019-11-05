@@ -21,58 +21,13 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Propagator/detail/StepperReturnState.hpp"
 
 #include <cmath>
 #include <functional>
 
 namespace Acts {
-	
-	/// @brief This is a helper struct to deduce the dimensions of the full Jacobian. It decides based on the start and end parameters which one it will be. This leads to four different cases ...
-	///
-	/// @tparam S The boolean expression whether the start parameters are in local representation
-	/// @tparam E The boolean expression whether the end parameters are in local representation
-  template<bool S, bool E>
-  struct JacobianHelper;
-   //~ {
-	  //~ using type = int;
-  //~ };
-  
-  /// @brief Case: 
-  /// - start parameters are in local representation
-  /// - end parameters are in local representation
-  template<>
-  struct JacobianHelper<true, true>
-  {
-	  using type = BoundMatrix;
-  };
-  
-  /// @brief Case: 
-  /// - start parameters are in local representation
-  /// - end parameters are in global representation  
-  template<>
-  struct JacobianHelper<true, false>
-  {
-	  using type = BoundToFreeMatrix;
-  };
- 
-   /// @brief Case: 
-  /// - start parameters are in global representation
-  /// - end parameters are in local representation 
-template<>
-  struct JacobianHelper<false, true>  
-  {
-	  using type = FreeToBoundMatrix;
-  };
-  
-  /// @brief Case: 
-  /// - start parameters are in global representation
-  /// - end parameters are in global representation
-template<>
-  struct JacobianHelper<false, false>  
-  {
-	  using type = FreeMatrix;
-  };
-  
+
 /// @brief straight line stepper based on Surface intersection
 ///
 /// The straight line stepper is a simple navigation stepper
@@ -298,19 +253,19 @@ class StraightLineStepper {
     return state.stepSize.toString();
   }
 
-  template<typename start_parameters_t, typename end_parameters_t>
+  template<typename start_parameters_t, typename end_parameters_t = start_parameters_t>
   auto 
   buildState(State& state, bool reinitialize) const
-  {
-	  return_state_type<start_parameters_t, end_parameters_t> result;
-	  
-	  //~ if constexpr (parameters_t::is_local_representation)
-	  //~ {
-		  //~ return freeState(state, reinitialize);
-	  //~ }
-	  //~ else
-		//~ return curvilinearState(state, reinitialize);
-	return result;
+  {	  
+	  using return_type = detail::return_state_type<start_parameters_t, end_parameters_t>;
+	  if constexpr (end_parameters_t::is_local_representation)
+	  {
+		 return curvilinearState<return_type>(state, reinitialize);
+	  }
+	  else
+	  {
+		   return freeState<return_type>(state, reinitialize);
+	  }
   }
 
   /// Create and return the bound state at the current position
@@ -503,7 +458,7 @@ private:
      {
 		using VectorHelpers::phi;
 		using VectorHelpers::theta;
-
+		
 		 // Reset the jacobian
 		state.jacToGlobal = BoundToFreeMatrix::Zero();
 		
@@ -511,34 +466,31 @@ private:
 		// If treating curvilinear parameters
 		if(surface == nullptr)
 		{
-			if(state.jacToGlobal.has_value())
-			{
-				auto& jac = *state.jacToGlobal;
-				// TODO: This was calculated before - can it be reused?
-				// Optimized trigonometry on the propagation direction
-				const double x = state.dir(0);  // == cos(phi) * sin(theta)
-				const double y = state.dir(1);  // == sin(phi) * sin(theta)
-				const double z = state.dir(2);  // == cos(theta)
-				// can be turned into cosine/sine
-				const double cosTheta = z;
-				const double sinTheta = sqrt(x * x + y * y);
-				const double invSinTheta = 1. / sinTheta;
-				const double cosPhi = x * invSinTheta;
-				const double sinPhi = y * invSinTheta;
+			auto& jac = *state.jacToGlobal;
+			// TODO: This was calculated before - can it be reused?
+			// Optimized trigonometry on the propagation direction
+			const double x = state.dir(0);  // == cos(phi) * sin(theta)
+			const double y = state.dir(1);  // == sin(phi) * sin(theta)
+			const double z = state.dir(2);  // == cos(theta)
+			// can be turned into cosine/sine
+			const double cosTheta = z;
+			const double sinTheta = sqrt(x * x + y * y);
+			const double invSinTheta = 1. / sinTheta;
+			const double cosPhi = x * invSinTheta;
+			const double sinPhi = y * invSinTheta;
 
-			  jac(0, eLOC_0) = -sinPhi;
-			  jac(0, eLOC_1) = -cosPhi * cosTheta;
-			  jac(1, eLOC_0) = cosPhi;
-			  jac(1, eLOC_1) = -sinPhi * cosTheta;
-			  jac(2, eLOC_1) = sinTheta;
-			  jac(3, eT) = 1;
-			  jac(4, ePHI) = -sinTheta * sinPhi;
-			  jac(4, eTHETA) = cosTheta * cosPhi;
-			  jac(5, ePHI) = sinTheta * cosPhi;
-			  jac(5, eTHETA) = cosTheta * sinPhi;
-			  jac(6, eTHETA) = -sinTheta;
-			  jac(7, eQOP) = 1;
-			}
+		  jac(0, eLOC_0) = -sinPhi;
+		  jac(0, eLOC_1) = -cosPhi * cosTheta;
+		  jac(1, eLOC_0) = cosPhi;
+		  jac(1, eLOC_1) = -sinPhi * cosTheta;
+		  jac(2, eLOC_1) = sinTheta;
+		  jac(3, eT) = 1;
+		  jac(4, ePHI) = -sinTheta * sinPhi;
+		  jac(4, eTHETA) = cosTheta * cosPhi;
+		  jac(5, ePHI) = sinTheta * cosPhi;
+		  jac(5, eTHETA) = cosTheta * sinPhi;
+		  jac(6, eTHETA) = -sinTheta;
+		  jac(7, eQOP) = 1;
 		}
 		// If treating bound parameters
 		else
