@@ -61,7 +61,7 @@ class StraightLineStepper {
     /// @param [in] ndir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     /// @param [in] stolerance is the stepping tolerance
-    template <typename parameters_t>
+    template <typename parameters_t, std::enable_if_t<parameters_t::is_local_representation, int> = 0>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
                    const parameters_t& par, NavigationDirection ndir = forward,
@@ -87,6 +87,39 @@ class StraightLineStepper {
       }
     }
 
+    /// Constructor from the initial track parameters
+    ///
+    /// @tparam parameters_t the Type of the track parameters
+    ///
+    /// @param [in] gctx is the context object for the geometery
+    /// @param [in] mctx is the context object for the magnetic field
+    /// @param [in] par The track parameters at start
+    /// @param [in] ndir is the navigation direction
+    /// @param [in] ssize is the (absolute) maximum step size
+    /// @param [in] stolerance is the stepping tolerance
+    template <typename parameters_t, std::enable_if_t<not parameters_t::is_local_representation, int> = 0>
+    explicit StepperState(std::reference_wrapper<const GeometryContext> gctx,
+                   std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
+                   const parameters_t& par, NavigationDirection ndir = forward,
+                   double ssize = std::numeric_limits<double>::max(),
+                   double stolerance = s_onSurfaceTolerance)
+      : pos(par.position()),
+        dir(par.momentum().normalized()),
+        p(par.momentum().norm()),
+        q((par.charge() != 0.) ? par.charge() : 1.),
+        t0(par.time()),
+        navDir(ndir),
+        stepSize(ndir * std::abs(ssize)),
+        tolerance(stolerance),
+        geoContext(gctx) {
+      if (par.covariance()) {
+		  // Set the covariance transport flag to true
+		  covTransport = true;
+		  // Get the covariance
+          cov = *par.covariance();
+      }
+    }
+    
     /// Jacobian from local to the global frame
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
@@ -162,7 +195,7 @@ class StraightLineStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(StepperState& /*state*/, const Vector3D& /*pos*/) const {
+  Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
     // get the field from the cell
     return Vector3D(0., 0., 0.);
   }
@@ -255,15 +288,28 @@ class StraightLineStepper {
     return state.stepSize.toString();
   }
 
-  template<typename start_parameters_t, typename end_parameters_t = start_parameters_t>
+  /// @brief Final state builder without a target surface
+  ///
+  /// @tparam start_parameters_t Type of the start parameters
+  /// @tparam end_parameters_t Type of the end parameters
+  ///
+  /// @param [in, out] state State of the propagation
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return std::tuple conatining the final state parameters, the jacobian & the accumulated path
+  template<bool start_local, typename end_parameters_t>
   auto 
-  buildState(StepperState& state, bool reinitialize) const
+  buildState(State& state, bool reinitialize) const
   {	  
-	  using return_type = detail::return_state_type<start_parameters_t, end_parameters_t>;
+	  // The return type
+	  using return_type = detail::return_state_type<start_local, end_parameters_t>;
+	  // If the result should be local it is curvilinear
 	  if constexpr (end_parameters_t::is_local_representation)
 	  {
 		 return covTransport.curvilinearState<return_type>(state, reinitialize);
 	  }
+	  // else it is free
 	  else
 	  {
 		   return covTransport.freeState<return_type>(state, reinitialize);
@@ -380,6 +426,7 @@ class StraightLineStepper {
   }
 
 private:
+	/// The covariance transporter engine
 	CovarianceTransport covTransport;
 };
 

@@ -20,12 +20,15 @@
 
 namespace Acts {
 
+/// @brief This struct performs the transport of a covariance matrix using given Jacobians. The required data is provided by a @p StepperState object with some additional data. Since this is a purely algebraic problem the calculations are identical for @c StraightLineStepper and @c EigenStepper. As a consequence the methods can be located in a seperate file.
 struct CovarianceTransport {
 	
+	/// Some type defs
   using Corrector = VoidIntersectionCorrector;
   using Jacobian = BoundMatrix;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
 
+	/// Default constructor
   CovarianceTransport() = default;
   
   /// Create and return the bound state at the current position
@@ -33,6 +36,7 @@ struct CovarianceTransport {
   /// @brief It does not check if the transported state is at the surface, this
   /// needs to be guaranteed by the propagator
   ///
+  /// @tparam result_t Defines the return type
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
@@ -42,10 +46,9 @@ struct CovarianceTransport {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  template<typename start_parameters_t, typename end_parameters_t = start_parameters_t>
-  auto 
+  template<typename result_t>
+  result_t 
   boundState(StepperState& state, const Surface& surface, bool reinitialize) const {
-	  using return_type = detail::return_state_type<start_parameters_t, end_parameters_t, Surface>;
 	  
     // Transport the covariance to here
     std::optional<BoundSymMatrix> cov = std::nullopt;
@@ -59,7 +62,9 @@ struct CovarianceTransport {
                                state.p * state.dir, state.q,
                                state.t0 + state.dt, surface.getSharedPtr());
     // Create the bound state
-    return_type result = std::make_tuple(std::move(parameters), state.jacobian,
+    using jacobian = typename std::tuple_element<1, result_t>::type;
+    jacobian jac;
+    result_t result = std::make_tuple(std::move(parameters), jac,
                       state.pathAccumulated);
     // Reinitialize if asked to do so
     // this is useful for interruption calls
@@ -69,6 +74,7 @@ struct CovarianceTransport {
       // reset the jacobian
       state.derivative = FreeVector::Zero();
       reinitializeJacToGlobal(state, &surface);
+      state.localStart = true;
     }
     return result;
   }
@@ -77,6 +83,7 @@ struct CovarianceTransport {
   ///
   /// @brief This creates a curvilinear state.
   ///
+    /// @tparam result_t Defines the return type
   /// @param [in] state State that will be presented as @c CurvilinearState
   /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
   /// i.e. if this is an intermediate state of a larger propagation
@@ -97,7 +104,9 @@ struct CovarianceTransport {
     CurvilinearParameters parameters(cov, state.pos, state.p * state.dir,
                                      state.q, state.t0 + state.dt);
     // Create the bound state
-    result_t result = std::make_tuple(std::move(parameters), state.jacobian,
+    using jacobian = typename std::tuple_element<1, result_t>::type;
+    jacobian jac;
+    result_t result = std::make_tuple(std::move(parameters), jac,
                                state.pathAccumulated);
     // Reinitialize if asked to do so
     // this is useful for interruption calls
@@ -107,6 +116,7 @@ struct CovarianceTransport {
       // reset the jacobian
       state.derivative = FreeVector::Zero();
       reinitializeJacToGlobal(state);
+      state.localStart = true;
     }
     return result;
   }
@@ -115,6 +125,7 @@ struct CovarianceTransport {
   ///
   /// @brief This creates a free state.
   ///
+    /// @tparam result_t Defines the return type
   /// @param [in] state State that will be presented as @c FreeState
   /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
   /// i.e. if this is an intermediate state of a larger propagation
@@ -141,7 +152,9 @@ struct CovarianceTransport {
     FreeParameters parameters(cov, pars);
     
     // Create the bound state
-    result_t result = std::make_tuple(std::move(parameters), state.jacTransport,
+    using jacobian = typename std::tuple_element<1, result_t>::type;
+    jacobian jac;
+    result_t result = std::make_tuple(std::move(parameters), jac,
                                state.pathAccumulated);
     // Reinitialize if asked to do so
     // this is useful for interruption calls    
@@ -150,34 +163,33 @@ struct CovarianceTransport {
       state.jacobian = Jacobian::Identity();
       state.jacTransport = FreeMatrix::Identity();
       state.derivative = FreeVector::Zero();
+      state.localStart = false;
     }
     return result;
   }
 
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
-  ///
-  /// @tparam surface_t the surface type - ignored here
+  /// @brief Method for on-demand transport of the covariance to a new frame at current position in parameter space. It treats different scenarios:
+  /// - from local to local
+  /// - from local to global
+  /// - from global to local
+  /// - from global to global
   ///
   /// @param [in,out] state The stepper state
+  /// @param [in] toLocal Boolean flag whether the result is in local parameters
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
-  /// @param [in] reinitialize is a flag to steer whether the
-  ///        state should be reinitialized at the new
-  ///        position
-  /// @note no check is done if the position is actually on the surface
+  /// @note No check is done if the position is actually on the surface
   ///
   /// @return Projection jacobian from global to bound parameters
-  void covarianceTransport(StepperState& state, bool toSurface = true, const Surface* surface = nullptr) const {
+  void covarianceTransport(StepperState& state, bool toLocal = true, const Surface* surface = nullptr) const {
 	// Test if we started on a surface
 	if(state.jacToGlobal.has_value())
 	{
 		state.jacToGlobal = state.jacTransport * (*state.jacToGlobal);
 		
 		// Test if we went to a surface
-		if(toSurface)
+		if(toLocal)
 		{
 			const FreeToBoundMatrix jacToLocal = surfaceDerivative(state, surface);
 			const Jacobian jacFull = jacToLocal * (*state.jacToGlobal);
@@ -195,7 +207,7 @@ struct CovarianceTransport {
 	}
 	else
 	{
-		if(toSurface)
+		if(toLocal)
 		{
 			const FreeToBoundMatrix jacToLocal = surfaceDerivative(state, surface);
 			
@@ -215,7 +227,6 @@ private:
 	/// @brief This function treats the modifications of the jacobian related to the projection onto a surface. Since a variation of the start parameters within a given uncertainty would lead to a variation of the end parameters, these need to be propagated onto the target surface. This an approximated approach to treat the (assumed) small change.
 	///
 	/// @param [in] state The current state
-	/// @param [in, out] jacToFree The jacobian from the local start parameters to the propagated global end parameters
 	/// @param [in] surface The surface onto which the projection should be performed
 	/// @note The parameter @p surface is only required if projected to bound parameters. In the case of curvilinear parameters the geometry and the position is known and the calculation can be simplified
 	///

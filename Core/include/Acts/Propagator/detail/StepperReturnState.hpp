@@ -60,26 +60,26 @@ template<>
   
  // TODO: There should be a deduction of the charge policy
   // This struct is a meta-function deduces the return state if it ends on a surface...
-  template <typename Start, typename End, typename Surface>
+  template <bool local_start, typename end_parameters_t, typename Surface>
   struct s {
 	  // The dimensions of the jacobian
-	  using JacobianType = typename JacobianHelper<Start::is_local_representation, true>::type;
+	  using JacobianType = typename JacobianHelper<local_start, true>::type;
 	// The returning state
-	using type = std::tuple<BoundParameters, JacobianType, double>;
+	using type = std::tuple<BoundParameters, const JacobianType, double>;
   };
 
   // ...and for the case that it does not.
-  template <typename Start, typename End>
-  struct s<Start, End, int> {
+  template <bool local_start, typename end_parameters_t>
+  struct s<local_start, end_parameters_t, int> {
 	  	  // The dimensions of the jacobian
-	using JacobianType = typename JacobianHelper<Start::is_local_representation, End::is_local_representation>::type;
+	using JacobianType = typename JacobianHelper<local_start, end_parameters_t::is_local_representation>::type;
 		// The returning state
-    using type = std::tuple<End, JacobianType, double>;
+    using type = std::tuple<end_parameters_t, const JacobianType, double>;
   };
   
   /// Return parameter state deduction dependin on the propagation mode
-  template <typename start_parameters_t, typename end_parameters_t = start_parameters_t, typename surface_t = int>
-  using return_state_type = typename s<start_parameters_t, end_parameters_t, surface_t>::type;
+  template <bool local_start, typename end_parameters_t, typename surface_t = int> // TODO: the start parameters are usually unknown or guessed - if jacToGlobal exists then it would be more reliable
+  using return_state_type = typename s<local_start, end_parameters_t, surface_t>::type;
   
 }  // namespace detail
 }  // namespace Acts
