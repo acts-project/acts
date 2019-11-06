@@ -48,7 +48,7 @@ class SingleTrackParameters {
   using CovMatrix_t = BoundSymMatrix;
 
   /// @brief default destructor
-  ~SingleTrackParameters() = default;
+  virtual ~SingleTrackParameters() = default;
 
   /// @brief access position in global coordinate system
   ///
