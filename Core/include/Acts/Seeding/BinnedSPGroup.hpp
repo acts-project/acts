@@ -91,8 +91,8 @@ class NeighborhoodIterator {
     return (*m_curIt).get();
   }
 
-  bool operator==(const NeighborhoodIterator<external_spacepoint_t>& other) {
-    return m_curIt == other.m_curIt && m_curInd == other.m_curInd;
+  bool operator!=(const NeighborhoodIterator<external_spacepoint_t>& other) {
+    return m_curIt != other.m_curIt || m_curInd != other.m_curInd;
   }
 
   // iterators within current bin
@@ -103,6 +103,27 @@ class NeighborhoodIterator {
   // current bin
   size_t m_curInd;
   const Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
+};
+
+template <typename external_spacepoint_t>
+class Neighborhood {
+ public:
+  Neighborhood() = delete;
+  Neighborhood(std::vector<size_t> indices, const SpacePointGrid<external_spacepoint_t>* spgrid){
+    m_indices = indices;
+    m_spgrid = spgrid;
+  }
+  NeighborhoodIterator<external_spacepoint_t> begin(){
+    return NeighborhoodIterator<external_spacepoint_t>::begin(m_indices, m_spgrid);
+  }
+  NeighborhoodIterator<external_spacepoint_t> end() {
+    return NeighborhoodIterator<external_spacepoint_t>(
+        m_indices, m_spgrid, m_indices.size() - 1,
+        std::end(m_spgrid->at(m_indices.back())));
+  }
+ private:
+  std::vector<size_t> m_indices;
+  const SpacePointGrid<external_spacepoint_t>* m_spgrid;
 };
 
 template <typename external_spacepoint_t>
@@ -134,36 +155,18 @@ class BinnedSPGroupIterator {
     return (zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
   }
 
-  NeighborhoodIterator<external_spacepoint_t> middleBegin() {
-    return NeighborhoodIterator<external_spacepoint_t>::begin(currentBin, grid);
+  Neighborhood<external_spacepoint_t> middle() {
+    return Neighborhood<external_spacepoint_t>(currentBin, grid);
   }
 
-  NeighborhoodIterator<external_spacepoint_t> middleEnd() {
-    return NeighborhoodIterator<external_spacepoint_t>(
-        currentBin, grid, currentBin.size() - 1,
-        std::end(grid->at(currentBin.back())));
+
+  Neighborhood<external_spacepoint_t> bottom() {
+    return Neighborhood<external_spacepoint_t>(bottomBinIndices, grid);
   }
 
-  NeighborhoodIterator<external_spacepoint_t> bottomBegin() {
-    return NeighborhoodIterator<external_spacepoint_t>::begin(bottomBinIndices,
-                                                              grid);
-  }
 
-  NeighborhoodIterator<external_spacepoint_t> bottomEnd() {
-    return NeighborhoodIterator<external_spacepoint_t>(
-        bottomBinIndices, grid, bottomBinIndices.size() - 1,
-        std::end(grid->at(bottomBinIndices.back())));
-  }
-
-  NeighborhoodIterator<external_spacepoint_t> topBegin() {
-    return NeighborhoodIterator<external_spacepoint_t>::begin(topBinIndices,
-                                                              grid);
-  }
-
-  NeighborhoodIterator<external_spacepoint_t> topEnd() {
-    return NeighborhoodIterator<external_spacepoint_t>(
-        topBinIndices, grid, topBinIndices.size() - 1,
-        std::end(grid->at(topBinIndices.back())));
+  Neighborhood<external_spacepoint_t> top() {
+    return Neighborhood<external_spacepoint_t>(topBinIndices, grid);
   }
 
   BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,

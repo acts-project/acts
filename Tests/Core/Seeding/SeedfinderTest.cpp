@@ -126,9 +126,9 @@ int main() {
   auto endOfGroups = spGroup.end();
   for (; !(groupIt == endOfGroups); ++groupIt) {
     seedVector.push_back(a.createSeedsForGroup(
-        std::make_pair(groupIt.bottomBegin(), groupIt.bottomEnd()),
-        std::make_pair(groupIt.middleBegin(), groupIt.middleEnd()),
-        std::make_pair(groupIt.topBegin(), groupIt.topEnd())));
+        groupIt.bottom(),
+        groupIt.middle(),
+        groupIt.top()));
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

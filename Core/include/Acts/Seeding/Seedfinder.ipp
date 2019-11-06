@@ -35,17 +35,14 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
 }
 
 template <typename external_spacepoint_t>
-template <typename internal_sp_iterator_t>
+template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 Seedfinder<external_spacepoint_t>::createSeedsForGroup(
-    std::pair<internal_sp_iterator_t, internal_sp_iterator_t> bottom,
-    std::pair<internal_sp_iterator_t, internal_sp_iterator_t> middle,
-    std::pair<internal_sp_iterator_t, internal_sp_iterator_t> top) const {
+    sp_range_t bottomSPs,
+    sp_range_t middleSPs,
+    sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
-  auto middleSpIt = middle.first;
-  auto mEnd = middle.second;
-  for (; !(middleSpIt == mEnd); ++middleSpIt) {
-    const InternalSpacePoint<external_spacepoint_t>* spM = (*middleSpIt);
+  for (auto spM : middleSPs){
 
     float rM = spM->radius();
     float zM = spM->z();
@@ -53,13 +50,11 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     float covzM = spM->covz();
 
     // bottom space point
-    auto bottomSpIt = bottom.first;
-    auto bEnd = bottom.second;
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>
         compatBottomSP;
 
-    for (; !(bottomSpIt == bEnd); ++bottomSpIt) {
-      float rB = (*bottomSpIt)->radius();
+    for (auto bottomSP : bottomSPs) {
+      float rB = bottomSP->radius();
       float deltaR = rM - rB;
       // if r-distance is too big, try next SP in bin
       if (deltaR > m_config.deltaRMax) {
@@ -70,7 +65,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
         continue;
       }
       // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = (zM - (*bottomSpIt)->z()) / deltaR;
+      float cotTheta = (zM - bottomSP->z()) / deltaR;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
         continue;
       }
@@ -80,7 +75,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      compatBottomSP.push_back((*bottomSpIt));
+      compatBottomSP.push_back(bottomSP);
     }
     // no bottom SP found -> try next spM
     if (compatBottomSP.empty()) {
@@ -88,11 +83,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     }
 
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
-    auto topSpIt = top.first;
-    auto tEnd = top.second;
 
-    for (; !(topSpIt == tEnd); ++topSpIt) {
-      float rT = (*topSpIt)->radius();
+    for (auto topSP : topSPs) {
+      float rT = topSP->radius();
       float deltaR = rT - rM;
       // this condition is the opposite of the condition for bottom SP
       if (deltaR < m_config.deltaRMin) {
@@ -102,7 +95,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
         break;
       }
 
-      float cotTheta = ((*topSpIt)->z() - zM) / deltaR;
+      float cotTheta = (topSP->z() - zM) / deltaR;
       if (std::fabs(cotTheta) > m_config.cotThetaMax) {
         continue;
       }
@@ -111,7 +104,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      compatTopSP.push_back((*topSpIt));
+      compatTopSP.push_back(topSP);
     }
     if (compatTopSP.empty()) {
       continue;
