@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
+#include "Acts/Propagator/detail/StepperReturnState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -555,18 +556,68 @@ class AtlasStepper {
     return state.stepSize.toString();
   }
 
-  template<bool>
-  BoundState
-  buildState(State& state, const Surface& surface, bool reinitialize = false) const 
-  {
-	  return boundState(state, surface, reinitialize);
+  /// @brief Final state builder without a target surface
+  ///
+  /// @tparam start_parameters_t Type of the start parameters
+  /// @tparam end_parameters_t Type of the end parameters
+  ///
+  /// @param [in, out] state State of the propagation
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return std::tuple conatining the final state parameters, the jacobian & the accumulated path
+  template<bool start_local, typename end_parameters_t>
+  auto 
+  buildState(State& state, bool reinitialize) const
+  {	 
+	using return_type = detail::return_state_type<start_local, end_parameters_t>;
+	if(typeid(return_type) == typeid(CurvilinearState))
+	{
+		return_type result = curvilinearState(state, reinitialize);
+		return result;
+	}
+	else
+	{
+		if(typeid(end_parameters_t) == typeid(CurvilinearParameters))
+		{
+			Vector3D dummy;
+			CurvilinearParameters eParams(std::nullopt, dummy, dummy, 1., 0.);
+			using jacobian = typename std::tuple_element<1, return_type>::type;
+			jacobian jac;
+			return_type result = std::make_tuple(std::move(eParams), jac,
+									   state.pathAccumulated);
+									   
+			 return result;
+		 }
+	}
   }
   
-  template<bool, typename>
-  CurvilinearState
-  buildState(State& state, bool reinitialize = false) const 
-  {
-	return curvilinearState(state, reinitialize);
+  /// Create and return the bound state at the current position
+  ///
+  /// @brief It does not check if the transported state is at the surface, this
+  /// needs to be guaranteed by the propagator
+  ///
+  /// @param [in] state State that will be presented as @c BoundState
+  /// @param [in] surface The surface to which we bind the state
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return std::tuple conatining the final state parameters, the jacobian & the accumulated path
+  template<bool start_local>
+  auto 
+  buildState(State& state, const Surface& surface, bool reinitialize) const {
+	  using return_type = detail::return_state_type<start_local, BoundParameters, Surface>;
+	  if(typeid(return_type) == typeid(BoundState))
+	  {
+	  return boundState(state, surface, reinitialize);
+  }
+    BoundParameters eParams;
+	using jacobian = typename std::tuple_element<1, return_type>::type;
+    jacobian jac;
+    return_type result = std::make_tuple(std::move(eParams), jac,
+                               state.pathAccumulated);
+                               
+	 return result;
   }
 
   /// Create and return the bound state at the current position
