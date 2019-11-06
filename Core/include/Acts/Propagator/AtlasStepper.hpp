@@ -300,6 +300,8 @@ class AtlasStepper {
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
+    
+    bool localStart = true;
   };
 
   AtlasStepper(bfield_t bField) : m_bField(std::move(bField)){};
@@ -551,6 +553,20 @@ class AtlasStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
+  }
+
+  template<bool>
+  BoundState
+  buildState(State& state, const Surface& surface, bool reinitialize = false) const 
+  {
+	  return boundState(state, surface, reinitialize);
+  }
+  
+  template<bool, typename>
+  CurvilinearState
+  buildState(State& state, bool reinitialize = false) const 
+  {
+	return curvilinearState(state, reinitialize);
   }
 
   /// Create and return the bound state at the current position
