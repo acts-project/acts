@@ -297,4 +297,3 @@ void Seedfinder<external_spacepoint_t>::transformCoordinates(
   }
 }
 }  // namespace Acts
-
