@@ -11,16 +11,11 @@
 #include <cassert>
 #include <cmath>
 
+#include "Acts/Utilities/PdgParticle.hpp"
+
 using namespace Acts::UnitLiterals;
 
 namespace {
-// PDG particle type identifiers
-enum ParticleType : int {
-  Electron = 11,
-  Positron = -11,
-  Muon = 13,
-  AntiMuon = -13,
-};
 
 // values from RPP2018 table 33.1
 // electron mass
@@ -332,7 +327,7 @@ float Acts::computeRadiationLossMean(const Material& material, float thickness,
   const auto e = std::sqrt(m * m + p * p);
 
   auto dEdx = computeBremsstrahlungLossMean(m, e);
-  if (((pdg == ParticleType::Muon) or (pdg == ParticleType::AntiMuon)) and
+  if (((pdg == PdgParticle::eMuon) or (pdg == PdgParticle::eAntiMuon)) and
       (8_GeV < e)) {
     dEdx += computeMuonDirectPairPhotoNuclearLossMean(e);
   }
@@ -358,7 +353,7 @@ float Acts::deriveRadiationLossMeanQOverP(const Material& material,
 
   // compute derivative w/ respect to energy.
   auto derE = deriveBremsstrahlungLossMeanE(m);
-  if (((pdg == ParticleType::Muon) or (pdg == ParticleType::AntiMuon)) and
+  if (((pdg == PdgParticle::eMuon) or (pdg == PdgParticle::eAntiMuon)) and
       (8_GeV < e)) {
     derE += deriveMuonDirectPairPhotoNuclearLossMeanE(e);
   }
@@ -440,7 +435,7 @@ float Acts::computeMultipleScatteringTheta0(const Material& material,
   // q²/beta²; a smart compiler should be able to remove the unused computations
   const auto q2OverBeta2 = RelativisticQuantities(m, qOverP, q).q2OverBeta2;
 
-  if ((pdg == ParticleType::Electron) or (pdg == ParticleType::Positron)) {
+  if ((pdg == PdgParticle::eElectron) or (pdg == PdgParticle::ePositron)) {
     return theta0RossiGreisen(xOverX0, pInv, q2OverBeta2);
   } else {
     return theta0Highland(xOverX0, pInv, q2OverBeta2);
