@@ -39,7 +39,7 @@ class Seedfinder {
  public:
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the Seedfinder
-  Seedfinder(const Acts::SeedfinderConfig<external_spacepoint_t> config);
+  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
   ~Seedfinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
@@ -58,9 +58,7 @@ class Seedfinder {
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      sp_range_t bottomSP,
-      sp_range_t middleSP,
-      sp_range_t topSP) const;
+      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:
   void transformCoordinates(

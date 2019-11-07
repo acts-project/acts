@@ -20,7 +20,7 @@
 namespace Acts {
 
 ///@class NeighborhooodIterator Iterates over the elements of all bins given
-/// by the indices parameter in the given SpacePointGrid. 
+/// by the indices parameter in the given SpacePointGrid.
 /// Fullfills the forward iterator.
 template <typename external_spacepoint_t>
 class NeighborhoodIterator {
@@ -108,7 +108,6 @@ class NeighborhoodIterator {
   const Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
 };
 
-
 ///@class Neighborhood Used to access iterators to access a group of bins
 /// returned by a BinFinder.
 /// Fulfills the range_expression interface
@@ -116,23 +115,25 @@ template <typename external_spacepoint_t>
 class Neighborhood {
  public:
   Neighborhood() = delete;
-  Neighborhood(std::vector<size_t> indices, const SpacePointGrid<external_spacepoint_t>* spgrid){
+  Neighborhood(std::vector<size_t> indices,
+               const SpacePointGrid<external_spacepoint_t>* spgrid) {
     m_indices = indices;
     m_spgrid = spgrid;
   }
-  NeighborhoodIterator<external_spacepoint_t> begin(){
-    return NeighborhoodIterator<external_spacepoint_t>::begin(m_indices, m_spgrid);
+  NeighborhoodIterator<external_spacepoint_t> begin() {
+    return NeighborhoodIterator<external_spacepoint_t>::begin(m_indices,
+                                                              m_spgrid);
   }
   NeighborhoodIterator<external_spacepoint_t> end() {
     return NeighborhoodIterator<external_spacepoint_t>(
         m_indices, m_spgrid, m_indices.size() - 1,
         std::end(m_spgrid->at(m_indices.back())));
   }
+
  private:
   std::vector<size_t> m_indices;
   const SpacePointGrid<external_spacepoint_t>* m_spgrid;
 };
-
 
 ///@class BinnedSPGroupIterator Allows to iterate over all groups of bins
 /// a provided BinFinder can generate for each bin of a provided SPGrid
@@ -169,11 +170,9 @@ class BinnedSPGroupIterator {
     return Neighborhood<external_spacepoint_t>(currentBin, grid);
   }
 
-
   Neighborhood<external_spacepoint_t> bottom() {
     return Neighborhood<external_spacepoint_t>(bottomBinIndices, grid);
   }
-
 
   Neighborhood<external_spacepoint_t> top() {
     return Neighborhood<external_spacepoint_t>(topBinIndices, grid);

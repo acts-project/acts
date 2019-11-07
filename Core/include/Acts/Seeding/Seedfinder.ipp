@@ -16,7 +16,7 @@ namespace Acts {
 
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
-    const Acts::SeedfinderConfig<external_spacepoint_t> config)
+    Acts::SeedfinderConfig<external_spacepoint_t> config)
     : m_config(std::move(config)) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
@@ -38,12 +38,9 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 Seedfinder<external_spacepoint_t>::createSeedsForGroup(
-    sp_range_t bottomSPs,
-    sp_range_t middleSPs,
-    sp_range_t topSPs) const {
+    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
-  for (auto spM : middleSPs){
-
+  for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float covrM = spM->covr();
@@ -213,9 +210,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
         // from rad to deltaCotTheta
         float p2scatter = pT2scatter * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if (deltaCotTheta2 - error2 > 0 &&
+        if ((deltaCotTheta2 - error2 > 0) && (
             dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering *
-                                       m_config.sigmaScattering) {
+                                       m_config.sigmaScattering)) {
           continue;
         }
         // A and B allow calculation of impact params in U/V plane with linear
