@@ -19,6 +19,7 @@ namespace Acts {
 ///
 /// @param material  Properties of the traversed material
 /// @param thickness Thickness of the traversed material
+/// @param pdg       Particle type PDG identifier
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param q         Particle charge
@@ -31,14 +32,14 @@ namespace Acts {
 ///
 /// where -dE/dx is given by the Bethe formula.
 std::pair<float, float> computeIonisationLossMean(const Material& material,
-                                                  float thickness, float m,
-                                                  float qOverP,
+                                                  float thickness, int pdg,
+                                                  float m, float qOverP,
                                                   float q = UnitConstants::e);
 /// Derivative of the mean ionisation energy loss with respect to q/p.
 ///
 /// @see computeIonisationLossMean for parameters description
 float deriveIonisationLossMeanQOverP(const Material& material, float thickness,
-                                     float m, float qOverP,
+                                     int pdg, float m, float qOverP,
                                      float q = UnitConstants::e);
 
 /// Compute the most propable energy loss due to ionisation.
@@ -50,14 +51,14 @@ float deriveIonisationLossMeanQOverP(const Material& material, float thickness,
 /// the given properties and thickness as described by the mode of the
 /// Landau-Vavilov-Bichsel distribution.
 std::pair<float, float> computeIonisationLossMode(const Material& material,
-                                                  float thickness, float m,
-                                                  float qOverP,
+                                                  float thickness, int pdg,
+                                                  float m, float qOverP,
                                                   float q = UnitConstants::e);
 /// Derivative of the most probable ionisation energy loss with respect to q/p.
 ///
 /// @see computeIonisationLossMean for parameters description
 float deriveIonisationLossModeQOverP(const Material& material, float thickness,
-                                     float m, float qOverP,
+                                     int pdg, float m, float qOverP,
                                      float q = UnitConstants::e);
 
 /// Compute the mean energy loss due to radiation effects.
