@@ -307,19 +307,6 @@ std::pair<Vector3D, double> to_cylinder(
     return std::pair<Vector3D, double>(tp->position(), result.pathLength);
   }
 }
-    else
-    {
-    auto start = new CurvilinearParameters(covOpt, pos, mom, q, time);
-    
-      const auto result =
-      propagator.propagate(*start, *endSurface, options).value();
-  const auto& tp = result.endParameters;
-  // check for null pointer
-  BOOST_CHECK(tp != nullptr);
-  // The position and path length
-  return std::pair<Vector3D, double>(tp->position(), result.pathLength);
-}
-}
 
 // test propagation to most surfaces
 template <typename Propagator_type, typename SurfaceType>

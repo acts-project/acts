@@ -120,7 +120,7 @@ inline FreeRowVector Surface::freeToPathDerivative(
   return freeToPath;
 }
 
-inline const FreeRowVector Surface::derivativeFactors(
+inline FreeRowVector Surface::derivativeFactors(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
     const Vector3D& dir, const RotationMatrix3D& rft,
     const FreeMatrix& jac) const {

@@ -571,25 +571,32 @@ class AtlasStepper {
   buildState(State& state, bool reinitialize) const
   {	 
 	using return_type = detail::return_state_type<start_local, end_parameters_t>;
-	if(typeid(return_type) == typeid(CurvilinearState))
+	if constexpr (start_local && end_parameters_t::is_local_representation)
 	{
 		return_type result = curvilinearState(state, reinitialize);
 		return result;
 	}
-	else
+	
+	if constexpr (end_parameters_t::is_local_representation)
 	{
-		if(typeid(end_parameters_t) == typeid(CurvilinearParameters))
-		{
-			Vector3D dummy;
-			CurvilinearParameters eParams(std::nullopt, dummy, dummy, 1., 0.);
-			using jacobian = typename std::tuple_element<1, return_type>::type;
-			jacobian jac;
-			return_type result = std::make_tuple(std::move(eParams), jac,
-									   state.pathAccumulated);
-									   
-			 return result;
-		 }
-	}
+		Vector3D dummy;
+		CurvilinearParameters eParams(std::nullopt, dummy, dummy, 1., 0.);
+		using jacobian = typename std::tuple_element<1, return_type>::type;
+		jacobian jac;
+		return_type result = std::make_tuple(std::move(eParams), jac,
+								   state.pathAccumulated);
+								   
+		 return result;
+	 }
+	 else
+	 {
+		 FreeVector dummy;
+		 FreeParameters eParams(std::nullopt, dummy);
+		 using jacobian = typename std::tuple_element<1, return_type>::type;
+		 jacobian jac;
+		 return_type result = std::make_tuple(std::move(eParams), jac, state.pathAccumulated);
+		 return result;
+	 }
   }
   
   /// Create and return the bound state at the current position
@@ -605,19 +612,22 @@ class AtlasStepper {
   /// @return std::tuple conatining the final state parameters, the jacobian & the accumulated path
   template<bool start_local>
   auto 
-  buildState(State& state, const Surface& surface, bool reinitialize) const {
+  buildState(State& state, const Surface& surface, bool reinitialize) const { 
 	  using return_type = detail::return_state_type<start_local, BoundParameters, Surface>;
-	  if(typeid(return_type) == typeid(BoundState))
+	  if constexpr(start_local)
 	  {
 	  return boundState(state, surface, reinitialize);
   }
-    BoundParameters eParams;
+  else
+  {
+    BoundParameters eParams(state.geoContext, std::nullopt, BoundVector(), surface.getSharedPtr());
 	using jacobian = typename std::tuple_element<1, return_type>::type;
     jacobian jac;
     return_type result = std::make_tuple(std::move(eParams), jac,
                                state.pathAccumulated);
                                
 	 return result;
+ }
   }
 
   /// Create and return the bound state at the current position
