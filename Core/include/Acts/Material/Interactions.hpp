@@ -59,7 +59,7 @@ float deriveIonisationLossModeQOverP(const Material& material, float thickness,
                                      float m, float qOverP,
                                      float q = UnitConstants::e);
 
-/// Compute the expected energy loss due to radiation effects.
+/// Compute the mean energy loss due to radiation effects.
 ///
 /// @param material  Properties of the traversed material
 /// @param thickness Thickness of the traversed material
@@ -70,14 +70,15 @@ float deriveIonisationLossModeQOverP(const Material& material, float thickness,
 ///
 /// Bremsstrahlung is always included. Direct e+e- pair production and
 /// photo-nuclear interactions only for muons.
-float computeRadiationLoss(const Material& material, float thickness, int pdg,
-                           float m, float qOverP, float q = UnitConstants::e);
-/// Derivative of the expected radiation energy loss with respect to q/p.
+float computeRadiationLossMean(const Material& material, float thickness,
+                               int pdg, float m, float qOverP,
+                               float q = UnitConstants::e);
+/// Derivative of the mean radiation energy loss with respect to q/p.
 ///
 /// @see computeRadiationLoss for parameters description
-float deriveRadiationLossQOverP(const Material& material, float thickness,
-                                int pdg, float m, float qOverP,
-                                float q = UnitConstants::e);
+float deriveRadiationLossMeanQOverP(const Material& material, float thickness,
+                                    int pdg, float m, float qOverP,
+                                    float q = UnitConstants::e);
 
 /// Compute the combined mean energy loss.
 ///
