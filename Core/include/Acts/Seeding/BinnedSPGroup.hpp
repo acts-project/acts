@@ -19,6 +19,9 @@
 
 namespace Acts {
 
+///@class NeighborhooodIterator Iterates over the elements of all bins given
+/// by the indices parameter in the given SpacePointGrid. 
+/// Fullfills the forward iterator.
 template <typename external_spacepoint_t>
 class NeighborhoodIterator {
  public:
@@ -105,6 +108,10 @@ class NeighborhoodIterator {
   const Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
 };
 
+
+///@class Neighborhood Used to access iterators to access a group of bins
+/// returned by a BinFinder.
+/// Fulfills the range_expression interface
 template <typename external_spacepoint_t>
 class Neighborhood {
  public:
@@ -126,6 +133,9 @@ class Neighborhood {
   const SpacePointGrid<external_spacepoint_t>* m_spgrid;
 };
 
+
+///@class BinnedSPGroupIterator Allows to iterate over all groups of bins
+/// a provided BinFinder can generate for each bin of a provided SPGrid
 template <typename external_spacepoint_t>
 class BinnedSPGroupIterator {
  public:
@@ -216,6 +226,9 @@ class BinnedSPGroupIterator {
   BinFinder<external_spacepoint_t>* m_topBinFinder;
 };
 
+///@class BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
+/// for given BinFinders and SpacePointGrid.
+/// Fulfills the range_expression interface.
 template <typename external_spacepoint_t>
 class BinnedSPGroup {
  public:
