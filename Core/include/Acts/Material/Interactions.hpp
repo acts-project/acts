@@ -29,6 +29,7 @@ namespace Acts {
 ///
 ///     -dE(x) = -dE/dx * x
 ///
+/// where -dE/dx is given by the Bethe formula.
 std::pair<float, float> computeIonisationLossMean(const Material& material,
                                                   float thickness, float m,
                                                   float qOverP,
@@ -45,8 +46,8 @@ float deriveIonisationLossMeanQOverP(const Material& material, float thickness,
 /// @see computeEnergyLossIonisationMean for parameters description
 /// @return Energy loss distribution most probable value and width
 ///
-/// This computes the most probable energy loss dE through a material of the
-/// given properties and thickness as described by the mode of the
+/// This computes the most probable energy loss -dE(x) through a material of
+/// the given properties and thickness as described by the mode of the
 /// Landau-Vavilov-Bichsel distribution.
 std::pair<float, float> computeIonisationLossMode(const Material& material,
                                                   float thickness, float m,
@@ -68,6 +69,7 @@ float deriveIonisationLossModeQOverP(const Material& material, float thickness,
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param q         Particle charge
 ///
+/// This computes the mean energy loss -dE(x) using an approximative formula.
 /// Bremsstrahlung is always included. Direct e+e- pair production and
 /// photo-nuclear interactions only for muons.
 float computeRadiationLossMean(const Material& material, float thickness,
@@ -88,6 +90,9 @@ float deriveRadiationLossMeanQOverP(const Material& material, float thickness,
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param q         Particle charge
+///
+/// This computes the mean energy loss -dE(x) including ionisation and radiation
+/// effects.
 float computeEnergyLossMean(const Material& material, float thickness, int pdg,
                             float m, float qOverP, float q = UnitConstants::e);
 /// Derivative of the combined mean energy loss with respect to q/p.
