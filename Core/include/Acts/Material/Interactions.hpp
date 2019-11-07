@@ -23,7 +23,6 @@ namespace Acts {
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param q         Particle charge
-/// @return Energy loss distribution mean and width
 ///
 /// This computes the expected mean energy loss -dE(x) through a material of
 /// the given properties and thickness x, i.e. it computes
@@ -31,10 +30,9 @@ namespace Acts {
 ///     -dE(x) = -dE/dx * x
 ///
 /// where -dE/dx is given by the Bethe formula.
-std::pair<float, float> computeIonisationLossMean(const Material& material,
-                                                  float thickness, int pdg,
-                                                  float m, float qOverP,
-                                                  float q = UnitConstants::e);
+float computeIonisationLossMean(const Material& material, float thickness,
+                                int pdg, float m, float qOverP,
+                                float q = UnitConstants::e);
 /// Derivative of the mean ionisation energy loss with respect to q/p.
 ///
 /// @see computeIonisationLossMean for parameters description
@@ -50,16 +48,29 @@ float deriveIonisationLossMeanQOverP(const Material& material, float thickness,
 /// This computes the most probable energy loss -dE(x) through a material of
 /// the given properties and thickness as described by the mode of the
 /// Landau-Vavilov-Bichsel distribution.
-std::pair<float, float> computeIonisationLossMode(const Material& material,
-                                                  float thickness, int pdg,
-                                                  float m, float qOverP,
-                                                  float q = UnitConstants::e);
+float computeIonisationLossMode(const Material& material, float thickness,
+                                int pdg, float m, float qOverP,
+                                float q = UnitConstants::e);
 /// Derivative of the most probable ionisation energy loss with respect to q/p.
 ///
 /// @see computeIonisationLossMean for parameters description
 float deriveIonisationLossModeQOverP(const Material& material, float thickness,
                                      int pdg, float m, float qOverP,
                                      float q = UnitConstants::e);
+
+/// Compute the Gaussian-equivalent sigma for the ionisation loss fluctuations.
+///
+/// @see computeIonisationLossMean for parameters description
+float computeIonisationLossSigma(const Material& material, float thickness,
+                                 int pdg, float m, float qOverP,
+                                 float q = UnitConstants::e);
+/// Compute q/p Gaussian-equivalent sigma due to ionisation loss fluctuations.
+///
+/// @see computeIonisationLossMean for parameters description
+float computeIonisationLossSigmaQOverP(const Material& material,
+                                       float thickness, int pdg, float m,
+                                       float qOverP,
+                                       float q = UnitConstants::e);
 
 /// Compute the mean energy loss due to radiation effects.
 ///

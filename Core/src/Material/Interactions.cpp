@@ -25,10 +25,6 @@ static constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
 // Energy scale for plasma energy.
 static constexpr float PlasmaEnergyScale = 28.816_eV;
 
-// 4 * scaling factor for Landau FWHM to equivalent Gaussian sigma
-// values is 2 / sqrt(2 * log(2))
-static constexpr float Landau2Gauss = 2.577567883f;
-
 /// Additional derived relativistic quantities.
 struct RelativisticQuantities {
   float q2OverBeta2 = 0.0f;
@@ -138,14 +134,14 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
   assert(0 < m and "Mass must be positive");              \
   assert(0 < (qOverP * q) and "Inconsistent q/p and q signs");
 
-std::pair<float, float> Acts::computeIonisationLossMean(
-    const Material& material, float thickness, int /* unused */, float m,
-    float qOverP, float q) {
+float Acts::computeIonisationLossMean(const Material& material, float thickness,
+                                      int /* unused */, float m, float qOverP,
+                                      float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
   if (not material) {
-    return {0.0f, 0.0f};
+    return 0.0f;
   }
 
   const auto I = material.meanExcitationEnergy();
@@ -162,7 +158,7 @@ std::pair<float, float> Acts::computeIonisationLossMean(
   // identical to the prefactor epsilon for the most probable value.
   const auto running =
       0.5f * std::log(u / I) + 0.5f * std::log(wmax / I) - rq.beta2 - dhalf;
-  return {eps * running, eps * Landau2Gauss};
+  return eps * running;
 }
 
 float Acts::deriveIonisationLossMeanQOverP(const Material& material,
@@ -204,14 +200,14 @@ float Acts::deriveIonisationLossMeanQOverP(const Material& material,
   return eps * rel;
 }
 
-std::pair<float, float> Acts::computeIonisationLossMode(
-    const Material& material, float thickness, int /* unused */, float m,
-    float qOverP, float q) {
+float Acts::computeIonisationLossMode(const Material& material, float thickness,
+                                      int /* unused */, float m, float qOverP,
+                                      float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
   if (not material) {
-    return {0.0f, 0.0f};
+    return 0.0f;
   }
 
   const auto I = material.meanExcitationEnergy();
@@ -223,7 +219,7 @@ std::pair<float, float> Acts::computeIonisationLossMode(
   // uses RPP2018 eq. 33.11
   const auto running =
       std::log(t / I) + std::log(eps / I) + 0.2f - rq.beta2 - 2 * dhalf;
-  return {eps * running, eps * Landau2Gauss};
+  return eps * running;
 }
 
 float Acts::deriveIonisationLossModeQOverP(const Material& material,
@@ -261,6 +257,61 @@ float Acts::deriveIonisationLossModeQOverP(const Material& material,
                                 rq.beta2 - 2 * dhalf) +
                    logDerT + logDerEps - derBeta2 - 2 * derDHalf;
   return eps * rel;
+}
+
+namespace {
+/// Convert Landau full-width-half-maximum to an equivalent Gaussian sigma,
+///
+/// Full-width=half-maximum for a Gaussian is given as
+///
+///    fwhm = 2 * sqrt(2 * log(2)) * sigma
+/// -> sigma = fwhm / (2 * sqrt(2 * log(2)))
+///
+inline float convertLandauFwhmToGaussianSigma(float fwhm) {
+  return fwhm / (2 * std::sqrt(2 * std::log(2.0f)));
+}
+}  // namespace
+
+float Acts::computeIonisationLossSigma(const Material& material,
+                                       float thickness, int /* unused */,
+                                       float m, float qOverP, float q) {
+  ASSERT_INPUTS(thickness, m, qOverP, q)
+
+  // return early in case of vacuum
+  if (not material) {
+    return 0.0f;
+  }
+
+  const auto Ne = material.molarElectronDensity();
+  const auto rq = RelativisticQuantities(m, qOverP, q);
+  // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
+  const auto fwhm = 4 * computeEpsilon(Ne, thickness, rq);
+  return convertLandauFwhmToGaussianSigma(fwhm);
+}
+
+float Acts::computeIonisationLossSigmaQOverP(const Material& material,
+                                             float thickness, int /* unused */,
+                                             float m, float qOverP, float q) {
+  ASSERT_INPUTS(thickness, m, qOverP, q)
+
+  // return early in case of vacuum
+  if (not material) {
+    return 0.0f;
+  }
+
+  const auto Ne = material.molarElectronDensity();
+  const auto rq = RelativisticQuantities(m, qOverP, q);
+  // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
+  const auto fwhm = 4 * computeEpsilon(Ne, thickness, rq);
+  const auto sigmaE = convertLandauFwhmToGaussianSigma(fwhm);
+  //  var(q/p) = (d(q/p)/dE)² * var(E)
+  // d(q/p)/dE = d/dE (q/sqrt(E²-m²))
+  //           = q * -(1/2) * 1/p³ * 2E
+  //           = -q/p² E/p = -(q/p)² * 1/(q*beta) = -(q/p)² * (q/beta) / q²
+  //  var(q/p) = (q/p)^4 * (q/beta)² * (1/q)^4 * var(E)
+  //           = (1/p)^4 * (q/beta)² * var(E)
+  const auto pInv = qOverP / q;
+  return std::sqrt(rq.q2OverBeta2) * pInv * pInv * sigmaE;
 }
 
 namespace {
@@ -371,8 +422,7 @@ float Acts::deriveRadiationLossMeanQOverP(const Material& material,
 
 float Acts::computeEnergyLossMean(const Material& material, float thickness,
                                   int pdg, float m, float qOverP, float q) {
-  return computeIonisationLossMean(material, thickness, pdg, m, qOverP, q)
-             .first +
+  return computeIonisationLossMean(material, thickness, pdg, m, qOverP, q) +
          computeRadiationLossMean(material, thickness, pdg, m, qOverP, q);
 }
 
@@ -389,8 +439,7 @@ float Acts::computeEnergyLossMode(const Material& material, float thickness,
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
   return 0.9f *
-             computeIonisationLossMode(material, thickness, pdg, m, qOverP, q)
-                 .first +
+             computeIonisationLossMode(material, thickness, pdg, m, qOverP, q) +
          0.15f *
              computeRadiationLossMean(material, thickness, pdg, m, qOverP, q);
 }
