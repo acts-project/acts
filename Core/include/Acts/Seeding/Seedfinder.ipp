@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -210,9 +210,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
         // from rad to deltaCotTheta
         float p2scatter = pT2scatter * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if ((deltaCotTheta2 - error2 > 0) && (
-            dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering *
-                                       m_config.sigmaScattering)) {
+        if ((deltaCotTheta2 - error2 > 0) &&
+            (dCotThetaMinusError2 >
+             p2scatter * m_config.sigmaScattering * m_config.sigmaScattering)) {
           continue;
         }
         // A and B allow calculation of impact params in U/V plane with linear
@@ -297,3 +297,4 @@ void Seedfinder<external_spacepoint_t>::transformCoordinates(
   }
 }
 }  // namespace Acts
+
