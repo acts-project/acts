@@ -13,9 +13,6 @@
 
 #include "Acts/Utilities/Units.hpp"
 
-Acts::Material::Material(float X0_, float L0_, float Ar_, float Z_, float rho_)
-    : m_x0(X0_), m_l0(L0_), m_ar(Ar_), m_z(Z_), m_rho(rho_) {}
-
 Acts::Material::Material(const ActsVectorF<5>& parameters)
     : Material(parameters[eX0], parameters[eL0], parameters[eAr],
                parameters[eZ], parameters[eRho]) {}

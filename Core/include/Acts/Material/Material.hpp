@@ -48,7 +48,8 @@ class Material {
   /// @param Ar_  is the relative atomic mass
   /// @param Z_   is the atomic number
   /// @param rho_ is the mass density
-  Material(float X0_, float L0_, float Ar_, float Z_, float rho_);
+  constexpr Material(float X0_, float L0_, float Ar_, float Z_, float rho_)
+      : m_x0(X0_), m_l0(L0_), m_ar(Ar_), m_z(Z_), m_rho(rho_) {}
   /// Construct from an encoded parameters vector.
   Material(const ActsVectorF<5>& parameters);
   ~Material() = default;
