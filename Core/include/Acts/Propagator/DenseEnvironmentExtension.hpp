@@ -9,6 +9,7 @@
 #pragma once
 
 #include <functional>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
@@ -45,10 +46,6 @@ struct DenseEnvironmentExtension {
   std::array<double, 4> Lambdappi;
   /// Energy at each sub-step
   std::array<double, 4> energy;
-
-  /// Energy loss calculator
-  static const detail::IonisationLoss ionisationLoss;
-  static const detail::RadiationLoss radiationLoss;
 
   /// @brief Default constructor
   DenseEnvironmentExtension() = default;
@@ -106,8 +103,7 @@ struct DenseEnvironmentExtension {
       // Evaluate k for the time propagation
       Lambdappi[0] =
           -qop[0] * qop[0] * qop[0] * g * energy[0] /
-          (stepper.charge(state.stepping) * stepper.charge(state.stepping) *
-           UnitConstants::C * UnitConstants::C);
+          (stepper.charge(state.stepping) * stepper.charge(state.stepping));
       //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
       tKi[0] = std::hypot(1, state.options.mass * qop[0]);
     } else {
@@ -339,78 +335,6 @@ struct DenseEnvironmentExtension {
     return true;
   }
 
-  /// @brief This function calculates the energy loss dE per path length ds of
-  /// a particle through material. The energy loss consists of ionisation and
-  /// radiation.
-  ///
-  /// @param [in] energy_        Particle energy
-  /// @param [in] momentum       Particle momentum
-  /// @param [in] mass           Particle mass
-  /// @param [in] pdg            Particle PDG code to identify the type
-  /// @param [in] meanEnergyLoss Boolean indicator if mean or mode of the energy
-  /// loss will be evaluated
-  /// @return Infinitesimal energy loss
-  double dEds(const double energy_, const double momentum, const double mass,
-              const int pdg, const bool meanEnergyLoss) const {
-    // Easy exit if material is invalid
-    if (material->X0() == 0 || material->Z() == 0) {
-      return 0.;
-    }
-
-    // Calculate energy loss by
-    // a) ionisation
-    double ionisationEnergyLoss =
-        ionisationLoss
-            .dEds(mass, momentum / energy_, energy_ / mass, *(material), 1.,
-                  meanEnergyLoss)
-            .first;
-    // b) radiation
-    double radiationEnergyLoss =
-        radiationLoss.dEds(energy_, mass, *(material), pdg, 1.);
-
-    // Rescaling for mode evaluation.
-    // C.f. ATL-SOFT-PUB-2008-003 section 3. The mode evaluation for the energy
-    // loss by ionisation can be directly evaluated.
-    if (!meanEnergyLoss) {
-      radiationEnergyLoss *= 0.15;
-    }
-
-    // Return sum of contributions
-    return ionisationEnergyLoss + radiationEnergyLoss;
-  }
-
-  /// @brief This function calculates the derivation of g=dE/dx by d(q/p)
-  ///
-  /// @param [in] energy_        Particle energy
-  /// @param [in] mass           Particle mass
-  /// @param [in] pdg            Particle PDG code to identify the type
-  /// @param [in] meanEnergyLoss Return mean or mode of the energy loss
-  /// @return Derivative evaluated at the point defined by the
-  /// function parameters
-  double dgdqop(const double energy_, const double mass, const int pdg,
-                const bool meanEnergyLoss) const {
-    // Fast exit if material is invalid
-    if (material->X0() == 0. || material->Z() == 0. ||
-        material->zOverAtimesRho() == 0.) {
-      return 0.;
-    }
-
-    // Bethe-Bloch
-    const double betheBlochDerivative =
-        ionisationLoss.dqop(energy_, qop[0], mass, *(material), true);
-    // Bethe-Heitler (+ pair production & photonuclear interaction for muons)
-    const double radiationDerivative =
-        radiationLoss.dqop(mass, *(material), qop[0], energy_, pdg);
-
-    // Return the total derivative
-    if (meanEnergyLoss) {
-      return betheBlochDerivative + radiationDerivative;
-    } else {
-      // C.f. ATL-SOFT-PUB-2008-003 section 3
-      return 0.9 * betheBlochDerivative + 0.15 * radiationDerivative;
-    }
-  }
-
   /// @brief Initializer of all parameters related to a RKN4 step with energy
   /// loss of a particle in material
   ///
@@ -419,9 +343,18 @@ struct DenseEnvironmentExtension {
   template <typename propagator_state_t>
   void initializeEnergyLoss(const propagator_state_t& state) {
     energy[0] = std::hypot(initialMomentum, state.options.mass);
+    // use unit length as thickness to compute the energy loss per unit length
+    Acts::MaterialProperties slab(*material, 1);
     // Use the same energy loss throughout the step.
-    g = dEds(energy[0], initialMomentum, state.options.mass,
-             state.options.absPdgCode, state.options.meanEnergyLoss);
+    if (state.options.meanEnergyLoss) {
+      g = -computeEnergyLossMean(slab, state.options.absPdgCode,
+                                 state.options.mass, qop[0]);
+    } else {
+      // TODO using the unit path length is not quite right since the most
+      //      probably energy loss is not independent from the path length.
+      g = -computeEnergyLossMode(slab, state.options.absPdgCode,
+                                 state.options.mass, qop[0]);
+    }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
     dPds[0] = g * energy[0] / initialMomentum;
@@ -429,10 +362,14 @@ struct DenseEnvironmentExtension {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
       if (state.options.includeGgradient) {
-        dgdqopValue =
-            dgdqop(energy[0], state.options.mass, state.options.absPdgCode,
-                   state.options
-                       .meanEnergyLoss);  // Use this value throughout the step.
+        if (state.options.meanEnergyLoss) {
+          dgdqopValue = deriveEnergyLossMeanQOverP(
+              slab, state.options.absPdgCode, state.options.mass, qop[0]);
+        } else {
+          // TODO path length dependence; see above
+          dgdqopValue = deriveEnergyLossModeQOverP(
+              slab, state.options.absPdgCode, state.options.mass, qop[0]);
+        }
       }
       // Calculate term for later error propagation
       dLdl[0] = (-qop[0] * qop[0] * g * energy[0] *
