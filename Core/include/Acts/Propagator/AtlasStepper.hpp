@@ -576,7 +576,7 @@ class AtlasStepper {
 		return_type result = curvilinearState(state, reinitialize);
 		return result;
 	}
-	
+	// TODO: Needs implementation
 	if constexpr (end_parameters_t::is_local_representation)
 	{
 		Vector3D dummy;
@@ -618,6 +618,7 @@ class AtlasStepper {
 	  {
 	  return boundState(state, surface, reinitialize);
   }
+  // TODO: Needs implementation
   else
   {
     BoundParameters eParams(state.geoContext, std::nullopt, BoundVector(), surface.getSharedPtr());
