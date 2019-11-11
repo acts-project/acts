@@ -27,12 +27,13 @@ class GeometryID {
  public:
   using Value = uint64_t;
 
-  /// Construct default GeometryID with all values set to zero.
-  constexpr GeometryID() : m_value(0) {}
   /// Construct from an already encoded value.
   constexpr GeometryID(Value encoded) : m_value(encoded) {}
-  constexpr GeometryID(GeometryID&&) = default;
-  constexpr GeometryID(const GeometryID&) = default;
+  /// Construct default GeometryID with all values set to zero.
+  GeometryID() = default;
+  GeometryID(GeometryID&&) = default;
+  GeometryID(const GeometryID&) = default;
+  ~GeometryID() = default;
   GeometryID& operator=(GeometryID&&) = default;
   GeometryID& operator=(const GeometryID&) = default;
 
