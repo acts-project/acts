@@ -1,13 +1,13 @@
 add_library(
   ActsCustomLogger SHARED
-  src/CustomDefaultLogger.cpp)
+  CustomDefaultLogger.cpp)
 target_include_directories(
   ActsCustomLogger
   PRIVATE ${PROJECT_SOURCE_DIR}/Core/include)
 
 add_executable(
   ActsTabulateEnergyLoss
-  src/TabulateEnergyLoss.cpp)
+  TabulateEnergyLoss.cpp)
 target_link_libraries(
   ActsTabulateEnergyLoss
   PRIVATE ActsCore ActsTestsCommonHelpers)
