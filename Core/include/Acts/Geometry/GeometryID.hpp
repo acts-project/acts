@@ -11,8 +11,6 @@
 #include <cstdint>
 #include <ostream>
 
-#include "Acts/Utilities/Helpers.hpp"
-
 namespace Acts {
 
 /// Identifier for geometry nodes.
@@ -42,23 +40,15 @@ class GeometryID {
   constexpr Value value() const { return m_value; }
 
   /// Return the volume identifier.
-  constexpr Value volume() const {
-    return ACTS_BIT_DECODE(m_value, volume_mask);
-  }
+  constexpr Value volume() const { return getBits(volume_mask); }
   /// Return the boundary identifier.
-  constexpr Value boundary() const {
-    return ACTS_BIT_DECODE(m_value, boundary_mask);
-  }
+  constexpr Value boundary() const { return getBits(boundary_mask); }
   /// Return the layer identifier.
-  constexpr Value layer() const { return ACTS_BIT_DECODE(m_value, layer_mask); }
+  constexpr Value layer() const { return getBits(layer_mask); }
   /// Return the approach identifier.
-  constexpr Value approach() const {
-    return ACTS_BIT_DECODE(m_value, approach_mask);
-  }
+  constexpr Value approach() const { return getBits(approach_mask); }
   /// Return the sensitive identifier.
-  constexpr Value sensitive() const {
-    return ACTS_BIT_DECODE(m_value, sensitive_mask);
-  }
+  constexpr Value sensitive() const { return getBits(sensitive_mask); }
 
   /// Set the volume identifier.
   constexpr GeometryID& setVolume(Value volume) {
@@ -83,18 +73,31 @@ class GeometryID {
 
  private:
   // clang-format off
-  constexpr static Value volume_mask    = 0xff00000000000000; // 255 volumes
-  constexpr static Value boundary_mask  = 0x00ff000000000000; // 255 boundaries
-  constexpr static Value layer_mask     = 0x0000fff000000000; // 4095 layers
-  constexpr static Value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
-  constexpr static Value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
+  static constexpr Value volume_mask    = 0xff00000000000000; // 255 volumes
+  static constexpr Value boundary_mask  = 0x00ff000000000000; // 255 boundaries
+  static constexpr Value layer_mask     = 0x0000fff000000000; // 4095 layers
+  static constexpr Value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
+  static constexpr Value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
   // clang-format on
 
   Value m_value = 0;
 
-  /// Set the subset of bits indicated by the mask
+  /// Extract the bit shift necessary to access the masked values.
+  static constexpr int extractShift(Value mask) {
+    // use compiler builtin to extract the number of trailing bits from the
+    // mask. the builtin should be available on all supported compilers.
+    // need unsigned long long version (...ll) to ensure uint64_t compatibility.
+    // WARNING undefined behaviour for mask == 0 which we should not have.
+    return __builtin_ctzll(mask);
+  }
+  /// Extract the masked bits from the encoded value.
+  constexpr Value getBits(Value mask) const {
+    return (m_value & mask) >> extractShift(mask);
+  }
+  /// Set the masked bits to id in the encoded value.
   constexpr GeometryID& setBits(Value mask, Value id) {
-    m_value = (m_value & ~mask) | (ACTS_BIT_ENCODE(id, mask) & mask);
+    m_value = (m_value & ~mask) | ((id << extractShift(mask)) & mask);
+    // return *this here so we need to write less lines in the set... methods
     return *this;
   }
 
