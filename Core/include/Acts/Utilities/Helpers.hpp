@@ -12,7 +12,6 @@
 
 #pragma once
 
-// libc/STL include(s)
 #include <bitset>
 #include <cmath>
 #include <cstdlib>
@@ -21,23 +20,10 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "strings.h"
 
-// Acts include(s)
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/DefaultParameterDefinitions.hpp"
-
-#ifndef ACTS_BIT_CODING
-#define ACTS_BIT_CODING 1
-#if (__GNUC__ >= 4)
-#define ACTS_BIT_SHIFT(mask) __builtin_ctzl(mask)
-#else
-#define ACTS_BIT_SHIFT(mask) (ffsl(mask) - 1)
-#endif
-#define ACTS_BIT_ENCODE(value, mask) (value << ACTS_BIT_SHIFT(mask))
-#define ACTS_BIT_DECODE(code, mask) ((code & mask) >> ACTS_BIT_SHIFT(mask))
-#endif
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
 
