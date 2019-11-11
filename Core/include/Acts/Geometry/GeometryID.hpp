@@ -9,7 +9,7 @@
 #pragma once
 
 #include <cstdint>
-#include <ostream>
+#include <iosfwd>
 
 namespace Acts {
 
@@ -107,14 +107,8 @@ class GeometryID {
   friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value < rhs.m_value;
   }
-  friend inline std::ostream& operator<<(std::ostream& os, GeometryID id) {
-    os << "[ " << std::setw(3) << id.volume();
-    os << " | " << std::setw(3) << id.boundary();
-    os << " | " << std::setw(3) << id.layer();
-    os << " | " << std::setw(3) << id.approach();
-    os << " | " << std::setw(4) << id.sensitive() << " ]";
-    return os;
-  }
 };
+
+std::ostream& operator<<(std::ostream& os, GeometryID id);
 
 }  // namespace Acts
