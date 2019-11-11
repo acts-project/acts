@@ -170,10 +170,10 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // The stepwise jacobians
   auto swJacobians = swJacobianTest.jacobians;
   // The last-step jacobian, needed for the full jacobian transport
-  const auto& swlJacobian = std::visit([](std::variant<BoundMatrix, 
+  const auto& swlJacobian = std::visit([](std::optional<std::variant<BoundMatrix, 
 			   BoundToFreeMatrix, 
 			   FreeToBoundMatrix, 
-			   FreeMatrix>&& arg) -> BoundMatrix { return std::get<BoundMatrix>(arg);}, swResult.transportJacobian);
+			   FreeMatrix>>&& arg) -> BoundMatrix { return std::get<BoundMatrix>(*arg);}, swResult.transportJacobian);
 
   // Build up the step-wise jacobians
   for (auto& j : swJacobians) {

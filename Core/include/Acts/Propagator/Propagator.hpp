@@ -50,10 +50,10 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   std::unique_ptr<const parameters_t> endParameters = nullptr;
 
   /// Full transport jacobian
-  std::variant<BoundMatrix, 
+  std::optional<std::variant<BoundMatrix, 
 			   BoundToFreeMatrix, 
 			   FreeToBoundMatrix, 
-			   FreeMatrix> transportJacobian;
+			   FreeMatrix>> transportJacobian;
 
   /// Number of propagation steps that were carried out
   unsigned int steps = 0;
