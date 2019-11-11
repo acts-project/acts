@@ -60,19 +60,19 @@ static inline double square(double x) {
 }
 
 /// @warning This **only** works for tolerance-based checks
-bool Acts::EllipseBounds::inside(const Acts::Vector2D& lpos,
+bool Acts::EllipseBounds::inside(const Acts::Vector2D& lposition,
                                  const Acts::BoundaryCheck& bcheck) const {
   double tol0 = bcheck.m_tolerance[0];
   double tol1 = bcheck.m_tolerance[1];
-  double phi = detail::radian_sym(VectorHelpers::phi(lpos) - averagePhi());
+  double phi = detail::radian_sym(VectorHelpers::phi(lposition) - averagePhi());
   double phiHalf = halfPhiSector() + tol1;
 
   bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
   bool insideInner = (rMinX() <= tol0) || (rMinY() <= tol0) ||
-                     (1 < (square(lpos[Acts::eLOC_X] / (rMinX() - tol0)) +
-                           square(lpos[Acts::eLOC_Y] / (rMinY() - tol0))));
-  bool insideOuter = ((square(lpos[Acts::eLOC_X] / (rMaxX() + tol0)) +
-                       square(lpos[Acts::eLOC_Y] / (rMaxY() + tol0))) < 1);
+                     (1 < (square(lposition[Acts::eLOC_X] / (rMinX() - tol0)) +
+                           square(lposition[Acts::eLOC_Y] / (rMinY() - tol0))));
+  bool insideOuter = ((square(lposition[Acts::eLOC_X] / (rMaxX() + tol0)) +
+                       square(lposition[Acts::eLOC_Y] / (rMaxY() + tol0))) < 1);
   return (insidePhi && insideInner && insideOuter);
 }
 
@@ -82,15 +82,16 @@ bool Acts::EllipseBounds::inside(const Acts::Vector2D& lpos,
 // and m_valueStore.at(EllipseBounds::bv_rMaxX) ~=
 // m_valueStore.at(EllipseBounds::bv_rMaxY)
 //
-double Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const {
-  double r = perp(lpos);
+double Acts::EllipseBounds::distanceToBoundary(
+    const Vector2D& lposition) const {
+  double r = perp(lposition);
   if (r == 0) {
     return std::min(rMinX(), rMinY());
   }
 
-  double sn = lpos[eLOC_X] / r;
-  double cs = lpos[eLOC_Y] / r;
-  double dF = detail::radian_sym(phi(lpos) - m_avgPhi);
+  double sn = lposition[eLOC_X] / r;
+  double cs = lposition[eLOC_Y] / r;
+  double dF = detail::radian_sym(phi(lposition) - m_avgPhi);
   double sf = 0.;
 
   if (m_halfPhi < M_PI) {

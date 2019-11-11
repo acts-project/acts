@@ -84,24 +84,26 @@ class CylinderBounds : public SurfaceBounds {
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
   /// the bounds  Inside can be called without/with tolerances.
   ///
-  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lposition,
+              const BoundaryCheck& bcheck) const final;
 
   /// Specialized method for CylinderBounds that checks if a global position
   /// is within the the cylinder cover
   ///
-  /// @param pos is the position in the cylinder frame
+  /// @param position is the position in the cylinder frame
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for operation success
-  bool inside3D(const Vector3D& pos, const BoundaryCheck& bcheck = true) const;
+  bool inside3D(const Vector3D& position,
+                const BoundaryCheck& bcheck = true) const;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
-  /// @param lpos is the local position to check for the distance
+  /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -124,7 +126,7 @@ class CylinderBounds : public SurfaceBounds {
   /// an indicator if the bounds are closed
   bool m_closed;
 
-  Vector2D shifted(const Vector2D& lpos) const;
+  Vector2D shifted(const Vector2D& lposition) const;
   ActsSymMatrixD<2> jacobian() const;
 };
 

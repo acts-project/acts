@@ -52,7 +52,6 @@ struct PropagatorState {
     using CurvilinearState =
         std::tuple<CurvilinearParameters, Jacobian, double>;
     using BField = int;
-    using Corrector = VoidIntersectionCorrector;
 
     template <typename, typename>
     using return_parameter_type = void;
@@ -99,11 +98,6 @@ struct PropagatorState {
 
     /// Time access
     double time(const State& state) const { return state.t; }
-
-    /// Return a corrector
-    VoidIntersectionCorrector corrector(State& /*unused*/) const {
-      return VoidIntersectionCorrector();
-    }
 
     bool surfaceReached(const State& state, const Surface* surface) const {
       return surface->isOnSurface(tgContext, position(state), direction(state),

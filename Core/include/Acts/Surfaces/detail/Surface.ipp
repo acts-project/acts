@@ -45,8 +45,8 @@ inline const RotationMatrix3D Surface::referenceFrame(
 
 inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
                                           BoundToFreeMatrix& jacobian,
-                                          const Vector3D& gpos,
-                                          const Vector3D& dir,
+                                          const Vector3D& position,
+                                          const Vector3D& direction,
                                           const BoundVector& /*pars*/) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
@@ -54,9 +54,9 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   //
   // Here, we can avoid it because the direction is by definition a unit
   // vector, with the following coordinate conversions...
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
-  const double z = dir(2);  // == cos(theta)
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
+  const double z = direction(2);  // == cos(theta)
 
   // ...which we can invert to directly get the sines and cosines:
   const double cos_theta = z;
@@ -65,7 +65,7 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   const double cos_phi = x * inv_sin_theta;
   const double sin_phi = y * inv_sin_theta;
   // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, gpos, dir);
+  const auto rframe = referenceFrame(gctx, position, direction);
   // the local error components - given by reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the time component
@@ -81,17 +81,18 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
 
 inline const RotationMatrix3D Surface::initJacobianToLocal(
     const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-    const Vector3D& gpos, const Vector3D& dir) const {
+    const Vector3D& position, const Vector3D& direction) const {
   // Optimized trigonometry on the propagation direction
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
   // component expressions
   const double inv_sin_theta_2 = 1. / (x * x + y * y);
   const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
   const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
   const double inv_sin_theta = sqrt(inv_sin_theta_2);
   // The measurement frame of the surface
-  RotationMatrix3D rframeT = referenceFrame(gctx, gpos, dir).transpose();
+  RotationMatrix3D rframeT =
+      referenceFrame(gctx, position, direction).transpose();
   // given by the refernece frame
   jacobian.block<2, 3>(0, 0) = rframeT.block<2, 3>(0, 0);
   // Time component
@@ -107,13 +108,13 @@ inline const RotationMatrix3D Surface::initJacobianToLocal(
 
 inline const BoundRowVector Surface::derivativeFactors(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
-    const Vector3D& dir, const RotationMatrix3D& rft,
-    const BoundToFreeMatrix& jac) const {
+    const Vector3D& direction, const RotationMatrix3D& rft,
+    const BoundToFreeMatrix& jacobian) const {
   // Create the normal and scale it with the projection onto the direction
   ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
-  norm_vec /= (norm_vec * dir);
+  norm_vec /= (norm_vec * direction);
   // calculate the s factors
-  return (norm_vec * jac.topLeftCorner<3, BoundParsDim>());
+  return (norm_vec * jacobian.topLeftCorner<3, BoundParsDim>());
 }
 
 template <typename parameters_t>

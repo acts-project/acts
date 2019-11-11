@@ -77,21 +77,21 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
 }
 
 void Acts::PlaneSurface::localToGlobal(const GeometryContext& gctx,
-                                       const Vector2D& lpos,
+                                       const Vector2D& lposition,
                                        const Vector3D& /*gmom*/,
-                                       Vector3D& gpos) const {
-  Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
+                                       Vector3D& position) const {
+  Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
   /// the chance that there is no transform is almost 0, let's apply it
-  gpos = transform(gctx) * loc3Dframe;
+  position = transform(gctx) * loc3Dframe;
 }
 
 bool Acts::PlaneSurface::globalToLocal(const GeometryContext& gctx,
-                                       const Vector3D& gpos,
+                                       const Vector3D& position,
                                        const Vector3D& /*gmom*/,
-                                       Acts::Vector2D& lpos) const {
+                                       Acts::Vector2D& lposition) const {
   /// the chance that there is no transform is almost 0, let's apply it
-  Vector3D loc3Dframe = (transform(gctx).inverse()) * gpos;
-  lpos = Vector2D(loc3Dframe.x(), loc3Dframe.y());
+  Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
+  lposition = Vector2D(loc3Dframe.x(), loc3Dframe.y());
   return ((loc3Dframe.z() * loc3Dframe.z() >
            s_onSurfaceTolerance * s_onSurfaceTolerance)
               ? false

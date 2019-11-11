@@ -47,22 +47,23 @@ std::vector<TDD_real_t> Acts::RadialBounds::valueStore() const {
   return values;
 }
 
-Acts::Vector2D Acts::RadialBounds::shifted(const Acts::Vector2D& lpos) const {
+Acts::Vector2D Acts::RadialBounds::shifted(
+    const Acts::Vector2D& lposition) const {
   Vector2D tmp;
-  tmp[eLOC_R] = lpos[eLOC_R];
-  tmp[eLOC_PHI] = detail::radian_sym(lpos[eLOC_PHI] - averagePhi());
+  tmp[eLOC_R] = lposition[eLOC_R];
+  tmp[eLOC_PHI] = detail::radian_sym(lposition[eLOC_PHI] - averagePhi());
   return tmp;
 }
 
-bool Acts::RadialBounds::inside(const Acts::Vector2D& lpos,
+bool Acts::RadialBounds::inside(const Acts::Vector2D& lposition,
                                 const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(shifted(lpos), Vector2D(rMin(), -halfPhiSector()),
+  return bcheck.isInside(shifted(lposition), Vector2D(rMin(), -halfPhiSector()),
                          Vector2D(rMax(), halfPhiSector()));
 }
 
 double Acts::RadialBounds::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
-  return BoundaryCheck(true).distance(shifted(lpos),
+    const Acts::Vector2D& lposition) const {
+  return BoundaryCheck(true).distance(shifted(lposition),
                                       Vector2D(rMin(), -halfPhiSector()),
                                       Vector2D(rMax(), halfPhiSector()));
 }

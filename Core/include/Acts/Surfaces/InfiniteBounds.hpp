@@ -39,7 +39,7 @@ class InfiniteBounds : public SurfaceBounds {
   /// ignores input parameters
   ///
   /// @return always true
-  bool inside(const Vector2D& /*lpos*/,
+  bool inside(const Vector2D& /*lposition*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }
@@ -47,7 +47,9 @@ class InfiniteBounds : public SurfaceBounds {
   /// Minimal distance calculation
   /// ignores input parameter
   /// @return always 0. (should be -NaN)
-  double distanceToBoundary(const Vector2D& /*pos*/) const final { return 0; }
+  double distanceToBoundary(const Vector2D& /*position*/) const final {
+    return 0;
+  }
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& os) const final {

@@ -49,14 +49,14 @@ std::vector<TDD_real_t> Acts::DiamondBounds::valueStore() const {
   return values;
 }
 
-bool Acts::DiamondBounds::inside(const Acts::Vector2D& lpos,
+bool Acts::DiamondBounds::inside(const Acts::Vector2D& lposition,
                                  const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lpos, vertices());
+  return bcheck.isInside(lposition, vertices());
 }
 
 double Acts::DiamondBounds::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
-  return BoundaryCheck(true).distance(lpos, vertices());
+    const Acts::Vector2D& lposition) const {
+  return BoundaryCheck(true).distance(lposition, vertices());
 }
 
 std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices() const {

@@ -76,23 +76,24 @@ Acts::Surface::SurfaceType Acts::DiscSurface::type() const {
 }
 
 void Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
-                                      const Vector2D& lpos,
+                                      const Vector2D& lposition,
                                       const Vector3D& /*gmom*/,
                                       Vector3D& gpos) const {
   // create the position in the local 3d frame
-  Vector3D loc3Dframe(lpos[Acts::eLOC_R] * cos(lpos[Acts::eLOC_PHI]),
-                      lpos[Acts::eLOC_R] * sin(lpos[Acts::eLOC_PHI]), 0.);
+  Vector3D loc3Dframe(lposition[Acts::eLOC_R] * cos(lposition[Acts::eLOC_PHI]),
+                      lposition[Acts::eLOC_R] * sin(lposition[Acts::eLOC_PHI]),
+                      0.);
   // transport it to the globalframe (very unlikely that this is not needed)
   gpos = transform(gctx) * loc3Dframe;
 }
 
 bool Acts::DiscSurface::globalToLocal(const GeometryContext& gctx,
-                                      const Vector3D& gpos,
+                                      const Vector3D& position,
                                       const Vector3D& /*gmom*/,
-                                      Vector2D& lpos) const {
+                                      Vector2D& lposition) const {
   // transport it to the globalframe (very unlikely that this is not needed)
-  Vector3D loc3Dframe = (transform(gctx).inverse()) * gpos;
-  lpos = Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
+  Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
+  lposition = Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
   return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
 }
 

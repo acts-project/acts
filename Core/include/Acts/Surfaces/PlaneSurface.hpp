@@ -93,11 +93,11 @@ class PlaneSurface : public Surface {
   /// Normal vector return
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos is the local position is ignored
+  /// @param lposition is the local position is ignored
   ///
   /// return a Vector3D by value
   const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lpos) const final;
+                        const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -123,50 +123,50 @@ class PlaneSurface : public Surface {
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos local 2D posittion in specialized surface frame
-  /// @param mom global 3D momentum representation (optionally ignored)
-  /// @param gpos global 3D position to be filled (given by reference for method
-  /// symmetry)
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lpos,
-                     const Vector3D& mom, Vector3D& gpos) const override;
+  /// @param lposition local 2D posittion in specialized surface frame
+  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param position global 3D position to be filled (given by reference for
+  /// method symmetry)
+  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                     const Vector3D& momentum,
+                     Vector3D& position) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param mom global 3D momentum representation (optionally ignored)
-  /// @param lpos local 2D position to be filled (given by reference for method
-  /// symmetry)
+  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param lposition local 2D position to be filled (given by reference for
+  /// method symmetry)
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& gpos,
-                     const Vector3D& mom, Vector2D& lpos) const override;
+  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
+                     const Vector3D& momentum,
+                     Vector2D& lposition) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
-  /// @param pos global 3D position - considered to be on surface but not
+  /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param mom global 3D momentum representation (optionally ignored)
+  /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @note this is the final implementation of the pathCorrection function
   ///
   /// @return a double representing the scaling factor
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& pos,
-                        const Vector3D& mom) const final;
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                        const Vector3D& momentum) const final;
 
   /// @brief Straight line intersection schema
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos The start position of the intersection attempt
-  /// @param gdir The direction of the interesection attempt,
-  ///       @note expected to be normalized
-  /// @param navDir The navigation direction with respect to the momentum
+  /// @param position The start position of the intersection attempt
+  /// @param direction The direction of the interesection attempt,
+  /// (@note expected to be normalized)
   /// @param bcheck The boundary check directive
-  /// @param correct is a corrector function (e.g. for curvature correction)
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -186,11 +186,10 @@ class PlaneSurface : public Surface {
   /// - perpendicular to the normal of the plane
   ///
   /// @return the Intersection object
-  Intersection intersectionEstimate(const GeometryContext& gctx,
-                                    const Vector3D& gpos, const Vector3D& gdir,
-                                    NavigationDirection navDir = forward,
-                                    const BoundaryCheck& bcheck = false,
-                                    CorrFnc correct = nullptr) const final;
+  Intersection intersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction,
+      const BoundaryCheck& bcheck = false) const final;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

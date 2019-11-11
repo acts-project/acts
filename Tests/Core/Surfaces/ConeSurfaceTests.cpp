@@ -167,12 +167,12 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// intersectionEstimate
   Vector3D direction{-1., 0, 0};
   auto intersect = coneSurfaceObject->intersectionEstimate(
-      tgContext, offSurface, direction, forward, false);
-  Intersection expectedIntersect{Vector3D{0, 1, 2}, 100., true, 0};
-  BOOST_CHECK(intersect.valid);
+      tgContext, offSurface, direction, false);
+  Intersection expectedIntersect{Vector3D{0, 1, 2}, 100.,
+                                 Intersection::Status::reachable};
+  BOOST_CHECK(bool(intersect));
   CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-6);
   CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-6);
-  CHECK_CLOSE_ABS(intersect.distance, expectedIntersect.distance, 1e-6);
   //
   /// Test pathCorrection
   CHECK_CLOSE_REL(

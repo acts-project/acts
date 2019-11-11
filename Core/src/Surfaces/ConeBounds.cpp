@@ -54,29 +54,33 @@ std::vector<TDD_real_t> Acts::ConeBounds::valueStore() const {
 }
 
 /// Shift r-phi coordinate to be centered around the average phi.
-Acts::Vector2D Acts::ConeBounds::shifted(const Acts::Vector2D& lpos) const {
+Acts::Vector2D Acts::ConeBounds::shifted(
+    const Acts::Vector2D& lposition) const {
   using Acts::detail::radian_sym;
 
-  auto x = r(lpos[eLOC_Z]);  // cone radius at the local position
+  auto x = r(lposition[eLOC_Z]);  // cone radius at the local position
   Vector2D shifted;
-  shifted[eLOC_Z] = lpos[eLOC_Z];
+  shifted[eLOC_Z] = lposition[eLOC_Z];
   shifted[eLOC_RPHI] =
-      std::isnormal(x) ? (x * radian_sym((lpos[eLOC_RPHI] / x) - averagePhi()))
-                       : lpos[eLOC_RPHI];
+      std::isnormal(x)
+          ? (x * radian_sym((lposition[eLOC_RPHI] / x) - averagePhi()))
+          : lposition[eLOC_RPHI];
   return shifted;
 }
 
-bool Acts::ConeBounds::inside(const Acts::Vector2D& lpos,
+bool Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
                               const Acts::BoundaryCheck& bcheck) const {
-  auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
-  return bcheck.isInside(shifted(lpos), Vector2D(-rphiHalf, minZ()),
+  auto rphiHalf = r(lposition[eLOC_Z]) * halfPhiSector();
+  return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, minZ()),
                          Vector2D(rphiHalf, maxZ()));
 }
 
-double Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& lpos) const {
-  auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
-  return BoundaryCheck(true).distance(
-      shifted(lpos), Vector2D(-rphiHalf, minZ()), Vector2D(rphiHalf, maxZ()));
+double Acts::ConeBounds::distanceToBoundary(
+    const Acts::Vector2D& lposition) const {
+  auto rphiHalf = r(lposition[eLOC_Z]) * halfPhiSector();
+  return BoundaryCheck(true).distance(shifted(lposition),
+                                      Vector2D(-rphiHalf, minZ()),
+                                      Vector2D(rphiHalf, maxZ()));
 }
 
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {

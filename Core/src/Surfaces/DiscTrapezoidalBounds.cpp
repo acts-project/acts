@@ -57,32 +57,32 @@ Acts::Vector2D Acts::DiscTrapezoidalBounds::toLocalXY(
 }
 
 Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidalBounds::jacobianToLocalXY(
-    const Acts::Vector2D& lpos) const {
+    const Acts::Vector2D& lposition) const {
   ActsMatrixD<2, 2> jacobian;
-  jacobian(0, eLOC_R) = std::sin(lpos[eLOC_PHI] - m_avgPhi);
-  jacobian(1, eLOC_R) = std::cos(lpos[eLOC_PHI] - m_avgPhi);
-  jacobian(0, eLOC_PHI) = lpos[eLOC_R] * std::cos(lpos[eLOC_PHI]);
-  jacobian(1, eLOC_PHI) = lpos[eLOC_R] * -std::sin(lpos[eLOC_PHI]);
+  jacobian(0, eLOC_R) = std::sin(lposition[eLOC_PHI] - m_avgPhi);
+  jacobian(1, eLOC_R) = std::cos(lposition[eLOC_PHI] - m_avgPhi);
+  jacobian(0, eLOC_PHI) = lposition[eLOC_R] * std::cos(lposition[eLOC_PHI]);
+  jacobian(1, eLOC_PHI) = lposition[eLOC_R] * -std::sin(lposition[eLOC_PHI]);
   return jacobian;
 }
 
 bool Acts::DiscTrapezoidalBounds::inside(
-    const Acts::Vector2D& lpos, const Acts::BoundaryCheck& bcheck) const {
+    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
   Vector2D vertices[] = {{minHalflengthX(), rMin()},
                          {maxHalflengthX(), rMax()},
                          {-maxHalflengthX(), rMax()},
                          {-minHalflengthX(), rMin()}};
-  auto jacobian = jacobianToLocalXY(lpos);
-  return bcheck.transformed(jacobian).isInside(toLocalXY(lpos), vertices);
+  auto jacobian = jacobianToLocalXY(lposition);
+  return bcheck.transformed(jacobian).isInside(toLocalXY(lposition), vertices);
 }
 
 double Acts::DiscTrapezoidalBounds::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
+    const Acts::Vector2D& lposition) const {
   Vector2D vertices[] = {{minHalflengthX(), rMin()},
                          {maxHalflengthX(), rMax()},
                          {-maxHalflengthX(), rMax()},
                          {-minHalflengthX(), rMin()}};
-  return BoundaryCheck(true).distance(toLocalXY(lpos), vertices);
+  return BoundaryCheck(true).distance(toLocalXY(lposition), vertices);
 }
 
 // ostream operator overload

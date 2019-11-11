@@ -36,7 +36,7 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename bfield_t, typename corrector_t = VoidIntersectionCorrector,
+template <typename bfield_t, 
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
@@ -55,7 +55,6 @@ class EigenStepper {
 
  public:
   using cstep = detail::ConstrainedStep;
-  using Corrector = corrector_t;
 
   /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
@@ -278,11 +277,6 @@ class EigenStepper {
   /// @param [in] up the updated momentum value
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const;
-
-  /// Return a corrector
-  corrector_t corrector(State& state) const {
-    return corrector_t(state.startPos, state.startDir, state.pathAccumulated);
-  }
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

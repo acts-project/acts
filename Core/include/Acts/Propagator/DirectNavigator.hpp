@@ -175,9 +175,6 @@ class DirectNavigator {
     state.navigation.currentSurface = nullptr;
 
     if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
-      // Get a  navigation corrector associated to the stepper
-      auto navCorr = stepper.corrector(state.stepping);
-
       // The Options struct
       Options navOpts;
 
@@ -186,7 +183,7 @@ class DirectNavigator {
           (*state.navigation.nextSurfaceIter)
               ->surfaceIntersectionEstimate(
                   state.geoContext, stepper.position(state.stepping),
-                  stepper.direction(state.stepping), navOpts, navCorr);
+                  stepper.direction(state.stepping), navOpts.boundaryCheck);
 
       // Intersect the next surface and go
       double navStep = nextIntersection.intersection.pathLength;

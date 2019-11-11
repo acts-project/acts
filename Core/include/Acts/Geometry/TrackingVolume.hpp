@@ -50,11 +50,11 @@ using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
 // full intersection with Layer
-using LayerIntersection = FullIntersection<Layer, Surface>;
+using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
 // full intersection with surface
 using BoundaryIntersection =
-    FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface>;
+    ObjectIntersection<BoundarySurfaceT<TrackingVolume>, Surface>;
 
 /// @class TrackingVolume
 ///
@@ -169,105 +169,85 @@ class TrackingVolume : public Volume {
   ///
   /// This is the method for the propagator/extrapolator
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position for the search
   /// @param direction Direction for the search
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   ///
   /// @return vector of compatible intersections with layers
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+  template <typename options_t>
   std::vector<LayerIntersection> compatibleLayers(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+      const Vector3D& direction, const options_t& options) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
   /// This is the method for the propagator/extrapolator
   /// @tparam parameters_t Type of parameters used for the decomposition
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   ///
   /// @return vector of compatible intersections with layers
-  template <typename parameters_t, typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+  template <typename parameters_t, typename options_t>
   std::vector<LayerIntersection> compatibleLayers(
       const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+      const options_t& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   /// @tparam sorter_t Type of the boundary surface sorter
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position for searching
   /// @param direction The direction for searching
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
   template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector,
             typename sorter_t = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const options_t& options,
-      const corrector_t& corrfnc = corrector_t(),
       const sorter_t& sorter = sorter_t()) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
   /// @tparam parameters_t Type of parameters used for the decomposition
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   /// @tparam sorter_t Type of the boundary surface sorter
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
   template <typename parameters_t, typename options_t,
-            typename corrector_t = VoidIntersectionCorrector,
             typename sorter_t = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection> compatibleBoundaries(
       const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options, const corrector_t& corrfnc = corrector_t(),
-      const sorter_t& sorter = sorter_t()) const;
+      const options_t& options, const sorter_t& sorter = sorter_t()) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction towards which to test
   /// @param angle The opening angle
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   ///
   /// @return Vector of surface candidates
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+  template <typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, double angle, const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+      const Vector3D& direction, double angle, const options_t& options) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///

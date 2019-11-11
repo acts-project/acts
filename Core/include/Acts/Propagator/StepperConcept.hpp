@@ -48,7 +48,6 @@ namespace concept {
   METHOD_TRAIT(update_t, update);
   METHOD_TRAIT(covariance_transport_t, covarianceTransport);
   METHOD_TRAIT(step_t, step);
-  METHOD_TRAIT(corrector_t, corrector);
 
   template <typename T>
   using cov_transport_t = decltype(std::declval<T>().covTransport);
@@ -110,8 +109,6 @@ namespace concept {
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const BoundParameters&>,
                                                              has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
         static_assert(update_method_exists, "update method not found");
-        constexpr static bool corrector_exists = has_method<const S, typename S::Corrector, corrector_t, state&>;
-        static_assert(corrector_exists, "corrector method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&, bool>,
                                                                     has_method<const S, void, covariance_transport_t, state&, const Surface&, bool>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
@@ -133,7 +130,6 @@ namespace concept {
                                               bound_state_method_exists,
                                               curvilinear_state_method_exists,
                                               update_method_exists,
-                                              corrector_exists,
                                               covariance_transport_exists>;
       };
   // clang-format on

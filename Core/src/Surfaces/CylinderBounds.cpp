@@ -63,10 +63,11 @@ std::vector<TDD_real_t> Acts::CylinderBounds::valueStore() const {
 }
 
 // Convert from (r*phi,z) to (phi,z) centered around phi0
-Acts::Vector2D Acts::CylinderBounds::shifted(const Acts::Vector2D& lpos) const {
-  return {
-      Acts::detail::radian_sym((lpos[Acts::eLOC_RPHI] / m_radius) - m_avgPhi),
-      lpos[Acts::eLOC_Z]};
+Acts::Vector2D Acts::CylinderBounds::shifted(
+    const Acts::Vector2D& lposition) const {
+  return {Acts::detail::radian_sym((lposition[Acts::eLOC_RPHI] / m_radius) -
+                                   m_avgPhi),
+          lposition[Acts::eLOC_Z]};
 }
 
 // Jacobian from (r*phi,z) to (phi,z)
@@ -79,14 +80,14 @@ Acts::ActsSymMatrixD<2> Acts::CylinderBounds::jacobian() const {
   return j;
 }
 
-bool Acts::CylinderBounds::inside(const Vector2D& lpos,
+bool Acts::CylinderBounds::inside(const Vector2D& lposition,
                                   const BoundaryCheck& bcheck) const {
   return bcheck.transformed(jacobian())
-      .isInside(shifted(lpos), Vector2D(-m_halfPhi, -m_halfZ),
+      .isInside(shifted(lposition), Vector2D(-m_halfPhi, -m_halfZ),
                 Vector2D(m_halfPhi, m_halfZ));
 }
 
-bool Acts::CylinderBounds::inside3D(const Vector3D& pos,
+bool Acts::CylinderBounds::inside3D(const Vector3D& position,
                                     const BoundaryCheck& bcheck) const {
   // additional tolerance from the boundary check if configred
   bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
@@ -97,22 +98,22 @@ bool Acts::CylinderBounds::inside3D(const Vector3D& pos,
   double addToleranceZ = checkAbsolute ? bcheck.m_tolerance[1] : 0.;
   // check if the position compatible with the radius
   if ((s_onSurfaceTolerance + addToleranceR) <=
-      std::abs(perp(pos) - m_radius)) {
+      std::abs(perp(position) - m_radius)) {
     return false;
   } else if (checkAbsolute && m_closed) {
     return ((s_onSurfaceTolerance + addToleranceZ + m_halfZ) >=
-            std::abs(pos.z()));
+            std::abs(position.z()));
   }
   // detailed, but slower check
-  Vector2D lpos(detail::radian_sym(phi(pos) - m_avgPhi), pos.z());
+  Vector2D lpos(detail::radian_sym(phi(position) - m_avgPhi), position.z());
   return bcheck.transformed(jacobian())
       .isInside(lpos, Vector2D(-m_halfPhi, -m_halfZ),
                 Vector2D(m_halfPhi, m_halfZ));
 }
 
 double Acts::CylinderBounds::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
-  return BoundaryCheck(true).distance(shifted(lpos),
+    const Acts::Vector2D& lposition) const {
+  return BoundaryCheck(true).distance(shifted(lposition),
                                       Vector2D(-m_halfPhi, -m_halfZ),
                                       Vector2D(m_halfPhi, m_halfZ));
 }

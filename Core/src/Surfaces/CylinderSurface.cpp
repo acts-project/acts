@@ -89,14 +89,14 @@ const Acts::Vector3D Acts::CylinderSurface::binningPosition(
 
 // return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D Acts::CylinderSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3D& gpos,
+    const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
   RotationMatrix3D mFrame;
   // construct the measurement frame
   // measured Y is the z axis
   Vector3D measY = rotSymmetryAxis(gctx);
   // measured z is the position normalized transverse (in local)
-  Vector3D measDepth = normal(gctx, gpos);
+  Vector3D measDepth = normal(gctx, position);
   // measured X is what comoes out of it
   Vector3D measX(measY.cross(measDepth).normalized());
   // assign the columnes
@@ -112,20 +112,20 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 }
 
 void Acts::CylinderSurface::localToGlobal(const GeometryContext& gctx,
-                                          const Vector2D& lpos,
+                                          const Vector2D& lposition,
                                           const Vector3D& /*unused*/,
-                                          Vector3D& gpos) const {
+                                          Vector3D& position) const {
   // create the position in the local 3d frame
   double r = bounds().r();
-  double phi = lpos[Acts::eLOC_RPHI] / r;
-  gpos = Vector3D(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
-  gpos = transform(gctx) * gpos;
+  double phi = lposition[Acts::eLOC_RPHI] / r;
+  position = Vector3D(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
+  position = transform(gctx) * position;
 }
 
 bool Acts::CylinderSurface::globalToLocal(const GeometryContext& gctx,
-                                          const Vector3D& gpos,
+                                          const Vector3D& position,
                                           const Vector3D& /*unused*/,
-                                          Vector2D& lpos) const {
+                                          Vector2D& lposition) const {
   // get the transform & transform global position into cylinder frame
   // @todo clean up intolerance parameters
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
@@ -138,8 +138,8 @@ bool Acts::CylinderSurface::globalToLocal(const GeometryContext& gctx,
 
   const Transform3D& sfTransform = transform(gctx);
   Transform3D inverseTrans(sfTransform.inverse());
-  Vector3D loc3Dframe(inverseTrans * gpos);
-  lpos = Vector2D(bounds().r() * phi(loc3Dframe), loc3Dframe.z());
+  Vector3D loc3Dframe(inverseTrans * position);
+  lposition = Vector2D(bounds().r() * phi(loc3Dframe), loc3Dframe.z());
   radius = perp(loc3Dframe);
   // return true or false
   return ((std::abs(radius - bounds().r()) > inttol) ? false : true);
@@ -160,28 +160,28 @@ Acts::CylinderSurface* Acts::CylinderSurface::clone_impl(
 }
 
 const Acts::Vector3D Acts::CylinderSurface::normal(
-    const GeometryContext& gctx, const Acts::Vector2D& lpos) const {
-  double phi = lpos[Acts::eLOC_RPHI] / m_bounds->r();
+    const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
+  double phi = lposition[Acts::eLOC_RPHI] / m_bounds->r();
   Vector3D localNormal(cos(phi), sin(phi), 0.);
   return Vector3D(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
 }
 
 const Acts::Vector3D Acts::CylinderSurface::normal(
-    const GeometryContext& gctx, const Acts::Vector3D& gpos) const {
+    const GeometryContext& gctx, const Acts::Vector3D& position) const {
   const Transform3D& sfTransform = transform(gctx);
   // get it into the cylinder frame
-  Vector3D pos3D = sfTransform.inverse() * gpos;
+  Vector3D pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0
   pos3D.z() = 0.;
   // normalize and rotate back into global if needed
   return sfTransform.linear() * pos3D.normalized();
 }
 
-double Acts::CylinderSurface::pathCorrection(const GeometryContext& gctx,
-                                             const Acts::Vector3D& gpos,
-                                             const Acts::Vector3D& mom) const {
-  Vector3D normalT = normal(gctx, gpos);
-  double cosAlpha = normalT.dot(mom.normalized());
+double Acts::CylinderSurface::pathCorrection(
+    const GeometryContext& gctx, const Acts::Vector3D& position,
+    const Acts::Vector3D& momentum) const {
+  Vector3D normalT = normal(gctx, position);
+  double cosAlpha = normalT.dot(momentum);
   return std::fabs(1. / cosAlpha);
 }
 

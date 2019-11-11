@@ -50,8 +50,7 @@ using Covariance = BoundSymMatrix;
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<BFieldType>;
 using DenseStepperType =
-    EigenStepper<BFieldType, VoidIntersectionCorrector,
-                 StepperExtensionList<DenseEnvironmentExtension>>;
+    EigenStepper<BFieldType, StepperExtensionList<DenseEnvironmentExtension>>;
 using AtlasStepperType = AtlasStepper<BFieldType>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 using DensePropagatorType = Propagator<DenseStepperType, Navigator>;

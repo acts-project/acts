@@ -25,8 +25,8 @@ inline const Vector2D DiscSurface::localCartesianToPolar(
 
 inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
                                               BoundToFreeMatrix& jacobian,
-                                              const Vector3D& gpos,
-                                              const Vector3D& dir,
+                                              const Vector3D& position,
+                                              const Vector3D& direction,
                                               const BoundVector& pars) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
@@ -34,9 +34,9 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   //
   // Here, we can avoid it because the direction is by definition a unit
   // vector, with the following coordinate conversions...
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
-  const double z = dir(2);  // == cos(theta)
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
+  const double z = direction(2);  // == cos(theta)
 
   // ...which we can invert to directly get the sines and cosines:
   const double cos_theta = z;
@@ -45,7 +45,7 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   const double cos_phi = x * inv_sin_theta;
   const double sin_phi = y * inv_sin_theta;
   // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, gpos, dir);
+  const auto rframe = referenceFrame(gctx, position, direction);
 
   // special polar coordinates for the Disc
   double lrad = pars[eLOC_0];
@@ -71,21 +71,22 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
 
 inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
     const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-    const Vector3D& gpos, const Vector3D& dir) const {
+    const Vector3D& position, const Vector3D& direction) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // Optimized trigonometry on the propagation direction
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
   // component expressions - global
   const double inv_sin_theta_2 = 1. / (x * x + y * y);
   const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
   const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
   const double inv_sin_theta = sqrt(inv_sin_theta_2);
   // The measurement frame of the surface
-  RotationMatrix3D rframeT = referenceFrame(gctx, gpos, dir).transpose();
+  RotationMatrix3D rframeT =
+      referenceFrame(gctx, position, direction).transpose();
   // calculate the transformation to local coorinates
-  const Vector3D pos_loc = transform(gctx).inverse() * gpos;
+  const Vector3D pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
   const double lphi = phi(pos_loc);
   const double lcphi = cos(lphi);
@@ -107,9 +108,8 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
 }
 
 inline Intersection DiscSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
-    NavigationDirection navDir, const BoundaryCheck& bcheck,
-    CorrFnc correct) const {
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // minimize the call to transform()
   const auto& tMatrix = transform(gctx).matrix();
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
@@ -117,34 +117,31 @@ inline Intersection DiscSurface::intersectionEstimate(
   // return solution and path
   Vector3D solution(0., 0., 0.);
   double path = std::numeric_limits<double>::infinity();
-  // lemma : the solver -> should catch current values
-  auto solve = [&solution, &path, &pnormal, &pcenter, &navDir](
-                   const Vector3D& lpos, const Vector3D& ldir) -> bool {
+  // Lemma : the solver ------ encapsulated
+  auto solve = [&solution, &path, &pnormal, &pcenter](
+                   const Vector3D& lpos,
+                   const Vector3D& ldir) -> Intersection::Status {
     double denom = ldir.dot(pnormal);
     if (denom != 0.0) {
       path = (pnormal.dot((pcenter - lpos))) / (denom);
       solution = (lpos + path * ldir);
+      // Is valid hence either on surface or reachable
+      return (path * path < s_onSurfaceTolerance * s_onSurfaceTolerance)
+                 ? Intersection::Status::onSurface
+                 : Intersection::Status::reachable;
     }
-    // is valid if it goes into the right direction
-    return ((navDir == 0) || path * navDir >= 0.);
+    return Intersection::Status::unreachable;
   };
-  // solve first
-  bool valid = solve(gpos, gdir);
-  // if configured to correct, do it and solve again
-  if (correct) {
-    // copy as the corrector may change them
-    Vector3D lposc = gpos;
-    Vector3D ldirc = gdir;
-    if (correct(lposc, ldirc, path)) {
-      valid = solve(lposc, ldirc);
-    }
-  }
-  // evaluate (if necessary in terms of boundaries)
+  // --------
+  Intersection::Status status = solve(position, direction);
+  // Evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
-  //  all we need is to check if it's inside bounds in 3D space
-  valid = bcheck ? (valid && isOnSurface(gctx, solution, gdir, bcheck)) : valid;
-  // return the result
-  return Intersection(solution, path, valid);
+  //  all we need is to check if it's inside bounds
+  if (status != Intersection::Status::unreachable and bcheck and
+      not isOnSurface(gctx, solution, direction, bcheck)) {
+    status = Intersection::Status::missed;
+  }
+  return Intersection(solution, path, status);
 }
 
 inline const Vector3D DiscSurface::normal(const GeometryContext& gctx,
@@ -160,8 +157,9 @@ inline const Vector3D DiscSurface::binningPosition(
 }
 
 inline double DiscSurface::pathCorrection(const GeometryContext& gctx,
-                                          const Vector3D& pos,
-                                          const Vector3D& mom) const {
+                                          const Vector3D& position,
+                                          const Vector3D& momentum) const {
   /// we can ignore the global position here
-  return 1. / std::abs(Surface::normal(gctx, pos).dot(mom.normalized()));
+  return 1. /
+         std::abs(Surface::normal(gctx, position).dot(momentum.normalized()));
 }

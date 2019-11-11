@@ -75,17 +75,17 @@ class ConeBounds : public SurfaceBounds {
 
   /// inside method for local position
   ///
-  /// @param lpos is the local position to be checked
+  /// @param lposition is the local position to be checked
   /// @param bcheck is the boundary check directive
   /// @return is a boolean indicating if the position is inside
-  bool inside(const Vector2D& lpos,
+  bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
-  /// @param lpos is the local position to check for the distance
+  /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
   ///

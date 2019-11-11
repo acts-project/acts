@@ -19,29 +19,20 @@ void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
 }
 
 Acts::ObjectIntersection<Acts::Surface>
-Acts::GenericApproachDescriptor::approachSurface(const GeometryContext& gctx,
-                                                 const Vector3D& gpos,
-                                                 const Vector3D& gdir,
-                                                 NavigationDirection navDir,
-                                                 const BoundaryCheck& bcheck,
-                                                 CorrFnc corrfnc) const {
+Acts::GenericApproachDescriptor::approachSurface(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // the intersection estimates
   std::vector<ObjectIntersection<Surface>> sIntersections;
   sIntersections.reserve(m_surfaceCache.size());
   for (auto& sf : m_surfaceCache) {
     // intersect
     auto intersection =
-        sf->intersectionEstimate(gctx, gpos, gdir, navDir, bcheck, corrfnc);
-    sIntersections.push_back(
-        ObjectIntersection<Surface>(intersection, sf, navDir));
+        sf->intersectionEstimate(gctx, position, direction, bcheck);
+    sIntersections.push_back(ObjectIntersection<Surface>(intersection, sf));
   }
-  // sort depedning on the navigation direction
-  if (navDir == forward) {
-    std::sort(sIntersections.begin(), sIntersections.end());
-  } else {
-    std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
-  }
-  // return what you have
+  // Sor them & return the closest
+  std::sort(sIntersections.begin(), sIntersections.end());
   return (*sIntersections.begin());
 }
 

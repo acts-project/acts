@@ -44,8 +44,6 @@ class AtlasStepper {
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
-  using Corrector = VoidIntersectionCorrector;
-
   using BField = bfield_t;
 
   /// @brief Nested State struct for the local caching
@@ -606,11 +604,6 @@ class AtlasStepper {
     state.pVector[5] = udirection[1];
     state.pVector[6] = udirection[2];
     state.pVector[7] = charge(state) / up;
-  }
-
-  /// Return a corrector
-  VoidIntersectionCorrector corrector(State& /*unused*/) const {
-    return VoidIntersectionCorrector();
   }
 
   /// Method for on-demand transport of the covariance

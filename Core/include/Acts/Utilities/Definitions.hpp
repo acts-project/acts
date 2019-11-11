@@ -43,7 +43,7 @@ static constexpr double s_curvilinearProjTolerance = 0.999995;
 /// @enum NavigationDirection
 /// The navigation direciton is always with
 /// respect to a given momentum or direction
-enum NavigationDirection : int { backward = -1, anyDirection = 0, forward = 1 };
+enum NavigationDirection : int { backward = -1, forward = 1 };
 
 ///  This is a steering enum to tell which material update stage:
 /// - preUpdate  : update on approach of a surface

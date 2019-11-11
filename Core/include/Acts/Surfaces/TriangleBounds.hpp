@@ -58,16 +58,17 @@ class TriangleBounds : public PlanarBounds {
   /// This method checks if the provided local coordinates are inside the
   /// surface bounds
   ///
-  /// @param lpos local position in 2D local carthesian frame
+  /// @param lposition local position in 2D local carthesian frame
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lposition,
+              const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
-  /// @param lpos is the local position to check for the distance
+  /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// This method returns the coordinates of vertices
   std::vector<Vector2D> vertices() const final;

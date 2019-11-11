@@ -44,7 +44,6 @@ class StraightLineStepper {
  public:
   using cstep = detail::ConstrainedStep;
 
-  using Corrector = VoidIntersectionCorrector;
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
@@ -290,11 +289,6 @@ class StraightLineStepper {
     state.dir = udirection;
     state.p = up;
     state.dt = time;
-  }
-
-  /// Return a corrector
-  VoidIntersectionCorrector corrector(State& /*state*/) const {
-    return VoidIntersectionCorrector();
   }
 
   /// Method for on-demand transport of the covariance

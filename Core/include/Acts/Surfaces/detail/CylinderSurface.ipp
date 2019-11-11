@@ -17,12 +17,11 @@ inline const Vector3D CylinderSurface::rotSymmetryAxis(
 }
 
 inline Intersection CylinderSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
-    NavigationDirection navDir, const BoundaryCheck& bcheck,
-    CorrFnc correct) const {
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // create line parameters
-  Vector3D lpos = gpos;
-  Vector3D ldir = gdir;
+  Vector3D lpos = position;
+  Vector3D ldir = direction;
   // minimize the call to transform()
   const auto& tMatrix = transform(gctx).matrix();
   Vector3D caxis = tMatrix.block<3, 1>(0, 2).transpose();
@@ -31,10 +30,10 @@ inline Intersection CylinderSurface::intersectionEstimate(
   Vector3D solution(0, 0, 0);
   double path = 0.;
 
-  // lemma : the solver -> should catch current values
-  auto solve = [&solution, &path, &lpos, &ldir, &ccenter, &caxis,
-                &navDir](double R) -> bool {
-    // check documentation for explanation
+  // lemma : the solver ----- encapsulated
+  auto solve = [&solution, &path, &lpos, &ldir, &ccenter,
+                &caxis](double R) -> Intersection::Status {
+    // Check documentation for explanation
     Vector3D pc = lpos - ccenter;
     Vector3D pcXcd = pc.cross(caxis);
     Vector3D ldXcd = ldir.cross(caxis);
@@ -45,29 +44,26 @@ inline Intersection CylinderSurface::intersectionEstimate(
     detail::RealQuadraticEquation qe(a, b, c);
     // check how many solution you have
     if (qe.solutions == 0) {
-      return false;
+      return Intersection::Status::unreachable;
     }
-    // chose the solution
-    path = ((navDir == 0) || qe.first * qe.second > 0.)
-               ? (qe.first * qe.first < qe.second * qe.second ? qe.first
-                                                              : qe.second)
-               : (navDir * qe.first >= 0. ? qe.first : qe.second);
+    // @TODO this needs some thinking ... we need to provide both solutions
+    // Chose the solution
+    path = qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second;
     // return the solution
     solution = lpos + path * ldir;
     // is valid if it goes into the right direction
-    return (path * navDir >= 0.);
+    return Intersection::Status::reachable;
   };
+  // ------
 
-  // solve for radius R
+  // Solve for radius R
   double R = bounds().r();
-  bool valid = solve(R);
-  // if configured, correct and solve again
-  if (correct && correct(lpos, ldir, path)) {
-    valid = solve(R);
+  Intersection::Status status = solve(R);
+  // Boundary check necessary
+  if (status != Intersection::Status::unreachable and bcheck and
+      not isOnSurface(gctx, solution, direction, bcheck)) {
+    status = Intersection::Status::missed;
   }
-  // update for inside if requested :
-  // @todo fix this : fast inside bounds check needed
-  valid = bcheck ? (valid && isOnSurface(gctx, solution, gdir, bcheck)) : valid;
-  // now return
-  return Intersection(solution, path, valid);
+  // Now return the solution
+  return Intersection(solution, path, status);
 }

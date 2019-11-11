@@ -169,11 +169,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));
   EigenStepper<
-      ConstantBField, VoidIntersectionCorrector,
+      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
+  Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
@@ -207,12 +207,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOptsDef.maxSteps = 100;
   propOptsDef.maxStepSize = 0.5_m;
 
-  EigenStepper<ConstantBField, VoidIntersectionCorrector,
-               StepperExtensionList<DefaultExtension>>
-      esDef(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
-                          StepperExtensionList<DefaultExtension>>,
-             Navigator>
+  EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
+      bField);
+  Propagator<
+      EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>>,
+      Navigator>
       propDef(esDef, naviVac);
 
   // Launch and collect results
@@ -284,11 +283,11 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));
   EigenStepper<
-      ConstantBField, VoidIntersectionCorrector,
+      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
+  Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
@@ -332,10 +331,9 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOptsDense.debug = true;
 
   // Build stepper and propagator
-  EigenStepper<ConstantBField, VoidIntersectionCorrector,
-               StepperExtensionList<DenseEnvironmentExtension>>
+  EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
       esDense(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
+  Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DenseEnvironmentExtension>>,
              Navigator>
       propDense(esDense, naviMat);
@@ -361,11 +359,11 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Re-launch the configuration with magnetic field
   bField.setField(0., 1_T, 0.);
   EigenStepper<
-      ConstantBField, VoidIntersectionCorrector,
+      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       esB(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
+  Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
@@ -457,11 +455,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 1_T, 0.));
   EigenStepper<
-      ConstantBField, VoidIntersectionCorrector,
+      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
+  Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
@@ -516,12 +514,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDef.maxStepSize = 0.5_m;
 
   // Build stepper and propagator
-  EigenStepper<ConstantBField, VoidIntersectionCorrector,
-               StepperExtensionList<DefaultExtension>>
-      esDef(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
-                          StepperExtensionList<DefaultExtension>>,
-             Navigator>
+  EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
+      bField);
+  Propagator<
+      EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>>,
+      Navigator>
       propDef(esDef, naviDet);
 
   // Launch and collect results
@@ -583,10 +580,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDense.tolerance = 1e-8;
 
   // Build stepper and propagator
-  EigenStepper<ConstantBField, VoidIntersectionCorrector,
-               StepperExtensionList<DenseEnvironmentExtension>>
+  EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
       esDense(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
+  Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DenseEnvironmentExtension>>,
              Navigator>
       propDense(esDense, naviDet);

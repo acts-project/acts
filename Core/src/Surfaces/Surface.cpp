@@ -41,14 +41,15 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
 Acts::Surface::~Surface() = default;
 
 bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
-                                const Vector3D& gpos, const Vector3D& gmom,
+                                const Vector3D& position,
+                                const Vector3D& momentum,
                                 const BoundaryCheck& bcheck) const {
   // create the local position
-  Vector2D lpos;
+  Vector2D lposition{0., 0.};
   // global to local transformation
-  bool gtlSuccess = globalToLocal(gctx, gpos, gmom, lpos);
+  bool gtlSuccess = globalToLocal(gctx, position, momentum, lposition);
   if (gtlSuccess) {
-    return bcheck ? bounds().inside(lpos, bcheck) : true;
+    return bcheck ? bounds().inside(lposition, bcheck) : true;
   }
   // did not succeed
   return false;

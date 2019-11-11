@@ -171,46 +171,37 @@ class Layer : public virtual GeometryObject {
   /// @brief Decompose Layer into (compatible) surfaces
   ///
   /// @tparam options_t The navigation options type
-  /// @tparam corrector_t is an (optional) intersection corrector type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position parameter for searching
   /// @param momentum Momentum parameter for searching
   /// @param options The templated naivation options
-  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// @return list of intersection of surfaces on the layer
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+  template <typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum, const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+      const Vector3D& direction, const options_t& options) const;
 
   /// @brief Decompose Layer into (compatible) surfaces
   ///
   /// @tparam parameters_t The Track parameters type
   /// @tparam options_t The navigation options type
-  /// @tparam corrector_t is an (optional) intersection corrector type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
-  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// @return list of intersection of surfaces on the layer
-  template <typename parameters_t, typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+  template <typename parameters_t, typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfaces(
       const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+      const options_t& options) const;
 
   /// Surface seen on approach
   ///
   /// @tparam parameters_t The Track parameters  type
   /// @tparam options_t The navigation options type
-  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
@@ -218,20 +209,16 @@ class Layer : public virtual GeometryObject {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated naivation options
-  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// @return the Surface intersection of the approach surface
-  template <typename parameters_t, typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
-  const SurfaceIntersection surfaceOnApproach(
-      const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+  template <typename parameters_t, typename options_t>
+  const SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
+                                              const parameters_t& parameters,
+                                              const options_t& options) const;
 
   /// Surface seen on approach
   ///
   /// @tparam options_t The navigation options type
-  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
@@ -240,15 +227,13 @@ class Layer : public virtual GeometryObject {
   /// @param position Position for searching
   /// @param direction Direction for searching
   /// @param options The templated naivation options
-  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// @return the Surface intersection of the approach surface
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
-  const SurfaceIntersection surfaceOnApproach(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+  template <typename options_t>
+  const SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
+                                              const Vector3D& position,
+                                              const Vector3D& direction,
+                                              const options_t& options) const;
 
   /// Fast navigation to next layer
   ///
@@ -260,12 +245,12 @@ class Layer : public virtual GeometryObject {
   const Layer* nextLayer(const GeometryContext& gctx, const Vector3D& gp,
                          const Vector3D& mom) const;
 
-  /// get the confining TrackingVolume
+  /// Bet the confining TrackingVolume
   ///
   /// @return the pointer to the enclosing volume
   const TrackingVolume* trackingVolume() const;
 
-  ///  return the abstract volume that represents the layer
+  ///  Return the abstract volume that represents the layer
   ///
   /// @return the representing volume of the layer
   const AbstractVolume* representingVolume() const;

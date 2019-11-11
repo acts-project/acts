@@ -66,15 +66,17 @@ class DiscTrapezoidalBounds : public DiscBounds {
   ///  This method cheks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
   /// if only tol0 is given and additional in the phi sector is tol1 is given
-  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @param lposition is the local position to be checked (in polar
+  /// coordinates)
   /// @param bcheck is the boundary check directive
-  bool inside(const Vector2D& lpos,
+  bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary
-  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @param lposition is the local position to be checked (in polar
+  /// coordinates)
   /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
-  double distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

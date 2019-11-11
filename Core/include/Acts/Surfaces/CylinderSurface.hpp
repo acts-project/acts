@@ -187,13 +187,10 @@ class CylinderSurface : public Surface {
   ///  and (signed) path length
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global position as a starting point
-  /// @param gdir is the global direction at the starting point, expected to
+  /// @param gpos The global position as a starting point
+  /// @param gdir The global direction at starting point, expected to
   ///  be normalized
-  /// @param navDir The navigation direction with respect to the momentum
-  /// @param bcheck is the boundary check
-  /// @param correct is an optional correction function pointer that
-  ///        allows to update the intial estimate
+  /// @param bcheck The boundary check presection
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -226,11 +223,9 @@ class CylinderSurface : public Surface {
   /// reinsertion into the line equation.
   ///
   /// @return is the intersection object
-  Intersection intersectionEstimate(const GeometryContext& gctx,
-                                    const Vector3D& gpos, const Vector3D& gdir,
-                                    NavigationDirection navDir = forward,
-                                    const BoundaryCheck& bcheck = false,
-                                    CorrFnc correct = nullptr) const final;
+  Intersection intersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
+      const BoundaryCheck& bcheck = false) const final;
 
   /// Path correction due to incident of the track
   ///

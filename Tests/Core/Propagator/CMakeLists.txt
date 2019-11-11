@@ -6,10 +6,6 @@ add_executable (ActionListTests ActionListTests.cpp)
 target_link_libraries (ActionListTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME ActionListUnitTests COMMAND ActionListTests)
 
-add_executable (IntersectionCorrectorTests IntersectionCorrectorTests.cpp)
-target_link_libraries (IntersectionCorrectorTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test(NAME IntersectionCorrectorUnitTests COMMAND IntersectionCorrectorTests)
-
 add_executable (LoopProtectionTests LoopProtectionTests.cpp)
 target_link_libraries (LoopProtectionTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME LoopProtectionUnitTests COMMAND LoopProtectionTests)
@@ -37,7 +33,6 @@ add_executable (NavigatorTests NavigatorTests.cpp)
 target_link_libraries (NavigatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME NavigatorUnitTests COMMAND NavigatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST NavigatorUnitTests TARGETS NavigatorTests)
-
 
 add_executable (DirectNavigatorTests DirectNavigatorTests.cpp)
 target_link_libraries (DirectNavigatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

@@ -68,18 +68,19 @@ class RadialBounds : public DiscBounds {
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///
-  /// @param lpos local position to be checked
+  /// @param lposition local position to be checked
   /// @param bcheck boundary check directive
   ///
   /// @return is a boolean indicating the operation success
-  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lposition,
+              const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary calculation
   ///
-  /// @param lpos local 2D position in surface coordinate frame
+  /// @param lposition local 2D position in surface coordinate frame
   ///
   /// @return distance to boundary ( > 0 if outside and <=0 if inside)
-  double distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Outstream operator
   ///

@@ -267,15 +267,11 @@ class DiscSurface : public Surface {
 
   /// @brief Straight line intersection schema
   ///
-  /// navDir=anyDirection is to provide the closest solution
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos The global position as a starting point
   /// @param gdir The global direction at the starting point
   ///        @note expected to be normalized (no checking)
-  /// @param navDir is a navigation direction
   /// @param bcheck The boundary check prescription
-  /// @param correct is a corrector function (e.g. for curvature correction)
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -294,11 +290,9 @@ class DiscSurface : public Surface {
   /// - perpendicular to the normal of the plane
   ///
   /// @return is the surface intersection object
-  Intersection intersectionEstimate(const GeometryContext& gctx,
-                                    const Vector3D& gpos, const Vector3D& gdir,
-                                    NavigationDirection navDir = forward,
-                                    const BoundaryCheck& bcheck = false,
-                                    CorrFnc correct = nullptr) const final;
+  Intersection intersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
+      const BoundaryCheck& bcheck = false) const final;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

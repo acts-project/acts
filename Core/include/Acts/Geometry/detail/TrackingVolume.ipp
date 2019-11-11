@@ -11,29 +11,29 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Acts::Layer* TrackingVolume::associatedLayer(
-    const GeometryContext& /*gctx*/, const Vector3D& gp) const {
+    const GeometryContext& /*gctx*/, const Vector3D& position) const {
   // confined static layers - highest hierarchy
-  if (m_confinedLayers) {
-    return (m_confinedLayers->object(gp).get());
+  if (m_confinedLayers != nullptr) {
+    return (m_confinedLayers->object(position).get());
   }
 
   // return the null pointer
   return nullptr;
 }
 
-template <typename options_t, typename corrector_t>
+template <typename options_t>
 std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options,
-    const corrector_t& corrfnc) const {
+    const Vector3D& direction, const options_t& options) const {
   // the layer intersections which are valid
   std::vector<LayerIntersection> lIntersections;
 
   // the confinedLayers
-  if (m_confinedLayers) {
+  if (m_confinedLayers != nullptr) {
     // start layer given or not - test layer
-    const Layer* tLayer = options.startObject ? options.startObject
-                                              : associatedLayer(gctx, position);
+    const Layer* tLayer = options.startObject != nullptr
+                              ? options.startObject
+                              : associatedLayer(gctx, position);
     while (tLayer != nullptr) {
       // check if the layer needs resolving
       // - resolveSensitive -> always take layer if it has a surface array
@@ -43,8 +43,8 @@ std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
       if (tLayer != options.startObject && tLayer->resolve(options)) {
         // if it's a resolveable start layer, you are by definition on it
         // layer on approach intersection
-        auto atIntersection = tLayer->surfaceOnApproach(
-            gctx, position, direction, options, corrfnc);
+        auto atIntersection =
+            tLayer->surfaceOnApproach(gctx, position, direction, options);
         auto path = atIntersection.intersection.pathLength;
         bool withinLimit =
             (path * path <= options.pathLimit * options.pathLimit);
@@ -73,20 +73,20 @@ std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
   return lIntersections;
 }
 
-template <typename parameters_t, typename options_t, typename corrector_t>
+template <typename parameters_t, typename options_t>
 std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options, const corrector_t& corrfnc) const {
+    const options_t& options) const {
   return compatibleLayers(gctx, parameters.position(), parameters.direction(),
-                          options, corrfnc);
+                          options);
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
-template <typename options_t, typename corrector_t, typename sorter_t>
+template <typename options_t, typename sorter_t>
 std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const options_t& options,
-    const corrector_t& corrfnc, const sorter_t& sorter) const {
+    const sorter_t& sorter) const {
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;
   auto& bSurfaces = boundarySurfaces();
@@ -118,29 +118,24 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
       nonExcludedBoundaries.push_back(bSurface);
     }
   }
-
-  return sorter(gctx, nonExcludedBoundaries, position, direction, options,
-                corrfnc);
+  return sorter(gctx, nonExcludedBoundaries, position, direction, options);
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
 // straight line intersection @todo change hard-coded default
-template <typename parameters_t, typename options_t, typename corrector_t,
-          typename sorter_t>
+template <typename parameters_t, typename options_t, typename sorter_t>
 std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options, const corrector_t& corrfnc,
-    const sorter_t& sorter) const {
+    const options_t& options, const sorter_t& sorter) const {
   return compatibleBoundaries(gctx, parameters.position(),
-                              parameters.direction(), options, corrfnc, sorter);
+                              parameters.direction(), options, sorter);
 }
 
-template <typename options_t, typename corrector_t>
+template <typename options_t>
 std::vector<SurfaceIntersection>
 TrackingVolume::compatibleSurfacesFromHierarchy(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, double angle, const options_t& options,
-    const corrector_t& corrfnc) const {
+    const Vector3D& direction, double angle, const options_t& options) const {
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
 
@@ -171,8 +166,8 @@ TrackingVolume::compatibleSurfacesFromHierarchy(
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
       SurfaceIntersection sfi(
-          srf.intersectionEstimate(gctx, position, direction, options.navDir,
-                                   false, corrfnc),
+          srf.intersectionEstimate(gctx, position, options.navDir * direction,
+                                   false),
           &srf);
 
       if (sfi) {
