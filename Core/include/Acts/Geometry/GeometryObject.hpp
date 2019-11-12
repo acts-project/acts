@@ -11,10 +11,12 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 
@@ -28,18 +30,13 @@ namespace Acts {
 ///
 class GeometryObject {
  public:
-  /// default constructor
-  GeometryObject() : m_geoID(0) {}
+  GeometryObject() = default;
+  GeometryObject(const GeometryObject&) = default;
 
   /// constructor from a ready-made value
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
-
-  /// copy-constructor
-  ///
-  /// @param geoID the geometry identifier of the object
-  GeometryObject(const GeometryObject& geoObj) = default;
 
   /// assignment operator
   ///

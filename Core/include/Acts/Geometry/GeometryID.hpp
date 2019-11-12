@@ -1,151 +1,115 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// GeometryID.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
-#include <iostream>
-#include "Acts/Utilities/Helpers.hpp"
-
-using geo_id_value = uint64_t;
+#include <cstdint>
+#include <iosfwd>
 
 namespace Acts {
 
-/// @class GeometryID
+/// Identifier for geometry nodes.
 ///
-///  Identifier for Geometry nodes - packing the
-///  - (Sensitive) Surfaces    - uses counting through sensitive surfaces
-///  - (Approach)  Surfaces    - uses counting approach surfaces
-///  - (Layer)     Surfaces    - uses counting confined layers
-///  - (Boundary)  Surfaces    - uses counting through boundary surfaces
-///  - Volumes                 - uses counting given by TrackingGeometry
-
+/// Each identifier can be split info the following components:
+///
+/// - Volumes                 - uses counting given by TrackingGeometry
+/// - (Boundary)  Surfaces    - counts through boundary surfaces
+/// - (Layer)     Surfaces    - counts confined layers
+/// - (Approach)  Surfaces    - counts approach surfaces
+/// - (Sensitive) Surfaces    - counts through sensitive surfaces
+///
 class GeometryID {
  public:
-  // clang-format off
-  constexpr static geo_id_value volume_mask    = 0xff00000000000000; // 255 volumes
-  constexpr static geo_id_value boundary_mask  = 0x00ff000000000000; // 255 boundaries
-  constexpr static geo_id_value layer_mask     = 0x0000fff000000000; // 4095 layers
-  constexpr static geo_id_value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
-  constexpr static geo_id_value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
-  // clang-format on
+  using Value = uint64_t;
 
-  /// default constructor
-  ///
+  /// Construct from an already encoded value.
+  constexpr GeometryID(Value encoded) : m_value(encoded) {}
+  /// Construct default GeometryID with all values set to zero.
   GeometryID() = default;
+  GeometryID(GeometryID&&) = default;
+  GeometryID(const GeometryID&) = default;
+  ~GeometryID() = default;
+  GeometryID& operator=(GeometryID&&) = default;
+  GeometryID& operator=(const GeometryID&) = default;
 
-  /// constructor from a ready-made value
-  ///
-  /// @param id_value is the full decoded value of the identifier
-  GeometryID(geo_id_value id_value) : m_value(id_value) {}
+  /// Return the encoded value.
+  constexpr Value value() const { return m_value; }
 
-  // constructor from a shift and a value
-  ///
-  /// @param id type_id numbered object
-  /// @param type_mask is necessary for the decoding
-  GeometryID(geo_id_value type_id, geo_id_value type_mask)
-      : m_value(ACTS_BIT_ENCODE(type_id, type_mask)) {}
+  /// Return the volume identifier.
+  constexpr Value volume() const { return getBits(volume_mask); }
+  /// Return the boundary identifier.
+  constexpr Value boundary() const { return getBits(boundary_mask); }
+  /// Return the layer identifier.
+  constexpr Value layer() const { return getBits(layer_mask); }
+  /// Return the approach identifier.
+  constexpr Value approach() const { return getBits(approach_mask); }
+  /// Return the sensitive identifier.
+  constexpr Value sensitive() const { return getBits(sensitive_mask); }
 
-  /// Copy constructor
-  ///
-  /// @param tddID is the geometry ID that will be copied
-  GeometryID(const GeometryID& tddID) = default;
-
-  /// Assignement operator
-  ///
-  /// @param tddID is the geometry ID that will be assigned
-  GeometryID& operator=(const GeometryID& tddID) {
-    if (&tddID != this) {
-      m_value = tddID.m_value;
-    }
-    return (*this);
+  /// Set the volume identifier.
+  constexpr GeometryID& setVolume(Value volume) {
+    return setBits(volume_mask, volume);
   }
-
-  /// Add some stuff - a new GeometryID
-  ///
-  /// @param tddID is the geometry ID that will be added
-  GeometryID& operator+=(const GeometryID& tddID) {
-    m_value += tddID.value();
-    return (*this);
+  /// Set the boundary identifier.
+  constexpr GeometryID& setBoundary(Value boundary) {
+    return setBits(boundary_mask, boundary);
   }
-
-  /// Add some stuff - a decoded value
-  ///
-  /// @param add_value is the fully decoded value to be added
-  GeometryID& operator+=(geo_id_value add_value) {
-    m_value += add_value;
-    return (*this);
+  /// Set the layer identifier.
+  constexpr GeometryID& setLayer(Value layer) {
+    return setBits(layer_mask, layer);
   }
-
-  /// Equality operator
-  ///
-  /// @param tddID is the geometry ID that will be compared on equality
-  bool operator==(const GeometryID& tddID) const {
-    return (m_value == tddID.value());
+  /// Set the approach identifier.
+  constexpr GeometryID& setApproach(Value approach) {
+    return setBits(approach_mask, approach);
   }
-
-  /// Non-equality operator
-  ///
-  /// @param tddID is the geometry ID that will be compared on equality
-  bool operator!=(const GeometryID& tddID) const { return !operator==(tddID); }
-
-  /// Add some stuff
-  ///
-  /// @param type_id which identifier do you wanna add
-  /// @param type_mask the mask that is supposed to be applied
-  void add(geo_id_value type_id, geo_id_value type_mask) {
-    m_value += ACTS_BIT_ENCODE(type_id, type_mask);
+  /// Set the sensitive identifier.
+  constexpr GeometryID& setSensitive(Value sensitive) {
+    return setBits(sensitive_mask, sensitive);
   }
-
-  /// return the value
-  ///
-  /// @param mask is the mask to be applied
-  geo_id_value value(geo_id_value mask = 0) const;
-
-  /// return the split value as string for debugging
-  std::string toString() const;
 
  private:
-  geo_id_value m_value = 0;
+  // clang-format off
+  static constexpr Value volume_mask    = 0xff00000000000000; // 255 volumes
+  static constexpr Value boundary_mask  = 0x00ff000000000000; // 255 boundaries
+  static constexpr Value layer_mask     = 0x0000fff000000000; // 4095 layers
+  static constexpr Value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
+  static constexpr Value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
+  // clang-format on
+
+  Value m_value = 0;
+
+  /// Extract the bit shift necessary to access the masked values.
+  static constexpr int extractShift(Value mask) {
+    // use compiler builtin to extract the number of trailing bits from the
+    // mask. the builtin should be available on all supported compilers.
+    // need unsigned long long version (...ll) to ensure uint64_t compatibility.
+    // WARNING undefined behaviour for mask == 0 which we should not have.
+    return __builtin_ctzll(mask);
+  }
+  /// Extract the masked bits from the encoded value.
+  constexpr Value getBits(Value mask) const {
+    return (m_value & mask) >> extractShift(mask);
+  }
+  /// Set the masked bits to id in the encoded value.
+  constexpr GeometryID& setBits(Value mask, Value id) {
+    m_value = (m_value & ~mask) | ((id << extractShift(mask)) & mask);
+    // return *this here so we need to write less lines in the set... methods
+    return *this;
+  }
+
+  friend constexpr bool operator==(GeometryID lhs, GeometryID rhs) {
+    return lhs.m_value == rhs.m_value;
+  }
+  friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
+    return lhs.m_value < rhs.m_value;
+  }
 };
 
-inline geo_id_value GeometryID::value(geo_id_value mask) const {
-  if (mask != 0u) {
-    return ACTS_BIT_DECODE(m_value, mask);
-  }
-  return m_value;
-}
+std::ostream& operator<<(std::ostream& os, GeometryID id);
 
-inline std::string GeometryID::toString() const {
-  geo_id_value volume_id = value(volume_mask);
-  geo_id_value boundary_id = value(boundary_mask);
-  geo_id_value layer_id = value(layer_mask);
-  geo_id_value approach_id = value(approach_mask);
-  geo_id_value sensitive_id = value(sensitive_mask);
-
-  std::stringstream dstream;
-  dstream << "[ " << std::setw(3) << volume_id;
-  dstream << " | " << std::setw(3) << boundary_id;
-  dstream << " | " << std::setw(3) << layer_id;
-  dstream << " | " << std::setw(3) << approach_id;
-  dstream << " | " << std::setw(4) << sensitive_id << " ]";
-  return dstream.str();
-}
-
-/// Overload of operator< | <= | > | >=  for the usage in a map
-bool operator<(const GeometryID& one, const GeometryID& two);
-bool operator<=(const GeometryID& one, const GeometryID& two);
-bool operator>(const GeometryID& one, const GeometryID& two);
-bool operator>=(const GeometryID& one, const GeometryID& two);
-
-/// Overload of << operator for std::ostream for debug output
-std::ostream& operator<<(std::ostream& sl, const GeometryID& tid);
 }  // namespace Acts

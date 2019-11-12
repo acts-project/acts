@@ -43,7 +43,7 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
   ACTS_DEBUG(mState.accumulatedMaterial.size()
              << " Surfaces with PROXIES collected ... ");
   for (auto& smg : mState.accumulatedMaterial) {
-    ACTS_VERBOSE(" -> Surface in with id " << smg.first.toString());
+    ACTS_VERBOSE(" -> Surface in with id " << smg.first);
   }
   return mState;
 }
@@ -103,9 +103,9 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
   // Check if the surface has a proxy
   if (surfaceMaterial != nullptr) {
     auto geoID = surface.geoID();
-    size_t volumeID = geoID.value(GeometryID::volume_mask);
+    size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material surface found with volumeID " << volumeID);
-    ACTS_DEBUG("       - surfaceID is " << geoID.toString());
+    ACTS_DEBUG("       - surfaceID is " << geoID);
 
     // We need a dynamic_cast to either a surface material proxy or
     // proper surface material
@@ -144,7 +144,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
 void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
   // iterate over the map to call the total average
   for (auto& accMaterial : mState.accumulatedMaterial) {
-    ACTS_DEBUG("Finalizing map for Surface " << accMaterial.first.toString());
+    ACTS_DEBUG("Finalizing map for Surface " << accMaterial.first);
     mState.surfaceMaterial[accMaterial.first] =
         accMaterial.second.totalAverage();
   }
@@ -189,7 +189,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
                             << " mapping surfaces for this track.");
   ACTS_VERBOSE("Mapping surfaces are :")
   for (auto& mSurface : mappingSurfaces) {
-    ACTS_VERBOSE(" - Surface : " << mSurface.surface->geoID().toString()
+    ACTS_VERBOSE(" - Surface : " << mSurface.surface->geoID()
                                  << " at position = (" << mSurface.position.x()
                                  << ", " << mSurface.position.y() << ", "
                                  << mSurface.position.z() << ")");
@@ -226,7 +226,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     // get the current Surface ID
     currentID = sfIter->surface->geoID();
     // We have work to do: the assignemnt surface has changed
-    if (currentID != lastID) {
+    if (not(currentID == lastID)) {
       // Let's (re-)assess the information
       lastID = currentID;
       currentPos = (sfIter)->position;
@@ -245,8 +245,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   ACTS_VERBOSE("Surfaces have following number of assigned hits :")
   for (auto& [key, value] : assignedMaterial) {
-    ACTS_VERBOSE(" + Surface : " << key.toString() << " has " << value
-                                 << " hits.");
+    ACTS_VERBOSE(" + Surface : " << key << " has " << value << " hits.");
   }
 
   // After mapping this track, average the touched bins

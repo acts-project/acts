@@ -56,8 +56,8 @@ using Covariance = BoundSymMatrix;
 using TrackState = TrackState<SourceLink, BoundParameters>;
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
-using VolumeResolution = std::map<geo_id_value, ElementResolution>;
-using DetectorResolution = std::map<geo_id_value, VolumeResolution>;
+using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
+using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
 
 using DebugOutput = detail::DebugOutputActor;
 
@@ -103,8 +103,8 @@ struct MeasurementCreator {
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
       auto geoID = surface->geoID();
-      geo_id_value volumeID = geoID.value(GeometryID::volume_mask);
-      geo_id_value layerID = geoID.value(GeometryID::layer_mask);
+      auto volumeID = geoID.volume();
+      auto layerID = geoID.layer();
       // find volume and layer information for this
       auto vResolution = detectorResolution.find(volumeID);
       if (vResolution != detectorResolution.end()) {

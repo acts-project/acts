@@ -291,7 +291,7 @@ class KalmanFitter {
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
-        ACTS_VERBOSE("Measurement surface " << surface->geoID().toString()
+        ACTS_VERBOSE("Measurement surface " << surface->geoID()
                                             << " detected.");
 
         // create track state on the vector from sourcelink
@@ -324,7 +324,7 @@ class KalmanFitter {
         ++result.processedStates;
       } else if (surface->associatedDetectorElement() != nullptr) {
         // Count the missed surface
-        ACTS_VERBOSE("Detected hole on " << surface->geoID().toString());
+        ACTS_VERBOSE("Detected hole on " << surface->geoID());
         result.missedActiveSurfaces.push_back(surface);
       }
 

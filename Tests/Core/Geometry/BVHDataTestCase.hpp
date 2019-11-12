@@ -165,8 +165,6 @@ BOOST_DATA_TEST_CASE(
     std::cout << debugString << std::endl;
   }
 
-  using ag = Acts::GeometryID;
-
   // collect surfaces
   std::vector<const Surface*> actHits;
   auto steppingResults =
@@ -176,7 +174,7 @@ BOOST_DATA_TEST_CASE(
       continue;
     }
 
-    geo_id_value sensitiveID = step.surface->geoID().value(ag::sensitive_mask);
+    auto sensitiveID = step.surface->geoID().sensitive();
     if (sensitiveID != 0) {
       actHits.push_back(step.surface.get());
     }

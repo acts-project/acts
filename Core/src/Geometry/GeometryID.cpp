@@ -1,36 +1,21 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// GeometryIDCalculator.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Geometry/GeometryID.hpp"
 
-bool Acts::operator<(const Acts::GeometryID& one, const Acts::GeometryID& two) {
-  return (one.value() < two.value());
-}
+#include <iomanip>
+#include <ostream>
 
-bool Acts::operator<=(const Acts::GeometryID& one,
-                      const Acts::GeometryID& two) {
-  return (one.value() <= two.value());
-}
-
-bool Acts::operator>(const Acts::GeometryID& one, const Acts::GeometryID& two) {
-  return (one.value() > two.value());
-}
-
-bool Acts::operator>=(const Acts::GeometryID& one,
-                      const Acts::GeometryID& two) {
-  return (one.value() >= two.value());
-}
-
-std::ostream& Acts::operator<<(std::ostream& sl, const Acts::GeometryID& tid) {
-  sl << tid.value();
-  return sl;
+std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryID id) {
+  os << "[ " << std::setw(3) << id.volume();
+  os << " | " << std::setw(3) << id.boundary();
+  os << " | " << std::setw(3) << id.layer();
+  os << " | " << std::setw(3) << id.approach();
+  os << " | " << std::setw(4) << id.sensitive() << " ]";
+  return os;
 }

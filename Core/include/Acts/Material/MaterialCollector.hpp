@@ -68,7 +68,7 @@ struct MaterialCollector {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Material check on surface ";
-        dstream << state.navigation.currentSurface->geoID().toString();
+        dstream << state.navigation.currentSurface->geoID();
         return dstream.str();
       });
 

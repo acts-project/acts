@@ -63,10 +63,9 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
     // indicates the existance of approach surfaces
     m_ssApproachSurfaces = 1;
     // loop through the approachSurfaces and assign unique GeomeryID
-    geo_id_value iasurface = 0;
+    GeometryID::Value iasurface = 0;
     for (auto& aSurface : m_approachDescriptor->containedSurfaces()) {
-      GeometryID asurfaceID = layerID;
-      asurfaceID.add(++iasurface, GeometryID::approach_mask);
+      auto asurfaceID = GeometryID(layerID).setApproach(++iasurface);
       auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeoID(asurfaceID);
       if (materialDecorator != nullptr) {
@@ -83,10 +82,9 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
     // indicates the existance of sensitive surfaces
     m_ssSensitiveSurfaces = 1;
     // loop sensitive surfaces and assign unique GeometryID
-    geo_id_value issurface = 0;
+    GeometryID::Value issurface = 0;
     for (auto& sSurface : m_surfaceArray->surfaces()) {
-      GeometryID ssurfaceID = layerID;
-      ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
+      auto ssurfaceID = GeometryID(layerID).setSensitive(++issurface);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
       if (materialDecorator != nullptr) {
