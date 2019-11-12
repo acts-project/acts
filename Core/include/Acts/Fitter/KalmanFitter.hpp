@@ -20,7 +20,11 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+<<<<<<< HEAD
 #include "Acts/Propagator/ConstrainedStep.hpp"
+=======
+#include "Acts/Propagator/DirectNavigator.hpp"
+>>>>>>> f176fbef... Adapt the KF fit to the DirectNavigator
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -174,6 +178,13 @@ class KalmanFitter {
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
 
+  /// The navigator type
+  using KalmanNavigator = typename decltype(m_propagator)::Navigator;
+
+  /// The navigator has DirectNavigator type or not
+  static constexpr bool isDirectNavigator =
+      std::is_same<KalmanNavigator, DirectNavigator>::value;
+
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
@@ -243,8 +254,10 @@ class KalmanFitter {
       }
 
       // Finalization:
-      // When the navigation is breaked
-      if (state.navigation.navigationBreak and result.processedStates > 0 and
+      // When all track states have been handled or the navigation is breaked
+      if ((result.processedStates == inputMeasurements.size() or
+           (state.navigation.navigationBreak and
+            result.processedStates > 0)) and
           not result.smoothed) {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
@@ -460,7 +473,8 @@ class KalmanFitter {
   Result<KalmanFitterResult<source_link_t>> fit(
       const std::vector<source_link_t>& sourcelinks,
       const start_parameters_t& sParameters,
-      const KalmanFitterOptions& kfOptions) const {
+      const KalmanFitterOptions& kfOptions,
+      const std::vector<const Surface*> sSequence = {}) const {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -477,7 +491,13 @@ class KalmanFitter {
     using KalmanAborter = Aborter<source_link_t, parameters_t>;
     using KalmanActor = Actor<source_link_t, parameters_t>;
     using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<KalmanActor>;
+
+    using StandardNavigatorActors = ActionList<KalmanActor>;
+    using DirectNavigatorActors =
+        ActionList<DirectNavigator::Initializer, KalmanActor>;
+    using Actors = std::conditional_t<isDirectNavigator, DirectNavigatorActors,
+                                      StandardNavigatorActors>;
+
     using Aborters = AbortList<KalmanAborter>;
 
     // Create relevant options for the propagation options
@@ -493,6 +513,13 @@ class KalmanFitter {
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;
     kalmanActor.m_smoother.m_logger = m_logger;
+
+    if constexpr (isDirectNavigator) {
+      // Set the surface sequence
+      auto& dInitializer =
+          kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
+      dInitializer.surfaceSequence = sSequence;
+    }
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);
