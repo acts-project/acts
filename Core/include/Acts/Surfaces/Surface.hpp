@@ -266,22 +266,6 @@ class Surface : public virtual GeometryObject,
   /// @param material Material description associated to this surface
   void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
 
-  /// The templated Parameters onSurface method
-  /// In order to avoid unneccessary geometrical operations, it checks on the
-  /// surface pointer first. If that check fails, it calls the geometrical
-  /// check isOnSurface
-  ///
-  /// @tparam parameters_t The parameters type
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param pars TrackParameters to be checked
-  /// @param bcheck BoundaryCheck directive for this onSurface check
-  ///
-  /// @return boolean indication if operation was successful
-  template <typename parameters_t>
-  bool isOnSurface(const GeometryContext& gctx, const parameters_t& parameters,
-                   const BoundaryCheck& bcheck = true) const;
-
   /// The geometric onSurface method
   ///
   /// Geometrical check whether position is on Surface
@@ -432,7 +416,7 @@ class Surface : public virtual GeometryObject,
   /// @param bcheck the Boundary Check
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection surfaceIntersectionEstimate(
+  virtual SurfaceIntersection surfaceIntersectionEstimate(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const BoundaryCheck& bcheck) const
 
@@ -442,26 +426,6 @@ class Surface : public virtual GeometryObject,
         intersectionEstimate(gctx, position, direction, bcheck);
     // return a surface intersection with result direction
     return SurfaceIntersection(sIntersection, this);
-  }
-
-  /// Straight line intersection schema from parameters
-  ///
-  /// Templated for :
-  /// @tparam parameters_t Type of track parameters
-  /// @tparam options_t Type of the navigation options
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters The parameters to start from
-  /// @param options Options object that holds additional navigation info
-  ///
-  /// @return SurfaceIntersection object (contains intersection & surface)
-  template <typename parameters_t, typename options_t>
-  SurfaceIntersection surfaceIntersectionEstimate(
-      const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options) const {
-    return surfaceIntersectionEstimate(gctx, parameters.position(),
-                                       options.navDir * parameters.direction(),
-                                       options.boundaryCheck);
   }
 
   /// Straight line intersection from position and momentum

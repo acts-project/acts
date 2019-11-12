@@ -181,22 +181,6 @@ class TrackingVolume : public Volume {
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const options_t& options) const;
 
-  /// @brief Resolves the volume into (compatible) Layers
-  ///
-  /// This is the method for the propagator/extrapolator
-  /// @tparam parameters_t Type of parameters used for the decomposition
-  /// @tparam options_t Type of navigation options object for decomposition
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters The templated parameters for searching
-  /// @param options The templated navigation options
-  ///
-  /// @return vector of compatible intersections with layers
-  template <typename parameters_t, typename options_t>
-  std::vector<LayerIntersection> compatibleLayers(
-      const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options) const;
-
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
   /// @tparam options_t Type of navigation options object for decomposition
@@ -215,24 +199,6 @@ class TrackingVolume : public Volume {
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const options_t& options,
       const sorter_t& sorter = sorter_t()) const;
-
-  /// @brief Returns all boundary surfaces sorted by the user.
-  ///
-  /// @tparam parameters_t Type of parameters used for the decomposition
-  /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam sorter_t Type of the boundary surface sorter
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters The templated parameters for searching
-  /// @param options The templated navigation options
-  /// @param sorter Sorter of the boundary surfaces
-  ///
-  /// @return is the templated boundary intersection
-  template <typename parameters_t, typename options_t,
-            typename sorter_t = DefaultBoundaryIntersectionSorter>
-  std::vector<BoundaryIntersection> compatibleBoundaries(
-      const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options, const sorter_t& sorter = sorter_t()) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition

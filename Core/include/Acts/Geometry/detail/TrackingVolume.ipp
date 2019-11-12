@@ -73,14 +73,6 @@ std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
   return lIntersections;
 }
 
-template <typename parameters_t, typename options_t>
-std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options) const {
-  return compatibleLayers(gctx, parameters.position(), parameters.direction(),
-                          options);
-}
-
 // Returns the boundary surfaces ordered in probability to hit them based on
 template <typename options_t, typename sorter_t>
 std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
@@ -121,16 +113,6 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
   return sorter(gctx, nonExcludedBoundaries, position, direction, options);
 }
 
-// Returns the boundary surfaces ordered in probability to hit them based on
-// straight line intersection @todo change hard-coded default
-template <typename parameters_t, typename options_t, typename sorter_t>
-std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options, const sorter_t& sorter) const {
-  return compatibleBoundaries(gctx, parameters.position(),
-                              parameters.direction(), options, sorter);
-}
-
 template <typename options_t>
 std::vector<SurfaceIntersection>
 TrackingVolume::compatibleSurfacesFromHierarchy(
@@ -166,9 +148,7 @@ TrackingVolume::compatibleSurfacesFromHierarchy(
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
       SurfaceIntersection sfi(
-          srf.intersectionEstimate(gctx, position, options.navDir * direction,
-                                   false),
-          &srf);
+          srf.intersectionEstimate(gctx, position, dir, false), &srf);
 
       if (sfi) {
         sIntersections.push_back(std::move(sfi));
@@ -176,7 +156,7 @@ TrackingVolume::compatibleSurfacesFromHierarchy(
     }
   }
 
-  // sort according to the path length
+  // Sort according to the path length
   if (options.navDir == forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {

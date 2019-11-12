@@ -24,10 +24,13 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   Intersection fIp(Vector3D(0., 1., 0.), 1., Intersection::Status::reachable);
   Intersection sIp(Vector3D(0., 2., 0.), 2., Intersection::Status::reachable);
   Intersection tIp(Vector3D(0., 3., 0.), 3., Intersection::Status::reachable);
+  BOOST_CHECK(bool(fIp));
+  BOOST_CHECK(bool(sIp));
+  BOOST_CHECK(bool(tIp));
 
   // a non-valid intersection
   Intersection nIp(Vector3D(3., 3., 0.), 3., Intersection::Status::unreachable);
-  BOOST_CHECK(bool(nIp));
+  BOOST_CHECK(!bool(nIp));
 
   std::vector<Intersection> fstpIntersections = {fIp, sIp, tIp};
   std::vector<Intersection> tsfpIntersections = {tIp, sIp, fIp};

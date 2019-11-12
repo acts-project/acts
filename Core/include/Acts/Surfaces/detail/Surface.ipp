@@ -117,16 +117,6 @@ inline const BoundRowVector Surface::derivativeFactors(
   return (norm_vec * jacobian.topLeftCorner<3, BoundParsDim>());
 }
 
-template <typename parameters_t>
-bool Surface::isOnSurface(const GeometryContext& gctx, const parameters_t& pars,
-                          const BoundaryCheck& bcheck) const {
-  // surface pointer comparison as a first fast check (w/o transform)
-  // @todo check if we can find a fast way that works for stepper state and
-  // parameters
-  // if ((&pars.referenceSurface() == this) && !bcheck) return true;
-  return isOnSurface(gctx, pars.position(), pars.momentum(), bcheck);
-}
-
 inline const DetectorElementBase* Surface::associatedDetectorElement() const {
   return m_associatedDetElement;
 }

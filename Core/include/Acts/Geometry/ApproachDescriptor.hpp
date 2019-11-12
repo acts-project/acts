@@ -48,28 +48,15 @@ class ApproachDescriptor {
 
   /// @brief Get the surface on approach
   ///
-  /// @tparam parameters_t Type of the Parameters for the approach search
-  /// @tparam options_t Type of the Navigation options for the search
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters The actual parameters object
-  /// @param options are the steering options for the search
-  template <typename parameters_t, typename options_t>
-  ObjectIntersection<Surface> approachSurface(const GeometryContext& gctx,
-                                              const parameters_t& parameters,
-                                              const options_t& options) const;
-
-  /// @brief Get the surface on approach
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the position from start of the search
-  /// @param gdir is the direction at the start of the search
+  /// @param position is the position from start of the search
+  /// @param direction is the direction at the start of the search
   /// @param bcheck is the boundary check directive
   ///
   /// @return is a surface intersection
   virtual ObjectIntersection<Surface> approachSurface(
-      const GeometryContext& gctx, const Vector3D& pos, const Vector3D& gdir,
-      const BoundaryCheck& bcheck) const = 0;
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const BoundaryCheck& bcheck) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor
@@ -78,15 +65,5 @@ class ApproachDescriptor {
   /// Non-const version
   virtual std::vector<const Surface*>& containedSurfaces() = 0;
 };
-
-template <typename parameters_t, typename options_t>
-ObjectIntersection<Surface> ApproachDescriptor::approachSurface(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options) const {
-  // Calculate the actual intersection
-  return approachSurface(gctx, parameters.position(),
-                         options.navDir * parameters.direction(),
-                         options.boundaryCheck);
-}
 
 }  // namespace Acts

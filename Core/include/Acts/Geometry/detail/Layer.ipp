@@ -39,14 +39,15 @@ inline const AbstractVolume* Layer::representingVolume() const {
 }
 
 inline const Layer* Layer::nextLayer(const GeometryContext& /*gctx*/,
-                                     const Vector3D& gp,
-                                     const Vector3D& mom) const {
+                                     const Vector3D& position,
+                                     const Vector3D& direction) const {
   // no binutility -> no chance to find out the direction
   if (m_nextLayerUtility == nullptr) {
     return nullptr;
   }
-  return (m_nextLayerUtility->nextDirection(gp, mom) < 0) ? m_nextLayers.first
-                                                          : m_nextLayers.second;
+  return (m_nextLayerUtility->nextDirection(position, direction) < 0)
+             ? m_nextLayers.first
+             : m_nextLayers.second;
 }
 
 inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
@@ -63,12 +64,6 @@ inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
     return true;
   }
   return false;
-}
-
-template <typename parameters_t>
-bool Layer::onLayer(const GeometryContext& gctx, const parameters_t& pars,
-                    const BoundaryCheck& bcheck) const {
-  return isOnLayer(gctx, pars.position(), bcheck);
 }
 
 template <typename options_t>
@@ -211,14 +206,6 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
   return sIntersections;
 }
 
-template <typename parameters_t, typename options_t>
-std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options) const {
-  return compatibleSurfaces(gctx, parameters.position(),
-                            parameters.momentum().normalized(), options);
-}
-
 template <typename options_t>
 const SurfaceIntersection Layer::surfaceOnApproach(
     const GeometryContext& gctx, const Vector3D& position,
@@ -267,20 +254,14 @@ const SurfaceIntersection Layer::surfaceOnApproach(
       gctx, position, options.navDir * direction, options.boundaryCheck);
 }
 
-template <typename parameters_t, typename options_t>
-const SurfaceIntersection Layer::surfaceOnApproach(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options) const {
-  return surfaceOnApproach(gctx, parameters.position(), parameters.direction(),
-                           options);
-}
-
-inline bool Layer::isOnLayer(const GeometryContext& gctx, const Vector3D& gp,
+inline bool Layer::isOnLayer(const GeometryContext& gctx,
+                             const Vector3D& position,
                              const BoundaryCheck& bcheck) const {
   if (m_representingVolume != nullptr) {
-    return m_representingVolume->inside(gp);
+    return m_representingVolume->inside(position);
   }
-  return (surfaceRepresentation()).isOnSurface(gctx, gp, s_origin, bcheck);
+  return (surfaceRepresentation())
+      .isOnSurface(gctx, position, s_origin, bcheck);
 }
 
 }  // namespace Acts
