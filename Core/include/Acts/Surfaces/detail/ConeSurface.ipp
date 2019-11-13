@@ -17,11 +17,6 @@ inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
   Vector3D point1 = position;
   Vector3D dir1 = direction;
 
-  // What you need at the and
-  Vector3D solution(0, 0, 0);
-  double path = 0.;
-  Intersection::Status status = Intersection::Status::unreachable;
-
   // Transform into the local frame
   Transform3D invTrans = transform(gctx).inverse();
   point1 = invTrans * position;
