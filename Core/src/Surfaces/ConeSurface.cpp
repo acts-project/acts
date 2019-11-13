@@ -137,7 +137,7 @@ bool Acts::ConeSurface::globalToLocal(const GeometryContext& gctx,
 
 double Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,
                                          const Vector3D& position,
-                                         const Vector3D& momentum) const {
+                                         const Vector3D& direction) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   Vector3D posLocal =
       m_transform ? transform(gctx).inverse() * position : position;
@@ -148,8 +148,8 @@ double Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,
   if (m_transform) {
     normalC = transform(gctx) * normalC;
   }
-  // back in global frame
-  double cAlpha = normalC.dot(momentum.normalized());
+  // Back to the global frame
+  double cAlpha = normalC.dot(direction);
   return std::abs(1. / cAlpha);
 }
 

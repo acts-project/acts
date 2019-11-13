@@ -10,12 +10,9 @@
 // ConeSurface.ipp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-inline Intersection ConeSurface::intersectionEstimate(
+inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
-  // check if you need
-  bool needsTransform = (Surface::m_transform) ? true : false;
-
+    const Vector3D& direction) const {
   // Create the points
   Vector3D point1 = position;
   Vector3D dir1 = direction;
@@ -25,11 +22,10 @@ inline Intersection ConeSurface::intersectionEstimate(
   double path = 0.;
   Intersection::Status status = Intersection::Status::unreachable;
 
-  if (needsTransform) {
-    Transform3D invTrans = transform(gctx).inverse();
-    point1 = invTrans * position;
-    dir1 = invTrans.linear() * direction;
-  }
+  // Transform into the local frame
+  Transform3D invTrans = transform(gctx).inverse();
+  point1 = invTrans * position;
+  dir1 = invTrans.linear() * direction;
 
   // See file header for the formula derivation
   double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
@@ -43,47 +39,82 @@ inline Intersection ConeSurface::intersectionEstimate(
     A += 1e-16;  // avoid division by zero
   }
 
-  detail::RealQuadraticEquation solns(A, B, C);
+  return detail::RealQuadraticEquation(A, B, C);
+}
 
-  if (solns.solutions != 0) {
-    double t1 = solns.first;
-    Vector3D soln1Loc(point1 + t1 * dir1);
-    // set the validity flag
-    status = Intersection::Status::reachable;
-    // there's only one solution for this
-    if (solns.solutions == 1) {
-      // set the solution
-      solution = soln1Loc;
-      path = t1;
-      // check the validity given the navigation direction
-      status = Intersection::Status::reachable;
-      // there's two solutions
-    } else if (solns.solutions == 2) {
-      // get the second solution
-      double t2 = solns.second;
-      Vector3D soln2Loc(point1 + t2 * direction);
-      // both solutions have the same sign - or you don't care
-      // @TODO needs two solution
-      if (t1 * t1 < t2 * t2) {
-        solution = soln1Loc;
-        path = t1;
-      } else {
-        solution = soln2Loc;
-        path = t2;
-      }
-    }
+inline Intersection ConeSurface::intersectionEstimate(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Solve the quadratic equation
+  auto qe = intersectionSolver(gctx, position, direction);
+
+  // If no valid solution return a non-valid intersection
+  if (qe.solutions == 0) {
+    return Intersection();
   }
 
-  // Transform back if needed
-  if (m_transform) {
-    solution = transform(gctx) * solution;
-  }
-  // Check validity
-  if (status != Intersection::Status::unreachable and bcheck and
-      not isOnSurface(gctx, solution, direction, bcheck)) {
+  // Absolute smallest solution is taken by default
+  double path =
+      qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second;
+  Vector3D solution = position + path * direction;
+  Intersection::Status status = Intersection::Status::reachable;
+
+  // Boundary check necessary
+  if (bcheck and not isOnSurface(gctx, solution, direction, bcheck)) {
     status = Intersection::Status::missed;
   }
 
-  // Set the result navigation direction
-  return Intersection(solution, path, status);
+  // Now return the solution
+  return Intersection(transform(gctx) * solution, path, status);
+}
+
+inline SurfaceIntersection ConeSurface::surfaceIntersectionEstimate(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Solve the quadratic euation
+  auto qe = intersectionSolver(gctx, position, direction);
+
+  // If no valid solution return a non-valid surfaceIntersection
+  if (qe.solutions == 0) {
+    return SurfaceIntersection();
+  }
+
+  // Check the validity of the first solution
+  Vector3D solution1 = position + qe.first * direction;
+  Intersection::Status status1 = Intersection::Status::reachable;
+  if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
+    status1 = Intersection::Status::missed;
+  }
+
+  // Check the validity of the secind solution
+  Vector3D solution2 = position + qe.first * direction;
+  Intersection::Status status2 = Intersection::Status::reachable;
+  if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
+    status2 = Intersection::Status::missed;
+  }
+
+  const auto& tf = transform(gctx);
+  // Set the intersection
+  Intersection first(tf * solution1, qe.first, status1);
+  Intersection second(tf * solution2, qe.second, status2);
+  SurfaceIntersection cIntersection(first, this);
+  // Check one if its valid or neither is valid
+  bool check1 = status1 != Intersection::Status::missed or
+                (status1 == Intersection::Status::missed and
+                 status2 == Intersection::Status::missed);
+  // Check and (eventually) go with the first solution
+  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+      status2 == Intersection::Status::missed) {
+    // And add the alternative
+    if (qe.solutions > 1) {
+      cIntersection.alternatives = {second};
+    }
+  } else {
+    // And add the alternative
+    if (qe.solutions > 1) {
+      cIntersection.alternatives = {first};
+    }
+    cIntersection.intersection = second;
+  }
+  return cIntersection;
 }

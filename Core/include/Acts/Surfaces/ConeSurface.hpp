@@ -175,6 +175,44 @@ class ConeSurface : public Surface {
   /// normalized)
   /// @param bcheck The boundary check to be used in this directive
   ///
+  /// @return is the Intersection object
+  Intersection intersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction,
+      const BoundaryCheck& bcheck = false) const final;
+
+  /// Straight line intersection schema from position/direction
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to start from
+  /// @param direction The direction at start
+  /// @param bcheck the Boundary Check
+  ///
+  /// If possible returns both solutions for the cylinder
+  ///
+  /// @return SurfaceIntersection object (contains intersection & surface)
+  SurfaceIntersection surfaceIntersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const BoundaryCheck& bcheck) const final;
+
+  /// the pathCorrection for derived classes with thickness
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global potion at the correction point
+  /// @param direction is the momentum direciton at the correction point
+  /// @return is the path correction due to incident angle
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                        const Vector3D& direction) const final;
+
+  /// Return properly formatted class name for screen output
+  std::string name() const override;
+
+ protected:
+  std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
+
+ private:
+  /// Implementation of the intersection solver
+  ///
   /// <b>mathematical motivation:</b>
   ///
   ///   The calculation will be done in the 3-dim frame of the cone,
@@ -207,28 +245,11 @@ class ConeSurface : public Surface {
   ///   is also the length of the path, since we normalized @f$x_d@f$
   ///   to be unit length.
   ///
-  /// @return is the Intersection object
-  Intersection intersectionEstimate(
+  /// @return the quadratic equation
+  detail::RealQuadraticEquation intersectionSolver(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3D& direction) const;
 
-  /// the pathCorrection for derived classes with thickness
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global potion at the correction point
-  /// @param momentum is the momentum at the correction point
-  /// @return is the path correction due to incident angle
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& momentum) const final;
-
-  /// Return properly formatted class name for screen output
-  std::string name() const override;
-
- protected:
-  std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
-
- private:
   /// Clone method implementation
   ///
   /// @param gctx The current geometry context object, e.g. alignment

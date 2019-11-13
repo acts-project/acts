@@ -248,7 +248,6 @@ class CylinderSurface : public Surface {
 
   /// Implementation of the intersection solver
   ///
-  ///
   ///  <b>mathematical motivation:</b>
   ///
   /// The cylinder is given by :

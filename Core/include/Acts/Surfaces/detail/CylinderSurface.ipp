@@ -75,45 +75,40 @@ inline SurfaceIntersection CylinderSurface::surfaceIntersectionEstimate(
     return SurfaceIntersection();
   }
 
-  // Check the validity of the solution
+  // Check the validity of the first solution
   Vector3D solution1 = position + qe.first * direction;
   Intersection::Status status1 = Intersection::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection::Status::missed;
   }
 
-  // Check the validity of the solution
+  // Check the validity of second the solution
   Vector3D solution2 = position + qe.first * direction;
   Intersection::Status status2 = Intersection::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection::Status::missed;
   }
   // Set the intersection
-  Intersection primary;
-  std::vector<Intersection> alternative = {};
-
+  Intersection first(solution1, qe.first, status1);
+  Intersection second(solution2, qe.second, status2);
+  SurfaceIntersection cIntersection(first, this);
   // Check one if its valid or neither is valid
   bool check1 = status1 != Intersection::Status::missed or
                 (status1 == Intersection::Status::missed and
                  status2 == Intersection::Status::missed);
-
+  // Check and (eventually) go with the first solution
   if ((check1 and qe.first * qe.first < qe.second * qe.second) or
       status2 == Intersection::Status::missed) {
-    // Assign the primary intersection
-    primary = Intersection(solution1, qe.first, status1);
     // And add the alternative
     if (qe.solutions > 1) {
-      alternative = {Intersection(solution2, qe.first, status2)};
+      cIntersection.alternatives = {second};
     }
   } else {
-    // Assign the primary intersection
-    primary = Intersection(solution2, qe.second, status2);
     // And add the alternative
     if (qe.solutions > 1) {
-      alternative = {Intersection(solution1, qe.first, status1)};
+      cIntersection.alternatives = {first};
     }
+    cIntersection.intersection = second;
   }
-  SurfaceIntersection cIntersection(primary, this);
-  cIntersection.alternatives = alternative;
   return cIntersection;
 }
