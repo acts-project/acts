@@ -91,6 +91,9 @@ class ObjectIntersection {
   /// The representation of this object
   const representation_t* representation{nullptr};
 
+  /// The alternative intersections
+  std::vector<Intersection> alternatives = {};
+
   /// Default constructor
   ObjectIntersection() = default;
 
@@ -120,6 +123,9 @@ class ObjectIntersection {
 
   /// @brief Smaller operator for ordering & sorting
   ///
+  /// This operator will ignore the alternatives, but simply
+  /// order the representing intersection
+  ///
   /// @param oi is the source intersection for comparison
   bool operator<(
       const ObjectIntersection<object_t, representation_t>& oi) const {
@@ -127,6 +133,9 @@ class ObjectIntersection {
   }
 
   /// @brief Greater operator for ordering & sorting
+  ///
+  /// This operator will ignore the alternatives, but simply
+  /// order the representing intersection
   ///
   /// @param oi is the source intersection for comparison
   bool operator>(

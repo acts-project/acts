@@ -181,14 +181,27 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
       testContext, offSurface, direction, false);
   Intersection expectedIntersect{Vector3D{1, 1, 2}, 99.,
                                  Intersection::Status::reachable};
+  // check the result
   BOOST_CHECK(bool(intersect));
   CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
   CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-9);
+
+  /// surfaceIntersectionEstimate
+  auto surfaceIntersect = cylinderSurfaceObject->surfaceIntersectionEstimate(
+      testContext, offSurface, direction, false);
+  BOOST_CHECK(bool(surfaceIntersect));
+  // there is a second solution & and it should be valid
+  BOOST_CHECK(surfaceIntersect.alternatives.size() == 1);
+  BOOST_CHECK(bool(*surfaceIntersect.alternatives.begin()));
+  // And it's path should be further away then the primary solution
+  double pn = surfaceIntersect.intersection.pathLength;
+  double pa = surfaceIntersect.alternatives[0].pathLength;
+  BOOST_CHECK(pn * pn < pa * pa);
   //
   /// Test pathCorrection
-  CHECK_CLOSE_REL(
-      cylinderSurfaceObject->pathCorrection(testContext, offSurface, momentum),
-      std::sqrt(3.), 0.01);
+  CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
+                                                        momentum.normalized()),
+                  std::sqrt(3.), 0.01);
   //
   /// Test name
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->name(),

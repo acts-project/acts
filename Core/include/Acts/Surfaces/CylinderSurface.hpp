@@ -120,12 +120,12 @@ class CylinderSurface : public Surface {
   /// position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the position where the measurement frame is defined
-  /// @param mom is the momentum vector (ignored)
+  /// @param position is the position where the measurement frame is defined
+  /// @param momentum is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
   const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& gpos,
-                                        const Vector3D& mom) const final;
+                                        const Vector3D& position,
+                                        const Vector3D& momentum) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -135,20 +135,22 @@ class CylinderSurface : public Surface {
   /// vector
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos is the local postion for which the normal vector is requested
+  /// @param lposition is the local postion for which the normal vector is
+  /// requested
   /// @return normal vector at the local position
   const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lpos) const final;
+                        const Vector2D& lposition) const final;
 
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
   /// vector
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global postion for which the normal vector is requested
+  /// @param position is the global postion for which the normal vector is
+  /// requested
   /// @return normal vector at the global position
   const Vector3D normal(const GeometryContext& gctx,
-                        const Vector3D& gpos) const final;
+                        const Vector3D& param) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -166,31 +168,86 @@ class CylinderSurface : public Surface {
   /// Local to global transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos is the local position to be transformed
-  /// @param mom is the global momentum (ignored in this operation)
-  /// @param gpos is the global position shich is filled
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lpos,
-                     const Vector3D& mom, Vector3D& gpos) const final;
+  /// @param lposition is the local position to be transformed
+  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param position is the global position shich is filled
+  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                     const Vector3D& momentum, Vector3D& position) const final;
 
   /// Global to local transfomration
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global position to be transformed
-  /// @param mom is the global momentum (ignored in this operation)
-  /// @param lpos is hte local position to be filled
+  /// @param position is the global position to be transformed
+  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param lposition is hte local position to be filled
   ///
   /// @return is a boolean indicating if the transformation succeeded
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& gpos,
-                     const Vector3D& mom, Vector2D& lpos) const final;
+  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
+                     const Vector3D& momentum, Vector2D& lposition) const final;
 
   /// Straight line intersection schema - provides closest intersection
   ///  and (signed) path length
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos The global position as a starting point
-  /// @param gdir The global direction at starting point, expected to
-  ///  be normalized
+  /// @param position The global position as a starting point
+  /// @param direction The global direction at starting point
+  ///        (@note expected to be normalise)
   /// @param bcheck The boundary check presection
+  ///
+  /// @return is the closest intersection (fwd or bwd)
+  Intersection intersectionEstimate(const GeometryContext& gctx,
+                                    const Vector3D& position,
+                                    const Vector3D& direction,
+                                    const BoundaryCheck& bcheck) const final;
+
+  /// Straight line intersection schema from position/direction
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to start from
+  /// @param direction The direction at start
+  /// @param bcheck the Boundary Check
+  ///
+  /// If possible returns both solutions for the cylinder
+  ///
+  /// @return SurfaceIntersection object (contains intersection & surface)
+  SurfaceIntersection surfaceIntersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const BoundaryCheck& bcheck) const final;
+
+  /// Path correction due to incident of the track
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global position as a starting point
+  /// @param momentum is the global momentum at the starting point
+  ///
+  /// @return is the correction factor due to incident
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                        const Vector3D& momentum) const final;
+
+  /// Return method for properly formatted output string
+  std::string name() const override;
+
+  /// Return a PolyhedronRepresentation for this object
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param l0div Number of divisions along l0 (phi)
+  /// @param l1div Number of divisions along l1 (z)
+  virtual PolyhedronRepresentation polyhedronRepresentation(
+      const GeometryContext& gctx, size_t l0div = 10, size_t l1div = 1) const;
+
+ protected:
+  std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
+
+ private:
+  /// Clone method implementation
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param shift applied to the surface
+  CylinderSurface* clone_impl(const GeometryContext& gctx,
+                              const Transform3D& shift) const override;
+
+  /// Implementation of the intersection solver
+  ///
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -222,42 +279,10 @@ class CylinderSurface : public Surface {
   /// finally solve the second order equation : a*t^2 + b*t + c = 0
   /// reinsertion into the line equation.
   ///
-  /// @return is the intersection object
-  Intersection intersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
-      const BoundaryCheck& bcheck = false) const final;
-
-  /// Path correction due to incident of the track
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global position as a starting point
-  /// @param mom is the global momentum at the starting point
-  ///
-  /// @return is the correction factor due to incident
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& gpos,
-                        const Vector3D& mom) const final;
-
-  /// Return method for properly formatted output string
-  std::string name() const override;
-
-  /// Return a PolyhedronRepresentation for this object
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param l0div Number of divisions along l0 (phi)
-  /// @param l1div Number of divisions along l1 (z)
-  virtual PolyhedronRepresentation polyhedronRepresentation(
-      const GeometryContext& gctx, size_t l0div = 10, size_t l1div = 1) const;
-
- protected:
-  std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
-
- private:
-  /// Clone method implementation
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  CylinderSurface* clone_impl(const GeometryContext& gctx,
-                              const Transform3D& shift) const override;
+  /// @return the quadratic equation
+  detail::RealQuadraticEquation intersectionSolver(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction) const;
 };
 
 #include "Acts/Surfaces/detail/CylinderSurface.ipp"

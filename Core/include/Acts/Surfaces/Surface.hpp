@@ -33,6 +33,9 @@ class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 
+/// Typedef of the surface intersection
+using SurfaceIntersection = ObjectIntersection<Surface>;
+
 /// @class Surface
 ///
 /// @brief Abstract Base Class for tracking surfaces
@@ -61,9 +64,6 @@ class Surface : public virtual GeometryObject,
     Curvilinear = 6,
     Other = 7
   };
-
-  /// Typedef of the surface intersection
-  using SurfaceIntersection = ObjectIntersection<Surface>;
 
  protected:
   /// Constructor with Transform3D as a shared object
