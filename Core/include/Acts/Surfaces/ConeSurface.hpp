@@ -35,8 +35,6 @@ namespace Acts {
 class ConeSurface : public Surface {
   friend Surface;
 
-  ConeSurface() = delete;
-
  protected:
   /// Constructor form HepTransform and an opening angle
   ///
@@ -79,6 +77,9 @@ class ConeSurface : public Surface {
  public:
   /// Destructor - defaulted
   ~ConeSurface() override = default;
+
+  /// Default Constructor - deleted
+  ConeSurface() = delete;
 
   /// Assignment operator
   ///

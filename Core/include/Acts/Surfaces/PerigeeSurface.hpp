@@ -28,8 +28,6 @@ namespace Acts {
 class PerigeeSurface : public LineSurface {
   friend Surface;
 
-  PerigeeSurface() = delete;
-
  protected:
   /// Constructor from GlobalPosition
   ///
@@ -57,6 +55,9 @@ class PerigeeSurface : public LineSurface {
  public:
   /// Destructor - defaulted
   ~PerigeeSurface() override = default;
+
+  /// Default Constructor - deleted
+  PerigeeSurface() = delete;
 
   /// Clone method into a concrete type of PerigeeSurface with shift
   ///
