@@ -34,8 +34,6 @@ class LineBounds;
 class LineSurface : public Surface {
   friend Surface;
 
-  LineSurface() = delete;
-
  protected:
   /// Constructor from Transform3D and bounds
   ///
@@ -76,6 +74,9 @@ class LineSurface : public Surface {
  public:
   /// Destructor - defaulted
   ~LineSurface() override = default;
+
+  /// Default Constructor - deleted
+  LineSurface() = delete;
 
   /// Assignment operator
   ///

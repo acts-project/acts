@@ -47,11 +47,7 @@ class DetectorElementBase;
 class DiscSurface : public Surface {
   friend Surface;
 
-  DiscSurface() = delete;
-
  protected:
-  /// Default Constructor is deleted
-
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max} \f$
   ///
   /// @param htrans is transform that places the disc in the global 3D space
@@ -109,6 +105,9 @@ class DiscSurface : public Surface {
  public:
   /// Destructor - defaulted
   ~DiscSurface() override = default;
+
+  /// Default Constructor - deleted
+  DiscSurface() = delete;
 
   /// Assignement operator
   ///
