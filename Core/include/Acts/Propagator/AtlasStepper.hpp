@@ -46,7 +46,7 @@ class AtlasStepper {
 
   using Corrector = VoidIntersectionCorrector;
 
-  using BField_t = bfield_t;
+  using BField = bfield_t;
 
   /// @brief Nested State struct for the local caching
   struct State {

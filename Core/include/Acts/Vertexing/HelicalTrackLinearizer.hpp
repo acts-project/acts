@@ -45,7 +45,7 @@ class HelicalTrackLinearizer {
 
  public:
   using Propagator_t = propagator_t;
-  using BField_t = typename Propagator_t::Stepper::BField_t;
+  using BField_t = typename Propagator_t::Stepper::BField;
 
   /// @brief Helper function to set up the correct PropagatorOptions with
   /// propagation direction set to backward. To be used when setting up the
