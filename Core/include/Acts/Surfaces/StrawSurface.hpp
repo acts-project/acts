@@ -32,9 +32,6 @@ struct PolyhedronRepresentation;
 class StrawSurface : public LineSurface {
   friend Surface;
 
-  /// Default Constructor - deleted
-  StrawSurface() = delete;
-
  protected:
   /// Constructor from Transform3D and bounds
   ///
@@ -78,6 +75,9 @@ class StrawSurface : public LineSurface {
  public:
   /// Destructor - defaulted
   ~StrawSurface() override = default;
+
+  /// Default Constructor - deleted
+  StrawSurface() = delete;
 
   /// Assignment operator
   ///
