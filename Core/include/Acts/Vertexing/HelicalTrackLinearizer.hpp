@@ -36,18 +36,16 @@ namespace Acts {
 ///
 /// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
-/// @tparam bfield_t Magnetic field type
 /// @tparam propagator_t Propagator type
-/// @tparam action_list_t Propagator action list type
-/// @tparam aborter_list_t Propagator aborter list type
-template <typename bfield_t,
-          typename propagator_t = Propagator<EigenStepper<bfield_t>>,
-          typename action_list_t = ActionList<>,
-          typename aborter_list_t = AbortList<>>
+/// @tparam propagator_options_t Propagator options type
+template <typename propagator_t,
+          typename propagator_options_t = PropagatorOptions<>>
 class HelicalTrackLinearizer {
+  using PropagatorOptions_t = propagator_options_t;
+
  public:
   using Propagator_t = propagator_t;
-  using BField_t = bfield_t;
+  using BField_t = typename Propagator_t::Stepper::BField_t;
 
   /// @brief Helper function to set up the correct PropagatorOptions with
   /// propagation direction set to backward. To be used when setting up the
@@ -57,10 +55,9 @@ class HelicalTrackLinearizer {
   /// @param mv The MagneticFieldContext
   ///
   /// @return The PropagatorOptions with direction = backward
-  static PropagatorOptions<action_list_t, aborter_list_t>
-  getDefaultPropagatorOptions(const GeometryContext& gc,
-                              const MagneticFieldContext& mc) {
-    PropagatorOptions<action_list_t, aborter_list_t> options(gc, mc);
+  static PropagatorOptions_t getDefaultPropagatorOptions(
+      const GeometryContext& gc, const MagneticFieldContext& mc) {
+    PropagatorOptions_t options(gc, mc);
     options.direction = backward;
     return options;
   }
@@ -72,16 +69,26 @@ class HelicalTrackLinearizer {
   /// @param propOptions The propagator options
   struct Config {
     Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop,
-           PropagatorOptions<action_list_t, aborter_list_t> propOptions)
+           PropagatorOptions_t propOptions)
         : bField(bIn), propagator(std::move(prop)), pOptions(propOptions) {
       assert(pOptions.direction == backward);
     }
 
+    /// @brief Config constructor if BField_t == int (no B-Field provided),
+    ///        sets int bField to 0
+    template <typename T = BField_t,
+              std::enable_if_t<std::is_same<T, int>::value, int> = 0>
+    Config(std::shared_ptr<Propagator_t> prop, PropagatorOptions_t propOptions)
+        : bField(0), propagator(std::move(prop)), pOptions(propOptions) {
+      assert(pOptions.direction == backward);
+    }
+
+    // The magnetic field
     BField_t bField;
-
+    // The propagator
     std::shared_ptr<Propagator_t> propagator;
-
-    PropagatorOptions<action_list_t, aborter_list_t> pOptions;
+    // The propagator options
+    PropagatorOptions_t pOptions;
   };
 
   /// @brief Constructor
@@ -100,6 +107,28 @@ class HelicalTrackLinearizer {
       const BoundParameters* params, const SpacePointVector& linPoint) const;
 
  private:
+  /// @brief Method that returns the magnetic field value at a given position
+  ///        Enabled if BField_t == int (no B-Field provided), returns 0.
+  ///
+  /// @param linPointPos Position for which to get the magnetic field value
+  /// @return The magnetic field value
+  template <typename T = BField_t,
+            std::enable_if_t<std::is_same<T, int>::value, int> = 0>
+  double getBField(const Acts::Vector3D& /*linPointPos*/) const {
+    return m_cfg.bField;
+  }
+
+  /// @brief Method that returns the magnetic field value at a given position
+  ///        Enabled if BField_t != int (B-Field provided)
+  ///
+  /// @param linPointPos Position for which to get the magnetic field value
+  /// @return The magnetic field value
+  template <typename T = BField_t,
+            std::enable_if_t<!std::is_same<T, int>::value, int> = 0>
+  double getBField(const Acts::Vector3D& linPointPos) const {
+    return m_cfg.bField.getField(linPointPos)[eZ];
+  }
+
   /// Configuration object
   const Config m_cfg;
 };

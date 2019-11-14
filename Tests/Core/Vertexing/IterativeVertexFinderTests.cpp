@@ -37,10 +37,8 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator<EigenStepper<ConstantBField>>>;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -109,14 +107,13 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     auto propagator = std::make_shared<Propagator>(stepper);
 
     PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+        Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
 
     // Linearizer for BoundParameters type test
-    Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-    Linearizer_t linearizer(ltConfig);
+    Linearizer::Config ltConfig(bField, propagator, pOptions);
+    Linearizer linearizer(ltConfig);
 
-    using BilloirFitter =
-        FullBilloirVertexFitter<BoundParameters, Linearizer_t>;
+    using BilloirFitter = FullBilloirVertexFitter<BoundParameters, Linearizer>;
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
@@ -329,14 +326,14 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     auto propagator = std::make_shared<Propagator>(stepper);
 
     PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+        Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
 
     // Linearizer for user defined InputTrack type test
-    Linearizer_t::Config ltConfigUT(bField, propagator, pOptions);
-    Linearizer_t linearizer(ltConfigUT);
+    Linearizer::Config ltConfigUT(bField, propagator, pOptions);
+    Linearizer linearizer(ltConfigUT);
 
     // Set up vertex fitter for user track type
-    using BilloirFitter = FullBilloirVertexFitter<InputTrack, Linearizer_t>;
+    using BilloirFitter = FullBilloirVertexFitter<InputTrack, Linearizer>;
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack

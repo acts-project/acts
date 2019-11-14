@@ -39,10 +39,8 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator<EigenStepper<ConstantBField>>>;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();

@@ -31,7 +31,7 @@ using namespace Acts::UnitLiterals;
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer = HelicalTrackLinearizer<ConstantBField, Propagator>;
+using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();

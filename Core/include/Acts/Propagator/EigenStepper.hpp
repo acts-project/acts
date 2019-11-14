@@ -62,6 +62,7 @@ class EigenStepper {
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+  using BField_t = BField;
 
   /// @brief State for track parameter propagation
   ///

@@ -33,9 +33,8 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator<EigenStepper<ConstantBField>>>;
+using Linearizer =
+    HelicalTrackLinearizer<Propagator<EigenStepper<ConstantBField>>>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -55,15 +54,14 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+      Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
 
-  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-  Linearizer_t linearizer(ltConfig);
+  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer linearizer(ltConfig);
 
   // Set up Billoir Vertex Fitter
-  FullBilloirVertexFitter<BoundParameters, Linearizer_t>::Config
-      vertexFitterCfg;
-  FullBilloirVertexFitter<BoundParameters, Linearizer_t> billoirFitter(
+  FullBilloirVertexFitter<BoundParameters, Linearizer>::Config vertexFitterCfg;
+  FullBilloirVertexFitter<BoundParameters, Linearizer> billoirFitter(
       vertexFitterCfg);
 
   // Constraint for vertex fit
@@ -141,10 +139,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+      Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
 
-  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-  Linearizer_t linearizer(ltConfig);
+  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer linearizer(ltConfig);
 
   // Number of events
   const int nEvents = 10;
@@ -153,9 +151,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     unsigned int nTracks = nTracksDist(gen);
 
     // Set up Billoir Vertex Fitter
-    FullBilloirVertexFitter<BoundParameters, Linearizer_t>::Config
+    FullBilloirVertexFitter<BoundParameters, Linearizer>::Config
         vertexFitterCfg;
-    FullBilloirVertexFitter<BoundParameters, Linearizer_t> billoirFitter(
+    FullBilloirVertexFitter<BoundParameters, Linearizer> billoirFitter(
         vertexFitterCfg);
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
@@ -270,10 +268,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
   PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+      Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
 
-  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-  Linearizer_t linearizer(ltConfig);
+  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer linearizer(ltConfig);
 
   const int nEvents = 10;
 
@@ -286,8 +284,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
         [](InputTrack params) { return params.parameters(); };
 
     // Set up Billoir Vertex Fitter
-    FullBilloirVertexFitter<InputTrack, Linearizer_t>::Config vertexFitterCfg;
-    FullBilloirVertexFitter<InputTrack, Linearizer_t> billoirFitter(
+    FullBilloirVertexFitter<InputTrack, Linearizer>::Config vertexFitterCfg;
+    FullBilloirVertexFitter<InputTrack, Linearizer> billoirFitter(
         vertexFitterCfg, extractParameters);
 
     // Constraint for vertex fit

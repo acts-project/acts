@@ -8,13 +8,10 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-template <typename bfield_t, typename propagator_t, typename action_list_t,
-          typename aborter_list_t>
-
-Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
-    bfield_t, propagator_t, action_list_t,
-    aborter_list_t>::linearizeTrack(const BoundParameters* params,
-                                    const SpacePointVector& linPoint) const {
+template <typename propagator_t, typename propagator_options_t>
+Acts::Result<Acts::LinearizedTrack> Acts::
+    HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
+        const BoundParameters* params, const SpacePointVector& linPoint) const {
   if (params == nullptr) {
     return LinearizedTrack();
   }
@@ -59,7 +56,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
   Vector3D momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
-  double Bz = m_cfg.bField.getField(linPointPos)[eZ];
+  double Bz = getBField(linPointPos);
 
   double rho;
   // Curvature is infinite w/o b field

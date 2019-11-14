@@ -31,7 +31,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t = HelicalTrackLinearizer<ConstantBField, Propagator>;
+using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
