@@ -137,8 +137,7 @@ inline const Vector3D DiscSurface::binningPosition(
 
 inline double DiscSurface::pathCorrection(const GeometryContext& gctx,
                                           const Vector3D& position,
-                                          const Vector3D& momentum) const {
+                                          const Vector3D& direction) const {
   /// we can ignore the global position here
-  return 1. /
-         std::abs(Surface::normal(gctx, position).dot(momentum.normalized()));
+  return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }

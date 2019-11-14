@@ -86,14 +86,14 @@ const Acts::Vector3D Acts::ConeSurface::rotSymmetryAxis(
 }
 
 const Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3D& pos,
+    const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
   RotationMatrix3D mFrame;
   // construct the measurement frame
   // measured Y is the local z axis
   Vector3D measY = rotSymmetryAxis(gctx);
   // measured z is the position transverse normalized
-  Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).normalized();
+  Vector3D measDepth = Vector3D(position.x(), position.y(), 0.).normalized();
   // measured X is what comoes out of it
   Acts::Vector3D measX(measY.cross(measDepth).normalized());
   // the columnes

@@ -401,12 +401,12 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation
+  /// @param direction global 3D momentum direction
   ///
   /// @return Path correction with respect to the nominal incident.
   virtual double pathCorrection(const GeometryContext& gctx,
                                 const Vector3D& position,
-                                const Vector3D& momentum) const = 0;
+                                const Vector3D& direction) const = 0;
 
   /// Straight line intersection schema from position/direction
   ///

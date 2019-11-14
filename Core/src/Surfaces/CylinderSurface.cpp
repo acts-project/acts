@@ -179,9 +179,9 @@ const Acts::Vector3D Acts::CylinderSurface::normal(
 
 double Acts::CylinderSurface::pathCorrection(
     const GeometryContext& gctx, const Acts::Vector3D& position,
-    const Acts::Vector3D& momentum) const {
+    const Acts::Vector3D& direction) const {
   Vector3D normalT = normal(gctx, position);
-  double cosAlpha = normalT.dot(momentum);
+  double cosAlpha = normalT.dot(direction);
   return std::fabs(1. / cosAlpha);
 }
 

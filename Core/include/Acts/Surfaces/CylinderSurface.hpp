@@ -219,11 +219,11 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position as a starting point
-  /// @param momentum is the global momentum at the starting point
+  /// @param direction is the global momentum at the starting point
   ///
   /// @return is the correction factor due to incident
   double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& momentum) const final;
+                        const Vector3D& direction) const final;
 
   /// Return method for properly formatted output string
   std::string name() const override;

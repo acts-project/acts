@@ -24,10 +24,9 @@ inline const Vector3D PlaneSurface::binningPosition(
 
 inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
                                            const Vector3D& position,
-                                           const Vector3D& momentum) const {
+                                           const Vector3D& direction) const {
   /// We can ignore the global position here
-  return 1. /
-         std::abs(Surface::normal(gctx, position).dot(momentum.normalized()));
+  return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
 inline Intersection PlaneSurface::intersectionEstimate(
