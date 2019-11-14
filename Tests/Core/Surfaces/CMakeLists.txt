@@ -1,4 +1,4 @@
-Tests/Core/Surfaces/CMakeLists.txt add_executable (BoundaryCheckTests BoundaryCheckTests.cpp)
+add_executable (BoundaryCheckTests BoundaryCheckTests.cpp)
 target_link_libraries (BoundaryCheckTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME BoundaryCheckUnitTest COMMAND BoundaryCheckTests)
 
