@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {

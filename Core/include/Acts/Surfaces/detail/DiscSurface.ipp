@@ -110,38 +110,17 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
 inline Intersection DiscSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
-  // minimize the call to transform()
-  const auto& tMatrix = transform(gctx).matrix();
-  const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
-  const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();
-  // return solution and path
-  Vector3D solution(0., 0., 0.);
-  double path = std::numeric_limits<double>::infinity();
-  // Lemma : the solver ------ encapsulated
-  auto solve = [&solution, &path, &pnormal, &pcenter](
-                   const Vector3D& lpos,
-                   const Vector3D& ldir) -> Intersection::Status {
-    double denom = ldir.dot(pnormal);
-    if (denom != 0.0) {
-      path = (pnormal.dot((pcenter - lpos))) / (denom);
-      solution = (lpos + path * ldir);
-      // Is valid hence either on surface or reachable
-      return (path * path < s_onSurfaceTolerance * s_onSurfaceTolerance)
-                 ? Intersection::Status::onSurface
-                 : Intersection::Status::reachable;
-    }
-    return Intersection::Status::unreachable;
-  };
-  // --------
-  Intersection::Status status = solve(position, direction);
+  // Use the intersection helper for planar surfaces
+  auto intersection =
+      PlanarHelper::intersectionEstimate(transform(gctx), position, direction);
   // Evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds
-  if (status != Intersection::Status::unreachable and bcheck and
-      not isOnSurface(gctx, solution, direction, bcheck)) {
-    status = Intersection::Status::missed;
+  if (intersection.status != Intersection::Status::unreachable and bcheck and
+      not isOnSurface(gctx, intersection.position, direction, bcheck)) {
+    intersection.status = Intersection::Status::missed;
   }
-  return Intersection(solution, path, status);
+  return intersection;
 }
 
 inline const Vector3D DiscSurface::normal(const GeometryContext& gctx,

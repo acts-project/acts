@@ -605,7 +605,7 @@ class Navigator {
         return dstream.str();
       });
       // Now intersect (should exclude punch-through)
-      auto surfaceIntersect = surface->surfaceIntersectionEstimate(
+      auto surfaceIntersect = surface->intersect(
           state.geoContext, stepper.position(state.stepping),
           stepper.direction(state.stepping), navOpts.boundaryCheck);
       double surfaceDistance = surfaceIntersect.intersection.pathLength;
@@ -764,7 +764,7 @@ class Navigator {
       }
       // Otherwise try to step towards it
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-      auto layerIntersect = layerSurface->surfaceIntersectionEstimate(
+      auto layerIntersect = layerSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
           stepper.direction(state.stepping), navOpts.boundaryCheck);
       // check if the intersect is invalid
@@ -899,7 +899,7 @@ class Navigator {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // Step towards the boundary surface
-      auto boundaryIntersect = boundarySurface->surfaceIntersectionEstimate(
+      auto boundaryIntersect = boundarySurface->intersect(
           state.geoContext, stepper.position(state.stepping),
           stepper.direction(state.stepping), navOpts.boundaryCheck);
       // Distance
@@ -995,10 +995,9 @@ class Navigator {
                                          resolveSensitive, resolveMaterial,
                                          resolvePassive);
       // take the target intersection
-      auto targetIntersection =
-          state.navigation.targetSurface->surfaceIntersectionEstimate(
-              state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), navOpts.boundaryCheck);
+      auto targetIntersection = state.navigation.targetSurface->intersect(
+          state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), navOpts.boundaryCheck);
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Target estimate position (";

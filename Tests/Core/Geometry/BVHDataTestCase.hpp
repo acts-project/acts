@@ -113,8 +113,7 @@ BOOST_DATA_TEST_CASE(
     // collect all surfaces that are hit
     for (const auto& bndSrf : bndSurfaces) {
       const auto& srf = bndSrf->surfaceRepresentation();
-      auto sri = srf.surfaceIntersectionEstimate(tgContext, ray.origin(),
-                                                 ray.dir(), true);
+      auto sri = srf.intersect(tgContext, ray.origin(), ray.dir(), true);
       if (sri) {
         // does intersect
         hits.push_back(std::move(sri));

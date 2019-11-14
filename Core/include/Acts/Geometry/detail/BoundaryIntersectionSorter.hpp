@@ -58,9 +58,8 @@ struct DefaultBoundaryIntersectionSorter {
     for (auto& bSurface : boundaries) {
       const auto& bSurfaceRep = bSurface->surfaceRepresentation();
       // intersect the surface
-      SurfaceIntersection bsIntersection =
-          bSurfaceRep.surfaceIntersectionEstimate(gctx, position, direction,
-                                                  options.boundaryCheck);
+      SurfaceIntersection bsIntersection = bSurfaceRep.intersect(
+          gctx, position, direction, options.boundaryCheck);
       // check if the intersection is valid, but exlude the on-surface case
       // when requested -- move to intersectionestimate
       if (bsIntersection) {
@@ -192,8 +191,8 @@ struct BoundaryIntersectionSorter {
       const options_t& options) const {
     const Surface* surface = &(boundary->surfaceRepresentation());
     // intersect the surface
-    SurfaceIntersection bsIntersection = surface->surfaceIntersectionEstimate(
-        gctx, position, direction, options.boundaryCheck);
+    SurfaceIntersection bsIntersection =
+        surface->intersect(gctx, position, direction, options.boundaryCheck);
     return BoundaryIntersection(bsIntersection.intersection, boundary, surface);
   }
 };

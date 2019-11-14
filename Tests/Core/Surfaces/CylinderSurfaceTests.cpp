@@ -186,8 +186,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
   CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-9);
 
-  /// surfaceIntersectionEstimate
-  auto surfaceIntersect = cylinderSurfaceObject->surfaceIntersectionEstimate(
+  /// intersect
+  auto surfaceIntersect = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, false);
   BOOST_CHECK(bool(surfaceIntersect));
   // there is a second solution & and it should be valid

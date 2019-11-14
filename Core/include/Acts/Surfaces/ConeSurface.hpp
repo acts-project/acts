@@ -191,9 +191,10 @@ class ConeSurface : public Surface {
   /// If possible returns both solutions for the cylinder
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection surfaceIntersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const BoundaryCheck& bcheck) const final;
+  SurfaceIntersection intersect(const GeometryContext& gctx,
+                                const Vector3D& position,
+                                const Vector3D& direction,
+                                const BoundaryCheck& bcheck) const final;
 
   /// the pathCorrection for derived classes with thickness
   ///

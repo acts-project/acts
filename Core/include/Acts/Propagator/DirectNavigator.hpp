@@ -181,9 +181,9 @@ class DirectNavigator {
       // take the target intersection
       auto nextIntersection =
           (*state.navigation.nextSurfaceIter)
-              ->surfaceIntersectionEstimate(
-                  state.geoContext, stepper.position(state.stepping),
-                  stepper.direction(state.stepping), navOpts.boundaryCheck);
+              ->intersect(state.geoContext, stepper.position(state.stepping),
+                          stepper.direction(state.stepping),
+                          navOpts.boundaryCheck);
 
       // Intersect the next surface and go
       double navStep = nextIntersection.intersection.pathLength;

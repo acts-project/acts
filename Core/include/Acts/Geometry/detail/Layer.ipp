@@ -90,9 +90,8 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
   if (options.endObject) {
     // intersect the end surface
     // - it is the final one don't use the bounday check at all
-    SurfaceIntersection endInter =
-        options.endObject->surfaceIntersectionEstimate(
-            gctx, position, options.navDir * direction, BoundaryCheck(true));
+    SurfaceIntersection endInter = options.endObject->intersect(
+        gctx, position, options.navDir * direction, BoundaryCheck(true));
     // non-valid intersection with the end surface provided at this layer
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
@@ -144,7 +143,7 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
       return;
     }
     // the surface intersection
-    SurfaceIntersection sfi = sf.surfaceIntersectionEstimate(
+    SurfaceIntersection sfi = sf.intersect(
         gctx, position, options.navDir * direction, options.boundaryCheck);
     // check if intersection is valid and pathLimit has not been exceeded
     double sifPath = sfi.intersection.pathLength;
@@ -250,8 +249,8 @@ const SurfaceIntersection Layer::surfaceOnApproach(
   }
 
   // create the intersection with the surface representation
-  return rSurface.surfaceIntersectionEstimate(
-      gctx, position, options.navDir * direction, options.boundaryCheck);
+  return rSurface.intersect(gctx, position, options.navDir * direction,
+                            options.boundaryCheck);
 }
 
 inline bool Layer::isOnLayer(const GeometryContext& gctx,

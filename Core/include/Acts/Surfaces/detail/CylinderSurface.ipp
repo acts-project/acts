@@ -53,7 +53,10 @@ inline Intersection CylinderSurface::intersectionEstimate(
   double path =
       qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second;
   Vector3D solution = position + path * direction;
-  Intersection::Status status = Intersection::Status::reachable;
+  Intersection::Status status =
+      path * path < s_onSurfaceTolerance * s_onSurfaceTolerance
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
 
   // Boundary check necessary
   if (bcheck and not isOnSurface(gctx, solution, direction, bcheck)) {
@@ -64,7 +67,7 @@ inline Intersection CylinderSurface::intersectionEstimate(
   return Intersection(solution, path, status);
 }
 
-inline SurfaceIntersection CylinderSurface::surfaceIntersectionEstimate(
+inline SurfaceIntersection CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // Solve the quadratic euation
@@ -77,14 +80,20 @@ inline SurfaceIntersection CylinderSurface::surfaceIntersectionEstimate(
 
   // Check the validity of the first solution
   Vector3D solution1 = position + qe.first * direction;
-  Intersection::Status status1 = Intersection::Status::reachable;
+  Intersection::Status status1 =
+      qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection::Status::missed;
   }
 
   // Check the validity of second the solution
-  Vector3D solution2 = position + qe.first * direction;
-  Intersection::Status status2 = Intersection::Status::reachable;
+  Vector3D solution2 = position + qe.second * direction;
+  Intersection::Status status2 =
+      qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection::Status::missed;
   }

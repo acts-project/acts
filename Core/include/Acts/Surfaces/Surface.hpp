@@ -416,9 +416,10 @@ class Surface : public virtual GeometryObject,
   /// @param bcheck the Boundary Check
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  virtual SurfaceIntersection surfaceIntersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const BoundaryCheck& bcheck) const
+  virtual SurfaceIntersection intersect(const GeometryContext& gctx,
+                                        const Vector3D& position,
+                                        const Vector3D& direction,
+                                        const BoundaryCheck& bcheck) const
 
   {
     // Get the intersection with the surface

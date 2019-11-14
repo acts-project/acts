@@ -1,4 +1,4 @@
-add_executable (BoundaryCheckTests BoundaryCheckTests.cpp)
+Tests/Core/Surfaces/CMakeLists.txt add_executable (BoundaryCheckTests BoundaryCheckTests.cpp)
 target_link_libraries (BoundaryCheckTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME BoundaryCheckUnitTest COMMAND BoundaryCheckTests)
 
@@ -42,6 +42,10 @@ add_test (NAME PlaneSurfaceUnitTest COMMAND PlaneSurfaceTests)
 add_executable (SurfaceBoundsTests SurfaceBoundsTests.cpp)
 target_link_libraries (SurfaceBoundsTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME SurfaceBoundsUnitTest COMMAND SurfaceBoundsTests)
+
+add_executable (SurfaceIntersectionTests SurfaceIntersectionTests.cpp)
+target_link_libraries (SurfaceIntersectionTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME SurfaceIntersectionUnitTest COMMAND SurfaceIntersectionTests)
 
 add_executable (InfiniteBoundsTests InfiniteBoundsTests.cpp)
 target_link_libraries (InfiniteBoundsTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
