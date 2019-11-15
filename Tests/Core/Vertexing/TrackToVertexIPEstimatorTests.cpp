@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =

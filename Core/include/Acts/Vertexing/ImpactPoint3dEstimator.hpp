@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
@@ -20,8 +21,11 @@ namespace Acts {
 ///
 /// @brief Estimates point of closest approach in 3D
 /// together with corresponding track parameters
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t = PropagatorOptions<>>
 class ImpactPoint3dEstimator {
+  using BField_t = typename propagator_t::Stepper::BField;
+
  public:
   /// @struct Configuration struct
   struct Config {
@@ -29,17 +33,26 @@ class ImpactPoint3dEstimator {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(const bfield_t& bIn, std::shared_ptr<propagator_t> prop)
-        : bField(bIn), propagator(std::move(prop)) {}
-    /// Magnetic field
-    bfield_t bField;
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
+    Config(const BField_t& bIn, std::shared_ptr<propagator_t> prop,
+           propagator_options_t propOptions, bool doBackwardPropagation = true)
+        : bField(bIn),
+          propagator(std::move(prop)),
+          pOptions(std::move(propOptions)) {
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
+    }
 
+    /// Magnetic field
+    BField_t bField;
     /// Propagator
     std::shared_ptr<propagator_t> propagator;
-
+    // The propagator options
+    propagator_options_t pOptions;
     /// Max. number of iterations in Newton method
     int maxIterations = 20;
-
     /// Desired precision in deltaPhi in Newton method
     double precision = 1.e-10;
   };
@@ -68,14 +81,14 @@ class ImpactPoint3dEstimator {
   /// to the plane and center of the plane defined as the
   /// given reference point (vertex).
   ///
-  /// @param geoCtx The geometry context
+  /// @param gctx The geometry context
   /// @param trkParams Track parameters
   /// @param vtxPos Reference position (vertex)
   ///
   /// @return New track params
   Result<std::unique_ptr<const BoundParameters>> getParamsAtClosestApproach(
-      const GeometryContext& gctx, const MagneticFieldContext& mctx,
-      const BoundParameters& trkParams, const Vector3D& vtxPos) const;
+      const GeometryContext& gctx, const BoundParameters& trkParams,
+      const Vector3D& vtxPos) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -125,6 +138,28 @@ class ImpactPoint3dEstimator {
                                       const BoundParameters& trkParams,
                                       const Vector3D& vtxPos, Vector3D& deltaR,
                                       Vector3D& momDir) const;
+
+  /// @brief Method that returns the magnetic field value at a given position
+  ///        Enabled if BField_t == int (no B-Field provided), returns 0.
+  ///
+  /// @param linPointPos Position for which to get the magnetic field value
+  /// @return The magnetic field value
+  template <typename T = BField_t,
+            std::enable_if_t<std::is_same<T, int>::value, int> = 0>
+  double getBField(const Acts::Vector3D& /*linPointPos*/) const {
+    return m_cfg.bField;
+  }
+
+  /// @brief Method that returns the magnetic field z-value at a given position
+  ///        Enabled if BField_t != int (B-Field provided)
+  ///
+  /// @param linPointPos Position for which to get the magnetic field value
+  /// @return The magnetic field value
+  template <typename T = BField_t,
+            std::enable_if_t<!std::is_same<T, int>::value, int> = 0>
+  double getBField(const Acts::Vector3D& linPointPos) const {
+    return m_cfg.bField.getField(linPointPos)[eZ];
+  }
 };
 
 }  // namespace Acts

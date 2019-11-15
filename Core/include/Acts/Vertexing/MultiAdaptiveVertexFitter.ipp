@@ -16,7 +16,6 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
     State& state, const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   auto& geoContext = vFitterOptions.geoContext;
-  auto& mfContext = vFitterOptions.magFieldContext;
 
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
@@ -76,7 +75,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
-      setAllVertexCompatibilities(state, geoContext, mfContext, currentVtx);
+      setAllVertexCompatibilities(state, geoContext, currentVtx);
     }  // End loop over vertex collection
 
     // Now after having estimated all compatibilities of all tracks at
@@ -194,13 +193,11 @@ Acts::Result<void> Acts::
         const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   const Vector3D& refPos = vtx->position();
   auto& geoContext = vFitterOptions.geoContext;
-  auto& mfContext = vFitterOptions.magFieldContext;
 
   // Loop over all tracks at current vertex
   for (const auto& trkAtVtx : vtx->tracks()) {
     auto res = m_cfg.ipEst.getParamsAtClosestApproach(
-        geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
-        refPos);
+        geoContext, m_extractParameters(trkAtVtx.originalTrack), refPos);
     if (!res.ok()) {
       return res.error();
     }
@@ -214,7 +211,6 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(State& state, const GeometryContext& geoContext,
-                                const MagneticFieldContext& mfContext,
                                 Vertex<input_track_t>* currentVtx) const {
   VertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
   // Create empty list of new TrackAtVertex objects
@@ -230,7 +226,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
     // more tracks were added later on
     if (!state.trkInfoMap[trkAtVtx.id].ip3dParams) {
       auto res = m_cfg.ipEst.getParamsAtClosestApproach(
-          geoContext, mfContext, m_extractParameters(trkAtVtx.originalTrack),
+          geoContext, m_extractParameters(trkAtVtx.originalTrack),
           VectorHelpers::position(currentVtxInfo.linPoint));
       if (!res.ok()) {
         return res.error();

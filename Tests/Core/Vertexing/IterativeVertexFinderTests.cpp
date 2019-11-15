@@ -106,8 +106,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     // Linearizer for BoundParameters type test
     Linearizer::Config ltConfig(bField, propagator, pOptions);
@@ -144,7 +143,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     using ImpactPointEstimator =
         ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>;
 
-    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
     ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
     VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
@@ -325,8 +324,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     // Linearizer for user defined InputTrack type test
     Linearizer::Config ltConfigUT(bField, propagator, pOptions);
@@ -359,7 +357,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     using ImpactPointEstimator =
         ImpactPoint3dEstimator<ConstantBField, InputTrack, Propagator>;
 
-    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
     ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
     // Vertex Finder

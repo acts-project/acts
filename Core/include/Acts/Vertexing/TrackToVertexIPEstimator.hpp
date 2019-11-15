@@ -31,8 +31,7 @@ struct ImpactParametersAndSigma {
 };
 
 template <typename input_track_t, typename propagator_t,
-          typename action_list_t = ActionList<>,
-          typename aborter_list_t = AbortList<>>
+          typename propagator_options_t = PropagatorOptions<>>
 
 /// @class TrackToVertexIPEstimator estimates the impact parameters and their
 /// errors of a given track w.r.t. a vertex
@@ -42,14 +41,20 @@ class TrackToVertexIPEstimator {
   ///
   /// @param p The propagator
   /// @param propOptions The propagator options
+  /// @param doBackwardPropagation Set the propagation direction to backward
   struct Config {
     Config(std::shared_ptr<propagator_t> p,
-           const PropagatorOptions<action_list_t, aborter_list_t>& propOptions)
-        : propagator(std::move(p)), pOptions(propOptions) {}
+           const propagator_options_t& propOptions,
+           bool doBackwardPropagation = true)
+        : propagator(std::move(p)), pOptions(propOptions) {
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
+    }
 
     std::shared_ptr<propagator_t> propagator;
 
-    PropagatorOptions<action_list_t, aborter_list_t> pOptions;
+    propagator_options_t pOptions;
   };
 
   /// @brief Default constructor

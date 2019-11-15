@@ -47,44 +47,40 @@ class HelicalTrackLinearizer {
   using Propagator_t = propagator_t;
   using BField_t = typename Propagator_t::Stepper::BField;
 
-  /// @brief Helper function to set up the correct PropagatorOptions with
-  /// propagation direction set to backward. To be used when setting up the
-  /// propagator options for the HelicalTrackLinearizer Config.
-  ///
-  /// @param gc The GeometryContext
-  /// @param mv The MagneticFieldContext
-  ///
-  /// @return The PropagatorOptions with direction = backward
-  static PropagatorOptions_t getDefaultPropagatorOptions(
-      const GeometryContext& gc, const MagneticFieldContext& mc) {
-    PropagatorOptions_t options(gc, mc);
-    options.direction = backward;
-    return options;
-  }
-
   /// @brief Configuration struct
-  ///
-  /// @param bIn The magnetic field
-  /// @param prop The propagator
-  /// @param propOptions The propagator options
   struct Config {
+    /// @ Config constructor if bfield present
+    ///
+    /// @param bIn The magnetic field
+    /// @param prop The propagator
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
     Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop,
-           PropagatorOptions_t propOptions)
+           PropagatorOptions_t propOptions, bool doBackwardPropagation = true)
         : bField(bIn),
           propagator(std::move(prop)),
           pOptions(std::move(propOptions)) {
-      assert(pOptions.direction == backward);
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
     }
 
     /// @brief Config constructor if BField_t == int (no B-Field provided),
     ///        sets int bField to 0
+    ///
+    /// @param prop The propagator
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
     template <typename T = BField_t,
               std::enable_if_t<std::is_same<T, int>::value, int> = 0>
-    Config(std::shared_ptr<Propagator_t> prop, PropagatorOptions_t propOptions)
+    Config(std::shared_ptr<Propagator_t> prop, PropagatorOptions_t propOptions,
+           bool doBackwardPropagation = true)
         : bField(0),
           propagator(std::move(prop)),
           pOptions(std::move(propOptions)) {
-      assert(pOptions.direction == backward);
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
     }
 
     // The magnetic field

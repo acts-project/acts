@@ -83,8 +83,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -163,8 +162,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   Linearizer::Config ltConfig(bField, propagator, pOptions);
   Linearizer linFactory(ltConfig);
@@ -207,8 +205,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator<StraightLineStepper>>(stepper);
 
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      LinearizerStraightLine::getDefaultPropagatorOptions(tgContext, mfContext);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
