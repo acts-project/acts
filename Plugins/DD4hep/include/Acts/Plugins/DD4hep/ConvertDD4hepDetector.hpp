@@ -179,5 +179,5 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
 /// @param [out] volumes the DD4hep::DetElements of the volumes contained by
 /// detElement
 void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
-                            std::vector<dd4hep::DetElement>& volumes);
+                           std::vector<dd4hep::DetElement>& volumes);
 }  // namespace Acts
