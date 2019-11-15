@@ -50,13 +50,13 @@ std::vector<TDD_real_t> Acts::DiscTrapezoidalBounds::valueStore() const {
   return values;
 }
 
-Acts::Vector2D Acts::DiscTrapezoidalBounds::toLocalXY(
-    const Acts::Vector2D& lpos) const {
-  return {lpos[eLOC_R] * std::sin(lpos[eLOC_PHI] - m_avgPhi),
-          lpos[eLOC_R] * std::cos(lpos[eLOC_PHI] - m_avgPhi)};
+Acts::Vector2D Acts::DiscTrapezoidalBounds::toLocalCartesian(
+    const Acts::Vector2D& lposition) const {
+  return {lposition[eLOC_R] * std::sin(lposition[eLOC_PHI] - m_avgPhi),
+          lposition[eLOC_R] * std::cos(lposition[eLOC_PHI] - m_avgPhi)};
 }
 
-Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidalBounds::jacobianToLocalXY(
+Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidalBounds::jacobianToLocalCartesian(
     const Acts::Vector2D& lposition) const {
   ActsMatrixD<2, 2> jacobian;
   jacobian(0, eLOC_R) = std::sin(lposition[eLOC_PHI] - m_avgPhi);
@@ -72,8 +72,9 @@ bool Acts::DiscTrapezoidalBounds::inside(
                          {maxHalflengthX(), rMax()},
                          {-maxHalflengthX(), rMax()},
                          {-minHalflengthX(), rMin()}};
-  auto jacobian = jacobianToLocalXY(lposition);
-  return bcheck.transformed(jacobian).isInside(toLocalXY(lposition), vertices);
+  auto jacobian = jacobianToLocalCartesian(lposition);
+  return bcheck.transformed(jacobian).isInside(toLocalCartesian(lposition),
+                                               vertices);
 }
 
 double Acts::DiscTrapezoidalBounds::distanceToBoundary(
@@ -82,7 +83,7 @@ double Acts::DiscTrapezoidalBounds::distanceToBoundary(
                          {maxHalflengthX(), rMax()},
                          {-maxHalflengthX(), rMax()},
                          {-minHalflengthX(), rMin()}};
-  return BoundaryCheck(true).distance(toLocalXY(lposition), vertices);
+  return BoundaryCheck(true).distance(toLocalCartesian(lposition), vertices);
 }
 
 // ostream operator overload

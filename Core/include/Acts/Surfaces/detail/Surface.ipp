@@ -32,9 +32,9 @@ inline const Transform3D& Surface::transform(
   return s_idTransform;
 }
 
-inline bool Surface::insideBounds(const Vector2D& locpos,
+inline bool Surface::insideBounds(const Vector2D& lposition,
                                   const BoundaryCheck& bcheck) const {
-  return bounds().inside(locpos, bcheck);
+  return bounds().inside(lposition, bcheck);
 }
 
 inline const RotationMatrix3D Surface::referenceFrame(

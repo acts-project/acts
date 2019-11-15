@@ -198,19 +198,20 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /**
    * Return whether a local 2D point lies inside of the bounds defined by this
    * object.
-   * @param lpos The local position to check
+   * @param lposition The local position to check
    * @param bcheck The `BoundaryCheck` object handling tolerances.
    * @return Whether the points is inside
    */
-  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lposition,
+              const BoundaryCheck& bcheck) const final;
 
   /**
    * Return the smallest distance to any point on the boundary of this bounds
    * object.
-   * @param lpos The local position to get the distance to
+   * @param lpos The lposition position to get the distance to
    * @return The smallest distance to the boundary.
    */
-  double distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /**
    * Returns a vector containing the vertices making up the bounds.

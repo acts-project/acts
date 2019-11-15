@@ -159,11 +159,11 @@ class TrackingVolume : public Volume {
   /// Return the associated Layer to the global position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gp is the associated global position
+  /// @param position is the associated global position
   ///
   /// @return plain pointer to layer object
   const Layer* associatedLayer(const GeometryContext& gctx,
-                               const Vector3D& gp) const;
+                               const Vector3D& position) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///

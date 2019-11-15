@@ -132,7 +132,10 @@ class ConeBounds : public SurfaceBounds {
   double m_zMin, m_zMax;
   double m_avgPhi, m_halfPhi;
 
-  Vector2D shifted(const Vector2D& lpos) const;
+  /// Private helper functin to shift a local 2D position
+  ///
+  /// @param lposition The original local position
+  Vector2D shifted(const Vector2D& lposition) const;
 };
 
 inline double ConeBounds::r(double z) const {

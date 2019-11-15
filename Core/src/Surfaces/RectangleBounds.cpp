@@ -34,14 +34,14 @@ std::vector<TDD_real_t> Acts::RectangleBounds::valueStore() const {
   return values;
 }
 
-bool Acts::RectangleBounds::inside(const Acts::Vector2D& lpos,
+bool Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lpos, m_min, m_max);
+  return bcheck.isInside(lposition, m_min, m_max);
 }
 
 double Acts::RectangleBounds::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
-  return BoundaryCheck(true).distance(lpos, m_min, m_max);
+    const Acts::Vector2D& lposition) const {
+  return BoundaryCheck(true).distance(lposition, m_min, m_max);
 }
 
 std::vector<Acts::Vector2D> Acts::RectangleBounds::vertices() const {

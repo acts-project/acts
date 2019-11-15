@@ -115,14 +115,14 @@ Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
 
 template <int N>
 bool Acts::ConvexPolygonBounds<N>::inside(
-    const Acts::Vector2D& lpos, const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lpos, m_vertices);
+    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
+  return bcheck.isInside(lposition, m_vertices);
 }
 
 template <int N>
 double Acts::ConvexPolygonBounds<N>::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
-  return BoundaryCheck(true).distance(lpos, m_vertices);
+    const Acts::Vector2D& lposition) const {
+  return BoundaryCheck(true).distance(lposition, m_vertices);
 }
 
 template <int N>

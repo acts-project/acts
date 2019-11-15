@@ -109,14 +109,14 @@ const Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
 void Acts::ConeSurface::localToGlobal(const GeometryContext& gctx,
                                       const Vector2D& lposition,
                                       const Vector3D& /*unused*/,
-                                      Vector3D& gpos) const {
+                                      Vector3D& position) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eLOC_Z] * bounds().tanAlpha();
   double phi = lposition[Acts::eLOC_RPHI] / r;
   Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
   // transport it to the globalframe
   if (m_transform) {
-    gpos = transform(gctx) * loc3Dframe;
+    position = transform(gctx) * loc3Dframe;
   }
 }
 

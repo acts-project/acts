@@ -103,7 +103,11 @@ class RadialBounds : public DiscBounds {
  private:
   double m_rMin, m_rMax, m_avgPhi, m_halfPhi;
 
-  Vector2D shifted(const Vector2D& lpos) const;
+  /// Private helper method to shift a local position
+  /// within the bounds
+  ///
+  /// @param lposition The local position in polar coordinates
+  Vector2D shifted(const Vector2D& lposition) const;
 };
 
 inline double RadialBounds::rMin() const {

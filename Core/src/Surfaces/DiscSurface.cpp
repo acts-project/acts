@@ -120,15 +120,15 @@ const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
 }
 
 const Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
-    const GeometryContext& gctx, const Vector2D& lpos) const {
-  Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
+    const GeometryContext& gctx, const Vector2D& lposition) const {
+  Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
   return Vector3D(transform(gctx) * loc3Dframe);
 }
 
 const Acts::Vector2D Acts::DiscSurface::globalToLocalCartesian(
-    const GeometryContext& gctx, const Vector3D& gpos,
+    const GeometryContext& gctx, const Vector3D& position,
     double /*unused*/) const {
-  Vector3D loc3Dframe = (transform(gctx).inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
   return Vector2D(loc3Dframe.x(), loc3Dframe.y());
 }
 

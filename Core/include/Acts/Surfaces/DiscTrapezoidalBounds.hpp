@@ -112,8 +112,17 @@ class DiscTrapezoidalBounds : public DiscBounds {
   double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
 
-  Vector2D toLocalXY(const Vector2D& lpos) const;
-  ActsMatrixD<2, 2> jacobianToLocalXY(const Vector2D& lpos) const;
+  /// Private helper method to convert a local postion
+  /// into its caftesian representation
+  ///
+  /// @param lposition The local position in polar coordinates
+  Vector2D toLocalCartesian(const Vector2D& lpos) const;
+
+  /// Jacobian
+  /// into its caftesian representation
+  ///
+  /// @param lposition The local position in polar coordinates
+  ActsMatrixD<2, 2> jacobianToLocalCartesian(const Vector2D& lposition) const;
 };
 
 inline double DiscTrapezoidalBounds::rMin() const {

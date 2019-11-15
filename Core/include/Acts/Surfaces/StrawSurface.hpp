@@ -32,7 +32,7 @@ struct PolyhedronRepresentation;
 class StrawSurface : public LineSurface {
   friend Surface;
 
-protected:
+ protected:
   /// Constructor from Transform3D and bounds
   ///
   /// @param htrans is the transform that positions the surface in the global

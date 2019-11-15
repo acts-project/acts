@@ -150,7 +150,7 @@ class CylinderSurface : public Surface {
   /// requested
   /// @return normal vector at the global position
   const Vector3D normal(const GeometryContext& gctx,
-                        const Vector3D& param) const final;
+                        const Vector3D& position) const final;
 
   /// Normal vector return without argument
   using Surface::normal;

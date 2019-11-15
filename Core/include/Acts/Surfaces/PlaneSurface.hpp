@@ -153,12 +153,11 @@ class PlaneSurface : public Surface {
   ///
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
-  ///
+  /// @param direction global 3D momentum direction (ignored for PlaneSurface)
   /// @note this is the final implementation of the pathCorrection function
   ///
   /// @return a double representing the scaling factor
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& direction,
                         const Vector3D& momentum) const final;
 
   /// @brief Straight line intersection schema
