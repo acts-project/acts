@@ -56,7 +56,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   Vector3D momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
-  double Bz = getBField(linPointPos);
+  double Bz = getBFieldZ(linPointPos);
 
   double rho;
   // Curvature is infinite w/o b field

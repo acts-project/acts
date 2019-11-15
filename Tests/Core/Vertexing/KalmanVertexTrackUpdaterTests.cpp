@@ -87,11 +87,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up ImpactPoint3dEstimator, used for comparisons later
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
-      ip3dEstConfig(bField, propagator, pOptions);
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ip3dEstConfig(
+      bField, propagator, pOptions);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator> ip3dEst(
-      ip3dEstConfig);
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ip3dEst(ip3dEstConfig);
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundParameters type test

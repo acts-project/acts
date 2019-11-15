@@ -45,6 +45,24 @@ class ImpactPoint3dEstimator {
       }
     }
 
+    /// @brief Config constructor if BField_t == int (no B-Field provided),
+    ///        sets int bField to 0
+    ///
+    /// @param prop The propagator
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
+    template <typename T = BField_t,
+              std::enable_if_t<std::is_same<T, int>::value, int> = 0>
+    Config(std::shared_ptr<propagator_t> prop, propagator_options_t propOptions,
+           bool doBackwardPropagation = true)
+        : bField(0),
+          propagator(std::move(prop)),
+          pOptions(std::move(propOptions)) {
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
+    }
+
     /// Magnetic field
     BField_t bField;
     /// Propagator
@@ -55,6 +73,10 @@ class ImpactPoint3dEstimator {
     int maxIterations = 20;
     /// Desired precision in deltaPhi in Newton method
     double precision = 1.e-10;
+    /// Minimum q/p value
+    double minQoP = 1e-15;
+    /// Maximum curvature value
+    double maxRho = 1e+15;
   };
 
   /// @brief Constructor
@@ -139,14 +161,14 @@ class ImpactPoint3dEstimator {
                                       const Vector3D& vtxPos, Vector3D& deltaR,
                                       Vector3D& momDir) const;
 
-  /// @brief Method that returns the magnetic field value at a given position
+  /// @brief Method that returns the magnetic field z-value at a given position
   ///        Enabled if BField_t == int (no B-Field provided), returns 0.
   ///
   /// @param linPointPos Position for which to get the magnetic field value
   /// @return The magnetic field value
   template <typename T = BField_t,
             std::enable_if_t<std::is_same<T, int>::value, int> = 0>
-  double getBField(const Acts::Vector3D& /*linPointPos*/) const {
+  double getBFieldZ(const Acts::Vector3D& /*linPointPos*/) const {
     return m_cfg.bField;
   }
 
@@ -157,7 +179,7 @@ class ImpactPoint3dEstimator {
   /// @return The magnetic field value
   template <typename T = BField_t,
             std::enable_if_t<!std::is_same<T, int>::value, int> = 0>
-  double getBField(const Acts::Vector3D& linPointPos) const {
+  double getBFieldZ(const Acts::Vector3D& linPointPos) const {
     return m_cfg.bField.getField(linPointPos)[eZ];
   }
 };

@@ -111,14 +111,14 @@ class HelicalTrackLinearizer {
       const BoundParameters* params, const SpacePointVector& linPoint) const;
 
  private:
-  /// @brief Method that returns the magnetic field value at a given position
+  /// @brief Method that returns the magnetic field z-value at a given position
   ///        Enabled if BField_t == int (no B-Field provided), returns 0.
   ///
   /// @param linPointPos Position for which to get the magnetic field value
   /// @return The magnetic field value
   template <typename T = BField_t,
             std::enable_if_t<std::is_same<T, int>::value, int> = 0>
-  double getBField(const Acts::Vector3D& /*linPointPos*/) const {
+  double getBFieldZ(const Acts::Vector3D& /*linPointPos*/) const {
     return m_cfg.bField;
   }
 
@@ -129,7 +129,7 @@ class HelicalTrackLinearizer {
   /// @return The magnetic field value
   template <typename T = BField_t,
             std::enable_if_t<!std::is_same<T, int>::value, int> = 0>
-  double getBField(const Acts::Vector3D& linPointPos) const {
+  double getBFieldZ(const Acts::Vector3D& linPointPos) const {
     return m_cfg.bField.getField(linPointPos)[eZ];
   }
 

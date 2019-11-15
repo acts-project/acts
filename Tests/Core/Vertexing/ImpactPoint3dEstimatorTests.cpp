@@ -75,11 +75,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
-      ipEstCfg(bField, propagator, pOptions);
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+      bField, propagator, pOptions);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>
-      ipEstimator(ipEstCfg);
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -196,11 +195,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
-      ipEstCfg(bField, propagator, pOptions);
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+      bField, propagator, pOptions);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>
-      ipEstimator(ipEstCfg);
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);

@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     // IP 3D Estimator
     using ImpactPointEstimator =
-        ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>;
+        ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
     ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
     ImpactPointEstimator ip3dEst(ip3dEstCfg);
@@ -354,8 +354,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     ZScanSeedFinder sFinder(std::move(sFcfg), extractParameters);
 
     // IP 3D Estimator
-    using ImpactPointEstimator =
-        ImpactPoint3dEstimator<ConstantBField, InputTrack, Propagator>;
+    using ImpactPointEstimator = ImpactPoint3dEstimator<InputTrack, Propagator>;
 
     ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
     ImpactPointEstimator ip3dEst(ip3dEstCfg);

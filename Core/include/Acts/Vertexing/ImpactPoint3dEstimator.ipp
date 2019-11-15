@@ -195,16 +195,18 @@ Acts::Result<void> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
   double qOvP = trkParams.parameters()[ParID_t::eQOP];
 
   double cotTheta = 1. / std::tan(theta);
-  double bZ = m_cfg.bField.getField(trkSurfaceCenter)[eZ];
+
+  // get B-field z-component at current position
+  double bZ = getBFieldZ(trkSurfaceCenter);
 
   // The radius
   double r;
   // Curvature is infinite w/o b field
-  if (bZ == 0. || std::abs(qOvP) < 1.e-15) {
-    r = std::numeric_limits<double>::max();
+  if (bZ == 0. || std::abs(qOvP) < m_cfg.minQoP) {
+    r = m_cfg.maxRho;
   } else {
     // signed(!) r
-    r = std::sin(theta) * (1 / qOvP) / bZ;
+    r = std::sin(theta) * (1. / qOvP) / bZ;
   }
 
   Vector3D vec0 = trkSurfaceCenter + Vector3D(-(d0 - r) * std::sin(phi),

@@ -84,8 +84,7 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
 
   // IP 3D Estimator
-  using IPEstimator =
-      ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>;
+  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
   IPEstimator ip3dEst(ip3dEstCfg);
