@@ -70,7 +70,9 @@ class HelicalTrackLinearizer {
   struct Config {
     Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop,
            PropagatorOptions_t propOptions)
-        : bField(bIn), propagator(std::move(prop)), pOptions(propOptions) {
+        : bField(bIn),
+          propagator(std::move(prop)),
+          pOptions(std::move(propOptions)) {
       assert(pOptions.direction == backward);
     }
 
