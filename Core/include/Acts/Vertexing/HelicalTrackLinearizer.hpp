@@ -93,6 +93,10 @@ class HelicalTrackLinearizer {
     std::shared_ptr<Propagator_t> propagator;
     // The propagator options
     PropagatorOptions_t pOptions;
+    // Minimum q/p value
+    double minQoP = 1e-15;
+    // Maximum curvature value
+    double maxRho = 1e+15;
   };
 
   /// @brief Constructor
@@ -122,7 +126,7 @@ class HelicalTrackLinearizer {
     return m_cfg.bField;
   }
 
-  /// @brief Method that returns the magnetic field value at a given position
+  /// @brief Method that returns the magnetic field z-value at a given position
   ///        Enabled if BField_t != int (B-Field provided)
   ///
   /// @param linPointPos Position for which to get the magnetic field value

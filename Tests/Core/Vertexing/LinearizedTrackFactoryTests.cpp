@@ -253,6 +253,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
                                      perigeeSurface));
   }
 
+  // Set up helical track linearizer for the case of a non-existing
+  // magnetic field, which results in the extreme case of a straight line
   LinearizerStraightLine::Config ltConfig(propagator, pOptions);
   LinearizerStraightLine linFactory(ltConfig);
 
