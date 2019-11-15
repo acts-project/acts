@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -203,10 +203,10 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   }
 }
 
-void Acts::TrackingVolume::glueTrackingVolume(
-    const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
-    TrackingVolume* neighbor,
-    BoundarySurfaceFace bsfNeighbor) {
+void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
+                                              BoundarySurfaceFace bsfMine,
+                                              TrackingVolume* neighbor,
+                                              BoundarySurfaceFace bsfNeighbor) {
   // Find the connection of the two tracking volumes: binR returns the center
   // except for cylindrical volumes
   Vector3D bPosition(binningPosition(gctx, binR));

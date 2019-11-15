@@ -465,7 +465,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     auto dd4hepVolumeBuilder =
         std::make_shared<const Acts::DD4hepVolumeBuilder>(
             vbConfig,
-            Acts::getDefaultLogger(std::string("D2A_VB_") + subDetector.name(), loggingLevel));
+            Acts::getDefaultLogger(std::string("D2A_VB_") + subDetector.name(),
+                                   loggingLevel));
 
     // the configuration object of the volume builder
     Acts::CylinderVolumeBuilder::Config cvbConfig;

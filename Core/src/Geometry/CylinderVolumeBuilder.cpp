@@ -12,7 +12,6 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
