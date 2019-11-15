@@ -81,7 +81,9 @@ class HelicalTrackLinearizer {
     template <typename T = BField_t,
               std::enable_if_t<std::is_same<T, int>::value, int> = 0>
     Config(std::shared_ptr<Propagator_t> prop, PropagatorOptions_t propOptions)
-        : bField(0), propagator(std::move(prop)), pOptions(propOptions) {
+        : bField(0),
+          propagator(std::move(prop)),
+          pOptions(std::move(propOptions)) {
       assert(pOptions.direction == backward);
     }
 
