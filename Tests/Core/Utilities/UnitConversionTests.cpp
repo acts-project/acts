@@ -15,8 +15,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-namespace utf = boost::unit_test;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 BOOST_AUTO_TEST_SUITE(unit_conversions)
