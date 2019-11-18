@@ -14,26 +14,17 @@
 
 namespace Acts {
 
-/// @class AccumulatedVolumeMaterial
+/// Accumulate and average volume-based material properties.
 ///
-/// This class is used by the VolumeMaterialMapper in order to
-/// accumulate/collect material information during the mapping process. The
-/// object represents the collection of a single grid point.
-///
-/// It calculates the average of the material parameters when called, and
-/// returns a material with the averaged properties.
+/// This class is intended to be used during the mapping process.
 class AccumulatedVolumeMaterial {
  public:
-  /// @brief This function collects the classification values of a material in
-  /// the container
-  ///
-  /// @param [in] mat Material that will be collected
+  /// Add one entry with the given material properties.
   void accumulate(const Material& mat);
 
-  /// @brief Total average of each material classification value stored in the
-  /// object independently
+  /// Compute the average material collected so far.
   ///
-  /// @return Material consisting of the averaged values
+  /// @returns Vacuum properties if no matter has been accumulated yet.
   Material average();
 
  private:
