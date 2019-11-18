@@ -24,9 +24,6 @@ namespace Acts {
 /// returns a material with the averaged properties.
 class AccumulatedVolumeMaterial {
  public:
-  AccumulatedVolumeMaterial() = default;
-  ~AccumulatedVolumeMaterial() = default;
-
   /// @brief This function collects the classification values of a material in
   /// the container
   ///
