@@ -52,15 +52,15 @@ class Material {
       : m_x0(X0_), m_l0(L0_), m_ar(Ar_), m_z(Z_), m_rho(rho_) {}
   /// Construct from an encoded parameters vector.
   Material(const ActsVectorF<5>& parameters);
-  ~Material() = default;
 
   Material(Material&& mat) = default;
   Material(const Material& mat) = default;
+  ~Material() = default;
   Material& operator=(Material&& mat) = default;
   Material& operator=(const Material& mat) = default;
 
   /// Check if the material is valid, i.e. it is not vacuum.
-  constexpr operator bool() const { return m_ar != 0.0f; }
+  constexpr operator bool() const { return 0.0f < m_ar; }
 
   /// Return the radition length. Infinity in case of vacuum.
   constexpr float X0() const { return m_x0; }
