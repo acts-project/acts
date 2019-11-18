@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -29,7 +30,7 @@ class ImpactPoint3dEstimator {
  public:
   /// @struct Configuration struct
   struct Config {
-    /// @brief Configuration constructor
+    /// @brief Config constructor if magnetic field is present
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
@@ -45,19 +46,17 @@ class ImpactPoint3dEstimator {
       }
     }
 
-    /// @brief Config constructor if BField_t == int (no B-Field provided),
-    ///        sets int bField to 0
+    /// @brief Config constructor if BField_t == NullBField (no B-Field
+    /// provided)
     ///
     /// @param prop The propagator
     /// @param propOptions The propagator options
     /// @param doBackwardPropagation Set the propagation direction to backward
     template <typename T = BField_t,
-              std::enable_if_t<std::is_same<T, int>::value, int> = 0>
+              std::enable_if_t<std::is_same<T, NullBField>::value, int> = 0>
     Config(std::shared_ptr<propagator_t> prop, propagator_options_t propOptions,
            bool doBackwardPropagation = true)
-        : bField(0),
-          propagator(std::move(prop)),
-          pOptions(std::move(propOptions)) {
+        : propagator(std::move(prop)), pOptions(std::move(propOptions)) {
       if (doBackwardPropagation) {
         pOptions.direction = backward;
       }
@@ -160,28 +159,6 @@ class ImpactPoint3dEstimator {
                                       const BoundParameters& trkParams,
                                       const Vector3D& vtxPos, Vector3D& deltaR,
                                       Vector3D& momDir) const;
-
-  /// @brief Method that returns the magnetic field z-value at a given position
-  ///        Enabled if BField_t == int (no B-Field provided), returns 0.
-  ///
-  /// @param linPointPos Position for which to get the magnetic field value
-  /// @return The magnetic field value
-  template <typename T = BField_t,
-            std::enable_if_t<std::is_same<T, int>::value, int> = 0>
-  double getBFieldZ(const Acts::Vector3D& /*linPointPos*/) const {
-    return m_cfg.bField;
-  }
-
-  /// @brief Method that returns the magnetic field z-value at a given position
-  ///        Enabled if BField_t != int (B-Field provided)
-  ///
-  /// @param linPointPos Position for which to get the magnetic field value
-  /// @return The magnetic field value
-  template <typename T = BField_t,
-            std::enable_if_t<!std::is_same<T, int>::value, int> = 0>
-  double getBFieldZ(const Acts::Vector3D& linPointPos) const {
-    return m_cfg.bField.getField(linPointPos)[eZ];
-  }
 };
 
 }  // namespace Acts

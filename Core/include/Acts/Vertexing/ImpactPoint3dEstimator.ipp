@@ -197,7 +197,7 @@ Acts::Result<void> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
   double cotTheta = 1. / std::tan(theta);
 
   // get B-field z-component at current position
-  double bZ = getBFieldZ(trkSurfaceCenter);
+  double bZ = m_cfg.bField.getField(trkSurfaceCenter)[eZ];
 
   // The radius
   double r;

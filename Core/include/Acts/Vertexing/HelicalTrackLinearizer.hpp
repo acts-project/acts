@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -49,7 +50,7 @@ class HelicalTrackLinearizer {
 
   /// @brief Configuration struct
   struct Config {
-    /// @ Config constructor if bfield present
+    /// @ Config constructor if magnetic field is present
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
@@ -65,19 +66,17 @@ class HelicalTrackLinearizer {
       }
     }
 
-    /// @brief Config constructor if BField_t == int (no B-Field provided),
-    ///        sets int bField to 0
+    /// @brief Config constructor if BField_t == NullBField (no B-Field
+    /// provided)
     ///
     /// @param prop The propagator
     /// @param propOptions The propagator options
     /// @param doBackwardPropagation Set the propagation direction to backward
     template <typename T = BField_t,
-              std::enable_if_t<std::is_same<T, int>::value, int> = 0>
+              std::enable_if_t<std::is_same<T, NullBField>::value, int> = 0>
     Config(std::shared_ptr<Propagator_t> prop, PropagatorOptions_t propOptions,
            bool doBackwardPropagation = true)
-        : bField(0),
-          propagator(std::move(prop)),
-          pOptions(std::move(propOptions)) {
+        : propagator(std::move(prop)), pOptions(std::move(propOptions)) {
       if (doBackwardPropagation) {
         pOptions.direction = backward;
       }
@@ -111,28 +110,6 @@ class HelicalTrackLinearizer {
       const BoundParameters* params, const SpacePointVector& linPoint) const;
 
  private:
-  /// @brief Method that returns the magnetic field z-value at a given position
-  ///        Enabled if BField_t == int (no B-Field provided), returns 0.
-  ///
-  /// @param linPointPos Position for which to get the magnetic field value
-  /// @return The magnetic field value
-  template <typename T = BField_t,
-            std::enable_if_t<std::is_same<T, int>::value, int> = 0>
-  double getBFieldZ(const Acts::Vector3D& /*linPointPos*/) const {
-    return m_cfg.bField;
-  }
-
-  /// @brief Method that returns the magnetic field z-value at a given position
-  ///        Enabled if BField_t != int (B-Field provided)
-  ///
-  /// @param linPointPos Position for which to get the magnetic field value
-  /// @return The magnetic field value
-  template <typename T = BField_t,
-            std::enable_if_t<!std::is_same<T, int>::value, int> = 0>
-  double getBFieldZ(const Acts::Vector3D& linPointPos) const {
-    return m_cfg.bField.getField(linPointPos)[eZ];
-  }
-
   /// Configuration object
   const Config m_cfg;
 };
