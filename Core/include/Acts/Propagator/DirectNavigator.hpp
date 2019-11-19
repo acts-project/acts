@@ -45,15 +45,6 @@ class DirectNavigator {
   /// The tolerance used to define "surface reached"
   double tolerance = s_onSurfaceTolerance;
 
-  /// Nested Navigation options struct
-  struct Options {
-    /// The navigation direction
-    NavigationDirection navDir = forward;
-
-    /// The boundary check directive
-    BoundaryCheck boundaryCheck = true;
-  };
-
   /// Nested Actor struct, called Initializer
   ///
   /// This is needed for the initialization of the
@@ -175,18 +166,20 @@ class DirectNavigator {
     state.navigation.currentSurface = nullptr;
 
     if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
-      // The Options struct
-      Options navOpts;
-
       // take the target intersection
       auto nextIntersection =
           (*state.navigation.nextSurfaceIter)
               ->intersect(state.geoContext, stepper.position(state.stepping),
-                          stepper.direction(state.stepping),
-                          navOpts.boundaryCheck);
+                          stepper.direction(state.stepping), false);
 
       // Intersect the next surface and go
       double navStep = nextIntersection.intersection.pathLength;
+      double overstepLimit = stepper.overstepLimit(state.stepping);
+      if (navStep < overstepLimit and
+          nextIntersection.alternatives.size() > 0 and
+          nextIntersection.alternatives[0]) {
+        navStep = nextIntersection.alternatives[0].pathLength;
+      }
 
       // Set the step size - this has to be outsourced to the Stepper
       state.stepping.stepSize.update(navStep, Cstep::actor, true);

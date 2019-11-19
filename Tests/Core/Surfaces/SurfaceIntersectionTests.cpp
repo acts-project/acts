@@ -20,6 +20,7 @@
 
 // Acts Core includes
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -171,6 +172,59 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 
   // In a system somewhere away
   testCylinderIntersection(aTransform);
+}
+
+/// This tests the interseciton with cylinders
+/// and looks for valid, non-valid, solutions
+BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
+  double alpha = 0.25 * M_PI;
+
+  auto testConeIntersection = [&](const Transform3D& transform) -> void {
+    // A cone suface ready to use
+    auto aCone = Surface::makeShared<ConeSurface>(
+        std::make_shared<Transform3D>(transform), alpha, true);
+
+    // Linear transform
+    auto lTransform = transform.linear();
+
+    // An onCylinder solution
+    Vector3D onCone = transform * Vector3D(std::sqrt(2.), std::sqrt(2.), 2.);
+    Vector3D outCone = transform * Vector3D(std::sqrt(4.), std::sqrt(4.), 2.);
+    // Simply along the x axis
+    Vector3D perpXY = lTransform * Vector3D(1., -1., 0.).normalized();
+    Vector3D transXY = lTransform * Vector3D(1., 1., 0).normalized();
+
+    // Intersect without boundary check with an on solution
+    BOOST_CHECK(aCone->isOnSurface(tgContext, onCone, transXY, false));
+    auto aIntersection = aCone->intersect(tgContext, onCone, transXY, true);
+
+    // Check the validity of the interseciton
+    BOOST_CHECK(aIntersection);
+    // The status of this one should be on surface
+    BOOST_CHECK(aIntersection.intersection.status ==
+                Intersection::Status::onSurface);
+
+    // There MUST be a second solution
+    BOOST_CHECK(aIntersection.alternatives.size() == 1);
+    // The other intersection MUST be reachable
+    BOOST_CHECK(aIntersection.alternatives[0].status ==
+                Intersection::Status::reachable);
+    // The other intersection is at 2 meter distance
+    CHECK_CLOSE_ABS(aIntersection.alternatives[0].pathLength, -4.,
+                    s_onSurfaceTolerance);
+
+    // Intersection from outside without chance of hitting the cylinder
+    auto iIntersection = aCone->intersect(tgContext, outCone, perpXY, false);
+
+    // Check the validity of the interseciton
+    BOOST_CHECK(!iIntersection);
+  };
+
+  // In a nominal world
+  testConeIntersection(Transform3D::Identity());
+
+  // In a system somewhere away
+  testConeIntersection(aTransform);
 }
 
 /// This tests the interseciton with planar surfaces (plane, disk)

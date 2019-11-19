@@ -99,6 +99,11 @@ struct PropagatorState {
     /// Time access
     double time(const State& state) const { return state.t; }
 
+    /// Overstep limit access
+    double overstepLimit(const State& /*state*/) const {
+      return s_onSurfaceTolerance;
+    }
+
     bool surfaceReached(const State& state, const Surface* surface) const {
       return surface->isOnSurface(tgContext, position(state), direction(state),
                                   true);

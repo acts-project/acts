@@ -156,14 +156,16 @@ struct SurfaceReached {
     }
     // Calculate the distance to the surface
     const double tolerance = state.options.targetTolerance;
-    const auto intersection = targetSurface.intersectionEstimate(
+    const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
         state.stepping.navDir * stepper.direction(state.stepping), true);
-    const double distance = intersection.pathLength;
-    // Adjust the step size so that we cannot cross the target surface
-    state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
-    // return true if you fall below tolerance
-    bool targetReached = (distance * distance <= tolerance * tolerance);
+
+    // The target is reached
+    bool targetReached =
+        (sIntersection.intersection.status == Intersection::Status::onSurface);
+    double distance = sIntersection.intersection.pathLength;
+
+    // Return true if you fall below tolerance
     if (targetReached) {
       targetDebugLog(state, "x", [&] {
         std::stringstream dstream;
@@ -182,6 +184,17 @@ struct SurfaceReached {
       // reaching the target calls a navigation break
       state.navigation.targetReached = true;
     } else {
+      // Target is not reached, update the step size
+      const double overstepLimit = stepper.overstepLimit(state.stepping);
+      // Check the alternative solution
+      if (distance < overstepLimit and
+          sIntersection.alternatives.size() == 1 and
+          sIntersection.alternatives[0]) {
+        // Update the distance to the alternative solution
+        distance = sIntersection.alternatives[0].pathLength;
+      }
+      state.stepping.stepSize.update(state.stepping.navDir * distance,
+                                     ConstrainedStep::aborter);
       targetDebugLog(state, "o", [&] {
         std::stringstream dstream;
         dstream << "Target stepSize (surface) updated to ";
@@ -189,7 +202,6 @@ struct SurfaceReached {
         return dstream.str();
       });
     }
-
     // path limit check
     return targetReached;
   }

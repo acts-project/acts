@@ -52,7 +52,10 @@ inline Intersection ConeSurface::intersectionEstimate(
   double path =
       qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second;
   Vector3D solution = position + path * direction;
-  Intersection::Status status = Intersection::Status::reachable;
+  Intersection::Status status =
+      (path * path < s_onSurfaceTolerance * s_onSurfaceTolerance)
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
 
   // Boundary check necessary
   if (bcheck and not isOnSurface(gctx, solution, direction, bcheck)) {
@@ -76,14 +79,21 @@ inline SurfaceIntersection ConeSurface::intersect(
 
   // Check the validity of the first solution
   Vector3D solution1 = position + qe.first * direction;
-  Intersection::Status status1 = Intersection::Status::reachable;
+  Intersection::Status status1 =
+      (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
+
   if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection::Status::missed;
   }
 
   // Check the validity of the secind solution
   Vector3D solution2 = position + qe.first * direction;
-  Intersection::Status status2 = Intersection::Status::reachable;
+  Intersection::Status status2 =
+      (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection::Status::missed;
   }

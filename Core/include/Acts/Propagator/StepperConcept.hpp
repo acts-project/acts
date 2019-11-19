@@ -41,7 +41,8 @@ namespace concept {
   METHOD_TRAIT(direction_t, direction);
   METHOD_TRAIT(momentum_t, momentum);
   METHOD_TRAIT(charge_t, charge);
-  METHOD_TRAIT(timet, time);
+  METHOD_TRAIT(time_t, time);
+  METHOD_TRAIT(overstep_t, overstepLimit);
   METHOD_TRAIT(surface_reached_t, surfaceReached);
   METHOD_TRAIT(bound_state_method_t, boundState);
   METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
@@ -98,8 +99,10 @@ namespace concept {
         static_assert(momentum_exists, "momentum method not found");
         constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
         static_assert(charge_exists, "charge method not found");
-        constexpr static bool time_exists = has_method<const S, double, timet, const state&>;
+        constexpr static bool time_exists = has_method<const S, double, time_t, const state&>;
         static_assert(time_exists, "time method not found");
+        constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
+        static_assert(overstep_exists, "overstepLimit method not found");
         constexpr static bool surface_reached_exists = has_method<const S, bool, surface_reached_t, const state&, const Surface*>;
         static_assert(surface_reached_exists, "surfaceReached method not found");
         constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;

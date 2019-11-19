@@ -135,15 +135,14 @@ BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2)) {
                                                ignoredMomentum,
                                                returnedLocalPosition));  // pass
   CHECK_CLOSE_ABS(returnedLocalPosition, expectedLocalPosition, 1e-6);
-  //
-  BOOST_CHECK(!discSurfaceObject->globalToLocal(
-      tgContext, point3DNotInSector, ignoredMomentum,
-      returnedLocalPosition));  // test fails
+
+  // Global to local does not check inside bounds
+  BOOST_CHECK(discSurfaceObject->globalToLocal(
+      tgContext, point3DNotInSector, ignoredMomentum, returnedLocalPosition));
   //
   Vector3D pointOutsideRadius{0.0, 100., 0};
-  BOOST_CHECK(!discSurfaceObject->globalToLocal(
-      tgContext, pointOutsideRadius, ignoredMomentum,
-      returnedLocalPosition));  // fails
+  BOOST_CHECK(discSurfaceObject->globalToLocal(
+      tgContext, pointOutsideRadius, ignoredMomentum, returnedLocalPosition));
   //
   /// Test localPolarToCartesian
   Vector2D rPhi1_1{std::sqrt(2.), M_PI / 4.};
@@ -175,9 +174,9 @@ BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2)) {
   Vector3D momentum{projected3DMomentum, projected3DMomentum,
                     projected3DMomentum};
   Vector3D ignoredPosition{1.1, 2.2, 3.3};
-  CHECK_CLOSE_REL(
-      discSurfaceObject->pathCorrection(tgContext, ignoredPosition, momentum),
-      std::sqrt(3), 0.01);
+  CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(tgContext, ignoredPosition,
+                                                    momentum.normalized()),
+                  std::sqrt(3), 0.01);
   //
   /// intersectionEstimate
   Vector3D globalPosition{1.2, 0.0, -10.};

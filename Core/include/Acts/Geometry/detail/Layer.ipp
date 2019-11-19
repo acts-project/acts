@@ -86,7 +86,8 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
   // (0) End surface check
   // @todo: - we might be able to skip this by use of options.pathLimit
   // check if you have to stop at the endSurface
-  double maxPath = options.pathLimit;
+  double pathLimit = options.pathLimit;
+  double overstepLimit = options.overstepLimit;
   if (options.endObject) {
     // intersect the end surface
     // - it is the final one don't use the bounday check at all
@@ -97,11 +98,10 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
     if (endInter) {
-      maxPath = endInter.intersection.pathLength;
+      pathLimit = endInter.intersection.pathLength;
     } else {
       return sIntersections;
     }
-
   } else {
     // compatibleSurfaces() should only be called when on the layer,
     // i.e. the maximum path limit is given by the layer thickness times
@@ -109,7 +109,7 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     // -> this avoids punch through for cylinders
     double pCorrection =
         surfaceRepresentation().pathCorrection(gctx, position, direction);
-    maxPath = 1.5 * thickness() * pCorrection * options.navDir;
+    pathLimit = 1.5 * thickness() * pCorrection * options.navDir;
   }
 
   // lemma 0 : accept the surface
@@ -148,7 +148,10 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     // check if intersection is valid and pathLimit has not been exceeded
     double sifPath = sfi.intersection.pathLength;
     // check the maximum path length
-    if (sfi && sifPath * sifPath <= maxPath * maxPath) {
+    if (sfi && sifPath > overstepLimit &&
+        sifPath * sifPath <= pathLimit * pathLimit) {
+      // Now put the right sign on it
+      sfi.intersection.pathLength *=  options.navDir;        
       sIntersections.push_back(sfi);
       accepted[&sf] = true;
     }
@@ -219,38 +222,57 @@ const SurfaceIntersection Layer::surfaceOnApproach(
                    (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
                     surfaceRepresentation().surfaceMaterial());
 
-  // now of course this only counts when you have an approach descriptor
-  if (m_approachDescriptor && (resolvePS || resolveMS)) {
-    // Test if you are on an approach surface already, if so - provide it
-    for (auto& asf : m_approachDescriptor->containedSurfaces()) {
-      // In a connected geometry this is only a pointer comparison
-      if (options.startObject &&
-          asf == &(options.startObject->surfaceRepresentation())) {
-        Intersection nIntersection(position, 0.,
-                                   Intersection::Status::onSurface);
-        return SurfaceIntersection(nIntersection, asf);
+  // The signed direction: solution (except overstepping) is positive
+  auto sDirection = options.navDir * direction;
+
+  // The Limits: current, path & overstepping
+  double pLimit = options.pathLimit;
+  double oLimit = options.overstepLimit;
+
+  // Helper function to test intersection
+  auto checkIntersection =
+      [&](SurfaceIntersection& sIntersection) -> SurfaceIntersection {
+    // Avoid doing anything if that's a rotten apple already
+    if (!sIntersection) {
+      return sIntersection;
+    }
+    double cLimit = sIntersection.intersection.pathLength;
+    // If there's only one intersection or the closest is within limits
+    bool withinLimit =
+        (cLimit > oLimit and
+         cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+    if (withinLimit) {
+      // Set the right sign to the path length
+      sIntersection.intersection.pathLength *= options.navDir;
+      return sIntersection;
+    } else if (sIntersection.alternatives.size() > 0.) {
+      // Test the alternative
+      cLimit = sIntersection.alternatives[0].pathLength;
+      withinLimit = (cLimit > oLimit and
+                     cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+      if (sIntersection.alternatives[0] and withinLimit) {
+        // Set the right sign for the path length
+        sIntersection.alternatives[0].pathLength *= options.navDir;
+        return SurfaceIntersection(sIntersection.alternatives[0],
+                                   sIntersection.object);
       }
     }
-    // that's the collect trigger for always collecting
-    // let's find the most suitable approach surface
+    // Return an invalid one
+    return SurfaceIntersection();
+  };
+
+  // Approach descriptor present and resolving is necessary
+  if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        gctx, position, options.navDir * direction, options.boundaryCheck);
-    if (bool(aSurface)) {
-      return (aSurface);
-    }
+        gctx, position, sDirection, options.boundaryCheck);
+    return checkIntersection(aSurface);
   }
 
+  // Intersect and check the representing surface
   const Surface& rSurface = surfaceRepresentation();
-
-  // if we have no approach descriptor - we have no sensitive surfaces
-  if (rSurface.isOnSurface(gctx, position, direction, options.boundaryCheck)) {
-    Intersection nIntersection(position, 0., Intersection::Status::onSurface);
-    return SurfaceIntersection(nIntersection, &rSurface);
-  }
-
-  // create the intersection with the surface representation
-  return rSurface.intersect(gctx, position, options.navDir * direction,
-                            options.boundaryCheck);
+  auto sIntersection =
+      rSurface.intersect(gctx, position, sDirection, options.boundaryCheck);
+  return checkIntersection(sIntersection);
 }
 
 inline bool Layer::isOnLayer(const GeometryContext& gctx,

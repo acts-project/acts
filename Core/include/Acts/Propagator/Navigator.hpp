@@ -21,10 +21,12 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
 using Cstep = detail::ConstrainedStep;
+using namespace Acts::UnitLiterals;
 
 /// @brief struct for the Navigation options that are forwarded to
 ///        the geometry
@@ -55,7 +57,13 @@ struct NavigationOptions {
   /// Target surface to exclude
   const Surface* targetSurface = nullptr;
 
+  /// The maximum path limit for this navigation step
   double pathLimit = std::numeric_limits<double>::max();
+
+  /// The overstep tolerance for this navigation step
+  /// @note must be negative as it describes overstepping
+  /// @todo could be dynamic in the future (pT dependent)
+  double overstepLimit = -1_um;
 
   /// Constructor
   ///
@@ -75,7 +83,8 @@ struct NavigationOptions {
         resolvePassive(resolvep),
         startObject(sobject),
         endObject(eobject),
-        pathLimit(ndir * std::numeric_limits<double>::max()) {}
+        pathLimit(ndir * std::numeric_limits<double>::max()),
+        overstepLimit(-1_um) {}
 };
 
 /// Navigator class
@@ -387,7 +396,7 @@ class Navigator {
                [&] { return std::string("Target set to next boundary."); });
     } else {
       debugLog(state, [&] {
-        return std::string("No furter navigation action, proceed to target.");
+        return std::string("No further navigation action, proceed to target.");
       });
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
@@ -582,6 +591,7 @@ class Navigator {
     // Create the navigaton options
     NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
 
     // Loop over the navigation surfaces
     while (state.navigation.navSurfaceIter !=
@@ -677,6 +687,7 @@ class Navigator {
         NavigationOptions<Surface> navOpts(
             state.stepping.navDir, true, resolveSensitive, resolveMaterial,
             resolvePassive, nullptr, state.navigation.targetSurface);
+        navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
         double opening_angle = 0;
 
         // Preliminary version of the frustum opening angle estimation.
@@ -764,6 +775,7 @@ class Navigator {
       }
       // Otherwise try to step towards it
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
       auto layerIntersect = layerSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
           stepper.direction(state.stepping), navOpts.boundaryCheck);
@@ -860,6 +872,7 @@ class Navigator {
     // The navigation options
     NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
 
     // If you came until here, and you might not have boundaries
     // per definition, this is free of the self call
@@ -994,6 +1007,8 @@ class Navigator {
       NavigationOptions<Surface> navOpts(state.stepping.navDir, false,
                                          resolveSensitive, resolveMaterial,
                                          resolvePassive);
+      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+
       // take the target intersection
       auto targetIntersection = state.navigation.targetSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
@@ -1052,6 +1067,8 @@ class Navigator {
         resolvePassive, startSurface, state.navigation.targetSurface);
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
@@ -1116,6 +1133,7 @@ class Navigator {
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
     // Request the compatible layers
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(
