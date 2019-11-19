@@ -16,14 +16,13 @@
 using namespace Acts::UnitLiterals;
 
 namespace {
-
 // values from RPP2018 table 33.1
 // electron mass
-static constexpr float Me = 0.5109989461_MeV;
+constexpr float Me = 0.5109989461_MeV;
 // Bethe formular prefactor. 1/mol unit is just a factor 1 here.
-static constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
+constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
 // Energy scale for plasma energy.
-static constexpr float PlasmaEnergyScale = 28.816_eV;
+constexpr float PlasmaEnergyScale = 28.816_eV;
 
 /// Additional derived relativistic quantities.
 struct RelativisticQuantities {
