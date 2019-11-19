@@ -40,7 +40,7 @@ float deriveIonisationLossMeanQOverP(const Material& material, float thickness,
                                      int pdg, float m, float qOverP,
                                      float q = UnitConstants::e);
 
-/// Compute the most propable energy loss due to ionisation.
+/// Compute the most propable energy loss due to ionisation and excitation.
 ///
 /// @see computeEnergyLossIonisationMean for parameters description
 /// @return Energy loss distribution most probable value and width

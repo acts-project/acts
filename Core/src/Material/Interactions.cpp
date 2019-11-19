@@ -89,7 +89,7 @@ inline float logDeriveWMax(float mass, float qOverP,
 ///
 ///     (K/2) * (Z/A)*rho * x * (q²/beta²)
 ///
-/// where (Z/A)*rho it the electron density in the material and x is the
+/// where (Z/A)*rho is the electron density in the material and x is the
 /// traversed length (thickness) of the material.
 inline float computeEpsilon(float molarElectronDensity, float thickness,
                             const RelativisticQuantities& rq) {
