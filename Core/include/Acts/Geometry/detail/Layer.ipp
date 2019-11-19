@@ -151,7 +151,7 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     if (sfi && sifPath > overstepLimit &&
         sifPath * sifPath <= pathLimit * pathLimit) {
       // Now put the right sign on it
-      sfi.intersection.pathLength *=  options.navDir;        
+      sfi.intersection.pathLength *= options.navDir;
       sIntersections.push_back(sfi);
       accepted[&sf] = true;
     }

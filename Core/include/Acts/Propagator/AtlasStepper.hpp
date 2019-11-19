@@ -1259,7 +1259,7 @@ class AtlasStepper {
   bfield_t m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -1_um;
+  double m_overstepLimit = -50_um;
 };
 
 }  // namespace Acts

@@ -69,12 +69,12 @@ EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
 StraightLineStepper slstepper;
 StraightLinePropagator slpropagator(std::move(slstepper),
                                     std::move(navigatorSL));
-const int ntests = 6;
-const int skip = 5;
-bool debugModeFwd = true;
-bool debugModeBwd = true;
-bool debugModeFwdStep = true;
-bool debugModeBwdStep = true;
+const int ntests = 500;
+const int skip = 0;
+bool debugModeFwd = false;
+bool debugModeBwd = false;
+bool debugModeFwdStep = false;
+bool debugModeBwdStep = false;
 
 /// the actual test nethod that runs the test
 /// can be used with several propagator types

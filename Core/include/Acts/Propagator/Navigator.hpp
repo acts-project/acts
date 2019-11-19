@@ -1067,7 +1067,10 @@ class Navigator {
         resolvePassive, startSurface, state.navigation.targetSurface);
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
-    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+    // No overstepping on start layer, otherwise ask the stepper
+    navOpts.overstepLimit = (cLayer != nullptr)
+                                ? s_onSurfaceTolerance
+                                : stepper.overstepLimit(state.stepping);
 
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
