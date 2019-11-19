@@ -29,9 +29,11 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 namespace Acts {
 namespace Test {
@@ -113,7 +115,7 @@ struct CylindricalTrackingGeometry {
         cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
 
     // ----------------- build a beam pipe -----------------------------------
-    MaterialProperties beamPipeMaterial{352.8, 407., 9.012, 4., 1.848e-3, 0.8};
+    MaterialProperties beamPipeMaterial(makeBeryllium(), 0.8_mm);
     PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";
     bplConfig.centralLayerRadii = std::vector<double>(1, 19.);
@@ -143,14 +145,14 @@ struct CylindricalTrackingGeometry {
     //-------------------------------------------------------------------------------------
     // some prep work for the material
     // Layer material properties - thickness, X0, L0, A, Z, Rho
-    MaterialProperties lProperties(95.7, 465.2, 28.03, 14., 2.32e-3, 1.5_mm);
+    MaterialProperties lProperties(makeSilicon(), 1.5_mm);
 
     std::shared_ptr<const ISurfaceMaterial> layerMaterialPtr =
         std::shared_ptr<const ISurfaceMaterial>(
             new Acts::HomogeneousSurfaceMaterial(lProperties));
 
     // Module material - X0, L0, A, Z, Rho
-    Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
+    Material pcMaterial = makeSilicon();
 
     std::vector<double> pLayerRadii = {32., 72., 116., 172.};
     std::vector<std::pair<int, int>> pLayerBinning = {

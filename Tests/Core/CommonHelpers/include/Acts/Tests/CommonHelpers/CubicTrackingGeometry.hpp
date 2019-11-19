@@ -20,11 +20,13 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 namespace Acts {
 namespace Test {
@@ -51,9 +53,8 @@ struct CubicTrackingGeometry {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
-    surfaceMaterial = std::shared_ptr<const ISurfaceMaterial>(
-        new HomogeneousSurfaceMaterial(matProp));
+    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    surfaceMaterial = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
   }
 
   /// Call operator to build the standard cubic tracking geometry
