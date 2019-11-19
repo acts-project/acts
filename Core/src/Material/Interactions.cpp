@@ -32,12 +32,12 @@ struct RelativisticQuantities {
   float betaGamma = 0.0f;
   float gamma = 0.0f;
 
-  RelativisticQuantities(float m, float qOverP, float q) {
+  RelativisticQuantities(float mass, float qOverP, float q) {
     // beta²/q² = (p/E)²/q² = p²/(q²m² + q²p²) = 1/(q² + (m²(q/p)²)
     // q²/beta² = q² + m²(q/p)²
-    q2OverBeta2 = q * q + (m * qOverP) * (m * qOverP);
+    q2OverBeta2 = q * q + (mass * qOverP) * (mass * qOverP);
     // 1/p = q/(qp) = (q/p)/q
-    const auto mOverP = m * std::abs(qOverP / q);
+    const auto mOverP = mass * std::abs(qOverP / q);
     const auto pOverM = 1.0f / mOverP;
     // beta² = p²/E² = p²/(m² + p²) = 1/(1 + (m/p)²)
     beta2 = 1.0f / (1.0f + mOverP * mOverP);
@@ -53,9 +53,9 @@ inline float deriveBeta2(float qOverP, const RelativisticQuantities& rq) {
   return -2 / (qOverP * rq.gamma * rq.gamma);
 }
 
-/// Compute the 2 * m * (beta * gamma)² mass term.
-inline float computeMassTerm(float m, const RelativisticQuantities& rq) {
-  return 2 * m * rq.betaGamma * rq.betaGamma;
+/// Compute the 2 * mass * (beta * gamma)² mass term.
+inline float computeMassTerm(float mass, const RelativisticQuantities& rq) {
+  return 2 * mass * rq.betaGamma * rq.betaGamma;
 }
 /// Compute mass term logarithmic derivative w/ respect to q/p.
 inline float logDeriveMassTerm(float qOverP) {
@@ -66,21 +66,21 @@ inline float logDeriveMassTerm(float qOverP) {
 /// Compute the maximum energy transfer in a single collision.
 ///
 /// Uses RPP2018 eq. 33.4.
-inline float computeWMax(float m, const RelativisticQuantities& rq) {
-  const auto mfrac = Me / m;
+inline float computeWMax(float mass, const RelativisticQuantities& rq) {
+  const auto mfrac = Me / mass;
   const auto nominator = 2 * Me * rq.betaGamma * rq.betaGamma;
   const auto denonimator = 1.0f + 2 * rq.gamma * mfrac + mfrac * mfrac;
   return nominator / denonimator;
 }
 /// Compute WMax logarithmic derivative w/ respect to q/p.
-inline float logDeriveWMax(float m, float qOverP,
+inline float logDeriveWMax(float mass, float qOverP,
                            const RelativisticQuantities& rq) {
   // this is (q/p) * (beta/q).
   // both quantities have the same sign and the product must always be
   // positive. we can thus reuse the known (unsigned) quantity (q/beta)².
   const auto a = std::abs(qOverP / std::sqrt(rq.q2OverBeta2));
   // (m² + me²) / me = me (1 + (m/me)²)
-  const auto b = Me * (1.0f + (m / Me) * (m / Me));
+  const auto b = Me * (1.0f + (mass / Me) * (mass / Me));
   return -2 * (a * b - 2 + rq.beta2) / (qOverP * (a * b + 2));
 }
 
@@ -129,9 +129,9 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
 }
 }  // namespace
 
-#define ASSERT_INPUTS(thickness, m, qOverP, q)            \
+#define ASSERT_INPUTS(thickness, mass, qOverP, q)         \
   assert(0 < thickness and "Thickness must be positive"); \
-  assert(0 < m and "Mass must be positive");              \
+  assert(0 < mass and "Mass must be positive");           \
   assert(0 < (qOverP * q) and "Inconsistent q/p and q signs");
 
 float Acts::computeIonisationLossMean(const Material& material, float thickness,
@@ -262,9 +262,9 @@ float Acts::deriveIonisationLossModeQOverP(const Material& material,
 namespace {
 /// Convert Landau full-width-half-maximum to an equivalent Gaussian sigma,
 ///
-/// Full-width=half-maximum for a Gaussian is given as
+/// Full-width-half-maximum for a Gaussian is given as
 ///
-///    fwhm = 2 * sqrt(2 * log(2)) * sigma
+///     fwhm = 2 * sqrt(2 * log(2)) * sigma
 /// -> sigma = fwhm / (2 * sqrt(2 * log(2)))
 ///
 inline float convertLandauFwhmToGaussianSigma(float fwhm) {
@@ -316,21 +316,21 @@ float Acts::computeIonisationLossSigmaQOverP(const Material& material,
 
 namespace {
 /// Compute mean energy loss from bremsstrahlung per radiation length.
-inline float computeBremsstrahlungLossMean(float m, float e) {
-  return e * (Me / m) * (Me / m);
+inline float computeBremsstrahlungLossMean(float mass, float energy) {
+  return energy * (Me / mass) * (Me / mass);
 }
 /// Derivative of the bremsstrahlung loss per rad length with respect to energy.
-inline float deriveBremsstrahlungLossMeanE(float m) {
-  return (Me / m) * (Me / m);
+inline float deriveBremsstrahlungLossMeanE(float mass) {
+  return (Me / mass) * (Me / mass);
 }
 
-/// expansion coefficients for the muon radiation loss as a function of energy
+/// Expansion coefficients for the muon radiation loss as a function of energy
 ///
-/// taken from ATL-SOFT-PUB-2008-003 eq. 7,8 where the expansion is expressed
-/// with terms e^n/X0 with fixed units [e] = MeV and [X0] = mm. the evaluated
+/// Taken from ATL-SOFT-PUB-2008-003 eq. 7,8 where the expansion is expressed
+/// with terms E^n/X0 with fixed units [E] = MeV and [X0] = mm. The evaluated
 /// expansion has units MeV/mm. In this implementation, the X0 dependence is
 /// factored out and the coefficients must be scaled to the native units such
-/// that the evaluated expansion with terms e^n has dimension energy in
+/// that the evaluated expansion with terms E^n has dimension energy in
 /// native units.
 constexpr float MuonHighLowThreshold = 1_TeV;
 // [low0 / X0] = MeV / mm -> [low0] = MeV
@@ -347,17 +347,18 @@ constexpr double MuonHigh0 = -2.986_MeV;
 constexpr double MuonHigh1 = 9.253e-5;
 
 /// Compute additional radiation energy loss for muons per radiation length.
-inline float computeMuonDirectPairPhotoNuclearLossMean(double e) {
-  if (e < MuonHighLowThreshold) {
-    return MuonLow0 + MuonLow1 * e + MuonLow2 * e * e + MuonLow3 * e * e * e;
+inline float computeMuonDirectPairPhotoNuclearLossMean(double energy) {
+  if (energy < MuonHighLowThreshold) {
+    return MuonLow0 +
+           (MuonLow1 + (MuonLow2 + MuonLow3 * energy) * energy) * energy;
   } else {
-    return MuonHigh0 + MuonHigh1 * e;
+    return MuonHigh0 + MuonHigh1 * energy;
   }
 }
 /// Derivative of the additional rad loss per rad length with respect to energy.
-inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double e) {
-  if (e < MuonHighLowThreshold) {
-    return MuonLow1 + 2 * MuonLow2 * e + 3 * MuonLow3 * e * e;
+inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double energy) {
+  if (energy < MuonHighLowThreshold) {
+    return MuonLow1 + (2 * MuonLow2 + 3 * MuonLow3 * energy) * energy;
   } else {
     return MuonHigh1;
   }
@@ -376,13 +377,13 @@ float Acts::computeRadiationLossMean(const Material& material, float thickness,
   // relative radiation length
   const auto x = thickness / material.X0();
   // particle momentum and energy
-  const auto p = q / qOverP;
-  const auto e = std::sqrt(m * m + p * p);
+  const auto momentum = q / qOverP;
+  const auto energy = std::sqrt(m * m + momentum * momentum);
 
-  auto dEdx = computeBremsstrahlungLossMean(m, e);
+  auto dEdx = computeBremsstrahlungLossMean(m, energy);
   if (((pdg == PdgParticle::eMuon) or (pdg == PdgParticle::eAntiMuon)) and
-      (8_GeV < e)) {
-    dEdx += computeMuonDirectPairPhotoNuclearLossMean(e);
+      (8_GeV < energy)) {
+    dEdx += computeMuonDirectPairPhotoNuclearLossMean(energy);
   }
   // scale from energy loss per unit radiation length to total energy
   return dEdx * x;
@@ -401,22 +402,22 @@ float Acts::deriveRadiationLossMeanQOverP(const Material& material,
   // relative radiation length
   const auto x = thickness / material.X0();
   // particle momentum and energy
-  const auto p = q / qOverP;
-  const auto e = std::sqrt(m * m + p * p);
+  const auto momentum = q / qOverP;
+  const auto energy = std::sqrt(m * m + momentum * momentum);
 
   // compute derivative w/ respect to energy.
   auto derE = deriveBremsstrahlungLossMeanE(m);
   if (((pdg == PdgParticle::eMuon) or (pdg == PdgParticle::eAntiMuon)) and
-      (8_GeV < e)) {
-    derE += deriveMuonDirectPairPhotoNuclearLossMeanE(e);
+      (8_GeV < energy)) {
+    derE += deriveMuonDirectPairPhotoNuclearLossMeanE(energy);
   }
   // compute derivative w/ respect to q/p by using the chain rule
-  //     df(e)/d(q/p) = df(e)/de de/d(q/p)
+  //     df(E)/d(q/p) = df(E)/dE dE/d(q/p)
   // with
-  //     e = sqrt(m² + p²) = sqrt(m² + q²/(q/p)²)
+  //     E = sqrt(m² + p²) = sqrt(m² + q²/(q/p)²)
   // and the resulting derivative
-  //     de/d(q/p) = -q² / ((q/p)³ * e)
-  const auto derQOverP = -(q * q) / (qOverP * qOverP * qOverP * e);
+  //     dE/d(q/p) = -q² / ((q/p)³ * E)
+  const auto derQOverP = -(q * q) / (qOverP * qOverP * qOverP * energy);
   return derE * derQOverP * x;
 }
 
@@ -457,18 +458,21 @@ float Acts::deriveEnergyLossModeQOverP(const Material& material,
 
 namespace {
 /// Multiple scattering theta0 for minimum ionizing particles.
-inline float theta0Highland(float xOverX0, float pInv, float q2OverBeta2) {
+inline float theta0Highland(float xOverX0, float momentumInv,
+                            float q2OverBeta2) {
   // RPP2018 eq. 33.15 (treats beta and q² consistenly)
   const auto t = std::sqrt(xOverX0 * q2OverBeta2);
   // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
   //                          = 2 * log(sqrt(x/X0) * (q/beta))
-  return 13.6_MeV * pInv * t * (1.0f + 0.038f * 2 * std::log(t));
+  return 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t));
 }
 /// Multiple scattering thet0 for electrons.
-inline float theta0RossiGreisen(float xOverX0, float pInv, float q2OverBeta2) {
+inline float theta0RossiGreisen(float xOverX0, float momentumInv,
+                                float q2OverBeta2) {
   // TODO add source paper/ resource
   const auto t = std::sqrt(xOverX0 * q2OverBeta2);
-  return 17.5_MeV * pInv * t * (1.0f + 0.125f * std::log10(10.0f * xOverX0));
+  return 17.5_MeV * momentumInv * t *
+         (1.0f + 0.125f * std::log10(10.0f * xOverX0));
 }
 }  // namespace
 
@@ -485,13 +489,13 @@ float Acts::computeMultipleScatteringTheta0(const Material& material,
   // relative radiation length
   const auto xOverX0 = thickness / material.X0();
   // 1/p = q/(pq) = (q/p)/q
-  const auto pInv = std::abs(qOverP / q);
+  const auto momentumInv = std::abs(qOverP / q);
   // q²/beta²; a smart compiler should be able to remove the unused computations
   const auto q2OverBeta2 = RelativisticQuantities(m, qOverP, q).q2OverBeta2;
 
   if ((pdg == PdgParticle::eElectron) or (pdg == PdgParticle::ePositron)) {
-    return theta0RossiGreisen(xOverX0, pInv, q2OverBeta2);
+    return theta0RossiGreisen(xOverX0, momentumInv, q2OverBeta2);
   } else {
-    return theta0Highland(xOverX0, pInv, q2OverBeta2);
+    return theta0Highland(xOverX0, momentumInv, q2OverBeta2);
   }
 }

@@ -15,7 +15,7 @@
 
 namespace Acts {
 
-/// Compute the mean energy loss due to ionisation.
+/// Compute the mean energy loss due to ionisation and excitation.
 ///
 /// @param material  Properties of the traversed material
 /// @param thickness Thickness of the traversed material
