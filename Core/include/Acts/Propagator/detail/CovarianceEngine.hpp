@@ -19,9 +19,9 @@
 
 namespace Acts {
 
-/// @brief These functions perform the transport of a covariance matrix using given
-/// Jacobians. The required data is provided by a @p StepperState object with
-/// some additional data. Since this is a purely algebraic problem the
+/// @brief These functions perform the transport of a covariance matrix using
+/// given Jacobians. The required data is provided by a @p StepperState object
+/// with some additional data. Since this is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a seperate file.
 namespace detail {
@@ -73,5 +73,5 @@ std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
 void covarianceTransport(StepperState& state, bool reinitialize,
                          const Surface* surface = nullptr);
 
-}  // namespace CovarianceEngine
+}  // namespace detail
 }  // namespace Acts

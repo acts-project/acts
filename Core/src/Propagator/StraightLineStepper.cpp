@@ -18,8 +18,7 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
 }
 
 std::tuple<CurvilinearParameters, BoundMatrix, double>
-StraightLineStepper::curvilinearState(State& state,
-                                      bool reinitialize) const {
+StraightLineStepper::curvilinearState(State& state, bool reinitialize) const {
   return detail::curvilinearState(state, reinitialize);
 }
 
