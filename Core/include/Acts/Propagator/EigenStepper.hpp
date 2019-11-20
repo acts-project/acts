@@ -54,7 +54,7 @@ class EigenStepper {
 
   /// @brief The state object. This object extends the general container @c
   /// StepperState by some parameters for RKN4
-  struct State : public StepperState{
+  struct State : public StepperState {
     /// Constructor from the initial track parameters
     ///
     /// @tparam parameters_t the Type of the track parameters
