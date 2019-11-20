@@ -233,9 +233,10 @@ class KalmanFitter {
       }
 
       // Update:
-      // - Waiting for a current surface that appears in the measurement list
+      // - Waiting for a current surface that has material
+      // -> a trackState will be created on surface with material
       auto surface = state.navigation.currentSurface;
-      if (surface and not result.smoothed) {
+      if (surface and surface->surfaceMaterial() and not result.smoothed) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -305,6 +306,11 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, result_type& result) const {
+      // Transport & bind the state to the current surface
+      std::tuple<BoundParameters,
+                 typename TrackStateType::Parameters::CovMatrix_t, double>
+          boundState = stepper.boundState(state.stepping, *surface, true);
+
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -342,6 +348,9 @@ class KalmanFitter {
             m_calibrator(trackStateProxy.uncalibrated(),
                          trackStateProxy.predicted()));
 
+        // Set the parameter type flag
+        trackState.setType(TrackStateFlag::ParameterFlag);
+
         // If the update is successful, set covariance and
         auto updateRes = m_updater(state.geoContext, trackStateProxy);
         if (!updateRes.ok()) {
@@ -359,12 +368,34 @@ class KalmanFitter {
         }
         // We count the processed state
         ++result.processedStates;
-      } else if (surface->associatedDetectorElement() != nullptr) {
-        // Count the missed surface
-        ACTS_VERBOSE("Detected hole on " << surface->geoID());
-        result.missedActiveSurfaces.push_back(surface);
-      }
+      } else {
+        // When no measurement on this surface,
+        // create a track state from predicted parameter
+        result.fittedStates.emplace_back(std::get<0>(boundState));
+        TrackStateType& trackState = result.fittedStates.back();
 
+        // Fill the track state
+        trackState.parameter.jacobian = std::get<1>(boundState);
+        trackState.parameter.pathLength = std::get<2>(boundState);
+
+        // @todo: set the filtered parameter by updating the predicted parameter
+        // with material effects
+
+        if (surface->associatedDetectorElement() != nullptr) {
+          // If the surface is sensitive,
+          // set the hole type flag
+          trackState.setType(TrackStateFlag::HoleFlag);
+
+          // Count the missed surface
+          ACTS_VERBOSE("Detected hole on " << surface->geoID());
+          result.missedActiveSurfaces.push_back(surface);
+        } else {
+          // If the surface is in-sensitive,
+          // set the material type flag
+          trackState.setType(TrackStateFlag::MaterialFlag);
+          ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
+        }
+      }
       return Result<void>::success();
     }
 
