@@ -17,6 +17,7 @@
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/StepperState.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -51,17 +52,14 @@ class EigenStepper {
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
   using BField = bfield_t;
 
-  /// @brief State for track parameter propagation
-  ///
-  /// It contains the stepping information and is provided thread local
-  /// by the propagator
-  struct State {
-    /// Default constructor - deleted
-    State() = delete;
-
+  /// @brief The state object. This object extends the general container @c
+  /// StepperState by some parameters for RKN4
+  struct State : public StepperState{
     /// Constructor from the initial track parameters
     ///
-    /// @param [in] gctx is the context object for the geometry
+    /// @tparam parameters_t the Type of the track parameters
+    ///
+    /// @param [in] gctx is the context object for the geometery
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] ndir The navigation direciton w.r.t momentum
@@ -75,82 +73,12 @@ class EigenStepper {
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : pos(par.position()),
-          dir(par.momentum().normalized()),
-          p(par.momentum().norm()),
-          q(par.charge()),
-          t(par.time()),
-          navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
-          tolerance(stolerance),
-          fieldCache(mctx),
-          geoContext(gctx) {
-      // Init the jacobian matrix if needed
-      if (par.covariance()) {
-        // Get the reference surface for navigation
-        const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
-        covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
-        surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
-                                     par.parameters());
-      }
-    }
-
-    /// Global particle position
-    Vector3D pos = Vector3D(0., 0., 0.);
-
-    /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1., 0., 0.);
-
-    /// Momentum
-    double p = 0.;
-
-    /// The charge
-    double q = 1.;
-
-    /// Propagated time
-    double t = 0.;
-
-    /// Navigation direction, this is needed for searching
-    NavigationDirection navDir;
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
-
-    /// The propagation derivative
-    FreeVector derivative = FreeVector::Zero();
-
-    /// Covariance matrix (and indicator)
-    //// associated with the initial error on track parameters
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
-
-    /// Accummulated path length state
-    double pathAccumulated = 0.;
-
-    /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
-
-    /// Last performed step (for overstep limit calculation)
-    double previousStepSize = 0.;
-
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
+        : StepperState(gctx, mctx, par, ndir, ssize), fieldCache(mctx) {
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
     typename BField::Cache fieldCache;
-
-    /// The geometry context
-    std::reference_wrapper<const GeometryContext> geoContext;
 
     /// List of algorithmic extensions
     extensionlist_t extension;
