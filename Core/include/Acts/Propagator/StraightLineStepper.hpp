@@ -29,19 +29,6 @@ namespace Acts {
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
 class StraightLineStepper {
- private:
-  // This struct is a meta-function which normally maps to BoundParameters...
-  template <typename T, typename S>
-  struct s {
-    using type = BoundParameters;
-  };
-
-  // ...unless type S is int, in which case it maps to Curvilinear parameters
-  template <typename T>
-  struct s<T, int> {
-    using type = CurvilinearParameters;
-  };
-
  public:
   using cstep = detail::ConstrainedStep;
 
@@ -141,12 +128,6 @@ class StraightLineStepper {
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
   using state_type = State;
-
-  /// Return parameter types depend on the propagation mode:
-  /// - when propagating to a surface we return BoundParameters
-  /// - otherwise CurvilinearParameters
-  template <typename parameters_t, typename surface_t = int>
-  using return_parameter_type = typename s<parameters_t, surface_t>::type;
 
   /// Constructor
   StraightLineStepper() = default;

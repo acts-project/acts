@@ -27,18 +27,6 @@ using namespace Acts::UnitLiterals;
 /// @brief the AtlasStepper implementation for the
 template <typename bfield_t>
 class AtlasStepper {
-  // This struct is a meta-function which normally maps to BoundParameters...
-  template <typename T, typename S>
-  struct s {
-    using type = BoundParameters;
-  };
-
-  // Unless S is int, then it maps to CurvilinearParameters ...
-  template <typename T>
-  struct s<T, int> {
-    using type = CurvilinearParameters;
-  };
-
  public:
   using cstep = detail::ConstrainedStep;
 
@@ -301,9 +289,6 @@ class AtlasStepper {
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
   };
-
-  template <typename T, typename S = int>
-  using return_parameter_type = typename s<T, S>::type;
 
   AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};
 

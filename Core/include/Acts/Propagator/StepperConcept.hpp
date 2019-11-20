@@ -21,10 +21,7 @@ namespace concept {
 
   template <typename T>
   using state_t = typename T::State;
-
-  template <typename T>
-  using return_t = typename T::template return_parameter_type<void, void>;
-
+  
   template <typename T>
   using jacobian_t = typename T::Jacobian;
   template <typename T>
@@ -87,8 +84,6 @@ namespace concept {
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool bfield_exists = exists<bfield_t, S>;
         static_assert(bfield_exists, "BField type not found");
-        constexpr static bool return_type_exists = exists<return_t, S>;
-        static_assert(return_type_exists, "return_parameter_type not found");
         constexpr static bool get_field_exists = has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>;
         static_assert(get_field_exists, "getField method not found");
         constexpr static bool position_exists = has_method<const S, Vector3D, position_t, const state&>;
@@ -122,7 +117,6 @@ namespace concept {
                                               bound_state_exists,
                                               curvilinear_state_exists,
                                               bfield_exists,
-                                              return_type_exists,
                                               get_field_exists,
                                               position_exists,
                                               direction_exists,

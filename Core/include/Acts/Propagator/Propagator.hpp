@@ -336,8 +336,7 @@ class Propagator final {
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
-      typename stepper_t::template return_parameter_type<parameters_t>,
-      typename propagator_options_t::action_list_type>>
+      CurvilinearParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
@@ -364,8 +363,7 @@ class Propagator final {
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
-      typename stepper_t::template return_parameter_type<parameters_t, Surface>,
-      typename propagator_options_t::action_list_type>>
+      BoundParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
