@@ -21,7 +21,7 @@ namespace concept {
 
   template <typename T>
   using state_t = typename T::State;
-  
+
   template <typename T>
   using jacobian_t = typename T::Jacobian;
   template <typename T>
