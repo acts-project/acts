@@ -77,28 +77,21 @@ class RiddersPropagator {
   /// @brief Propagation method targeting curvilinear parameters
   ///
   /// @tparam parameters_t Type of the start parameters
-  /// @tparam action_list_t Type of the action list
-  /// @tparam aborter_list_t Type of the aborter list
   /// @tparam propagator_options_t Type of the propagator options
   ///
   /// @param [in] start Start parameters
   /// @param [in] options Options of the propagations
   ///
   /// @return Result of the propagation
-  template <typename parameters_t, typename action_list_t,
-            typename aborter_list_t,
-            template <typename, typename> class propagator_options_t>
-  Result<action_list_t_result_t<CurvilinearParameters, action_list_t>>
+  template <typename parameters_t, typename propagator_options_t>
+  Result<action_list_t_result_t<CurvilinearParameters, typename propagator_options_t::action_list_type>>
   propagate(
       const parameters_t& start,
-      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
+      const propagator_options_t& options) const;
 
   /// @brief Propagation method targeting bound parameters
   ///
   /// @tparam parameters_t Type of the start parameters
-  /// @tparam surface_t Type of target surface
-  /// @tparam action_list_t Type of the action list
-  /// @tparam aborter_list_t Type of the aborter list
   /// @tparam propagator_options_t Type of the propagator options
   ///
   /// @param [in] start Start parameters
@@ -107,13 +100,11 @@ class RiddersPropagator {
   /// @return Result of the propagation
   /// @note If the target surface is a disc, the resulting covariance may be
   /// inconsistent. In this case a zero matrix is returned.
-  template <typename parameters_t, typename surface_t, typename action_list_t,
-            typename aborter_list_t,
-            template <typename, typename> class propagator_options_t>
-  Result<action_list_t_result_t<BoundParameters, action_list_t>> propagate(
-      const parameters_t& start, const surface_t& target,
-      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
-
+  template <typename parameters_t, typename propagator_options_t>
+  Result<action_list_t_result_t<BoundParameters, typename propagator_options_t::action_list_type>> propagate(
+      const parameters_t& start, const Surface& target,
+      const propagator_options_t& options) const;
+      
  private:
   /// @brief This function tests whether the variations on a disc as target
   /// surface lead to results on different sides wrt the center of the disc.

@@ -7,13 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename propagator_t>
-template <typename parameters_t, typename action_list_t,
-          typename aborter_list_t,
-          template <typename, typename> class propagator_options_t>
+template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start,
-    const propagator_options_t<action_list_t, aborter_list_t>& options) const
-    -> Result<action_list_t_result_t<CurvilinearParameters, action_list_t>> {
+    const propagator_options_t& options) const
+    -> Result<action_list_t_result_t<CurvilinearParameters, typename propagator_options_t::action_list_type>> {
   // Launch nominal propagation and collect results
   auto nominalResult = m_propagator.propagate(start, options).value();
   const BoundVector& nominalParameters =
@@ -25,7 +23,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
 
   // Allow larger distances for the oscillation
-  propagator_options_t<action_list_t, aborter_list_t> opts = options;
+  propagator_options_t opts = options;
   opts.pathLimit *= 2.;
 
   // Derivations of each parameter around the nominal parameters
@@ -49,13 +47,11 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 }
 
 template <typename propagator_t>
-template <typename parameters_t, typename surface_t, typename action_list_t,
-          typename aborter_list_t,
-          template <typename, typename> class propagator_options_t>
+template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
-    const parameters_t& start, const surface_t& target,
-    const propagator_options_t<action_list_t, aborter_list_t>& options) const
-    -> Result<action_list_t_result_t<BoundParameters, action_list_t>> {
+    const parameters_t& start, const Surface& target,
+    const propagator_options_t& options) const
+    -> Result<action_list_t_result_t<BoundParameters, typename propagator_options_t::action_list_type>> {
   // Launch nominal propagation and collect results
   auto nominalResult = m_propagator.propagate(start, target, options).value();
   const BoundVector& nominalParameters =
@@ -77,7 +73,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   // intersection solution
 
   // Allow larger distances for the oscillation
-  propagator_options_t<action_list_t, aborter_list_t> opts = options;
+  propagator_options_t opts = options;
   opts.pathLimit *= 2.;
 
   // Derivations of each parameter around the nominal parameters
