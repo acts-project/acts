@@ -148,10 +148,6 @@ class StraightLineStepper {
   template <typename parameters_t, typename surface_t = int>
   using return_parameter_type = typename s<parameters_t, surface_t>::type;
 
-  /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename parameters_t>
-  using step_parameter_type = CurvilinearParameters;
-
   /// Constructor
   StraightLineStepper() = default;
 
