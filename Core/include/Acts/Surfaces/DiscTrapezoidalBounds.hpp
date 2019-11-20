@@ -116,7 +116,7 @@ class DiscTrapezoidalBounds : public DiscBounds {
   /// into its caftesian representation
   ///
   /// @param lposition The local position in polar coordinates
-  Vector2D toLocalCartesian(const Vector2D& lpos) const;
+  Vector2D toLocalCartesian(const Vector2D& lposition) const;
 
   /// Jacobian
   /// into its caftesian representation

@@ -90,8 +90,55 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;
   auto& bSurfaces = boundarySurfaces();
+<<<<<<< HEAD
   std::vector<const BoundarySurfaceT<TrackingVolume>*> nonExcludedBoundaries;
 
+=======
+  std::vector<BoundaryIntersection> bIntersections;
+
+  // The signed direction: solution (except overstepping) is positive
+  auto sDirection = options.navDir * direction;
+
+  // The Limits: current, path & overstepping
+  double pLimit = options.pathLimit;
+  double oLimit = options.overstepLimit;
+
+  // Helper function to test intersection
+  auto checkIntersection =
+      [&](SurfaceIntersection& sIntersection,
+          const BoundarySurface* bSurface) -> BoundaryIntersection {
+    // Avoid doing anything if that's a rotten apple already
+    if (!sIntersection) {
+      return BoundaryIntersection();
+    }
+
+    double cLimit = sIntersection.intersection.pathLength;
+    //
+    bool withinLimit =
+        (cLimit > oLimit and
+         cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+    if (withinLimit) {
+      sIntersection.intersection.pathLength *= options.navDir;
+      return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                  sIntersection.object);
+    }
+    // Check the alternative
+    if (!sIntersection.alternatives.empty()) {
+      // Test the alternative
+      cLimit = sIntersection.alternatives[0].pathLength;
+      withinLimit = (cLimit > oLimit and
+                     cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+      if (sIntersection.alternatives[0] and withinLimit) {
+        sIntersection.alternatives[0].pathLength *= options.navDir;
+        return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
+                                    sIntersection.object);
+      }
+    }
+    // Return an invalid one
+    return BoundaryIntersection();
+  };
+  // Loop over the boundary surfaces
+>>>>>>> 6beccdac... 3 UnitTests remain failing
   for (auto& bsIter : bSurfaces) {
     // get the boundary surface pointer
     const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();

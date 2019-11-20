@@ -237,7 +237,7 @@ const SurfaceIntersection Layer::surfaceOnApproach(
       return sIntersection;
     }
     double cLimit = sIntersection.intersection.pathLength;
-    // If there's only one intersection or the closest is within limits
+    // Check if you are within the limit
     bool withinLimit =
         (cLimit > oLimit and
          cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);

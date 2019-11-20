@@ -157,8 +157,8 @@ class PlaneSurface : public Surface {
   /// @note this is the final implementation of the pathCorrection function
   ///
   /// @return a double representing the scaling factor
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& direction,
-                        const Vector3D& momentum) const final;
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                        const Vector3D& direction) const final;
 
   /// @brief Straight line intersection schema
   ///
