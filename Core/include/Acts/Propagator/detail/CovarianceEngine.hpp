@@ -20,7 +20,7 @@
 #include <functional>
 
 namespace Acts {
-
+	
 /// @brief These functions perform the transport of a covariance matrix using
 /// given Jacobians. The required data is provided by the stepper object
 /// with some additional data. Since this is a purely algebraic problem the
