@@ -31,7 +31,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t = HelicalTrackLinearizer<ConstantBField, Propagator>;
+using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -84,8 +84,7 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up LinearizedTrackFactory, needed for linearizing the tracks
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Linearizer for BoundParameters type test
   Linearizer_t::Config ltConfig(bField, propagator, pOptions);

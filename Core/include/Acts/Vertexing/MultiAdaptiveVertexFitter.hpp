@@ -41,9 +41,8 @@ class MultiAdaptiveVertexFitter {
 
   using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
-  using BField_t = typename linearizer_t::BField_t;
   using ImpactPointEstimator =
-      ImpactPoint3dEstimator<BField_t, InputTrack_t, Propagator_t>;
+      ImpactPoint3dEstimator<InputTrack_t, Propagator_t>;
 
  public:
   /// @brief Helper struct for storing vertex related information
@@ -235,11 +234,9 @@ class MultiAdaptiveVertexFitter {
   ///
   /// @param state The state object
   /// @param geoContext The geometry context
-  /// @param mfContext The magnetic field context
   /// @param currentVtx Current vertex
   Result<void> setAllVertexCompatibilities(
       State& state, const GeometryContext& geoContext,
-      const MagneticFieldContext& mfContext,
       Vertex<InputTrack_t>* currentVtx) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)

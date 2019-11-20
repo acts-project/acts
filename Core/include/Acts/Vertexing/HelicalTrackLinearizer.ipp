@@ -8,13 +8,10 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-template <typename bfield_t, typename propagator_t, typename action_list_t,
-          typename aborter_list_t>
-
-Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
-    bfield_t, propagator_t, action_list_t,
-    aborter_list_t>::linearizeTrack(const BoundParameters* params,
-                                    const SpacePointVector& linPoint) const {
+template <typename propagator_t, typename propagator_options_t>
+Acts::Result<Acts::LinearizedTrack> Acts::
+    HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
+        const BoundParameters* params, const SpacePointVector& linPoint) const {
   if (params == nullptr) {
     return LinearizedTrack();
   }
@@ -63,8 +60,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::HelicalTrackLinearizer<
 
   double rho;
   // Curvature is infinite w/o b field
-  if (Bz == 0. || std::abs(qOvP) < 1.e-15) {
-    rho = std::numeric_limits<double>::max();
+  if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
+    rho = m_cfg.maxRho;
   } else {
     // signed(!) rho
     rho = sinTh * (1. / qOvP) / Bz;

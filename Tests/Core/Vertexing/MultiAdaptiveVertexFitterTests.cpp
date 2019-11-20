@@ -31,7 +31,7 @@ using namespace Acts::UnitLiterals;
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer = HelicalTrackLinearizer<ConstantBField, Propagator>;
+using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -79,21 +79,18 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
 
   // IP 3D Estimator
-  using IPEstimator =
-      ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>;
+  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
-  IPEstimator::Config ip3dEstCfg(bField, propagator);
+  IPEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
   IPEstimator ip3dEst(ip3dEstCfg);
 
   MultiAdaptiveVertexFitter<BoundParameters, Linearizer>::Config fitterCfg(
       ip3dEst);
-
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer::getDefaultPropagatorOptions(tgContext, mfContext);
 
   // Linearizer for BoundParameters type test
   Linearizer::Config ltConfig(bField, propagator, pOptions);

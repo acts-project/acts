@@ -51,6 +51,7 @@ struct PropagatorState {
     using BoundState = std::tuple<BoundParameters, Jacobian, double>;
     using CurvilinearState =
         std::tuple<CurvilinearParameters, Jacobian, double>;
+    using BField = int;
     using Corrector = VoidIntersectionCorrector;
 
     template <typename, typename>

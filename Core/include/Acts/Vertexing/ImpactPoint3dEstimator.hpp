@@ -11,6 +11,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
@@ -20,28 +22,60 @@ namespace Acts {
 ///
 /// @brief Estimates point of closest approach in 3D
 /// together with corresponding track parameters
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t = PropagatorOptions<>>
 class ImpactPoint3dEstimator {
+  using BField_t = typename propagator_t::Stepper::BField;
+
  public:
   /// @struct Configuration struct
   struct Config {
-    /// @brief Configuration constructor
+    /// @brief Config constructor if magnetic field is present
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(const bfield_t& bIn, std::shared_ptr<propagator_t> prop)
-        : bField(bIn), propagator(std::move(prop)) {}
-    /// Magnetic field
-    bfield_t bField;
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
+    Config(const BField_t& bIn, std::shared_ptr<propagator_t> prop,
+           propagator_options_t propOptions, bool doBackwardPropagation = true)
+        : bField(bIn),
+          propagator(std::move(prop)),
+          pOptions(std::move(propOptions)) {
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
+    }
 
+    /// @brief Config constructor if BField_t == NullBField (no B-Field
+    /// provided)
+    ///
+    /// @param prop The propagator
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
+    template <typename T = BField_t,
+              std::enable_if_t<std::is_same<T, NullBField>::value, int> = 0>
+    Config(std::shared_ptr<propagator_t> prop, propagator_options_t propOptions,
+           bool doBackwardPropagation = true)
+        : propagator(std::move(prop)), pOptions(std::move(propOptions)) {
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
+    }
+
+    /// Magnetic field
+    BField_t bField;
     /// Propagator
     std::shared_ptr<propagator_t> propagator;
-
+    // The propagator options
+    propagator_options_t pOptions;
     /// Max. number of iterations in Newton method
     int maxIterations = 20;
-
     /// Desired precision in deltaPhi in Newton method
     double precision = 1.e-10;
+    /// Minimum q/p value
+    double minQoP = 1e-15;
+    /// Maximum curvature value
+    double maxRho = 1e+15;
   };
 
   /// @brief Constructor
@@ -68,14 +102,14 @@ class ImpactPoint3dEstimator {
   /// to the plane and center of the plane defined as the
   /// given reference point (vertex).
   ///
-  /// @param geoCtx The geometry context
+  /// @param gctx The geometry context
   /// @param trkParams Track parameters
   /// @param vtxPos Reference position (vertex)
   ///
   /// @return New track params
   Result<std::unique_ptr<const BoundParameters>> getParamsAtClosestApproach(
-      const GeometryContext& gctx, const MagneticFieldContext& mctx,
-      const BoundParameters& trkParams, const Vector3D& vtxPos) const;
+      const GeometryContext& gctx, const BoundParameters& trkParams,
+      const Vector3D& vtxPos) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d

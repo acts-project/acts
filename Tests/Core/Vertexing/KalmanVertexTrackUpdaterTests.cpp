@@ -34,7 +34,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t = HelicalTrackLinearizer<ConstantBField, Propagator>;
+using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -84,18 +84,15 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up ImpactPoint3dEstimator, used for comparisons later
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
-      ip3dEstConfig(bField, propagator);
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ip3dEstConfig(
+      bField, propagator, pOptions);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator> ip3dEst(
-      ip3dEstConfig);
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ip3dEst(ip3dEstConfig);
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-      Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
-
   // Linearizer for BoundParameters type test
   Linearizer_t::Config ltConfig(bField, propagator, pOptions);
   Linearizer_t linearizer(ltConfig);

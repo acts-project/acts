@@ -72,13 +72,13 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
-      ipEstCfg(bField, propagator);
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+      bField, propagator, pOptions);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>
-      ipEstimator(ipEstCfg);
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
                 << std::endl;
     }
 
-    auto res = ipEstimator.getParamsAtClosestApproach(tgContext, mfContext,
-                                                      myTrack, refPosition);
+    auto res =
+        ipEstimator.getParamsAtClosestApproach(tgContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
 
@@ -192,13 +192,13 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>::Config
-      ipEstCfg(bField, propagator);
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+      bField, propagator, pOptions);
 
-  ImpactPoint3dEstimator<ConstantBField, BoundParameters, Propagator>
-      ipEstimator(ipEstCfg);
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -252,8 +252,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 
     distancesList.push_back(*distanceRes);
 
-    auto res = ipEstimator.getParamsAtClosestApproach(tgContext, mfContext,
-                                                      myTrack, refPosition);
+    auto res =
+        ipEstimator.getParamsAtClosestApproach(tgContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
 

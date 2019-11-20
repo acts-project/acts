@@ -39,10 +39,8 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator<EigenStepper<ConstantBField>>>;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -93,7 +91,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<BoundParameters, Linearizer_t>
         BilloirFitter;
@@ -209,7 +207,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;
 

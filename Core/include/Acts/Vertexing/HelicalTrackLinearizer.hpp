@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -36,52 +37,61 @@ namespace Acts {
 ///
 /// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
-/// @tparam bfield_t Magnetic field type
 /// @tparam propagator_t Propagator type
-/// @tparam action_list_t Propagator action list type
-/// @tparam aborter_list_t Propagator aborter list type
-template <typename bfield_t,
-          typename propagator_t = Propagator<EigenStepper<bfield_t>>,
-          typename action_list_t = ActionList<>,
-          typename aborter_list_t = AbortList<>>
+/// @tparam propagator_options_t Propagator options type
+template <typename propagator_t,
+          typename propagator_options_t = PropagatorOptions<>>
 class HelicalTrackLinearizer {
+  using PropagatorOptions_t = propagator_options_t;
+
  public:
   using Propagator_t = propagator_t;
-  using BField_t = bfield_t;
-
-  /// @brief Helper function to set up the correct PropagatorOptions with
-  /// propagation direction set to backward. To be used when setting up the
-  /// propagator options for the HelicalTrackLinearizer Config.
-  ///
-  /// @param gc The GeometryContext
-  /// @param mv The MagneticFieldContext
-  ///
-  /// @return The PropagatorOptions with direction = backward
-  static PropagatorOptions<action_list_t, aborter_list_t>
-  getDefaultPropagatorOptions(const GeometryContext& gc,
-                              const MagneticFieldContext& mc) {
-    PropagatorOptions<action_list_t, aborter_list_t> options(gc, mc);
-    options.direction = backward;
-    return options;
-  }
+  using BField_t = typename Propagator_t::Stepper::BField;
 
   /// @brief Configuration struct
-  ///
-  /// @param bIn The magnetic field
-  /// @param prop The propagator
-  /// @param propOptions The propagator options
   struct Config {
+    /// @ Config constructor if magnetic field is present
+    ///
+    /// @param bIn The magnetic field
+    /// @param prop The propagator
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
     Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop,
-           PropagatorOptions<action_list_t, aborter_list_t> propOptions)
-        : bField(bIn), propagator(std::move(prop)), pOptions(propOptions) {
-      assert(pOptions.direction == backward);
+           PropagatorOptions_t propOptions, bool doBackwardPropagation = true)
+        : bField(bIn),
+          propagator(std::move(prop)),
+          pOptions(std::move(propOptions)) {
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
     }
 
+    /// @brief Config constructor if BField_t == NullBField (no B-Field
+    /// provided)
+    ///
+    /// @param prop The propagator
+    /// @param propOptions The propagator options
+    /// @param doBackwardPropagation Set the propagation direction to backward
+    template <typename T = BField_t,
+              std::enable_if_t<std::is_same<T, NullBField>::value, int> = 0>
+    Config(std::shared_ptr<Propagator_t> prop, PropagatorOptions_t propOptions,
+           bool doBackwardPropagation = true)
+        : propagator(std::move(prop)), pOptions(std::move(propOptions)) {
+      if (doBackwardPropagation) {
+        pOptions.direction = backward;
+      }
+    }
+
+    // The magnetic field
     BField_t bField;
-
+    // The propagator
     std::shared_ptr<Propagator_t> propagator;
-
-    PropagatorOptions<action_list_t, aborter_list_t> pOptions;
+    // The propagator options
+    PropagatorOptions_t pOptions;
+    // Minimum q/p value
+    double minQoP = 1e-15;
+    // Maximum curvature value
+    double maxRho = 1e+15;
   };
 
   /// @brief Constructor

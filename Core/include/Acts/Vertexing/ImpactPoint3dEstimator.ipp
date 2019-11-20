@@ -12,12 +12,13 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
 Acts::Result<double> Acts::ImpactPoint3dEstimator<
-    bfield_t, input_track_t,
-    propagator_t>::calculateDistance(const GeometryContext& gctx,
-                                     const BoundParameters& trkParams,
-                                     const Vector3D& vtxPos) const {
+    input_track_t, propagator_t,
+    propagator_options_t>::calculateDistance(const GeometryContext& gctx,
+                                             const BoundParameters& trkParams,
+                                             const Vector3D& vtxPos) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -31,11 +32,12 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
   return deltaR.norm();
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
 Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
-Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
+Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
+                             propagator_options_t>::
     getParamsAtClosestApproach(const GeometryContext& gctx,
-                               const MagneticFieldContext& mctx,
                                const BoundParameters& trkParams,
                                const Vector3D& vtxPos) const {
   Vector3D deltaR;
@@ -68,11 +70,9 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
       Surface::makeShared<PlaneSurface>(
           std::make_shared<Transform3D>(thePlane));
 
-  PropagatorOptions pOptions(gctx, mctx);
-  pOptions.direction = backward;
-
   // Do the propagation to linPointPos
-  auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagate(trkParams, *planeSurface, m_cfg.pOptions);
   if (result.ok()) {
     return std::move((*result).endParameters);
   } else {
@@ -80,12 +80,13 @@ Acts::ImpactPoint3dEstimator<bfield_t, input_track_t, propagator_t>::
   }
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Result<double> Acts::ImpactPoint3dEstimator<
-    bfield_t, input_track_t,
-    propagator_t>::getVertexCompatibility(const GeometryContext& gctx,
-                                          const BoundParameters* trkParams,
-                                          const Vector3D& vertexPos) const {
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
+Acts::Result<double> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
+                                                  propagator_options_t>::
+    getVertexCompatibility(const GeometryContext& gctx,
+                           const BoundParameters* trkParams,
+                           const Vector3D& vertexPos) const {
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -121,13 +122,14 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
   return myXYpos.dot(myWeightXY * myXYpos);
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
 Acts::Result<double> Acts::ImpactPoint3dEstimator<
-    bfield_t, input_track_t,
-    propagator_t>::performNewtonApproximation(const Vector3D& trkPos,
-                                              const Vector3D& vtxPos,
-                                              double phi, double theta,
-                                              double r) const {
+    input_track_t, propagator_t,
+    propagator_options_t>::performNewtonApproximation(const Vector3D& trkPos,
+                                                      const Vector3D& vtxPos,
+                                                      double phi, double theta,
+                                                      double r) const {
   double sinNewPhi = -std::sin(phi);
   double cosNewPhi = std::cos(phi);
 
@@ -176,14 +178,14 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
   return phi;
 }
 
-template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Result<void> Acts::ImpactPoint3dEstimator<
-    bfield_t, input_track_t,
-    propagator_t>::getDistanceAndMomentum(const GeometryContext& gctx,
-                                          const BoundParameters& trkParams,
-                                          const Vector3D& vtxPos,
-                                          Vector3D& deltaR,
-                                          Vector3D& momDir) const {
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
+Acts::Result<void> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
+                                                propagator_options_t>::
+    getDistanceAndMomentum(const GeometryContext& gctx,
+                           const BoundParameters& trkParams,
+                           const Vector3D& vtxPos, Vector3D& deltaR,
+                           Vector3D& momDir) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
   double d0 = trkParams.parameters()[ParID_t::eLOC_D0];
@@ -193,16 +195,18 @@ Acts::Result<void> Acts::ImpactPoint3dEstimator<
   double qOvP = trkParams.parameters()[ParID_t::eQOP];
 
   double cotTheta = 1. / std::tan(theta);
+
+  // get B-field z-component at current position
   double bZ = m_cfg.bField.getField(trkSurfaceCenter)[eZ];
 
   // The radius
   double r;
   // Curvature is infinite w/o b field
-  if (bZ == 0. || std::abs(qOvP) < 1.e-15) {
-    r = std::numeric_limits<double>::max();
+  if (bZ == 0. || std::abs(qOvP) < m_cfg.minQoP) {
+    r = m_cfg.maxRho;
   } else {
     // signed(!) r
-    r = std::sin(theta) * (1 / qOvP) / bZ;
+    r = std::sin(theta) * (1. / qOvP) / bZ;
   }
 
   Vector3D vec0 = trkSurfaceCenter + Vector3D(-(d0 - r) * std::sin(phi),
