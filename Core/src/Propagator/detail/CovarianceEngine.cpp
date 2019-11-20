@@ -240,5 +240,5 @@ void covarianceTransport(StepperState& state, bool reinitialize,
   // Store The global and bound jacobian (duplication for the moment)
   state.jacobian = jacFull * state.jacobian;
 }
-}  // namespace CovarianceEngine
+}  // namespace detail
 }  // namespace Acts
