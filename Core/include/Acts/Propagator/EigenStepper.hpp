@@ -205,32 +205,32 @@ class EigenStepper {
 
   /// Global particle position accessor
   ///
-  /// @param state [in] Thestepping state (thread-local cache)
+  /// @param state [in] The stepping state (thread-local cache)
   Vector3D position(const State& state) const { return state.pos; }
 
   /// Momentum direction accessor
   ///
-  /// @param state [in] Thestepping state (thread-local cache)
+  /// @param state [in] The stepping state (thread-local cache)
   Vector3D direction(const State& state) const { return state.dir; }
 
   /// Actual momentum accessor
   ///
-  /// @param state [in] Thestepping state (thread-local cache)
+  /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const { return state.p; }
 
   /// Charge access
   ///
-  /// @param state [in] Thestepping state (thread-local cache)
+  /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const { return state.q; }
 
   /// Time access
   ///
-  /// @param state [in] Thestepping state (thread-local cache)
+  /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.t0 + state.dt; }
 
   /// Overstep limit
   ///
-  /// @param state [in] Thestepping state (thread-local cache)
+  /// @param state [in] The stepping state (thread-local cache)
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
 
   /// Tests if the state reached a surface

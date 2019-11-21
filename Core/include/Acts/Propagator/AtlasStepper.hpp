@@ -338,7 +338,7 @@ class AtlasStepper {
 
   /// Overstep limit
   ///
-  /// @param state [in] Thestepping state (thread-local cache)
+  /// @param state [in] The stepping state (thread-local cache)
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
 
   /// Time access
