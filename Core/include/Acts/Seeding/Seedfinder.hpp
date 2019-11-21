@@ -54,7 +54,8 @@ class Seedfinder {
   /// @param bottom group of space points to be used as innermost SP in a seed.
   /// @param middle group of space points to be used as middle SP in a seed.
   /// @param top group of space points to be used as outermost SP in a seed.
-  /// Iterators must be separate objects for each parallel call.
+  /// Ranges must return pointers.
+  /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
