@@ -114,7 +114,7 @@ BOOST_DATA_TEST_CASE(
     for (const auto& bndSrf : bndSurfaces) {
       const auto& srf = bndSrf->surfaceRepresentation();
       auto sri = srf.intersect(tgContext, ray.origin(), ray.dir(), true);
-      if (sri) {
+      if (sri and sri.intersection.pathLength >= s_onSurfaceTolerance) {
         // does intersect
         hits.push_back(std::move(sri));
       }
