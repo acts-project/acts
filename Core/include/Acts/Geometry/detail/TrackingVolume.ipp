@@ -87,85 +87,75 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const options_t& options,
     const sorter_t& sorter) const {
-  // Loop over boundarySurfaces and calculate the intersection
-  auto excludeObject = options.startObject;
-  auto& bSurfaces = boundarySurfaces();
-<<<<<<< HEAD
-  std::vector<const BoundarySurfaceT<TrackingVolume>*> nonExcludedBoundaries;
+      
+   // Loop over boundarySurfaces and calculate the intersection
+   auto excludeObject = options.startObject;
+   auto& bSurfaces = boundarySurfaces();
+   std::vector<BoundaryIntersection> bIntersections;
 
-=======
-  std::vector<BoundaryIntersection> bIntersections;
+   // The signed direction: solution (except overstepping) is positive
+   auto sDirection = options.navDir * direction;
 
-  // The signed direction: solution (except overstepping) is positive
-  auto sDirection = options.navDir * direction;
+   // The Limits: current, path & overstepping
+   double pLimit = options.pathLimit;
+   double oLimit = options.overstepLimit;
 
-  // The Limits: current, path & overstepping
-  double pLimit = options.pathLimit;
-  double oLimit = options.overstepLimit;
+   // Helper function to test intersection
+   auto checkIntersection =
+       [&](SurfaceIntersection& sIntersection,
+           const BoundarySurface* bSurface) -> BoundaryIntersection {
+     // Avoid doing anything if that's a rotten apple already
+     if (!sIntersection) {
+       return BoundaryIntersection();
+     }
 
-  // Helper function to test intersection
-  auto checkIntersection =
-      [&](SurfaceIntersection& sIntersection,
-          const BoundarySurface* bSurface) -> BoundaryIntersection {
-    // Avoid doing anything if that's a rotten apple already
-    if (!sIntersection) {
-      return BoundaryIntersection();
-    }
-
-    double cLimit = sIntersection.intersection.pathLength;
-    //
-    bool withinLimit =
-        (cLimit > oLimit and
-         cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-    if (withinLimit) {
-      sIntersection.intersection.pathLength *= options.navDir;
-      return BoundaryIntersection(sIntersection.intersection, bSurface,
-                                  sIntersection.object);
-    }
-    // Check the alternative
-    if (!sIntersection.alternatives.empty()) {
-      // Test the alternative
-      cLimit = sIntersection.alternatives[0].pathLength;
-      withinLimit = (cLimit > oLimit and
-                     cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-      if (sIntersection.alternatives[0] and withinLimit) {
-        sIntersection.alternatives[0].pathLength *= options.navDir;
-        return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
-                                    sIntersection.object);
-      }
-    }
-    // Return an invalid one
-    return BoundaryIntersection();
-  };
-  // Loop over the boundary surfaces
->>>>>>> 6beccdac... 3 UnitTests remain failing
-  for (auto& bsIter : bSurfaces) {
-    // get the boundary surface pointer
-    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
-    const auto& bSurfaceRep = bSurface->surfaceRepresentation();
-    // exclude the on boundary object
-    if (excludeObject && excludeObject == &bSurfaceRep) {
-      continue;
-    }
-    nonExcludedBoundaries.push_back(bSurface);
-  }
-
-  const std::vector<std::shared_ptr<TrackingVolume>> confinedDenseVolumes =
-      denseVolumes();
-  for (const auto& dv : confinedDenseVolumes) {
-    auto& bSurfacesConfined = dv->boundarySurfaces();
-    for (auto& bsIter : bSurfacesConfined) {
-      // get the boundary surface pointer
-      const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
-      const auto& bSurfaceRep = bSurface->surfaceRepresentation();
-      // exclude the on boundary object
-      if (excludeObject && excludeObject == &bSurfaceRep) {
-        continue;
-      }
-      nonExcludedBoundaries.push_back(bSurface);
-    }
-  }
-  return sorter(gctx, nonExcludedBoundaries, position, direction, options);
+     double cLimit = sIntersection.intersection.pathLength;
+     //
+     bool withinLimit =
+         (cLimit > oLimit and
+          cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+     if (withinLimit) {
+       sIntersection.intersection.pathLength *= options.navDir;
+       return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                   sIntersection.object);
+     }
+     // Check the alternative
+     if (!sIntersection.alternatives.empty()) {
+       // Test the alternative
+       cLimit = sIntersection.alternatives[0].pathLength;
+       withinLimit = (cLimit > oLimit and
+                      cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+       if (sIntersection.alternatives[0] and withinLimit) {
+         sIntersection.alternatives[0].pathLength *= options.navDir;
+         return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
+                                     sIntersection.object);
+       }
+     }
+     // Return an invalid one
+     return BoundaryIntersection();
+   };
+   // Loop over the boundary surfaces
+   for (auto& bsIter : bSurfaces) {
+     // Get the boundary surface pointer
+     const auto& bSurfaceRep = bsIter->surfaceRepresentation();
+     // Exclude the boundary where you are on
+     if (excludeObject != &bSurfaceRep) {
+       auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
+                                               options.boundaryCheck);
+       // Intersect and continue
+       auto bIntersection = checkIntersection(bCandidate, bsIter.get());
+       if (bIntersection) {
+         bIntersections.push_back(bIntersection);
+       }
+     }
+   }
+   // Sort them accordingly to the navigation direction
+   if (options.navDir == forward) {
+     std::sort(bIntersections.begin(), bIntersections.end());
+   } else {
+     std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
+   }
+   return bIntersections;
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
