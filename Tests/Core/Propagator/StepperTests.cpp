@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
   propOptsDef.maxStepSize = 1.5_m;
-  propOptsDef.debug = true;
+  propOptsDef.debug = false;
 
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
