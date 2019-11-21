@@ -146,8 +146,6 @@ class DirectNavigator {
       // Move the sequence to the next surface
       ++state.navigation.nextSurfaceIter;
     }
-    // Return to the propagator
-    return;
   }
 
   /// @brief Navigator target call
@@ -175,8 +173,7 @@ class DirectNavigator {
       // Intersect the next surface and go
       double navStep = nextIntersection.intersection.pathLength;
       double overstepLimit = stepper.overstepLimit(state.stepping);
-      if (navStep < overstepLimit and
-          nextIntersection.alternatives.size() > 0 and
+      if (navStep < overstepLimit and !nextIntersection.alternatives.empty() and
           nextIntersection.alternatives[0]) {
         navStep = nextIntersection.alternatives[0].pathLength;
       }
@@ -200,8 +197,6 @@ class DirectNavigator {
                  [&] { return std::string("No target Surface, job done."); });
       }
     }
-    // Return to the propagator
-    return;
   }
 
  private:
