@@ -24,6 +24,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
@@ -164,7 +165,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
-  propOpts.maxStepSize = 0.5_m;
+  propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));
@@ -205,7 +206,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOptsDef.actionList = aListDef;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
-  propOptsDef.maxStepSize = 0.5_m;
+  propOptsDef.maxStepSize = 1.5_m;
 
   EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
       bField);
@@ -277,7 +278,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
-  propOpts.maxStepSize = 0.5_m;
+  propOpts.maxStepSize = 1.5_m;
   propOpts.debug = true;
 
   // Build stepper and propagator
@@ -327,7 +328,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 100;
-  propOptsDense.maxStepSize = 0.5_m;
+  propOptsDense.maxStepSize = 1.5_m;
   propOptsDense.debug = true;
 
   // Build stepper and propagator
@@ -439,18 +440,18 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                                        startMom, 1., 0.);
 
   // Create action list for surface collection
-  ActionList<StepCollector> aList;
   AbortList<EndOfWorld> abortList;
   abortList.get<EndOfWorld>().maxX = 3_m;
 
+  using DebugOutput = Acts::detail::DebugOutputActor;
+
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector>,
+  DenseStepperPropagatorOptions<ActionList<StepCollector, DebugOutput>,
                                 AbortList<EndOfWorld>>
       propOpts(tgContext, mfContext);
-  propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
-  propOpts.maxStepSize = 0.5_m;
+  propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 1_T, 0.));
@@ -503,15 +504,15 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   // Build launcher through vacuum
   // Set options for propagator
-  ActionList<StepCollector> aListDef;
 
-  PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
+  PropagatorOptions<ActionList<StepCollector, DebugOutput>,
+                    AbortList<EndOfWorld>>
       propOptsDef(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 1_m;
-  propOptsDef.actionList = aListDef;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
-  propOptsDef.maxStepSize = 0.5_m;
+  propOptsDef.maxStepSize = 1.5_m;
+  propOptsDef.debug = true;
 
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
@@ -544,6 +545,12 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     }
   }
 
+  if (propOptsDef.debug) {
+    const auto debugString =
+        resultDef.template get<DebugOutput::result_type>().debugString;
+    std::cout << debugString << std::endl;
+  }
+
   CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1_um);
   CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1_um);
 
@@ -573,10 +580,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                 AbortList<EndOfWorld>>
       propOptsDense(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 2_m;
-  propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 100;
-  propOptsDense.maxStepSize = 0.5_m;
+  propOptsDense.maxStepSize = 1.5_m;
   propOptsDense.tolerance = 1e-8;
 
   // Build stepper and propagator
