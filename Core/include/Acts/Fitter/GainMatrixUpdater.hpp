@@ -84,6 +84,7 @@ class GainMatrixUpdater {
     auto filtered = trackState.filtered();
     auto filtered_covariance = trackState.filteredCovariance();
 
+    std::optional<std::error_code> error{std::nullopt};  // assume ok
     visit_measurement(
         trackState.calibrated(), trackState.calibratedCovariance(),
         trackState.calibratedSize(),
@@ -110,6 +111,11 @@ class GainMatrixUpdater {
 
           ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
+          if (K.hasNaN()) {
+            error = KalmanFitterError::UpdateFailed;  // set to error
+            return false;                             // abort execution
+          }
+
           filtered = predicted + K * (calibrated - H * predicted);
           filtered_covariance =
               (ActsSymMatrixD<
@@ -131,6 +137,7 @@ class GainMatrixUpdater {
                   .value();
 
           ACTS_VERBOSE("Chi2: " << trackState.chi2());
+          return true;  // continue execution
         });
 
     // always succeed, no outlier logic yet
