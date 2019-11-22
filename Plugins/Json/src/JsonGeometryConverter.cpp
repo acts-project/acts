@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
@@ -17,6 +18,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -29,17 +31,17 @@
 
 Acts::JsonGeometryConverter::JsonGeometryConverter(
     const Acts::JsonGeometryConverter::Config& cfg)
-  : m_cfg(std::move(cfg))
-{
+    : m_cfg(std::move(cfg)) {
   // Validate the configuration
-  if (!m_cfg.logger) { throw std::invalid_argument("Missing logger"); }
+  if (!m_cfg.logger) {
+    throw std::invalid_argument("Missing logger");
+  }
 }
 
-std::pair<std::map<Acts::GeometryID, std::shared_ptr<const Acts::ISurfaceMaterial>>,
-          std::map<Acts::GeometryID, std::shared_ptr<const Acts::IVolumeMaterial>>>
-Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps)
-{
-
+std::pair<
+    std::map<Acts::GeometryID, std::shared_ptr<const Acts::ISurfaceMaterial>>,
+    std::map<Acts::GeometryID, std::shared_ptr<const Acts::IVolumeMaterial>>>
+Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
   auto& j = materialmaps;
   // The return maps
   std::pair<SurfaceMaterialMap, VolumeMaterialMap> maps;
@@ -54,24 +56,24 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps)
       auto volj = value;
       for (auto& [vkey, vvalue] : volj.items()) {
         // Create the volume id
-        int              vid = std::stoi(vkey);
+        int vid = std::stoi(vkey);
         Acts::GeometryID volumeID;
         volumeID.setVolume(vid);
         ACTS_VERBOSE("j2a: -> Found Volume " << vid);
         // Loop through the information in the volume
         for (auto& [vckey, vcvalue] : vvalue.items()) {
-          if (vckey == m_cfg.boukey and m_cfg.processBoundaries
-              and not vcvalue.empty()) {
+          if (vckey == m_cfg.boukey and m_cfg.processBoundaries and
+              not vcvalue.empty()) {
             ACTS_VERBOSE("j2a: --> BoundarySurface(s) to be parsed");
             for (auto& [bkey, bvalue] : vcvalue.items()) {
               // Create the boundary id
-              int              bid = std::stoi(bkey);
+              int bid = std::stoi(bkey);
               Acts::GeometryID boundaryID(volumeID);
               boundaryID.setBoundary(bid);
               ACTS_VERBOSE("j2a: ---> Found boundary surface " << bid);
               auto boumat = jsonToSurfaceMaterial(bvalue);
-              maps.first[boundaryID]
-                  = std::shared_ptr<const ISurfaceMaterial>(boumat);
+              maps.first[boundaryID] =
+                  std::shared_ptr<const ISurfaceMaterial>(boumat);
             }
           } else if (vckey == m_cfg.laykey) {
             ACTS_VERBOSE("j2a: --> Layer(s) to be parsed");
@@ -79,20 +81,20 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps)
             auto layj = vcvalue;
             for (auto& [lkey, lvalue] : layj.items()) {
               // Create the layer id
-              int              lid = std::stoi(lkey);
+              int lid = std::stoi(lkey);
               Acts::GeometryID layerID(volumeID);
               layerID.setLayer(lid);
               ACTS_VERBOSE("j2a: ---> Found Layer " << lid);
               // Finally loop over layer components
               for (auto& [lckey, lcvalue] : lvalue.items()) {
-                if (lckey == m_cfg.repkey and m_cfg.processRepresenting
-                    and not lcvalue.empty()) {
+                if (lckey == m_cfg.repkey and m_cfg.processRepresenting and
+                    not lcvalue.empty()) {
                   ACTS_VERBOSE("j2a: ----> Found representing surface");
                   auto repmat = jsonToSurfaceMaterial(lcvalue);
-                  maps.first[layerID]
-                      = std::shared_ptr<const Acts::ISurfaceMaterial>(repmat);
-                } else if (lckey == m_cfg.appkey and m_cfg.processApproaches
-                           and not lcvalue.empty()) {
+                  maps.first[layerID] =
+                      std::shared_ptr<const Acts::ISurfaceMaterial>(repmat);
+                } else if (lckey == m_cfg.appkey and m_cfg.processApproaches and
+                           not lcvalue.empty()) {
                   ACTS_VERBOSE("j2a: ----> Found approach surface(s)");
                   // Loop over approach surfaces
                   for (auto& [askey, asvalue] : lcvalue.items()) {
@@ -102,11 +104,11 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps)
                     approachID.setApproach(aid);
                     ACTS_VERBOSE("j2a: -----> Approach surface " << askey);
                     auto appmat = jsonToSurfaceMaterial(asvalue);
-                    maps.first[approachID]
-                        = std::shared_ptr<const Acts::ISurfaceMaterial>(appmat);
+                    maps.first[approachID] =
+                        std::shared_ptr<const Acts::ISurfaceMaterial>(appmat);
                   }
-                } else if (lckey == m_cfg.senkey and m_cfg.processSensitives
-                           and not lcvalue.empty()) {
+                } else if (lckey == m_cfg.senkey and m_cfg.processSensitives and
+                           not lcvalue.empty()) {
                   ACTS_VERBOSE("j2a: ----> Found sensitive surface(s)");
                   // Loop over sensitive surfaces
                   for (auto& [sskey, ssvalue] : lcvalue.items()) {
@@ -116,8 +118,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps)
                     senisitiveID.setSensitive(sid);
                     ACTS_VERBOSE("j2a: -----> Sensitive surface " << sskey);
                     auto senmat = jsonToSurfaceMaterial(ssvalue);
-                    maps.first[senisitiveID]
-                        = std::shared_ptr<const Acts::ISurfaceMaterial>(senmat);
+                    maps.first[senisitiveID] =
+                        std::shared_ptr<const Acts::ISurfaceMaterial>(senmat);
                   }
                 }
               }
@@ -139,18 +141,16 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps)
 
 /// Convert method
 ///
-json
-Acts::JsonGeometryConverter::materialMapsToJson(
-    const DetectorMaterialMaps& maps)
-{
+json Acts::JsonGeometryConverter::materialMapsToJson(
+    const DetectorMaterialMaps& maps) {
   DetectorRep detRep;
   // Collect all GeometryIDs per VolumeID for the formatted output
   for (auto& [key, value] : maps.first) {
-    geo_id_value vid    = key.volume();
-    auto         volRep = detRep.volumes.find(vid);
+    geo_id_value vid = key.volume();
+    auto volRep = detRep.volumes.find(vid);
     if (volRep == detRep.volumes.end()) {
       detRep.volumes.insert({vid, VolumeRep()});
-      volRep                  = detRep.volumes.find(vid);
+      volRep = detRep.volumes.find(vid);
       volRep->second.volumeID = key;
     }
     geo_id_value lid = key.layer();
@@ -159,7 +159,7 @@ Acts::JsonGeometryConverter::materialMapsToJson(
       auto layRep = volRep->second.layers.find(lid);
       if (layRep == volRep->second.layers.end()) {
         volRep->second.layers.insert({lid, LayerRep()});
-        layRep                 = volRep->second.layers.find(lid);
+        layRep = volRep->second.layers.find(lid);
         layRep->second.layerID = key;
       }
       // now insert appropriately
@@ -181,11 +181,11 @@ Acts::JsonGeometryConverter::materialMapsToJson(
   }
   for (auto& [key, value] : maps.second) {
     // find the volume representation
-    geo_id_value vid    = key.volume();
-    auto         volRep = detRep.volumes.find(vid);
+    geo_id_value vid = key.volume();
+    auto volRep = detRep.volumes.find(vid);
     if (volRep == detRep.volumes.end()) {
       detRep.volumes.insert({vid, VolumeRep()});
-      volRep                  = detRep.volumes.find(vid);
+      volRep = detRep.volumes.find(vid);
       volRep->second.volumeID = key;
     }
     volRep->second.material = value.get();
@@ -195,9 +195,7 @@ Acts::JsonGeometryConverter::materialMapsToJson(
 }
 
 /// Create Json from a detector represenation
-json
-Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep)
-{
+json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
   json detectorj;
   ACTS_VERBOSE("a2j: Writing json from detector representation");
   ACTS_VERBOSE("a2j: Found entries for " << detRep.volumes.size()
@@ -207,7 +205,7 @@ Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep)
   for (auto& [key, value] : detRep.volumes) {
     json volj;
     ACTS_VERBOSE("a2j: -> Writing Volume: " << key);
-    volj[m_cfg.namekey]  = value.volumeName;
+    volj[m_cfg.namekey] = value.volumeName;
     std::ostringstream svolumeID;
     svolumeID << value.volumeID;
     volj[m_cfg.geoidkey] = svolumeID.str();
@@ -276,9 +274,7 @@ Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep)
 
 /// Create the Surface Material
 const Acts::ISurfaceMaterial*
-Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material)
-{
-
+Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
   Acts::ISurfaceMaterial* sMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
@@ -309,20 +305,15 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material)
   return sMaterial;
 }
 
-json
-Acts::JsonGeometryConverter::trackingGeometryToJson(
-    const Acts::TrackingGeometry& tGeometry)
-{
+json Acts::JsonGeometryConverter::trackingGeometryToJson(
+    const Acts::TrackingGeometry& tGeometry) {
   DetectorRep detRep;
   convertToRep(detRep, *tGeometry.highestTrackingVolume());
   return detectorRepToJson(detRep);
 }
 
-void
-Acts::JsonGeometryConverter::convertToRep(
-    DetectorRep&                detRep,
-    const Acts::TrackingVolume& tVolume)
-{
+void Acts::JsonGeometryConverter::convertToRep(
+    DetectorRep& detRep, const Acts::TrackingVolume& tVolume) {
   // The writer reader volume representation
   VolumeRep volRep;
   volRep.volumeName = tVolume.volumeName();
@@ -338,7 +329,7 @@ Acts::JsonGeometryConverter::convertToRep(
   }
   // Get the volume Id
   Acts::GeometryID volumeID = tVolume.geoID();
-  geo_id_value     vid      = volumeID.volume();
+  geo_id_value vid = volumeID.volume();
 
   // Write the material if there's one
   if (tVolume.volumeMaterial() != nullptr) {
@@ -354,7 +345,7 @@ Acts::JsonGeometryConverter::convertToRep(
       if (layRep) {
         // it's a valid representation so let's go with it
         Acts::GeometryID layerID = lay->geoID();
-        geo_id_value     lid     = layerID.layer();
+        geo_id_value lid = layerID.layer();
         volRep.layers.insert({lid, std::move(layRep)});
       }
     }
@@ -365,7 +356,7 @@ Acts::JsonGeometryConverter::convertToRep(
     auto& bssfRep = bsurf->surfaceRepresentation();
     if (bssfRep.surfaceMaterial()) {
       Acts::GeometryID boundaryID = bssfRep.geoID();
-      geo_id_value     bid = boundaryID.boundary();
+      geo_id_value bid = boundaryID.boundary();
       // Ignore if the volumeID is not correct (i.e. shared boundary)
       // if (boundaryID.value(Acts::GeometryID::volume_mask) == vid){
       volRep.boundaries[bid] = bssfRep.surfaceMaterial();
@@ -374,16 +365,15 @@ Acts::JsonGeometryConverter::convertToRep(
   }
   // Write if it's good
   if (volRep) {
-    volRep.volumeName         = tVolume.volumeName();
-    volRep.volumeID           = volumeID;
+    volRep.volumeName = tVolume.volumeName();
+    volRep.volumeID = volumeID;
     detRep.volumes.insert({vid, std::move(volRep)});
   }
   return;
 }
 
-Acts::JsonGeometryConverter::LayerRep
-Acts::JsonGeometryConverter::convertToRep(const Acts::Layer& layer)
-{
+Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
+    const Acts::Layer& layer) {
   LayerRep layRep;
   // fill layer ID information
   layRep.layerID = layer.geoID();
@@ -415,26 +405,19 @@ Acts::JsonGeometryConverter::convertToRep(const Acts::Layer& layer)
   return layRep;
 }
 
-json
-Acts::JsonGeometryConverter::surfaceMaterialToJson(
-    const Acts::ISurfaceMaterial& sMaterial)
-{
-
+json Acts::JsonGeometryConverter::surfaceMaterialToJson(
+    const Acts::ISurfaceMaterial& sMaterial) {
   json smj;
 
   // lemma 0 : accept the surface
-  auto convertMaterialProperties
-      = [](const Acts::MaterialProperties& mp) -> std::vector<float> {
+  auto convertMaterialProperties =
+      [](const Acts::MaterialProperties& mp) -> std::vector<float> {
     // convert when ready
     if (mp) {
       /// Return the thickness in mm
       return {
-          mp.averageX0(),
-          mp.averageL0(),
-          mp.averageA(),          
-          mp.averageZ(),
-          mp.averageRho(),
-          mp.thickness(),
+          mp.averageX0(), mp.averageL0(),  mp.averageA(),
+          mp.averageZ(),  mp.averageRho(), mp.thickness(),
       };
     }
     return {};
@@ -447,29 +430,29 @@ Acts::JsonGeometryConverter::surfaceMaterialToJson(
   if (psMaterial != nullptr) {
     // Type is proto material
     smj[m_cfg.typekey] = "proto";
-    bUtility           = &(psMaterial->binUtility());
+    bUtility = &(psMaterial->binUtility());
   } else {
     // Now check if we have a homogeneous material
-    auto hsMaterial
-        = dynamic_cast<const Acts::HomogeneousSurfaceMaterial*>(&sMaterial);
+    auto hsMaterial =
+        dynamic_cast<const Acts::HomogeneousSurfaceMaterial*>(&sMaterial);
     if (hsMaterial != nullptr) {
       // type is homogeneous
       smj[m_cfg.typekey] = "homogeneous";
       if (m_cfg.writeData) {
         // write out the data, it's a [[[X0,L0,Z,A,rho,thickness]]]
         auto& mp = hsMaterial->materialProperties(0, 0);
-        std::vector<std::vector<std::vector<float>>> mmat
-            = {{convertMaterialProperties(mp)}};
+        std::vector<std::vector<std::vector<float>>> mmat = {
+            {convertMaterialProperties(mp)}};
         smj[m_cfg.datakey] = mmat;
       }
     } else {
       // Only option remaining: BinnedSurface material
-      auto bsMaterial
-          = dynamic_cast<const Acts::BinnedSurfaceMaterial*>(&sMaterial);
+      auto bsMaterial =
+          dynamic_cast<const Acts::BinnedSurfaceMaterial*>(&sMaterial);
       if (bsMaterial != nullptr) {
         // type is binned
         smj[m_cfg.typekey] = "binned";
-        bUtility           = &(bsMaterial->binUtility());
+        bUtility = &(bsMaterial->binUtility());
         // convert the data
         // get the material matrix
         if (m_cfg.writeData) {
@@ -519,8 +502,7 @@ Acts::JsonGeometryConverter::surfaceMaterialToJson(
 
 /// Create the Material Matrix
 Acts::MaterialPropertiesMatrix
-Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data)
-{
+Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
   Acts::MaterialPropertiesMatrix mpMatrix;
   /// This is assumed to be an array or array of array[6]
   for (auto& outer : data) {
@@ -539,17 +521,16 @@ Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data)
 }
 
 /// Create the BinUtility for this
-Acts::BinUtility
-Acts::JsonGeometryConverter::jsonToBinUtility(const json& bin)
-{
+Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
+    const json& bin) {
   // finding the iterator position to determine the binning value
-  auto bit = std::find(
-      Acts::binningValueNames.begin(), Acts::binningValueNames.end(), bin[0]);
-  size_t             indx = std::distance(Acts::binningValueNames.begin(), bit);
+  auto bit = std::find(Acts::binningValueNames.begin(),
+                       Acts::binningValueNames.end(), bin[0]);
+  size_t indx = std::distance(Acts::binningValueNames.begin(), bit);
   Acts::BinningValue bval = Acts::BinningValue(indx);
   Acts::BinningOption bopt = bin[1] == "open" ? Acts::open : Acts::closed;
-  unsigned int        bins = bin[2];
-  double              min = 0, max = 0;
+  unsigned int bins = bin[2];
+  double min = 0, max = 0;
   if (bin[3].size() == 2) {
     min = bin[3][0];
     max = bin[3][1];
