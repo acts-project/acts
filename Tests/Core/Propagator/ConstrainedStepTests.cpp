@@ -37,9 +37,12 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
   cstep stepSize_p = 0.25;
 
   // All of the types should be 0.25 now
-  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::accuracy], 0.25);
-  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::actor], 0.25);
-  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::aborter], 0.25);
+  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::accuracy],
+                    std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::actor],
+                    std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::aborter],
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_p.values[cstep::user], 0.25);
 
   // Check the cast operation to double
@@ -67,16 +70,20 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
 
   // now we release the accuracy - to the highest available value
   stepSize_p.release(cstep::accuracy);
-  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::accuracy], 0.25);
+  BOOST_CHECK_EQUAL(stepSize_p.values[cstep::accuracy],
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_p, 0.05);
 
   // backward stepping test
   cstep stepSize_n = -0.25;
 
   // All of the types should be 0.25 now
-  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::accuracy], -0.25);
-  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::actor], -0.25);
-  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::aborter], -0.25);
+  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::accuracy],
+                    -std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::actor],
+                    -std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::aborter],
+                    -std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_n.values[cstep::user], -0.25);
 
   // Check the cast operation to double
@@ -103,7 +110,8 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
 
   // now we release the accuracy - to the highest available value
   stepSize_n.release(cstep::accuracy);
-  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::accuracy], -0.25);
+  BOOST_CHECK_EQUAL(stepSize_n.values[cstep::accuracy],
+                    -std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_n, -0.05);
 }
 
