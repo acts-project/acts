@@ -1,4 +1,4 @@
-// This file is part of the Acts project.
+Tests/Core/Propagator/StepperTests.cpp // This file is part of the Acts project.
 //
 // Copyright (C) 2018-2019 CERN for the benefit of the Acts project
 //
@@ -724,11 +724,11 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));
   EigenStepper<
-      ConstantBField, VoidIntersectionCorrector,
+      ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
       detail::HighestValidAuctioneer>
       es(bField);
-  Propagator<EigenStepper<ConstantBField, VoidIntersectionCorrector,
+  Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DefaultExtension,
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,

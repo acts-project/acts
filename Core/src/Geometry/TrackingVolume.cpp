@@ -131,9 +131,8 @@ void Acts::TrackingVolume::sign(GeometrySignature geosign,
   }
 }
 
-const std::vector<
-    std::shared_ptr<const Acts::BoundarySurfaceT<Acts::TrackingVolume>>>&
-Acts::TrackingVolume::boundarySurfaces() const {
+const Acts::TrackingVolumeBoundaries& Acts::TrackingVolume::boundarySurfaces()
+    const {
   return (m_boundarySurfaces);
 }
 

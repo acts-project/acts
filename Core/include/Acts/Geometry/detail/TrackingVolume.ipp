@@ -1,4 +1,4 @@
-// This file is part of the Acts project.
+Core/include/Acts/Propagator/Navigator.hpp// This file is part of the Acts project.
 //
 // Copyright (C) 2018 CERN for the benefit of the Acts project
 //
@@ -73,99 +73,95 @@ std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
   return lIntersections;
 }
 
-template <typename parameters_t, typename options_t>
-std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options) const {
-  return compatibleLayers(gctx, parameters.position(), parameters.direction(),
-                          options);
-}
-
 // Returns the boundary surfaces ordered in probability to hit them based on
-template <typename options_t, typename sorter_t>
+template <typename options_t>
 std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options,
-    const sorter_t& sorter) const {
-      
-   // Loop over boundarySurfaces and calculate the intersection
-   auto excludeObject = options.startObject;
-   auto& bSurfaces = boundarySurfaces();
-   std::vector<BoundaryIntersection> bIntersections;
+    const Vector3D& direction, const options_t& options) const {
+  // Loop over boundarySurfaces and calculate the intersection
+  auto excludeObject = options.startObject;
+  std::vector<BoundaryIntersection> bIntersections;
 
-   // The signed direction: solution (except overstepping) is positive
-   auto sDirection = options.navDir * direction;
+  // The signed direction: solution (except overstepping) is positive
+  auto sDirection = options.navDir * direction;
 
-   // The Limits: current, path & overstepping
-   double pLimit = options.pathLimit;
-   double oLimit = options.overstepLimit;
+  // The Limits: current, path & overstepping
+  double pLimit = options.pathLimit;
+  double oLimit = options.overstepLimit;
 
-   // Helper function to test intersection
-   auto checkIntersection =
-       [&](SurfaceIntersection& sIntersection,
-           const BoundarySurface* bSurface) -> BoundaryIntersection {
-     // Avoid doing anything if that's a rotten apple already
-     if (!sIntersection) {
-       return BoundaryIntersection();
-     }
+  // Helper function to test intersection
+  auto checkIntersection =
+      [&](SurfaceIntersection& sIntersection,
+          const BoundarySurface* bSurface) -> BoundaryIntersection {
+    // Avoid doing anything if that's a rotten apple already
+    if (!sIntersection) {
+      return BoundaryIntersection();
+    }
 
-     double cLimit = sIntersection.intersection.pathLength;
-     //
-     bool withinLimit =
-         (cLimit > oLimit and
-          cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-     if (withinLimit) {
-       sIntersection.intersection.pathLength *= options.navDir;
-       return BoundaryIntersection(sIntersection.intersection, bSurface,
-                                   sIntersection.object);
-     }
-     // Check the alternative
-     if (!sIntersection.alternatives.empty()) {
-       // Test the alternative
-       cLimit = sIntersection.alternatives[0].pathLength;
-       withinLimit = (cLimit > oLimit and
-                      cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-       if (sIntersection.alternatives[0] and withinLimit) {
-         sIntersection.alternatives[0].pathLength *= options.navDir;
-         return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
-                                     sIntersection.object);
-       }
-     }
-     // Return an invalid one
-     return BoundaryIntersection();
-   };
-   // Loop over the boundary surfaces
-   for (auto& bsIter : bSurfaces) {
-     // Get the boundary surface pointer
-     const auto& bSurfaceRep = bsIter->surfaceRepresentation();
-     // Exclude the boundary where you are on
-     if (excludeObject != &bSurfaceRep) {
-       auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
-                                               options.boundaryCheck);
-       // Intersect and continue
-       auto bIntersection = checkIntersection(bCandidate, bsIter.get());
-       if (bIntersection) {
-         bIntersections.push_back(bIntersection);
-       }
-     }
-   }
-   // Sort them accordingly to the navigation direction
-   if (options.navDir == forward) {
-     std::sort(bIntersections.begin(), bIntersections.end());
-   } else {
-     std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
-   }
-   return bIntersections;
-}
+    double cLimit = sIntersection.intersection.pathLength;
+    //
+    bool withinLimit =
+        (cLimit > oLimit and
+         cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+    if (withinLimit) {
+      sIntersection.intersection.pathLength *= options.navDir;
+      return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                  sIntersection.object);
+    }
+    // Check the alternative
+    if (!sIntersection.alternatives.empty()) {
+      // Test the alternative
+      cLimit = sIntersection.alternatives[0].pathLength;
+      withinLimit = (cLimit > oLimit and
+                     cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+      if (sIntersection.alternatives[0] and withinLimit) {
+        sIntersection.alternatives[0].pathLength *= options.navDir;
+        return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
+                                    sIntersection.object);
+      }
+    }
+    // Return an invalid one
+    return BoundaryIntersection();
+  };
 
-// Returns the boundary surfaces ordered in probability to hit them based on
-// straight line intersection @todo change hard-coded default
-template <typename parameters_t, typename options_t, typename sorter_t>
-std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options, const sorter_t& sorter) const {
-  return compatibleBoundaries(gctx, parameters.position(),
-                              parameters.direction(), options, sorter);
+  /// Helper function to process boundary surfaces
+  auto processBoundaries =
+      [&](const TrackingVolumeBoundaries& bSurfaces) -> void {
+    // Loop over the boundary surfaces
+    for (auto& bsIter : bSurfaces) {
+      // Get the boundary surface pointer
+      const auto& bSurfaceRep = bsIter->surfaceRepresentation();
+      // Exclude the boundary where you are on
+      if (excludeObject != &bSurfaceRep) {
+        auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
+                                                options.boundaryCheck);
+        // Intersect and continue
+        auto bIntersection = checkIntersection(bCandidate, bsIter.get());
+        if (bIntersection) {
+          bIntersections.push_back(bIntersection);
+        }
+      }
+    }
+  };
+
+  // Process the boundaries of the current volume
+  auto& bSurfaces = boundarySurfaces();
+  processBoundaries(bSurfaces);
+
+  // Process eventuyal boundaries of contained volumes
+  auto confinedDenseVolumes = denseVolumes();
+  for (const auto& dv : confinedDenseVolumes) {
+    auto& bSurfacesConfined = dv->boundarySurfaces();
+    processBoundaries(bSurfacesConfined);
+  }
+
+  // Sort them accordingly to the navigation direction
+  if (options.navDir == forward) {
+    std::sort(bIntersections.begin(), bIntersections.end());
+  } else {
+    std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
+  }
+  return bIntersections;
 }
 
 template <typename options_t>

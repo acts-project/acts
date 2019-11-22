@@ -37,7 +37,7 @@ using namespace Acts::UnitLiterals;
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename bfield_t, 
+template <typename bfield_t,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {

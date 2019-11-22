@@ -41,6 +41,7 @@ using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 using TrackingVolumeBoundaryPtr =
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
+using TrackingVolumeBoundaries = std::vector<TrackingVolumeBoundaryPtr>;
 
 // possible contained
 using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
@@ -49,7 +50,7 @@ using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
-// full intersection with Layer
+// Intersection with Layer
 using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
 // full intersection with surface
@@ -193,12 +194,10 @@ class TrackingVolume : public Volume {
   /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
-  template <typename options_t,
-            typename sorter_t = DefaultBoundaryIntersectionSorter>
+  template <typename options_t>
   std::vector<BoundaryIntersection> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options,
-      const sorter_t& sorter = sorter_t()) const;
+      const Vector3D& direction, const options_t& options) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
@@ -250,7 +249,7 @@ class TrackingVolume : public Volume {
   const std::string& volumeName() const;
 
   /// Method to return the BoundarySurfaces
-  const std::vector<TrackingVolumeBoundaryPtr>& boundarySurfaces() const;
+  const TrackingVolumeBoundaries& boundarySurfaces() const;
 
   /// Return the material of the volume
   const IVolumeMaterial* volumeMaterial() const;
