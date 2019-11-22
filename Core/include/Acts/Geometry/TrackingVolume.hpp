@@ -216,12 +216,12 @@ class TrackingVolume : public Volume {
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gp is the global position associated with that search
+  /// @param position is the global position associated with that search
   /// @param tol Search position tolerance for dense volumes
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& gp,
+                                             const Vector3D& position,
                                              const double tol = 0.) const;
 
   /// Return the confined static layer array - if it exists
