@@ -174,29 +174,6 @@ class KalmanFitter {
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
 
-  template <typename source_link_t>
-  class Aborter {
-   public:
-    /// Broadcast the result_type
-    using result_type = KalmanFitterResult<source_link_t>;
-
-    template <typename propagator_state_t, typename stepper_t>
-    bool operator()(propagator_state_t& /*state*/,
-                    const stepper_t& /*unused*/) const {
-      return false;
-    }
-
-    template <typename propagator_state_t, typename stepper_t,
-              typename result_t>
-    bool operator()(const result_t& result, propagator_state_t& /*state*/,
-                    const stepper_t& /*stepper*/) const {
-      if (!result.result.ok()) {
-        return true;
-      }
-      return false;
-    }
-  };
-
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
@@ -498,7 +475,7 @@ class KalmanFitter {
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<source_link_t>;
+    using KalmanAborter = Aborter<source_link_t, parameters_t>;
     using KalmanActor = Actor<source_link_t, parameters_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
@@ -515,8 +492,8 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
 
     // also set logger on updater and smoother
-    kalmanActor.m_updater.m_logger = kalmanActor.m_logger;
-    kalmanActor.m_smoother.m_logger = kalmanActor.m_logger;
+    kalmanActor.m_updater.m_logger = m_logger;
+    kalmanActor.m_smoother.m_logger = m_logger;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);
