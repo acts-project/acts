@@ -8,13 +8,13 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-template <typename input_track_t, typename propagator_t, typename action_list_t,
-          typename aborter_list_t>
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
 Acts::Result<std::unique_ptr<Acts::ImpactParametersAndSigma>>
 Acts::TrackToVertexIPEstimator<
-    input_track_t, propagator_t, action_list_t,
-    aborter_list_t>::estimate(const BoundParameters& track,
-                              const Vertex<input_track_t>& vtx) const {
+    input_track_t, propagator_t,
+    propagator_options_t>::estimate(const BoundParameters& track,
+                                    const Vertex<input_track_t>& vtx) const {
   // estimating the d0 and its significance by propagating the trajectory state
   // towards
   // the vertex position. By this time the vertex should NOT contain this
@@ -25,12 +25,9 @@ Acts::TrackToVertexIPEstimator<
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(lp);
 
-  // Set the propagation direction to be backward as needed below
-  auto options = m_cfg.pOptions;
-  options.direction = backward;
-
   // Do the propagation to linPoint
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, options);
+  auto result =
+      m_cfg.propagator->propagate(track, *perigeeSurface, m_cfg.pOptions);
 
   if (!result.ok()) {
     return result.error();

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -38,6 +37,7 @@ class FullBilloirVertexFitter {
  public:
   using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
+  using BField_t = typename linearizer_t::BField_t;
   using Linearizer_t = linearizer_t;
 
   struct Config {
@@ -83,15 +83,6 @@ class FullBilloirVertexFitter {
   ///
   /// @param params input_track_t object to extract track parameters from
   std::function<BoundParameters(input_track_t)> extractParameters;
-
-  /// @brief Function to correct 2-pi periodicity for phi and theta
-  ///
-  /// @param phiIn Phi
-  /// @param thetaIn Theta
-  ///
-  /// @return Pair of (corrected phi, corrected theta)
-  std::pair<double, double> correctPhiThetaPeriodicity(double phiIn,
-                                                       double thetaIn) const;
 };
 
 }  // namespace Acts

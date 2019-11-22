@@ -47,7 +47,7 @@ struct TargetOptions {
 /// when not needed.
 ///
 /// @param state the propagator cache for the debug flag, prefix/stream
-/// @param logAction is a callable function that returns a stremable object
+/// @param logAction is a callable function that returns a streamable object
 template <typename propagator_state_t>
 void targetDebugLog(propagator_state_t& state, const std::string& status,
                     const std::function<std::string()>& logAction) {
@@ -67,13 +67,6 @@ void targetDebugLog(propagator_state_t& state, const std::string& status,
 struct PathLimitReached {
   /// Boolean switch for Loop protection
   double internalLimit = std::numeric_limits<double>::max();
-
-  /// boolean operator for abort condition using the result
-  template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const result_t& /*r*/, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    return operator()(state, stepper);
-  }
 
   /// boolean operator for abort condition without using the result
   ///
@@ -120,13 +113,6 @@ struct PathLimitReached {
 struct SurfaceReached {
   /// Default Constructor
   SurfaceReached() = default;
-
-  /// boolean operator for abort condition using the result (ignored)
-  template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const result_t& /*result*/, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    return operator()(state, stepper);
-  }
 
   /// boolean operator for abort condition without using the result
   ///
@@ -190,7 +176,7 @@ struct SurfaceReached {
       targetDebugLog(state, "x", [&] {
         std::stringstream dstream;
         dstream << "Current surface set to target surface  ";
-        dstream << state.navigation.currentSurface->geoID().toString();
+        dstream << state.navigation.currentSurface->geoID();
         return dstream.str();
       });
       // reaching the target calls a navigation break
@@ -214,13 +200,6 @@ struct SurfaceReached {
 struct EndOfWorldReached {
   /// Default Constructor
   EndOfWorldReached() = default;
-
-  /// boolean operator for abort condition using the result (ignored)
-  template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const result_t& /*result*/, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    return operator()(state, stepper);
-  }
 
   /// boolean operator for abort condition without using the result
   ///

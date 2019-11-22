@@ -80,7 +80,7 @@ BOOST_DATA_TEST_CASE(
   // l_x, l_y, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {
       {-0.1234, 9.8765, 0.45, 0.888, 0.001, 21.}};
-  TrackParametersBase::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -115,7 +115,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataPlane_from_pars.referenceSurface(), pSurface.get());
   BOOST_CHECK_EQUAL(&n_ataPlane_from_pars.referenceSurface(),
                     &n_ataPlane_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(pSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(pSurface.use_count(), 5u);
 
   // check that the reference frame is the rotation matrix
   CHECK_CLOSE_REL(ataPlane_from_pars.referenceFrame(tgContext), rot, 1e-6);
@@ -187,7 +187,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // r, phi, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{125., 0.345, 0.45, 0.888, 0.001, 21.}};
-  TrackParametersBase::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -221,7 +221,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataDisc_from_pars.referenceSurface(), dSurface.get());
   BOOST_CHECK_EQUAL(&n_ataDisc_from_pars.referenceSurface(),
                     &n_ataDisc_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(dSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(dSurface.use_count(), 5u);
 
   // check that the reference frame is the
   // rotation matrix of the surface
@@ -272,7 +272,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // rPhi, a, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{125., 343., 0.45, 0.888, 0.001, 21.}};
-  TrackParametersBase::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -313,7 +313,7 @@ BOOST_DATA_TEST_CASE(
                     cSurface.get());
   BOOST_CHECK_EQUAL(&n_ataCylinder_from_pars.referenceSurface(),
                     &n_ataCylinder_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(cSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(cSurface.use_count(), 5u);
 
   auto pPosition = ataCylinder_from_pars.position();
   // the reference frame is
@@ -367,7 +367,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // d0, z0, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{-0.7321, 22.5, 0.45, 0.888, 0.001, 21.}};
-  TrackParametersBase::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -395,7 +395,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataPerigee_from_pars.referenceSurface(), pSurface.get());
   BOOST_CHECK_EQUAL(&n_ataPerigee_from_pars.referenceSurface(),
                     &n_ataPerigee_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(pSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(pSurface.use_count(), 5u);
 }
 
 /// @brief Unit test for parameters at a line
@@ -441,7 +441,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // r, z, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{0.2321, 22.5, 0.45, 0.888, 0.001, 21.}};
-  TrackParametersBase::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -470,7 +470,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(&n_ataLine_from_pars.referenceSurface(), sSurface.get());
   BOOST_CHECK_EQUAL(&n_ataLine_from_pars.referenceSurface(),
                     &n_ataLine_from_global.referenceSurface());
-  BOOST_CHECK_EQUAL(sSurface.use_count(), 5);
+  BOOST_CHECK_EQUAL(sSurface.use_count(), 5u);
 }
 }  // namespace Test
 }  // namespace Acts

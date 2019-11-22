@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/EventData/TrackStateSorters.hpp"
+#include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -26,6 +27,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -84,9 +86,12 @@ struct KalmanFitterResult {
 
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces = {};
+
+  Result<void> result{Result<void>::success()};
 };
 
 /// @brief Kalman fitter implementation of Acts as a plugin
+///
 /// to the Propgator
 ///
 /// @tparam propagator_t Type of the propagation class
@@ -143,67 +148,7 @@ class KalmanFitter {
       : m_propagator(std::move(pPropagator)),
         m_inputConverter(std::move(pInputCnv)),
         m_outputConverter(std::move(pOutputCnv)),
-        m_logger(std::move(logger)) {}
-
-  /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
-  ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam parameters_t Type of parameters used for local parameters
-  ///
-  /// @param sourcelinks The fittable uncalibrated measurements
-  /// @param sParameters The initial track parameters
-  /// @param kfOptions KalmanOptions steering the fit
-  /// @note The input measurements are given in the form of @c SourceLinks. It's
-  /// @c calibrator_t's job to turn them into calibrated measurements used in
-  /// the fit.
-  ///
-  /// @return the output as an output track
-  template <typename source_link_t, typename start_parameters_t,
-            typename parameters_t = BoundParameters>
-  auto fit(const std::vector<source_link_t>& sourcelinks,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions& kfOptions) const {
-    static_assert(SourceLinkConcept<source_link_t>,
-                  "Source link does not fulfill SourceLinkConcept");
-
-    // To be able to find measurements later, we put them into a map
-    // We need to copy input SourceLinks anyways, so the map can own them.
-    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::map<const Surface*, source_link_t> inputMeasurements;
-    for (const auto& sl : sourcelinks) {
-      const Surface* srf = &sl.referenceSurface();
-      inputMeasurements.emplace(srf, sl);
-    }
-
-    // Create the ActionList and AbortList
-    using KalmanActor = Actor<source_link_t, parameters_t>;
-    using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<KalmanActor>;
-    using Aborters = AbortList<>;
-
-    // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
-
-    // Catch the actor and set the measurements
-    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.m_logger = m_logger.get();
-    kalmanActor.inputMeasurements = std::move(inputMeasurements);
-    kalmanActor.targetSurface = kfOptions.referenceSurface;
-
-    // Run the fitter
-    const auto& result =
-        m_propagator.template propagate(sParameters, kalmanOptions).value();
-
-    /// Get the result of the fit
-    auto kalmanResult = result.template get<KalmanResult>();
-
-    // Return the converted Track
-    return m_outputConverter(std::move(kalmanResult));
-  }
+        m_logger(logger.release()) {}
 
  private:
   /// The propgator for the transport and material update
@@ -219,7 +164,7 @@ class KalmanFitter {
   const Logger& logger() const { return *m_logger; }
 
   /// Owned logging instance
-  std::unique_ptr<const Logger> m_logger;
+  std::shared_ptr<const Logger> m_logger;
 
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
@@ -260,11 +205,13 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+      ACTS_VERBOSE("KalmanFitter step");
       // Initialization:
       // - Only when track states are not set
       if (!result.initialized) {
         // -> Move the TrackState vector
         // -> Feed the KalmanSequencer with the measurements to be fitted
+        ACTS_VERBOSE("Initializing");
         initialize(state, stepper, result);
         result.initialized = true;
       }
@@ -279,7 +226,12 @@ class KalmanFitter {
         // -> Perform the kalman update
         // -> Check outlier behavior (@todo)
         // -> Fill strack state information & update stepper information
-        filter(surface, state, stepper, result);
+        ACTS_VERBOSE("Perform filter step");
+        auto res = filter(surface, state, stepper, result);
+        if (!res.ok()) {
+          ACTS_ERROR("Error in filter: " << res.error());
+          result.result = res.error();
+        }
       }
 
       // Finalization:
@@ -289,12 +241,18 @@ class KalmanFitter {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
         // -> Set a stop condition when all track states have been handled
-        finalize(state, stepper, result);
+        ACTS_VERBOSE("Finalize/run smoothing");
+        auto res = finalize(state, stepper, result);
+        if (!res.ok()) {
+          ACTS_ERROR("Error in finalize: " << res.error());
+          result.result = res.error();
+        }
       }
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
       if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
+        ACTS_VERBOSE("Completing");
         // Transport & bind the parameter to the final surface
         auto fittedState =
             stepper.boundState(state.stepping, *targetSurface, true);
@@ -327,13 +285,13 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void filter(const Surface* surface, propagator_state_t& state,
-                const stepper_t& stepper, result_type& result) const {
+    Result<void> filter(const Surface* surface, propagator_state_t& state,
+                        const stepper_t& stepper, result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
-        ACTS_VERBOSE("Measurement surface " << surface->geoID().toString()
+        ACTS_VERBOSE("Measurement surface " << surface->geoID()
                                             << " detected.");
 
         // create track state on the vector from sourcelink
@@ -350,7 +308,11 @@ class KalmanFitter {
         trackState.parameter.pathLength = std::get<2>(boundState);
 
         // If the update is successful, set covariance and
-        if (m_updater(state.geoContext, trackState)) {
+        auto updateRes = m_updater(state.geoContext, trackState);
+        if (!updateRes.ok()) {
+          ACTS_ERROR("Update step failed: " << updateRes.error());
+          return updateRes.error();
+        } else {
           // Update the stepping state
           ACTS_VERBOSE("Filtering step successful, updated parameters are : \n"
                        << *trackState.parameter.filtered);
@@ -362,9 +324,11 @@ class KalmanFitter {
         ++result.processedStates;
       } else if (surface->associatedDetectorElement() != nullptr) {
         // Count the missed surface
-        ACTS_VERBOSE("Detected hole on " << surface->geoID().toString());
+        ACTS_VERBOSE("Detected hole on " << surface->geoID());
         result.missedActiveSurfaces.push_back(surface);
       }
+
+      return Result<void>::success();
     }
 
     /// @brief Kalman actor operation : finalize
@@ -376,8 +340,8 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void finalize(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+    Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
+                          result_type& result) const {
       // Remember you smoothed the track states
       result.smoothed = true;
 
@@ -389,20 +353,23 @@ class KalmanFitter {
       ACTS_VERBOSE("Apply smoothing on " << result.fittedStates.size()
                                          << " filtered track states.");
       // Smooth the track states and obtain the last smoothed track parameters
-      const auto& smoothedPars =
-          m_smoother(state.geoContext, result.fittedStates);
-      // Update the stepping parameters - in order to progress to destination
-      if (smoothedPars) {
-        // Update the stepping state
-        ACTS_VERBOSE(
-            "Smoothing successful, updating stepping state, "
-            "set target surface.");
-        stepper.update(state.stepping, smoothedPars.get());
-        // Reverse the propagation direction
-        state.stepping.stepSize =
-            detail::ConstrainedStep(-1. * state.options.maxStepSize);
-        state.options.direction = backward;
+      auto smoothRes = m_smoother(state.geoContext, result.fittedStates);
+      if (!smoothRes.ok()) {
+        ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
+        return smoothRes.error();
       }
+      parameters_t smoothedPars = *smoothRes;
+      // Update the stepping parameters - in order to progress to destination
+      ACTS_VERBOSE(
+          "Smoothing successful, updating stepping state, "
+          "set target surface.");
+      stepper.update(state.stepping, smoothedPars);
+      // Reverse the propagation direction
+      state.stepping.stepSize =
+          detail::ConstrainedStep(-1. * state.options.maxStepSize);
+      state.options.direction = backward;
+
+      return Result<void>::success();
     }
 
     /// Pointer to a logger that is owned by the parent, KalmanFilter
@@ -423,6 +390,95 @@ class KalmanFitter {
     /// The Surface beeing
     detail::SurfaceReached targetReached;
   };
+
+  template <typename source_link_t, typename parameters_t>
+  class Aborter {
+   public:
+    /// Broadcast the result_type
+    using action_type = Actor<source_link_t, parameters_t>;
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename result_t>
+    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const result_t& result) const {
+      if (!result.result.ok()) {
+        return true;
+      }
+      return false;
+    }
+  };
+
+ public:
+  /// Fit implementation of the foward filter, calls the
+  /// the forward filter and backward smoother
+  ///
+  /// @tparam source_link_t Source link type identifying uncalibrated input
+  /// measurements.
+  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam parameters_t Type of parameters used for local parameters
+  ///
+  /// @param sourcelinks The fittable uncalibrated measurements
+  /// @param sParameters The initial track parameters
+  /// @param kfOptions KalmanOptions steering the fit
+  /// @note The input measurements are given in the form of @c SourceLinks. It's
+  /// @c calibrator_t's job to turn them into calibrated measurements used in
+  /// the fit.
+  ///
+  /// @return the output as an output track
+  template <typename source_link_t, typename start_parameters_t,
+            typename parameters_t = BoundParameters>
+  Result<KalmanFitterResult<source_link_t, parameters_t>> fit(
+      const std::vector<source_link_t>& sourcelinks,
+      const start_parameters_t& sParameters,
+      const KalmanFitterOptions& kfOptions) const {
+    static_assert(SourceLinkConcept<source_link_t>,
+                  "Source link does not fulfill SourceLinkConcept");
+
+    // To be able to find measurements later, we put them into a map
+    // We need to copy input SourceLinks anyways, so the map can own them.
+    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
+    std::map<const Surface*, source_link_t> inputMeasurements;
+    for (const auto& sl : sourcelinks) {
+      const Surface* srf = &sl.referenceSurface();
+      inputMeasurements.emplace(srf, sl);
+    }
+
+    // Create the ActionList and AbortList
+    using KalmanAborter = Aborter<source_link_t, parameters_t>;
+    using KalmanActor = Actor<source_link_t, parameters_t>;
+    using KalmanResult = typename KalmanActor::result_type;
+    using Actors = ActionList<KalmanActor>;
+    using Aborters = AbortList<KalmanAborter>;
+
+    // Create relevant options for the propagation options
+    PropagatorOptions<Actors, Aborters> kalmanOptions(
+        kfOptions.geoContext, kfOptions.magFieldContext);
+
+    // Catch the actor and set the measurements
+    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
+    kalmanActor.m_logger = m_logger.get();
+    kalmanActor.inputMeasurements = std::move(inputMeasurements);
+    kalmanActor.targetSurface = kfOptions.referenceSurface;
+
+    // Run the fitter
+    auto result = m_propagator.template propagate(sParameters, kalmanOptions);
+
+    if (!result.ok()) {
+      return result.error();
+    }
+
+    const auto& propRes = *result;
+
+    /// Get the result of the fit
+    auto kalmanResult = propRes.template get<KalmanResult>();
+
+    if (!kalmanResult.result.ok()) {
+      return kalmanResult.result.error();
+    }
+
+    // Return the converted Track
+    return m_outputConverter(std::move(kalmanResult));
+  }
 };
 
 }  // namespace Acts

@@ -26,6 +26,7 @@ struct VertexFitterOptions {
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> mctx,
       const Vertex<input_track_t>& vconstr = Vertex<input_track_t>())
+
       : geoContext(gctx), magFieldContext(mctx), vertexConstraint(vconstr) {}
 
   /// Context object for the geometry

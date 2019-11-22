@@ -319,56 +319,56 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
 
 BOOST_AUTO_TEST_CASE(wrapBin) {
   Axis<AxisType::Equidistant, AxisBoundaryType::Open> a1(0.0, 1.0, 10u);
-  BOOST_CHECK_EQUAL(a1.wrapBin(0), 0);
-  BOOST_CHECK_EQUAL(a1.wrapBin(1), 1);
-  BOOST_CHECK_EQUAL(a1.wrapBin(-1), 0);
-  BOOST_CHECK_EQUAL(a1.wrapBin(10), 10);
-  BOOST_CHECK_EQUAL(a1.wrapBin(11), 11);
-  BOOST_CHECK_EQUAL(a1.wrapBin(12), 11);
+  BOOST_CHECK_EQUAL(a1.wrapBin(0), 0u);
+  BOOST_CHECK_EQUAL(a1.wrapBin(1), 1u);
+  BOOST_CHECK_EQUAL(a1.wrapBin(-1), 0u);
+  BOOST_CHECK_EQUAL(a1.wrapBin(10), 10u);
+  BOOST_CHECK_EQUAL(a1.wrapBin(11), 11u);
+  BOOST_CHECK_EQUAL(a1.wrapBin(12), 11u);
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> a2(0.0, 1.0, 10u);
-  BOOST_CHECK_EQUAL(a2.wrapBin(0), 1);
-  BOOST_CHECK_EQUAL(a2.wrapBin(1), 1);
-  BOOST_CHECK_EQUAL(a2.wrapBin(-1), 1);
-  BOOST_CHECK_EQUAL(a2.wrapBin(10), 10);
-  BOOST_CHECK_EQUAL(a2.wrapBin(11), 10);
-  BOOST_CHECK_EQUAL(a2.wrapBin(12), 10);
+  BOOST_CHECK_EQUAL(a2.wrapBin(0), 1u);
+  BOOST_CHECK_EQUAL(a2.wrapBin(1), 1u);
+  BOOST_CHECK_EQUAL(a2.wrapBin(-1), 1u);
+  BOOST_CHECK_EQUAL(a2.wrapBin(10), 10u);
+  BOOST_CHECK_EQUAL(a2.wrapBin(11), 10u);
+  BOOST_CHECK_EQUAL(a2.wrapBin(12), 10u);
 
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> a3(0.0, 1.0, 10u);
-  BOOST_CHECK_EQUAL(a3.wrapBin(0), 10);
-  BOOST_CHECK_EQUAL(a3.wrapBin(1), 1);
-  BOOST_CHECK_EQUAL(a3.wrapBin(-1), 9);
-  BOOST_CHECK_EQUAL(a3.wrapBin(10), 10);
-  BOOST_CHECK_EQUAL(a3.wrapBin(11), 1);
-  BOOST_CHECK_EQUAL(a3.wrapBin(12), 2);
+  BOOST_CHECK_EQUAL(a3.wrapBin(0), 10u);
+  BOOST_CHECK_EQUAL(a3.wrapBin(1), 1u);
+  BOOST_CHECK_EQUAL(a3.wrapBin(-1), 9u);
+  BOOST_CHECK_EQUAL(a3.wrapBin(10), 10u);
+  BOOST_CHECK_EQUAL(a3.wrapBin(11), 1u);
+  BOOST_CHECK_EQUAL(a3.wrapBin(12), 2u);
 
   Axis<AxisType::Variable, AxisBoundaryType::Open> a4(
       {0.0, 2.0, 4.0, 9.0, 10.0});
-  BOOST_CHECK_EQUAL(a4.wrapBin(0), 0);
-  BOOST_CHECK_EQUAL(a4.wrapBin(1), 1);
-  BOOST_CHECK_EQUAL(a4.wrapBin(-1), 0);
-  BOOST_CHECK_EQUAL(a4.wrapBin(4), 4);
-  BOOST_CHECK_EQUAL(a4.wrapBin(5), 5);
-  BOOST_CHECK_EQUAL(a4.wrapBin(6), 5);
+  BOOST_CHECK_EQUAL(a4.wrapBin(0), 0u);
+  BOOST_CHECK_EQUAL(a4.wrapBin(1), 1u);
+  BOOST_CHECK_EQUAL(a4.wrapBin(-1), 0u);
+  BOOST_CHECK_EQUAL(a4.wrapBin(4), 4u);
+  BOOST_CHECK_EQUAL(a4.wrapBin(5), 5u);
+  BOOST_CHECK_EQUAL(a4.wrapBin(6), 5u);
 
   Axis<AxisType::Variable, AxisBoundaryType::Bound> a5(
       {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
-  BOOST_CHECK_EQUAL(a5.wrapBin(0), 1);
-  BOOST_CHECK_EQUAL(a5.wrapBin(1), 1);
-  BOOST_CHECK_EQUAL(a5.wrapBin(-1), 1);
-  BOOST_CHECK_EQUAL(a5.wrapBin(4), 4);
-  BOOST_CHECK_EQUAL(a5.wrapBin(5), 5);
-  BOOST_CHECK_EQUAL(a5.wrapBin(6), 5);
+  BOOST_CHECK_EQUAL(a5.wrapBin(0), 1u);
+  BOOST_CHECK_EQUAL(a5.wrapBin(1), 1u);
+  BOOST_CHECK_EQUAL(a5.wrapBin(-1), 1u);
+  BOOST_CHECK_EQUAL(a5.wrapBin(4), 4u);
+  BOOST_CHECK_EQUAL(a5.wrapBin(5), 5u);
+  BOOST_CHECK_EQUAL(a5.wrapBin(6), 5u);
 
   Axis<AxisType::Variable, AxisBoundaryType::Closed> a6(
       {0.0, 2.0, 4.0, 9.0, 9.5, 10.0});
-  BOOST_CHECK_EQUAL(a6.wrapBin(0), 5);
-  BOOST_CHECK_EQUAL(a6.wrapBin(1), 1);
-  BOOST_CHECK_EQUAL(a6.wrapBin(-1), 4);
-  BOOST_CHECK_EQUAL(a6.wrapBin(4), 4);
-  BOOST_CHECK_EQUAL(a6.wrapBin(5), 5);
-  BOOST_CHECK_EQUAL(a6.wrapBin(6), 1);
-  BOOST_CHECK_EQUAL(a6.wrapBin(7), 2);
+  BOOST_CHECK_EQUAL(a6.wrapBin(0), 5u);
+  BOOST_CHECK_EQUAL(a6.wrapBin(1), 1u);
+  BOOST_CHECK_EQUAL(a6.wrapBin(-1), 4u);
+  BOOST_CHECK_EQUAL(a6.wrapBin(4), 4u);
+  BOOST_CHECK_EQUAL(a6.wrapBin(5), 5u);
+  BOOST_CHECK_EQUAL(a6.wrapBin(6), 1u);
+  BOOST_CHECK_EQUAL(a6.wrapBin(7), 2u);
 }
 
 }  // namespace Test

@@ -7,11 +7,6 @@ target_link_libraries (UnitConversionTests PRIVATE ActsCore ActsTestsCommonHelpe
 add_test (NAME UnitConversionUnitTest COMMAND UnitConversionTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST UnitConversionUnitTest TARGETS UnitConversionTests)
 
-add_executable (GeometryIDTests GeometryIDTests.cpp)
-target_link_libraries (GeometryIDTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (NAME GeometryIDUnitTest COMMAND GeometryIDTests)
-acts_add_test_to_cdash_project (PROJECT ACore TEST GeometryIDUnitTest TARGETS GeometryIDTests)
-
 add_executable (IntersectionTests IntersectionTests.cpp)
 target_link_libraries (IntersectionTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME IntersectionUnitTests COMMAND IntersectionTests)
@@ -96,3 +91,9 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialMapUtilsTest TARGETS 
 add_executable (HelpersTests HelpersTests.cpp)
 target_link_libraries (HelpersTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME HelpersTests COMMAND HelpersTests)
+
+add_executable (AnnealingUtilityTests AnnealingUtilityTests.cpp)
+target_include_directories (AnnealingUtilityTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (AnnealingUtilityTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME VertexAnnealingToolUnitTests COMMAND AnnealingUtilityTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST VertexAnnealingToolUnitTests TARGETS AnnealingUtilityTests)

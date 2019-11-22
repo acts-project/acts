@@ -15,7 +15,6 @@
 
 #include <Eigen/Core>
 
-#include "Acts/EventData/TrackParametersBase.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"

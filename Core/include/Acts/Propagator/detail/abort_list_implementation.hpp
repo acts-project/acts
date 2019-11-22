@@ -9,7 +9,6 @@
 #pragma once
 
 #include <algorithm>
-#include "Acts/Propagator/detail/condition_uses_result_type.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 namespace Acts {
@@ -28,7 +27,7 @@ struct condition_caller {
     using action_type = action_type_t<condition>;
     using result_type = result_type_t<action_type>;
 
-    return c(r.template get<result_type>(), state, stepper);
+    return c(state, stepper, r.template get<result_type>());
   }
 };
 
@@ -58,7 +57,7 @@ struct abort_list_impl<first, others...> {
   static bool check(const T& conditions_tuple, const result_t& result,
                     propagator_state_t& state, const stepper_t& stepper) {
     // get the right helper for calling the abort condition
-    constexpr bool has_result = condition_uses_result_type<first>::value;
+    constexpr bool has_result = has_action_type_v<first>;
     using caller_type = condition_caller<has_result>;
 
     // get the cache abort condition
@@ -83,7 +82,7 @@ struct abort_list_impl<last> {
   static bool check(const T& conditions_tuple, const result_t& result,
                     propagator_state_t& state, const stepper_t& stepper) {
     // get the right helper for calling the abort condition
-    constexpr bool has_result = condition_uses_result_type<last>::value;
+    constexpr bool has_result = has_action_type_v<last>;
     const auto& this_condition = std::get<last>(conditions_tuple);
 
     return condition_caller<has_result>::check(this_condition, result, state,

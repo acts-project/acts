@@ -39,10 +39,8 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator<EigenStepper<ConstantBField>>>;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -93,7 +91,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<BoundParameters, Linearizer_t>
         BilloirFitter;
@@ -121,7 +119,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       double q = qDist(gen) < 0 ? -1. : 1.;
 
       // Construct random track parameters
-      TrackParametersBase::ParVector_t paramVec;
+      BoundVector paramVec;
       double z0track = z0_v + z0Dist(gen);
       paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
           q / pTDist(gen), 0.;
@@ -139,6 +137,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+
       tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
@@ -208,7 +207,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;
 
@@ -235,7 +234,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
       double q = qDist(gen) < 0 ? -1. : 1.;
 
       // Construct random track parameters
-      TrackParametersBase::ParVector_t paramVec;
+      BoundVector paramVec;
       double z0track = z0_v + z0Dist(gen);
       paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
           q / pTDist(gen), 0.;
@@ -253,6 +252,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+
       tracks.push_back(InputTrack(BoundParameters(tgContext, std::move(covMat),
                                                   paramVec, perigeeSurface)));
     }

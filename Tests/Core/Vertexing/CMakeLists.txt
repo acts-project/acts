@@ -27,3 +27,33 @@ target_include_directories (IterativeVertexFinderTests PRIVATE ${Boost_INCLUDE_D
 target_link_libraries (IterativeVertexFinderTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME IterativeVertexFinderUnitTests COMMAND IterativeVertexFinderTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST IterativeVertexFinderUnitTests TARGETS IterativeVertexFinderTests)
+
+add_executable (VertexSmootherTests VertexSmootherTests.cpp)
+target_include_directories (VertexSmootherTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (VertexSmootherTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME SequentialVertexSmootherUnitTests COMMAND VertexSmootherTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST SequentialVertexSmootherUnitTests TARGETS VertexSmootherTests)
+
+add_executable (MultiAdaptiveVertexFitterTests MultiAdaptiveVertexFitterTests.cpp)
+target_include_directories (MultiAdaptiveVertexFitterTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (MultiAdaptiveVertexFitterTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME MultiAdaptiveVertexFitterUnitTests COMMAND MultiAdaptiveVertexFitterTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST MultiAdaptiveVertexFitterUnitTests TARGETS MultiAdaptiveVertexFitterTests)
+
+add_executable (ImpactPoint3dEstimatorTests ImpactPoint3dEstimatorTests.cpp)
+target_include_directories (ImpactPoint3dEstimatorTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (ImpactPoint3dEstimatorTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME ImpactPoint3dEstimatorUnitTests COMMAND ImpactPoint3dEstimatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ImpactPoint3dEstimatorUnitTests TARGETS ImpactPoint3dEstimatorTests)
+
+add_executable (KalmanVertexTrackUpdaterTests KalmanVertexTrackUpdaterTests.cpp)
+target_include_directories (KalmanVertexTrackUpdaterTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (KalmanVertexTrackUpdaterTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME KalmanVertexTrackUpdaterUnitTests COMMAND KalmanVertexTrackUpdaterTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanVertexTrackUpdaterUnitTests TARGETS KalmanVertexTrackUpdaterTests)
+
+add_executable (KalmanVertexUpdaterTests KalmanVertexUpdaterTests.cpp)
+target_include_directories (KalmanVertexUpdaterTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (KalmanVertexUpdaterTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME KalmanVertexUpdaterUnitTests COMMAND KalmanVertexUpdaterTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanVertexUpdaterUnitTests TARGETS KalmanVertexUpdaterTests)

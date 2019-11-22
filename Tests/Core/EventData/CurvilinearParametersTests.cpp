@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   curvilinear_pos_copy.set<eLOC_0>(tgContext, ux);
   curvilinear_pos_copy.set<eLOC_1>(tgContext, uy);
   // the local parameter should still be (0,0) for Curvilinear
-  BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_0], 0);
-  BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_1], 0);
+  BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_0], 0u);
+  BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_1], 0u);
   // the position should be updated though
   Vector3D uposition =
       curvilinear_neg_copy.referenceSurface().transform(tgContext) *

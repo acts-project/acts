@@ -27,6 +27,12 @@ target_link_libraries (BoundParametersTests PRIVATE ActsCore ActsTestsCommonHelp
 add_test (NAME BoundParametersUnitTests COMMAND BoundParametersTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BoundParametersUnitTests TARGETS BoundParametersTests)
 
+add_executable (FreeParametersTests FreeParametersTests.cpp)
+target_include_directories (FreeParametersTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (FreeParametersTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME FreeParametersUnitTests COMMAND FreeParametersTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST FreeParametersUnitTests TARGETS FreeParametersTests)
+
 add_executable (TrackStateTests TrackStateTests.cpp)
 target_include_directories (TrackStateTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (TrackStateTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

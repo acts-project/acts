@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
 
   BOOST_CHECK(!mState.parameter.filtered);
   BOOST_CHECK(!mState.measurement.calibrated);
-  BOOST_CHECK(gmu(tgContext, mState));
+  BOOST_CHECK(gmu(tgContext, mState).ok());
   // filtered is set now
   BOOST_CHECK(!!mState.parameter.filtered);
   // measurement was calibrated

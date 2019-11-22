@@ -84,8 +84,7 @@ class SingleCurvilinearTrackParameters
       : SingleTrackParameters<ChargePolicy>(std::move(other)),
         m_upSurface(std::move(other.m_upSurface)) {}
 
-  /// @brief desctructor
-  ~SingleCurvilinearTrackParameters() override = default;
+  ~SingleCurvilinearTrackParameters() final = default;
 
   /// @brief copy assignment operator - charged/netural
   /// virtual constructor for type creation without casting
@@ -114,7 +113,7 @@ class SingleCurvilinearTrackParameters
 
   /// @brief clone - charged/netural
   /// virtual constructor for type creation without casting
-  SingleTrackParameters<ChargePolicy>* clone() const override {
+  SingleTrackParameters<ChargePolicy>* clone() const {
     return new SingleCurvilinearTrackParameters<ChargePolicy>(*this);
   }
 
@@ -177,7 +176,7 @@ class SingleCurvilinearTrackParameters
   ///
   /// @note For a curvilinear track parameterisation this is identical to
   /// the rotation matrix of the intrinsic planar surface.
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const final {
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const {
     return m_upSurface->transform(gctx).linear();
   }
 

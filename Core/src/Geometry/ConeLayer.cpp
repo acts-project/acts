@@ -12,7 +12,6 @@
 
 #include <utility>
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ConeLayer.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"

@@ -83,6 +83,12 @@ class TrackingVolume : public Volume {
   /// Destructor
   ~TrackingVolume() override;
 
+  /// Forbidden copy constructor - deleted
+  TrackingVolume(const TrackingVolume&) = delete;
+
+  /// Forbidden assignment - deleted
+  TrackingVolume& operator=(const TrackingVolume&) = delete;
+
   /// Factory constructor for a container TrackingVolume
   /// - by definition a Vacuum volume
   ///
@@ -476,12 +482,6 @@ class TrackingVolume : public Volume {
   template <typename T>
   static std::vector<const Volume*> intersectSearchHierarchy(
       const T obj, const Volume::BoundingBox* lnode);
-
-  /// Forbidden copy constructor - deleted
-  TrackingVolume(const TrackingVolume&) = delete;
-
-  /// Forbidden assignment - deleted
-  TrackingVolume& operator=(const TrackingVolume&) = delete;
 
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};

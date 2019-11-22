@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(phi_helper_test) {
   CHECK_CLOSE_ABS(phi(v2), M_PI / 2., 1e-9);
 
   MyStruct s;
-  BOOST_CHECK_EQUAL(phi(s), 42);
+  BOOST_CHECK_EQUAL(phi(s), 42u);
 }
 
 BOOST_AUTO_TEST_CASE(perp_helper_test) {

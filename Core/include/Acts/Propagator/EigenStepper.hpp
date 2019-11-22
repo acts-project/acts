@@ -36,7 +36,7 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField, typename corrector_t = VoidIntersectionCorrector,
+template <typename bfield_t, typename corrector_t = VoidIntersectionCorrector,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
@@ -62,6 +62,7 @@ class EigenStepper {
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+  using BField = bfield_t;
 
   /// @brief State for track parameter propagation
   ///

@@ -27,7 +27,7 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
-
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -37,10 +37,8 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Linearizer_t =
-    HelicalTrackLinearizer<ConstantBField,
-                           Propagator<EigenStepper<ConstantBField>>>;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
+using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -108,15 +106,13 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     // Linearizer for BoundParameters type test
-    Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-    Linearizer_t linearizer(ltConfig);
+    Linearizer::Config ltConfig(bField, propagator, pOptions);
+    Linearizer linearizer(ltConfig);
 
-    using BilloirFitter =
-        FullBilloirVertexFitter<BoundParameters, Linearizer_t>;
+    using BilloirFitter = FullBilloirVertexFitter<BoundParameters, Linearizer>;
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
@@ -143,8 +139,15 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
+    // IP 3D Estimator
+    using ImpactPointEstimator =
+        ImpactPoint3dEstimator<BoundParameters, Propagator>;
+
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
+    ImpactPointEstimator ip3dEst(ip3dEstCfg);
+
     VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder));
+                             std::move(sFinder), std::move(ip3dEst));
 
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -191,7 +194,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         double q = qDist(gen) < 0 ? -1. : 1.;
 
         // Construct random track parameters
-        TrackParametersBase::ParVector_t paramVec;
+        BoundVector paramVec;
         double z0track = z0_v + z0Dist(gen);
         paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
             q / pTDist(gen), 0.;
@@ -321,15 +324,14 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    PropagatorOptions<ActionList<>, AbortList<>> pOptions =
-        Linearizer_t::getDefaultPropagatorOptions(tgContext, mfContext);
+    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     // Linearizer for user defined InputTrack type test
-    Linearizer_t::Config ltConfigUT(bField, propagator, pOptions);
-    Linearizer_t linearizer(ltConfigUT);
+    Linearizer::Config ltConfigUT(bField, propagator, pOptions);
+    Linearizer linearizer(ltConfigUT);
 
     // Set up vertex fitter for user track type
-    using BilloirFitter = FullBilloirVertexFitter<InputTrack, Linearizer_t>;
+    using BilloirFitter = FullBilloirVertexFitter<InputTrack, Linearizer>;
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack
@@ -351,10 +353,16 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     ZScanSeedFinder sFinder(std::move(sFcfg), extractParameters);
 
+    // IP 3D Estimator
+    using ImpactPointEstimator = ImpactPoint3dEstimator<InputTrack, Propagator>;
+
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
+    ImpactPointEstimator ip3dEst(ip3dEstCfg);
+
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
     VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder));
+                             std::move(sFinder), std::move(ip3dEst));
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg, extractParameters);
@@ -400,7 +408,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
         double q = qDist(gen) < 0 ? -1. : 1.;
 
         // Construct random track parameters
-        TrackParametersBase::ParVector_t paramVec;
+        BoundVector paramVec;
         double z0track = z0_v + z0Dist(gen);
         paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
             q / pTDist(gen), 0.;

@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<ActionList<>, AbortList<>> pOptions(tgContext, mfContext);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters
-    TrackParametersBase::ParVector_t paramVec;
+    BoundVector paramVec;
     paramVec << d0_v + d0Dist(gen), z0_v + z0Dist(gen), phiDist(gen),
         thetaDist(gen), q / pTDist(gen), 0.;
 
@@ -144,6 +144,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+
     BoundParameters track =
         BoundParameters(tgContext, std::move(covMat), paramVec, perigeeSurface);
 

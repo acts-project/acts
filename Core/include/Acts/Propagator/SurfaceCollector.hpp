@@ -13,6 +13,40 @@
 
 namespace Acts {
 
+/// Simple struct to select surfaces
+struct SurfaceSelector {
+  bool selectSensitive = true;
+  bool selectMaterial = false;
+  bool selectPassive = false;
+
+  /// SurfaceSelector with options
+  ///
+  /// @param sSensitive is the directive to select sensitive surfaces
+  /// @param sMaterial is the directive to select material surfaces
+  /// @param sPassive is the directive to select passive surfaces
+  SurfaceSelector(bool sSensitive = true, bool sMaterial = false,
+                  bool sPassive = false)
+      : selectSensitive(sSensitive),
+        selectMaterial(sMaterial),
+        selectPassive(sPassive) {}
+
+  /// Call operator to check if a surface should be selected
+  ///
+  /// @param surface is the test surface
+  bool operator()(const Acts::Surface& surface) const {
+    if (selectSensitive && surface.associatedDetectorElement() != nullptr) {
+      return true;
+    }
+    if (selectMaterial && surface.surfaceMaterial() != nullptr) {
+      return true;
+    }
+    if (selectPassive) {
+      return true;
+    }
+    return false;
+  }
+};
+
 /// The information to be writtern out per hit surface
 struct SurfaceHit {
   const Surface* surface = nullptr;
@@ -26,7 +60,7 @@ struct SurfaceHit {
 /// Whenever a surface is passed in the propagation
 /// that satisfies the selector, it is recorded
 /// for further usage in the flow.
-template <typename Selector>
+template <typename Selector = SurfaceSelector>
 struct SurfaceCollector {
   /// The selector used for this surface
   Selector selector;
@@ -54,17 +88,23 @@ struct SurfaceCollector {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
-    // a current surface has been assigned by the navigator
-    //
+    // The current surface has been assigned by the navigator
     if (state.navigation.currentSurface &&
         selector(*state.navigation.currentSurface)) {
-      // create for recording
+      // Create for recording
       SurfaceHit surface_hit;
       surface_hit.surface = state.navigation.currentSurface;
       surface_hit.position = stepper.position(state.stepping);
       surface_hit.direction = stepper.direction(state.stepping);
-      // save if in the result
+      // Save if in the result
       result.collected.push_back(surface_hit);
+      // Screen output
+      debugLog(state, [&] {
+        std::stringstream dstream;
+        dstream << "Collect surface  "
+                << state.navigation.currentSurface->geoID();
+        return dstream.str();
+      });
     }
   }
 
@@ -73,6 +113,31 @@ struct SurfaceCollector {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& /*state*/,
                   const stepper_t& /*unused*/) const {}
+
+ private:
+  /// The private propagation debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the state.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @tparam propagator_state_t Type of the propagator state
+  ///
+  /// @param state the propagator state for the debug flag, prefix and
+  /// length
+  /// @param logAction is a callable function that returns a streamable object
+  template <typename propagator_state_t>
+  void debugLog(propagator_state_t& state,
+                const std::function<std::string()>& logAction) const {
+    if (state.options.debug) {
+      std::stringstream dstream;
+      dstream << "   " << std::setw(state.options.debugPfxWidth);
+      dstream << "surface collector"
+              << " | ";
+      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
+      state.options.debugString += dstream.str();
+    }
+  }
 };
 
 }  // namespace Acts

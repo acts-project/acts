@@ -19,7 +19,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
@@ -158,7 +157,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     // check if the surfaces are free
     std::cout << ">>> Material steps found on ..." << std::endl;
     for (auto& fwdStepsC : fwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << fwdStepsC.surface->geoID().toString()
+      std::cout << "--> Surface with " << fwdStepsC.surface->geoID()
                 << std::endl;
     }
   }
@@ -216,7 +215,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     // check if the surfaces are free
     std::cout << ">>> Material steps found on ..." << std::endl;
     for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << bwdStepsC.surface->geoID().toString()
+      std::cout << "--> Surface with " << bwdStepsC.surface->geoID()
                 << std::endl;
     }
   }
@@ -250,7 +249,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     std::cout << ">>> Forward steps to be processed sequentially ..."
               << std::endl;
     for (auto& fwdStepsC : fwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << fwdStepsC.surface->geoID().toString()
+      std::cout << "--> Surface with " << fwdStepsC.surface->geoID()
                 << std::endl;
     }
   }
@@ -261,8 +260,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   for (auto& fwdSteps : fwdMaterial.materialInteractions) {
     if (debugModeFwdStep) {
       std::cout << ">>> Forward step : "
-                << sParameters->referenceSurface().geoID().toString() << " --> "
-                << fwdSteps.surface->geoID().toString() << std::endl;
+                << sParameters->referenceSurface().geoID() << " --> "
+                << fwdSteps.surface->geoID() << std::endl;
     }
 
     // make a forward step
@@ -292,8 +291,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   if (debugModeFwdStep) {
     std::cout << ">>> Forward step : "
-              << sParameters->referenceSurface().geoID().toString() << " --> "
-              << dSurface.geoID().toString() << std::endl;
+              << sParameters->referenceSurface().geoID() << " --> "
+              << dSurface.geoID() << std::endl;
   }
 
   const auto& fwdStepFinal =
@@ -341,7 +340,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     std::cout << ">>> Backward steps to be processed sequentially ..."
               << std::endl;
     for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << bwdStepsC.surface->geoID().toString()
+      std::cout << "--> Surface with " << bwdStepsC.surface->geoID()
                 << std::endl;
     }
   }
@@ -351,8 +350,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   for (auto& bwdSteps : bwdMaterial.materialInteractions) {
     if (debugModeBwdStep) {
       std::cout << ">>> Backward step : "
-                << sParameters->referenceSurface().geoID().toString() << " --> "
-                << bwdSteps.surface->geoID().toString() << std::endl;
+                << sParameters->referenceSurface().geoID() << " --> "
+                << bwdSteps.surface->geoID() << std::endl;
     }
     // make a forward step
     const auto& bwdStep =
@@ -381,8 +380,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   if (debugModeBwdStep) {
     std::cout << ">>> Backward step : "
-              << sParameters->referenceSurface().geoID().toString() << " --> "
-              << dSurface.geoID().toString() << std::endl;
+              << sParameters->referenceSurface().geoID() << " --> "
+              << dSurface.geoID() << std::endl;
   }
 
   const auto& bwdStepFinal =

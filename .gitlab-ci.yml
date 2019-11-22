@@ -8,11 +8,12 @@ stages:
 variables:
   # everything on except legacy, dd4hp, tgeo
   COMMON_BUILD_OPTIONS: -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on
+  CLICOLOR_FORCE: 1
 
 before_script:
   # CI executor uses fail on error by default
   # setup scripts do not like that
-  - set +e && source CI/setup_lcg94.sh; set -e
+  - set +e && source CI/setup_lcg96.sh; set -e
 
 # pre-build checks
 
@@ -66,7 +67,7 @@ include_guards:
   script:
     - mkdir build
     - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror" ${BUILD_OPTIONS} ..
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always" ${BUILD_OPTIONS} ..
     - cmake --build . -- -j${ACTS_NCPUS}
     - find . -name "*.o" -delete
   artifacts:
@@ -96,31 +97,38 @@ include_guards:
   script:
     - cmake --build build -- integration_tests
 
-# SLC6, LCG94
+# CC7, LCG96
 
-build_slc6_lcg94:
+build_cc7_lcg96_debug:
   <<: *template_build
   variables:
     BUILD_TYPE: Debug # for coverage check
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
+    - export ACTS_NCPUS=4
+
+build_cc7_lcg96:
+  <<: *template_build
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
 
 # this build tests whether we can do an incremental build
 # from the last tag to this commit.
-build_slc6_lcg94_incremental:
+build_cc7_lcg96_incremental:
   <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
   script:
     - export prev_tag=$(CI/incremental_prev_tag.py)
     - export current_head=$(git rev-parse HEAD)
     - git checkout $prev_tag
     - mkdir build
     - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror" ${BUILD_OPTIONS} ..
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always" ${BUILD_OPTIONS} ..
     - 'echo "Build previous tag: $prev_tag"'
     - cmake --build . -- -j${ACTS_NCPUS}
     - git checkout $current_head
@@ -129,14 +137,14 @@ build_slc6_lcg94_incremental:
     - find . -name "*.o" -delete
   allow_failure: true
 
-unit_tests_slc6_lcg94:
+coverage:
   <<: *template_unit_tests
   dependencies:
-    - build_slc6_lcg94
-  needs: ["build_slc6_lcg94"]
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+    - build_cc7_lcg96_debug
+  needs: ["build_cc7_lcg96_debug"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
   # replace script to also calculate code coverage
   script:
     - cmake --build build -- test
@@ -148,21 +156,39 @@ unit_tests_slc6_lcg94:
     paths:
       - build/coverage
 
-# SLC6, LCG94, build w/ legacy disabled
+unit_tests_cc7_lcg96:
+  <<: *template_unit_tests
+  dependencies:
+    - build_cc7_lcg96
+  needs: ["build_cc7_lcg96"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
 
-build_slc6_lcg94_no_legacy:
+integration_tests_cc7_lcg96:
+  <<: *template_integration_tests
+  dependencies:
+    - build_cc7_lcg96
+  needs: ["build_cc7_lcg96"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
+
+# SLC6, LCG96, build w/ legacy disabled
+
+build_cc7_lcg96_no_legacy:
   <<: *template_build
   # need to set all variables again since we are overriding the template section
   variables:
     BUILD_TYPE: Release
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
+    - set +e && source CI/setup_lcg96.sh; set -e
   script:
     - mkdir build
     - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror" ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=off ..
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always" ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=off ..
     - cmake --build . -- -j${ACTS_NCPUS}
     - find . -name "*.o" -delete
 
@@ -219,32 +245,6 @@ integration_tests_ubuntu1804_llvm70:
   image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
   before_script: []
 
-# CC7, LCG94
-
-build_cc7_lcg94:
-  <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
-unit_tests_cc7_lcg94:
-  <<: *template_unit_tests
-  dependencies:
-    - build_cc7_lcg94
-  needs: ["build_cc7_lcg94"]
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
-integration_tests_cc7_lcg94:
-  <<: *template_integration_tests
-  dependencies:
-    - build_cc7_lcg94
-  needs: ["build_cc7_lcg94"]
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-
 # CC7, LCG95
 
 build_cc7_lcg95:
@@ -299,7 +299,7 @@ clang_tidy:
     - mkdir report
     - mkdir build && cd build
     # contain LCG to only where needed
-    - /bin/sh -c "set +e && source ../CI/setup_lcg94.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on"
+    - /bin/sh -c "set +e && source ../CI/setup_lcg96.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on"
     - cd ..
     - run-clang-tidy.py -p build -header-filter=.* -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
     - virtualenv civenv
@@ -343,7 +343,7 @@ coverage_deploy:
   <<: *deploy_base
   stage: deploy
   dependencies:
-    - unit_tests_slc6_lcg94
+    - coverage
   script:
     - CI/publish_coverage.py --coverage-source=build/coverage --project-id=$CI_PROJECT_ID
   only:

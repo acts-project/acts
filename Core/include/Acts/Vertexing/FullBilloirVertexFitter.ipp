@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -231,7 +231,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       trackMomenta[iTrack][2] += deltaP[2];
 
       // correct for 2PI / PI periodicity
-      auto correctedPhiTheta = correctPhiThetaPeriodicity(
+      auto correctedPhiTheta = detail::ensureThetaBounds(
           trackMomenta[iTrack][0], trackMomenta[iTrack][1]);
 
       trackMomenta[iTrack][0] = correctedPhiTheta.first;
@@ -327,7 +327,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       iTrack = 0;
       for (auto& bTrack : billoirTracks) {
         // new refitted trackparameters
-        TrackParametersBase::ParVector_t paramVec;
+        BoundVector paramVec;
         paramVec << 0., 0., trackMomenta[iTrack](0), trackMomenta[iTrack](1),
             trackMomenta[iTrack](2), 0.;
 
@@ -343,34 +343,4 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     }
   }  // end loop iterations
   return std::move(fittedVertex);
-}
-
-template <typename input_track_t, typename linearizer_t>
-std::pair<double, double> Acts::FullBilloirVertexFitter<
-    input_track_t, linearizer_t>::correctPhiThetaPeriodicity(double phiIn,
-                                                             double thetaIn)
-    const {
-  double tmpPhi = std::fmod(phiIn, 2 * M_PI);  // temp phi
-  if (tmpPhi > M_PI) {
-    tmpPhi -= 2 * M_PI;
-  }
-  if (tmpPhi < -M_PI && tmpPhi > -2 * M_PI) {
-    tmpPhi += 2 * M_PI;
-  }
-
-  double tmpTht = std::fmod(thetaIn, 2 * M_PI);  // temp theta
-  if (tmpTht < -M_PI) {
-    tmpTht = std::abs(tmpTht + 2 * M_PI);
-  } else if (tmpTht < 0) {
-    tmpTht *= -1;
-    tmpPhi += M_PI;
-    tmpPhi = tmpPhi > M_PI ? tmpPhi - 2 * M_PI : tmpPhi;
-  }
-  if (tmpTht > M_PI) {
-    tmpTht = 2 * M_PI - tmpTht;
-    tmpPhi += M_PI;
-    tmpPhi = tmpPhi > M_PI ? (tmpPhi - 2 * M_PI) : tmpPhi;
-  }
-
-  return std::pair<double, double>(tmpPhi, tmpTht);
 }

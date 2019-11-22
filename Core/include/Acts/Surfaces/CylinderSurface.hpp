@@ -39,9 +39,6 @@ class CylinderSurface : public Surface {
   friend Surface;
 
  protected:
-  /// Deleted default constructor
-  CylinderSurface() = delete;
-
   /// Constructor from Transform3D, radius and halflength
   ///
   /// @param htrans transform to position the surface, can be nullptr
@@ -93,6 +90,9 @@ class CylinderSurface : public Surface {
  public:
   /// Destructor - defaulted
   ~CylinderSurface() override = default;
+
+  /// Deleted default constructor
+  CylinderSurface() = delete;
 
   /// Assignment operator
   ///

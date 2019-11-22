@@ -33,6 +33,8 @@ namespace concept {
   using bound_state_t = typename T::BoundState;
   template <typename T>
   using curvilinear_state_t = typename T::CurvilinearState;
+  template <typename T>
+  using bfield_t = typename T::BField;
 
   METHOD_TRAIT(get_field_t, getField);
   METHOD_TRAIT(position_t, position);
@@ -83,6 +85,8 @@ namespace concept {
         static_assert(bound_state_exists, "BoundState type not found");
         constexpr static bool curvilinear_state_exists = exists<curvilinear_state_t, S>;
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
+        constexpr static bool bfield_exists = exists<bfield_t, S>;
+        static_assert(bfield_exists, "BField type not found");
         constexpr static bool return_type_exists = exists<return_t, S>;
         static_assert(return_type_exists, "return_parameter_type not found");
         constexpr static bool get_field_exists = has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>;
@@ -117,6 +121,7 @@ namespace concept {
                                               covariance_exists,
                                               bound_state_exists,
                                               curvilinear_state_exists,
+                                              bfield_exists,
                                               return_type_exists,
                                               get_field_exists,
                                               position_exists,

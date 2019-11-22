@@ -10,7 +10,9 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE Mapped material tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 // clang-format on
 
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
@@ -82,8 +84,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
 
   // Test the number of bins getter
   std::vector<size_t> nBins = matMap.getNBins();
-  BOOST_CHECK_EQUAL(nBins[0], 3);
-  BOOST_CHECK_EQUAL(nBins[1], 3);
+  BOOST_CHECK_EQUAL(nBins[0], 3u);
+  BOOST_CHECK_EQUAL(nBins[1], 3u);
 
   // Test the lower limits
   std::vector<double> limits = matMap.getMin();

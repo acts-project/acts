@@ -15,7 +15,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -65,6 +64,9 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
 struct PropagatorOptions {
+  using action_list_type = action_list_t;
+  using aborter_list_type = aborter_list_t;
+
   /// Delete default contructor
   PropagatorOptions() = delete;
 
@@ -331,16 +333,13 @@ class Propagator final {
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t, typename action_list_t,
-            typename aborter_list_t,
-            template <typename, typename> class propagator_options_t,
+  template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
-      action_list_t>>
-  propagate(
-      const parameters_t& start,
-      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
+      typename propagator_options_t::action_list_type>>
+  propagate(const parameters_t& start,
+            const propagator_options_t& options) const;
 
   /// @brief Propagate track parameters - User method
   ///
@@ -361,18 +360,14 @@ class Propagator final {
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t, typename surface_t, typename action_list_t,
-            typename aborter_list_t,
-            template <typename, typename> class propagator_options_t,
+  template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t = detail::PathLimitReached>
-  Result<
-      action_list_t_result_t<typename stepper_t::template return_parameter_type<
-                                 parameters_t, surface_t>,
-                             action_list_t>>
-  propagate(
-      const parameters_t& start, const surface_t& target,
-      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
+  Result<action_list_t_result_t<
+      typename stepper_t::template return_parameter_type<parameters_t, Surface>,
+      typename propagator_options_t::action_list_type>>
+  propagate(const parameters_t& start, const Surface& target,
+            const propagator_options_t& options) const;
 
  private:
   /// Implementation of propagation algorithm
@@ -390,7 +385,7 @@ class Propagator final {
   /// @tparam propagator_state_t Type of the nested propagator state object
   ///
   /// @param state the propagator state for the debug flag, prefix/length
-  /// @param logAction is a callable function that returns a stremable object
+  /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
   void debugLog(propagator_state_t& state,
                 const std::function<std::string()>& logAction) const;

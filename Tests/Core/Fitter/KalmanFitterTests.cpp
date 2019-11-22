@@ -56,8 +56,8 @@ using Covariance = BoundSymMatrix;
 using TrackState = TrackState<SourceLink, BoundParameters>;
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
-using VolumeResolution = std::map<geo_id_value, ElementResolution>;
-using DetectorResolution = std::map<geo_id_value, VolumeResolution>;
+using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
+using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
 
 using DebugOutput = detail::DebugOutputActor;
 
@@ -103,8 +103,8 @@ struct MeasurementCreator {
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
       auto geoID = surface->geoID();
-      geo_id_value volumeID = geoID.value(GeometryID::volume_mask);
-      geo_id_value layerID = geoID.value(GeometryID::layer_mask);
+      auto volumeID = geoID.volume();
+      auto layerID = geoID.layer();
       // find volume and layer information for this
       auto vResolution = detectorResolution.find(volumeID);
       if (vResolution != detectorResolution.end()) {
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // This vector owns the measurements
   std::vector<FittableMeasurement<SourceLink>> measurements =
       std::move(mResult.template get<MeasurementCreator::result_type>());
-  BOOST_CHECK_EQUAL(measurements.size(), 6);
+  BOOST_CHECK_EQUAL(measurements.size(), 6u);
 
   // Make a vector of source links as input to the KF
   std::vector<SourceLink> sourcelinks;
@@ -322,11 +322,15 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, rSurface);
 
   // Fit the track
-  auto fittedTrack = kFitter.fit(sourcelinks, rStart, kfOptions);
+  auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedTrack = *fitRes;
   auto fittedParameters = fittedTrack.fittedParameters.get();
 
   // Make sure it is deterministic
-  auto fittedAgainTrack = kFitter.fit(sourcelinks, rStart, kfOptions);
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedAgainTrack = *fitRes;
   auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
@@ -340,8 +344,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       sourcelinks[4], sourcelinks[5], sourcelinks[0]};
 
   // Make sure it works for shuffled measurements as well
-  auto fittedShuffledTrack =
-      kFitter.fit(shuffledMeasurements, rStart, kfOptions);
+  fitRes = kFitter.fit(shuffledMeasurements, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedShuffledTrack = *fitRes;
   auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
@@ -357,12 +362,13 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       sourcelinks[5]};
 
   // Make sure it works for shuffled measurements as well
-  auto fittedWithHoleTrack =
-      kFitter.fit(measurementsWithHole, rStart, kfOptions);
+  fitRes = kFitter.fit(measurementsWithHole, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedWithHoleTrack = *fitRes;
   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
   // Count one hole
-  BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1);
+  BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);
   // And the parameters should be different
   //~
   // BOOST_CHECK(!Acts::Test::checkCloseRel(fittedParameters.parameters().template

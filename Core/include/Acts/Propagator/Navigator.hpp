@@ -436,7 +436,7 @@ class Navigator {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Current surface set to start surface ";
-        dstream << state.navigation.currentSurface->geoID().toString();
+        dstream << state.navigation.currentSurface->geoID();
         return dstream.str();
       });
     }
@@ -525,7 +525,7 @@ class Navigator {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Current surface set to surface ";
-          dstream << state.navigation.currentSurface->geoID().toString();
+          dstream << state.navigation.currentSurface->geoID();
           return dstream.str();
         });
       }
@@ -610,7 +610,7 @@ class Navigator {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Next surface candidate will be ";
-        dstream << surface->geoID().toString();
+        dstream << surface->geoID();
         return dstream.str();
       });
       // Now intersect (should exclude punch-through)
@@ -995,7 +995,7 @@ class Navigator {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Target surface set to ";
-        dstream << state.navigation.targetSurface->geoID().toString();
+        dstream << state.navigation.targetSurface->geoID();
         return dstream.str();
       });
       // assign the target volume and the target surface
@@ -1267,7 +1267,7 @@ class Navigator {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface ";
-          dstream << state.navigation.currentSurface->geoID().toString();
+          dstream << state.navigation.currentSurface->geoID();
           return dstream.str();
         });
         return true;
@@ -1287,7 +1287,7 @@ class Navigator {
   ///
   /// @param[in,out] state the propagator state for the debug flag,
   ///      prefix and length
-  /// @param logAction is a callable function that returns a stremable object
+  /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
   void debugLog(propagator_state_t& state,
                 const std::function<std::string()>& logAction) const {
