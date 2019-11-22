@@ -1,4 +1,4 @@
-Core/include/Acts/Propagator/Navigator.hpp// This file is part of the Acts project.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2018 CERN for the benefit of the Acts project
 //
@@ -172,22 +172,24 @@ TrackingVolume::compatibleSurfacesFromHierarchy(
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
 
+  // The limits for this navigation step
+  double pLimit = options.pathLimit;
+  double oLimit = options.overstepLimit;
+
   if (m_bvhTop == nullptr || !options.navDir) {
     return sIntersections;
   }
 
-  Vector3D dir = direction;
-  if (options.navDir == backward) {
-    dir *= -1;
-  }
+  // The signed direction
+  Vector3D sdir = options.navDir * direction;
 
   std::vector<const Volume*> hits;
   if (angle == 0) {
     // use ray
-    Ray3D obj(position, dir);
+    Ray3D obj(position, sdir);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   } else {
-    Acts::Frustum<double, 3, 4> obj(position, dir, angle);
+    Acts::Frustum<double, 3, 4> obj(position, sdir, angle);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   }
 
@@ -199,17 +201,16 @@ TrackingVolume::compatibleSurfacesFromHierarchy(
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
       SurfaceIntersection sfi(
-          srf.intersectionEstimate(gctx, position, options.navDir * direction,
-                                   false),
-          &srf);
+          srf.intersectionEstimate(gctx, position, sdir, false), &srf);
 
-      if (sfi) {
+      if (sfi and sfi.intersection.pathLength > oLimit and
+          sfi.intersection.pathLength <= pLimit) {
         sIntersections.push_back(std::move(sfi));
       }
     }
   }
 
-  // sort according to the path length
+  // Sort according to the path length
   if (options.navDir == forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {

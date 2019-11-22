@@ -20,7 +20,6 @@
 #include "Acts/Geometry/GeometrySignature.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Geometry/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -396,7 +395,9 @@ class TrackingVolume : public Volume {
   /// @param volumeBounds is the description of the volume boundaries
   /// @param volumeMaterial is are materials of the tracking volume
   /// @param staticLayerArray is the confined layer array (optional)
-  /// @param containedVolumeArray is the confined volume array
+  /// @param containedVolumeArray are the sub volumes if the volume is a
+  /// container
+  /// @param denseVolumeVector  The contained desnse volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
       std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
