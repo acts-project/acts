@@ -431,8 +431,8 @@ Acts::JsonGeometryConverter::surfaceMaterialToJson(
       return {
           mp.averageX0(),
           mp.averageL0(),
+          mp.averageA(),          
           mp.averageZ(),
-          mp.averageA(),
           mp.averageRho(),
           mp.thickness(),
       };
@@ -549,7 +549,7 @@ Acts::JsonGeometryConverter::jsonToBinUtility(const json& bin)
   Acts::BinningValue bval = Acts::BinningValue(indx);
   Acts::BinningOption bopt = bin[1] == "open" ? Acts::open : Acts::closed;
   unsigned int        bins = bin[2];
-  double              min = 0 , max = 0;
+  double              min = 0, max = 0;
   if (bin[3].size() == 2) {
     min = bin[3][0];
     max = bin[3][1];
