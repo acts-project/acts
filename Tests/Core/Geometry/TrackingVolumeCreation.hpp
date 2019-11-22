@@ -78,7 +78,7 @@ TrackingVolumePtr constructCylinderVolume(
       innerVolumeR, outerVolumeR, bUmax + volumeEnvelope);
 
   TrackingVolumePtr volume = TrackingVolume::create(
-      nullptr, volumeBounds, nullptr, std::move(layerArray), nullptr, name);
+      nullptr, volumeBounds, nullptr, std::move(layerArray), nullptr, {}, name);
   ///  return the volume
   return volume;
 }

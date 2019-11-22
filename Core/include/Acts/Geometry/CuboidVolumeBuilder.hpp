@@ -13,6 +13,7 @@
 #include <vector>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -79,6 +80,10 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::vector<LayerConfig> layerCfg;
     // Stored layers
     std::vector<std::shared_ptr<const Layer>> layers;
+    // Configurations of confined volumes
+    std::vector<VolumeConfig> volumeCfg;
+    // Stored confined volumes
+    std::vector<std::shared_ptr<TrackingVolume>> trackingVolumes;
     // Name of the volume
     std::string name = "Volume";
     // Material
@@ -152,6 +157,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::pair<double, double> binningRange(const GeometryContext& gctx,
                                          const VolumeConfig& cfg) const;
 
+  void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3D>>& tapVec,
+                   BinningValue bValue) const;
+
   /// @brief This function builds a world TrackingVolume based on a given
   /// configuration
   ///
@@ -167,5 +175,4 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// Configuration of the world volume
   Config m_cfg;
 };
-
 }  // namespace Acts

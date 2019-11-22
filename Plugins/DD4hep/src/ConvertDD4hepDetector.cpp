@@ -24,6 +24,7 @@
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "TGeoManager.h"
 
@@ -424,8 +425,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                  << subDetector.name()
                  << " is a (sensitive) Barrel volume - building barrel.");
     /// the dd4hep::DetElements of the layers of the central volume
-    std::vector<dd4hep::DetElement> centralLayers;
+    std::vector<dd4hep::DetElement> centralLayers, centralVolumes;
     collectLayers_dd4hep(subDetector, centralLayers);
+    collectVolumes_dd4hep(subDetector, centralVolumes);
 
     // configure SurfaceArrayCreator
     auto surfaceArrayCreator =
@@ -448,6 +450,16 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         lbConfig,
         Acts::getDefaultLogger(std::string("D2A_LB_") + subDetector.name(),
                                loggingLevel));
+
+    // Configure DD4hepVolumeBuilder
+    Acts::DD4hepVolumeBuilder::Config vbConfig;
+    vbConfig.configurationName = subDetector.name();
+    vbConfig.centralVolumes = centralVolumes;
+    auto dd4hepVolumeBuilder =
+        std::make_shared<const Acts::DD4hepVolumeBuilder>(
+            vbConfig,
+            Acts::getDefaultLogger(std::string("D2A_VB_") + subDetector.name(),
+                                   loggingLevel));
 
     // the configuration object of the volume builder
     Acts::CylinderVolumeBuilder::Config cvbConfig;
@@ -475,6 +487,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.volumeName = subDetector.name();
     cvbConfig.volumeMaterial = volumeMaterial;
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
+    cvbConfig.ctVolumeBuilder = dd4hepVolumeBuilder;
     auto cylinderVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
             cvbConfig,
@@ -581,6 +594,24 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
       continue;
     }
     collectLayers_dd4hep(childDetElement, layers);
+  }
+}
+
+void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
+                           std::vector<dd4hep::DetElement>& volumes) {
+  const dd4hep::DetElement::Children& children = detElement.children();
+  for (auto& child : children) {
+    dd4hep::DetElement childDetElement = child.second;
+    Acts::ActsExtension* detExtension = nullptr;
+    try {
+      detExtension = childDetElement.extension<Acts::ActsExtension>();
+    } catch (std::runtime_error& e) {
+    }
+    if ((detExtension != nullptr) && detExtension->hasType("volume")) {
+      volumes.push_back(childDetElement);
+      continue;
+    }
+    collectVolumes_dd4hep(childDetElement, volumes);
   }
 }
 }  // End of namespace Acts

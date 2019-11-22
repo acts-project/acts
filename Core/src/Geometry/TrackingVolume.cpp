@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,14 +47,17 @@ Acts::TrackingVolume::TrackingVolume(
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
+    MutableTrackingVolumeVector denseVolumeVector,
     const std::string& volumeName)
     : Volume(std::move(htrans), std::move(volumeBounds)),
       m_volumeMaterial(std::move(volumeMaterial)),
       m_confinedLayers(std::move(staticLayerArray)),
       m_confinedVolumes(std::move(containedVolumeArray)),
+      m_confinedDenseVolumes({}),
       m_name(volumeName) {
   createBoundarySurfaces();
   interlinkLayers();
+  connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
 // constructor for arguments
@@ -84,11 +87,18 @@ Acts::TrackingVolume::~TrackingVolume() {
 }
 
 const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& /*gctx*/, const Vector3D& gp) const {
+    const GeometryContext& /*gctx*/, const Vector3D& gp,
+    const double tol) const {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
     return (m_confinedVolumes->object(gp).get());
   }
+
+  // search for dense volumes
+  if (!m_confinedDenseVolumes.empty())
+    for (auto& denseVolume : m_confinedDenseVolumes)
+      if (denseVolume->inside(gp, tol))
+        return denseVolume.get();
 
   // there is no lower sub structure
   return this;
@@ -110,12 +120,62 @@ void Acts::TrackingVolume::sign(GeometrySignature geosign,
       mutableVolumesIter->sign(geosign, geotype);
     }
   }
+
+  // finally for confined dense volumes
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& volumesIter : m_confinedDenseVolumes) {
+      auto mutableVolumesIter =
+          std::const_pointer_cast<TrackingVolume>(volumesIter);
+      mutableVolumesIter->sign(geosign, geotype);
+    }
+  }
 }
 
 const std::vector<
     std::shared_ptr<const Acts::BoundarySurfaceT<Acts::TrackingVolume>>>&
 Acts::TrackingVolume::boundarySurfaces() const {
   return (m_boundarySurfaces);
+}
+
+void Acts::TrackingVolume::connectDenseBoundarySurfaces(
+    MutableTrackingVolumeVector& confinedDenseVolumes) {
+  if (!confinedDenseVolumes.empty()) {
+    BoundaryOrientation bo;
+    // Walk over each dense volume
+    for (auto& confDenseVol : confinedDenseVolumes) {
+      // Walk over each boundary surface of the volume
+      auto& boundSur = confDenseVol->boundarySurfaces();
+      for (unsigned int i = 0; i < boundSur.size(); i++) {
+        // Skip empty entries since we do not know the shape of the dense volume
+        // and therewith the used indices
+        if (boundSur.at(i) == nullptr) {
+          continue;
+        }
+
+        // Use mother volume as the opposite direction of the already used
+        // direction
+        auto mutableBs =
+            std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
+                boundSur.at(i));
+        if (mutableBs->m_insideVolume != nullptr &&
+            mutableBs->m_outsideVolume == nullptr) {
+          bo = BoundaryOrientation::outsideVolume;
+          mutableBs->attachVolume(this, bo);
+        } else {
+          if (mutableBs->m_insideVolume == nullptr &&
+              mutableBs->m_outsideVolume != nullptr) {
+            bo = BoundaryOrientation::insideVolume;
+            mutableBs->attachVolume(this, bo);
+          }
+        }
+
+        // Update the boundary
+        confDenseVol->updateBoundarySurface((BoundarySurfaceFace)i, mutableBs);
+      }
+      // Store the volume
+      m_confinedDenseVolumes.push_back(std::move(confDenseVol));
+    }
+  }
 }
 
 void Acts::TrackingVolume::createBoundarySurfaces() {
@@ -143,10 +203,10 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   }
 }
 
-void Acts::TrackingVolume::glueTrackingVolume(
-    const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
-    const std::shared_ptr<TrackingVolume>& neighbor,
-    BoundarySurfaceFace bsfNeighbor) {
+void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
+                                              BoundarySurfaceFace bsfMine,
+                                              TrackingVolume* neighbor,
+                                              BoundarySurfaceFace bsfNeighbor) {
   // Find the connection of the two tracking volumes: binR returns the center
   // except for cylindrical volumes
   Vector3D bPosition(binningPosition(gctx, binR));
@@ -343,6 +403,7 @@ void Acts::TrackingVolume::closeGeometry(
     materialDecorator->decorate(*thisVolume);
   }
 
+  this->assignGeoID(volumeID);
   // loop over the boundary surfaces
   GeometryID::Value iboundary = 0;
   // loop over the boundary surfaces
@@ -397,6 +458,16 @@ void Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
+      mutableVolumesIter->setMotherVolume(this);
+    }
+  }
+
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& volumesIter : m_confinedDenseVolumes) {
+      auto mutableVolumesIter =
+          std::const_pointer_cast<TrackingVolume>(volumesIter);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
+      mutableVolumesIter->setMotherVolume(this);
     }
   }
 }

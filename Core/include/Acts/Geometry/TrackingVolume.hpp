@@ -45,6 +45,7 @@ using TrackingVolumeBoundaryPtr =
 // possible contained
 using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
+using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
@@ -147,10 +148,12 @@ class TrackingVolume : public Volume {
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> containedLayers = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
+      MutableTrackingVolumeVector denseVolumes = {},
       const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(new TrackingVolume(
         std::move(htrans), std::move(volumeBounds), std::move(volumeMaterial),
-        std::move(containedLayers), std::move(containedVolumes), volumeName));
+        std::move(containedLayers), std::move(containedVolumes),
+        std::move(denseVolumes), volumeName));
   }
 
   /// Return the associated Layer to the global position
@@ -270,10 +273,12 @@ class TrackingVolume : public Volume {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position associated with that search
+  /// @param tol Search position tolerance for dense volumes
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& gp) const;
+                                             const Vector3D& gp,
+                                             const double tol = 0.) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists
@@ -281,6 +286,9 @@ class TrackingVolume : public Volume {
 
   /// Return the confined volumes of this container array - if it exists
   std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
+
+  /// Return the confined dense volumes
+  const MutableTrackingVolumeVector denseVolumes() const;
 
   /// @brief Visit all sensitive surfaces
   ///
@@ -333,8 +341,7 @@ class TrackingVolume : public Volume {
   /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boudnary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
-                          BoundarySurfaceFace bsfMine,
-                          const MutableTrackingVolumePtr& neighbor,
+                          BoundarySurfaceFace bsfMine, TrackingVolume* neighbor,
                           BoundarySurfaceFace bsfNeighbor);
 
   /// Glue another tracking volume to this one
@@ -451,9 +458,13 @@ class TrackingVolume : public Volume {
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
+      MutableTrackingVolumeVector denseVolumeVector = {},
       const std::string& volumeName = "undefined");
 
  private:
+  void connectDenseBoundarySurfaces(
+      MutableTrackingVolumeVector& confinedDenseVolumes);
+
   /// Create Boundary Surface
   void createBoundarySurfaces();
 
@@ -499,6 +510,9 @@ class TrackingVolume : public Volume {
   /// Array of Volumes inside the Volume when actin as container
   std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes = nullptr;
 
+  /// confined dense
+  MutableTrackingVolumeVector m_confinedDenseVolumes;
+
   /// Volumes to glue Volumes from the outside
   GlueVolumesDescriptor* m_glueVolumeDescriptor{nullptr};
 
@@ -508,7 +522,7 @@ class TrackingVolume : public Volume {
   /// The gometry type for the navigation schema
   GeometryType m_geometryType{NumberOfGeometryTypes};
 
-  //// Volume name for debug reasons & screen output
+  /// Volume name for debug reasons & screen output
   std::string m_name;
 
   /// color code for displaying
@@ -540,6 +554,10 @@ inline void TrackingVolume::assignVolumeMaterial(
 
 inline const LayerArray* TrackingVolume::confinedLayers() const {
   return m_confinedLayers.get();
+}
+
+inline const MutableTrackingVolumeVector TrackingVolume::denseVolumes() const {
+  return m_confinedDenseVolumes;
 }
 
 inline std::shared_ptr<const TrackingVolumeArray>

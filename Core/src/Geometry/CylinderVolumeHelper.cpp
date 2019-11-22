@@ -53,6 +53,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     const GeometryContext& gctx, const LayerVector& layers,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::shared_ptr<const VolumeBounds> volumeBounds,
+    MutableTrackingVolumeVector mtvVector,
     std::shared_ptr<const Transform3D> transform, const std::string& volumeName,
     BinningType bType) const {
   // the final one to build / sensitive Volume / Bounds
@@ -132,7 +133,8 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
           : std::shared_ptr<const VolumeBounds>(cylinderBounds);
   // finally create the TrackingVolume
   tVolume = TrackingVolume::create(transform, volumeBoundsFinal, volumeMaterial,
-                                   std::move(layerArray), nullptr, volumeName);
+                                   std::move(layerArray), nullptr, mtvVector,
+                                   volumeName);
   // screen output
   ACTS_VERBOSE(
       "Created cylindrical volume at z-position :" << tVolume->center().z());
@@ -144,6 +146,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
     const GeometryContext& gctx, const LayerVector& layers,
+    MutableTrackingVolumeVector mtvVector,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
     double rMax, double zMin, double zMax, const std::string& volumeName,
     BinningType bType) const {
@@ -179,13 +182,13 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
                        : nullptr;
   // call to the creation method with Bounds & Translation3D
   return createTrackingVolume(gctx, layers, volumeMaterial,
-                              VolumeBoundsPtr(cBounds), transform, volumeName,
-                              bType);
+                              VolumeBoundsPtr(cBounds), mtvVector, transform,
+                              volumeName, bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    const GeometryContext& gctx,
+    const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
     double rMax, double zMin, double zMax, unsigned int materialLayers,
     bool cylinder, const std::string& volumeName) const {
@@ -211,14 +214,14 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   }
 
   // now call the main method
-  return createGapTrackingVolume(gctx, volumeMaterial, rMin, rMax, zMin, zMax,
-                                 layerPositions, cylinder, volumeName,
-                                 arbitrary);
+  return createGapTrackingVolume(gctx, mtvVector, volumeMaterial, rMin, rMax,
+                                 zMin, zMax, layerPositions, cylinder,
+                                 volumeName, arbitrary);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    const GeometryContext& gctx,
+    const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
     double rMax, double zMin, double zMax,
     const std::vector<double>& layerPositions, bool cylinder,
@@ -257,8 +260,8 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
     }
   }
   // now call the createTrackingVolume() method
-  return createTrackingVolume(gctx, layers, volumeMaterial, rMin, rMax, zMin,
-                              zMax, volumeName, bType);
+  return createTrackingVolume(gctx, layers, mtvVector, volumeMaterial, rMin,
+                              rMax, zMin, zMax, volumeName, bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
@@ -743,8 +746,8 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                       << glueVolTwo->volumeName() << " @ "
                                       << faceTwo << " ]");
     // one to one is easy
-    mutableGlueVolOne->glueTrackingVolume(gctx, faceOne, mutableGlueVolTwo,
-                                          faceTwo);
+    mutableGlueVolOne->glueTrackingVolume(gctx, faceOne,
+                                          mutableGlueVolTwo.get(), faceTwo);
 
   } else if (volOneGlueVols <= 1) {
     // (ii) one -> many
