@@ -198,7 +198,7 @@ class Surface : public virtual GeometryObject,
   /// It requires a local position to be given (in general)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition is the local position where the normal verctor is
+  /// @param lposition is the local position where the normal vector is
   /// constructed
   ///
   /// @return normal vector by value
@@ -294,7 +294,7 @@ class Surface : public virtual GeometryObject,
   /// ambiguity this is also provided
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition local 2D posittion in specialized surface frame
+  /// @param lposition local 2D position in specialized surface frame
   /// @param momentum global 3D momentum representation (optionally ignored)
   /// @param position global 3D position to be filled (given by reference for
   /// method symmetry)

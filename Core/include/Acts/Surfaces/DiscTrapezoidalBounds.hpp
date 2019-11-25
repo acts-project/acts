@@ -113,13 +113,13 @@ class DiscTrapezoidalBounds : public DiscBounds {
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
 
   /// Private helper method to convert a local postion
-  /// into its caftesian representation
+  /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
   Vector2D toLocalCartesian(const Vector2D& lposition) const;
 
   /// Jacobian
-  /// into its caftesian representation
+  /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
   ActsMatrixD<2, 2> jacobianToLocalCartesian(const Vector2D& lposition) const;

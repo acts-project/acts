@@ -191,7 +191,7 @@ class CylinderSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position as a starting point
   /// @param direction The global direction at starting point
-  ///        (@note expected to be normalise)
+  ///        (@note expected to be normalised)
   /// @param bcheck The boundary check presection
   ///
   /// @return is the closest intersection (fwd or bwd)

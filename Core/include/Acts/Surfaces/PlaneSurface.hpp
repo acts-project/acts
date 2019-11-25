@@ -124,7 +124,7 @@ class PlaneSurface : public Surface {
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition local 2D posittion in specialized surface frame
+  /// @param lposition local 2D position in specialized surface frame
   /// @param momentum global 3D momentum representation (optionally ignored)
   /// @param position global 3D position to be filled (given by reference for
   /// method symmetry)
