@@ -148,7 +148,7 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
   auto& bSurfaces = boundarySurfaces();
   processBoundaries(bSurfaces);
 
-  // Process eventuyal boundaries of contained volumes
+  // Process potential boundaries of contained volumes
   auto confinedDenseVolumes = denseVolumes();
   for (const auto& dv : confinedDenseVolumes) {
     auto& bSurfacesConfined = dv->boundarySurfaces();
