@@ -11,7 +11,7 @@ else
   exit 2
 fi
 
-dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+dir="$( cd "$( dirname "${this_script}" )" && pwd )"
 
 source $dir/env_info.sh
 
