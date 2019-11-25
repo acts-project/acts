@@ -10,110 +10,112 @@
 // ConeSurface.ipp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-inline Intersection ConeSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gmom,
-    NavigationDirection navDir, const BoundaryCheck& bcheck,
-    CorrFnc correct) const {
-  // check if you need
-  bool needsTransform = (Surface::m_transform) ? true : false;
+inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction) const {
+  // Transform into the local frame
+  Transform3D invTrans = transform(gctx).inverse();
+  Vector3D point1 = invTrans * position;
+  Vector3D dir1 = invTrans.linear() * direction;
 
-  // create the points
-  Vector3D point1 = gpos;
-  Vector3D initialdir = gmom.normalized();
-  Vector3D direction = initialdir;
-
-  // what you need at the and
-  Vector3D solution(0, 0, 0);
-  double path = 0.;
-  bool valid = false;
-
-  // break condition for the loop
-  bool correctionDone = false;
-
-  // make the loop including the potential correction
-  do {
-    if (needsTransform) {
-      Transform3D invTrans = transform(gctx).inverse();
-      point1 = invTrans * gpos;
-      direction = invTrans.linear() * direction;
-    }
-
-    // see the header for the formula derivation
-    double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
-           A = direction.x() * direction.x() + direction.y() * direction.y() -
-               tan2Alpha * direction.z() * direction.z(),
-           B = 2 * (direction.x() * point1.x() + direction.y() * point1.y() -
-                    tan2Alpha * direction.z() * point1.z()),
-           C = point1.x() * point1.x() + point1.y() * point1.y() -
-               tan2Alpha * point1.z() * point1.z();
-    if (A == 0.) {
-      A += 1e-16;  // avoid division by zero
-    }
-
-    // use Andreas' quad solver, much more stable than what I wrote
-    detail::RealQuadraticEquation solns(A, B, C);
-
-    if (solns.solutions != 0) {
-      double t1 = solns.first;
-      Vector3D soln1Loc(point1 + t1 * direction);
-
-      // there's only one solution for this
-      if (solns.solutions == 1) {
-        // set the solution
-        solution = soln1Loc;
-        path = t1;
-        // check the validity given the navigation direction
-        valid = (t1 * navDir >= 0.);
-        // there's two solutions
-      } else if (solns.solutions == 2) {
-        // get the second solution
-        double t2 = solns.second;
-        Vector3D soln2Loc(point1 + t2 * direction);
-        // both solutions have the same sign - or you don't care
-        // then take the closer one
-        if (t1 * t2 > 0. || (navDir == 0)) {
-          if (t1 * t1 < t2 * t2) {
-            solution = soln1Loc;
-            path = t1;
-          } else {
-            solution = soln2Loc;
-            path = t2;
-          }
-        } else {
-          if (navDir * t1 > 0.) {
-            solution = soln1Loc;
-            path = t1;
-          } else {
-            solution = soln2Loc;
-            path = t2;
-          }
-        }
-      }
-    }
-    // set the validity flag
-    valid = (navDir * path >= 0.);
-
-    // break if there's nothing to correct
-    if (correct && !correctionDone) {
-      // reset to initial position and direction
-      point1 = gpos;
-      direction = initialdir;
-      if (correct(point1, direction, path)) {
-        correctionDone = true;
-      } else {
-        break;
-      }
-    } else {
-      break;
-    }
-  } while (true);
-
-  // transform back if needed
-  if (m_transform) {
-    solution = transform(gctx) * solution;
+  // See file header for the formula derivation
+  double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
+         A = dir1.x() * dir1.x() + dir1.y() * dir1.y() -
+             tan2Alpha * dir1.z() * dir1.z(),
+         B = 2 * (dir1.x() * point1.x() + dir1.y() * point1.y() -
+                  tan2Alpha * dir1.z() * point1.z()),
+         C = point1.x() * point1.x() + point1.y() * point1.y() -
+             tan2Alpha * point1.z() * point1.z();
+  if (A == 0.) {
+    A += 1e-16;  // avoid division by zero
   }
-  // check validity
-  valid = bcheck ? (valid && isOnSurface(gctx, solution, gmom, bcheck)) : valid;
-  // set the result navigation direction
-  return Intersection(solution, path, valid);
+
+  return detail::RealQuadraticEquation(A, B, C);
+}
+
+inline Intersection ConeSurface::intersectionEstimate(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Solve the quadratic equation
+  auto qe = intersectionSolver(gctx, position, direction);
+
+  // If no valid solution return a non-valid intersection
+  if (qe.solutions == 0) {
+    return Intersection();
+  }
+
+  // Absolute smallest solution is taken by default
+  double path =
+      qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second;
+  Vector3D solution = position + path * direction;
+  Intersection::Status status =
+      (path * path < s_onSurfaceTolerance * s_onSurfaceTolerance)
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
+
+  // Boundary check necessary
+  if (bcheck and not isOnSurface(gctx, solution, direction, bcheck)) {
+    status = Intersection::Status::missed;
+  }
+
+  // Now return the solution
+  return Intersection(transform(gctx) * solution, path, status);
+}
+
+inline SurfaceIntersection ConeSurface::intersect(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Solve the quadratic equation
+  auto qe = intersectionSolver(gctx, position, direction);
+
+  // If no valid solution return a non-valid surfaceIntersection
+  if (qe.solutions == 0) {
+    return SurfaceIntersection();
+  }
+
+  // Check the validity of the first solution
+  Vector3D solution1 = position + qe.first * direction;
+  Intersection::Status status1 =
+      (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
+
+  if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
+    status1 = Intersection::Status::missed;
+  }
+
+  // Check the validity of the second solution
+  Vector3D solution2 = position + qe.first * direction;
+  Intersection::Status status2 =
+      (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
+  if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
+    status2 = Intersection::Status::missed;
+  }
+
+  const auto& tf = transform(gctx);
+  // Set the intersection
+  Intersection first(tf * solution1, qe.first, status1);
+  Intersection second(tf * solution2, qe.second, status2);
+  SurfaceIntersection cIntersection(first, this);
+  // Check one if its valid or neither is valid
+  bool check1 = status1 != Intersection::Status::missed or
+                (status1 == Intersection::Status::missed and
+                 status2 == Intersection::Status::missed);
+  // Check and (eventually) go with the first solution
+  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+      status2 == Intersection::Status::missed) {
+    // And add the alternative
+    if (qe.solutions > 1) {
+      cIntersection.alternatives = {second};
+    }
+  } else {
+    // And add the alternative
+    if (qe.solutions > 1) {
+      cIntersection.alternatives = {first};
+    }
+    cIntersection.intersection = second;
+  }
+  return cIntersection;
 }

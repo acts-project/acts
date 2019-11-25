@@ -107,9 +107,10 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   // intersectionEstimate (should delegate to derived class method of same
   // name)
   Vector3D mom{100., 200., 300.};
-  auto intersectionEstimate =
-      surface.intersectionEstimate(tgContext, reference, mom, forward, false);
-  const Intersection ref{Vector3D{1, 1, 1}, 20., true};
+  auto intersectionEstimate = surface.intersectionEstimate(
+      tgContext, reference, mom.normalized(), false);
+  const Intersection ref{Vector3D{1, 1, 1}, 20.,
+                         Intersection::Status::reachable};
   BOOST_CHECK_EQUAL(ref.position, intersectionEstimate.position);
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));

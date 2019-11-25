@@ -90,9 +90,9 @@ struct SurfaceObserver {
       // calculate the distance to the surface
       const double distance =
           surface
-              ->intersectionEstimate(
-                  state.geoContext, stepper.position(state.stepping),
-                  stepper.direction(state.stepping), forward, true)
+              ->intersectionEstimate(state.geoContext,
+                                     stepper.position(state.stepping),
+                                     stepper.direction(state.stepping), true)
               .pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, cstep::actor);

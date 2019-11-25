@@ -111,12 +111,10 @@ BOOST_DATA_TEST_CASE(
     const auto& absVol = dynamic_cast<const AbstractVolume&>(*vol);
     auto bndSurfaces = absVol.boundarySurfaces();
     // collect all surfaces that are hit
-    Acts::NavigationOptions<Acts::Surface> no(Acts::forward, true);
     for (const auto& bndSrf : bndSurfaces) {
       const auto& srf = bndSrf->surfaceRepresentation();
-      auto sri = srf.surfaceIntersectionEstimate(tgContext, ray.origin(),
-                                                 ray.dir(), no);
-      if (sri) {
+      auto sri = srf.intersect(tgContext, ray.origin(), ray.dir(), true);
+      if (sri and sri.intersection.pathLength >= s_onSurfaceTolerance) {
         // does intersect
         hits.push_back(std::move(sri));
       }

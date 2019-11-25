@@ -14,15 +14,16 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include "Acts/Propagator/EigenStepperError.hpp"
-#include "Acts/Utilities/Result.hpp"
-
 namespace Acts {
+
+using namespace Acts::UnitLiterals;
 
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
@@ -36,7 +37,7 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename bfield_t, typename corrector_t = VoidIntersectionCorrector,
+template <typename bfield_t,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
@@ -55,7 +56,6 @@ class EigenStepper {
 
  public:
   using cstep = detail::ConstrainedStep;
-  using Corrector = corrector_t;
 
   /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
@@ -204,19 +204,34 @@ class EigenStepper {
   }
 
   /// Global particle position accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   Vector3D position(const State& state) const { return state.pos; }
 
   /// Momentum direction accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   Vector3D direction(const State& state) const { return state.dir; }
 
   /// Actual momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const { return state.p; }
 
   /// Charge access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const { return state.q; }
 
   /// Time access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.t0 + state.dt; }
+
+  /// Overstep limit
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
 
   /// Tests if the state reached a surface
   ///
@@ -279,11 +294,6 @@ class EigenStepper {
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const;
 
-  /// Return a corrector
-  corrector_t corrector(State& state) const {
-    return corrector_t(state.startPos, state.startDir, state.pathAccumulated);
-  }
-
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
   /// or direction of the state
@@ -325,6 +335,9 @@ class EigenStepper {
  private:
   /// Magnetic field inside of the detector
   BField m_bField;
+
+  /// Overstep limit: could/should be dynamic
+  double m_overstepLimit = -50_um;
 };
 }  // namespace Acts
 

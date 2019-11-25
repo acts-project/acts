@@ -50,15 +50,15 @@ class SurfaceArray {
                                    const SurfaceVector& surfaces) = 0;
 
     /// @brief Performs lookup at @c pos and returns bin content as reference
-    /// @param pos Lookup position
+    /// @param position Lookup position
     /// @return @c SurfaceVector at given bin
-    virtual SurfaceVector& lookup(const Vector3D& pos) = 0;
+    virtual SurfaceVector& lookup(const Vector3D& position) = 0;
 
     /// @brief Performs lookup at @c pos and returns bin content as const
     /// reference
-    /// @param pos Lookup position
+    /// @param position Lookup position
     /// @return @c SurfaceVector at given bin
-    virtual const SurfaceVector& lookup(const Vector3D& pos) const = 0;
+    virtual const SurfaceVector& lookup(const Vector3D& position) const = 0;
 
     /// @brief Performs lookup at global bin and returns bin content as
     /// reference
@@ -74,9 +74,9 @@ class SurfaceArray {
 
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
-    /// @param pos Lookup position
+    /// @param position Lookup position
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
-    virtual const SurfaceVector& neighbors(const Vector3D& pos) const = 0;
+    virtual const SurfaceVector& neighbors(const Vector3D& position) const = 0;
 
     /// @brief Returns the total size of the grid (including under/overflow
     /// bins)
@@ -204,18 +204,18 @@ class SurfaceArray {
     }
 
     /// @brief Performs lookup at @c pos and returns bin content as reference
-    /// @param pos Lookup position
+    /// @param position Lookup position
     /// @return @c SurfaceVector at given bin
-    SurfaceVector& lookup(const Vector3D& pos) override {
-      return m_grid.atPosition(m_globalToLocal(pos));
+    SurfaceVector& lookup(const Vector3D& position) override {
+      return m_grid.atPosition(m_globalToLocal(position));
     }
 
     /// @brief Performs lookup at @c pos and returns bin content as const
     /// reference
-    /// @param pos Lookup position
+    /// @param position Lookup position
     /// @return @c SurfaceVector at given bin
-    const SurfaceVector& lookup(const Vector3D& pos) const override {
-      return m_grid.atPosition(m_globalToLocal(pos));
+    const SurfaceVector& lookup(const Vector3D& position) const override {
+      return m_grid.atPosition(m_globalToLocal(position));
     }
 
     /// @brief Performs lookup at global bin and returns bin content as
@@ -234,11 +234,11 @@ class SurfaceArray {
 
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
-    /// @param pos Lookup position
+    /// @param position Lookup position
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
-    const SurfaceVector& neighbors(const Vector3D& pos) const override {
-      auto loc = m_globalToLocal(pos);
-      return m_neighborMap.at(m_grid.globalBinFromPosition(loc));
+    const SurfaceVector& neighbors(const Vector3D& position) const override {
+      auto lposition = m_globalToLocal(position);
+      return m_neighborMap.at(m_grid.globalBinFromPosition(lposition));
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -342,16 +342,16 @@ class SurfaceArray {
         : m_element({element}) {}
 
     /// @brief Lookup, always returns @c element
-    /// @param pos is ignored
+    /// @param position is ignored
     /// @return reference to vector containing only @c element
-    SurfaceVector& lookup(const Vector3D& /*pos*/) override {
+    SurfaceVector& lookup(const Vector3D& /*position*/) override {
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
-    /// @param pos is ignored
+    /// @param position is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& lookup(const Vector3D& /*pos*/) const override {
+    const SurfaceVector& lookup(const Vector3D& /*position*/) const override {
       return m_element;
     }
 
@@ -368,9 +368,10 @@ class SurfaceArray {
     }
 
     /// @brief Lookup, always returns @c element
-    /// @param pos is ignored
+    /// @param position is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& neighbors(const Vector3D& /*pos*/) const override {
+    const SurfaceVector& neighbors(
+        const Vector3D& /*position*/) const override {
       return m_element;
     }
 
@@ -438,16 +439,18 @@ class SurfaceArray {
   SurfaceArray(std::shared_ptr<const Surface> srf);
 
   /// @brief Get all surfaces in bin given by position.
-  /// @param pos the lookup position
+  /// @param position the lookup position
   /// @return reference to @c SurfaceVector contained in bin at that position
-  SurfaceVector& at(const Vector3D& pos) { return p_gridLookup->lookup(pos); }
+  SurfaceVector& at(const Vector3D& position) {
+    return p_gridLookup->lookup(position);
+  }
 
   /// @brief Get all surfaces in bin given by position @p pos.
-  /// @param pos the lookup position
+  /// @param position the lookup position
   /// @return const reference to @c SurfaceVector contained in bin at that
   /// position
-  const SurfaceVector& at(const Vector3D& pos) const {
-    return p_gridLookup->lookup(pos);
+  const SurfaceVector& at(const Vector3D& position) const {
+    return p_gridLookup->lookup(position);
   }
 
   /// @brief Get all surfaces in bin given by global bin index @p bin.
@@ -463,14 +466,14 @@ class SurfaceArray {
   }
 
   /// @brief Get all surfaces in bin at @p pos and its neighbors
-  /// @param pos The position to lookup as nominal
+  /// @param position The position to lookup as nominal
   /// @param size How many neighbors we want in each direction. (default: 1)
   /// @return Merged @c SurfaceVector of neighbors and nominal
   /// @note The @c SurfaceVector will be combined. For technical reasons, the
   ///       different bin content vectors have to be copied, so the resulting
   ///       vector contains copies.
-  SurfaceVector neighbors(const Vector3D& pos) const {
-    return p_gridLookup->neighbors(pos);
+  SurfaceVector neighbors(const Vector3D& position) const {
+    return p_gridLookup->neighbors(position);
   }
 
   /// @brief Get the size of the underlying grid structure including

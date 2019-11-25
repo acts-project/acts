@@ -51,19 +51,17 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param lay is the layer to be registerd
   void registerLayer(const Layer& lay) override;
 
-  /// get the compatible surfaces
+  /// Get the aproach surface to the layer
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global position to start the approach from
-  /// @param gdir is the momentum vector
-  /// @param bcheck is the boundary check prescription
-  /// @param corrfnc is an noption correction function
+  /// @param position The global position to start the approach from
+  /// @param direction The momentum vector
+  /// @param bcheck The boundary check prescription
   ///
-  /// @return : a boolean indicating if an actual intersection had been tried
+  /// @return : a SurfaceIntersection
   ObjectIntersection<Surface> approachSurface(
-      const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
-      NavigationDirection navDir, const BoundaryCheck& bcheck,
-      CorrFnc corrfnc = nullptr) const override;
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const BoundaryCheck& bcheck) const override;
 
   /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>& containedSurfaces() const override;

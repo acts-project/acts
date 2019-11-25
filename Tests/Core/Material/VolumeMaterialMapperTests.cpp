@@ -29,6 +29,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
@@ -312,15 +313,24 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   MagneticFieldContext mc;
 
+  using DebugOutput = Acts::detail::DebugOutputActor;
+
   // Launch propagation and gather result
-  PropagatorOptions<ActionList<MaterialCollector>,
+  PropagatorOptions<ActionList<MaterialCollector, DebugOutput>,
                     AbortList<detail::EndOfWorldReached>>
       po(gc, mc);
   po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
+  po.debug = true;
+
   const auto& result = prop.propagate(sctp, po).value();
   const MaterialCollector::this_result& stepResult =
       result.get<typename MaterialCollector::result_type>();
+
+  if (po.debug) {
+    auto screenOutput = result.get<DebugOutput::result_type>();
+    std::cout << screenOutput.debugString << std::endl;
+  }
 
   // Collect the material as given by the grid and test it
   std::vector<Material> matGrid;

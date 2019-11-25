@@ -41,14 +41,14 @@ std::vector<TDD_real_t> Acts::TrapezoidBounds::valueStore() const {
   return values;
 }
 
-bool Acts::TrapezoidBounds::inside(const Acts::Vector2D& lpos,
+bool Acts::TrapezoidBounds::inside(const Acts::Vector2D& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lpos, vertices());
+  return bcheck.isInside(lposition, vertices());
 }
 
 double Acts::TrapezoidBounds::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
-  return BoundaryCheck(true).distance(lpos, vertices());
+    const Acts::Vector2D& lposition) const {
+  return BoundaryCheck(true).distance(lposition, vertices());
 }
 
 std::vector<Acts::Vector2D> Acts::TrapezoidBounds::vertices() const {

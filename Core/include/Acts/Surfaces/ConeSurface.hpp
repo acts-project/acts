@@ -109,31 +109,30 @@ class ConeSurface : public Surface {
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param pos is the global position where the measurement frame is
+  /// @param position is the global position where the measurement frame is
   /// constructed
-  /// @param mom is the momentum used for the measurement frame construction
+  /// @param momentum is the momentum used for the measurement frame
+  /// construction
   /// @return matrix that indicates the measurement frame
   const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& pos,
-                                        const Vector3D& mom) const final;
+                                        const Vector3D& position,
+                                        const Vector3D& momentum) const final;
 
   /// Return method for surface normal information
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lp is the local position on the cone for which the normal vector
-  /// is requested
+  /// @param lposition is the local position at normal vector request
   /// @return Vector3D normal vector in global frame
   const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lp) const final;
+                        const Vector2D& lposition) const final;
 
   /// Return method for surface normal information
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global position on the cone for which the normal vector
-  /// is requested
+  /// @param position is the global position as normal vector base
   /// @return Vector3D normal vector in global frame
   const Vector3D normal(const GeometryContext& gctx,
-                        const Vector3D& gpos) const final;
+                        const Vector3D& position) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -151,31 +150,69 @@ class ConeSurface : public Surface {
   /// Local to global transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos is the local position to be transformed
-  /// @param mom is the global momentum (ignored in this operation)
-  /// @param gpos is the global position shich is filled
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lpos,
-                     const Vector3D& mom, Vector3D& gpos) const final;
+  /// @param lposition is the local position to be transformed
+  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param position is the global position which is filled
+  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                     const Vector3D& momentum, Vector3D& position) const final;
 
-  /// Global to local transfomration
+  /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global position to be transformed
-  /// @param mom is the global momentum (ignored in this operation)
-  /// @param lpos is hte local position to be filled
+  /// @param position is the global position to be transformed
+  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param lposition is the local position to be filled
   /// @return is a boolean indicating if the transformation succeeded
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& gpos,
-                     const Vector3D& mom, Vector2D& lpos) const final;
+  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
+                     const Vector3D& momentum, Vector2D& lposition) const final;
 
   /// @brief Straight line intersection schema - provides closest intersection
   /// and (signed) path length
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos The start position for the intersection
-  /// @param gmom The start momentum for the intersection (will be normalized)
-  /// @param navDir The navigation direction with respect to the momentum
+  /// @param position The start position for the intersection
+  /// @param direciton The start direction for the intersection (expected
+  /// normalized)
   /// @param bcheck The boundary check to be used in this directive
-  /// @param correct is an (optional) correction function pointer
+  ///
+  /// @return is the Intersection object
+  Intersection intersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction,
+      const BoundaryCheck& bcheck = false) const final;
+
+  /// Straight line intersection schema from position/direction
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to start from
+  /// @param direction The direction at start
+  /// @param bcheck the Boundary Check
+  ///
+  /// If possible returns both solutions for the cylinder
+  ///
+  /// @return SurfaceIntersection object (contains intersection & surface)
+  SurfaceIntersection intersect(const GeometryContext& gctx,
+                                const Vector3D& position,
+                                const Vector3D& direction,
+                                const BoundaryCheck& bcheck) const final;
+
+  /// the pathCorrection for derived classes with thickness
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global potion at the correction point
+  /// @param direction is the momentum direction at the correction point
+  /// @return is the path correction due to incident angle
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                        const Vector3D& direction) const final;
+
+  /// Return properly formatted class name for screen output
+  std::string name() const override;
+
+ protected:
+  std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
+
+ private:
+  /// Implementation of the intersection solver
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -209,29 +246,11 @@ class ConeSurface : public Surface {
   ///   is also the length of the path, since we normalized @f$x_d@f$
   ///   to be unit length.
   ///
-  /// @return is the Intersection object
-  Intersection intersectionEstimate(const GeometryContext& gctx,
-                                    const Vector3D& gpos, const Vector3D& gmom,
-                                    NavigationDirection navDir,
-                                    const BoundaryCheck& bcheck = false,
-                                    CorrFnc correct = nullptr) const final;
+  /// @return the quadratic equation
+  detail::RealQuadraticEquation intersectionSolver(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction) const;
 
-  /// the pathCorrection for derived classes with thickness
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global potion at the correction point
-  /// @param mom is the momentum at the correction point
-  /// @return is the path correction due to incident angle
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& gpos,
-                        const Vector3D& mom) const final;
-
-  /// Return properly formatted class name for screen output
-  std::string name() const override;
-
- protected:
-  std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
-
- private:
   /// Clone method implementation
   ///
   /// @param gctx The current geometry context object, e.g. alignment

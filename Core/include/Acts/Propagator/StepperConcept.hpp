@@ -41,14 +41,14 @@ namespace concept {
   METHOD_TRAIT(direction_t, direction);
   METHOD_TRAIT(momentum_t, momentum);
   METHOD_TRAIT(charge_t, charge);
-  METHOD_TRAIT(timet, time);
+  METHOD_TRAIT(time_t, time);
+  METHOD_TRAIT(overstep_t, overstepLimit);
   METHOD_TRAIT(surface_reached_t, surfaceReached);
   METHOD_TRAIT(bound_state_method_t, boundState);
   METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
   METHOD_TRAIT(update_t, update);
   METHOD_TRAIT(covariance_transport_t, covarianceTransport);
   METHOD_TRAIT(step_t, step);
-  METHOD_TRAIT(corrector_t, corrector);
 
   template <typename T>
   using cov_transport_t = decltype(std::declval<T>().covTransport);
@@ -99,8 +99,10 @@ namespace concept {
         static_assert(momentum_exists, "momentum method not found");
         constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
         static_assert(charge_exists, "charge method not found");
-        constexpr static bool time_exists = has_method<const S, double, timet, const state&>;
+        constexpr static bool time_exists = has_method<const S, double, time_t, const state&>;
         static_assert(time_exists, "time method not found");
+        constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
+        static_assert(overstep_exists, "overstepLimit method not found");
         constexpr static bool surface_reached_exists = has_method<const S, bool, surface_reached_t, const state&, const Surface*>;
         static_assert(surface_reached_exists, "surfaceReached method not found");
         constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
@@ -110,8 +112,6 @@ namespace concept {
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const BoundParameters&>,
                                                              has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
         static_assert(update_method_exists, "update method not found");
-        constexpr static bool corrector_exists = has_method<const S, typename S::Corrector, corrector_t, state&>;
-        static_assert(corrector_exists, "corrector method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&, bool>,
                                                                     has_method<const S, void, covariance_transport_t, state&, const Surface&, bool>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
@@ -133,7 +133,6 @@ namespace concept {
                                               bound_state_method_exists,
                                               curvilinear_state_method_exists,
                                               update_method_exists,
-                                              corrector_exists,
                                               covariance_transport_exists>;
       };
   // clang-format on

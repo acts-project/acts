@@ -16,58 +16,108 @@ inline const Vector3D CylinderSurface::rotSymmetryAxis(
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
-inline Intersection CylinderSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
-    NavigationDirection navDir, const BoundaryCheck& bcheck,
-    CorrFnc correct) const {
-  // create line parameters
-  Vector3D lpos = gpos;
-  Vector3D ldir = gdir;
-  // minimize the call to transform()
+inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction) const {
+  // Solve for radius R
+  double R = bounds().r();
+
+  // Get the transformation matrtix
   const auto& tMatrix = transform(gctx).matrix();
   Vector3D caxis = tMatrix.block<3, 1>(0, 2).transpose();
   Vector3D ccenter = tMatrix.block<3, 1>(0, 3).transpose();
-  // what you need at the and
-  Vector3D solution(0, 0, 0);
-  double path = 0.;
 
-  // lemma : the solver -> should catch current values
-  auto solve = [&solution, &path, &lpos, &ldir, &ccenter, &caxis,
-                &navDir](double R) -> bool {
-    // check documentation for explanation
-    Vector3D pc = lpos - ccenter;
-    Vector3D pcXcd = pc.cross(caxis);
-    Vector3D ldXcd = ldir.cross(caxis);
-    double a = ldXcd.dot(ldXcd);
-    double b = 2. * (ldXcd.dot(pcXcd));
-    double c = pcXcd.dot(pcXcd) - (R * R);
-    // and solve the qaudratic equation - todo, validity check
-    detail::RealQuadraticEquation qe(a, b, c);
-    // check how many solution you have
-    if (qe.solutions == 0) {
-      return false;
-    }
-    // chose the solution
-    path = ((navDir == 0) || qe.first * qe.second > 0.)
-               ? (qe.first * qe.first < qe.second * qe.second ? qe.first
-                                                              : qe.second)
-               : (navDir * qe.first >= 0. ? qe.first : qe.second);
-    // return the solution
-    solution = lpos + path * ldir;
-    // is valid if it goes into the right direction
-    return (path * navDir >= 0.);
-  };
+  // Check documentation for explanation
+  Vector3D pc = position - ccenter;
+  Vector3D pcXcd = pc.cross(caxis);
+  Vector3D ldXcd = direction.cross(caxis);
+  double a = ldXcd.dot(ldXcd);
+  double b = 2. * (ldXcd.dot(pcXcd));
+  double c = pcXcd.dot(pcXcd) - (R * R);
+  // And solve the qaudratic equation
+  return detail::RealQuadraticEquation(a, b, c);
+}
 
-  // solve for radius R
-  double R = bounds().r();
-  bool valid = solve(R);
-  // if configured, correct and solve again
-  if (correct && correct(lpos, ldir, path)) {
-    valid = solve(R);
+inline Intersection CylinderSurface::intersectionEstimate(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Solve the quadratic equation
+  auto qe = intersectionSolver(gctx, position, direction);
+
+  // If no valid solution return a non-valid intersection
+  if (qe.solutions == 0) {
+    return Intersection();
   }
-  // update for inside if requested :
-  // @todo fix this : fast inside bounds check needed
-  valid = bcheck ? (valid && isOnSurface(gctx, solution, gdir, bcheck)) : valid;
-  // now return
-  return Intersection(solution, path, valid);
+
+  // Absolute smallest solution
+  double path =
+      qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second;
+  Vector3D solution = position + path * direction;
+  Intersection::Status status =
+      path * path < s_onSurfaceTolerance * s_onSurfaceTolerance
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
+
+  // Boundary check necessary
+  if (bcheck and not isOnSurface(gctx, solution, direction, bcheck)) {
+    status = Intersection::Status::missed;
+  }
+
+  // Now return the solution
+  return Intersection(solution, path, status);
+}
+
+inline SurfaceIntersection CylinderSurface::intersect(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Solve the quadratic equation
+  auto qe = intersectionSolver(gctx, position, direction);
+
+  // If no valid solution return a non-valid surfaceIntersection
+  if (qe.solutions == 0) {
+    return SurfaceIntersection();
+  }
+
+  // Check the validity of the first solution
+  Vector3D solution1 = position + qe.first * direction;
+  Intersection::Status status1 =
+      qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
+  if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
+    status1 = Intersection::Status::missed;
+  }
+
+  // Check the validity of the second solution
+  Vector3D solution2 = position + qe.second * direction;
+  Intersection::Status status2 =
+      qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance
+          ? Intersection::Status::onSurface
+          : Intersection::Status::reachable;
+  if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
+    status2 = Intersection::Status::missed;
+  }
+  // Set the intersection
+  Intersection first(solution1, qe.first, status1);
+  Intersection second(solution2, qe.second, status2);
+  SurfaceIntersection cIntersection(first, this);
+  // Check one if its valid or neither is valid
+  bool check1 = status1 != Intersection::Status::missed or
+                (status1 == Intersection::Status::missed and
+                 status2 == Intersection::Status::missed);
+  // Check and (eventually) go with the first solution
+  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+      status2 == Intersection::Status::missed) {
+    // And add the alternative
+    if (qe.solutions > 1) {
+      cIntersection.alternatives = {second};
+    }
+  } else {
+    // And add the alternative
+    if (qe.solutions > 1) {
+      cIntersection.alternatives = {first};
+    }
+    cIntersection.intersection = second;
+  }
+  return cIntersection;
 }

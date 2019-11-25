@@ -23,49 +23,24 @@ inline const Vector3D PlaneSurface::binningPosition(
 }
 
 inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                           const Vector3D& pos,
-                                           const Vector3D& mom) const {
-  /// we can ignore the global position here
-  return 1. / std::abs(Surface::normal(gctx, pos).dot(mom.normalized()));
+                                           const Vector3D& position,
+                                           const Vector3D& direction) const {
+  /// We can ignore the global position here
+  return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
 inline Intersection PlaneSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gdir,
-    NavigationDirection navDir, const BoundaryCheck& bcheck,
-    CorrFnc correct) const {
-  // minimize the call to transform()
-  const auto& tMatrix = transform(gctx).matrix();
-  const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
-  const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();
-  // return solution and path
-  Vector3D solution(0., 0., 0.);
-  double path = std::numeric_limits<double>::infinity();
-  // lemma : the solver -> should catch current values
-  auto solve = [&solution, &path, &pnormal, &pcenter, &navDir](
-                   const Vector3D& lpos, const Vector3D& ldir) -> bool {
-    double denom = ldir.dot(pnormal);
-    if (denom != 0.0) {
-      path = (pnormal.dot((pcenter - lpos))) / (denom);
-      solution = (lpos + path * ldir);
-    }
-    // is valid if it goes into the right direction
-    return ((navDir == anyDirection) || path * navDir >= 0.);
-  };
-  // solve first
-  bool valid = solve(gpos, gdir);
-  // if configured to correct, do it and solve again
-  if (correct) {
-    // copy as the corrector may change them
-    Vector3D lposc = gpos;
-    Vector3D ldirc = gdir;
-    if (correct(lposc, ldirc, path)) {
-      valid = solve(lposc, ldirc);
-    }
-  }
-  // evaluate (if necessary in terms of boundaries)
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Use the intersection helper for planar surfaces
+  auto intersection =
+      PlanarHelper::intersectionEstimate(transform(gctx), position, direction);
+  // Evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds
-  valid = bcheck ? (valid && isOnSurface(gctx, solution, gdir, bcheck)) : valid;
-  // return the result
-  return Intersection(solution, path, valid);
+  if (intersection.status != Intersection::Status::unreachable and bcheck and
+      not isOnSurface(gctx, intersection.position, direction, bcheck)) {
+    intersection.status = Intersection::Status::missed;
+  }
+  return intersection;
 }

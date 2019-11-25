@@ -26,7 +26,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/RelativePathCorrector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -58,8 +57,7 @@ Navigator navigatorES(tGeometry);
 Navigator navigatorSL(tGeometry);
 
 using BField = ConstantBField;
-using StepCorrector = detail::RelativePathCorrector;
-using EigenStepper = EigenStepper<BField, StepCorrector>;
+using EigenStepper = EigenStepper<BField>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 

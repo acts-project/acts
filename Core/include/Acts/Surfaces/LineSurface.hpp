@@ -86,11 +86,11 @@ class LineSurface : public Surface {
   /// Normal vector return
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos is the local position is ignored
+  /// @param lposition is the local position is ignored
   ///
   /// @return a Vector3D by value
   const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lpos) const final;
+                        const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -111,14 +111,15 @@ class LineSurface : public Surface {
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the global position where the measurement frame is
+  /// @param position is the global position where the measurement frame is
   /// constructed
-  /// @param mom is the momentum used for the measurement frame construction
+  /// @param momentum is the momentum used for the measurement frame
+  /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& gpos,
-                                        const Vector3D& mom) const final;
+                                        const Vector3D& position,
+                                        const Vector3D& momentum) const final;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -127,13 +128,13 @@ class LineSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param jacobian is the jacobian to be initialized
-  /// @param gpos is the global position of the parameters
-  /// @param dir is the direction at of the parameters
+  /// @param position is the global position of the parameters
+  /// @param direction is the direction at of the parameters
   ///
   /// @param pars is the paranmeters vector
   void initJacobianToGlobal(const GeometryContext& gctx,
-                            BoundToFreeMatrix& jacobian, const Vector3D& gpos,
-                            const Vector3D& dir,
+                            BoundToFreeMatrix& jacobian,
+                            const Vector3D& position, const Vector3D& direction,
                             const BoundVector& pars) const final;
 
   /// Calculate the form factors for the derivatives
@@ -141,30 +142,31 @@ class LineSurface : public Surface {
   /// reference frame does not depend on the direction
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param pos is the position of the paramters in global
-  /// @param dir is the direction of the track
+  /// @param position is the position of the paramters in global
+  /// @param direction is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
-  /// @param jac is the transport jacobian
+  /// @param jacobian is the transport jacobian
   ///
   /// @return a five-dim vector
   const BoundRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& pos, const Vector3D& dir,
-      const RotationMatrix3D& rft, const BoundToFreeMatrix& jac) const final;
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const RotationMatrix3D& rft,
+      const BoundToFreeMatrix& jacobian) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
   /// radius
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos is the local position to be transformed
-  /// @param mom is the global momentum (used to sign the closest approach)
-  ///
-  /// @param gpos is the global position shich is filled
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lpos,
-                     const Vector3D& mom, Vector3D& gpos) const final;
+  /// @param lposition is the local position to be transformed
+  /// @param momentum is the global momentum (used to sign the closest approach)
+  /// @param position is the global position which is filled
+  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                     const Vector3D& momentum, Vector3D& position) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
+  ///
   /// This method is the true global->local transformation.<br>
   /// makes use of globalToLocal and indicates the sign of the Acts::eLOC_R by
   /// the given momentum
@@ -192,26 +194,24 @@ class LineSurface : public Surface {
   /// \image html SignOfDriftCircleD0.gif
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param mom global 3D momentum representation (optionally ignored)
-  /// @param lpos local 2D position to be filled (given by reference for method
-  /// symmetry)
+  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param lposition local 2D position to be filled (given by reference for
+  /// method symmetry)
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& gpos,
-                     const Vector3D& mom, Vector2D& lpos) const final;
+  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
+                     const Vector3D& momentum, Vector2D& lposition) const final;
 
   /// @brief Straight line intersection schema
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos The global position as a starting point
-  /// @param gdir The global direction at the starting point
+  /// @param position The global position as a starting point
+  /// @param direction The global direction at the starting point
   ///        @note exptected to be normalized
-  /// @param navDir The navigation direction
   /// @param bcheck The boundary check directive for the estimate
-  /// @param correct is a corrector function (e.g. for curvature correction)
   ///
   ///   <b>mathematical motivation:</b>
   ///   Given two lines in parameteric form:<br>
@@ -241,19 +241,18 @@ class LineSurface : public Surface {
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///
   /// @return is the intersection object
-  Intersection intersectionEstimate(const GeometryContext& gctx,
-                                    const Vector3D& gpos, const Vector3D& gdir,
-                                    NavigationDirection navDir = forward,
-                                    const BoundaryCheck& bcheck = false,
-                                    CorrFnc correct = nullptr) const final;
+  Intersection intersectionEstimate(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction,
+      const BoundaryCheck& bcheck = false) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
   ///
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& pos,
-                        const Vector3D& mom) const override;
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                        const Vector3D& momentum) const override;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds& bounds() const final;
@@ -268,11 +267,11 @@ class LineSurface : public Surface {
   /// helper function to apply the globalToLocal with out transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param pos is the global position
-  /// @param mom is the momentum
-  /// @param lpos is the local position to be filled
-  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3D& pos,
-                          const Vector3D& mom, Vector2D& lpos) const;
+  /// @param position is the global position
+  /// @param momentum is the momentum
+  /// @param lposition is the local position to be filled
+  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3D& position,
+                          const Vector3D& momentum, Vector2D& lposition) const;
 };
 
 #include "Acts/Surfaces/detail/LineSurface.ipp"

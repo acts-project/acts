@@ -62,7 +62,7 @@ Stepper dstepper(bField);
 ReferencePropagator rpropagator(std::move(estepper), std::move(navigator));
 DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
-const int ntests = 1000;
+const int ntests = 500;
 const int skip = 0;
 bool debugMode = false;
 bool referenceTiming = false;
@@ -129,6 +129,10 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   if (debugMode) {
     std::cout << ">>> Standard Navigator output to come : " << std::endl;
     std::cout << cOutput.debugString << std::endl;
+
+    std::cout << " - the standard navigator yielded "
+              << cSurfaces.collected.size() << " collected surfaces"
+              << std::endl;
   }
 
   if (not referenceTiming) {

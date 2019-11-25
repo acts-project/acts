@@ -33,6 +33,9 @@ class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 
+/// Typedef of the surface intersection
+using SurfaceIntersection = ObjectIntersection<Surface>;
+
 /// @class Surface
 ///
 /// @brief Abstract Base Class for tracking surfaces
@@ -61,9 +64,6 @@ class Surface : public virtual GeometryObject,
     Curvilinear = 6,
     Other = 7
   };
-
-  /// Typedef of the surface intersection
-  using SurfaceIntersection = ObjectIntersection<Surface>;
 
  protected:
   /// Constructor with Transform3D as a shared object
@@ -198,23 +198,25 @@ class Surface : public virtual GeometryObject,
   /// It requires a local position to be given (in general)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos is the local position where the normal verctor is constructed
+  /// @param lposition is the local position where the normal vector is
+  /// constructed
   ///
   /// @return normal vector by value
   virtual const Vector3D normal(const GeometryContext& gctx,
-                                const Vector2D& lpos) const = 0;
+                                const Vector2D& lposition) const = 0;
 
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
   /// It requires a local position to be given (in general)
   ///
-  /// @param pos is the global position where the normal vector is constructed
+  /// @param position is the global position where the normal vector is
+  /// constructed
   /// @param gctx The current geometry context object, e.g. alignment
 
   ///
   /// @return normal vector by value
   virtual const Vector3D normal(const GeometryContext& gctx,
-                                const Vector3D& pos) const;
+                                const Vector3D& position) const;
 
   /// Return method for the normal vector of the surface
   ///
@@ -264,42 +266,26 @@ class Surface : public virtual GeometryObject,
   /// @param material Material description associated to this surface
   void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
 
-  /// The templated Parameters onSurface method
-  /// In order to avoid unneccessary geometrical operations, it checks on the
-  /// surface pointer first. If that check fails, it calls the geometrical
-  /// check isOnSurface
-  ///
-  /// @tparam parameters_t The parameters type
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param pars TrackParameters to be checked
-  /// @param bcheck BoundaryCheck directive for this onSurface check
-  ///
-  /// @return boolean indication if operation was successful
-  template <typename parameters_t>
-  bool isOnSurface(const GeometryContext& gctx, const parameters_t& pars,
-                   const BoundaryCheck& bcheck = true) const;
-
   /// The geometric onSurface method
   ///
   /// Geometrical check whether position is on Surface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos global position to be evaludated
-  /// @param gmom global momentum (required for line-type surfaces)
+  /// @param position global position to be evaludated
+  /// @param momentum global momentum (required for line-type surfaces)
   /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
-  bool isOnSurface(const GeometryContext& gctx, const Vector3D& gpos,
-                   const Vector3D& gmom,
+  bool isOnSurface(const GeometryContext& gctx, const Vector3D& position,
+                   const Vector3D& momentum,
                    const BoundaryCheck& bcheck = true) const;
 
   /// The insideBounds method for local positions
   ///
-  /// @param locpos local position to check
-  /// @param bcheck  BoundaryCheck directive for this onSurface check
+  /// @param lposition The local position to check
+  /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool insideBounds(const Vector2D& locpos,
+  virtual bool insideBounds(const Vector2D& lposition,
                             const BoundaryCheck& bcheck = true) const;
 
   /// Local to global transformation
@@ -308,12 +294,14 @@ class Surface : public virtual GeometryObject,
   /// ambiguity this is also provided
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lpos local 2D posittion in specialized surface frame
-  /// @param gmom global 3D momentum representation (optionally ignored)
-  /// @param gpos global 3D position to be filled (given by reference for method
-  /// symmetry)
-  virtual void localToGlobal(const GeometryContext& gctx, const Vector2D& lpos,
-                             const Vector3D& gmom, Vector3D& gpos) const = 0;
+  /// @param lposition local 2D position in specialized surface frame
+  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param position global 3D position to be filled (given by reference for
+  /// method symmetry)
+  virtual void localToGlobal(const GeometryContext& gctx,
+                             const Vector2D& lposition,
+                             const Vector3D& momentum,
+                             Vector3D& position) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
@@ -321,31 +309,32 @@ class Surface : public virtual GeometryObject,
   /// ambiguity this is also provided
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param gmom global 3D momentum representation (optionally ignored)
-  /// @param lpos local 2D position to be filled (given by reference for method
-  /// symmetry)
+  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param lposition local 2D position to be filled (given by reference for
+  /// method symmetry)
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  virtual bool globalToLocal(const GeometryContext& gctx, const Vector3D& gpos,
-                             const Vector3D& gmom, Vector2D& lpos) const = 0;
+  virtual bool globalToLocal(const GeometryContext& gctx,
+                             const Vector3D& position, const Vector3D& momentum,
+                             Vector2D& lposition) const = 0;
 
   /// Return mehtod for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param gmom global 3D momentum representation (optionally ignored)
+  /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
   virtual const Acts::RotationMatrix3D referenceFrame(
-      const GeometryContext& gctx, const Vector3D& gpos,
-      const Vector3D& gmom) const;
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& momentum) const;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -358,12 +347,13 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param jacobian is the jacobian to be initialized
-  /// @param gpos is the global position of the parameters
-  /// @param dir is the direction at of the parameters
+  /// @param position is the global position of the parameters
+  /// @param direction is the direction at of the parameters
   /// @param pars is the parameter vector
   virtual void initJacobianToGlobal(const GeometryContext& gctx,
                                     BoundToFreeMatrix& jacobian,
-                                    const Vector3D& gpos, const Vector3D& dir,
+                                    const Vector3D& position,
+                                    const Vector3D& direction,
                                     const BoundVector& pars) const;
 
   /// Initialize the jacobian from global to local
@@ -376,14 +366,14 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param jacobian is the jacobian to be initialized
-  /// @param gpos is the global position of the parameters
-  /// @param dir is the direction at of the parameters
+  /// @param position is the global position of the parameters
+  /// @param direction is the direction at of the parameters
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D initJacobianToLocal(
       const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-      const Vector3D& gpos, const Vector3D& dir) const;
+      const Vector3D& position, const Vector3D& direction) const;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
@@ -395,99 +385,63 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos is the position of the paramters in global
-  /// @param dir is the direction of the track
+  /// @param position is the position of the paramters in global
+  /// @param direction is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
-  /// @param jac is the transport jacobian
+  /// @param jacobian is the transport jacobian
   ///
   /// @return a five-dim vector
   virtual const BoundRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& dir,
-      const RotationMatrix3D& rft, const BoundToFreeMatrix& jac) const;
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const RotationMatrix3D& rft,
+      const BoundToFreeMatrix& jacobian) const;
 
   /// Calucation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param gmom global 3D momentum representation
+  /// @param direction global 3D momentum direction
   ///
   /// @return Path correction with respect to the nominal incident.
   virtual double pathCorrection(const GeometryContext& gctx,
-                                const Vector3D& gpos,
-                                const Vector3D& gmom) const = 0;
+                                const Vector3D& position,
+                                const Vector3D& direction) const = 0;
 
   /// Straight line intersection schema from position/direction
   ///
-  /// Templated for :
-  /// @tparam options_t Type of the navigation options
-  /// @tparam corrector_t is the type of the corrector struct foer the direction
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
-  /// @param position The direction to start from
-  /// @param options Options object that holds additional navigation info
-  /// @param correct Corrector struct that can be used to refine the solution
+  /// @param direction The direction at start
+  /// @param bcheck the Boundary Check
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
-  SurfaceIntersection surfaceIntersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options,
-      const corrector_t& correct = corrector_t()) const
+  virtual SurfaceIntersection intersect(const GeometryContext& gctx,
+                                        const Vector3D& position,
+                                        const Vector3D& direction,
+                                        const BoundaryCheck& bcheck) const
 
   {
-    // get the intersection with the surface
+    // Get the intersection with the surface
     auto sIntersection =
-        intersectionEstimate(gctx, position, direction, options.navDir,
-                             options.boundaryCheck, correct);
+        intersectionEstimate(gctx, position, direction, bcheck);
     // return a surface intersection with result direction
     return SurfaceIntersection(sIntersection, this);
-  }
-
-  /// Straight line intersection schema from parameters
-  ///
-  /// Templated for :
-  /// @tparam parameters_t Type of track parameters
-  /// @tparam options_t Type of the navigation options
-  /// @tparam corrector_t is the type of the corrector struct foer the direction
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters The parameters to start from
-  /// @param options Options object that holds additional navigation info
-  /// @param correct Corrector struct that can be used to refine the solution
-  ///
-  /// @return SurfaceIntersection object (contains intersection & surface)
-  template <typename parameters_t, typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
-  SurfaceIntersection surfaceIntersectionEstimate(
-      const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options,
-      const corrector_t& correct = corrector_t()) const {
-    return surfaceIntersectionEstimate(
-        gctx, parameters.position(), parameters.direction(), options, correct);
   }
 
   /// Straight line intersection from position and momentum
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param position global 3D position - considered to be on surface but not
   ///        inside bounds (check is done)
-  /// @param 3D direction representation - expected to be normalized
+  /// @param direction 3D direction representation - expected to be normalized
   ///        (no check done)
-  /// @param navDir The navigation direction : if you want to find the closest,
-  ///        chose anyDirection and the closest will be chosen
   /// @param bcheck boundary check directive for this operation
-  /// @param corr is a correction function on position and momentum to do
-  ///        a more appropriate intersection
   ///
   /// @return Intersection object
   virtual Intersection intersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& gpos, const Vector3D& gidr,
-      NavigationDirection navDir = forward, const BoundaryCheck& bcheck = false,
-      CorrFnc corr = nullptr) const = 0;
-  /// clang-format on
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const BoundaryCheck& bcheck) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
@@ -512,7 +466,7 @@ class Surface : public virtual GeometryObject,
   const Layer* m_associatedLayer{nullptr};
 
   /// The assoicated TrackingVolume - tracking volume in case the surface is a
-  /// boundary surface, nullptr if not
+  /// boundary surface, nullptr if not associated
   const TrackingVolume* m_associatedTrackingVolume{nullptr};
 
   /// Possibility to attach a material descrption

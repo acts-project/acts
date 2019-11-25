@@ -17,7 +17,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -44,15 +43,6 @@ class DirectNavigator {
 
   /// The tolerance used to define "surface reached"
   double tolerance = s_onSurfaceTolerance;
-
-  /// Nested Navigation options struct
-  struct Options {
-    /// The navigation direction
-    NavigationDirection navDir = forward;
-
-    /// The boundary check directive
-    BoundaryCheck boundaryCheck = true;
-  };
 
   /// Nested Actor struct, called Initializer
   ///
@@ -155,8 +145,6 @@ class DirectNavigator {
       // Move the sequence to the next surface
       ++state.navigation.nextSurfaceIter;
     }
-    // Return to the propagator
-    return;
   }
 
   /// @brief Navigator target call
@@ -175,21 +163,19 @@ class DirectNavigator {
     state.navigation.currentSurface = nullptr;
 
     if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
-      // Get a  navigation corrector associated to the stepper
-      auto navCorr = stepper.corrector(state.stepping);
-
-      // The Options struct
-      Options navOpts;
-
       // take the target intersection
       auto nextIntersection =
           (*state.navigation.nextSurfaceIter)
-              ->surfaceIntersectionEstimate(
-                  state.geoContext, stepper.position(state.stepping),
-                  stepper.direction(state.stepping), navOpts, navCorr);
+              ->intersect(state.geoContext, stepper.position(state.stepping),
+                          stepper.direction(state.stepping), false);
 
       // Intersect the next surface and go
       double navStep = nextIntersection.intersection.pathLength;
+      double overstepLimit = stepper.overstepLimit(state.stepping);
+      if (navStep < overstepLimit and !nextIntersection.alternatives.empty() and
+          nextIntersection.alternatives[0]) {
+        navStep = nextIntersection.alternatives[0].pathLength;
+      }
 
       // Set the step size - this has to be outsourced to the Stepper
       state.stepping.stepSize.update(navStep, Cstep::actor, true);
@@ -210,8 +196,6 @@ class DirectNavigator {
                  [&] { return std::string("No target Surface, job done."); });
       }
     }
-    // Return to the propagator
-    return;
   }
 
  private:

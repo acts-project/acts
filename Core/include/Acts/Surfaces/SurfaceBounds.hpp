@@ -73,17 +73,17 @@ class SurfaceBounds {
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
   /// the bounds  Inside can be called without/with tolerances.
   ///
-  /// @param lpos Local position (assumed to be in right surface frame)
+  /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2D& lpos,
+  virtual bool inside(const Vector2D& lposition,
                       const BoundaryCheck& bcheck) const = 0;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
-  /// @param lpos is the local position to check for the distance
+  /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  virtual double distanceToBoundary(const Vector2D& lpos) const = 0;
+  virtual double distanceToBoundary(const Vector2D& lposition) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///

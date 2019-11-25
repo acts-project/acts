@@ -17,9 +17,12 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
+
+using namespace Acts::UnitLiterals;
 
 /// @brief the AtlasStepper implementation for the
 template <typename bfield_t>
@@ -43,8 +46,6 @@ class AtlasStepper {
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
-
-  using Corrector = VoidIntersectionCorrector;
 
   using BField = bfield_t;
 
@@ -335,6 +336,11 @@ class AtlasStepper {
     return state.pVector[7] > 0. ? 1. : -1.;
   }
 
+  /// Overstep limit
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
+
   /// Time access
   double time(const State& state) const { return state.t0 + state.pVector[3]; }
 
@@ -606,11 +612,6 @@ class AtlasStepper {
     state.pVector[5] = udirection[1];
     state.pVector[6] = udirection[2];
     state.pVector[7] = charge(state) / up;
-  }
-
-  /// Return a corrector
-  VoidIntersectionCorrector corrector(State& /*unused*/) const {
-    return VoidIntersectionCorrector();
   }
 
   /// Method for on-demand transport of the covariance
@@ -1256,6 +1257,9 @@ class AtlasStepper {
 
  private:
   bfield_t m_bField;
+
+  /// Overstep limit: could/should be dynamic
+  double m_overstepLimit = -50_um;
 };
 
 }  // namespace Acts

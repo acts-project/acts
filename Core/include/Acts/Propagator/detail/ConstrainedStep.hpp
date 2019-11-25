@@ -65,10 +65,13 @@ struct ConstrainedStep {
   }
 
   /// constructor from double
-  /// @paramn value is the initial value for all steps
-  ConstrainedStep(double value)
-      : values({{value, value, value, value}}),
-        direction(value > 0. ? forward : backward) {}
+  /// @paramn value is the user given initial value
+  ConstrainedStep(double value) : direction(value > 0. ? forward : backward) {
+    values[accuracy] *= direction;
+    values[actor] *= direction;
+    values[aborter] *= direction;
+    values[user] = value;
+  }
 
   /// The assignment operator from one double
   /// @note this will set only the accuracy, as this is the most

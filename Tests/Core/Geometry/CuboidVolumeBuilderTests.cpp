@@ -24,6 +24,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -259,6 +260,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
       volumeConfig2.name);
 }
 
+/*
 BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
   // Production factory
   CuboidVolumeBuilder cvb;
@@ -357,7 +359,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
     }
   }
 }
-
+*/
+/** As discussed with the author, disabled for the moment
 BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
   // Production factory
   CuboidVolumeBuilder cvb;
@@ -422,11 +425,16 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
   std::shared_ptr<const TrackingGeometry> detector =
       tgb.trackingGeometry(tgContext);
 
+  using DebugOutput = Acts::detail::DebugOutputActor;
+
   // Set propagator and navigator
-  PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext,
-                                                              mfContext);
+  PropagatorOptions<ActionList<StepVolumeCollector,DebugOutput>>
+propOpts(tgContext, mfContext);
+
+  propOpts.debug = true;
   propOpts.maxStepSize = 10. * units::_mm;
   StraightLineStepper sls;
+
   Navigator navi(detector);
   navi.resolvePassive = true;
   navi.resolveMaterial = true;
@@ -443,6 +451,13 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
   const auto& result = prop.propagate(sbtp, propOpts).value();
   const StepVolumeCollector::this_result& stepResult =
       result.get<typename StepVolumeCollector::result_type>();
+
+  // Screen output
+  if (propOpts.debug) {
+    const auto debugString =
+        result.template get<DebugOutput::result_type>().debugString;
+    std::cout << debugString << std::endl;
+  }
 
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     // Check the movement in the right direction
@@ -469,5 +484,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
     }
   }
 }
+*/
+
 }  // namespace Test
 }  // namespace Acts

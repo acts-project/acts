@@ -20,7 +20,6 @@
 #include "Acts/Geometry/GeometrySignature.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Geometry/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -41,6 +40,7 @@ using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 using TrackingVolumeBoundaryPtr =
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
+using TrackingVolumeBoundaries = std::vector<TrackingVolumeBoundaryPtr>;
 
 // possible contained
 using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
@@ -49,12 +49,12 @@ using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
-// full intersection with Layer
-using LayerIntersection = FullIntersection<Layer, Surface>;
+// Intersection with Layer
+using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
 // full intersection with surface
-using BoundaryIntersection =
-    FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface>;
+using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
+using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
 
 /// @class TrackingVolume
 ///
@@ -159,125 +159,69 @@ class TrackingVolume : public Volume {
   /// Return the associated Layer to the global position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gp is the associated global position
+  /// @param position is the associated global position
   ///
   /// @return plain pointer to layer object
   const Layer* associatedLayer(const GeometryContext& gctx,
-                               const Vector3D& gp) const;
+                               const Vector3D& position) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
   /// This is the method for the propagator/extrapolator
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position for the search
   /// @param direction Direction for the search
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   ///
   /// @return vector of compatible intersections with layers
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+  template <typename options_t>
   std::vector<LayerIntersection> compatibleLayers(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
-
-  /// @brief Resolves the volume into (compatible) Layers
-  ///
-  /// This is the method for the propagator/extrapolator
-  /// @tparam parameters_t Type of parameters used for the decomposition
-  /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters The templated parameters for searching
-  /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
-  ///
-  /// @return vector of compatible intersections with layers
-  template <typename parameters_t, typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
-  std::vector<LayerIntersection> compatibleLayers(
-      const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+      const Vector3D& direction, const options_t& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   /// @tparam sorter_t Type of the boundary surface sorter
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position for searching
   /// @param direction The direction for searching
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector,
-            typename sorter_t = DefaultBoundaryIntersectionSorter>
+  template <typename options_t>
   std::vector<BoundaryIntersection> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options,
-      const corrector_t& corrfnc = corrector_t(),
-      const sorter_t& sorter = sorter_t()) const;
-
-  /// @brief Returns all boundary surfaces sorted by the user.
-  ///
-  /// @tparam parameters_t Type of parameters used for the decomposition
-  /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
-  /// @tparam sorter_t Type of the boundary surface sorter
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters The templated parameters for searching
-  /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
-  /// @param sorter Sorter of the boundary surfaces
-  ///
-  /// @return is the templated boundary intersection
-  template <typename parameters_t, typename options_t,
-            typename corrector_t = VoidIntersectionCorrector,
-            typename sorter_t = DefaultBoundaryIntersectionSorter>
-  std::vector<BoundaryIntersection> compatibleBoundaries(
-      const GeometryContext& gctx, const parameters_t& parameters,
-      const options_t& options, const corrector_t& corrfnc = corrector_t(),
-      const sorter_t& sorter = sorter_t()) const;
+      const Vector3D& direction, const options_t& options) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction towards which to test
   /// @param angle The opening angle
   /// @param options The templated navigation options
-  /// @param corrfnc is the corrector struct / function
   ///
   /// @return Vector of surface candidates
-  template <typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+  template <typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, double angle, const options_t& options,
-      const corrector_t& corrfnc = corrector_t()) const;
+      const Vector3D& direction, double angle, const options_t& options) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gp is the global position associated with that search
+  /// @param position is the global position associated with that search
   /// @param tol Search position tolerance for dense volumes
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& gp,
+                                             const Vector3D& position,
                                              const double tol = 0.) const;
 
   /// Return the confined static layer array - if it exists
@@ -304,7 +248,7 @@ class TrackingVolume : public Volume {
   const std::string& volumeName() const;
 
   /// Method to return the BoundarySurfaces
-  const std::vector<TrackingVolumeBoundaryPtr>& boundarySurfaces() const;
+  const TrackingVolumeBoundaries& boundarySurfaces() const;
 
   /// Return the material of the volume
   const IVolumeMaterial* volumeMaterial() const;
@@ -451,7 +395,9 @@ class TrackingVolume : public Volume {
   /// @param volumeBounds is the description of the volume boundaries
   /// @param volumeMaterial is are materials of the tracking volume
   /// @param staticLayerArray is the confined layer array (optional)
-  /// @param containedVolumeArray is the confined volume array
+  /// @param containedVolumeArray are the sub volumes if the volume is a
+  /// container
+  /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
       std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,

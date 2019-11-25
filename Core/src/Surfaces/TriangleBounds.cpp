@@ -47,14 +47,14 @@ std::vector<TDD_real_t> Acts::TriangleBounds::valueStore() const {
   return values;
 }
 
-bool Acts::TriangleBounds::inside(const Acts::Vector2D& lpos,
+bool Acts::TriangleBounds::inside(const Acts::Vector2D& lposition,
                                   const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lpos, m_vertices);
+  return bcheck.isInside(lposition, m_vertices);
 }
 
 double Acts::TriangleBounds::distanceToBoundary(
-    const Acts::Vector2D& lpos) const {
-  return BoundaryCheck(true).distance(lpos, m_vertices);
+    const Acts::Vector2D& lposition) const {
+  return BoundaryCheck(true).distance(lposition, m_vertices);
 }
 
 std::vector<Acts::Vector2D> Acts::TriangleBounds::vertices() const {

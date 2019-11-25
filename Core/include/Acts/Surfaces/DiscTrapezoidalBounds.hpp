@@ -66,15 +66,17 @@ class DiscTrapezoidalBounds : public DiscBounds {
   ///  This method cheks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
   /// if only tol0 is given and additional in the phi sector is tol1 is given
-  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @param lposition is the local position to be checked (in polar
+  /// coordinates)
   /// @param bcheck is the boundary check directive
-  bool inside(const Vector2D& lpos,
+  bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary
-  /// @param lpos is the local position to be checked (in polar coordinates)
+  /// @param lposition is the local position to be checked (in polar
+  /// coordinates)
   /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
-  double distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -110,8 +112,17 @@ class DiscTrapezoidalBounds : public DiscBounds {
   double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
 
-  Vector2D toLocalXY(const Vector2D& lpos) const;
-  ActsMatrixD<2, 2> jacobianToLocalXY(const Vector2D& lpos) const;
+  /// Private helper method to convert a local postion
+  /// into its Cartesian representation
+  ///
+  /// @param lposition The local position in polar coordinates
+  Vector2D toLocalCartesian(const Vector2D& lposition) const;
+
+  /// Jacobian
+  /// into its Cartesian representation
+  ///
+  /// @param lposition The local position in polar coordinates
+  ActsMatrixD<2, 2> jacobianToLocalCartesian(const Vector2D& lposition) const;
 };
 
 inline double DiscTrapezoidalBounds::rMin() const {

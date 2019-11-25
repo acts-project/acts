@@ -11,29 +11,29 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Acts::Layer* TrackingVolume::associatedLayer(
-    const GeometryContext& /*gctx*/, const Vector3D& gp) const {
+    const GeometryContext& /*gctx*/, const Vector3D& position) const {
   // confined static layers - highest hierarchy
-  if (m_confinedLayers) {
-    return (m_confinedLayers->object(gp).get());
+  if (m_confinedLayers != nullptr) {
+    return (m_confinedLayers->object(position).get());
   }
 
   // return the null pointer
   return nullptr;
 }
 
-template <typename options_t, typename corrector_t>
+template <typename options_t>
 std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options,
-    const corrector_t& corrfnc) const {
+    const Vector3D& direction, const options_t& options) const {
   // the layer intersections which are valid
   std::vector<LayerIntersection> lIntersections;
 
   // the confinedLayers
-  if (m_confinedLayers) {
+  if (m_confinedLayers != nullptr) {
     // start layer given or not - test layer
-    const Layer* tLayer = options.startObject ? options.startObject
-                                              : associatedLayer(gctx, position);
+    const Layer* tLayer = options.startObject != nullptr
+                              ? options.startObject
+                              : associatedLayer(gctx, position);
     while (tLayer != nullptr) {
       // check if the layer needs resolving
       // - resolveSensitive -> always take layer if it has a surface array
@@ -43,8 +43,8 @@ std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
       if (tLayer != options.startObject && tLayer->resolve(options)) {
         // if it's a resolveable start layer, you are by definition on it
         // layer on approach intersection
-        auto atIntersection = tLayer->surfaceOnApproach(
-            gctx, position, direction, options, corrfnc);
+        auto atIntersection =
+            tLayer->surfaceOnApproach(gctx, position, direction, options);
         auto path = atIntersection.intersection.pathLength;
         bool withinLimit =
             (path * path <= options.pathLimit * options.pathLimit);
@@ -73,93 +73,125 @@ std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
   return lIntersections;
 }
 
-template <typename parameters_t, typename options_t, typename corrector_t>
-std::vector<LayerIntersection> TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options, const corrector_t& corrfnc) const {
-  return compatibleLayers(gctx, parameters.position(), parameters.direction(),
-                          options, corrfnc);
-}
-
 // Returns the boundary surfaces ordered in probability to hit them based on
-template <typename options_t, typename corrector_t, typename sorter_t>
+template <typename options_t>
 std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options,
-    const corrector_t& corrfnc, const sorter_t& sorter) const {
+    const Vector3D& direction, const options_t& options) const {
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;
-  auto& bSurfaces = boundarySurfaces();
-  std::vector<const BoundarySurfaceT<TrackingVolume>*> nonExcludedBoundaries;
+  std::vector<BoundaryIntersection> bIntersections;
 
-  for (auto& bsIter : bSurfaces) {
-    // get the boundary surface pointer
-    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
-    const auto& bSurfaceRep = bSurface->surfaceRepresentation();
-    // exclude the on boundary object
-    if (excludeObject && excludeObject == &bSurfaceRep) {
-      continue;
+  // The signed direction: solution (except overstepping) is positive
+  auto sDirection = options.navDir * direction;
+
+  // The Limits: current, path & overstepping
+  double pLimit = options.pathLimit;
+  double oLimit = options.overstepLimit;
+
+  // Helper function to test intersection
+  auto checkIntersection =
+      [&](SurfaceIntersection& sIntersection,
+          const BoundarySurface* bSurface) -> BoundaryIntersection {
+    // Avoid doing anything if that's a rotten apple already
+    if (!sIntersection) {
+      return BoundaryIntersection();
     }
-    nonExcludedBoundaries.push_back(bSurface);
-  }
 
-  const std::vector<std::shared_ptr<TrackingVolume>> confinedDenseVolumes =
-      denseVolumes();
+    double cLimit = sIntersection.intersection.pathLength;
+    // Check if the surface is within limit
+    bool withinLimit =
+        (cLimit > oLimit and
+         cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+    if (withinLimit) {
+      sIntersection.intersection.pathLength *=
+          std::copysign(1., options.navDir);
+      return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                  sIntersection.object);
+    }
+    // Check the alternative
+    if (!sIntersection.alternatives.empty()) {
+      // Test the alternative
+      cLimit = sIntersection.alternatives[0].pathLength;
+      withinLimit = (cLimit > oLimit and
+                     cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
+      if (sIntersection.alternatives[0] and withinLimit) {
+        sIntersection.alternatives[0].pathLength *=
+            std::copysign(1., options.navDir);
+        return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
+                                    sIntersection.object);
+      }
+    }
+    // Return an invalid one
+    return BoundaryIntersection();
+  };
+
+  /// Helper function to process boundary surfaces
+  auto processBoundaries =
+      [&](const TrackingVolumeBoundaries& bSurfaces) -> void {
+    // Loop over the boundary surfaces
+    for (auto& bsIter : bSurfaces) {
+      // Get the boundary surface pointer
+      const auto& bSurfaceRep = bsIter->surfaceRepresentation();
+      // Exclude the boundary where you are on
+      if (excludeObject != &bSurfaceRep) {
+        auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
+                                                options.boundaryCheck);
+        // Intersect and continue
+        auto bIntersection = checkIntersection(bCandidate, bsIter.get());
+        if (bIntersection) {
+          bIntersections.push_back(bIntersection);
+        }
+      }
+    }
+  };
+
+  // Process the boundaries of the current volume
+  auto& bSurfaces = boundarySurfaces();
+  processBoundaries(bSurfaces);
+
+  // Process potential boundaries of contained volumes
+  auto confinedDenseVolumes = denseVolumes();
   for (const auto& dv : confinedDenseVolumes) {
     auto& bSurfacesConfined = dv->boundarySurfaces();
-    for (auto& bsIter : bSurfacesConfined) {
-      // get the boundary surface pointer
-      const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
-      const auto& bSurfaceRep = bSurface->surfaceRepresentation();
-      // exclude the on boundary object
-      if (excludeObject && excludeObject == &bSurfaceRep) {
-        continue;
-      }
-      nonExcludedBoundaries.push_back(bSurface);
-    }
+    processBoundaries(bSurfacesConfined);
   }
 
-  return sorter(gctx, nonExcludedBoundaries, position, direction, options,
-                corrfnc);
+  // Sort them accordingly to the navigation direction
+  if (options.navDir == forward) {
+    std::sort(bIntersections.begin(), bIntersections.end());
+  } else {
+    std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
+  }
+  return bIntersections;
 }
 
-// Returns the boundary surfaces ordered in probability to hit them based on
-// straight line intersection @todo change hard-coded default
-template <typename parameters_t, typename options_t, typename corrector_t,
-          typename sorter_t>
-std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
-    const GeometryContext& gctx, const parameters_t& parameters,
-    const options_t& options, const corrector_t& corrfnc,
-    const sorter_t& sorter) const {
-  return compatibleBoundaries(gctx, parameters.position(),
-                              parameters.direction(), options, corrfnc, sorter);
-}
-
-template <typename options_t, typename corrector_t>
+template <typename options_t>
 std::vector<SurfaceIntersection>
 TrackingVolume::compatibleSurfacesFromHierarchy(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, double angle, const options_t& options,
-    const corrector_t& corrfnc) const {
+    const Vector3D& direction, double angle, const options_t& options) const {
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
+
+  // The limits for this navigation step
+  double pLimit = options.pathLimit;
+  double oLimit = options.overstepLimit;
 
   if (m_bvhTop == nullptr || !options.navDir) {
     return sIntersections;
   }
 
-  Vector3D dir = direction;
-  if (options.navDir == backward) {
-    dir *= -1;
-  }
+  // The signed direction
+  Vector3D sdir = options.navDir * direction;
 
   std::vector<const Volume*> hits;
   if (angle == 0) {
     // use ray
-    Ray3D obj(position, dir);
+    Ray3D obj(position, sdir);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   } else {
-    Acts::Frustum<double, 3, 4> obj(position, dir, angle);
+    Acts::Frustum<double, 3, 4> obj(position, sdir, angle);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   }
 
@@ -171,17 +203,16 @@ TrackingVolume::compatibleSurfacesFromHierarchy(
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
       SurfaceIntersection sfi(
-          srf.intersectionEstimate(gctx, position, direction, options.navDir,
-                                   false, corrfnc),
-          &srf);
+          srf.intersectionEstimate(gctx, position, sdir, false), &srf);
 
-      if (sfi) {
+      if (sfi and sfi.intersection.pathLength > oLimit and
+          sfi.intersection.pathLength <= pLimit) {
         sIntersections.push_back(std::move(sfi));
       }
     }
   }
 
-  // sort according to the path length
+  // Sort according to the path length
   if (options.navDir == forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {

@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename B, typename C, typename E, typename A>
-Acts::EigenStepper<B, C, E, A>::EigenStepper(B bField)
+template <typename B, typename E, typename A>
+Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
     : m_bField(std::move(bField)) {}
 
-template <typename B, typename C, typename E, typename A>
-auto Acts::EigenStepper<B, C, E, A>::boundState(State& state,
-                                                const Surface& surface,
-                                                bool reinitialize) const
+template <typename B, typename E, typename A>
+auto Acts::EigenStepper<B, E, A>::boundState(State& state,
+                                             const Surface& surface,
+                                             bool reinitialize) const
     -> BoundState {
   // Transport the covariance to here
   std::optional<Covariance> covOpt = std::nullopt;
@@ -36,9 +36,9 @@ auto Acts::EigenStepper<B, C, E, A>::boundState(State& state,
   return bState;
 }
 
-template <typename B, typename C, typename E, typename A>
-auto Acts::EigenStepper<B, C, E, A>::curvilinearState(State& state,
-                                                      bool reinitialize) const
+template <typename B, typename E, typename A>
+auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
+                                                   bool reinitialize) const
     -> CurvilinearState {
   // Transport the covariance to here
   std::optional<Covariance> covOpt = std::nullopt;
@@ -61,9 +61,9 @@ auto Acts::EigenStepper<B, C, E, A>::curvilinearState(State& state,
   return curvState;
 }
 
-template <typename B, typename C, typename E, typename A>
-void Acts::EigenStepper<B, C, E, A>::update(State& state,
-                                            const BoundParameters& pars) const {
+template <typename B, typename E, typename A>
+void Acts::EigenStepper<B, E, A>::update(State& state,
+                                         const BoundParameters& pars) const {
   const auto& mom = pars.momentum();
   state.pos = pars.position();
   state.dir = mom.normalized();
@@ -74,20 +74,20 @@ void Acts::EigenStepper<B, C, E, A>::update(State& state,
   }
 }
 
-template <typename B, typename C, typename E, typename A>
-void Acts::EigenStepper<B, C, E, A>::update(State& state,
-                                            const Vector3D& uposition,
-                                            const Vector3D& udirection,
-                                            double up, double time) const {
+template <typename B, typename E, typename A>
+void Acts::EigenStepper<B, E, A>::update(State& state,
+                                         const Vector3D& uposition,
+                                         const Vector3D& udirection, double up,
+                                         double time) const {
   state.pos = uposition;
   state.dir = udirection;
   state.p = up;
   state.dt = time;
 }
 
-template <typename B, typename C, typename E, typename A>
-void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
-    State& state, bool reinitialize) const {
+template <typename B, typename E, typename A>
+void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
+                                                      bool reinitialize) const {
   // Optimized trigonometry on the propagation direction
   const double x = state.dir(0);  // == cos(phi) * sin(theta)
   const double y = state.dir(1);  // == sin(phi) * sin(theta)
@@ -160,9 +160,10 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   state.jacobian = jacFull * state.jacobian;
 }
 
-template <typename B, typename C, typename E, typename A>
-void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
-    State& state, const Surface& surface, bool reinitialize) const {
+template <typename B, typename E, typename A>
+void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
+                                                      const Surface& surface,
+                                                      bool reinitialize) const {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
   // Initialize the transport final frame jacobian
@@ -201,9 +202,9 @@ void Acts::EigenStepper<B, C, E, A>::covarianceTransport(
   state.jacobian = jacFull * state.jacobian;
 }
 
-template <typename B, typename C, typename E, typename A>
+template <typename B, typename E, typename A>
 template <typename propagator_state_t>
-Acts::Result<double> Acts::EigenStepper<B, C, E, A>::step(
+Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     propagator_state_t& state) const {
   using namespace Acts::UnitLiterals;
 

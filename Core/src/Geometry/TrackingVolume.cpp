@@ -87,17 +87,17 @@ Acts::TrackingVolume::~TrackingVolume() {
 }
 
 const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& /*gctx*/, const Vector3D& gp,
+    const GeometryContext& /*gctx*/, const Vector3D& position,
     const double tol) const {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
-    return (m_confinedVolumes->object(gp).get());
+    return (m_confinedVolumes->object(position).get());
   }
 
   // search for dense volumes
   if (!m_confinedDenseVolumes.empty())
     for (auto& denseVolume : m_confinedDenseVolumes)
-      if (denseVolume->inside(gp, tol))
+      if (denseVolume->inside(position, tol))
         return denseVolume.get();
 
   // there is no lower sub structure
@@ -131,9 +131,8 @@ void Acts::TrackingVolume::sign(GeometrySignature geosign,
   }
 }
 
-const std::vector<
-    std::shared_ptr<const Acts::BoundarySurfaceT<Acts::TrackingVolume>>>&
-Acts::TrackingVolume::boundarySurfaces() const {
+const Acts::TrackingVolumeBoundaries& Acts::TrackingVolume::boundarySurfaces()
+    const {
   return (m_boundarySurfaces);
 }
 
