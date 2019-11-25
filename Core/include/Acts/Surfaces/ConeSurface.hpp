@@ -156,7 +156,7 @@ class ConeSurface : public Surface {
   void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
                      const Vector3D& momentum, Vector3D& position) const final;
 
-  /// Global to local transfomration
+  /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
