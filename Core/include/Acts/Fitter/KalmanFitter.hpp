@@ -307,45 +307,47 @@ class KalmanFitter {
             TrackStatePropMask::All, result.trackTip);
 
         // now get track state proxy back
-        auto trackState = result.fittedStates.getTrackState(result.trackTip);
+        auto trackStateProxy =
+            result.fittedStates.getTrackState(result.trackTip);
 
         // assign the source link to the track state
-        trackState.uncalibrated() = sourcelink_it->second;
+        trackStateProxy.uncalibrated() = sourcelink_it->second;
 
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface, true);
 
         // Fill the track state
-        trackState.predicted() = boundParams.parameters();
-        trackState.predictedCovariance() = *boundParams.covariance();
-        trackState.jacobian() = jacobian;
-        trackState.pathLength() = pathLength;
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
 
         // We have predicted parameters, so calibrate the uncalibrated input
         // measuerement
         std::visit(
             [&](const auto& calibrated) {
-              trackState.setCalibrated(calibrated);
+              trackStateProxy.setCalibrated(calibrated);
             },
-            m_calibrator(trackState.uncalibrated(), trackState.predicted()));
+            m_calibrator(trackStateProxy.uncalibrated(),
+                         trackStateProxy.predicted()));
 
         // If the update is successful, set covariance and
-        auto updateRes = m_updater(state.geoContext, trackState);
+        auto updateRes = m_updater(state.geoContext, trackStateProxy);
         if (!updateRes.ok()) {
           ACTS_ERROR("Update step failed: " << updateRes.error());
           return updateRes.error();
         } else {
           // Update the stepping state
           ACTS_VERBOSE("Filtering step successful, updated parameters are : \n"
-                       << trackState.filtered().transpose());
+                       << trackStateProxy.filtered().transpose());
           // update stepping state using filtered parameters after kalman update
           // We need to (re-)construct a BoundParameters instance here, which is
           // a bit awkward.
           // @TODO: Make this unnecessary
-          BoundParameters bPars(state.options.geoContext,
-                                trackState.filteredCovariance(),
-                                trackState.filtered(), surface->getSharedPtr());
+          BoundParameters bPars(
+              state.options.geoContext, trackStateProxy.filteredCovariance(),
+              trackStateProxy.filtered(), surface->getSharedPtr());
           stepper.update(state.stepping, bPars);
         }
         // We count the processed state
