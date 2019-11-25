@@ -225,7 +225,7 @@ const SurfaceIntersection Layer::surfaceOnApproach(
   // The signed direction: solution (except overstepping) is positive
   auto sDirection = options.navDir * direction;
 
-  // The Limits: current, path & overstepping
+  // The Limits: current path & overstepping
   double pLimit = options.pathLimit;
   double oLimit = options.overstepLimit;
 
