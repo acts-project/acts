@@ -397,7 +397,7 @@ class TrackingVolume : public Volume {
   /// @param staticLayerArray is the confined layer array (optional)
   /// @param containedVolumeArray are the sub volumes if the volume is a
   /// container
-  /// @param denseVolumeVector  The contained desnse volumes
+  /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
       std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
