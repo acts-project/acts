@@ -344,11 +344,8 @@ class KalmanFitter {
           // update stepping state using filtered parameters after kalman update
           // We need to (re-)construct a BoundParameters instance here, which is
           // a bit awkward.
-          // @TODO: Make this unnecessary
-          BoundParameters bPars(
-              state.options.geoContext, trackStateProxy.filteredCovariance(),
-              trackStateProxy.filtered(), surface->getSharedPtr());
-          stepper.update(state.stepping, bPars);
+          stepper.update(state.stepping, trackStateProxy.filteredParameters(
+                                             state.options.geoContext));
         }
         // We count the processed state
         ++result.processedStates;

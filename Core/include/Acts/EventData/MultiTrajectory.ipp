@@ -67,6 +67,13 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
+inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::predictedParameters(
+    const Acts::GeometryContext& gctx) const {
+  return {gctx, predictedCovariance(), predicted(),
+          m_traj->m_referenceSurfaces[data().irefsurface]};
+}
+
+template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered() const
     -> Parameters {
   assert(data().ifiltered != IndexData::kInvalid);
@@ -81,6 +88,13 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
+inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::filteredParameters(
+    const Acts::GeometryContext& gctx) const {
+  return {gctx, filteredCovariance(), filtered(),
+          m_traj->m_referenceSurfaces[data().irefsurface]};
+}
+
+template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const
     -> Parameters {
   assert(data().ismoothed != IndexData::kInvalid);
@@ -92,6 +106,13 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
   assert(data().ismoothed != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ismoothed).data());
+}
+
+template <typename SL, size_t N, size_t M, bool ReadOnly>
+inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::smoothedParameters(
+    const Acts::GeometryContext& gctx) const {
+  return {gctx, smoothedCovariance(), smoothed(),
+          m_traj->m_referenceSurfaces[data().irefsurface]};
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>

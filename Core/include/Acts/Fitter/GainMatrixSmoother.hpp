@@ -131,11 +131,7 @@ class GainMatrixSmoother {
     }
 
     // construct parameters from last track state
-    parameters_t lastSmoothed(gctx, prev_ts.smoothedCovariance(),
-                              prev_ts.smoothed(),
-                              prev_ts.referenceSurface().getSharedPtr());
-
-    return lastSmoothed;
+    return prev_ts.smoothedParameters(gctx);
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
