@@ -16,7 +16,7 @@ inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
   // Transform into the local frame
   Transform3D invTrans = transform(gctx).inverse();
   Vector3D point1 = invTrans * position;
-  Vector3Ddir1 = invTrans.linear() * direction;
+  Vector3D dir1 = invTrans.linear() * direction;
 
   // See file header for the formula derivation
   double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
