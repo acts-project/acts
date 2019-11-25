@@ -201,7 +201,7 @@ class Layer : public virtual GeometryObject {
   const Layer* nextLayer(const GeometryContext& gctx, const Vector3D& position,
                          const Vector3D& direction) const;
 
-  /// Bet the confining TrackingVolume
+  /// Get the confining TrackingVolume
   ///
   /// @return the pointer to the enclosing volume
   const TrackingVolume* trackingVolume() const;
