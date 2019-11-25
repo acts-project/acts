@@ -151,7 +151,7 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     if (sfi && sifPath > overstepLimit &&
         sifPath * sifPath <= pathLimit * pathLimit) {
       // Now put the right sign on it
-      sfi.intersection.pathLength *= options.navDir;
+      sfi.intersection.pathLength *= std::copysign(1., options.navDir);
       sIntersections.push_back(sfi);
       accepted[&sf] = true;
     }
@@ -243,7 +243,8 @@ const SurfaceIntersection Layer::surfaceOnApproach(
          cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
     if (withinLimit) {
       // Set the right sign to the path length
-      sIntersection.intersection.pathLength *= options.navDir;
+      sIntersection.intersection.pathLength *=
+          std::copysign(1., options.navDir);
       return sIntersection;
     } else if (sIntersection.alternatives.size() > 0.) {
       // Test the alternative
@@ -252,7 +253,8 @@ const SurfaceIntersection Layer::surfaceOnApproach(
                      cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
       if (sIntersection.alternatives[0] and withinLimit) {
         // Set the right sign for the path length
-        sIntersection.alternatives[0].pathLength *= options.navDir;
+        sIntersection.alternatives[0].pathLength *=
+            std::copysign(1., options.navDir);
         return SurfaceIntersection(sIntersection.alternatives[0],
                                    sIntersection.object);
       }

@@ -152,7 +152,7 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
   /// @param momentum is the global momentum (ignored in this operation)
-  /// @param position is the global position shich is filled
+  /// @param position is the global position which is filled
   void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
                      const Vector3D& momentum, Vector3D& position) const final;
 
@@ -161,7 +161,7 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
   /// @param momentum is the global momentum (ignored in this operation)
-  /// @param lposition is hte local position to be filled
+  /// @param lposition is the local position to be filled
   /// @return is a boolean indicating if the transformation succeeded
   bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
                      const Vector3D& momentum, Vector2D& lposition) const final;
@@ -200,7 +200,7 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global potion at the correction point
-  /// @param direction is the momentum direciton at the correction point
+  /// @param direction is the momentum direction at the correction point
   /// @return is the path correction due to incident angle
   double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
                         const Vector3D& direction) const final;

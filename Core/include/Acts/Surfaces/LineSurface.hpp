@@ -160,7 +160,7 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
   /// @param momentum is the global momentum (used to sign the closest approach)
-  /// @param position is the global position shich is filled
+  /// @param position is the global position which is filled
   void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
                      const Vector3D& momentum, Vector3D& position) const final;
 

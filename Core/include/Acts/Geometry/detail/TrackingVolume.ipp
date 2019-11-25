@@ -99,12 +99,13 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
     }
 
     double cLimit = sIntersection.intersection.pathLength;
-    //
+    // Check if the surface is within limit
     bool withinLimit =
         (cLimit > oLimit and
          cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
     if (withinLimit) {
-      sIntersection.intersection.pathLength *= options.navDir;
+      sIntersection.intersection.pathLength *=
+          std::copysign(1., options.navDir);
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
     }
@@ -115,7 +116,8 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
       withinLimit = (cLimit > oLimit and
                      cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
       if (sIntersection.alternatives[0] and withinLimit) {
-        sIntersection.alternatives[0].pathLength *= options.navDir;
+        sIntersection.alternatives[0].pathLength *=
+            std::copysign(1., options.navDir);
         return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
                                     sIntersection.object);
       }
