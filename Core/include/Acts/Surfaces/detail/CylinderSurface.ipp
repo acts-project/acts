@@ -41,7 +41,7 @@ inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
 inline Intersection CylinderSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
-  // Solve the quadratic euation
+  // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
   // If no valid solution return a non-valid intersection
@@ -70,7 +70,7 @@ inline Intersection CylinderSurface::intersectionEstimate(
 inline SurfaceIntersection CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
-  // Solve the quadratic euation
+  // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
   // If no valid solution return a non-valid surfaceIntersection
@@ -88,7 +88,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
     status1 = Intersection::Status::missed;
   }
 
-  // Check the validity of second the solution
+  // Check the validity of the second solution
   Vector3D solution2 = position + qe.second * direction;
   Intersection::Status status2 =
       qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance

@@ -28,7 +28,7 @@ namespace PlanarHelper {
 static Intersection intersectionEstimate(const Transform3D& transform,
                                          const Vector3D& position,
                                          const Vector3D& direction) {
-  // Get the matrix form the transform (faster access)
+  // Get the matrix from the transform (faster access)
   const auto& tMatrix = transform.matrix();
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
   const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();

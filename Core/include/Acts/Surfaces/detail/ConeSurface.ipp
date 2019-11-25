@@ -13,14 +13,11 @@
 inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction) const {
-  // Create the points
-  Vector3D point1 = position;
-  Vector3D dir1 = direction;
 
   // Transform into the local frame
   Transform3D invTrans = transform(gctx).inverse();
-  point1 = invTrans * position;
-  dir1 = invTrans.linear() * direction;
+  Vector3D point1 = invTrans * position;
+  Vector3Ddir1 = invTrans.linear() * direction;
 
   // See file header for the formula derivation
   double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
@@ -69,7 +66,7 @@ inline Intersection ConeSurface::intersectionEstimate(
 inline SurfaceIntersection ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
-  // Solve the quadratic euation
+  // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
   // If no valid solution return a non-valid surfaceIntersection
@@ -88,7 +85,7 @@ inline SurfaceIntersection ConeSurface::intersect(
     status1 = Intersection::Status::missed;
   }
 
-  // Check the validity of the secind solution
+  // Check the validity of the second solution
   Vector3D solution2 = position + qe.first * direction;
   Intersection::Status status2 =
       (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)

@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
 
 /// This tests the interseciton with planar surfaces (plane, disk)
 /// as those share the same PlanarHelper methods, only one test is
-/// sufficienct
+/// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
   double halfX = 1_m;
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
 
 /// This tests the interseciton with line like surfaces (straw, perigee)
 /// as those share the same methods, only one test is
-/// sufficienct
+/// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
   double radius = 1_m;
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST be unique
     BOOST_CHECK(oIntersection.alternatives.size() == 0);
 
-    // On surface intersecion - offise the straw but normal vecot
+    // On surface intersecion - on the surface with normal vector
     oIntersection = aLine->intersect(tgContext, onitP, normalP, true);
     // The intersection MUST be valid
     BOOST_CHECK(oIntersection);

@@ -58,7 +58,7 @@ class TriangleBounds : public PlanarBounds {
   /// This method checks if the provided local coordinates are inside the
   /// surface bounds
   ///
-  /// @param lposition local position in 2D local carthesian frame
+  /// @param lposition local position in 2D local Cartesian frame
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2D& lposition,

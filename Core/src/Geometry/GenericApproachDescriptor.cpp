@@ -31,7 +31,7 @@ Acts::GenericApproachDescriptor::approachSurface(
         sf->intersectionEstimate(gctx, position, direction, bcheck);
     sIntersections.push_back(ObjectIntersection<Surface>(intersection, sf));
   }
-  // Sor them & return the closest
+  // Sort them & return the closest
   std::sort(sIntersections.begin(), sIntersections.end());
   return (*sIntersections.begin());
 }

@@ -61,7 +61,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// intersects
   /// with the negative @f$ y @f$ - axis of the local frame.
   ///
-  /// @param lpos is the local position to be checked (carthesian local frame)
+  /// @param lpos is the local position to be checked (Cartesian local frame)
   /// @param bcheck is the boundary check directive
   ///
   /// <br>

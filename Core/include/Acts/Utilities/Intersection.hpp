@@ -30,7 +30,7 @@ struct Intersection {
 
   /// Position of the intersection
   Vector3D position{0., 0., 0.};
-  /// Singed path length to the intersection (if valid)
+  /// Signed path length to the intersection (if valid)
   double pathLength{std::numeric_limits<double>::infinity()};
   /// The Status of the intersection
   Status status{Status::unreachable};
