@@ -1,8 +1,19 @@
 # setup LCG release 94 via cvmfs
 
 # determine os release
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source $DIR/env_info.sh
+if [ -n "$BASH_SOURCE" ]; then
+  this_script=$BASH_SOURCE
+elif [ -n "$ZSH_VERSION" ]; then
+  setopt function_argzero
+  this_script=$0
+else
+  echo 1>&2 "Unsupported shell. Please use bash, or zsh."
+  exit 2
+fi
+
+dir=$(dirname $(realpath $this_script))
+
+source $dir/env_info.sh
 
 release=LCG_94
 platform=x86_64-${ACTS_OS}-${ACTS_COMPILER}
