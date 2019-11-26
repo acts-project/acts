@@ -69,15 +69,15 @@ class MaterialProperties {
   /// Return the thickness.
   constexpr float thickness() const { return m_thickness; }
   /// Return the radiation length fraction.
-  constexpr float thicknessInX0() const { return m_dInX0; }
+  constexpr float thicknessInX0() const { return m_thicknessInX0; }
   /// Return the nuclear interaction length fraction.
-  constexpr float thicknessInL0() const { return m_dInL0; }
+  constexpr float thicknessInL0() const { return m_thicknessInL0; }
 
  private:
   Material m_material;
   float m_thickness = 0.0f;
-  float m_dInX0 = 0.0f;
-  float m_dInL0 = 0.0f;
+  float m_thicknessInX0 = 0.0f;
+  float m_thicknessInL0 = 0.0f;
 
   friend constexpr bool operator==(const MaterialProperties& lhs,
                                    const MaterialProperties& rhs) {

@@ -9,7 +9,10 @@
 #include "Acts/Material/MaterialProperties.hpp"
 
 #include <climits>
+#include <limits>
 #include <ostream>
+
+static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 
 Acts::MaterialProperties::MaterialProperties(float thickness)
     : m_thickness(thickness) {}
@@ -19,17 +22,16 @@ Acts::MaterialProperties::MaterialProperties(float X0, float L0, float Ar,
                                              float thickness)
     : m_material(X0, L0, Ar, Z, rho),
       m_thickness(thickness),
-      m_dInX0(X0 * X0 > 10e-10 ? thickness / X0 : 0.0f),
-      m_dInL0(L0 * L0 > 10e-10 ? thickness / L0 : 0.0f) {}
+      m_thicknessInX0((X0 > eps) ? (thickness / X0) : 0),
+      m_thicknessInL0((L0 > eps) ? (thickness / L0) : 0) {}
 
 Acts::MaterialProperties::MaterialProperties(const Material& material,
                                              float thickness)
     : m_material(material),
       m_thickness(thickness),
-      m_dInX0(material.X0() * material.X0() > 10e-10 ? thickness / material.X0()
-                                                     : 0.0f),
-      m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
-                                                     : 0.0f) {}
+      m_thicknessInX0((material.X0() > eps) ? (thickness / material.X0()) : 0),
+      m_thicknessInL0((material.L0() > eps) ? (thickness / material.L0()) : 0) {
+}
 
 namespace {
 /// Scale material properties to unit thickness.
@@ -65,12 +67,12 @@ Acts::MaterialProperties::MaterialProperties(
     density += mat.rho() * layer.thickness();
     thickness += layer.thickness();
     // relative thickness in X0 and L0 are strictly additive
-    m_dInX0 += layer.thicknessInX0();
-    m_dInL0 += layer.thicknessInL0();
+    m_thicknessInX0 += layer.thicknessInX0();
+    m_thicknessInL0 += layer.thicknessInL0();
   }
   // create the average
-  const double X0 = thickness / m_dInX0;
-  const double L0 = thickness / m_dInL0;
+  const double X0 = thickness / m_thicknessInX0;
+  const double L0 = thickness / m_thicknessInL0;
   Ar /= density;
   Z /= density;
   density /= thickness;
@@ -85,9 +87,9 @@ Acts::MaterialProperties::MaterialProperties(
 }
 
 void Acts::MaterialProperties::scaleThickness(float scale) {
-  m_dInX0 *= scale;
-  m_dInL0 *= scale;
   m_thickness *= scale;
+  m_thicknessInX0 *= scale;
+  m_thicknessInL0 *= scale;
 }
 
 std::ostream& Acts::operator<<(std::ostream& os,
