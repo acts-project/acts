@@ -114,7 +114,8 @@ class AtlasStepper {
         covariance = new ActsSymMatrixD<BoundParsDim>(*pars.covariance());
         covTransport = true;
         useJacobian = true;
-        const auto transform = pars.referenceFrame(geoContext);
+        const auto transform = pars.referenceSurface().referenceFrame(
+            geoContext, pos, pars.momentum());
 
         pVector[8] = transform(0, eLOC_0);
         pVector[16] = transform(0, eLOC_1);
