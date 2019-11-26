@@ -33,14 +33,14 @@ inline Intersection PlaneSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // Get the contextual transform
-  auto gctxTransform = transform(gctx);
+  const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
   // Evaluate (if necessary in terms of boundaries)
   if (intersection.status != Intersection::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons
-    const auto& tMatrix = transform(gctx).matrix();
+    const auto& tMatrix = gctxTransform.matrix();
     if (not insideBounds(
             tMatrix.block<3, 2>(0, 0).transpose() * intersection.position,
             bcheck)) {

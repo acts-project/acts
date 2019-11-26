@@ -39,7 +39,10 @@ unsigned int nrepts = 1000000;
 GeometryContext tgContext = GeometryContext();
 
 // Create a test plane in 10 m distance
-auto at = Translation3D(0., 0., 10_m);
+// Some random transform
+Transform3D at = Transform3D::Identity() * Translation3D(0_m, 0_m, 10_mm) *
+                 AngleAxis3D(0.15, Vector3D(1.2, 1.2, 0.12).normalized());
+
 auto rb = std::make_shared<RectangleBounds>(1_m, 1_m);
 auto aPlane = Surface::makeShared<PlaneSurface>(
     std::make_shared<Transform3D>(at), std::move(rb));
