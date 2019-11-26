@@ -20,7 +20,9 @@
 
 #include <cmath>
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -43,10 +45,17 @@ GeometryContext tgContext = GeometryContext();
 Transform3D at = Transform3D::Identity() * Translation3D(0_m, 0_m, 10_mm) *
                  AngleAxis3D(0.15, Vector3D(1.2, 1.2, 0.12).normalized());
 
+// Define the Plane surface
 auto rb = std::make_shared<RectangleBounds>(1_m, 1_m);
 auto aPlane = Surface::makeShared<PlaneSurface>(
     std::make_shared<Transform3D>(at), std::move(rb));
 
+// Define the Disc surface
+auto db = std::make_shared<RadialBounds>(0.2_m, 1.2_m);
+auto aDisc = Surface::makeShared<DiscSurface>(std::make_shared<Transform3D>(at),
+                                              std::move(db));
+
+// The orgin of our attempts
 Vector3D origin(0., 0., 0.);
 
 // This test case checks that no segmentation fault appears
@@ -61,6 +70,8 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<>(-0.3, 0.3))) ^
         bdata::xrange(ntests),
     phi, theta, index) {
+  (void)index;
+
   // Shoot at it
   double cosPhi = std::cos(phi);
   double sinPhi = std::sin(phi);
@@ -71,6 +82,35 @@ BOOST_DATA_TEST_CASE(
 
   for (unsigned int ir = 0; ir < nrepts; ++ir) {
     auto intersect = aPlane->intersect(tgContext, origin, direction, true);
+
+    (void)intersect;
+  }
+}
+
+// This test case checks that no segmentation fault appears
+// - this tests the collection of surfaces
+BOOST_DATA_TEST_CASE(
+    test_disc_intersection,
+    bdata::random(
+        (bdata::seed = 21,
+         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+        bdata::random((bdata::seed = 22,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-0.3, 0.3))) ^
+        bdata::xrange(ntests),
+    phi, theta, index) {
+  (void)index;
+
+  // Shoot at it
+  double cosPhi = std::cos(phi);
+  double sinPhi = std::sin(phi);
+  double cosTheta = std::cos(theta);
+  double sinTheta = std::sin(theta);
+
+  Vector3D direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
+
+  for (unsigned int ir = 0; ir < nrepts; ++ir) {
+    auto intersect = aDisc->intersect(tgContext, origin, direction, true);
 
     (void)intersect;
   }

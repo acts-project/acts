@@ -256,6 +256,21 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
 
     // Intersect forward
     auto fIntersection = aPlane->intersect(tgContext, before, direction, true);
+
+    Vector2D lposition;
+    aPlane->globalToLocal(tgContext, fIntersection.intersection.position,
+                          direction, lposition);
+    std::cout << "Local position (first) = " << lposition.x() << ", "
+              << lposition.y() << std::endl;
+
+    // Test code (1)
+    const auto& tMatrix = transform.matrix();
+    Vector2D lpositionCheck(
+        tMatrix.block<3, 2>(0, 0).transpose() *
+        (fIntersection.intersection.position - tMatrix.block<3, 1>(0, 3)));
+    std::cout << "Local position (check) = " << lpositionCheck.x() << ", "
+              << lpositionCheck.y() << std::endl;
+
     // The intersection MUST be valid
     BOOST_CHECK(fIntersection);
     // The intersection MUST be reachable

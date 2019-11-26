@@ -25,7 +25,7 @@ inline const Vector3D PlaneSurface::binningPosition(
 inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
                                            const Vector3D& position,
                                            const Vector3D& direction) const {
-  /// We can ignore the global position here
+  // We can ignore the global position here
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
@@ -37,13 +37,14 @@ inline Intersection PlaneSurface::intersectionEstimate(
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
-  // Evaluate (if necessary in terms of boundaries)
+  // Evaluate boundary check if requested (and reachable)
   if (intersection.status != Intersection::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
-    if (not insideBounds(
-            tMatrix.block<3, 2>(0, 0).transpose() * intersection.position,
-            bcheck)) {
+    // Create the reference vector in local
+    const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    if (not insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
+                         bcheck)) {
       intersection.status = Intersection::Status::missed;
     }
   }

@@ -115,12 +115,16 @@ inline Intersection DiscSurface::intersectionEstimate(
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
-  // Evaluate (if necessary in terms of boundaries)
-  // @todo: speed up isOnSurface - we know that it is on surface
-  //  all we need is to check if it's inside bounds
-  if (intersection.status != Intersection::Status::unreachable and bcheck and
-      not isOnSurface(gctx, intersection.position, direction, bcheck)) {
-    intersection.status = Intersection::Status::missed;
+  // Evaluate boundary check if requested (and reachable)
+  if (intersection.status != Intersection::Status::unreachable and bcheck) {
+    // Built-in local to global for speed reasons
+    const auto& tMatrix = gctxTransform.matrix();
+    const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    const Vector2D lposition =
+        localCartesianToPolar(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal);
+    if (not insideBounds(lposition, bcheck)) {
+      intersection.status = Intersection::Status::missed;
+    }
   }
   return intersection;
 }
