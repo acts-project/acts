@@ -110,9 +110,11 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
 inline Intersection DiscSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Get the contextual transform
+  auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersectionEstimate(transform(gctx), position, direction);
+      PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
   // Evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds

@@ -1,4 +1,4 @@
-// This file is part of the Acts project.
+Core/include/Acts/Surfaces/detail/PlanarHelper.hpp// This file is part of the Acts project.
 //
 // Copyright (C) 2019 CERN for the benefit of the Acts project
 //
@@ -43,7 +43,7 @@ static Intersection intersectionEstimate(const Transform3D& transform,
             ? Intersection::Status::onSurface
             : Intersection::Status::reachable;
     // Return the intersection
-    return Intersection{(position + path * direction), path, status};
+    return Intersection(position + path * direction, path, status);
   }
   return Intersection();
 }

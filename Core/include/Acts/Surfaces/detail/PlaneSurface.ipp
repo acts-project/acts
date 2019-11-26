@@ -32,15 +32,20 @@ inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
 inline Intersection PlaneSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Get the contextual transform
+  auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersectionEstimate(transform(gctx), position, direction);
+      PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
   // Evaluate (if necessary in terms of boundaries)
-  // @todo: speed up isOnSurface - we know that it is on surface
-  //  all we need is to check if it's inside bounds
-  if (intersection.status != Intersection::Status::unreachable and bcheck and
-      not isOnSurface(gctx, intersection.position, direction, bcheck)) {
-    intersection.status = Intersection::Status::missed;
+  if (intersection.status != Intersection::Status::unreachable and bcheck) {
+    // Built-in local to global for speed reasons
+    const auto& tMatrix = transform(gctx).matrix();
+    if (not insideBounds(
+            tMatrix.block<3, 2>(0, 0).transpose() * intersection.position,
+            bcheck)) {
+      intersection.status = Intersection::Status::missed;
+    }
   }
   return intersection;
 }
