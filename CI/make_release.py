@@ -60,16 +60,29 @@ def main():
         if not click.confirm("Are you sure?"):
             return
 
-    with Spinner(text="Updating local clone"):
-        if not args.dry_run:
-            git.fetch(all=True)
-            git.checkout("master")
-            git.pull()
 
-    release_branch = "release/v{:d}.{:>02d}.X".format(*version)
+    develop_branch = "develop/v{:d}.{:>02d}.X".format(*version)
     branches = (
         git("for-each-ref", "refs/heads", format="%(refname:short)").strip().split("\n")
     )
+
+    if develop_branch not in branches:
+        print(
+            "Develop branch",
+            develop_branch,
+            "doesn't exist. I will not attempt to create it. Please do that manually",
+        )
+
+    with Spinner(f"Switching to develop branch {develop_branch}"):
+        if not args.dry_run:
+            git.checkout(develop_branch)
+
+    with Spinner(text="Updating local clone"):
+        if not args.dry_run:
+            git.fetch(all=True)
+            git.pull()
+
+    release_branch = "release/v{:d}.{:>02d}.X".format(*version)
 
     if release_branch not in branches:
         print(
@@ -83,9 +96,9 @@ def main():
             git.checkout(release_branch)
             git.pull()
 
-    with Spinner(text=f"Merging master into {release_branch}"):
+    with Spinner(text=f"Merging {develop_branch} into {release_branch}"):
         if not args.dry_run:
-            git.merge("master")
+            git.merge(develop_branch)
 
     version_file = Path() / "version_number"
     with Spinner(text=f"Bumping version to {format_version(version)}"):
@@ -93,7 +106,7 @@ def main():
             with version_file.open("w") as fh:
                 fh.write(".".join(map(str, version)))
 
-    with Spinner(text="Committing bumped version"):
+    with Spinner(text=f"Committing bumped version on release branch {release_branch}"):
         if not args.dry_run:
             git.add(str(version_file))
             git.commit(message="Bump version to %s" % ".".join(map(str, version)))
