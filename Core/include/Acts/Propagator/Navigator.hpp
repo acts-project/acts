@@ -586,13 +586,7 @@ class Navigator {
       });
       return false;
     }
-
-    // Create the navigaton options
-    NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-    navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
-    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
-
-    // Loop over the navigation surfaces
+    // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIter !=
            state.navigation.navSurfaces.end()) {
       // Screen output how much is left to try
@@ -613,26 +607,20 @@ class Navigator {
         dstream << surface->geoID();
         return dstream.str();
       });
-      // Now intersect (should exclude punch-through)
-      auto surfaceIntersect = surface->intersect(
-          state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), navOpts.boundaryCheck);
-      double surfaceDistance = surfaceIntersect.intersection.pathLength;
-      if (!surfaceIntersect) {
+      // Estimate the surface status
+      auto surfaceStatus =
+          stepper.updateSurfaceStatus(state.stepping, *surface, true);
+      if (surfaceStatus == Intersection::Status::reachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
-          dstream << "Surface intersection at path length ";
-          dstream << surfaceDistance;
-          dstream << " is not valid.";
+          dstream << "Surface reachable, step size updated to ";
+          dstream << state.stepping.stepSize.toString();
           return dstream.str();
         });
-        ++state.navigation.navSurfaceIter;
-        continue;
+        return true;
       }
-      // Update the step for the stepper
-      updateStep(state, surfaceDistance, true);
-      // Return to the propagator
-      return true;
+      ++state.navigation.navSurfaceIter;
+      continue;
     }
 
     // Reached the end of the surface iteration

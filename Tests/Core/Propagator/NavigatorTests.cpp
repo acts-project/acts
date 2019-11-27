@@ -21,6 +21,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -82,6 +83,8 @@ struct PropagatorState {
 
       // adaptive sep size of the runge-kutta integration
       Cstep stepSize = Cstep(100_cm);
+
+      GeometryContext geoContext = GeometryContext();
     };
 
     /// Global particle position accessor
@@ -107,6 +110,13 @@ struct PropagatorState {
     bool surfaceReached(const State& state, const Surface* surface) const {
       return surface->isOnSurface(tgContext, position(state), direction(state),
                                   true);
+    }
+
+    Intersection::Status updateSurfaceStatus(
+        State& state, const Surface& surface,
+        const BoundaryCheck& bcheck) const {
+      return detail::updateSurfaceStatus_t<Stepper>(*this, state, surface,
+                                                    bcheck);
     }
 
     BoundState boundState(State& state, const Surface& surface,

@@ -192,13 +192,14 @@ class StraightLineStepper {
   /// the step size accordingly
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param surface [in] The surface provided 
+  /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
-  Intersection::Status updateSurfaceStatus(State& state, 
-      const Surface& surface, const BoundaryCheck& bcheck) const{
-        return detail::updateSurfaceStatus_sc<StraightLineStepper>(*this,state,surface,bcheck);     
+  Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
+                                           const BoundaryCheck& bcheck) const {
+    return detail::updateSurfaceStatus_t<StraightLineStepper>(*this, state,
+                                                              surface, bcheck);
   }
-  
+
   /// Create and return the bound state at the current position
   ///
   /// @brief It does not check if the transported state is at the surface, this
