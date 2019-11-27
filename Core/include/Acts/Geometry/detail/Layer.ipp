@@ -246,16 +246,16 @@ const SurfaceIntersection Layer::surfaceOnApproach(
       sIntersection.intersection.pathLength *=
           std::copysign(1., options.navDir);
       return sIntersection;
-    } else if (sIntersection.alternatives.size() > 0.) {
+    } else if (sIntersection.alternative) {
       // Test the alternative
-      cLimit = sIntersection.alternatives[0].pathLength;
+      cLimit = sIntersection.alternative.pathLength;
       withinLimit = (cLimit > oLimit and
                      cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-      if (sIntersection.alternatives[0] and withinLimit) {
+      if (sIntersection.alternative and withinLimit) {
         // Set the right sign for the path length
-        sIntersection.alternatives[0].pathLength *=
+        sIntersection.alternative.pathLength *=
             std::copysign(1., options.navDir);
-        return SurfaceIntersection(sIntersection.alternatives[0],
+        return SurfaceIntersection(sIntersection.alternative,
                                    sIntersection.object);
       }
     }

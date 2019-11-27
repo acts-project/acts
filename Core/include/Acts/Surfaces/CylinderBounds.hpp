@@ -120,6 +120,9 @@ class CylinderBounds : public SurfaceBounds {
   /// This method returns the halflengthZ
   double halflengthZ() const;
 
+  /// Returns true is full phi coverage
+  bool fullAzimuth() const;
+
  private:
   /// the bound radius, average, half phi and half Z
   double m_radius, m_avgPhi, m_halfPhi, m_halfZ;
@@ -145,4 +148,9 @@ inline double CylinderBounds::halfPhiSector() const {
 inline double CylinderBounds::halflengthZ() const {
   return m_halfZ;
 }
+
+inline bool CylinderBounds::fullAzimuth() const {
+  return (m_halfPhi == M_PI);
+}
+
 }  // namespace Acts

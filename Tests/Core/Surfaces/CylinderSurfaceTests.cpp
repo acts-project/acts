@@ -191,11 +191,10 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
       testContext, offSurface, direction, false);
   BOOST_CHECK(bool(surfaceIntersect));
   // there is a second solution & and it should be valid
-  BOOST_CHECK(surfaceIntersect.alternatives.size() == 1);
-  BOOST_CHECK(bool(*surfaceIntersect.alternatives.begin()));
+  BOOST_CHECK(surfaceIntersect.alternative);
   // And it's path should be further away then the primary solution
   double pn = surfaceIntersect.intersection.pathLength;
-  double pa = surfaceIntersect.alternatives[0].pathLength;
+  double pa = surfaceIntersect.alternative.pathLength;
   BOOST_CHECK(pn * pn < pa * pa);
   //
   /// Test pathCorrection

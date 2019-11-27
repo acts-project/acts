@@ -110,15 +110,15 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
                                   sIntersection.object);
     }
     // Check the alternative
-    if (!sIntersection.alternatives.empty()) {
+    if (sIntersection.alternative) {
       // Test the alternative
-      cLimit = sIntersection.alternatives[0].pathLength;
+      cLimit = sIntersection.alternative.pathLength;
       withinLimit = (cLimit > oLimit and
                      cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
-      if (sIntersection.alternatives[0] and withinLimit) {
-        sIntersection.alternatives[0].pathLength *=
+      if (sIntersection.alternative and withinLimit) {
+        sIntersection.alternative.pathLength *=
             std::copysign(1., options.navDir);
-        return BoundaryIntersection(sIntersection.alternatives[0], bSurface,
+        return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
       }
     }

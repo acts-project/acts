@@ -172,9 +172,8 @@ class DirectNavigator {
       // Intersect the next surface and go
       double navStep = nextIntersection.intersection.pathLength;
       double overstepLimit = stepper.overstepLimit(state.stepping);
-      if (navStep < overstepLimit and !nextIntersection.alternatives.empty() and
-          nextIntersection.alternatives[0]) {
-        navStep = nextIntersection.alternatives[0].pathLength;
+      if (navStep < overstepLimit and nextIntersection.alternative) {
+        navStep = nextIntersection.alternative.pathLength;
       }
 
       // Set the step size - this has to be outsourced to the Stepper

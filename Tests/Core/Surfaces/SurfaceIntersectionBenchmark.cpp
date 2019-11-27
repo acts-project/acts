@@ -20,6 +20,8 @@
 
 #include <cmath>
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -35,7 +37,7 @@ namespace Test {
 
 // Some randomness & number crunching
 unsigned int ntests = 100;
-unsigned int nrepts = 1000000;
+unsigned int nrepts = 1000;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -54,6 +56,11 @@ auto aPlane = Surface::makeShared<PlaneSurface>(
 auto db = std::make_shared<RadialBounds>(0.2_m, 1.2_m);
 auto aDisc = Surface::makeShared<DiscSurface>(std::make_shared<Transform3D>(at),
                                               std::move(db));
+
+// Define a Cylinder surface
+auto cb = std::make_shared<CylinderBounds>(10_m, 100_m);
+auto aCylinder = Surface::makeShared<CylinderSurface>(
+    std::make_shared<Transform3D>(at), std::move(cb));
 
 // The orgin of our attempts
 Vector3D origin(0., 0., 0.);
@@ -111,6 +118,35 @@ BOOST_DATA_TEST_CASE(
 
   for (unsigned int ir = 0; ir < nrepts; ++ir) {
     auto intersect = aDisc->intersect(tgContext, origin, direction, true);
+
+    (void)intersect;
+  }
+}
+
+// This test case checks that no segmentation fault appears
+// - this tests the collection of surfaces
+BOOST_DATA_TEST_CASE(
+    test_cylinder_intersection,
+    bdata::random(
+        (bdata::seed = 21,
+         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+        bdata::random((bdata::seed = 22,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-0.3, 0.3))) ^
+        bdata::xrange(ntests),
+    phi, theta, index) {
+  (void)index;
+
+  // Shoot at it
+  double cosPhi = std::cos(phi);
+  double sinPhi = std::sin(phi);
+  double cosTheta = std::cos(theta);
+  double sinTheta = std::sin(theta);
+
+  Vector3D direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
+
+  for (unsigned int ir = 0; ir < nrepts; ++ir) {
+    auto intersect = aCylinder->intersect(tgContext, origin, direction, true);
 
     (void)intersect;
   }

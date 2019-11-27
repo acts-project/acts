@@ -187,11 +187,9 @@ struct SurfaceReached {
       // Target is not reached, update the step size
       const double overstepLimit = stepper.overstepLimit(state.stepping);
       // Check the alternative solution
-      if (distance < overstepLimit and
-          sIntersection.alternatives.size() == 1 and
-          sIntersection.alternatives[0]) {
+      if (distance < overstepLimit and sIntersection.alternative) {
         // Update the distance to the alternative solution
-        distance = sIntersection.alternatives[0].pathLength;
+        distance = sIntersection.alternative.pathLength;
       }
       state.stepping.stepSize.update(state.stepping.navDir * distance,
                                      ConstrainedStep::aborter);
