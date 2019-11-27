@@ -33,56 +33,50 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
       m_thicknessInL0((material.L0() > eps) ? (thickness / material.L0()) : 0) {
 }
 
-namespace {
-/// Scale material properties to unit thickness.
-///
-/// A helper method to allows to scale a material property for
-/// unphysical/blended material to a unit thickness of 1. This is safe for
-/// energy loss and multiple scattering application in the material integration
-///
-/// Scaling to unit thickness changes only X0, L0, and rho.
-Acts::Material makeUnitThicknessMaterial(double X0, double L0, double Ar,
-                                         double Z, double density,
-                                         double thickness) {
-  return {static_cast<float>(X0 / thickness),
-          static_cast<float>(L0 / thickness), static_cast<float>(Ar),
-          static_cast<float>(Z), static_cast<float>(density * thickness)};
-}
-}  // namespace
-
 Acts::MaterialProperties::MaterialProperties(
     const std::vector<MaterialProperties>& layers, bool normalize)
     : MaterialProperties() {
   // use double for computations to avoid precision loss
-  double Ar = 0.;
-  double Z = 0.;
-  double density = 0.;
-  double thickness = 0.;
+  double Ar = 0.0;
+  double Z = 0.0;
+  double weight = 0.0;
+  double thickness = 0.0;
+  double thicknessInX0 = 0.0;
+  double thicknessInL0 = 0.0;
+  // sum-up contributions from each layer
   for (const auto& layer : layers) {
     const auto& mat = layer.material();
-    // A/Z scale with thickness * density
-    Ar += mat.Ar() * mat.rho() * layer.thickness();
-    Z += mat.Z() * mat.rho() * layer.thickness();
-    // density scales with thickness
-    density += mat.rho() * layer.thickness();
+    // weight of the layer assuming a unit area, i.e. volume = thickness*1*1
+    const auto layerWeight = mat.rho() * layer.thickness();
+    // Ar,Z are weighted by mass
+    Ar += mat.Ar() * layerWeight;
+    Z += mat.Z() * layerWeight;
+    weight += layerWeight;
+    // thickness and relative thickness in X0,L0 are strictly additive
     thickness += layer.thickness();
-    // relative thickness in X0 and L0 are strictly additive
-    m_thicknessInX0 += layer.thicknessInX0();
-    m_thicknessInL0 += layer.thicknessInL0();
+    thicknessInX0 += layer.thicknessInX0();
+    thicknessInL0 += layer.thicknessInL0();
   }
-  // create the average
-  const double X0 = thickness / m_thicknessInX0;
-  const double L0 = thickness / m_thicknessInL0;
-  Ar /= density;
-  Z /= density;
-  density /= thickness;
-  // set the material
+  // compute the average material constants
+  Ar /= weight;
+  Z /= weight;
+  // this is weight/volume w/ volume = thickness*unitArea = thickness*1*1
+  const auto density = weight / thickness;
+  const auto X0 = thickness / thicknessInX0;
+  const auto L0 = thickness / thicknessInL0;
   if (normalize) {
-    m_material = makeUnitThicknessMaterial(X0, L0, Ar, Z, density, thickness);
+    /// scale the material constants to a unit thickness of 1. should be
+    /// safe for energy loss and multiple scattering computations in the
+    /// material interactions.
+    m_material = Material(X0, L0, Ar, Z, density);
     m_thickness = 1.0f;
+    m_thicknessInX0 = thicknessInX0 / thickness;
+    m_thicknessInL0 = thicknessInL0 / thickness;
   } else {
     m_material = Material(X0, L0, Ar, Z, density);
     m_thickness = thickness;
+    m_thicknessInX0 = thicknessInX0;
+    m_thicknessInL0 = thicknessInL0;
   }
 }
 
