@@ -61,8 +61,10 @@ class MaterialProperties {
   /// Scale the material thickness by the given factor.
   void scaleThickness(float scale);
 
-  /// Check if the material is valid, i.e. it is not vacuum.
-  constexpr operator bool() const { return m_material; }
+  /// Check if the material is valid, i.e. it is finite and not vacuum.
+  constexpr operator bool() const {
+    return m_material and (0.0f < m_thickness);
+  }
 
   /// Access the (average) material parameters.
   constexpr const Material& material() const { return m_material; }
