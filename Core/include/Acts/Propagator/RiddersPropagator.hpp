@@ -88,10 +88,7 @@ class RiddersPropagator {
   template <typename parameters_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t>
-  Result<
-      action_list_t_result_t<typename propagator_t::Stepper::
-                                 template return_parameter_type<parameters_t>,
-                             action_list_t>>
+  Result<action_list_t_result_t<CurvilinearParameters, action_list_t>>
   propagate(
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const;
@@ -113,11 +110,7 @@ class RiddersPropagator {
   template <typename parameters_t, typename surface_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t>
-  Result<action_list_t_result_t<
-      typename propagator_t::Stepper::template return_parameter_type<
-          parameters_t, surface_t>,
-      action_list_t>>
-  propagate(
+  Result<action_list_t_result_t<BoundParameters, action_list_t>> propagate(
       const parameters_t& start, const surface_t& target,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const;
 
