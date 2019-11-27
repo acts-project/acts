@@ -133,9 +133,9 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
   assert(0 < mass and "Mass must be positive");           \
   assert(0 < (qOverP * q) and "Inconsistent q/p and q signs");
 
-float Acts::computeIonisationLossMean(const Material& material, float thickness,
-                                      int /* unused */, float m, float qOverP,
-                                      float q) {
+float Acts::computeEnergyLossBethe(const Material& material, float thickness,
+                                   int /* unused */, float m, float qOverP,
+                                   float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -160,9 +160,9 @@ float Acts::computeIonisationLossMean(const Material& material, float thickness,
   return eps * running;
 }
 
-float Acts::deriveIonisationLossMeanQOverP(const Material& material,
-                                           float thickness, int /* unused */,
-                                           float m, float qOverP, float q) {
+float Acts::deriveEnergyLossBetheQOverP(const Material& material,
+                                        float thickness, int /* unused */,
+                                        float m, float qOverP, float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -423,15 +423,14 @@ float Acts::deriveEnergyLossRadiativeQOverP(const Material& material,
 
 float Acts::computeEnergyLossMean(const Material& material, float thickness,
                                   int pdg, float m, float qOverP, float q) {
-  return computeIonisationLossMean(material, thickness, pdg, m, qOverP, q) +
+  return computeEnergyLossBethe(material, thickness, pdg, m, qOverP, q) +
          computeEnergyLossRadiative(material, thickness, pdg, m, qOverP, q);
 }
 
 float Acts::deriveEnergyLossMeanQOverP(const Material& material,
                                        float thickness, int pdg, float m,
                                        float qOverP, float q) {
-  return deriveIonisationLossMeanQOverP(material, thickness, pdg, m, qOverP,
-                                        q) +
+  return deriveEnergyLossBetheQOverP(material, thickness, pdg, m, qOverP, q) +
          deriveEnergyLossRadiativeQOverP(material, thickness, pdg, m, qOverP,
                                          q);
 }

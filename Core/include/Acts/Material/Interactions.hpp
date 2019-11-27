@@ -24,21 +24,21 @@ namespace Acts {
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param q         Particle charge
 ///
-/// This computes the expected mean energy loss -dE(x) through a material of
-/// the given properties and thickness x, i.e. it computes
+/// This computes the mean energy loss -dE(x) through a material with
+/// the given properties, i.e. it computes
 ///
 ///     -dE(x) = -dE/dx * x
 ///
-/// where -dE/dx is given by the Bethe formula.
-float computeIonisationLossMean(const Material& material, float thickness,
-                                int pdg, float m, float qOverP,
-                                float q = UnitConstants::e);
-/// Derivative of the mean ionisation energy loss with respect to q/p.
+/// where -dE/dx is given by the Bethe formula. The computations are valid
+/// for intermediate particle energies.
+float computeEnergyLossBethe(const Material& material, float thickness, int pdg,
+                             float m, float qOverP, float q = UnitConstants::e);
+/// Derivative of the Bethe energy loss with respect to q/p.
 ///
-/// @see computeIonisationLossMean for parameters description
-float deriveIonisationLossMeanQOverP(const Material& material, float thickness,
-                                     int pdg, float m, float qOverP,
-                                     float q = UnitConstants::e);
+/// @see computeEnergyLossBethe for parameters description
+float deriveEnergyLossBetheQOverP(const Material& material, float thickness,
+                                  int pdg, float m, float qOverP,
+                                  float q = UnitConstants::e);
 
 /// Compute the most propable energy loss due to ionisation and excitation.
 ///
@@ -104,7 +104,8 @@ float deriveEnergyLossRadiativeQOverP(const Material& material, float thickness,
 /// @param q         Particle charge
 ///
 /// This computes the combined mean energy loss -dE(x) including ionisation and
-/// radiative effects.
+/// radiative effects. The computations are valid over a wide range of particle
+/// energies.
 float computeEnergyLossMean(const Material& material, float thickness, int pdg,
                             float m, float qOverP, float q = UnitConstants::e);
 /// Derivative of the combined mean energy loss with respect to q/p.
