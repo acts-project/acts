@@ -71,8 +71,7 @@ class Material {
   /// Return the atomic number.
   constexpr float Z() const { return m_z; }
   /// Return the mass density.
-  constexpr float rho() const { return m_rho; }
-
+  constexpr float massDensity() const { return m_rho; }
   /// Return the electron density in mol / (native length unit)³.
   ///
   /// Use mol instead of the real number of electrons to avoid large numbers

@@ -26,7 +26,7 @@ void Acts::AccumulatedVolumeMaterial::accumulate(const Material& mat) {
     }
     m_totalAr += mat.Ar();
     m_totalZ += mat.Z();
-    m_totalRho += mat.rho();
+    m_totalRho += mat.massDensity();
     m_materialEntries++;
   }
 }

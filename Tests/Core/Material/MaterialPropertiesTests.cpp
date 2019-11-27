@@ -84,12 +84,12 @@ BOOST_AUTO_TEST_CASE(construct_compound_unscaled) {
                   a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
                   eps);
   // The density scales with the thickness
-  CHECK_CLOSE_REL(
-      abc.material().rho(),
-      (a.thickness() * a.material().rho() + b.thickness() * b.material().rho() +
-       c.thickness() * c.material().rho()) /
-          (a.thickness() + b.thickness() + c.thickness()),
-      eps);
+  CHECK_CLOSE_REL(abc.material().massDensity(),
+                  (a.thickness() * a.material().massDensity() +
+                   b.thickness() * b.material().massDensity() +
+                   c.thickness() * c.material().massDensity()) /
+                      (a.thickness() + b.thickness() + c.thickness()),
+                  eps);
 }
 
 BOOST_AUTO_TEST_CASE(scale_thickness) {
@@ -102,8 +102,9 @@ BOOST_AUTO_TEST_CASE(scale_thickness) {
   BOOST_TEST(halfMat == halfScaled);
   CHECK_CLOSE_REL(mat.thicknessInX0(), 2 * halfMat.thicknessInX0(), eps);
   CHECK_CLOSE_REL(mat.thicknessInL0(), 2 * halfMat.thicknessInL0(), eps);
-  CHECK_CLOSE_REL(mat.thickness() * mat.material().rho(),
-                  2. * halfMat.thickness() * halfMat.material().rho(), eps);
+  CHECK_CLOSE_REL(mat.thickness() * mat.material().massDensity(),
+                  2. * halfMat.thickness() * halfMat.material().massDensity(),
+                  eps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

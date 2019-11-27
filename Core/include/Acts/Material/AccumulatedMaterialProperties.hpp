@@ -117,7 +117,7 @@ inline void AccumulatedMaterialProperties::accumulate(
   m_eventPathInX0 += amp.thicknessInX0();
   m_eventPathInL0 += amp.thicknessInL0();
   double t = amp.thickness();
-  double r = amp.material().rho();
+  double r = amp.material().massDensity();
   m_eventPath += t;
   m_eventRho += r * t;
 

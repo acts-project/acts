@@ -47,7 +47,7 @@ Acts::MaterialProperties::MaterialProperties(
   for (const auto& layer : layers) {
     const auto& mat = layer.material();
     // weight of the layer assuming a unit area, i.e. volume = thickness*1*1
-    const auto layerWeight = mat.rho() * layer.thickness();
+    const auto layerWeight = mat.massDensity() * layer.thickness();
     // Ar,Z are weighted by mass
     Ar += mat.Ar() * layerWeight;
     Z += mat.Z() * layerWeight;

@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(units) {
   CHECK_CLOSE_REL(silicon.L0(), 0.4652_m, eps);
   CHECK_CLOSE_REL(silicon.Ar(), 28.0855, eps);
   CHECK_CLOSE_REL(silicon.Z(), 14.0, eps);
-  CHECK_CLOSE_REL(silicon.rho(), 2.329_g / 1_cm3, eps);
-  CHECK_CLOSE_REL(silicon.rho(), 0.002329_kg / 1_cm3, eps);
-  CHECK_CLOSE_REL(silicon.rho(), 0.002329_g / 1_mm3, eps);
+  CHECK_CLOSE_REL(silicon.massDensity(), 2.329_g / 1_cm3, eps);
+  CHECK_CLOSE_REL(silicon.massDensity(), 0.002329_kg / 1_cm3, eps);
+  CHECK_CLOSE_REL(silicon.massDensity(), 0.002329_g / 1_mm3, eps);
   // check derived values
   CHECK_CLOSE_REL(silicon.molarElectronDensity(), SiNe, eps);
   CHECK_CLOSE_REL(silicon.meanExcitationEnergy(), SiI, eps);
@@ -67,7 +67,7 @@ static Acts::ActsVectorF<5> makeSiClassificationNumbers() {
   values[Acts::Material::eL0] = Acts::Test::makeSilicon().L0();
   values[Acts::Material::eAr] = Acts::Test::makeSilicon().Ar();
   values[Acts::Material::eZ] = Acts::Test::makeSilicon().Z();
-  values[Acts::Material::eRho] = Acts::Test::makeSilicon().rho();
+  values[Acts::Material::eRho] = Acts::Test::makeSilicon().massDensity();
   return values;
 }
 

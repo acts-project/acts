@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(single_material) {
     CHECK_CLOSE_REL(result.L0(), mat.L0(), 1e-4);
     CHECK_CLOSE_REL(result.Ar(), mat.Ar(), 1e-4);
     CHECK_CLOSE_REL(result.Z(), mat.Z(), 1e-4);
-    CHECK_CLOSE_REL(result.rho(), mat.rho(), 1e-4);
+    CHECK_CLOSE_REL(result.massDensity(), mat.massDensity(), 1e-4);
   }
   // adding a vacuum step changes the average
   avm.accumulate(Material());
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(single_material) {
     // less material, lower density
     CHECK_CLOSE_REL(result.Ar(), 0.5 * mat.Ar(), 1e-4);
     CHECK_CLOSE_REL(result.Z(), 0.5 * mat.Z(), 1e-4);
-    CHECK_CLOSE_REL(result.rho(), 0.5 * mat.rho(), 1e-4);
+    CHECK_CLOSE_REL(result.massDensity(), 0.5 * mat.massDensity(), 1e-4);
   }
 }
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(two_materials) {
   CHECK_CLOSE_REL(result.L0(), 0.5 * (2. + 7.), 1e-4);
   CHECK_CLOSE_REL(result.Ar(), 0.5 * (3. + 8.), 1e-4);
   CHECK_CLOSE_REL(result.Z(), 0.5 * (4. + 9.), 1e-4);
-  CHECK_CLOSE_REL(result.rho(), 0.5 * (5. + 10.), 1e-4);
+  CHECK_CLOSE_REL(result.massDensity(), 0.5 * (5. + 10.), 1e-4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

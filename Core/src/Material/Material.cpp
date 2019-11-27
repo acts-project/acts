@@ -67,7 +67,7 @@ std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
     os << "|L0=" << material.L0();
     os << "|Ar=" << material.Ar();
     os << "|Z=" << material.Z();
-    os << "|rho=" << material.rho();
+    os << "|rho=" << material.massDensity();
   }
   return os;
 }
