@@ -16,6 +16,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -185,6 +186,19 @@ class StraightLineStepper {
                                 direction(state), true);
   }
 
+  /// Update surface status
+  ///
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param surface [in] The surface provided 
+  /// @param bcheck [in] The boundary check for this status update
+  Intersection::Status updateSurfaceStatus(State& state, 
+      const Surface& surface, const BoundaryCheck& bcheck) const{
+        return detail::updateSurfaceStatus_sc<StraightLineStepper>(*this,state,surface,bcheck);     
+  }
+  
   /// Create and return the bound state at the current position
   ///
   /// @brief It does not check if the transported state is at the surface, this

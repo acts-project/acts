@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -341,6 +342,20 @@ class AtlasStepper {
                                 direction(state), true);
   }
 
+
+  /// Update surface status
+  ///
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param surface [in] The surface provided 
+  /// @param bcheck [in] The boundary check for this status update
+  Intersection::Status updateSurfaceStatus(State& state, 
+      const Surface& surface, const BoundaryCheck& bcheck) const{
+        return detail::updateSurfaceStatus_sc<AtlasStepper>(*this,state,surface,bcheck);     
+  }
+  
   /// Create and return the bound state at the current position
   ///
   ///

@@ -18,6 +18,7 @@
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -209,6 +210,19 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.t0 + state.dt; }
+
+  /// Update surface status
+  ///
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param surface [in] The surface provided 
+  /// @param bcheck [in] The boundary check for this status update
+  Intersection::Status updateSurfaceStatus(State& state, 
+      const Surface& surface, const BoundaryCheck& bcheck) const{
+        return detail::updateSurfaceStatus_sc<EigenStepper>(*this,state,surface,bcheck);     
+  }
 
   /// Overstep limit
   ///
