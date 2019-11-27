@@ -29,8 +29,6 @@ namespace Acts {
 ///
 template <typename parameters_t>
 class GainMatrixUpdater {
-  using jacobian_t = typename parameters_t::CovMatrix_t;
-
  public:
   /// Explicit constructor
   ///

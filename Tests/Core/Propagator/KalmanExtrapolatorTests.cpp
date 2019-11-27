@@ -50,7 +50,6 @@ struct StepWiseActor {
     std::vector<Jacobian> jacobians = {};
     std::vector<double> paths = {};
 
-    Jacobian fullJacobian = Jacobian::Identity();
     double fullPath = 0.;
 
     bool finalized = false;
@@ -82,8 +81,7 @@ struct StepWiseActor {
         not result.finalized) {
       // Set the last stepping parameter
       result.paths.push_back(state.stepping.pathAccumulated);
-      // Set the full parameters
-      result.fullJacobian = state.stepping.jacobian;
+      // Set the full parameter
       result.fullPath = state.stepping.pathAccumulated;
       // Remember that you finalized this
       result.finalized = true;
