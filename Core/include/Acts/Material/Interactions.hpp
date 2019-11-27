@@ -42,35 +42,39 @@ float deriveEnergyLossBetheQOverP(const Material& material, float thickness,
 
 /// Compute the most propable energy loss due to ionisation and excitation.
 ///
-/// @see computeEnergyLossIonisationMean for parameters description
-/// @return Energy loss distribution most probable value and width
+/// @see computeEnergyLossBethe for parameters description
 ///
 /// This computes the most probable energy loss -dE(x) through a material of
 /// the given properties and thickness as described by the mode of the
-/// Landau-Vavilov-Bichsel distribution.
-float computeIonisationLossMode(const Material& material, float thickness,
-                                int pdg, float m, float qOverP,
-                                float q = UnitConstants::e);
+/// Landau-Vavilov-Bichsel distribution. The computations are valid
+/// for intermediate particle energies.
+float computeEnergyLossLandau(const Material& material, float thickness,
+                              int pdg, float m, float qOverP,
+                              float q = UnitConstants::e);
 /// Derivative of the most probable ionisation energy loss with respect to q/p.
 ///
-/// @see computeIonisationLossMean for parameters description
-float deriveIonisationLossModeQOverP(const Material& material, float thickness,
-                                     int pdg, float m, float qOverP,
-                                     float q = UnitConstants::e);
+/// @see computeEnergyLossBethe for parameters description
+float deriveEnergyLossLandauQOverP(const Material& material, float thickness,
+                                   int pdg, float m, float qOverP,
+                                   float q = UnitConstants::e);
 
 /// Compute the Gaussian-equivalent sigma for the ionisation loss fluctuations.
 ///
-/// @see computeIonisationLossMean for parameters description
-float computeIonisationLossSigma(const Material& material, float thickness,
-                                 int pdg, float m, float qOverP,
-                                 float q = UnitConstants::e);
+/// @see computeEnergyLossBethe for parameters description
+///
+/// This is the sigma paramter of a Gaussian distribution with the same
+/// full-width-half-maximum as the Landau-Vavilov-Bichsel distribution. The
+/// computations are valid for intermediate particle energies.
+float computeEnergyLossLandauSigma(const Material& material, float thickness,
+                                   int pdg, float m, float qOverP,
+                                   float q = UnitConstants::e);
 /// Compute q/p Gaussian-equivalent sigma due to ionisation loss fluctuations.
 ///
-/// @see computeIonisationLossMean for parameters description
-float computeIonisationLossSigmaQOverP(const Material& material,
-                                       float thickness, int pdg, float m,
-                                       float qOverP,
-                                       float q = UnitConstants::e);
+/// @see computeEnergyLossBethe for parameters description
+float computeEnergyLossLandauSigmaQOverP(const Material& material,
+                                         float thickness, int pdg, float m,
+                                         float qOverP,
+                                         float q = UnitConstants::e);
 
 /// Compute the mean energy loss due to radiative effects at high energies.
 ///

@@ -199,9 +199,9 @@ float Acts::deriveEnergyLossBetheQOverP(const Material& material,
   return eps * rel;
 }
 
-float Acts::computeIonisationLossMode(const Material& material, float thickness,
-                                      int /* unused */, float m, float qOverP,
-                                      float q) {
+float Acts::computeEnergyLossLandau(const Material& material, float thickness,
+                                    int /* unused */, float m, float qOverP,
+                                    float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -221,9 +221,9 @@ float Acts::computeIonisationLossMode(const Material& material, float thickness,
   return eps * running;
 }
 
-float Acts::deriveIonisationLossModeQOverP(const Material& material,
-                                           float thickness, int /* unused */,
-                                           float m, float qOverP, float q) {
+float Acts::deriveEnergyLossLandauQOverP(const Material& material,
+                                         float thickness, int /* unused */,
+                                         float m, float qOverP, float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -271,9 +271,9 @@ inline float convertLandauFwhmToGaussianSigma(float fwhm) {
 }
 }  // namespace
 
-float Acts::computeIonisationLossSigma(const Material& material,
-                                       float thickness, int /* unused */,
-                                       float m, float qOverP, float q) {
+float Acts::computeEnergyLossLandauSigma(const Material& material,
+                                         float thickness, int /* unused */,
+                                         float m, float qOverP, float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -288,9 +288,10 @@ float Acts::computeIonisationLossSigma(const Material& material,
   return convertLandauFwhmToGaussianSigma(fwhm);
 }
 
-float Acts::computeIonisationLossSigmaQOverP(const Material& material,
-                                             float thickness, int /* unused */,
-                                             float m, float qOverP, float q) {
+float Acts::computeEnergyLossLandauSigmaQOverP(const Material& material,
+                                               float thickness,
+                                               int /* unused */, float m,
+                                               float qOverP, float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -440,7 +441,7 @@ float Acts::computeEnergyLossMode(const Material& material, float thickness,
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
   return 0.9f *
-             computeIonisationLossMode(material, thickness, pdg, m, qOverP, q) +
+             computeEnergyLossLandau(material, thickness, pdg, m, qOverP, q) +
          0.15f *
              computeEnergyLossRadiative(material, thickness, pdg, m, qOverP, q);
 }
@@ -450,8 +451,8 @@ float Acts::deriveEnergyLossModeQOverP(const Material& material,
                                        float qOverP, float q) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
-  return 0.9f * deriveIonisationLossModeQOverP(material, thickness, pdg, m,
-                                               qOverP, q) +
+  return 0.9f * deriveEnergyLossLandauQOverP(material, thickness, pdg, m,
+                                             qOverP, q) +
          0.15f * deriveEnergyLossRadiativeQOverP(material, thickness, pdg, m,
                                                  qOverP, q);
 }
