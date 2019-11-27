@@ -72,7 +72,7 @@ float computeIonisationLossSigmaQOverP(const Material& material,
                                        float qOverP,
                                        float q = UnitConstants::e);
 
-/// Compute the mean energy loss due to radiation effects.
+/// Compute the mean energy loss due to radiative effects at high energies.
 ///
 /// @param material  Properties of the traversed material
 /// @param thickness Thickness of the traversed material
@@ -82,17 +82,17 @@ float computeIonisationLossSigmaQOverP(const Material& material,
 /// @param q         Particle charge
 ///
 /// This computes the mean energy loss -dE(x) using an approximative formula.
-/// Bremsstrahlung is always included. Direct e+e- pair production and
+/// Bremsstrahlung is always included; direct e+e- pair production and
 /// photo-nuclear interactions only for muons.
-float computeRadiationLossMean(const Material& material, float thickness,
-                               int pdg, float m, float qOverP,
-                               float q = UnitConstants::e);
-/// Derivative of the mean radiation energy loss with respect to q/p.
+float computeEnergyLossRadiative(const Material& material, float thickness,
+                                 int pdg, float m, float qOverP,
+                                 float q = UnitConstants::e);
+/// Derivative of the mean radiative energy loss with respect to q/p.
 ///
-/// @see computeRadiationLoss for parameters description
-float deriveRadiationLossMeanQOverP(const Material& material, float thickness,
-                                    int pdg, float m, float qOverP,
-                                    float q = UnitConstants::e);
+/// @see computeEnergyLossRadiative for parameters description
+float deriveEnergyLossRadiativeQOverP(const Material& material, float thickness,
+                                      int pdg, float m, float qOverP,
+                                      float q = UnitConstants::e);
 
 /// Compute the combined mean energy loss.
 ///
@@ -103,8 +103,8 @@ float deriveRadiationLossMeanQOverP(const Material& material, float thickness,
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param q         Particle charge
 ///
-/// This computes the mean energy loss -dE(x) including ionisation and radiation
-/// effects.
+/// This computes the combined mean energy loss -dE(x) including ionisation and
+/// radiative effects.
 float computeEnergyLossMean(const Material& material, float thickness, int pdg,
                             float m, float qOverP, float q = UnitConstants::e);
 /// Derivative of the combined mean energy loss with respect to q/p.

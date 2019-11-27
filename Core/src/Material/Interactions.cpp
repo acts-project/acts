@@ -323,7 +323,7 @@ inline float deriveBremsstrahlungLossMeanE(float mass) {
   return (Me / mass) * (Me / mass);
 }
 
-/// Expansion coefficients for the muon radiation loss as a function of energy
+/// Expansion coefficients for the muon radiative loss as a function of energy
 ///
 /// Taken from ATL-SOFT-PUB-2008-003 eq. 7,8 where the expansion is expressed
 /// with terms E^n/X0 with fixed units [E] = MeV and [X0] = mm. The evaluated
@@ -364,8 +364,9 @@ inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double energy) {
 }
 }  // namespace
 
-float Acts::computeRadiationLossMean(const Material& material, float thickness,
-                                     int pdg, float m, float qOverP, float q) {
+float Acts::computeEnergyLossRadiative(const Material& material,
+                                       float thickness, int pdg, float m,
+                                       float qOverP, float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -388,9 +389,9 @@ float Acts::computeRadiationLossMean(const Material& material, float thickness,
   return dEdx * x;
 }
 
-float Acts::deriveRadiationLossMeanQOverP(const Material& material,
-                                          float thickness, int pdg, float m,
-                                          float qOverP, float q) {
+float Acts::deriveEnergyLossRadiativeQOverP(const Material& material,
+                                            float thickness, int pdg, float m,
+                                            float qOverP, float q) {
   ASSERT_INPUTS(thickness, m, qOverP, q)
 
   // return early in case of vacuum
@@ -423,7 +424,7 @@ float Acts::deriveRadiationLossMeanQOverP(const Material& material,
 float Acts::computeEnergyLossMean(const Material& material, float thickness,
                                   int pdg, float m, float qOverP, float q) {
   return computeIonisationLossMean(material, thickness, pdg, m, qOverP, q) +
-         computeRadiationLossMean(material, thickness, pdg, m, qOverP, q);
+         computeEnergyLossRadiative(material, thickness, pdg, m, qOverP, q);
 }
 
 float Acts::deriveEnergyLossMeanQOverP(const Material& material,
@@ -431,7 +432,8 @@ float Acts::deriveEnergyLossMeanQOverP(const Material& material,
                                        float qOverP, float q) {
   return deriveIonisationLossMeanQOverP(material, thickness, pdg, m, qOverP,
                                         q) +
-         deriveRadiationLossMeanQOverP(material, thickness, pdg, m, qOverP, q);
+         deriveEnergyLossRadiativeQOverP(material, thickness, pdg, m, qOverP,
+                                         q);
 }
 
 float Acts::computeEnergyLossMode(const Material& material, float thickness,
@@ -441,7 +443,7 @@ float Acts::computeEnergyLossMode(const Material& material, float thickness,
   return 0.9f *
              computeIonisationLossMode(material, thickness, pdg, m, qOverP, q) +
          0.15f *
-             computeRadiationLossMean(material, thickness, pdg, m, qOverP, q);
+             computeEnergyLossRadiative(material, thickness, pdg, m, qOverP, q);
 }
 
 float Acts::deriveEnergyLossModeQOverP(const Material& material,
@@ -451,8 +453,8 @@ float Acts::deriveEnergyLossModeQOverP(const Material& material,
   // TODO this is inconsistent with the text of the note
   return 0.9f * deriveIonisationLossModeQOverP(material, thickness, pdg, m,
                                                qOverP, q) +
-         0.15f * deriveRadiationLossMeanQOverP(material, thickness, pdg, m,
-                                               qOverP, q);
+         0.15f * deriveEnergyLossRadiativeQOverP(material, thickness, pdg, m,
+                                                 qOverP, q);
 }
 
 namespace {
