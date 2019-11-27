@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -38,13 +39,18 @@ namespace Test {
 // Some randomness & number crunching
 unsigned int ntests = 100;
 unsigned int nrepts = 1000;
+const bool boundaryCheck = false;
+const bool testPlane = true;
+const bool testDisc = true;
+const bool testCylinder = true;
+const bool testStraw = true;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
 // Create a test plane in 10 m distance
 // Some random transform
-Transform3D at = Transform3D::Identity() * Translation3D(0_m, 0_m, 10_mm) *
+Transform3D at = Transform3D::Identity() * Translation3D(0_m, 0_m, 10_m) *
                  AngleAxis3D(0.15, Vector3D(1.2, 1.2, 0.12).normalized());
 
 // Define the Plane surface
@@ -62,23 +68,18 @@ auto cb = std::make_shared<CylinderBounds>(10_m, 100_m);
 auto aCylinder = Surface::makeShared<CylinderSurface>(
     std::make_shared<Transform3D>(at), std::move(cb));
 
-// The orgin of our attempts
+// Define a Straw surface
+auto aStraw = Surface::makeShared<StrawSurface>(
+    std::make_shared<Transform3D>(at), 50_cm, 2_m);
+
+// The orgin of our attempts for plane, disc and cylinder
 Vector3D origin(0., 0., 0.);
 
-// This test case checks that no segmentation fault appears
-// - this tests the collection of surfaces
-BOOST_DATA_TEST_CASE(
-    test_plane_intersection,
-    bdata::random(
-        (bdata::seed = 21,
-         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-0.3, 0.3))) ^
-        bdata::xrange(ntests),
-    phi, theta, index) {
-  (void)index;
+// The origin for straw/line attempts
+Vector3D originStraw(0.3_m, -0.2_m, 11_m);
 
+template <typename surface_t>
+void intersectionTest(const surface_t& surface, double phi, double theta) {
   // Shoot at it
   double cosPhi = std::cos(phi);
   double sinPhi = std::sin(phi);
@@ -88,16 +89,15 @@ BOOST_DATA_TEST_CASE(
   Vector3D direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
 
   for (unsigned int ir = 0; ir < nrepts; ++ir) {
-    auto intersect = aPlane->intersect(tgContext, origin, direction, true);
+    auto intersect =
+        surface.intersect(tgContext, origin, direction, boundaryCheck);
 
     (void)intersect;
   }
 }
 
-// This test case checks that no segmentation fault appears
-// - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
-    test_disc_intersection,
+    benchmark_surface_intersections,
     bdata::random(
         (bdata::seed = 21,
          bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
@@ -108,47 +108,17 @@ BOOST_DATA_TEST_CASE(
     phi, theta, index) {
   (void)index;
 
-  // Shoot at it
-  double cosPhi = std::cos(phi);
-  double sinPhi = std::sin(phi);
-  double cosTheta = std::cos(theta);
-  double sinTheta = std::sin(theta);
-
-  Vector3D direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
-
-  for (unsigned int ir = 0; ir < nrepts; ++ir) {
-    auto intersect = aDisc->intersect(tgContext, origin, direction, true);
-
-    (void)intersect;
+  if (testPlane) {
+    intersectionTest<PlaneSurface>(*aPlane, phi, theta);
   }
-}
-
-// This test case checks that no segmentation fault appears
-// - this tests the collection of surfaces
-BOOST_DATA_TEST_CASE(
-    test_cylinder_intersection,
-    bdata::random(
-        (bdata::seed = 21,
-         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(-0.3, 0.3))) ^
-        bdata::xrange(ntests),
-    phi, theta, index) {
-  (void)index;
-
-  // Shoot at it
-  double cosPhi = std::cos(phi);
-  double sinPhi = std::sin(phi);
-  double cosTheta = std::cos(theta);
-  double sinTheta = std::sin(theta);
-
-  Vector3D direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
-
-  for (unsigned int ir = 0; ir < nrepts; ++ir) {
-    auto intersect = aCylinder->intersect(tgContext, origin, direction, true);
-
-    (void)intersect;
+  if (testDisc) {
+    intersectionTest<DiscSurface>(*aDisc, phi, theta);
+  }
+  if (testCylinder) {
+    intersectionTest<CylinderSurface>(*aCylinder, phi, theta);
+  }
+  if (testStraw) {
+    intersectionTest<StrawSurface>(*aStraw, phi, theta + M_PI);
   }
 }
 

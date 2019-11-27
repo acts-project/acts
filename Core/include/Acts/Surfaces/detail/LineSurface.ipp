@@ -114,14 +114,19 @@ inline Intersection LineSurface::intersectionEstimate(
     status = (u * u < s_onSurfaceTolerance * s_onSurfaceTolerance)
                  ? Intersection::Status::onSurface
                  : Intersection::Status::reachable;
-    // evaluate validaty in terms of bounds
     Vector3D result = (ma + u * ea);
-    // it just needs to be a insideBounds() check
-    // @todo there should be a faster check possible
-    if (bcheck and not isOnSurface(gctx, result, direction, bcheck)) {
-      status = Intersection::Status::missed;
+    // Evaluate the boundary check if requested
+    // m_bounds == nullptr prevents unecessary calulations for PerigeeSurface
+    if (bcheck and m_bounds) {
+      // At closest approach: check inside R or and inside Z
+      const Vector3D vecLocal(result - mb);
+      double cZ = vecLocal.dot(eb);
+      double hZ = m_bounds->halflengthZ() + s_onSurfaceTolerance;
+      if ((cZ * cZ > hZ * hZ) or ((vecLocal - cZ * eb).norm() >
+                                  m_bounds->r() + s_onSurfaceTolerance)) {
+        status = Intersection::Status::missed;
+      }
     }
-    // return the result with validity
     return Intersection(result, u, status);
   }
   // return a false intersection
