@@ -128,23 +128,23 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
 }
 }  // namespace
 
-#define ASSERT_INPUTS(thickness, mass, qOverP, q)         \
-  assert(0 < thickness and "Thickness must be positive"); \
-  assert(0 < mass and "Mass must be positive");           \
-  assert(0 < (qOverP * q) and "Inconsistent q/p and q signs");
+#define ASSERT_INPUTS(mass, qOverP, q)            \
+  assert((0 < mass) and "Mass must be positive"); \
+  assert((0 < (qOverP * q)) and "Inconsistent q/p and q signs");
 
-float Acts::computeEnergyLossBethe(const Material& material, float thickness,
+float Acts::computeEnergyLossBethe(const MaterialProperties& slab,
                                    int /* unused */, float m, float qOverP,
                                    float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
-  const auto I = material.meanExcitationEnergy();
-  const auto Ne = material.molarElectronDensity();
+  const auto I = slab.material().meanExcitationEnergy();
+  const auto Ne = slab.material().molarElectronDensity();
+  const auto thickness = slab.thickness();
   const auto rq = RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
@@ -160,18 +160,19 @@ float Acts::computeEnergyLossBethe(const Material& material, float thickness,
   return eps * running;
 }
 
-float Acts::deriveEnergyLossBetheQOverP(const Material& material,
-                                        float thickness, int /* unused */,
-                                        float m, float qOverP, float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+float Acts::deriveEnergyLossBetheQOverP(const MaterialProperties& slab,
+                                        int /* unused */, float m, float qOverP,
+                                        float q) {
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
-  const auto I = material.meanExcitationEnergy();
-  const auto Ne = material.molarElectronDensity();
+  const auto I = slab.material().meanExcitationEnergy();
+  const auto Ne = slab.material().molarElectronDensity();
+  const auto thickness = slab.thickness();
   const auto rq = RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
@@ -199,18 +200,19 @@ float Acts::deriveEnergyLossBetheQOverP(const Material& material,
   return eps * rel;
 }
 
-float Acts::computeEnergyLossLandau(const Material& material, float thickness,
+float Acts::computeEnergyLossLandau(const MaterialProperties& slab,
                                     int /* unused */, float m, float qOverP,
                                     float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
-  const auto I = material.meanExcitationEnergy();
-  const auto Ne = material.molarElectronDensity();
+  const auto I = slab.material().meanExcitationEnergy();
+  const auto Ne = slab.material().molarElectronDensity();
+  const auto thickness = slab.thickness();
   const auto rq = RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
@@ -221,18 +223,19 @@ float Acts::computeEnergyLossLandau(const Material& material, float thickness,
   return eps * running;
 }
 
-float Acts::deriveEnergyLossLandauQOverP(const Material& material,
-                                         float thickness, int /* unused */,
-                                         float m, float qOverP, float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+float Acts::deriveEnergyLossLandauQOverP(const MaterialProperties& slab,
+                                         int /* unused */, float m,
+                                         float qOverP, float q) {
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
-  const auto I = material.meanExcitationEnergy();
-  const auto Ne = material.molarElectronDensity();
+  const auto I = slab.material().meanExcitationEnergy();
+  const auto Ne = slab.material().molarElectronDensity();
+  const auto thickness = slab.thickness();
   const auto rq = RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
@@ -271,35 +274,36 @@ inline float convertLandauFwhmToGaussianSigma(float fwhm) {
 }
 }  // namespace
 
-float Acts::computeEnergyLossLandauSigma(const Material& material,
-                                         float thickness, int /* unused */,
-                                         float m, float qOverP, float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+float Acts::computeEnergyLossLandauSigma(const MaterialProperties& slab,
+                                         int /* unused */, float m,
+                                         float qOverP, float q) {
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
-  const auto Ne = material.molarElectronDensity();
+  const auto Ne = slab.material().molarElectronDensity();
+  const auto thickness = slab.thickness();
   const auto rq = RelativisticQuantities(m, qOverP, q);
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
   const auto fwhm = 4 * computeEpsilon(Ne, thickness, rq);
   return convertLandauFwhmToGaussianSigma(fwhm);
 }
 
-float Acts::computeEnergyLossLandauSigmaQOverP(const Material& material,
-                                               float thickness,
+float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialProperties& slab,
                                                int /* unused */, float m,
                                                float qOverP, float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
-  const auto Ne = material.molarElectronDensity();
+  const auto Ne = slab.material().molarElectronDensity();
+  const auto thickness = slab.thickness();
   const auto rq = RelativisticQuantities(m, qOverP, q);
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
   const auto fwhm = 4 * computeEpsilon(Ne, thickness, rq);
@@ -365,18 +369,17 @@ inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double energy) {
 }
 }  // namespace
 
-float Acts::computeEnergyLossRadiative(const Material& material,
-                                       float thickness, int pdg, float m,
-                                       float qOverP, float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+float Acts::computeEnergyLossRadiative(const MaterialProperties& slab, int pdg,
+                                       float m, float qOverP, float q) {
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
   // relative radiation length
-  const auto x = thickness / material.X0();
+  const auto x = slab.thicknessInX0();
   // particle momentum and energy
   const auto momentum = q / qOverP;
   const auto energy = std::sqrt(m * m + momentum * momentum);
@@ -390,18 +393,18 @@ float Acts::computeEnergyLossRadiative(const Material& material,
   return dEdx * x;
 }
 
-float Acts::deriveEnergyLossRadiativeQOverP(const Material& material,
-                                            float thickness, int pdg, float m,
-                                            float qOverP, float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+float Acts::deriveEnergyLossRadiativeQOverP(const MaterialProperties& slab,
+                                            int pdg, float m, float qOverP,
+                                            float q) {
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
   // relative radiation length
-  const auto x = thickness / material.X0();
+  const auto x = slab.thicknessInX0();
   // particle momentum and energy
   const auto momentum = q / qOverP;
   const auto energy = std::sqrt(m * m + momentum * momentum);
@@ -422,39 +425,32 @@ float Acts::deriveEnergyLossRadiativeQOverP(const Material& material,
   return derE * derQOverP * x;
 }
 
-float Acts::computeEnergyLossMean(const Material& material, float thickness,
-                                  int pdg, float m, float qOverP, float q) {
-  return computeEnergyLossBethe(material, thickness, pdg, m, qOverP, q) +
-         computeEnergyLossRadiative(material, thickness, pdg, m, qOverP, q);
+float Acts::computeEnergyLossMean(const MaterialProperties& slab, int pdg,
+                                  float m, float qOverP, float q) {
+  return computeEnergyLossBethe(slab, pdg, m, qOverP, q) +
+         computeEnergyLossRadiative(slab, pdg, m, qOverP, q);
 }
 
-float Acts::deriveEnergyLossMeanQOverP(const Material& material,
-                                       float thickness, int pdg, float m,
-                                       float qOverP, float q) {
-  return deriveEnergyLossBetheQOverP(material, thickness, pdg, m, qOverP, q) +
-         deriveEnergyLossRadiativeQOverP(material, thickness, pdg, m, qOverP,
-                                         q);
+float Acts::deriveEnergyLossMeanQOverP(const MaterialProperties& slab, int pdg,
+                                       float m, float qOverP, float q) {
+  return deriveEnergyLossBetheQOverP(slab, pdg, m, qOverP, q) +
+         deriveEnergyLossRadiativeQOverP(slab, pdg, m, qOverP, q);
 }
 
-float Acts::computeEnergyLossMode(const Material& material, float thickness,
-                                  int pdg, float m, float qOverP, float q) {
+float Acts::computeEnergyLossMode(const MaterialProperties& slab, int pdg,
+                                  float m, float qOverP, float q) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
-  return 0.9f *
-             computeEnergyLossLandau(material, thickness, pdg, m, qOverP, q) +
-         0.15f *
-             computeEnergyLossRadiative(material, thickness, pdg, m, qOverP, q);
+  return 0.9f * computeEnergyLossLandau(slab, pdg, m, qOverP, q) +
+         0.15f * computeEnergyLossRadiative(slab, pdg, m, qOverP, q);
 }
 
-float Acts::deriveEnergyLossModeQOverP(const Material& material,
-                                       float thickness, int pdg, float m,
-                                       float qOverP, float q) {
+float Acts::deriveEnergyLossModeQOverP(const MaterialProperties& slab, int pdg,
+                                       float m, float qOverP, float q) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
-  return 0.9f * deriveEnergyLossLandauQOverP(material, thickness, pdg, m,
-                                             qOverP, q) +
-         0.15f * deriveEnergyLossRadiativeQOverP(material, thickness, pdg, m,
-                                                 qOverP, q);
+  return 0.9f * deriveEnergyLossLandauQOverP(slab, pdg, m, qOverP, q) +
+         0.15f * deriveEnergyLossRadiativeQOverP(slab, pdg, m, qOverP, q);
 }
 
 namespace {
@@ -467,7 +463,7 @@ inline float theta0Highland(float xOverX0, float momentumInv,
   //                          = 2 * log(sqrt(x/X0) * (q/beta))
   return 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t));
 }
-/// Multiple scattering thet0 for electrons.
+/// Multiple scattering theta0 for electrons.
 inline float theta0RossiGreisen(float xOverX0, float momentumInv,
                                 float q2OverBeta2) {
   // TODO add source paper/ resource
@@ -477,18 +473,18 @@ inline float theta0RossiGreisen(float xOverX0, float momentumInv,
 }
 }  // namespace
 
-float Acts::computeMultipleScatteringTheta0(const Material& material,
-                                            float thickness, int pdg, float m,
-                                            float qOverP, float q) {
-  ASSERT_INPUTS(thickness, m, qOverP, q)
+float Acts::computeMultipleScatteringTheta0(const MaterialProperties& slab,
+                                            int pdg, float m, float qOverP,
+                                            float q) {
+  ASSERT_INPUTS(m, qOverP, q)
 
-  // return early in case of vacuum
-  if (not material) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
     return 0.0f;
   }
 
   // relative radiation length
-  const auto xOverX0 = thickness / material.X0();
+  const auto xOverX0 = slab.thicknessInX0();
   // 1/p = q/(pq) = (q/p)/q
   const auto momentumInv = std::abs(qOverP / q);
   // q²/beta²; a smart compiler should be able to remove the unused computations
