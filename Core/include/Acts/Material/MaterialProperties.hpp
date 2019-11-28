@@ -45,12 +45,13 @@ class MaterialProperties {
   /// @param material  is the material description
   /// @param thickness is the thickness of the material
   MaterialProperties(const Material& material, float thickness);
-  /// Construct by averaging over multiple layers.
+  /// Construct by averaging the material properties over multiple layers.
   ///
-  /// @param layers    Input layers to average over.
-  /// @param normalize Whether to normalize the result to unit thickness.
-  MaterialProperties(const std::vector<MaterialProperties>& layers,
-                     bool normalize = true);
+  /// @param layers Input layers to average over.
+  ///
+  /// The resulting object has the combined thickness of all layers but just
+  /// one set of appropriately averaged material constants.
+  MaterialProperties(const std::vector<MaterialProperties>& layers);
   ~MaterialProperties() = default;
 
   MaterialProperties(MaterialProperties&& mprop) = default;

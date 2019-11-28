@@ -34,7 +34,7 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
 }
 
 Acts::MaterialProperties::MaterialProperties(
-    const std::vector<MaterialProperties>& layers, bool normalize)
+    const std::vector<MaterialProperties>& layers)
     : MaterialProperties() {
   // use double for computations to avoid precision loss
   double Ar = 0.0;
@@ -57,27 +57,18 @@ Acts::MaterialProperties::MaterialProperties(
     thicknessInX0 += layer.thicknessInX0();
     thicknessInL0 += layer.thicknessInL0();
   }
-  // compute the average material constants
+  // store averaged material constants
   Ar /= weight;
   Z /= weight;
   // this is weight/volume w/ volume = thickness*unitArea = thickness*1*1
   const auto density = weight / thickness;
   const auto X0 = thickness / thicknessInX0;
   const auto L0 = thickness / thicknessInL0;
-  if (normalize) {
-    /// scale the material constants to a unit thickness of 1. should be
-    /// safe for energy loss and multiple scattering computations in the
-    /// material interactions.
-    m_material = Material(X0, L0, Ar, Z, density);
-    m_thickness = 1.0f;
-    m_thicknessInX0 = thicknessInX0 / thickness;
-    m_thicknessInL0 = thicknessInL0 / thickness;
-  } else {
-    m_material = Material(X0, L0, Ar, Z, density);
-    m_thickness = thickness;
-    m_thicknessInX0 = thicknessInX0;
-    m_thicknessInL0 = thicknessInL0;
-  }
+  m_material = Material(X0, L0, Ar, Z, density);
+  // thickness properties do not need to be averaged
+  m_thickness = thickness;
+  m_thicknessInX0 = thicknessInX0;
+  m_thicknessInL0 = thicknessInL0;
 }
 
 void Acts::MaterialProperties::scaleThickness(float scale) {

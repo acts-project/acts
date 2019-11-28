@@ -43,30 +43,8 @@ static const Acts::MaterialProperties b(2., 4., 6., 8., 10., 2.);
 static const Acts::MaterialProperties c(4., 8., 12., 16., 20., 3.);
 static const std::vector<Acts::MaterialProperties> components = {a, b, c};
 
-BOOST_AUTO_TEST_CASE(construct_compound_scaled) {
-  /// scale to unit thickness
-  Acts::MaterialProperties abc(components, true);
-
-  // consistency checks
-  CHECK_CLOSE_REL(abc.thickness() / abc.material().X0(), abc.thicknessInX0(),
-                  eps);
-  CHECK_CLOSE_REL(abc.thickness() / abc.material().L0(), abc.thicknessInL0(),
-                  eps);
-
-  // absolute thickness is fixed
-  CHECK_CLOSE_REL(abc.thickness(), 1., eps);
-  // relative thicknesses are additive
-  CHECK_CLOSE_REL(abc.thicknessInX0(),
-                  a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
-                  eps);
-  CHECK_CLOSE_REL(abc.thicknessInL0(),
-                  a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
-                  eps);
-}
-
-BOOST_AUTO_TEST_CASE(construct_compound_unscaled) {
-  // Thinkness is NOT scale to unit thickness
-  Acts::MaterialProperties abc(components, false);
+BOOST_AUTO_TEST_CASE(construct_compound) {
+  Acts::MaterialProperties abc(components);
 
   // consistency checks
   CHECK_CLOSE_REL(abc.thickness() / abc.material().X0(), abc.thicknessInX0(),
