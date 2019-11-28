@@ -82,7 +82,6 @@ add_subdirectory_if(Tests ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS OR AC
 # documentation
 add_subdirectory_if(doc ACTS_BUILD_DOC)
 
-# setup script and cmake configuration files
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_DIR}/setup.sh)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
+# create cmake configuration files and environment setup script
 include(ActsCreateConfig)
+include(ActsCreateSetup)
