@@ -83,5 +83,5 @@ add_subdirectory_if(Tests ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS OR AC
 add_subdirectory_if(doc ACTS_BUILD_DOC)
 
 # create cmake configuration files and environment setup script
-include(ActsCreateConfig)
+include(ActsCreateCMakeConfig)
 include(ActsCreateSetup)
