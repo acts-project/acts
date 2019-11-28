@@ -14,6 +14,11 @@ add_executable (HomogeneousSurfaceMaterialTests HomogeneousSurfaceMaterialTests.
 target_include_directories (HomogeneousSurfaceMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (HomogeneousSurfaceMaterialTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
+add_executable (InteractionsTests InteractionsTests.cpp)
+target_include_directories (InteractionsTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (InteractionsTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME InteractionsTests COMMAND InteractionsTests)
+
 add_executable (BinnedSurfaceMaterialTests BinnedSurfaceMaterialTests.cpp)
 target_include_directories (BinnedSurfaceMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (BinnedSurfaceMaterialTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

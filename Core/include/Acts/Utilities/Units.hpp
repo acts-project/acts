@@ -92,6 +92,18 @@ constexpr double mm = 1.0;
 constexpr double cm = 10.0;
 constexpr double m = 1e3;
 constexpr double km = 1e6;
+// Shortcuts for commonly used area and volume units. This intentionally
+// contains not all possible combinations to avoid cluttering the namespace.
+// Missing area or volume units can always be defined on the fly using the
+// existing length units e.g. 1fm³ -> 1fm * 1fm * 1fm
+// Area, native unit mm²
+constexpr double mm2 = mm * mm;
+constexpr double cm2 = cm * cm;
+constexpr double m2 = m * m;
+// Volume, native unit mm³
+constexpr double mm3 = mm * mm * mm;
+constexpr double cm3 = cm * cm * cm;
+constexpr double m3 = m * m * m;
 // Time, native unit mm = [speed-of-light * time] = mm/s * s
 constexpr double s = 299792458000.0;
 constexpr double fs = 1e-15 * s;
@@ -111,6 +123,8 @@ constexpr double keV = 1e-6;
 constexpr double MeV = 1e-3;
 constexpr double GeV = 1.0;
 constexpr double TeV = 1e3;
+// atomic mass unit u
+constexpr double u = 0.93149410242;
 //     1eV/c² == 1.782662e-36kg
 //    1GeV/c² == 1.782662e-27kg
 // ->     1kg == (1/1.782662e-27)GeV/c²
@@ -143,6 +157,12 @@ ACTS_DEFINE_UNIT_LITERAL(mm)
 ACTS_DEFINE_UNIT_LITERAL(cm)
 ACTS_DEFINE_UNIT_LITERAL(m)
 ACTS_DEFINE_UNIT_LITERAL(km)
+ACTS_DEFINE_UNIT_LITERAL(mm2)
+ACTS_DEFINE_UNIT_LITERAL(cm2)
+ACTS_DEFINE_UNIT_LITERAL(m2)
+ACTS_DEFINE_UNIT_LITERAL(mm3)
+ACTS_DEFINE_UNIT_LITERAL(cm3)
+ACTS_DEFINE_UNIT_LITERAL(m3)
 ACTS_DEFINE_UNIT_LITERAL(fs)
 ACTS_DEFINE_UNIT_LITERAL(ps)
 ACTS_DEFINE_UNIT_LITERAL(ns)
@@ -159,6 +179,7 @@ ACTS_DEFINE_UNIT_LITERAL(keV)
 ACTS_DEFINE_UNIT_LITERAL(MeV)
 ACTS_DEFINE_UNIT_LITERAL(GeV)
 ACTS_DEFINE_UNIT_LITERAL(TeV)
+ACTS_DEFINE_UNIT_LITERAL(u)
 ACTS_DEFINE_UNIT_LITERAL(g)
 ACTS_DEFINE_UNIT_LITERAL(kg)
 ACTS_DEFINE_UNIT_LITERAL(e)

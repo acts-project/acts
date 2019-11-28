@@ -79,23 +79,23 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_trackaverage_test) {
   // Thickness in X0 is additive
   CHECK_CLOSE_REL(mpAbc.thickness(), 1., 0.0001);
   // A/Z should be 0.5 roughly for both
-  CHECK_CLOSE_REL(mpAbc.averageZ() / mpAbc.averageA(), 0.5, 0.0001);
+  CHECK_CLOSE_REL(mpAbc.material().Z() / mpAbc.material().Ar(), 0.5, 0.0001);
   // Thickness in X0 is additive
   CHECK_CLOSE_REL(mpAbc.thicknessInX0(),
                   a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
                   0.0001);
   // Consistency check : X0
-  CHECK_CLOSE_REL(mpAbc.thickness() / mpAbc.averageX0(), mpAbc.thicknessInX0(),
-                  0.0001);
+  CHECK_CLOSE_REL(mpAbc.thickness() / mpAbc.material().X0(),
+                  mpAbc.thicknessInX0(), 0.0001);
   // Consistency check : L0
   CHECK_CLOSE_REL(mpAbc.thicknessInL0(),
                   a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
                   0.0001);
   // The density scales with the thickness then
-  double rhoTmapped = mpAbc.averageRho() * mpAbc.thickness();
-  double rhoTadded =
-      (a.thickness() * a.averageRho() + b.thickness() * b.averageRho() +
-       c.thickness() * c.averageRho());
+  double rhoTmapped = mpAbc.material().massDensity() * mpAbc.thickness();
+  double rhoTadded = (a.thickness() * a.material().massDensity() +
+                      b.thickness() * b.material().massDensity() +
+                      c.thickness() * c.material().massDensity());
   CHECK_CLOSE_REL(rhoTmapped, rhoTadded, 0.0001);
 }
 
@@ -120,10 +120,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   // Test:
   // that the average of a and a vacuum
   // step of same length is half a
-  MaterialProperties halfA = a;
-  halfA *= 0.5;
-  halfA.scaleToUnitThickness();
-
+  MaterialProperties halfA(a.material(), a.thickness() / 2);
   AccumulatedMaterialProperties av;
   av.accumulate(a);
   av.trackAverage();
@@ -134,15 +131,13 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
 
   BOOST_CHECK_EQUAL(halfA.thicknessInX0(), matAV.thicknessInX0());
   BOOST_CHECK_EQUAL(halfA.thicknessInL0(), matAV.thicknessInL0());
-  CHECK_CLOSE_REL(halfA.averageRho() * halfA.thickness(),
-                  matAV.averageRho() * matAV.thickness(), 0.0001);
+  CHECK_CLOSE_REL(halfA.material().massDensity() * halfA.thickness(),
+                  matAV.material().massDensity() * matAV.thickness(), 0.0001);
   BOOST_CHECK_EQUAL(averageAV.second, 2u);
 
   // Test:
   // average of a + 3*a -> 2*a
-  MaterialProperties doubleA = a;
-  doubleA *= 2.;
-
+  MaterialProperties doubleA(a.material(), 2 * a.thickness());
   AccumulatedMaterialProperties aa3;
   aa3.accumulate(a);
   aa3.trackAverage();
@@ -153,8 +148,8 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
 
   BOOST_CHECK_EQUAL(doubleA.thicknessInX0(), matAA3.thicknessInX0());
   BOOST_CHECK_EQUAL(doubleA.thicknessInL0(), matAA3.thicknessInL0());
-  CHECK_CLOSE_REL(doubleA.averageRho() * doubleA.thickness(),
-                  matAA3.averageRho() * matAA3.thickness(), 0.0001);
+  CHECK_CLOSE_REL(doubleA.material().massDensity() * doubleA.thickness(),
+                  matAA3.material().massDensity() * matAA3.thickness(), 0.0001);
   BOOST_CHECK_EQUAL(averageAA3.second, 2u);
 
   /// Test:

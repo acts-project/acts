@@ -19,8 +19,7 @@ Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
 
 Acts::HomogeneousSurfaceMaterial& Acts::HomogeneousSurfaceMaterial::operator*=(
     double scale) {
-  // scale the sub properties
-  m_fullMaterial *= scale;
+  m_fullMaterial.scaleThickness(scale);
   return (*this);
 }
 

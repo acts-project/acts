@@ -137,7 +137,7 @@ inline MaterialProperties ISurfaceMaterial::materialProperties(
     if (scaleFactor == 0.) {
       return MaterialProperties();
     }
-    plainMatProp *= scaleFactor;
+    plainMatProp.scaleThickness(scaleFactor);
   }
   return plainMatProp;
 }
@@ -153,7 +153,7 @@ inline MaterialProperties ISurfaceMaterial::materialProperties(
     if (scaleFactor == 0.) {
       return MaterialProperties();
     }
-    plainMatProp *= scaleFactor;
+    plainMatProp.scaleThickness(scaleFactor);
   }
   return plainMatProp;
 }

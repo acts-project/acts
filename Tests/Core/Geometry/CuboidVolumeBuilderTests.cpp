@@ -26,13 +26,15 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -88,9 +90,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
-    cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
-        new HomogeneousSurfaceMaterial(matProp));
+    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
     // Thickness of the detector element
     cfg.thickness = 1_um;
@@ -147,8 +148,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   volumeConfig.layerCfg = layerConfig;
   volumeConfig.name = "Test volume";
   volumeConfig.volumeMaterial =
-      std::make_shared<const HomogeneousVolumeMaterial>(
-          Material(352.8, 407., 9.012, 4., 1.848e-3));
+      std::make_shared<HomogeneousVolumeMaterial>(makeBeryllium());
 
   // Test the building
   std::shared_ptr<TrackingVolume> trVol =
@@ -214,9 +214,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
-    cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
-        new HomogeneousSurfaceMaterial(matProp));
+    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
     // Thickness of the detector element
     cfg.thickness = 1_um;

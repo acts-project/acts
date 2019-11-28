@@ -6,115 +6,80 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// MaterialProperties.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Material/MaterialProperties.hpp"
+
 #include <climits>
+#include <limits>
+#include <ostream>
+
+static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 
 Acts::MaterialProperties::MaterialProperties(float thickness)
     : m_thickness(thickness) {}
 
-Acts::MaterialProperties::MaterialProperties(float Xo, float Lo, float averageA,
-                                             float averageZ, float averageRho,
+Acts::MaterialProperties::MaterialProperties(float X0, float L0, float Ar,
+                                             float Z, float rho,
                                              float thickness)
-    : m_material(Xo, Lo, averageA, averageZ, averageRho),
+    : m_material(X0, L0, Ar, Z, rho),
       m_thickness(thickness),
-      m_dInX0(Xo * Xo > 10e-10 ? thickness / Xo : 0.),
-      m_dInL0(Lo * Lo > 10e-10 ? thickness / Lo : 0.) {}
+      m_thicknessInX0((X0 > eps) ? (thickness / X0) : 0),
+      m_thicknessInL0((L0 > eps) ? (thickness / L0) : 0) {}
 
 Acts::MaterialProperties::MaterialProperties(const Material& material,
                                              float thickness)
     : m_material(material),
       m_thickness(thickness),
-      m_dInX0(material.X0() * material.X0() > 10e-10 ? thickness / material.X0()
-                                                     : 0.),
-      m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
-                                                     : 0.) {}
+      m_thicknessInX0((material.X0() > eps) ? (thickness / material.X0()) : 0),
+      m_thicknessInL0((material.L0() > eps) ? (thickness / material.L0()) : 0) {
+}
 
 Acts::MaterialProperties::MaterialProperties(
-    const std::vector<MaterialProperties>& matLayers, bool unitThickness)
-    : m_material(), m_thickness(0.), m_dInX0(0.), m_dInL0(0.) {
-  double rho = 0.;
-  double A = 0.;
-  double Z = 0.;
-  double X0 = 0.;
-  double L0 = 0.;
-
-  for (auto& mat : matLayers) {
-    // thickness in X0 and L0 are strictly additive
-    m_dInX0 += mat.thicknessInX0();
-    m_dInL0 += mat.thicknessInL0();
-    double t = mat.thickness();
-    double r = mat.averageRho();
-    m_thickness += t;
-    // density scales with thickness
-    rho += r * t;
-    // A/Z scale with thickness * density
-    A += mat.averageA() * r * t;
-    Z += mat.averageZ() * r * t;
+    const std::vector<MaterialProperties>& layers)
+    : MaterialProperties() {
+  // use double for computations to avoid precision loss
+  double Ar = 0.0;
+  double Z = 0.0;
+  double weight = 0.0;
+  double thickness = 0.0;
+  double thicknessInX0 = 0.0;
+  double thicknessInL0 = 0.0;
+  // sum-up contributions from each layer
+  for (const auto& layer : layers) {
+    const auto& mat = layer.material();
+    // weight of the layer assuming a unit area, i.e. volume = thickness*1*1
+    const auto layerWeight = mat.massDensity() * layer.thickness();
+    // Ar,Z are weighted by mass
+    Ar += mat.Ar() * layerWeight;
+    Z += mat.Z() * layerWeight;
+    weight += layerWeight;
+    // thickness and relative thickness in X0,L0 are strictly additive
+    thickness += layer.thickness();
+    thicknessInX0 += layer.thicknessInX0();
+    thicknessInL0 += layer.thicknessInL0();
   }
-  // Now create the average
-  X0 = m_thickness / m_dInX0;
-  L0 = m_thickness / m_dInL0;
-  A /= rho;
-  Z /= rho;
-  rho /= m_thickness;
-  // set the material
-  m_material = Material(X0, L0, A, Z, rho);
-  if (unitThickness) {
-    scaleToUnitThickness();
-  }
+  // store averaged material constants
+  Ar /= weight;
+  Z /= weight;
+  // this is weight/volume w/ volume = thickness*unitArea = thickness*1*1
+  const auto density = weight / thickness;
+  const auto X0 = thickness / thicknessInX0;
+  const auto L0 = thickness / thicknessInL0;
+  m_material = Material(X0, L0, Ar, Z, density);
+  // thickness properties do not need to be averaged
+  m_thickness = thickness;
+  m_thicknessInX0 = thicknessInX0;
+  m_thicknessInL0 = thicknessInL0;
 }
 
-Acts::MaterialProperties& Acts::MaterialProperties::operator*=(float scale) {
-  // assuming rescaling of the material thickness
-  m_dInX0 *= scale;
-  m_dInL0 *= scale;
+void Acts::MaterialProperties::scaleThickness(float scale) {
   m_thickness *= scale;
-  return (*this);
+  m_thicknessInX0 *= scale;
+  m_thicknessInL0 *= scale;
 }
 
-void Acts::MaterialProperties::scaleToUnitThickness() {
-  // And 'condense to unit thickness' if configured
-  double t = thickness();
-  double X0 = m_material.X0() / t;
-  double L0 = m_material.L0() / t;
-  double A = m_material.A();
-  double Z = m_material.Z();
-  double rho = m_material.rho() * t;
-  m_material = Material(X0, L0, A, Z, rho);
-  m_thickness = 1.;
-}
-
-std::ostream& Acts::operator<<(std::ostream& sl,
-                               const MaterialProperties& mprop) {
-  if (mprop) {
-    sl << "Acts::MaterialProperties: " << std::endl;
-    sl << "   - thickness/X0                          = "
-       << mprop.thicknessInX0() << std::endl;
-    sl << "   - thickness                       [mm]  = " << mprop.thickness()
-       << std::endl;
-    sl << "   - radiation length X0             [mm]  = " << mprop.averageX0()
-       << std::endl;
-    sl << "   - nuclear interaction length L0   [mm]  = " << mprop.averageL0()
-       << std::endl;
-    sl << "   - average material Z/A*rho [gram/mm^3]  = "
-       << mprop.zOverAtimesRho() << '\n';
-  } else {
-    sl << "Vaccum" << std::endl;
-  }
-
-  /*  interface not finalized
-  if (mprop.material().composition){
-      sl << "   - material composition from " <<
-  mprop.material().composition->size() << " elements " << std::endl;
-      sl << "       listing them (prob. ordereded ) : " << std::endl;
-      for ( auto& eIter : (*mprop.material().composition) )
-          sl << "         -> Z : " << eIter.element() << "( fraction : "  <<
-  eIter.fraction() << " )" << std::endl;
-  }
-  */
-  return sl;
+std::ostream& Acts::operator<<(std::ostream& os,
+                               const MaterialProperties& materialProperties) {
+  os << materialProperties.material()
+     << "|t=" << materialProperties.thickness();
+  return os;
 }

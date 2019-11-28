@@ -32,7 +32,7 @@ Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::operator*=(
     double scale) {
   for (auto& materialVector : m_fullMaterial) {
     for (auto& materialBin : materialVector) {
-      (materialBin) *= scale;
+      materialBin.scaleThickness(scale);
     }
   }
   return (*this);

@@ -166,6 +166,7 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
                                                       bool reinitialize) const {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
+
   // Initialize the transport final frame jacobian
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // initalize the jacobian to local, returns the transposed ref frame
@@ -206,7 +207,7 @@ template <typename B, typename E, typename A>
 template <typename propagator_state_t>
 Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     propagator_state_t& state) const {
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;

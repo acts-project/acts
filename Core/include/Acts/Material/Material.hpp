@@ -1,178 +1,105 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// Material.hpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
-#include <climits>
-#include <iomanip>
-#include <iostream>
+#include <iosfwd>
 #include <limits>
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
-#include "Acts/Material/MaterialComposition.hpp"
+
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
-/// @class Material
+/// Material description for interactions with matter.
 ///
-/// A common object to be contained by
-/// - MaterialStep ( for mapping)
-/// - MaterialProperties ( for reconstruction )
-/// - it is optimized for T/P split
+/// The following parameters are used to specify the material and its
+/// interactions with traversing particles:
 ///
-///  X0 - radiation length
-///  L0 - nuclear interaction length
-///  A - nuclear mass
-///  Z - nuclear number
-///  rho - density
-///  Z/A*rho
+/// *   X0:  radiation length (native length units)
+/// *   L0:  nuclear interaction length (native length units)
+/// *   Ar:  relative atomic mass (unitless number)
+/// *   Z:   atomic number (unitless number)
+/// *   rho: mass density (native mass unit / (native length unit)³)
+///
+/// The parameters can be effective or average parameters when e.g. a mixture
+/// of materials is described.
 class Material {
  public:
-  /// @brief Accessor enums
+  /// Index of the parameters in the encoded parameters vector.
   enum Param {
-    matX0 = 0,   ///< X0 - this is in mm
-    matL0 = 1,   ///< L0 - this is in mm
-    matA = 2,    ///< A - in au
-    matZ = 3,    ///< Z - in e
-    matrho = 4,  ///< rho - g/mm^3
-    matZ_AR = 5  ///< Z/A*rho
+    eX0 = 0,
+    eL0 = 1,
+    eAr = 2,
+    eZ = 3,
+    eRho = 4,
   };
 
-  /// @brief Default Constructor - vacuum material
+  /// Construct a vacuum representation.
   Material() = default;
-
-  /// @brief Constructor with arguments
+  /// Construct from material parameters.
   ///
-  /// @param iX0 is the radiation length parameter
-  /// @param iL0 is the nuclear interaction length
-  /// @param iA is the average atomic weight
-  /// @param iZ is the average atomic number
-  /// @param iRho is the average density
-  /// @param imc is the material composition
-  Material(float iX0, float iL0, float iA, float iZ, float iRho,
-           MaterialComposition imc = {})
-      : m_vacuum(false),
-        m_store({iX0, iL0, iA, iZ, iRho, 0.}),
-        m_composition(std::move(imc)) {
-    float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
-    m_store[5] = zOaTr;
-  }
+  /// @param X0_  is the radiation length
+  /// @param L0_  is the nuclear interaction length
+  /// @param Ar_  is the relative atomic mass
+  /// @param Z_   is the atomic number
+  /// @param rho_ is the mass density
+  constexpr Material(float X0_, float L0_, float Ar_, float Z_, float rho_)
+      : m_x0(X0_), m_l0(L0_), m_ar(Ar_), m_z(Z_), m_rho(rho_) {}
+  /// Construct from an encoded parameters vector.
+  Material(const ActsVectorF<5>& parameters);
 
-  Material(ActsVectorF<5> iMatData, MaterialComposition imc = {})
-      : Material(iMatData[0], iMatData[1], iMatData[2], iMatData[3],
-                 iMatData[4], std::move(imc)) {}
-
-  /// @brief Copy Constructor
-  ///
-  /// @param mat copy constructor
-  Material(const Material& mat) = default;
-
-  /// @brief Copy Move constructor
-  ///
-  /// @param  mat copy constructor
   Material(Material&& mat) = default;
-
-  /// @brief Assignment operator
-  ///
-  /// @param mat is the source material
+  Material(const Material& mat) = default;
+  ~Material() = default;
+  Material& operator=(Material&& mat) = default;
   Material& operator=(const Material& mat) = default;
 
-  /// @brief Assignment Move operator
+  /// Check if the material is valid, i.e. it is not vacuum.
+  constexpr operator bool() const { return 0.0f < m_ar; }
+
+  /// Return the radition length. Infinity in case of vacuum.
+  constexpr float X0() const { return m_x0; }
+  /// Return the nuclear interaction length. Infinity in case of vacuum.
+  constexpr float L0() const { return m_l0; }
+  /// Return the relative atomic mass.
+  constexpr float Ar() const { return m_ar; }
+  /// Return the atomic number.
+  constexpr float Z() const { return m_z; }
+  /// Return the mass density.
+  constexpr float massDensity() const { return m_rho; }
+  /// Return the electron density in mol / (native length unit)³.
   ///
-  /// @param mat is the source material
-  Material& operator=(Material&& mat) = default;
+  /// Use mol instead of the real number of electrons to avoid large numbers
+  /// which could result in numerical instabilities somewhere else.
+  float molarElectronDensity() const;
+  /// Return the mean electron excitation energy.
+  float meanExcitationEnergy() const;
 
-  /// @brief Desctructor
-  ~Material() = default;
-
-  /// @brief Equality operator
-  ///
-  /// @param mat is the source material
-  bool operator==(const Material& mat) const;
-
-  /// @brief Inequality operator
-  ///
-  /// @param mat is the source material
-  bool operator!=(const Material& mat) const;
-
-  /// @brief Boolean operator to check if this is vacuum
-  operator bool() const { return (!m_vacuum); }
-
-  /// @brief Access to X0
-  /// if it's vacuum, infinity
-  float X0() const { return m_store[matX0]; }
-
-  /// @brief Access to L0
-  /// if it's vacuum, infinity
-  float L0() const { return m_store[matL0]; }
-
-  /// @brief Access to A
-  float A() const { return m_store[matA]; }
-
-  /// @brief Access to Z
-  float Z() const { return m_store[matZ]; }
-
-  /// @brief Access to rho
-  float rho() const { return m_store[matrho]; }
-
-  ///  @brief Access to z/A*tho
-  float zOverAtimesRho() const { return m_store[matZ_AR]; }
-
-  /// @brief Access to all classification numbers of the material
-  ActsVectorF<5> classificationNumbers() {
-    ActsVectorF<5> numbers;
-    numbers << X0(), L0(), A(), Z(), rho();
-    return numbers;
-  }
-
-  /// spit out as a string
-  std::string toString() const {
-    std::ostringstream sout;
-    sout << std::setiosflags(std::ios::fixed) << std::setprecision(4);
-    sout << " | ";
-    if (m_vacuum) {
-      sout << " vacuum | ";
-    } else {
-      for (auto& mat : m_store) {
-        sout << mat << " | ";
-      }
-    }
-    return sout.str();
-  }
+  /// Encode the properties into a parameter vector.
+  ActsVectorF<5> classificationNumbers() const;
 
  private:
-  /// define it is vacuum or not
-  bool m_vacuum = true;
+  float m_x0 = std::numeric_limits<float>::infinity();
+  float m_l0 = std::numeric_limits<float>::infinity();
+  float m_ar = 0.0f;
+  float m_z = 0.0f;
+  float m_rho = 0.0f;
 
-  /// standard x0, l0, A, Z, rho description
-  std::array<float, 6> m_store = {std::numeric_limits<float>::infinity(),
-                                  std::numeric_limits<float>::infinity(),
-                                  0.,
-                                  0.,
-                                  0.,
-                                  0.};
-
-  /// optional composition parameter
-  MaterialComposition m_composition = MaterialComposition();
+  friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
+    return (lhs.m_x0 == rhs.m_x0) and (lhs.m_l0 == rhs.m_l0) and
+           (lhs.m_ar == rhs.m_ar) and (lhs.m_z == rhs.m_z) and
+           (lhs.m_rho == rhs.m_rho);
+  }
+  friend constexpr bool operator!=(const Material& lhs, const Material& rhs) {
+    return !(lhs == rhs);
+  }
 };
 
-inline bool Material::operator==(const Material& mat) const {
-  return (m_store == mat.m_store && m_composition == mat.m_composition);
-}
+std::ostream& operator<<(std::ostream& os, const Material& material);
 
-inline bool Material::operator!=(const Material& mat) const {
-  return !operator==(mat);
-}
 }  // namespace Acts

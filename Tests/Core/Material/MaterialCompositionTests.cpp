@@ -12,146 +12,75 @@
 #include <boost/test/unit_test.hpp>
 // clang-format on
 
-#include <climits>
-
-#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialComposition.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
-
 namespace Test {
 
-// the maximum tolerance is half the accuracy
-float elMaxTolerance = 0.5 / float(UCHAR_MAX);
+BOOST_AUTO_TEST_SUITE(material_composition)
 
-BOOST_AUTO_TEST_CASE(ElementFraction_construction_test) {
+constexpr float eps = 1.0f / 255u;
+
+BOOST_AUTO_TEST_CASE(construct_element_fraction) {
   // carbon parameters, atomic charge is Z
-  unsigned char carbonZ = 12;
+  unsigned int carbonZ = 12u;
   // a fraction between 0 and 255
-  unsigned char carbonFractionCH = 46;
-  float carbonFractionFloat = float(46. / UCHAR_MAX);
+  unsigned int carbonWeight = 46u;
+  float carbonFraction = float(carbonWeight) / 255u;
 
-  // test the carbon fraction
-  std::array<unsigned char, 2> data = {{carbonZ, carbonFractionCH}};
-  ElementFraction carbonEFC(data);
-  ElementFraction carbonEFF((unsigned int)carbonZ, carbonFractionFloat);
+  ElementFraction a(carbonZ, carbonFraction);
+  BOOST_TEST(a.element(), carbonZ);
+  CHECK_CLOSE_REL(a.fraction(), carbonFraction, eps);
 
-  // check if you get the element and the fraction back
-  BOOST_CHECK_EQUAL(12ul, carbonEFC.element());
-  CHECK_CLOSE_REL(carbonFractionFloat, carbonEFC.fraction(), elMaxTolerance);
-  BOOST_CHECK_EQUAL(12ul, carbonEFF.element());
-  CHECK_CLOSE_REL(carbonFractionFloat, carbonEFF.fraction(), elMaxTolerance);
+  ElementFraction b(carbonZ, carbonWeight);
+  BOOST_TEST(b.element(), carbonZ);
+  CHECK_CLOSE_REL(b.fraction(), carbonFraction, eps);
 }
 
-BOOST_AUTO_TEST_CASE(ElementFraction_movable_test) {
-  // carbon parameters, atomic charge is Z
-  unsigned char carbonZ = 12;
-  // a fraction between 0 and 255
-  float carbonFraction = float(46. / UCHAR_MAX);
+BOOST_AUTO_TEST_CASE(construct_with_fractions) {
+  ElementFraction carbon(12u, 0.45f);
+  ElementFraction silicon(14u, 0.125f);
+  ElementFraction titanium(22u, 0.25f);
+  ElementFraction copper(29u, 0.175f);
 
-  // test the carbon fraction
-  ElementFraction carbon((unsigned int)carbonZ, carbonFraction);
-  ElementFraction carbonMoved(std::move(carbon));
+  MaterialComposition compound({silicon, carbon, titanium, copper});
+  BOOST_TEST(!!compound);
+  BOOST_TEST(compound.size() == 4u);
 
-  BOOST_CHECK_EQUAL(12ul, carbonMoved.element());
-  CHECK_CLOSE_REL(carbonFraction, carbonMoved.fraction(), elMaxTolerance);
-
-  ElementFraction carbonMovedAssigned = std::move(carbonMoved);
-  BOOST_CHECK_EQUAL(12ul, carbonMovedAssigned.element());
-  CHECK_CLOSE_REL(carbonFraction, carbonMovedAssigned.fraction(),
-                  elMaxTolerance);
-}
-
-BOOST_AUTO_TEST_CASE(MaterialComposition_construction_test) {
-  // Carbon fraction
-  unsigned int carbonZ = 12;
-  float carbonFraction = 0.45;
-  ElementFraction carbon(carbonZ, carbonFraction);
-
-  // Silicon fraction
-  unsigned int siliconZ = 14;
-  float siliconFracton = 0.1;
-  ElementFraction silicon(siliconZ, siliconFracton);
-
-  // Titanium fraction
-  unsigned int titantiumZ = 22;
-  float titaniumFraction = 0.25;
-  ElementFraction titanium(titantiumZ, titaniumFraction);
-
-  // Copper fraction
-  unsigned int copperZ = 29;
-  float copperFraction = 0.2;
-  ElementFraction copper(copperZ, copperFraction);
-
-  std::vector<ElementFraction> elements = {silicon, carbon, titanium, copper};
-  std::vector<ElementFraction> shuffled = {carbon, silicon, titanium, copper};
-
-  /// create the material composition
-  MaterialComposition elementsC(elements);
-  MaterialComposition shuffledC(shuffled);
-  // check if the sorting worked
-  BOOST_CHECK_EQUAL(elementsC.size(), shuffledC.size());
-  BOOST_CHECK_EQUAL(elementsC.elements()[0].data()[0],
-                    shuffledC.elements()[0].data()[0]);
-  BOOST_CHECK_EQUAL(elementsC.elements()[1].data()[0],
-                    shuffledC.elements()[1].data()[0]);
-  BOOST_CHECK_EQUAL(elementsC.elements()[2].data()[0],
-                    shuffledC.elements()[2].data()[0]);
-  BOOST_CHECK_EQUAL(elementsC.elements()[3].data()[0],
-                    shuffledC.elements()[3].data()[0]);
-  BOOST_CHECK_EQUAL(elementsC.elements()[0].data()[1],
-                    shuffledC.elements()[0].data()[1]);
-  BOOST_CHECK_EQUAL(elementsC.elements()[1].data()[1],
-                    shuffledC.elements()[1].data()[1]);
-  BOOST_CHECK_EQUAL(elementsC.elements()[2].data()[1],
-                    shuffledC.elements()[2].data()[1]);
-  BOOST_CHECK_EQUAL(elementsC.elements()[3].data()[1],
-                    shuffledC.elements()[3].data()[1]);
-  /// or shortly
-  BOOST_CHECK_EQUAL(elementsC, shuffledC);
-
-  float totalFraction = 0.;
-  for (auto& eFraction : elementsC.elements()) {
+  float totalFraction = 0.0f;
+  for (const auto& eFraction : compound) {
     totalFraction += eFraction.fraction();
   }
   // to better fit we need to implement some proper weight scaling
-  BOOST_CHECK_LT(std::abs(1. - totalFraction),
-                 elementsC.elements().size() * elMaxTolerance);
+  CHECK_CLOSE_REL(totalFraction, 1.0f, compound.size() * eps);
+
+  // input order should not matter
+  MaterialComposition shuffled({carbon, silicon, titanium, copper});
+  // check if the sorting worked
+  BOOST_TEST(compound.size() == shuffled.size());
+  BOOST_TEST(compound == shuffled);
 }
 
-BOOST_AUTO_TEST_CASE(MaterialComposition_movable_test) {
-  // Carbon fraction
-  unsigned int carbonZ = 12;
-  float carbonFraction = 0.45;
-  ElementFraction carbon(carbonZ, carbonFraction);
+BOOST_AUTO_TEST_CASE(construct_with_weights) {
+  ElementFraction carbon(12u, 128u);
+  ElementFraction silicon(14u, 64u);
+  ElementFraction titanium(22u, 32u);
+  ElementFraction copper(29u, 31u);
 
-  // Silicon fraction
-  unsigned int siliconZ = 14;
-  float siliconFracton = 0.1;
-  ElementFraction silicon(siliconZ, siliconFracton);
+  MaterialComposition compound({silicon, carbon, titanium, copper});
+  BOOST_TEST(!!compound);
+  BOOST_TEST(compound.size() == 4u);
 
-  // Titanium fraction
-  unsigned int titantiumZ = 22;
-  float titaniumFraction = 0.25;
-  ElementFraction titanium(titantiumZ, titaniumFraction);
-
-  // Copper fraction
-  unsigned int copperZ = 29;
-  float copperFraction = 0.2;
-  ElementFraction copper(copperZ, copperFraction);
-
-  std::vector<ElementFraction> elements = {silicon, carbon, titanium, copper};
-
-  /// create the material composition - elements are copied here
-  MaterialComposition mComposition(elements);
-
-  /// Move copy construction - object is moved here
-  MaterialComposition mCompositionMoved(std::move(mComposition));
-  BOOST_CHECK_EQUAL(mCompositionMoved.size(), elements.size());
-
-  MaterialComposition mCompositionMovedAssigned = std::move(mCompositionMoved);
-  BOOST_CHECK_EQUAL(mCompositionMovedAssigned.size(), elements.size());
+  float totalFraction = 0.0f;
+  for (const auto& eFraction : compound) {
+    totalFraction += eFraction.fraction();
+  }
+  // to better fit we need to implement some proper weight scaling
+  CHECK_CLOSE_REL(totalFraction, 1.0f, compound.size() * eps);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Test
 }  // namespace Acts
