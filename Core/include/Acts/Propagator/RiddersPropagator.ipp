@@ -9,10 +9,9 @@
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
-    const parameters_t& start,
-    const propagator_options_t& options) const
+    const parameters_t& start, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        CurvilinearParameters, 
+        CurvilinearParameters,
         typename propagator_options_t::action_list_type>> {
   // Launch nominal propagation and collect results
   auto nominalResult = m_propagator.propagate(start, options).value();
@@ -53,7 +52,8 @@ template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
-    -> Result<action_list_t_result_t<BoundParameters, typename propagator_options_t::action_list_type>> {
+    -> Result<action_list_t_result_t<
+        BoundParameters, typename propagator_options_t::action_list_type>> {
   // Launch nominal propagation and collect results
   auto nominalResult = m_propagator.propagate(start, target, options).value();
   const BoundVector& nominalParameters =
