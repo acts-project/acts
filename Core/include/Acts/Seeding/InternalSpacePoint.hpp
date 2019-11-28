@@ -37,8 +37,8 @@ class InternalSpacePoint {
   const float& z() const { return m_z; }
   const float& radius() const { return m_r; }
   float phi() const { return atan2f(m_y, m_x); }
-  const float& covr() const { return m_covr; }
-  const float& covz() const { return m_covz; }
+  const float& varianceR() const { return m_varianceR; }
+  const float& varianceZ() const { return m_varianceZ; }
   const SpacePoint& sp() const { return m_sp; }
 
  protected:
@@ -46,8 +46,8 @@ class InternalSpacePoint {
   float m_y;               // y-coordinate in beam system coordinates
   float m_z;               // z-coordinate in beam system coordinetes
   float m_r;               // radius       in beam system coordinates
-  float m_covr;            //
-  float m_covz;            //
+  float m_varianceR;            //
+  float m_varianceZ;            //
   const SpacePoint& m_sp;  // external space point
 };
 
@@ -58,14 +58,14 @@ class InternalSpacePoint {
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
     const SpacePoint& sp, const Acts::Vector3D& globalPos,
-    const Acts::Vector2D& offsetXY, const Acts::Vector2D& cov)
+    const Acts::Vector2D& offsetXY, const Acts::Vector2D& variance)
     : m_sp(sp) {
   m_x = globalPos.x() - offsetXY.x();
   m_y = globalPos.y() - offsetXY.y();
   m_z = globalPos.z();
   m_r = std::sqrt(m_x * m_x + m_y * m_y);
-  m_covr = cov.x();
-  m_covz = cov.y();
+  m_varianceR = variance.x();
+  m_varianceZ = variance.y();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -80,8 +80,8 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
   m_y = sp.m_y;
   m_z = sp.m_z;
   m_r = sp.m_r;
-  m_covr = sp.m_covr;
-  m_covz = sp.m_covz;
+  m_varianceR = sp.m_varianceR;
+  m_varianceZ = sp.m_varianceZ;
 }
 
 }  // end of namespace Acts

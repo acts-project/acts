@@ -54,13 +54,13 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
 
-    // covariance tool provided by user
-    Acts::Vector2D cov =
+    // 2D variance tool provided by user
+    Acts::Vector2D variance =
         covTool(sp, config.zAlign, config.rAlign, config.sigmaError);
     Acts::Vector3D spPosition(spX, spY, spZ);
     auto isp =
         std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
-            sp, spPosition, config.beamPos, cov);
+            sp, spPosition, config.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = isp->radius();

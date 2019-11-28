@@ -38,23 +38,23 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x, y, z, r, covr, covz;
+      float x, y, z, r, varianceR, varianceZ;
       if (linetype == "lxyz") {
-        ss >> layer >> x >> y >> z >> covr >> covz;
+        ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
         r = std::sqrt(x * x + y * y);
-        float f22 = covr;
-        float wid = covz;
+        float f22 = varianceR;
+        float wid = varianceZ;
         float cov = wid * wid * .08333;
         if (cov < f22)
           cov = f22;
         if (std::abs(z) > 450.) {
-          covz = 9. * cov;
-          covr = .06;
+          varianceZ = 9. * cov;
+          varianceR = .06;
         } else {
-          covr = 9. * cov;
-          covz = .06;
+          varianceR = 9. * cov;
+          varianceZ = .06;
         }
-        SpacePoint* sp = new SpacePoint{x, y, z, r, layer, covr, covz};
+        SpacePoint* sp = new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }
@@ -101,7 +101,7 @@ int main() {
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {
-    return {sp.covr, sp.covz};
+    return {sp.varianceR, sp.varianceZ};
   };
 
   // setup spacepoint grid config

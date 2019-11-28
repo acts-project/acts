@@ -43,8 +43,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
-    float covrM = spM->covr();
-    float covzM = spM->covz();
+    float varianceRM = spM->varianceR();
+    float varianceZM = spM->varianceZ();
 
     // bottom space point
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>
@@ -160,7 +160,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
         float error2 = lt.Er + ErB +
-                       2 * (cotThetaB * lt.cotTheta * covrM + covzM) *
+                       2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
                            iDeltaRB * lt.iDeltaR;
 
         float deltaCotTheta = cotThetaB - lt.cotTheta;
@@ -254,8 +254,8 @@ void Seedfinder<external_spacepoint_t>::transformCoordinates(
   float yM = spM.y();
   float zM = spM.z();
   float rM = spM.radius();
-  float covzM = spM.covz();
-  float covrM = spM.covr();
+  float varianceZM = spM.varianceZ();
+  float varianceRM = spM.varianceR();
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
   for (auto sp : vec) {
@@ -290,8 +290,8 @@ void Seedfinder<external_spacepoint_t>::transformCoordinates(
     l.U = x * iDeltaR2;
     l.V = y * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    l.Er = ((covzM + sp->covz()) +
-            (cot_theta * cot_theta) * (covrM + sp->covr())) *
+    l.Er = ((varianceZM + sp->varianceZ()) +
+            (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
     linCircleVec.push_back(l);
   }
