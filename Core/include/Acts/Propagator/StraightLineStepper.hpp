@@ -175,17 +175,6 @@ class StraightLineStepper {
     return s_onSurfaceTolerance;
   }
 
-  /// Tests if the state reached a surface
-  ///
-  /// @param [in] state State that is tests
-  /// @param [in] surface Surface that is tested
-  ///
-  /// @return Boolean statement if surface is reached by state
-  bool surfaceReached(const State& state, const Surface* surface) const {
-    return surface->isOnSurface(state.geoContext, position(state),
-                                direction(state), true);
-  }
-
   /// Update surface status
   ///
   /// It checks the status to the reference surface & updates
@@ -198,6 +187,35 @@ class StraightLineStepper {
                                            const BoundaryCheck& bcheck) const {
     return detail::updateSurfaceStatus_t<StraightLineStepper>(*this, state,
                                                               surface, bcheck);
+  }
+
+  /// Update step size
+  ///
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param release [in] boolean to trigger step size release
+  template <typename object_intersection_t>
+  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+                      bool release = true) const {
+    detail::updateStepSize_t<StraightLineStepper>(state, oIntersection,
+                                                  release);
+  }
+
+  /// Release the Step size
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  void releaseStepSize(State& state) const {
+    state.stepSize.release(cstep::actor);
+  }
+
+  /// Output the Step Size - single component
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  std::string outputStepSize(const State& state) const {
+    return state.stepSize.toString();
   }
 
   /// Create and return the bound state at the current position

@@ -107,16 +107,26 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    bool surfaceReached(const State& state, const Surface* surface) const {
-      return surface->isOnSurface(tgContext, position(state), direction(state),
-                                  true);
-    }
-
     Intersection::Status updateSurfaceStatus(
         State& state, const Surface& surface,
         const BoundaryCheck& bcheck) const {
       return detail::updateSurfaceStatus_t<Stepper>(*this, state, surface,
                                                     bcheck);
+    }
+
+    template <typename object_intersection_t>
+    void updateStepSize(State& state,
+                        const object_intersection_t& oIntersection,
+                        bool release = true) const {
+      detail::updateStepSize_t<Stepper>(state, oIntersection, release);
+    }
+
+    void releaseStepSize(State& state) const {
+      state.stepSize.release(Cstep::actor);
+    }
+
+    std::string outputStepSize(const State& state) const {
+      return state.stepSize.toString();
     }
 
     BoundState boundState(State& state, const Surface& surface,

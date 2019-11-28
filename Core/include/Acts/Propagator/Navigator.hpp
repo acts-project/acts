@@ -97,8 +97,8 @@ struct NavigationOptions {
 /// This navigation actor thus always needs to run first!
 /// It does two things: it figures out the order of volumes, layers and
 /// surfaces. For each propagation step, the operator() runs, which checks if
-/// the current surface (or layer/volume boundary) is reached via
-/// surfaceReached.
+/// the current surface (or layer/volume boundary) is reached.
+///
 /// The current target surface is the surface pointed to by of the iterators
 /// for the surfaces, layers or volume boundaries.
 /// If a surface is found, the state.navigation.currentSurface
@@ -106,7 +106,7 @@ struct NavigationOptions {
 /// actor uses the ordered  iterators  to figure out which surface, layer or
 /// volume boundary is _supposed_ to be hit next. It then sets the maximum
 /// step size to the path length found out by straight line intersection. If
-/// the surfaceReached call fails, it also  re-computes the step size, to make
+/// the state is not on surface, it also  re-computes the step size, to make
 /// sure we end up at the desired surface.
 ///
 class Navigator {
@@ -325,7 +325,7 @@ class Navigator {
           });
           // Navigation break & release navigation stepping
           state.navigation.navigationBreak = true;
-          state.stepping.stepSize.release(Cstep::actor);
+          stepper.releaseStepSize(state.stepping);
           return;
         } else {
           debugLog(state, [&] { return std::string("Volume updated."); });
@@ -345,7 +345,7 @@ class Navigator {
       });
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
-      state.stepping.stepSize.release(Cstep::actor);
+      stepper.releaseStepSize(state.stepping);
     } else {
       debugLog(state, [&] {
         return std::string("Status could not be determined - good luck.");
@@ -399,7 +399,7 @@ class Navigator {
       });
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
-      state.stepping.stepSize.release(Cstep::actor);
+      stepper.releaseStepSize(state.stepping);
     }
 
     // Navigator target always resets the current surface
@@ -518,7 +518,9 @@ class Navigator {
     // Check if we are at a surface
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
-    if (stepper.surfaceReached(state.stepping, surface)) {
+    auto surfaceStatus =
+        stepper.updateSurfaceStatus(state.stepping, *surface, true);
+    if (surfaceStatus == Intersection::Status::onSurface) {
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
@@ -572,7 +574,7 @@ class Navigator {
         });
         // set the navigation break
         state.navigation.navigationBreak = true;
-        state.stepping.stepSize.release(Cstep::actor);
+        stepper.releaseStepSize(state.stepping);
       }
       return startResolved;
     }
@@ -614,7 +616,7 @@ class Navigator {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Surface reachable, step size updated to ";
-          dstream << state.stepping.stepSize.toString();
+          dstream << stepper.outputStepSize(state.stepping);
           return dstream.str();
         });
         return true;
@@ -718,7 +720,7 @@ class Navigator {
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
 
-          // are we on the first surface?
+          // Check: are we on the first surface?
           if (state.navigation.currentSurface == nullptr ||
               state.navigation.currentSurface !=
                   protoNavSurfaces.front().object) {
@@ -729,9 +731,15 @@ class Navigator {
                 state.navigation.navSurfaces.begin();
             state.navigation.navLayers = {};
             state.navigation.navLayerIter = state.navigation.navLayers.end();
-            updateStep(state,
-                       state.navigation.navSurfaceIter->intersection.pathLength,
-                       true);
+            // The stepper updates the step size ( single / multi component)
+            stepper.updateStepSize(state.stepping,
+                                   *state.navigation.navSurfaceIter, true);
+            debugLog(state, [&] {
+              std::stringstream dstream;
+              dstream << "Navigation stepSize updated to ";
+              dstream << stepper.outputStepSize(state.stepping);
+              return dstream.str();
+            });
             return true;
           }
         }
@@ -760,24 +768,24 @@ class Navigator {
           continue;
         }
       }
-      // Otherwise try to step towards it
-      NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
-      auto layerIntersect = layerSurface->intersect(
-          state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), navOpts.boundaryCheck);
-      // check if the intersect is invalid
-      if (!layerIntersect) {
+      // Try to step towards it
+      auto layerStatus =
+          stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
+      if (layerStatus == Intersection::Status::reachable) {
         debugLog(state, [&] {
-          return std::string("Layer intersection not valid, skipping it.");
+          std::stringstream dstream;
+          dstream << "Layer reachable, step size updated to ";
+          dstream << stepper.outputStepSize(state.stepping);
+          return dstream.str();
         });
-        ++state.navigation.navLayerIter;
-      } else {
-        // update the navigation step size, release the former first
-        updateStep(state, layerIntersect.intersection.pathLength, true);
         return true;
       }
+      debugLog(state, [&] {
+        return std::string("Layer intersection not valid, skipping it.");
+      });
+      ++state.navigation.navLayerIter;
     }
+
     // Re-initialize target at last layer, only in case it is the target volume
     // This avoids a wrong target volume estimation
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
@@ -839,7 +847,7 @@ class Navigator {
             "No sufficient information to resolve boundary, "
             "stopping navigation.");
       });
-      state.stepping.stepSize.release(Cstep::actor);
+      stepper.releaseStepSize(state.stepping);
       return false;
     } else if (state.navigation.currentVolume ==
                state.navigation.targetVolume) {
@@ -848,7 +856,7 @@ class Navigator {
             "In target volume: no need to resolve boundary, "
             "stopping navigation.");
         state.navigation.navigationBreak = true;
-        state.stepping.stepSize.release(Cstep::actor);
+        stepper.releaseStepSize(state.stepping);
       });
       return true;
     }
@@ -890,6 +898,18 @@ class Navigator {
       });
       // Set the begin iterator
       state.navigation.navBoundaryIter = state.navigation.navBoundaries.begin();
+      if (not state.navigation.navBoundaries.empty()) {
+        // TSet to the first and return to the stepper
+        stepper.updateStepSize(state.stepping,
+                               *state.navigation.navBoundaryIter, true);
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Navigation stepSize updated to ";
+          dstream << stepper.outputStepSize(state.stepping);
+          return dstream.str();
+        });
+        return true;
+      }
     }
 
     // Loop over the boundary surface
@@ -897,38 +917,20 @@ class Navigator {
            state.navigation.navBoundaries.end()) {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
-      // Step towards the boundary surface
-      auto boundaryIntersect = boundarySurface->intersect(
-          state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), navOpts.boundaryCheck);
-      // Distance
-      auto distance = boundaryIntersect.intersection.pathLength;
-      // Check the boundary is properly intersected: we are in target mode
-      if (!boundaryIntersect or
-          distance * distance < s_onSurfaceTolerance * s_onSurfaceTolerance) {
+      // Step twoards the boundary surfrace
+      auto boundaryStatus = stepper.updateSurfaceStatus(
+          state.stepping, *boundarySurface, navOpts.boundaryCheck);
+      if (boundaryStatus == Intersection::Status::reachable) {
         debugLog(state, [&] {
-          std::stringstream ss;
-          ss << "Boundary intersection with:\n";
-          boundaryIntersect.object->toStream(state.geoContext, ss);
-          ss << "\n";
-          ss << "Boundary intersection not valid, skipping it.\n";
-          ss << "valid: " << bool(boundaryIntersect) << "\n";
-          ss << "pathLength: " << distance << "\n";
-          if (distance < 0 && std::abs(distance) < 0.01) {
-            ss << "Very likely overstepped over boundary surface! \n";
-          }
-          return ss.str();
+          std::stringstream dstream;
+          dstream << "Boundary reachable, step size updated to ";
+          dstream << stepper.outputStepSize(state.stepping);
+          return dstream.str();
         });
-        // Increase the iterator to the next one
-        ++state.navigation.navBoundaryIter;
-
-      } else {
-        debugLog(state,
-                 [&] { return std::string("Boundary intersection valid."); });
-        // This is a new navigation stream, release the former first
-        updateStep(state, distance, true);
         return true;
       }
+      // Increase the iterator to the next one
+      ++state.navigation.navBoundaryIter;
     }
     // Could not do anything
     return false;
@@ -957,7 +959,8 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   void initializeTarget(propagator_state_t& state,
                         const stepper_t& stepper) const {
-    if (state.navigation.targetVolume && state.stepping.pathAccumulated == 0.) {
+    if (state.navigation.targetVolume and
+        state.stepping.pathAccumulated == 0.) {
       debugLog(state, [&] {
         return std::string("Re-initialzing cancelled as it is the first step.");
       });
@@ -990,39 +993,35 @@ class Navigator {
       }
       // Slow navigation initialization for target:
       // target volume and layer search through global search
-      NavigationOptions<Surface> navOpts(state.stepping.navDir, false,
-                                         resolveSensitive, resolveMaterial,
-                                         resolvePassive);
-      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
-
-      // take the target intersection
       auto targetIntersection = state.navigation.targetSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), navOpts.boundaryCheck);
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Target estimate position (";
-        dstream << targetIntersection.intersection.position.x() << ", ";
-        dstream << targetIntersection.intersection.position.y() << ", ";
-        dstream << targetIntersection.intersection.position.z() << ")";
-        return dstream.str();
-      });
-      /// get the target volume from the intersection
-      auto tPosition = targetIntersection.intersection.position;
-      state.navigation.targetVolume =
-          trackingGeometry->lowestTrackingVolume(state.geoContext, tPosition);
-      state.navigation.targetLayer =
-          state.navigation.targetVolume
-              ? state.navigation.targetVolume->associatedLayer(state.geoContext,
-                                                               tPosition)
-              : nullptr;
-      if (state.navigation.targetVolume) {
+          state.stepping.navDir * stepper.direction(state.stepping), false);
+      if (targetIntersection) {
         debugLog(state, [&] {
           std::stringstream dstream;
-          dstream << "Target volume estimated : ";
-          dstream << state.navigation.targetVolume->volumeName();
+          dstream << "Target estimate position (";
+          dstream << targetIntersection.intersection.position.x() << ", ";
+          dstream << targetIntersection.intersection.position.y() << ", ";
+          dstream << targetIntersection.intersection.position.z() << ")";
           return dstream.str();
         });
+        /// get the target volume from the intersection
+        auto tPosition = targetIntersection.intersection.position;
+        state.navigation.targetVolume =
+            trackingGeometry->lowestTrackingVolume(state.geoContext, tPosition);
+        state.navigation.targetLayer =
+            state.navigation.targetVolume
+                ? state.navigation.targetVolume->associatedLayer(
+                      state.geoContext, tPosition)
+                : nullptr;
+        if (state.navigation.targetVolume) {
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Target volume estimated : ";
+            dstream << state.navigation.targetVolume->volumeName();
+            return dstream.str();
+          });
+        }
       }
     }
   }
@@ -1075,11 +1074,15 @@ class Navigator {
       });
       // set the iterator
       state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
-      // Update the navigation step size before you return to the stepper
-      // This is a new navigation stream, release the former step size first
-      updateStep(state,
-                 state.navigation.navSurfaceIter->intersection.pathLength,
-                 true);
+      // The stepper updates the step size ( single / multi component)
+      stepper.updateStepSize(state.stepping, *state.navigation.navSurfaceIter,
+                             true);
+      debugLog(state, [&] {
+        std::stringstream dstream;
+        dstream << "Navigation stepSize updated to ";
+        dstream << stepper.outputStepSize(state.stepping);
+        return dstream.str();
+      });
       return true;
     }
     state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
@@ -1148,11 +1151,15 @@ class Navigator {
           state.navigation.navLayerIter->object !=
               state.navigation.startLayer) {
         debugLog(state, [&] { return std::string("Target at layer."); });
-        // update the navigation step size before you return
-        updateStep(state,
-                   state.navigation.navLayerIter->intersection.pathLength,
-                   true);
-        // Trigger the return to the propagator
+        // The stepper updates the step size ( single / multi component)
+        stepper.updateStepSize(state.stepping, *state.navigation.navLayerIter,
+                               true);
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Navigation stepSize updated to ";
+          dstream << stepper.outputStepSize(state.stepping);
+          return dstream.str();
+        });
         return true;
       }
     }
@@ -1164,31 +1171,9 @@ class Navigator {
     debugLog(state, [&] {
       return std::string("No compatible layer candidates found.");
     });
-    // Update the navigation step to the target step to trigger
-    // step modification when requested
-    updateStep(state, state.stepping.stepSize.value(Cstep::aborter));
-
+    // Release the step size
+    stepper.releaseStepSize(state.stepping);
     return false;
-  }
-
-  /// This method updates the constrained step size
-  ///
-  /// @tparam propagator_state_t is the state type
-  ///
-  /// @param[in,out] state The state object for the step length
-  /// @param[in] step the step size
-  /// @param[in] release flag steers if the step is released first
-  template <typename propagator_state_t>
-  void updateStep(propagator_state_t& state, double navigationStep,
-                  bool release = false) const {  //  update the step
-    state.stepping.stepSize.update(navigationStep, Cstep::actor, release);
-    debugLog(state, [&] {
-      std::stringstream dstream;
-      std::string releaseFlag = release ? "released and " : "";
-      dstream << "Navigation stepSize " << releaseFlag << "updated to ";
-      dstream << state.stepping.stepSize.toString();
-      return dstream.str();
-    });
   }
 
   /// --------------------------------------------------------------------
@@ -1226,12 +1211,12 @@ class Navigator {
       if (state.navigation.targetReached || !state.navigation.targetSurface) {
         return true;
       }
+      auto targetStatus = stepper.updateSurfaceStatus(
+          state.stepping, *state.navigation.targetSurface, true);
       // the only advance could have been to the target
-      if (stepper.surfaceReached(state.stepping,
-                                 state.navigation.targetSurface)) {
+      if (targetStatus == Intersection::Status::onSurface) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
-
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface ";

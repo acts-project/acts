@@ -131,19 +131,22 @@ class DirectNavigator {
     // Navigator status always resets the current surface
     state.navigation.currentSurface = nullptr;
     // Check if we are on surface
-    if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter &&
-        stepper.surfaceReached(state.stepping,
-                               *state.navigation.nextSurfaceIter)) {
-      // Set the current surface
-      state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Current surface set to  "
-                << state.navigation.currentSurface->geoID();
-        return dstream.str();
-      });
-      // Move the sequence to the next surface
-      ++state.navigation.nextSurfaceIter;
+    if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
+      // Establish the surface status
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, **state.navigation.nextSurfaceIter, false);
+      if (surfaceStatus == Intersection::Status::onSurface) {
+        // Set the current surface
+        state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Current surface set to  "
+                  << state.navigation.currentSurface->geoID();
+          return dstream.str();
+        });
+        // Move the sequence to the next surface
+        ++state.navigation.nextSurfaceIter;
+      }
     }
   }
 
@@ -161,29 +164,27 @@ class DirectNavigator {
 
     // Navigator target always resets the current surface
     state.navigation.currentSurface = nullptr;
-
     if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
-      // take the target intersection
-      auto nextIntersection =
-          (*state.navigation.nextSurfaceIter)
-              ->intersect(state.geoContext, stepper.position(state.stepping),
-                          stepper.direction(state.stepping), false);
-
-      // Intersect the next surface and go
-      double navStep = nextIntersection.intersection.pathLength;
-      double overstepLimit = stepper.overstepLimit(state.stepping);
-      if (navStep < overstepLimit and nextIntersection.alternative) {
-        navStep = nextIntersection.alternative.pathLength;
+      // Establish & update the surface status
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, **state.navigation.nextSurfaceIter, false);
+      if (surfaceStatus == Intersection::Status::unreachable) {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Surface not reachable anymore, switching to next one in "
+                     "sequence";
+          return dstream.str();
+        });
+        // Move the sequence to the next surface
+        ++state.navigation.nextSurfaceIter;
+      } else {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Navigation stepSize released and updated to ";
+          dstream << stepper.outputStepSize(state.stepping);
+          return dstream.str();
+        });
       }
-
-      // Set the step size - this has to be outsourced to the Stepper
-      state.stepping.stepSize.update(navStep, Cstep::actor, true);
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Navigation stepSize released and updated to ";
-        dstream << state.stepping.stepSize.toString();
-        return dstream.str();
-      });
     } else {
       // Set the navigation break
       state.navigation.navigationBreak = true;

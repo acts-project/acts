@@ -65,5 +65,22 @@ Acts::Intersection::Status updateSurfaceStatus_t(
   }
   return Intersection::Status::unreachable;
 }
+
+/// Update the Step size - single component
+///
+/// It takes a (valid) object intersection from the compatibleX(...)
+/// calls in the geometry and updates the step size
+///
+/// @param state [in,out] The stepping state (thread-local cache)
+/// @param oIntersection [in] The object that yielded this step size
+/// @param release [in] A release flag
+template <typename stepper_t, typename object_intersection_t>
+void updateStepSize_t(typename stepper_t::State& state,
+                      const object_intersection_t& oIntersection,
+                      bool release = true) {
+  double stepSize = oIntersection.intersection.pathLength;
+  state.stepSize.update(stepSize, cstep::actor, release);
+}
+
 }  // namespace detail
 }  // namespace Acts
