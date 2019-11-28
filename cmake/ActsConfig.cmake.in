@@ -1,18 +1,9 @@
-# - Config file for the Acts package
+# CMake config for the Acts package
 #
-# It include the cmake targets of all defined components. Additionally, the 
-# following variables are set:
-# - ACTS_INCLUDE_DIR ... directory containing the Acts header files
-# - ACTS_LIBRARY_DIR ... directory containing the Acts libraries
-# - compiler flags used during the compilation of Acts:
-#  + ACTS_CXX_FLAGS
-#  + ACTS_CXX_FLAGS_DEBUG
-#  + ACTS_CXX_FLAGS_MINSIZEREL
-#  + ACTS_CXX_FLAGS_RELEASE
-#  + ACTS_CXX_FLAGS_RELWITHDEBINFO
-# - linker flags used for Acts:
-#  + ACTS_EXE_LINKER_FLAGS_DEBUG
-#  + ACTS_SHARED_LINKER_FLAGS_DEBUG
+# Only defines CMake targets for requested and available components.
+# No addititional variables are defined. All additional information, e.g.
+# include directories and dependencies, are defined as target-specific
+# properties and are automatically propagated when linking to the target.
 
 # - Init CMakePackageConfigHelpers
 @PACKAGE_INIT@
@@ -69,20 +60,3 @@ foreach (_comp ${Acts_FIND_COMPONENTS})
   # link to (libraries) or execute (programs)
   include ("${CMAKE_CURRENT_LIST_DIR}/Acts${_comp}Targets.cmake")
 endforeach ()
-
-# - Create relocatable paths
-# NOTE: Do not strictly need paths as all usage requirements are encoded in
-# the imported targets created later.
-set_and_check (ACTS_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
-set_and_check (ACTS_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
-set_and_check (Acts_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
-set_and_check (Acts_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
-
-# set Acts compilation and linker flags
-set (ACTS_CXX_FLAGS "@ACTS_CXX_FLAGS@")
-set (ACTS_CXX_FLAGS_DEBUG "@ACTS_CXX_FLAGS_DEBUG@")
-set (ACTS_CXX_FLAGS_MINSIZEREL "@ACTS_CXX_FLAGS_MINSIZEREL@")
-set (ACTS_CXX_FLAGS_RELEASE "@ACTS_CXX_FLAGS_RELEASE@")
-set (ACTS_CXX_FLAGS_RELWITHDEBINFO "@ACTS_CXX_FLAGS_RELWITHDEBINFO@")
-set (ACTS_EXE_LINKER_FLAGS_DEBUG "@ACTS_EXE_LINKER_FLAGS_DEBUG@")
-set (ACTS_SHARED_LINKER_FLAGS_DEBUG "@ACTS_SHARED_LINKER_FLAGS_DEBUG@")
