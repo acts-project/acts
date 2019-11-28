@@ -5,58 +5,46 @@
 # include directories and dependencies, are defined as target-specific
 # properties and are automatically propagated when linking to the target.
 
-# - Init CMakePackageConfigHelpers
 @PACKAGE_INIT@
 
-set(_supported_components @_supported_components@)
-set(_git_hash @_git_hash@)
-set(_git_hash_short @_git_hash_short@)
-set(_git_local_changes @_git_local_changes@)
+set(Acts_SUPPORTED_COMPONENTS @_supported_components@)
+set(Acts_VERSION_HASH "@_git_hash_short@ @_git_local_changes@")
 
-# copy version to all uppercase
-set(ACTS_VERSION "${Acts_VERSION}")
-
-# print information about found version
-if (NOT (${Acts_FIND_QUIETLY}))
-  
-  set(_git_msg "[${_git_hash_short}]")
-  if(${_git_local_changes} STREQUAL "DIRTY")
-          set(_git_msg "${_git_msg} - DIRTY")
-  endif()
-
-  message (STATUS "found Acts version ${Acts_VERSION} - ${_git_msg}")
-  message (STATUS "supported components are:")
-  foreach (_scomp ${_supported_components})
-    message (STATUS "   - ${_scomp}")
-  endforeach ()
+# print version and components information
+if(NOT Acts_FIND_QUIETLY)
+  message(STATUS "found Acts version ${Acts_VERSION} - ${Acts_VERSION_HASH}")
+  message(STATUS "supported components:")
+  foreach(_component ${_supported_components})
+    message(STATUS "  - ${_component}")
+  endforeach()
 endif()
 
-# check for all required components
-foreach (_comp ${Acts_FIND_COMPONENTS})
+# check that requested components are available
+foreach(_component ${Acts_FIND_COMPONENTS})
   # check if this component is supported
-  if (NOT ";${_supported_components};" MATCHES ";${_comp};")
-    # not supported, but required -> fail
-    if (${Acts_FIND_REQUIRED_${_comp}})
-      set (Acts_FOUND False)
-      message (FATAL_ERROR "required component \"${_comp}\" not found")
-    # not supported and optional -> skip
-    else ()
-      list (REMOVE_ITEM Acts_FIND_COMPONENTS ${_comp})
-      if (NOT (${Acts_FIND_QUIETLY}))
-      	message (STATUS "optional component \"${_comp}\" not found")
-      endif ()
-    endif ()
-  endif ()
-endforeach ()
+  if(NOT _component IN_LIST Acts_SUPPORTED_COMPONENTS)
+    if (${Acts_FIND_REQUIRED_${_component}})
+      # not supported, but required -> fail
+      set(Acts_FOUND False)
+      message(FATAL_ERROR "required component \"${_component}\" not found")
+    else()
+      # not supported and optional -> skip
+      list(REMOVE_ITEM Acts_FIND_COMPONENTS ${_component})
+      if(NOT Acts_FIND_QUIETLY)
+        message(STATUS "optional component \"${_component}\" not found")
+      endif()
+    endif()
+  endif()
+endforeach()
 
-if (NOT (${Acts_FIND_QUIETLY}))
-  message (STATUS "loading components:")
-endif ()
-foreach (_comp ${Acts_FIND_COMPONENTS})
-  if (NOT (${Acts_FIND_QUIETLY}))
-    message (STATUS "   - ${_comp}")
-  endif ()
-  # - Include the targets file to create the imported targets that a client can
-  # link to (libraries) or execute (programs)
-  include ("${CMAKE_CURRENT_LIST_DIR}/Acts${_comp}Targets.cmake")
-endforeach ()
+# load requested and available components
+if(NOT Acts_FIND_QUIETLY)
+  message(STATUS "loading components:")
+endif()
+foreach(_component ${Acts_FIND_COMPONENTS})
+  if(NOT Acts_FIND_QUIETLY)
+    message(STATUS "  - ${_component}")
+  endif()
+  # include the targets file to create the imported targets for the user
+  include(${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Targets.cmake)
+endforeach()
