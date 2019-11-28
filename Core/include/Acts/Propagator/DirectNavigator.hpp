@@ -36,7 +36,7 @@ class DirectNavigator {
  public:
   /// The sequentially crossed surfaces
   using SurfaceSequence = std::vector<const Surface*>;
-  using SurfaceIter = std::vector<const Surface*>::const_iterator;
+  using SurfaceIter = std::vector<const Surface*>::iterator;
 
   /// Defaulted Constructed
   DirectNavigator() = default;
@@ -76,8 +76,6 @@ class DirectNavigator {
         state.navigation.surfaceSequence = surfaceSequence;
         state.navigation.nextSurfaceIter =
             state.navigation.surfaceSequence.begin();
-        state.navigation.endSurfaceIter =
-            state.navigation.surfaceSequence.end();
         r.initialized = true;
       }
     }
@@ -100,8 +98,6 @@ class DirectNavigator {
 
     /// Iterator the the next surface
     SurfaceIter nextSurfaceIter = surfaceSequence.begin();
-    /// Iterator to the end for the end sequence trigger
-    SurfaceIter endSurfaceIter = surfaceSequence.end();
 
     /// Navigation state - external interface: the start surface
     const Surface* startSurface = nullptr;
@@ -130,8 +126,18 @@ class DirectNavigator {
 
     // Navigator status always resets the current surface
     state.navigation.currentSurface = nullptr;
+    // Output the position in the sequence
+    debugLog(state, [&] {
+      std::stringstream dstream;
+      dstream << std::distance(state.navigation.nextSurfaceIter,
+                               state.navigation.surfaceSequence.end());
+      dstream << " out of " << state.navigation.surfaceSequence.size();
+      dstream << " surfaces remain to try.";
+      return dstream.str();
+    });
     // Check if we are on surface
-    if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
+    if (state.navigation.nextSurfaceIter !=
+        state.navigation.surfaceSequence.end()) {
       // Establish the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, **state.navigation.nextSurfaceIter, false);
@@ -146,6 +152,13 @@ class DirectNavigator {
         });
         // Move the sequence to the next surface
         ++state.navigation.nextSurfaceIter;
+      } else if (surfaceStatus == Intersection::Status::reachable) {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Next surface reachable at distance  "
+                  << stepper.outputStepSize(state.stepping);
+          return dstream.str();
+        });
       }
     }
   }
@@ -164,7 +177,17 @@ class DirectNavigator {
 
     // Navigator target always resets the current surface
     state.navigation.currentSurface = nullptr;
-    if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
+    // Output the position in the sequence
+    debugLog(state, [&] {
+      std::stringstream dstream;
+      dstream << std::distance(state.navigation.nextSurfaceIter,
+                               state.navigation.surfaceSequence.end());
+      dstream << " out of " << state.navigation.surfaceSequence.size();
+      dstream << " surfaces remain to try.";
+      return dstream.str();
+    });
+    if (state.navigation.nextSurfaceIter !=
+        state.navigation.surfaceSequence.end()) {
       // Establish & update the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, **state.navigation.nextSurfaceIter, false);

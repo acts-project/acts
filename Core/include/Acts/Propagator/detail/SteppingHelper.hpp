@@ -46,6 +46,7 @@ Acts::Intersection::Status updateSurfaceStatus_t(
     // Path and overstep limit checking
     double pLimit = state.stepSize.value(cstep::aborter);
     double oLimit = stepper.overstepLimit(state);
+
     auto checkIntersection = [&](const Intersection& intersection) -> bool {
       double cLimit = intersection.pathLength;
       bool accept = (cLimit > oLimit and cLimit * cLimit < pLimit * pLimit);
@@ -54,7 +55,7 @@ Acts::Intersection::Status updateSurfaceStatus_t(
         // Update the step size
         state.stepSize.update(distance, cstep::actor, true);
       }
-      return true;
+      return accept;
     };
     // If either of the two intersections are viable return reachable
     if (checkIntersection(sIntersection.intersection) or

@@ -382,6 +382,9 @@ class Navigator {
       initializeTarget(state, stepper);
     }
 
+    // TODO - if there's no currentSurface set, then the target was estimated in
+    // the status() call already !!!
+
     // Try targeting the surfaces - then layers - then boundaries
     if (state.navigation.navigationStage <= Stage::surfaceTarget and
         targetSurfaces(state, stepper)) {
