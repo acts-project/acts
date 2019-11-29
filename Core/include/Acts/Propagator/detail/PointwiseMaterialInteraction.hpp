@@ -8,12 +8,7 @@
 
 #pragma once
 
-#include <cmath>
-#include <sstream>
-#include <utility>
-
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/Interactions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
@@ -88,16 +83,7 @@ namespace detail {
   	///
   	/// @param [in] multipleScattering Boolean to indiciate the application of multiple scattering
   	/// @param [in] energyLoss Boolean to indiciate the application of energy loss
-  	void evaluatePointwiseMaterialInteraction(bool multipleScattering, bool energyLoss)
-	{
-		if (energyLoss) {
-		  Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
-		}
-		// Compute contributions from interactions
-		if (performCovarianceTransport) {
-			covarianceContributions(multipleScattering, energyLoss);
-		}
-	}
+  	void evaluatePointwiseMaterialInteraction(bool multipleScattering, bool energyLoss);
   
   	/// @brief Update the state
 	///
@@ -126,38 +112,13 @@ namespace detail {
   ///
   	/// @param [in] multipleScattering Boolean to indiciate the application of multiple scattering
   	/// @param [in] energyLoss Boolean to indiciate the application of energy loss
-  void covarianceContributions(bool multipleScattering, bool energyLoss)
-  {
-	// Compute contributions from interactions
-	if(multipleScattering)
-	{
-	  // TODO use momentum before or after energy loss in backward mode?
-	  const auto theta0 =
-		  computeMultipleScatteringTheta0(slab, pdg, mass, qOverP, q);
-	  // sigmaPhi = theta0 / sin(theta)
-	  const auto sigmaPhi = theta0 * (dir.norm() / dir.z());
-	  variances.x() = sigmaPhi * sigmaPhi;
-	  // sigmaTheta = theta0
-	  variances.y() = theta0 * theta0;
-	}
-	// TODO just ionisation loss or full energy loss?
-	if(energyLoss) {
-	  const auto sigmaQOverP =
-		  computeEnergyLossLandauSigmaQOverP(slab, pdg, mass, qOverP, q);
-	  variances.z() = sigmaQOverP * sigmaQOverP;
-	}
-  }
+  void covarianceContributions(bool multipleScattering, bool energyLoss);
   
   /// @brief Convenience method for better readability
   ///
   /// @param [in, out] variance A diagonal entry of the covariance matrix
   /// @param [in] change The change that may be applied to it
-  void changeVariance(double& variance, const double change) const
-  {
-	  // Add/Subtract the change (depending on the direction)
-	  // Protect the variance against becoming negative
-	 variance = std::max(0., variance + std::copysign(change, nav));
-  }
+  void changeVariance(double& variance, const double change) const;
   };
 }  // namespace detail
 }  // end of namespace Acts
