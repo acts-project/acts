@@ -8,16 +8,12 @@
 
 #pragma once
 
-//~ #include <cmath>
 #include <sstream>
-//~ #include <utility>
 
-//~ #include "Acts/Material/ISurfaceMaterial.hpp"
-//~ #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 
 namespace Acts {
 
@@ -101,32 +97,31 @@ struct MaterialInteractor {
     if (not(surface and surface->surfaceMaterial())) {
       return;
     }
-	
+
     // Prepare relevant input particle properties
     detail::PointwiseMaterialInteraction d(surface, state, stepper);
-    
+
     // Determine the effective traversed material and its properties
     // Material exists but it's not real, i.e. vacuum; there is nothing to do
     if (not d.evaluateMaterialProperties(state)) {
       return;
     }
 
-	// Evaluate the material effects
-	d.evaluatePointwiseMaterialInteraction(multipleScattering, energyLoss);
-	
-	if(energyLoss)
-	{
-	  debugLog(state, [=] {
-		using namespace UnitLiterals;
-		std::stringstream dstream;
-		dstream << d.slab;
-		dstream << " pdg=" << d.pdg;
-		dstream << " mass=" << d.mass / 1_MeV << "MeV";
-		dstream << " momentum=" << d.momentum / 1_GeV << "GeV";
-		dstream << " energyloss=" << d.Eloss / 1_MeV << "MeV";
-		return dstream.str();
-	  });	
-	}
+    // Evaluate the material effects
+    d.evaluatePointwiseMaterialInteraction(multipleScattering, energyLoss);
+
+    if (energyLoss) {
+      debugLog(state, [=] {
+        using namespace UnitLiterals;
+        std::stringstream dstream;
+        dstream << d.slab;
+        dstream << " pdg=" << d.pdg;
+        dstream << " mass=" << d.mass / 1_MeV << "MeV";
+        dstream << " momentum=" << d.momentum / 1_GeV << "GeV";
+        dstream << " energyloss=" << d.Eloss / 1_MeV << "MeV";
+        return dstream.str();
+      });
+    }
 
     // To integrate process noise, we need to transport
     // the covariance to the current position in space
@@ -134,10 +129,10 @@ struct MaterialInteractor {
     if (d.performCovarianceTransport) {
       stepper.covarianceTransport(state.stepping, true);
     }
-	// Apply the material interactions
-	d.updateState(state, stepper);
-	// Record the result
-	recordResult(d, result);
+    // Apply the material interactions
+    d.updateState(state, stepper);
+    // Record the result
+    recordResult(d, result);
   }
 
   /// Material interaction has no pure observer.
@@ -145,14 +140,13 @@ struct MaterialInteractor {
   void operator()(propagator_state_t& /* unused */) const {}
 
  private:
-
-	/// @brief This function records the material effect
-	///
-	/// @param [in] d Data cache container
-	/// @param [in, out] result Result storage
-  void recordResult(const detail::PointwiseMaterialInteraction& d, result_type& result) const
-  {
-	result.materialInX0 += d.slab.thicknessInX0();
+  /// @brief This function records the material effect
+  ///
+  /// @param [in] d Data cache container
+  /// @param [in, out] result Result storage
+  void recordResult(const detail::PointwiseMaterialInteraction& d,
+                    result_type& result) const {
+    result.materialInX0 += d.slab.thicknessInX0();
     result.materialInL0 += d.slab.thicknessInL0();
     // Record the interaction if requested
     if (recordInteractions) {
@@ -170,7 +164,7 @@ struct MaterialInteractor {
       result.materialInteractions.push_back(std::move(mi));
     }
   }
-  
+
   /// The private propagation debug logging
   ///
   /// It needs to be fed by a lambda function that returns a string,
