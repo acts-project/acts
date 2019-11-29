@@ -53,7 +53,7 @@ class JsonGeometryConverter {
 
     /// The LayerRep is actually worth it to write out
     operator bool() const {
-      return (sensitives.size() != 0 or approaches.size() != 0 or
+      return (sensitives.empty() or approaches.empty() or
               representing != nullptr);
     }
   };
@@ -72,8 +72,7 @@ class JsonGeometryConverter {
 
     /// The VolumeRep is actually worth it to write out
     operator bool() const {
-      return (layers.size() != 0 or boundaries.size() != 0 or
-              material != nullptr);
+      return (layers.empty() or boundaries.empty() or material != nullptr);
     }
   };
 

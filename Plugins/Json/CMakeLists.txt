@@ -7,11 +7,11 @@ add_library(ActsJsonPlugin SHARED ${src_files})
 set(_json_dep_header_sha256_ref d2eeb25d2e95bffeb08ebb7704cdffd2e8fca7113eba9a0b38d60a5c391ea09a)
 
 # Check if hash of file on disk matches the stated hash of the release
-file(READ "include/Acts/Plugins/Json/lib/json.hpp" _json_dep_header)
+file(READ "include/Acts/Plugins/Json/lib/json.h" _json_dep_header)
 string(SHA256 _json_dep_header_sha256 "${_json_dep_header}")
 
 if (NOT ${_json_dep_header_sha256} STREQUAL ${_json_dep_header_sha256_ref})
-  message(FATAL_ERROR "json.hpp hash does not match reference!")
+  message(FATAL_ERROR "json.h hash does not match reference!")
 endif()
 
 target_include_directories(ActsJsonPlugin SYSTEM INTERFACE ${Boost_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
@@ -28,4 +28,4 @@ install(
   DIRECTORY include/Acts
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-acts_add_targets_to_cdash_project(PROJECT ActsJsonPlugin TARGETS ActsJsonPlugin)  
+acts_add_targets_to_cdash_project(PROJECT ActsJsonPlugin TARGETS ActsJsonPlugin)

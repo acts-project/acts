@@ -294,7 +294,7 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
   }
 
   // We have protoMaterial
-  if (mpMatrix.size() == 0) {
+  if (mpMatrix.empty()) {
     sMaterial = new Acts::ProtoSurfaceMaterial(bUtility);
   } else if (bUtility.bins() == 1) {
     sMaterial = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0]);
@@ -318,7 +318,7 @@ void Acts::JsonGeometryConverter::convertToRep(
   VolumeRep volRep;
   volRep.volumeName = tVolume.volumeName();
   // there are confined volumes
-  if (tVolume.confinedVolumes()) {
+  if (tVolume.confinedVolumes() != nullptr) {
     // get through the volumes
     auto& volumes = tVolume.confinedVolumes()->arrayObjects();
     // loop over the volumes
@@ -336,7 +336,7 @@ void Acts::JsonGeometryConverter::convertToRep(
     volRep.material = tVolume.volumeMaterial();
   }
   // there are confied layers
-  if (tVolume.confinedLayers()) {
+  if (tVolume.confinedLayers() != nullptr) {
     // get the layers
     auto& layers = tVolume.confinedLayers()->arrayObjects();
     // loop of the volumes
@@ -354,7 +354,7 @@ void Acts::JsonGeometryConverter::convertToRep(
   for (auto& bsurf : tVolume.boundarySurfaces()) {
     // the surface representation
     auto& bssfRep = bsurf->surfaceRepresentation();
-    if (bssfRep.surfaceMaterial()) {
+    if (bssfRep.surfaceMaterial() != nullptr) {
       Acts::GeometryID boundaryID = bssfRep.geoID();
       geo_id_value bid = boundaryID.boundary();
       // Ignore if the volumeID is not correct (i.e. shared boundary)
@@ -373,13 +373,13 @@ void Acts::JsonGeometryConverter::convertToRep(
 }
 
 Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
-    const Acts::Layer& layer) {
+    const Acts::Layer& tLayer) {
   LayerRep layRep;
   // fill layer ID information
-  layRep.layerID = layer.geoID();
-  if (m_cfg.processSensitives and layer.surfaceArray() != nullptr) {
-    for (auto& ssf : layer.surfaceArray()->surfaces()) {
-      if (ssf != nullptr && ssf->surfaceMaterial()) {
+  layRep.layerID = tLayer.geoID();
+  if (m_cfg.processSensitives and tLayer.surfaceArray() != nullptr) {
+    for (auto& ssf : tLayer.surfaceArray()->surfaces()) {
+      if (ssf != nullptr && ssf->surfaceMaterial() != nullptr) {
         Acts::GeometryID sensitiveID = ssf->geoID();
         geo_id_value sid = sensitiveID.sensitive();
         layRep.sensitives.insert({sid, ssf->surfaceMaterial()});
@@ -387,12 +387,12 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
     }
   }
   // the representing
-  if (layer.surfaceRepresentation().surfaceMaterial() != nullptr) {
-    layRep.representing = layer.surfaceRepresentation().surfaceMaterial();
+  if (tLayer.surfaceRepresentation().surfaceMaterial() != nullptr) {
+    layRep.representing = tLayer.surfaceRepresentation().surfaceMaterial();
   }
   // the approach
-  if (layer.approachDescriptor() != nullptr) {
-    for (auto& asf : layer.approachDescriptor()->containedSurfaces()) {
+  if (tLayer.approachDescriptor() != nullptr) {
+    for (auto& asf : tLayer.approachDescriptor()->containedSurfaces()) {
       // get the surface and check for material
       if (asf->surfaceMaterial() != nullptr) {
         Acts::GeometryID approachID = asf->geoID();
@@ -530,7 +530,8 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
   Acts::BinningValue bval = Acts::BinningValue(indx);
   Acts::BinningOption bopt = bin[1] == "open" ? Acts::open : Acts::closed;
   unsigned int bins = bin[2];
-  double min = 0, max = 0;
+  float min = 0;
+  float max = 0;
   if (bin[3].size() == 2) {
     min = bin[3][0];
     max = bin[3][1];
