@@ -5,19 +5,13 @@ cmake_minimum_required(VERSION 3.9)
 # target_include_directories call, resulting in the desired -isystem flag.
 unset(ENV{CPATH})
 
-# read version number from file
-file(READ version_number _acts_version)
-string(STRIP ${_acts_version} _acts_version)
-
-project(Acts VERSION ${_acts_version} LANGUAGES CXX)
-
+# must be set before project(...) call; version module is needed before
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# get git commit hash
-include(GetGitRevisionDescription)
-get_git_head_revision(_git_refspec _git_hash)
-git_local_changes(_git_local_changes)
-string(SUBSTRING "${_git_hash}" 0 8 _git_hash_short)
+# determine project version; sets _acts_version and _acts_commit_hash
+include(ActsRetrieveVersion)
+
+project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # build options
 
