@@ -18,14 +18,9 @@
 
 namespace Acts {
 namespace detail {
-	struct Data
-	{
-		template<typename propagator_state_t, typename stepper_t>
-		Data(const Surface* sSurface, const propagator_state_t& state, const stepper_t& stepper) 
-			: surface(sSurface), pos(stepper.position(state.stepping)), time(stepper.time(state.stepping)), dir(stepper.direction(state.stepping)), 
-			momentum(stepper.momentum(state.stepping)), q(stepper.charge(state.stepping)), qOverP(q / momentum), mass(state.options.mass), pdg(state.options.absPdgCode), 
-			performCovarianceTransport(state.stepping.covTransport), nav(state.stepping.navDir) {}
-    		
+	/// @brief Struct to handle pointwise material interaction
+	struct PointwiseMaterialInteraction
+	{		
 		const Surface* surface;
 		const Vector3D pos;
 		const double time;
@@ -42,83 +37,127 @@ namespace detail {
 		double pathCorrection;
 		Vector3D variances;
 		double Eloss;
-		
 		double nextP;
-	};
-	
-  void covarianceContributions(Data& d, bool multipleScattering, bool energyLoss)
+
+	/// @brief Contructor
+	///
+	/// @tparam propagator_state_t Type of the propagator state
+	/// @tparam stepper_t Type of the stepper
+	///
+	/// @param [in] sSurface The current surface
+	/// @param [in] state State of the propagation
+	/// @param [in] stepper Stepper in use
+	template<typename propagator_state_t, typename stepper_t>
+		PointwiseMaterialInteraction(const Surface* sSurface, const propagator_state_t& state, const stepper_t& stepper) 
+			: surface(sSurface), pos(stepper.position(state.stepping)), time(stepper.time(state.stepping)), dir(stepper.direction(state.stepping)), 
+			momentum(stepper.momentum(state.stepping)), q(stepper.charge(state.stepping)), qOverP(q / momentum), mass(state.options.mass), pdg(state.options.absPdgCode), 
+			performCovarianceTransport(state.stepping.covTransport), nav(state.stepping.navDir) {}
+    
+	/// @brief This function evaluates the material properties to interact with
+	///
+	/// @tparam propagator_state_t Type of the propagator state
+	///
+	/// @param [in] state State of the propagation
+	/// @param [in] updateStage The stage of the material update
+	///
+	/// @return Boolean statement whether the material is valid
+  template<typename propagator_state_t>
+  bool evaluateMaterialProperties(const propagator_state_t& state,
+      MaterialUpdateStage updateStage = fullUpdate) {  
+    // We are at the start surface
+    if (surface == state.navigation.startSurface) {
+      updateStage = postUpdate;
+      // Or is it the target surface ?
+    } else if (surface == state.navigation.targetSurface) {
+      updateStage = preUpdate;
+    }
+
+	// Retrieve the material properties
+	slab = state.navigation.currentSurface->surfaceMaterial()->materialProperties(pos, nav, updateStage);
+
+    // Correct the material properties for non-zero incidence
+    pathCorrection =
+        surface->pathCorrection(state.geoContext, pos, dir);
+    slab.scaleThickness(pathCorrection);
+
+    // Get the surface material & properties from them
+    return slab;
+  }
+  	
+  	/// @brief This function evaluate the material effects
+  	///
+  	/// @param [in] multipleScattering Boolean to indiciate the application of multiple scattering
+  	/// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  	void evaluatePointwiseMaterialInteraction(bool multipleScattering, bool energyLoss)
+	{
+		if (energyLoss) {
+		  Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
+		}
+		// Compute contributions from interactions
+		if (performCovarianceTransport) {
+			covarianceContributions(multipleScattering, energyLoss);
+		}
+	}
+  
+  	/// @brief Update the state
+	///
+	/// @tparam propagator_state_t Type of the propagator state
+	/// @tparam stepper_t Type of the stepper
+	///
+	/// @param [in] state State of the propagation
+	/// @param [in] stepper Stepper in use
+  template<typename propagator_state_t, typename stepper_t>
+  void updateState(propagator_state_t& state, const stepper_t& stepper)
+  {
+	// in forward(backward) propagation, energy decreases(increases) and variances increase(decrease)
+    const auto nextE = std::sqrt(mass * mass + momentum * momentum) - std::copysign(Eloss, nav);
+    // put particle at rest if energy loss is too large
+	nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
+	// update track parameters and covariance
+	stepper.update(state.stepping, pos, dir, nextP, time);
+	changeVariance(state.stepping.cov(ePHI, ePHI), variances.x());
+	changeVariance(state.stepping.cov(eTHETA, eTHETA), variances.y());
+	changeVariance(state.stepping.cov(eQOP, eQOP), variances.z());
+  }
+  
+  private:
+  
+  /// @brief Evaluates the contributions to the covariance matrix
+  ///
+  	/// @param [in] multipleScattering Boolean to indiciate the application of multiple scattering
+  	/// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  void covarianceContributions(bool multipleScattering, bool energyLoss)
   {
 	// Compute contributions from interactions
 	if(multipleScattering)
 	{
 	  // TODO use momentum before or after energy loss in backward mode?
 	  const auto theta0 =
-		  computeMultipleScatteringTheta0(d.slab, d.pdg, d.mass, d.qOverP, d.q);
+		  computeMultipleScatteringTheta0(slab, pdg, mass, qOverP, q);
 	  // sigmaPhi = theta0 / sin(theta)
-	  const auto sigmaPhi = theta0 * (d.dir.norm() / d.dir.z());
-	  d.variances.x() = sigmaPhi * sigmaPhi;
+	  const auto sigmaPhi = theta0 * (dir.norm() / dir.z());
+	  variances.x() = sigmaPhi * sigmaPhi;
 	  // sigmaTheta = theta0
-	  d.variances.y() = theta0 * theta0;
+	  variances.y() = theta0 * theta0;
 	}
 	// TODO just ionisation loss or full energy loss?
 	if(energyLoss) {
 	  const auto sigmaQOverP =
-		  computeEnergyLossLandauSigmaQOverP(d.slab, d.pdg, d.mass, d.qOverP, d.q);
-	  d.variances.z() = sigmaQOverP * sigmaQOverP;
+		  computeEnergyLossLandauSigmaQOverP(slab, pdg, mass, qOverP, q);
+	  variances.z() = sigmaQOverP * sigmaQOverP;
 	}
-  }
- 
-	void evaluatePointwiseMaterialInteraction(Data& d, bool multipleScattering, bool energyLoss)
-	{
-		if (energyLoss) {
-		  d.Eloss = computeEnergyLossBethe(d.slab, d.pdg, d.mass, d.qOverP, d.q);
-		}
-		// Compute contributions from interactions
-		if (d.performCovarianceTransport) {
-			covarianceContributions(d, multipleScattering, energyLoss);
-		}
-	}
-	
-  template<typename propagator_state_t>
-  bool evaluateMaterialProperties(const propagator_state_t& state, Data& d,
-      MaterialUpdateStage updateStage = fullUpdate) {  
-    // We are at the start surface
-    if (d.surface == state.navigation.startSurface) {
-      updateStage = postUpdate;
-      // Or is it the target surface ?
-    } else if (d.surface == state.navigation.targetSurface) {
-      updateStage = preUpdate;
-    }
-
-	// Retrieve the material properties
-	d.slab = state.navigation.currentSurface->surfaceMaterial()->materialProperties(d.pos, d.nav, updateStage);
-
-    // Correct the material properties for non-zero incidence
-    d.pathCorrection =
-        d.surface->pathCorrection(state.geoContext, d.pos, d.dir);
-    d.slab.scaleThickness(d.pathCorrection);
-
-    // Get the surface material & properties from them
-    return d.slab;
-  }
-
-  void changeVariance(double& variance, const double change, const NavigationDirection nav)
-  {
-	 variance = std::max(0., variance + std::copysign(change, nav));
   }
   
-  template<typename propagator_state_t, typename stepper_t>
-  void updateState(propagator_state_t& state, const stepper_t& stepper, Data& d)
+  /// @brief Convenience method for better readability
+  ///
+  /// @param [in, out] variance A diagonal entry of the covariance matrix
+  /// @param [in] change The change that may be applied to it
+  void changeVariance(double& variance, const double change) const
   {
-	// in forward(backward) propagation, energy decreases(increases) and variances increase(decrease)
-    const auto nextE = std::sqrt(d.mass * d.mass + d.momentum * d.momentum) - std::copysign(d.Eloss, d.nav);
-    // put particle at rest if energy loss is too large
-	d.nextP = (d.mass < nextE) ? std::sqrt(nextE * nextE - d.mass * d.mass) : 0;
-	// update track parameters and covariance
-	stepper.update(state.stepping, d.pos, d.dir, d.nextP, d.time);
-	changeVariance(state.stepping.cov(ePHI, ePHI), d.variances.x(), d.nav);
-	changeVariance(state.stepping.cov(eTHETA, eTHETA), d.variances.y(), d.nav);
-	changeVariance(state.stepping.cov(eQOP, eQOP), d.variances.z(), d.nav);
+	  // Add/Subtract the change (depending on the direction)
+	  // Protect the variance against becoming negative
+	 variance = std::max(0., variance + std::copysign(change, nav));
   }
+  };
 }  // namespace detail
 }  // end of namespace Acts

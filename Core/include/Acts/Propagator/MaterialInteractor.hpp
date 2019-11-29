@@ -103,15 +103,16 @@ struct MaterialInteractor {
     }
 	
     // Prepare relevant input particle properties
-    detail::Data d(surface, state, stepper);
+    detail::PointwiseMaterialInteraction d(surface, state, stepper);
     
     // Determine the effective traversed material and its properties
     // Material exists but it's not real, i.e. vacuum; there is nothing to do
-    if (not detail::evaluateMaterialProperties(state, d)) {
+    if (not d.evaluateMaterialProperties(state)) {
       return;
     }
 
-	detail::evaluatePointwiseMaterialInteraction(d, multipleScattering, energyLoss);
+	// Evaluate the material effects
+	d.evaluatePointwiseMaterialInteraction(multipleScattering, energyLoss);
 	
 	if(energyLoss)
 	{
@@ -133,9 +134,9 @@ struct MaterialInteractor {
     if (d.performCovarianceTransport) {
       stepper.covarianceTransport(state.stepping, true);
     }
-
-	detail::updateState(state, stepper, d);
-
+	// Apply the material interactions
+	d.updateState(state, stepper);
+	// Record the result
 	recordResult(d, result);
   }
 
@@ -145,7 +146,11 @@ struct MaterialInteractor {
 
  private:
 
-  void recordResult(const detail::Data& d, result_type& result) const
+	/// @brief This function records the material effect
+	///
+	/// @param [in] d Data cache container
+	/// @param [in, out] result Result storage
+  void recordResult(const detail::PointwiseMaterialInteraction& d, result_type& result) const
   {
 	result.materialInX0 += d.slab.thicknessInX0();
     result.materialInL0 += d.slab.thicknessInL0();
