@@ -17,6 +17,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 
 namespace Acts {
 
@@ -96,140 +97,46 @@ struct MaterialInteractor {
       return;
     }
     // We only have material interactions if there is potential material
-    const auto* surface = state.navigation.currentSurface;
+    const Surface* surface = state.navigation.currentSurface;
     if (not(surface and surface->surfaceMaterial())) {
       return;
     }
-
-    // Determine how the update should be handled
-    MaterialUpdateStage updateStage = MaterialUpdateStage::fullUpdate;
-    if (surface == state.navigation.startSurface) {
-      // We are at the start surface
-      debugLog(state, [&] {
-        return std::string("Update on start surface: post-update mode.");
-      });
-      updateStage = MaterialUpdateStage::postUpdate;
-      // Or is it the target surface ?
-    } else if (surface == state.navigation.targetSurface) {
-      debugLog(state, [&] {
-        return std::string("Update on target surface: pre-update mode");
-      });
-      updateStage = MaterialUpdateStage::preUpdate;
-    } else {
-      debugLog(state, [&] {
-        return std::string("Update while pass through: full mode.");
-      });
-    }
-
+	
     // Prepare relevant input particle properties
-    const auto pos = stepper.position(state.stepping);
-    const auto time = stepper.time(state.stepping);
-    const auto dir = stepper.direction(state.stepping);
-    const auto momentum = stepper.momentum(state.stepping);
-    const auto q = stepper.charge(state.stepping);
-    const auto qOverP = q / momentum;
-    const auto mass = state.options.mass;
-    const auto pdg = state.options.absPdgCode;
-    const auto nav = state.stepping.navDir;
-    const auto performCovarianceTransport = state.stepping.covTransport;
-
+    detail::Data d(surface, state, stepper);
+    
     // Determine the effective traversed material and its properties
-    MaterialProperties slab =
-        surface->surfaceMaterial()->materialProperties(pos, nav, updateStage);
     // Material exists but it's not real, i.e. vacuum; there is nothing to do
-    if (not slab) {
+    if (not detail::evaluateMaterialProperties(state, d)) {
       return;
     }
 
-    // Correct the material properties for non-zero incidence
-    const auto pathCorrection =
-        surface->pathCorrection(state.geoContext, pos, dir);
-    slab.scaleThickness(pathCorrection);
-
-    // Compute contributions from interactions
-    double varPhi = 0.0;
-    double varTheta = 0.0;
-    double varQOverP = 0.0;
-    double Eloss = 0.0;
-    if (multipleScattering and performCovarianceTransport) {
-      // TODO use momentum before or after energy loss in backward mode?
-      const auto theta0 =
-          computeMultipleScatteringTheta0(slab, pdg, mass, qOverP, q);
-      // sigmaTheta = theta0
-      varTheta = theta0 * theta0;
-      // sigmaPhi = theta0 / sin(theta)
-      const auto sigmaPhi = theta0 * (dir.norm() / dir.z());
-      varPhi = sigmaPhi * sigmaPhi;
-    }
-    // TODO just ionisation loss or full energy loss?
-    if (energyLoss and performCovarianceTransport) {
-      const auto sigmaQOverP =
-          computeEnergyLossLandauSigmaQOverP(slab, pdg, mass, qOverP, q);
-      varQOverP = sigmaQOverP * sigmaQOverP;
-    }
-    if (energyLoss) {
-      Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
-      debugLog(state, [=] {
-        using namespace UnitLiterals;
-        std::stringstream dstream;
-        dstream << slab;
-        dstream << " pdg=" << pdg;
-        dstream << " mass=" << mass / 1_MeV << "MeV";
-        dstream << " momentum=" << momentum / 1_GeV << "GeV";
-        dstream << " energyloss=" << Eloss / 1_MeV << "MeV";
-        return dstream.str();
-      });
-    }
+	detail::evaluatePointwiseMaterialInteraction(d, multipleScattering, energyLoss);
+	
+	if(energyLoss)
+	{
+	  debugLog(state, [=] {
+		using namespace UnitLiterals;
+		std::stringstream dstream;
+		dstream << d.slab;
+		dstream << " pdg=" << d.pdg;
+		dstream << " mass=" << d.mass / 1_MeV << "MeV";
+		dstream << " momentum=" << d.momentum / 1_GeV << "GeV";
+		dstream << " energyloss=" << d.Eloss / 1_MeV << "MeV";
+		return dstream.str();
+	  });	
+	}
 
     // To integrate process noise, we need to transport
     // the covariance to the current position in space
     // the 'true' indicates re-initializaiton of the further transport
-    if (performCovarianceTransport) {
+    if (d.performCovarianceTransport) {
       stepper.covarianceTransport(state.stepping, true);
     }
 
-    // update track parameters and covariance
-    if (nav == NavigationDirection::forward) {
-      // in forward propagation, energy decreases and variances increase
-      const auto nextE = std::sqrt(mass * mass + momentum * momentum) - Eloss;
-      // put particle at rest if energy loss is too large
-      const auto nextP =
-          (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
-      stepper.update(state.stepping, pos, dir, nextP, time);
-      state.stepping.cov(ePHI, ePHI) += varPhi;
-      state.stepping.cov(eTHETA, eTHETA) += varTheta;
-      state.stepping.cov(eQOP, eQOP) += varQOverP;
-    } else {
-      // in backward propagation, energy increases and variances decreases
-      const auto nextE = std::sqrt(mass * mass + momentum * momentum) + Eloss;
-      const auto nextP = std::sqrt(nextE * nextE - mass * mass);
-      stepper.update(state.stepping, pos, dir, nextP, time);
-      // ensure variances stay positive even after noise removals
-      const auto varPhiUp = state.stepping.cov(ePHI, ePHI) - varPhi;
-      const auto varThetaUp = state.stepping.cov(eTHETA, eTHETA) - varTheta;
-      const auto varQOverPUp = state.stepping.cov(eQOP, eQOP) - varQOverP;
-      state.stepping.cov(ePHI, ePHI) = std::max(0.0, varPhiUp);
-      state.stepping.cov(eTHETA, eTHETA) = std::max(0.0, varThetaUp);
-      state.stepping.cov(eQOP, eQOP) = std::max(0.0, varQOverPUp);
-    }
+	detail::updateState(state, stepper, d);
 
-    result.materialInX0 += slab.thicknessInX0();
-    result.materialInL0 += slab.thicknessInL0();
-    // Record the interaction if requested
-    if (recordInteractions) {
-      MaterialInteraction mi;
-      mi.position = pos;
-      mi.time = time;
-      mi.direction = dir;
-      mi.deltaP = stepper.momentum(state.stepping) - momentum;
-      mi.sigmaPhi2 = varPhi;
-      mi.sigmaTheta2 = varTheta;
-      mi.sigmaQoP2 = varQOverP;
-      mi.surface = surface;
-      mi.pathCorrection = pathCorrection;
-      mi.materialProperties = slab;
-      result.materialInteractions.push_back(std::move(mi));
-    }
+	recordResult(d, result);
   }
 
   /// Material interaction has no pure observer.
@@ -237,6 +144,28 @@ struct MaterialInteractor {
   void operator()(propagator_state_t& /* unused */) const {}
 
  private:
+
+  void recordResult(const detail::Data& d, result_type& result) const
+  {
+	result.materialInX0 += d.slab.thicknessInX0();
+    result.materialInL0 += d.slab.thicknessInL0();
+    // Record the interaction if requested
+    if (recordInteractions) {
+      MaterialInteraction mi;
+      mi.position = d.pos;
+      mi.time = d.time;
+      mi.direction = d.dir;
+      mi.deltaP = d.nextP - d.momentum;
+      mi.sigmaPhi2 = d.variances.x();
+      mi.sigmaTheta2 = d.variances.y();
+      mi.sigmaQoP2 = d.variances.z();
+      mi.surface = d.surface;
+      mi.pathCorrection = d.pathCorrection;
+      mi.materialProperties = d.slab;
+      result.materialInteractions.push_back(std::move(mi));
+    }
+  }
+  
   /// The private propagation debug logging
   ///
   /// It needs to be fed by a lambda function that returns a string,
