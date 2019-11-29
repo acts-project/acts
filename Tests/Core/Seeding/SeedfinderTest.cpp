@@ -54,7 +54,8 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        SpacePoint* sp = new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
+        SpacePoint* sp =
+            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }

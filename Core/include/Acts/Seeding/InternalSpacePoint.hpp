@@ -24,7 +24,8 @@ class InternalSpacePoint {
  public:
   InternalSpacePoint() = delete;
   InternalSpacePoint(const SpacePoint& sp, const Acts::Vector3D& globalPos,
-                     const Acts::Vector2D& offsetXY, const Acts::Vector2D& cov);
+                     const Acts::Vector2D& offsetXY,
+                     const Acts::Vector2D& variance);
 
   InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
@@ -46,8 +47,8 @@ class InternalSpacePoint {
   float m_y;               // y-coordinate in beam system coordinates
   float m_z;               // z-coordinate in beam system coordinetes
   float m_r;               // radius       in beam system coordinates
-  float m_varianceR;            //
-  float m_varianceZ;            //
+  float m_varianceR;       //
+  float m_varianceZ;       //
   const SpacePoint& m_sp;  // external space point
 };
 
