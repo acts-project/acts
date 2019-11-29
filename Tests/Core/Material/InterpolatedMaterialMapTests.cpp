@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
     grid.at(i) = mat;
   }
   MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
-  InterpolatedMaterialMap ipolMatMap(matMap);
+  InterpolatedMaterialMap ipolMatMap(std::move(matMap));
 
   // Test the material getter
   CHECK_CLOSE_REL(ipolMatMap.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
@@ -150,16 +150,6 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   cache.initialized = true;
   CHECK_CLOSE_REL(ipolMatMap.getMaterial(Vector3D(0.5, 0.5, 0.5), cache),
                   Material(mat), 1e-4);
-
-  // Test the material map getter
-  auto mapper = ipolMatMap.getMapper();
-  BOOST_CHECK_EQUAL(mapper.getMaterial({0.5, 0.5, 0.5}),
-                    matMap.getMaterial({0.5, 0.5, 0.5}));
-  for (unsigned int i = 0; i < dim; i++) {
-    BOOST_CHECK_EQUAL(mapper.getNBins()[i], matMap.getNBins()[i]);
-    BOOST_CHECK_EQUAL(mapper.getMin()[i], matMap.getMin()[i]);
-    BOOST_CHECK_EQUAL(mapper.getMax()[i], matMap.getMax()[i]);
-  }
 
   // Test the inside check
   BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(1., 1., 1.)), true);
