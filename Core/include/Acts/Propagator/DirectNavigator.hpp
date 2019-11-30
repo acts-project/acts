@@ -152,6 +152,16 @@ class DirectNavigator {
         });
         // Move the sequence to the next surface
         ++state.navigation.nextSurfaceIter;
+        if (state.navigation.nextSurfaceIter !=
+            state.navigation.surfaceSequence.end()) {
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Next surface candidate is  "
+                    << (*state.navigation.nextSurfaceIter)->geoID();
+            return dstream.str();
+          });
+          stepper.releaseStepSize(state.stepping);
+        }
       } else if (surfaceStatus == Intersection::Status::reachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
@@ -203,7 +213,7 @@ class DirectNavigator {
       } else {
         debugLog(state, [&] {
           std::stringstream dstream;
-          dstream << "Navigation stepSize released and updated to ";
+          dstream << "Navigation stepSize set to ";
           dstream << stepper.outputStepSize(state.stepping);
           return dstream.str();
         });
@@ -248,6 +258,7 @@ class DirectNavigator {
                 << " | ";
         dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
         state.options.debugString += dstream.str();
+        std::cout << dstream.str();
       }
     }
   }

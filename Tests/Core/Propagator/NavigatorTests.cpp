@@ -54,6 +54,8 @@ struct PropagatorState {
         std::tuple<CurvilinearParameters, Jacobian, double>;
     using BField = int;
 
+    using Cstep = detail::ConstrainedStep;
+
     template <typename, typename>
     using return_parameter_type = void;
 
@@ -83,6 +85,12 @@ struct PropagatorState {
 
       // adaptive sep size of the runge-kutta integration
       Cstep stepSize = Cstep(100_cm);
+
+      // Previous step size for overstep estimation (ignored here)
+      double previousStepSize = 0.;
+
+      /// The tolerance for the stepping
+      double tolerance = s_onSurfaceTolerance;
 
       GeometryContext geoContext = GeometryContext();
     };
@@ -119,6 +127,10 @@ struct PropagatorState {
                         const object_intersection_t& oIntersection,
                         bool release = true) const {
       detail::updateStepSize_t<Stepper>(state, oIntersection, release);
+    }
+
+    void setStepSize(State& state, double stepSize) const {
+      state.stepSize.update(stepSize, Cstep::actor, true);
     }
 
     void releaseStepSize(State& state) const {

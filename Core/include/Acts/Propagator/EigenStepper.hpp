@@ -68,13 +68,15 @@ class EigenStepper {
     /// @param [in] par The track parameters at start
     /// @param [in] ndir The navigation direciton w.r.t momentum
     /// @param [in] ssize is the maximum step size
+    /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     template <typename parameters_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
                    const parameters_t& par, NavigationDirection ndir = forward,
-                   double ssize = std::numeric_limits<double>::max())
+                   double ssize = std::numeric_limits<double>::max(),
+                   double stolerance = s_onSurfaceTolerance)
         : pos(par.position()),
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
@@ -82,6 +84,7 @@ class EigenStepper {
           t0(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
+          tolerance(stolerance),
           fieldCache(mctx),
           geoContext(gctx) {
       // remember the start parameters
@@ -143,11 +146,17 @@ class EigenStepper {
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
-    /// accummulated path length state
+    /// Aaccummulated path length state
     double pathAccumulated = 0.;
 
-    /// adaptive step size of the runge-kutta integration
+    /// Adaptive step size of the runge-kutta integration
     cstep stepSize{std::numeric_limits<double>::max()};
+
+    /// Last performed step (for overstep limit calulcation)
+    double previousStepSize = 0.;
+
+    /// The tolerance for the stepping
+    double tolerance = s_onSurfaceTolerance;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
@@ -239,6 +248,15 @@ class EigenStepper {
     detail::updateStepSize_t<EigenStepper>(state, oIntersection, release);
   }
 
+  /// Set Step size - explicitely with a double
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param stepSize [in] The step size value
+  void setStepSize(State& state, double stepSize) const {
+    state.previousStepSize = state.stepSize;
+    state.stepSize.update(stepSize, cstep::actor, true);
+  }
+
   /// Release the Step size
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
@@ -256,7 +274,10 @@ class EigenStepper {
   /// Overstep limit
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
+  double overstepLimit(const State& /*state*/) const {
+    // A dynamic overstep limit could sit here
+    return -m_overstepLimit;
+  }
 
   /// Create and return the bound state at the current position
   ///
@@ -351,7 +372,7 @@ class EigenStepper {
   BField m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -50_um;
+  double m_overstepLimit = 100_um;
 };
 }  // namespace Acts
 

@@ -241,7 +241,7 @@ class Propagator final {
     State(const parameters_t& start, const propagator_options_t& topts)
         : options(topts),
           stepping(topts.geoContext, topts.magFieldContext, start,
-                   topts.direction, topts.maxStepSize),
+                   topts.direction, topts.maxStepSize, topts.tolerance),
           geoContext(topts.geoContext) {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();

@@ -52,11 +52,13 @@ class AtlasStepper {
     /// @param[in] pars Input parameters
     /// @param[in] ndir The navigation direction w.r.t. parameters
     /// @param[in] ssize the steps size limitation
+    /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
     State(std::reference_wrapper<const GeometryContext> gctx,
           std::reference_wrapper<const MagneticFieldContext> mctx,
           const Parameters& pars, NavigationDirection ndir = forward,
-          double ssize = std::numeric_limits<double>::max())
+          double ssize = std::numeric_limits<double>::max(),
+          double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
           useJacobian(false),
           step(0.),
@@ -68,6 +70,7 @@ class AtlasStepper {
           covariance(nullptr),
           t0(pars.time()),
           stepSize(ndir * std::abs(ssize)),
+          tolerance(stolerance),
           fieldCache(mctx),
           geoContext(gctx) {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
@@ -272,8 +275,14 @@ class AtlasStepper {
     // Starting time
     const double t0;
 
-    // adaptive step size of the runge-kutta integration
+    // Adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
+
+    // Previous step size for overstep estimation
+    double previousStepSize = 0.;
+
+    /// The tolerance for the stepping
+    double tolerance = s_onSurfaceTolerance;
 
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
@@ -357,6 +366,15 @@ class AtlasStepper {
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       bool release = true) const {
     detail::updateStepSize_t<AtlasStepper>(state, oIntersection, release);
+  }
+
+  /// Set Step size - explicitely with a double
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param stepSize [in] The step size value
+  void setStepSize(State& state, double stepSize) const {
+    state.previousStepSize = state.stepSize;
+    state.stepSize.update(stepSize, cstep::actor, true);
   }
 
   /// Release the Step size

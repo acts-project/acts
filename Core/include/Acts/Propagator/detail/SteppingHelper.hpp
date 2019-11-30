@@ -46,14 +46,11 @@ Acts::Intersection::Status updateSurfaceStatus_t(
     // Path and overstep limit checking
     double pLimit = state.stepSize.value(cstep::aborter);
     double oLimit = stepper.overstepLimit(state);
-
     auto checkIntersection = [&](const Intersection& intersection) -> bool {
       double cLimit = intersection.pathLength;
       bool accept = (cLimit > oLimit and cLimit * cLimit < pLimit * pLimit);
       if (accept) {
-        double distance = state.navDir * sIntersection.intersection.pathLength;
-        // Update the step size
-        state.stepSize.update(distance, cstep::actor, true);
+        stepper.setStepSize(state, state.navDir * cLimit);
       }
       return accept;
     };

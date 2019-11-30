@@ -62,10 +62,12 @@ Stepper dstepper(bField);
 ReferencePropagator rpropagator(std::move(estepper), std::move(navigator));
 DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
-const int ntests = 500;
+const int ntests = 1000;
 const int skip = 0;
 bool debugMode = false;
 bool referenceTiming = false;
+bool oversteppingTest = false;
+double oversteppingMaxStepSize = 1_mm;
 
 /// The actual test nethod that runs the test
 /// can be used with several propagator types
@@ -113,6 +115,9 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   using Options = PropagatorOptions<RefereceActionList, ReferenceAbortList>;
   Options pOptions(tgContext, mfContext);
   pOptions.debug = debugMode;
+  if (oversteppingTest) {
+    pOptions.maxStepSize = oversteppingMaxStepSize;
+  }
 
   // Surface collector configuration
   auto& sCollector = pOptions.actionList.template get<SurfaceCollector<>>();
@@ -200,7 +205,7 @@ BOOST_DATA_TEST_CASE(
     test_direct_navigator,
     bdata::random((bdata::seed = 20,
                    bdata::distribution =
-                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
+                       std::uniform_real_distribution<>(0.15_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
