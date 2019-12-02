@@ -13,8 +13,8 @@ struct SpacePoint {
   float m_z;
   float m_r;
   int surface;
-  float covr;
-  float covz;
+  float varianceR;
+  float varianceZ;
   float x() const { return m_x; }
   float y() const { return m_y; }
   float z() const { return m_z; }

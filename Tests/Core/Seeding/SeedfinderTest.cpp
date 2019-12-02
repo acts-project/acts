@@ -7,10 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Seeding/BinFinder.hpp"
+#include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
@@ -35,23 +38,24 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x, y, z, r, covr, covz;
+      float x, y, z, r, varianceR, varianceZ;
       if (linetype == "lxyz") {
-        ss >> layer >> x >> y >> z >> covr >> covz;
+        ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
         r = std::sqrt(x * x + y * y);
-        float f22 = covr;
-        float wid = covz;
+        float f22 = varianceR;
+        float wid = varianceZ;
         float cov = wid * wid * .08333;
         if (cov < f22)
           cov = f22;
         if (std::abs(z) > 450.) {
-          covz = 9. * cov;
-          covr = .06;
+          varianceZ = 9. * cov;
+          varianceR = .06;
         } else {
-          covr = 9. * cov;
-          covz = .06;
+          varianceR = 9. * cov;
+          varianceZ = .06;
         }
-        SpacePoint* sp = new SpacePoint{x, y, z, r, layer, covr, covz};
+        SpacePoint* sp =
+            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }
@@ -98,28 +102,45 @@ int main() {
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {
-    return {sp.covr, sp.covz};
+    return {sp.varianceR, sp.varianceZ};
   };
 
-  Acts::SeedfinderState<SpacePoint> state = a.initState(
-      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder);
+  // setup spacepoint grid config
+  Acts::SpacePointGridConfig gridConf;
+  gridConf.bFieldInZ = config.bFieldInZ;
+  gridConf.minPt = config.minPt;
+  gridConf.rMax = config.rMax;
+  gridConf.zMax = config.zMax;
+  gridConf.zMin = config.zMin;
+  gridConf.deltaRMax = config.deltaRMax;
+  gridConf.cotThetaMax = config.cotThetaMax;
+  // create grid with bin sizes according to the configured geometry
+  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
+                                                 bottomBinFinder, topBinFinder,
+                                                 std::move(grid), config);
+
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   auto start = std::chrono::system_clock::now();
-  for (Acts::SeedfinderStateIterator<SpacePoint> it = state.begin();
-       !(it == state.end()); ++it) {
-    a.createSeedsForRegion(it, state);
+  auto groupIt = spGroup.begin();
+  auto endOfGroups = spGroup.end();
+  for (; !(groupIt == endOfGroups); ++groupIt) {
+    seedVector.push_back(a.createSeedsForGroup(
+        groupIt.bottom(), groupIt.middle(), groupIt.top()));
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
-  std::cout << "Number of regions: " << state.outputVec.size() << std::endl;
+  std::cout << "Number of regions: " << seedVector.size() << std::endl;
   int numSeeds = 0;
-  for (auto& outVec : state.outputVec) {
+  for (auto& outVec : seedVector) {
     numSeeds += outVec.size();
   }
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
-  for (auto& regionVec : state.outputVec) {
+  for (auto& regionVec : seedVector) {
     for (size_t i = 0; i < regionVec.size(); i++) {
-      const Acts::Seed<SpacePoint>* seed = regionVec[i].get();
+      const Acts::Seed<SpacePoint>* seed = &regionVec[i];
       const SpacePoint* sp = seed->sp()[0];
       std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                 << ") ";
