@@ -104,7 +104,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
       // Create the reference vector in local
       const Vector3D vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[1];
+      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_Z];
       double hZ = cBounds.halflengthZ() + tolerance;
       return (cZ * cZ < hZ * hZ) ? status : Intersection::Status::missed;
     }
