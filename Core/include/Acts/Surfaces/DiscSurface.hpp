@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 

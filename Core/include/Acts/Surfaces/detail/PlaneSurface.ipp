@@ -25,22 +25,28 @@ inline const Vector3D PlaneSurface::binningPosition(
 inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
                                            const Vector3D& position,
                                            const Vector3D& direction) const {
-  /// We can ignore the global position here
+  // We can ignore the global position here
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
 inline Intersection PlaneSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Get the contextual transform
+  const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersectionEstimate(transform(gctx), position, direction);
-  // Evaluate (if necessary in terms of boundaries)
-  // @todo: speed up isOnSurface - we know that it is on surface
-  //  all we need is to check if it's inside bounds
-  if (intersection.status != Intersection::Status::unreachable and bcheck and
-      not isOnSurface(gctx, intersection.position, direction, bcheck)) {
-    intersection.status = Intersection::Status::missed;
+      PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
+  // Evaluate boundary check if requested (and reachable)
+  if (intersection.status != Intersection::Status::unreachable and bcheck) {
+    // Built-in local to global for speed reasons
+    const auto& tMatrix = gctxTransform.matrix();
+    // Create the reference vector in local
+    const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    if (not insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
+                         bcheck)) {
+      intersection.status = Intersection::Status::missed;
+    }
   }
   return intersection;
 }

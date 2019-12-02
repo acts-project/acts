@@ -100,6 +100,13 @@ class RadialBounds : public DiscBounds {
   /// Return method for the half phi span
   double halfPhiSector() const;
 
+  /// Returns true for full phi coverage
+  bool coversFullAzimuth() const final;
+
+  /// Checks if this is inside the radial coverage
+  /// given the a tolerance
+  bool insideRadialBounds(double R, double tolerance = 0.) const final;
+
  private:
   double m_rMin, m_rMax, m_avgPhi, m_halfPhi;
 
@@ -124,6 +131,14 @@ inline double RadialBounds::averagePhi() const {
 
 inline double RadialBounds::halfPhiSector() const {
   return m_halfPhi;
+}
+
+inline bool RadialBounds::coversFullAzimuth() const {
+  return (m_halfPhi == M_PI);
+}
+
+inline bool RadialBounds::insideRadialBounds(double R, double tolerance) const {
+  return (R + tolerance > m_rMin and R - tolerance < m_rMax);
 }
 
 }  // namespace Acts

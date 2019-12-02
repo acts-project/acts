@@ -110,15 +110,29 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
 inline Intersection DiscSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  // Get the contextual transform
+  auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersectionEstimate(transform(gctx), position, direction);
-  // Evaluate (if necessary in terms of boundaries)
-  // @todo: speed up isOnSurface - we know that it is on surface
-  //  all we need is to check if it's inside bounds
+      PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
+  // Evaluate boundary check if requested (and reachable)
   if (intersection.status != Intersection::Status::unreachable and bcheck and
-      not isOnSurface(gctx, intersection.position, direction, bcheck)) {
-    intersection.status = Intersection::Status::missed;
+      m_bounds != nullptr) {
+    // Built-in local to global for speed reasons
+    const auto& tMatrix = gctxTransform.matrix();
+    const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    const Vector2D lcartesian =
+        tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
+    if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
+        m_bounds->coversFullAzimuth()) {
+      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_R];
+      if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
+                                           tolerance)) {
+        intersection.status = Intersection::Status::missed;
+      }
+    } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
+      intersection.status = Intersection::Status::missed;
+    }
   }
   return intersection;
 }

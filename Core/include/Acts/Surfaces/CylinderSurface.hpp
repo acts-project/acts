@@ -281,7 +281,7 @@ class CylinderSurface : public Surface {
   ///
   /// @return the quadratic equation
   detail::RealQuadraticEquation intersectionSolver(
-      const GeometryContext& gctx, const Vector3D& position,
+      const Transform3D& transform, const Vector3D& position,
       const Vector3D& direction) const;
 };
 
