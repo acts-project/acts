@@ -116,13 +116,21 @@ inline Intersection DiscSurface::intersectionEstimate(
   auto intersection =
       PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection::Status::unreachable and bcheck) {
+  if (intersection.status != Intersection::Status::unreachable and bcheck and
+      m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
-    const Vector2D lposition =
-        localCartesianToPolar(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal);
-    if (not insideBounds(lposition, bcheck)) {
+    const Vector2D lcartesian =
+        tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
+    if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
+        m_bounds->coversFullAzimuth()) {
+      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_R];
+      if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
+                                           tolerance)) {
+        intersection.status = Intersection::Status::missed;
+      }
+    } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
       intersection.status = Intersection::Status::missed;
     }
   }

@@ -20,6 +20,13 @@ namespace Acts {
 /// common base class for all bounds that are in a r/phi frame
 ///  - simply introduced to avoid wrong bound assigments to surfaces
 
-class DiscBounds : public SurfaceBounds {};
+class DiscBounds : public SurfaceBounds {
+ public:
+  /// Returns true for full phi coverage
+  virtual bool coversFullAzimuth() const = 0;
+
+  /// Checks if it's inside the radius
+  virtual bool insideRadialBounds(double R, double tolerance = 0.) const = 0;
+};
 
 }  // namespace Acts

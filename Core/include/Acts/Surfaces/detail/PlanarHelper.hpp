@@ -43,7 +43,7 @@ static Intersection intersectionEstimate(const Transform3D& transform,
             ? Intersection::Status::onSurface
             : Intersection::Status::reachable;
     // Return the intersection
-    return Intersection(position + path * direction, path, status);
+    return Intersection{(position + path * direction), path, status};
   }
   return Intersection();
 }

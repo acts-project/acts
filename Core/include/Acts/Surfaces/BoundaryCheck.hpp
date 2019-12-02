@@ -114,13 +114,19 @@ class BoundaryCheck {
   double distance(const Vector2D& point, const Vector2D& lowerLeft,
                   const Vector2D& upperRight) const;
 
- private:
   enum class Type {
     eNone,      ///< disable boundary check
     eAbsolute,  ///< absolute cut
     eChi2       ///< chi2-based cut with full correlations
   };
 
+  /// Broadcast the type
+  Type type() const;
+
+  // Broadcast the tolerance
+  const Vector2D& tolerance() const;
+
+ private:
   /// Return a new BoundaryCheck with updated covariance.
   /// @param jacobian Tranform Jacobian for the covariance
   /// @warning This currently only transforms the covariance and does not work
@@ -170,6 +176,14 @@ class BoundaryCheck {
 };
 
 }  // namespace Acts
+
+inline Acts::BoundaryCheck::Type Acts::BoundaryCheck::type() const {
+  return m_type;
+}
+
+inline const Acts::Vector2D& Acts::BoundaryCheck::tolerance() const {
+  return m_tolerance;
+}
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool check)
     : m_weight(ActsSymMatrixD<2>::Identity()),

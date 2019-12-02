@@ -96,14 +96,16 @@ inline SurfaceIntersection CylinderSurface::intersect(
     if (!bcheck)
       return status;
     const auto& cBounds = bounds();
-    if (cBounds.fullAzimuth()) {
+    if (cBounds.coversFullAzimuth() and
+        bcheck.type() == BoundaryCheck::Type::eAbsolute) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
       const Vector3D vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double hZ = cBounds.halflengthZ() + s_onSurfaceTolerance;
+      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[1];
+      double hZ = cBounds.halflengthZ() + tolerance;
       return (cZ * cZ < hZ * hZ) ? status : Intersection::Status::missed;
     }
     return (isOnSurface(gctx, solution, direction, bcheck)
