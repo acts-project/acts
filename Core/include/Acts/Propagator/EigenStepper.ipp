@@ -260,9 +260,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     return (error_estimate <= state.options.tolerance);
   };
 
-  double stepSizeScaling;
-
-  unsigned int stepAttempts = 0;
+  double stepSizeScaling = 1.;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (!tryRungeKuttaStep(state.stepping.stepSize)) {
