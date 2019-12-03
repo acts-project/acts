@@ -10,7 +10,10 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
@@ -45,6 +48,10 @@ namespace concept {
   METHOD_TRAIT(update_t, update);
   METHOD_TRAIT(covariance_transport_t, covarianceTransport);
   METHOD_TRAIT(step_t, step);
+  METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
+  METHOD_TRAIT(set_step_size_t, setStepSize);
+  METHOD_TRAIT(release_step_size_t, releaseStepSize);
+  METHOD_TRAIT(output_step_size_t, outputStepSize);
 
   template <typename T>
   using cov_transport_t = decltype(std::declval<T>().covTransport);
@@ -107,6 +114,14 @@ namespace concept {
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&, bool>,
                                                                     has_method<const S, void, covariance_transport_t, state&, const Surface&, bool>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
+        constexpr static bool update_surface_exists = has_method<const S, Intersection::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
+        static_assert(update_surface_exists, "updateSurfaceStatus method not found");
+        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double>;
+        static_assert(set_step_size_exists, "setStepSize method not found");
+        constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&>;
+        static_assert(release_step_size_exists, "releaseStepSize method not found");
+        constexpr static bool output_step_size_exists = has_method<const S, std::string, output_step_size_t, const state&>;
+        static_assert(output_step_size_exists, "outputStepSize method not found");
 
         constexpr static bool value = require<state_exists,
                                               jacobian_exists,
@@ -123,7 +138,11 @@ namespace concept {
                                               bound_state_method_exists,
                                               curvilinear_state_method_exists,
                                               update_method_exists,
-                                              covariance_transport_exists>;
+                                              covariance_transport_exists,
+                                              update_surface_exists,
+                                              set_step_size_exists,
+                                              release_step_size_exists,
+                                              output_step_size_exists>;
       };
   // clang-format on
   }  // namespace Stepper

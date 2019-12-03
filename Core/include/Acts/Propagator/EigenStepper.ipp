@@ -276,14 +276,6 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     }
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
 
-    // @HOTFIX to break the RK step trying, @TODO will be replaced
-    // by proper overstepping mechanism
-    if (++stepAttempts == 100) {
-      // step in mm steps, costly but should do
-      state.stepping.stepSize = state.stepping.navDir * 1_mm;
-      break;
-    }
-
     // If step size becomes too small the particle remains at the initial
     // place
     if (state.stepping.stepSize * state.stepping.stepSize <
