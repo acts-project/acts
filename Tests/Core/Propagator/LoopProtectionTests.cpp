@@ -87,6 +87,8 @@ struct Options {
   bool loopProtection = true;
   double loopFraction = 0.5;
 
+  bool debug = false;
+
   /// Contains: target aborters
   AbortList<PathLimitReached> abortList;
 };
