@@ -192,7 +192,7 @@ class KalmanFitter {
   template <typename source_link_t, typename parameters_t>
   class Actor {
    public:
-    using TrackStateType = TrackState<source_link_t, parameters_t>;
+    using TrackState = TrackState<source_link_t, parameters_t>;
 
     /// Explicit constructor with updater and calibrator
     Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
@@ -307,9 +307,8 @@ class KalmanFitter {
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, result_type& result) const {
       // Transport & bind the state to the current surface
-      std::tuple<BoundParameters,
-                 typename TrackStateType::Parameters::CovMatrix_t, double>
-          boundState = stepper.boundState(state.stepping, *surface, true);
+      auto [boundParams, jacobian, pathLength] =
+          stepper.boundState(state.stepping, *surface, true);
 
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
@@ -329,10 +328,6 @@ class KalmanFitter {
         // assign the source link to the track state
         trackStateProxy.uncalibrated() = sourcelink_it->second;
 
-        // Transport & bind the state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, true);
-
         // Fill the track state
         trackStateProxy.predicted() = boundParams.parameters();
         trackStateProxy.predictedCovariance() = *boundParams.covariance();
@@ -348,8 +343,10 @@ class KalmanFitter {
             m_calibrator(trackStateProxy.uncalibrated(),
                          trackStateProxy.predicted()));
 
-        // Set the parameter type flag
-        trackState.setType(TrackStateFlag::ParameterFlag);
+        // Get and set the type flags
+        auto typeFlags = trackStateProxy.typeFlags();
+        typeFlags.set(TrackStateFlag::MeasurementFlag);
+        typeFlags.set(TrackStateFlag::ParameterFlag);
 
         // If the update is successful, set covariance and
         auto updateRes = m_updater(state.geoContext, trackStateProxy);
@@ -371,30 +368,31 @@ class KalmanFitter {
       } else {
         // When no measurement on this surface,
         // create a track state from predicted parameter
-        result.fittedStates.emplace_back(std::get<0>(boundState));
-        TrackStateType& trackState = result.fittedStates.back();
+        TrackState trackState(boundParams);
 
         // Fill the track state
-        trackState.parameter.jacobian = std::get<1>(boundState);
-        trackState.parameter.pathLength = std::get<2>(boundState);
+        trackState.parameter.jacobian = jacobian;
+        trackState.parameter.pathLength = pathLength;
 
         // @todo: set the filtered parameter by updating the predicted parameter
         // with material effects
 
         if (surface->associatedDetectorElement() != nullptr) {
-          // If the surface is sensitive,
-          // set the hole type flag
+          // If the surface is sensitive, set the hole type flag
           trackState.setType(TrackStateFlag::HoleFlag);
 
           // Count the missed surface
           ACTS_VERBOSE("Detected hole on " << surface->geoID());
           result.missedActiveSurfaces.push_back(surface);
         } else {
-          // If the surface is in-sensitive,
-          // set the material type flag
+          // If the surface is in-sensitive, set the material type flag
           trackState.setType(TrackStateFlag::MaterialFlag);
           ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
         }
+
+        // Add the track state to the fittedStates
+        result.trackTip =
+            result.fittedStates.addTrackState(trackState, result.trackTip);
       }
       return Result<void>::success();
     }

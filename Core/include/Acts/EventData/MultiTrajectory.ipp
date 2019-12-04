@@ -222,6 +222,7 @@ inline size_t MultiTrajectory<SL>::addTrackState(
 
   nts.chi2() = ts.parameter.chi2;
   nts.pathLength() = ts.parameter.pathLength;
+  nts.typeFlags() = ts.type();
 
   return index;
 }

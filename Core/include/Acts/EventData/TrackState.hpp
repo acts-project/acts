@@ -29,6 +29,8 @@ enum TrackStateFlag {
   NumTrackStateFlags = 5
 };
 
+using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
+
 class Surface;
 
 /// @class TrackState
@@ -127,7 +129,7 @@ class TrackState {
   }
 
   /// @brief return method for the type flags
-  std::bitset<NumTrackStateFlags> type() const { return m_typeFlags; }
+  TrackStateType type() const { return m_typeFlags; }
 
   /// @brief number of Measured parameters, forwarded
   /// @note This only returns a value if there is a calibrated measurement
@@ -174,6 +176,6 @@ class TrackState {
   /// The surface of this TrackState
   const Surface* m_surface = nullptr;
   /// The type flag of this TrackState
-  std::bitset<NumTrackStateFlags> m_typeFlags;
+  TrackStateType m_typeFlags;
 };
 }  // namespace Acts
