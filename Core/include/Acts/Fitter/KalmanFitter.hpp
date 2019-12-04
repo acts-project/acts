@@ -20,8 +20,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -396,7 +396,7 @@ class KalmanFitter {
       stepper.update(state.stepping, smoothedPars);
       // Reverse the propagation direction
       state.stepping.stepSize =
-          detail::ConstrainedStep(-1. * state.options.maxStepSize);
+          ConstrainedStep(-1. * state.options.maxStepSize);
       state.options.direction = backward;
 
       return Result<void>::success();

@@ -44,8 +44,6 @@ template <typename bfield_t,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
-  using cstep = detail::ConstrainedStep;
-
   /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
@@ -150,7 +148,7 @@ class EigenStepper {
     double pathAccumulated = 0.;
 
     /// Adaptive step size of the runge-kutta integration
-    cstep stepSize{std::numeric_limits<double>::max()};
+    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
 
     /// Last performed step (for overstep limit calulcation)
     double previousStepSize = 0.;
@@ -252,16 +250,18 @@ class EigenStepper {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
-  void setStepSize(State& state, double stepSize) const {
+  /// @param stype [in] The step size type to be set
+  void setStepSize(State& state, double stepSize,
+                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
     state.previousStepSize = state.stepSize;
-    state.stepSize.update(stepSize, cstep::actor, true);
+    state.stepSize.update(stepSize, stype, true);
   }
 
   /// Release the Step size
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   void releaseStepSize(State& state) const {
-    state.stepSize.release(cstep::actor);
+    state.stepSize.release(ConstrainedStep::actor);
   }
 
   /// Output the Step Size - single component

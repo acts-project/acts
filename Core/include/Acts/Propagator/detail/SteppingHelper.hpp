@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -17,8 +17,6 @@
 namespace Acts {
 
 namespace detail {
-
-using cstep = detail::ConstrainedStep;
 
 /// Update surface status - Single component
 ///
@@ -40,11 +38,11 @@ Acts::Intersection::Status updateSurfaceStatus_t(
   // The intersection is on surface already
   if (sIntersection.intersection.status == Intersection::Status::onSurface) {
     // Release navigation step size
-    state.stepSize.release(cstep::actor);
+    state.stepSize.release(ConstrainedStep::actor);
     return Intersection::Status::onSurface;
   } else if (sIntersection.intersection or sIntersection.alternative) {
     // Path and overstep limit checking
-    double pLimit = state.stepSize.value(cstep::aborter);
+    double pLimit = state.stepSize.value(ConstrainedStep::aborter);
     double oLimit = stepper.overstepLimit(state);
     auto checkIntersection = [&](const Intersection& intersection) -> bool {
       double cLimit = intersection.pathLength;
@@ -77,7 +75,7 @@ void updateStepSize_t(typename stepper_t::State& state,
                       const object_intersection_t& oIntersection,
                       bool release = true) {
   double stepSize = oIntersection.intersection.pathLength;
-  state.stepSize.update(stepSize, cstep::actor, release);
+  state.stepSize.update(stepSize, ConstrainedStep::actor, release);
 }
 
 }  // namespace detail

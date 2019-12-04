@@ -17,14 +17,13 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
-using Cstep = detail::ConstrainedStep;
 using namespace Acts::UnitLiterals;
 
 /// @brief struct for the Navigation options that are forwarded to
@@ -869,7 +868,7 @@ class Navigator {
 
     // The navigation options
     NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-    navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
     navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
 
     // If you came until here, and you might not have boundaries
@@ -1054,7 +1053,7 @@ class Navigator {
         state.stepping.navDir, true, resolveSensitive, resolveMaterial,
         resolvePassive, startSurface, state.navigation.targetSurface);
     // Check the limit
-    navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
     // No overstepping on start layer, otherwise ask the stepper
     navOpts.overstepLimit = (cLayer != nullptr)
                                 ? s_onSurfaceTolerance
@@ -1127,7 +1126,7 @@ class Navigator {
                                      resolvePassive, startLayer, nullptr);
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
-    navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
     navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
     // Request the compatible layers
     state.navigation.navLayers =

@@ -20,7 +20,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -54,8 +54,6 @@ struct PropagatorState {
         std::tuple<CurvilinearParameters, Jacobian, double>;
     using BField = int;
 
-    using Cstep = detail::ConstrainedStep;
-
     template <typename, typename>
     using return_parameter_type = void;
 
@@ -84,7 +82,7 @@ struct PropagatorState {
       double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
-      Cstep stepSize = Cstep(100_cm);
+      ConstrainedStep stepSize = ConstrainedStep(100_cm);
 
       // Previous step size for overstep estimation (ignored here)
       double previousStepSize = 0.;
@@ -129,12 +127,15 @@ struct PropagatorState {
       detail::updateStepSize_t<Stepper>(state, oIntersection, release);
     }
 
-    void setStepSize(State& state, double stepSize) const {
-      state.stepSize.update(stepSize, Cstep::actor, true);
+    void setStepSize(
+        State& state, double stepSize,
+        ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+      state.previousStepSize = state.stepSize;
+      state.stepSize.update(stepSize, stype, true);
     }
 
     void releaseStepSize(State& state) const {
-      state.stepSize.release(Cstep::actor);
+      state.stepSize.release(ConstrainedStep::actor);
     }
 
     std::string outputStepSize(const State& state) const {

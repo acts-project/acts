@@ -30,25 +30,27 @@ struct LoopProtection {
       // Get the field at the start position
       Vector3D field =
           stepper.getField(state.stepping, stepper.position(state.stepping));
-      // Transvserse component at start is taken for the loop protection
-      const double pT =
-          stepper.momentum(state.stepping) *
-          stepper.direction(state.stepping).cross(field.normalized()).norm();
-      // From this we calulate the full helix path
       const double B = field.norm();
-      const double helixPath = 2 * M_PI * pT / B;
-      // now set the new loop limit
-      auto& pathAborter =
-          state.options.abortList.template get<path_arborter_t>();
-      double loopLimit = state.options.loopFraction * helixPath;
-      pathAborter.internalLimit = loopLimit;
-
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Path aborter limit set to ";
-        dstream << loopLimit << " (full helix =  " << helixPath << ")";
-        return dstream.str();
-      });
+      if (B != 0.) {
+        // Transvserse component at start is taken for the loop protection
+        const double p = stepper.momentum(state.stepping);
+        // Calulate the full helix path
+        const double helixPath = 2 * M_PI * p / B;
+        // And set it as the loop limit if it overwrites the internal limit
+        auto& pathAborter =
+            state.options.abortList.template get<path_arborter_t>();
+        double loopLimit = state.options.loopFraction * helixPath;
+        double pathLimit = pathAborter.internalLimit;
+        if (loopLimit * loopLimit < pathLimit * pathLimit) {
+          pathAborter.internalLimit = loopLimit;
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Path aborter limit set to ";
+            dstream << loopLimit << " (full helix =  " << helixPath << ")";
+            return dstream.str();
+          });
+        }
+      }
     }
   }
 

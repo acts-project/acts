@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -188,9 +189,18 @@ BOOST_DATA_TEST_CASE(
   Vector3D mom(px, py, pz);
   CurvilinearParameters start(std::nullopt, pos, mom, q, 42.);
 
-  PropagatorOptions<> options(tgContext, mfContext);
+  using DebugOutput = Acts::detail::DebugOutputActor;
+  using Options = PropagatorOptions<ActionList<DebugOutput>, AbortList<>>;
+  Options options(tgContext, mfContext);
+  options.debug = true;
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();
+
+  if (options.debug) {
+    const auto debugString =
+        result.template get<DebugOutput::result_type>().debugString;
+    std::cout << debugString << std::endl;
+  }
 
   // this test assumes state.options.loopFraction = 0.5
   CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);

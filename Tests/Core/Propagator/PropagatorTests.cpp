@@ -19,7 +19,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -40,7 +40,6 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-using cstep = detail::ConstrainedStep;
 using Covariance = BoundSymMatrix;
 
 /// An observer that measures the perpendicular distance
@@ -95,13 +94,13 @@ struct SurfaceObserver {
                                      stepper.direction(state.stepping), true)
               .pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      state.stepping.stepSize.update(distance, cstep::actor);
+      state.stepping.stepSize.update(distance, ConstrainedStep::actor);
       // return true if you fall below tolerance
       if (std::abs(distance) <= tolerance) {
         ++result.surfaces_passed;
         result.surface_passed_r = perp(stepper.position(state.stepping));
         // release the step size, will be re-adjusted
-        state.stepping.stepSize.release(cstep::actor);
+        state.stepping.stepSize.release(ConstrainedStep::actor);
       }
     }
   }

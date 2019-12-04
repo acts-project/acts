@@ -42,7 +42,6 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using cstep = detail::ConstrainedStep;
 using Covariance = BoundSymMatrix;
 
 // Create a test context

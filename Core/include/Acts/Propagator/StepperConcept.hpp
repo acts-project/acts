@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -71,7 +71,7 @@ namespace concept {
                 has_member<S, cov_t, BoundSymMatrix>,
                 has_member<S, nav_dir_t, NavigationDirection>,
                 has_member<S, path_accumulated_t, double>,
-                has_member<S, step_size_t, detail::ConstrainedStep>
+                has_member<S, step_size_t, ConstrainedStep>
                >;
   // clang-format on
 
@@ -116,7 +116,7 @@ namespace concept {
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
         constexpr static bool update_surface_exists = has_method<const S, Intersection::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
-        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double>;
+        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type>;
         static_assert(set_step_size_exists, "setStepSize method not found");
         constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&>;
         static_assert(release_step_size_exists, "releaseStepSize method not found");

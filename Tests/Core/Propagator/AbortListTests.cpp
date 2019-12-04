@@ -20,7 +20,7 @@
 // leave blank line
 
 #include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -43,7 +43,6 @@ using PathLimit = detail::PathLimitReached;
 using EndOfWorld = detail::EndOfWorldReached;
 
 // the constrained step class
-using cstep = detail::ConstrainedStep;
 
 /// This is a simple cache struct to mimic the
 /// Navigator state
@@ -67,11 +66,12 @@ struct PropagatorState {
   // This is a simple cache struct to mimic the
   // Stepper cache in the propagation
   struct StepperState {
-    // accummulated path length cache
+    // Accummulated path length cache
     double pathAccumulated = 0.;
-
+    // Navigation direction
+    NavigationDirection navDir = forward;
     // adaptive sep size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize = std::numeric_limits<double>::max();
   };
 
   /// emulate the options template

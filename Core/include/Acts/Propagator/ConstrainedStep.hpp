@@ -17,7 +17,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
-namespace detail {
 
 /// A constrained step class for the steppers
 struct ConstrainedStep {
@@ -136,5 +135,4 @@ inline std::string ConstrainedStep::toString() const {
   return dstream.str();
 }
 
-}  // namespace detail
 }  // namespace Acts

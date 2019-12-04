@@ -11,7 +11,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -82,7 +82,9 @@ struct PathLimitReached {
     }
 
     // Check if the maximum allowed step size has to be updated
-    double limit = std::min(internalLimit, state.options.pathLimit);
+    double limit = state.stepping.navDir *
+                   std::min(state.stepping.navDir * internalLimit,
+                            state.stepping.navDir * state.options.pathLimit);
     double distance = limit - state.stepping.pathAccumulated;
     double tolerance = state.options.targetTolerance;
     state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
