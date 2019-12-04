@@ -190,8 +190,9 @@ BOOST_DATA_TEST_CASE(
   CurvilinearParameters start(std::nullopt, pos, mom, q, 42.);
 
   using DebugOutput = Acts::detail::DebugOutputActor;
-  using Options = PropagatorOptions<ActionList<DebugOutput>, AbortList<>>;
-  Options options(tgContext, mfContext);
+  using ProopagatorOptions =
+      PropagatorOptions<ActionList<DebugOutput>, AbortList<>>;
+  ProopagatorOptions options(tgContext, mfContext);
   options.debug = true;
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();
