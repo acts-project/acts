@@ -18,11 +18,14 @@
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -192,7 +195,7 @@ class KalmanFitter {
   template <typename source_link_t, typename parameters_t>
   class Actor {
    public:
-    using TrackState = TrackState<source_link_t, parameters_t>;
+    using TrackStateType = TrackState<source_link_t, parameters_t>;
 
     /// Explicit constructor with updater and calibrator
     Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
@@ -209,6 +212,12 @@ class KalmanFitter {
 
     /// Allows retrieving measurements for a surface
     std::map<const Surface*, source_link_t> inputMeasurements;
+
+    /// Whether to consider multiple scattering.
+    bool multipleScattering = true;
+
+    /// Whether to consider energy loss.
+    bool energyLoss = true;
 
     /// @brief Kalman actor operation
     ///
@@ -306,16 +315,20 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, result_type& result) const {
-      // Transport & bind the state to the current surface
-      auto [boundParams, jacobian, pathLength] =
-          stepper.boundState(state.stepping, *surface, true);
-
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geoID()
                                             << " detected.");
+
+        // Update state and stepper with pre material effects
+        materialInteractor(surface, state, stepper, preUpdate);
+
+        // Transport & bind the state to the current surface
+        auto [boundParams, jacobian, pathLength] =
+            stepper.boundState(state.stepping, *surface, true);
+
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
         result.trackTip = result.fittedStates.addTrackState(
@@ -344,9 +357,10 @@ class KalmanFitter {
                          trackStateProxy.predicted()));
 
         // Get and set the type flags
-        auto typeFlags = trackStateProxy.typeFlags();
+        auto& typeFlags = trackStateProxy.typeFlags();
         typeFlags.set(TrackStateFlag::MeasurementFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
+        typeFlags.set(TrackStateFlag::MaterialFlag);
 
         // If the update is successful, set covariance and
         auto updateRes = m_updater(state.geoContext, trackStateProxy);
@@ -354,7 +368,7 @@ class KalmanFitter {
           ACTS_ERROR("Update step failed: " << updateRes.error());
           return updateRes.error();
         } else {
-          // Update the stepping state
+          // Update the stepping state with filtered parameters
           ACTS_VERBOSE("Filtering step successful, updated parameters are : \n"
                        << trackStateProxy.filtered().transpose());
           // update stepping state using filtered parameters after kalman update
@@ -362,21 +376,45 @@ class KalmanFitter {
           // a bit awkward.
           stepper.update(state.stepping, trackStateProxy.filteredParameters(
                                              state.options.geoContext));
+
+          // Update state and stepper with post material effects
+          materialInteractor(surface, state, stepper, postUpdate);
         }
         // We count the processed state
         ++result.processedStates;
       } else {
-        // When no measurement on this surface,
-        // create a track state from predicted parameter
-        TrackState trackState(boundParams);
+        // Transport & bind the state to the current surface
+        auto [boundParams, jacobian, pathLength] =
+            stepper.boundState(state.stepping, *surface, true);
+
+        // Create a track state from predicted parameter
+        TrackStateType trackState(boundParams);
 
         // Fill the track state
         trackState.parameter.jacobian = jacobian;
         trackState.parameter.pathLength = pathLength;
 
-        // @todo: set the filtered parameter by updating the predicted parameter
-        // with material effects
+        // Update state and stepper with material effects
+        auto interaction =
+            materialInteractor(surface, state, stepper, fullUpdate);
 
+        // Set the filtered parameter by updating the predicted parameter with
+        // material effects
+        auto updateRes =
+            materialUpdater(state.geoContext, trackState, interaction);
+        if (!updateRes.ok()) {
+          ACTS_ERROR(
+              "Update with material effects failed: " << updateRes.error());
+          return updateRes.error();
+        } else {
+          ACTS_VERBOSE(
+              "Update with material effects successful, updated parameters are "
+              ": \n"
+              << *trackState.parameter.filtered.parameters());
+        }
+
+        // Set the track state flags
+        trackState.setType(TrackStateFlag::MaterialFlag);
         if (surface->associatedDetectorElement() != nullptr) {
           // If the surface is sensitive, set the hole type flag
           trackState.setType(TrackStateFlag::HoleFlag);
@@ -385,8 +423,6 @@ class KalmanFitter {
           ACTS_VERBOSE("Detected hole on " << surface->geoID());
           result.missedActiveSurfaces.push_back(surface);
         } else {
-          // If the surface is in-sensitive, set the material type flag
-          trackState.setType(TrackStateFlag::MaterialFlag);
           ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
         }
 
@@ -394,6 +430,87 @@ class KalmanFitter {
         result.trackTip =
             result.fittedStates.addTrackState(trackState, result.trackTip);
       }
+      return Result<void>::success();
+    }
+
+    /// @brief Kalman actor operation : material interaction
+    ///
+    /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam stepper_t Type of the stepper
+    ///
+    /// @param surface The surface where the material interaction happens
+    /// @param state The mutable propagator state object
+    /// @param stepper The stepper in use
+    /// @param mStage The materal update stage
+    ///
+    /// @return The material interaction
+    template <typename propagator_state_t, typename stepper_t>
+    detail::PointwiseMaterialInteraction materialInteractor(
+        const Surface* surface, propagator_state_t& state, stepper_t& stepper,
+        const MaterialUpdateStage& mStage) const {
+      // Prepare relevant input particle properties
+      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+
+      // Evaluate the material properties
+      if (interaction.evaluateMaterialProperties(state, mStage)) {
+        // Evaluate the material effects
+        interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
+                                                         energyLoss);
+
+        // Transport the covariance to the current position in space
+        // the 'true' indicates re-initializaiton of the further transport
+        if (interaction.performCovarianceTransport) {
+          stepper.covarianceTransport(state.stepping, true);
+        }
+
+        // Update the state and stepper with material effects
+        interaction.updateState(state, stepper);
+      }
+
+      return std::move(interaction);
+    }
+
+    /// @brief Kalman actor operation : material effects updater
+    ///
+    /// @tparam track_state_t is the type of track state
+    ///
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param trackState the track state
+    ///
+    /// @return Bool indicating whether this update was 'successful'
+    template <typename track_state_t>
+    Result<void> materialUpdater(
+        const GeometryContext& geoContext, track_state_t& trackState,
+        const detail::PointwiseMaterialInteraction& interaction) const {
+      // Predicted parameter and covariance
+      parameters_t predicted = *trackState.parameter.predicted;
+      auto predicted_parameter = predicted.parameters();
+      auto predicted_covariance = *predicted.covariance();
+
+      // Get the update for parameter
+      BoundParameters::ParVector_t deltaParamVec;
+      // The delta of q/p
+      double deltaQOP = interaction.q / interaction.nextP - interaction.qOverP;
+      deltaParamVec << 0, 0, 0, 0, deltaQOP, 0.;
+
+      // Get the update for covariance
+      Acts::BoundSymMatrix deltaParamCov;
+      deltaParamCov.setZero();
+      deltaParamCov.diagonal() << 0, 0, interaction.variances.x(),
+          interaction.variances.y(), interaction.variances.z(), 0;
+
+      // The updated parameter and covariance
+      auto filtered_parameters = predicted_parameter + deltaParamVec;
+      auto filtered_covariance = predicted_covariance + deltaParamCov;
+
+      // The filtered parameter
+      parameters_t filtered(geoContext, std::move(filtered_covariance),
+                            std::move(filtered_parameters),
+                            predicted.referenceSurface().getSharedPtr());
+
+      // Set the filtered parameter for the track state
+      trackState.parameter.filtered = std::move(filtered);
+
       return Result<void>::success();
     }
 
