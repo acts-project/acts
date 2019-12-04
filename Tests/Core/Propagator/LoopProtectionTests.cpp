@@ -88,6 +88,9 @@ struct Options {
   double loopFraction = 0.5;
 
   bool debug = false;
+  std::string debugString;
+  int debugMsgWidth = 60;
+  int debugPfxWidth = 30;
 
   /// Contains: target aborters
   AbortList<PathLimitReached> abortList;
