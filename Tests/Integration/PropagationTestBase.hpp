@@ -22,6 +22,8 @@
 
 using namespace Acts::UnitLiterals;
 
+unsigned int itest = 0;
+
 // datasets for Boost::Test data-driven test cases
 namespace ds {
 // track parameters
@@ -50,6 +52,9 @@ auto threeRandom = (rand1 ^ rand2 ^ rand2);
 BOOST_DATA_TEST_CASE(forward_backward_propagation_,
                      ds::trackParameters* ds::propagationLimit, pT, phi, theta,
                      charge, plimit) {
+  std::cout << "Running (first patch) tests : " << itest << std::endl;
+  ++itest;
+
   // foward backward check atlas stepper
   foward_backward(apropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV,
                   debug);

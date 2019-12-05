@@ -128,10 +128,27 @@ struct ConstrainedStep {
 
 inline std::string ConstrainedStep::toString() const {
   std::stringstream dstream;
-  dstream << "(" << std::setw(5) << values[accuracy];
-  dstream << ", " << std::setw(5) << values[actor];
-  dstream << ", " << std::setw(5) << values[aborter];
-  dstream << ", " << std::setw(5) << values[user] << " )";
+
+  // Helper method to avoid unreadable screen output
+  auto streamValue = [&](ConstrainedStep cstep) -> void {
+    double val = values[cstep];
+    dstream << std::setw(5);
+    if (std::abs(val) == std::numeric_limits<double>::max()) {
+      dstream << (val > 0 ? "+∞" : "-∞");
+    } else {
+      dstream << val;
+    }
+  };
+
+  dstream << "(";
+  streamValue(accuracy);
+  dstream << ", ";
+  streamValue(actor);
+  dstream << ", ";
+  streamValue(aborter);
+  dstream << ", ";
+  streamValue(user);
+  dstream << " )";
   return dstream.str();
 }
 

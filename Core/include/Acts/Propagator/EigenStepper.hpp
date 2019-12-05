@@ -88,6 +88,7 @@ class EigenStepper {
       // remember the start parameters
       startPos = pos;
       startDir = dir;
+
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation

@@ -256,7 +256,6 @@ class DirectNavigator {
                 << " | ";
         dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
         state.options.debugString += dstream.str();
-        std::cout << dstream.str();
       }
     }
   }

@@ -80,12 +80,8 @@ struct PathLimitReached {
     if (state.navigation.targetReached) {
       return true;
     }
-
     // Check if the maximum allowed step size has to be updated
-    double limit = state.stepping.navDir *
-                   std::min(state.stepping.navDir * internalLimit,
-                            state.stepping.navDir * state.options.pathLimit);
-    double distance = limit - state.stepping.pathAccumulated;
+    double distance = internalLimit - state.stepping.pathAccumulated;
     double tolerance = state.options.targetTolerance;
     state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
     bool limitReached = (distance * distance < tolerance * tolerance);

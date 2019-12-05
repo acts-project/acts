@@ -224,7 +224,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
     std::cout << " - resulted at position : "
               << fwdResult.endParameters->position() << std::endl;
 
-    auto bwdOutput = fwdResult.template get<DebugOutput::result_type>();
+    auto bwdOutput = bwdResult.template get<DebugOutput::result_type>();
     std::cout << ">>>>> Output for backward propagation " << std::endl;
     std::cout << bwdOutput.debugString << std::endl;
     std::cout << " - resulted at position : "
