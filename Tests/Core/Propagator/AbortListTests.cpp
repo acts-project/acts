@@ -84,7 +84,7 @@ struct PropagatorState {
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
-    bool debug = false;
+    bool debug = true;
     std::string debugString = "";
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
@@ -117,6 +117,7 @@ BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit) {
   Result result;
 
   AbortList<PathLimit> abortList;
+  abortList.get<PathLimit>().internalLimit = state.options.pathLimit;
 
   // It should not abort yet
   BOOST_CHECK(!abortList(result, state, stepper));
