@@ -416,8 +416,8 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
     if (mp) {
       /// Return the thickness in mm
       return {
-          mp.averageX0(), mp.averageL0(),  mp.averageA(),
-          mp.averageZ(),  mp.averageRho(), mp.thickness(),
+          mp.material().X0(), mp.material().L0(),  mp.material().Ar(),
+          mp.material().Z(),  mp.material().massDensity(), mp.thickness(),
       };
     }
     return {};
