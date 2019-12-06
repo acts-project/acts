@@ -108,12 +108,12 @@ inline SurfaceIntersection ConeSurface::intersect(
       status2 == Intersection::Status::missed) {
     // And add the alternative
     if (qe.solutions > 1) {
-      cIntersection.alternatives = {second};
+      cIntersection.alternative = second;
     }
   } else {
     // And add the alternative
     if (qe.solutions > 1) {
-      cIntersection.alternatives = {first};
+      cIntersection.alternative = first;
     }
     cIntersection.intersection = second;
   }

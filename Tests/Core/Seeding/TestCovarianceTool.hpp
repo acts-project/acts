@@ -19,9 +19,9 @@ class CovarianceTool {
   /// @param sp is the SpacePoint fro which the covariance values will be
   /// retrieved
   /// @param zAlign is the alignment uncertainty in z.
-  /// it is going to be squared and added to covz.
+  /// it is going to be squared and added to varianceZ.
   /// @param rAlign is the alignment uncertainty in r.
-  /// it is going to be squared and added to covr.
+  /// it is going to be squared and added to varianceR.
   /// @param sigma is multiplied with the combined alignment and covariance
   /// errors
   template <typename SpacePoint>
@@ -33,8 +33,8 @@ inline Acts::Vector2D CovarianceTool::getCovariances(const SpacePoint* sp,
                                                      float zAlign, float rAlign,
                                                      float sigma) {
   Acts::Vector2D cov;
-  cov[0] = ((*sp).covr + rAlign * rAlign) * sigma;
-  cov[1] = ((*sp).covz + zAlign * zAlign) * sigma;
+  cov[0] = ((*sp).varianceR + rAlign * rAlign) * sigma;
+  cov[1] = ((*sp).varianceZ + zAlign * zAlign) * sigma;
   return cov;
 }
 }  // namespace Acts

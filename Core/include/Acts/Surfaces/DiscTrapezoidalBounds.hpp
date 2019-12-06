@@ -108,6 +108,13 @@ class DiscTrapezoidalBounds : public DiscBounds {
   /// This method returns the halflength in Y (this is Rmax -Rmin)
   double halflengthY() const;
 
+  /// Returns true for full phi coverage - obviously false here
+  bool coversFullAzimuth() const final;
+
+  /// Checks if this is inside the radial coverage
+  /// given the a tolerance
+  bool insideRadialBounds(double R, double tolerance = 0.) const final;
+
  private:
   double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
@@ -165,6 +172,15 @@ inline double DiscTrapezoidalBounds::halflengthY() const {
   auto hmin = std::sqrt(m_rMin * m_rMin - m_minHalfX * m_minHalfX);
   auto hmax = std::sqrt(m_rMax * m_rMax - m_maxHalfX * m_maxHalfX);
   return (hmax - hmin) / 2.0;
+}
+
+inline bool DiscTrapezoidalBounds::coversFullAzimuth() const {
+  return false;
+}
+
+inline bool DiscTrapezoidalBounds::insideRadialBounds(double R,
+                                                      double tolerance) const {
+  return (R + tolerance > m_rMin and R - tolerance < m_rMax);
 }
 
 }  // namespace Acts

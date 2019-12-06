@@ -40,10 +40,11 @@ struct SeedFilterConfig {
 
 /// @class Filter seeds at various stages with the currently
 /// available information.
-template <typename SpacePoint>
+template <typename external_spacepoint_t>
 class SeedFilter {
  public:
-  SeedFilter(SeedFilterConfig config, IExperimentCuts<SpacePoint>* expCuts = 0);
+  SeedFilter(SeedFilterConfig config,
+             IExperimentCuts<external_spacepoint_t>* expCuts = 0);
 
   SeedFilter() = delete;
   virtual ~SeedFilter() = default;
@@ -57,12 +58,12 @@ class SeedFilter {
   /// @param origin on the z axis as defined by bottom and middle space point
   /// @return vector of pairs containing seed weight and seed for all valid
   /// created seeds
-  virtual std::vector<
-      std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+  virtual std::vector<std::pair<
+      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
   filterSeeds_2SpFixed(
-      const InternalSpacePoint<SpacePoint>& bottomSP,
-      const InternalSpacePoint<SpacePoint>& middleSP,
-      std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
+      const InternalSpacePoint<external_spacepoint_t>& bottomSP,
+      const InternalSpacePoint<external_spacepoint_t>& middleSP,
+      std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin) const;
 
@@ -72,12 +73,13 @@ class SeedFilter {
   /// @return vector of all InternalSeeds that not filtered out
   virtual void filterSeeds_1SpFixed(
       std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<SpacePoint>>>>& seedsPerSpM,
-      std::vector<std::unique_ptr<Seed<SpacePoint>>>& outVec) const;
+          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+          seedsPerSpM,
+      std::vector<Seed<external_spacepoint_t>>& outVec) const;
 
  private:
   const SeedFilterConfig m_cfg;
-  const IExperimentCuts<SpacePoint>* m_experimentCuts;
+  const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
 };
 }  // namespace Acts
 #include "Acts/Seeding/SeedFilter.ipp"

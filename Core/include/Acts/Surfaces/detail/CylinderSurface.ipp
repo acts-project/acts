@@ -17,13 +17,13 @@ inline const Vector3D CylinderSurface::rotSymmetryAxis(
 }
 
 inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
-    const GeometryContext& gctx, const Vector3D& position,
+    const Transform3D& transform, const Vector3D& position,
     const Vector3D& direction) const {
   // Solve for radius R
   double R = bounds().r();
 
   // Get the transformation matrtix
-  const auto& tMatrix = transform(gctx).matrix();
+  const auto& tMatrix = transform.matrix();
   Vector3D caxis = tMatrix.block<3, 1>(0, 2).transpose();
   Vector3D ccenter = tMatrix.block<3, 1>(0, 3).transpose();
 
@@ -41,8 +41,9 @@ inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
 inline Intersection CylinderSurface::intersectionEstimate(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  const auto& gctxTransform = transform(gctx);
   // Solve the quadratic equation
-  auto qe = intersectionSolver(gctx, position, direction);
+  auto qe = intersectionSolver(gctxTransform, position, direction);
 
   // If no valid solution return a non-valid intersection
   if (qe.solutions == 0) {
@@ -70,8 +71,10 @@ inline Intersection CylinderSurface::intersectionEstimate(
 inline SurfaceIntersection CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
+  const auto& gctxTransform = transform(gctx);
+
   // Solve the quadratic equation
-  auto qe = intersectionSolver(gctx, position, direction);
+  auto qe = intersectionSolver(gctxTransform, position, direction);
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
@@ -84,23 +87,48 @@ inline SurfaceIntersection CylinderSurface::intersect(
       qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance
           ? Intersection::Status::onSurface
           : Intersection::Status::reachable;
-  if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
-    status1 = Intersection::Status::missed;
-  }
 
+  // Helper method for boundary check
+  auto boundaryCheck =
+      [&](const Vector3D& solution,
+          Intersection::Status status) -> Intersection::Status {
+    // No check to be done, return current status
+    if (!bcheck)
+      return status;
+    const auto& cBounds = bounds();
+    if (cBounds.coversFullAzimuth() and
+        bcheck.type() == BoundaryCheck::Type::eAbsolute) {
+      // Project out the current Z value via local z axis
+      // Built-in local to global for speed reasons
+      const auto& tMatrix = gctxTransform.matrix();
+      // Create the reference vector in local
+      const Vector3D vecLocal(solution - tMatrix.block<3, 1>(0, 3));
+      double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
+      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_Z];
+      double hZ = cBounds.halflengthZ() + tolerance;
+      return (cZ * cZ < hZ * hZ) ? status : Intersection::Status::missed;
+    }
+    return (isOnSurface(gctx, solution, direction, bcheck)
+                ? status
+                : Intersection::Status::missed);
+  };
+  // Check first solution for boundary compatiblity
+  status1 = boundaryCheck(solution1, status1);
+  // Set the intersection
+  Intersection first(solution1, qe.first, status1);
+  SurfaceIntersection cIntersection(first, this);
+  if (qe.solutions == 1) {
+    return cIntersection;
+  }
   // Check the validity of the second solution
   Vector3D solution2 = position + qe.second * direction;
   Intersection::Status status2 =
       qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance
           ? Intersection::Status::onSurface
           : Intersection::Status::reachable;
-  if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
-    status2 = Intersection::Status::missed;
-  }
-  // Set the intersection
-  Intersection first(solution1, qe.first, status1);
+  // Check first solution for boundary compatiblity
+  status2 = boundaryCheck(solution2, status2);
   Intersection second(solution2, qe.second, status2);
-  SurfaceIntersection cIntersection(first, this);
   // Check one if its valid or neither is valid
   bool check1 = status1 != Intersection::Status::missed or
                 (status1 == Intersection::Status::missed and
@@ -109,14 +137,10 @@ inline SurfaceIntersection CylinderSurface::intersect(
   if ((check1 and qe.first * qe.first < qe.second * qe.second) or
       status2 == Intersection::Status::missed) {
     // And add the alternative
-    if (qe.solutions > 1) {
-      cIntersection.alternatives = {second};
-    }
+    cIntersection.alternative = second;
   } else {
     // And add the alternative
-    if (qe.solutions > 1) {
-      cIntersection.alternatives = {first};
-    }
+    cIntersection.alternative = first;
     cIntersection.intersection = second;
   }
   return cIntersection;

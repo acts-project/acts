@@ -47,6 +47,10 @@ add_executable (SurfaceIntersectionTests SurfaceIntersectionTests.cpp)
 target_link_libraries (SurfaceIntersectionTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME SurfaceIntersectionUnitTest COMMAND SurfaceIntersectionTests)
 
+add_executable (SurfaceIntersectionBenchmark SurfaceIntersectionBenchmark.cpp)
+target_link_libraries (SurfaceIntersectionBenchmark PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME SurfaceIntersectionBenchmarkTest COMMAND SurfaceIntersectionBenchmark)
+
 add_executable (InfiniteBoundsTests InfiniteBoundsTests.cpp)
 target_link_libraries (InfiniteBoundsTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME InfiniteBoundsUnitTest COMMAND InfiniteBoundsTests)

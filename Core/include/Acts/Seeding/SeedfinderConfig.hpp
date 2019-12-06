@@ -19,10 +19,6 @@ template <typename SpacePoint>
 struct SeedfinderConfig {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 
-  // Algorithm settings
-  // number of seeds to be produced before returning
-  size_t minSeeds = 50000;
-
   // Seed Cuts
   // lower cutoff for seeds in MeV
   // FIXME: Acts units
