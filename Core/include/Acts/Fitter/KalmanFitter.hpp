@@ -245,7 +245,7 @@ class KalmanFitter {
       // - Waiting for a current surface that has material
       // -> a trackState will be created on surface with material
       auto surface = state.navigation.currentSurface;
-      if (surface and surface->surfaceMaterial() and not result.smoothed) {
+      if (surface and not result.smoothed) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -358,9 +358,9 @@ class KalmanFitter {
 
         // Get and set the type flags
         auto& typeFlags = trackStateProxy.typeFlags();
+        typeFlags.set(TrackStateFlag::MaterialFlag);
         typeFlags.set(TrackStateFlag::MeasurementFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
-        typeFlags.set(TrackStateFlag::MaterialFlag);
 
         // If the update is successful, set covariance and
         auto updateRes = m_updater(state.geoContext, trackStateProxy);
@@ -382,42 +382,36 @@ class KalmanFitter {
         }
         // We count the processed state
         ++result.processedStates;
-      } else {
+      } else if (surface->surfaceMaterial()) {
+        ACTS_VERBOSE("Material surface " << surface->geoID()
+                                         << " without measurement detected.");
+
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface, true);
 
-        // Create a track state from predicted parameter
-        TrackStateType trackState(boundParams);
+        // add a full TrackState entry multi trajectory
+        // (this allocates storage for all components, we will set them later)
+        result.trackTip = result.fittedStates.addTrackState(
+            TrackStatePropMask::All, result.trackTip);
+
+        // now get track state proxy back
+        auto trackStateProxy =
+            result.fittedStates.getTrackState(result.trackTip);
 
         // Fill the track state
-        trackState.parameter.jacobian = jacobian;
-        trackState.parameter.pathLength = pathLength;
-
-        // Update state and stepper with material effects
-        auto interaction =
-            materialInteractor(surface, state, stepper, fullUpdate);
-
-        // Set the filtered parameter by updating the predicted parameter with
-        // material effects
-        auto updateRes =
-            materialUpdater(state.geoContext, trackState, interaction);
-        if (!updateRes.ok()) {
-          ACTS_ERROR(
-              "Update with material effects failed: " << updateRes.error());
-          return updateRes.error();
-        } else {
-          ACTS_VERBOSE(
-              "Update with material effects successful, updated parameters are "
-              ": \n"
-              << *trackState.parameter.filtered.parameters());
-        }
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
 
         // Set the track state flags
-        trackState.setType(TrackStateFlag::MaterialFlag);
+        auto& typeFlags = trackStateProxy.typeFlags();
+        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.set(TrackStateFlag::ParameterFlag);
         if (surface->associatedDetectorElement() != nullptr) {
           // If the surface is sensitive, set the hole type flag
-          trackState.setType(TrackStateFlag::HoleFlag);
+          typeFlags.set(TrackStateFlag::HoleFlag);
 
           // Count the missed surface
           ACTS_VERBOSE("Detected hole on " << surface->geoID());
@@ -426,9 +420,24 @@ class KalmanFitter {
           ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
         }
 
-        // Add the track state to the fittedStates
-        result.trackTip =
-            result.fittedStates.addTrackState(trackState, result.trackTip);
+        // Update state and stepper with material effects
+        auto interaction =
+            materialInteractor(surface, state, stepper, fullUpdate);
+
+        // Set the filtered parameter by updating the predicted parameter with
+        // material effects
+        auto updateRes =
+            materialUpdater(state.geoContext, trackStateProxy, interaction);
+        if (!updateRes.ok()) {
+          ACTS_ERROR(
+              "Update with material effects failed: " << updateRes.error());
+          return updateRes.error();
+        } else {
+          ACTS_VERBOSE(
+              "Update with material effects successful, updated parameters are "
+              ": \n"
+              << trackStateProxy.filtered().transpose());
+        }
       }
       return Result<void>::success();
     }
@@ -480,12 +489,36 @@ class KalmanFitter {
     /// @return Bool indicating whether this update was 'successful'
     template <typename track_state_t>
     Result<void> materialUpdater(
-        const GeometryContext& geoContext, track_state_t& trackState,
+        const GeometryContext& /*gctx*/, track_state_t trackState,
         const detail::PointwiseMaterialInteraction& interaction) const {
-      // Predicted parameter and covariance
-      parameters_t predicted = *trackState.parameter.predicted;
-      auto predicted_parameter = predicted.parameters();
-      auto predicted_covariance = *predicted.covariance();
+      // let's make sure the types are consistent
+      using SourceLink = typename track_state_t::SourceLink;
+      using TrackStateProxy =
+          typename MultiTrajectory<SourceLink>::TrackStateProxy;
+      static_assert(std::is_same_v<track_state_t, TrackStateProxy>,
+                    "Given track state type is not a track state proxy");
+
+      // we should have predicted state set
+      assert(trackState.hasPredicted());
+      // filtering should not have happened yet, but is allocated, therefore set
+      assert(trackState.hasFiltered());
+
+      // read-only handles. Types are eigen maps to backing storage
+      const auto predicted = trackState.predicted();
+      const auto predicted_covariance = trackState.predictedCovariance();
+
+      ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
+      ACTS_VERBOSE("Predicted covariance:\n" << predicted_covariance);
+
+      // read-write handles. Types are eigen maps into backing storage.
+      // This writes directly into the trajectory storage
+      auto filtered = trackState.filtered();
+      auto filtered_covariance = trackState.filteredCovariance();
+
+      // check for interaction
+      if (!interaction.nextP) {
+        return KalmanFitterError::UpdateFailed;
+      }
 
       // Get the update for parameter
       BoundParameters::ParVector_t deltaParamVec;
@@ -499,17 +532,12 @@ class KalmanFitter {
       deltaParamCov.diagonal() << 0, 0, interaction.variances.x(),
           interaction.variances.y(), interaction.variances.z(), 0;
 
-      // The updated parameter and covariance
-      auto filtered_parameters = predicted_parameter + deltaParamVec;
-      auto filtered_covariance = predicted_covariance + deltaParamCov;
+      // Fill the updated parameter and covariance
+      filtered = predicted + deltaParamVec;
+      filtered_covariance = predicted_covariance + deltaParamCov;
 
-      // The filtered parameter
-      parameters_t filtered(geoContext, std::move(filtered_covariance),
-                            std::move(filtered_parameters),
-                            predicted.referenceSurface().getSharedPtr());
-
-      // Set the filtered parameter for the track state
-      trackState.parameter.filtered = std::move(filtered);
+      ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
+      ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
 
       return Result<void>::success();
     }
