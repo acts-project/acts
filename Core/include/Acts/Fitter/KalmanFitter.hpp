@@ -87,6 +87,9 @@ struct KalmanFitterResult {
   // The optional Parameters at the provided surface
   boost::optional<BoundParameters> fittedParameters;
 
+  // Counter for states with measurements
+  size_t measurementStates = 0;
+
   // Counter for handled states
   size_t processedStates = 0;
 
@@ -380,6 +383,8 @@ class KalmanFitter {
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
         }
+        // We count the state with measurement
+        ++result.measurementStates;
         // We count the processed state
         ++result.processedStates;
       } else if (surface->surfaceMaterial()) {
@@ -438,6 +443,8 @@ class KalmanFitter {
               ": \n"
               << trackStateProxy.filtered().transpose());
         }
+        // We count the processed state
+        ++result.processedStates;
       }
       return Result<void>::success();
     }
