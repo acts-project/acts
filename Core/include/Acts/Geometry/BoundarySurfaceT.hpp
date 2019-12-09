@@ -127,10 +127,8 @@ class BoundarySurfaceT {
   /// Virtual Destructor
   virtual ~BoundarySurfaceT() = default;
 
- protected:
   /// Helper method: attach a Volume to this BoundarySurfaceT
-  /// this is done during the geometry construction and only called by
-  /// the friend templated volume
+  /// this is done during the geometry construction.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to be attached
@@ -138,8 +136,7 @@ class BoundarySurfaceT {
   void attachVolume(const T* volume, BoundaryOrientation inout);
 
   /// Helper method: attach a Volume to this BoundarySurfaceT
-  /// this is done during the geometry construction and only called by
-  /// the friend templated volume
+  /// this is done during the geometry construction.
   ///
   /// @param volumes The volume array to be attached
   /// @param inout The boundary orientation @todo update to along/opposite
