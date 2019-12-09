@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -46,6 +47,8 @@ struct SteppingState {
   Vector3D pos = Vector3D(0., 0., 0.);
   Vector3D dir = Vector3D(0., 0., 1);
   double p = 100_MeV;
+
+  NavigationDirection navDir;
 };
 
 /// @brief mockup of stepping state
@@ -86,6 +89,11 @@ struct Options {
   double pathLimit = std::numeric_limits<double>::max();
   bool loopProtection = true;
   double loopFraction = 0.5;
+
+  bool debug = false;
+  std::string debugString;
+  int debugMsgWidth = 60;
+  int debugPfxWidth = 30;
 
   /// Contains: target aborters
   AbortList<PathLimitReached> abortList;
@@ -183,9 +191,19 @@ BOOST_DATA_TEST_CASE(
   Vector3D mom(px, py, pz);
   CurvilinearParameters start(std::nullopt, pos, mom, q, 42.);
 
-  PropagatorOptions<> options(tgContext, mfContext);
+  using DebugOutput = Acts::detail::DebugOutputActor;
+  using ProopagatorOptions =
+      PropagatorOptions<ActionList<DebugOutput>, AbortList<>>;
+  ProopagatorOptions options(tgContext, mfContext);
+  options.debug = false;
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();
+
+  if (options.debug) {
+    const auto debugString =
+        result.template get<DebugOutput::result_type>().debugString;
+    std::cout << debugString << std::endl;
+  }
 
   // this test assumes state.options.loopFraction = 0.5
   CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);

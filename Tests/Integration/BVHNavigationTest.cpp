@@ -35,7 +35,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"

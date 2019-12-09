@@ -12,7 +12,8 @@
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -28,8 +29,6 @@ using namespace Acts::UnitLiterals;
 template <typename bfield_t>
 class AtlasStepper {
  public:
-  using cstep = detail::ConstrainedStep;
-
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
@@ -51,11 +50,13 @@ class AtlasStepper {
     /// @param[in] pars Input parameters
     /// @param[in] ndir The navigation direction w.r.t. parameters
     /// @param[in] ssize the steps size limitation
+    /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
     State(std::reference_wrapper<const GeometryContext> gctx,
           std::reference_wrapper<const MagneticFieldContext> mctx,
           const Parameters& pars, NavigationDirection ndir = forward,
-          double ssize = std::numeric_limits<double>::max())
+          double ssize = std::numeric_limits<double>::max(),
+          double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
           useJacobian(false),
           step(0.),
@@ -67,6 +68,7 @@ class AtlasStepper {
           covariance(nullptr),
           t0(pars.time()),
           stepSize(ndir * std::abs(ssize)),
+          tolerance(stolerance),
           fieldCache(mctx),
           geoContext(gctx) {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
@@ -271,8 +273,14 @@ class AtlasStepper {
     // Starting time
     const double t0;
 
-    // adaptive step size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    // Adaptive step size of the runge-kutta integration
+    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+
+    // Previous step size for overstep estimation
+    double previousStepSize = 0.;
+
+    /// The tolerance for the stepping
+    double tolerance = s_onSurfaceTolerance;
 
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
@@ -330,15 +338,59 @@ class AtlasStepper {
   /// Time access
   double time(const State& state) const { return state.t0 + state.pVector[3]; }
 
-  /// Tests if the state reached a surface
+  /// Update surface status
   ///
-  /// @param [in] state State that is tests
-  /// @param [in] surface Surface that is tested
+  /// This method intersect the provided surface and update the navigation
+  /// step estimation accordingly (hence it changes the state). It also
+  /// returns the status of the intersection to trigger onSurface in case
+  /// the surface is reached.
   ///
-  /// @return Boolean statement if surface is reached by state
-  bool surfaceReached(const State& state, const Surface* surface) const {
-    return surface->isOnSurface(state.geoContext, position(state),
-                                direction(state), true);
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param surface [in] The surface provided
+  /// @param bcheck [in] The boundary check for this status update
+  Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
+                                           const BoundaryCheck& bcheck) const {
+    return detail::updateSingleSurfaceStatus<AtlasStepper>(*this, state,
+                                                           surface, bcheck);
+  }
+
+  /// Update step size
+  ///
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param release [in] boolean to trigger step size release
+  template <typename object_intersection_t>
+  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+                      bool release = true) const {
+    detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
+  }
+
+  /// Set Step size - explicitely with a double
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param stepSize [in] The step size value
+  /// @param stype [in] The step size type to be set
+  void setStepSize(State& state, double stepSize,
+                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+    state.previousStepSize = state.stepSize;
+    state.stepSize.update(stepSize, stype, true);
+  }
+
+  /// Release the Step size
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  void releaseStepSize(State& state) const {
+    state.stepSize.release(ConstrainedStep::actor);
+  }
+
+  /// Output the Step Size - single component
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  std::string outputStepSize(const State& state) const {
+    return state.stepSize.toString();
   }
 
   /// Create and return the bound state at the current position

@@ -20,7 +20,8 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -81,7 +82,15 @@ struct PropagatorState {
       double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
-      Cstep stepSize = Cstep(100_cm);
+      ConstrainedStep stepSize = ConstrainedStep(100_cm);
+
+      // Previous step size for overstep estimation (ignored here)
+      double previousStepSize = 0.;
+
+      /// The tolerance for the stepping
+      double tolerance = s_onSurfaceTolerance;
+
+      GeometryContext geoContext = GeometryContext();
     };
 
     /// Global particle position accessor
@@ -104,9 +113,33 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    bool surfaceReached(const State& state, const Surface* surface) const {
-      return surface->isOnSurface(tgContext, position(state), direction(state),
-                                  true);
+    Intersection::Status updateSurfaceStatus(
+        State& state, const Surface& surface,
+        const BoundaryCheck& bcheck) const {
+      return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
+                                                        bcheck);
+    }
+
+    template <typename object_intersection_t>
+    void updateStepSize(State& state,
+                        const object_intersection_t& oIntersection,
+                        bool release = true) const {
+      detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
+    }
+
+    void setStepSize(
+        State& state, double stepSize,
+        ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+      state.previousStepSize = state.stepSize;
+      state.stepSize.update(stepSize, stype, true);
+    }
+
+    void releaseStepSize(State& state) const {
+      state.stepSize.release(ConstrainedStep::actor);
+    }
+
+    std::string outputStepSize(const State& state) const {
+      return state.stepSize.toString();
     }
 
     BoundState boundState(State& state, const Surface& surface,

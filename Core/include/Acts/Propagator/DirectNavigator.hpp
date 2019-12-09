@@ -17,13 +17,11 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
-
-using Cstep = detail::ConstrainedStep;
 
 /// DirectNavigator class
 ///
@@ -36,7 +34,7 @@ class DirectNavigator {
  public:
   /// The sequentially crossed surfaces
   using SurfaceSequence = std::vector<const Surface*>;
-  using SurfaceIter = std::vector<const Surface*>::const_iterator;
+  using SurfaceIter = std::vector<const Surface*>::iterator;
 
   /// Defaulted Constructed
   DirectNavigator() = default;
@@ -76,8 +74,6 @@ class DirectNavigator {
         state.navigation.surfaceSequence = surfaceSequence;
         state.navigation.nextSurfaceIter =
             state.navigation.surfaceSequence.begin();
-        state.navigation.endSurfaceIter =
-            state.navigation.surfaceSequence.end();
         r.initialized = true;
       }
     }
@@ -100,8 +96,6 @@ class DirectNavigator {
 
     /// Iterator the the next surface
     SurfaceIter nextSurfaceIter = surfaceSequence.begin();
-    /// Iterator to the end for the end sequence trigger
-    SurfaceIter endSurfaceIter = surfaceSequence.end();
 
     /// Navigation state - external interface: the start surface
     const Surface* startSurface = nullptr;
@@ -130,20 +124,50 @@ class DirectNavigator {
 
     // Navigator status always resets the current surface
     state.navigation.currentSurface = nullptr;
+    // Output the position in the sequence
+    debugLog(state, [&] {
+      std::stringstream dstream;
+      dstream << std::distance(state.navigation.nextSurfaceIter,
+                               state.navigation.surfaceSequence.end());
+      dstream << " out of " << state.navigation.surfaceSequence.size();
+      dstream << " surfaces remain to try.";
+      return dstream.str();
+    });
     // Check if we are on surface
-    if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter &&
-        stepper.surfaceReached(state.stepping,
-                               *state.navigation.nextSurfaceIter)) {
-      // Set the current surface
-      state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Current surface set to  "
-                << state.navigation.currentSurface->geoID();
-        return dstream.str();
-      });
-      // Move the sequence to the next surface
-      ++state.navigation.nextSurfaceIter;
+    if (state.navigation.nextSurfaceIter !=
+        state.navigation.surfaceSequence.end()) {
+      // Establish the surface status
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, **state.navigation.nextSurfaceIter, false);
+      if (surfaceStatus == Intersection::Status::onSurface) {
+        // Set the current surface
+        state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Current surface set to  "
+                  << state.navigation.currentSurface->geoID();
+          return dstream.str();
+        });
+        // Move the sequence to the next surface
+        ++state.navigation.nextSurfaceIter;
+        if (state.navigation.nextSurfaceIter !=
+            state.navigation.surfaceSequence.end()) {
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Next surface candidate is  "
+                    << (*state.navigation.nextSurfaceIter)->geoID();
+            return dstream.str();
+          });
+          stepper.releaseStepSize(state.stepping);
+        }
+      } else if (surfaceStatus == Intersection::Status::reachable) {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Next surface reachable at distance  "
+                  << stepper.outputStepSize(state.stepping);
+          return dstream.str();
+        });
+      }
     }
   }
 
@@ -161,29 +185,37 @@ class DirectNavigator {
 
     // Navigator target always resets the current surface
     state.navigation.currentSurface = nullptr;
-
-    if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
-      // take the target intersection
-      auto nextIntersection =
-          (*state.navigation.nextSurfaceIter)
-              ->intersect(state.geoContext, stepper.position(state.stepping),
-                          stepper.direction(state.stepping), false);
-
-      // Intersect the next surface and go
-      double navStep = nextIntersection.intersection.pathLength;
-      double overstepLimit = stepper.overstepLimit(state.stepping);
-      if (navStep < overstepLimit and nextIntersection.alternative) {
-        navStep = nextIntersection.alternative.pathLength;
+    // Output the position in the sequence
+    debugLog(state, [&] {
+      std::stringstream dstream;
+      dstream << std::distance(state.navigation.nextSurfaceIter,
+                               state.navigation.surfaceSequence.end());
+      dstream << " out of " << state.navigation.surfaceSequence.size();
+      dstream << " surfaces remain to try.";
+      return dstream.str();
+    });
+    if (state.navigation.nextSurfaceIter !=
+        state.navigation.surfaceSequence.end()) {
+      // Establish & update the surface status
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, **state.navigation.nextSurfaceIter, false);
+      if (surfaceStatus == Intersection::Status::unreachable) {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Surface not reachable anymore, switching to next one in "
+                     "sequence";
+          return dstream.str();
+        });
+        // Move the sequence to the next surface
+        ++state.navigation.nextSurfaceIter;
+      } else {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Navigation stepSize set to ";
+          dstream << stepper.outputStepSize(state.stepping);
+          return dstream.str();
+        });
       }
-
-      // Set the step size - this has to be outsourced to the Stepper
-      state.stepping.stepSize.update(navStep, Cstep::actor, true);
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Navigation stepSize released and updated to ";
-        dstream << state.stepping.stepSize.toString();
-        return dstream.str();
-      });
     } else {
       // Set the navigation break
       state.navigation.navigationBreak = true;

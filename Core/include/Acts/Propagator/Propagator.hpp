@@ -94,9 +94,9 @@ struct PropagatorOptions {
     eoptions.absPdgCode = absPdgCode;
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
-    eoptions.maxStepSize = maxStepSize;
+    eoptions.maxStepSize = direction * std::abs(maxStepSize);
     eoptions.targetTolerance = targetTolerance;
-    eoptions.pathLimit = pathLimit;
+    eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
     eoptions.loopFraction = loopFraction;
     // Output option
@@ -241,7 +241,7 @@ class Propagator final {
     State(const parameters_t& start, const propagator_options_t& topts)
         : options(topts),
           stepping(topts.geoContext, topts.magFieldContext, start,
-                   topts.direction, topts.maxStepSize),
+                   topts.direction, topts.maxStepSize, topts.tolerance),
           geoContext(topts.geoContext) {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();

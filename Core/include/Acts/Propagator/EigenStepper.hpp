@@ -18,6 +18,7 @@
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -43,8 +44,6 @@ template <typename bfield_t,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
-  using cstep = detail::ConstrainedStep;
-
   /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
@@ -67,13 +66,15 @@ class EigenStepper {
     /// @param [in] par The track parameters at start
     /// @param [in] ndir The navigation direciton w.r.t momentum
     /// @param [in] ssize is the maximum step size
+    /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     template <typename parameters_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
                    const parameters_t& par, NavigationDirection ndir = forward,
-                   double ssize = std::numeric_limits<double>::max())
+                   double ssize = std::numeric_limits<double>::max(),
+                   double stolerance = s_onSurfaceTolerance)
         : pos(par.position()),
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
@@ -81,11 +82,13 @@ class EigenStepper {
           t0(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
+          tolerance(stolerance),
           fieldCache(mctx),
           geoContext(gctx) {
       // remember the start parameters
       startPos = pos;
       startDir = dir;
+
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation
@@ -142,11 +145,17 @@ class EigenStepper {
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
-    /// accummulated path length state
+    /// Accummulated path length state
     double pathAccumulated = 0.;
 
-    /// adaptive step size of the runge-kutta integration
-    cstep stepSize{std::numeric_limits<double>::max()};
+    /// Adaptive step size of the runge-kutta integration
+    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
+
+    /// Last performed step (for overstep limit calculation)
+    double previousStepSize = 0.;
+
+    /// The tolerance for the stepping
+    double tolerance = s_onSurfaceTolerance;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
@@ -210,20 +219,67 @@ class EigenStepper {
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.t0 + state.dt; }
 
+  /// Update surface status
+  ///
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param surface [in] The surface provided
+  /// @param bcheck [in] The boundary check for this status update
+  Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
+                                           const BoundaryCheck& bcheck) const {
+    return detail::updateSingleSurfaceStatus<EigenStepper>(*this, state,
+                                                           surface, bcheck);
+  }
+
+  /// Update step size
+  ///
+  /// This method intersect the provided surface and update the navigation
+  /// step estimation accordingly (hence it changes the state). It also
+  /// returns the status of the intersection to trigger onSurface in case
+  /// the surface is reached.
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param release [in] boolean to trigger step size release
+  template <typename object_intersection_t>
+  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+                      bool release = true) const {
+    detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
+  }
+
+  /// Set Step size - explicitely with a double
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param stepSize [in] The step size value
+  /// @param stype [in] The step size type to be set
+  void setStepSize(State& state, double stepSize,
+                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+    state.previousStepSize = state.stepSize;
+    state.stepSize.update(stepSize, stype, true);
+  }
+
+  /// Release the Step size
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  void releaseStepSize(State& state) const {
+    state.stepSize.release(ConstrainedStep::actor);
+  }
+
+  /// Output the Step Size - single component
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
+  std::string outputStepSize(const State& state) const {
+    return state.stepSize.toString();
+  }
+
   /// Overstep limit
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
-
-  /// Tests if the state reached a surface
-  ///
-  /// @param [in] state State that is tests
-  /// @param [in] surface Surface that is tested
-  ///
-  /// @return Boolean statement if surface is reached by state
-  bool surfaceReached(const State& state, const Surface* surface) const {
-    return surface->isOnSurface(state.geoContext, position(state),
-                                direction(state), true);
+  double overstepLimit(const State& /*state*/) const {
+    // A dynamic overstep limit could sit here
+    return -m_overstepLimit;
   }
 
   /// Create and return the bound state at the current position
@@ -319,7 +375,7 @@ class EigenStepper {
   BField m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -50_um;
+  double m_overstepLimit = 100_um;
 };
 }  // namespace Acts
 

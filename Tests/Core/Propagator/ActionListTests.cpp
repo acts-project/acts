@@ -38,7 +38,6 @@ namespace Acts {
 namespace Test {
 
 // the constrained step class
-using cstep = detail::ConstrainedStep;
 
 /// This is a simple cache struct to mimic the
 /// Propagator cache
@@ -50,7 +49,7 @@ struct PropagatorState {
     double pathAccumulated = 0.;
 
     // adaptive sep size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize = std::numeric_limits<double>::max();
   };
 
   /// emulate the options template

@@ -107,6 +107,8 @@ auto Acts::Propagator<S, N>::propagate(
 
   // Expand the abort list with a path aborter
   path_aborter_t pathAborter;
+  pathAborter.internalLimit = options.pathLimit;
+
   auto abortList = options.abortList.append(pathAborter);
 
   // The expanded options (including path limit)
@@ -166,6 +168,7 @@ auto Acts::Propagator<S, N>::propagate(
   // Type of provided options
   target_aborter_t targetAborter;
   path_aborter_t pathAborter;
+  pathAborter.internalLimit = options.pathLimit;
   auto abortList = options.abortList.append(targetAborter, pathAborter);
 
   // Create the extended options and declare their type
