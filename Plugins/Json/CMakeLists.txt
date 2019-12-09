@@ -4,6 +4,7 @@ set(_json_dep_header_sha256_ref d2eeb25d2e95bffeb08ebb7704cdffd2e8fca7113eba9a0b
 
 # Check if hash of file on disk matches the stated hash of the release
 file(READ "include/Acts/Plugins/Json/lib/json.h" _json_dep_header)
+file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 string(SHA256 _json_dep_header_sha256 "${_json_dep_header}")
 
 if(NOT ${_json_dep_header_sha256} STREQUAL ${_json_dep_header_sha256_ref})
@@ -11,12 +12,22 @@ if(NOT ${_json_dep_header_sha256} STREQUAL ${_json_dep_header_sha256_ref})
 endif()
 
 add_library(
-  ActsJsonPlugin INTERFACE)
+  ActsJsonPlugin SHARED ${src_files})
+  
 target_include_directories(
   ActsJsonPlugin
-  INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  SYSTEM INTERFACE
+  ${Boost_INCLUDE_DIRS}
+  ${EIGEN_INCLUDE_DIRS})
+
+target_include_directories(
+  ActsJsonPlugin
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+    $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(
+  ActsJsonPlugin PUBLIC ActsCore)
 
 install(
   TARGETS ActsJsonPlugin
