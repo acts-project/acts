@@ -1,0 +1,25 @@
+target_sources_local(
+  ActsCore
+  PRIVATE
+    ConeBounds.cpp
+    ConeSurface.cpp
+    CylinderBounds.cpp
+    CylinderSurface.cpp
+    DiamondBounds.cpp
+    DiscSurface.cpp
+    DiscTrapezoidalBounds.cpp
+    EllipseBounds.cpp
+    InfinitieBounds.cpp
+    LineBounds.cpp
+    LineSurface.cpp
+    PerigeeSurface.cpp
+    PlaneSurface.cpp
+    PolyhedronRepresentation.cpp
+    RadialBounds.cpp
+    RectangleBounds.cpp
+    StrawSurface.cpp
+    Surface.cpp
+    SurfaceArray.cpp
+    TrapezoidBounds.cpp
+    TriangleBounds.cpp
+)

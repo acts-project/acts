@@ -1,88 +1,50 @@
-# - Config file for the Acts package
+# CMake config for the Acts package
 #
-# It include the cmake targets of all defined components. Additionally, the 
-# following variables are set:
-# - ACTS_INCLUDE_DIR ... directory containing the Acts header files
-# - ACTS_LIBRARY_DIR ... directory containing the Acts libraries
-# - compiler flags used during the compilation of Acts:
-#  + ACTS_CXX_FLAGS
-#  + ACTS_CXX_FLAGS_DEBUG
-#  + ACTS_CXX_FLAGS_MINSIZEREL
-#  + ACTS_CXX_FLAGS_RELEASE
-#  + ACTS_CXX_FLAGS_RELWITHDEBINFO
-# - linker flags used for Acts:
-#  + ACTS_EXE_LINKER_FLAGS_DEBUG
-#  + ACTS_SHARED_LINKER_FLAGS_DEBUG
+# Only defines CMake targets for requested and available components.
+# No addititional variables are defined. All additional information, e.g.
+# include directories and dependencies, are defined as target-specific
+# properties and are automatically propagated when linking to the target.
 
-# - Init CMakePackageConfigHelpers
 @PACKAGE_INIT@
 
-set(_supported_components @_supported_components@)
-set(_git_hash @_git_hash@)
-set(_git_hash_short @_git_hash_short@)
-set(_git_local_changes @_git_local_changes@)
+set(Acts_SUPPORTED_COMPONENTS @_supported_components@)
+set(Acts_COMMIT_HASH "@_acts_commit_hash@")
 
-# copy version to all uppercase
-set(ACTS_VERSION "${Acts_VERSION}")
-
-# print information about found version
-if (NOT (${Acts_FIND_QUIETLY}))
-  
-  set(_git_msg "[${_git_hash_short}]")
-  if(${_git_local_changes} STREQUAL "DIRTY")
-          set(_git_msg "${_git_msg} - DIRTY")
-  endif()
-
-  message (STATUS "found Acts version ${Acts_VERSION} - ${_git_msg}")
-  message (STATUS "supported components are:")
-  foreach (_scomp ${_supported_components})
-    message (STATUS "   - ${_scomp}")
-  endforeach ()
+# print version and components information
+if(NOT Acts_FIND_QUIETLY)
+  message(STATUS "found Acts version ${Acts_VERSION} - ${Acts_COMMIT_HASH}")
+  message(STATUS "supported components:")
+  foreach(_component ${_supported_components})
+    message(STATUS "  - ${_component}")
+  endforeach()
 endif()
 
-# check for all required components
-foreach (_comp ${Acts_FIND_COMPONENTS})
+# check that requested components are available
+foreach(_component ${Acts_FIND_COMPONENTS})
   # check if this component is supported
-  if (NOT ";${_supported_components};" MATCHES ";${_comp};")
-    # not supported, but required -> fail
-    if (${Acts_FIND_REQUIRED_${_comp}})
-      set (Acts_FOUND False)
-      message (FATAL_ERROR "required component \"${_comp}\" not found")
-    # not supported and optional -> skip
-    else ()
-      list (REMOVE_ITEM Acts_FIND_COMPONENTS ${_comp})
-      if (NOT (${Acts_FIND_QUIETLY}))
-      	message (STATUS "optional component \"${_comp}\" not found")
-      endif ()
-    endif ()
-  endif ()
-endforeach ()
+  if(NOT _component IN_LIST Acts_SUPPORTED_COMPONENTS)
+    if (${Acts_FIND_REQUIRED_${_component}})
+      # not supported, but required -> fail
+      set(Acts_FOUND False)
+      message(FATAL_ERROR "required component \"${_component}\" not found")
+    else()
+      # not supported and optional -> skip
+      list(REMOVE_ITEM Acts_FIND_COMPONENTS ${_component})
+      if(NOT Acts_FIND_QUIETLY)
+        message(STATUS "optional component \"${_component}\" not found")
+      endif()
+    endif()
+  endif()
+endforeach()
 
-if (NOT (${Acts_FIND_QUIETLY}))
-  message (STATUS "loading components:")
-endif ()
-foreach (_comp ${Acts_FIND_COMPONENTS})
-  if (NOT (${Acts_FIND_QUIETLY}))
-    message (STATUS "   - ${_comp}")
-  endif ()
-  # - Include the targets file to create the imported targets that a client can
-  # link to (libraries) or execute (programs)
-  include ("${CMAKE_CURRENT_LIST_DIR}/Acts${_comp}Targets.cmake")
-endforeach ()
-
-# - Create relocatable paths
-# NOTE: Do not strictly need paths as all usage requirements are encoded in
-# the imported targets created later.
-set_and_check (ACTS_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
-set_and_check (ACTS_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
-set_and_check (Acts_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
-set_and_check (Acts_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
-
-# set Acts compilation and linker flags
-set (ACTS_CXX_FLAGS "@ACTS_CXX_FLAGS@")
-set (ACTS_CXX_FLAGS_DEBUG "@ACTS_CXX_FLAGS_DEBUG@")
-set (ACTS_CXX_FLAGS_MINSIZEREL "@ACTS_CXX_FLAGS_MINSIZEREL@")
-set (ACTS_CXX_FLAGS_RELEASE "@ACTS_CXX_FLAGS_RELEASE@")
-set (ACTS_CXX_FLAGS_RELWITHDEBINFO "@ACTS_CXX_FLAGS_RELWITHDEBINFO@")
-set (ACTS_EXE_LINKER_FLAGS_DEBUG "@ACTS_EXE_LINKER_FLAGS_DEBUG@")
-set (ACTS_SHARED_LINKER_FLAGS_DEBUG "@ACTS_SHARED_LINKER_FLAGS_DEBUG@")
+# load requested and available components
+if(NOT Acts_FIND_QUIETLY)
+  message(STATUS "loading components:")
+endif()
+foreach(_component ${Acts_FIND_COMPONENTS})
+  if(NOT Acts_FIND_QUIETLY)
+    message(STATUS "  - ${_component}")
+  endif()
+  # include the targets file to create the imported targets for the user
+  include(${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Targets.cmake)
+endforeach()

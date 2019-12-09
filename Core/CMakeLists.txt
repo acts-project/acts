@@ -1,31 +1,46 @@
-file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp" "include/*.ipp")
+configure_file(
+  ActsVersion.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp)
 
-add_library(ActsCore SHARED ${src_files})
-
-# set per-target c++17 requirement that will be propagated to linked targets
-target_compile_features(ActsCore PUBLIC cxx_std_17)
-target_compile_definitions(ActsCore PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
-target_include_directories(ActsCore SYSTEM PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
-target_include_directories(ActsCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
+# source files will be added later
+add_library(
+  ActsCore SHARED "")
+target_compile_features(
+  ActsCore
+  PUBLIC cxx_std_17)
+target_compile_definitions(
+  ActsCore
+  PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
+target_include_directories(
+  ActsCore
+  SYSTEM PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    # for the generated version header
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_link_libraries(
+  ActsCore
+  PUBLIC Boost::boost)
 
 install(
   TARGETS ActsCore
   EXPORT ActsCoreTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  COMPONENT ActsCore)
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(
   DIRECTORY include/Acts
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  COMPONENT Core)
-
-# generate version header and make it available to the build
-configure_file(
-  ActsVersion.hpp.in
-  ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp)
-target_include_directories(ActsCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Acts)
 
-acts_add_targets_to_cdash_project(PROJECT ACore TARGETS ActsCore)
+# target source files are added separately
+add_subdirectory(src/EventData)
+add_subdirectory(src/Geometry)
+add_subdirectory(src/MagneticField)
+add_subdirectory(src/Material)
+add_subdirectory(src/Propagator)
+add_subdirectory(src/Surfaces)
+add_subdirectory(src/Utilities)
+add_subdirectory(src/Vertexing)
