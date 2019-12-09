@@ -1,0 +1,35 @@
+target_sources_local(
+  ActsCore
+  PRIVATE
+    AbstractVolume.cpp
+    BinUtility.cpp
+    ConeLayer.cpp
+    CuboidVolumeBounds.cpp
+    CuboidVolumeBuilder.cpp
+    CutoutCylinderVolumeBounds.cpp
+    CylinderLayer.cpp
+    CylinderVolumeBounds.cpp
+    CylinderVolumeBuilder.cpp
+    CylinderVolumeHelper.cpp
+    DiscLayer.cpp
+    DoubleTrapezoidVolumeBounds.cpp
+    GenericApproachDescriptor.cpp
+    GenericCuboidVolumeBounds.cpp
+    GeometryID.cpp
+    GlueVolumesDescriptor.cpp
+    Layer.cpp
+    LayerArrayCreator.cpp
+    LayerCreator.cpp
+    NavigationLayer.cpp
+    PassiveLayerBuilder.cpp
+    PlaneLayer.cpp
+    ProtoLayer.cpp
+    SurfaceArrayCreator.cpp
+    TrackingGeometry.cpp
+    TrackingGeometryBuilder.cpp
+    TrackingVolume.cpp
+    TrackingVolumeArrayCreator.cpp
+    TrapezoidVolumeBounds.cpp
+    Volume.cpp
+    VolumeBounds.cpp
+)

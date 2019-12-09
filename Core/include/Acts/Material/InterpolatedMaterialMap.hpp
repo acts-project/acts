@@ -232,7 +232,7 @@ class InterpolatedMaterialMap final {
   /// @brief Create interpolated map
   ///
   /// @param [in] mapper Material map
-  InterpolatedMaterialMap(Mapper_t& mapper) : m_mapper(std::move(mapper)) {}
+  InterpolatedMaterialMap(Mapper_t&& mapper) : m_mapper(std::move(mapper)) {}
 
   /// @brief Retrieve material
   ///
@@ -290,7 +290,7 @@ class InterpolatedMaterialMap final {
   /// @brief Convenience method to access underlying material mapper
   ///
   /// @return The material mapper
-  Mapper_t getMapper() const { return m_mapper; }
+  const Mapper_t& getMapper() const { return m_mapper; }
 
   /// @brief Check whether given 3D position is inside look-up domain
   ///
