@@ -221,8 +221,6 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     return 0.;
   }
 
-  unsigned int attempts = 0;
-
   // The following functor starts to perform a Runge-Kutta step of a certain
   // size, going up to the point where it can return an estimate of the local
   // integration error. The results are stated in the local variables above,
@@ -231,12 +229,6 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
-
-    if (++attempts > 100) {
-      std::cout << "Panic ! Step size = " << h
-                << " |  Momentum = " << state.stepping.p << std::endl;
-      return true;
-    }
 
     // Second Runge-Kutta point
     const Vector3D pos1 =
