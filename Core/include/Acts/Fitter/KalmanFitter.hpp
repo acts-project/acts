@@ -265,9 +265,9 @@ class KalmanFitter {
 
       // Finalization:
       // When all track states have been handled or the navigation is breaked
-      if ((result.processedStates == inputMeasurements.size() or
-           (state.navigation.navigationBreak and
-            result.processedStates > 0)) and
+      if ((result.measurementStates == inputMeasurements.size() or
+           (result.measurementStates > 0 and
+            state.navigation.navigationBreak)) and
           not result.smoothed) {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
@@ -405,6 +405,7 @@ class KalmanFitter {
             result.fittedStates.getTrackState(result.trackTip);
 
         // Fill the track state
+        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
         trackStateProxy.predicted() = boundParams.parameters();
         trackStateProxy.predictedCovariance() = *boundParams.covariance();
         trackStateProxy.jacobian() = jacobian;
@@ -458,12 +459,14 @@ class KalmanFitter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param mStage The materal update stage
+    /// @param reinitialize The flag to steer whether the state should be
+    /// reinitialized at the new position
     ///
     /// @return The material interaction
     template <typename propagator_state_t, typename stepper_t>
     detail::PointwiseMaterialInteraction materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
-        const MaterialUpdateStage& mStage) const {
+        const MaterialUpdateStage& mStage, bool reinitialize = false) const {
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
 
@@ -476,7 +479,7 @@ class KalmanFitter {
         // Transport the covariance to the current position in space
         // the 'true' indicates re-initializaiton of the further transport
         if (interaction.performCovarianceTransport) {
-          stepper.covarianceTransport(state.stepping, true);
+          stepper.covarianceTransport(state.stepping, initialize);
         }
 
         // Update the state and stepper with material effects

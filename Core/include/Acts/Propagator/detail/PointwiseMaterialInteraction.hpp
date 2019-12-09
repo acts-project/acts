@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -86,9 +87,9 @@ struct PointwiseMaterialInteraction {
     }
 
     // Retrieve the material properties
-    slab =
-        state.navigation.currentSurface->surfaceMaterial()->materialProperties(
-            pos, nav, updateStage);
+    const ISurfaceMaterial* sMaterial =
+        state.navigation.currentSurface->surfaceMaterial();
+    slab = sMaterial->materialProperties(pos, nav, updateStage);
 
     // Correct the material properties for non-zero incidence
     pathCorrection = surface->pathCorrection(state.geoContext, pos, dir);
