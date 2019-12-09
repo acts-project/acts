@@ -57,11 +57,14 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      const Surface* rSurface = nullptr)
+                      const Surface* rSurface = nullptr,
+                      bool mScattering = true, bool eLoss = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        referenceSurface(rSurface) {}
+        referenceSurface(rSurface),
+        multipleScattering(mScattering),
+        energyLoss(eLoss) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -72,6 +75,12 @@ struct KalmanFitterOptions {
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
+
+  /// Whether to consider multiple scattering.
+  bool multipleScattering = true;
+
+  /// Whether to consider energy loss.
+  bool energyLoss = true;
 };
 
 template <typename source_link_t>
@@ -479,7 +488,7 @@ class KalmanFitter {
         // Transport the covariance to the current position in space
         // the 'true' indicates re-initializaiton of the further transport
         if (interaction.performCovarianceTransport) {
-          stepper.covarianceTransport(state.stepping, initialize);
+          stepper.covarianceTransport(state.stepping, reinitialize);
         }
 
         // Update the state and stepper with material effects
@@ -684,6 +693,8 @@ class KalmanFitter {
     kalmanActor.m_logger = m_logger.get();
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
     kalmanActor.targetSurface = kfOptions.referenceSurface;
+    kalmanActor.multipleScattering = kfOptions.multipleScattering;
+    kalmanActor.energyLoss = kfOptions.energyLoss;
 
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;
