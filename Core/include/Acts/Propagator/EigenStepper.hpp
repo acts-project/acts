@@ -235,8 +235,10 @@ class EigenStepper {
 
   /// Update step size
   ///
-  /// It checks the status to the reference surface & updates
-  /// the step size accordingly
+  /// This method intersect the provided surface and update the navigation
+  /// step estimation accordingly (hence it changes the state). It also
+  /// returns the status of the intersection to trigger onSurface in case
+  /// the surface is reached.
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
