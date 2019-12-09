@@ -116,15 +116,15 @@ struct PropagatorState {
     Intersection::Status updateSurfaceStatus(
         State& state, const Surface& surface,
         const BoundaryCheck& bcheck) const {
-      return detail::updateSurfaceStatus_t<Stepper>(*this, state, surface,
-                                                    bcheck);
+      return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
+                                                        bcheck);
     }
 
     template <typename object_intersection_t>
     void updateStepSize(State& state,
                         const object_intersection_t& oIntersection,
                         bool release = true) const {
-      detail::updateStepSize_t<Stepper>(state, oIntersection, release);
+      detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
     void setStepSize(

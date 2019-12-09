@@ -229,8 +229,8 @@ class EigenStepper {
   /// @param bcheck [in] The boundary check for this status update
   Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
                                            const BoundaryCheck& bcheck) const {
-    return detail::updateSurfaceStatus_t<EigenStepper>(*this, state, surface,
-                                                       bcheck);
+    return detail::updateSingleSurfaceStatus<EigenStepper>(*this, state,
+                                                           surface, bcheck);
   }
 
   /// Update step size
@@ -246,7 +246,7 @@ class EigenStepper {
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       bool release = true) const {
-    detail::updateStepSize_t<EigenStepper>(state, oIntersection, release);
+    detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
   /// Set Step size - explicitely with a double

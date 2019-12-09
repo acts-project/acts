@@ -29,7 +29,7 @@ namespace detail {
 /// @param surface [in] The surface provided
 /// @param bcheck [in] The boundary check for this status update
 template <typename stepper_t>
-Acts::Intersection::Status updateSurfaceStatus_t(
+Acts::Intersection::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, const BoundaryCheck& bcheck) {
   auto sIntersection =
@@ -72,9 +72,9 @@ Acts::Intersection::Status updateSurfaceStatus_t(
 /// @param oIntersection [in] The object that yielded this step size
 /// @param release [in] A release flag
 template <typename stepper_t, typename object_intersection_t>
-void updateStepSize_t(typename stepper_t::State& state,
-                      const object_intersection_t& oIntersection,
-                      bool release = true) {
+void updateSingleStepSize(typename stepper_t::State& state,
+                          const object_intersection_t& oIntersection,
+                          bool release = true) {
   double stepSize = oIntersection.intersection.pathLength;
   state.stepSize.update(stepSize, ConstrainedStep::actor, release);
 }

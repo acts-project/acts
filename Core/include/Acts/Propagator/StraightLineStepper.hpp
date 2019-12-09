@@ -194,8 +194,8 @@ class StraightLineStepper {
   /// @param bcheck [in] The boundary check for this status update
   Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
                                            const BoundaryCheck& bcheck) const {
-    return detail::updateSurfaceStatus_t<StraightLineStepper>(*this, state,
-                                                              surface, bcheck);
+    return detail::updateSingleSurfaceStatus<StraightLineStepper>(
+        *this, state, surface, bcheck);
   }
 
   /// Update step size
@@ -209,8 +209,8 @@ class StraightLineStepper {
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       bool release = true) const {
-    detail::updateStepSize_t<StraightLineStepper>(state, oIntersection,
-                                                  release);
+    detail::updateSingleStepSize<StraightLineStepper>(state, oIntersection,
+                                                      release);
   }
 
   /// Set Step size - explicitely with a double

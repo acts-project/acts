@@ -350,8 +350,8 @@ class AtlasStepper {
   /// @param bcheck [in] The boundary check for this status update
   Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
                                            const BoundaryCheck& bcheck) const {
-    return detail::updateSurfaceStatus_t<AtlasStepper>(*this, state, surface,
-                                                       bcheck);
+    return detail::updateSingleSurfaceStatus<AtlasStepper>(*this, state,
+                                                           surface, bcheck);
   }
 
   /// Update step size
@@ -365,7 +365,7 @@ class AtlasStepper {
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       bool release = true) const {
-    detail::updateStepSize_t<AtlasStepper>(state, oIntersection, release);
+    detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
   /// Set Step size - explicitely with a double
