@@ -381,9 +381,6 @@ class Navigator {
       initializeTarget(state, stepper);
     }
 
-    // TODO - if there's no currentSurface set, then the target was estimated in
-    // the status() call already !!!
-
     // Try targeting the surfaces - then layers - then boundaries
     if (state.navigation.navigationStage <= Stage::surfaceTarget and
         targetSurfaces(state, stepper)) {
@@ -901,7 +898,7 @@ class Navigator {
       // Set the begin iterator
       state.navigation.navBoundaryIter = state.navigation.navBoundaries.begin();
       if (not state.navigation.navBoundaries.empty()) {
-        // TSet to the first and return to the stepper
+        // Set to the first and return to the stepper
         stepper.updateStepSize(state.stepping,
                                *state.navigation.navBoundaryIter, true);
         debugLog(state, [&] {
@@ -919,7 +916,7 @@ class Navigator {
            state.navigation.navBoundaries.end()) {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
-      // Step twoards the boundary surfrace
+      // Step towards the boundary surfrace
       auto boundaryStatus = stepper.updateSurfaceStatus(
           state.stepping, *boundarySurface, navOpts.boundaryCheck);
       if (boundaryStatus == Intersection::Status::reachable) {

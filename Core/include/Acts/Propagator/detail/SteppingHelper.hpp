@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,7 +30,6 @@ template <typename stepper_t>
 Acts::Intersection::Status updateSurfaceStatus_t(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, const BoundaryCheck& bcheck) {
-  // Now intersect (should exclude punch-through)
   auto sIntersection =
       surface.intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), bcheck);

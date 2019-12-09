@@ -145,13 +145,13 @@ class EigenStepper {
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
-    /// Aaccummulated path length state
+    /// Accummulated path length state
     double pathAccumulated = 0.;
 
     /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize{std::numeric_limits<double>::max()};
 
-    /// Last performed step (for overstep limit calulcation)
+    /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
 
     /// The tolerance for the stepping

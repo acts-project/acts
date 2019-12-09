@@ -32,9 +32,9 @@ struct LoopProtection {
           stepper.getField(state.stepping, stepper.position(state.stepping));
       const double B = field.norm();
       if (B != 0.) {
-        // Transvserse component at start is taken for the loop protection
+        // Transverse component at start is taken for the loop protection
         const double p = stepper.momentum(state.stepping);
-        // Calulate the full helix path
+        // Calculate the full helix path
         const double helixPath = state.stepping.navDir * 2 * M_PI * p / B;
         // And set it as the loop limit if it overwrites the internal limit
         auto& pathAborter =
