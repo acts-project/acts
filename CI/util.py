@@ -83,5 +83,5 @@ def Spinner(text, persist=True, *args, **kwargs):
             if not persist:
                 spinner.stop()
     else:
-        sys.stdout.write(text + "\n")
+        stream.write(text + "\n")
         yield

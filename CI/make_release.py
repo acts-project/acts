@@ -12,6 +12,11 @@ import jinja2
 import humanize
 
 from util import Spinner
+from release_notes import (
+    collect_milestone,
+    make_release_notes,
+    get_label_groups,
+)
 
 version_ex = re.compile(r"^v?(\d+)\.(\d{1,2})\.(\d{1,2})$")
 
@@ -43,17 +48,20 @@ def get_milestones(project, **kwargs):
     milestones = project.milestones.list(**kwargs)
     ms_dict = {}
     for ms in milestones:
-        ms_dict[ms.title] = ms
+        try:
+          ms_dict[tuple(split_version(ms.title))] = ms
+        except:
+          pass
     return ms_dict
 
 
 def find_milestone(version, milestones):
-    vstr = "{:d}.{:>0d}.{:>02d}".format(*version)
+    vstr = "{:d}.{:>02d}.{:>02d}".format(*version)
     ms_titles = (vstr, "v" + vstr)
 
     milestone = None
     for ms in milestones:
-        #  print(ms.title, ms_title)
+        #  print(ms.title, ms_titles)
         if ms.title in ms_titles:
             milestone = ms
             break
@@ -242,6 +250,47 @@ This release can be cancelled if no merges happen before that date.
     )
 
     print(text)
+
+@main.command()
+@gitlab_option
+@click.argument("start", callback=lambda c, p, s: split_version(s))
+@click.argument("end", callback=lambda c, p, s: split_version(s))
+def relnotes(start, end, gitlab):
+    start = tuple(start)
+    end = tuple(end)
+    print(start, end, file=sys.stderr)
+    project = gitlab.projects.get("acts/acts-core")
+
+    all_milestones = get_milestones(project)
+    milestones = []
+    for ms in all_milestones.values():
+      try:
+        ver = split_version(ms.title)
+        milestones.append(ms)
+      except:
+        pass
+
+    sorted_milestones = list(sorted(all_milestones.keys()))
+
+    start_ms = all_milestones[start]
+    end_ms = all_milestones[end]
+
+    ms_range = (sorted_milestones.index(start), sorted_milestones.index(end))
+
+    md = ""
+
+    for mst in sorted_milestones[ms_range[0]+1:ms_range[1]+1]:
+      ms = all_milestones[mst]
+      print(ms.title, file=sys.stderr)
+      
+
+      mrs_grouped, issues_grouped = collect_milestone(ms)
+      with Spinner(text="Assembling release notes", stream=sys.stderr):
+          md += f"## {format_version(mst)}\n\n"
+          md += make_release_notes(ms, mrs_grouped, issues_grouped, badges=False, links=False)
+
+
+    print(md)
 
 
 if "__main__" == __name__:

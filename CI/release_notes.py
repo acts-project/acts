@@ -3,6 +3,7 @@ import os
 import re
 import urllib.parse
 import requests
+import sys
 
 
 def parse_version(name):
@@ -35,13 +36,13 @@ def group_items(labels, items):
 def collect_milestone(milestone):
     label_groups = get_label_groups()
     mrs = []
-    with Spinner(text=f"Loading merge requests associated with %{milestone.iid}"):
+    with Spinner(text=f"Loading merge requests associated with %{milestone.iid}", stream=sys.stderr):
         for mr in milestone.merge_requests():
             if mr.state == "merged":
                 mrs.append(mr)
 
     # need to get issues from merged MRs
-    with Spinner(text=f"Collecting issues from {len(mrs)} merged MRs"):
+    with Spinner(text=f"Collecting issues from {len(mrs)} merged MRs", stream=sys.stderr):
         issue_ids = []
         issues = []
         for mr in mrs:
@@ -56,7 +57,10 @@ def collect_milestone(milestone):
     return mrs_grouped, issues_grouped
 
 
-def make_release_notes(milestone, mrs_grouped, issues_grouped):
+def make_release_notes(milestone, mrs_grouped, issues_grouped, badges=True, links=True):
+    if links: link = lambda title, url: f"[{title}]({url})"
+    else: link = lambda title, url: f"{title}"
+
     label_groups = get_label_groups()
     # make the Markdown
     md = ""
@@ -67,16 +71,17 @@ def make_release_notes(milestone, mrs_grouped, issues_grouped):
         f"%{milestone.title}"
     )
 
-    md += f"[![]({ms_badge})]({milestone.web_url})\n"
 
     badge = f"![](https://gitlab.cern.ch/acts/acts-core/badges/v{milestone.title}/coverage.svg)"
     cov_url = f"https://acts.web.cern.ch/ACTS/coverage/v{milestone.title}/"
 
-    r = requests.get(cov_url)
-    if r.status_code == 200:
-        md += f"[{badge}]({cov_url})\n\n"
-    else:
-        md += f"[{badge}](#)\n\n"
+    if badges:
+      md += f"[![]({ms_badge})]({milestone.web_url})\n"
+      r = requests.get(cov_url)
+      if r.status_code == 200:
+          md += f"[{badge}]({cov_url})\n\n"
+      else:
+          md += f"[{badge}](#)\n\n"
 
     nmrs = sum([len(v) for v in mrs_grouped.values()])
     nissues = sum([len(v) for v in issues_grouped.values()])
@@ -88,7 +93,8 @@ def make_release_notes(milestone, mrs_grouped, issues_grouped):
                 continue
             md += f"#### {g}\n"
             for mr in mrs_grouped[g]:
-                md += f"- [!{mr.iid} - {mr.title}]({mr.web_url})\n"
+                l = link(f"!<span></span>{mr.iid} - {mr.title}", mr.web_url)
+                md += f"- {l}\n"
         md += "\n"
 
     if nissues > 0:
@@ -98,5 +104,6 @@ def make_release_notes(milestone, mrs_grouped, issues_grouped):
                 continue
             md += f"#### {g}\n"
             for issue in issues_grouped[g]:
-                md += f"- [#{issue.iid} - {issue.title}]({issue.web_url})\n"
+                l = link(f"#<span></span>{issue.iid} - {issue.title}", issue.web_url)
+                md += f"- {l}\n"
     return md
