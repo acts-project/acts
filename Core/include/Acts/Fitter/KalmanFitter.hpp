@@ -243,8 +243,8 @@ class KalmanFitter {
       }
 
       // Finalization:
-      // - When all track states have been handled
-      if (result.processedStates == inputMeasurements.size() and
+      // When the navigation is breaked
+      if (state.navigation.navigationBreak and result.processedStates > 0 and
           not result.smoothed) {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
