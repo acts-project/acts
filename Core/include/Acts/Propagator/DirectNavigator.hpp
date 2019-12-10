@@ -134,34 +134,22 @@ class DirectNavigator {
       return dstream.str();
     });
     // Check if we are on surface
-<<<<<<< HEAD
     if (state.navigation.nextSurfaceIter !=
         state.navigation.surfaceSequence.end()) {
       // Establish the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, **state.navigation.nextSurfaceIter, false);
       if (surfaceStatus == Intersection::Status::onSurface) {
-=======
-    if (state.navigation.nextSurfaceIter != state.navigation.endSurfaceIter) {
-      if (stepper.surfaceReached(state.stepping,
-                                 *state.navigation.nextSurfaceIter)) {
->>>>>>> 695c717e... Fix the DirectNavigator
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
         debugLog(state, [&] {
           std::stringstream dstream;
-<<<<<<< HEAD
           dstream << "Current surface set to  "
                   << state.navigation.currentSurface->geoID();
-=======
-          dstream << "Current surface set to  ";
-          dstream << state.navigation.currentSurface->geoID();
->>>>>>> 695c717e... Fix the DirectNavigator
           return dstream.str();
         });
         // Move the sequence to the next surface
         ++state.navigation.nextSurfaceIter;
-<<<<<<< HEAD
         if (state.navigation.nextSurfaceIter !=
             state.navigation.surfaceSequence.end()) {
           debugLog(state, [&] {
@@ -179,14 +167,6 @@ class DirectNavigator {
                   << stepper.outputStepSize(state.stepping);
           return dstream.str();
         });
-=======
-      } else if ((*state.navigation.nextSurfaceIter)
-                     ->isOnSurface(state.geoContext,
-                                   stepper.position(state.stepping),
-                                   stepper.direction(state.stepping), false)) {
-        // Move the sequence to the next surface
-        ++state.navigation.nextSurfaceIter;
->>>>>>> 695c717e... Fix the DirectNavigator
       }
     }
   }

@@ -20,11 +20,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-<<<<<<< HEAD
 #include "Acts/Propagator/ConstrainedStep.hpp"
-=======
 #include "Acts/Propagator/DirectNavigator.hpp"
->>>>>>> f176fbef... Adapt the KF fit to the DirectNavigator
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
