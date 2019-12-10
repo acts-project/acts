@@ -21,6 +21,7 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -174,6 +175,13 @@ class KalmanFitter {
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
 
+  /// The navigator type
+  using KalmanNavigator = typename decltype(m_propagator)::Navigator;
+
+  /// The navigator has DirectNavigator type or not
+  static constexpr bool isDirectNavigator =
+      std::is_same<KalmanNavigator, DirectNavigator>::value;
+
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
@@ -243,8 +251,10 @@ class KalmanFitter {
       }
 
       // Finalization:
-      // - When all track states have been handled
-      if (result.processedStates == inputMeasurements.size() and
+      // When all track states have been handled or the navigation is breaked
+      if ((result.processedStates == inputMeasurements.size() or
+           (state.navigation.navigationBreak and
+            result.processedStates > 0)) and
           not result.smoothed) {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
@@ -456,11 +466,12 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename parameters_t = BoundParameters>
-  Result<KalmanFitterResult<source_link_t>> fit(
-      const std::vector<source_link_t>& sourcelinks,
-      const start_parameters_t& sParameters,
-      const KalmanFitterOptions& kfOptions) const {
+            typename parameters_t = BoundParameters,
+            typename result_t = Result<KalmanFitterResult<source_link_t>>>
+  auto fit(const std::vector<source_link_t>& sourcelinks,
+           const start_parameters_t& sParameters,
+           const KalmanFitterOptions& kfOptions) const
+      -> std::enable_if_t<!isDirectNavigator, result_t> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -493,6 +504,89 @@ class KalmanFitter {
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;
     kalmanActor.m_smoother.m_logger = m_logger;
+
+    // Run the fitter
+    auto result = m_propagator.template propagate(sParameters, kalmanOptions);
+
+    if (!result.ok()) {
+      return result.error();
+    }
+
+    const auto& propRes = *result;
+
+    /// Get the result of the fit
+    auto kalmanResult = propRes.template get<KalmanResult>();
+
+    if (!kalmanResult.result.ok()) {
+      return kalmanResult.result.error();
+    }
+
+    // Return the converted Track
+    return m_outputConverter(std::move(kalmanResult));
+  }
+
+  /// Fit implementation of the foward filter, calls the
+  /// the forward filter and backward smoother
+  ///
+  /// @tparam source_link_t Source link type identifying uncalibrated input
+  /// measurements.
+  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam parameters_t Type of parameters used for local parameters
+  ///
+  /// @param sourcelinks The fittable uncalibrated measurements
+  /// @param sParameters The initial track parameters
+  /// @param kfOptions KalmanOptions steering the fit
+  /// @param sSequence surface sequence used to initialize a DirectNavigator
+  /// @note The input measurements are given in the form of @c SourceLinks. It's
+  /// @c calibrator_t's job to turn them into calibrated measurements used in
+  /// the fit.
+  ///
+  /// @return the output as an output track
+  template <typename source_link_t, typename start_parameters_t,
+            typename parameters_t = BoundParameters,
+            typename result_t = Result<KalmanFitterResult<source_link_t>>>
+  auto fit(const std::vector<source_link_t>& sourcelinks,
+           const start_parameters_t& sParameters,
+           const KalmanFitterOptions& kfOptions,
+           const std::vector<const Surface*>& sSequence) const
+      -> std::enable_if_t<isDirectNavigator, result_t> {
+    static_assert(SourceLinkConcept<source_link_t>,
+                  "Source link does not fulfill SourceLinkConcept");
+
+    // To be able to find measurements later, we put them into a map
+    // We need to copy input SourceLinks anyways, so the map can own them.
+    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
+    std::map<const Surface*, source_link_t> inputMeasurements;
+    for (const auto& sl : sourcelinks) {
+      const Surface* srf = &sl.referenceSurface();
+      inputMeasurements.emplace(srf, sl);
+    }
+
+    // Create the ActionList and AbortList
+    using KalmanAborter = Aborter<source_link_t, parameters_t>;
+    using KalmanActor = Actor<source_link_t, parameters_t>;
+    using KalmanResult = typename KalmanActor::result_type;
+    using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
+    using Aborters = AbortList<KalmanAborter>;
+
+    // Create relevant options for the propagation options
+    PropagatorOptions<Actors, Aborters> kalmanOptions(
+        kfOptions.geoContext, kfOptions.magFieldContext);
+
+    // Catch the actor and set the measurements
+    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
+    kalmanActor.m_logger = m_logger.get();
+    kalmanActor.inputMeasurements = std::move(inputMeasurements);
+    kalmanActor.targetSurface = kfOptions.referenceSurface;
+
+    // also set logger on updater and smoother
+    kalmanActor.m_updater.m_logger = m_logger;
+    kalmanActor.m_smoother.m_logger = m_logger;
+
+    // Set the surface sequence
+    auto& dInitializer =
+        kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
+    dInitializer.surfaceSequence = sSequence;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);

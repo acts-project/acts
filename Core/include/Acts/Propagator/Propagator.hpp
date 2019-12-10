@@ -208,6 +208,9 @@ class Propagator final {
   /// Type of the stepper in use for public scope
   using Stepper = stepper_t;
 
+  /// Type of the navigator in use for public scope
+  using Navigator = navigator_t;
+
   /// Type of state object used by the propagation implementation
   using StepperState = typename Stepper::State;
 
