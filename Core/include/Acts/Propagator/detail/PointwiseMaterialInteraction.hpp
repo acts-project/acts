@@ -17,14 +17,14 @@ namespace detail {
 struct PointwiseMaterialInteraction {
   /// Data from the propagation state
   const Surface* surface;
-  
+
   const Vector3D pos;
   const double time;
   const Vector3D dir;
   const double momentum;
   const double q;
   const double qOverP;
-  
+
   const double mass;
   const int pdg;
   const bool performCovarianceTransport;
@@ -33,11 +33,11 @@ struct PointwiseMaterialInteraction {
   /// Data evaluated within this struct
   MaterialProperties slab;
   double pathCorrection;
-  
+
   double variancePhi = 0.;
   double varianceTheta = 0.;
   double varianceQoverP = 0.;
-  
+
   double Eloss = 0.;
   double nextP;
 
@@ -123,9 +123,12 @@ struct PointwiseMaterialInteraction {
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
-    state.stepping.cov(ePHI, ePHI) = updateVariance(state.stepping.cov(ePHI, ePHI), variancePhi);
-    state.stepping.cov(eTHETA, eTHETA) = updateVariance(state.stepping.cov(eTHETA, eTHETA), varianceTheta);
-    state.stepping.cov(eQOP, eQOP) = updateVariance(state.stepping.cov(eQOP, eQOP), varianceQoverP);
+    state.stepping.cov(ePHI, ePHI) =
+        updateVariance(state.stepping.cov(ePHI, ePHI), variancePhi);
+    state.stepping.cov(eTHETA, eTHETA) =
+        updateVariance(state.stepping.cov(eTHETA, eTHETA), varianceTheta);
+    state.stepping.cov(eQOP, eQOP) =
+        updateVariance(state.stepping.cov(eQOP, eQOP), varianceQoverP);
   }
 
  private:
