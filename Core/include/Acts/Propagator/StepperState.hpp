@@ -21,8 +21,6 @@ namespace Acts {
 /// State for track parameter propagation
 ///
 struct StepperState {
-  using cstep = detail::ConstrainedStep;
-
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
 
@@ -43,7 +41,8 @@ struct StepperState {
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
       const parameters_t& par, NavigationDirection ndir = forward,
-      double ssize = std::numeric_limits<double>::max())
+      double ssize = std::numeric_limits<double>::max(),
+      double stolerance = s_onSurfaceTolerance)
       : pos(par.position()),
         dir(par.momentum().normalized()),
         p(par.momentum().norm()),
@@ -106,7 +105,7 @@ struct StepperState {
   double pathAccumulated = 0.;
 
   /// adaptive step size of the runge-kutta integration
-  cstep stepSize = std::numeric_limits<double>::max();
+  ConstrainedStep stepSize = std::numeric_limits<double>::max();
 
   /// Previous step size for overstep estimation (ignored for SL stepper)
   double previousStepSize = 0.;
