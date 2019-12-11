@@ -13,7 +13,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -52,7 +52,7 @@ struct StepperState {
         navDir(ndir),
         stepSize(ndir * std::abs(ssize)),
         tolerance(stolerance),
-        geoContext(gctx) {  
+        geoContext(gctx) {
     if (par.covariance()) {  // TODO: constructors might be combined but a
                              // covariance setter is then templated
       // Set the covariance transport flag to true
@@ -113,7 +113,7 @@ struct StepperState {
 
   /// The tolerance for the stepping
   double tolerance = s_onSurfaceTolerance;
-    
+
   /// Cache the geometry context of this propagation
   std::reference_wrapper<const GeometryContext> geoContext;
 };
