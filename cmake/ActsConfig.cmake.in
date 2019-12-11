@@ -9,10 +9,11 @@
 
 set(Acts_SUPPORTED_COMPONENTS @_supported_components@)
 set(Acts_COMMIT_HASH "@_acts_commit_hash@")
+set(Acts_COMMIT_HASH_SHORT "@_acts_commit_hash_short@")
 
 # print version and components information
 if(NOT Acts_FIND_QUIETLY)
-  message(STATUS "found Acts version ${Acts_VERSION} - ${Acts_COMMIT_HASH}")
+  message(STATUS "found Acts version ${Acts_VERSION} - ${Acts_COMMIT_HASH_SHORT}")
   message(STATUS "supported components:")
   foreach(_component ${_supported_components})
     message(STATUS "  - ${_component}")
