@@ -3,4 +3,5 @@ target_sources_local(
   PRIVATE
     StraightLineStepper.cpp
     detail/PointwiseMaterialInteraction.cpp
+    detail/CovarianceEngine.cpp
 )
