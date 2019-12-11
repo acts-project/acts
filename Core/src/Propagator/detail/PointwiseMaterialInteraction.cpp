@@ -31,23 +31,23 @@ void PointwiseMaterialInteraction::covarianceContributions(
         computeMultipleScatteringTheta0(slab, pdg, mass, qOverP, q);
     // sigmaPhi = theta0 / sin(theta)
     const auto sigmaPhi = theta0 * (dir.norm() / dir.z());
-    variances.x() = sigmaPhi * sigmaPhi;
+    variancePhi = sigmaPhi * sigmaPhi;
     // sigmaTheta = theta0
-    variances.y() = theta0 * theta0;
+    varianceTheta = theta0 * theta0;
   }
   // TODO just ionisation loss or full energy loss?
   if (energyLoss) {
-    const auto sigmaQOverP =
+    const auto sigmaQoverP =
         computeEnergyLossLandauSigmaQOverP(slab, pdg, mass, qOverP, q);
-    variances.z() = sigmaQOverP * sigmaQOverP;
+    varianceQoverP = sigmaQoverP * sigmaQoverP;
   }
 }
 
-void PointwiseMaterialInteraction::changeVariance(double& variance,
-                                                  const double change) const {
+double PointwiseMaterialInteraction::updateVariance(double variance,
+                                                    double change) const {
   // Add/Subtract the change (depending on the direction)
   // Protect the variance against becoming negative
-  variance = std::max(0., variance + std::copysign(change, nav));
+  return std::max(0., variance + std::copysign(change, nav));
 }
 }  // namespace detail
 }  // end of namespace Acts

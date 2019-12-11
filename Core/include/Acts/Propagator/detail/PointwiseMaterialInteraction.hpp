@@ -15,22 +15,30 @@ namespace Acts {
 namespace detail {
 /// @brief Struct to handle pointwise material interaction
 struct PointwiseMaterialInteraction {
+  /// Data from the propagation state
   const Surface* surface;
+  
   const Vector3D pos;
   const double time;
   const Vector3D dir;
   const double momentum;
   const double q;
   const double qOverP;
+  
   const double mass;
   const int pdg;
   const bool performCovarianceTransport;
   const NavigationDirection nav;
 
+  /// Data evaluated within this struct
   MaterialProperties slab;
   double pathCorrection;
-  Vector3D variances;
-  double Eloss;
+  
+  double variancePhi = 0.;
+  double varianceTheta = 0.;
+  double varianceQoverP = 0.;
+  
+  double Eloss = 0.;
   double nextP;
 
   /// @brief Contructor
@@ -115,9 +123,9 @@ struct PointwiseMaterialInteraction {
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
-    changeVariance(state.stepping.cov(ePHI, ePHI), variances.x());
-    changeVariance(state.stepping.cov(eTHETA, eTHETA), variances.y());
-    changeVariance(state.stepping.cov(eQOP, eQOP), variances.z());
+    state.stepping.cov(ePHI, ePHI) = updateVariance(state.stepping.cov(ePHI, ePHI), variancePhi);
+    state.stepping.cov(eTHETA, eTHETA) = updateVariance(state.stepping.cov(eTHETA, eTHETA), varianceTheta);
+    state.stepping.cov(eQOP, eQOP) = updateVariance(state.stepping.cov(eQOP, eQOP), varianceQoverP);
   }
 
  private:
@@ -130,9 +138,11 @@ struct PointwiseMaterialInteraction {
 
   /// @brief Convenience method for better readability
   ///
-  /// @param [in, out] variance A diagonal entry of the covariance matrix
+  /// @param [in] variance A diagonal entry of the covariance matrix
   /// @param [in] change The change that may be applied to it
-  void changeVariance(double& variance, const double change) const;
+  ///
+  /// @return The updated variance
+  double updateVariance(double variance, double change) const;
 };
 }  // namespace detail
 }  // end of namespace Acts

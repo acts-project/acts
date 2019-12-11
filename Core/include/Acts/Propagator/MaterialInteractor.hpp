@@ -155,9 +155,9 @@ struct MaterialInteractor {
       mi.time = d.time;
       mi.direction = d.dir;
       mi.deltaP = d.nextP - d.momentum;
-      mi.sigmaPhi2 = d.variances.x();
-      mi.sigmaTheta2 = d.variances.y();
-      mi.sigmaQoP2 = d.variances.z();
+      mi.sigmaPhi2 = d.variancePhi;
+      mi.sigmaTheta2 = d.varianceTheta;
+      mi.sigmaQoP2 = d.varianceQoverP;
       mi.surface = d.surface;
       mi.pathCorrection = d.pathCorrection;
       mi.materialProperties = d.slab;
