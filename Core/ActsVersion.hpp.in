@@ -8,6 +8,7 @@
 //  will cause a recompile every time a new Acts version is
 //  used.
 
+// clang-format off
 namespace Acts {
 constexpr unsigned int VersionMajor = @PROJECT_VERSION_MAJOR@u;
 constexpr unsigned int VersionMinor = @PROJECT_VERSION_MINOR@u;
@@ -15,7 +16,9 @@ constexpr unsigned int VersionPatch = @PROJECT_VERSION_PATCH@u;
 constexpr unsigned int Version
     = 10000u * VersionMajor + 100u * VersionMinor + VersionPatch;
 constexpr std::string_view CommitHash = "@_acts_commit_hash@";
+constexpr std::string_view CommitHashShort = "@_acts_commit_hash_short@";
 }  // namespace Acts
+// clang-format on
 
 // for backward compatibility
 #define ACTS_VERSION Acts::Version
