@@ -917,8 +917,7 @@ class Navigator {
       }
     };
 
-    // If you came until here, and you might not have boundaries
-    // per definition, this is free of the self call
+    // No boundaries are assigned yet, find them
     if (state.navigation.navBoundaries.empty() and findBoundaries()) {
       return true;
     }
