@@ -119,14 +119,16 @@ class GainMatrixSmoother {
                 G.transpose();
 
         // Check if the covariance matrix is semi-positive definite.
-        // If not, attempt to replace it with the nearest semi-positive def
-        // matrix twice, but it could still be non semi-positive
+        // If not, make one (could do more) attempt to replace it with the
+        // nearest semi-positive def matrix,
+        // but it could still be non semi-positive
         CovMatrix_t smoothedCov = ts.smoothedCovariance();
-        if (not detail::covariance_helper<CovMatrix_t, 2>::validate(
-                smoothedCov)) {
-          ACTS_WARNING("Smoothed covariance is not positive definite!");
+        if (not detail::covariance_helper<CovMatrix_t>::validate(smoothedCov)) {
+          ACTS_DEBUG(
+              "Smoothed covariance is not positive definite. Could result in "
+              "negative covariance!");
         }
-        // reset smoothed covariance
+        // Reset smoothed covariance
         ts.smoothedCovariance() = smoothedCov;
         ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
 

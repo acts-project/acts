@@ -434,8 +434,6 @@ class KalmanFitter {
           ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
 
           // Transport & get curvilinear state instead of bound state
-          // The reason is that: boundState on in-sensitive surface
-          // could look suspicious, especially the Jacobian??
           auto [curvilinearParams, jacobian, pathLength] =
               stepper.curvilinearState(state.stepping, true);
 
@@ -448,23 +446,15 @@ class KalmanFitter {
         }
 
         // Update state and stepper with material effects
-        auto interaction =
-            materialInteractor(surface, state, stepper, fullUpdate);
+        materialInteractor(surface, state, stepper, fullUpdate);
 
-        // Set the filtered parameter by updating the predicted parameter with
-        // material effects
-        auto updateRes =
-            materialUpdater(state.geoContext, trackStateProxy, interaction);
-        if (!updateRes.ok()) {
-          ACTS_ERROR(
-              "Update with material effects failed: " << updateRes.error());
-          return updateRes.error();
-        } else {
-          ACTS_VERBOSE(
-              "Update with material effects successful, updated parameters are "
-              ": \n"
-              << trackStateProxy.filtered().transpose());
-        }
+        // Set the filtered parameter to be the same with predicted parameter
+        // @Todo: shall we update the filterd parameter with material effects?
+        // But it seems that the smoothing does not like this
+        trackStateProxy.filtered() = trackStateProxy.predicted();
+        trackStateProxy.filteredCovariance() =
+            trackStateProxy.predictedCovariance();
+
         // We count the processed state
         ++result.processedStates;
       }
@@ -480,14 +470,11 @@ class KalmanFitter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param mStage The materal update stage
-    /// @param reinitialize The flag to steer whether the state should be
-    /// reinitialized at the new position
     ///
-    /// @return The material interaction
     template <typename propagator_state_t, typename stepper_t>
-    detail::PointwiseMaterialInteraction materialInteractor(
-        const Surface* surface, propagator_state_t& state, stepper_t& stepper,
-        const MaterialUpdateStage& mStage) const {
+    void materialInteractor(const Surface* surface, propagator_state_t& state,
+                            stepper_t& stepper,
+                            const MaterialUpdateStage& mStage) const {
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
 
@@ -497,8 +484,9 @@ class KalmanFitter {
         interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
                                                          energyLoss);
 
-        ACTS_VERBOSE("Material effects on surface: " << surface->geoID()
-                                                     << ":");
+        ACTS_VERBOSE("Material effects on surface: "
+                     << surface->geoID() << " at update stage: " << mStage
+                     << " are :");
         ACTS_VERBOSE("eLoss = "
                      << interaction.Eloss << " and \n"
                      << "(variancePhi, varianceTheta, varianceQoverP) = ("
@@ -508,71 +496,10 @@ class KalmanFitter {
 
         // Update the state and stepper with material effects
         interaction.updateState(state, stepper);
+      } else {
+        ACTS_VERBOSE("No material effects on surface: "
+                     << surface->geoID() << " at update stage: " << mStage);
       }
-
-      return std::move(interaction);
-    }
-
-    /// @brief Kalman actor operation : material effects updater
-    ///
-    /// @tparam track_state_t is the type of track state
-    ///
-    /// @param gctx The current geometry context object, e.g. alignment
-    /// @param trackState the track state
-    ///
-    /// @return Bool indicating whether this update was 'successful'
-    template <typename track_state_t>
-    Result<void> materialUpdater(
-        const GeometryContext& /*gctx*/, track_state_t& trackState,
-        const detail::PointwiseMaterialInteraction& interaction) const {
-      ACTS_VERBOSE("Invoked updater for material effects");
-      // let's make sure the types are consistent
-      using SourceLink = typename track_state_t::SourceLink;
-      using TrackStateProxy =
-          typename MultiTrajectory<SourceLink>::TrackStateProxy;
-      static_assert(std::is_same_v<track_state_t, TrackStateProxy>,
-                    "Given track state type is not a track state proxy");
-
-      // we should have predicted state set
-      assert(trackState.hasPredicted());
-      // filtering should not have happened yet, but is allocated, therefore set
-      assert(trackState.hasFiltered());
-
-      // read-only handles. Types are eigen maps to backing storage
-      const auto predicted = trackState.predicted();
-      const auto predicted_covariance = trackState.predictedCovariance();
-
-      ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
-      ACTS_VERBOSE("Predicted covariance:\n" << predicted_covariance);
-
-      // read-write handles. Types are eigen maps into backing storage.
-      // This writes directly into the trajectory storage
-      auto filtered = trackState.filtered();
-      auto filtered_covariance = trackState.filteredCovariance();
-
-      // Get the update for parameter
-      BoundParameters::ParVector_t deltaParamVec;
-      // The delta of q/p
-      double deltaQOP = interaction.nextQOverP - interaction.qOverP;
-      deltaParamVec << 0, 0, 0, 0, deltaQOP, 0.;
-
-      // Get the update for covariance
-      Acts::BoundSymMatrix deltaParamCov;
-      deltaParamCov.setZero();
-      deltaParamCov.diagonal() << 0, 0, interaction.variancePhi,
-          interaction.varianceTheta, interaction.varianceQoverP, 0;
-
-      // Fill the updated parameter and covariance
-      // filtered = predicted + deltaParamVec;
-      // filtered_covariance = predicted_covariance + deltaParamCov;
-      // It turns out the smoothing prefers no updating like below??
-      filtered = predicted;
-      filtered_covariance = predicted_covariance;
-
-      ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
-      ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
-
-      return Result<void>::success();
     }
 
     /// @brief Kalman actor operation : finalize
