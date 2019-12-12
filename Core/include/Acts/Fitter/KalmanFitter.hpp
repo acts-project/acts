@@ -24,7 +24,6 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -498,13 +497,14 @@ class KalmanFitter {
         interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
                                                          energyLoss);
 
-        ACTS_VERBOSE("Material effects on surface: " << surface->geoID());
-        ACTS_VERBOSE("Eloss = " << interaction.Eloss);
-        ACTS_VERBOSE("(deltaThetaCov, deltaPhiCov, deltaQOverPCov) = ("
-                     << interaction.variances.x() << ", "
-                     << interaction.variances.y() << ", "
-                     << interaction.variances.z()
-                     << ") from multiple scattering.");
+        ACTS_VERBOSE("Material effects on surface: " << surface->geoID()
+                                                     << ":");
+        ACTS_VERBOSE("eLoss = "
+                     << interaction.Eloss << " and \n"
+                     << "(variancePhi, varianceTheta, varianceQoverP) = ("
+                     << interaction.variancePhi << ", "
+                     << interaction.varianceTheta << ", "
+                     << interaction.varianceQoverP << ")");
 
         // Update the state and stepper with material effects
         interaction.updateState(state, stepper);
@@ -559,8 +559,8 @@ class KalmanFitter {
       // Get the update for covariance
       Acts::BoundSymMatrix deltaParamCov;
       deltaParamCov.setZero();
-      deltaParamCov.diagonal() << 0, 0, interaction.variances.x(),
-          interaction.variances.y(), interaction.variances.z(), 0;
+      deltaParamCov.diagonal() << 0, 0, interaction.variancePhi,
+          interaction.varianceTheta, interaction.varianceQoverP, 0;
 
       // Fill the updated parameter and covariance
       // filtered = predicted + deltaParamVec;
