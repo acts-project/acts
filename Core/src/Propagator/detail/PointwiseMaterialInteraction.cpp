@@ -8,6 +8,7 @@
 
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 namespace detail {
@@ -30,7 +31,7 @@ void PointwiseMaterialInteraction::covarianceContributions(
     const auto theta0 =
         computeMultipleScatteringTheta0(slab, pdg, mass, qOverP, q);
     // sigmaPhi = theta0 / sin(theta)
-    const auto sigmaPhi = theta0 * (dir.norm() / dir.z());
+    const auto sigmaPhi = theta0 * (dir.norm() / VectorHelpers::perp(dir));
     variancePhi = sigmaPhi * sigmaPhi;
     // sigmaTheta = theta0
     varianceTheta = theta0 * theta0;
