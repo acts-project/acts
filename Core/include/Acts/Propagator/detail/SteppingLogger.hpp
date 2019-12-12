@@ -40,6 +40,9 @@ struct SteppingLogger {
 
   using result_type = this_result;
 
+  /// Set the Logger to sterile
+  bool sterile = false;
+
   /// SteppingLogger action for the ActionList of the Propagator
   ///
   /// @tparam stepper_t is the type of the Stepper
@@ -51,8 +54,9 @@ struct SteppingLogger {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
     // don't log if you have reached the target
-    if (state.navigation.targetReached)
+    if (sterile or state.navigation.targetReached) {
       return;
+    }
     // record the propagation state
     Step step;
     step.stepSize = state.stepping.stepSize;
