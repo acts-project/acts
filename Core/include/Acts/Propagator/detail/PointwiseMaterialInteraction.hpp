@@ -41,6 +41,7 @@ struct PointwiseMaterialInteraction {
 
   double Eloss = 0.;
   double nextP;
+  double nextQOverP;
 
   /// @brief Contructor
   ///
@@ -64,7 +65,9 @@ struct PointwiseMaterialInteraction {
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
-        nav(state.stepping.navDir) {}
+        nav(state.stepping.navDir),
+        nextP(momentum),
+        nextQOverP(q / momentum) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
@@ -122,6 +125,7 @@ struct PointwiseMaterialInteraction {
                        std::copysign(Eloss, nav);
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
+    nextQOverP = q / nextP;
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
     state.stepping.cov(ePHI, ePHI) =

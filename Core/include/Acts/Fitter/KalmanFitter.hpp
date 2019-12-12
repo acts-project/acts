@@ -257,7 +257,7 @@ class KalmanFitter {
       // - Waiting for a current surface that has material
       // -> a trackState will be created on surface with material
       auto surface = state.navigation.currentSurface;
-      if (surface and not result.smoothed) {
+      if ((surface and surface->surfaceMaterial()) and not result.smoothed) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -396,14 +396,7 @@ class KalmanFitter {
         ++result.measurementStates;
         // We count the processed state
         ++result.processedStates;
-      } else if (surface->surfaceMaterial()) {
-        ACTS_VERBOSE("Material surface " << surface->geoID()
-                                         << " without measurement detected.");
-
-        // Transport & bind the state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, true);
-
+      } else {
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
         result.trackTip = result.fittedStates.addTrackState(
@@ -413,26 +406,46 @@ class KalmanFitter {
         auto trackStateProxy =
             result.fittedStates.getTrackState(result.trackTip);
 
-        // Fill the track state
+        // Set the surface
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
-        trackStateProxy.jacobian() = jacobian;
-        trackStateProxy.pathLength() = pathLength;
 
         // Set the track state flags
         auto& typeFlags = trackStateProxy.typeFlags();
         typeFlags.set(TrackStateFlag::MaterialFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
+
         if (surface->associatedDetectorElement() != nullptr) {
+          ACTS_VERBOSE("Detected hole on " << surface->geoID());
           // If the surface is sensitive, set the hole type flag
           typeFlags.set(TrackStateFlag::HoleFlag);
 
           // Count the missed surface
-          ACTS_VERBOSE("Detected hole on " << surface->geoID());
           result.missedActiveSurfaces.push_back(surface);
+
+          // Transport & bind the state to the current surface
+          auto [boundParams, jacobian, pathLength] =
+              stepper.boundState(state.stepping, *surface, true);
+
+          // Fill the track state
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = *boundParams.covariance();
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
         } else {
           ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
+
+          // Transport & get curvilinear state instead of bound state
+          // The reason is that: boundState on in-sensitive surface
+          // could look suspicious, especially the Jacobian??
+          auto [curvilinearParams, jacobian, pathLength] =
+              stepper.curvilinearState(state.stepping, true);
+
+          // Fill the track state
+          trackStateProxy.predicted() = curvilinearParams.parameters();
+          trackStateProxy.predictedCovariance() =
+              *curvilinearParams.covariance();
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
         }
 
         // Update state and stepper with material effects
@@ -475,7 +488,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     detail::PointwiseMaterialInteraction materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
-        const MaterialUpdateStage& mStage, bool reinitialize = false) const {
+        const MaterialUpdateStage& mStage) const {
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
 
@@ -485,11 +498,13 @@ class KalmanFitter {
         interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
                                                          energyLoss);
 
-        // Transport the covariance to the current position in space
-        // the 'true' indicates re-initializaiton of the further transport
-        if (interaction.performCovarianceTransport) {
-          stepper.covarianceTransport(state.stepping, reinitialize);
-        }
+        ACTS_VERBOSE("Material effects on surface: " << surface->geoID());
+        ACTS_VERBOSE("Eloss = " << interaction.Eloss);
+        ACTS_VERBOSE("(deltaThetaCov, deltaPhiCov, deltaQOverPCov) = ("
+                     << interaction.variances.x() << ", "
+                     << interaction.variances.y() << ", "
+                     << interaction.variances.z()
+                     << ") from multiple scattering.");
 
         // Update the state and stepper with material effects
         interaction.updateState(state, stepper);
@@ -508,8 +523,9 @@ class KalmanFitter {
     /// @return Bool indicating whether this update was 'successful'
     template <typename track_state_t>
     Result<void> materialUpdater(
-        const GeometryContext& /*gctx*/, track_state_t trackState,
+        const GeometryContext& /*gctx*/, track_state_t& trackState,
         const detail::PointwiseMaterialInteraction& interaction) const {
+      ACTS_VERBOSE("Invoked updater for material effects");
       // let's make sure the types are consistent
       using SourceLink = typename track_state_t::SourceLink;
       using TrackStateProxy =
@@ -534,15 +550,10 @@ class KalmanFitter {
       auto filtered = trackState.filtered();
       auto filtered_covariance = trackState.filteredCovariance();
 
-      // check for interaction
-      if (!interaction.nextP) {
-        return KalmanFitterError::UpdateFailed;
-      }
-
       // Get the update for parameter
       BoundParameters::ParVector_t deltaParamVec;
       // The delta of q/p
-      double deltaQOP = interaction.q / interaction.nextP - interaction.qOverP;
+      double deltaQOP = interaction.nextQOverP - interaction.qOverP;
       deltaParamVec << 0, 0, 0, 0, deltaQOP, 0.;
 
       // Get the update for covariance
@@ -552,8 +563,11 @@ class KalmanFitter {
           interaction.variances.y(), interaction.variances.z(), 0;
 
       // Fill the updated parameter and covariance
-      filtered = predicted + deltaParamVec;
-      filtered_covariance = predicted_covariance + deltaParamCov;
+      // filtered = predicted + deltaParamVec;
+      // filtered_covariance = predicted_covariance + deltaParamCov;
+      // It turns out the smoothing prefers no updating like below??
+      filtered = predicted;
+      filtered_covariance = predicted_covariance;
 
       ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
       ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
