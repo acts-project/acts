@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(visit_apply_abort) {
   BOOST_CHECK_EQUAL(n, 3u);
 }
 
-BOOST_AUTO_TEST_CASE(trackstate_add_bitmask) {
+BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   using PM = TrackStatePropMask;
   auto bs1 = PM::Uncalibrated;
 
@@ -244,6 +244,29 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask) {
     }
   }
 
+  BOOST_CHECK(cnv(PM::Predicted ^ PM::Filtered).count() == 2);
+  BOOST_CHECK(cnv(PM::Predicted ^ PM::Predicted).none());
+  BOOST_CHECK(~(PM::Predicted | PM::Calibrated) ==
+              (PM::All ^ PM::Predicted ^ PM::Calibrated));
+
+  PM base = PM::None;
+  BOOST_CHECK(cnv(base) == 0);
+
+  base &= PM::Filtered;
+  BOOST_CHECK(cnv(base) == 0);
+
+  base |= PM::Filtered;
+  BOOST_CHECK(base == PM::Filtered);
+
+  base |= PM::Calibrated;
+  BOOST_CHECK(base == (PM::Filtered | PM::Calibrated));
+
+  base ^= PM::All;
+  BOOST_CHECK(base == ~(PM::Filtered | PM::Calibrated));
+}
+
+BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
+  using PM = TrackStatePropMask;
   MultiTrajectory<SourceLink> t;
 
   auto ts = t.getTrackState(t.addTrackState(PM::All));

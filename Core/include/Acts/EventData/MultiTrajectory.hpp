@@ -548,6 +548,30 @@ constexpr TrackStatePropMask operator~(TrackStatePropMask op) {
       ~static_cast<std::underlying_type<TrackStatePropMask>::type>(op));
 }
 
+constexpr TrackStatePropMask& operator|=(TrackStatePropMask& lhs,
+                                         TrackStatePropMask rhs) {
+  lhs = static_cast<TrackStatePropMask>(
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) |
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
+  return lhs;
+}
+
+constexpr TrackStatePropMask& operator&=(TrackStatePropMask& lhs,
+                                         TrackStatePropMask rhs) {
+  lhs = static_cast<TrackStatePropMask>(
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) &
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
+  return lhs;
+}
+
+constexpr TrackStatePropMask& operator^=(TrackStatePropMask& lhs,
+                                         TrackStatePropMask rhs) {
+  lhs = static_cast<TrackStatePropMask>(
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) ^
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
+  return lhs;
+}
+
 /// Store a trajectory of track states with multiple components.
 ///
 /// This container supports both simple, sequential trajectories as well
