@@ -472,36 +472,36 @@ class KalmanFitter {
     /// @param surface The surface where the material interaction happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
-    /// @param mStage The materal update stage
+    /// @param updateStage The materal update stage
     ///
     template <typename propagator_state_t, typename stepper_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
                             stepper_t& stepper,
-                            const MaterialUpdateStage& mStage) const {
+                            const MaterialUpdateStage& updateStage) const {
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
 
       // Evaluate the material properties
-      if (interaction.evaluateMaterialProperties(state, mStage)) {
+      if (interaction.evaluateMaterialProperties(state, updateStage)) {
         // Evaluate the material effects
         interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
                                                          energyLoss);
 
         ACTS_VERBOSE("Material effects on surface: "
-                     << surface->geoID() << " at update stage: " << mStage
+                     << surface->geoID() << " at update stage: " << updateStage
                      << " are :");
         ACTS_VERBOSE("eLoss = "
-                     << interaction.Eloss << " and \n"
-                     << "(variancePhi, varianceTheta, varianceQoverP) = ("
-                     << interaction.variancePhi << ", "
-                     << interaction.varianceTheta << ", "
-                     << interaction.varianceQoverP << ")");
+                     << interaction.Eloss << ", "
+                     << "variancePhi = " << interaction.variancePhi << ", "
+                     << "varianceTheta = " << interaction.varianceTheta << ", "
+                     << "varianceQoverP = " << interaction.varianceQoverP);
 
         // Update the state and stepper with material effects
         interaction.updateState(state, stepper);
       } else {
-        ACTS_VERBOSE("No material effects on surface: "
-                     << surface->geoID() << " at update stage: " << mStage);
+        ACTS_VERBOSE("No material effects on surface: " << surface->geoID()
+                                                        << " at update stage: "
+                                                        << updateStage);
       }
     }
 
