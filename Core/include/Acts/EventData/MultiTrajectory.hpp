@@ -580,12 +580,15 @@ class MultiTrajectory {
   ///
   /// @tparam parameters_t The parameter type used for the trackstate
   /// @param trackParameters  at the local point
+  /// @param mask The bitmask that instructs which components to allocate and
+  /// which to leave invalid
   /// @param iprevious        index of the previous state, SIZE_MAX if first
   /// @note The parameter type from @p parameters_t is not currently stored in
   /// MultiTrajectory.
   /// @return Index of the newly added track state
   template <typename parameters_t>
   size_t addTrackState(const TrackState<SourceLink, parameters_t>& ts,
+                       TrackStatePropMask mask = TrackStatePropMask::All,
                        size_t iprevious = SIZE_MAX);
 
   /// Add a track state without providing explicit information. Which components

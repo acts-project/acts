@@ -123,20 +123,20 @@ auto make_trackstate() {
 
 BOOST_AUTO_TEST_CASE(multitrajectory_build) {
   MultiTrajectory<SourceLink> t;
+  TrackStatePropMask mask = TrackStatePropMask::Predicted;
 
   // construct trajectory w/ multiple components
-  auto i0 = t.addTrackState(make_rand_trackstate());
+  auto i0 = t.addTrackState(make_rand_trackstate(), mask);
   // trajectory bifurcates here into multiple hypotheses
-  auto i1a = t.addTrackState(make_rand_trackstate(), i0);
-  auto i1b = t.addTrackState(make_rand_trackstate(), i0);
-  auto i2a = t.addTrackState(make_rand_trackstate(), i1a);
-  auto i2b = t.addTrackState(make_rand_trackstate(), i1b);
+  auto i1a = t.addTrackState(make_rand_trackstate(), mask, i0);
+  auto i1b = t.addTrackState(make_rand_trackstate(), mask, i0);
+  auto i2a = t.addTrackState(make_rand_trackstate(), mask, i1a);
+  auto i2b = t.addTrackState(make_rand_trackstate(), mask, i1b);
 
   // print each trajectory component
   std::vector<size_t> act;
   auto collect = [&](auto p) {
     act.push_back(p.index());
-    // assert absence of things
     BOOST_CHECK(!p.hasUncalibrated());
     BOOST_CHECK(!p.hasCalibrated());
     BOOST_CHECK(!p.hasFiltered());
@@ -161,11 +161,12 @@ BOOST_AUTO_TEST_CASE(multitrajectory_build) {
 
 BOOST_AUTO_TEST_CASE(visit_apply_abort) {
   MultiTrajectory<SourceLink> t;
+  TrackStatePropMask mask = TrackStatePropMask::Predicted;
 
   // construct trajectory with three components
-  auto i0 = t.addTrackState(make_rand_trackstate());
-  auto i1 = t.addTrackState(make_rand_trackstate(), i0);
-  auto i2 = t.addTrackState(make_rand_trackstate(), i1);
+  auto i0 = t.addTrackState(make_rand_trackstate(), mask);
+  auto i1 = t.addTrackState(make_rand_trackstate(), mask, i0);
+  auto i2 = t.addTrackState(make_rand_trackstate(), mask, i1);
 
   size_t n = 0;
   t.applyBackwards(i2, [&](const auto&) {

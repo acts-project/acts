@@ -163,9 +163,11 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
 template <typename SL>
 template <typename parameters_t>
 inline size_t MultiTrajectory<SL>::addTrackState(
-    const TrackState<SL, parameters_t>& ts, size_t iprevious) {
+    const TrackState<SL, parameters_t>& ts, TrackStatePropMask mask,
+    size_t iprevious) {
   using CovMap =
       typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
+  using PropMask = TrackStatePropMask;
 
   // use a TrackStateProxy to do the assignments
   m_index.emplace_back();
@@ -174,50 +176,80 @@ inline size_t MultiTrajectory<SL>::addTrackState(
 
   TrackStateProxy nts = getTrackState(index);
 
-  // make shared ownership held by this multi trajectory
-  m_referenceSurfaces.push_back(ts.referenceSurface().getSharedPtr());
-  p.irefsurface = m_referenceSurfaces.size() - 1;
-
   if (iprevious != SIZE_MAX) {
     p.iprevious = static_cast<uint16_t>(iprevious);
   }
 
-  if (ts.parameter.predicted) {
-    const auto& predicted = *ts.parameter.predicted;
-    m_params.addCol() = predicted.parameters();
-    CovMap(m_cov.addCol().data()) = *predicted.covariance();
+  // make shared ownership held by this multi trajectory
+  m_referenceSurfaces.push_back(ts.referenceSurface().getSharedPtr());
+  p.irefsurface = m_referenceSurfaces.size() - 1;
+
+  if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
+    m_cov.addCol();
+    m_params.addCol();
     p.ipredicted = m_params.size() - 1;
+    if (ts.parameter.predicted) {
+      const auto& predicted = *ts.parameter.predicted;
+      m_params.col(p.ipredicted) = predicted.parameters();
+      CovMap(m_cov.col(p.ipredicted).data()) = *predicted.covariance();
+    }
   }
 
-  if (ts.parameter.filtered) {
-    const auto& filtered = *ts.parameter.filtered;
-    m_params.addCol() = filtered.parameters();
-    CovMap(m_cov.addCol().data()) = *filtered.covariance();
+  if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
+    m_cov.addCol();
+    m_params.addCol();
     p.ifiltered = m_params.size() - 1;
+    if (ts.parameter.filtered) {
+      const auto& filtered = *ts.parameter.filtered;
+      m_params.col(p.ifiltered) = filtered.parameters();
+      CovMap(m_cov.col(p.ifiltered).data()) = *filtered.covariance();
+    }
   }
 
-  if (ts.parameter.smoothed) {
-    const auto& smoothed = *ts.parameter.smoothed;
-    m_params.addCol() = smoothed.parameters();
-    CovMap(m_cov.addCol().data()) = *smoothed.covariance();
+  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
+    m_cov.addCol();
+    m_params.addCol();
     p.ismoothed = m_params.size() - 1;
+    if (ts.parameter.smoothed) {
+      const auto& smoothed = *ts.parameter.smoothed;
+      m_params.col(p.ismoothed) = smoothed.parameters();
+      CovMap(m_cov.col(p.ismoothed).data()) = *smoothed.covariance();
+    }
   }
 
-  // store jacobian
-  if (ts.parameter.jacobian) {
-    CovMap(m_jac.addCol().data()) = *ts.parameter.jacobian;
+  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
+    // store jacobian
+    m_jac.addCol();
     p.ijacobian = m_jac.size() - 1;
+    if (ts.parameter.jacobian) {
+      CovMap(m_jac.col(p.ijacobian).data()) = *ts.parameter.jacobian;
+    }
   }
 
   // handle measurements
-  if (ts.measurement.uncalibrated) {
-    m_sourceLinks.push_back(*ts.measurement.uncalibrated);
+  if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
+    m_sourceLinks.emplace_back();  // allocate empty
     p.iuncalibrated = m_sourceLinks.size() - 1;
+    if (ts.measurement.uncalibrated) {
+      m_sourceLinks[p.iuncalibrated] = *ts.measurement.uncalibrated;
+    }
   }
 
-  if (ts.measurement.calibrated) {
-    std::visit([&](const auto& m) { nts.resetCalibrated(m); },
-               *ts.measurement.calibrated);
+  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
+    m_meas.addCol();
+    m_measCov.addCol();
+    p.icalibrated = m_meas.size() - 1;
+
+    m_sourceLinks.emplace_back();
+    p.icalibratedsourcelink = m_sourceLinks.size() - 1;
+
+    m_projectors.emplace_back();
+    p.iprojector = m_projectors.size() - 1;
+
+    if (ts.measurement.calibrated) {
+      std::visit([&](const auto& m) { nts.setCalibrated(m); },
+                 *ts.measurement.calibrated);
+    }
   }
 
   nts.chi2() = ts.parameter.chi2;
