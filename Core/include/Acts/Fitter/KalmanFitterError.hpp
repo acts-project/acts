@@ -17,7 +17,8 @@ namespace Acts {
 enum class KalmanFitterError {
   UpdateFailed = 1,
   SmoothFailed = 2,
-  OutputConversionFailed = 3
+  OutputConversionFailed = 3,
+  PropagationInVain = 4
 };
 
 namespace detail {
@@ -35,6 +36,8 @@ class KalmanFitterErrorCategory : public std::error_category {
         return "Kalman smooth failed";
       case KalmanFitterError::OutputConversionFailed:
         return "Kalman output conversion failed";
+      case KalmanFitterError::PropagationInVain:
+        return "No detector observed during the propagation";
       default:
         return "unknown";
     }

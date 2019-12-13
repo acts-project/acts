@@ -653,6 +653,12 @@ class KalmanFitter {
     /// Get the result of the fit
     auto kalmanResult = propRes.template get<KalmanResult>();
 
+    /// It could happen that the fit ends in zero processed states.
+    /// The result gets meaningless so such case is regarded as fit failure.
+    if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
+      kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
+    }
+
     if (!kalmanResult.result.ok()) {
       return kalmanResult.result.error();
     }
@@ -735,6 +741,12 @@ class KalmanFitter {
 
     /// Get the result of the fit
     auto kalmanResult = propRes.template get<KalmanResult>();
+
+    /// It could happen that the fit ends in zero processed states.
+    /// The result gets meaningless so such case is regarded as fit failure.
+    if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
+      kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
+    }
 
     if (!kalmanResult.result.ok()) {
       return kalmanResult.result.error();
