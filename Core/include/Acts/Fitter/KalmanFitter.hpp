@@ -396,10 +396,13 @@ class KalmanFitter {
         // We count the processed state
         ++result.processedStates;
       } else {
-        // add a full TrackState entry multi trajectory
-        // (this allocates storage for all components, we will set them later)
+        // add a non-measurement TrackState entry multi trajectory
+        // (this allocates storage for components except measurements, we will
+        // set them later)
         result.trackTip = result.fittedStates.addTrackState(
-            TrackStatePropMask::All, result.trackTip);
+            ~(TrackStatePropMask::Uncalibrated |
+              TrackStatePropMask::Calibrated),
+            result.trackTip);
 
         // now get track state proxy back
         auto trackStateProxy =

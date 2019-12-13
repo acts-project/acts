@@ -108,7 +108,7 @@ struct IndexData {
 
   double chi2;
   double pathLength;
-  std::bitset<TrackStateFlag::NumTrackStateFlags> typeFlags;
+  TrackStateType typeFlags;
 
   IndexType iuncalibrated = kInvalid;
   IndexType icalibrated = kInvalid;
