@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(visit_apply_abort) {
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_add_bitmask) {
-  namespace PM = TrackStatePropMask;
+  using PM = TrackStatePropMask;
   auto bs1 = PM::Uncalibrated;
 
   BOOST_CHECK(ACTS_CHECK_BIT(bs1, PM::Uncalibrated));
@@ -219,6 +219,29 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask) {
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Calibrated));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Smoothed));
+
+  auto cnv = [](auto a) -> std::bitset<8> {
+    return static_cast<std::underlying_type<PM>::type>(a);
+  };
+
+  BOOST_CHECK(cnv(PM::All).all());    // all ones
+  BOOST_CHECK(cnv(PM::None).none());  // all zeros
+
+  // test orthogonality
+  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
+                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  for (size_t i = 0; i < values.size(); i++) {
+    for (size_t j = 0; j < values.size(); j++) {
+      PM a = values[i];
+      PM b = values[j];
+
+      if (i == j) {
+        BOOST_CHECK(cnv(a & b).count() == 1);
+      } else {
+        BOOST_CHECK(cnv(a & b).none());
+      }
+    }
+  }
 
   MultiTrajectory<SourceLink> t;
 

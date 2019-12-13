@@ -507,22 +507,46 @@ constexpr bool VisitorConcept = concept ::require<
 /// (TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian) will instruct
 /// allocating storage for both predicted parameters (including covariance) and
 /// a jacobian.
-namespace TrackStatePropMask {
-/// Type of the bitmasks
-using Type = std::bitset<8>;
+/// The enum is used as a strong type wrapper around the bits to prevent
+/// autoconversion from integer
+enum struct TrackStatePropMask : uint8_t {
+  None = 0,
+  Predicted = 1 << 0,
+  Filtered = 1 << 1,
+  Smoothed = 1 << 2,
+  Jacobian = 1 << 3,
 
-constexpr Type Predicted{1 << 0};
-constexpr Type Filtered{1 << 1};
-constexpr Type Smoothed{1 << 2};
-constexpr Type Jacobian{1 << 3};
+  Uncalibrated = 1 << 4,
+  Calibrated = 1 << 5,
 
-constexpr Type Uncalibrated{1 << 4};
-constexpr Type Calibrated{1 << 5};
+  All = std::numeric_limits<uint8_t>::max(),  // should be all ones
+};
 
-// Initialize to all 1s. This only works as long as number of bits <= 64
-constexpr Type All{static_cast<unsigned long long>(-1)};
-constexpr Type None{0};
-}  // namespace TrackStatePropMask
+constexpr TrackStatePropMask operator|(TrackStatePropMask lhs,
+                                       TrackStatePropMask rhs) {
+  return static_cast<TrackStatePropMask>(
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) |
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
+}
+
+constexpr TrackStatePropMask operator&(TrackStatePropMask lhs,
+                                       TrackStatePropMask rhs) {
+  return static_cast<TrackStatePropMask>(
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) &
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
+}
+
+constexpr TrackStatePropMask operator^(TrackStatePropMask lhs,
+                                       TrackStatePropMask rhs) {
+  return static_cast<TrackStatePropMask>(
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) ^
+      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
+}
+
+constexpr TrackStatePropMask operator~(TrackStatePropMask op) {
+  return static_cast<TrackStatePropMask>(
+      ~static_cast<std::underlying_type<TrackStatePropMask>::type>(op));
+}
 
 /// Store a trajectory of track states with multiple components.
 ///
@@ -570,9 +594,8 @@ class MultiTrajectory {
   /// which to leave invalid
   /// @param iprevious index of the previous state, SIZE_MAX if first
   /// @return Index of the newly added track state
-  size_t addTrackState(
-      const TrackStatePropMask::Type& mask = TrackStatePropMask::All,
-      size_t iprevious = SIZE_MAX);
+  size_t addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
+                       size_t iprevious = SIZE_MAX);
 
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access

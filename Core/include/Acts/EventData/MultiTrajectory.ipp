@@ -228,9 +228,9 @@ inline size_t MultiTrajectory<SL>::addTrackState(
 }
 
 template <typename SL>
-inline size_t MultiTrajectory<SL>::addTrackState(
-    const TrackStatePropMask::Type& mask, size_t iprevious) {
-  namespace PropMask = TrackStatePropMask;
+inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
+                                                 size_t iprevious) {
+  using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
   detail_lt::IndexData& p = m_index.back();
