@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 

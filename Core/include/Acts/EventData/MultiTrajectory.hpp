@@ -108,6 +108,7 @@ struct IndexData {
 
   double chi2;
   double pathLength;
+  TrackStateType typeFlags;
 
   IndexType iuncalibrated = kInvalid;
   IndexType icalibrated = kInvalid;
@@ -464,6 +465,19 @@ class TrackStateProxy {
   /// Getter for the path length. Returns a copy of the path length value.
   /// @return The path length of this track state
   double pathLength() const { return data().pathLength; }
+
+  /// Getter for the type flags associated with the track state.
+  /// This overloaded is only enabled if not read-only, and returns a mutable
+  /// reference.
+  /// @return reference to the type flags.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  TrackStateType& typeFlags() {
+    return data().typeFlags;
+  }
+
+  /// Getter for the type flags. Returns a copy of the type flags value.
+  /// @return The type flags of this track state
+  TrackStateType typeFlags() const { return data().typeFlags; }
 
  private:
   // Private since it can only be created by the trajectory.

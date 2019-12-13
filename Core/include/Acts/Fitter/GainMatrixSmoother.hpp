@@ -12,6 +12,7 @@
 #include <memory>
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/covariance_helper.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -117,6 +118,18 @@ class GainMatrixSmoother {
             G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
                 G.transpose();
 
+        // Check if the covariance matrix is semi-positive definite.
+        // If not, make one (could do more) attempt to replace it with the
+        // nearest semi-positive def matrix,
+        // but it could still be non semi-positive
+        CovMatrix_t smoothedCov = ts.smoothedCovariance();
+        if (not detail::covariance_helper<CovMatrix_t>::validate(smoothedCov)) {
+          ACTS_DEBUG(
+              "Smoothed covariance is not positive definite. Could result in "
+              "negative covariance!");
+        }
+        // Reset smoothed covariance
+        ts.smoothedCovariance() = smoothedCov;
         ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
 
         prev_ts = ts;
