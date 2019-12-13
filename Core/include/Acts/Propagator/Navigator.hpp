@@ -915,6 +915,7 @@ class Navigator {
         });
         return true;
       }
+      return false;
     };
 
     // No boundaries are assigned yet, find them
@@ -961,7 +962,7 @@ class Navigator {
       return true;
     }
 
-    // Tried out bes, but couldn't do anything
+    // Tried our best, but couldn't do anything
     return false;
   }
 
