@@ -275,6 +275,8 @@ class Navigator {
       }
       // Set the navigation stage to surface target
       state.navigation.navigationStage = Stage::surfaceTarget;
+      debugLog(state,
+               [&] { return std::string("Staying focussed on surface."); });
       // Try finding status of layer
     } else if (status(state, stepper, state.navigation.navLayers,
                       state.navigation.navLayerIter)) {
@@ -292,6 +294,8 @@ class Navigator {
       } else {
         // Set the navigation stage to layer target
         state.navigation.navigationStage = Stage::layerTarget;
+        debugLog(state,
+                 [&] { return std::string("Staying focussed on layer."); });
       }
       // Try finding status of boundaries
     } else if (status(state, stepper, state.navigation.navBoundaries,
@@ -336,6 +340,8 @@ class Navigator {
       } else {
         // Set the navigation stage back to boundary target
         state.navigation.navigationStage = Stage::boundaryTarget;
+        debugLog(state,
+                 [&] { return std::string("Staying focussed on boundary."); });
       }
     } else if (state.navigation.currentVolume ==
                state.navigation.targetVolume) {
@@ -863,14 +869,14 @@ class Navigator {
     // Re-initialize target at volume boundary
     initializeTarget(state, stepper);
 
-    // The navigation options
-    NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-    navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
-    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+    // Helper function to find boundaries
+    auto findBoundaries = [&]() -> bool {
+      // The navigation options
+      NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+      navOpts.pathLimit =
+          state.stepping.stepSize.value(ConstrainedStep::aborter);
+      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
 
-    // If you came until here, and you might not have boundaries
-    // per definition, this is free of the self call
-    if (state.navigation.navBoundaries.empty()) {
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
       debugLog(state, [&] {
@@ -909,6 +915,12 @@ class Navigator {
         });
         return true;
       }
+      return false;
+    };
+
+    // No boundaries are assigned yet, find them
+    if (state.navigation.navBoundaries.empty() and findBoundaries()) {
+      return true;
     }
 
     // Loop over the boundary surface
@@ -917,8 +929,8 @@ class Navigator {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // Step towards the boundary surfrace
-      auto boundaryStatus = stepper.updateSurfaceStatus(
-          state.stepping, *boundarySurface, navOpts.boundaryCheck);
+      auto boundaryStatus =
+          stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true);
       if (boundaryStatus == Intersection::Status::reachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
@@ -927,11 +939,30 @@ class Navigator {
           return dstream.str();
         });
         return true;
+      } else {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Boundary ";
+          dstream << std::distance(state.navigation.navBoundaryIter,
+                                   state.navigation.navBoundaries.end());
+          dstream << " out of " << state.navigation.navBoundaries.size();
+          dstream << " not reachable anymore, switching to next.";
+          return dstream.str();
+        });
       }
       // Increase the iterator to the next one
       ++state.navigation.navBoundaryIter;
     }
-    // Could not do anything
+    // We have to leave the volume somehow, so try again
+    state.navigation.navBoundaries.clear();
+    debugLog(state, [&] {
+      return std::string("Boundary navigation lost, re-targetting.");
+    });
+    if (findBoundaries()) {
+      return true;
+    }
+
+    // Tried our best, but couldn't do anything
     return false;
   }
 
