@@ -170,82 +170,52 @@ inline size_t MultiTrajectory<SL>::addTrackState(
   using PropMask = TrackStatePropMask;
 
   // use a TrackStateProxy to do the assignments
-  m_index.emplace_back();
-  detail_lt::IndexData& p = m_index.back();
-  size_t index = m_index.size() - 1;
-
+  size_t index = addTrackState(mask, iprevious);
   TrackStateProxy nts = getTrackState(index);
 
-  if (iprevious != SIZE_MAX) {
-    p.iprevious = static_cast<uint16_t>(iprevious);
-  }
-
   // make shared ownership held by this multi trajectory
-  m_referenceSurfaces.push_back(ts.referenceSurface().getSharedPtr());
-  p.irefsurface = m_referenceSurfaces.size() - 1;
+
+  nts.setReferenceSurface(ts.referenceSurface().getSharedPtr());
 
   if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
-    m_cov.addCol();
-    m_params.addCol();
-    p.ipredicted = m_params.size() - 1;
     if (ts.parameter.predicted) {
       const auto& predicted = *ts.parameter.predicted;
-      m_params.col(p.ipredicted) = predicted.parameters();
-      CovMap(m_cov.col(p.ipredicted).data()) = *predicted.covariance();
+      nts.predicted() = predicted.parameters();
+      nts.predictedCovariance() = *predicted.covariance();
     }
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
-    m_cov.addCol();
-    m_params.addCol();
-    p.ifiltered = m_params.size() - 1;
     if (ts.parameter.filtered) {
       const auto& filtered = *ts.parameter.filtered;
-      m_params.col(p.ifiltered) = filtered.parameters();
-      CovMap(m_cov.col(p.ifiltered).data()) = *filtered.covariance();
+      nts.filtered() = filtered.parameters();
+      nts.filteredCovariance() = *filtered.covariance();
     }
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
-    m_cov.addCol();
-    m_params.addCol();
-    p.ismoothed = m_params.size() - 1;
     if (ts.parameter.smoothed) {
       const auto& smoothed = *ts.parameter.smoothed;
-      m_params.col(p.ismoothed) = smoothed.parameters();
-      CovMap(m_cov.col(p.ismoothed).data()) = *smoothed.covariance();
+      nts.smoothed() = smoothed.parameters();
+      nts.smoothedCovariance() = *smoothed.covariance();
     }
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
     // store jacobian
-    m_jac.addCol();
-    p.ijacobian = m_jac.size() - 1;
     if (ts.parameter.jacobian) {
-      CovMap(m_jac.col(p.ijacobian).data()) = *ts.parameter.jacobian;
+      nts.jacobian() = *ts.parameter.jacobian;
     }
   }
 
   // handle measurements
   if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
-    m_sourceLinks.emplace_back();  // allocate empty
-    p.iuncalibrated = m_sourceLinks.size() - 1;
     if (ts.measurement.uncalibrated) {
-      m_sourceLinks[p.iuncalibrated] = *ts.measurement.uncalibrated;
+      nts.uncalibrated() = *ts.measurement.uncalibrated;
     }
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    m_meas.addCol();
-    m_measCov.addCol();
-    p.icalibrated = m_meas.size() - 1;
-
-    m_sourceLinks.emplace_back();
-    p.icalibratedsourcelink = m_sourceLinks.size() - 1;
-
-    m_projectors.emplace_back();
-    p.iprojector = m_projectors.size() - 1;
-
     if (ts.measurement.calibrated) {
       std::visit([&](const auto& m) { nts.setCalibrated(m); },
                  *ts.measurement.calibrated);
@@ -256,7 +226,7 @@ inline size_t MultiTrajectory<SL>::addTrackState(
   nts.pathLength() = ts.parameter.pathLength;
   nts.typeFlags() = ts.type();
 
-  return index;
+  return nts.index();
 }
 
 template <typename SL>
