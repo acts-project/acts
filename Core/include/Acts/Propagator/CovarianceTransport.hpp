@@ -24,7 +24,6 @@ namespace Acts {
 struct CovarianceTransport {
 	
 	/// Some type defs
-  using Corrector = VoidIntersectionCorrector;
   using Jacobian = BoundMatrix;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
 
