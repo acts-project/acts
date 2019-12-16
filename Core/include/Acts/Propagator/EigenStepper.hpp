@@ -19,7 +19,6 @@
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Propagator/detail/StepperReturnState.hpp"
-#include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Propagator/StepperState.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -158,10 +157,10 @@ class EigenStepper {
     NavigationDirection navDir;
 
     /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
+    std::variant<BoundMatrix, FreeToBoundMatrix, FreeMatrix, BoundToFreeMatrix> jacobian;
 
     /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+    std::optional<BoundToFreeMatrix> jacToGlobal;
 
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();
@@ -410,8 +409,6 @@ class EigenStepper {
   BField m_bField;
   /// Overstep limit: could/should be dynamic
   double m_overstepLimit = 100_um;
-  	/// The covariance transporter engine
-  CovarianceTransport covTransport;
 };
 }  // namespace Acts
 

@@ -22,7 +22,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Propagator/detail/StepperReturnState.hpp"
-#include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Propagator/StepperState.hpp"
 
 #include <cmath>
@@ -121,13 +120,13 @@ class StraightLineStepper {
     }
     
     /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+    std::optional<BoundToFreeMatrix> jacToGlobal;
 
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();
 
     /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
+    std::variant<BoundMatrix, FreeToBoundMatrix, FreeMatrix, BoundToFreeMatrix> jacobian;
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
@@ -424,10 +423,6 @@ class StraightLineStepper {
     // return h
     return h;
   }
-
-private:
-	/// The covariance transporter engine
-	CovarianceTransport covTransport;
 };
 
 }  // namespace Acts
