@@ -354,8 +354,7 @@ class KalmanFitter {
           targetReached(state, stepper, *targetSurface)) {
         ACTS_VERBOSE("Completing");
         // Transport & bind the parameter to the final surface
-        auto fittedState =
-            stepper.boundState(state.stepping, *targetSurface);
+        auto fittedState = stepper.boundState(state.stepping, *targetSurface);
         // Assign the fitted parameters
         result.fittedParameters = std::get<BoundParameters>(fittedState);
         // Break the navigation for stopping the Propagation
