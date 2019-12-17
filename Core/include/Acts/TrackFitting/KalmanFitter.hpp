@@ -483,7 +483,7 @@ class KalmanFitter {
         trackStateProxy.predicted() = std::move(boundParams.parameters());
         trackStateProxy.predictedCovariance() =
             std::move(*boundParams.covariance());
-        trackStateProxy.jacobian() = std::move(jacobian);
+        trackStateProxy.jacobian() = std::get<BoundMatrix>(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
         // We have predicted parameters, so calibrate the uncalibrated input

@@ -51,8 +51,8 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 
   /// Full transport jacobian
   std::optional<std::variant<BoundMatrix, 
-			   BoundToFreeMatrix, 
 			   FreeToBoundMatrix, 
+			   BoundToFreeMatrix, 
 			   FreeMatrix>> transportJacobian;
 
   /// Number of propagation steps that were carried out
@@ -228,6 +228,7 @@ class Propagator final {
   using BoundState = std::tuple<BoundTrackParameters, JacobianToBoundPars, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double>;
+  using FreeState = std::tuple<FreeTrackParameters, JacobianToFreePars, double>;
 
   //~ static_assert(StepperStateConcept<typename stepper_t::State>,
                 //~ "Stepper does not fulfill stepper concept.");

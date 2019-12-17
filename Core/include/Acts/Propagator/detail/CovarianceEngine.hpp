@@ -29,8 +29,7 @@ namespace Acts {
 /// As a consequence the methods can be located in a seperate file.
 namespace detail {
 
-using JacobianToBoundPars = std::variant<BoundMatrix, FreeToBoundMatrix>;
-using JacobianToFreePars = std::variant<FreeMatrix, BoundToFreeMatrix>;
+using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
 
 /// Create and return the bound state at the current position
 ///
@@ -59,7 +58,7 @@ std::tuple<BoundTrackParameters, JacobianToBoundPars, double> boundState(
     std::reference_wrapper<const GeometryContext> geoContext,
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const FreeVector& parameters,
     bool covTransport, double accumulatedPath, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
@@ -85,7 +84,7 @@ std::tuple<BoundTrackParameters, JacobianToBoundPars, double> boundState(
 std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double> curvilinearState(
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const FreeVector& parameters,
     bool covTransport, double accumulatedPath);
 
   /// Create and return a free state at the current position
@@ -101,7 +100,7 @@ std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double> curvilinearS
   ///   - the free parameters at given position
   ///   - the stepweise jacobian towards it (from last location)
   ///   - and the path length (from start - for ordering)
-  std::tuple<FreeParameters, JacobianToFreePars, double>
+  std::tuple<FreeParameters, Jacobian, double>
 freeState(StepperState& state, bool reinitialize);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at current position in parameter space. It treats different scenarios:

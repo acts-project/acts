@@ -328,7 +328,6 @@ class EigenStepper {
 
   /// @brief Final state builder without a target surface
   ///
-  /// @tparam start_parameters_t Type of the start parameters
   /// @tparam end_parameters_t Type of the end parameters
   ///
   /// @param [in] state State that will be presented as @c BoundState
@@ -377,7 +376,10 @@ class EigenStepper {
   /// to a new curvilinear frame at current  position,
   /// or direction of the state
   ///
+  /// @tparam end_parameters_t The target parameter type for dimension derivation
+  ///
   /// @param [in,out] state State of the stepper
+  template <typename end_parameters_t = CurvilinearParameters>
   void covarianceTransport(State& state) const;
 
   /// Method for on-demand transport of the covariance

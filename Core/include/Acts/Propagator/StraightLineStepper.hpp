@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -289,7 +290,6 @@ class StraightLineStepper {
 
   /// @brief Final state builder without a target surface
   ///
-  /// @tparam start_parameters_t Type of the start parameters
   /// @tparam end_parameters_t Type of the end parameters
   ///
   /// @param [in, out] state State of the propagation
@@ -297,21 +297,19 @@ class StraightLineStepper {
   /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return std::tuple conatining the final state parameters, the jacobian & the accumulated path
-  template<bool start_local, typename end_parameters_t>
+  template<typename end_parameters_t>
   auto 
   buildState(State& state, bool reinitialize) const
   {	  
-	  // The return type
-	  using return_type = detail::return_state_type<start_local, end_parameters_t>;
 	  // If the result should be local it is curvilinear
 	  if constexpr (end_parameters_t::is_local_representation)
 	  {
-		 return covTransport.curvilinearState<return_type>(state, reinitialize);
+		 return detail::curvilinearState(state, reinitialize);
 	  }
 	  // else it is free
 	  else
 	  {
-		   return covTransport.freeState<return_type>(state, reinitialize);
+		   return detail::freeState(state, reinitialize);
 	  }
   }
 
@@ -361,19 +359,27 @@ class StraightLineStepper {
   /// @param [in] time the updated time value
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const;
-
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
+  
+    /// Method for on-demand transport of the covariance
+  /// to a new curvilinear or freeframe at current  position,
+  /// or direction of the state
+  ///
+  /// @tparam end_parameters_t Type of the parameters to which the transport will be performed
   ///
   /// @param [in,out] state State of the stepper
-  void covarianceTransport(State& state) const;
+  /// @param [in] reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+	template <typename end_parameters_t = CurvilinearParameters>
+	void covarianceTransport(State& state) const
+	{
+		  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
+                              state.derivative, state.jacToGlobal, state.dir, end_parameters_t::is_local_representation);
+	}
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
-  ///
-  /// @tparam surface_t the surface type - ignored here
+  /// or direction of the state
   ///
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is

@@ -88,9 +88,10 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 }
 
 template <typename B, typename E, typename A>
+template <typename end_parameters_t>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
   detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal, state.dir);
+                              state.derivative, state.jacToGlobal, state.dir, end_parameters_t::is_local_representation);
 }
 
 template <typename B, typename E, typename A>
@@ -104,6 +105,7 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(
                               state.jacToGlobal, parameters, surface);
 }
 
+template <typename B, typename E, typename A>
   template<typename end_parameters_t>
   auto 
   Acts::EigenStepper<B, E, A>::buildState(State& state, bool reinitialize) const
@@ -111,21 +113,19 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(
 	  // If the result should be local it is curvilinear
 	  if constexpr (end_parameters_t::is_local_representation)
 	  {
-		 return detail::curvilinearState<return_type>(state, reinitialize);
+		 return detail::curvilinearState(state, reinitialize);
 	  }
 	  // else it is free
 	  else
 	  {
-		 return detail::freeState<return_type>(state, reinitialize);
+		 return detail::freeState(state, reinitialize);
 	  }
   }
 
 template <typename B, typename E, typename A>
-  template<bool start_local>
   auto 
   Acts::EigenStepper<B, E, A>::buildState(State& state, const Surface& surface, bool reinitialize) const {
-	  using return_type = detail::return_state_type<start_local, BoundParameters, Surface>;
-	  return covTransport.boundState<return_type>(state, surface, reinitialize);
+	  return detail::boundState(state, surface, reinitialize);
   }
   
 template <typename B, typename E, typename A>

@@ -69,7 +69,7 @@ struct StepWiseActor {
     if (surface and surface->associatedDetectorElement()) {
       // Create a bound state and log the jacobian
       auto boundState = stepper.buildState(state.stepping, *surface);
-      result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
+      result.jacobians.push_back(std::move(std::get<BoundMatrix>(std::get<1>(boundState))));
       result.paths.push_back(std::get<double>(boundState));
     }
     // Also store the jacobian and full path
@@ -143,10 +143,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   const auto& pResult = propagator.propagate(start, pOptions).value();
   // Let's get the end parameters and jacobian matrix
   //~ const auto& pJacobian = *(pResult.transportJacobian);
-  const auto& pJacobian = std::visit([](std::variant<BoundMatrix, 
-			   BoundToFreeMatrix, 
-			   FreeToBoundMatrix, 
-			   FreeMatrix>&& arg) -> BoundMatrix { return std::get<BoundMatrix>(arg);}, pResult.transportJacobian);
+  const auto& pJacobian =  std::get<BoundMatrix>(*pResult.transportJacobian);
 
   // Run the stepwise propagation
   const auto& swResult = propagator.propagate(start, swOptions).value();
@@ -170,10 +167,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // The stepwise jacobians
   auto swJacobians = swJacobianTest.jacobians;
   // The last-step jacobian, needed for the full jacobian transport
-  const auto& swlJacobian = std::visit([](std::optional<std::variant<BoundMatrix, 
-			   BoundToFreeMatrix, 
-			   FreeToBoundMatrix, 
-			   FreeMatrix>>&& arg) -> BoundMatrix { return std::get<BoundMatrix>(*arg);}, swResult.transportJacobian);
+  const auto& swlJacobian = std::get<BoundMatrix>(*swResult.transportJacobian);
 
   // Build up the step-wise jacobians
   for (auto& j : swJacobians) {
