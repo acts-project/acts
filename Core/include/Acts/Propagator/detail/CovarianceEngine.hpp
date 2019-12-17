@@ -34,15 +34,13 @@ namespace detail {
 /// @tparam result_t Defines the return type
 /// @param [in] state State that will be presented as @c BoundState
 /// @param [in] surface The surface to which we bind the state
-/// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-/// i.e. if this is an intermediate state of a larger propagation
 ///
 /// @return A bound state:
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 std::tuple<BoundParameters, BoundMatrix, double> boundState(
-    StepperState& state, const Surface& surface, bool reinitialize);
+    StepperState& state, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -50,28 +48,24 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(
 ///
 /// @tparam result_t Defines the return type
 /// @param [in] state State that will be presented as @c CurvilinearState
-/// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-/// i.e. if this is an intermediate state of a larger propagation
 ///
 /// @return A curvilinear state:
 ///   - the curvilinear parameters at given position
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
-    StepperState& state, bool reinitialize);
+    StepperState& state);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
 ///
 /// @param [in,out] state The stepper state
-/// @param [in] toLocal Boolean flag whether the result is in local parameters
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
 /// @note No check is done if the position is actually on the surface
 ///
 /// @return Projection jacobian from global to bound parameters
-void covarianceTransport(StepperState& state, bool reinitialize,
-                         const Surface* surface = nullptr);
+void covarianceTransport(StepperState& state, const Surface* surface = nullptr);
 
 }  // namespace detail
 }  // namespace Acts

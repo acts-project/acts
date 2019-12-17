@@ -14,17 +14,15 @@ Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
 
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::boundState(State& state,
-                                             const Surface& surface,
-                                             bool reinitialize) const
+                                             const Surface& surface) const
     -> BoundState {
-  return detail::boundState(state, surface, reinitialize);
+  return detail::boundState(state, surface);
 }
 
 template <typename B, typename E, typename A>
-auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
-                                                   bool reinitialize) const
+auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state) const
     -> CurvilinearState {
-  return detail::curvilinearState(state, reinitialize);
+  return detail::curvilinearState(state);
 }
 
 template <typename B, typename E, typename A>
@@ -52,16 +50,14 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 }
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
-                                                      bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize);
+void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
+  detail::covarianceTransport(state);
 }
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
-                                                      const Surface& surface,
-                                                      bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize, &surface);
+void Acts::EigenStepper<B, E, A>::covarianceTransport(
+    State& state, const Surface& surface) const {
+  detail::covarianceTransport(state, &surface);
 }
 
 template <typename B, typename E, typename A>

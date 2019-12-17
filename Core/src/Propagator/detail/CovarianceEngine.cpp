@@ -169,7 +169,6 @@ void reinitializeJacToGlobal(StepperState& state,
 /// @param [in] surface Representing surface of the stepper state
 void reinitializeJacobians(StepperState& state,
                            const Surface* surface = nullptr) {
-  state.jacobian = Jacobian::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
   reinitializeJacToGlobal(state, surface);
@@ -178,13 +177,12 @@ void reinitializeJacobians(StepperState& state,
 
 namespace detail {
 
-BoundState boundState(StepperState& state, const Surface& surface,
-                      bool reinitialize) {
+BoundState boundState(StepperState& state, const Surface& surface) {
   // Transport the covariance to here
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (state.covTransport) {
     // Initialize the transport final frame jacobian
-    covarianceTransport(state, reinitialize, &surface);
+    covarianceTransport(state, &surface);
     cov = state.cov;
   }
   // Create the bound parameters
@@ -194,19 +192,14 @@ BoundState boundState(StepperState& state, const Surface& surface,
   // Create the bound state
   BoundState result = std::make_tuple(std::move(parameters), state.jacobian,
                                       state.pathAccumulated);
-  // Reinitialize if asked to do so
-  // this is useful for interruption calls
-  if (reinitialize) {
-    reinitializeJacobians(state, &surface);
-  }
   return result;
 }
 
-CurvilinearState curvilinearState(StepperState& state, bool reinitialize) {
+CurvilinearState curvilinearState(StepperState& state) {
   // Transport the covariance to here
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (state.covTransport) {
-    covarianceTransport(state, reinitialize);
+    covarianceTransport(state);
     cov = state.cov;
   }
   // Create the curvilinear parameters
@@ -215,16 +208,11 @@ CurvilinearState curvilinearState(StepperState& state, bool reinitialize) {
   // Create the bound state
   CurvilinearState result = std::make_tuple(
       std::move(parameters), state.jacobian, state.pathAccumulated);
-  // Reinitialize if asked to do so
-  // this is useful for interruption calls
-  if (reinitialize) {
-    reinitializeJacobians(state);
-  }
+
   return result;
 }
 
-void covarianceTransport(StepperState& state, bool reinitialize,
-                         const Surface* surface) {
+void covarianceTransport(StepperState& state, const Surface* surface) {
   state.jacToGlobal = state.jacTransport * state.jacToGlobal;
 
   const FreeToBoundMatrix jacToLocal = surfaceDerivative(state, surface);
@@ -233,12 +221,11 @@ void covarianceTransport(StepperState& state, bool reinitialize,
   // Apply the actual covariance transport
   state.cov = jacFull * state.cov * jacFull.transpose();
 
-  if (reinitialize) {
-    reinitializeJacobians(state, surface);
-  }
+  // Reinitialize
+  reinitializeJacobians(state, surface);
 
   // Store The global and bound jacobian (duplication for the moment)
-  state.jacobian = jacFull * state.jacobian;
+  state.jacobian = jacFull;
 }
 }  // namespace detail
 }  // namespace Acts

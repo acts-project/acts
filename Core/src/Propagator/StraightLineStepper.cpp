@@ -12,14 +12,13 @@
 namespace Acts {
 
 std::tuple<BoundParameters, BoundMatrix, double>
-StraightLineStepper::boundState(State& state, const Surface& surface,
-                                bool reinitialize) const {
-  return detail::boundState(state, surface, reinitialize);
+StraightLineStepper::boundState(State& state, const Surface& surface) const {
+  return detail::boundState(state, surface);
 }
 
 std::tuple<CurvilinearParameters, BoundMatrix, double>
-StraightLineStepper::curvilinearState(State& state, bool reinitialize) const {
-  return detail::curvilinearState(state, reinitialize);
+StraightLineStepper::curvilinearState(State& state) const {
+  return detail::curvilinearState(state);
 }
 
 void StraightLineStepper::update(State& state,
@@ -44,14 +43,12 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
   state.t = time;
 }
 
-void StraightLineStepper::covarianceTransport(State& state,
-                                              bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize);
+void StraightLineStepper::covarianceTransport(State& state) const {
+  detail::covarianceTransport(state);
 }
 
 void StraightLineStepper::covarianceTransport(State& state,
-                                              const Surface& surface,
-                                              bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize, &surface);
+                                              const Surface& surface) const {
+  detail::covarianceTransport(state, &surface);
 }
 }  // namespace Acts
