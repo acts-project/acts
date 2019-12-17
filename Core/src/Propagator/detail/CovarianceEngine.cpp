@@ -169,7 +169,6 @@ void reinitializeJacToGlobal(StepperState& state,
 /// @param [in] surface Representing surface of the stepper state
 void reinitializeJacobians(StepperState& state,
                            const Surface* surface = nullptr) {
-  state.jacobian = Jacobian::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
   reinitializeJacToGlobal(state, surface);
@@ -197,7 +196,7 @@ BoundState boundState(StepperState& state, const Surface& surface,
   // Reinitialize if asked to do so
   // this is useful for interruption calls
   if (reinitialize) {
-    reinitializeJacobians(state, &surface);
+    state.jacobian = Jacobian::Identity();
   }
   return result;
 }
@@ -218,7 +217,7 @@ CurvilinearState curvilinearState(StepperState& state, bool reinitialize) {
   // Reinitialize if asked to do so
   // this is useful for interruption calls
   if (reinitialize) {
-    reinitializeJacobians(state);
+    state.jacobian = Jacobian::Identity();
   }
   return result;
 }
