@@ -212,6 +212,7 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
 
 namespace detail {
 
+<<<<<<< HEAD
 BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
                       Covariance& covarianceMatrix, Jacobian& jacobian,
                       FreeMatrix& transportJacobian, FreeVector& derivatives,
@@ -226,6 +227,15 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
                         transportJacobian, derivatives, jacobianLocalToGlobal,
                         parameters, reinitialize, surface);
     cov = covarianceMatrix;
+=======
+BoundState boundState(StepperState& state, const Surface& surface) {
+  // Transport the covariance to here
+  std::optional<BoundSymMatrix> cov = std::nullopt;
+  if (state.covTransport) {
+    // Initialize the transport final frame jacobian
+    covarianceTransport(state, &surface);
+    cov = state.cov;
+>>>>>>> Removed reinitializes from Stepper classes
   }
   // Create the bound parameters
   const Vector3D& position = parameters.segment<3>(eFreePos0);
@@ -246,6 +256,7 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
   return result;
 }
 
+<<<<<<< HEAD
 CurvilinearState curvilinearState(
     Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
@@ -260,6 +271,14 @@ CurvilinearState curvilinearState(
                         derivatives, jacobianLocalToGlobal, direction,
                         reinitialize);
     cov = covarianceMatrix;
+=======
+CurvilinearState curvilinearState(StepperState& state) {
+  // Transport the covariance to here
+  std::optional<BoundSymMatrix> cov = std::nullopt;
+  if (state.covTransport) {
+    covarianceTransport(state);
+    cov = state.cov;
+>>>>>>> Removed reinitializes from Stepper classes
   }
   // Create the curvilinear parameters
   const Vector3D& position = parameters.segment<3>(eFreePos0);
@@ -279,6 +298,7 @@ CurvilinearState curvilinearState(
   return result;
 }
 
+<<<<<<< HEAD
 void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
                          FreeMatrix& transportJacobian, FreeVector& derivatives,
                          BoundToFreeMatrix& jacobianLocalToGlobal,
@@ -301,6 +321,11 @@ void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
   // Store The global and bound jacobian (duplication for the moment)
   jacobian = jacFull * jacobian;
 }
+=======
+void covarianceTransport(StepperState& state,
+                         const Surface* surface) {
+  state.jacToGlobal = state.jacTransport * state.jacToGlobal;
+>>>>>>> Removed reinitializes from Stepper classes
 
 void covarianceTransport(
     std::reference_wrapper<const GeometryContext> geoContext,
@@ -317,11 +342,16 @@ void covarianceTransport(
   // Apply the actual covariance transport
   covarianceMatrix = jacFull * covarianceMatrix * jacFull.transpose();
 
+<<<<<<< HEAD
   // Reinitialize jacobian components
   if (reinitialize) {
     reinitializeJacobians(geoContext, transportJacobian, derivatives,
                           jacobianLocalToGlobal, parameters, surface);
   }
+=======
+   // Reinitialize 
+ reinitializeJacobians(state, surface);
+>>>>>>> Removed reinitializes from Stepper classes
 
   // Store The global and bound jacobian (duplication for the moment)
   jacobian = jacFull * jacobian;

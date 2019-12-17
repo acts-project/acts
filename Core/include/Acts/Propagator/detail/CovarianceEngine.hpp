@@ -43,8 +43,6 @@ namespace detail {
 /// performed
 /// @param [in] accumulatedPath Propagated distance
 /// @param [in] surface Target surface on which the state is represented
-/// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-/// i.e. if this is an intermediate state of a larger propagation
 ///
 /// @return A bound state:
 ///   - the parameters at the surface
@@ -55,8 +53,7 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath, const Surface& surface,
-    bool reinitialize);
+    bool covTransport, double accumulatedPath, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -73,8 +70,6 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
 /// @param [in] accumulatedPath Propagated distance
-/// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-/// i.e. if this is an intermediate state of a larger propagation
 ///
 /// @return A curvilinear state:
 ///   - the curvilinear parameters at given position
@@ -84,7 +79,7 @@ std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath, bool reinitialize);
+    bool covTransport, double accumulatedPath);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
@@ -98,8 +93,6 @@ std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
 /// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] parameters Free, nominal parametrisation
-/// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-/// i.e. if this is an intermediate state of a larger propagation
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
 /// @note No check is done if the position is actually on the surface
@@ -108,7 +101,7 @@ void covarianceTransport(
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool reinitialize, const Surface& surface);
+    const Surface& surface);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
@@ -121,12 +114,10 @@ void covarianceTransport(
 /// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
-/// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-/// i.e. if this is an intermediate state of a larger propagation
 void covarianceTransport(BoundSymMatrix& covarianceMatrix,
                          BoundMatrix& jacobian, FreeMatrix& transportJacobian,
                          FreeVector& derivatives,
                          BoundToFreeMatrix& jacobianLocalToGlobal,
-                         const Vector3D& direction, bool reinitialize);
+                         const Vector3D& direction);
 }  // namespace detail
 }  // namespace Acts
