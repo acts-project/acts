@@ -164,7 +164,8 @@ struct PropagatorState {
 
     void covarianceTransport(State& /*state*/) const {}
 
-    void covarianceTransport(State& /*unused*/, const Surface& /*surface*/) const {}
+    void covarianceTransport(State& /*unused*/,
+                             const Surface& /*surface*/) const {}
 
     Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
       // get the field from the cell
