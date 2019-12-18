@@ -68,7 +68,7 @@ struct StepWiseActor {
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
       // Create a bound state and log the jacobian
-      auto boundState = stepper.buildState(state.stepping, *surface);
+      auto boundState = stepper.boundState(state.stepping, *surface);
       result.jacobians.push_back(std::move(std::get<BoundMatrix>(std::get<1>(boundState))));
       result.paths.push_back(std::get<double>(boundState));
     }

@@ -104,29 +104,6 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(
                               state.jacTransport, state.derivative,
                               state.jacToGlobal, parameters, surface);
 }
-
-template <typename B, typename E, typename A>
-  template<typename end_parameters_t>
-  auto 
-  Acts::EigenStepper<B, E, A>::buildState(State& state, bool reinitialize) const
-  {	  
-	  // If the result should be local it is curvilinear
-	  if constexpr (end_parameters_t::is_local_representation)
-	  {
-		 return detail::curvilinearState(state, reinitialize);
-	  }
-	  // else it is free
-	  else
-	  {
-		 return detail::freeState(state, reinitialize);
-	  }
-  }
-
-template <typename B, typename E, typename A>
-  auto 
-  Acts::EigenStepper<B, E, A>::buildState(State& state, const Surface& surface, bool reinitialize) const {
-	  return detail::boundState(state, surface, reinitialize);
-  }
   
 template <typename B, typename E, typename A>
 template <typename propagator_state_t>

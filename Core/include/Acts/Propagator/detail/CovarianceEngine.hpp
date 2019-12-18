@@ -101,7 +101,7 @@ std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double> curvilinearS
   ///   - the stepweise jacobian towards it (from last location)
   ///   - and the path length (from start - for ordering)
   std::tuple<FreeParameters, Jacobian, double>
-freeState(StepperState& state, bool reinitialize);
+freeState(StepperState& state);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at current position in parameter space. It treats different scenarios:
 /// - from local to local

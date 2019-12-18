@@ -328,7 +328,16 @@ class EigenStepper {
 
   /// @brief Final state builder without a target surface
   ///
-  /// @tparam end_parameters_t Type of the end parameters
+  /// @param [in, out] state State of the propagation
+  ///
+  /// @return std::tuple conatining the final state parameters, the jacobian & the accumulated path
+  auto 
+  curvilinearState(State& state) const
+  {	  
+	return detail::curvilinearState(state);
+  }
+
+  /// @brief Final state builder without a target surface
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state

@@ -216,31 +216,14 @@ auto Acts::Propagator<S, N>::propagate(
   if (result.ok()) {
     auto& propRes = *result;
     // Compute the final results and mark the propagation as successful
-    if(ReturnParameterType::is_local_representation)
-    {
-		auto bs = m_stepper.boundState(state.stepping, target);
-		auto& boundParams = std::get<BoundTrackParameters>(bs);
-		// Fill the end parameters
-		propRes.endParameters =
-			std::make_unique<const BoundTrackParameters>(std::move(boundParameters));
-		// Only fill the transport jacobian when covariance transport was done
-		if (state.stepping.covTransport) {
-		  auto& tJacobian = std::get<1>(bs);
-		  propRes.transportJacobian = tJacobian;
-		}
-	}
-	else
-	{
-		auto bs = m_stepper.boundState(state.stepping, target);
-		auto& boundParams = std::get<BoundTrackParameters>(bs);
-		// Fill the end parameters
-		propRes.endParameters =
-			std::make_unique<const BoundTrackParameters>(std::move(boundParameters));
-		// Only fill the transport jacobian when covariance transport was done
-		if (state.stepping.covTransport) {
-		  auto& tJacobian = std::get<1>(bs);
-		  propRes.transportJacobian = tJacobian;
-		}
+	auto bs = m_stepper.boundState(state.stepping, target);
+	auto& boundParameters = std::get<BoundTrackParameters>(bs);
+	// Fill the end parameters
+	propRes.endParameters =
+		std::make_unique<const BoundTrackParameters>(std::move(boundParameters));
+	// Only fill the transport jacobian when covariance transport was done
+	if (state.stepping.covTransport) {
+	  *propRes.transportJacobian = std::get<1>(bs);
 	}
     return result;
   } else {
