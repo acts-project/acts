@@ -142,7 +142,6 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // Run the standard propagation
   const auto& pResult = propagator.propagate(start, pOptions).value();
   // Let's get the end parameters and jacobian matrix
-  //~ const auto& pJacobian = *(pResult.transportJacobian);
   const auto& pJacobian =  std::get<BoundMatrix>(*pResult.transportJacobian);
 
   // Run the stepwise propagation

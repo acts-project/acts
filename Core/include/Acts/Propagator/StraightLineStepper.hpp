@@ -83,6 +83,7 @@ class StraightLineStepper {
         cov = BoundSymMatrix(*par.covariance());
         surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
                                      par.parameters());
+        jacobian.emplace<0>(BoundMatrix::Identity());
       }
     }
 
@@ -116,6 +117,7 @@ class StraightLineStepper {
 		  covTransport = true;
 		  // Get the covariance
           cov = *par.covariance();
+          jacobian.emplace<3>(FreeMatrix::Identity());
       }
     }
     

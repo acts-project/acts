@@ -223,7 +223,7 @@ auto Acts::Propagator<S, N>::propagate(
 		std::make_unique<const BoundTrackParameters>(std::move(boundParameters));
 	// Only fill the transport jacobian when covariance transport was done
 	if (state.stepping.covTransport) {
-	  *propRes.transportJacobian = std::get<1>(bs);
+	  propRes.transportJacobian = std::get<1>(bs);
 	}
     return result;
   } else {
