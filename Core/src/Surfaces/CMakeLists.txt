@@ -9,7 +9,6 @@ target_sources_local(
     DiscSurface.cpp
     DiscTrapezoidalBounds.cpp
     EllipseBounds.cpp
-    InfinitieBounds.cpp
     LineBounds.cpp
     LineSurface.cpp
     PerigeeSurface.cpp
