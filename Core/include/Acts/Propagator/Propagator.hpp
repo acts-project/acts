@@ -278,7 +278,8 @@ class Propagator final {
                    topts.direction, topts.maxStepSize, topts.tolerance),
           geoContext(topts.geoContext) {
       // Setting the start surface
-      navigation.startSurface = &start.referenceSurface();
+      if constexpr (parameters_t::is_local_representation)
+		navigation.startSurface = &start.referenceSurface();
     }
 
     /// These are the options - provided for each propagation step
@@ -367,8 +368,7 @@ class Propagator final {
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t, typename propagator_options_t,
-			typename return_parameters_t = CurvilinearParameters,
+  template <typename return_parameters_t = CurvilinearParameters, typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
   Result<action_list_t_result_t<
       return_parameters_t,

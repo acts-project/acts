@@ -85,8 +85,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
 }
 
 template <typename S, typename N>
-template <typename parameters_t, typename propagator_options_t,
-		  typename return_parameters_t,
+template <typename return_parameters_t, typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
