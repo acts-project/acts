@@ -16,6 +16,7 @@
 #include <Eigen/Core>
 
 #include "Acts/EventData/TrackState.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -500,77 +501,6 @@ constexpr bool VisitorConcept = concept ::require<
                      concept ::identical_to<void, call_operator_t, T, TS>>>;
 
 }  // namespace detail_lt
-
-/// Collection of bit masks to enable steering which components of a track state
-/// should be initialized, and which should be left invalid.
-/// These mask values can be combined using binary operators, so
-/// (TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian) will instruct
-/// allocating storage for both predicted parameters (including covariance) and
-/// a jacobian.
-/// The enum is used as a strong type wrapper around the bits to prevent
-/// autoconversion from integer
-enum struct TrackStatePropMask : uint8_t {
-  None = 0,
-  Predicted = 1 << 0,
-  Filtered = 1 << 1,
-  Smoothed = 1 << 2,
-  Jacobian = 1 << 3,
-
-  Uncalibrated = 1 << 4,
-  Calibrated = 1 << 5,
-
-  All = std::numeric_limits<uint8_t>::max(),  // should be all ones
-};
-
-constexpr TrackStatePropMask operator|(TrackStatePropMask lhs,
-                                       TrackStatePropMask rhs) {
-  return static_cast<TrackStatePropMask>(
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) |
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
-}
-
-constexpr TrackStatePropMask operator&(TrackStatePropMask lhs,
-                                       TrackStatePropMask rhs) {
-  return static_cast<TrackStatePropMask>(
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) &
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
-}
-
-constexpr TrackStatePropMask operator^(TrackStatePropMask lhs,
-                                       TrackStatePropMask rhs) {
-  return static_cast<TrackStatePropMask>(
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) ^
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
-}
-
-constexpr TrackStatePropMask operator~(TrackStatePropMask op) {
-  return static_cast<TrackStatePropMask>(
-      ~static_cast<std::underlying_type<TrackStatePropMask>::type>(op));
-}
-
-constexpr TrackStatePropMask& operator|=(TrackStatePropMask& lhs,
-                                         TrackStatePropMask rhs) {
-  lhs = static_cast<TrackStatePropMask>(
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) |
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
-  return lhs;
-}
-
-constexpr TrackStatePropMask& operator&=(TrackStatePropMask& lhs,
-                                         TrackStatePropMask rhs) {
-  lhs = static_cast<TrackStatePropMask>(
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) &
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
-  return lhs;
-}
-
-constexpr TrackStatePropMask& operator^=(TrackStatePropMask& lhs,
-                                         TrackStatePropMask rhs) {
-  lhs = static_cast<TrackStatePropMask>(
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) ^
-      static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
-  return lhs;
-}
 
 /// Store a trajectory of track states with multiple components.
 ///
