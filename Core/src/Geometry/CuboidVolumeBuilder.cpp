@@ -65,7 +65,7 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   LayerCreator layerCreator(lCfg);
 
   return layerCreator.planeLayer(gctx, {cfg.surface}, cfg.binsY, cfg.binsZ,
-                                 BinningValue::binX, boost::none,
+                                 BinningValue::binX, std::nullopt,
                                  std::make_shared<const Transform3D>(trafo));
 }
 

@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <optional>
 
 namespace Acts {
 
@@ -133,14 +133,14 @@ class TrackState {
 
   /// @brief number of Measured parameters, forwarded
   /// @note This only returns a value if there is a calibrated measurement
-  ///       set. If not, this returns boost::none
+  ///       set. If not, this returns std::nullopt
   ///
-  /// @return number of measured parameters, or boost::none
-  boost::optional<size_t> size() {
+  /// @return number of measured parameters, or std::nullopt
+  std::optional<size_t> size() {
     if (this->measurement.calibrated) {
       return MeasurementHelpers::getSize(*this->measurement.calibrated);
     }
-    return boost::none;
+    return std::nullopt;
   }
 
   /// The parameter part
@@ -149,13 +149,13 @@ class TrackState {
   /// It is enough to to run the track smoothing
   struct {
     /// The predicted state
-    boost::optional<Parameters> predicted{boost::none};
+    std::optional<Parameters> predicted{std::nullopt};
     /// The filtered state
-    boost::optional<Parameters> filtered{boost::none};
+    std::optional<Parameters> filtered{std::nullopt};
     /// The smoothed state
-    boost::optional<Parameters> smoothed{boost::none};
+    std::optional<Parameters> smoothed{std::nullopt};
     /// The transport jacobian matrix
-    boost::optional<Jacobian> jacobian{boost::none};
+    std::optional<Jacobian> jacobian{std::nullopt};
     /// The path length along the track - will help sorting
     double pathLength = 0.;
     /// chisquare
@@ -167,9 +167,9 @@ class TrackState {
   /// (in case the latter is different)
   struct {
     /// The optional (uncalibrated) measurement
-    boost::optional<SourceLink> uncalibrated{boost::none};
+    std::optional<SourceLink> uncalibrated{std::nullopt};
     /// The optional calibrabed measurement
-    boost::optional<FittableMeasurement<SourceLink>> calibrated{boost::none};
+    std::optional<FittableMeasurement<SourceLink>> calibrated{std::nullopt};
   } measurement;
 
  private:

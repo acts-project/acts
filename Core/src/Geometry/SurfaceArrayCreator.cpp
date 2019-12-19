@@ -31,7 +31,7 @@ std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-    size_t binsZ, boost::optional<ProtoLayer> protoLayerOpt,
+    size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
     const std::shared_ptr<const Transform3D>& transformOpt) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
@@ -81,7 +81,7 @@ std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
-    BinningType bTypeZ, boost::optional<ProtoLayer> protoLayerOpt,
+    BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
     const std::shared_ptr<const Transform3D>& transformOpt) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
@@ -147,7 +147,7 @@ std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-    size_t binsPhi, boost::optional<ProtoLayer> protoLayerOpt,
+    size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
     const std::shared_ptr<const Transform3D>& transformOpt) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
@@ -203,7 +203,7 @@ std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
-    BinningType bTypePhi, boost::optional<ProtoLayer> protoLayerOpt,
+    BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
     const std::shared_ptr<const Transform3D>& transformOpt) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
@@ -312,8 +312,7 @@ std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-    size_t bins2, BinningValue bValue,
-    boost::optional<ProtoLayer> protoLayerOpt,
+    size_t bins2, BinningValue bValue, std::optional<ProtoLayer> protoLayerOpt,
     const std::shared_ptr<const Transform3D>& transformOpt) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it

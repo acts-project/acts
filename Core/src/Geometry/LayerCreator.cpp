@@ -45,7 +45,7 @@ void Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
 Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-    size_t binsZ, boost::optional<ProtoLayer> _protoLayer,
+    size_t binsZ, std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -120,7 +120,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
 Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
-    BinningType bTypeZ, boost::optional<ProtoLayer> _protoLayer,
+    BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -195,7 +195,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
 Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-    size_t binsPhi, boost::optional<ProtoLayer> _protoLayer,
+    size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -258,7 +258,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
-    BinningType bTypePhi, boost::optional<ProtoLayer> _protoLayer,
+    BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -318,7 +318,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-    size_t bins2, BinningValue bValue, boost::optional<ProtoLayer> _protoLayer,
+    size_t bins2, BinningValue bValue, std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
