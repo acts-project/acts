@@ -187,34 +187,35 @@ class TrackStateProxy {
     }
 
     // we're sure now this has correct allocations, so just copy
-    if (other.hasPredicted() && ACTS_CHECK_BIT(src, PM::Predicted)) {
+    if (ACTS_CHECK_BIT(src, PM::Predicted)) {
       predicted() = other.predicted();
       predictedCovariance() = other.predictedCovariance();
     }
 
-    if (other.hasFiltered() && ACTS_CHECK_BIT(src, PM::Filtered)) {
+    if (ACTS_CHECK_BIT(src, PM::Filtered)) {
       filtered() = other.filtered();
       filteredCovariance() = other.filteredCovariance();
     }
 
-    if (other.hasSmoothed() && ACTS_CHECK_BIT(src, PM::Smoothed)) {
+    if (ACTS_CHECK_BIT(src, PM::Smoothed)) {
       smoothed() = other.smoothed();
       smoothedCovariance() = other.smoothedCovariance();
     }
 
-    if (other.hasUncalibrated() && ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
+    if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
       uncalibrated() = other.uncalibrated();
     }
 
-    if (other.hasJacobian() && ACTS_CHECK_BIT(src, PM::Jacobian)) {
+    if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
       jacobian() = other.jacobian();
     }
 
-    if (other.hasCalibrated() && ACTS_CHECK_BIT(src, PM::Calibrated)) {
+    if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
       calibratedSourceLink() = other.calibratedSourceLink();
       calibrated() = other.calibrated();
       calibratedCovariance() = other.calibratedCovariance();
       data().measdim = other.data().measdim;
+      setProjectorBitset(other.projectorBitset());
     }
 
     chi2() = other.chi2();
