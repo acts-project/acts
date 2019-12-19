@@ -159,6 +159,11 @@ class TrackStateProxy {
     return m_traj->m_index[m_istate];
   }
 
+  /// Build a mask that represents all the allocated components of this track
+  /// state proxy
+  /// @return The generated mask
+  TrackStatePropMask getMask() const;
+
   /// Return the index tuple that makes up this track state
   /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
   const IndexData& data() const { return m_traj->m_index[m_istate]; }

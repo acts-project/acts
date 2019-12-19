@@ -18,6 +18,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <iostream>
+#include <numeric>
 
 using std::cout;
 using std::endl;
@@ -567,6 +568,33 @@ BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
 
   // remove some parts
 }
+
+BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
+  using PM = TrackStatePropMask;
+  MultiTrajectory<SourceLink> mj;
+
+  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
+                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+
+  PM all = std::accumulate(values.begin(), values.end(), PM::None,
+                           [](auto a, auto b) { return a | b; });
+
+  auto ts = mj.getTrackState(mj.addTrackState(PM::All));
+  BOOST_CHECK(ts.getMask() == all);
+
+  ts = mj.getTrackState(mj.addTrackState(PM::Filtered | PM::Calibrated));
+  BOOST_CHECK(ts.getMask() == (PM::Filtered | PM::Calibrated));
+
+  ts = mj.getTrackState(
+      mj.addTrackState(PM::Filtered | PM::Smoothed | PM::Predicted));
+  BOOST_CHECK(ts.getMask() == (PM::Filtered | PM::Smoothed | PM::Predicted));
+
+  for (PM mask : values) {
+    ts = mj.getTrackState(mj.addTrackState(mask));
+    BOOST_CHECK(ts.getMask() == mask);
+  }
+}
+
 }  // namespace Test
 
 }  // namespace Acts

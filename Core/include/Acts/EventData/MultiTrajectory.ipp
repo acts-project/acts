@@ -24,6 +24,33 @@ inline TrackStateProxy<SL, N, M, ReadOnly>::TrackStateProxy(
     : m_traj(&trajectory), m_istate(istate) {}
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
+TrackStatePropMask TrackStateProxy<SL, N, M, ReadOnly>::getMask() const {
+  using PM = TrackStatePropMask;
+  PM mask = PM::None;
+  if (hasPredicted()) {
+    mask |= PM::Predicted;
+  }
+
+  if (hasFiltered()) {
+    mask |= PM::Filtered;
+  }
+  if (hasSmoothed()) {
+    mask |= PM::Smoothed;
+  }
+  if (hasJacobian()) {
+    mask |= PM::Jacobian;
+  }
+  if (hasUncalibrated()) {
+    mask |= PM::Uncalibrated;
+  }
+  if (hasCalibrated()) {
+    mask |= PM::Calibrated;
+  }
+
+  return mask;
+}
+
+template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::parameters() const
     -> Parameters {
   IndexData::IndexType idx;
