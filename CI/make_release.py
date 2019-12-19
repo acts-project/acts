@@ -259,15 +259,19 @@ def message(version, gitlab):
             sys.exit(1)
 
     if current_milestone.due_date != date.today().strftime(dfmt):
-        if click.confirm(
-            f"Do you want me to set due date of %{current_milestone.title} to {date.today()}? (is {current_milestone.due_date})"
-        ):
-            current_milestone.due_date = date.today().strftime(dfmt)
-            current_milestone.save()
+        if sys.stdout.isatty():
+          if click.confirm(
+              f"Do you want me to set due date of %{current_milestone.title} to {date.today()}? (is {current_milestone.due_date})"
+          ):
+              current_milestone.due_date = date.today().strftime(dfmt)
+              current_milestone.save()
 
-    dt = date.today()
-    delta = relativedelta(weekday=FR(1))
-    next_due = dt + delta
+    if next_milestone.due_date is None:
+      dt = date.today()
+      delta = relativedelta(weekday=FR(1))
+      next_due = dt + delta
+    else:
+      next_due = datetime.strptime(next_milestone.due_date, dfmt)
     if sys.stdout.isatty():
         next_due = datetime.strptime(
             click.prompt(
@@ -296,10 +300,10 @@ def message(version, gitlab):
     tpl = jinja2.Template(
         """
 I've just tagged [`{{cv}}`](https://gitlab.cern.ch/acts/acts-core/-/tags/{{cv}}) from milestone [`%{{cm.title}}`](https://gitlab.cern.ch/acts/acts-core/-/milestones/{{cm.iid}}). 
-Bugfixes should be targeted at [`release/v0.12.X`](https://gitlab.cern.ch/acts/acts-core/tree/{{ release_branch  }}).
+Bugfixes should be targeted at [`{{ release_branch }}`](https://gitlab.cern.ch/acts/acts-core/tree/{{ release_branch  }}).
 
 We will tag the next release `{{nv}}` on {{humanize.naturaldate(next_due)}} from [`%{{nm.title}}`](https://gitlab.cern.ch/acts/acts-core/-/milestones/{{nm.iid}}). 
-This release can be cancelled if no merges happen before that date.
+This release can be cancelled if a sufficient number of merges does not  happen before that date.
 """.strip()
     )
 
