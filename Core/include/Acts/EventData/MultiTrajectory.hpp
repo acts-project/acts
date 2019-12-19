@@ -164,6 +164,66 @@ class TrackStateProxy {
   /// @return The generated mask
   TrackStatePropMask getMask() const;
 
+  /// Copy the contents of another track state proxy into this one
+  /// @param other The other track state to copy from
+  /// @param mask An optional mask to determine what to copy from
+  /// @note If the this track state proxy does not have compatible allocations
+  ///       with the source track state proxy, an exception is thrown.
+  /// @note The mask parameter will not cause a copy of components that are
+  ///       not allocated in the source track state proxy.
+  template <bool RO = ReadOnly, bool ReadOnlyOther,
+            typename = std::enable_if<!RO>>
+  void copyFrom(
+      const TrackStateProxy<source_link_t, N, M, ReadOnlyOther>& other,
+      TrackStatePropMask mask = TrackStatePropMask::All) {
+    using PM = TrackStatePropMask;
+    auto dest = getMask();
+    auto src = other.getMask() &
+               mask;  // combine what we have with what we want to copy
+    if (static_cast<std::underlying_type_t<TrackStatePropMask>>((src ^ dest) &
+                                                                src) != 0) {
+      throw std::runtime_error(
+          "Attempt track state copy with incompatible allocations");
+    }
+
+    // we're sure now this has correct allocations, so just copy
+    if (other.hasPredicted() && ACTS_CHECK_BIT(src, PM::Predicted)) {
+      predicted() = other.predicted();
+      predictedCovariance() = other.predictedCovariance();
+    }
+
+    if (other.hasFiltered() && ACTS_CHECK_BIT(src, PM::Filtered)) {
+      filtered() = other.filtered();
+      filteredCovariance() = other.filteredCovariance();
+    }
+
+    if (other.hasSmoothed() && ACTS_CHECK_BIT(src, PM::Smoothed)) {
+      smoothed() = other.smoothed();
+      smoothedCovariance() = other.smoothedCovariance();
+    }
+
+    if (other.hasUncalibrated() && ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
+      uncalibrated() = other.uncalibrated();
+    }
+
+    if (other.hasJacobian() && ACTS_CHECK_BIT(src, PM::Jacobian)) {
+      jacobian() = other.jacobian();
+    }
+
+    if (other.hasCalibrated() && ACTS_CHECK_BIT(src, PM::Calibrated)) {
+      calibratedSourceLink() = other.calibratedSourceLink();
+      calibrated() = other.calibrated();
+      calibratedCovariance() = other.calibratedCovariance();
+      data().measdim = other.data().measdim;
+    }
+
+    chi2() = other.chi2();
+    pathLength() = other.pathLength();
+
+    // can be nullptr, but we just take that
+    setReferenceSurface(other.referenceSurfacePointer());
+  }
+
   /// Return the index tuple that makes up this track state
   /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
   const IndexData& data() const { return m_traj->m_index[m_istate]; }
@@ -489,6 +549,11 @@ class TrackStateProxy {
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
                   size_t istate);
+
+  const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
+    assert(data().irefsurface != IndexData::kInvalid);
+    return m_traj->m_referenceSurfaces[data().irefsurface];
+  }
 
   ConstIf<MultiTrajectory<SourceLink>, ReadOnly>* m_traj;
   size_t m_istate;
