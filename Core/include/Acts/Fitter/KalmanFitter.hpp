@@ -93,7 +93,7 @@ struct KalmanFitterResult {
   size_t trackTip = SIZE_MAX;
 
   // The optional Parameters at the provided surface
-  boost::optional<BoundParameters> fittedParameters;
+  std::optional<BoundParameters> fittedParameters;
 
   // Counter for states with measurements
   size_t measurementStates = 0;

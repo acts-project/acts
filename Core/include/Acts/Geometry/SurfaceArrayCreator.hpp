@@ -12,9 +12,6 @@
 
 #pragma once
 
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -23,6 +20,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <optional>
 
 namespace Acts {
 namespace Test {
@@ -119,7 +118,7 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-      size_t binsZ, boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -143,7 +142,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
-      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -165,7 +164,7 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-      size_t binsPhi, boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -192,7 +191,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
-      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -219,7 +218,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
       size_t bins2, BinningValue bValue,
-      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// Static check funtion for surface equivalent
@@ -378,7 +377,7 @@ class SurfaceArrayCreator {
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
             new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
-      
+
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
       detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);

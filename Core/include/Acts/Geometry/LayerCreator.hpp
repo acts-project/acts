@@ -12,13 +12,14 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <optional>
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
 #define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -91,7 +92,7 @@ class LayerCreator {
   MutableLayerPtr cylinderLayer(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-      size_t binsZ, boost::optional<ProtoLayer> _protoLayer = boost::none,
+      size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       std::shared_ptr<const Transform3D> transform = nullptr,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
@@ -116,7 +117,7 @@ class LayerCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi, BinningType bTypeZ,
-      boost::optional<ProtoLayer> _protoLayer = boost::none,
+      std::optional<ProtoLayer> _protoLayer = std::nullopt,
       std::shared_ptr<const Transform3D> transform = nullptr,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
@@ -140,7 +141,7 @@ class LayerCreator {
   MutableLayerPtr discLayer(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-      size_t binsPhi, boost::optional<ProtoLayer> _protoLayer = boost::none,
+      size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       std::shared_ptr<const Transform3D> transform = nullptr,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
@@ -165,7 +166,7 @@ class LayerCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
-      boost::optional<ProtoLayer> _protoLayer = boost::none,
+      std::optional<ProtoLayer> _protoLayer = std::nullopt,
       std::shared_ptr<const Transform3D> transform = nullptr,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
@@ -194,7 +195,7 @@ class LayerCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
       size_t bins2, BinningValue bValue,
-      boost::optional<ProtoLayer> _protoLayer = boost::none,
+      std::optional<ProtoLayer> _protoLayer = std::nullopt,
       std::shared_ptr<const Transform3D> transform = nullptr,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
