@@ -169,57 +169,73 @@ inline size_t MultiTrajectory<SL>::addTrackState(
       typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
   using PropMask = TrackStatePropMask;
 
+  // build a mask to allocate for the components in the trackstate
+  PropMask required = PropMask::None;
+  if (ts.parameter.predicted) {
+    required |= PropMask::Predicted;
+  }
+
+  if (ts.parameter.filtered) {
+    required |= PropMask::Filtered;
+  }
+
+  if (ts.parameter.smoothed) {
+    required |= PropMask::Smoothed;
+  }
+
+  if (ts.parameter.jacobian) {
+    required |= PropMask::Jacobian;
+  }
+
+  if (ts.measurement.uncalibrated) {
+    required |= PropMask::Uncalibrated;
+  }
+
+  if (ts.measurement.calibrated) {
+    required |= PropMask::Calibrated;
+  }
+
   // use a TrackStateProxy to do the assignments
-  size_t index = addTrackState(mask, iprevious);
+  size_t index = addTrackState(mask | required, iprevious);
   TrackStateProxy nts = getTrackState(index);
 
   // make shared ownership held by this multi trajectory
-
   nts.setReferenceSurface(ts.referenceSurface().getSharedPtr());
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
-    if (ts.parameter.predicted) {
-      const auto& predicted = *ts.parameter.predicted;
-      nts.predicted() = predicted.parameters();
-      nts.predictedCovariance() = *predicted.covariance();
-    }
+  // we don't need to check allocation, because we ORed with required components
+  // above
+
+  if (ts.parameter.predicted) {
+    const auto& predicted = *ts.parameter.predicted;
+    nts.predicted() = predicted.parameters();
+    nts.predictedCovariance() = *predicted.covariance();
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
-    if (ts.parameter.filtered) {
-      const auto& filtered = *ts.parameter.filtered;
-      nts.filtered() = filtered.parameters();
-      nts.filteredCovariance() = *filtered.covariance();
-    }
+  if (ts.parameter.filtered) {
+    const auto& filtered = *ts.parameter.filtered;
+    nts.filtered() = filtered.parameters();
+    nts.filteredCovariance() = *filtered.covariance();
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
-    if (ts.parameter.smoothed) {
-      const auto& smoothed = *ts.parameter.smoothed;
-      nts.smoothed() = smoothed.parameters();
-      nts.smoothedCovariance() = *smoothed.covariance();
-    }
+  if (ts.parameter.smoothed) {
+    const auto& smoothed = *ts.parameter.smoothed;
+    nts.smoothed() = smoothed.parameters();
+    nts.smoothedCovariance() = *smoothed.covariance();
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
-    // store jacobian
-    if (ts.parameter.jacobian) {
-      nts.jacobian() = *ts.parameter.jacobian;
-    }
+  // store jacobian
+  if (ts.parameter.jacobian) {
+    nts.jacobian() = *ts.parameter.jacobian;
   }
 
   // handle measurements
-  if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
-    if (ts.measurement.uncalibrated) {
-      nts.uncalibrated() = *ts.measurement.uncalibrated;
-    }
+  if (ts.measurement.uncalibrated) {
+    nts.uncalibrated() = *ts.measurement.uncalibrated;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    if (ts.measurement.calibrated) {
-      std::visit([&](const auto& m) { nts.setCalibrated(m); },
-                 *ts.measurement.calibrated);
-    }
+  if (ts.measurement.calibrated) {
+    std::visit([&](const auto& m) { nts.setCalibrated(m); },
+               *ts.measurement.calibrated);
   }
 
   nts.chi2() = ts.parameter.chi2;
@@ -227,7 +243,7 @@ inline size_t MultiTrajectory<SL>::addTrackState(
   nts.typeFlags() = ts.type();
 
   return nts.index();
-}
+}  // namespace Acts
 
 template <typename SL>
 inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,

@@ -543,6 +543,30 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
       *ts.measurement.calibrated);
 }
 
+BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
+  auto [ts, fm, om] = make_trackstate();
+
+  ts.parameter.filtered = std::nullopt;
+  ts.parameter.smoothed = std::nullopt;
+  ts.measurement.calibrated = std::nullopt;
+
+  MultiTrajectory<SourceLink> mj;
+
+  // this should allocate for all the components in the trackstate, plus
+  // filtered
+  size_t i = mj.addTrackState(ts, TrackStatePropMask::Filtered);
+
+  auto tsp = mj.getTrackState(i);
+
+  BOOST_CHECK(tsp.hasPredicted());
+  BOOST_CHECK(tsp.hasFiltered());
+  BOOST_CHECK(!tsp.hasSmoothed());
+  BOOST_CHECK(tsp.hasUncalibrated());
+  BOOST_CHECK(!tsp.hasCalibrated());
+  BOOST_CHECK(tsp.hasJacobian());
+
+  // remove some parts
+}
 }  // namespace Test
 
 }  // namespace Acts
