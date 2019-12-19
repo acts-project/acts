@@ -719,6 +719,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
   BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
+  BOOST_CHECK_NE(ts1.projector(), ts2.projector());
 
   BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
@@ -740,6 +741,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
   BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
+  BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
 
   BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());
@@ -759,6 +761,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
   BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
+  BOOST_CHECK_NE(ts1.projector(), ts2.projector());
 
   BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
@@ -775,6 +778,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
   BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
+  BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
 
   BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());              // always copied

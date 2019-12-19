@@ -556,6 +556,19 @@ class TrackStateProxy {
     return m_traj->m_referenceSurfaces[data().irefsurface];
   }
 
+  typename MultiTrajectory<SourceLink>::ProjectorBitset projectorBitset()
+      const {
+    assert(data().iprojector != IndexData::kInvalid);
+    return m_traj->m_projectors[data().iprojector];
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setProjectorBitset(
+      typename MultiTrajectory<SourceLink>::ProjectorBitset proj) {
+    assert(data().iprojector != IndexData::kInvalid);
+    m_traj->m_projectors[data().iprojector] = proj;
+  }
+
   ConstIf<MultiTrajectory<SourceLink>, ReadOnly>* m_traj;
   size_t m_istate;
 
