@@ -163,6 +163,71 @@ def minor(version, dry_run, gitlab):
     if dry_run:
         print("THIS WAS A DRY RUN!")
 
+@main.command()
+@gitlab_option
+@click.option("--dry-run", is_flag=True)
+@click.argument("version")
+def patch(version, dry_run, gitlab):
+    project = gitlab.projects.get("acts/acts-core")
+
+    version = split_version(version)
+    milestone = find_milestone(version, project.milestones.list(state="active"))
+    assert (
+        milestone is not None
+    ), f"Didn't find milestone for {version}. Is it closed already?"
+
+    branches = get_branches()
+
+    release_branch = "release/v{:d}.{:>02d}.X".format(*version)
+    version_file = Path() / "version_number"
+    tag_name = format_version(version)
+
+    if release_branch not in branches:
+      print("Release branch", release_branch, "does not exist. I'm bailing")
+
+    print(
+        "Will make new patch version tag %s from milestone %s on branch %s"
+        % (format_version(version), milestone.title, release_branch)
+    )
+
+    if click.confirm("Do you want to run local preparation?"):
+
+      with Spinner(text=f"Checkout and update release branch {release_branch}"):
+          if not dry_run:
+              git.checkout(release_branch)
+              assert current_branch() == release_branch
+              git.pull()
+
+      with Spinner(text=f"Bumping version to {format_version(version)}"):
+          if not dry_run:
+              assert current_branch() == release_branch
+              with version_file.open("w") as fh:
+                  fh.write(".".join(map(str, version)))
+
+      with Spinner(
+          text=f"Committing bumped version on release branch {release_branch}"
+      ):
+          if not dry_run:
+              git.add(str(version_file))
+              git.commit(message="Bump version to %s" % ".".join(map(str, version)))
+
+      with Spinner(text=f"Creating local tag {tag_name} on {release_branch}"):
+          if not dry_run:
+              git.tag(tag_name)
+      print(f"You might want to run 'git push REMOTE {tag_name}'")
+
+    if click.confirm(f"Do you want me to try to push {release_branch}?"):
+        with Spinner(text=f"Pushing {release_branch}"):
+            if not dry_run:
+                git.push()
+
+    if click.confirm(f"Do you want me to close %{milestone.title}?"):
+        with Spinner(text=f"Closing milestone %{milestone.title}"):
+            if not dry_run:
+                milestone.state_event = "close"
+                milestone.save()
+
+
 
 @main.command()
 @gitlab_option
