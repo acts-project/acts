@@ -279,7 +279,7 @@ inline const FreeRowVector LineSurface::derivativeFactors(
   // normalisation of normal & longitudinal components
   double norm = 1. / (1. - long_c * long_c);
   // create a matrix representation
-  ActsMatrixD<3, FreeParsDim> long_mat = ActsMatrixD<3, FreeParsDim>::Zero();
+  ActsMatrixD<3, BoundParsDim> long_mat = ActsMatrixD<3, BoundParsDim>::Zero();
   long_mat.colwise() += locz.transpose();
   // build the combined normal & longitudinal components
   return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -

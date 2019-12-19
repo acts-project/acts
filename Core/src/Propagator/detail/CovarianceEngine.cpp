@@ -320,6 +320,7 @@ FreeState freeState(StepperState& state)
     return std::make_tuple(std::move(parameters), state.jacobian,
                                state.pathAccumulated);
   }
+<<<<<<< HEAD
   
 void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
                          FreeMatrix& transportJacobian, FreeVector& derivatives,
@@ -336,6 +337,21 @@ if(state.jacToGlobal.has_value())
 		const FreeToBoundMatrix jacToLocal =
 			  surfaceDerivative(direction, jacobianLocalToGlobal, transportJacobian, derivatives);
 		  const BoundMatrix jacFull = jacToLocal * jacobianLocalToGlobal;
+=======
+    
+void covarianceTransport(StepperState& state, const Surface& surface) {
+  if(state.jacToGlobal.has_value())
+  {
+	  state.jacToGlobal = state.jacTransport * (*state.jacToGlobal);
+	  state.jacobian = BoundMatrix(surfaceDerivative(state, &surface) * (*state.jacToGlobal));
+	  state.cov = BoundSymMatrix(std::get<BoundMatrix>(state.jacobian) * std::get<BoundSymMatrix>(state.cov) * std::get<BoundMatrix>(state.jacobian).transpose());
+  }
+  else
+  {
+	  state.jacobian = FreeToBoundMatrix(surfaceDerivative(state, &surface) * state.jacTransport);
+	  state.cov = BoundSymMatrix(std::get<FreeToBoundMatrix>(state.jacobian) * std::get<FreeSymMatrix>(state.cov) * std::get<FreeToBoundMatrix>(state.jacobian).transpose());
+  }
+>>>>>>> Fixed derivative evaluation
 
 		  // Apply the actual covariance transport
 		  covarianceMatrix = BoundSymMatrix(jacFull * std::get<BoundSymMatrix>(covarianceMatrix) * jacFull.transpose());
