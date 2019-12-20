@@ -125,7 +125,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       // Check if a radial split is requested
       if (layerCfg.splitRadii.size() > 1) {
-        ACTS_DEBUG("- radially split  layers tat are seperated by more than"
+        ACTS_DEBUG("- radially split layers seperated by more than "
                    << m_cfg.centralLayerSplit);
         ACTS_DEBUG("- surface center r min/max = " << layerCfg.rminmax.first
                                                    << ", "
@@ -137,7 +137,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         std::vector<LayerSurfaceVector> splitSurfaces{
             layerCfg.splitRadii.size(), LayerSurfaceVector{}};
         for (const auto& surface : layerSurfaces) {
-          double surfaceR = VectorHelpers::perp(surface->center(gctx));
+          double surfaceR = surface->binningPositionValue(gctx, binR);
           unsigned ir = 0;
           for (const auto& sugr : layerCfg.splitRadii) {
             if (std::abs(sugr - surfaceR) < m_cfg.centralLayerSplit) {
@@ -250,8 +250,7 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
         // layer surfaces -> i.e. the Layer to be built
         layerSurfaces.push_back(tgElement->surface().getSharedPtr());
         // Record rmin/rmax in the layerConfig for eventual splitting
-        double surfaceR =
-            VectorHelpers::perp(tgElement->surface().center(gctx));
+        double surfaceR = tgElement->surface().binningPositionValue(gctx, binR);
         layerConfig.rminmax.first =
             std::min(layerConfig.rminmax.first, surfaceR);
         layerConfig.rminmax.second =
