@@ -16,6 +16,7 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 class TGeoMatrix;
 class TGeoVolume;
@@ -27,6 +28,7 @@ class TGeoDetectorElement;
 class Surface;
 
 using NodeTransform = std::pair<TGeoNode*, std::shared_ptr<const Transform3D>>;
+using namespace Acts::UnitLiterals;
 
 /// @class TGeoLayerBuilder
 /// works on the gGeoManager, as this is filled from GDML
@@ -42,11 +44,14 @@ class TGeoLayerBuilder : public ILayerBuilder {
     // the local axis definition
     std::string localAxes = "xyz";
     // the envolpoe
-    std::pair<double, double> envelope;
+    std::pair<double, double> envelope = {0., 0.};
+    // the min/max in r
+    std::pair<double, double> rminmax = {0., 0.};
+    std::vector<double> splitRadii = {};
     /// define the number of bins in loc0
-    size_t binsLoc0{100};
+    size_t binsLoc0{12};
     /// define the number of bins in loc1
-    size_t binsLoc1{100};
+    size_t binsLoc1{12};
 
     LayerConfig()
         : layerName(""),
@@ -70,6 +75,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::vector<LayerConfig> negativeLayerConfigs;
     std::vector<LayerConfig> centralLayerConfigs;
     std::vector<LayerConfig> positiveLayerConfigs;
+    // Split flags - if different from 0., a split is attempted
+    double centralLayerSplit = 0_mm;
   };
 
   /// Constructor
@@ -137,7 +144,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
       TGeoVolume* tgVolume, TGeoNode* tgNode, const TGeoMatrix& tgTransform,
-      const LayerConfig& layerConfig, int type, bool correctBranch = false,
+      LayerConfig& layerConfig, int type, bool correctBranch = false,
       const std::string& offset = "");
 
   /// Private helper method : build layers

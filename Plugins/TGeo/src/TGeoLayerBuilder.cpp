@@ -88,7 +88,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        << " configurations.");
   for (auto layerCfg : layerConfigs) {
     // prepare the layer surfaces
-    std::vector<std::shared_ptr<const Surface>> layerSurfaces;
+    using LayerSurfaceVector = std::vector<std::shared_ptr<const Surface>>;
+    LayerSurfaceVector layerSurfaces;
 
     ACTS_DEBUG("- layer configuration found for layer "
                << layerCfg.layerName << " with sensor " << layerCfg.sensorName);
@@ -102,20 +103,61 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       // screen output
       ACTS_DEBUG(
           "- number of senstive sensors found : " << layerSurfaces.size());
-      // create the layer  - either way
-      if (type == 0) {
-        ProtoLayer pl(gctx, layerSurfaces);
-        pl.envR = {layerCfg.envelope.first, layerCfg.envelope.second};
-        pl.envZ = {layerCfg.envelope.second, layerCfg.envelope.second};
-        layers.push_back(m_cfg.layerCreator->cylinderLayer(
-            gctx, layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
-      } else {
-        ProtoLayer pl(gctx, layerSurfaces);
-        pl.envR = {layerCfg.envelope.first, layerCfg.envelope.second};
-        pl.envZ = {layerCfg.envelope.second, layerCfg.envelope.second};
-        layers.push_back(m_cfg.layerCreator->discLayer(
-            gctx, layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
+
+      // Helper function to fill the layer
+      auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
+                           const LayerConfig& lCfg) -> void {
+        // create the layer  - either way
+        if (type == 0) {
+          ProtoLayer pl(gctx, lSurfaces);
+          pl.envR = {lCfg.envelope.first, lCfg.envelope.second};
+          pl.envZ = {lCfg.envelope.second, lCfg.envelope.second};
+          layers.push_back(m_cfg.layerCreator->cylinderLayer(
+              gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
+        } else {
+          ProtoLayer pl(gctx, lSurfaces);
+          pl.envR = {lCfg.envelope.first, lCfg.envelope.second};
+          pl.envZ = {lCfg.envelope.second, lCfg.envelope.second};
+          layers.push_back(m_cfg.layerCreator->discLayer(
+              gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
+        }
+      };
+
+      // Check if a radial split is requested
+      if (layerCfg.splitRadii.size() > 1) {
+        ACTS_DEBUG("- radially split  layers tat are seperated by more than"
+                   << m_cfg.centralLayerSplit);
+        ACTS_DEBUG("- surface center r min/max = " << layerCfg.rminmax.first
+                                                   << ", "
+                                                   << layerCfg.rminmax.second);
+        ACTS_DEBUG("- number of proposed split radii is "
+                   << layerCfg.splitRadii.size());
+
+        // Prepare the vector of split surfaces
+        std::vector<LayerSurfaceVector> splitSurfaces{
+            layerCfg.splitRadii.size(), LayerSurfaceVector{}};
+        for (const auto& surface : layerSurfaces) {
+          double surfaceR = VectorHelpers::perp(surface->center(gctx));
+          unsigned ir = 0;
+          for (const auto& sugr : layerCfg.splitRadii) {
+            if (std::abs(sugr - surfaceR) < m_cfg.centralLayerSplit) {
+              splitSurfaces[ir].push_back(surface);
+            }
+            ++ir;
+          }
+        }
+
+        ACTS_DEBUG("Result of the split analysis:");
+        unsigned il = 0;
+        for (const auto& lSurfaces : splitSurfaces) {
+          ACTS_DEBUG("- layer  " << il << " has " << lSurfaces.size()
+                                 << " surfaces.");
+          fillLayer(lSurfaces, layerCfg);
+        }
+        return;
       }
+      // No splitting done
+      fillLayer(layerSurfaces, layerCfg);
     }
   }
 }
@@ -124,7 +166,7 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Acts::Surface>>& layerSurfaces,
     TGeoVolume* tgVolume, TGeoNode* tgNode, const TGeoMatrix& tgTransform,
-    const LayerConfig& layerConfig, int type, bool correctBranch,
+    LayerConfig& layerConfig, int type, bool correctBranch,
     const std::string& offset) {
   /// some screen output for disk debugging
   if (type != 0) {
@@ -207,6 +249,25 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
         // element owns the surface, we give shared ownership to
         // layer surfaces -> i.e. the Layer to be built
         layerSurfaces.push_back(tgElement->surface().getSharedPtr());
+        // Record rmin/rmax in the layerConfig for eventual splitting
+        double surfaceR =
+            VectorHelpers::perp(tgElement->surface().center(gctx));
+        layerConfig.rminmax.first =
+            std::min(layerConfig.rminmax.first, surfaceR);
+        layerConfig.rminmax.second =
+            std::max(layerConfig.rminmax.second, surfaceR);
+        // Check for splitting and record the radii
+        if (m_cfg.centralLayerSplit > 0.) {
+          bool foundR = false;
+          for (auto& sradius : layerConfig.splitRadii) {
+            if (std::abs(surfaceR - sradius) < m_cfg.centralLayerSplit) {
+              foundR = true;
+            }
+          }
+          if (not foundR) {
+            layerConfig.splitRadii.push_back(surfaceR);
+          }
+        }
       }
     } else {
       // is not yet the senstive one
