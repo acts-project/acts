@@ -243,6 +243,8 @@ class AtlasStepper {
 	  }
       // now declare the state as ready
       state_ready = true;
+      // Remember that the start was in bound parameters
+      localStart = true;
     }
 
     /// Constructor using global parameters
@@ -386,6 +388,8 @@ class AtlasStepper {
 	  }
       // now declare the state as ready
       state_ready = true;
+      // Remember that the start was in free parameters
+      localStart = false;
     }
     
     // optimisation that init is not called twice
@@ -427,6 +431,8 @@ class AtlasStepper {
     /// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]   P[62]   P[70]
     /// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]   P[63]   P[71]
     /// Cache: P[72] - P[75]
+    
+    bool localStart;
     
     // result
     const Covariance* covariance;
@@ -753,7 +759,7 @@ class AtlasStepper {
     BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext,
                                     pos4, dir, qOverP, std::move(covOpt));
 
-    return BoundState(std::move(parameters), BoundMatrix(state.jacobian),
+    return BoundState(std::move(parameters), BoundMatrix(state.jacobian), // TODO: jacobian dimensions
                       state.pathAccumulated);
   }
 
@@ -793,7 +799,7 @@ class AtlasStepper {
 
     CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
 
-    return CurvilinearState(std::move(parameters), BoundMatrix(state.jacobian),
+    return CurvilinearState(std::move(parameters), BoundMatrix(state.jacobian), // TODO: jacobian dimensions
                             state.pathAccumulated);
   }
 
@@ -862,14 +868,28 @@ class AtlasStepper {
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const {
     // update the vector
-    state.pVector[0] = uposition[0];
-    state.pVector[1] = uposition[1];
-    state.pVector[2] = uposition[2];
-    state.pVector[3] = time;
-    state.pVector[4] = udirection[0];
-    state.pVector[5] = udirection[1];
-    state.pVector[6] = udirection[2];
-    state.pVector[7] = charge(state) / up;
+    if(state.localStart)
+    {
+		state.pVector[0] = uposition[0];
+		state.pVector[1] = uposition[1];
+		state.pVector[2] = uposition[2];
+		state.pVector[3] = time;
+		state.pVector[4] = udirection[0];
+		state.pVector[5] = udirection[1];
+		state.pVector[6] = udirection[2];
+		state.pVector[7] = charge(state) / up;
+	}
+	else
+	{
+		state.gpVector[0] = uposition[0];
+		state.gpVector[1] = uposition[1];
+		state.gpVector[2] = uposition[2];
+		state.gpVector[3] = time;
+		state.gpVector[4] = udirection[0];
+		state.gpVector[5] = udirection[1];
+		state.gpVector[6] = udirection[2];
+		state.gpVector[7] = charge(state) / up;
+	}
   }
 
   /// Method for on-demand transport of the covariance
@@ -879,7 +899,7 @@ class AtlasStepper {
   /// @param [in,out] state State of the stepper
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state) const {
+  void covarianceTransport(State& state) const { // TODO
     double P[60];
     for (unsigned int i = 0; i < 60; ++i) {
       P[i] = state.pVector[i];
@@ -1029,7 +1049,7 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  void covarianceTransport(State& state, const Surface& surface) const {
+  void covarianceTransport(State& state, const Surface& surface) const { // TODO
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);
@@ -1289,11 +1309,26 @@ class AtlasStepper {
     auto& h = state.stepping.stepSize;
     bool Jac = state.stepping.useJacobian;
 
-    double* R = &(state.stepping.pVector[0]);  // Coordinates
-    double* A = &(state.stepping.pVector[4]);  // Directions
-    double* sA = &(state.stepping.pVector[56]);
-    // Invert mometum/2.
-    double Pi = 0.5 * state.stepping.pVector[7];
+	double* R;
+	double* A;
+	double* sA;
+	double Pi;
+	if(state.stepping.localStart)
+	{
+	    R = &(state.stepping.pVector[0]);  // Coordinates
+		A = &(state.stepping.pVector[4]);  // Directions
+		sA = &(state.stepping.pVector[56]);
+		Pi = 0.5 * state.stepping.pVector[7]; // Invert mometum/2.
+	}
+	else
+	{
+		R = &(state.stepping.gpVector[0]);  // Coordinates
+		A = &(state.stepping.gpVector[4]);  // Directions
+		sA = &(state.stepping.gpVector[72]);
+		Pi = 0.5 * state.stepping.gpVector[7]; // Invert mometum/2.
+
+	}
+// TODO: continue from here
     //    double dltm = 0.0002 * .03;
     Vector3D f0, f;
 

@@ -77,10 +77,11 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
   return std::make_shared<Transform3D>(ctransform);
 }
 
-template <typename Propagator_type>
+template <typename end_parameters_t, typename Propagator_type, typename start_parameters_t>
 Vector3D constant_field_propagation(const Propagator_type& propagator,
+									start_parameters_t start,
                                     double pT, double phi, double theta,
-                                    double charge, double time, double Bz,
+                                    double Bz,
                                     double disttol = 0.1 *
                                                      Acts::UnitConstants::um,
                                     bool debug = false) {
@@ -93,25 +94,17 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   options.maxStepSize = 1_cm;
   options.debug = debug;
 
-  // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = charge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-  CurvilinearParameters pars(std::nullopt, pos, mom, q, time);
+  double q = start.charge();
+  Vector3D pos = start.position();
+  Vector3D mom = start.momentum();
 
   // do propagation
-  const auto& tp = propagator.propagate(pars, options).value().endParameters;
+  const auto& tp = propagator.propagate(start, options).value().endParameters;
 
   // test propagation invariants
   // clang-format off
     CHECK_CLOSE_ABS(pT, VH::perp(tp->momentum()), 1_keV);
-    CHECK_CLOSE_ABS(pz, tp->momentum()(2), 1_keV);
+    CHECK_CLOSE_ABS(mom.z(), tp->momentum()(2), 1_keV);
     CHECK_CLOSE_ABS(theta, VH::theta(tp->momentum()), 1e-4);
   // clang-format on
 
@@ -133,7 +126,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   }
 
   // calculate expected position
-  double exp_z = z + pz / pT * 2 * M_PI * r * std::abs(turns);
+  double exp_z = pos.z() + mom.z() / pT * 2 * M_PI * r * std::abs(turns);
 
   // calculate center of bending circle in transverse plane
   double xc, yc;
@@ -141,14 +134,14 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   double dx = r * cos(M_PI / 2 - phi);
   double dy = r * sin(M_PI / 2 - phi);
   if (q * Bz < 0) {
-    xc = x - dx;
-    yc = y + dy;
+    xc = pos.x() - dx;
+    yc = pos.y() + dy;
   } else {
-    xc = x + dx;
-    yc = y - dy;
+    xc = pos.x() + dx;
+    yc = pos.y() - dy;
   }
   // phi position of starting point in bending circle
-  double phi0 = std::atan2(y - yc, x - xc);
+  double phi0 = std::atan2(pos.y() - yc, pos.x() - xc);
 
   // calculated expected position in transverse plane
   double exp_x = xc + r * cos(phi0 + turns * 2 * M_PI);
@@ -163,9 +156,9 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   return tp->position();
 }
 
-template <typename Propagator_type>
-void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double plimit,
+template <typename forward_parameters_t, typename backward_parameters_t, typename Propagator_type, typename start_parameters_t = CurvilinearParameters>
+void foward_backward(const Propagator_type& propagator, double plimit,
+                     start_parameters_t start,
                      double disttol = 1 * Acts::UnitConstants::um,
                      double momtol = 10 * Acts::UnitConstants::keV,
                      bool debug = false) {
@@ -186,45 +179,36 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
   bwdOptions.pathLimit = -plimit;
   bwdOptions.maxStepSize = 1_cm;
   bwdOptions.debug = debug;
+  
+  const Vector3D posStart = start.position();
+  const Vector3D momStart = start.momentum();
 
-  // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = charge;
-  double time = 0.;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
-
-  // do forward-backward propagation
-  const auto& fwdResult = propagator.propagate(start, fwdOptions).value();
+  // do forward propagation
+  const auto& fwdResult = propagator.template propagate<forward_parameters_t>(start, fwdOptions).value();
+  
+  // do the backward propagation
   const auto& bwdResult =
-      propagator.propagate(*fwdResult.endParameters, bwdOptions).value();
-
+	  propagator.template propagate<backward_parameters_t>(*fwdResult.endParameters, bwdOptions).value();
   const Vector3D& bwdPosition = bwdResult.endParameters->position();
   const Vector3D& bwdMomentum = bwdResult.endParameters->momentum();
-
+  
   // test propagation invariants
   // clang-format off
-    CHECK_CLOSE_ABS(x, bwdPosition(0), disttol);
-    CHECK_CLOSE_ABS(y, bwdPosition(1), disttol);
-    CHECK_CLOSE_ABS(z, bwdPosition(2), disttol);
-    CHECK_CLOSE_ABS(px, bwdMomentum(0), momtol);
-    CHECK_CLOSE_ABS(py, bwdMomentum(1), momtol);
-    CHECK_CLOSE_ABS(pz, bwdMomentum(2), momtol);
+    CHECK_CLOSE_ABS(posStart.x(), bwdPosition(0), disttol);
+    CHECK_CLOSE_ABS(posStart.y(), bwdPosition(1), disttol);
+    CHECK_CLOSE_ABS(posStart.z(), bwdPosition(2), disttol);
+    CHECK_CLOSE_ABS(momStart.x(), bwdMomentum(0), momtol);
+    CHECK_CLOSE_ABS(momStart.y(), bwdMomentum(1), momtol);
+    CHECK_CLOSE_ABS(momStart.z(), bwdMomentum(2), momtol);
   // clang-format on
 
   if (debug) {
-    auto fwdOutput = fwdResult.template get<DebugOutput::result_type>();
-    std::cout << ">>>>> Output for forward propagation " << std::endl;
-    std::cout << fwdOutput.debugString << std::endl;
-    std::cout << " - resulted at position : "
-              << fwdResult.endParameters->position() << std::endl;
-
+	auto fwdOutput = fwdResult.template get<DebugOutput::result_type>();
+	std::cout << ">>>>> Output for forward propagation " << std::endl;
+	std::cout << fwdOutput.debugString << std::endl;
+	std::cout << " - resulted at position : "
+			  << fwdResult.endParameters->position() << std::endl;  
+	
     auto bwdOutput = bwdResult.template get<DebugOutput::result_type>();
     std::cout << ">>>>> Output for backward propagation " << std::endl;
     std::cout << bwdOutput.debugString << std::endl;
