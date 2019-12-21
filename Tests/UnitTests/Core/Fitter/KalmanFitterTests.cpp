@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
+#include <boost/math/distributions/chi_squared.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -83,7 +84,15 @@ struct MeasurementCreator {
   /// The detector resolution
   DetectorResolution detectorResolution;
 
-  using result_type = std::vector<FittableMeasurement<SourceLink>>;
+  struct this_result {
+    // The measurements
+    std::vector<FittableMeasurement<SourceLink>> measurements;
+
+    // The outliers
+    std::vector<FittableMeasurement<SourceLink>> outliers;
+  };
+
+  using result_type = this_result;
 
   /// @brief Operater that is callable by an ActionList. The function collects
   /// the surfaces
@@ -120,12 +129,20 @@ struct MeasurementCreator {
               // push back & move a LOC_0 measurement
               MeasurementType<eLOC_0> m0(surface->getSharedPtr(), {}, cov1D,
                                          lPos[eLOC_0] + dp);
-              result.push_back(std::move(m0));
+              result.measurements.push_back(std::move(m0));
+              // push back & move a LOC_0 outlier
+              MeasurementType<eLOC_0> o0(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eLOC_0] + sp * 10);
+              result.outliers.push_back(std::move(o0));
             } else {
               // push back & move a LOC_1 measurement
               MeasurementType<eLOC_1> m1(surface->getSharedPtr(), {}, cov1D,
                                          lPos[eLOC_1] + dp);
-              result.push_back(std::move(m1));
+              result.measurements.push_back(std::move(m1));
+              // push back & move a LOC_1 outlier
+              MeasurementType<eLOC_1> o1(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eLOC_1] + sp * 10);
+              result.outliers.push_back(std::move(o1));
             }
           } else if (lResolution->second.size() == 2) {
             // Create the measurment and move it
@@ -138,7 +155,12 @@ struct MeasurementCreator {
             MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {},
                                                 cov2D, lPos[eLOC_0] + dx,
                                                 lPos[eLOC_1] + dy);
-            result.push_back(std::move(m01));
+            result.measurements.push_back(std::move(m01));
+            // push back & move a LOC_0, LOC_1 outlier
+            MeasurementType<eLOC_0, eLOC_1> o01(surface->getSharedPtr(), {},
+                                                cov2D, lPos[eLOC_0] + sx * 10,
+                                                lPos[eLOC_1] + sy * 10);
+            result.outliers.push_back(std::move(o01));
           }
         }
       }
@@ -195,6 +217,37 @@ struct MaterialScattering {
                        std::abs(gauss(generator)) * UnitConstants::MeV,
                    0.));
     }
+  }
+};
+
+struct MinimalOutlierFinder {
+  /// The measurement significance criteria
+  double measurementSignificance = 0.05;
+
+  /// The chi2 round-off error
+  double chi2Tolerance = 10e-5;
+
+  /// @brief Public call mimicking an outlier finder
+  ///
+  /// @tparam track_state_t Type of the track state
+  ///
+  /// @param trackState The trackState to investigate
+  ///
+  /// @return Whether it's outlier or not
+  template <typename track_state_t>
+  bool operator()(const track_state_t& trackState) const {
+    double chi2 = trackState.chi2();
+    if (std::abs(chi2) < chi2Tolerance) {
+      return false;
+    }
+    // The measurement dimension
+    size_t ndf = trackState.calibratedSize();
+    // The chisq distribution
+    boost::math::chi_squared chiDist(ndf);
+    // The p-Value
+    double pValue = 1 - boost::math::cdf(chiDist, chi2);
+    // If pValue is NOT significant enough => outlier
+    return pValue > measurementSignificance ? false : true;
   }
 };
 
@@ -269,8 +322,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Extract measurements from result of propagation.
   // This vector owns the measurements
-  std::vector<FittableMeasurement<SourceLink>> measurements =
-      std::move(mResult.template get<MeasurementCreator::result_type>());
+  std::vector<FittableMeasurement<SourceLink>> measurements = std::move(
+      mResult.template get<MeasurementCreator::result_type>().measurements);
   BOOST_CHECK_EQUAL(measurements.size(), 6u);
 
   // Make a vector of source links as input to the KF
@@ -310,7 +363,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   using Updater = GainMatrixUpdater<BoundParameters>;
   using Smoother = GainMatrixSmoother<BoundParameters>;
-  using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
+  using KalmanFitter =
+      KalmanFitter<RecoPropagator, Updater, Smoother, MinimalOutlierFinder>;
 
   KalmanFitter kFitter(rPropagator,
                        getDefaultLogger("KalmanFilter", Logging::VERBOSE));
@@ -373,6 +427,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK(!Acts::Test::checkCloseRel(fittedParameters.parameters(),
                                          fittedWithHoleParameters.parameters(),
                                          1e-6));
+  
   // Run KF fit in backward filtering mode
   kfOptions.backwardFiltering = true;
   // Fit the track
@@ -392,6 +447,33 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       nSmoothed++;
   });
   BOOST_CHECK_EQUAL(nSmoothed, 6u);
+
+  // Extract outliers from result of propagation.
+  // This vector owns the outliers
+  std::vector<FittableMeasurement<SourceLink>> outliers = std::move(
+      mResult.template get<MeasurementCreator::result_type>().outliers);
+
+  // Replace one measurement with outlier
+  std::vector<SourceLink> measurementsWithOneOutlier = {
+      sourcelinks[0],           sourcelinks[1], sourcelinks[2],
+      SourceLink{&outliers[3]}, sourcelinks[4], sourcelinks[5]};
+
+  // Make sure it works with one outlier
+  fitRes = kFitter.fit(measurementsWithOneOutlier, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto& fittedWithOneOutlier = *fitRes;
+
+  // Count the number of outliers
+  auto& trackTip = fittedWithOneOutlier.trackTip;
+  auto& mj = fittedWithOneOutlier.fittedStates;
+  size_t nOutliers = 0;
+  mj.visitBackwards(trackTip, [&](const auto& state) {
+    auto typeFlags = state.typeFlags();
+    if (typeFlags.test(TrackStateFlag::OutlierFlag)) {
+      nOutliers++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nOutliers, 1u);
 }
 
 }  // namespace Test
