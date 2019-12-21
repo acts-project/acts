@@ -233,8 +233,8 @@ class KalmanFitter {
           calibrator_t pCalibrator = calibrator_t())
         : m_updater(std::move(pUpdater)),
           m_smoother(std::move(pSmoother)),
-          m_calibrator(std::move(pCalibrator)),
-          m_outlierFinder(std::move(pOutlierFinder)) {}
+          m_outlierFinder(std::move(pOutlierFinder)),
+          m_calibrator(std::move(pCalibrator)) {}
 
     /// Broadcast the result_type
     using result_type = KalmanFitterResult<source_link_t>;
