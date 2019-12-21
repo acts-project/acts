@@ -110,4 +110,19 @@ struct VoidKalmanSmoother {
   }
 };
 
+/// @brief void outlier finder
+struct VoidOutlierFinder {
+  /// @brief Public call mimicking an outlier finder
+  ///
+  /// @tparam track_state_t Type of the track state
+  ///
+  /// @param trackState The trackState to investigate
+  ///
+  /// @return Whether it's outlier or not
+  template <typename track_state_t>
+  bool operator()(const track_state_t& trackState) const {
+    return false;
+  }
+};
+
 }  // namespace Acts

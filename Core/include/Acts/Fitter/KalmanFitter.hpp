@@ -150,6 +150,8 @@ struct KalmanFitterResult {
 /// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
 /// - The Smoother is called at the end of the forward fit by the Actor.
+/// - The outlier finder is called during the filtering by the Actor.
+///   It determines if the measurement is an outlier
 /// - The Calibrator is a dedicated calibration algorithm that allows
 ///   to calibrate measurements using track information, this could be
 ///    e.g. sagging for wires, module deformations, etc.
@@ -167,6 +169,7 @@ struct KalmanFitterResult {
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
+          typename outlier_finder_t = VoidOutlierFinder,
           typename calibrator_t = VoidMeasurementCalibrator,
           typename input_converter_t = VoidKalmanComponents,
           typename output_converter_t = VoidKalmanComponents>
@@ -226,10 +229,12 @@ class KalmanFitter {
 
     /// Explicit constructor with updater and calibrator
     Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
+          outlier_finder_t pOutlierFinder = outlier_finder_t(),
           calibrator_t pCalibrator = calibrator_t())
         : m_updater(std::move(pUpdater)),
           m_smoother(std::move(pSmoother)),
-          m_calibrator(std::move(pCalibrator)) {}
+          m_calibrator(std::move(pCalibrator)),
+          m_outlierFinder(std::move(pOutlierFinder)) {}
 
     /// Broadcast the result_type
     using result_type = KalmanFitterResult<source_link_t>;
@@ -503,14 +508,23 @@ class KalmanFitter {
           ACTS_ERROR("Update step failed: " << updateRes.error());
           return updateRes.error();
         } else {
-          // Update the stepping state with filtered parameters
-          ACTS_VERBOSE("Filtering step successful, updated parameters are : \n"
-                       << trackStateProxy.filtered().transpose());
-          // update stepping state using filtered parameters after kalman update
-          // We need to (re-)construct a BoundParameters instance here, which is
-          // a bit awkward.
-          stepper.update(state.stepping, trackStateProxy.filteredParameters(
-                                             state.options.geoContext));
+          if (not m_outlierFinder(trackStateProxy)) {
+            // Update the stepping state with filtered parameters
+            ACTS_VERBOSE(
+                "Filtering step successful, updated parameters are : \n"
+                << trackStateProxy.filtered().transpose());
+            // update stepping state using filtered parameters after kalman
+            // update We need to (re-)construct a BoundParameters instance here,
+            // which is a bit awkward.
+            stepper.update(state.stepping, trackStateProxy.filteredParameters(
+                                               state.options.geoContext));
+          } else {
+            ACTS_VERBOSE(
+                "Filtering step successful. But measurement is deterimined to "
+                "be an outlier. Stepping state is not updated.")
+            // Set the outlier type flag
+            typeFlags.set(TrackStateFlag::OutlierFlag);
+          }
 
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
@@ -839,6 +853,9 @@ class KalmanFitter {
 
     /// The Kalman smoother
     smoother_t m_smoother;
+
+    /// The outlier finder
+    outlier_finder_t m_outlierFinder;
 
     /// The Measuremetn calibrator
     calibrator_t m_calibrator;
