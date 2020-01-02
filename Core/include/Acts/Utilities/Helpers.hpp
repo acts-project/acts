@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -487,6 +488,17 @@ auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
   }
 
   return res;
+}
+
+template <typename Key, typename Value>
+size_t multimapKeyCount(const std::multimap<Key, Value>& arg) {
+  size_t result = 0U;
+
+  for (auto it = arg.cbegin(); it != arg.cend();
+       it = arg.upper_bound(it->first)) {
+    ++result;
+  }
+  return result;
 }
 
 }  // namespace Acts
