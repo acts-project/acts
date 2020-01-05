@@ -58,13 +58,14 @@ struct TrackFinderOptions {
                      std::reference_wrapper<const MagneticFieldContext> mctx,
                      std::reference_wrapper<const CalibrationContext> cctx,
                      const Surface* rSurface = nullptr, bool mScattering = true,
-                     bool eLoss = true)
+                     bool eLoss = true, bool runCKF = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
-        energyLoss(eLoss) {}
+        energyLoss(eLoss),
+        runCombKalmanFilter(runCKF) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -81,6 +82,9 @@ struct TrackFinderOptions {
 
   /// Whether to consider energy loss.
   bool energyLoss = true;
+
+  /// Whether to Combinatorial Kalman Filter
+  bool runCombKalmanFilter = true;
 };
 
 template <typename source_link_t>
@@ -311,10 +315,10 @@ class TrackFinder {
           }
         }
       } else {
-        if (result.measurementStates == multimapKeyCount(inputMeasurements) or
-            (result.measurementStates > 0 and
-             state.navigation.navigationBreak) and
-                not state.navigation.targetReached) {
+        if ((result.measurementStates == multimapKeyCount(inputMeasurements) or
+             (result.measurementStates > 0 and
+              state.navigation.navigationBreak)) and
+            not state.navigation.targetReached) {
           // Record the trajectory entry point (only single trajectory in this
           // mode)
           result.trackTips.push_back(result.trackTip);
@@ -945,6 +949,7 @@ class TrackFinder {
     trackFinderActor.targetSurface = tfOptions.referenceSurface;
     trackFinderActor.multipleScattering = tfOptions.multipleScattering;
     trackFinderActor.energyLoss = tfOptions.energyLoss;
+    trackFinderActor.runCombKalmanFilter = tfOptions.runCombKalmanFilter;
 
     // also set logger on updater and smoother
     trackFinderActor.m_updater.m_logger = m_logger;
@@ -1034,6 +1039,7 @@ class TrackFinder {
     trackFinderActor.targetSurface = tfOptions.referenceSurface;
     trackFinderActor.multipleScattering = tfOptions.multipleScattering;
     trackFinderActor.energyLoss = tfOptions.energyLoss;
+    trackFinderActor.runCombKalmanFilter = tfOptions.runCombKalmanFilter;
 
     // also set logger on updater and smoother
     trackFinderActor.m_updater.m_logger = m_logger;
