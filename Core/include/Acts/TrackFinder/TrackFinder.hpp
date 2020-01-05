@@ -88,9 +88,10 @@ struct TrackFinderResult {
   // Fitted states that the actor has handled.
   MultiTrajectory<source_link_t> fittedStates;
 
-  // This is the index of the 'tip' of the track stored in multitrajectory.
-  // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
+  // The indices of the 'tip' of the tracks stored in multitrajectory.
+  std::vector<size_t> trackTips;
+
+  // The currently active 'tip'
   size_t trackTip = SIZE_MAX;
 
   // Counter for states with measurements
@@ -222,6 +223,13 @@ class TrackFinder {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
+    /// Whether to Combinatorial Kalman Filter
+    bool runCombKalmanFilter = true;
+
+    /// The source link selection criteria
+    //@TODO: add source link selector
+    std::array<double, 2> sourceLinkSelectionCriteria = {7, 10};
+
     /// @brief Track finder actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -234,6 +242,7 @@ class TrackFinder {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
       ACTS_VERBOSE("TrackFinder step");
+
       // Initialization:
       // - Only when track states are not set
       if (!result.initialized) {
@@ -257,7 +266,9 @@ class TrackFinder {
         // -> Check outlier behavior (@todo)
         // -> Fill strack state information & update stepper information
         ACTS_VERBOSE("Perform filter step");
-        auto res = filter(surface, state, stepper, result);
+        auto res = runCombKalmanFilter
+                       ? combinatorialFilter(surface, state, stepper, result)
+                       : sequentialFilter(surface, state, stepper, result);
         if (!res.ok()) {
           ACTS_ERROR("Error in filter: " << res.error());
           result.result = res.error();
@@ -265,11 +276,52 @@ class TrackFinder {
       }
 
       // Finalization:
-      // When all track states have been handled or the navigation is breaked
-      if (result.measurementStates == multimapKeyCount(inputMeasurements) or
-          (result.measurementStates > 0 and state.navigation.navigationBreak)) {
-        // Manually break the navigation here
-        state.navigation.targetReached = true;
+      // -TODO: add smoothing
+      // When the navigation is breaked in CKF mode:
+      // -> find the closest childless track state among previous generations
+      // -> reset propagation state
+      // -> break navigation if no more propagation is needed
+      // When all track states have been handled or the navigation is breaked in
+      // SKF mode:
+      // -> break navigation (no smoothing?)
+      if (runCombKalmanFilter) {
+        if (result.measurementStates > 0 and
+            state.navigation.navigationBreak and
+            not state.navigation.targetReached) {
+          // Record the trajectory entry points
+          while (true) {
+            result.trackTips.push_back(result.trackTip);
+            auto currentState =
+                result.fittedStates.getTrackState(result.trackTip);
+            if (currentState.hasSister()) {
+              result.trackTip = currentState.sister();
+            } else {
+              break;
+            }
+          }
+          // Reset the propagation state
+          bool isReset = reset(state, stepper, result);
+          if (isReset) {
+            ACTS_VERBOSE("Propagation jumps to track state with tip = "
+                         << result.trackTip);
+          } else {
+            ACTS_VERBOSE("Completing the combinatorial track finding");
+            // Manually break the navigation here
+            state.navigation.targetReached = true;
+          }
+        }
+      } else {
+        if (result.measurementStates == multimapKeyCount(inputMeasurements) or
+            (result.measurementStates > 0 and
+             state.navigation.navigationBreak) and
+                not state.navigation.targetReached) {
+          // Record the trajectory entry point (only single trajectory in this
+          // mode)
+          result.trackTips.push_back(result.trackTip);
+          ACTS_VERBOSE("Completing the sequential track finding");
+          // Manually break the navigation here
+          state.navigation.targetReached = true;
+        }
       }
     }
 
@@ -285,6 +337,73 @@ class TrackFinder {
     void initialize(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     result_type& /*result*/) const {}
 
+    /// @brief Kalman actor operation : reset propagation
+    ///
+    /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam stepper_t Type of the stepper
+    ///
+    /// @param state is the mutable propagator state object
+    /// @param stepper The stepper in use
+    /// @param result is the mutable result state object
+    template <typename propagator_state_t, typename stepper_t>
+    bool reset(propagator_state_t& state, stepper_t& stepper,
+               result_type& result) const {
+      // Status of the reset
+      bool isReset = false;
+
+      // Find the childless track state at closest generation
+      auto currentState = result.fittedStates.getTrackState(result.trackTip);
+      result.fittedStates.visitBackwards(
+          currentState.previous(), [&](const auto st) {
+            if (st.hasSister()) {
+              auto sisterState = result.fittedStates.getTrackState(st.sister());
+              if (not sisterState.numChildren()) {
+                // Reset the active index
+                result.trackTip = st.sister();
+
+                // Reset the navigation state
+                state.navigation = typename propagator_t::NavigatorState();
+                state.navigation.startSurface = &sisterState.referenceSurface();
+                state.navigation.startLayer =
+                    state.navigation.startSurface->associatedLayer();
+                state.navigation.startVolume =
+                    state.navigation.startLayer->trackingVolume();
+                state.navigation.targetSurface = targetSurface;
+                state.navigation.currentSurface = state.navigation.startSurface;
+                state.navigation.currentVolume = state.navigation.startVolume;
+
+                // Update the stepping state
+                stepper.update(state.stepping, sisterState.filteredParameters(
+                                                   state.options.geoContext));
+                // Reinitialize the stepping jacobian
+                sisterState.referenceSurface().initJacobianToGlobal(
+                    state.options.geoContext, state.stepping.jacToGlobal,
+                    state.stepping.pos, state.stepping.dir,
+                    sisterState.filteredParameters(state.options.geoContext)
+                        .parameters());
+                state.stepping.jacobian = BoundMatrix::Identity();
+                state.stepping.jacTransport = FreeMatrix::Identity();
+                state.stepping.derivative = FreeVector::Zero();
+                // Reset step size and accumulated path
+                state.stepping.stepSize =
+                    ConstrainedStep(state.options.maxStepSize);
+                state.stepping.pathAccumulated = sisterState.pathLength();
+
+                // No Kalman filtering for the starting surface, but still need
+                // to consider the material effects here
+                materialInteractor(state.navigation.startSurface, state,
+                                   stepper);
+
+                isReset = true;
+                return false;  // abort search
+              }
+            }
+            return true;  // continue search
+          });
+
+      return isReset;
+    }
+
     /// @brief Track finder actor operation : update
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -295,8 +414,10 @@ class TrackFinder {
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> filter(const Surface* surface, propagator_state_t& state,
-                        const stepper_t& stepper, result_type& result) const {
+    Result<void> sequentialFilter(const Surface* surface,
+                                  propagator_state_t& state,
+                                  const stepper_t& stepper,
+                                  result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -478,6 +599,220 @@ class TrackFinder {
       return Result<void>::success();
     }
 
+    /// @brief Track finder actor operation : update for multi-state
+    ///
+    /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam stepper_t Type of the stepper
+    ///
+    /// @param surface The surface where the update happens
+    /// @param state The mutable propagator state object
+    /// @param stepper The stepper in use
+    /// @param result The mutable result state object
+    template <typename propagator_state_t, typename stepper_t>
+    Result<void> combinatorialFilter(const Surface* surface,
+                                     propagator_state_t& state,
+                                     const stepper_t& stepper,
+                                     result_type& result) const {
+      // Try to find the surface in the measurement surfaces
+      auto sourcelink_it = inputMeasurements.find(surface);
+      if (sourcelink_it != inputMeasurements.end()) {
+        // Screen output message
+        ACTS_VERBOSE("Measurement surface " << surface->geoID()
+                                            << " detected.");
+
+        // Update state and stepper with pre material effects
+        materialInteractor(surface, state, stepper, preUpdate);
+
+        // Transport & bind the state to the current surface
+        auto [boundParams, jacobian, pathLength] =
+            stepper.boundState(state.stepping, *surface, true);
+
+        // Create a tempoary track state proxy
+        size_t tempTrackTip =
+            result.fittedStates.addTrackState(TrackStatePropMask::All);
+
+        // Get the temporary track state proxy
+        auto tempTrackStateProxy =
+            result.fittedStates.getTrackState(tempTrackTip);
+
+        // Fill the temporary track state proxy
+        tempTrackStateProxy.predicted() = boundParams.parameters();
+        tempTrackStateProxy.predictedCovariance() = *boundParams.covariance();
+        tempTrackStateProxy.jacobian() = jacobian;
+        tempTrackStateProxy.pathLength() = pathLength;
+
+        // Initialize the update result
+        Result<void> updateRes = KalmanFitterError::UpdateFailed;
+
+        // Get all the source links on this surface
+        auto sourcelinks = inputMeasurements.equal_range(surface);
+
+        // Loop over the source link to select candidates
+        // with chi2 within a given criteria ??
+        std::vector<size_t> iStatesOnSurface;
+        for (auto it = sourcelinks.first; it != sourcelinks.second; ++it) {
+          // assign the source link to the track state
+          tempTrackStateProxy.uncalibrated() = it->second;
+
+          // We have predicted parameters, so calibrate the uncalibrated input
+          // measuerement
+          std::visit(
+              [&](const auto& calibrated) {
+                tempTrackStateProxy.setCalibrated(calibrated);
+              },
+              m_calibrator(tempTrackStateProxy.uncalibrated(),
+                           tempTrackStateProxy.predicted()));
+
+          // If the update is successful and chi2 satisties a given criteria,
+          // create new track state on ths surface
+          auto tempUpdateRes = m_updater(state.geoContext, tempTrackStateProxy);
+          if (tempUpdateRes.ok() and
+              tempTrackStateProxy.chi2() <
+                  (tempTrackStateProxy.calibratedSize() == 1
+                       ? sourceLinkSelectionCriteria[0]
+                       : sourceLinkSelectionCriteria[1])) {
+            // add a full TrackState entry multi trajectory
+            auto newTip = result.fittedStates.addTrackState(
+                TrackStatePropMask::All, result.trackTip);
+
+            // Now get track state proxy back
+            auto trackStateProxy = result.fittedStates.getTrackState(newTip);
+
+            // Add the (elder) sister of this track state
+            if (not iStatesOnSurface.empty()) {
+              trackStateProxy.data().isister = iStatesOnSurface.back();
+            }
+
+            ACTS_VERBOSE("Track state created with tip = " << newTip);
+
+            // Record the track states on this surface
+            iStatesOnSurface.push_back(newTip);
+
+            // Fill the track state
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = *boundParams.covariance();
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+
+            // Get and set the type flags
+            auto& typeFlags = trackStateProxy.typeFlags();
+            typeFlags.set(TrackStateFlag::MaterialFlag);
+            typeFlags.set(TrackStateFlag::MeasurementFlag);
+            typeFlags.set(TrackStateFlag::ParameterFlag);
+
+            trackStateProxy.uncalibrated() = it->second;
+            std::visit(
+                [&](const auto& calibrated) {
+                  trackStateProxy.setCalibrated(calibrated);
+                },
+                m_calibrator(trackStateProxy.uncalibrated(),
+                             trackStateProxy.predicted()));
+            trackStateProxy.filtered() = tempTrackStateProxy.filtered();
+            trackStateProxy.filteredCovariance() =
+                tempTrackStateProxy.filteredCovariance();
+            trackStateProxy.chi2() = tempTrackStateProxy.chi2();
+          }
+        }  // end of loop for all source links on this surface
+
+        // If the update is successful, set covariance and
+        if (iStatesOnSurface.empty()) {
+          ACTS_ERROR("No track states created on this surface");
+
+          // Update state and stepper with post material effects
+          materialInteractor(surface, state, stepper, postUpdate);
+        } else {
+          ACTS_VERBOSE("Filtering step successful with "
+                       << iStatesOnSurface.size()
+                       << " states created on this surface");
+
+          // Update the active 'tip' to point to last track state on this
+          // surface
+          result.trackTip = iStatesOnSurface.back();
+
+          // Update stepping state using filtered parameters after kalman update
+          // of last track state created on this surface
+          auto filteredParams =
+              result.fittedStates.getTrackState(result.trackTip)
+                  .filteredParameters(state.options.geoContext);
+          stepper.update(state.stepping, filteredParams);
+          ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
+                       << filteredParams.parameters().transpose()
+                       << " of track state with tip = " << result.trackTip);
+
+          // Update state and stepper with post material effects
+          materialInteractor(surface, state, stepper, postUpdate);
+        }
+        // We count the state with measurement
+        ++result.measurementStates;
+        // We count the processed state
+        ++result.processedStates;
+      } else {
+        // add a non-measurement TrackState entry multi trajectory
+        // (this allocates storage for components except measurements, we will
+        // set them later)
+        result.trackTip = result.fittedStates.addTrackState(
+            ~(TrackStatePropMask::Uncalibrated |
+              TrackStatePropMask::Calibrated),
+            result.trackTip);
+
+        // now get track state proxy back
+        auto trackStateProxy =
+            result.fittedStates.getTrackState(result.trackTip);
+
+        // Set the surface
+        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+
+        // Set the track state flags
+        auto& typeFlags = trackStateProxy.typeFlags();
+        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.set(TrackStateFlag::ParameterFlag);
+
+        if (surface->associatedDetectorElement() != nullptr) {
+          ACTS_VERBOSE("Detected hole on " << surface->geoID());
+          // If the surface is sensitive, set the hole type flag
+          typeFlags.set(TrackStateFlag::HoleFlag);
+
+          // Transport & bind the state to the current surface
+          auto [boundParams, jacobian, pathLength] =
+              stepper.boundState(state.stepping, *surface, true);
+
+          // Fill the track state
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = *boundParams.covariance();
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
+        } else {
+          ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
+
+          // Transport & get curvilinear state instead of bound state
+          auto [curvilinearParams, jacobian, pathLength] =
+              stepper.curvilinearState(state.stepping, true);
+
+          // Fill the track state
+          trackStateProxy.predicted() = curvilinearParams.parameters();
+          trackStateProxy.predictedCovariance() =
+              *curvilinearParams.covariance();
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
+        }
+
+        // Update state and stepper with material effects
+        materialInteractor(surface, state, stepper, fullUpdate);
+
+        // Set the filtered parameter to be the same with predicted parameter
+        // @Todo: shall we update the filterd parameter with material effects?
+        // But it seems that the smoothing does not like this
+        trackStateProxy.filtered() = trackStateProxy.predicted();
+        trackStateProxy.filteredCovariance() =
+            trackStateProxy.predictedCovariance();
+
+        // We count the processed state
+        ++result.processedStates;
+      }
+
+      return Result<void>::success();
+    }
+
     /// @brief Track finder actor operation : material interaction
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -489,9 +824,9 @@ class TrackFinder {
     /// @param updateStage The materal update stage
     ///
     template <typename propagator_state_t, typename stepper_t>
-    void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            stepper_t& stepper,
-                            const MaterialUpdateStage& updateStage) const {
+    void materialInteractor(
+        const Surface* surface, propagator_state_t& state, stepper_t& stepper,
+        const MaterialUpdateStage& updateStage = fullUpdate) const {
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
 
