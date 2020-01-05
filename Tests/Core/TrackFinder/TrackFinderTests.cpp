@@ -235,14 +235,8 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
   double eps = 15_mm;
   std::map<size_t, Vector3D> startingPos;
   startingPos.emplace(0, Vector3D{-3_m, 0., 0.});
-  startingPos.emplace(1, Vector3D{-3_m, 0., -1.0 * eps});
-  startingPos.emplace(2, Vector3D{-3_m, 0., eps});
-  startingPos.emplace(3, Vector3D{-3_m, -1.0 * eps, -1.0 * eps});
-  startingPos.emplace(4, Vector3D{-3_m, -1.0 * eps, 0.});
-  startingPos.emplace(5, Vector3D{-3_m, -1.0 * eps, eps});
-  startingPos.emplace(6, Vector3D{-3_m, eps, -1.0 * eps});
-  startingPos.emplace(7, Vector3D{-3_m, eps, 0.0});
-  startingPos.emplace(8, Vector3D{-3_m, eps, eps});
+  startingPos.emplace(1, Vector3D{-3_m, -1.0 * eps, -1.0 * eps});
+  startingPos.emplace(2, Vector3D{-3_m, eps, eps});
 
   // Run the propagation for a few times such that multiple measurements exist
   // on one surface
@@ -274,8 +268,8 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
                    return SourceLink{m.first, &m.second};
                  });
 
-  // There should be 54 source links in total
-  BOOST_CHECK_EQUAL(sourcelinks.size(), 54);
+  // There should be 18 source links in total
+  BOOST_CHECK_EQUAL(sourcelinks.size(), 18);
 
   // The TrackFinder - we use the eigen stepper for covariance transport
   // Build navigator for the measurement creatoin
@@ -296,7 +290,7 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
   using TrackFinder = TrackFinder<RecoPropagator, Updater, Smoother>;
 
   TrackFinder tFinder(rPropagator,
-                      getDefaultLogger("KalmanFilter", Logging::VERBOSE));
+                      getDefaultLogger("TrackFinder", Logging::VERBOSE));
 
   // Run the KamanFitter for track finding from different starting parameter
   for (const auto& [trackID, pos] : startingPos) {
@@ -320,30 +314,36 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
 
     TrackFinderOptions kfOptions(tgContext, mfContext, calContext, rSurface);
 
-    // Fit the track
+    // Found the track(s)
     auto fitRes = tFinder.findTracks(sourcelinks, rStart, kfOptions);
     BOOST_CHECK(fitRes.ok());
     auto foundTrack = *fitRes;
     auto& fittedStates = foundTrack.fittedStates;
-    size_t trackTip = foundTrack.trackTip;
+    auto& trackTips = foundTrack.trackTips;
 
-    std::vector<size_t> sourceIds;
-    fittedStates.visitBackwards(trackTip, [&](const auto& trackState) {
-      sourceIds.push_back(trackState.uncalibrated().sourceID);
-    });
-
-    BOOST_CHECK_EQUAL(sourceIds.size(), 6);
-
-    std::cout << "The source track id for found hits on track " << trackID
-              << " are: " << std::endl;
-    size_t numFakeHit = 0;
-    for (const auto& id : sourceIds) {
-      std::cout << id << " : ";
-      numFakeHit = numFakeHit + (id != trackID ? 1 : 0);
-    }
-    std::cout << std::endl;
-    std::cout << "There are " << numFakeHit << " fake hits from other tracks."
+    std::cout << "There are " << trackTips.size()
+              << " trajectories found for truth track " << trackID << " : "
               << std::endl;
+    size_t iTraj = 0;
+    for (const auto& tip : trackTips) {
+      std::vector<size_t> sourceIds;
+      fittedStates.visitBackwards(tip, [&](const auto& trackState) {
+        sourceIds.push_back(trackState.uncalibrated().sourceID);
+      });
+
+      BOOST_CHECK_EQUAL(sourceIds.size(), 6);
+
+      std::cout << "The source track id for hits on " << iTraj << " trajectory "
+                << " are: " << std::endl;
+      size_t numFakeHit = 0;
+      for (const auto& id : sourceIds) {
+        std::cout << id << " : ";
+        numFakeHit = numFakeHit + (id != trackID ? 1 : 0);
+      }
+      std::cout << std::endl;
+      std::cout << "There are " << numFakeHit << " fake hits from other tracks."
+                << std::endl;
+    }
   }
 }
 
