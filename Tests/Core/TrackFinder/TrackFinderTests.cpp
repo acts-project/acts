@@ -169,7 +169,7 @@ struct MeasurementCreator {
 };
 
 ///
-/// @brief Unit test for Kalman fitter with measurements along the x-axis
+/// @brief Unit test for track finder with measurements along the x-axis
 ///
 BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
   // Build detector
@@ -312,12 +312,12 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
 
     const Surface* rSurface = &rStart.referenceSurface();
 
-    TrackFinderOptions kfOptions(tgContext, mfContext, calContext, rSurface);
+    TrackFinderOptions tfOptions(tgContext, mfContext, calContext, rSurface);
 
     // Found the track(s)
-    auto fitRes = tFinder.findTracks(sourcelinks, rStart, kfOptions);
-    BOOST_CHECK(fitRes.ok());
-    auto foundTrack = *fitRes;
+    auto trackFindingRes = tFinder.findTracks(sourcelinks, rStart, tfOptions);
+    BOOST_CHECK(trackFindingRes.ok());
+    auto foundTrack = *trackFindingRes;
     auto& fittedStates = foundTrack.fittedStates;
     auto& trackTips = foundTrack.trackTips;
 
@@ -341,8 +341,9 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
         numFakeHit = numFakeHit + (id != trackID ? 1 : 0);
       }
       std::cout << std::endl;
-      std::cout << "There are " << numFakeHit << " fake hits from other tracks."
-                << std::endl;
+
+      // Check if there are 0 fake hits from other tracks
+      BOOST_CHECK_EQUAL(numFakeHit, 0);
     }
   }
 }
