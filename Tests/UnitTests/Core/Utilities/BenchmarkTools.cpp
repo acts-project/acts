@@ -176,6 +176,9 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
   const double nop_x100_iter_ns = nop_x100.iterTimeAverage().count();
   CHECK_CLOSE_REL(nop_x10_iter_ns, nop_x100_iter_ns, 0.1);
 
+// These tests reason about the performance characteristics of _optimized_ code,
+// and should therefore be compiled out of debug/coverage builds.
+#ifdef __OPTIMIZE__
   // The microbenchmarking harness is super low overhead, less than 1
   // nanosecond per iteration on a modern CPU.
   BOOST_CHECK_LT(nop_x100_iter_ns, 1.0);
@@ -220,8 +223,12 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
   std::cout << "sqrt (deadcode'd): " << sqrt_deadcode << std::endl;
   BOOST_CHECK_LT(sqrt_deadcode.iterTimeAverage().count(),
                  sqrt.iterTimeAverage().count() / 3.);
+#endif
 }
 
+// These tests reason about the performance characteristics of _optimized_ code,
+// and should therefore be compiled out of debug/coverage builds.
+#ifdef __OPTIMIZE__
 BOOST_AUTO_TEST_CASE(assume_read) {
   // You can use assumeRead when you want the compiler to assume that the result
   // of some computation has been read and therefore the computation shouldn't
@@ -250,6 +257,7 @@ BOOST_AUTO_TEST_CASE(assume_read) {
   BOOST_CHECK_LT(std::abs(tuple_return_iter_ns - assumeRead_iter_ns),
                  5. * tuple_return.iterTimeError().count());
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(assume_written) {
   // You can use assumeWritten when you want the compiler to assume that some
