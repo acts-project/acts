@@ -156,7 +156,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   return tp->position();
 }
 
-template <typename forward_parameters_t, typename backward_parameters_t, typename Propagator_type, typename start_parameters_t = CurvilinearParameters>
+template <typename forward_parameters_t, typename backward_parameters_t, typename Propagator_type, typename start_parameters_t>
 void foward_backward(const Propagator_type& propagator, double plimit,
                      start_parameters_t start,
                      double disttol = 1 * Acts::UnitConstants::um,
@@ -218,11 +218,11 @@ void foward_backward(const Propagator_type& propagator, double plimit,
 }
 
 // test propagation to cylinder
-template <typename Propagator_type>
+template <typename Propagator_type, typename start_parameters_t>
 std::pair<Vector3D, double> to_cylinder(
-    const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2, double /*rand3*/,
-    bool covtransport = false, bool debug = false) {
+    const Propagator_type& propagator, start_parameters_t start,
+    double plimit, double rand1, double rand2, double /*rand3*/,
+   bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -231,34 +231,6 @@ std::pair<Vector3D, double> to_cylinder(
   options.maxStepSize = plimit * 0.1;
   options.pathLimit = plimit;
   options.debug = debug;
-
-  // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = charge;
-  double time = 0.;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-
-  std::optional<Covariance> covOpt = std::nullopt;
-  if (covtransport) {
-    Covariance cov;
-    // take some major correlations (off-diagonals)
-    // clang-format off
-    cov <<
-     10_mm, 0, 0.123, 0, 0.5, 0,
-     0, 10_mm, 0, 0.162, 0, 0,
-     0.123, 0, 0.1, 0, 0, 0,
-     0, 0.162, 0, 0.1, 0, 0,
-     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
-     0, 0, 0, 0, 0, 1_us;
-    // clang-format on
-    covOpt = cov;
-  }  
 
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
@@ -269,35 +241,21 @@ std::pair<Vector3D, double> to_cylinder(
   // Increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
 
-  if (q == 0.) {
-    auto start = new NeutralCurvilinearTrackParameters(covOpt, pos, mom, time);
-
     const auto result =
-        propagator.propagate(*start, *endSurface, options).value();
+        propagator.propagate(start, *endSurface, options).value();
     const auto& tp = result.endParameters;
     // check for null pointer
     BOOST_CHECK(tp != nullptr);
     // The position and path length
     return std::pair<Vector3D, double>(tp->position(), result.pathLength);
-  } else {
-    auto start = new CurvilinearParameters(covOpt, pos, mom, q, time);
-
-    const auto result =
-        propagator.propagate(*start, *endSurface, options).value();
-    const auto& tp = result.endParameters;
-    // check for null pointer
-    BOOST_CHECK(tp != nullptr);
-    // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), result.pathLength);
-  }
 }
 
 // test propagation to most surfaces
-template <typename Propagator_type, typename SurfaceType>
+template <typename Propagator_type, typename Surface_type, typename start_parameters_t>
 std::pair<Vector3D, double> to_surface(
-    const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2, double rand3,
-    bool planar = true, bool covtransport = false, bool debug = false) {
+    const Propagator_type& propagator, start_parameters_t start,
+    double plimit, double rand1, double rand2, double rand3,
+    bool planar = true, bool debug = false) {
   using namespace Acts::UnitLiterals;
   using DebugOutput = DebugOutputActor;
 
@@ -308,37 +266,7 @@ std::pair<Vector3D, double> to_surface(
   options.pathLimit = plimit;
   options.debug = debug;
 
-  // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = charge;
-  double time = 0.;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-
-  std::optional<Covariance> covOpt = std::nullopt;
-  if (covtransport) {
-    Covariance cov;
-    // take some major correlations (off-diagonals)
-    // clang-format off
-    cov <<
-     10_mm, 0, 0.123, 0, 0.5, 0,
-     0, 10_mm, 0, 0.162, 0, 0,
-     0.123, 0, 0.1, 0, 0, 0,
-     0, 0.162, 0, 0.1, 0, 0,
-     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
-     0, 0, 0, 0, 0, 1_us;
-    // clang-format on
-    covOpt = cov;
-  }
-  // Create curvilinear start parameters
-  if (q == 0.) {
-    auto start = new NeutralCurvilinearTrackParameters(covOpt, pos, mom, time);
-    const auto result_s = propagator.propagate(*start, options).value();
+    const auto result_s = propagator.propagate(start, options).value();
     const auto& tp_s = result_s.endParameters;
     // The transform at the destination
     auto seTransform =
@@ -357,7 +285,7 @@ std::pair<Vector3D, double> to_surface(
                 << options.pathLimit << std::endl;
     }
 
-    auto result = propagator.propagate(*start, *endSurface, options);
+    auto result = propagator.propagate(start, *endSurface, options);
     const auto& propRes = *result;
     const auto& tp = propRes.endParameters;
     // check the result for nullptr
@@ -380,50 +308,6 @@ std::pair<Vector3D, double> to_surface(
 
     // The position and path length
     return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
-  } else {
-    auto start = new CurvilinearParameters(covOpt, pos, mom, q, time);
-    const auto result_s = propagator.propagate(*start, options).value();
-    const auto& tp_s = result_s.endParameters;
-    // The transform at the destination
-    auto seTransform =
-        planar ? createPlanarTransform(tp_s->position(),
-                                       tp_s->momentum().normalized(),
-                                       0.1 * rand3, 0.1 * rand1)
-               : createCylindricTransform(tp_s->position(), 0.04 * rand1,
-                                          0.04 * rand2);
-
-    auto endSurface = Surface::makeShared<SurfaceType>(seTransform, nullptr);
-    // Increase the path limit - to be safe hitting the surface
-    options.pathLimit *= 2;
-
-    if (debug) {
-      std::cout << ">>> Path limit for this propgation is set to: "
-                << options.pathLimit << std::endl;
-    }
-
-    auto result = propagator.propagate(*start, *endSurface, options);
-    const auto& propRes = *result;
-    const auto& tp = propRes.endParameters;
-    // check the result for nullptr
-    BOOST_CHECK(tp != nullptr);
-
-    // screen output in case you are running in debug mode
-    if (debug) {
-      const auto& debugOutput =
-          propRes.template get<DebugOutput::result_type>();
-      std::cout << ">>> Debug output of this propagation " << std::endl;
-      std::cout << debugOutput.debugString << std::endl;
-      std::cout << ">>> Propagation status is : ";
-      if (result.ok()) {
-        std::cout << "success";
-      } else {
-        std::cout << result.error();
-      }
-      std::cout << std::endl;
-    }
-    // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
-  }
 }
 
 template <typename Propagator_type>
