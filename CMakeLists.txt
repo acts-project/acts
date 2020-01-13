@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.11)
 
 # LCG sets CPATH, which gets treated like -I by the compiler. We want to ignore
 # warnings from libraries, by unsetting it here, it gets processed by the usual

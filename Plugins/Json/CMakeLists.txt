@@ -16,7 +16,16 @@ else()
   )
 
   set(JSON_BuildTests OFF CACHE INTERNAL "")
-  FetchContent_MakeAvailable(nlohmann_json)
+
+  if(${CMAKE_VERSION} VERSION_LESS "3.14.0") 
+    FetchContent_GetProperties(nlohmann_json)
+    if(NOT nlohmann_json_POPULATED)
+      FetchContent_Populate(nlohmann_json)
+      add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR})
+    endif()
+  else()
+    FetchContent_MakeAvailable(nlohmann_json)
+  endif()
 
 endif()
 
