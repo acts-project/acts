@@ -12,11 +12,11 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Plugins/Json/lib/json.h"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <nlohmann/json.hpp>
 
 #include <map>
 

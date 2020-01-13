@@ -1,24 +1,32 @@
-# Reference for the json header file, obtained from
-# https://github.com/nlohmann/json/releases
-set(_json_dep_header_sha256_ref d2eeb25d2e95bffeb08ebb7704cdffd2e8fca7113eba9a0b38d60a5c391ea09a)
+if (ACTS_USE_EXTERNAL_NLOHMANN_JSON)
+  message(STATUS "Using external install of nlohmann::json")
+  find_package(nlohmann_json 3.2.0 REQUIRED)
 
-# Check if hash of file on disk matches the stated hash of the release
-file(READ "include/Acts/Plugins/Json/lib/json.h" _json_dep_header)
-file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
-string(SHA256 _json_dep_header_sha256 "${_json_dep_header}")
+else()
+  message(STATUS "Will build nlohmann::json as part of this build")
 
-if(NOT ${_json_dep_header_sha256} STREQUAL ${_json_dep_header_sha256_ref})
-  message(FATAL_ERROR "json.h hash does not match reference!")
+  set(_source "https://github.com/nlohmann/json/archive/v3.7.3.tar.gz")
+  set(_md5 "846bbc611ce9ecd7d45d6554679245e1")
+
+  include(FetchContent)
+  FetchContent_Declare(
+    nlohmann_json
+    URL ${_source}
+    URL_MD5 ${_md5}
+  )
+
+  set(JSON_BuildTests OFF CACHE INTERNAL "")
+  FetchContent_MakeAvailable(nlohmann_json)
+
 endif()
+
+message(STATUS ${nlohmann_json_VERSION})
+message(STATUS ${nlohmann_json_INCLUDE})
+
+file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 add_library(
   ActsJsonPlugin SHARED ${src_files})
-  
-target_include_directories(
-  ActsJsonPlugin
-  SYSTEM INTERFACE
-  ${Boost_INCLUDE_DIRS}
-  ${EIGEN_INCLUDE_DIRS})
 
 target_include_directories(
   ActsJsonPlugin
@@ -27,7 +35,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(
-  ActsJsonPlugin PUBLIC ActsCore)
+  ActsJsonPlugin PUBLIC ActsCore nlohmann_json::nlohmann_json)
 
 install(
   TARGETS ActsJsonPlugin

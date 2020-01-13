@@ -26,6 +26,7 @@ option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
 option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
 option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
 option(ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
+option(ACTS_USE_EXTERNAL_NLOHMANN_JSON "Use external nlohmann::json" OFF)
 option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 
 # all other compile-time parameters must be defined here for clear visibility
