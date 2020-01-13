@@ -14,14 +14,23 @@
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 using namespace Acts::UnitLiterals;
 
 int main(int argc, char* argv[]) {
-  size_t n = 1e6;
-  if (argc == 2) {
-    n = std::stoi(argv[1]);
+  size_t iters_map = 5e2;
+  size_t iters_solenoid = 3;
+  size_t runs_solenoid = 1000;
+  if (argc >= 2) {
+    iters_map = std::stoi(argv[1]);
+  }
+  if (argc >= 3) {
+    iters_solenoid = std::stoi(argv[2]);
+  }
+  if (argc >= 4) {
+    runs_solenoid = std::stoi(argv[3]);
   }
 
   const double L = 5.8_m;
@@ -36,10 +45,8 @@ int main(int argc, char* argv[]) {
   double zMin = 2 * (-L / 2.);
   double zMax = 2 * (L / 2.);
 
-  size_t printStep = n / 10;
-
   Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
-  std::cout << "building map" << std::endl;
+  std::cout << "Building interpolated field map" << std::endl;
   auto mapper = Acts::solenoidFieldMapper({rMin, rMax}, {zMin, zMax},
                                           {nBinsR, nBinsZ}, bSolenoidField);
   using BField_t = Acts::InterpolatedBFieldMap<decltype(mapper)>;
@@ -47,59 +54,42 @@ int main(int argc, char* argv[]) {
   BField_t::Config cfg(std::move(mapper));
   auto bFieldMap = BField_t(std::move(cfg));
 
-  std::mt19937 rng;
+  std::minstd_rand rng;
   std::uniform_real_distribution<> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
   std::uniform_real_distribution<> rDist(0, R * 1.5);
   std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+  auto genPos = [&]() -> Acts::Vector3D {
+    const double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
+    return {r * std::cos(phi), r * std::sin(phi), z};
+  };
 
-  std::cout << "number of points: " << n << std::endl;
-  std::cout << "start" << std::endl;
-  using clock = std::chrono::steady_clock;
-  auto start = clock::now();
+  // SolenoidBField lookup is so slow that the cost of generating a random field
+  // lookup position is negligible in comparison...
+  std::cout << "Benchmarking random SolenoidBField lookup: " << std::flush;
+  const auto solenoid_result = Acts::Test::microBenchmark(
+      [&] { return bSolenoidField.getField(genPos()); }, iters_solenoid,
+      runs_solenoid);
+  std::cout << solenoid_result << std::endl;
 
-  double z, r, phi;
-  Acts::Vector3D pos;
-  Acts::Vector3D B;
-  for (size_t i = 0; i < n; i++) {
-    if (i % printStep == 0) {
-      std::cout << i << std::endl;
-    }
+  // ...but for interpolated B-field map, the overhead of a field lookup is
+  // comparable to that of generating a random position, so we must be more
+  // careful. Hence we do two microbenchmarks which represent a kind of
+  // lower and upper bound on field lookup performance.
+  //
+  // - The first benchmark operates at constant position, so it measures only
+  //   field lookup overhead but has unrealistically good cache locality. In
+  //   that sense, it provides a lower bound of field lookup performance.
+  std::cout << "Benchmarking cached interpolated field lookup: " << std::flush;
+  const auto fixedPos = genPos();
+  const auto map_cached_result = Acts::Test::microBenchmark(
+      [&] { return bFieldMap.getField(fixedPos); }, iters_map);
+  std::cout << map_cached_result << std::endl;
 
-    z = zDist(rng);
-    r = rDist(rng);
-    phi = phiDist(rng);
-    pos = {r * std::cos(phi), r * std::sin(phi), z};
-
-    B = bSolenoidField.getField(pos);
-  }
-
-  auto end = clock::now();
-  double ms_solenoid =
-      std::chrono::duration_cast<std::chrono::duration<double>>(end - start)
-          .count();
-  start = clock::now();
-
-  for (size_t i = 0; i < n; i++) {
-    if (i % printStep == 0) {
-      std::cout << i << std::endl;
-    }
-
-    z = zDist(rng);
-    r = rDist(rng);
-    phi = phiDist(rng);
-    pos = {r * std::cos(phi), r * std::sin(phi), z};
-
-    B = bFieldMap.getField(pos);
-  }
-
-  end = clock::now();
-  auto ms_map =
-      std::chrono::duration_cast<std::chrono::duration<double>>(end - start)
-          .count();
-
-  std::cout << "solenoid: " << (ms_solenoid * 1000.)
-            << "ms, per lookup: " << (ms_solenoid / n * 1000.) << "ms"
-            << std::endl;
-  std::cout << "map: " << (ms_map * 1000.)
-            << "ms, per lookup: " << (ms_map / n * 1000.) << "ms" << std::endl;
+  // - The second benchmark generates random positions, so it is biased by the
+  //   cost of random position generation and has unrealistically bad cache
+  //   locality, but provides an upper bound of field lookup performance.
+  std::cout << "Benchmarking random interpolated field lookup: " << std::flush;
+  const auto map_rand_result = Acts::Test::microBenchmark(
+      [&] { return bFieldMap.getField(genPos()); }, iters_map);
+  std::cout << map_rand_result << std::endl;
 }
