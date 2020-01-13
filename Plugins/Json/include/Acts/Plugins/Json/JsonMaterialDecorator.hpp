@@ -20,7 +20,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 // Convenience shorthand
-using json = nlohmann::json;
 
 namespace Acts {
 
@@ -49,7 +48,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
     Acts::JsonGeometryConverter jmConverter(jmConverterCfg);
 
     std::ifstream ifj(jFileName.c_str());
-    json jin;
+    nlohmann::json jin;
     ifj >> jin;
 
     auto maps = jmConverter.jsonToMaterialMaps(jin);

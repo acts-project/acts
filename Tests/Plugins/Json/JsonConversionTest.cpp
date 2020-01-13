@@ -22,6 +22,8 @@
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 
+using json = nlohmann::json;
+
 namespace Acts {
 namespace Test {
 

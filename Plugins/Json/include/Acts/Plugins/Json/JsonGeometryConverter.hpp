@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <map>
-
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -19,8 +17,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-// Convenience shorthand
-using json = nlohmann::json;
+
+#include <map>
 
 namespace Acts {
 
@@ -155,17 +153,17 @@ class JsonGeometryConverter {
   /// @param surfaceMaterialMap The indexed material map collection
   std::pair<std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>,
             std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>>
-  jsonToMaterialMaps(const json& materialmaps);
+  jsonToMaterialMaps(const nlohmann::json& materialmaps);
 
   /// Convert method
   ///
   /// @param surfaceMaterialMap The indexed material map collection
-  json materialMapsToJson(const DetectorMaterialMaps& maps);
+  nlohmann::json materialMapsToJson(const DetectorMaterialMaps& maps);
 
   /// Write method
   ///
   /// @param tGeometry is the tracking geometry which contains the material
-  json trackingGeometryToJson(const TrackingGeometry& tGeometry);
+  nlohmann::json trackingGeometryToJson(const TrackingGeometry& tGeometry);
 
  private:
   /// Convert to internal representation method, recursive call
@@ -181,23 +179,23 @@ class JsonGeometryConverter {
   /// Create the Surface Material from Json
   /// - factory method, ownership given
   /// @param material is the json part representing a material object
-  const ISurfaceMaterial* jsonToSurfaceMaterial(const json& material);
+  const ISurfaceMaterial* jsonToSurfaceMaterial(const nlohmann::json& material);
 
   /// Create the Material Matrix from Json
   ///
   /// @param data is the json part representing a material data array
-  MaterialPropertiesMatrix jsonToMaterialMatrix(const json& data);
+  MaterialPropertiesMatrix jsonToMaterialMatrix(const nlohmann::json& data);
 
   /// Create the BinUtility for from Json
-  BinUtility jsonToBinUtility(const json& bin);
+  BinUtility jsonToBinUtility(const nlohmann::json& bin);
 
   /// Create Json from a detector represenation
-  json detectorRepToJson(const DetectorRep& detRep);
+  nlohmann::json detectorRepToJson(const DetectorRep& detRep);
 
   /// SurfaceMaterial to Json
   ///
   /// @param the SurfaceMaterial
-  json surfaceMaterialToJson(const ISurfaceMaterial& sMaterial);
+  nlohmann::json surfaceMaterialToJson(const ISurfaceMaterial& sMaterial);
 
   /// The config class
   Config m_cfg;

@@ -29,6 +29,8 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+using json = nlohmann::json;
+
 Acts::JsonGeometryConverter::JsonGeometryConverter(
     const Acts::JsonGeometryConverter::Config& cfg)
     : m_cfg(std::move(cfg)) {
