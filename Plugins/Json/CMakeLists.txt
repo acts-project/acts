@@ -20,9 +20,6 @@ else()
 
 endif()
 
-message(STATUS ${nlohmann_json_VERSION})
-message(STATUS ${nlohmann_json_INCLUDE})
-
 file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 add_library(
