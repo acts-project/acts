@@ -1,1 +1,2 @@
 add_subdirectory_if(Digitization ACTS_BUILD_DIGITIZATION_PLUGIN)
+add_subdirectory_if(Json ACTS_BUILD_JSON_PLUGIN)
