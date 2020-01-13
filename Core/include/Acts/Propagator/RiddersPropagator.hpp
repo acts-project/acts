@@ -84,8 +84,9 @@ class RiddersPropagator {
   /// @param [in] options Options of the propagations
   ///
   /// @return Result of the propagation
-  template <typename parameters_t, typename propagator_options_t,
-			typename return_parameters_t = CurvilinearParameters>
+  template <typename return_parameters_t = CurvilinearParameters, 
+			//~ typename parameters_t, typename propagator_options_t, std::enable_if_t<parameters_t::is_local_representation and return_parameters_t::is_local_representation, int> = 0>
+			typename parameters_t, typename propagator_options_t>
   Result<
       action_list_t_result_t<return_parameters_t,
                              typename propagator_options_t::action_list_type>>
@@ -141,6 +142,12 @@ class RiddersPropagator {
       const options_t& options, const parameters_t& startPars,
       const unsigned int param, const Surface& target,
       const BoundVector& nominal, const std::vector<double>& deviations) const;
+      
+  //~ template <typename options_t, typename parameters_t>
+  //~ std::vector<FreeVector> wiggleDimension(
+      //~ const options_t& options, const parameters_t& startPars,
+      //~ const unsigned int param, const Surface& target,
+      //~ const FreeVector& nominal, const std::vector<double>& deviations) const;
 
   /// @brief This function propagates the covariance matrix
   ///

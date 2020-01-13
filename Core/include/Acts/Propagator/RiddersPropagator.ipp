@@ -7,8 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename propagator_t>
-template <typename parameters_t, typename propagator_options_t,
-		  typename return_parameters_t>
+template <typename return_parameters_t, typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
     -> Result<

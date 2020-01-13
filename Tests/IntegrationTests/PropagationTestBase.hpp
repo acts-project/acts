@@ -83,9 +83,9 @@ BOOST_DATA_TEST_CASE(
   
   Vector3D dir = mom.normalized();
   FreeVector pars;
-  pars << x, y, z, time, dir.x(), dir.y(), dir.z(), charge / mom.norm();
+  pars << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
   FreeParameters startF(std::nullopt, pars);
-  
+
   // constant field propagation atlas stepper
   auto aposition = constant_field_propagation<CurvilinearParameters>(apropagator, startC, pT, phi, theta, Bz);
   // constant field propagation eigen stepper
