@@ -14,80 +14,118 @@
 #include <vector>
 
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 using namespace Acts;
 
-constexpr int NTESTS = 2 << 15;
-// trapezoidal area
-static const Vector2D POLY[] = {
-    {0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
+int main(int /*argc*/, char** /*argv[]*/) {
+  // === PROBLEM DATA ===
 
-std::vector<Vector2D> make_random_points() {
+  // Trapezoidal area of interest
+  const Vector2D poly[] = {{0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
+
+  // Covariance matrix which specifies "soft" boundary check tolerance
+  ActsSymMatrixD<2> cov;
+  cov << 0.2, 0.02, 0.15, 0.02;
+
+  // Random tests cover the ((0, 0), (1, 1)) rectangle. 20% of that area is
+  // covered by the trapezoid and most of it is covered by a 3*sigma tolerance
+  // given the above covariance matrix.
   std::mt19937 rng(42);
   std::uniform_real_distribution<double> axis(0, 1);
+  auto random_point = [&]() -> Vector2D {
+    return Vector2D(axis(rng), axis(rng));
+  };
 
-  auto rnd_axis = std::bind(axis, rng);
-  auto rnd_point = [&]() { return Vector2D(rnd_axis(), rnd_axis()); };
+  // This point is inside the area
+  const Vector2D center(0.5, 0.5);
+  // This point is still inside the area, but close to an edge
+  const Vector2D edge_inside(0.401, 0.251);
+  // This point is just a bit outside, should be considered "in" by tolerance
+  const Vector2D edge_outside(0.399, 0.249);
+  // This point should always be considered outside the area
+  const Vector2D far_away(-1000., -1000.);
 
-  std::vector<Vector2D> points(NTESTS);
-  std::generate(points.begin(), points.end(), rnd_point);
-  return points;
-}
+  // === BENCHMARKS ===
 
-inline bool isInside(const Vector2D& point, const BoundaryCheck& check) {
-  return check.isInside(point, POLY);
-}
+  // Number of benchmark runs
+  constexpr int NTESTS = 5'000;
 
-struct StopWatch {
-  using Clock = std::chrono::high_resolution_clock;
-  using TimePoint = Clock::time_point;
+  // Some checks are much slower, so we tune down benchmark iterations
+  constexpr int NTESTS_SLOW = NTESTS / 10;
 
-  TimePoint start;
+  // Conversely, no-op tests are so fast that we need to tune up iterations
+  constexpr int NTESTS_NOOP = NTESTS * 10;
 
-  StopWatch() : start(Clock::now()) {}
+  // We use this to switch between iteration counts
+  enum class Mode { NoCheck, FastOutside, SlowOutside };
 
-  void finish(size_t n_trials, const char* name) {
-    auto stop = Clock::now();
-    std::chrono::duration<double, std::micro> total = stop - start;
-    std::chrono::duration<double, std::micro> perTrial =
-        (stop - start) / n_trials;
+  // Benchmark output display
+  auto print_bench_header = [](const std::string& check_name) {
+    std::cout << check_name << ":" << std::endl;
+  };
+  auto print_bench_result = [](const std::string& bench_name,
+                               const Acts::Test::MicroBenchmarkResult& res) {
+    std::cout << "- " << bench_name << ": " << res << std::endl;
+  };
 
-    std::cout << name << ":\n";
-    std::cout << "  trials: " << n_trials << '\n';
-    std::cout << "  time total: " << total.count() << " us\n";
-    std::cout << "  time per test: " << perTrial.count() << " us\n";
-  }
-};
+  // Benchmark runner
+  auto run_bench = [&](auto&& iteration, int num_iters,
+                       const std::string& bench_name) {
+    auto bench_result = Acts::Test::microBenchmark(iteration, num_iters);
+    print_bench_result(bench_name, bench_result);
+  };
+  auto run_bench_with_inputs = [&](auto&& iterationWithArg, auto&& inputs,
+                                   const std::string& bench_name) {
+    auto bench_result = Acts::Test::microBenchmark(iterationWithArg, inputs);
+    print_bench_result(bench_name, bench_result);
+  };
+  auto run_all_benches = [&](const BoundaryCheck& check,
+                             const std::string& check_name, const Mode mode) {
+    // Announce a set of benchmarks
+    print_bench_header(check_name);
 
-int main(int /*argc*/, char** /*argv[]*/) {
-  using std::cout;
+    // Pre-determined "interesting" test points
+    int num_inside_points;
+    int num_outside_points;
+    switch (mode) {
+      case Mode::NoCheck:
+        num_inside_points = NTESTS_NOOP;
+        num_outside_points = NTESTS_NOOP;
+        break;
+      case Mode::FastOutside:
+        num_inside_points = NTESTS;
+        num_outside_points = NTESTS;
+        break;
+      case Mode::SlowOutside:
+        num_inside_points = NTESTS;
+        num_outside_points = NTESTS_SLOW;
+    };
+    run_bench([&] { return check.isInside(center, poly); }, num_inside_points,
+              "Center");
+    run_bench([&] { return check.isInside(edge_inside, poly); },
+              num_inside_points, "Inside edge");
+    run_bench([&] { return check.isInside(edge_outside, poly); },
+              num_outside_points, "Outside edge");
+    run_bench([&] { return check.isInside(far_away, poly); },
+              num_outside_points, "Far away");
 
-  // absolute check w/o tolerance
-  {
-    auto points = make_random_points();
-    BoundaryCheck check(true);
-    int n_inside = 0;
-    StopWatch watch;
-    for (const auto& point : points) {
-      n_inside += (isInside(point, check) ? 1 : 0);
-    }
-    watch.finish(points.size(), "absolute check w/o tolerance");
-  }
-  // check w/ covariance
-  {
-    auto points = make_random_points();
-    ActsSymMatrixD<2> cov;
-    cov << 0.2, 0.02, 0.15, 0.02;
-    BoundaryCheck check(cov, 3.0);  // 3-sigma cut
-    int n_inside = 0;
-    StopWatch watch;
-    for (const auto& point : points) {
-      n_inside += (isInside(point, check) ? 1 : 0);
-    }
-    watch.finish(points.size(), "check w/ covariance");
-  }
+    // Pre-rolled random points
+    std::vector<Vector2D> points(num_outside_points);
+    std::generate(points.begin(), points.end(), random_point);
+    run_bench_with_inputs(
+        [&](const auto& point) { return check.isInside(point, poly); }, points,
+        "Random");
+  };
+
+  // Benchmark scenarios
+  run_all_benches(BoundaryCheck(false), "No check", Mode::NoCheck);
+  run_all_benches(BoundaryCheck(true), "No tolerance", Mode::FastOutside);
+  run_all_benches(BoundaryCheck(true, true, 0.6, 0.45), "Abs. tolerance",
+                  Mode::SlowOutside);
+  run_all_benches(BoundaryCheck(cov, 3.0), "Cov. tolerance", Mode::SlowOutside);
 
   return 0;
 }
