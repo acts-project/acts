@@ -224,6 +224,16 @@ inline bool Acts::BoundaryCheck::isInside(
   // outside but within the defined tolerance relative to the closest point
   if (isInsidePolygon(point, vertices)) {
     return true;
+  } else if (m_tolerance == Vector2D(0., 0.)) {
+    // computeClosestPointOnPolygon is an expensive computation, so we want to
+    // avoid it when we know that the isTolerated test will always succeed
+    // (for m_type = eNone) or fail (for other m_types).
+    //
+    // TODO: When tolerance is not 0, we can also avoid this computation in some
+    //       cases by testing against a bounding box of the polygon, padded on
+    //       each side with our tolerance. Check if this optimization is
+    //       worthwhile in some production workflows, and if so implement it.
+    return isTolerated(vertices[0] - point);
   } else {
     auto closestPoint = computeClosestPointOnPolygon(point, vertices);
     return isTolerated(closestPoint - point);
