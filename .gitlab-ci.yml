@@ -84,7 +84,7 @@ include_guards:
   script:
     - cd build
     - ctest -T test --no-compress-output 
-    - xsltproc ..CI/ctest2junit.xsl Testing/$(head -n1 Testing/TAG)/Test.xml > junit.xml
+    - xsltproc ../CI/ctest2junit.xsl Testing/$(head -n1 Testing/TAG)/Test.xml > junit.xml
   artifacts:
     reports:
       junit: build/junit.xml
