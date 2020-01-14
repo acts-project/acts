@@ -180,8 +180,6 @@ inline size_t MultiTrajectory<SL>::addTrackState(
 
   if (iprevious != SIZE_MAX) {
     p.iprevious = static_cast<uint16_t>(iprevious);
-    TrackStateProxy previous = getTrackState(iprevious);
-    previous.data().nchildren++;
   }
 
   if (ts.parameter.predicted) {
@@ -240,8 +238,6 @@ inline size_t MultiTrajectory<SL>::addTrackState(
 
   if (iprevious != SIZE_MAX) {
     p.iprevious = static_cast<uint16_t>(iprevious);
-    TrackStateProxy previous = getTrackState(iprevious);
-    previous.data().nchildren++;
   }
 
   // always set, but can be null

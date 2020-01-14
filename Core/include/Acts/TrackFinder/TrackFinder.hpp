@@ -98,8 +98,15 @@ struct TrackFinderResult {
   // The Parameters at the provided surface for separate tracks
   std::map<size_t, BoundParameters> fittedParameters;
 
-  // The current active 'tip'
-  size_t trackTip = SIZE_MAX;
+  // The indices of the 'tip' of the unfinished tracks
+  std::vector<size_t> activeTips;
+
+  // The indices of track states on current surface
+  // @TODO: how to avoid using this?
+  std::vector<size_t> tipsOnCurrentSurface;
+
+  // The index of track state being handled
+  size_t currentTip = SIZE_MAX;
 
   // Counter for states with measurements
   size_t measurementStates = 0;
@@ -292,31 +299,26 @@ class TrackFinder {
       }
 
       // Stopping forward filtering:
-      // -> when there is no childless track state from
-      // previous generations in CKF mode
+      // -> when the list of activeTips is empty in CKF mode
       // -> when all track states have been handled or the
       // navigation is breaked in SKF mode
       if (runCombKalmanFilter) {
         if (result.measurementStates > 0 and
             state.navigation.navigationBreak and not result.forwardFiltered) {
-          // Record the trajectory entry points
-          while (true) {
-            result.trackTips.push_back(result.trackTip);
-            auto currentState =
-                result.fittedStates.getTrackState(result.trackTip);
-            if (currentState.hasSister()) {
-              result.trackTip = currentState.sister();
-            } else {
-              break;
-            }
+          for (const auto tip : result.tipsOnCurrentSurface) {
+            // Record the trajectory entry index
+            result.trackTips.push_back(std::move(tip));
+            // Remove the index from list of 'active' tips
+            result.activeTips.pop_back();
           }
-          // If there is still childless track state from previous generations:
-          // -> find the closest childless track state
-          // -> reset propagation state
-          bool isReset = reset(state, stepper, result);
-          if (isReset) {
+
+          // If there is still active tip, reset propagation state to last
+          // element in activeTips
+          if (not result.activeTips.empty()) {
+            result.currentTip = result.activeTips.back();
             ACTS_VERBOSE("Propagation jumps to track state with tip = "
-                         << result.trackTip);
+                         << result.currentTip);
+            reset(state, stepper, result);
           } else {
             ACTS_VERBOSE("Finish forward filtering");
             result.forwardFiltered = true;
@@ -329,7 +331,7 @@ class TrackFinder {
             not result.forwardFiltered) {
           // Record the trajectory entry point (only single trajectory in this
           // mode)
-          result.trackTips.push_back(result.trackTip);
+          result.trackTips.push_back(result.currentTip);
           ACTS_VERBOSE("Finish forward filtering");
           result.forwardFiltered = true;
         }
@@ -339,10 +341,10 @@ class TrackFinder {
       // Run smoothing for the found trajectory indexed with iSmoothed (one
       // single trajectory in SKF mode):
       if (result.forwardFiltered and not result.smoothed) {
-        result.trackTip = result.trackTips.at(result.iSmoothed);
+        result.currentTip = result.trackTips.at(result.iSmoothed);
         ACTS_VERBOSE("Finalize/run smoothing for track "
                      << result.iSmoothed
-                     << " with entry index = " << result.trackTip);
+                     << " with entry index = " << result.currentTip);
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
         // -> Set a stop condition when all track states have been handled
@@ -360,12 +362,12 @@ class TrackFinder {
       if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
         ACTS_VERBOSE("Completing the track "
                      << result.iSmoothed
-                     << " with entry index = " << result.trackTip);
+                     << " with entry index = " << result.currentTip);
         // Transport & bind the parameter to the final surface
         auto fittedState =
             stepper.boundState(state.stepping, *targetSurface, true);
         // Assign the fitted parameters
-        result.fittedParameters.emplace(result.trackTip,
+        result.fittedParameters.emplace(result.currentTip,
                                         std::get<BoundParameters>(fittedState));
         // If there are more trajectories to handle
         // -> set the targetReached status to false
@@ -405,62 +407,39 @@ class TrackFinder {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    bool reset(propagator_state_t& state, stepper_t& stepper,
+    void reset(propagator_state_t& state, stepper_t& stepper,
                result_type& result) const {
-      // Status of the reset
-      bool isReset = false;
+      auto currentState = result.fittedStates.getTrackState(result.currentTip);
+      // Reset the navigation state
+      state.navigation = typename propagator_t::NavigatorState();
+      state.navigation.startSurface = &currentState.referenceSurface();
+      state.navigation.startLayer =
+          state.navigation.startSurface->associatedLayer();
+      state.navigation.startVolume =
+          state.navigation.startLayer->trackingVolume();
+      state.navigation.targetSurface = targetSurface;
+      state.navigation.currentSurface = state.navigation.startSurface;
+      state.navigation.currentVolume = state.navigation.startVolume;
 
-      // Find the childless track state at closest generation
-      auto currentState = result.fittedStates.getTrackState(result.trackTip);
-      result.fittedStates.visitBackwards(
-          currentState.previous(), [&](const auto st) {
-            if (st.hasSister()) {
-              auto sisterState = result.fittedStates.getTrackState(st.sister());
-              if (not sisterState.numChildren()) {
-                // Reset the active index
-                result.trackTip = st.sister();
+      // Update the stepping state
+      stepper.update(state.stepping,
+                     currentState.filteredParameters(state.options.geoContext));
+      // Reinitialize the stepping jacobian
+      currentState.referenceSurface().initJacobianToGlobal(
+          state.options.geoContext, state.stepping.jacToGlobal,
+          state.stepping.pos, state.stepping.dir,
+          currentState.filteredParameters(state.options.geoContext)
+              .parameters());
+      state.stepping.jacobian = BoundMatrix::Identity();
+      state.stepping.jacTransport = FreeMatrix::Identity();
+      state.stepping.derivative = FreeVector::Zero();
+      // Reset step size and accumulated path
+      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
+      state.stepping.pathAccumulated = currentState.pathLength();
 
-                // Reset the navigation state
-                state.navigation = typename propagator_t::NavigatorState();
-                state.navigation.startSurface = &sisterState.referenceSurface();
-                state.navigation.startLayer =
-                    state.navigation.startSurface->associatedLayer();
-                state.navigation.startVolume =
-                    state.navigation.startLayer->trackingVolume();
-                state.navigation.targetSurface = targetSurface;
-                state.navigation.currentSurface = state.navigation.startSurface;
-                state.navigation.currentVolume = state.navigation.startVolume;
-
-                // Update the stepping state
-                stepper.update(state.stepping, sisterState.filteredParameters(
-                                                   state.options.geoContext));
-                // Reinitialize the stepping jacobian
-                sisterState.referenceSurface().initJacobianToGlobal(
-                    state.options.geoContext, state.stepping.jacToGlobal,
-                    state.stepping.pos, state.stepping.dir,
-                    sisterState.filteredParameters(state.options.geoContext)
-                        .parameters());
-                state.stepping.jacobian = BoundMatrix::Identity();
-                state.stepping.jacTransport = FreeMatrix::Identity();
-                state.stepping.derivative = FreeVector::Zero();
-                // Reset step size and accumulated path
-                state.stepping.stepSize =
-                    ConstrainedStep(state.options.maxStepSize);
-                state.stepping.pathAccumulated = sisterState.pathLength();
-
-                // No Kalman filtering for the starting surface, but still need
-                // to consider the material effects here
-                materialInteractor(state.navigation.startSurface, state,
-                                   stepper);
-
-                isReset = true;
-                return false;  // abort search
-              }
-            }
-            return true;  // continue search
-          });
-
-      return isReset;
+      // No Kalman filtering for the starting surface, but still need
+      // to consider the material effects here
+      materialInteractor(state.navigation.startSurface, state, stepper);
     }
 
     /// @brief Track finder actor operation : update
@@ -493,12 +472,12 @@ class TrackFinder {
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
-        result.trackTip = result.fittedStates.addTrackState(
-            TrackStatePropMask::All, result.trackTip);
+        result.currentTip = result.fittedStates.addTrackState(
+            TrackStatePropMask::All, result.currentTip);
 
         // now get track state proxy back
         auto trackStateProxy =
-            result.fittedStates.getTrackState(result.trackTip);
+            result.fittedStates.getTrackState(result.currentTip);
 
         // Fill the track state
         trackStateProxy.predicted() = boundParams.parameters();
@@ -596,14 +575,14 @@ class TrackFinder {
         // add a non-measurement TrackState entry multi trajectory
         // (this allocates storage for components except measurements, we will
         // set them later)
-        result.trackTip = result.fittedStates.addTrackState(
+        result.currentTip = result.fittedStates.addTrackState(
             ~(TrackStatePropMask::Uncalibrated |
               TrackStatePropMask::Calibrated),
-            result.trackTip);
+            result.currentTip);
 
         // now get track state proxy back
         auto trackStateProxy =
-            result.fittedStates.getTrackState(result.trackTip);
+            result.fittedStates.getTrackState(result.currentTip);
 
         // Set the surface
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
@@ -672,6 +651,14 @@ class TrackFinder {
                                      propagator_state_t& state,
                                      const stepper_t& stepper,
                                      result_type& result) const {
+      // Remove the last currentTip stored in activeTips
+      if (not result.activeTips.empty()) {
+        result.activeTips.pop_back();
+      }
+
+      // Clear the tips stored on current surface
+      result.tipsOnCurrentSurface.clear();
+
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -708,7 +695,6 @@ class TrackFinder {
 
         // Loop over the source link to select candidates
         // with chi2 within a given criteria ??
-        std::vector<size_t> iStatesOnSurface;
         for (auto it = sourcelinks.first; it != sourcelinks.second; ++it) {
           // assign the source link to the track state
           tempTrackStateProxy.uncalibrated() = it->second;
@@ -732,20 +718,20 @@ class TrackFinder {
                        : sourceLinkSelectionCriteria[1])) {
             // add a full TrackState entry multi trajectory
             auto newTip = result.fittedStates.addTrackState(
-                TrackStatePropMask::All, result.trackTip);
+                TrackStatePropMask::All, result.currentTip);
+
+            ACTS_VERBOSE("Track state created with tip = " << newTip);
+
+            // Record the track states on this surface
+            result.tipsOnCurrentSurface.push_back(newTip);
 
             // Now get track state proxy back
             auto trackStateProxy = result.fittedStates.getTrackState(newTip);
 
             // Add the (elder) sister of this track state
-            if (not iStatesOnSurface.empty()) {
-              trackStateProxy.data().isister = iStatesOnSurface.back();
-            }
-
-            ACTS_VERBOSE("Track state created with tip = " << newTip);
-
-            // Record the track states on this surface
-            iStatesOnSurface.push_back(newTip);
+            // if (not iStatesOnSurface.empty()) {
+            //  trackStateProxy.data().isister = iStatesOnSurface.back();
+            //}
 
             // Fill the track state
             trackStateProxy.predicted() = boundParams.parameters();
@@ -774,20 +760,23 @@ class TrackFinder {
         }  // end of loop for all source links on this surface
 
         // If the update is successful, set covariance and
-        if (iStatesOnSurface.empty()) {
-          ACTS_DEBUG("A hole track state is created on this surface");
-
+        if (result.tipsOnCurrentSurface.empty()) {
           // add a non-measurement TrackState entry multi trajectory
           // (this allocates storage for components except measurements, we will
           // set them later)
-          result.trackTip = result.fittedStates.addTrackState(
+          result.currentTip = result.fittedStates.addTrackState(
               ~(TrackStatePropMask::Uncalibrated |
                 TrackStatePropMask::Calibrated),
-              result.trackTip);
+              result.currentTip);
+
+          ACTS_DEBUG("A hole track state is created on this surface");
+
+          // Record the active track tip
+          result.tipsOnCurrentSurface.push_back(result.currentTip);
 
           // now get track state proxy back
           auto trackStateProxy =
-              result.fittedStates.getTrackState(result.trackTip);
+              result.fittedStates.getTrackState(result.currentTip);
 
           // Set the surface
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
@@ -811,22 +800,22 @@ class TrackFinder {
           materialInteractor(surface, state, stepper, postUpdate);
         } else {
           ACTS_VERBOSE("Filtering step successful with "
-                       << iStatesOnSurface.size()
+                       << result.tipsOnCurrentSurface.size()
                        << " states created on this surface");
 
           // Update the active 'tip' to point to last track state on this
           // surface
-          result.trackTip = iStatesOnSurface.back();
+          result.currentTip = result.tipsOnCurrentSurface.back();
 
           // Update stepping state using filtered parameters after kalman update
           // of last track state created on this surface
           auto filteredParams =
-              result.fittedStates.getTrackState(result.trackTip)
+              result.fittedStates.getTrackState(result.currentTip)
                   .filteredParameters(state.options.geoContext);
           stepper.update(state.stepping, filteredParams);
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << filteredParams.parameters().transpose()
-                       << " of track state with tip = " << result.trackTip);
+                       << " of track state with tip = " << result.currentTip);
 
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
@@ -839,14 +828,17 @@ class TrackFinder {
         // add a non-measurement TrackState entry multi trajectory
         // (this allocates storage for components except measurements, we will
         // set them later)
-        result.trackTip = result.fittedStates.addTrackState(
+        result.currentTip = result.fittedStates.addTrackState(
             ~(TrackStatePropMask::Uncalibrated |
               TrackStatePropMask::Calibrated),
-            result.trackTip);
+            result.currentTip);
+
+        // Record the active track tip
+        result.tipsOnCurrentSurface.push_back(result.currentTip);
 
         // now get track state proxy back
         auto trackStateProxy =
-            result.fittedStates.getTrackState(result.trackTip);
+            result.fittedStates.getTrackState(result.currentTip);
 
         // Set the surface
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
@@ -895,6 +887,11 @@ class TrackFinder {
 
         // We count the processed state
         ++result.processedStates;
+      }
+
+      // Record the active track tip
+      for (const auto tip : result.tipsOnCurrentSurface) {
+        result.activeTips.push_back(std::move(tip));
       }
 
       return Result<void>::success();
@@ -959,14 +956,14 @@ class TrackFinder {
       if (logger().doPrint(Logging::VERBOSE)) {
         // need to count track states
         size_t nStates = 0;
-        result.fittedStates.visitBackwards(result.trackTip,
+        result.fittedStates.visitBackwards(result.currentTip,
                                            [&](const auto) { nStates++; });
         ACTS_VERBOSE("Apply smoothing on " << nStates
                                            << " filtered track states.");
       }
       // Smooth the track states and obtain the last smoothed track parameters
       auto smoothRes =
-          m_smoother(state.geoContext, result.fittedStates, result.trackTip);
+          m_smoother(state.geoContext, result.fittedStates, result.currentTip);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
