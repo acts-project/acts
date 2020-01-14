@@ -82,8 +82,12 @@ include_guards:
   variables:
       CTEST_OUTPUT_ON_FAILURE: 1
   script:
-    - cmake --build build -- test
+    - cd build
+    - ctest -T test --no-compress-output 
+    - xsltproc ../CI/ctest2junit.xsl Testing/$(head -n1 Testing/TAG)/Test.xml > junit.xml
   artifacts:
+    reports:
+      junit: build/junit.xml
     paths:
       - build
     expire_in: 6 hours
