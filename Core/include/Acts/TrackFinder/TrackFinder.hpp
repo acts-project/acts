@@ -107,12 +107,11 @@ struct TrackFinderResult {
   // The indices of the 'tip' of the unfinished tracks
   std::map<size_t, TipState> activeTips;
 
-  // The indices of track states on current surface
-  // @TODO: how to avoid using this?
-  std::vector<size_t> tipsOnCurrentSurface;
-
   // The index of track state being handled
   size_t currentTip = SIZE_MAX;
+
+  // Count the track states on current surface
+  size_t nStatesOnSurface = 0;
 
   // Indicator if forward filtering has been done
   bool forwardFiltered = false;
@@ -307,21 +306,24 @@ class TrackFinder {
       // navigation is breaked in SKF mode
       if (runCombKalmanFilter) {
         if (state.navigation.navigationBreak and not result.forwardFiltered) {
-          for (const auto tip : result.tipsOnCurrentSurface) {
-            // Record the trajectory entry index if there are measurements
-            auto it = result.activeTips.find(tip);
-            if (it != result.activeTips.end()) {
-              auto tipState = it->second;
-              if (tipState.nMeasurements > 0) {
-                result.trackTips.push_back(std::move(tip));
-              }
-              // Remove the tip from active tips
-              result.activeTips.erase(it);
+          // Record the tips on current surface as trajectory entry indices
+          // Taking advantage of fact that those tips are consecutive in list of
+          // active tips
+          while (result.nStatesOnSurface > 0) {
+            auto rit = result.activeTips.rbegin();
+            auto tip = rit->first;
+            auto tipState = rit->second;
+            if (tipState.nMeasurements > 0) {
+              // Record if there are measurements
+              result.trackTips.push_back(tip);
             }
+            // Remove the tip from list of active tips
+            result.activeTips.erase(tip);
+            result.nStatesOnSurface--;
           }
 
-          // If there is still active tip, reset propagation state to last
-          // element in activeTips
+          // If there is still active tip, reset propagation state to track
+          // state at last tip of active tips
           if (not result.activeTips.empty()) {
             result.currentTip = result.activeTips.rbegin()->first;
             ACTS_VERBOSE("Propagation jumps to track state with tip = "
@@ -334,7 +336,7 @@ class TrackFinder {
         }
       } else {
         if (not result.activeTips.empty()) {
-          // There should only one active tip, which is the same as
+          // There should only one active tip which is the same as
           // current tip
           auto tipState = result.activeTips.rbegin()->second;
           if ((tipState.nMeasurements == multimapKeyCount(inputMeasurements) or
@@ -365,6 +367,7 @@ class TrackFinder {
         if (!res.ok()) {
           ACTS_ERROR("Error in finalize: " << res.error());
           result.result = res.error();
+          //@TODO: smoothing failure for one track should not affect another?
         }
         result.smoothed = true;
       }
@@ -663,6 +666,11 @@ class TrackFinder {
         trackStateProxy.filteredCovariance() =
             trackStateProxy.predictedCovariance();
       }
+
+      // Count the number of states on current surface (always one in sequential
+      // mode)
+      result.nStatesOnSurface = 1;
+
       return Result<void>::success();
     }
 
@@ -688,8 +696,8 @@ class TrackFinder {
         result.activeTips.erase(tip_it);
       }
 
-      // Clear the tips stored on current surface
-      result.tipsOnCurrentSurface.clear();
+      // Re-initialize the number of states on current surface
+      result.nStatesOnSurface = 0;
 
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
@@ -743,58 +751,60 @@ class TrackFinder {
           // If the update is successful and chi2 satisties a given criteria,
           // create new track state on ths surface
           auto tempUpdateRes = m_updater(state.geoContext, tempTrackStateProxy);
-          if (tempUpdateRes.ok() and
-              tempTrackStateProxy.chi2() <
-                  (tempTrackStateProxy.calibratedSize() == 1
-                       ? sourceLinkSelectionCriteria[0]
-                       : sourceLinkSelectionCriteria[1])) {
-            // add a full TrackState entry multi trajectory
-            auto newTip = result.fittedStates.addTrackState(
-                TrackStatePropMask::All, result.currentTip);
+          if (tempUpdateRes.ok()) {
+            updateRes = tempUpdateRes;
+            if (tempTrackStateProxy.chi2() <
+                (tempTrackStateProxy.calibratedSize() == 1
+                     ? sourceLinkSelectionCriteria[0]
+                     : sourceLinkSelectionCriteria[1])) {
+              // add a full TrackState entry multi trajectory
+              auto newTip = result.fittedStates.addTrackState(
+                  TrackStatePropMask::All, result.currentTip);
 
-            ACTS_VERBOSE("Creating track state with tip = " << newTip);
+              ACTS_VERBOSE("Creating track state with tip = " << newTip);
 
-            // Count the number of processedStates, measurements and holes
-            auto tipState =
-                TipState{preTipState.nStates + 1, preTipState.nMeasurements + 1,
-                         preTipState.nHoles};
-            // Record the active tip and its state
-            result.activeTips.emplace(newTip, std::move(tipState));
+              // Count the number of processedStates, measurements and holes
+              auto tipState =
+                  TipState{preTipState.nStates + 1,
+                           preTipState.nMeasurements + 1, preTipState.nHoles};
+              // Record the active tip and its state
+              result.activeTips.emplace(newTip, std::move(tipState));
 
-            // Record the track tips on this surface
-            result.tipsOnCurrentSurface.push_back(newTip);
+              // Count the states on current surface
+              result.nStatesOnSurface++;
 
-            // Now get track state proxy back
-            auto trackStateProxy = result.fittedStates.getTrackState(newTip);
+              // Now get track state proxy back
+              auto trackStateProxy = result.fittedStates.getTrackState(newTip);
 
-            // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = *boundParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
+              // Fill the track state
+              trackStateProxy.predicted() = boundParams.parameters();
+              trackStateProxy.predictedCovariance() = *boundParams.covariance();
+              trackStateProxy.jacobian() = jacobian;
+              trackStateProxy.pathLength() = pathLength;
 
-            // Get and set the type flags
-            auto& typeFlags = trackStateProxy.typeFlags();
-            typeFlags.set(TrackStateFlag::MaterialFlag);
-            typeFlags.set(TrackStateFlag::MeasurementFlag);
-            typeFlags.set(TrackStateFlag::ParameterFlag);
+              // Get and set the type flags
+              auto& typeFlags = trackStateProxy.typeFlags();
+              typeFlags.set(TrackStateFlag::MaterialFlag);
+              typeFlags.set(TrackStateFlag::MeasurementFlag);
+              typeFlags.set(TrackStateFlag::ParameterFlag);
 
-            trackStateProxy.uncalibrated() = it->second;
-            std::visit(
-                [&](const auto& calibrated) {
-                  trackStateProxy.setCalibrated(calibrated);
-                },
-                m_calibrator(trackStateProxy.uncalibrated(),
-                             trackStateProxy.predicted()));
-            trackStateProxy.filtered() = tempTrackStateProxy.filtered();
-            trackStateProxy.filteredCovariance() =
-                tempTrackStateProxy.filteredCovariance();
-            trackStateProxy.chi2() = tempTrackStateProxy.chi2();
+              trackStateProxy.uncalibrated() = it->second;
+              std::visit(
+                  [&](const auto& calibrated) {
+                    trackStateProxy.setCalibrated(calibrated);
+                  },
+                  m_calibrator(trackStateProxy.uncalibrated(),
+                               trackStateProxy.predicted()));
+              trackStateProxy.filtered() = tempTrackStateProxy.filtered();
+              trackStateProxy.filteredCovariance() =
+                  tempTrackStateProxy.filteredCovariance();
+              trackStateProxy.chi2() = tempTrackStateProxy.chi2();
+            }
           }
         }  // end of loop for all source links on this surface
 
         // If the update is successful, set covariance and
-        if (result.tipsOnCurrentSurface.empty()) {
+        if (result.nStatesOnSurface == 0) {
           // add a non-measurement TrackState entry multi trajectory
           // (this allocates storage for components except measurements, we will
           // set them later)
@@ -812,8 +822,8 @@ class TrackFinder {
           // Record the active tip and its state
           result.activeTips.emplace(result.currentTip, std::move(tipState));
 
-          // Record the track tips on this surface
-          result.tipsOnCurrentSurface.push_back(result.currentTip);
+          // Count the states on current surface
+          result.nStatesOnSurface++;
 
           // now get track state proxy back
           auto trackStateProxy =
@@ -841,12 +851,11 @@ class TrackFinder {
           materialInteractor(surface, state, stepper, postUpdate);
         } else {
           ACTS_VERBOSE("Filtering step successful with "
-                       << result.tipsOnCurrentSurface.size()
+                       << result.nStatesOnSurface
                        << " states created on this surface");
 
-          // Update the active 'tip' to point to last track state on this
-          // surface
-          result.currentTip = result.tipsOnCurrentSurface.back();
+          // Update current tip to track state on this surface
+          result.currentTip = result.activeTips.rbegin()->first;
 
           // Update stepping state using filtered parameters after kalman update
           // of last track state created on this surface
@@ -878,8 +887,8 @@ class TrackFinder {
         // Record the active tip and its state
         result.activeTips.emplace(result.currentTip, std::move(tipState));
 
-        // Record the track tips on this surface
-        result.tipsOnCurrentSurface.push_back(result.currentTip);
+        // Count the states on current surface
+        result.nStatesOnSurface++;
 
         // now get track state proxy back
         auto trackStateProxy =
