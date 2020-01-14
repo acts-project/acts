@@ -100,7 +100,6 @@ struct IndexData {
 
   IndexType irefsurface = kInvalid;
   IndexType iprevious = kInvalid;
-  IndexType isister = kInvalid;
   IndexType ipredicted = kInvalid;
   IndexType ifiltered = kInvalid;
   IndexType ismoothed = kInvalid;
@@ -110,7 +109,6 @@ struct IndexData {
   double chi2;
   double pathLength;
   TrackStateType typeFlags;
-  IndexType nchildren = 0;
 
   IndexType iuncalibrated = kInvalid;
   IndexType icalibrated = kInvalid;
@@ -480,19 +478,6 @@ class TrackStateProxy {
   /// Getter for the type flags. Returns a copy of the type flags value.
   /// @return The type flags of this track state
   TrackStateType typeFlags() const { return data().typeFlags; }
-
-  /// Return the index of the 'sister' track state previously created on the
-  /// same surface
-  /// @return The index of the sister track state.
-  size_t sister() const { return data().isister; }
-
-  /// Return whether a track state has 'sister'
-  /// @return Whether it has sister
-  bool hasSister() const { return data().isister != IndexData::kInvalid; }
-
-  /// Return the number of 'children' track states in the track sequence
-  /// @return The number of children
-  size_t numChildren() const { return data().nchildren; }
 
  private:
   // Private since it can only be created by the trajectory.
