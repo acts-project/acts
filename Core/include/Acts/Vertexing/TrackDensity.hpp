@@ -85,6 +85,9 @@ class TrackDensity {
     UpperMap upperMap;
   };
 
+  /// @brief Constructor with config
+  TrackDensity(const Config& cfg) : m_cfg(cfg) {}
+
   /// @brief Add a track to the set being considered
   ///
   /// @param state The track density state
@@ -95,13 +98,30 @@ class TrackDensity {
                 const double d0SignificanceCut,
                 const double z0SignificanceCut) const;
 
-  /// @brief Calculates position of global maximum with Gaussian width
-  /// for density function
+  /// @brief Calculates z position of global maximum with Gaussian width
+  /// for density function.
+  /// Strategy:
+  /// The global maximum must be somewhere near a track.
+  /// Since we can calculate the first and second derivatives, at each point we
+  /// can determine a) whether the function is curved up (minimum) or down
+  /// (maximum) b) the distance to nearest maximum, assuming either Newton
+  /// (parabolic) or Gaussian local behavior.
+  /// For each track where the second derivative is negative, find step to
+  /// nearest maximum, take that step and then do one final refinement. The
+  /// largest density encountered in this procedure (after checking all tracks)
+  /// is considered the maximum.
   ///
   /// @param state The track density state
   ///
   /// @return Pair of position of global maximum and Gaussian width
   std::pair<double, double> globalMaximumWithWidth(State& state) const;
+
+  /// @brief Calculates the z position position of the global maximum
+  ///
+  /// @param state The track density state
+  ///
+  /// @return z position of the global maximum
+  double globalMaximum(State& state) const;
 
   /// @brief Evaluate the density function at the specified
   /// coordinate along the beamline

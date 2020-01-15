@@ -64,18 +64,6 @@ void Acts::TrackDensity::addTrack(State& state, const BoundParameters& trk,
 
 std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
     State& state) const {
-  // strategy:
-  // the global maximum must be somewhere near a track...
-  // since we can calculate the first and second derivatives, at each point we
-  // can determine a) whether the function is curved up (minimum) or down
-  // (maximum) b) the distance to nearest maximum, assuming either Newton
-  // (parabolic) or Gaussian local behavior
-  //
-  // For each track where the second derivative is negative, find step to
-  // nearest maximum Take that step, and then do one final refinement The
-  // largest density encountered in this procedure (after checking all tracks)
-  // is considered the maximum
-  //
   double maximumPosition = 0.0;
   double maximumDensity = 0.0;
   double maxCurvature = 0.;
@@ -113,6 +101,10 @@ std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
 
   return std::make_pair(maximumPosition,
                         std::sqrt(-(maximumDensity / maxCurvature)));
+}
+
+double Acts::TrackDensity::globalMaximum(State& state) const {
+  return globalMaximumWithWidth(state).first;
 }
 
 double Acts::TrackDensity::trackDensity(State& state, double z) const {
