@@ -206,13 +206,13 @@ double Acts::TrackDensity::trackDensity(State& state, double z,
 }
 
 void Acts::TrackDensity::updateMaximum(double newZ, double newValue,
-                                       double secondDerivative, double& maxZ,
+                                       double newSecondDerivative, double& maxZ,
                                        double& maxValue,
                                        double& maxSecondDerivative) const {
   if (newValue > maxValue) {
     maxZ = newZ;
     maxValue = newValue;
-    maxSecondDerivative = secondDerivative;
+    maxSecondDerivative = newSecondDerivative;
   }
 }
 

@@ -26,7 +26,7 @@ class TrackDensity {
         : c0(c0in), c1(c1in), c2(c2in), lowerBound(zMin), upperBound(zMax) {}
 
     // Dummy constructor for binary search
-    TrackEntry(double z) : c0(0), c1(0), c2(0), lowerBound(z), upperBound(z) {}
+    TrackEntry(double z) : lowerBound(z), upperBound(z) {}
 
     // Cached information for a single track
     // z-independent term in exponent
@@ -64,9 +64,9 @@ class TrackDensity {
     }
   };
 
-  typedef std::map<BoundParameters, TrackEntry, predPerigee> TrackMap;
-  typedef std::map<TrackEntry, BoundParameters, predEntryByMax> LowerMap;
-  typedef std::map<TrackEntry, BoundParameters, predEntryByMin> UpperMap;
+  using TrackMap = std::map<BoundParameters, TrackEntry, predPerigee>;
+  using LowerMap = std::map<TrackEntry, BoundParameters, predEntryByMax>;
+  using UpperMap = std::map<TrackEntry, BoundParameters, predEntryByMin>;
 
   /// @brief The Config struct
   struct Config {
@@ -98,8 +98,7 @@ class TrackDensity {
   /// @param d0SignificanceCut Significance cut on d0.
   /// @param z0SignificanceCut Significance cut on z0.
   void addTrack(State& state, const BoundParameters& trk,
-                const double d0SignificanceCut,
-                const double z0SignificanceCut) const;
+                double d0SignificanceCut, double z0SignificanceCut) const;
 
   /// @brief Calculates z position of global maximum with Gaussian width
   /// for density function.

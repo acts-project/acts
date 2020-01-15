@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/TrackDensity.hpp"
 
 namespace Acts {

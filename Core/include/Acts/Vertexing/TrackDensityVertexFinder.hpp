@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
+#include "Acts/Vertexing/VertexFitterConcept.hpp"
 
 namespace Acts {
 
@@ -30,6 +31,11 @@ namespace Acts {
 /// @tparam track_density_t The track density type
 template <typename vfitter_t, typename track_density_t>
 class TrackDensityVertexFinder {
+  // Provided vertex fitter type should comply with the VertexFitterConcept
+  // to ensure providing an input track type InputTrack_t
+  static_assert(VertexFitterConcept<vfitter_t>,
+                "Vertex fitter does not fulfill vertex fitter concept.");
+
   using InputTrack_t = typename vfitter_t::InputTrack_t;
 
  public:
