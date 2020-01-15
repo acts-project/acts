@@ -1,34 +1,3 @@
-if (ACTS_USE_EXTERNAL_NLOHMANN_JSON)
-  message(STATUS "Using external install of nlohmann::json")
-  find_package(nlohmann_json 3.2.0 REQUIRED)
-
-else()
-  message(STATUS "Will build nlohmann::json as part of this build")
-
-  set(_source "https://github.com/nlohmann/json/archive/v3.7.3.tar.gz")
-  set(_md5 "846bbc611ce9ecd7d45d6554679245e1")
-
-  include(FetchContent)
-  FetchContent_Declare(
-    nlohmann_json
-    URL ${_source}
-    URL_MD5 ${_md5}
-  )
-
-  set(JSON_BuildTests OFF CACHE INTERNAL "")
-
-  if(${CMAKE_VERSION} VERSION_LESS "3.14.0") 
-    FetchContent_GetProperties(nlohmann_json)
-    if(NOT nlohmann_json_POPULATED)
-      FetchContent_Populate(nlohmann_json)
-      add_subdirectory(${nlohmann_json_SOURCE_DIR} ${nlohmann_json_BINARY_DIR})
-    endif()
-  else()
-    FetchContent_MakeAvailable(nlohmann_json)
-  endif()
-
-endif()
-
 file(GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 add_library(
