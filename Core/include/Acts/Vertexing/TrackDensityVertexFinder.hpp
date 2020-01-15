@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,21 +19,38 @@ namespace Acts {
 
 /// @class TrackDensityVertexFinder
 ///
-/// TODO: docs
-template <typename vfitter_t>
+/// @brief Finds a vertex seed based on the maximum
+/// of a track density function.
+/// Each track is modelled as a 2d density
+/// function around its d0/z0 perigee parameter values.
+/// The z seed position is then found as the position
+/// of the maximum of all summed track density functions.
+///
+/// @tparam vfitter_t The vertex fitter type (needed to fulfill concept)
+/// @tparam track_density_t The track density type
+template <typename vfitter_t, typename track_density_t>
 class TrackDensityVertexFinder {
+  using InputTrack_t = typename vfitter_t::InputTrack_t;
 
-
-  /// @struct Config Configuration struct
+ public:
+  /// @brief The Config struct
   struct Config {
-    
+    // The track density estimator
+    track_density_t trackDensityEstimator;
+    // Run the vertex finder with width information
+    bool findWithWidth = false;
   };
-
 
   /// @brief TODO
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<InputTrack_t>& trackVector,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+
+  /// Default constructor
+  TrackDensityVertexFinder() = default;
+
+  /// Constructor with config
+  TrackDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
 
  private:
   Config m_cfg;
