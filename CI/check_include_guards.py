@@ -6,6 +6,7 @@ import os
 from glob import glob
 from concurrent.futures import ProcessPoolExecutor
 import re
+import fnmatch
 import sys
 
 
@@ -76,6 +77,7 @@ Input files: either file path, dir path (will glob for headers) or custom glob p
     p.add_argument("--fail-global", "-g", action="store_true", help="Fail on global include guards")
     p.add_argument("--quiet-local", "-ql", action="store_true")
     p.add_argument("--quiet-global", "-qg", action="store_true")
+    p.add_argument("--exclude", "-e", action="append", default=[])
                    
     args = p.parse_args()
 
@@ -94,6 +96,8 @@ Input files: either file path, dir path (will glob for headers) or custom glob p
     nglobal = 0
 
     for h in headers: 
+        if any([fnmatch(h, e) for e in args.exclude]):
+            continue
         valid_local, valid_global, errbuf = check_include_guards(h)
 
         if not valid_local:
