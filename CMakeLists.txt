@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.11)
 
 # LCG sets CPATH, which gets treated like -I by the compiler. We want to ignore
 # warnings from libraries, by unsetting it here, it gets processed by the usual
@@ -26,6 +26,7 @@ option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
 option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
 option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
 option(ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
+option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json" ON)
 option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 
 # all other compile-time parameters must be defined here for clear visibility
@@ -62,6 +63,16 @@ if(ACTS_BUILD_DD4HEP_PLUGIN)
 endif()
 if(ACTS_BUILD_TGEO_PLUGIN)
   find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
+endif()
+if(ACTS_BUILD_JSON_PLUGIN)
+  if(ACTS_USE_BUNDLED_NLOHMANN_JSON)
+    message(STATUS "Will build nlohmann::json as part of this build")
+    set(JSON_BuildTests OFF CACHE INTERNAL "")
+    add_subdirectory(thirdparty/nlohmann_json)
+  else()
+    message(STATUS "Using external install of nlohmann::json")
+    find_package(nlohmann_json 3.2.0 REQUIRED)
+  endif()
 endif()
 
 # core library and plugins

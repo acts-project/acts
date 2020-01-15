@@ -41,14 +41,14 @@ license:
   before_script: []
   script:
     - apk add --no-cache git
-    - CI/check_license.py .
+    - CI/check_license.py . --exclude "*thirdparty/*"
 
 include_guards:
   stage: check
   image: python:alpine3.6
   before_script: []
   script:
-    - CI/check_include_guards.py . --fail-global
+    - CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
 
 # job templates w/ default settings
 #
@@ -305,7 +305,7 @@ clang_tidy:
     # contain LCG to only where needed
     - /bin/sh -c "set +e && source ../CI/setup_lcg96.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on"
     - cd ..
-    - run-clang-tidy.py -p build -header-filter=.*pp -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
+    - run-clang-tidy.py -p build -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
     - virtualenv civenv
     - source civenv/bin/activate
     - pip install -r CI/requirements.txt

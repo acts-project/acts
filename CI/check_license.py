@@ -8,7 +8,7 @@ import difflib
 from datetime import datetime
 from fnmatch import fnmatch
 
-EXCLUDE = ["./Plugins/Json/include/Acts/Plugins/Json/lib/*"]
+EXCLUDE = []
 
 
 class bcolors:
