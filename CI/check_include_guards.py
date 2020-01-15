@@ -6,7 +6,7 @@ import os
 from glob import glob
 from concurrent.futures import ProcessPoolExecutor
 import re
-import fnmatch
+from fnmatch import fnmatch
 import sys
 
 
