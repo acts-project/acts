@@ -85,7 +85,10 @@ class TrackDensity {
     UpperMap upperMap;
   };
 
-  /// @brief Constructor with config
+  /// Default constructor
+  TrackDensity() = default;
+
+  /// Constructor with config
   TrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief Add a track to the set being considered

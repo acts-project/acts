@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,27 +9,68 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/TrackDensity.hpp"
 
 namespace Acts {
 
+/// @class GaussianTrackDensity
+///
+/// @brief Class to model tracks as Gaussian shaped density functions based on
+/// their d0 and z0 perigee parameters
+class GaussianTrackDensity {
+ public:
+  /// @brief The State struct
+  struct State {
+    // The track density
+    // Defaulted to Gaussian shaped density function
+    TrackDensity trackDensity;
 
-class GaussianTrackDensity{
+    // The track density state
+    TrackDensity::State trackDensityState;
+  };
 
-struct State{
+  /// @brief The Config struct
+  struct Config {
+    // Maximum d0 impact parameter significance to use a track
+    double d0MaxSignificance = 3.5;
 
-	class TrackDensity{
+    // Maximum z0 impact parameter significance to use a track
+    double z0MaxSignificance = 12.;
+  };
 
-	}; // class track density
-}; // state
+  /// Default constructor
+  GaussianTrackDensity() = default;
 
+  /// Constructor with config
+  GaussianTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
-}; // class Gaussian track density
+  /// @brief Calculates the global maximum
+  ///
+  /// @param trackList The list of tracks
+  /// @param state The GaussianTrackDensity state
+  ///
+  /// @return The z position of the maximum
+  double globalMaximum(const std::vector<Acts::BoundParameters>& trackList,
+                       State& state) const;
 
+  /// @brief Calculates the global maximum with width
+  ///
+  /// @param trackList The list of tracks
+  /// @param state The GaussianTrackDensity state
+  ///
+  /// @return The z position of the maximum and its width
+  std::pair<double, double> globalMaximumWithWidth(
+      const std::vector<Acts::BoundParameters>& trackList, State& state) const;
 
-} // namespace acts
+ private:
+  /// The configuration
+  Config m_cfg;
 
-
-#include "GaussianTrackDensity.ipp"
+  /// @brief Adds tracks based on a significance cut
+  ///
+  /// @param trackList The list of tracks
+  /// @param state The GaussianTrackDensity state
+  void addTracks(const std::vector<Acts::BoundParameters>& trackList,
+                 State& state) const;
+};
+}  // namespace Acts
