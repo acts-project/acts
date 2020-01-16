@@ -14,7 +14,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/EventData/TrackStateSorters.hpp"
-#include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -26,6 +25,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/TrackFinder/TrackFinderError.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -370,9 +370,8 @@ class TrackFinder {
         }
       }
       // No found tracks is taken as an error
-      // @TODO: add specific error type for CKF
       if (result.forwardFiltered and result.trackTips.empty()) {
-        result.result = Result<void>(KalmanFitterError::PropagationInVain);
+        result.result = Result<void>(TrackFinderError::NoTracksFound);
       }
 
       // If there are found tracks (one single trajectory in SKF mode),
@@ -561,7 +560,7 @@ class TrackFinder {
         tempTrackStateProxy.pathLength() = pathLength;
 
         // Initialize the update result
-        Result<void> updateRes = KalmanFitterError::UpdateFailed;
+        Result<void> updateRes = TrackFinderError::UpdateFailed;
 
         // Get all the source links on this surface
         auto sourcelinks = inputMeasurements.equal_range(surface);
@@ -762,7 +761,7 @@ class TrackFinder {
         tempTrackStateProxy.pathLength() = pathLength;
 
         // Initialize the update result
-        Result<void> updateRes = KalmanFitterError::UpdateFailed;
+        Result<void> updateRes = TrackFinderError::UpdateFailed;
 
         // Get all the source links on this surface
         auto sourcelinks = inputMeasurements.equal_range(surface);
@@ -1186,7 +1185,12 @@ class TrackFinder {
 
     /// It could happen that propagation reaches path limit or max step size
     /// before the track finding is finished.
-    /// @TODO: add error type for such case
+    /// @TODO: tune source link selector or propagation options to suppress this
+    if (trackFinderResult.result.ok() and
+        not trackFinderResult.forwardFiltered) {
+      trackFinderResult.result =
+          Result<void>(TrackFinderError::PropagationReachesLimit);
+    }
 
     if (!trackFinderResult.result.ok()) {
       return trackFinderResult.result.error();
@@ -1275,6 +1279,14 @@ class TrackFinder {
 
     /// Get the result of the track finding
     auto trackFinderResult = propRes.template get<TrackFinderResult>();
+
+    /// It could happen that propagation reaches path limit or max step size
+    /// before the track finding is finished.
+    if (trackFinderResult.result.ok() and
+        not trackFinderResult.forwardFiltered) {
+      trackFinderResult.result =
+          Result<void>(TrackFinderError::PropagationReachesLimit);
+    }
 
     if (!trackFinderResult.result.ok()) {
       return trackFinderResult.result.error();
