@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
@@ -75,12 +74,6 @@ class TrackDensityVertexFinder {
   ///
   /// @param InputTrack_t object to extract track parameters from
   std::function<BoundParameters(InputTrack_t)> m_extractParameters;
-
-  /// Logging instance
-  std::unique_ptr<const Logger> m_logger;
-
-  /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts
