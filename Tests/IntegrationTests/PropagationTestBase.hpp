@@ -384,9 +384,9 @@ BOOST_DATA_TEST_CASE(propagation_to_line_,
   ++itest;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
+  double x = 1.;
+  double y = 0.;
+  double z = 0.;
   double px = pT * cos(phi);
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
@@ -463,19 +463,29 @@ BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
                      charge, plimit) {
   // covariance check for straight line stepper
   CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear(rspropagator, pT, phi, theta, charge, plimit),
-      covariance_curvilinear(spropagator, pT, phi, theta, charge, plimit),
+      covariance_curvilinear<FreeParameters>(rspropagator, start, plimit),
+      covariance_curvilinear<FreeParameters>(spropagator, start, plimit),
       1e-3);
   // covariance check for eigen stepper
   CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear(repropagator, pT, phi, theta, charge, plimit),
-      covariance_curvilinear(epropagator, pT, phi, theta, charge, plimit),
+      covariance_curvilinear<FreeParameters>(repropagator, start, plimit),
+      covariance_curvilinear<FreeParameters>(epropagator, start, plimit),
       1e-3);
-  // covariance check fo atlas stepper
-  CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear(rapropagator, pT, phi, theta, charge, plimit),
-      covariance_curvilinear(apropagator, pT, phi, theta, charge, plimit),
-      1e-3);
+      
+  //~ ///
+  //~ /// Free to Curvilinear Tests
+  //~ ///
+  
+  //~ // covariance check for straight line stepper
+  //~ CHECK_CLOSE_COVARIANCE(
+      //~ covariance_curvilinear<FreeParameters>(rspropagator, start, plimit),
+      //~ covariance_curvilinear<FreeParameters>(spropagator, start, plimit),
+      //~ 1e-3);
+  //~ // covariance check for eigen stepper
+  //~ CHECK_CLOSE_COVARIANCE(
+      //~ covariance_curvilinear<FreeParameters>(repropagator, start, plimit),
+      //~ covariance_curvilinear<FreeParameters>(epropagator, start, plimit),
+      //~ 1e-3);
 }
 
 // test correct covariance transport from disc to disc

@@ -113,7 +113,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   // Wiggle each dimension individually
   for (unsigned int i = 0; i < eBoundSize; i++) {
     derivatives[i] =
-        wiggleDimension(opts, start, i, target, nominalParameters, deviations);
+        wiggleDimension(opts, start, i, nominalParameters, deviations, target);
   }
   // Exchange the result by Ridders Covariance
   const FullBoundParameterSet& parSet =
@@ -162,13 +162,13 @@ bool Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
 }
 
 template <typename propagator_t>
-template <typename options_t, typename parameters_t>
+template <typename options_t, typename start_parameters_t>
 std::vector<Acts::BoundVector>
 Acts::RiddersPropagator<propagator_t>::wiggleDimension(
-    const options_t& options, const parameters_t& startPars,
-    const unsigned int param, const Surface& target,
-    const Acts::BoundVector& nominal,
-    const std::vector<double>& deviations) const {
+    const options_t& options, const start_parameters_t& startPars,
+    const unsigned int param,
+    const BoundVector& nominal,
+    const std::vector<double>& deviations, const Surface& target) const {
   // Storage of the results
   std::vector<BoundVector> derivatives;
   derivatives.reserve(deviations.size());

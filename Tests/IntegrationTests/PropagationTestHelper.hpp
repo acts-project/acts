@@ -314,9 +314,8 @@ std::pair<Vector3D, double> to_surface(const Propagator_type& propagator,
   return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
 }
 
-template <typename Propagator_type>
-Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
-                                  double phi, double theta, double charge,
+template <typename end_parameters_t, typename Propagator_type, typename start_parameters_t>
+auto covariance_curvilinear(const Propagator_type& propagator, start_parameters_t start,
                                   double plimit, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
@@ -327,36 +326,9 @@ Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
   options.debug = debug;
   options.tolerance = 1e-9;
 
-  // define start parameters
-  double x = 1.;
-  double y = 0.;
-  double z = 0.;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = charge;
-  double time = 0.;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-
-  Covariance cov;
-  // take some major correlations (off-diagonals)
-  // clang-format off
-  cov <<
-   10_mm, 0, 0.123, 0, 0.5, 0,
-   0, 10_mm, 0, 0.162, 0, 0,
-   0.123, 0, 0.1, 0, 0, 0,
-   0, 0.162, 0, 0.1, 0, 0,
-   0.5, 0, 0, 0, 1_e / 10_GeV, 0,
-   0, 0, 0, 0, 0, 1_us;
-  // clang-format on
-
-  // do propagation of the start parameters
-  CurvilinearParameters start(cov, pos, mom, q, time);
-  CurvilinearParameters start_wo_c(std::nullopt, pos, mom, q, time);
-
-  const auto result = propagator.propagate(start, options).value();
+  const auto result = propagator.template propagate<end_parameters_t>(start, options).value();
   const auto& tp = result.endParameters;
+std::cout << "cov\n" << *(tp->covariance()) << std::endl;
 
   return *(tp->covariance());
 }
@@ -419,8 +391,6 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
   auto startSurface =
       Surface::makeShared<StartSurfaceType>(ssTransform, nullptr);
   BoundParameters start(tgContext, cov, pos, mom, q, time, startSurface);
-  BoundParameters start_wo_c(tgContext, std::nullopt, pos, mom, q, time,
-                             startSurface);
 
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;

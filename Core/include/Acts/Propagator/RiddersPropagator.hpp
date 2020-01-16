@@ -128,13 +128,15 @@ class RiddersPropagator {
   /// start parameters the slope
   ///
   /// @tparam options_t PropagatorOptions object
-  /// @tparam parameters+t Type of the parameters to start the propagation with
+  /// @tparam parameters_t Type of the parameters to start the propagation with
+  /// @tparam nominal_vector_t Nominal vector of the propagation
   ///
   /// @param [in] options Options do define how to wiggle
   /// @param [in] startPart Start parameters that are modified
   /// @param [in] param Index to get the parameter that will be modified
-  /// @param [in] target Target surface
   /// @param [in] nominal Nominal end parameters
+  /// @param [in] deviations Deviations from the start parameters that will be performed
+  /// @param [in] target Target surface
   ///
   /// @return Vector containing each slope
   template <typename options_t, typename parameters_t>
