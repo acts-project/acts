@@ -40,8 +40,8 @@ namespace Acts {
 
 /// @brief Options struct how the Fitter is called
 ///
-/// It contains the context of the fitter call and the optional
-/// surface where to express the fit result
+/// It contains the context of the track finder call and the optional
+/// surface where to express the track finding/fitting result
 ///
 /// @note the context objects must be provided
 struct TrackFinderOptions {
@@ -50,10 +50,11 @@ struct TrackFinderOptions {
 
   /// PropagatorOptions with context
   ///
-  /// @param gctx The goemetry context for this fit
-  /// @param mctx The magnetic context for this fit
-  /// @param cctx The calibration context for this fit
-  /// @param rSurface The reference surface for the fit to be expressed at
+  /// @param gctx The goemetry context for this track finding
+  /// @param mctx The magnetic context for this track finding
+  /// @param cctx The calibration context for this track finding
+  /// @param rSurface The reference surface for the eventual track fitting to be
+  /// expressed at
   TrackFinderOptions(std::reference_wrapper<const GeometryContext> gctx,
                      std::reference_wrapper<const MagneticFieldContext> mctx,
                      std::reference_wrapper<const CalibrationContext> cctx,
@@ -89,23 +90,24 @@ struct TrackFinderOptions {
 
 template <typename source_link_t>
 struct TrackFinderResult {
+  /// Struct to keep track of track quality
   struct TipState {
-    size_t nStates;
-    size_t nMeasurements;
-    size_t nHoles;
+    size_t nStates = 0;
+    size_t nMeasurements = 0;
+    size_t nHoles = 0;
   };
 
   // Fitted states that the actor has handled.
   MultiTrajectory<source_link_t> fittedStates;
 
   // The indices of the 'tip' of the tracks stored in multitrajectory.
-  std::vector<size_t> trackTips;
+  std::vector<size_t> trackTips = {};
 
   // The Parameters at the provided surface for separate tracks
-  std::map<size_t, BoundParameters> fittedParameters;
+  std::map<size_t, BoundParameters> fittedParameters = {};
 
   // The indices of the 'tip' of the unfinished tracks
-  std::map<size_t, TipState> activeTips;
+  std::map<size_t, TipState> activeTips = {};
 
   // The index of track state being handled
   size_t currentTip = SIZE_MAX;
@@ -148,7 +150,8 @@ struct TrackFinderResult {
 /// given to the Actor for further use:
 /// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
-/// - The Smoother is called at the end of the forward fit by the Actor.
+/// - The Smoother is called at the end of the forward track finding by the
+/// Actor.
 /// - The Calibrator is a dedicated calibration algorithm that allows
 ///   to calibrate measurements using track information, this could be
 ///    e.g. sagging for wires, module deformations, etc.
@@ -233,7 +236,7 @@ class TrackFinder {
     /// Broadcast the result_type
     using result_type = TrackFinderResult<source_link_t>;
 
-    /// Broadcast the track info type
+    /// Broadcast the track tip state type
     using TipState = typename result_type::TipState;
 
     /// The target surface
@@ -252,7 +255,6 @@ class TrackFinder {
     bool runCombKalmanFilter = true;
 
     /// The source link selection criteria
-    //@TODO: add source link selector
     std::array<double, 2> sourceLinkSelectionCriteria = {5, 8};
 
     /// @brief Track finder actor operation
@@ -272,7 +274,8 @@ class TrackFinder {
       // - Only when track states are not set
       if (!result.initialized) {
         // -> Move the TrackState vector
-        // -> Feed the KalmanSequencer with the measurements to be fitted
+        // -> Feed the KalmanSequencer with the measurements to peform track
+        // finding
         ACTS_VERBOSE("Initializing");
         initialize(state, stepper, result);
         result.initialized = true;
@@ -305,6 +308,7 @@ class TrackFinder {
       // -> when all track states have been handled or the
       // navigation is breaked in SKF mode
       if (runCombKalmanFilter) {
+        //@TODO: add stop condition for bad-quality branches
         if (state.navigation.navigationBreak and not result.forwardFiltered) {
           // Record the tips on current surface as trajectory entry indices
           // Taking advantage of fact that those tips are consecutive in list of
@@ -315,6 +319,10 @@ class TrackFinder {
             auto tipState = rit->second;
             if (tipState.nMeasurements > 0) {
               // Record if there are measurements
+              ACTS_VERBOSE("Found track with entry index = "
+                           << tip << " and " << tipState.nMeasurements
+                           << " measurements"
+                           << " and " << tipState.nHoles << " holes");
               result.trackTips.push_back(tip);
             }
             // Remove the tip from list of active tips
@@ -330,74 +338,92 @@ class TrackFinder {
                          << result.currentTip);
             reset(state, stepper, result);
           } else {
-            ACTS_VERBOSE("Finish forward filtering");
+            ACTS_VERBOSE("Finish forward track finding with "
+                         << result.trackTips.size() << " found tracks");
             result.forwardFiltered = true;
           }
         }
       } else {
         if (not result.activeTips.empty()) {
-          // There should only one active tip which is the same as
+          // There should be only one active tip which is the same as
           // current tip
-          auto tipState = result.activeTips.rbegin()->second;
+          auto rit = result.activeTips.rbegin();
+          auto tip = rit->first;
+          auto tipState = rit->second;
           if ((tipState.nMeasurements == multimapKeyCount(inputMeasurements) or
-               (tipState.nMeasurements > 0 and
-                state.navigation.navigationBreak)) and
+               state.navigation.navigationBreak) and
               not result.forwardFiltered) {
             // Record the trajectory entry point (only single trajectory in this
             // mode)
-            result.trackTips.push_back(result.currentTip);
-            ACTS_VERBOSE("Finish forward filtering");
+            if (tipState.nMeasurements > 0) {
+              // Record if there are measurements
+              ACTS_VERBOSE("Found track with entry index = "
+                           << tip << " and " << tipState.nMeasurements
+                           << " measurements"
+                           << " and " << tipState.nHoles << " holes");
+              result.trackTips.push_back(result.currentTip);
+            }
+            ACTS_VERBOSE("Finish forward track finding with "
+                         << result.trackTips.size() << " found tracks");
             result.forwardFiltered = true;
           }
         }
       }
-
-      // Finalization
-      // Run smoothing for the found trajectory indexed with iSmoothed (one
-      // single trajectory in SKF mode):
-      if (result.forwardFiltered and not result.smoothed) {
-        result.currentTip = result.trackTips.at(result.iSmoothed);
-        ACTS_VERBOSE("Finalize/run smoothing for track "
-                     << result.iSmoothed
-                     << " with entry index = " << result.currentTip);
-        // -> Sort the track states (as now the path length is set)
-        // -> Call the smoothing
-        // -> Set a stop condition when all track states have been handled
-        auto res = finalize(state, stepper, result);
-        if (!res.ok()) {
-          ACTS_ERROR("Error in finalize: " << res.error());
-          result.result = res.error();
-          //@TODO: smoothing failure for one track should not affect another?
-        }
-        result.smoothed = true;
+      // No found tracks is taken as an error
+      // @TODO: add specific error type for CKF
+      if (result.forwardFiltered and result.trackTips.empty()) {
+        result.result = Result<void>(KalmanFitterError::PropagationInVain);
       }
 
-      // Post-finalization:
-      // - Progress to target/reference surface and built the final track
-      // parameters for found trajectory indexed with iSmoothed
-      if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
-        ACTS_VERBOSE("Completing the track "
-                     << result.iSmoothed
-                     << " with entry index = " << result.currentTip);
-        // Transport & bind the parameter to the final surface
-        auto fittedState =
-            stepper.boundState(state.stepping, *targetSurface, true);
-        // Assign the fitted parameters
-        result.fittedParameters.emplace(result.currentTip,
-                                        std::get<BoundParameters>(fittedState));
-        // If there are more trajectories to handle
-        // -> set the targetReached status to false
-        // -> set the smoothed status to false
-        // -> update the index of track to the smoothed
-        if (result.iSmoothed < result.trackTips.size() - 1) {
-          state.navigation.targetReached = false;
-          result.smoothed = false;
-          result.iSmoothed++;
-        } else {
-          // Break the navigation for stopping the Propagation
-          state.navigation.navigationBreak = true;
-          ACTS_VERBOSE("Finish track finding. " << result.trackTips.size()
-                                                << " tracks are found.");
+      // If there are found tracks (one single trajectory in SKF mode),
+      // iterate over the found tracks for smoothing and getting the fitted
+      // parameter. This needs to be accomplished in different propagation steps
+      if (result.forwardFiltered and not result.trackTips.empty()) {
+        // Finalization
+        // - Run smoothing for found track indexed with iSmoothed
+        if (not result.smoothed) {
+          result.currentTip = result.trackTips.at(result.iSmoothed);
+          ACTS_VERBOSE("Finalize/run smoothing for track "
+                       << result.iSmoothed
+                       << " with entry index = " << result.currentTip);
+          // -> Sort the track states (as now the path length is set)
+          // -> Call the smoothing
+          // -> Set a stop condition when all track states have been handled
+          auto res = finalize(state, stepper, result);
+          if (!res.ok()) {
+            ACTS_ERROR("Error in finalize: " << res.error());
+            result.result = res.error();
+          }
+          result.smoothed = true;
+        }
+
+        // Post-finalization:
+        // - Progress to target/reference surface and built the final track
+        // parameters for found track indexed with iSmoothed
+        if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
+          ACTS_VERBOSE("Completing the track "
+                       << result.iSmoothed
+                       << " with entry index = " << result.currentTip);
+          // Transport & bind the parameter to the final surface
+          auto fittedState =
+              stepper.boundState(state.stepping, *targetSurface, true);
+          // Assign the fitted parameters
+          result.fittedParameters.emplace(
+              result.currentTip, std::get<BoundParameters>(fittedState));
+          // If there are more trajectories to handle:
+          // -> set the targetReached status to false
+          // -> set the smoothed status to false
+          // -> update the index of track to be smoothed
+          if (result.iSmoothed < result.trackTips.size() - 1) {
+            state.navigation.targetReached = false;
+            result.smoothed = false;
+            result.iSmoothed++;
+            // To avoid meaningless navigation target call
+            state.stepping.stepSize =
+                ConstrainedStep(state.options.maxStepSize);
+          } else {
+            ACTS_VERBOSE("Finish track finding and fitting");
+          }
         }
       }
     }
@@ -458,8 +484,13 @@ class TrackFinder {
       materialInteractor(state.navigation.startSurface, state, stepper);
     }
 
-    /// @brief Track finder actor operation : update
-    ///
+    /// @brief Track finder actor operation :
+    /// - filtering for all measurement(s) on surface
+    /// - store track state with the best fitting quality in multiTrajectory
+    /// - update propagator state to the best track state
+    /// @TODO: merge this in combinatorialFilter (they just need different
+    /// source link selector)
+    //
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
     ///
@@ -674,7 +705,10 @@ class TrackFinder {
       return Result<void>::success();
     }
 
-    /// @brief Track finder actor operation : update for multi-state
+    /// @brief Track finder actor operation :
+    /// - filtering for all measurement(s) on surface
+    /// - store selected track states in multiTrajectory
+    /// - update propagator state to the last selected track state
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
@@ -750,6 +784,8 @@ class TrackFinder {
 
           // If the update is successful and chi2 satisties a given criteria,
           // create new track state on ths surface
+          // @TODO: add source link selector (allow detector-specific chisq
+          // criteria and maximum branches)
           auto tempUpdateRes = m_updater(state.geoContext, tempTrackStateProxy);
           if (tempUpdateRes.ok()) {
             updateRes = tempUpdateRes;
@@ -758,10 +794,13 @@ class TrackFinder {
                      ? sourceLinkSelectionCriteria[0]
                      : sourceLinkSelectionCriteria[1])) {
               // add a full TrackState entry multi trajectory
+              // @TODO: avoid storage duplication for predicted parameter and
+              // measurement
               auto newTip = result.fittedStates.addTrackState(
                   TrackStatePropMask::All, result.currentTip);
 
-              ACTS_VERBOSE("Creating track state with tip = " << newTip);
+              ACTS_VERBOSE(
+                  "Creating measurement track state with tip = " << newTip);
 
               // Count the number of processedStates, measurements and holes
               auto tipState =
@@ -804,82 +843,88 @@ class TrackFinder {
         }  // end of loop for all source links on this surface
 
         // If the update is successful, set covariance and
-        if (result.nStatesOnSurface == 0) {
-          // add a non-measurement TrackState entry multi trajectory
-          // (this allocates storage for components except measurements, we will
-          // set them later)
-          result.currentTip = result.fittedStates.addTrackState(
-              ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated),
-              result.currentTip);
-
-          ACTS_VERBOSE("Creating track state with tip = " << result.currentTip);
-
-          // Count the number of processedStates, measurements and holes
-          auto tipState =
-              TipState{preTipState.nStates + 1, preTipState.nMeasurements,
-                       preTipState.nHoles + 1};
-          // Record the active tip and its state
-          result.activeTips.emplace(result.currentTip, std::move(tipState));
-
-          // Count the states on current surface
-          result.nStatesOnSurface++;
-
-          // now get track state proxy back
-          auto trackStateProxy =
-              result.fittedStates.getTrackState(result.currentTip);
-
-          // Set the surface
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-          // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = *boundParams.covariance();
-          trackStateProxy.jacobian() = jacobian;
-          trackStateProxy.pathLength() = pathLength;
-          trackStateProxy.filtered() = trackStateProxy.predicted();
-          trackStateProxy.filteredCovariance() =
-              trackStateProxy.predictedCovariance();
-
-          // Set the track state flags
-          auto& typeFlags = trackStateProxy.typeFlags();
-          typeFlags.set(TrackStateFlag::MaterialFlag);
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-          typeFlags.set(TrackStateFlag::HoleFlag);
-
-          // Update state and stepper with post material effects
-          materialInteractor(surface, state, stepper, postUpdate);
+        if (!updateRes.ok()) {
+          ACTS_ERROR("Update step failed: " << updateRes.error());
+          return updateRes.error();
         } else {
-          ACTS_VERBOSE("Filtering step successful with "
-                       << result.nStatesOnSurface
-                       << " states created on this surface");
+          if (result.nStatesOnSurface > 0) {
+            ACTS_VERBOSE("Filtering step successful with "
+                         << result.nStatesOnSurface
+                         << " compatible measurements found");
 
-          // Update current tip to track state on this surface
-          result.currentTip = result.activeTips.rbegin()->first;
+            // Update current tip to track state on this surface
+            result.currentTip = result.activeTips.rbegin()->first;
 
-          // Update stepping state using filtered parameters after kalman update
-          // of last track state created on this surface
-          auto filteredParams =
-              result.fittedStates.getTrackState(result.currentTip)
-                  .filteredParameters(state.options.geoContext);
-          stepper.update(state.stepping, filteredParams);
-          ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
-                       << filteredParams.parameters().transpose()
-                       << " of track state with tip = " << result.currentTip);
+            // Update stepping state using filtered parameters after kalman
+            // update of last track state created on this surface
+            auto filteredParams =
+                result.fittedStates.getTrackState(result.currentTip)
+                    .filteredParameters(state.options.geoContext);
+            stepper.update(state.stepping, filteredParams);
+            ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
+                         << filteredParams.parameters().transpose()
+                         << " of track state with tip = " << result.currentTip);
 
-          // Update state and stepper with post material effects
-          materialInteractor(surface, state, stepper, postUpdate);
+            // Update state and stepper with post material effects
+            materialInteractor(surface, state, stepper, postUpdate);
+          } else {
+            // add a hole TrackState entry multi trajectory
+            //@TODO: record a few measurements as outliers
+            result.currentTip = result.fittedStates.addTrackState(
+                ~(TrackStatePropMask::Uncalibrated |
+                  TrackStatePropMask::Calibrated),
+                result.currentTip);
+
+            ACTS_VERBOSE(
+                "No compatible measurements found. Creating hole track state "
+                "with tip = "
+                << result.currentTip);
+
+            // Count the number of processedStates, measurements and holes
+            auto tipState =
+                TipState{preTipState.nStates + 1, preTipState.nMeasurements,
+                         preTipState.nHoles + 1};
+            // Record the active tip and its state
+            result.activeTips.emplace(result.currentTip, std::move(tipState));
+
+            // Count the states on current surface
+            result.nStatesOnSurface++;
+
+            // now get track state proxy back
+            auto trackStateProxy =
+                result.fittedStates.getTrackState(result.currentTip);
+
+            // Set the surface
+            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+
+            // Fill the track state
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = *boundParams.covariance();
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+            trackStateProxy.filtered() = trackStateProxy.predicted();
+            trackStateProxy.filteredCovariance() =
+                trackStateProxy.predictedCovariance();
+
+            // Set the track state flags
+            auto& typeFlags = trackStateProxy.typeFlags();
+            typeFlags.set(TrackStateFlag::MaterialFlag);
+            typeFlags.set(TrackStateFlag::ParameterFlag);
+            typeFlags.set(TrackStateFlag::HoleFlag);
+
+            // Update state and stepper with post material effects
+            materialInteractor(surface, state, stepper, postUpdate);
+          }
         }
       } else {
         // add a non-measurement TrackState entry multi trajectory
-        // (this allocates storage for components except measurements, we will
-        // set them later)
         result.currentTip = result.fittedStates.addTrackState(
             ~(TrackStatePropMask::Uncalibrated |
               TrackStatePropMask::Calibrated),
             result.currentTip);
 
-        ACTS_VERBOSE("Creating track state with tip = " << result.currentTip);
+        ACTS_VERBOSE("Creating non-measurement track state with tip = "
+                     << result.currentTip);
 
         // Count the number of processedStates, measurements and holes
         auto tipState = TipState{preTipState.nStates + 1,
@@ -999,9 +1044,6 @@ class TrackFinder {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
                           result_type& result) const {
-      // Remember you smoothed the track states
-      // result.smoothed = true;
-
       // Screen output for debugging
       if (logger().doPrint(Logging::VERBOSE)) {
         // need to count track states
@@ -1079,10 +1121,11 @@ class TrackFinder {
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
-  /// @param tfOptions TrackFinderOptions steering the fit
-  /// @note The input measurements are given in the form of @c SourceLinks. It's
+  /// @param tfOptions TrackFinderOptions steering the track finding
+  /// @note The input measurements are given in the form of @c SourceLinks.
+  /// It's
   /// @c calibrator_t's job to turn them into calibrated measurements used in
-  /// the fit.
+  /// the track finding.
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
@@ -1141,12 +1184,9 @@ class TrackFinder {
     /// Get the result of the track finder
     auto trackFinderResult = propRes.template get<TrackFinderResult>();
 
-    /// It could happen that the track finder ends in zero found tracks.
-    /// The result gets meaningless so such case is regarded as a failure.
-    if (trackFinderResult.result.ok() and trackFinderResult.trackTips.empty()) {
-      trackFinderResult.result =
-          Result<void>(KalmanFitterError::PropagationInVain);
-    }
+    /// It could happen that propagation reaches path limit or max step size
+    /// before the track finding is finished.
+    /// @TODO: add error type for such case
 
     if (!trackFinderResult.result.ok()) {
       return trackFinderResult.result.error();
@@ -1166,11 +1206,12 @@ class TrackFinder {
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
-  /// @param tfOptions TrackFinderOptions steering the fit
+  /// @param tfOptions TrackFinderOptions steering the track finding
   /// @param sSequence surface sequence used to initialize a DirectNavigator
-  /// @note The input measurements are given in the form of @c SourceLinks. It's
+  /// @note The input measurements are given in the form of @c SourceLinks.
+  /// It's
   /// @c calibrator_t's job to turn them into calibrated measurements used in
-  /// the fit.
+  /// the track finding.
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
@@ -1223,7 +1264,7 @@ class TrackFinder {
         propOptions.actionList.template get<DirectNavigator::Initializer>();
     dInitializer.surfaceSequence = sSequence;
 
-    // Run the fitter
+    // Run the track finder
     auto result = m_propagator.template propagate(sParameters, propOptions);
 
     if (!result.ok()) {
@@ -1232,15 +1273,8 @@ class TrackFinder {
 
     const auto& propRes = *result;
 
-    /// Get the result of the fit
+    /// Get the result of the track finding
     auto trackFinderResult = propRes.template get<TrackFinderResult>();
-
-    /// It could happen that the track finder ends in zero found tracks.
-    /// The result gets meaningless so such case is regarded as a failure.
-    if (trackFinderResult.result.ok() and trackFinderResult.trackTips.empty()) {
-      trackFinderResult.result =
-          Result<void>(KalmanFitterError::PropagationInVain);
-    }
 
     if (!trackFinderResult.result.ok()) {
       return trackFinderResult.result.error();
