@@ -63,7 +63,7 @@ class StraightLineStepper {
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
           q((par.charge() != 0.) ? par.charge() : 1.),
-          t0(par.time()),
+          t(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -107,12 +107,8 @@ class StraightLineStepper {
     /// Save the charge: neutral as default for SL stepper
     double q = 0.;
 
-    /// @note The time is split into a starting and a propagated time to avoid
-    /// machine precision related errors
-    /// Starting time
-    const double t0;
     /// Propagated time
-    double dt = 0.;
+    double t = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -173,7 +169,7 @@ class StraightLineStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.t0 + state.dt; }
+  double time(const State& state) const { return state.t; }
 
   /// Overstep limit
   ///
@@ -330,7 +326,7 @@ class StraightLineStepper {
     const auto dtds = std::hypot(1., state.options.mass / state.stepping.p);
     // Update the track parameters according to the equations of motion
     state.stepping.pos += h * state.stepping.dir;
-    state.stepping.dt += h * dtds;
+    state.stepping.t += h * dtds;
     // Propagate the jacobian
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates

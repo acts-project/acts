@@ -23,7 +23,7 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
   }
   // Create the bound parameters
   BoundParameters parameters(state.geoContext, std::move(covOpt), state.pos,
-                             state.p * state.dir, state.q, state.t0 + state.dt,
+                             state.p * state.dir, state.q, state.t,
                              surface.getSharedPtr());
   // Create the bound state
   BoundState bState{std::move(parameters), state.jacobian,
@@ -48,8 +48,7 @@ auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
   }
   // Create the curvilinear parameters
   CurvilinearParameters parameters(std::move(state.cov), state.pos,
-                                   state.p * state.dir, state.q,
-                                   state.t0 + state.dt);
+                                   state.p * state.dir, state.q, state.t);
   // Create the bound state
   CurvilinearState curvState{std::move(parameters), state.jacobian,
                              state.pathAccumulated};
@@ -68,7 +67,7 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
   state.pos = pars.position();
   state.dir = mom.normalized();
   state.p = mom.norm();
-  state.dt = pars.time();
+  state.t = pars.time();
   if (pars.covariance()) {
     state.cov = (*(pars.covariance()));
   }
@@ -82,7 +81,7 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
   state.pos = uposition;
   state.dir = udirection;
   state.p = up;
-  state.dt = time;
+  state.t = time;
 }
 
 template <typename B, typename E, typename A>
@@ -195,7 +194,7 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
     surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
     BoundVector pars;
     pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-        state.q / state.p, state.t0 + state.dt;
+        state.q / state.p, state.t;
     surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, state.pos,
                                  state.dir, pars);
   }

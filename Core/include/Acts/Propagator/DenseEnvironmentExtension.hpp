@@ -161,7 +161,7 @@ struct DenseEnvironmentExtension {
     state.stepping.derivative(3) =
         std::hypot(1, state.options.mass / newMomentum);
     // Update time
-    state.stepping.dt += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
+    state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
 
     return true;
   }
