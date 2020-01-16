@@ -79,16 +79,12 @@ class EigenStepper {
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
           q(par.charge()),
-          t0(par.time()),
+          t(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(mctx),
           geoContext(gctx) {
-      // remember the start parameters
-      startPos = pos;
-      startDir = dir;
-
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation
@@ -100,12 +96,6 @@ class EigenStepper {
                                      par.parameters());
       }
     }
-
-    /// Global start particle position
-    Vector3D startPos = Vector3D(0., 0., 0.);
-
-    /// Momentum start direction (normalized)
-    Vector3D startDir = Vector3D(1., 0., 0.);
 
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
@@ -119,11 +109,8 @@ class EigenStepper {
     /// The charge
     double q = 1.;
 
-    /// @note The time is split into a starting and a propagated time to avoid
-    /// machine precision related errors Starting time
-    const double t0;
     /// Propagated time
-    double dt = 0.;
+    double t = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -217,7 +204,7 @@ class EigenStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.t0 + state.dt; }
+  double time(const State& state) const { return state.t; }
 
   /// Update surface status
   ///

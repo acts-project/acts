@@ -21,7 +21,7 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
   }
   // Create the bound parameters
   BoundParameters parameters(state.geoContext, cov, state.pos,
-                             state.p * state.dir, state.q, state.t0 + state.dt,
+                             state.p * state.dir, state.q, state.t,
                              surface.getSharedPtr());
   // Create the bound state
   BoundState bState{std::move(parameters), state.jacobian,
@@ -44,7 +44,7 @@ StraightLineStepper::curvilinearState(State& state, bool reinitialize) const {
   }
   // Create the curvilinear parameters
   CurvilinearParameters parameters(cov, state.pos, state.p * state.dir, state.q,
-                                   state.t0 + state.dt);
+                                   state.t);
   // Create the bound state
   CurvilinearState curvState{std::move(parameters), state.jacobian,
                              state.pathAccumulated};
@@ -62,7 +62,7 @@ void StraightLineStepper::update(State& state,
   state.pos = pars.position();
   state.dir = mom.normalized();
   state.p = mom.norm();
-  state.dt = pars.time();
+  state.t = pars.time();
 
   if (pars.covariance()) {
     state.cov = (*(pars.covariance()));
@@ -75,7 +75,7 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
   state.pos = uposition;
   state.dir = udirection;
   state.p = up;
-  state.dt = time;
+  state.t = time;
 }
 
 void StraightLineStepper::covarianceTransport(State& state,
@@ -185,7 +185,7 @@ void StraightLineStepper::covarianceTransport(State& state,
     surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
     BoundVector pars;
     pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-        state.q / state.p, state.t0 + state.dt;
+        state.q / state.p, state.t;
     surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, state.pos,
                                  state.dir, pars);
   }

@@ -109,7 +109,7 @@ struct DefaultExtension {
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
     auto derivative =
         std::hypot(1, state.options.mass / stepper.momentum(state.stepping));
-    state.stepping.dt += h * derivative;
+    state.stepping.t += h * derivative;
     if (state.stepping.covTransport) {
       state.stepping.derivative(3) = derivative;
     }
