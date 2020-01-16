@@ -48,8 +48,7 @@ auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
   }
   // Create the curvilinear parameters
   CurvilinearParameters parameters(std::move(state.cov), state.pos,
-                                   state.p * state.dir, state.q,
-                                   state.t);
+                                   state.p * state.dir, state.q, state.t);
   // Create the bound state
   CurvilinearState curvState{std::move(parameters), state.jacobian,
                              state.pathAccumulated};
