@@ -59,11 +59,27 @@ class TrackDensityVertexFinder {
       const std::vector<InputTrack_t>& trackVector,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
-  /// Default constructor
-  TrackDensityVertexFinder() = default;
+  /// @brief Constructor used if InputTrack_t type == BoundParameters
+  ///
+  /// @param cfg Configuration object
+  template <typename T = InputTrack_t,
+            std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
+  TrackDensityVertexFinder(const Config& cfg)
+      : m_cfg(cfg), m_extractParameters([](T params) { return params; }) {}
 
-  /// Constructor with config
-  TrackDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
+  /// @brief Default onstructor used if InputTrack_t type == BoundParameters
+  template <typename T = InputTrack_t,
+            std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
+  TrackDensityVertexFinder()
+      : m_extractParameters([](T params) { return params; }) {}
+
+  /// @brief Constructor for user-defined InputTrack_t type =! BoundParameters
+  ///
+  /// @param cfg Configuration object
+  /// @param func Function extracting BoundParameters from InputTrack_t object
+  TrackDensityVertexFinder(const Config& cfg,
+                           std::function<BoundParameters(InputTrack_t)> func)
+      : m_cfg(cfg), m_extractParameters(func) {}
 
  private:
   Config m_cfg;
