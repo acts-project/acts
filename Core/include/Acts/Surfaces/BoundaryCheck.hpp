@@ -220,21 +220,27 @@ inline Acts::BoundaryCheck Acts::BoundaryCheck::transformed(
 template <typename Vector2DContainer>
 inline bool Acts::BoundaryCheck::isInside(
     const Vector2D& point, const Vector2DContainer& vertices) const {
-  // a compatible point must be either completely in the polygon or on the
-  // outside but within the defined tolerance relative to the closest point
-  if (isInsidePolygon(point, vertices)) {
+  if (m_type == Type::eNone) {
+    // The null boundary check always succeeds
+    return true;
+  } else if (isInsidePolygon(point, vertices)) {
+    // If the point falls inside the polygon, the check always succeeds
     return true;
   } else if (m_tolerance == Vector2D(0., 0.)) {
-    // computeClosestPointOnPolygon is an expensive computation, so we want to
-    // avoid it when we know that the isTolerated test will always succeed
-    // (for m_type = eNone) or fail (for other m_types).
+    // Outside of the polygon, since we've eliminated the case of an absence of
+    // check above, we know we'll always fail if the tolerance is zero.
     //
-    // TODO: When tolerance is not 0, we can also avoid this computation in some
-    //       cases by testing against a bounding box of the polygon, padded on
-    //       each side with our tolerance. Check if this optimization is
+    // This allows us to avoid the expensive computeClosestPointOnPolygon
+    // computation in this simple case.
+    //
+    // TODO: When tolerance is not 0, we could also avoid this computation in
+    //       some cases by testing against a bounding box of the polygon, padded
+    //       on each side with our tolerance. Check if this optimization is
     //       worthwhile in some production workflows, and if so implement it.
-    return isTolerated(vertices[0] - point);
+    return false;
   } else {
+    // We are outside of the polygon, but there is a tolerance. Must find what
+    // the closest point on the polygon is and check if it's within tolerance.
     auto closestPoint = computeClosestPointOnPolygon(point, vertices);
     return isTolerated(closestPoint - point);
   }
