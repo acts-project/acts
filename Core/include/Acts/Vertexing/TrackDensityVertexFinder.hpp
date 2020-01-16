@@ -27,6 +27,8 @@ namespace Acts {
 /// The z seed position is then found as the position
 /// of the maximum of all summed track density functions.
 ///
+/// Ref. (1): https://cds.cern.ch/record/2670380
+///
 /// @tparam vfitter_t The vertex fitter type (needed to fulfill concept)
 /// @tparam track_density_t The track density type
 template <typename vfitter_t, typename track_density_t>
@@ -47,7 +49,13 @@ class TrackDensityVertexFinder {
     bool findWithWidth = false;
   };
 
-  /// @brief TODO
+  /// @brief Function that finds single vertex candidate
+  ///
+  /// @param trackVector Input track collection
+  /// @param vFinderOptions Vertex finder options
+  ///
+  /// @return Vector of vertices, filled with a single
+  ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<InputTrack_t>& trackVector,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
