@@ -26,6 +26,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/TrackFinder/TrackFinderError.hpp"
+#include "Acts/TrackFinder/detail/VoidTrackFinderComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -37,14 +38,27 @@
 #include <memory>
 
 namespace Acts {
+template <typename source_link_t>
+using SourceLinksIterator =
+    typename std::multimap<const Surface*, source_link_t>::iterator;
 
 /// @brief Options struct how the Fitter is called
 ///
-/// It contains the context of the track finder call and the optional
-/// surface where to express the track finding/fitting result
+/// @tparam source_link_selector_t The source link selector type
+///
+/// It contains the context of the track finder call, the source link selector
+/// config, the optional surface where to express the track finding/fitting
+/// result and config for material effects
 ///
 /// @note the context objects must be provided
+template <typename source_link_selector_t>
 struct TrackFinderOptions {
+  // Broadcast the source link selector type
+  using SourceLinkSelectorType = source_link_selector_t;
+
+  // Broadcast the source link selector config type
+  using SourceLinkSelectorConfigType = typename SourceLinkSelectorType::Config;
+
   /// Deleted default constructor
   TrackFinderOptions() = delete;
 
@@ -58,11 +72,13 @@ struct TrackFinderOptions {
   TrackFinderOptions(std::reference_wrapper<const GeometryContext> gctx,
                      std::reference_wrapper<const MagneticFieldContext> mctx,
                      std::reference_wrapper<const CalibrationContext> cctx,
+                     const SourceLinkSelectorConfigType& slsCfg,
                      const Surface* rSurface = nullptr, bool mScattering = true,
                      bool eLoss = true, bool runCKF = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
+        sourcelinkSelectorConfig(slsCfg),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
@@ -74,6 +90,9 @@ struct TrackFinderOptions {
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
+
+  /// The config for the source link selector
+  SourceLinkSelectorConfigType sourcelinkSelectorConfig;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -137,6 +156,7 @@ struct TrackFinderResult {
 /// @tparam propagator_t Type of the propagation class
 /// @tparam updater_t Type of the kalman updater class
 /// @tparam smoother_t Type of the kalman smoother class
+/// @tparam source_link_selector_t Type of the source link selector class
 /// @tparam calibrator_t Type of the calibrator class
 /// @tparam input_converter_t Type of the input converter class
 /// @tparam output_converter_t Type of the output converter class
@@ -152,6 +172,7 @@ struct TrackFinderResult {
 ///   runs via a visitor pattern through the measurements.
 /// - The Smoother is called at the end of the forward track finding by the
 /// Actor.
+/// - The Sourcelink selector is called during the filtering by the Actor.
 /// - The Calibrator is a dedicated calibration algorithm that allows
 ///   to calibrate measurements using track information, this could be
 ///    e.g. sagging for wires, module deformations, etc.
@@ -169,6 +190,7 @@ struct TrackFinderResult {
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
+          typename source_link_selector_t = VoidSourceLinkSelector,
           typename calibrator_t = VoidMeasurementCalibrator,
           typename input_converter_t = VoidKalmanComponents,
           typename output_converter_t = VoidKalmanComponents>
@@ -228,6 +250,7 @@ class TrackFinder {
 
     /// Explicit constructor with updater and calibrator
     Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
+          source_link_selector_t pSourceLinkSelector = source_link_selector_t(),
           calibrator_t pCalibrator = calibrator_t())
         : m_updater(std::move(pUpdater)),
           m_smoother(std::move(pSmoother)),
@@ -253,9 +276,6 @@ class TrackFinder {
 
     /// Whether to Combinatorial Kalman Filter
     bool runCombKalmanFilter = true;
-
-    /// The source link selection criteria
-    std::array<double, 2> sourceLinkSelectionCriteria = {5, 8};
 
     /// @brief Track finder actor operation
     ///
@@ -746,174 +766,144 @@ class TrackFinder {
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface, true);
 
-        // Create a tempoary track state proxy
-        size_t tempTrackTip =
-            result.fittedStates.addTrackState(TrackStatePropMask::All);
-
-        // Get the temporary track state proxy
-        auto tempTrackStateProxy =
-            result.fittedStates.getTrackState(tempTrackTip);
-
-        // Fill the temporary track state proxy
-        tempTrackStateProxy.predicted() = boundParams.parameters();
-        tempTrackStateProxy.predictedCovariance() = *boundParams.covariance();
-        tempTrackStateProxy.jacobian() = jacobian;
-        tempTrackStateProxy.pathLength() = pathLength;
-
-        // Initialize the update result
-        Result<void> updateRes = TrackFinderError::UpdateFailed;
-
         // Get all the source links on this surface
-        auto sourcelinks = inputMeasurements.equal_range(surface);
+        auto sourcelinkIts = inputMeasurements.equal_range(surface);
 
-        // Loop over the source link to select candidates
-        // with chi2 within a given criteria ??
-        for (auto it = sourcelinks.first; it != sourcelinks.second; ++it) {
-          // assign the source link to the track state
-          tempTrackStateProxy.uncalibrated() = it->second;
+        std::vector<source_link_t> sourcelinks;
+        sourcelinks.reserve(inputMeasurements.count(surface));
+        for (auto it = sourcelinkIts.first; it != sourcelinkIts.second; ++it) {
+          sourcelinks.push_back(it->second);
+        }
 
-          // We have predicted parameters, so calibrate the uncalibrated input
-          // measuerement
+        // Invoke the source link selector to select source links.
+        // Calibrator is passed to the selector because selection has to be done
+        // based on calibrated measurement
+        auto sourcelinkCandidates =
+            m_sourcelinkSelector(m_calibrator, boundParams, sourcelinks);
+
+        // Loop over the selected source links
+        for (const auto& sourcelink : sourcelinkCandidates) {
+          // Add a track state proxy in multi trajectory
+          // @TODO: avoid storage duplication of predicted parameter and
+          // measurement
+          auto trackTip = result.fittedStates.addTrackState(
+              TrackStatePropMask::All, result.currentTip);
+
+          // Get the track state proxy
+          auto trackStateProxy = result.fittedStates.getTrackState(trackTip);
+
+          // Fill the track state proxy
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = *boundParams.covariance();
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
+
+          // Get and set the type flags
+          auto& typeFlags = trackStateProxy.typeFlags();
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+          typeFlags.set(TrackStateFlag::MeasurementFlag);
+          typeFlags.set(TrackStateFlag::ParameterFlag);
+
+          // Assign the source link and calibrated measurement to the track
+          // state
+          trackStateProxy.uncalibrated() = sourcelink;
           std::visit(
               [&](const auto& calibrated) {
-                tempTrackStateProxy.setCalibrated(calibrated);
+                trackStateProxy.setCalibrated(calibrated);
               },
-              m_calibrator(tempTrackStateProxy.uncalibrated(),
-                           tempTrackStateProxy.predicted()));
+              m_calibrator(trackStateProxy.uncalibrated(),
+                           trackStateProxy.predicted()));
 
-          // If the update is successful and chi2 satisties a given criteria,
-          // create new track state on ths surface
-          // @TODO: add source link selector (allow detector-specific chisq
-          // criteria and maximum branches)
-          auto tempUpdateRes = m_updater(state.geoContext, tempTrackStateProxy);
-          if (tempUpdateRes.ok()) {
-            updateRes = tempUpdateRes;
-            if (tempTrackStateProxy.chi2() <
-                (tempTrackStateProxy.calibratedSize() == 1
-                     ? sourceLinkSelectionCriteria[0]
-                     : sourceLinkSelectionCriteria[1])) {
-              // add a full TrackState entry multi trajectory
-              // @TODO: avoid storage duplication for predicted parameter and
-              // measurement
-              auto newTip = result.fittedStates.addTrackState(
-                  TrackStatePropMask::All, result.currentTip);
-
-              ACTS_VERBOSE(
-                  "Creating measurement track state with tip = " << newTip);
-
-              // Count the number of processedStates, measurements and holes
-              auto tipState =
-                  TipState{preTipState.nStates + 1,
-                           preTipState.nMeasurements + 1, preTipState.nHoles};
-              // Record the active tip and its state
-              result.activeTips.emplace(newTip, std::move(tipState));
-
-              // Count the states on current surface
-              result.nStatesOnSurface++;
-
-              // Now get track state proxy back
-              auto trackStateProxy = result.fittedStates.getTrackState(newTip);
-
-              // Fill the track state
-              trackStateProxy.predicted() = boundParams.parameters();
-              trackStateProxy.predictedCovariance() = *boundParams.covariance();
-              trackStateProxy.jacobian() = jacobian;
-              trackStateProxy.pathLength() = pathLength;
-
-              // Get and set the type flags
-              auto& typeFlags = trackStateProxy.typeFlags();
-              typeFlags.set(TrackStateFlag::MaterialFlag);
-              typeFlags.set(TrackStateFlag::MeasurementFlag);
-              typeFlags.set(TrackStateFlag::ParameterFlag);
-
-              trackStateProxy.uncalibrated() = it->second;
-              std::visit(
-                  [&](const auto& calibrated) {
-                    trackStateProxy.setCalibrated(calibrated);
-                  },
-                  m_calibrator(trackStateProxy.uncalibrated(),
-                               trackStateProxy.predicted()));
-              trackStateProxy.filtered() = tempTrackStateProxy.filtered();
-              trackStateProxy.filteredCovariance() =
-                  tempTrackStateProxy.filteredCovariance();
-              trackStateProxy.chi2() = tempTrackStateProxy.chi2();
-            }
-          }
-        }  // end of loop for all source links on this surface
-
-        // If the update is successful, set covariance and
-        if (!updateRes.ok()) {
-          ACTS_ERROR("Update step failed: " << updateRes.error());
-          return updateRes.error();
-        } else {
-          if (result.nStatesOnSurface > 0) {
-            ACTS_VERBOSE("Filtering step successful with "
-                         << result.nStatesOnSurface
-                         << " compatible measurements found");
-
-            // Update current tip to track state on this surface
-            result.currentTip = result.activeTips.rbegin()->first;
-
-            // Update stepping state using filtered parameters after kalman
-            // update of last track state created on this surface
-            auto filteredParams =
-                result.fittedStates.getTrackState(result.currentTip)
-                    .filteredParameters(state.options.geoContext);
-            stepper.update(state.stepping, filteredParams);
-            ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
-                         << filteredParams.parameters().transpose()
-                         << " of track state with tip = " << result.currentTip);
-
-            // Update state and stepper with post material effects
-            materialInteractor(surface, state, stepper, postUpdate);
+          // If the update is successful, update the tip state and count the
+          // states on surface
+          auto updateRes = m_updater(state.geoContext, trackStateProxy);
+          if (!updateRes.ok()) {
+            ACTS_ERROR("Update step failed: " << updateRes.error());
+            return updateRes.error();
           } else {
-            // add a hole TrackState entry multi trajectory
-            //@TODO: record a few measurements as outliers
-            result.currentTip = result.fittedStates.addTrackState(
-                ~(TrackStatePropMask::Uncalibrated |
-                  TrackStatePropMask::Calibrated),
-                result.currentTip);
-
             ACTS_VERBOSE(
-                "No compatible measurements found. Creating hole track state "
-                "with tip = "
-                << result.currentTip);
+                "Creating measurement track state with tip = " << trackTip);
 
             // Count the number of processedStates, measurements and holes
             auto tipState =
-                TipState{preTipState.nStates + 1, preTipState.nMeasurements,
-                         preTipState.nHoles + 1};
+                TipState{preTipState.nStates + 1, preTipState.nMeasurements + 1,
+                         preTipState.nHoles};
             // Record the active tip and its state
-            result.activeTips.emplace(result.currentTip, std::move(tipState));
+            result.activeTips.emplace(trackTip, std::move(tipState));
 
             // Count the states on current surface
             result.nStatesOnSurface++;
-
-            // now get track state proxy back
-            auto trackStateProxy =
-                result.fittedStates.getTrackState(result.currentTip);
-
-            // Set the surface
-            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-            // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = *boundParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
-            trackStateProxy.filtered() = trackStateProxy.predicted();
-            trackStateProxy.filteredCovariance() =
-                trackStateProxy.predictedCovariance();
-
-            // Set the track state flags
-            auto& typeFlags = trackStateProxy.typeFlags();
-            typeFlags.set(TrackStateFlag::MaterialFlag);
-            typeFlags.set(TrackStateFlag::ParameterFlag);
-            typeFlags.set(TrackStateFlag::HoleFlag);
-
-            // Update state and stepper with post material effects
-            materialInteractor(surface, state, stepper, postUpdate);
           }
+        }  // end of loop for all selected source links on this surface
+
+        // If there are track states on this surface
+        if (result.nStatesOnSurface > 0) {
+          ACTS_VERBOSE("Filtering step successful with "
+                       << result.nStatesOnSurface
+                       << " compatible measurements found");
+
+          // Update current tip to last track state on this surface
+          result.currentTip = result.activeTips.rbegin()->first;
+
+          // Update stepping state using filtered parameters of last track state
+          // on this surface
+          auto filteredParams =
+              result.fittedStates.getTrackState(result.currentTip)
+                  .filteredParameters(state.options.geoContext);
+          stepper.update(state.stepping, filteredParams);
+          ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
+                       << filteredParams.parameters().transpose()
+                       << " of track state with tip = " << result.currentTip);
+
+          // Update state and stepper with post material effects
+          materialInteractor(surface, state, stepper, postUpdate);
+        } else {
+          // add a hole track state in multi trajectory
+          //@TODO: record a few measurements as outliers
+          result.currentTip = result.fittedStates.addTrackState(
+              ~(TrackStatePropMask::Uncalibrated |
+                TrackStatePropMask::Calibrated),
+              result.currentTip);
+
+          ACTS_VERBOSE(
+              "No compatible measurements found. Creating hole track state "
+              "with tip = "
+              << result.currentTip);
+
+          // Count the number of processedStates, measurements and holes
+          auto tipState =
+              TipState{preTipState.nStates + 1, preTipState.nMeasurements,
+                       preTipState.nHoles + 1};
+          // Record the active tip and its state
+          result.activeTips.emplace(result.currentTip, std::move(tipState));
+
+          // Count the states on current surface
+          result.nStatesOnSurface++;
+
+          // now get track state proxy back
+          auto trackStateProxy =
+              result.fittedStates.getTrackState(result.currentTip);
+
+          // Set the surface
+          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+
+          // Fill the track state
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = *boundParams.covariance();
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
+          trackStateProxy.filtered() = trackStateProxy.predicted();
+          trackStateProxy.filteredCovariance() =
+              trackStateProxy.predictedCovariance();
+
+          // Set the track state flags
+          auto& typeFlags = trackStateProxy.typeFlags();
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+          typeFlags.set(TrackStateFlag::ParameterFlag);
+          typeFlags.set(TrackStateFlag::HoleFlag);
+
+          // Update state and stepper with post material effects
+          materialInteractor(surface, state, stepper, postUpdate);
         }
       } else {
         // add a non-measurement TrackState entry multi trajectory
@@ -1085,6 +1075,9 @@ class TrackFinder {
     /// The track finder smoother
     smoother_t m_smoother;
 
+    /// The source link selector
+    source_link_selector_t m_sourcelinkSelector;
+
     /// The Measuremetn calibrator
     calibrator_t m_calibrator;
 
@@ -1116,6 +1109,7 @@ class TrackFinder {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam track_finder_options_t Type of the track finder options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1128,14 +1122,22 @@ class TrackFinder {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
+            typename track_finder_options_t,
             typename parameters_t = BoundParameters,
             typename result_t = Result<TrackFinderResult<source_link_t>>>
   auto findTracks(const std::vector<source_link_t>& sourcelinks,
                   const start_parameters_t& sParameters,
-                  const TrackFinderOptions& tfOptions) const
+                  const track_finder_options_t& tfOptions) const
       -> std::enable_if_t<!isDirectNavigator, result_t> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
+
+    static_assert(
+        std::is_same<
+            source_link_selector_t,
+            typename track_finder_options_t::SourceLinkSelectorType>::value,
+        "Inconsistent type of source link selector between track finder and "
+        "track finder options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
@@ -1166,6 +1168,11 @@ class TrackFinder {
     trackFinderActor.multipleScattering = tfOptions.multipleScattering;
     trackFinderActor.energyLoss = tfOptions.energyLoss;
     trackFinderActor.runCombKalmanFilter = tfOptions.runCombKalmanFilter;
+
+    // Set config and logger for source link selector
+    trackFinderActor.m_sourcelinkSelector.m_config =
+        tfOptions.sourcelinkSelectorConfig;
+    trackFinderActor.m_sourcelinkSelector.m_logger = m_logger;
 
     // also set logger on updater and smoother
     trackFinderActor.m_updater.m_logger = m_logger;
@@ -1206,6 +1213,7 @@ class TrackFinder {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam track_finder_options_t Type of the track finder options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1219,15 +1227,23 @@ class TrackFinder {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
+            typename track_finder_options_t,
             typename parameters_t = BoundParameters,
             typename result_t = Result<TrackFinderResult<source_link_t>>>
   auto findTracks(const std::vector<source_link_t>& sourcelinks,
                   const start_parameters_t& sParameters,
-                  const TrackFinderOptions& tfOptions,
+                  const track_finder_options_t& tfOptions,
                   const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator, result_t> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
+
+    static_assert(
+        std::is_same<
+            source_link_selector_t,
+            typename track_finder_options_t::SourceLinkSelectorType>::value,
+        "Inconsistent type of source link selector between track finder and "
+        "track finder options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
@@ -1258,6 +1274,11 @@ class TrackFinder {
     trackFinderActor.multipleScattering = tfOptions.multipleScattering;
     trackFinderActor.energyLoss = tfOptions.energyLoss;
     trackFinderActor.runCombKalmanFilter = tfOptions.runCombKalmanFilter;
+
+    // Set config and logger for source link selector
+    trackFinderActor.m_sourcelinkSelector.m_config =
+        tfOptions.sourcelinkSelectorConfig;
+    trackFinderActor.m_sourcelinkSelector.m_logger = m_logger;
 
     // also set logger on updater and smoother
     trackFinderActor.m_updater.m_logger = m_logger;
