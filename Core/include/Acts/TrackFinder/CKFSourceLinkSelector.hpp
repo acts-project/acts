@@ -63,8 +63,7 @@ struct CKFSourceLinkSelector {
   CKFSourceLinkSelector(
       Config cfg,
       std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("CKFSourceLinkSelector", Logging::WARNING)
-              .release()))
+          getDefaultLogger("CKFSourceLinkSelector", Logging::INFO).release()))
       : m_config(std::move(cfg)), m_logger(std::move(logger)) {}
 
   /// @brief Operater that select the source links compatible with
