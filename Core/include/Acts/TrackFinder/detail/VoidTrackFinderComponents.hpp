@@ -39,8 +39,7 @@ struct VoidSourceLinkSelector {
   VoidSourceLinkSelector(
       Config cfg,
       std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("VoidSourceLinkSelector", Logging::WARNING)
-              .release()))
+          getDefaultLogger("VoidSourceLinkSelector", Logging::INFO).release()))
       : m_config(std::move(cfg)), m_logger(std::move(logger)) {}
 
   /// @brief Operater that select the source links compatible with
