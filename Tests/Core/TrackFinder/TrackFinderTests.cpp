@@ -80,8 +80,6 @@ using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
 
 using DebugOutput = detail::DebugOutputActor;
 
-using SourceLinkSelector = CKFSourceLinkSelector;
-
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
@@ -290,11 +288,22 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
 
   using Updater = GainMatrixUpdater<BoundParameters>;
   using Smoother = GainMatrixSmoother<BoundParameters>;
+  using SourceLinkSelector = CKFSourceLinkSelector;
   using TrackFinder =
       TrackFinder<RecoPropagator, Updater, Smoother, SourceLinkSelector>;
 
   using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
   SourceLinkSelectorConfig slsConfig;
+  // Implement different chi2 criteria for different pixel (volumeID: 2)
+  // layers:
+  //-> layer 2: 8
+  //-> layer 4: 7
+  slsConfig.layerMaxChi2 = {{2, {{2, 8}, {4, 7}}}};
+  // Implement different chi2 criteria for pixel (volumeID: 2) and strip
+  // (volumeID: 3):
+  //-> pixel: 6
+  //-> strip: 8
+  slsConfig.volumeMaxChi2 = {{2, 7}, {3, 8}};
   slsConfig.maxChi2 = 8;
 
   TrackFinder tFinder(rPropagator,
@@ -343,7 +352,7 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
         numFakeHit = numFakeHit + (id != trackID ? 1 : 0);
       }
 
-      // Check if there are 0 fake hits from other tracks
+      // Check if there are fake hits from other tracks
       BOOST_CHECK_EQUAL(numFakeHit, 0);
     }
   }

@@ -26,31 +26,35 @@ struct CKFSourceLinkSelector {
  public:
   /// @brief nested config struct
   ///
+  /// Criteria at different detector level.
+  /// The layer-level criteria has the highest priority, then volume-level
+  /// criteria, and the global criteria has the lowest priority
+  ///
   struct Config {
     // Criteria type down to detector volume
     using VolumeChisq = std::map<GeometryID::Value, double>;
     using VolumeNumMeas = std::map<GeometryID::Value, size_t>;
     // Criteria type down to detector layer
-    using DetectorChisq = std::map<GeometryID::Value, VolumeChisq>;
-    using DetectorNumMeas = std::map<GeometryID::Value, VolumeNumMeas>;
+    using LayerChisq = std::map<GeometryID::Value, VolumeChisq>;
+    using LayerNumMeas = std::map<GeometryID::Value, VolumeNumMeas>;
 
     // Global maximum chi2
     double maxChi2 = 10;
 
-    // Volume-level maximum chi2 for detector
-    DetectorChisq detectorMaxChi2;
-
-    // Layer-level maximum chi2 for detector volume
+    // Volume-level maximum chi2
     VolumeChisq volumeMaxChi2;
+
+    // Layer-level maximum chi2
+    LayerChisq layerMaxChi2;
 
     // Global maximum number of source links on surface
     double maxNumSourcelinksOnSurface = std::numeric_limits<size_t>::max();
 
-    // Volume-level maximum number of source links on surface for detector
-    DetectorNumMeas detectorMaxNumSourcelinks;
-
-    // Layer-level maximum number of source links on surface for detector volume
+    // Volume-level maximum number of source links on surface
     VolumeNumMeas volumeMaxNumSourcelinks;
+
+    // Layer-level maximum number of source links on surface
+    LayerNumMeas LayerMaxNumSourcelinks;
   };
 
   /// @brief Default constructor
@@ -126,8 +130,8 @@ struct CKFSourceLinkSelector {
               // Otherwise, use world criteria
               double maxChi2;
               while (true) {
-                auto dvMaxChi2 = m_config.detectorMaxChi2.find(volumeID);
-                if (dvMaxChi2 != m_config.detectorMaxChi2.end()) {
+                auto dvMaxChi2 = m_config.layerMaxChi2.find(volumeID);
+                if (dvMaxChi2 != m_config.layerMaxChi2.end()) {
                   auto dvlMaxChi2 = dvMaxChi2->second.find(layerID);
                   if (dvlMaxChi2 != dvMaxChi2->second.end()) {
                     maxChi2 = dvlMaxChi2->second;
@@ -145,10 +149,10 @@ struct CKFSourceLinkSelector {
                 break;
               }
 
+              ACTS_VERBOSE("Chi2: " << chi2
+                                    << " and Chi2 criteria: " << maxChi2);
               // Push the source link if satisfying criteria
               if (chi2 < maxChi2) {
-                ACTS_VERBOSE("Chi2: " << chi2 << " is within chi2 criteria: "
-                                      << maxChi2);
                 sourcelinkCandidates.push_back(sourcelink);
               }
             }
