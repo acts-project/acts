@@ -27,6 +27,7 @@
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/TrackFinder/TrackFinder.hpp"
+#include "Acts/TrackFinder/CKFSourceLinkSelector.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -49,7 +50,7 @@ namespace Acts {
 namespace Test {
 
 struct ExtendedMinimalSourceLink {
-  size_t sourceID;
+  size_t sourceID = 0;
 
   const FittableMeasurement<ExtendedMinimalSourceLink>* meas{nullptr};
 
@@ -78,6 +79,8 @@ using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
 
 using DebugOutput = detail::DebugOutputActor;
+
+using SourceLinkSelector = CKFSourceLinkSelector;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -287,7 +290,12 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
 
   using Updater = GainMatrixUpdater<BoundParameters>;
   using Smoother = GainMatrixSmoother<BoundParameters>;
-  using TrackFinder = TrackFinder<RecoPropagator, Updater, Smoother>;
+  using TrackFinder =
+      TrackFinder<RecoPropagator, Updater, Smoother, SourceLinkSelector>;
+
+  using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
+  SourceLinkSelectorConfig slsConfig;
+  slsConfig.maxChi2 = 8;
 
   TrackFinder tFinder(rPropagator,
                       getDefaultLogger("TrackFinder", Logging::VERBOSE));
@@ -312,7 +320,8 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
 
     const Surface* rSurface = &rStart.referenceSurface();
 
-    TrackFinderOptions tfOptions(tgContext, mfContext, calContext, rSurface);
+    TrackFinderOptions<SourceLinkSelector> tfOptions(
+        tgContext, mfContext, calContext, slsConfig, rSurface);
 
     // Found the track(s)
     auto trackFindingRes = tFinder.findTracks(sourcelinks, rStart, tfOptions);
@@ -321,10 +330,6 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
     auto& fittedStates = foundTrack.fittedStates;
     auto& trackTips = foundTrack.trackTips;
 
-    std::cout << "There are " << trackTips.size()
-              << " trajectories found for truth track " << trackID << " : "
-              << std::endl;
-    size_t iTraj = 0;
     for (const auto& tip : trackTips) {
       std::vector<size_t> sourceIds;
       fittedStates.visitBackwards(tip, [&](const auto& trackState) {
@@ -333,14 +338,10 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
 
       BOOST_CHECK_EQUAL(sourceIds.size(), 6);
 
-      std::cout << "The source track id for hits on " << iTraj << " trajectory "
-                << " are: " << std::endl;
       size_t numFakeHit = 0;
       for (const auto& id : sourceIds) {
-        std::cout << id << " : ";
         numFakeHit = numFakeHit + (id != trackID ? 1 : 0);
       }
-      std::cout << std::endl;
 
       // Check if there are 0 fake hits from other tracks
       BOOST_CHECK_EQUAL(numFakeHit, 0);
