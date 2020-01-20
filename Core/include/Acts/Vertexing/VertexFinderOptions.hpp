@@ -8,6 +8,10 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
+
 namespace Acts {
 
 /// @brief Vertex Finder Options
