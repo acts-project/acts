@@ -15,8 +15,6 @@
 // clang-format on
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -25,12 +23,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
-#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
-#include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
-#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-
+#include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
+#include "Acts/Vertexing/DummyVertexFitter.hpp"
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -39,41 +34,198 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-// Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
-// Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
-// Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
-// Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
-// Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
-// Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
-// Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
-// Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
-// Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100_um);
-// Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
-// Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
+///
+/// @brief Unit test for TrackDensityVertexFinder using same configuration
+/// and values as VertexSeedFinderTestAlg in Athena implementation
+///
+BOOST_AUTO_TEST_CASE(track_density_finder_test) {
+  Vector3D pos0{0, 0, 0};
+  Vector3D pos1a{2_mm, 1_mm, -10_mm};
+  Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
+  Vector3D pos1b{1_mm, 2_mm, -3_mm};
+  Vector3D mom1b{600_MeV, 400_MeV, -200_MeV};
+  Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
+
+  Covariance covMat = Covariance::Identity();
+
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
+
+  VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+
+  TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+
+  // Test finder for some fixed track parameter values
+  BoundParameters params1a(tgContext, covMat, pos1a, mom1a, 1, 0,
+                           perigeeSurface);
+  BoundParameters params1b(tgContext, covMat, pos1b, mom1b, -1, 0,
+                           perigeeSurface);
+  BoundParameters params1c(tgContext, covMat, pos1c, mom1c, -1, 0,
+                           perigeeSurface);
+
+  // Vectors of track parameters in different orders
+  std::vector<BoundParameters> vec1 = {params1a, params1b, params1c};
+  std::vector<BoundParameters> vec2 = {params1c, params1a, params1b};
+
+  auto res1 = finder.find(vec1, vFinderOptions);
+  auto res2 = finder.find(vec2, vFinderOptions);
+
+  if (!res1.ok()) {
+    std::cout << res1.error().message() << std::endl;
+  }
+
+  if (!res2.ok()) {
+    std::cout << res2.error().message() << std::endl;
+  }
+
+  if (res1.ok() and res2.ok()) {
+    BOOST_CHECK(!(*res1).empty());
+    BOOST_CHECK(!(*res2).empty());
+    Vector3D result1 = (*res1).back().position();
+    Vector3D result2 = (*res2).back().position();
+    BOOST_CHECK(result1 == result2);
+  }
+}
 
 ///
-/// @brief Unit test for TrackDensityVertexFinder
+/// @brief Unit test for TrackDensityVertexFinder using same configuration
+/// and values as VertexSeedFinderTestAlg in Athena implementation
 ///
-BOOST_AUTO_TEST_CASE(TrackDensity_finder_test) {
-  BOOST_CHECK(true);
+BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
+  Vector3D pos0{0, 0, 0};
+  Vector3D pos1a{2_mm, 1_mm, -10_mm};
+  Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
+  Vector3D pos1b{1_mm, 2_mm, -3_mm};
+  Vector3D mom1b{600_MeV, 400_MeV, -200_MeV};
+  Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
+
+  // From Athena VertexSeedFinderTestAlg
+  double const expectedZResult = -13.013;
+
+  Covariance covMat = Covariance::Identity();
+
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
+
+  // Finder options
+  VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+
+  // Create constraint for seed finding
+  Vector3D constraintPos{1.7_mm, 1.3_mm, -6_mm};
+  ActsSymMatrixD<3> constrCov = ActsSymMatrixD<3>::Identity();
+
+  Vertex<BoundParameters> vertexConstraint(constraintPos);
+  vertexConstraint.setCovariance(constrCov);
+
+  vFinderOptions.vertexConstraint = vertexConstraint;
+
+  TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+
+  // Test finder for some fixed track parameter values
+  BoundParameters params1a(tgContext, covMat, pos1a, mom1a, 1, 0,
+                           perigeeSurface);
+  BoundParameters params1b(tgContext, covMat, pos1b, mom1b, -1, 0,
+                           perigeeSurface);
+  BoundParameters params1c(tgContext, covMat, pos1c, mom1c, -1, 0,
+                           perigeeSurface);
+
+  // Vector of track parameters
+  std::vector<BoundParameters> vec1 = {params1a, params1b, params1c};
+
+  auto res = finder.find(vec1, vFinderOptions);
+
+  if (!res.ok()) {
+    std::cout << res.error().message() << std::endl;
+  }
+
+  if (res.ok()) {
+    BOOST_CHECK(!(*res).empty());
+    Vector3D result = (*res).back().position();
+
+    BOOST_CHECK(result[eX] == constraintPos[eX]);
+    BOOST_CHECK(result[eY] == constraintPos[eY]);
+    CHECK_CLOSE_ABS(result[eZ], expectedZResult, 0.001_mm);
+  }
+}
+
+const double zVertexPos = 12.;
+// x position
+std::normal_distribution<double> xdist(1_mm, 0.1_mm);
+// y position
+std::normal_distribution<double> ydist(-0.7_mm, 0.1_mm);
+// z1 position
+std::normal_distribution<double> z1dist(zVertexPos * 1_mm, 1_mm);
+// z2 position
+std::normal_distribution<double> z2dist(-3_mm, 0.5_mm);
+// Track pT distribution
+std::uniform_real_distribution<double> pTDist(0.1_GeV, 100_GeV);
+// Track phi distribution
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+// Track eta distribution
+std::uniform_real_distribution<double> etaDist(-4., 4.);
+
+///
+/// @brief Unit test for TrackDensityVertexFinder using same configuration
+/// and values as VertexSeedFinderTestAlg in Athena implementation
+///
+BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
+  Covariance covMat = Covariance::Identity();
+
+  Vector3D pos0{0, 0, 0};
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
+
+  VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+
+  TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+
+  int mySeed = 31415;
+  std::mt19937 gen(mySeed);
+  unsigned int nTracks = 200;
+
+  std::vector<BoundParameters> trackVec;
+  trackVec.reserve(nTracks);
+
+  // Create nTracks tracks for test case
+  for (unsigned int i = 0; i < nTracks; i++) {
+    // The position of the particle
+    Vector3D pos(xdist(gen), ydist(gen), 0);
+    // Produce most of the tracks at near z1 position,
+    // some near z2. Highest track density then expected at z1
+    if ((i % 4) == 0) {
+      pos[eZ] = z2dist(gen);
+    } else {
+      pos[eZ] = z1dist(gen);
+    }
+
+    // Create momentum and charge of track
+    double pt = pTDist(gen);
+    double phi = phiDist(gen);
+    double eta = etaDist(gen);
+    Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
+    double charge = etaDist(gen) > 0 ? 1 : -1;
+
+    trackVec.push_back(BoundParameters(tgContext, covMat, pos, mom, charge, 0,
+                                       perigeeSurface));
+  }
+
+  auto res3 = finder.find(trackVec, vFinderOptions);
+  if (!res3.ok()) {
+    std::cout << res3.error().message() << std::endl;
+  }
+
+  if (res3.ok()) {
+    BOOST_CHECK(!(*res3).empty());
+    Vector3D result = (*res3).back().position();
+    CHECK_CLOSE_ABS(result[eZ], zVertexPos, 1_mm);
+  }
 }
 
 // Dummy user-defined InputTrack type
@@ -89,10 +241,69 @@ struct InputTrack {
 };
 
 ///
-/// @brief Unit test for ZScanVertexFinder with user-defined input track type
+/// @brief Unit test for TrackDensityVertexFinder with user-defined input track
+/// type
 ///
-BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
-  BOOST_CHECK(true);
+BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
+  Vector3D pos0{0, 0, 0};
+  Vector3D pos1a{2_mm, 1_mm, -10_mm};
+  Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
+  Vector3D pos1b{1_mm, 2_mm, -3_mm};
+  Vector3D mom1b{600_MeV, 400_MeV, -200_MeV};
+  Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
+
+  // From Athena VertexSeedFinderTestAlg
+  double const expectedZResult = -13.013;
+
+  Covariance covMat = Covariance::Identity();
+
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
+
+  // Finder options
+  VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
+
+  // Create constraint for seed finding
+  Vector3D constraintPos{1.7_mm, 1.3_mm, -6_mm};
+  ActsSymMatrixD<3> constrCov = ActsSymMatrixD<3>::Identity();
+
+  Vertex<InputTrack> vertexConstraint(constraintPos);
+  vertexConstraint.setCovariance(constrCov);
+
+  vFinderOptions.vertexConstraint = vertexConstraint;
+
+  std::function<BoundParameters(InputTrack)> extractParameters =
+      [](InputTrack params) { return params.parameters(); };
+
+  TrackDensityVertexFinder<DummyVertexFitter<InputTrack>, GaussianTrackDensity>
+      finder(extractParameters);
+
+  // Test finder for some fixed track parameter values
+  InputTrack params1a(
+      BoundParameters(tgContext, covMat, pos1a, mom1a, 1, 0, perigeeSurface));
+  InputTrack params1b(
+      BoundParameters(tgContext, covMat, pos1b, mom1b, -1, 0, perigeeSurface));
+  InputTrack params1c(
+      BoundParameters(tgContext, covMat, pos1c, mom1c, -1, 0, perigeeSurface));
+
+  // Vector of track parameters
+  std::vector<InputTrack> vec1 = {params1a, params1b, params1c};
+
+  auto res = finder.find(vec1, vFinderOptions);
+
+  if (!res.ok()) {
+    std::cout << res.error().message() << std::endl;
+  }
+
+  if (res.ok()) {
+    BOOST_CHECK(!(*res).empty());
+    Vector3D result = (*res).back().position();
+    std::cout << result << std::endl;
+    BOOST_CHECK(result[eX] == constraintPos[eX]);
+    BOOST_CHECK(result[eY] == constraintPos[eY]);
+    CHECK_CLOSE_ABS(result[eZ], expectedZResult, 0.001_mm);
+  }
 }
 
 }  // namespace Test
