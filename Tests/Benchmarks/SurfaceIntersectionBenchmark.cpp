@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -30,8 +31,8 @@ namespace Acts {
 namespace Test {
 
 // Some randomness & number crunching
-unsigned int ntests = 100;
-unsigned int nrepts = 1000;
+unsigned int ntests = 10;
+unsigned int nrepts = 2000;
 const bool boundaryCheck = false;
 const bool testPlane = true;
 const bool testDisc = true;
@@ -72,7 +73,8 @@ Vector3D origin(0., 0., 0.);
 Vector3D originStraw(0.3_m, -0.2_m, 11_m);
 
 template <typename surface_t>
-void intersectionTest(const surface_t& surface, double phi, double theta) {
+MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
+                                      double theta) {
   // Shoot at it
   double cosPhi = std::cos(phi);
   double sinPhi = std::sin(phi);
@@ -81,12 +83,11 @@ void intersectionTest(const surface_t& surface, double phi, double theta) {
 
   Vector3D direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
 
-  for (unsigned int ir = 0; ir < nrepts; ++ir) {
-    auto intersect =
-        surface.intersect(tgContext, origin, direction, boundaryCheck);
-
-    (void)intersect;
-  }
+  return Acts::Test::microBenchmark(
+      [&] {
+        return surface.intersect(tgContext, origin, direction, boundaryCheck);
+      },
+      nrepts);
 }
 
 BOOST_DATA_TEST_CASE(
@@ -101,17 +102,27 @@ BOOST_DATA_TEST_CASE(
     phi, theta, index) {
   (void)index;
 
+  std::cout << std::endl
+            << "Benchmarking theta=" << theta << ", phi=" << phi << "..."
+            << std::endl;
   if (testPlane) {
-    intersectionTest<PlaneSurface>(*aPlane, phi, theta);
+    std::cout << "- Plane: "
+              << intersectionTest<PlaneSurface>(*aPlane, phi, theta)
+              << std::endl;
   }
   if (testDisc) {
-    intersectionTest<DiscSurface>(*aDisc, phi, theta);
+    std::cout << "- Disc: " << intersectionTest<DiscSurface>(*aDisc, phi, theta)
+              << std::endl;
   }
   if (testCylinder) {
-    intersectionTest<CylinderSurface>(*aCylinder, phi, theta);
+    std::cout << "- Cylinder: "
+              << intersectionTest<CylinderSurface>(*aCylinder, phi, theta)
+              << std::endl;
   }
   if (testStraw) {
-    intersectionTest<StrawSurface>(*aStraw, phi, theta + M_PI);
+    std::cout << "- Straw: "
+              << intersectionTest<StrawSurface>(*aStraw, phi, theta + M_PI)
+              << std::endl;
   }
 }
 
