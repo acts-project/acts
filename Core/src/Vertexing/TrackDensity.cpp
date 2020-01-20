@@ -69,7 +69,7 @@ std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
   double maxCurvature = 0.;
 
   for (const auto& entry : state.trackMap) {
-    double trialZ = entry.first.parameters()[ParID_t::eLOC_D0];
+    double trialZ = entry.first.parameters()[ParID_t::eLOC_Z0];
     double density = 0.0;
     double slope = 0.0;
     double curvature = 0.0;
