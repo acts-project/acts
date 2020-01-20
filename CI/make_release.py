@@ -153,6 +153,11 @@ def minor(version, dry_run, gitlab):
             if not dry_run:
                 git.push()
 
+    if click.confirm(f"Do you want me to try to push tag {tag_name}?"):
+        with Spinner(text=f"Pushing {tag_name}"):
+            if not dry_run:
+                git.push("REMOTE", tag_name)
+
     if click.confirm(f"Do you want me to close %{milestone.title}?"):
         with Spinner(text=f"Closing milestone %{milestone.title}"):
             if not dry_run:
