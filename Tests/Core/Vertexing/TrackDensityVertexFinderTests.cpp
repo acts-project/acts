@@ -19,9 +19,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
-
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
@@ -44,6 +41,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// and values as VertexSeedFinderTestAlg in Athena implementation
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_test) {
+  // Define some track parameter properties
   Vector3D pos0{0, 0, 0};
   Vector3D pos1a{2_mm, 1_mm, -10_mm};
   Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
@@ -52,14 +50,14 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
   Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
 
-  Covariance covMat = Covariance::Identity();
-
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(pos0);
-
   VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
   TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+
+  // Start creating some track parameters
+  Covariance covMat = Covariance::Identity();
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
   BoundParameters params1a(tgContext, covMat, pos1a, mom1a, 1, 0,
@@ -98,6 +96,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 /// and values as VertexSeedFinderTestAlg in Athena implementation
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
+  // Define some track parameter properties
   Vector3D pos0{0, 0, 0};
   Vector3D pos1a{2_mm, 1_mm, -10_mm};
   Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
@@ -108,11 +107,6 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
-
-  Covariance covMat = Covariance::Identity();
-
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(pos0);
 
   // Finder options
   VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
@@ -127,6 +121,11 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   vFinderOptions.vertexConstraint = vertexConstraint;
 
   TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+
+  // Start creating some track parameters
+  Covariance covMat = Covariance::Identity();
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
   BoundParameters params1a(tgContext, covMat, pos1a, mom1a, 1, 0,
@@ -178,6 +177,7 @@ std::uniform_real_distribution<double> etaDist(-4., 4.);
 BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   Covariance covMat = Covariance::Identity();
 
+  // Perigee surface for track parameters
   Vector3D pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
@@ -245,6 +245,7 @@ struct InputTrack {
 /// type
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
+  // Define some track parameter properties
   Vector3D pos0{0, 0, 0};
   Vector3D pos1a{2_mm, 1_mm, -10_mm};
   Vector3D mom1a{400_MeV, 600_MeV, 200_MeV};
@@ -255,11 +256,6 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
-
-  Covariance covMat = Covariance::Identity();
-
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(pos0);
 
   // Finder options
   VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
@@ -278,6 +274,11 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   TrackDensityVertexFinder<DummyVertexFitter<InputTrack>, GaussianTrackDensity>
       finder(extractParameters);
+
+  // Start creating some track parameters
+  Covariance covMat = Covariance::Identity();
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
   InputTrack params1a(
