@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   if (res.ok()) {
     BOOST_CHECK(!(*res).empty());
     Vector3D result = (*res).back().position();
-    std::cout << result << std::endl;
+
     BOOST_CHECK(result[eX] == constraintPos[eX]);
     BOOST_CHECK(result[eY] == constraintPos[eY]);
     CHECK_CLOSE_ABS(result[eZ], expectedZResult, 0.001_mm);
