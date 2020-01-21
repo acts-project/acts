@@ -77,15 +77,17 @@ class TrackDensityVertexFinder {
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from InputTrack_t object
-  TrackDensityVertexFinder(const Config& cfg,
-                           std::function<BoundParameters(InputTrack_t)> func)
+  TrackDensityVertexFinder(
+      const Config& cfg,
+      const std::function<BoundParameters(InputTrack_t)>& func)
       : m_cfg(cfg), m_extractParameters(func) {}
 
   /// @brief Constructor for user-defined InputTrack_t type =! BoundParameters
   /// with default Config object
   ///
   /// @param func Function extracting BoundParameters from InputTrack_t object
-  TrackDensityVertexFinder(std::function<BoundParameters(InputTrack_t)> func)
+  TrackDensityVertexFinder(
+      const std::function<BoundParameters(InputTrack_t)>& func)
       : m_extractParameters(func) {}
 
  private:
