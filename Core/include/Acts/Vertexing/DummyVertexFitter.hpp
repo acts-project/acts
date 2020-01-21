@@ -1,0 +1,40 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2020 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexFitterOptions.hpp"
+namespace Acts {
+
+// Dummy track linearizer
+class DummyTrackLinearizer;
+
+/// @class DummyVertexFitter
+/// @brief Dummy vertex fitter class, only to be used
+/// for ensuring interfaces where a vertex fitter type is
+/// required but no fitter is actually needed
+template <typename input_track_t = BoundParameters,
+          typename linearizer_t = DummyTrackLinearizer>
+class DummyVertexFitter {
+ public:
+  using InputTrack_t = input_track_t;
+  using Linearizer_t = linearizer_t;
+  using Propagator_t = void;
+
+  // Do not allow an instance creation
+  DummyVertexFitter() = delete;
+
+  /// @brief Dummy fit method
+  Result<Vertex<input_track_t>> fit(
+      const std::vector<input_track_t>&, const linearizer_t&,
+      const VertexFitterOptions<input_track_t>&) const;
+};
+
+}  // namespace Acts
