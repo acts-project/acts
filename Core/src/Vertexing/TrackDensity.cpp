@@ -15,21 +15,23 @@ void Acts::TrackDensity::addTrack(State& state, const BoundParameters& trk,
   if (state.trackMap.count(trk) != 0) {
     return;
   }
+  // Get required track parameters
   const double d0 = trk.parameters()[ParID_t::eLOC_D0];
   const double z0 = trk.parameters()[ParID_t::eLOC_Z0];
+  // Get track covariance
   const auto perigeeCov = *(trk.covariance());
   const double covDD = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0);
   const double covZZ = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
-
   const double covDZ = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_Z0);
-
   const double covDeterminant = covDD * covZZ - covDZ * covDZ;
 
+  // Do track selection based on track cov matrix and d0SignificanceCut
   if ((covDD <= 0) || (d0 * d0 / covDD > d0SignificanceCut) || (covZZ <= 0) ||
       (covDeterminant <= 0)) {
     return;
   }
 
+  // Calculate track density quantities
   double constantTerm =
       -(d0 * d0 * covZZ + z0 * z0 * covDD + 2 * d0 * z0 * covDZ) /
       (2 * covDeterminant);
@@ -44,6 +46,7 @@ void Acts::TrackDensity::addTrack(State& state, const BoundParameters& trk,
     return;
   }
 
+  // Add the track to the current maps in the state
   discriminant = std::sqrt(discriminant);
   const double zMax = (-linearTerm - discriminant) / (2 * quadraticTerm);
   const double zMin = (-linearTerm + discriminant) / (2 * quadraticTerm);
@@ -93,10 +96,6 @@ std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
     }
     updateMaximum(trialZ, density, curvature, maximumPosition, maximumDensity,
                   maxCurvature);
-  }
-  if (maximumDensity <= 0) {
-    std::cout << "Global maximum at density of 0; track map contains "
-              << state.trackMap.size() << " tracks" << std::endl;
   }
 
   return std::make_pair(maximumPosition,
