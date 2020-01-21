@@ -9,6 +9,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include "Acts/EventData/TrackParameters.hpp"
 
 namespace Acts {
@@ -81,7 +82,7 @@ class TrackDensity {
     double maxZRange = 0;
 
     // Maps to cache track information
-    TrackMap trackMap;
+    std::set<BoundParameters, predPerigee> trackSet;
     LowerMap lowerMap;
     UpperMap upperMap;
   };
@@ -119,7 +120,7 @@ class TrackDensity {
   /// @return Pair of position of global maximum and Gaussian width
   std::pair<double, double> globalMaximumWithWidth(State& state) const;
 
-  /// @brief Calculates the z position position of the global maximum
+  /// @brief Calculates the z position of the global maximum
   ///
   /// @param state The track density state
   ///
