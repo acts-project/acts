@@ -15,8 +15,9 @@ namespace Acts {
 
 /// @class TrackDensity
 ///
-/// @brief Class to model tracks as density functions based on
-/// their d0 and z0 perigee parameters
+/// @brief Class to model tracks as 2D density functions based on
+/// their d0 and z0 perigee parameters (mean value) and covariance
+/// matrices (determining the width of the function)
 class TrackDensity {
  public:
   /// @brief Struct to store information for a single track

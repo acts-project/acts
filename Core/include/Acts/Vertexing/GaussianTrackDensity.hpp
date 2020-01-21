@@ -14,8 +14,9 @@ namespace Acts {
 
 /// @class GaussianTrackDensity
 ///
-/// @brief Class to model tracks as Gaussian shaped density functions based on
-/// their d0 and z0 perigee parameters
+/// @brief Class to model tracks as 2D Gaussian-shaped density functions
+/// based on their d0 and z0 perigee parameters (mean value)
+/// and covariance matrices (determining the width of the function)
 class GaussianTrackDensity {
  public:
   /// @brief The State struct
