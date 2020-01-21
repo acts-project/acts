@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include <climits>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -31,52 +32,79 @@ using NodeTransform = std::pair<TGeoNode*, std::shared_ptr<const Transform3D>>;
 using namespace Acts::UnitLiterals;
 
 /// @class TGeoLayerBuilder
-/// works on the gGeoManager, as this is filled from GDML
+///
+/// This parses the gGeoManager and looks for a defined combination
+/// of volume with contained sensitive detector element. The association
+/// is done by matching the names of the TGeoNode / TGeoVolume to the search
+/// string.
+///
+/// The parsing can be restricted to a given parse volume (in r and z),
+/// and given some splitting parameters the surfaces can be automatically be
+/// split into layers.
 class TGeoLayerBuilder : public ILayerBuilder {
  public:
   ///  Helper config structs for volume parsin
   struct LayerConfig {
    public:
-    /// identify the layer by name
+    /// Identify the layer by name
     std::string layerName = "";
-    /// identify the sensor by name
+    /// Identify the sensor by name
     std::string sensorName = "";
-    // the local axis definition
+    /// The local axis definition of TGeo object to Acts::Surface
     std::string localAxes = "xyz";
-    // the envolpoe
-    std::pair<double, double> envelope = {0., 0.};
-    // the min/max in r
-    std::pair<double, double> rminmax = {0., 0.};
-    std::vector<double> splitRadii = {};
-    /// define the number of bins in loc0
+    /// Parse area :  in r
+    std::pair<double, double> parseRangeR = {
+        0., std::numeric_limits<double>::max()};
+    /// Parse area : in z
+    std::pair<double, double> parseRangeZ = {
+        -std::numeric_limits<double>::max(),
+        std::numeric_limits<double>::max()};
+    /// The envelope to be built around the layer
+    std::pair<double, double> envelope = {0_mm, 0_mm};
+    /// Layer splitting: r min/max of the split range
+    std::pair<double, double> splitRangeR = {
+        std::numeric_limits<double>::max(),
+        -std::numeric_limits<double>::max()};
+    /// Layer splitting: r the result of the splitting
+    std::vector<double> splitParametersR = {};
+    /// Layer splitting: z min/max of the split range
+    std::pair<double, double> splitRangeZ = {
+        std::numeric_limits<double>::max(),
+        -std::numeric_limits<double>::max()};
+    /// Layer splitting: z the result of the splitting
+    std::vector<double> splitParametersZ = {};
+    /// Define the number of bins in loc0
     size_t binsLoc0{12};
-    /// define the number of bins in loc1
+    /// Define the number of bins in loc1
     size_t binsLoc1{12};
 
+    // Default constructor
     LayerConfig()
         : layerName(""),
           sensorName(""),
           localAxes("XZY"),
-          envelope(std::pair<double, double>(1., 1.)) {}
+          envelope(std::pair<double, double>(1_mm, 1_mm)) {}
   };
 
   /// @struct Config
-  /// nested configuration struct for steering of the layer builder
+  /// @brief nested configuration struct for steering of the layer builder
   struct Config {
-    /// string based identification
+    /// String based identification
     std::string configurationName = "undefined";
-    // unit conversion
-    double unit = 10;
-    // set visibility flag
-    bool setVisibility;
-    // layer creator
+
+    // Unit conversion
+    double unit = 1_cm;
+    // Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
-    // configurations
-    std::vector<LayerConfig> negativeLayerConfigs;
-    std::vector<LayerConfig> centralLayerConfigs;
-    std::vector<LayerConfig> positiveLayerConfigs;
-    // Split flags - if different from 0., a split is attempted
-    double centralLayerSplit = 0_mm;
+
+    // Configuration is always | n | c | p |
+    std::array<std::vector<LayerConfig>, 3> layerConfigurations;
+
+    // Split tolerances in R
+    std::array<double, 3> layerSplitToleranceR = {-1., -1., -1.};
+
+    // Split tolerances in Z
+    std::array<double, 3> layerSplitToleranceZ = {-1., -1., -1.};
   };
 
   /// Constructor
@@ -110,14 +138,14 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// Name identification
   const std::string& identification() const final;
 
-  /// set the configuration object
+  /// Set the configuration object
   /// @param config is the configuration struct
   void setConfiguration(const Config& config);
 
-  /// get the configuration object
+  /// Get the configuration object
   Config getConfiguration() const;
 
-  /// set logging instance
+  /// Set logging instance
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Return the created detector elements
@@ -125,21 +153,32 @@ class TGeoLayerBuilder : public ILayerBuilder {
   detectorElements() const;
 
  private:
-  /// configruation object
+  /// Configuration object
   Config m_cfg;
+
+  /// layer types
+  std::array<std::string, 3> m_layerTypes = {"Negative", "Central", "Positive"};
 
   /// Private access to the logger
   const Logger& logger() const { return *m_logger; }
 
-  /// logging instance
+  /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 
   /// @todo make clear where the TGeoDetectorElement lives
   std::vector<std::shared_ptr<const TGeoDetectorElement>> m_elementStore;
 
   /// Private helper function to parse the geometry tree
+  ///
   /// @param gcts the geometry context of this call
   /// @param layerSurfaces are the surfaces that build the layer
+  /// @param tgVolume is the current volume
+  /// @param tgNode the current Node (branch)
+  /// @param tgTransform is the current relative transform
+  /// @param layerConfig is the configuration to be filled
+  /// @param type is ( n | c | p ) as of  ( -1 | 0 | 1 )
+  /// @param correctBranch is the branch hit
+  /// @param offset is a string offset for the screen output
   void resolveSensitive(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
@@ -148,6 +187,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
       const std::string& offset = "");
 
   /// Private helper method : build layers
+  ///
   /// @param gcts the geometry context of this call
   /// @param layers is goint to be filled
   /// @param type is the indication which ones to build -1 | 0 | 1
@@ -158,6 +198,28 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// @param wc is the one with the potential wildcard
   /// @param test is the test string
   bool match(const char* first, const char* second) const;
+
+  /// Private helper method : register splitting input
+  void registerSplit(std::vector<double>& parameters, double test,
+                     double tolerance, std::pair<double, double>& range) const;
+};
+
+inline void TGeoLayerBuilder::registerSplit(
+    std::vector<double>& parameters, double test, double tolerance,
+    std::pair<double, double>& range) const {
+  bool found = false;
+  // min/max setting
+  range.first = std::min(range.first, test);
+  range.second = std::max(range.second, test);
+  // Loop and find the split parameters
+  for (auto& splitPar : parameters) {
+    if (std::abs(test - splitPar) < tolerance) {
+      found = true;
+    }
+  }
+  if (not found) {
+    parameters.push_back(test);
+  }
 };
 
 inline TGeoLayerBuilder::Config TGeoLayerBuilder::getConfiguration() const {

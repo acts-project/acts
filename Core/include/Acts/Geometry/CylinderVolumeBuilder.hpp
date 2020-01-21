@@ -489,7 +489,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     std::pair<double, double> layerEnvelopeR = {1. * UnitConstants::mm,
                                                 1. * UnitConstants::mm};
     /// the additional envelope in Z to create zMin, zMax
-    double layerEnvelopeZ = 10. * UnitConstants::mm;
+    double layerEnvelopeZ = 1. * UnitConstants::mm;
 
     // The potential boundary material (MB) options - there are 6 at maximium
     /// -------------------- MB (outer [1]) ---------------
