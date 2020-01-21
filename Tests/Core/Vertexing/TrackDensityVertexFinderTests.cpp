@@ -39,7 +39,8 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 
 ///
 /// @brief Unit test for TrackDensityVertexFinder using same configuration
-/// and values as VertexSeedFinderTestAlg in Athena implementation
+/// and values as VertexSeedFinderTestAlg in Athena implementation, i.e.
+/// tests if reordering tracks returns the same result
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   // Define some track parameter properties
@@ -243,7 +244,7 @@ struct InputTrack {
 
 ///
 /// @brief Unit test for TrackDensityVertexFinder with user-defined input track
-/// type
+/// type with same values as in other tests
 ///
 BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Define some track parameter properties
