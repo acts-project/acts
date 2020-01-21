@@ -361,30 +361,34 @@ inline Acts::Vector2D Acts::BoundaryCheck::computeClosestPointOnPolygon(
   auto closestOnSegment = [&](auto&& ll0, auto&& ll1) {
     // normal vector and position of the closest point along the normal
     auto n = ll1 - ll0;
-    auto f = (n.transpose() * m_weight * n).value();
+    auto weighted_n = m_weight * n;
+    auto f = n.dot(weighted_n);
     auto u = std::isnormal(f)
-                 ? -((ll0 - point).transpose() * m_weight * n).value() / f
+                 ? (point - ll0).dot(weighted_n) / f
                  : 0.5;  // ll0 and ll1 are so close it doesn't matter
     // u must be in [0, 1] to still be on the polygon segment
-    return ll0 + std::min(std::max(u, 0.0), 1.0) * n;
+    return ll0 + std::clamp(u, 0.0, 1.0) * n;
   };
 
   auto iv = std::begin(vertices);
   Vector2D l0 = *iv;
   Vector2D l1 = *(++iv);
   Vector2D closest = closestOnSegment(l0, l1);
+  auto closestDist = squaredNorm(closest - point);
   // Calculate the closest point on other connecting lines and compare distances
   for (++iv; iv != std::end(vertices); ++iv) {
     l0 = l1;
     l1 = *iv;
     Vector2D current = closestOnSegment(l0, l1);
-    if (squaredNorm(current - point) < squaredNorm(closest - point)) {
+    auto currentDist = squaredNorm(current - point);
+    if (currentDist < closestDist) {
       closest = current;
+      closestDist = currentDist;
     }
   }
   // final edge from last vertex back to the first vertex
   Vector2D last = closestOnSegment(l1, *std::begin(vertices));
-  if (squaredNorm(last - point) < squaredNorm(closest - point)) {
+  if (squaredNorm(last - point) < closestDist) {
     closest = last;
   }
   return closest;
