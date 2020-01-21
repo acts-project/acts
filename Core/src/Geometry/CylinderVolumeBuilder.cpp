@@ -412,7 +412,6 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
         takeBigger(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
         takeSmaller(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
         takeBigger(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
-        //!< @todo check for Endcap Ring config
       }
     }
     for (auto& volume : mtvVector) {
@@ -427,7 +426,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
     }
   }
 
-  // set the layers to the layer vector
+  // Set the layers to the layer vector
   lConfig.layers = lVector;
   // set the layers to the layer vector
   lConfig.volumes = mtvVector;
