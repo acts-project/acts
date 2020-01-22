@@ -11,6 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include <algorithm>
+#include <vector>
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -198,6 +200,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                 m_cfg.volumeName + "::Barrel")
           : nullptr;
 
+  // Helper method to check for
+
   // Helper method to create endcap volume
   auto createEndcap =
       [&](VolumeConfig& centralConfig, VolumeConfig& endcapConfig,
@@ -208,7 +212,99 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     }
     // Check for ring layout
     if (m_cfg.checkRingLayout) {
-      for (const auto& elayer : endcapConfig.layers) {
+      ACTS_DEBUG("Configured to check for ring layout - parsing layers.");
+      // Parsing loop for ring layout
+      std::vector<double> innerRadii = {};
+      std::vector<double> outerRadii = {};
+      for (const auto& elay : endcapConfig.layers) {
+        auto discBounds = dynamic_cast<const RadialBounds*>(
+            &(elay->surfaceRepresentation().bounds()));
+        if (discBounds) {
+          double tolerance = m_cfg.ringTolerance;
+          // Search for the rmin value  - and insert if necessary
+          double rMin = discBounds->rMin();
+          auto innerSearch = std::find_if(
+              innerRadii.begin(), innerRadii.end(), [&](double reference) {
+                return std::abs(rMin - reference) < tolerance;
+              });
+          if (innerSearch == innerRadii.end()) {
+            innerRadii.push_back(rMin);
+          }
+          // Search for the rmax value - and insert if necessary
+          double rMax = discBounds->rMax();
+          auto outerSearch = std::find_if(
+              outerRadii.begin(), outerRadii.end(), [&](double reference) {
+                return std::abs(rMax - reference) < tolerance;
+              });
+          if (outerSearch == outerRadii.end()) {
+            outerRadii.push_back(rMax);
+          }
+        }
+      }
+      // Result of the parsing loop
+      if (innerRadii.size() == outerRadii.size() and not innerRadii.empty()) {
+        bool consistent = true;
+        // The inter volume radii
+        std::vector<double> interRadii = {};
+        for (int ir = 1; ir < int(innerRadii.size()); ++ir) {
+          // Check whether inner/outer radii are consistent
+          if (outerRadii[ir - 1] < innerRadii[ir]) {
+            interRadii.push_back(0.5 * (outerRadii[ir - 1] + innerRadii[ir]));
+          } else {
+            consistent = false;
+            break;
+          }
+        }
+        // Continue if the ring layout is consistent
+        if (consistent) {
+          ACTS_DEBUG("Ring layout detection: " << innerRadii.size()
+                                               << " volumes.");
+          // Separate the Layers into volumes
+          std::vector<std::pair<double, double>> volumeRminRmax = {};
+          for (unsigned int ii = 0; ii < interRadii.size(); ++ii) {
+            if (ii == 0) {
+              volumeRminRmax.push_back({endcapConfig.rMin, interRadii[ii]});
+            }
+            if (ii + 1 < interRadii.size()) {
+              volumeRminRmax.push_back({interRadii[ii], interRadii[ii + 1]});
+            } else {
+              volumeRminRmax.push_back({interRadii[ii], endcapConfig.rMax});
+            }
+          }
+          auto ringLayers =
+              std::vector<LayerVector>(innerRadii.size(), LayerVector());
+          // Filling loop
+          for (const auto& elay : endcapConfig.layers) {
+            // Getting the reference radius
+            double test =
+                elay->surfaceRepresentation().binningPositionValue(gctx, binR);
+            // Find the right bin
+            auto ringVolume = std::find_if(
+                volumeRminRmax.begin(), volumeRminRmax.end(),
+                [&](const auto& reference) {
+                  // std::cout << reference.first << " < " << test << " < " <<
+                  // reference.second << std::endl;
+                  return (test > reference.first and test < reference.second);
+                });
+            if (ringVolume != volumeRminRmax.end()) {
+              unsigned int ringBin =
+                  std::distance(ringVolume, volumeRminRmax.begin());
+              ringLayers[ringBin].push_back(elay);
+            }
+          }
+
+          // Subvolume construction
+          ACTS_DEBUG("Ring layout configuration: ");
+          unsigned int ir = 0;
+          for (auto& rLayers : ringLayers) {
+            ACTS_DEBUG(" - ring volume " << ir << " with " << rLayers.size()
+                                         << " layers.");
+            ACTS_DEBUG(" - ring volume rmin/rmax = "
+                       << volumeRminRmax[ir].first << "/"
+                       << volumeRminRmax[ir].second);
+            ++ir;
+          }
+        }
       }
     }
 
@@ -291,11 +387,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     volume = nEndcap ? nEndcap : (barrel ? barrel : pEndcap);
   }
 
-  // prepare the gap volumes first
+  // Prepare the gap volumes first
   TrackingVolumePtr existingVolumeCp = existingVolume;
-  // check if further action is needed on existing volumes and gap volumes
+  // Check if further action is needed on existing volumes and gap volumes
   if (existingVolumeCp) {
-    // check if gaps are needed
+    // Check if gaps are needed
     std::vector<std::shared_ptr<const TrackingVolume>> existingContainer;
     if (wConfig.fGapVolumeConfig) {
       // create the gap volume
@@ -319,7 +415,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       existingContainer.push_back(sGap);
     }
 
-    // and low lets create the new existing volume with gaps
+    // And low lets create the new existing volume with gaps
     existingVolumeCp =
         existingContainer.size() > 1
             ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
