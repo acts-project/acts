@@ -459,33 +459,37 @@ struct WrappingConfig {
 /// All are optionally wrapped around a given volume which has to by a cylinder
 /// volume and which has to be center at z == 0
 ///
-///  To receive the tracking volume it is possible to also hand over a triple of
+/// To receive the tracking volume it is possible to also hand over a triple of
 /// layers, which is a C++ tuple of three pointers to layer vectors (defined in
 /// the ITrackingVolumeBuilder). This functionality is needed for a possible
 /// translation of an geometry existing in another format. The first entry
 /// represents the layers of the negative endcap, the second the layers of the
 /// barrel and the third the layers of the positive endcap. If the one of these
 /// pointers is a nullptr no layers will be created for this volume
-
+///
+/// For the endcap region it is possible to check for a ring layout,
+/// in which case an attempt to split into individual ring volumes is done
 class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
  public:
   /// @struct Config
   /// Nested configuration struct for this CylinderVolumeBuilder
   struct Config {
-    /// the trackign volume helper for construction
+    /// The trackign volume helper for construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
-    /// the string based indenfication
+    /// The string based indenfication
     std::string volumeName = "";
-    /// the world material
+    /// The world material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
-    /// build the volume to the beam line
+    /// Build the volume to the beam line
     bool buildToRadiusZero = false;
-    /// needed to build layers within the volume
+    /// Check for endcap ring layout
+    bool checkRingLayout = false;
+    /// Builder to construct layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
-    /// needed to build confined volumes within the volume
+    /// Builder to construct confined volumes within the volume
     std::shared_ptr<const IConfinedTrackingVolumeBuilder> ctVolumeBuilder =
         nullptr;
-    /// the additional envelope in R to create rMin, rMax
+    /// Additional envelope in R to create rMin, rMax
     std::pair<double, double> layerEnvelopeR = {1. * UnitConstants::mm,
                                                 1. * UnitConstants::mm};
     /// the additional envelope in Z to create zMin, zMax
@@ -498,7 +502,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     std::array<std::shared_ptr<const ISurfaceMaterial>, 6> boundaryMaterial{
         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 
-    /// the volume signature
+    /// Volume signature
     int volumeSignature = -1;
   };
 

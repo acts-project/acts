@@ -220,7 +220,7 @@ inline void TGeoLayerBuilder::registerSplit(
   if (not found) {
     parameters.push_back(test);
   }
-};
+}
 
 inline TGeoLayerBuilder::Config TGeoLayerBuilder::getConfiguration() const {
   return m_cfg;

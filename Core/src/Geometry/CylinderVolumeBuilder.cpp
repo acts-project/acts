@@ -198,27 +198,34 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                 m_cfg.volumeName + "::Barrel")
           : nullptr;
 
-  // the negative endcap is created if present
-  auto nEndcap =
-      wConfig.nVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.nVolumeConfig.layers,
-                wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-                wConfig.nVolumeConfig.rMin, wConfig.nVolumeConfig.rMax,
-                wConfig.nVolumeConfig.zMin, wConfig.nVolumeConfig.zMax,
-                m_cfg.volumeName + "::NegativeEndcap")
-          : nullptr;
+  // Helper method to create endcap volume
+  auto createEndcap =
+      [&](VolumeConfig& centralConfig, VolumeConfig& endcapConfig,
+          const std::string& endcapName) -> MutableTrackingVolumePtr {
+    // No config - no volume
+    if (not endcapConfig) {
+      return nullptr;
+    }
+    // Check for ring layout
+    if (m_cfg.checkRingLayout) {
+      for (const auto& elayer : endcapConfig.layers) {
+      }
+    }
 
-  // the positive endcap is created
-  auto pEndcap =
-      wConfig.pVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.pVolumeConfig.layers,
-                wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-                wConfig.pVolumeConfig.rMin, wConfig.pVolumeConfig.rMax,
-                wConfig.pVolumeConfig.zMin, wConfig.pVolumeConfig.zMax,
-                m_cfg.volumeName + "::PositiveEndcap")
-          : nullptr;
+    // No ring layout - return single volume
+    return tvHelper->createTrackingVolume(
+        gctx, endcapConfig.layers, centralConfig.volumes, m_cfg.volumeMaterial,
+        endcapConfig.rMin, endcapConfig.rMax, endcapConfig.zMin,
+        endcapConfig.zMax, m_cfg.volumeName + endcapName);
+  };
+
+  // The negative endcap is created if present
+  auto nEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.nVolumeConfig,
+                              "::NegativeEndcap");
+
+  // The positive endcap is created if present
+  auto pEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.pVolumeConfig,
+                              "::PositiveEndcap");
 
   ACTS_DEBUG("Newly created volume(s) will be " << wConfig.wConditionScreen);
   // standalone container, full wrapping, full insertion & if no existing volume
