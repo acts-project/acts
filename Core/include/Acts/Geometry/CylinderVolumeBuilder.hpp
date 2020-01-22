@@ -484,6 +484,8 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     bool buildToRadiusZero = false;
     /// Check for endcap ring layout
     bool checkRingLayout = false;
+    /// Tolerance for endcap ring association
+    double ringTolerance = 0 * UnitConstants::mm;
     /// Builder to construct layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
     /// Builder to construct confined volumes within the volume

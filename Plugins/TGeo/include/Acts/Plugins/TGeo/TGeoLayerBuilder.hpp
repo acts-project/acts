@@ -91,20 +91,20 @@ class TGeoLayerBuilder : public ILayerBuilder {
   struct Config {
     /// String based identification
     std::string configurationName = "undefined";
-
-    // Unit conversion
+    /// Unit conversion
     double unit = 1_cm;
-    // Layer creator
+    /// Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
-
-    // Configuration is always | n | c | p |
+    /// Configuration is always | n | c | p |
     std::array<std::vector<LayerConfig>, 3> layerConfigurations;
-
-    // Split tolerances in R
+    /// Split tolerances in R
     std::array<double, 3> layerSplitToleranceR = {-1., -1., -1.};
-
-    // Split tolerances in Z
+    /// Split tolerances in Z
     std::array<double, 3> layerSplitToleranceZ = {-1., -1., -1.};
+    /// Check for ring layout when building a volume
+    bool checkRingLayout = false;
+    /// Tolerance for ring detection and association
+    bool ringTolerance = 0_mm;
   };
 
   /// Constructor
