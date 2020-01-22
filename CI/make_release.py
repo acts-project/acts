@@ -8,8 +8,15 @@ import gitlab as gitlab_api
 import sys
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta, FR
+import dateutil.parser
 import jinja2
+import json
 import humanize
+import click_config_file
+import requests
+import os
+from pprint import pprint
+import tempfile
 
 from util import Spinner
 from release_notes import (
@@ -39,7 +46,7 @@ def gitlab_instance(ctx, param, token):
 
 def gitlab_option(f):
     f = click.option(
-        "--access-token", "-t", "gitlab", required=True, callback=gitlab_instance
+        "--gitlab-token", "-t", "gitlab", required=True, callback=gitlab_instance
     )(f)
     return f
 
@@ -366,6 +373,140 @@ def relnotes(start, end, gitlab):
 
     print(md)
 
+class Zenodo:
+  def __init__(self, token, base_url = "https://zenodo.org/api/"):
+    self.token = token
+    self.base_url = base_url
+
+  def get(self, url, params = {}, **kwargs):
+    _params = {"access_token": self.token}
+    _params.update(params)
+    r =  requests.get(os.path.join(self.base_url, url), params=_params, **kwargs)
+    return r.json()
+
+  def post(self, url, params = {}, headers = {}, **kwargs):
+    _headers = {"Content-Type": "application/json"}
+    _headers.update(headers)
+    _params = {"access_token": self.token}
+    _params.update(params)
+    r = requests.post(os.path.join(self.base_url, url), params=_params, 
+                      headers=_headers, 
+                      **kwargs)
+    assert r.status_code == 201, r.json()
+    return r
+
+  def put(self, url, data, params = {}, headers = {}, **kwargs):
+    _headers = {"Content-Type": "application/json"}
+    _headers.update(headers)
+    #  _params = {"access_token": self.token}
+    #  _params.update(params)
+    _url = os.path.join(self.base_url, url)+f"?access_token={self.token}"
+    print(_url)
+    r = requests.put(_url,
+                      data=json.dumps(data),
+                      headers=_headers, 
+                      **kwargs)
+    assert r.status_code == 200, f"Status {r.status_code}, {r.json()}"
+    return r
+
+  def upload(self, deposition, name, fh):
+    _params = {"access_token": self.token}
+    data={"name": name}
+    files = {"file": fh}
+    r = requests.post(os.path.join(self.base_url, f"deposit/depositions/{deposition}/files"), 
+                      params=_params, data=data, files=files)
+    assert r.status_code == 201, r.status_code
+    return r
+
+  def delete(self, url, params = {}, **kwargs):
+    _params = {"access_token": self.token}
+    return requests.delete(os.path.join(self.base_url, url), params=_params)
+
+@main.command()
+@gitlab_option
+@click.argument("version")
+@click.option("--zenodo-token", "-z", required=True)
+@click.option("--deposition", "-d", required=True)
+@click_config_file.configuration_option()
+def zenodo(version, gitlab, zenodo_token, deposition):
+  version = split_version(version)
+  print(version, gitlab, zenodo_token)
+  zenodo = Zenodo(zenodo_token)
+
+  create_res = zenodo.post(f"deposit/depositions/{deposition}/actions/newversion")
+  print(create_res)
+  create_res = create_res.json()
+
+  draft_id = create_res["links"]["latest_draft"].split("/")[-1]
+  pprint(create_res)
+
+  print("Created new version with id", draft_id)
+
+  print("Delete all files for draft")
+  draft = zenodo.get(f"deposit/depositions/{draft_id}")
+  pprint(draft)
+
+  for file in draft["files"]:
+    file_id = file["id"]
+    r = zenodo.delete(f"deposit/depositions/{draft_id}/files/{file_id}")
+    assert r.status_code == 204
+
+  creator_file = os.path.join(os.path.dirname(__file__), "../AUTHORS.md")
+  with open(creator_file) as fh:
+    md = fh.read().strip().split("\n")
+  md = [l.strip() for l in md if not l.strip().startswith("#") and not l.strip() == ""]
+
+  creators = []
+  for line in md:
+    assert line.startswith("- ")
+    line = line[2:]
+    split = line.split(",", 1)
+    creator = {"name": split[0].strip()}
+
+    if len(split) == 2:
+      creator["affiliation"] = split[1].strip()
+
+    creators.append(creator)
+	
+  project = gitlab.projects.get("acts/acts-core")
+  milestones = project.milestones.list()
+  milestone = find_milestone(version, milestones)
+  mrs_grouped, issues_grouped = collect_milestone(milestone)
+
+  assert milestone.state == "closed"
+
+  tag = project.tags.get(format_version(version))
+  print(tag)
+  tag_date = dateutil.parser.parse(tag.commit["created_at"]).date().strftime("%Y-%m-%d")
+
+  description = f'Milestone: <a href="{milestone.web_url}">%{milestone.title}</a> <br/> Merge requested accepted for this version: \n <ul>\n'
+
+  for mr in sum(mrs_grouped.values(), []):
+    description += f'<li><a href="{mr.web_url}">!{mr.iid} - {mr.title}</a></li>\n'
+
+  description += "</ul>"
+
+  data = {"metadata": {
+    "title": f"Acts Project: {format_version(version)}",
+    "upload_type": "software",
+    "description": description,
+    "creators": creators,
+    "version": format_version(version),
+    "publication_date": tag_date,
+    "license": "MPL-2.0",
+  }}
+  zenodo.put(f"deposit/depositions/{draft_id}", data).json()
+
+
+  with tempfile.TemporaryFile() as fh:
+    r = requests.get(f"https://gitlab.cern.ch/acts/acts-core/-/archive/{format_version(version)}/acts-core-{format_version(version)}.zip", stream=True)
+    r.raw.decode_content = True
+    fh.write(r.raw.read())
+    fh.seek(0)
+    name = f"acts-core-{format_version(version)}.zip"
+    zenodo.upload(draft_id, name, fh)
 
 if "__main__" == __name__:
     main()
+
+
