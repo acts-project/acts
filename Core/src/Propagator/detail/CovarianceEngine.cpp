@@ -140,7 +140,8 @@ const FreeToBoundMatrix surfaceDerivative(
 if(jacobianLocalToGlobal.has_value())
 {
   const BoundRowVector sfactors =
-      normVec * jacobianLocalToGlobal.template topLeftCorner<3, eBoundSize>();
+      normVec *
+      (*jacobianLocalToGlobal).template topLeftCorner<3, eBoundSize>();
   *jacobianLocalToGlobal -= derivatives * sfactors;
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here
@@ -301,25 +302,24 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
                          accumulatedPath);
 }
 
-FreeState freeState(StepperState& state)
-  {
-    // Transport the covariance to here
-    std::optional<FreeSymMatrix> cov = std::nullopt;
-    if (state.covTransport) {
-		covarianceTransport(state, false);
-		cov = std::get<FreeSymMatrix>(state.cov);
-    }
-    // Create the free parameters
-    FreeVector pars;
-    pars.template head<3>() = state.pos;
-    pars(3) = state.t;
-    pars.template segment<3>(4) = state.dir;
-    pars(7) = (state.q / state.p);
-    FreeParameters parameters(std::move(cov), pars);
-    
-    return std::make_tuple(std::move(parameters), state.jacobian,
-                               state.pathAccumulated);
+FreeState freeState(StepperState& state) {
+  // Transport the covariance to here
+  std::optional<FreeSymMatrix> cov = std::nullopt;
+  if (state.covTransport) {
+    covarianceTransport(state, false);
+    cov = std::get<FreeSymMatrix>(state.cov);
   }
+  // Create the free parameters
+  FreeVector pars;
+  pars.template head<3>() = state.pos;
+  pars(3) = state.t;
+  pars.template segment<3>(4) = state.dir;
+  pars(7) = (state.q / state.p);
+  FreeParameters parameters(std::move(cov), pars);
+
+  return std::make_tuple(std::move(parameters), state.jacobian,
+                         state.pathAccumulated);
+}
   
 void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
                          FreeMatrix& transportJacobian, FreeVector& derivatives,
@@ -367,6 +367,7 @@ else
 }
 
 // Reinitialize jacobian components
+// TODO: Jacobian reset must occur in any case
 if(toLocal)
   reinitializeJacobians(transportJacobian, derivatives, jacobianLocalToGlobal,
                         direction);
@@ -408,6 +409,6 @@ void covarianceTransport(
   // Reinitialize jacobian components
   reinitializeJacobians(geoContext, transportJacobian, derivatives,
                         jacobianLocalToGlobal, parameters, surface);
-}	
+}
 }  // namespace detail
 }  // namespace Acts

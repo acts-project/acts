@@ -80,19 +80,24 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   CurvilinearParameters startC(std::nullopt, pos, mom, q, time);
-  
+
   Vector3D dir = mom.normalized();
   FreeVector pars;
   pars << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
   FreeParameters startF(std::nullopt, pars);
 
   // constant field propagation atlas stepper
-  auto aposition = constant_field_propagation<CurvilinearParameters>(apropagator, startC, pT, phi, theta, Bz);
+  auto aposition = constant_field_propagation<CurvilinearParameters>(
+      apropagator, startC, pT, phi, theta, Bz);
   // constant field propagation eigen stepper
-  auto epositionCC = constant_field_propagation<CurvilinearParameters>(epropagator, startC, pT, phi, theta, Bz);
-  auto epositionFC = constant_field_propagation<FreeParameters>(epropagator, startC, pT, phi, theta, Bz);
-  auto epositionCF = constant_field_propagation<CurvilinearParameters>(epropagator, startF, pT, phi, theta, Bz);
-  auto epositionFF = constant_field_propagation<FreeParameters>(epropagator, startF, pT, phi, theta, Bz);
+  auto epositionCC = constant_field_propagation<CurvilinearParameters>(
+      epropagator, startC, pT, phi, theta, Bz);
+  auto epositionFC = constant_field_propagation<FreeParameters>(
+      epropagator, startC, pT, phi, theta, Bz);
+  auto epositionCF = constant_field_propagation<CurvilinearParameters>(
+      epropagator, startF, pT, phi, theta, Bz);
+  auto epositionFF = constant_field_propagation<FreeParameters>(
+      epropagator, startF, pT, phi, theta, Bz);
   // check consistency
   CHECK_CLOSE_REL(epositionCC, aposition, 1e-6);
   CHECK_CLOSE_REL(epositionCC, epositionFC, 1e-6);
@@ -118,59 +123,60 @@ BOOST_DATA_TEST_CASE(forward_backward_propagation_,
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
   CurvilinearParameters startC(std::nullopt, pos, mom, q, time);
-  
+
   Vector3D dir = mom.normalized();
   FreeVector pars;
   pars << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
   FreeParameters startF(std::nullopt, pars);
-  
+
   // foward backward check atlas stepper
-  foward_backward<CurvilinearParameters, CurvilinearParameters>(apropagator, plimit, startC, 1_um, 1_eV, debug);
+  foward_backward<CurvilinearParameters, CurvilinearParameters>(
+      apropagator, plimit, startC, 1_um, 1_eV, debug);
   // foward backward check eigen stepper
-  foward_backward<CurvilinearParameters, CurvilinearParameters>(epropagator, plimit, startC, 1_um, 1_eV,
-                  debug);
-  foward_backward<FreeParameters, CurvilinearParameters>(epropagator, plimit, startC, 1_um, 1_eV,
-                  debug);
-  foward_backward<CurvilinearParameters, FreeParameters>(epropagator, plimit, startC, 1_um, 1_eV,
-                  debug);  
-  foward_backward<FreeParameters, FreeParameters>(epropagator, plimit, startC, 1_um, 1_eV,
-                  debug);
-  foward_backward<CurvilinearParameters, CurvilinearParameters>(epropagator, plimit, startF, 1_um, 1_eV,
-                  debug);
-  foward_backward<FreeParameters, CurvilinearParameters>(epropagator, plimit, startF, 1_um, 1_eV,
-                  debug);
-  foward_backward<CurvilinearParameters, FreeParameters>(epropagator, plimit, startF, 1_um, 1_eV,
-                  debug);  
-  foward_backward<FreeParameters, FreeParameters>(epropagator, plimit, startF, 1_um, 1_eV,
-                  debug);
+  foward_backward<CurvilinearParameters, CurvilinearParameters>(
+      epropagator, plimit, startC, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, CurvilinearParameters>(
+      epropagator, plimit, startC, 1_um, 1_eV, debug);
+  foward_backward<CurvilinearParameters, FreeParameters>(
+      epropagator, plimit, startC, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, FreeParameters>(epropagator, plimit, startC,
+                                                  1_um, 1_eV, debug);
+  foward_backward<CurvilinearParameters, CurvilinearParameters>(
+      epropagator, plimit, startF, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, CurvilinearParameters>(
+      epropagator, plimit, startF, 1_um, 1_eV, debug);
+  foward_backward<CurvilinearParameters, FreeParameters>(
+      epropagator, plimit, startF, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, FreeParameters>(epropagator, plimit, startF,
+                                                  1_um, 1_eV, debug);
   // foward backward check straight line stepper
-  foward_backward<CurvilinearParameters, CurvilinearParameters>(spropagator, plimit, startC, 1_um, 1_eV,
-                  debug);
-  foward_backward<FreeParameters, CurvilinearParameters>(spropagator, plimit, startC, 1_um, 1_eV,
-                  debug);
-  foward_backward<CurvilinearParameters, FreeParameters>(spropagator, plimit, startC, 1_um, 1_eV,
-                  debug);
-  foward_backward<FreeParameters, FreeParameters>(spropagator, plimit, startC, 1_um, 1_eV,
-                  debug);
-  foward_backward<CurvilinearParameters, CurvilinearParameters>(spropagator, plimit, startF, 1_um, 1_eV,
-                  debug);
-  foward_backward<FreeParameters, CurvilinearParameters>(spropagator, plimit, startF, 1_um, 1_eV,
-                  debug);
-  foward_backward<CurvilinearParameters, FreeParameters>(spropagator, plimit, startF, 1_um, 1_eV,
-                  debug);
-  foward_backward<FreeParameters, FreeParameters>(spropagator, plimit, startF, 1_um, 1_eV,
-                  debug);
+  foward_backward<CurvilinearParameters, CurvilinearParameters>(
+      spropagator, plimit, startC, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, CurvilinearParameters>(
+      spropagator, plimit, startC, 1_um, 1_eV, debug);
+  foward_backward<CurvilinearParameters, FreeParameters>(
+      spropagator, plimit, startC, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, FreeParameters>(spropagator, plimit, startC,
+                                                  1_um, 1_eV, debug);
+  foward_backward<CurvilinearParameters, CurvilinearParameters>(
+      spropagator, plimit, startF, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, CurvilinearParameters>(
+      spropagator, plimit, startF, 1_um, 1_eV, debug);
+  foward_backward<CurvilinearParameters, FreeParameters>(
+      spropagator, plimit, startF, 1_um, 1_eV, debug);
+  foward_backward<FreeParameters, FreeParameters>(spropagator, plimit, startF,
+                                                  1_um, 1_eV, debug);
 }
 
 /// test consistency of propagators when approaching a cylinder
 BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
                      ds::trackParameters* ds::propagationFraction ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, pfrac, rand1, rand2, rand3) {  
+                     pT, phi, theta, charge, pfrac, rand1, rand2, rand3) {
   // just make sure we can reach it
   double r = pfrac * std::abs(pT / Bz);
   r = (r > 2.5_m) ? 2.5_m : r;
-  
+
   // define start parameters
   double x = 0;
   double y = 0;
@@ -207,37 +213,37 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(std::nullopt, parsC);
   NeutralFreeParameters startNF(std::nullopt, parsN);
-  
+
   // check atlas stepper
-  auto a_at_cylinder = to_cylinder(apropagator, startC, r,
-                                   rand1, rand2, rand3, debug);
+  auto a_at_cylinder =
+      to_cylinder(apropagator, startC, r, rand1, rand2, rand3, debug);
   // check eigen stepper
-  auto e_at_cylinder = to_cylinder(epropagator, startC, r,
-                                   rand1, rand2, rand3, debug);
-  auto e_free_at_cylinder = to_cylinder(epropagator, startCF, r,
-                                   rand1, rand2, rand3, debug);
+  auto e_at_cylinder =
+      to_cylinder(epropagator, startC, r, rand1, rand2, rand3, debug);
+  auto e_free_at_cylinder =
+      to_cylinder(epropagator, startCF, r, rand1, rand2, rand3, debug);
   CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10_um);
   CHECK_CLOSE_ABS(e_at_cylinder.first, e_free_at_cylinder.first, 10_um);
-  
+
   // check without charge
-  auto s_at_cylinder = to_cylinder(spropagator, startN, r, rand1,
-                                   rand2, rand3, debug);
-  auto s_free_at_cylinder = to_cylinder(spropagator, startNF, r, rand1,
-                              rand2, rand3, debug);
-  e_at_cylinder = to_cylinder(epropagator, startN, r, rand1, rand2,
-                              rand3, debug);
-  e_free_at_cylinder = to_cylinder(epropagator, startNF, r, rand1, rand2,
-                              rand3, debug);
-  CHECK_CLOSE_ABS(s_at_cylinder.first, s_free_at_cylinder.first, 1_um);                               
+  auto s_at_cylinder =
+      to_cylinder(spropagator, startN, r, rand1, rand2, rand3, debug);
+  auto s_free_at_cylinder =
+      to_cylinder(spropagator, startNF, r, rand1, rand2, rand3, debug);
+  e_at_cylinder =
+      to_cylinder(epropagator, startN, r, rand1, rand2, rand3, debug);
+  e_free_at_cylinder =
+      to_cylinder(epropagator, startNF, r, rand1, rand2, rand3, debug);
+  CHECK_CLOSE_ABS(s_at_cylinder.first, s_free_at_cylinder.first, 1_um);
   CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 1_um);
-  CHECK_CLOSE_ABS(s_at_cylinder.first, e_free_at_cylinder.first, 1_um);                               
+  CHECK_CLOSE_ABS(s_at_cylinder.first, e_free_at_cylinder.first, 1_um);
 }
 
 /// test consistency of propagators to a plane
 BOOST_DATA_TEST_CASE(propagation_to_plane_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {  
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // define start parameters
   double x = 0;
   double y = 0;
@@ -264,7 +270,7 @@ BOOST_DATA_TEST_CASE(propagation_to_plane_,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-  }						 
+  }
   CurvilinearParameters startC(covOpt, pos, mom, q, time);
   NeutralCurvilinearParameters startN(covOpt, pos, mom, time);
 
@@ -274,7 +280,7 @@ BOOST_DATA_TEST_CASE(propagation_to_plane_,
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(std::nullopt, parsC);
   NeutralFreeParameters startNF(std::nullopt, parsN);
-  
+
   // to a plane with the atlas stepper
   auto a_at_plane = to_surface<AtlasPropagatorType, PlaneSurface>(
       apropagator, startC, plimit, rand1, rand2, rand3, true);
@@ -305,7 +311,7 @@ BOOST_DATA_TEST_CASE(propagation_to_plane_,
 BOOST_DATA_TEST_CASE(propagation_to_disc_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {  
+                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   // define start parameters
   double x = 0;
   double y = 0;
@@ -332,7 +338,7 @@ BOOST_DATA_TEST_CASE(propagation_to_disc_,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-  }						 
+  }
   CurvilinearParameters startC(covOpt, pos, mom, q, time);
   NeutralCurvilinearParameters startN(covOpt, pos, mom, time);
 
@@ -342,7 +348,7 @@ BOOST_DATA_TEST_CASE(propagation_to_disc_,
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(std::nullopt, parsC);
   NeutralFreeParameters startNF(std::nullopt, parsN);
-  
+
   // to a disc with the  atlas stepper
   auto a_at_disc = to_surface<AtlasPropagatorType, DiscSurface>(
       apropagator, startC, plimit, rand1, rand2, rand3, true);
@@ -374,9 +380,9 @@ BOOST_DATA_TEST_CASE(propagation_to_line_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
                      pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
-std::cout << "Running (first patch) tests : " << itest << std::endl;
+  std::cout << "Running (first patch) tests : " << itest << std::endl;
   ++itest;
-  
+
   // define start parameters
   double x = 0;
   double y = 0;
@@ -403,7 +409,7 @@ std::cout << "Running (first patch) tests : " << itest << std::endl;
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-  }						 
+  }
   CurvilinearParameters startC(covOpt, pos, mom, q, time);
   NeutralCurvilinearParameters startN(covOpt, pos, mom, time);
 
@@ -413,7 +419,7 @@ std::cout << "Running (first patch) tests : " << itest << std::endl;
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(std::nullopt, parsC);
   NeutralFreeParameters startNF(std::nullopt, parsN);
-  
+
   // to a line with the atlas stepper
   if (debug) {
     std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
@@ -425,11 +431,9 @@ std::cout << "Running (first patch) tests : " << itest << std::endl;
     std::cout << "[ >>>> Testing Eigen Propagator <<<< ]" << std::endl;
   }
   auto e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, startC, plimit, rand1, rand2, rand3, false,
-      debug);
+      epropagator, startC, plimit, rand1, rand2, rand3, false, debug);
   auto e_free_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, startCF, plimit, rand1, rand2, rand3, false,
-      debug);
+      epropagator, startCF, plimit, rand1, rand2, rand3, false, debug);
   CHECK_CLOSE_ABS(a_at_line.first, e_at_line.first, 10_um);
   CHECK_CLOSE_ABS(a_at_line.first, e_free_at_line.first, 10_um);
 
@@ -438,18 +442,14 @@ std::cout << "Running (first patch) tests : " << itest << std::endl;
   }
   // to a straw with the straight line stepper
   auto s_at_line = to_surface<StraightPropagatorType, StrawSurface>(
-      spropagator, startN, plimit, rand1, rand2, rand3, false,
-      debug);
+      spropagator, startN, plimit, rand1, rand2, rand3, false, debug);
   auto s_free_at_line = to_surface<StraightPropagatorType, StrawSurface>(
-      spropagator, startNF, plimit, rand1, rand2, rand3, false,
-      debug);
+      spropagator, startNF, plimit, rand1, rand2, rand3, false, debug);
   // to a straw with the eigen stepper without charge
   e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, startN, plimit, rand1, rand2, rand3, false,
-      debug);
+      epropagator, startN, plimit, rand1, rand2, rand3, false, debug);
   e_free_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, startNF, plimit, rand1, rand2, rand3, false,
-      debug);
+      epropagator, startNF, plimit, rand1, rand2, rand3, false, debug);
   CHECK_CLOSE_ABS(s_at_line.first, s_free_at_line.first, 1_um);
   CHECK_CLOSE_ABS(s_at_line.first, e_at_line.first, 1_um);
   CHECK_CLOSE_ABS(s_at_line.first, e_free_at_line.first, 1_um);

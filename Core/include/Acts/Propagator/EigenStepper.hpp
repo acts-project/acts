@@ -17,8 +17,8 @@
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
-#include "Acts/Propagator/StepperState.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -209,9 +209,8 @@ class EigenStepper {
       /// k_i elements of the momenta
       std::array<double, 4> kQoP;
     } stepData;
-    
   };
-        
+
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField);
 
@@ -331,11 +330,10 @@ class EigenStepper {
   ///
   /// @param [in, out] state State of the propagation
   ///
-  /// @return std::tuple conatining the final state parameters, the jacobian & the accumulated path
-  auto 
-  curvilinearState(State& state) const
-  {	  
-	return detail::curvilinearState(state);
+  /// @return std::tuple conatining the final state parameters, the jacobian &
+  /// the accumulated path
+  auto curvilinearState(State& state) const {
+    return detail::curvilinearState(state);
   }
 
   /// @brief Final state builder without a target surface
@@ -386,7 +384,8 @@ class EigenStepper {
   /// to a new curvilinear frame at current  position,
   /// or direction of the state
   ///
-  /// @tparam end_parameters_t The target parameter type for dimension derivation
+  /// @tparam end_parameters_t The target parameter type for dimension
+  /// derivation
   ///
   /// @param [in,out] state State of the stepper
   template <typename end_parameters_t = CurvilinearParameters>

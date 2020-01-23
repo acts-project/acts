@@ -386,11 +386,12 @@ class Surface : public virtual GeometryObject,
   /// @param rft is the transposed reference frame (avoids recalculation)
   /// @param jacobian is the transport jacobian
   ///
-  /// @return a 8-dim vector  
+  /// @return a 8-dim vector
   virtual const FreeRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& position, const Vector3D& direction,
-      const RotationMatrix3D& rft, const FreeMatrix& jacobian) const;
-      
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction, const RotationMatrix3D& rft,
+      const FreeMatrix& jacobian) const;
+
   /// Calucation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment

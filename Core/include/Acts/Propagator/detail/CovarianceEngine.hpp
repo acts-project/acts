@@ -29,7 +29,8 @@ namespace Acts {
 /// As a consequence the methods can be located in a seperate file.
 namespace detail {
 
-using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
+using Jacobian =
+    std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
 
 /// Create and return the bound state at the current position
 ///
@@ -87,23 +88,23 @@ std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double> curvilinearS
     std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const FreeVector& parameters,
     bool covTransport, double accumulatedPath);
 
-  /// Create and return a free state at the current position
-  ///
-  /// @brief This creates a free state.
-  ///
-    /// @tparam result_t Defines the return type
-  /// @param [in] state State that will be presented as @c FreeState
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-  /// i.e. if this is an intermediate state of a larger propagation
-  ///
-  /// @return A free state:
-  ///   - the free parameters at given position
-  ///   - the stepweise jacobian towards it (from last location)
-  ///   - and the path length (from start - for ordering)
-  std::tuple<FreeParameters, Jacobian, double>
-freeState(StepperState& state);
+/// Create and return a free state at the current position
+///
+/// @brief This creates a free state.
+///
+/// @tparam result_t Defines the return type
+/// @param [in] state State that will be presented as @c FreeState
+/// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+/// i.e. if this is an intermediate state of a larger propagation
+///
+/// @return A free state:
+///   - the free parameters at given position
+///   - the stepweise jacobian towards it (from last location)
+///   - and the path length (from start - for ordering)
+std::tuple<FreeParameters, Jacobian, double> freeState(StepperState& state);
 
-/// @brief Method for on-demand transport of the covariance to a new frame at current position in parameter space. It treats different scenarios:
+/// @brief Method for on-demand transport of the covariance to a new frame at
+/// current position in parameter space. It treats different scenarios:
 /// - from local to local
 /// - from local to global
 /// - from global to local

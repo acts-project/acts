@@ -153,9 +153,11 @@ class LineSurface : public Surface {
   /// @param jacobian is the transport jacobian
   ///
   /// @return a 8-dim vector
-  const FreeRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& position, const Vector3D& direction,
-      const RotationMatrix3D& rft, const FreeMatrix& jacobian) const final;
+  const FreeRowVector derivativeFactors(const GeometryContext& gctx,
+                                        const Vector3D& position,
+                                        const Vector3D& direction,
+                                        const RotationMatrix3D& rft,
+                                        const FreeMatrix& jacobian) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift

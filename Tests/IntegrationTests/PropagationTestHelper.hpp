@@ -77,11 +77,11 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
   return std::make_shared<Transform3D>(ctransform);
 }
 
-template <typename end_parameters_t, typename Propagator_type, typename start_parameters_t>
+template <typename end_parameters_t, typename Propagator_type,
+          typename start_parameters_t>
 Vector3D constant_field_propagation(const Propagator_type& propagator,
-									start_parameters_t start,
-                                    double pT, double phi, double theta,
-                                    double Bz,
+                                    start_parameters_t start, double pT,
+                                    double phi, double theta, double Bz,
                                     double disttol = 0.1 *
                                                      Acts::UnitConstants::um,
                                     bool debug = false) {
@@ -156,7 +156,8 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   return tp->position();
 }
 
-template <typename forward_parameters_t, typename backward_parameters_t, typename Propagator_type, typename start_parameters_t>
+template <typename forward_parameters_t, typename backward_parameters_t,
+          typename Propagator_type, typename start_parameters_t>
 void foward_backward(const Propagator_type& propagator, double plimit,
                      start_parameters_t start,
                      double disttol = 1 * Acts::UnitConstants::um,
@@ -179,19 +180,23 @@ void foward_backward(const Propagator_type& propagator, double plimit,
   bwdOptions.pathLimit = -plimit;
   bwdOptions.maxStepSize = 1_cm;
   bwdOptions.debug = debug;
-  
+
   const Vector3D posStart = start.position();
   const Vector3D momStart = start.momentum();
 
   // do forward propagation
-  const auto& fwdResult = propagator.template propagate<forward_parameters_t>(start, fwdOptions).value();
-  
+  const auto& fwdResult =
+      propagator.template propagate<forward_parameters_t>(start, fwdOptions)
+          .value();
+
   // do the backward propagation
-  const auto& bwdResult =
-	  propagator.template propagate<backward_parameters_t>(*fwdResult.endParameters, bwdOptions).value();
+  const auto& bwdResult = propagator
+                              .template propagate<backward_parameters_t>(
+                                  *fwdResult.endParameters, bwdOptions)
+                              .value();
   const Vector3D& bwdPosition = bwdResult.endParameters->position();
   const Vector3D& bwdMomentum = bwdResult.endParameters->momentum();
-  
+
   // test propagation invariants
   // clang-format off
     CHECK_CLOSE_ABS(posStart.x(), bwdPosition(0), disttol);
@@ -203,12 +208,12 @@ void foward_backward(const Propagator_type& propagator, double plimit,
   // clang-format on
 
   if (debug) {
-	auto fwdOutput = fwdResult.template get<DebugOutput::result_type>();
-	std::cout << ">>>>> Output for forward propagation " << std::endl;
-	std::cout << fwdOutput.debugString << std::endl;
-	std::cout << " - resulted at position : "
-			  << fwdResult.endParameters->position() << std::endl;  
-	
+    auto fwdOutput = fwdResult.template get<DebugOutput::result_type>();
+    std::cout << ">>>>> Output for forward propagation " << std::endl;
+    std::cout << fwdOutput.debugString << std::endl;
+    std::cout << " - resulted at position : "
+              << fwdResult.endParameters->position() << std::endl;
+
     auto bwdOutput = bwdResult.template get<DebugOutput::result_type>();
     std::cout << ">>>>> Output for backward propagation " << std::endl;
     std::cout << bwdOutput.debugString << std::endl;
@@ -219,10 +224,10 @@ void foward_backward(const Propagator_type& propagator, double plimit,
 
 // test propagation to cylinder
 template <typename Propagator_type, typename start_parameters_t>
-std::pair<Vector3D, double> to_cylinder(
-    const Propagator_type& propagator, start_parameters_t start,
-    double plimit, double rand1, double rand2, double /*rand3*/,
-   bool debug = false) {
+std::pair<Vector3D, double> to_cylinder(const Propagator_type& propagator,
+                                        start_parameters_t start, double plimit,
+                                        double rand1, double rand2,
+                                        double /*rand3*/, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -241,21 +246,21 @@ std::pair<Vector3D, double> to_cylinder(
   // Increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
 
-    const auto result =
-        propagator.propagate(start, *endSurface, options).value();
-    const auto& tp = result.endParameters;
-    // check for null pointer
-    BOOST_CHECK(tp != nullptr);
-    // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), result.pathLength);
+  const auto result = propagator.propagate(start, *endSurface, options).value();
+  const auto& tp = result.endParameters;
+  // check for null pointer
+  BOOST_CHECK(tp != nullptr);
+  // The position and path length
+  return std::pair<Vector3D, double>(tp->position(), result.pathLength);
 }
 
 // test propagation to most surfaces
-template <typename Propagator_type, typename Surface_type, typename start_parameters_t>
-std::pair<Vector3D, double> to_surface(
-    const Propagator_type& propagator, start_parameters_t start,
-    double plimit, double rand1, double rand2, double rand3,
-    bool planar = true, bool debug = false) {
+template <typename Propagator_type, typename Surface_type,
+          typename start_parameters_t>
+std::pair<Vector3D, double> to_surface(const Propagator_type& propagator,
+                                       start_parameters_t start, double plimit,
+                                       double rand1, double rand2, double rand3,
+                                       bool planar = true, bool debug = false) {
   using namespace Acts::UnitLiterals;
   using DebugOutput = DebugOutputActor;
 
@@ -266,48 +271,47 @@ std::pair<Vector3D, double> to_surface(
   options.pathLimit = plimit;
   options.debug = debug;
 
-    const auto result_s = propagator.propagate(start, options).value();
-    const auto& tp_s = result_s.endParameters;
-    // The transform at the destination
-    auto seTransform =
-        planar ? createPlanarTransform(tp_s->position(),
-                                       tp_s->momentum().normalized(),
-                                       0.1 * rand3, 0.1 * rand1)
-               : createCylindricTransform(tp_s->position(), 0.04 * rand1,
-                                          0.04 * rand2);
+  const auto result_s = propagator.propagate(start, options).value();
+  const auto& tp_s = result_s.endParameters;
+  // The transform at the destination
+  auto seTransform = planar
+                         ? createPlanarTransform(tp_s->position(),
+                                                 tp_s->momentum().normalized(),
+                                                 0.1 * rand3, 0.1 * rand1)
+                         : createCylindricTransform(tp_s->position(),
+                                                    0.04 * rand1, 0.04 * rand2);
 
-    auto endSurface = Surface::makeShared<SurfaceType>(seTransform, nullptr);
-    // Increase the path limit - to be safe hitting the surface
-    options.pathLimit *= 2;
+  auto endSurface = Surface::makeShared<Surface_type>(seTransform, nullptr);
+  // Increase the path limit - to be safe hitting the surface
+  options.pathLimit *= 2;
 
-    if (debug) {
-      std::cout << ">>> Path limit for this propgation is set to: "
-                << options.pathLimit << std::endl;
+  if (debug) {
+    std::cout << ">>> Path limit for this propgation is set to: "
+              << options.pathLimit << std::endl;
+  }
+
+  auto result = propagator.propagate(start, *endSurface, options);
+  const auto& propRes = *result;
+  const auto& tp = propRes.endParameters;
+  // check the result for nullptr
+  BOOST_CHECK(tp != nullptr);
+
+  // screen output in case you are running in debug mode
+  if (debug) {
+    const auto& debugOutput = propRes.template get<DebugOutput::result_type>();
+    std::cout << ">>> Debug output of this propagation " << std::endl;
+    std::cout << debugOutput.debugString << std::endl;
+    std::cout << ">>> Propagation status is : ";
+    if (result.ok()) {
+      std::cout << "success";
+    } else {
+      std::cout << result.error();
     }
+    std::cout << std::endl;
+  }
 
-    auto result = propagator.propagate(start, *endSurface, options);
-    const auto& propRes = *result;
-    const auto& tp = propRes.endParameters;
-    // check the result for nullptr
-    BOOST_CHECK(tp != nullptr);
-
-    // screen output in case you are running in debug mode
-    if (debug) {
-      const auto& debugOutput =
-          propRes.template get<DebugOutput::result_type>();
-      std::cout << ">>> Debug output of this propagation " << std::endl;
-      std::cout << debugOutput.debugString << std::endl;
-      std::cout << ">>> Propagation status is : ";
-      if (result.ok()) {
-        std::cout << "success";
-      } else {
-        std::cout << result.error();
-      }
-      std::cout << std::endl;
-    }
-
-    // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
+  // The position and path length
+  return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
 }
 
 template <typename Propagator_type>
