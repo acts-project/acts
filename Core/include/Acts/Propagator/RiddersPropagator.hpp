@@ -86,8 +86,8 @@ class RiddersPropagator {
   /// @return Result of the propagation
   template <typename return_parameters_t = CurvilinearParameters,
             //~ typename parameters_t, typename propagator_options_t,
-            //std::enable_if_t<parameters_t::is_local_representation and
-            //return_parameters_t::is_local_representation, int> = 0>
+            // std::enable_if_t<parameters_t::is_local_representation and
+            // return_parameters_t::is_local_representation, int> = 0>
             typename parameters_t, typename propagator_options_t>
   Result<action_list_t_result_t<
       return_parameters_t, typename propagator_options_t::action_list_type>>
