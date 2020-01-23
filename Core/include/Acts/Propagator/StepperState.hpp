@@ -47,7 +47,7 @@ struct StepperState {
         dir(par.momentum().normalized()),
         p(par.momentum().norm()),
         q(par.charge()),
-        t0(par.time()),
+        t(par.time()),
         navDir(ndir),
         stepSize(ndir * std::abs(ssize)),
         tolerance(stolerance),
@@ -91,12 +91,8 @@ struct StepperState {
   /// Save the charge: neutral as default for SL stepper
   double q = 0.;
 
-  /// @note The time is split into a starting and a propagated time to avoid
-  /// machine precision related errors
-  /// Starting time
-  const double t0;
   /// Propagated time
-  double dt = 0.;
+  double t = 0.;
 
   /// Navigation direction, this is needed for searching
   NavigationDirection navDir;

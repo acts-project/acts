@@ -74,7 +74,7 @@ class EigenStepper {
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : StepperState(gctx, mctx, par, ndir, ssize, stolerance),
-          fieldCache(mctx) {
+          fieldCache(mctx) {}
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
