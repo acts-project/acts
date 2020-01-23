@@ -130,6 +130,9 @@ struct TrackFinderResult {
   // Count the track states on current surface
   size_t nStatesOnSurface = 0;
 
+  // The indices of measurements in multitrajectory
+  std::map<const Surface*, std::map<size_t, size_t>> measurementTips;
+
   // Indicator if forward filtering has been done
   bool forwardFiltered = false;
 
@@ -498,6 +501,14 @@ class TrackFinder {
         ACTS_VERBOSE("Measurement surface " << surface->geoID()
                                             << " detected.");
 
+        // Get the already created track state tips with source links on this
+        // surface
+        std::map<size_t, size_t> measurementTipsOnSurface;
+        auto measTips_it = result.measurementTips.find(surface);
+        if (measTips_it != result.measurementTips.end()) {
+          measurementTipsOnSurface = measTips_it->second;
+        }
+
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
 
@@ -516,18 +527,39 @@ class TrackFinder {
 
         // Loop over the selected source links
         for (const auto& index : candidateIndices) {
+          // Determine if the source link is already contained in other track
+          // state
+          bool sourcelinkShared = false;
+          auto index_it = measurementTipsOnSurface.find(index);
+          if (index_it != measurementTipsOnSurface.end()) {
+            sourcelinkShared = true;
+          }
+
+          // No storage allocation for predicted parameter and measurement if
+          // already stored
+          auto stateMask =
+              (result.nStatesOnSurface > 0 ? ~TrackStatePropMask::Predicted
+                                           : TrackStatePropMask::All) &
+              (sourcelinkShared ? ~TrackStatePropMask::Uncalibrated
+                                : TrackStatePropMask::All);
           // Add a track state proxy in multi trajectory
-          // @TODO: avoid storage duplication of predicted parameter and
-          // measurement
-          auto trackTip = result.fittedStates.addTrackState(
-              TrackStatePropMask::All, result.currentTip);
+          auto trackTip =
+              result.fittedStates.addTrackState(stateMask, result.currentTip);
 
           // Get the track state proxy
           auto trackStateProxy = result.fittedStates.getTrackState(trackTip);
 
           // Fill the track state proxy
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = *boundParams.covariance();
+          if (result.nStatesOnSurface > 0) {
+            // The predicted parameter is already stored, just set the index
+            auto tip = result.activeTips.rbegin()->first;
+            auto sharedPredicted = result.fittedStates.getTrackState(tip);
+            trackStateProxy.data().ipredicted =
+                sharedPredicted.data().ipredicted;
+          } else {
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = *boundParams.covariance();
+          }
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
 
@@ -539,7 +571,15 @@ class TrackFinder {
 
           // Assign the source link and calibrated measurement to the track
           // state
-          trackStateProxy.uncalibrated() = sourcelinks.at(index);
+          if (sourcelinkShared) {
+            // The source link is already stored, just set the index
+            auto sharedMeasurement =
+                result.fittedStates.getTrackState(index_it->second);
+            trackStateProxy.data().iuncalibrated =
+                sharedMeasurement.data().iuncalibrated;
+          } else {
+            trackStateProxy.uncalibrated() = sourcelinks.at(index);
+          }
           std::visit(
               [&](const auto& calibrated) {
                 trackStateProxy.setCalibrated(calibrated);
@@ -563,6 +603,12 @@ class TrackFinder {
                          preTipState.nHoles};
             // Record the active tip and its state
             result.activeTips.emplace(trackTip, std::move(tipState));
+
+            // Record the track state tip for this source link
+            if (not sourcelinkShared) {
+              auto& measurementTips = result.measurementTips[surface];
+              measurementTips.emplace(index, trackTip);
+            }
 
             // Count the states on current surface
             result.nStatesOnSurface++;
