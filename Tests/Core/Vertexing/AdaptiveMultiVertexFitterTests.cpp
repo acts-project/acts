@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE MultiAdaptiveVertexFitter Tests
+#define BOOST_TEST_MODULE AdaptiveMultiVertexFitter Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -15,7 +15,7 @@
 // clang-format on
 
 #include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Vertexing/MultiAdaptiveVertexFitter.hpp"
+#include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -62,7 +62,7 @@ std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 // Number of tracks distritbution
 std::uniform_int_distribution<> nTracksDist(3, 10);
 
-/// @brief Unit test for MultiAdaptiveVertexFitter
+/// @brief Unit test for AdaptiveMultiVertexFitter
 ///
 BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   bool debugMode = false;
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   IPEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
   IPEstimator ip3dEst(ip3dEstCfg);
 
-  MultiAdaptiveVertexFitter<BoundParameters, Linearizer>::Config fitterCfg(
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::Config fitterCfg(
       ip3dEst);
 
   // Linearizer for BoundParameters type test
@@ -99,9 +99,9 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
 
-  MultiAdaptiveVertexFitter<BoundParameters, Linearizer> fitter(fitterCfg);
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer> fitter(fitterCfg);
 
-  MultiAdaptiveVertexFitter<BoundParameters, Linearizer>::State state;
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state;
 
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later

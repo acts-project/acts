@@ -12,7 +12,7 @@
 
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit_impl(
     State& state, const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   auto& geoContext = vFitterOptions.geoContext;
@@ -110,7 +110,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit_impl(
 
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit(
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
     State& state, Vertex<input_track_t>& newVertex,
     const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
@@ -178,7 +178,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::fit(
 }
 
 template <typename input_track_t, typename linearizer_t>
-bool Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
+bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     isAlreadyInList(
         Vertex<input_track_t>* vtx,
         const std::vector<Vertex<input_track_t>*>& verticesVec) const {
@@ -188,7 +188,7 @@ bool Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
 
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void> Acts::
-    MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
+    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
         State& state, Vertex<input_track_t>* vtx,
         const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   const Vector3D& refPos = vtx->position();
@@ -209,7 +209,7 @@ Acts::Result<void> Acts::
 
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(State& state, const GeometryContext& geoContext,
                                 Vertex<input_track_t>* currentVtx) const {
   VertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
@@ -257,7 +257,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
     input_track_t, linearizer_t>::setWeightsAndUpdate(State& state,
                                                       const linearizer_t&
                                                           linearizer) const {
@@ -322,7 +322,7 @@ Acts::Result<void> Acts::MultiAdaptiveVertexFitter<
 
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<std::vector<double>>
-Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     collectTrackToVertexCompatibilities(
         State& state, const TrackAtVertex<input_track_t>& trk) const {
   // All vertices that currently hold the track `trk`
@@ -353,7 +353,7 @@ Acts::MultiAdaptiveVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-bool Acts::MultiAdaptiveVertexFitter<
+bool Acts::AdaptiveMultiVertexFitter<
     input_track_t, linearizer_t>::checkSmallShift(State& state) const {
   for (auto vtx : state.vertexCollection) {
     SpacePointVector diff =
