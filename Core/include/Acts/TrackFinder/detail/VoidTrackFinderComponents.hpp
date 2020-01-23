@@ -52,20 +52,21 @@ struct VoidSourceLinkSelector {
   /// @param predictedParams The predicted track parameter on a surface
   /// @param sourcelinks The pool of source links
   ///
-  /// @return the compatible source links
+  /// @return the compatible source link indices
   template <typename calibrator_t, typename source_link_t>
-  std::vector<source_link_t> operator()(
+  std::vector<size_t> operator()(
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks) const {
     ACTS_VERBOSE("Invoked VoidSourceLinkSelector");
 
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
 
-    std::vector<source_link_t> sourcelinkCandidates;
+    std::vector<size_t> candidateIndices;
     // There is either one found source link or not
-    sourcelinkCandidates.reserve(1);
+    candidateIndices.reserve(1);
 
     double minChi2 = std::numeric_limits<double>::max();
+    size_t index = 0;
     for (const auto& sourcelink : sourcelinks) {
       std::visit(
           [&](const auto& calibrated) {
@@ -96,25 +97,26 @@ struct VoidSourceLinkSelector {
             // Find the source link with the min chi2
             if (chi2 < minChi2 and chi2 < m_config.maxChi2) {
               minChi2 = chi2;
-              if (sourcelinkCandidates.empty()) {
-                sourcelinkCandidates.push_back(sourcelink);
+              if (candidateIndices.empty()) {
+                candidateIndices.push_back(index);
               } else {
-                sourcelinkCandidates[0] = sourcelink;
+                candidateIndices.at(0) = index;
               }
             }
           },
           calibrator(sourcelink, predictedParams));
+      index++;
     }
 
     // Check if the chi2 satisfies requirement in the config
-    if (not sourcelinkCandidates.empty()) {
+    if (not candidateIndices.empty()) {
       ACTS_VERBOSE("Minimum Chi2: " << minChi2 << " is within chi2 criteria: "
                                     << m_config.maxChi2);
     } else {
       ACTS_DEBUG("No source link candidate");
     }
 
-    return std::move(sourcelinkCandidates);
+    return std::move(candidateIndices);
   }
 
   /// The config

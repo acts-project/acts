@@ -80,18 +80,19 @@ struct CKFSourceLinkSelector {
   /// @param predictedParams The predicted track parameter on a surface
   /// @param sourcelinks The pool of source links
   ///
-  /// @return the compatible source links
+  /// @return the compatible source link indices
   template <typename calibrator_t, typename source_link_t>
-  std::vector<source_link_t> operator()(
+  std::vector<size_t> operator()(
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
 
-    std::vector<source_link_t> sourcelinkCandidates;
-    sourcelinkCandidates.reserve(sourcelinks.size());
+    std::vector<size_t> candidateIndices;
+    candidateIndices.reserve(sourcelinks.size());
 
+    size_t index = 0;
     for (const auto& sourcelink : sourcelinks) {
       std::visit(
           [&](const auto& calibrated) {
@@ -153,11 +154,12 @@ struct CKFSourceLinkSelector {
                                     << " and Chi2 criteria: " << maxChi2);
               // Push the source link if satisfying criteria
               if (chi2 < maxChi2) {
-                sourcelinkCandidates.push_back(sourcelink);
+                candidateIndices.push_back(index);
               }
             }
           },
           calibrator(sourcelink, predictedParams));
+      index++;
     }
 
     // TODO: check the number of source links against provided criteria
@@ -165,9 +167,9 @@ struct CKFSourceLinkSelector {
     //-> remove the 'overflow' source links
 
     ACTS_VERBOSE(
-        "Number of source link candidates: " << sourcelinkCandidates.size());
+        "Number of source link candidates: " << candidateIndices.size());
 
-    return std::move(sourcelinkCandidates);
+    return std::move(candidateIndices);
   }
 
   /// The config
