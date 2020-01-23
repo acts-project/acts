@@ -23,7 +23,7 @@
 
 namespace Acts {
 
-/// @class MultiAdaptiveVertexFitter
+/// @class AdaptiveMultiVertexFitter
 /// @brief Implements an adaptive multi-vertex fitter as described
 ///   in detail in Section 5.3.5 in:
 ///   Ref. (1): CERN-THESIS-2010-027, Author: Piacquadio, Giacinto:
@@ -35,7 +35,7 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
 template <typename input_track_t, typename linearizer_t>
-class MultiAdaptiveVertexFitter {
+class AdaptiveMultiVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");
 
@@ -128,9 +128,9 @@ class MultiAdaptiveVertexFitter {
   /// @param logger The logging instance
   template <typename T = InputTrack_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
-  MultiAdaptiveVertexFitter(Config& cfg,
+  AdaptiveMultiVertexFitter(Config& cfg,
                             std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("MultiAdaptiveVertexFitter",
+                                getDefaultLogger("AdaptiveMultiVertexFitter",
                                                  Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters([](T params) { return params; }),
@@ -141,10 +141,10 @@ class MultiAdaptiveVertexFitter {
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from InputTrack_t object
   /// @param logger The logging instance
-  MultiAdaptiveVertexFitter(Config& cfg,
+  AdaptiveMultiVertexFitter(Config& cfg,
                             std::function<BoundParameters(InputTrack_t)> func,
                             std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("MultiAdaptiveVertexFitter",
+                                getDefaultLogger("AdaptiveMultiVertexFitter",
                                                  Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters(func),
@@ -269,4 +269,4 @@ class MultiAdaptiveVertexFitter {
 
 }  // namespace Acts
 
-#include "Acts/Vertexing/MultiAdaptiveVertexFitter.ipp"
+#include "Acts/Vertexing/AdaptiveMultiVertexFitter.ipp"
