@@ -127,6 +127,62 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   }
 
   {
+    using Result = Result<double, const char*>;
+    Result res{0};
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL(*res, 0.0);
+
+    res = 1;
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL(*res, 1.0);
+
+    Result res2{"blubb"};
+    BOOST_CHECK(!res2.ok());
+    BOOST_CHECK_EQUAL(res2.error(), "blubb");
+    res2 = "sep";
+    BOOST_CHECK(!res2.ok());
+    BOOST_CHECK_EQUAL(res2.error(), "sep");
+  }
+
+  {
+    using Result = Result<const char*, double>;
+    Result res{0};
+    BOOST_CHECK(!res.ok());
+    BOOST_CHECK_EQUAL(res.error(), 0.0);
+
+    res = "blibb";
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL(res.value(), "blibb");
+
+    Result res2{"blibb"};
+    BOOST_CHECK(res2.ok());
+    BOOST_CHECK_EQUAL(res2.value(), "blibb");
+
+    res2 = 0;
+    BOOST_CHECK(!res2.ok());
+    BOOST_CHECK_EQUAL(res2.error(), 0.0);
+  }
+
+  {
+    using Result = Result<double, int>;
+    Result res = Result::success(2);
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL(res.value(), 2.0);
+
+    res = Result::failure(3);
+    BOOST_CHECK(!res.ok());
+    BOOST_CHECK_EQUAL(res.error(), 3);
+
+    Result res2 = Result::failure(2);
+    BOOST_CHECK(!res2.ok());
+    BOOST_CHECK_EQUAL(res2.error(), 2);
+
+    res2 = Result::success(3.3);
+    BOOST_CHECK(res2.ok());
+    BOOST_CHECK_EQUAL(res2.value(), 3.3);
+  }
+
+  {
     using Result = Result<double>;
 
     Result res(42);
@@ -167,6 +223,18 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     BOOST_CHECK(!res.ok());
     BOOST_CHECK_EQUAL(res.error(), MyError::SomethingElse);
     BOOST_CHECK(res.error() != MyError::Failure);
+  }
+
+  {
+    using Result = Result<std::string, int>;
+
+    Result res{"hallo"};
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL(res.value(), "hallo");
+
+    Result res2{4};
+    BOOST_CHECK(!res2.ok());
+    BOOST_CHECK_EQUAL(res2.error(), 4);
   }
 }
 
