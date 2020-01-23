@@ -505,14 +505,17 @@ class TrackFinder {
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface, true);
 
+        // Get all source links on surface
+        auto& sourcelinks = sourcelink_it->second;
+
         // Invoke the source link selector to select source links.
         // Calibrator is passed to the selector because selection has to be done
         // based on calibrated measurement
-        auto sourcelinkCandidates =
-            m_sourcelinkSelector(m_calibrator, boundParams, sourcelink_it->second);
+        auto candidateIndices =
+            m_sourcelinkSelector(m_calibrator, boundParams, sourcelinks);
 
         // Loop over the selected source links
-        for (const auto& sourcelink : sourcelinkCandidates) {
+        for (const auto& index : candidateIndices) {
           // Add a track state proxy in multi trajectory
           // @TODO: avoid storage duplication of predicted parameter and
           // measurement
@@ -536,7 +539,7 @@ class TrackFinder {
 
           // Assign the source link and calibrated measurement to the track
           // state
-          trackStateProxy.uncalibrated() = sourcelink;
+          trackStateProxy.uncalibrated() = sourcelinks.at(index);
           std::visit(
               [&](const auto& calibrated) {
                 trackStateProxy.setCalibrated(calibrated);
