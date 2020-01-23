@@ -262,7 +262,7 @@ class TrackFinder {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    std::multimap<const Surface*, source_link_t> inputMeasurements;
+    std::map<const Surface*, std::vector<source_link_t>> inputMeasurements;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -505,20 +505,11 @@ class TrackFinder {
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface, true);
 
-        // Get all the source links on this surface
-        auto sourcelinkIts = inputMeasurements.equal_range(surface);
-
-        std::vector<source_link_t> sourcelinks;
-        sourcelinks.reserve(inputMeasurements.count(surface));
-        for (auto it = sourcelinkIts.first; it != sourcelinkIts.second; ++it) {
-          sourcelinks.push_back(it->second);
-        }
-
         // Invoke the source link selector to select source links.
         // Calibrator is passed to the selector because selection has to be done
         // based on calibrated measurement
         auto sourcelinkCandidates =
-            m_sourcelinkSelector(m_calibrator, boundParams, sourcelinks);
+            m_sourcelinkSelector(m_calibrator, boundParams, sourcelink_it->second);
 
         // Loop over the selected source links
         for (const auto& sourcelink : sourcelinkCandidates) {
@@ -881,10 +872,10 @@ class TrackFinder {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::multimap<const Surface*, source_link_t> inputMeasurements;
+    std::map<const Surface*, std::vector<source_link_t>> inputMeasurements;
     for (const auto& sl : sourcelinks) {
       const Surface* srf = &sl.referenceSurface();
-      inputMeasurements.emplace(srf, sl);
+      inputMeasurements[srf].push_back(sl);
     }
 
     // Create the ActionList and AbortList
@@ -986,10 +977,10 @@ class TrackFinder {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::multimap<const Surface*, source_link_t> inputMeasurements;
+    std::map<const Surface*, std::vector<source_link_t>> inputMeasurements;
     for (const auto& sl : sourcelinks) {
       const Surface* srf = &sl.referenceSurface();
-      inputMeasurements.emplace(srf, sl);
+      inputMeasurements[srf].push_back(sl);
     }
 
     // Create the ActionList and AbortList
