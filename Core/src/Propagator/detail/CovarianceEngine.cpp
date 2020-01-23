@@ -157,7 +157,7 @@ void reinitializeJacToGlobal(StepperState& state,
     surface->globalToLocal(state.geoContext, state.pos, state.dir, loc);
     BoundVector pars;
     pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-        state.q / state.p, state.t0 + state.dt;
+        state.q / state.p, state.t;
     surface->initJacobianToGlobal(state.geoContext, state.jacToGlobal,
                                   state.pos, state.dir, pars);
   }
@@ -188,7 +188,7 @@ BoundState boundState(StepperState& state, const Surface& surface,
   }
   // Create the bound parameters
   BoundParameters parameters(state.geoContext, cov, state.pos,
-                             state.p * state.dir, state.q, state.t0 + state.dt,
+                             state.p * state.dir, state.q, state.t,
                              surface.getSharedPtr());
   // Create the bound state
   BoundState result = std::make_tuple(std::move(parameters), state.jacobian,
@@ -210,7 +210,7 @@ CurvilinearState curvilinearState(StepperState& state, bool reinitialize) {
   }
   // Create the curvilinear parameters
   CurvilinearParameters parameters(cov, state.pos, state.p * state.dir, state.q,
-                                   state.t0 + state.dt);
+                                   state.t);
   // Create the bound state
   CurvilinearState result = std::make_tuple(
       std::move(parameters), state.jacobian, state.pathAccumulated);
