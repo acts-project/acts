@@ -312,7 +312,7 @@ FreeState freeState(StepperState& state)
     // Create the free parameters
     FreeVector pars;
     pars.template head<3>() = state.pos;
-    pars(3) = state.t0 + state.dt;
+    pars(3) = state.t;
     pars.template segment<3>(4) = state.dir;
     pars(7) = (state.q / state.p);
     FreeParameters parameters(std::move(cov), pars);
