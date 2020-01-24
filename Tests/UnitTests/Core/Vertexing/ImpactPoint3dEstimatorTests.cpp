@@ -296,5 +296,54 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   }
 }
 
+/// @brief Unit test for ImpactPoint 3d estimator, using same
+/// configuration and test values as in Athena unit test algorithm
+/// Tracking/TrkVertexFitter/TrkVertexFitterUtils/test/ImpactPoint3dEstimator_test
+BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
+  
+  // Set up constant B-Field
+  ConstantBField bField(Vector3D(0., 0., 200.08) * units::_T);
+
+  // Set up Eigenstepper
+  EigenStepper<ConstantBField> stepper(bField);
+
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator>(stepper);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
+
+  // Set up the ImpactPoint3dEstimator
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+      bField, propagator, pOptions);
+
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
+
+  // Use same values as in Athena unit test
+  Vector3D pos1(2_mm, 1_mm, -10_mm);
+  Vector3D mom1(400_MeV, 600_MeV, 200_MeV);
+  Vector3D vtxPos(1.2_mm, 0.8_mm, -7_mm);
+
+  // Start creating some track parameters
+  Covariance covMat = Covariance::Identity();
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3D(0.,0.,0.));
+
+  // Some fixed track parameter values
+  BoundParameters params1(tgContext, covMat, pos1, mom1, 1, 0,
+                           perigeeSurface);
+
+  auto res1 = ipEstimator.calculateDistance(tgContext, params1, vtxPos);
+  BOOST_CHECK(res1.ok());
+  double distance = (*res1);
+  std::cout << "distance: " << distance << std::endl;
+
+  auto res2 = ipEstimator.getParamsAtClosestApproach(tgContext, params1, vtxPos);
+  BOOST_CHECK(res2.ok());
+  BoundParameters endParams = std::move(**res2);
+  Vector3D surfaceCenter = endParams.referenceSurface().center(tgContext);
+
+  BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
+
+}
+
 }  // namespace Test
 }  // namespace Acts
