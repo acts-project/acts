@@ -162,6 +162,29 @@ class RiddersPropagator {
       const unsigned int param,
       const FreeVector& nominal, const std::vector<double>& deviations) const;
 
+	/// @brief This function builds the start parameters. Only one dimension is changed.
+	///
+	/// @tparam parameters_t Type of the start parameters
+	/// @param [in] geoContext Geometry context
+	/// @param [in] h The variation distance
+	/// @param [in] param Index of the dimension
+	/// @param [in] tp Copy of the unchanged start parameters
+	///
+	/// @return The changed start parameters
+	template<typename parameters_t>
+	parameters_t
+	wiggleStartVector(std::reference_wrapper<const GeometryContext> geoContext, double h, const unsigned int param, parameters_t tp) const;
+	
+	/// @copydoc RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const GeometryContext>, double, const unsigned int, parameters_t)
+	template<typename parameters_t>
+	void
+	wiggleBoundStartVector(std::reference_wrapper<const GeometryContext> geoContext, double h, const unsigned int param, parameters_t& tp) const;
+	
+	/// @copydoc RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const GeometryContext>, double, const unsigned int, parameters_t)
+	template<typename parameters_t>
+	void
+	wiggleFreeStartVector(std::reference_wrapper<const GeometryContext> geoContext, double h, const unsigned int param, parameters_t& tp) const;
+
   /// @brief This function propagates the covariance matrix
   ///
   /// @param [in] derivatives Slopes of each modification of the parameters
