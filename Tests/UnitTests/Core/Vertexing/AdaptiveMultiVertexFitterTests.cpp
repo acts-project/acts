@@ -60,7 +60,7 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 
 /// @brief Unit test for AdaptiveMultiVertexFitter
 ///
-BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
+BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   bool debugMode = false;
 
   // Set up RNG
@@ -262,6 +262,118 @@ BOOST_AUTO_TEST_CASE(multi_adaptive_vertex_fitter_test) {
               << "\nFitted position:\n " << vtxList[2].fullPosition()
               << std::endl;
   }
+}
+
+/// @brief Unit test for AdaptiveMultiVertexFitter
+/// based on Athena unit test, i.e. same setting and
+/// test values are used here
+BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
+  // Set up constant B-Field
+  ConstantBField bField(Vector3D(0., 0., 2._T));
+
+  // Set up Eigenstepper
+  EigenStepper<ConstantBField> stepper(bField);
+
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator>(stepper);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
+
+  VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
+
+  // IP 3D Estimator
+  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
+
+  IPEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
+  IPEstimator ip3dEst(ip3dEstCfg);
+
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::Config fitterCfg(
+      ip3dEst);
+
+  // Linearizer for BoundParameters type test
+  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer linearizer(ltConfig);
+
+  // Test smoothing
+  // fitterCfg.doSmoothing = true;
+
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer> fitter(fitterCfg);
+
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state;
+
+  // Create first vector of tracks
+  Vector3D pos0(0., 0., 0.);
+  Vector3D pos1a(2_mm, 1_mm, -10_mm);
+  Vector3D mom1a(400_MeV, 600_MeV, 200_MeV);
+  Vector3D pos1b(1_mm, 2_mm, -3_mm);
+  Vector3D mom1b(600_MeV, 400_MeV, -200_MeV);
+  Vector3D pos1c(1.2_mm, 1.3_mm, -7_mm);
+  Vector3D mom1c(300_MeV, 1000_MeV, 100_MeV);
+
+  // Start creating some track parameters
+  Covariance covMat1 = Covariance::Identity();
+
+  std::vector<BoundParameters> params1;
+
+  params1.push_back(
+      BoundParameters(tgContext, covMat1, pos1a, mom1a, 1, 0,
+                      Surface::makeShared<PerigeeSurface>(pos1a)));
+  params1.push_back(
+      BoundParameters(tgContext, covMat1, pos1b, mom1b, -1, 0,
+                      Surface::makeShared<PerigeeSurface>(pos1b)));
+  params1.push_back(
+      BoundParameters(tgContext, covMat1, pos1c, mom1c, -1, 0,
+                      Surface::makeShared<PerigeeSurface>(pos1c)));
+
+  // Create second vector of tracks
+  Vector3D pos2a(10_mm, 0_mm, -5_mm);
+  Vector3D mom2a(1000_MeV, 0_MeV, 0_MeV);
+  Vector3D pos2b(10.5_mm, 0.5_mm, -5.5_mm);
+  Vector3D mom2b(800_MeV, 200_MeV, 200_MeV);
+  Vector3D pos2c(9.5_mm, -0.5_mm, -4.5_mm);
+  Vector3D mom2c(700_MeV, -300_MeV, -200_MeV);
+  Covariance covMat2 = Covariance::Identity();
+
+  // Define covariance entries as used in athena unit test
+  const double covEntries = 1e-2;
+  covMat2 = covMat2 * covEntries;
+  covMat2(1, 1) = 1;
+
+  std::vector<BoundParameters> params2;
+
+  params2.push_back(
+      BoundParameters(tgContext, covMat2, pos2a, mom2a, 1, 0,
+                      Surface::makeShared<PerigeeSurface>(pos2a)));
+  params2.push_back(
+      BoundParameters(tgContext, covMat2, pos2b, mom2b, -1, 0,
+                      Surface::makeShared<PerigeeSurface>(pos2b)));
+  params2.push_back(
+      BoundParameters(tgContext, covMat2, pos2c, mom2c, -1, 0,
+                      Surface::makeShared<PerigeeSurface>(pos2c)));
+
+  std::vector<TrackAtVertex<BoundParameters>> tracksAtVtx1;
+  for (const auto& trk : params1) {
+    tracksAtVtx1.push_back(TrackAtVertex<BoundParameters>(0, trk, trk));
+  }
+  std::vector<TrackAtVertex<BoundParameters>> tracksAtVtx2;
+  for (const auto& trk : params2) {
+    tracksAtVtx2.push_back(TrackAtVertex<BoundParameters>(0, trk, trk));
+  }
+
+  std::vector<Vertex<BoundParameters>> vtxList;
+
+  Vector3D vtxPos1(1.5_mm, 1.7_mm, -6_mm);
+  Vertex<BoundParameters> vtx1(vtxPo1);
+  // Set track for current vertex
+  vtx1.setTracksAtVertex(tracksAtVtx1);
+  // Add to vertex list
+  vtxList.push_back(vtx1);
+
+  Vector3D vtxPos2(9.8_mm, 0.2_mm, -4.8_mm);
+  Vertex<BoundParameters> vtx2(vtxPo1);
+  // Set track for current vertex
+  vtx2.setTracksAtVertex(tracksAtVtx2);
+  // Add to vertex list
+  vtxList.push_back(vtx2);
 }
 
 }  // namespace Test
