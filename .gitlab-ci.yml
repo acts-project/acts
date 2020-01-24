@@ -222,31 +222,31 @@ integration_tests_slc6_lcg95:
   before_script:
     - set +e && source CI/setup_lcg95.sh; set -e
 
-# SLC, LCG94, LLVM60
+# Ubuntu, LLVM90
 
-build_ubuntu1804_llvm70:
+build_ubuntu1804_llvm90:
   <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804_llvm9:latest
   before_script:
     - source CI/env_info.sh
   variables:
     BUILD_TYPE: Release
     BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DCMAKE_CXX_FLAGS="-stdlib=libc++"
 
-unit_tests_ubuntu1804_llvm70:
+unit_tests_ubuntu1804_llvm90:
   <<: *template_unit_tests
   dependencies:
-    - build_ubuntu1804_llvm70
-  needs: ["build_ubuntu1804_llvm70"]
-  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
+    - build_ubuntu1804_llvm90
+  needs: ["build_ubuntu1804_llvm90"]
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804_llvm9:latest
   before_script: []
 
-integration_tests_ubuntu1804_llvm70:
+integration_tests_ubuntu1804_llvm90:
   <<: *template_integration_tests
   dependencies:
-    - build_ubuntu1804_llvm70
-  needs: ["build_ubuntu1804_llvm70"]
-  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
+    - build_ubuntu1804_llvm90
+  needs: ["build_ubuntu1804_llvm90"]
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804_llvm9:latest
   before_script: []
 
 # CC7, LCG95
