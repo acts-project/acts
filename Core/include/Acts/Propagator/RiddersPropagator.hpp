@@ -159,31 +159,39 @@ class RiddersPropagator {
   template <typename options_t, typename parameters_t>
   std::vector<FreeVector> wiggleDimension(
       const options_t& options, const parameters_t& startPars,
-      const unsigned int param,
-      const FreeVector& nominal, const std::vector<double>& deviations) const;
+      const unsigned int param, const FreeVector& nominal,
+      const std::vector<double>& deviations) const;
 
-	/// @brief This function builds the start parameters. Only one dimension is changed.
-	///
-	/// @tparam parameters_t Type of the start parameters
-	/// @param [in] geoContext Geometry context
-	/// @param [in] h The variation distance
-	/// @param [in] param Index of the dimension
-	/// @param [in] tp Copy of the unchanged start parameters
-	///
-	/// @return The changed start parameters
-	template<typename parameters_t>
-	parameters_t
-	wiggleStartVector(std::reference_wrapper<const GeometryContext> geoContext, double h, const unsigned int param, parameters_t tp) const;
-	
-	/// @copydoc RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const GeometryContext>, double, const unsigned int, parameters_t)
-	template<typename parameters_t>
-	void
-	wiggleBoundStartVector(std::reference_wrapper<const GeometryContext> geoContext, double h, const unsigned int param, parameters_t& tp) const;
-	
-	/// @copydoc RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const GeometryContext>, double, const unsigned int, parameters_t)
-	template<typename parameters_t>
-	void
-	wiggleFreeStartVector(std::reference_wrapper<const GeometryContext> geoContext, double h, const unsigned int param, parameters_t& tp) const;
+  /// @brief This function builds the start parameters. Only one dimension is
+  /// changed.
+  ///
+  /// @tparam parameters_t Type of the start parameters
+  /// @param [in] geoContext Geometry context
+  /// @param [in] h The variation distance
+  /// @param [in] param Index of the dimension
+  /// @param [in] tp Copy of the unchanged start parameters
+  ///
+  /// @return The changed start parameters
+  template <typename parameters_t>
+  parameters_t wiggleStartVector(
+      std::reference_wrapper<const GeometryContext> geoContext, double h,
+      const unsigned int param, parameters_t tp) const;
+
+  /// @copydoc
+  /// RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const
+  /// GeometryContext>, double, const unsigned int, parameters_t)
+  template <typename parameters_t>
+  void wiggleBoundStartVector(
+      std::reference_wrapper<const GeometryContext> geoContext, double h,
+      const unsigned int param, parameters_t& tp) const;
+
+  /// @copydoc
+  /// RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const
+  /// GeometryContext>, double, const unsigned int, parameters_t)
+  template <typename parameters_t>
+  void wiggleFreeStartVector(
+      std::reference_wrapper<const GeometryContext> geoContext, double h,
+      const unsigned int param, parameters_t& tp) const;
 
   /// @brief This function propagates the covariance matrix
   ///
@@ -195,17 +203,23 @@ class RiddersPropagator {
       const std::array<std::vector<BoundVector>, eBoundSize>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
-  /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&, const std::vector<double>&)
+  /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
+  /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
+  /// const std::vector<double>&)
   const Covariance calculateCovariance(
       const std::array<std::vector<BoundVector>, FreeParsDim>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
-  /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&, const std::vector<double>&)
+  /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
+  /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
+  /// const std::vector<double>&)
   const Covariance calculateCovariance(
       const std::array<std::vector<FreeVector>, BoundParsDim>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
-  /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&, const std::vector<double>&)
+  /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
+  /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
+  /// const std::vector<double>&)
   const Covariance calculateCovariance(
       const std::array<std::vector<FreeVector>, FreeParsDim>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
@@ -219,7 +233,7 @@ class RiddersPropagator {
   /// @return Vector containing the linear fit
   template <typename vector_t>
   vector_t fitLinear(const std::vector<vector_t>& values,
-                        const std::vector<double>& deviations) const;
+                     const std::vector<double>& deviations) const;
 
   /// Propagator
   propagator_t m_propagator;
