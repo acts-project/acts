@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2.) * units::_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2.) * units::_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -300,9 +300,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 /// configuration and test values as in Athena unit test algorithm
 /// Tracking/TrkVertexFitter/TrkVertexFitterUtils/test/ImpactPoint3dEstimator_test
 BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
-  
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 200.08) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 1.9971546939) * units::_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -325,24 +324,26 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0.,0.,0.));
+      Surface::makeShared<PerigeeSurface>(pos1);
 
   // Some fixed track parameter values
-  BoundParameters params1(tgContext, covMat, pos1, mom1, 1, 0,
-                           perigeeSurface);
+  BoundParameters params1(tgContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
 
   auto res1 = ipEstimator.calculateDistance(tgContext, params1, vtxPos);
   BOOST_CHECK(res1.ok());
   double distance = (*res1);
-  std::cout << "distance: " << distance << std::endl;
 
-  auto res2 = ipEstimator.getParamsAtClosestApproach(tgContext, params1, vtxPos);
+  // Desired result from Athena unit test
+  const double result = 3.10391_mm;
+  CHECK_CLOSE_ABS(distance, result, 0.00001_mm);
+
+  auto res2 =
+      ipEstimator.getParamsAtClosestApproach(tgContext, params1, vtxPos);
   BOOST_CHECK(res2.ok());
   BoundParameters endParams = std::move(**res2);
   Vector3D surfaceCenter = endParams.referenceSurface().center(tgContext);
 
   BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
-
 }
 
 }  // namespace Test
