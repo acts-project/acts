@@ -130,12 +130,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         BilloirTrack<input_track_t> currentBilloirTrack(trackContainer,
                                                         linTrack);
 
-        // calculate dqi = deltaQ[i]
-        currentBilloirTrack.deltaQ[0] = d0;
-        currentBilloirTrack.deltaQ[1] = z0;
-        currentBilloirTrack.deltaQ[2] = phi - fPhi;
-        currentBilloirTrack.deltaQ[3] = theta - fTheta;
-        currentBilloirTrack.deltaQ[4] = qOverP - fQOvP;
+        currentBilloirTrack.deltaQ << d0, z0, phi - fPhi, theta - fTheta,
+            qOverP - fQOvP, 0;
 
         // position jacobian (D matrix)
         SpacePointToBoundMatrix Dmat;
