@@ -164,42 +164,124 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     const unsigned int param, const Surface& target,
     const Acts::BoundVector& nominal,
     const std::vector<double>& deviations) const {
+  
   // Storage of the results
   std::vector<BoundVector> derivatives;
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
-    // Treatment for theta
-    if (param == eBoundTheta) {
-      const double current_theta = startPars.template get<eBoundTheta>();
-      if (current_theta + h > M_PI) {
-        h = M_PI - current_theta;
-      }
-      if (current_theta + h < 0) {
-        h = -current_theta;
-      }
-    }
+    parameters_t tp = startPars;
 
-    // Modify start parameter
-    BoundVector values = startPars.parameters();
-    values[param] += h;
+	if constexpr (parameters_t::is_local_representation)
+    {
+		// Treatment for theta
+		if (param == eTHETA) {
+		  const double current_theta = tp.template get<eTHETA>();
+		  if (current_theta + h > M_PI) {
+			h = M_PI - current_theta;
+		  }
+		  if (current_theta + h < 0) {
+			h = -current_theta;
+		  }
+		}
 
-    // Propagate with updated start parameters
-    BoundTrackParameters tp(startPars.referenceSurface().getSharedPtr(), values,
-                            startPars.covariance());
+		// Modify start parameter and propagate
+		switch (param) {
+		  case 0: {
+			tp.template set<eLOC_0>(options.geoContext,
+									tp.template get<eLOC_0>() + h);
+			break;
+		  }
+		  case 1: {
+			tp.template set<eLOC_1>(options.geoContext,
+									tp.template get<eLOC_1>() + h);
+			break;
+		  }
+		  case 2: {
+			tp.template set<ePHI>(options.geoContext, tp.template get<ePHI>() + h);
+			break;
+		  }
+		  case 3: {
+			tp.template set<eTHETA>(options.geoContext,
+									tp.template get<eTHETA>() + h);
+			break;
+		  }
+		  case 4: {
+			tp.template set<eQOP>(options.geoContext, tp.template get<eQOP>() + h);
+			break;
+		  }
+		  case 5: {
+			tp.template set<eT>(options.geoContext, tp.template get<eT>() + h);
+			break;
+		  }
+		  default:
+			return {};
+		}
+	}
+	else
+	{
+		  switch (param) {
+		  case 0: {
+			tp.template set<0>(options.geoContext,
+									tp.template get<0>() + h);
+			break;
+		  }
+		  case 1: {
+			tp.template set<1>(options.geoContext,
+									tp.template get<1>() + h);
+			break;
+		  }
+		  case 2: {
+			tp.template set<2>(options.geoContext,
+									tp.template get<2>() + h);
+			break;
+		  }
+		  case 3: {
+			tp.template set<3>(options.geoContext,
+									tp.template get<3>() + h);
+			break;
+		  }
+		  case 4: {
+			tp.template set<4>(options.geoContext,
+									tp.template get<4>() + h);
+			break;
+		  }
+		  case 5: {
+			tp.template set<5>(options.geoContext,
+									tp.template get<5>() + h);
+			break;
+		  }
+		  case 6: {
+			tp.template set<6>(options.geoContext,
+									tp.template get<6>() + h);
+			break;
+		  }
+		  case 7: {
+			tp.template set<7>(options.geoContext,
+									tp.template get<7>() + h);
+			break;
+		  }
+		  default:
+			return {};
+		}
+	}
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 
-    // Correct for a possible variation of phi around
-    if (param == 2) {
-      double phi0 = nominal(Acts::eBoundPhi);
-      double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
-      if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-        derivatives.back()[Acts::eBoundPhi] = (phi1 + 2. * M_PI - phi0) / h;
-      else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-        derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
-    }
+	if constexpr (parameters_t::is_local_representation)
+	{
+		// Correct for a possible variation of phi around
+		if (param == 2) {
+		  double phi0 = nominal(Acts::eBoundPhi);
+		  double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
+		  if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+			derivatives.back()[Acts::eBoundPhi] = (phi1 + 2. * M_PI - phi0) / h;
+		  else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+			derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
+		}
+	}
   }
+
   return derivatives;
 }
 
