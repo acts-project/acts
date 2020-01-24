@@ -23,6 +23,9 @@ namespace Acts {
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of source links on one surface
 ///
+/// If there is no compatible source link, it will return the source link with
+/// min chi2 and tag it as an outlier.
+
 struct CKFSourceLinkSelector {
  public:
   /// @brief nested config struct
@@ -81,9 +84,9 @@ struct CKFSourceLinkSelector {
   /// @param predictedParams The predicted track parameter on a surface
   /// @param sourcelinks The pool of source links
   ///
-  /// @return the compatible source link indices
+  /// @return the compatible or outlier source link indice(s)
   template <typename calibrator_t, typename source_link_t>
-  std::vector<size_t> operator()(
+  std::pair<std::vector<size_t>, bool> operator()(
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
@@ -91,8 +94,9 @@ struct CKFSourceLinkSelector {
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
 
     std::vector<size_t> candidateIndices;
-    candidateIndices.reserve(sourcelinks.size());
 
+    double minChi2 = std::numeric_limits<double>::max();
+    size_t minIndex = 0;
     size_t index = 0;
     for (const auto& sourcelink : sourcelinks) {
       std::visit(
@@ -130,32 +134,38 @@ struct CKFSourceLinkSelector {
               // First check if the layer-level criteria is configured.
               // If not, check if the volume-level criteria is configured.
               // Otherwise, use world criteria
-              double maxChi2;
+              double chi2Cut;
               while (true) {
                 auto dvMaxChi2 = m_config.layerMaxChi2.find(volumeID);
                 if (dvMaxChi2 != m_config.layerMaxChi2.end()) {
                   auto dvlMaxChi2 = dvMaxChi2->second.find(layerID);
                   if (dvlMaxChi2 != dvMaxChi2->second.end()) {
-                    maxChi2 = dvlMaxChi2->second;
+                    chi2Cut = dvlMaxChi2->second;
                     break;
                   }
                 }
 
                 auto vvMaxChi2 = m_config.volumeMaxChi2.find(volumeID);
                 if (vvMaxChi2 != m_config.volumeMaxChi2.end()) {
-                  maxChi2 = vvMaxChi2->second;
+                  chi2Cut = vvMaxChi2->second;
                   break;
                 }
 
-                maxChi2 = m_config.maxChi2;
+                chi2Cut = m_config.maxChi2;
                 break;
               }
 
               ACTS_VERBOSE("Chi2: " << chi2
-                                    << " and Chi2 criteria: " << maxChi2);
-              // Push the source link if satisfying criteria
-              if (chi2 < maxChi2) {
+                                    << " and Chi2 criteria: " << chi2Cut);
+              // Push the source link and tag it as measurement if satisfying
+              // criteria
+              if (chi2 < chi2Cut) {
                 candidateIndices.push_back(index);
+              }
+              // To search for the source link with the min chisq
+              if (chi2 < minChi2) {
+                minChi2 = chi2;
+                minIndex = index;
               }
             }
           },
@@ -168,9 +178,18 @@ struct CKFSourceLinkSelector {
     //-> remove the 'overflow' source links
 
     ACTS_VERBOSE(
-        "Number of source link candidates: " << candidateIndices.size());
+        "Number of measurement candidates: " << candidateIndices.size());
 
-    return std::move(candidateIndices);
+    bool isOutlier = false;
+    // If there is no selected source link, return the source link with the best
+    // chisq and tag it as an outlier
+    if (index > 0 and candidateIndices.empty()) {
+      candidateIndices.push_back(minIndex);
+      isOutlier = true;
+      ACTS_DEBUG("No measurement candidate. Return an outlier source link.");
+    }
+
+    return {std::move(candidateIndices), isOutlier};
   }
 
   /// The config
