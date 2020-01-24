@@ -18,9 +18,10 @@
 namespace Acts {
 
 /// @brief This struct selects the source link most compatible with the
-/// track parameter according to the chi2
+/// track parameter according to the chi2.
 ///
-/// The chi2 with the selected source link should satisfy provided criteria
+/// If the chi2 with the selected source link does not satisfy provided
+/// criteria, the returned source link will be tagged as an outlier source link.
 ///
 struct VoidSourceLinkSelector {
   /// @brief nested config struct
@@ -53,9 +54,9 @@ struct VoidSourceLinkSelector {
   /// @param predictedParams The predicted track parameter on a surface
   /// @param sourcelinks The pool of source links
   ///
-  /// @return the compatible source link indices
+  /// @return the compatible or outlier source link index
   template <typename calibrator_t, typename source_link_t>
-  std::vector<size_t> operator()(
+  std::pair<std::vector<size_t>, bool> operator()(
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks) const {
     ACTS_VERBOSE("Invoked VoidSourceLinkSelector");
@@ -63,10 +64,9 @@ struct VoidSourceLinkSelector {
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
 
     std::vector<size_t> candidateIndices;
-    // There is either one found source link or not
-    candidateIndices.reserve(1);
 
     double minChi2 = std::numeric_limits<double>::max();
+    size_t minIndex = 0;
     size_t index = 0;
     for (const auto& sourcelink : sourcelinks) {
       std::visit(
@@ -96,28 +96,28 @@ struct VoidSourceLinkSelector {
                               .eval()(0, 0);
 
             // Find the source link with the min chi2
-            if (chi2 < minChi2 and chi2 < m_config.maxChi2) {
+            if (chi2 < minChi2) {
               minChi2 = chi2;
-              if (candidateIndices.empty()) {
-                candidateIndices.push_back(index);
-              } else {
-                candidateIndices.at(0) = index;
-              }
+              minIndex = index;
             }
           },
           calibrator(sourcelink, predictedParams));
       index++;
     }
 
+    bool isOutlier = false;
     // Check if the chi2 satisfies requirement in the config
-    if (not candidateIndices.empty()) {
+    if (minChi2 < m_config.maxChi2) {
+      candidateIndices.push_back(minIndex);
       ACTS_VERBOSE("Minimum Chi2: " << minChi2 << " is within chi2 criteria: "
                                     << m_config.maxChi2);
-    } else {
-      ACTS_DEBUG("No source link candidate");
+    } else if (index > 0) {
+      candidateIndices.push_back(minIndex);
+      isOutlier = true;
+      ACTS_DEBUG("No measurement candidate. Return an outlier source link.");
     }
 
-    return std::move(candidateIndices);
+    return {candidateIndices, isOutlier};
   }
 
   /// The config
