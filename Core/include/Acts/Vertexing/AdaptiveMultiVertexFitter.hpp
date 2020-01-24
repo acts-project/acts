@@ -178,6 +178,18 @@ class AdaptiveMultiVertexFitter {
       const linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
+  /// @brief The actual fit function, performs a simulaneous
+  ///   fit of all vertices in state.vertexCollection
+  ///
+  /// @param state The state object
+  /// @param linearizer The track linearizer
+  /// @param vFitterOptions Vertex fitter options
+  ///
+  /// @return Result<void> object
+  Result<void> fitAllVertices(
+      State& state, const linearizer_t& linearizer,
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
+
  private:
   /// Configuration object
   const Config m_cfg;
@@ -194,18 +206,6 @@ class AdaptiveMultiVertexFitter {
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
-
-  /// @brief The actual fit function, performs a simulaneous
-  ///   fit of all vertices in state.vertexCollection
-  ///
-  /// @param state The state object
-  /// @param linearizer The track linearizer
-  /// @param vFitterOptions Vertex fitter options
-  ///
-  /// @return Result<void> object
-  Result<void> fit_impl(
-      State& state, const linearizer_t& linearizer,
-      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Tests if vertex is already in list of vertices or not
   ///

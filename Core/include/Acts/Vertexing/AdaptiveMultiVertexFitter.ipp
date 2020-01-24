@@ -12,7 +12,7 @@
 
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit_impl(
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitAllVertices(
     State& state, const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   auto& geoContext = vFitterOptions.geoContext;
@@ -168,7 +168,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
   state.vertexCollection = verticesToFit;
 
   // Perform fit on all added vertices
-  auto fitRes = fit_impl(state, linearizer, vFitterOptions);
+  auto fitRes = fitAllVertices(state, linearizer, vFitterOptions);
 
   if (!fitRes.ok()) {
     return fitRes.error();
