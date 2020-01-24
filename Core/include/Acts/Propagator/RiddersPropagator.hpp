@@ -32,8 +32,7 @@ namespace Acts {
 /// latter classes.
 template <typename propagator_t>
 class RiddersPropagator {
-  using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
 
  private:
   ///
@@ -160,13 +159,27 @@ class RiddersPropagator {
       const std::array<std::vector<BoundVector>, eBoundSize>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
+  const Covariance calculateCovariance(
+      const std::array<std::vector<BoundVector>, FreeParsDim>& derivatives,
+      const Covariance& startCov, const std::vector<double>& deviations) const;
+
+  const Covariance calculateCovariance(
+      const std::array<std::vector<FreeVector>, BoundParsDim>& derivatives,
+      const Covariance& startCov, const std::vector<double>& deviations) const;
+
+  const Covariance calculateCovariance(
+      const std::array<std::vector<FreeVector>, FreeParsDim>& derivatives,
+      const Covariance& startCov, const std::vector<double>& deviations) const;
+
   /// @brief This function fits a linear function through the final state
   /// parametrisations
   ///
+  /// @tparam vector_t Type of the stored and returned vector
   /// @param [in] values Vector containing the final state parametrisations
   ///
   /// @return Vector containing the linear fit
-  BoundVector fitLinear(const std::vector<BoundVector>& values,
+  template <typename vector_t>
+  vector_t fitLinear(const std::vector<vector_t>& values,
                         const std::vector<double>& deviations) const;
 
   /// Propagator
