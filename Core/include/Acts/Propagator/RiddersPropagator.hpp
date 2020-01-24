@@ -143,11 +143,24 @@ class RiddersPropagator {
       const unsigned int param, const Surface& target,
       const BoundVector& nominal, const std::vector<double>& deviations) const;
 
-  //~ template <typename options_t, typename parameters_t>
-  //~ std::vector<FreeVector> wiggleDimension(
-  //~ const options_t& options, const parameters_t& startPars,
-  //~ const unsigned int param, const Surface& target,
-  //~ const FreeVector& nominal, const std::vector<double>& deviations) const;
+  /// @brief This function wiggles one dimension of the starting parameters,
+  /// performs the propagation to a surface and collects for each change of the
+  /// start parameters the slope
+  ///
+  /// @tparam options_t PropagatorOptions object
+  /// @tparam parameters+t Type of the parameters to start the propagation with
+  ///
+  /// @param [in] options Options do define how to wiggle
+  /// @param [in] startPart Start parameters that are modified
+  /// @param [in] param Index to get the parameter that will be modified
+  /// @param [in] nominal Nominal end parameters
+  ///
+  /// @return Vector containing each slope
+  template <typename options_t, typename parameters_t>
+  std::vector<FreeVector> wiggleDimension(
+      const options_t& options, const parameters_t& startPars,
+      const unsigned int param,
+      const FreeVector& nominal, const std::vector<double>& deviations) const;
 
   /// @brief This function propagates the covariance matrix
   ///
