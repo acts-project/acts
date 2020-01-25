@@ -67,8 +67,8 @@ class GeometryObject {
   /// @param bValue is the dobule in which you want to bin
   ///
   /// @return float to be used for the binning schema
-  double binningPositionValue(const GeometryContext& gctx,
-                              BinningValue bValue) const;
+  virtual double binningPositionValue(const GeometryContext& gctx,
+                                      BinningValue bValue) const;
 
   /// Set the value
   ///
@@ -104,7 +104,7 @@ inline double GeometryObject::binningPositionValue(const GeometryContext& gctx,
     case Acts::binZ: {
       return binningPosition(gctx, bValue).z();
     } break;
-    // case
+    // case - to be overwritten by disks
     case Acts::binR: {
       return perp(binningPosition(gctx, bValue));
     } break;

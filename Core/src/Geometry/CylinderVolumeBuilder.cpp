@@ -282,28 +282,34 @@ Acts::CylinderVolumeBuilder::trackingVolume(
             auto ringVolume = std::find_if(
                 volumeRminRmax.begin(), volumeRminRmax.end(),
                 [&](const auto& reference) {
-                  // std::cout << reference.first << " < " << test << " < " <<
-                  // reference.second << std::endl;
                   return (test > reference.first and test < reference.second);
                 });
             if (ringVolume != volumeRminRmax.end()) {
               unsigned int ringBin =
-                  std::distance(ringVolume, volumeRminRmax.begin());
+                  std::distance(volumeRminRmax.begin(), ringVolume);
               ringLayers[ringBin].push_back(elay);
             }
           }
-
           // Subvolume construction
           ACTS_DEBUG("Ring layout configuration: ");
+          // Endcap container
+          std::vector<TrackingVolumePtr> endcapContainer;
           unsigned int ir = 0;
           for (auto& rLayers : ringLayers) {
             ACTS_DEBUG(" - ring volume " << ir << " with " << rLayers.size()
-                                         << " layers.");
-            ACTS_DEBUG(" - ring volume rmin/rmax = "
-                       << volumeRminRmax[ir].first << "/"
-                       << volumeRminRmax[ir].second);
+                                         << " layers, and rmin/rmax = "
+                                         << volumeRminRmax[ir].first << "/"
+                                         << volumeRminRmax[ir].second);
+            endcapContainer.push_back(tvHelper->createTrackingVolume(
+                gctx, rLayers, centralConfig.volumes, m_cfg.volumeMaterial,
+                volumeRminRmax[ir].first, volumeRminRmax[ir].second,
+                endcapConfig.zMin, endcapConfig.zMax,
+                m_cfg.volumeName + endcapName + std::string("::Ring") +
+                    std::to_string(ir)));
             ++ir;
           }
+          // Return a container of ring volumes
+          return tvHelper->createContainerTrackingVolume(gctx, endcapContainer);
         }
       }
     }
@@ -324,13 +330,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                               "::PositiveEndcap");
 
   ACTS_DEBUG("Newly created volume(s) will be " << wConfig.wConditionScreen);
-  // standalone container, full wrapping, full insertion & if no existing volume
+  // Standalone container, full wrapping, full insertion & if no existing volume
   // is present needs a bare triple
   if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting ||
       wConfig.wCondition == NoWrapping) {
     ACTS_VERBOSE("Combined new container is being built.");
-    // stuff into the container what you have
-    std::vector<std::shared_ptr<const TrackingVolume>> volumesContainer;
+    // Stuff into the container what you have
+    std::vector<TrackingVolumePtr> volumesContainer;
     if (nEndcap) {
       volumesContainer.push_back(nEndcap);
       volume = nEndcap;
@@ -392,7 +398,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // Check if further action is needed on existing volumes and gap volumes
   if (existingVolumeCp) {
     // Check if gaps are needed
-    std::vector<std::shared_ptr<const TrackingVolume>> existingContainer;
+    std::vector<TrackingVolumePtr> existingContainer;
     if (wConfig.fGapVolumeConfig) {
       // create the gap volume
       auto fGap = tvHelper->createGapTrackingVolume(
@@ -437,7 +443,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
             ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
             : existingVolumeCp;
 
-    std::vector<std::shared_ptr<const TrackingVolume>> totalContainer;
+    std::vector<TrackingVolumePtr> totalContainer;
     // check what to do with the existing
     if (wConfig.wCondition == Attaching ||
         wConfig.wCondition == CentralWrapping ||

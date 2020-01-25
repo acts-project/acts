@@ -1,6 +1,7 @@
 target_sources_local(
   ActsCore
   PRIVATE
+    AnnulusBounds.cpp
     ConeBounds.cpp
     ConeSurface.cpp
     CylinderBounds.cpp

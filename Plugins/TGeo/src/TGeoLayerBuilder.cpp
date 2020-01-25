@@ -84,6 +84,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   ACTS_DEBUG(layerType << " layers : found " << layerConfigs.size()
                        << " configuration(s)" + addonOutput);
   for (auto layerCfg : layerConfigs) {
+    layerCfg.runningID = type * 100000;
+
     // Prepare the layer surfaces
     using LayerSurfaceVector = std::vector<std::shared_ptr<const Surface>>;
     LayerSurfaceVector layerSurfaces;
@@ -273,8 +275,14 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
   if (tgNode != nullptr) {
     // Get the matrix of the current node for positioning
     const TGeoMatrix* tgMatrix = tgNode->GetMatrix();
-    // The translation of the parent
-    const Double_t* translation = tgTransform.GetTranslation();
+
+    // Build the matrix
+    TGeoHMatrix parseTransform =
+        TGeoCombiTrans(tgTransform) * TGeoCombiTrans(*tgMatrix);
+
+    // The translation of the node for parsing
+    const Double_t* translation = parseTransform.GetTranslation();
+
     double x = m_cfg.unit * translation[0];
     double y = m_cfg.unit * translation[1];
     double z = m_cfg.unit * translation[2];
@@ -306,9 +314,10 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
         ACTS_VERBOSE(offset << "[>>] accepted.");
         // Create the element
         // @todo allow IdentifierSvc to fill the identifier
+
         auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
-            Identifier(), tgNode, &tgTransform, layerConfig.localAxes,
-            m_cfg.unit);
+            Identifier(++layerConfig.runningID), tgNode, &tgTransform,
+            layerConfig.localAxes, m_cfg.unit);
         // Record the element @todo solve with provided cache
         m_elementStore.push_back(tgElement);
         // Register theshared pointer to the surface for layer building
