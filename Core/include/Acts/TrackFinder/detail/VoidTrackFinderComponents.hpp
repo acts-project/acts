@@ -10,6 +10,7 @@
 #include <limits>
 
 #include "Acts/EventData/SourceLinkConcept.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"

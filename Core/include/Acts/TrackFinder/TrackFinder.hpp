@@ -107,9 +107,13 @@ template <typename source_link_t>
 struct TrackFinderResult {
   /// Struct to keep track of track quality
   struct TipState {
+    // Total number of states
     size_t nStates = 0;
+    // Number of (non-outlier) measurements
     size_t nMeasurements = 0;
+    // Number of outliers
     size_t nOutliers = 0;
+    // Number of holes
     size_t nHoles = 0;
   };
 
@@ -131,8 +135,8 @@ struct TrackFinderResult {
   // Count the track states on current surface
   size_t nStatesOnSurface = 0;
 
-  // The indices of measurements in multitrajectory
-  std::map<const Surface*, std::map<size_t, size_t>> measurementTips;
+  // The indices of source links in multitrajectory
+  std::map<const Surface*, std::map<size_t, size_t>> sourcelinkTips;
 
   // Indicator if forward filtering has been done
   bool forwardFiltered = false;
@@ -333,8 +337,8 @@ class TrackFinder {
             // Record if there are measurements
             ACTS_VERBOSE("Found track with entry index = "
                          << tip << " and " << tipState.nMeasurements
-                         << " measurements"
-                         << " and " << tipState.nHoles << " holes");
+                         << " measurements and " << tipState.nOutliers
+                         << "outliers and " << tipState.nHoles << " holes");
             result.trackTips.push_back(tip);
           }
           // Remove the tip from list of active tips
@@ -504,10 +508,10 @@ class TrackFinder {
 
         // Get the already created track state tips with source links on this
         // surface
-        std::map<size_t, size_t> measurementTipsOnSurface;
-        auto measTips_it = result.measurementTips.find(surface);
-        if (measTips_it != result.measurementTips.end()) {
-          measurementTipsOnSurface = measTips_it->second;
+        std::map<size_t, size_t> sourcelinkTipsOnSurface;
+        auto measTips_it = result.sourcelinkTips.find(surface);
+        if (measTips_it != result.sourcelinkTips.end()) {
+          sourcelinkTipsOnSurface = measTips_it->second;
         }
 
         // Update state and stepper with pre material effects
@@ -531,22 +535,23 @@ class TrackFinder {
           // Determine if the source link is already contained in other track
           // state
           bool sourcelinkShared = false;
-          auto index_it = measurementTipsOnSurface.find(index);
-          if (index_it != measurementTipsOnSurface.end()) {
+          auto index_it = sourcelinkTipsOnSurface.find(index);
+          if (index_it != sourcelinkTipsOnSurface.end()) {
             sourcelinkShared = true;
           }
 
-          // No storage allocation for predicted parameter and measurement if
-          // already stored
-          // @Todo: no storage allocation for filtered parameter for
-          // holes/outliers
+          // Add a measurement/outlier track state proxy in multi trajectory
+          // No storage allocation for:
+          // -> predicted parameter and uncalibrated measurement if already
+          // stored
+          // -> filtered parameter for outlier
           auto stateMask =
               (result.nStatesOnSurface > 0 ? ~TrackStatePropMask::Predicted
                                            : TrackStatePropMask::All) &
               (sourcelinkShared ? ~TrackStatePropMask::Uncalibrated
-                                : TrackStatePropMask::All);
-
-          // Add a track state proxy in multi trajectory
+                                : TrackStatePropMask::All) &
+              (isOutlier ? ~TrackStatePropMask::Filtered
+                         : TrackStatePropMask::All);
           auto trackTip =
               result.fittedStates.addTrackState(stateMask, result.currentTip);
 
@@ -570,11 +575,13 @@ class TrackFinder {
           // Get and set the type flags
           auto& typeFlags = trackStateProxy.typeFlags();
           typeFlags.set(TrackStateFlag::MaterialFlag);
-          typeFlags.set(TrackStateFlag::MeasurementFlag);
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (isOutlier) {
             // Set the outlier type flag
             typeFlags.set(TrackStateFlag::OutlierFlag);
+          } else {
+            // Set the measurement type flag
+            typeFlags.set(TrackStateFlag::MeasurementFlag);
           }
 
           // Assign the source link and calibrated measurement to the track
@@ -597,18 +604,18 @@ class TrackFinder {
 
           if (isOutlier) {
             // No Kalman update for outlier
-            trackStateProxy.filtered() = trackStateProxy.predicted();
-            trackStateProxy.filteredCovariance() =
-                trackStateProxy.predictedCovariance();
+            // Set the filtered parameter index to be the same with predicted
+            // parameter
+            trackStateProxy.data().ifiltered =
+                trackStateProxy.data().ipredicted;
 
             ACTS_VERBOSE(
-                "Creating outlier (measurement) track state with tip = "
-                << trackTip);
+                "Creating outlier track state with tip = " << trackTip);
 
             // Count the number of processedStates, measurements, outliers and
             // holes
             auto tipState =
-                TipState{preTipState.nStates + 1, preTipState.nMeasurements + 1,
+                TipState{preTipState.nStates + 1, preTipState.nMeasurements,
                          preTipState.nOutliers + 1, preTipState.nHoles};
             // Record the active tip and its state
             result.activeTips.emplace(trackTip, std::move(tipState));
@@ -635,8 +642,8 @@ class TrackFinder {
 
           // Record the track state tip for this source link
           if (not sourcelinkShared) {
-            auto& measurementTips = result.measurementTips[surface];
-            measurementTips.emplace(index, trackTip);
+            auto& sourcelinkTips = result.sourcelinkTips[surface];
+            sourcelinkTips.emplace(index, trackTip);
           }
 
           // Count the states on current surface
@@ -664,14 +671,17 @@ class TrackFinder {
                          << " of track state with tip = " << result.currentTip);
           }
         } else {
-          // Add a hole track state in multi trajectory
+          // If the cluster selector return neither measurement nor outlier
+          // source link, will create a hole track state in multi trajectory No
+          // storage allocation for uncalibrated/calibrated measurement and
+          // filtered parameter
           result.currentTip = result.fittedStates.addTrackState(
               ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated),
+                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
               result.currentTip);
 
           ACTS_VERBOSE(
-              "No compatible/outlier measurements found. Creating "
+              "No measurements/outlier found. Creating "
               "hole track state "
               "with tip = "
               << result.currentTip);
@@ -698,9 +708,9 @@ class TrackFinder {
           trackStateProxy.predictedCovariance() = *boundParams.covariance();
           trackStateProxy.jacobian() = jacobian;
           trackStateProxy.pathLength() = pathLength;
-          trackStateProxy.filtered() = trackStateProxy.predicted();
-          trackStateProxy.filteredCovariance() =
-              trackStateProxy.predictedCovariance();
+          // Set the filtered parameter index to be the same with predicted
+          // parameter
+          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
 
           // Set the track state flags
           auto& typeFlags = trackStateProxy.typeFlags();
@@ -712,13 +722,15 @@ class TrackFinder {
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, postUpdate);
       } else {
-        // add a non-measurement TrackState entry multi trajectory
+        // No source links on surface, add either hole or passive material
+        // TrackState entry multi trajectory No storage allocation for
+        // uncalibrated/calibrated measurement and filtered parameter
         result.currentTip = result.fittedStates.addTrackState(
             ~(TrackStatePropMask::Uncalibrated |
-              TrackStatePropMask::Calibrated),
+              TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
             result.currentTip);
 
-        ACTS_VERBOSE("Creating non-measurement track state with tip = "
+        ACTS_VERBOSE("Creating non-sourcelink track state with tip = "
                      << result.currentTip);
 
         // Count the number of processedStates, measurements, outliers and holes
@@ -779,10 +791,9 @@ class TrackFinder {
         // Update state and stepper with material effects
         materialInteractor(surface, state, stepper, fullUpdate);
 
-        // Set the filtered parameter to be the same with predicted parameter
-        trackStateProxy.filtered() = trackStateProxy.predicted();
-        trackStateProxy.filteredCovariance() =
-            trackStateProxy.predictedCovariance();
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
+        trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
       }
 
       return Result<void>::success();
