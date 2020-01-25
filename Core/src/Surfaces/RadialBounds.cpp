@@ -11,12 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-
-#include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::RadialBounds::RadialBounds(double minrad, double maxrad, double hphisec)
     : RadialBounds(minrad, maxrad, 0, hphisec) {}

@@ -149,6 +149,15 @@ inline const Vector3D DiscSurface::binningPosition(
   return center(gctx);
 }
 
+inline double DiscSurface::binningPositionValue(const GeometryContext& gctx,
+                                                BinningValue bValue) const {
+  // only modify binR
+  if (bValue == binR) {
+    return VectorHelpers::perp(center(gctx)) + m_bounds->binningValueR();
+  }
+  return GeometryObject::binningPositionValue(gctx, bValue);
+}
+
 inline double DiscSurface::pathCorrection(const GeometryContext& gctx,
                                           const Vector3D& position,
                                           const Vector3D& direction) const {

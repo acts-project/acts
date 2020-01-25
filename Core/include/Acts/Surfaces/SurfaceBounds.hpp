@@ -47,8 +47,9 @@ class SurfaceBounds {
     Triangle = 10,
     DiscTrapezoidal = 11,
     ConvexPolygon = 12,
-    Boundless = 13,
-    Other = 14
+    Annulus = 13,
+    Boundless = 14,
+    Other = 15
   };
 
   virtual ~SurfaceBounds() = default;

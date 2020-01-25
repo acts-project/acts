@@ -78,6 +78,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Define the number of bins in loc1
     size_t binsLoc1{12};
 
+    /// Running identifier
+    int runningID = 0;
+
     // Default constructor
     LayerConfig()
         : layerName(""),
