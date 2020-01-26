@@ -165,6 +165,20 @@ class AdaptiveMultiVertexFitter {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
+  /// @brief The actual fit function, performs a simultaneous
+  /// fit of all vertices in `verticesToFit` by invoking `fitImpl`
+  ///
+  /// @param state The state object
+  /// @param verticesToFit Vector containing all vertices to be fitted
+  /// @param linearizer The track linearizer
+  /// @param vFitterOptions Vertex fitter options
+  ///
+  /// @return Result<void> object
+  Result<void> fit(
+      State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
+      const linearizer_t& linearizer,
+      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+
   /// @brief Adds new vertex to an existing multi-vertex fit
   /// and fits everything together (by invoking the fit_impl method):
   /// 1. The new vertex is added to the fit: all associated tracks get
@@ -210,7 +224,7 @@ class AdaptiveMultiVertexFitter {
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
 
-  /// @brief The actual fit function, performs a simulaneous
+  /// @brief The actual fit function, performs a simultaneous
   ///   fit of all vertices in state.vertexCollection
   ///
   /// @param state The state object
