@@ -97,8 +97,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   AdaptiveMultiVertexFitter<BoundParameters, Linearizer> fitter(fitterCfg);
 
-  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state;
-
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later
   Vector3D vtxPos1(-0.15_mm, -0.1_mm, -1.5_mm);
@@ -183,21 +181,15 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     idx++;
   }
 
-  for (auto& vtx : vtxList) {
-    std::cout << &vtx << std::endl;
-  }
-
-  for (auto& vtx : vtxList) {
-    // Add vertex link to each track
-    for (auto& trkAtVtx : vtx.tracks()) {
-      state.trkInfoMap[trkAtVtx.id].linksToVertices.push_back(&vtx);
-    }
-
-    if (debugMode) {
-      std::cout << "Number of tracks at vertex " << &vtx << ": "
-                << vtx.tracks().size() << std::endl;
+  if (debugMode) {
+    int count = 0;
+    for (auto& vtx : vtxList) {
+      count++;
+      std::cout << count << ". vertex: " << &vtx << std::endl;
     }
   }
+
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state(vtxList);
 
   if (debugMode) {
     for (auto& trkAtVtx : allTracks) {
@@ -213,7 +205,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
-  auto res1 = fitter.fit(state, vtxList[0], linearizer, fitterOptions);
+  auto res1 = fitter.addVtxToFit(state, vtxList[0], linearizer, fitterOptions);
 
   BOOST_CHECK(res1.ok());
 
@@ -241,7 +233,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   CHECK_CLOSE_ABS(vtxList[1].fullPosition(), seedListCopy[1].fullPosition(),
                   1_mm);
 
-  auto res2 = fitter.fit(state, vtxList[2], linearizer, fitterOptions);
+  auto res2 = fitter.addVtxToFit(state, vtxList[2], linearizer, fitterOptions);
 
   BOOST_CHECK(res2.ok());
 
@@ -362,14 +354,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   std::vector<Vertex<BoundParameters>> vtxList;
 
   Vector3D vtxPos1(1.5_mm, 1.7_mm, -6_mm);
-  Vertex<BoundParameters> vtx1(vtxPo1);
+  Vertex<BoundParameters> vtx1(vtxPos1);
   // Set track for current vertex
   vtx1.setTracksAtVertex(tracksAtVtx1);
   // Add to vertex list
   vtxList.push_back(vtx1);
 
   Vector3D vtxPos2(9.8_mm, 0.2_mm, -4.8_mm);
-  Vertex<BoundParameters> vtx2(vtxPo1);
+  Vertex<BoundParameters> vtx2(vtxPos2);
   // Set track for current vertex
   vtx2.setTracksAtVertex(tracksAtVtx2);
   // Add to vertex list

@@ -83,6 +83,21 @@ class AdaptiveMultiVertexFitter {
 
     // Map to store tracks information
     std::map<unsigned long, TrackAtVertexInfo> trkInfoMap;
+
+    /// @brief Default State constructor
+    State() = default;
+
+    /// @brief State constructor to initialize trkInfoMap::linksToVertices
+    ///
+    /// @param vtxList List of all vertices with trackAtVertex information
+    State(std::vector<Vertex<input_track_t>>& vtxList) {
+      for (auto& vtx : vtxList) {
+        // Add vertex link to each track
+        for (auto& trkAtVtx : vtx.tracks()) {
+          trkInfoMap[trkAtVtx.id].linksToVertices.push_back(&vtx);
+        }
+      }
+    }
   };
 
   struct Config {
@@ -136,7 +151,7 @@ class AdaptiveMultiVertexFitter {
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
-  /// @brief Constructor for user-defined InputTrack_t type =! BoundParameters
+  /// @brief Constructor for user-defined InputTrack_t type != BoundParameters
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from InputTrack_t object
@@ -173,21 +188,9 @@ class AdaptiveMultiVertexFitter {
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object
-  Result<void> fit(
+  Result<void> addVtxToFit(
       State& state, Vertex<InputTrack_t>& newVertex,
       const linearizer_t& linearizer,
-      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
-
-  /// @brief The actual fit function, performs a simulaneous
-  ///   fit of all vertices in state.vertexCollection
-  ///
-  /// @param state The state object
-  /// @param linearizer The track linearizer
-  /// @param vFitterOptions Vertex fitter options
-  ///
-  /// @return Result<void> object
-  Result<void> fitAllVertices(
-      State& state, const linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
  private:
@@ -206,6 +209,18 @@ class AdaptiveMultiVertexFitter {
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
+
+  /// @brief The actual fit function, performs a simulaneous
+  ///   fit of all vertices in state.vertexCollection
+  ///
+  /// @param state The state object
+  /// @param linearizer The track linearizer
+  /// @param vFitterOptions Vertex fitter options
+  ///
+  /// @return Result<void> object
+  Result<void> fitImpl(
+      State& state, const linearizer_t& linearizer,
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Tests if vertex is already in list of vertices or not
   ///
