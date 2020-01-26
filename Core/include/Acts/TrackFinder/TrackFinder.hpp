@@ -132,9 +132,6 @@ struct TrackFinderResult {
   // The index of track state being handled
   size_t currentTip = SIZE_MAX;
 
-  // Count the track states on current surface
-  size_t nStatesOnSurface = 0;
-
   // The indices of source links in multitrajectory
   std::map<const Surface*, std::map<size_t, size_t>> sourcelinkTips;
 
@@ -329,22 +326,33 @@ class TrackFinder {
         // Record the tips on current surface as trajectory entry indices
         // Taking advantage of fact that those tips are consecutive in list of
         // active tips
-        while (result.nStatesOnSurface > 0) {
-          auto rit = result.activeTips.rbegin();
-          auto tip = rit->first;
-          auto tipState = rit->second;
-          if (tipState.nMeasurements > 0) {
-            // Record if there are measurements
-            ACTS_VERBOSE("Found track with entry index = "
-                         << tip << " and " << tipState.nMeasurements
-                         << " measurements and " << tipState.nOutliers
-                         << "outliers and " << tipState.nHoles << " holes");
-            result.trackTips.push_back(tip);
+        if (not result.activeTips.empty()) {
+          result.currentTip = result.activeTips.rbegin()->first;
+          // Get the index of previous state
+          auto iprevious =
+              result.fittedStates.getTrackState(result.currentTip).previous();
+          // Find the track states which have the same previous state
+          while (not result.activeTips.empty()) {
+            result.currentTip = result.activeTips.rbegin()->first;
+            if (result.fittedStates.getTrackState(result.currentTip)
+                    .previous() != iprevious) {
+              break;
+            }
+            auto tipState = result.activeTips.rbegin()->second;
+            if (tipState.nMeasurements > 0) {
+              // Record if there are measurements
+              ACTS_VERBOSE("Found track with entry index = "
+                           << result.currentTip << " and "
+                           << tipState.nMeasurements << " measurements and "
+                           << tipState.nOutliers << "outliers and "
+                           << tipState.nHoles << " holes");
+              result.trackTips.push_back(result.currentTip);
+            }
+            // Remove the tip from list of active tips
+            result.activeTips.erase(result.currentTip);
           }
-          // Remove the tip from list of active tips
-          result.activeTips.erase(tip);
-          result.nStatesOnSurface--;
         }
+
         // If there is still active tip, reset propagation state to track
         // state at last tip of active tips
         if (not result.activeTips.empty()) {
@@ -496,8 +504,8 @@ class TrackFinder {
         result.activeTips.erase(tip_it);
       }
 
-      // Re-initialize the number of states on current surface
-      result.nStatesOnSurface = 0;
+      // Initialize the number of states on current surface
+      size_t nStatesOnSurface = 0;
 
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
@@ -546,8 +554,8 @@ class TrackFinder {
           // stored
           // -> filtered parameter for outlier
           auto stateMask =
-              (result.nStatesOnSurface > 0 ? ~TrackStatePropMask::Predicted
-                                           : TrackStatePropMask::All) &
+              (nStatesOnSurface > 0 ? ~TrackStatePropMask::Predicted
+                                    : TrackStatePropMask::All) &
               (sourcelinkShared ? ~TrackStatePropMask::Uncalibrated
                                 : TrackStatePropMask::All) &
               (isOutlier ? ~TrackStatePropMask::Filtered
@@ -559,7 +567,7 @@ class TrackFinder {
           auto trackStateProxy = result.fittedStates.getTrackState(trackTip);
 
           // Fill the track state proxy
-          if (result.nStatesOnSurface > 0) {
+          if (nStatesOnSurface > 0) {
             // The predicted parameter is already stored, just set the index
             auto tip = result.activeTips.rbegin()->first;
             auto sharedPredicted = result.fittedStates.getTrackState(tip);
@@ -647,17 +655,17 @@ class TrackFinder {
           }
 
           // Count the states on current surface
-          result.nStatesOnSurface++;
+          nStatesOnSurface++;
         }  // end of loop for all selected source links on this surface
 
-        if (result.nStatesOnSurface > 0) {
+        if (nStatesOnSurface > 0) {
           // Update current tip to last track state on this surface
           result.currentTip = result.activeTips.rbegin()->first;
 
           if (not isOutlier) {
             // If there are measurement track states on this surface
             ACTS_VERBOSE("Filtering step successful with "
-                         << result.nStatesOnSurface
+                         << nStatesOnSurface
                          << " compatible measurements found");
 
             // Update stepping state using filtered parameters of last track
@@ -694,7 +702,7 @@ class TrackFinder {
           result.activeTips.emplace(result.currentTip, std::move(tipState));
 
           // Count the states on current surface
-          result.nStatesOnSurface++;
+          nStatesOnSurface++;
 
           // now get track state proxy back
           auto trackStateProxy =
@@ -741,7 +749,7 @@ class TrackFinder {
         result.activeTips.emplace(result.currentTip, std::move(tipState));
 
         // Count the states on current surface
-        result.nStatesOnSurface++;
+        nStatesOnSurface++;
 
         // now get track state proxy back
         auto trackStateProxy =
