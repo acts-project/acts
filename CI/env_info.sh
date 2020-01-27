@@ -4,6 +4,13 @@ if [ "$(cat /etc/redhat-release | grep '^Scientific Linux .*6.*')" ]; then
 elif [ "$(cat /etc/centos-release | grep 'CentOS Linux release 7')" ]; then
   export ACTS_OS=centos7
   export ACTS_COMPILER=gcc8-opt
+elif [ "$(cat /etc/debian_version | grep 'buster.*sid')" ]; then
+  export ACTS_OS=ubuntu1804
+  if [[ "${1}" =~ "lcg94" ]]; then
+    export ACTS_COMPILER=gcc7-opt
+  else
+    export ACTS_COMPILER=gcc8-opt
+  fi
 else
   echo "Unknown OS" 1>&2
 fi

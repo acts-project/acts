@@ -13,7 +13,7 @@ fi
 
 dir="$( cd "$( dirname "${this_script}" )" && pwd )"
 
-source $dir/env_info.sh
+source $dir/env_info.sh ${this_script}
 
 release=LCG_95
 platform=x86_64-${ACTS_OS}-${ACTS_COMPILER}
