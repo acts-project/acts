@@ -3,5 +3,5 @@ add_subdirectory(CommonHelpers)
 
 add_subdirectory_if(Benchmarks ACTS_BUILD_BENCHMARKS)
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
-add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS)
-add_subdirectory_if(UnitTests ACTS_BUILD_TESTS)
+add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATIONTESTS)
+add_subdirectory_if(UnitTests ACTS_BUILD_UNITTESTS)

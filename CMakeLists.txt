@@ -19,16 +19,16 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 # make the option variables available everywhere
 option(ACTS_BUILD_LEGACY "Build legacy package" OFF)
 option(ACTS_BUILD_DOC "Build documentation" OFF)
-option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
-option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
-option(ACTS_BUILD_TESTS "Build unit tests" OFF)
-option(ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
 option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
 option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
 option(ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
-option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json" ON)
 option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
+option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json" ON)
+option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
+option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
@@ -80,8 +80,8 @@ endif()
 add_component(Core Core)
 add_subdirectory(Plugins)
 # benchmarks, examples, and tests
-if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
-  enable_testing() # must be set from the main CMakeLists.txt
+if(ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS)
+  enable_testing() # must be set in the main CMakeLists.txt
 endif()
 add_subdirectory(Tests)
 # documentation
