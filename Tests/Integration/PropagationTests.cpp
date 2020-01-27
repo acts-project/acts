@@ -6,37 +6,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
-#define BOOST_TEST_MODULE Propagator Tests
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-// clang-format on
+#include <boost/test/unit_test.hpp>
 
 #include <cmath>
 #include <iostream>
 
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/RiddersPropagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/RiddersPropagator.hpp"
-
 #include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;

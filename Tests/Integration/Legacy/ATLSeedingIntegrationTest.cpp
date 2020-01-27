@@ -6,12 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <algorithm>
-#include "Acts/Seeding/AtlasSeedfinder.hpp"
-
-#define BOOST_TEST_MODULE SeedfinderIntegrationTest
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
+
+#include "Acts/Seeding/AtlasSeedfinder.hpp"
 
 // space point structure with the bare minimum and reasonable default
 // covariances. clusterList default is SCT (strip detector)
@@ -83,13 +82,13 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_) {
                           -412.277,
                           -462.5564};
 
-  std::vector<float> yVec{2.7288, 
-                          4.5193, 
-                          4.6755, 
-                          11.1935, 
-                          18.7696, 
-                          83.1666, 
-                          179.1006, 
+  std::vector<float> yVec{2.7288,
+                          4.5193,
+                          4.6755,
+                          11.1935,
+                          18.7696,
+                          83.1666,
+                          179.1006,
                           232.9765};
 
   std::vector<float> zVec{-74.5553,

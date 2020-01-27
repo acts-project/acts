@@ -9,6 +9,7 @@
 #pragma once
 
 #include <limits>
+
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
