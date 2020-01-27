@@ -1,5 +1,25 @@
-add_integrationtest(BVHNavigationIntegrationTest BVHNavigationTest.cpp)
-add_integrationtest(InterpolatedSolenoidBFieldIntegrationTest InterpolatedSolenoidBFieldTest.cpp)
-add_integrationtest(PropagationIntegrationTests PropagationTests.cpp)
+# integration tests are different and should not be registered with the
+# preconfigured `tests` target. manually add a separate one.
+add_custom_target(integrationtests)
+# add an integrationtest exectuable w/ default dependencies and register it
+macro(add_integrationtest _name)
+  # automatically prefix the target name
+  set(_target "ActsIntegrationTest${_name}")
+  add_executable(${_target} ${ARGN})
+  target_include_directories(
+    ${_target}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(
+    ${_target}
+    PRIVATE ActsCore ActsTestsCommonHelpers Boost::unit_test_framework)
+  # register as integration test executable
+  set(_test "integrationtests-${_name}")
+  add_custom_target(${_test} COMMAND ${_target})
+  add_dependencies(integrationtests ${_test})
+endmacro()
+
+add_integrationtest(BVHNavigation BVHNavigationTest.cpp)
+add_integrationtest(InterpolatedSolenoidBField InterpolatedSolenoidBFieldTest.cpp)
+add_integrationtest(Propagation PropagationTests.cpp)
 
 add_subdirectory_if(Legacy ACTS_BUILD_LEGACY)
