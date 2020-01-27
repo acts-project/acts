@@ -346,7 +346,7 @@ class TrackFinder {
               ACTS_VERBOSE("Found track with entry index = "
                            << result.currentTip << " and "
                            << tipState.nMeasurements << " measurements and "
-                           << tipState.nOutliers << "outliers and "
+                           << tipState.nOutliers << " outliers and "
                            << tipState.nHoles << " holes");
               result.trackTips.push_back(result.currentTip);
             }
@@ -534,14 +534,19 @@ class TrackFinder {
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;
 
-        // Invoke the source link selector to select source links
-        // Calibrator is passed to the selector because selection has to be done
-        // based on calibrated measurement
+        // Invoke the source link selector to select source links for either
+        // measurements or outlier.
+        // Calibrator is passed to the selector because
+        // selection has to be done based on calibrated measurement
         auto [candidateIndices, isOutlier] =
             m_sourcelinkSelector(m_calibrator, boundParams, sourcelinks);
 
-        // Create measurement or outlier if there are selected source link
-        if (not candidateIndices.empty()) {
+        // No returned source link is taken as error
+        if (candidateIndices.empty()) {
+          ACTS_ERROR("Source link selection failed: "
+                     << TrackFinderError::SourcelinkSelectionFailed);
+          return TrackFinderError::SourcelinkSelectionFailed;
+        } else {
           // Remember the tip of the neighbor state on this surface
           size_t neighborTip = SIZE_MAX;
 
@@ -703,56 +708,6 @@ class TrackFinder {
                   << " of track state with tip = " << result.currentTip);
             }
           }
-        } else {
-          // If the cluster selector return neither measurement nor outlier
-          // source link, will create a hole track state in multi trajectory No
-          // storage allocation for uncalibrated/calibrated measurement and
-          // filtered parameter
-          result.currentTip = result.fittedStates.addTrackState(
-              ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
-              result.currentTip);
-
-          ACTS_VERBOSE(
-              "No measurements/outlier found. Creating "
-              "hole track state "
-              "with tip = "
-              << result.currentTip);
-
-          // now get track state proxy back
-          auto trackStateProxy =
-              result.fittedStates.getTrackState(result.currentTip);
-
-          // Set the surface
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-          // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = *boundParams.covariance();
-          trackStateProxy.jacobian() = jacobian;
-          trackStateProxy.pathLength() = pathLength;
-          // Set the filtered parameter index to be the same with predicted
-          // parameter
-          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
-
-          // Set the track state flags
-          auto& typeFlags = trackStateProxy.typeFlags();
-          typeFlags.set(TrackStateFlag::MaterialFlag);
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-          typeFlags.set(TrackStateFlag::HoleFlag);
-
-          // Count the number of processedStates, measurements and holes
-          auto tipState =
-              TipState{preTipState.nStates + 1, preTipState.nMeasurements,
-                       preTipState.nOutliers, preTipState.nHoles + 1};
-
-          // Check if need to stop this branch
-          if (not m_branchStopper(result.fittedStates, result.currentTip)) {
-            // Remember the active tip and its state
-            result.activeTips.emplace(result.currentTip, std::move(tipState));
-            // Count the valid branches on current surface
-            nBranchesOnSurface++;
-          }
         }
 
         // Update state and stepper with post material effects
@@ -843,7 +798,7 @@ class TrackFinder {
               "Propagation jumps to branch with tip = " << result.currentTip);
           reset(state, stepper, result);
         } else {
-          ACTS_VERBOSE("Finish forward track finding with "
+          ACTS_VERBOSE("Stop forward track finding with "
                        << result.trackTips.size() << " found tracks");
           result.forwardFiltered = true;
         }

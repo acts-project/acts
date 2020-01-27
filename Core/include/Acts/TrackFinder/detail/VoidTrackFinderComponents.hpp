@@ -145,8 +145,8 @@ struct VoidBranchStopper {
   ///
   /// @return The resulting
   template <typename source_link_t>
-  bool operator()(MultiTrajectory<source_link_t>& trajectory,
-                  size_t entryIndex) const {
+  bool operator()(const MultiTrajectory<source_link_t>& /*trajectory*/,
+                  size_t /*entryIndex*/) const {
     return false;
   }
 };
