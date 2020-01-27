@@ -1,4 +1,4 @@
-# helpers shared between all unittests
+# helpers shared between all tests
 add_subdirectory(CommonHelpers)
 
 # add a unittest executable w/ default dependencies and register it
@@ -40,3 +40,4 @@ add_subdirectory_if(Core ACTS_BUILD_TESTS)
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 add_subdirectory_if(Integration ACTS_BUILD_INTEGRATION_TESTS)
 add_subdirectory_if(Plugins ACTS_BUILD_TESTS)
+add_subdirectory_if(Benchmarks ACTS_BUILD_BENCHMARKS)

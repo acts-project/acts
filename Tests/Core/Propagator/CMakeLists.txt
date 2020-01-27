@@ -11,16 +11,3 @@ add_unittest(MaterialCollectionTests MaterialCollectionTests.cpp)
 add_unittest(NavigatorTests NavigatorTests.cpp)
 add_unittest(PropagatorTests PropagatorTests.cpp)
 add_unittest(StepperTests StepperTests.cpp)
-
-add_executable(
-  AtlasStepperBenchmark
-  AtlasStepperBenchmark.cpp)
-target_link_libraries(
-  AtlasStepperBenchmark
-  PRIVATE ActsCore Boost::program_options)
-add_executable(
-  EigenStepperBenchmark
-  EigenStepperBenchmark.cpp)
-target_link_libraries(
-  EigenStepperBenchmark
-  PRIVATE ActsCore Boost::program_options)

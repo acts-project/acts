@@ -19,6 +19,7 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 # make the option variables available everywhere
 option(ACTS_BUILD_LEGACY "Build legacy package" OFF)
 option(ACTS_BUILD_DOC "Build documentation" OFF)
+option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option(ACTS_BUILD_TESTS "Build unit tests" OFF)
 option(ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
@@ -78,11 +79,11 @@ endif()
 # core library and plugins
 add_component(Core Core)
 add_subdirectory(Plugins)
-# examples and tests
+# benchmarks, examples, and tests
 if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
   enable_testing() # must be set from the main CMakeLists.txt
 endif()
-add_subdirectory_if(Tests ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS OR ACTS_BUILD_EXAMPLES)
+add_subdirectory(Tests)
 # documentation
 add_subdirectory_if(doc ACTS_BUILD_DOC)
 

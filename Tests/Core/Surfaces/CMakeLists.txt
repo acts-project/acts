@@ -22,16 +22,3 @@ add_unittest(SurfaceIntersectionTests SurfaceIntersectionTests.cpp)
 add_unittest(SurfaceTests SurfaceTests.cpp)
 add_unittest(TrapezoidBoundsTests TrapezoidBoundsTests.cpp)
 add_unittest(TriangleBoundsTests TriangleBoundsTests.cpp)
-
-add_executable(
-  BoundaryCheckBenchmark
-  BoundaryCheckBenchmark.cpp)
-target_link_libraries(
-  BoundaryCheckBenchmark
-  PRIVATE ActsCore)
-add_executable(
-  SurfaceIntersectionBenchmark
-  SurfaceIntersectionBenchmark.cpp)
-target_link_libraries(
-  SurfaceIntersectionBenchmark
-  PRIVATE ActsCore Boost::unit_test_framework)
