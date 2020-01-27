@@ -18,8 +18,9 @@ enum class TrackFinderError {
   UpdateFailed = 1,
   SmoothFailed = 2,
   OutputConversionFailed = 3,
-  NoTracksFound = 4,
-  PropagationReachesLimit = 5
+  SourcelinkSelectionFailed = 4,
+  NoTracksFound = 5,
+  PropagationReachesLimit = 6
 };
 
 namespace detail {
@@ -37,6 +38,8 @@ class TrackFinderErrorCategory : public std::error_category {
         return "Kalman smooth failed";
       case TrackFinderError::OutputConversionFailed:
         return "Kalman output conversion failed";
+      case TrackFinderError::SourcelinkSelectionFailed:
+        return "Source link selection failed";
       case TrackFinderError::NoTracksFound:
         return "No track is found";
       case TrackFinderError::PropagationReachesLimit:
