@@ -12,7 +12,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
