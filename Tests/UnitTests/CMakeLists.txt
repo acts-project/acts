@@ -26,4 +26,5 @@ macro(add_unittest _name)
 endmacro()
 
 add_subdirectory(Core)
+add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)
