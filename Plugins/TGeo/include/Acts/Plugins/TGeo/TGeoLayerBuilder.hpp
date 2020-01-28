@@ -74,12 +74,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Layer splitting: z the result of the splitting
     std::vector<double> splitParametersZ = {};
     /// Define the number of bins in loc0
-    size_t binsLoc0{12};
+    size_t binsLoc0{1};
     /// Define the number of bins in loc1
-    size_t binsLoc1{12};
-
-    /// Running identifier
-    int runningID = 0;
+    size_t binsLoc1{1};
 
     // Default constructor
     LayerConfig()

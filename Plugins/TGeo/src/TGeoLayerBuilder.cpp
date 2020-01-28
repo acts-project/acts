@@ -84,8 +84,6 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   ACTS_DEBUG(layerType << " layers : found " << layerConfigs.size()
                        << " configuration(s)" + addonOutput);
   for (auto layerCfg : layerConfigs) {
-    layerCfg.runningID = type * 100000;
-
     // Prepare the layer surfaces
     using LayerSurfaceVector = std::vector<std::shared_ptr<const Surface>>;
     LayerSurfaceVector layerSurfaces;
@@ -195,6 +193,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
             splitParameters.clear();
           }
         }
+        unsigned int iss = 0;
+        ACTS_VERBOSE("  - splitting yielded " << postSplitSurfaces.size()
+                                              << " surface sets:");
+        for (const auto& sset : postSplitSurfaces) {
+          ACTS_VERBOSE("  - set " << iss++ << " has " << sset.size()
+                                  << " surfaces.");
+        }
+
         // Return them to the callers
         return postSplitSurfaces;
       };
@@ -222,8 +228,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       // Now go through and fill, @todo adapt layer configurations
       unsigned int il = 0;
       for (const auto& slSurfaces : splitLayerSurfaces) {
-        ACTS_DEBUG("  - layer " << il++ << " has " << slSurfaces.size()
-                                << " surfaces.");
+        ACTS_VERBOSE("  - layer " << il++ << " has " << slSurfaces.size()
+                                  << " surfaces.");
         fillLayer(slSurfaces, layerCfg);
       }
     }
@@ -306,7 +312,7 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
       // Create the detector element
       // - check on the type for the side
       // - check for the parsing volume
-      bool insideParseRange = r > layerConfig.parseRangeR.first and
+      bool insideParseRange = r >= layerConfig.parseRangeR.first and
                               r <= layerConfig.parseRangeR.second;
 
       if (insideParseRange and ((type == 0) || type * z > 0.)) {
@@ -316,11 +322,11 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
         // @todo allow IdentifierSvc to fill the identifier
 
         auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
-            Identifier(++layerConfig.runningID), tgNode, &tgTransform,
-            layerConfig.localAxes, m_cfg.unit);
+            Identifier(), tgNode, &tgTransform, layerConfig.localAxes,
+            m_cfg.unit);
         // Record the element @todo solve with provided cache
         m_elementStore.push_back(tgElement);
-        // Register theshared pointer to the surface for layer building
+        // Register the shared pointer to the surface for layer building
         layerSurfaces.push_back(tgElement->surface().getSharedPtr());
 
         // Record split range for eventual splitting
@@ -339,6 +345,13 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
                         m_cfg.layerSplitToleranceZ[type + 1],
                         layerConfig.splitRangeZ);
         }
+      } else if (type * z < 0) {
+        ACTS_VERBOSE("[xx] cancelled by side check.");
+      } else if (not insideParseRange) {
+        ACTS_VERBOSE("[xx] cancelled by parse range on side " << type);
+        ACTS_VERBOSE("     r = " << r << " in ("
+                                 << layerConfig.parseRangeR.first << ", "
+                                 << layerConfig.parseRangeR.second << "] ?");
       }
     } else {
       // This is not yet the senstive one

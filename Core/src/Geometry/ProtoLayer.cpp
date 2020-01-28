@@ -185,12 +185,11 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       envPhi = {dPhi, dPhi};
 
     } else {
-
-    const CylinderBounds* cBounds =
+      const CylinderBounds* cBounds =
           dynamic_cast<const CylinderBounds*>(&(sf->bounds()));
 
-    const AnnulusBounds* aBounds =
-        dynamic_cast<const AnnulusBounds*>(&(sf->bounds()));
+      const AnnulusBounds* aBounds =
+          dynamic_cast<const AnnulusBounds*>(&(sf->bounds()));
 
       if (cBounds != nullptr) {
         double r = cBounds->r();
@@ -215,11 +214,9 @@ void ProtoLayer::measure(const GeometryContext& gctx,
         minPhi = phi - hPhi;
 
       } else if (aBounds != nullptr) {
-
         minR = aBounds->rMin();
         maxR = aBounds->rMax();
         double z = sf->center(gctx).z();
-
 
         maxX = maxR;
         minX = -maxR;
@@ -227,8 +224,8 @@ void ProtoLayer::measure(const GeometryContext& gctx,
         maxY = maxR;
         minY = -maxR;
 
-        maxZ = z + 0.5*thickness;
-        minZ = z - 0.5*thickness;
+        maxZ = z + 0.5 * thickness;
+        minZ = z - 0.5 * thickness;
 
         maxPhi = aBounds->phiMin();
         minPhi = aBounds->phiMax();
