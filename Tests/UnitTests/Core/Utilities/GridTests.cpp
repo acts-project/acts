@@ -6,11 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
-#define BOOST_TEST_MODULE grid tests
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-// clang-format on
 
 #include <chrono>
 #include <random>
@@ -1028,7 +1024,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
                 == bins_t({0, 1, 2}));
     BOOST_CHECK(g1.neighborHoodIndices({{1}}, 1).collect()
                 == bins_t({0, 1, 2}));
-    BOOST_CHECK(g1.neighborHoodIndices({{1}}, 3).collect() 
+    BOOST_CHECK(g1.neighborHoodIndices({{1}}, 3).collect()
                 == bins_t({0, 1, 2, 3, 4}));
     BOOST_CHECK(g1.neighborHoodIndices({{4}}, 2).collect()
                 == bins_t({2, 3, 4, 5, 6}));

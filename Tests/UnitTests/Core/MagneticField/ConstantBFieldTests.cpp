@@ -8,12 +8,8 @@
 
 /// @file ConstantBField_tests.cpp
 
-// clang-format off
-#define BOOST_TEST_MODULE Constant magnetic field tests
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-// clang-format on
+#include <boost/test/unit_test.hpp>
 
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"

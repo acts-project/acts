@@ -6,29 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
-#define BOOST_TEST_MODULE material utils test
-#include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-// clang-format on
+#include <boost/test/included/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include <limits>
 #include <random>
 #include <vector>
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
+
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
-#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 namespace bdata = boost::unit_test::data;

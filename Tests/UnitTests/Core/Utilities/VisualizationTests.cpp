@@ -6,16 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE VisualizationTest Test
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/output_test_stream.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <iostream>
 
 #include "Acts/Utilities/IVisualization.hpp"
 #include "Acts/Utilities/ObjHelper.hpp"
 #include "Acts/Utilities/PlyHelper.hpp"
-
-#include <iostream>
 
 using boost::test_tools::output_test_stream;
 

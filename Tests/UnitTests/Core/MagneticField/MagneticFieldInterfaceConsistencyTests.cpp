@@ -7,22 +7,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// @file MagneticFieldInterfaceConsistencyTests.cpp
-#define BOOST_TEST_MODULE Magnetic field interface consistency tests
 
-// clang-format off
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/SharedBField.hpp"
+#include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-
-#include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-// clang-format on
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

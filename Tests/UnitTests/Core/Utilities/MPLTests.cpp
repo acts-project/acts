@@ -6,18 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Boost include(s)
-#define BOOST_TEST_MODULE MPL Tests
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+
 #include <type_traits>
-#include "Acts/Utilities/detail/MPL/all_of.hpp"
-#include "Acts/Utilities/detail/MPL/any_of.hpp"
-#include "Acts/Utilities/detail/MPL/are_sorted.hpp"
-#include "Acts/Utilities/detail/MPL/are_within.hpp"
-#include "Acts/Utilities/detail/MPL/at_index.hpp"
-#include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
-#include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 #include <boost/hana.hpp>
 #include <boost/hana/core/to.hpp>
@@ -29,6 +20,14 @@
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/type.hpp>
 #include <boost/hana/union.hpp>
+
+#include "Acts/Utilities/detail/MPL/all_of.hpp"
+#include "Acts/Utilities/detail/MPL/any_of.hpp"
+#include "Acts/Utilities/detail/MPL/are_sorted.hpp"
+#include "Acts/Utilities/detail/MPL/are_within.hpp"
+#include "Acts/Utilities/detail/MPL/at_index.hpp"
+#include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
+#include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 namespace hana = boost::hana;
 namespace Acts {

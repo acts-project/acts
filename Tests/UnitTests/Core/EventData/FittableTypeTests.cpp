@@ -6,11 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
-#define BOOST_TEST_MODULE Fittable Type Tests
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-// clang-format on
 
 #include <cmath>
 #include <memory>
@@ -24,9 +20,9 @@
 
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
 
-#include <boost/hana/tuple.hpp>
-#include <boost/hana/integral_constant.hpp>
 #include <boost/hana/equal.hpp>
+#include <boost/hana/integral_constant.hpp>
+#include <boost/hana/tuple.hpp>
 #include <boost/hana/type.hpp>
 
 namespace hana = boost::hana;

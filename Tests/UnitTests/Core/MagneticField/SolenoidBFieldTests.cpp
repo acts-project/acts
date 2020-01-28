@@ -8,20 +8,16 @@
 
 /// @file SolenoidBFieldTests.cpp
 
-// clang-format off
-#define BOOST_TEST_MODULE Solenoid magnetic field tests
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-// clang-format on
+#include <boost/test/unit_test.hpp>
 
 #include <fstream>
 
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

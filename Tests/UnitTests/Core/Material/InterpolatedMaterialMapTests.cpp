@@ -8,19 +8,16 @@
 
 /// @file InterpolatedMaterialdMapTests.cpp
 
-// clang-format off
-#define BOOST_TEST_MODULE Mapped material tests
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-// clang-format on
+#include <boost/test/unit_test.hpp>
+
+#include <array>
 
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include <array>
 
 namespace Acts {
 

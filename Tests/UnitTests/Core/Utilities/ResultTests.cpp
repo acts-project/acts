@@ -6,17 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
-#define BOOST_TEST_MODULE Result Tests
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-// clang-format on
-
-#include "Acts/Utilities/Result.hpp"
 
 #include <iostream>
 #include <string>
 #include <system_error>
+
+#include "Acts/Utilities/Result.hpp"
 
 using namespace std::string_literals;
 

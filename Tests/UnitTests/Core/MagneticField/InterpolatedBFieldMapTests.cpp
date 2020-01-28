@@ -8,16 +8,12 @@
 
 /// @file InterpolatedBFieldMap_tests.cpp
 
-// clang-format off
-#define BOOST_TEST_MODULE Mapped magnetic field tests
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-// clang-format on
 
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 

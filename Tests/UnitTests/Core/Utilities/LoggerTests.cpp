@@ -8,11 +8,11 @@
 
 /// @file Logger_tests.cpp
 
-#define BOOST_TEST_MODULE Logger Tests
-#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+
 #include <fstream>
 #include <string>
+
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {

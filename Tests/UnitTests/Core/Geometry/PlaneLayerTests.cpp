@@ -6,27 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE Layer Tests
-
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
+#include <boost/test/tools/output_test_stream.hpp>
+#include <boost/test/unit_test.hpp>
 
-#include <boost/test/output_test_stream.hpp>
-// leave blank line
-
-//#include <limits>
-#include "Acts/Geometry/PlaneLayer.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-//#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

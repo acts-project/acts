@@ -6,16 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE Ray Test
-#define BOOST_TEST_DYN_LINK
+#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <boost/test/output_test_stream.hpp>
-
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/PlyHelper.hpp"
 #include "Acts/Utilities/Ray.hpp"
-
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 using boost::test_tools::output_test_stream;
 

@@ -6,24 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
-#define BOOST_TEST_MODULE SurfaceArrayCreator
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 #include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
-// clang-format on
+#include <boost/test/unit_test.hpp>
 
 #include <fstream>
 #include <random>
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
