@@ -1,2 +1,2 @@
-add_unittest(JsonConversionTest JsonConversionTest.cpp)
-target_link_libraries(JsonConversionTest PRIVATE ActsJsonPlugin)
+add_unittest(JsonConversion JsonConversionTest.cpp)
+target_link_libraries(ActsUnitTestJsonConversion PRIVATE ActsJsonPlugin)

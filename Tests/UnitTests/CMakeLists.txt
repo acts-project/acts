@@ -1,7 +1,7 @@
 # add a unittest executable w/ default dependencies and register it
 macro(add_unittest _name)
-  # for now we use the same name also for the target
-  set(_target ${_name})
+  # automatically prefix the target name
+  set(_target "ActsUnitTest${_name}")
   add_executable(${_target} ${ARGN})
   target_include_directories(
     ${_target}
