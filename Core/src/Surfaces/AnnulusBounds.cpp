@@ -104,17 +104,16 @@ std::vector<TDD_real_t> Acts::AnnulusBounds::valueStore() const {
   return values;
 }
 
-std::vector<Acts::Vector2D>  Acts::AnnulusBounds::corners() const {
+std::vector<Acts::Vector2D> Acts::AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
   return {rot * m_outRightStripPC, rot * m_outLeftStripPC,
           rot * m_inLeftStripPC, rot * m_inRightStripPC};
 }
 
-std::vector<Acts::Vector2D>  Acts::AnnulusBounds::vertices() const {
-
-  return {m_outRightStripXY, m_outLeftStripXY,
-          m_inLeftStripXY, m_inRightStripXY};
+std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices() const {
+  return {m_outRightStripXY, m_outLeftStripXY, m_inLeftStripXY,
+          m_inRightStripXY};
 }
 
 bool Acts::AnnulusBounds::inside(const Vector2D& locpo, double tolR,

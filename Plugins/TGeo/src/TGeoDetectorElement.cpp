@@ -14,11 +14,11 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -29,6 +29,8 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoTrd2.h"
 #include "TGeoTube.h"
+
+using Line2D = Eigen::Hyperplane<double, 2>;
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, TGeoNode* tGeoDetElement,
@@ -113,7 +115,74 @@ void Acts::TGeoDetectorElement::construct(
         double rMax = baseTube->GetRmax() * scalor;
         auto maskShape = dynamic_cast<TGeoArb8*>(interNode->GetRightShape());
         if (maskShape) {
+          auto maskTransform = interNode->GetRightMatrix();
+          // Get pthe oly vertices
+          const Double_t* polyVrt = maskShape->GetVertices();
+          // the poly has a translation matrix in ROOT
+          // we apply it to the vertices directly
+          const Double_t* polyTrl = nullptr;
+          polyTrl = (maskTransform->GetTranslation());
+          std::vector<Vector2D> vertices;
+          for (unsigned int v = 0; v < 8; v += 2) {
+            Vector2D vtx = Vector2D((polyTrl[0] + polyVrt[v + 0]) * scalor,
+                                    (polyTrl[1] + polyVrt[v + 1]) * scalor);
+            vertices.push_back(vtx);
+          }
+
+          std::vector<std::pair<Vector2D, Vector2D>> boundLines;
+          for (size_t i = 0; i < vertices.size(); ++i) {
+            Vector2D a = vertices.at(i);
+            Vector2D b = vertices.at((i + 1) % vertices.size());
+            Vector2D ab = b - a;
+            double phi = VectorHelpers::phi(ab);
+
+            if (std::abs(phi) > 3 * M_PI / 4. || std::abs(phi) < M_PI / 4.) {
+              if (a.norm() < b.norm()) {
+                boundLines.push_back(std::make_pair(a, b));
+              } else {
+                boundLines.push_back(std::make_pair(b, a));
+              }
+            }
+          }
+
+          if (boundLines.size() != 2) {
+            throw std::logic_error(
+                "Input DiscPoly bounds type does not have sensible edges.");
+          }
+
+          Line2D lA =
+              Line2D::Through(boundLines[0].first, boundLines[0].second);
+          Line2D lB =
+              Line2D::Through(boundLines[1].first, boundLines[1].second);
+          Vector2D ix = lA.intersection(lB);
+
+          const Eigen::Translation3d originTranslation(ix.x(), ix.y(), 0.);
+          const Vector2D originShift = -ix;
+
+          // update transform by prepending the origin shift translation
+          m_transform = std::make_shared<const Transform3D>((*m_transform) *
+                                                            originTranslation);
+
+          // transform phi line point to new origin and get phi
+          double phi1 =
+              VectorHelpers::phi(boundLines[0].second - boundLines[0].first);
+          double phi2 =
+              VectorHelpers::phi(boundLines[1].second - boundLines[1].first);
+          double phiMax = std::max(phi1, phi2);
+          double phiMin = std::min(phi1, phi2);
+          double phiShift = 0.;
+
+          // Create the bounds
+          auto annulusBounds = std::make_shared<const AnnulusBounds>(
+              rMin, rMax, phiMin, phiMax, originShift, phiShift);
+
+          m_thickness = maskShape->GetDZ() * scalor;
+          m_bounds = annulusBounds;
+          surface = Surface::makeShared<DiscSurface>(annulusBounds, *this);
+
+          /*
           auto rMatrix = interNode->GetRightMatrix();
+
           // get the placement and orientation in respect to its mother
           auto rRotation = rMatrix->GetRotationMatrix();
           auto rTranslation = rMatrix->GetTranslation();
@@ -127,68 +196,24 @@ void Acts::TGeoDetectorElement::construct(
 
           auto rTransform = makeTransform(rColX, rColY, rColZ, rColT);
 
-          // Helper method for line line intersection
-          auto det = [](double a, double b, double c, double d) -> double {
-            return a * d - b * c;
-          };
-
-          auto lineLineIntersect = [&](double x1, double y1,  // Line 1 start
-                                       double x2, double y2,  // Line 1 end
-                                       double x3, double y3,  // Line 2 start
-                                       double x4, double y4,  // Line 2 end
-                                       double& ixOut, double& iyOut) -> bool {
-            // http://mathworld.wolfram.com/Line-LineIntersection.html
-
-            double detL1 = det(x1, y1, x2, y2);
-            double detL2 = det(x3, y3, x4, y4);
-            double x1mx2 = x1 - x2;
-            double x3mx4 = x3 - x4;
-            double y1my2 = y1 - y2;
-            double y3my4 = y3 - y4;
-
-            double xnom = det(detL1, x1mx2, detL2, x3mx4);
-            double ynom = det(detL1, y1my2, detL2, y3my4);
-            double denom = det(x1mx2, y1my2, x3mx4, y3my4);
-            if (denom == 0.0) {
-              ixOut = NAN;
-              iyOut = NAN;
-              return false;
-            }
-
-            ixOut = xnom / denom;
-            iyOut = ynom / denom;
-            return true;
-          };
-
           auto vertices = maskShape->GetVertices();
-          std::array<Vector3D, 4> vxyz;
+          std::array<Vector2D, 4> vxy;
           for (unsigned int iv = 0; iv < 4; ++iv) {
-            Vector3D v = (*m_transform) * rTransform *
-                         Vector3D(scalor * vertices[2 * iv],
-                                  scalor * vertices[2 * iv + 1], 0.);
-            vxyz[iv] = v;
+             vxy[iv] = (*m_transform) * rTransform *
+                        Vector2D(scalor * vertices[2 * iv],
+                                 scalor * vertices[2 * iv + 1]);
           }
 
-          double ix, iy;
-          if (lineLineIntersect(vxyz[0].x(), vxyz[0].y(), vxyz[1].x(),
-                                vxyz[1].y(), vxyz[2].x(), vxyz[2].y(),
-                                vxyz[3].x(), vxyz[3].y(), ix, iy)) {
+          Line2D   lA = Line2D::Through(vxy[0],vxy[1]);
+          Line2D   lB = Line2D::Through(vxy[2],vxy[3]);
+          Vector2D ix = lA.intersection(lB);
 
-            // rMin / rMax are in module system
-            // phiMin / rMax are in strip sytem                      
-            Vector3D ssOffset(ix,iy,0.);
-            double phiMin = VectorHelpers::phi(vxyz[3]+ssOffset);
-            double phiMax = VectorHelpers::phi(vxyz[0]+ssOffset);
-            // Create the bounds
-            auto annulusBounds 
-              =  std::make_shared<const AnnulusBounds>(rMin, rMax,
-                                                       phiMin, phiMax,
-                                                       Vector2D(ix,iy));   
-
-            m_thickness = maskShape->GetDZ() * scalor;
-            m_bounds = annulusBounds;
-            surface = Surface::makeShared<DiscSurface>(annulusBounds, *this);
-          }
+          // rMin / rMax are in module system
+          // phiMin / rMax are in strip sytem
+          Vector3D ssOffset(ix,iy,0.);
+          double phiMin = VectorHelpers::phi(vxyz[3]+ssOffset);
+          double phiMax = VectorHelpers::phi(vxyz[0]+ssOffset);
+          */
         }
       }
     }

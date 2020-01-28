@@ -122,8 +122,8 @@ class AnnulusBounds : public DiscBounds {
   /// locX)
   std::vector<Vector2D> corners() const;
 
-  /// This method returns the xy coordinates of the four corners of the 
-  /// bounds in module coorindates 
+  /// This method returns the xy coordinates of the four corners of the
+  /// bounds in module coorindates
   /// Starting from the upper right (max R, pos locX) and proceding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
