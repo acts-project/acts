@@ -17,6 +17,7 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
+option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_LEGACY "Build legacy package" OFF)
 option(ACTS_BUILD_DOC "Build documentation" OFF)
 option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
@@ -78,6 +79,7 @@ endif()
 
 # core library and plugins
 add_component(Core Core)
+add_component(Fatras Fatras)
 add_subdirectory(Plugins)
 # benchmarks, examples, and tests
 if(ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS)
