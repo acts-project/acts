@@ -77,7 +77,6 @@ endif()
 
 # core library and plugins
 add_component(Core Core)
-add_component_if(Legacy Legacy ACTS_BUILD_LEGACY)
 add_subdirectory(Plugins)
 # examples and tests
 if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
