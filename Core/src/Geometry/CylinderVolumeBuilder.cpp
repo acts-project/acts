@@ -219,7 +219,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       for (const auto& elay : endcapConfig.layers) {
         auto discBounds = dynamic_cast<const RadialBounds*>(
             &(elay->surfaceRepresentation().bounds()));
-        if (discBounds) {
+        if (discBounds != nullptr) {
           double tolerance = m_cfg.ringTolerance;
           // Search for the rmin value  - and insert if necessary
           double rMin = discBounds->rMin();
