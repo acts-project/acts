@@ -47,9 +47,6 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsin
   struct LayerConfig {
    public:
-    /// Create an indentifier from TGeoNode
-    std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
-
     /// Identify the layer by name
     std::string layerName = "";
     /// Identify the sensor by name
@@ -97,6 +94,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::string configurationName = "undefined";
     /// Unit conversion
     double unit = 1_cm;
+    /// Create an indentifier from TGeoNode
+    std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
     /// Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// Configuration is always | n | c | p |

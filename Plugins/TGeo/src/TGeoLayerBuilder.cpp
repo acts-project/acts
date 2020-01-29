@@ -319,9 +319,10 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
         //  Senstive volume found, collect it
         ACTS_VERBOSE(offset << "[>>] accepted.");
         // Create the element
-        auto identifier = m_cfg.identifierProvider != nullptr
-                              ? m_cfg.identifierProvider->identify(gctx, tgNode)
-                              : Identifier();
+        auto identifier =
+            m_cfg.identifierProvider != nullptr
+                ? m_cfg.identifierProvider->identify(gctx, *tgNode)
+                : Identifier();
         auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
             identifier, tgNode, &tgTransform, layerConfig.localAxes,
             m_cfg.unit);

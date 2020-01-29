@@ -13,18 +13,21 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
 
+class TGeoNode;
+
 namespace Acts {
 
 /// @brief ITGeoIdentierProvider
 ///
 /// Interface class that provides an Indentifier from a TGeoNode
 class ITGeoIdentifierProvider {
+ public:
   /// Take a geometry context and a TGeoNode and provide an identifier
   ///
   /// @param gctx is a geometry context object
   /// @param tgnode is a TGeoNode that is translated
-  virtual Identifier indentify(const GeometryContext& gctx,
-                               const TGeoNode& tgnode) const = 0;
+  virtual Identifier identify(const GeometryContext& gctx,
+                              const TGeoNode& tgnode) const = 0;
 };
 
 }  // namespace Acts
