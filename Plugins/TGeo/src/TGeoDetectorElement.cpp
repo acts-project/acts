@@ -178,41 +178,6 @@ void Acts::TGeoDetectorElement::construct(
           m_thickness = maskShape->GetDZ() * scalor;
           m_bounds = annulusBounds;
           surface = Surface::makeShared<DiscSurface>(annulusBounds, *this);
-
-          /*
-          auto rMatrix = interNode->GetRightMatrix();
-
-          // get the placement and orientation in respect to its mother
-          auto rRotation = rMatrix->GetRotationMatrix();
-          auto rTranslation = rMatrix->GetTranslation();
-
-          // create the translation
-          Vector3D rColT(scalor * rTranslation[0], scalor * rTranslation[1],
-                         scalor * rTranslation[2]);
-          Vector3D rColX(rRotation[0], rRotation[3], rRotation[6]);
-          Vector3D rColY(rRotation[1], rRotation[4], rRotation[7]);
-          Vector3D rColZ(rRotation[2], rRotation[5], rRotation[8]);
-
-          auto rTransform = makeTransform(rColX, rColY, rColZ, rColT);
-
-          auto vertices = maskShape->GetVertices();
-          std::array<Vector2D, 4> vxy;
-          for (unsigned int iv = 0; iv < 4; ++iv) {
-             vxy[iv] = (*m_transform) * rTransform *
-                        Vector2D(scalor * vertices[2 * iv],
-                                 scalor * vertices[2 * iv + 1]);
-          }
-
-          Line2D   lA = Line2D::Through(vxy[0],vxy[1]);
-          Line2D   lB = Line2D::Through(vxy[2],vxy[3]);
-          Vector2D ix = lA.intersection(lB);
-
-          // rMin / rMax are in module system
-          // phiMin / rMax are in strip sytem
-          Vector3D ssOffset(ix,iy,0.);
-          double phiMin = VectorHelpers::phi(vxyz[3]+ssOffset);
-          double phiMax = VectorHelpers::phi(vxyz[0]+ssOffset);
-          */
         }
       }
     }
