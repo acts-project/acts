@@ -148,17 +148,15 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
       return false;
     }
   }
-
   return true;
 }
 
 bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
-                                 const BoundaryCheck& bchk) const {
+                                 const BoundaryCheck& bcheck) const {
   // locpo is PC in STRIP SYSTEM
-
-  if (bchk.type() == BoundaryCheck::Type::eAbsolute) {
-    return inside(lposition, bchk.tolerance()[eLOC_R],
-                  bchk.tolerance()[eLOC_PHI]);
+  if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
+    return inside(lposition, bcheck.tolerance()[eLOC_R],
+                  bcheck.tolerance()[eLOC_PHI]);
   } else {
     // first check if inside. We don't need to look into the covariance if
     // inside
@@ -253,7 +251,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
         r_strip * (B * O_x + C * O_y + r_strip) / A;
 
     // covariance is given in STRIP PC
-    auto covStripPC = bchk.covariance();
+    auto covStripPC = bcheck.covariance();
     // calculate covariance in MODULE PC using jacobian from above
     auto covModulePC = jacobianStripPCToModulePC * covStripPC *
                        jacobianStripPCToModulePC.transpose();
@@ -309,7 +307,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
     // compare resulting Mahalanobis distance to configured
     // "number of sigmas"
     // we square it b/c we never took the square root of the distance
-    return minDist < bchk.tolerance()[0] * bchk.tolerance()[0];
+    return minDist < bcheck.tolerance()[0] * bcheck.tolerance()[0];
   }
 }
 
