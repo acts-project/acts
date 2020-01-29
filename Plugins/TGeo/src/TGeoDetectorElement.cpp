@@ -159,11 +159,10 @@ void Acts::TGeoDetectorElement::construct(
           const Eigen::Translation3d originTranslation(ix.x(), ix.y(), 0.);
           const Vector2D originShift = -ix;
 
-          // update transform by prepending the origin shift translation
+          // Update transform by prepending the origin shift translation
           m_transform = std::make_shared<const Transform3D>((*m_transform) *
                                                             originTranslation);
-
-          // transform phi line point to new origin and get phi
+          // Transform phi line point to new origin and get phi
           double phi1 =
               VectorHelpers::phi(boundLines[0].second - boundLines[0].first);
           double phi2 =
