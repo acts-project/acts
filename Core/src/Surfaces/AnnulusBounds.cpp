@@ -157,7 +157,8 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
   // locpo is PC in STRIP SYSTEM
 
   if (bchk.type() == BoundaryCheck::Type::eAbsolute) {
-    return inside(locpo, bchk.tolerance()[eLOC_R], bchk.tolerance()[eLOC_PHI]);
+    return inside(lposition, bchk.tolerance()[eLOC_R],
+                  bchk.tolerance()[eLOC_PHI]);
   } else {
     // first check if inside. We don't need to look into the covariance if
     // inside
