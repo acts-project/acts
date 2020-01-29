@@ -104,7 +104,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Check for ring layout when building a volume
     bool checkRingLayout = false;
     /// Tolerance for ring detection and association
-    bool ringTolerance = 0_mm;
+    double ringTolerance = 0_mm;
   };
 
   /// Constructor

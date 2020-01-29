@@ -106,15 +106,15 @@ void Acts::TGeoDetectorElement::construct(
   auto compShape = dynamic_cast<TGeoCompositeShape*>(tgShape);
   if (compShape != nullptr) {
     auto interNode = dynamic_cast<TGeoIntersection*>(compShape->GetBoolNode());
-    if (interNode) {
+    if (interNode != nullptr) {
       auto baseTube = dynamic_cast<TGeoTubeSeg*>(interNode->GetLeftShape());
-      if (baseTube) {
+      if (baseTube != nullptr) {
         m_transform = std::make_shared<const Transform3D>(
             makeTransform(colX, colY, colZ, colT));
         double rMin = baseTube->GetRmin() * scalor;
         double rMax = baseTube->GetRmax() * scalor;
         auto maskShape = dynamic_cast<TGeoArb8*>(interNode->GetRightShape());
-        if (maskShape) {
+        if (maskShape != nullptr) {
           auto maskTransform = interNode->GetRightMatrix();
           // Get pthe oly vertices
           const Double_t* polyVrt = maskShape->GetVertices();

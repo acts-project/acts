@@ -49,7 +49,7 @@ class AnnulusBounds : public DiscBounds {
   /// @note For @c moduleOrigin you need to actually calculate the cartesian
   /// offset
   AnnulusBounds(double minR, double maxR, double minPhi, double maxPhi,
-                Vector2D moduleOrigin = {0, 0}, double avgPhi = 0);
+                const Vector2D& moduleOrigin = {0, 0}, double avgPhi = 0);
 
   /// Virtual constructor
   AnnulusBounds* clone() const final;

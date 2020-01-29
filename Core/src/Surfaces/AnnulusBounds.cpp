@@ -19,7 +19,7 @@
 #include <iostream>
 
 Acts::AnnulusBounds::AnnulusBounds(double minR, double maxR, double minPhi,
-                                   double maxPhi, Vector2D moduleOrigin,
+                                   double maxPhi, const Vector2D& moduleOrigin,
                                    double avgPhi)
     : m_rMin(std::min(minR, maxR)),
       m_rMax(std::max(minR, maxR)),
@@ -116,11 +116,11 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices() const {
           m_inRightStripXY};
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2D& locpo, double tolR,
+bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
                                  double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by m_phiAvg
-  Vector2D locpo_rotated = m_rotationStripPC * locpo;
+  Vector2D locpo_rotated = m_rotationStripPC * lposition;
   double phiLoc = locpo_rotated[eLOC_PHI];
   double rLoc = locpo_rotated[eLOC_R];
 
@@ -152,7 +152,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& locpo, double tolR,
   return true;
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2D& locpo,
+bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
                                  const BoundaryCheck& bchk) const {
   // locpo is PC in STRIP SYSTEM
 
@@ -161,12 +161,12 @@ bool Acts::AnnulusBounds::inside(const Vector2D& locpo,
   } else {
     // first check if inside. We don't need to look into the covariance if
     // inside
-    if (inside(locpo, 0., 0.)) {
+    if (inside(lposition, 0., 0.)) {
       return true;
     }
 
     // we need to rotated the locpo
-    Vector2D locpo_rotated = m_rotationStripPC * locpo;
+    Vector2D locpo_rotated = m_rotationStripPC * lposition;
 
     // covariance is given in STRIP SYSTEM in PC
     // we need to convert the covariance to the MODULE SYSTEM in PC
@@ -312,12 +312,13 @@ bool Acts::AnnulusBounds::inside(const Vector2D& locpo,
   }
 }
 
-double Acts::AnnulusBounds::distanceToBoundary(const Vector2D& locpo) const {
+double Acts::AnnulusBounds::distanceToBoundary(
+    const Vector2D& lposition) const {
   // find the closest point on all edges, calculate distance
   // return smallest one
   // closest distance is cartesian, we want the result in mm.
 
-  Vector2D locpo_rotated = m_rotationStripPC * locpo;
+  Vector2D locpo_rotated = m_rotationStripPC * lposition;
 
   // locpo is given in STRIP PC, we need it in STRIP XY and possibly MODULE XY
   double rStrip = locpo_rotated[eLOC_R];
