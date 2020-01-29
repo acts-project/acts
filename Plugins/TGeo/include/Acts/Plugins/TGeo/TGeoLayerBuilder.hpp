@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -46,6 +47,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsin
   struct LayerConfig {
    public:
+    /// Create an indentifier from TGeoNode
+    std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
+
     /// Identify the layer by name
     std::string layerName = "";
     /// Identify the sensor by name
