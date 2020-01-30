@@ -401,7 +401,7 @@ class Zenodo:
     #  _params = {"access_token": self.token}
     #  _params.update(params)
     _url = os.path.join(self.base_url, url)+f"?access_token={self.token}"
-    print(_url)
+    #  print(_url)
     r = requests.put(_url,
                       data=json.dumps(data),
                       headers=_headers, 
@@ -430,81 +430,89 @@ class Zenodo:
 @click_config_file.configuration_option()
 def zenodo(version, gitlab, zenodo_token, deposition):
   version = split_version(version)
-  print(version, gitlab, zenodo_token)
+  #  print(version, gitlab, zenodo_token)
   zenodo = Zenodo(zenodo_token)
 
-  create_res = zenodo.post(f"deposit/depositions/{deposition}/actions/newversion")
-  print(create_res)
-  create_res = create_res.json()
+  with Spinner(text="Creating new version of existing deposition"):
+    create_res = zenodo.post(f"deposit/depositions/{deposition}/actions/newversion")
+    #  print(create_res)
+    create_res = create_res.json()
 
   draft_id = create_res["links"]["latest_draft"].split("/")[-1]
-  pprint(create_res)
+  #  pprint(create_res)
 
   print("Created new version with id", draft_id)
 
-  print("Delete all files for draft")
-  draft = zenodo.get(f"deposit/depositions/{draft_id}")
-  pprint(draft)
+  with Spinner(text="Delete all files for draft"):
+    draft = zenodo.get(f"deposit/depositions/{draft_id}")
+    #  pprint(draft)
 
-  for file in draft["files"]:
-    file_id = file["id"]
-    r = zenodo.delete(f"deposit/depositions/{draft_id}/files/{file_id}")
-    assert r.status_code == 204
+    for file in draft["files"]:
+      file_id = file["id"]
+      r = zenodo.delete(f"deposit/depositions/{draft_id}/files/{file_id}")
+      assert r.status_code == 204
 
-  creator_file = os.path.join(os.path.dirname(__file__), "../AUTHORS.md")
-  with open(creator_file) as fh:
-    md = fh.read().strip().split("\n")
-  md = [l.strip() for l in md if not l.strip().startswith("#") and not l.strip() == ""]
+  with Spinner(text="Assembling authors"):
+    creator_file = os.path.join(os.path.dirname(__file__), "../AUTHORS.md")
+    with open(creator_file) as fh:
+      md = fh.read().strip().split("\n")
+    md = [l.strip() for l in md if not l.strip().startswith("#") and not l.strip() == ""]
 
-  creators = []
-  for line in md:
-    assert line.startswith("- ")
-    line = line[2:]
-    split = line.split(",", 1)
-    creator = {"name": split[0].strip()}
+    creators = []
+    for line in md:
+      assert line.startswith("- ")
+      line = line[2:]
+      split = line.split(",", 1)
+      creator = {"name": split[0].strip()}
 
-    if len(split) == 2:
-      creator["affiliation"] = split[1].strip()
+      if len(split) == 2:
+        creator["affiliation"] = split[1].strip()
 
-    creators.append(creator)
+      creators.append(creator)
 	
-  project = gitlab.projects.get("acts/acts-core")
-  milestones = project.milestones.list()
-  milestone = find_milestone(version, milestones)
-  mrs_grouped, issues_grouped = collect_milestone(milestone)
+  with Spinner(text="Collection milestones for description"):
+    project = gitlab.projects.get("acts/acts-core")
+    milestones = project.milestones.list()
+    milestone = find_milestone(version, milestones)
+    mrs_grouped, issues_grouped = collect_milestone(milestone)
+    assert milestone.state == "closed"
 
-  assert milestone.state == "closed"
+    tag = project.tags.get(format_version(version))
+    #  print(tag)
+    tag_date = dateutil.parser.parse(tag.commit["created_at"]).date().strftime("%Y-%m-%d")
 
-  tag = project.tags.get(format_version(version))
-  print(tag)
-  tag_date = dateutil.parser.parse(tag.commit["created_at"]).date().strftime("%Y-%m-%d")
+    description = f'Milestone: <a href="{milestone.web_url}">%{milestone.title}</a> <br/> Merge requested accepted for this version: \n <ul>\n'
 
-  description = f'Milestone: <a href="{milestone.web_url}">%{milestone.title}</a> <br/> Merge requested accepted for this version: \n <ul>\n'
+    for mr in sum(mrs_grouped.values(), []):
+      description += f'<li><a href="{mr.web_url}">!{mr.iid} - {mr.title}</a></li>\n'
 
-  for mr in sum(mrs_grouped.values(), []):
-    description += f'<li><a href="{mr.web_url}">!{mr.iid} - {mr.title}</a></li>\n'
+    description += "</ul>"
 
-  description += "</ul>"
-
-  data = {"metadata": {
-    "title": f"Acts Project: {format_version(version)}",
-    "upload_type": "software",
-    "description": description,
-    "creators": creators,
-    "version": format_version(version),
-    "publication_date": tag_date,
-    "license": "MPL-2.0",
-  }}
-  zenodo.put(f"deposit/depositions/{draft_id}", data).json()
+  with Spinner(text="Updating deposition metadata"):
+    data = {"metadata": {
+      "title": f"Acts Project: {format_version(version)}",
+      "upload_type": "software",
+      "description": description,
+      "creators": creators,
+      "version": format_version(version),
+      "publication_date": tag_date,
+      "license": "MPL-2.0",
+    }}
+    zenodo.put(f"deposit/depositions/{draft_id}", data).json()
 
 
   with tempfile.TemporaryFile() as fh:
-    r = requests.get(f"https://gitlab.cern.ch/acts/acts-core/-/archive/{format_version(version)}/acts-core-{format_version(version)}.zip", stream=True)
-    r.raw.decode_content = True
-    fh.write(r.raw.read())
-    fh.seek(0)
-    name = f"acts-core-{format_version(version)}.zip"
-    zenodo.upload(draft_id, name, fh)
+    with Spinner(text="Downloading release archive from Gitlab"):
+      r = requests.get(f"https://gitlab.cern.ch/acts/acts-core/-/archive/{format_version(version)}/acts-core-{format_version(version)}.zip", stream=True)
+      r.raw.decode_content = True
+      fh.write(r.raw.read())
+      fh.seek(0)
+    with Spinner(text="Uploading release archive to zenodo"):
+      name = f"acts-core-{format_version(version)}.zip"
+      zenodo.upload(draft_id, name, fh)
+
+
+  print(f"Done: https://zenodo.org/deposit/{draft_id}")
 
 if "__main__" == __name__:
     main()
