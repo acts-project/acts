@@ -1,2 +1,0 @@
-add_integrationtest(ATLSeedingIntegrationTest ATLSeedingIntegrationTest.cpp)
-target_link_libraries(ATLSeedingIntegrationTest PRIVATE ActsLegacy)

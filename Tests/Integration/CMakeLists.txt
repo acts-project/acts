@@ -1,5 +1,0 @@
-add_integrationtest(BVHNavigationIntegrationTest BVHNavigationTest.cpp)
-add_integrationtest(InterpolatedSolenoidBFieldIntegrationTest InterpolatedSolenoidBFieldTest.cpp)
-add_integrationtest(PropagationIntegrationTests PropagationTests.cpp)
-
-add_subdirectory_if(Legacy ACTS_BUILD_LEGACY)

@@ -61,7 +61,7 @@ cmake --build . -- install
 ## <a name="cmake">CMake build system</a>
 
 CMake is used as build system for compiling and installing Acts.  For a
-complete list of CMake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) 
+complete list of CMake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html)
 and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
 Important options relevant for the Acts project are given below. They are set
 by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
@@ -70,14 +70,15 @@ by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 |----------------------------------|---------|---------------------------------------------------------|
 | ACTS_BUILD_LEGACY                | ON      | build Legacy package                                    |
 | ACTS_BUILD_DOC                   | OFF     | build documentation                                     |
-| ACTS_BUILD_EXAMPLES              | OFF     | build examples                                          |
-| ACTS_BUILD_TESTS                 | ON      | build unit tests                                        |
-| ACTS_BUILD_INTEGRATION_TESTS     | OFF     | build integration tests                                 |
 | ACTS_BUILD_DIGITIZATION_PLUGIN   | OFF     | build geometric digitization plugin                     |
 | ACTS_BUILD_DD4HEP_PLUGIN         | OFF     | build DD4HEP plugin for DD4hep geometry                 |
 | ACTS_BUILD_TGEO_PLUGIN           | OFF     | build TGeo plugin for ROOT geometry                     |
 | ACTS_BUILD_JSON_PLUGIN           | OFF     | build Json plugin for Json geometry input/output        |
 | ACTS_BUILD_IDENTIFICATION_PLUGIN | OFF     | build Identification plugin                             |
+| ACTS_BUILD_BENCHMARKS            | OFF     | build benchmarks                                        |
+| ACTS_BUILD_EXAMPLES              | OFF     | build examples                                          |
+| ACTS_BUILD_UNITTESTS             | OFF     | build unit tests                                        |
+| ACTS_BUILD_INTEGRATIONTESTS      | OFF     | build integration tests                                 |
 | CMAKE_INSTALL_PREFIX             |         | target installation directory                           |
 | CMAKE_PREFIX_PATH                |         | search path for external packages                       |
 | CMAKE_CXX_COMPILER               |         | set C++ compiler (e.g. g++ or clang++)                  |
@@ -104,7 +105,7 @@ source <ACTS_DIR>/CI/setup_lcgXYZ.sh
 where `XYZ` is the version number of the LCG release. There are multiple setup
 scripts for different LCG releases, which corresponds to the releases the CI
 tests against. The releases which can be set up using these scripts are therefore
-sure to be compatible. **You can build Acts with any of these releases**. 
+sure to be compatible. **You can build Acts with any of these releases**.
 Additionally, there is a script called `setup_clang.sh` which will make the `clang` compiler available on top of one
 of the LCG releases. This configuration is also tested by the CI.
 
@@ -146,4 +147,3 @@ where `compX` are the required components from the Acts project. See the
 # <a name="documentation">Documentation</a>
 
 You can find a complete documentation of the Acts functionality and the class reference guide at [http://acts.web.cern.ch/ACTS/latest/doc/index.html](http://acts.web.cern.ch/ACTS/latest/doc/index.html).
-

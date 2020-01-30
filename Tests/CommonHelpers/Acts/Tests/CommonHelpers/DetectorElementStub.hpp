@@ -11,14 +11,12 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "Acts/Utilities/Definitions.hpp"
-// Geometry module
+
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-
-// required because LineSurface is abstract
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
