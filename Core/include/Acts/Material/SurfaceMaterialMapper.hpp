@@ -141,7 +141,7 @@ class SurfaceMaterialMapper {
   /// @note the RecordedMaterialProperties of the track are assumed
   /// to be ordered from the starting position along the starting direction
   void mapMaterialTrack(State& mState,
-                        const RecordedMaterialTrack& mTrack) const;
+                        RecordedMaterialTrack& mTrack) const;
 
  private:
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume

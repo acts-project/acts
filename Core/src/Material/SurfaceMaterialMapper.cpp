@@ -151,7 +151,7 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 }
 
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
-    State& mState, const RecordedMaterialTrack& mTrack) const {
+    State& mState, RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
   NeutralCurvilinearParameters start(std::nullopt, mTrack.first.first,
                                      mTrack.first.second, 0.);
@@ -179,7 +179,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   auto mappingSurfaces = mcResult.collected;
 
   // Retrieve the recorded material from the recorded material track
-  const auto& rMaterial = mTrack.second.materialInteractions;
+  auto& rMaterial = mTrack.second.materialInteractions;
   std::map<GeometryID, unsigned int> assignedMaterial;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
@@ -239,6 +239,9 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
         currentPos, rmIter->materialProperties, currentPathCorrection);
     touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     ++assignedMaterial[currentID];
+    // Update the material interaction with the associated surface and direction
+    rmIter->direction = mTrack.first.second.normalized();
+    rmIter->surface = sfIter->surface;
     // Switch to next material
     ++rmIter;
   }
