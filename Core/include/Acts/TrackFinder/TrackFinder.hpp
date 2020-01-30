@@ -38,9 +38,6 @@
 #include <memory>
 
 namespace Acts {
-template <typename source_link_t>
-using SourceLinksIterator =
-    typename std::multimap<const Surface*, source_link_t>::iterator;
 
 /// @brief Options struct how the Fitter is called
 ///
@@ -67,8 +64,12 @@ struct TrackFinderOptions {
   /// @param gctx The goemetry context for this track finding
   /// @param mctx The magnetic context for this track finding
   /// @param cctx The calibration context for this track finding
+  /// @param slsCfg The config for the source link selector for this track
+  /// finding
   /// @param rSurface The reference surface for the eventual track fitting to be
   /// expressed at
+  /// @param mScattering Whether to include multiple scattering
+  /// @param eLoss Whether to include energy loss
   TrackFinderOptions(std::reference_wrapper<const GeometryContext> gctx,
                      std::reference_wrapper<const MagneticFieldContext> mctx,
                      std::reference_wrapper<const CalibrationContext> cctx,
