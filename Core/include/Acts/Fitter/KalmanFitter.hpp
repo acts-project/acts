@@ -40,12 +40,20 @@ namespace Acts {
 
 /// @brief Options struct how the Fitter is called
 ///
-/// It contains the context of the fitter call, the optional
+/// It contains the context of the fitter call, the outlier finder, the optional
 /// surface where to express the fit result and configurations for material
 /// effects and smoothing options
 ///
+///
 /// @note the context objects must be provided
+template <typename outlier_finder_t = VoidOutlierFinder>
 struct KalmanFitterOptions {
+  // Broadcast the outlier finder type
+  using OutlierFinderType = outlier_finder_t;
+
+  // Broadcast the outlier finder config type
+  using OutlierFinderConfigType = typename OutlierFinderType::Config;
+
   /// Deleted default constructor
   KalmanFitterOptions() = delete;
 
@@ -54,6 +62,7 @@ struct KalmanFitterOptions {
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
+  /// @param olCfg The config for the outlier finder
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
@@ -61,12 +70,14 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
+                      const OutlierFinderConfigType& ofCfg,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
+        outlierFinderConfig(ofCfg),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
@@ -78,6 +89,9 @@ struct KalmanFitterOptions {
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
+
+  /// The config for the outlier finder
+  OutlierFinderConfigType outlierFinderConfig;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -136,6 +150,7 @@ struct KalmanFitterResult {
 /// @tparam propagator_t Type of the propagation class
 /// @tparam updater_t Type of the kalman updater class
 /// @tparam smoother_t Type of the kalman smoother class
+/// @tparam outlier_finder_t Type of the outlier finder class
 /// @tparam calibrator_t Type of the calibrator class
 /// @tparam input_converter_t Type of the input converter class
 /// @tparam output_converter_t Type of the output converter class
@@ -499,7 +514,6 @@ class KalmanFitter {
         // Get and set the type flags
         auto& typeFlags = trackStateProxy.typeFlags();
         typeFlags.set(TrackStateFlag::MaterialFlag);
-        typeFlags.set(TrackStateFlag::MeasurementFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
 
         // If the update is successful, set covariance and
@@ -509,6 +523,8 @@ class KalmanFitter {
           return updateRes.error();
         } else {
           if (not m_outlierFinder(trackStateProxy)) {
+            // Set the measurement type flag
+            typeFlags.set(TrackStateFlag::MeasurementFlag);
             // Update the stepping state with filtered parameters
             ACTS_VERBOSE(
                 "Filtering step successful, updated parameters are : \n"
@@ -888,6 +904,7 @@ class KalmanFitter {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam kalman_fitter_options_t Type of the kalman fitter options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -899,14 +916,22 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
+            typename kalman_fitter_options_t,
             typename parameters_t = BoundParameters,
             typename result_t = Result<KalmanFitterResult<source_link_t>>>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions& kfOptions) const
+           const kalman_fitter_options_t& kfOptions) const
       -> std::enable_if_t<!isDirectNavigator, result_t> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
+
+    static_assert(
+        std::is_same<
+            outlier_finder_t,
+            typename kalman_fitter_options_t::OutlierFinderType>::value,
+        "Inconsistent type of outlier finder between kalman fitter and "
+        "kalman fitter options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
@@ -936,6 +961,9 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
+
+    // Set config for outlier finder
+    kalmanActor.m_outlierFinder.m_config = kfOptions.outlierFinderConfig;
 
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;
@@ -974,6 +1002,7 @@ class KalmanFitter {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam kalman_fitter_options_t Type of the kalman fitter options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -986,15 +1015,23 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
+            typename kalman_fitter_options_t,
             typename parameters_t = BoundParameters,
             typename result_t = Result<KalmanFitterResult<source_link_t>>>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions& kfOptions,
+           const kalman_fitter_options_t& kfOptions,
            const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator, result_t> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
+
+    static_assert(
+        std::is_same<
+            outlier_finder_t,
+            typename kalman_fitter_options_t::OutlierFinderType>::value,
+        "Inconsistent type of outlier finder between kalman fitter and "
+        "kalman fitter options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
@@ -1024,6 +1061,9 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
+
+    // Set config for outlier finder
+    kalmanActor.m_outlierFinder.m_config = kfOptions.outlierFinderConfig;
 
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;

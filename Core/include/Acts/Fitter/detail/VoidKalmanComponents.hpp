@@ -112,6 +112,12 @@ struct VoidKalmanSmoother {
 
 /// @brief void outlier finder
 struct VoidOutlierFinder {
+  /// @brief nested config struct
+  ///
+  struct Config {
+    // Allowed maximum chi2
+    double maxChi2 = std::numeric_limits<double>::max();
+  };
   /// @brief Public call mimicking an outlier finder
   ///
   /// @tparam track_state_t Type of the track state
@@ -121,8 +127,14 @@ struct VoidOutlierFinder {
   /// @return Whether it's outlier or not
   template <typename track_state_t>
   bool operator()(const track_state_t& trackState) const {
+    if (trackState.chi2 > m_config.maxChi2) {
+      return true;
+    }
     return false;
   }
+
+  /// The config
+  Config m_config;
 };
 
 }  // namespace Acts

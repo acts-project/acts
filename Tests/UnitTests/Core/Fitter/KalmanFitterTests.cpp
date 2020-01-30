@@ -221,11 +221,15 @@ struct MaterialScattering {
 };
 
 struct MinimalOutlierFinder {
-  /// The measurement significance criteria
-  double measurementSignificance = 0.05;
+  /// @brief nested config struct
+  ///
+  struct Config {
+    /// The measurement significance criteria
+    double measurementSignificance = 0;
 
-  /// The chi2 round-off error
-  double chi2Tolerance = 10e-5;
+    /// The chi2 round-off error
+    double chi2Tolerance = 10e-5;
+  };
 
   /// @brief Public call mimicking an outlier finder
   ///
@@ -237,7 +241,7 @@ struct MinimalOutlierFinder {
   template <typename track_state_t>
   bool operator()(const track_state_t& trackState) const {
     double chi2 = trackState.chi2();
-    if (std::abs(chi2) < chi2Tolerance) {
+    if (std::abs(chi2) < m_config.chi2Tolerance) {
       return false;
     }
     // The measurement dimension
@@ -247,8 +251,11 @@ struct MinimalOutlierFinder {
     // The p-Value
     double pValue = 1 - boost::math::cdf(chiDist, chi2);
     // If pValue is NOT significant enough => outlier
-    return pValue > measurementSignificance ? false : true;
+    return pValue > m_config.measurementSignificance ? false : true;
   }
+
+  /// The config
+  Config m_config;
 };
 
 ///
@@ -366,10 +373,15 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   using KalmanFitter =
       KalmanFitter<RecoPropagator, Updater, Smoother, MinimalOutlierFinder>;
 
+  using OutlierFinderConfig = typename MinimalOutlierFinder::Config;
+  OutlierFinderConfig ofConfig;
+  ofConfig.measurementSignificance = 0.05;
+
   KalmanFitter kFitter(rPropagator,
                        getDefaultLogger("KalmanFilter", Logging::VERBOSE));
 
-  KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, rSurface);
+  KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
+      tgContext, mfContext, calContext, ofConfig, rSurface);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
