@@ -6,13 +6,27 @@
 
 # <a name="intro">Introduction</a>
 
-This project is supposed to be an experiment-independent set of track reconstruction tools. The main philosophy is to provide high-level track reconstruction modules that can be used for any tracking detector. The description of the tracking detector's geometry is optimized for efficient navigation and quick extrapolation of tracks. Converters for several common geometry description languages exist. Having a highly performant, yet largely customizable implementation of track reconstruction algorithms was a primary objective for the design of this toolset. Additionally, the applicability to real-life HEP experiments played a major role in the development process. Apart from algorithmic code, this project also provides an event data model for the description of track parameters and measurements.
+This project is an experiment-independent set of track reconstruction tools. The
+main philosophy is to provide high-level track reconstruction modules that can
+be used for any tracking detector. The description of the tracking detector's
+geometry is optimized for efficient navigation and quick extrapolation of
+tracks. Converters for several common geometry description languages exist.
+Having a fast, yet largely customizable implementation of track
+reconstruction algorithms was a primary objective for the design of this
+toolset. Additionally, the applicability to real-life HEP experiments played a
+major role in the development process. Apart from algorithmic code, this project
+also provides an event data model for the description of track parameters and
+measurements.
 
 Key features of this project include:
-* tracking geometry description which can be constructed from TGeo, DD4Hep, or customized input
-* simple and efficient event data model,
-* performant and highly flexible algorithms for track propagation and fitting,
-* basic seed finding algorithms.
+
+*   Tracking geometry description which can be constructed from TGeo, DD4Hep,
+    or customized input.
+*   Simple and efficient event data model.
+*   Fast and highly flexible algorithms for track propagation and fitting.
+*   Seed finding algorithms.
+*   Fast track simulation tools based on the reconstruction geometry
+    description.
 
 The git repository for the Acts project can be found at <a href="https://gitlab.cern.ch/acts/acts-core.git">https://gitlab.cern.ch/acts/acts-core.git</a>.
 
