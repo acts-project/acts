@@ -67,8 +67,18 @@ def main():
         if not args.dry_run:
             with Spinner(text=f"Saving release notes on {tag.name}"):
                 tag.set_release_description(md)
+
+        # there should be a release now
+        with Spinner(f"Getting release for tag {tag.name}"):
+            rel = project.releases.get(tag.name)
+            if not args.dry_run:
+                with Spinner(f"Setting milestones on release {tag.name} to [{milestone.title}]"):
+                    gl.http_put(f"/projects/{project.id}/releases/{tag.name}", post_data={"milestones": [milestone.title]})
+            #  rel.milestones = [milestone.title]
+                #  rel.save()
         if args.verbose:
             print("---")
+
 
 
 if "__main__" == __name__:
