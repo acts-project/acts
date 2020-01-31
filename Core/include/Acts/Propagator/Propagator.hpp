@@ -29,17 +29,7 @@
 #include "Acts/Utilities/Units.hpp"
 
 // Workaround for building on clang+libstdc++
-// See https://gitlab.cern.ch/atlas/atlasexternals/merge_requests/563
-namespace std {
-template <>
-struct is_constructible<std::reference_wrapper<const std::any>,
-                        const std::reference_wrapper<const std::any>&>
-    : public true_type {};
-template <>
-struct is_constructible<std::reference_wrapper<const std::any>,
-                        std::reference_wrapper<const std::any>&>
-    : public true_type {};
-}  // namespace std
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 namespace Acts {
 
