@@ -40,7 +40,7 @@ static void writeAnnulusDiscObj(std::ofstream& stream, double scalor,
                                 unsigned int nSegments,
                                 const Acts::Transform3D& transform,
                                 const std::vector<Acts::Vector2D>& vertices,
-                                const Acts::Vector3D& offset) {
+                                const Acts::Vector3D& os = Acts::Vector3D(0.,0.,0.)) {
   unsigned int cvc = 0;
 
   std::vector<Acts::Vector3D> gVertices;
@@ -81,7 +81,7 @@ static void writeAnnulusDiscObj(std::ofstream& stream, double scalor,
         double phi = phif + is * phiD;
         double z = zf + is * zD;
         completed3D.push_back(Acts::Vector3D(r * cos(phi), r * sin(phi), z) -
-                              offset);
+                              os);
       }
       // Reassing the global points
       return completed3D;
