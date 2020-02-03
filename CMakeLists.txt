@@ -17,18 +17,19 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
-option(ACTS_BUILD_LEGACY "Build legacy package" OFF)
-option(ACTS_BUILD_DOC "Build documentation" OFF)
 option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
 option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
 option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
 option(ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
-option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json" ON)
+option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
+option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
+option(ACTS_BUILD_LEGACY "Build legacy package" OFF)
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
+option(ACTS_BUILD_DOC "Build documentation" OFF)
 
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
@@ -56,14 +57,8 @@ find_package(Boost 1.62 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
 
 # optional packages
-if(ACTS_BUILD_DOC)
-  find_package(Doxygen 1.8.11 REQUIRED)
-endif()
 if(ACTS_BUILD_DD4HEP_PLUGIN)
   find_package(DD4hep 1.2 REQUIRED COMPONENTS DDCore)
-endif()
-if(ACTS_BUILD_TGEO_PLUGIN)
-  find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
 endif()
 if(ACTS_BUILD_JSON_PLUGIN)
   if(ACTS_USE_BUNDLED_NLOHMANN_JSON)
@@ -75,15 +70,24 @@ if(ACTS_BUILD_JSON_PLUGIN)
     find_package(nlohmann_json 3.2.0 REQUIRED)
   endif()
 endif()
+if(ACTS_BUILD_TGEO_PLUGIN)
+  find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
+endif()
+if(ACTS_BUILD_DOC)
+  find_package(Doxygen 1.8.11 REQUIRED)
+endif()
 
-# core library and plugins
+# core library, core plugins, and other components
 add_component(Core Core)
 add_subdirectory(Plugins)
+add_component(Fatras Fatras)
+
 # benchmarks, examples, and tests
 if(ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS)
   enable_testing() # must be set in the main CMakeLists.txt
 endif()
 add_subdirectory(Tests)
+
 # documentation
 add_subdirectory_if(doc ACTS_BUILD_DOC)
 

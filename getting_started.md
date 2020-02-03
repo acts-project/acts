@@ -38,7 +38,6 @@ continous integration (CI) system to test the software. Setup scripts are provid
 in the repository that can be used to setup this release, and a few others, on
 lxplus machines at CERN (see [below](#installation)).
 
-
 ## <a name="installation">Installation and quick start</a>
 
 The Acts repository is hosted on the GitLab instance at CERN. In order to aquire the latest
@@ -68,22 +67,24 @@ by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 
 | option                           | default | description                                             |
 |----------------------------------|---------|---------------------------------------------------------|
-| ACTS_BUILD_LEGACY                | ON      | build Legacy package                                    |
-| ACTS_BUILD_DOC                   | OFF     | build documentation                                     |
-| ACTS_BUILD_DIGITIZATION_PLUGIN   | OFF     | build geometric digitization plugin                     |
-| ACTS_BUILD_DD4HEP_PLUGIN         | OFF     | build DD4HEP plugin for DD4hep geometry                 |
-| ACTS_BUILD_TGEO_PLUGIN           | OFF     | build TGeo plugin for ROOT geometry                     |
-| ACTS_BUILD_JSON_PLUGIN           | OFF     | build Json plugin for Json geometry input/output        |
-| ACTS_BUILD_IDENTIFICATION_PLUGIN | OFF     | build Identification plugin                             |
-| ACTS_BUILD_BENCHMARKS            | OFF     | build benchmarks                                        |
-| ACTS_BUILD_EXAMPLES              | OFF     | build examples                                          |
-| ACTS_BUILD_UNITTESTS             | OFF     | build unit tests                                        |
-| ACTS_BUILD_INTEGRATIONTESTS      | OFF     | build integration tests                                 |
-| CMAKE_INSTALL_PREFIX             |         | target installation directory                           |
-| CMAKE_PREFIX_PATH                |         | search path for external packages                       |
-| CMAKE_CXX_COMPILER               |         | set C++ compiler (e.g. g++ or clang++)                  |
-| CMAKE_BUILD_TYPE                 |         | build type (e.g. Debug, Release) affects compiler flags |
-| DD4hep_DIR                       |         | path to the DD4hep installation                         |
+| ACTS_BUILD_DD4HEP_PLUGIN         | OFF     | Build DD4HEP geometry plugin                            |
+| ACTS_BUILD_DIGITIZATION_PLUGIN   | OFF     | Build Digitization plugin                               |
+| ACTS_BUILD_JSON_PLUGIN           | OFF     | Build Json plugin for geometry input/output             |
+| ACTS_BUILD_IDENTIFICATION_PLUGIN | OFF     | Build Identification plugin                             |
+| ACTS_BUILD_TGEO_PLUGIN           | OFF     | Build TGeo geometry plugin                              |
+| ACTS_BUILD_FATRAS                | OFF     | Build FAst TRAcking Simulation package                  |
+| ACTS_BUILD_LEGACY                | OFF     | Build Legacy package                                    |
+| ACTS_BUILD_BENCHMARKS            | OFF     | Build benchmarks                                        |
+| ACTS_BUILD_EXAMPLES              | OFF     | Build examples                                          |
+| ACTS_BUILD_UNITTESTS             | OFF     | Build unit tests                                        |
+| ACTS_BUILD_INTEGRATIONTESTS      | OFF     | Build integration tests                                 |
+| ACTS_BUILD_DOC                   | OFF     | Build documentation                                     |
+| ACTS_USE_BUNDLED_NLOHMANN_JSON   | ON      | Use external or bundled Json library                    |
+| CMAKE_INSTALL_PREFIX             |         | The installation directory                              |
+| CMAKE_PREFIX_PATH                |         | Search path for external packages                       |
+| CMAKE_CXX_COMPILER               |         | Set C++ compiler (e.g. g++ or clang++)                  |
+| CMAKE_BUILD_TYPE                 |         | Build type (e.g. Debug, Release) affects compiler flags |
+| DD4hep_DIR                       |         | Path to the DD4hep installation                         |
 
 ## <a name="building-acts">Building Acts</a>
 
@@ -96,7 +97,6 @@ enable, as mentioned above.
 If you are in an *lxplus-like* environment (i.e. `SLC6` or `CC7`, with
 `cvmfs`), you can use the setup scripts located in `<ACTS_DIR>/CI` to get the
 dependencies:
-
 
 ```bash
 source <ACTS_DIR>/CI/setup_lcgXYZ.sh

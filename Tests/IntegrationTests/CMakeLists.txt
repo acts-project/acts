@@ -1,7 +1,11 @@
 # integration tests are different and should not be registered with the
 # preconfigured `tests` target. manually add a separate one.
 add_custom_target(integrationtests)
-# add an integrationtest exectuable w/ default dependencies and register it
+# add an integrationtest exectuable w/ default dependencies and register it.
+#
+# the common libraries which are linked to every integrationtest can be
+# extended by setting the `unittest_extra_libraries` variables before
+# calling the macro.
 macro(add_integrationtest _name)
   # automatically prefix the target name
   set(_target "ActsIntegrationTest${_name}")
@@ -15,7 +19,11 @@ macro(add_integrationtest _name)
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(
     ${_target}
-    PRIVATE ActsCore ActsTestsCommonHelpers Boost::unit_test_framework)
+    PRIVATE
+      ActsCore
+      ActsTestsCommonHelpers
+      Boost::unit_test_framework
+      ${integrationtest_extra_libraries})
   # register as integration test executable
   set(_test "integrationtests-${_name}")
   add_custom_target(${_test} COMMAND ${_target})
