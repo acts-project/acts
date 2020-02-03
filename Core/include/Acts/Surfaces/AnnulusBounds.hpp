@@ -51,6 +51,9 @@ class AnnulusBounds : public DiscBounds {
   AnnulusBounds(double minR, double maxR, double minPhi, double maxPhi,
                 const Vector2D& moduleOrigin = {0, 0}, double avgPhi = 0);
 
+  /// @brief copy constructor
+  AnnulusBounds(const AnnulusBounds& source) = default;
+
   /// Virtual constructor
   AnnulusBounds* clone() const final;
 
@@ -215,7 +218,7 @@ inline bool AnnulusBounds::coversFullAzimuth() const {
 
 inline bool AnnulusBounds::insideRadialBounds(double R,
                                               double tolerance) const {
-  return (R + tolerance > m_rMin and R - tolerance < m_rMax);
+  return ((R + tolerance) > m_rMin and (R - tolerance) < m_rMax);
 }
 
 inline double AnnulusBounds::binningValueR() const {
