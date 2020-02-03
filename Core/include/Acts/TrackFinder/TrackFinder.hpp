@@ -39,7 +39,7 @@
 
 namespace Acts {
 
-/// @brief Options struct how the Fitter is called
+/// @brief Options struct how the Track Finder is called
 ///
 /// @tparam source_link_selector_t The source link selector type
 ///
@@ -421,6 +421,8 @@ class TrackFinder {
             // To avoid meaningless navigation target call
             state.stepping.stepSize =
                 ConstrainedStep(state.options.maxStepSize);
+            // Need to go back to start targeting for the rest tracks
+            state.stepping.navDir = forward;
           } else {
             ACTS_VERBOSE("Finish track finding and fitting");
           }
@@ -921,6 +923,7 @@ class TrackFinder {
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);
       state.options.direction = backward;
+      state.stepping.navDir = backward;
 
       return Result<void>::success();
     }
@@ -1054,9 +1057,11 @@ class TrackFinder {
     /// Get the result of the track finder
     auto trackFinderResult = propRes.template get<TrackFinderResult>();
 
-    /// It could happen that propagation reaches path limit or max step size
+    /// It could happen that propagation reaches max step size
     /// before the track finding is finished.
     /// @TODO: tune source link selector or propagation options to suppress this
+    /// It can also due to the fact that the navigation never breaks (as in KF
+    /// fit call)
     if (trackFinderResult.result.ok() and
         not trackFinderResult.forwardFiltered) {
       trackFinderResult.result =
