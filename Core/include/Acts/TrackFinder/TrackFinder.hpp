@@ -734,9 +734,6 @@ class TrackFinder {
         auto trackStateProxy =
             result.fittedStates.getTrackState(result.currentTip);
 
-        // Set the surface
-        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
         // Set the track state flags
         auto& typeFlags = trackStateProxy.typeFlags();
         typeFlags.set(TrackStateFlag::MaterialFlag);
@@ -754,6 +751,9 @@ class TrackFinder {
           auto [boundParams, jacobian, pathLength] =
               stepper.boundState(state.stepping, *surface, true);
 
+          // Set the surface
+          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+
           // Fill the track state
           trackStateProxy.predicted() = boundParams.parameters();
           trackStateProxy.predictedCovariance() = *boundParams.covariance();
@@ -765,6 +765,10 @@ class TrackFinder {
           // Transport & get curvilinear state instead of bound state
           auto [curvilinearParams, jacobian, pathLength] =
               stepper.curvilinearState(state.stepping, true);
+
+          // Set the surface
+          trackStateProxy.setReferenceSurface(Surface::makeShared<PlaneSurface>(
+              curvilinearParams.position(), curvilinearParams.momentum()));
 
           // Fill the track state
           trackStateProxy.predicted() = curvilinearParams.parameters();
@@ -860,23 +864,54 @@ class TrackFinder {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
                           result_type& result) const {
+      // Get the index of measurement states;
+      std::vector<size_t> measurementIndices;
+      auto lastState = result.fittedStates.getTrackState(result.currentTip);
+      if (lastState.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        measurementIndices.push_back(result.currentTip);
+      }
+      // Count track states to be smoothed
+      size_t nStates = 0;
+      result.fittedStates.applyBackwards(result.currentTip, [&](auto st) {
+        // Smoothing will start from the last measurement state
+        if (measurementIndices.empty()) {
+          // No smoothed parameter for the last few non-measurment states
+          st.data().ismoothed = detail_lt::IndexData::kInvalid;
+        } else {
+          nStates++;
+        }
+        size_t iprevious = st.previous();
+        if (iprevious != Acts::detail_lt::IndexData::kInvalid) {
+          auto previousState = result.fittedStates.getTrackState(iprevious);
+          if (previousState.typeFlags().test(
+                  Acts::TrackStateFlag::MeasurementFlag)) {
+            measurementIndices.push_back(iprevious);
+          }
+        }
+      });
+      // Return error if the track has no measurement states (but this should
+      // not happen)
+      if (measurementIndices.empty()) {
+        return TrackFinderError::SmoothFailed;
+      }
       // Screen output for debugging
       if (logger().doPrint(Logging::VERBOSE)) {
-        // need to count track states
-        size_t nStates = 0;
-        result.fittedStates.visitBackwards(result.currentTip,
-                                           [&](const auto) { nStates++; });
         ACTS_VERBOSE("Apply smoothing on " << nStates
                                            << " filtered track states.");
       }
-      // Smooth the track states and obtain the last smoothed track parameters
-      auto smoothRes =
-          m_smoother(state.geoContext, result.fittedStates, result.currentTip);
+      // Smooth the track states
+      auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
+                                  measurementIndices.front());
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
       }
-      parameters_t smoothedPars = *smoothRes;
+      // Obtain the smoothed parameters at first measurement state
+      auto firstMeasurement =
+          result.fittedStates.getTrackState(measurementIndices.back());
+      parameters_t smoothedPars =
+          firstMeasurement.smoothedParameters(state.options.geoContext);
+
       // Update the stepping parameters - in order to progress to destination
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state, "
