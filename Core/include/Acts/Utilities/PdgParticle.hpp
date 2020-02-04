@@ -12,6 +12,7 @@ namespace Acts {
 
 /// Symbolic values for commonly used PDG particle numbers.
 enum PdgParticle : int {
+  eInvalid = 0,
   eElectron = 11,
   eAntiElectron = -eElectron,
   ePositron = -eElectron,
