@@ -21,7 +21,6 @@
 
 #include <Acts/Surfaces/Surface.hpp>
 
-
 // Convenience shorthand
 using json = nlohmann::json;
 
