@@ -15,67 +15,68 @@
 namespace ActsFatras {
 namespace Casts {
 
-/// The Eta cast operator
-struct eta {
-  template <typename particle_t>
-  double operator()(const particle_t &particle) const {
-    return Acts::VectorHelpers::eta(particle.momentum());
-  }
-};
-
-/// The Eta cast operator
-struct absEta {
-  template <typename particle_t>
-  double operator()(const particle_t &particle) const {
-    return std::abs(Acts::VectorHelpers::eta(particle.momentum()));
-  }
-};
-
-/// The Pt cast operator
-struct pT {
-  template <typename particle_t>
-  double operator()(const particle_t &particle) const {
-    return Acts::VectorHelpers::perp(particle.momentum());
-  }
-};
-
-/// The P cast operator
-struct p {
-  template <typename particle_t>
-  double operator()(const particle_t &particle) const {
-    return particle.momentum().norm();
-  }
-};
-
-/// The E cast operator
-struct E {
-  template <typename particle_t>
-  double operator()(const particle_t &particle) const {
-    return particle.E();
-  }
-};
-
-/// The E cast operator
-struct vR {
+/// Retrieve the transverse absolute distance of the vertex to the origin.
+struct Vrho {
   template <typename particle_t>
   double operator()(const particle_t &particle) const {
     return Acts::VectorHelpers::perp(particle.position());
   }
 };
 
-/// The E cast operator
-struct vZ {
+/// Retrieve the longitudinal distance of the vertex to the origin.
+struct Vz {
   template <typename particle_t>
   double operator()(const particle_t &particle) const {
     return particle.position().z();
   }
 };
 
-/// The E cast operator
+/// Retrieve the longitudinal absolute distance of the vertex to the origin.
 struct AbsVz {
   template <typename particle_t>
   double operator()(const particle_t &particle) const {
     return std::abs(particle.position().z());
+  }
+};
+
+/// Retrieve the direction pseudo-rapidity.
+struct Eta {
+  template <typename particle_t>
+  double operator()(const particle_t &particle) const {
+    return Acts::VectorHelpers::eta(particle.direction());
+  }
+};
+
+/// Retrieve the direction absolute pseudo-rapidity.
+struct AbsEta {
+  template <typename particle_t>
+  double operator()(const particle_t &particle) const {
+    return std::abs(Acts::VectorHelpers::eta(particle.direction()));
+  }
+};
+
+/// Retrieve the transverse momentum.
+struct Pt {
+  template <typename particle_t>
+  double operator()(const particle_t &particle) const {
+    return particle.momentum() *
+           Acts::VectorHelpers::perp(particle.direction());
+  }
+};
+
+/// Retrieve the absolute momentum.
+struct P {
+  template <typename particle_t>
+  double operator()(const particle_t &particle) const {
+    return particle.momentum();
+  }
+};
+
+/// Retrieve the total energy.
+struct E {
+  template <typename particle_t>
+  double operator()(const particle_t &particle) const {
+    return particle.energy();
   }
 };
 
