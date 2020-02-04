@@ -36,11 +36,11 @@ Vector2D offset(-2., 2.);
 
 bool writeObj = false;
 
-static void writeAnnulusDiscObj(std::ofstream& stream, double scalor,
-                                unsigned int nSegments,
-                                const Acts::Transform3D& transform,
-                                const std::vector<Acts::Vector2D>& vertices,
-                                const Acts::Vector3D& os = Acts::Vector3D(0.,0.,0.)) {
+static void writeAnnulusDiscObj(
+    std::ofstream& stream, double scalor, unsigned int nSegments,
+    const Acts::Transform3D& transform,
+    const std::vector<Acts::Vector2D>& vertices,
+    const Acts::Vector3D& os = Acts::Vector3D(0., 0., 0.)) {
   unsigned int cvc = 0;
 
   std::vector<Acts::Vector3D> gVertices;
