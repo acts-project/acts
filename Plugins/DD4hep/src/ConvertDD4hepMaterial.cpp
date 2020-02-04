@@ -40,7 +40,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
       max = M_PI;
     }
     int bins = actsExtension.getValue(bin.first, valueTag);
-    if (bins > 1) {
+    if (bins >= 1) {
       bu += Acts::BinUtility(bins, min, max, bopt, bval);
     }
   }
