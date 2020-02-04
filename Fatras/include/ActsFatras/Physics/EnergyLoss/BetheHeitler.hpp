@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsFatras/Kernel/detail/RandomNumberDistributions.hpp"
+#include <random>
 
 namespace ActsFatras {
 
@@ -50,7 +50,7 @@ struct BetheHeitler {
     double tInX0 = detector.thickness() / detector.material().X0();
 
     // Take a random gamma-distributed value - depending on t/X0
-    GammaDist gDist = GammaDist(tInX0 / log_2, 1.);
+    std::gamma_distribution<double> gDist(tInX0 / log_2, 1.);
 
     double u = gDist(generator);
     double z = std::exp(-1. * u);

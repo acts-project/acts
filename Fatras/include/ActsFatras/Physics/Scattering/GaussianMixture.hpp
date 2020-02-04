@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include <random>
+
 #include "Acts/Material/Interactions.hpp"
-#include "ActsFatras/Kernel/detail/RandomNumberDistributions.hpp"
 
 namespace ActsFatras {
 
@@ -53,10 +54,10 @@ struct GaussianMixture {
     double sigma2 = sigma * sigma;
 
     // Gauss distribution, will be sampled with generator
-    GaussDist gaussDist = GaussDist(0., 1.);
+    std::normal_distribution<double> gaussDist(0., 1.);
 
     // Uniform distribution, will be sampled with generator
-    UniformDist uniformDist = UniformDist(0., 1.);
+    std::uniform_real_distribution<double> uniformDist(0., 1.);
 
     // Now correct for the tail fraction
     // d_0'

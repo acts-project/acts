@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include <random>
+
 #include "Acts/Material/Interactions.hpp"
-#include "ActsFatras/Kernel/detail/RandomNumberDistributions.hpp"
 
 namespace ActsFatras {
 
@@ -33,7 +34,7 @@ struct Highland {
   double operator()(generator_t &generator, const detector_t &detector,
                     particle_t &particle) const {
     // Gauss distribution, will be sampled sampled with generator
-    GaussDist gaussDist = GaussDist(0., 1.);
+    std::normal_distribution<double> gaussDist(0., 1.);
 
     double qop = particle.q() / particle.p();
     double theta0 = Acts::computeMultipleScatteringTheta0(

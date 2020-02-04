@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -38,7 +39,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
   desc.add_options()
       ("help", "produce help message")
-      ("toys",po::value<unsigned int>(&toys)->default_value(10000),"number of tracks to propagate")
+      ("toys",po::value<unsigned int>(&toys)->default_value(20000),"number of tracks to propagate")
       ("pT",po::value<double>(&ptInGeV)->default_value(1),"transverse momentum in GeV")
       ("B",po::value<double>(&BzInT)->default_value(2),"z-component of B-field in T")
       ("path",po::value<double>(&maxPathInM)->default_value(5),"maximum path length in m")
@@ -96,15 +97,25 @@ int main(int argc, char* argv[]) {
   CurvilinearParameters pars(optCov, pos, mom, +1, 0.);
 
   double totalPathLength = 0;
-  for (unsigned int i = 0; i < toys; ++i) {
-    auto r = propagator.propagate(pars, options).value();
-    ACTS_DEBUG("reached position (" << r.endParameters->position().x() << ", "
-                                    << r.endParameters->position().y() << ", "
-                                    << r.endParameters->position().z()
-                                    << ") in " << r.steps << " steps");
-    totalPathLength += r.pathLength;
-  }
+  size_t num_iters = 0;
+  const auto propagation_bench_result = Acts::Test::microBenchmark(
+      [&] {
+        auto r = propagator.propagate(pars, options).value();
+        if (totalPathLength == 0.) {
+          ACTS_DEBUG("reached position ("
+                     << r.endParameters->position().x() << ", "
+                     << r.endParameters->position().y() << ", "
+                     << r.endParameters->position().z() << ") in " << r.steps
+                     << " steps");
+        }
+        totalPathLength += r.pathLength;
+        ++num_iters;
+        return r;
+      },
+      1, toys);
 
-  ACTS_INFO("average path length = " << totalPathLength / toys / 1_mm << "mm");
+  ACTS_INFO("Execution stats: " << propagation_bench_result);
+  ACTS_INFO("average path length = " << totalPathLength / num_iters / 1_mm
+                                     << "mm");
   return 0;
 }
