@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/Interactions.hpp"
-#include "ActsFatras/Kernel/detail/RandomNumberDistributions.hpp"
+#include "ActsFatras/Kernel/LandauDistribution.hpp"
 
 namespace ActsFatras {
 
@@ -53,7 +53,7 @@ struct BetheBloch {
     }
 
     // Create a random landau distribution between in the intervall [0,1]
-    LandauDist landauDist = LandauDist(0., 1.);
+    LandauDistribution landauDist(0., 1.);
     double landau = landauDist(generator);
     double qop = particle.q() / particle.p();
 

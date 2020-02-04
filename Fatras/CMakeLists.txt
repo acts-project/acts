@@ -1,6 +1,6 @@
 add_library(
   ActsFatras SHARED
-  src/RandomNumberDistributions.cpp)
+  src/LandauDistribution.cpp)
 target_compile_features(
   ActsFatras
   PUBLIC cxx_std_17)
