@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include <random>
+
 #include "Acts/Material/Interactions.hpp"
-#include "ActsFatras/Kernel/detail/RandomNumberDistributions.hpp"
 
 namespace ActsFatras {
 
@@ -49,7 +50,7 @@ struct GeneralMixture {
 
     if (std::abs(particle.pdg()) != 11) {
       /// Uniform distribution, will be sampled with generator
-      UniformDist uniformDist = UniformDist(0., 1.);
+      std::uniform_real_distribution<double> uniformDist(0., 1.);
 
       //----------------------------------------------------------------------------
       // see Mixture models of multiple scattering: computation and simulation.
@@ -83,7 +84,7 @@ struct GeneralMixture {
       }
     } else {
       /// Gauss distribution, will be sampled with generator
-      GaussDist gaussDist = GaussDist(0., 1.);
+      std::normal_distribution<double> gaussDist(0., 1.);
 
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random

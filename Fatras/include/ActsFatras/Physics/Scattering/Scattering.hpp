@@ -9,10 +9,10 @@
 #pragma once
 
 #include <cmath>
+#include <random>
 
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsFatras/Kernel/detail/RandomNumberDistributions.hpp"
 
 namespace ActsFatras {
 
@@ -84,7 +84,7 @@ struct Scattering {
       in.scatter(in.p() * Acts::Vector3D(cphi * stheta, sphi * stheta, ctheta));
     } else {
       /// uniform distribution
-      UniformDist uniformDist = UniformDist(0., 1.);
+      std::uniform_real_distribution<double> uniformDist(0., 1.);
 
       // Create a random uniform distribution between in the intervall [0,1]
       double psi = 2. * M_PI * uniformDist(gen);
