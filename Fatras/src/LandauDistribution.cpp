@@ -1,23 +1,20 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#include "ActsFatras/Kernel/LandauDistribution.hpp"
 
-#include <cmath>
-#include <limits>
-
-static inline double landau_quantile(double z, double xi) {
+double ActsFatras::LandauDistribution::quantile(double z, double xi) {
   // LANDAU quantile : algorithm from CERNLIB G110 ranlan
   // with scale parameter xi
   // Converted by Rene Brun from CERNLIB routine ranlan(G110),
   // Moved and adapted to QuantFuncMathCore by B. List 29.4.2010
 
-  static double f[982] = {
+  static const double f[982] = {
       0,         0,         0,         0,         0,         -2.244733,
       -2.204365, -2.168163, -2.135219, -2.104898, -2.076740, -2.050397,
       -2.025605, -2.002150, -1.979866, -1.958612, -1.938275, -1.918760,
