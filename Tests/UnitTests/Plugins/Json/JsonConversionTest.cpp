@@ -26,13 +26,15 @@ namespace Test {
 BOOST_AUTO_TEST_CASE(Json_conversion) {
   std::stringstream ifj;
 
+  Acts::JsonGeometryConverter::Config cfg;
+
   ifj << "{";
   ifj << "    \"volumes\": {";
   ifj << "        \"2\": {";
-  ifj << "            \"geoid\": \"[   2 |   0 |   2 |   0 |    0 ]\",";
+  ifj << "            \"Geoid\": \"[   2 |   0 |   2 |   0 |    0 ]\",";
   ifj << "            \"layers\": {";
   ifj << "                \"2\": {";
-  ifj << "                    \"geoid\": \"[   2 |   0 |   2 |   0 |    0 ]\",";
+  ifj << "                    \"Geoid\": \"[   2 |   0 |   2 |   0 |    0 ]\",";
   ifj << "                    \"representing\": {";
   ifj << "                        \"bin0\": [";
   ifj << "                            \"binR\",";
@@ -67,7 +69,7 @@ BOOST_AUTO_TEST_CASE(Json_conversion) {
   ifj << "                    }";
   ifj << "                },";
   ifj << "                \"4\": {";
-  ifj << "                    \"geoid\": \"[   2 |   0 |   4 |   0 |    0 ]\",";
+  ifj << "                    \"Geoid\": \"[   2 |   0 |   4 |   0 |    0 ]\",";
   ifj << "                    \"representing\": {";
   ifj << "                        \"bin0\": [";
   ifj << "                            \"binR\",";
@@ -111,7 +113,6 @@ BOOST_AUTO_TEST_CASE(Json_conversion) {
   json jin;
   ifj >> jin;
 
-  Acts::JsonGeometryConverter::Config cfg;
   Acts::JsonGeometryConverter jmConverter(cfg);
 
   auto Map = jmConverter.jsonToMaterialMaps(jin);
