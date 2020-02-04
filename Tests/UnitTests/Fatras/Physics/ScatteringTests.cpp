@@ -19,8 +19,7 @@
 #include "ActsFatras/Physics/Scattering/Scattering.hpp"
 #include "Dataset.hpp"
 
-// TODO decrease this after removing computation round trip from particle
-static constexpr double eps = 1e-4;
+static constexpr double eps = 1e-10;
 
 BOOST_AUTO_TEST_SUITE(FatrasScattering)
 
@@ -37,9 +36,8 @@ BOOST_DATA_TEST_CASE(HighlandScattering, Dataset::particleParameters, phi,
   HighlandScattering scattering;
   const auto outgoing = scattering(gen, Dataset::thinSlab, after);
   // scattering leaves absolute energy/momentum unchanged
-  CHECK_CLOSE_REL(after.pT(), before.pT(), eps);
-  CHECK_CLOSE_REL(after.p(), before.p(), eps);
-  CHECK_CLOSE_REL(after.E(), before.E(), eps);
+  CHECK_CLOSE_REL(after.momentum(), before.momentum(), eps);
+  CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
   // scattering creates no new particles
   BOOST_TEST(outgoing.empty());
 }

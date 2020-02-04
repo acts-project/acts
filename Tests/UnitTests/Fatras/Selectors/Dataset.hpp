@@ -27,25 +27,29 @@ constexpr auto massElectron = 0.51099891_MeV;
 constexpr auto massMuon = 105.658367_MeV;
 constexpr auto massPion = 134.9766_MeV;
 
-ActsFatras::Particle centralElectron({0_mm, 0_mm, 0_mm},
-                                     {0_GeV, 1.5_GeV, 0_GeV}, massElectron,
-                                     -1_e, Acts::PdgParticle::eElectron);
-ActsFatras::Particle centralPositron({0_mm, 0_mm, 0_mm},
-                                     {0_GeV, 1.5_GeV, 0_GeV}, massElectron, 1_e,
-                                     Acts::PdgParticle::ePositron);
-ActsFatras::Particle centralMuon({0_mm, 0_mm, 0_mm}, {0_GeV, 1.5_GeV, 0_GeV},
-                                 massMuon, -1_e, Acts::PdgParticle::eMuon);
-ActsFatras::Particle centralAntiMuon({0_mm, 0_mm, 0_mm},
-                                     {0_GeV, 1.5_GeV, 0_GeV}, massMuon, 1_e,
-                                     Acts::PdgParticle::eAntiMuon);
-ActsFatras::Particle backwardPion({0_mm, 0_mm, -100_mm},
-                                  {10_MeV, 10_MeV, -1.5_GeV}, massPion, -1_e,
-                                  Acts::PdgParticle::ePionMinus);
-ActsFatras::Particle centralPion({0_mm, 0_mm, 0_mm}, {0_GeV, 1.5_GeV, 0_GeV},
-                                 massPion, -1_e, Acts::PdgParticle::ePionMinus);
-ActsFatras::Particle forwardPion({0_mm, 0_mm, 100_mm},
-                                 {10_MeV, 10_MeV, 1.5_GeV}, massPion, -1_e,
-                                 Acts::PdgParticle::ePionMinus);
+ActsFatras::Particle makeParticle(double z, double eta, Acts::PdgParticle pdg,
+                                  double m, double q) {
+  const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);
+  return ActsFatras::Particle(id, pdg, m, q)
+      .setPosition4(0.0, 0.0, z, 0.0)
+      .setDirection(1.0 / std::cosh(eta), 0.0, std::tanh(eta))
+      .setMomentum(1.5_GeV);
+}
+
+const auto centralElectron =
+    makeParticle(0_mm, 0.0, Acts::PdgParticle::eElectron, massElectron, -1_e);
+const auto centralPositron =
+    makeParticle(0_mm, 0.0, Acts::PdgParticle::ePositron, massElectron, 1_e);
+const auto centralMuon =
+    makeParticle(0_mm, 0.0, Acts::PdgParticle::eMuon, massMuon, -1_e);
+const auto centralAntiMuon =
+    makeParticle(0_mm, 0.0, Acts::PdgParticle::eAntiMuon, massMuon, 1_e);
+const auto backwardPion =
+    makeParticle(-100_mm, -4.5, Acts::PdgParticle::ePionMinus, massPion, -1_e);
+const auto centralPion =
+    makeParticle(0_mm, 0.0, Acts::PdgParticle::ePionMinus, massPion, -1_e);
+const auto forwardPion =
+    makeParticle(100_mm, 4.5, Acts::PdgParticle::ePionMinus, massPion, -1_e);
 
 }  // namespace
 }  // namespace Dataset
