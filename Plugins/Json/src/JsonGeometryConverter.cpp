@@ -26,10 +26,12 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include <Acts/Surfaces/CylinderBounds.hpp>
+#include <Acts/Surfaces/RadialBounds.hpp>
+#include <Acts/Surfaces/SurfaceBounds.hpp>
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-
-using json = nlohmann::json;
 
 Acts::JsonGeometryConverter::JsonGeometryConverter(
     const Acts::JsonGeometryConverter::Config& cfg)
@@ -74,8 +76,9 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
               boundaryID.setBoundary(bid);
               ACTS_VERBOSE("j2a: ---> Found boundary surface " << bid);
               auto boumat = jsonToSurfaceMaterial(bvalue);
-              maps.first[boundaryID] =
-                  std::shared_ptr<const ISurfaceMaterial>(boumat);
+              if(bvalue[m_cfg.mapkey]==true)
+                maps.first[boundaryID] =
+                    std::shared_ptr<const ISurfaceMaterial>(boumat);
             }
           } else if (vckey == m_cfg.laykey) {
             ACTS_VERBOSE("j2a: --> Layer(s) to be parsed");
@@ -93,8 +96,9 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                     not lcvalue.empty()) {
                   ACTS_VERBOSE("j2a: ----> Found representing surface");
                   auto repmat = jsonToSurfaceMaterial(lcvalue);
-                  maps.first[layerID] =
-                      std::shared_ptr<const Acts::ISurfaceMaterial>(repmat);
+                  if(lcvalue[m_cfg.mapkey]==true)
+                    maps.first[layerID] =
+                        std::shared_ptr<const Acts::ISurfaceMaterial>(repmat);
                 } else if (lckey == m_cfg.appkey and m_cfg.processApproaches and
                            not lcvalue.empty()) {
                   ACTS_VERBOSE("j2a: ----> Found approach surface(s)");
@@ -106,7 +110,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                     approachID.setApproach(aid);
                     ACTS_VERBOSE("j2a: -----> Approach surface " << askey);
                     auto appmat = jsonToSurfaceMaterial(asvalue);
-                    maps.first[approachID] =
+                    if(asvalue[m_cfg.mapkey]==true)
+                      maps.first[approachID] =
                         std::shared_ptr<const Acts::ISurfaceMaterial>(appmat);
                   }
                 } else if (lckey == m_cfg.senkey and m_cfg.processSensitives and
@@ -120,8 +125,9 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                     senisitiveID.setSensitive(sid);
                     ACTS_VERBOSE("j2a: -----> Sensitive surface " << sskey);
                     auto senmat = jsonToSurfaceMaterial(ssvalue);
-                    maps.first[senisitiveID] =
-                        std::shared_ptr<const Acts::ISurfaceMaterial>(senmat);
+                    if(ssvalue[m_cfg.mapkey]==true)
+                      maps.first[senisitiveID] =
+                          std::shared_ptr<const Acts::ISurfaceMaterial>(senmat);
                   }
                 }
               }
@@ -229,6 +235,10 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
           for (auto& [akey, avalue] : lvalue.approaches) {
             ACTS_VERBOSE("a2j: ------> Convert approach surface " << akey);
             approachesj[std::to_string(akey)] = surfaceMaterialToJson(*avalue);
+            if(lvalue.approacheSurfaces.find(akey)!=lvalue.approacheSurfaces.end())
+              addSurfaceToJson(approachesj[std::to_string(akey)],
+                              lvalue.approacheSurfaces.at(akey));
+
           }
           // Add to the layer json
           layj[m_cfg.appkey] = approachesj;
@@ -241,6 +251,9 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
           for (auto& [skey, svalue] : lvalue.sensitives) {
             ACTS_VERBOSE("a2j: ------> Convert sensitive surface " << skey);
             sensitivesj[std::to_string(skey)] = surfaceMaterialToJson(*svalue);
+            if(lvalue.sensitiveSurfaces.find(skey)!=lvalue.sensitiveSurfaces.end())
+              addSurfaceToJson(sensitivesj[std::to_string(skey)],
+                              lvalue.sensitiveSurfaces.at(skey));
           }
           // Add to the layer json
           layj[m_cfg.senkey] = sensitivesj;
@@ -249,6 +262,9 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
         if (lvalue.representing != nullptr and m_cfg.processRepresenting) {
           ACTS_VERBOSE("a2j: ------> Convert representing surface ");
           layj[m_cfg.repkey] = surfaceMaterialToJson(*lvalue.representing);
+          if(lvalue.representingSurface!=nullptr)
+            addSurfaceToJson(layj[m_cfg.repkey],
+                            lvalue.representingSurface);
         }
         layersj[std::to_string(lkey)] = layj;
       }
@@ -262,6 +278,9 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
       for (auto& [bkey, bvalue] : value.boundaries) {
         ACTS_VERBOSE("a2j: ----> Convert boundary " << bkey);
         boundariesj[std::to_string(bkey)] = surfaceMaterialToJson(*bvalue);
+        if(value.boundarySurfaces.find(bkey)!=value.boundarySurfaces.end())
+          addSurfaceToJson(boundariesj[std::to_string(bkey)],
+                          value.boundarySurfaces.at(bkey));
       }
       volj[m_cfg.boukey] = boundariesj;
     }
@@ -362,7 +381,17 @@ void Acts::JsonGeometryConverter::convertToRep(
       // Ignore if the volumeID is not correct (i.e. shared boundary)
       // if (boundaryID.value(Acts::GeometryID::volume_mask) == vid){
       volRep.boundaries[bid] = bssfRep.surfaceMaterial();
-      //}
+      volRep.boundarySurfaces[bid] = &bssfRep;
+      // }
+    }
+    else if(m_cfg.processnonmaterial == true){
+      // if no material suface exist add a default one for the mapping configuration
+      Acts::GeometryID boundaryID = bssfRep.geoID();
+      geo_id_value bid = boundaryID.boundary();
+      Acts::BinUtility bUtility = DefaultBin(bssfRep);
+      Acts::ISurfaceMaterial* bMaterial = new Acts::ProtoSurfaceMaterial(bUtility);
+      volRep.boundaries[bid] = bMaterial;
+      volRep.boundarySurfaces[bid] = &bssfRep;
     }
   }
   // Write if it's good
@@ -385,12 +414,32 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
         Acts::GeometryID sensitiveID = ssf->geoID();
         geo_id_value sid = sensitiveID.sensitive();
         layRep.sensitives.insert({sid, ssf->surfaceMaterial()});
+        layRep.sensitiveSurfaces.insert({sid, ssf});
+      }
+      else if(m_cfg.processnonmaterial == true){
+        // if no material suface exist add a default one for the mapping configuration
+        Acts::GeometryID sensitiveID = ssf->geoID();
+        geo_id_value sid = sensitiveID.sensitive();
+        Acts::BinUtility sUtility = DefaultBin(*ssf);
+        Acts::ISurfaceMaterial* sMaterial = new Acts::ProtoSurfaceMaterial(sUtility);
+        layRep.sensitives.insert({sid, sMaterial});
+        layRep.sensitiveSurfaces.insert({sid, ssf});
       }
     }
   }
   // the representing
-  if (tLayer.surfaceRepresentation().surfaceMaterial() != nullptr) {
-    layRep.representing = tLayer.surfaceRepresentation().surfaceMaterial();
+  if(!(tLayer.surfaceRepresentation().geoID() == GeometryID())){
+    if (tLayer.surfaceRepresentation().surfaceMaterial() != nullptr) {
+      layRep.representing = tLayer.surfaceRepresentation().surfaceMaterial();
+      layRep.representingSurface = &tLayer.surfaceRepresentation();
+    }
+    else if(m_cfg.processnonmaterial == true){
+      // if no material suface exist add a default one for the mapping configuration
+      Acts::BinUtility rUtility = DefaultBin(tLayer.surfaceRepresentation());
+      Acts::ISurfaceMaterial* rMaterial = new Acts::ProtoSurfaceMaterial(rUtility);
+      layRep.representing = rMaterial;
+      layRep.representingSurface = &tLayer.surfaceRepresentation();
+    }
   }
   // the approach
   if (tLayer.approachDescriptor() != nullptr) {
@@ -400,6 +449,16 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
         Acts::GeometryID approachID = asf->geoID();
         geo_id_value aid = approachID.approach();
         layRep.approaches.insert({aid, asf->surfaceMaterial()});
+        layRep.approacheSurfaces.insert({aid, asf});
+      }
+      else if(m_cfg.processnonmaterial == true){
+        // if no material suface exist add a default one for the mapping configuration
+        Acts::GeometryID approachID = asf->geoID();
+        geo_id_value aid = approachID.approach();
+        Acts::BinUtility aUtility = DefaultBin(*asf);
+        Acts::ISurfaceMaterial* aMaterial = new Acts::ProtoSurfaceMaterial(aUtility);
+        layRep.approaches.insert({aid, aMaterial});
+        layRep.approacheSurfaces.insert({aid, asf});
       }
     }
   }
@@ -432,6 +491,8 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
   if (psMaterial != nullptr) {
     // Type is proto material
     smj[m_cfg.typekey] = "proto";
+    // by default the protoMaterial is not used for mapping
+    smj[m_cfg.mapkey] = false;
     bUtility = &(psMaterial->binUtility());
   } else {
     // Now check if we have a homogeneous material
@@ -440,6 +501,7 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
     if (hsMaterial != nullptr) {
       // type is homogeneous
       smj[m_cfg.typekey] = "homogeneous";
+      smj[m_cfg.mapkey] = true;
       if (m_cfg.writeData) {
         // write out the data, it's a [[[X0,L0,Z,A,rho,thickness]]]
         auto& mp = hsMaterial->materialProperties(0, 0);
@@ -454,6 +516,7 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       if (bsMaterial != nullptr) {
         // type is binned
         smj[m_cfg.typekey] = "binned";
+        smj[m_cfg.mapkey] = true;
         bUtility = &(bsMaterial->binUtility());
         // convert the data
         // get the material matrix
@@ -490,6 +553,9 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
         binj.push_back("open");
       }
       binj.push_back(cbData.bins());
+      // If protoMaterial has a non uniform binning (non default) then it is used
+      // by default in the mapping
+      if(smj[m_cfg.typekey] == "proto" && cbData.bins()>1)     smj[m_cfg.mapkey] = true;
       // If it's not a proto map, write min / max
       if (smj[m_cfg.typekey] != "proto") {
         std::pair<double, double> minMax = {cbData.min, cbData.max};
@@ -498,9 +564,36 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       smj[binkeys[ibin]] = binj;
     }
   }
-
   return smj;
 }
+
+void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson, const Surface* surface){
+  // Get the ID of the surface (redundant but help readability)
+  std::ostringstream SurfaceID;
+  SurfaceID << surface->geoID();
+  sjson[m_cfg.surfacegeoidkey]=SurfaceID.str();
+
+  // Cast the surface bound to both disk and cylinder
+  const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
+  auto  sTransform = surface->transform(GeometryContext());
+
+  const Acts::RadialBounds* radialBounds
+   = dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
+  const Acts::CylinderBounds* cylinderBounds
+    = dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
+
+  if (radialBounds) {
+    sjson[m_cfg.surfacetypekey] = "Disk";
+    sjson[m_cfg.surfacepositionkey] = sTransform.translation().z();
+    sjson[m_cfg.surfacerangekey] = { radialBounds->rMin(), radialBounds->rMax() };
+  }
+  if (cylinderBounds) {
+    sjson[m_cfg.surfacetypekey] = "Cylinder";
+    sjson[m_cfg.surfacepositionkey] = cylinderBounds->r();
+    sjson[m_cfg.surfacerangekey] = { -1*cylinderBounds->halflengthZ(), cylinderBounds->halflengthZ() };
+  }
+}
+
 
 /// Create the Material Matrix
 Acts::MaterialPropertiesMatrix
@@ -539,4 +632,26 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
     max = bin[3][1];
   }
   return Acts::BinUtility(bins, min, max, bopt, bval);
+}
+
+Acts::BinUtility
+Acts::JsonGeometryConverter::DefaultBin(const Acts::Surface& surface)
+{
+  Acts::BinUtility bUtility;
+
+  const Acts::SurfaceBounds& surfaceBounds = surface.bounds();
+  const Acts::RadialBounds* radialBounds
+    = dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
+  const Acts::CylinderBounds* cylinderBounds
+    = dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
+
+  if (radialBounds) {
+    bUtility += BinUtility(1,-1*M_PI, M_PI, Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(1,radialBounds->rMin(), radialBounds->rMax(), Acts::open, Acts::binR);
+  }
+  if (cylinderBounds) {
+    bUtility += BinUtility(1,-1*M_PI, M_PI, Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(1,-1*cylinderBounds->halflengthZ(), cylinderBounds->halflengthZ(), Acts::open, Acts::binZ);
+  }
+  return bUtility;
 }
