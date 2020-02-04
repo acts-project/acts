@@ -9,206 +9,188 @@
 #pragma once
 
 #include <cmath>
+#include <limits>
 
-#include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
 namespace ActsFatras {
-
-/// Typedef the pdg code
-typedef int pdg_type;
-
-/// Typedef the process code
-typedef unsigned int process_code;
-
-/// Typedef barcode
-typedef unsigned int barcode_type;
 
 /// Simulation particle information and kinematic state.
 class Particle {
  public:
-  /// Default
+  using Scalar = double;
+  using Vector3 = Acts::ActsVector<Scalar, 3>;
+  using Vector4 = Acts::ActsVector<Scalar, 4>;
+
+  /// Construct a default particle with invalid identity.
   Particle() = default;
-
-  /// @brief Construct a particle consistently
+  /// Construct a particle at rest with explicit mass and charge.
   ///
-  /// @param pposition The particle position at construction
-  /// @param pmomentum The particle momentum at construction
-  /// @param pm The particle mass
-  /// @param pq The partilce charge
-  /// @param pbarcode The particle barcode
-  Particle(const Acts::Vector3D &position, const Acts::Vector3D &momentum,
-           double m, double q, pdg_type pdg = 0, barcode_type barcode = 0,
-           double startTime = 0.)
-      : m_position(position),
-        m_momentum(momentum),
-        m_m(m),
-        m_q(q),
-        m_p(momentum.norm()),
-        m_pT(Acts::VectorHelpers::perp(momentum)),
-        m_pdg(pdg),
-        m_barcode(barcode),
-        m_timeStamp(startTime) {
-    m_E = std::sqrt(m_p * m_p + m_m * m_m);
-    m_beta = (m_p / m_E);
-    m_gamma = (m_E / m_m);
+  /// @param id     Encoded identifier within an event
+  /// @param pdg    PDG particle number
+  /// @param mass   Particle mass in native units
+  /// @param charge Particle charge in native units
+  ///
+  /// @warning It is the users responsibility that charge and mass match
+  ///          the PDG particle number.
+  Particle(Barcode id, Acts::PdgParticle pdg, Scalar mass, Scalar charge)
+      : m_id(id), m_pdg(pdg), m_charge(charge), m_mass(mass) {}
+  Particle(const Particle &) = default;
+  Particle(Particle &&) = default;
+  Particle &operator=(const Particle &) = default;
+  Particle &operator=(Particle &&) = default;
+
+  /// Set the space-time position four-vector.
+  Particle &setPosition4(const Vector4 &pos4) {
+    m_position4 = pos4;
+    return *this;
   }
-
-  /// @brief Set the limits
-  ///
-  /// @param x0Limit the limit in X0 to be passed
-  /// @param l0Limit the limit in L0 to be passed
-  /// @param timeLimit the readout time limit to be passed
-  void setLimits(double x0Limit, double l0Limit,
-                 double timeLimit = std::numeric_limits<double>::max()) {
-    m_limitInX0 = x0Limit;
-    m_limitInL0 = l0Limit;
-    m_timeLimit = timeLimit;
+  /// Set the space-time position four-vector from three-position and time.
+  Particle &setPosition4(const Vector3 &position, Scalar time) {
+    m_position4.head<3>() = position;
+    m_position4[3] = time;
+    return *this;
   }
-
-  /// @brief Update the particle with applying energy loss
-  ///
-  /// @param deltaE is the energy loss to be applied
-  void scatter(Acts::Vector3D nmomentum) {
-    m_momentum = std::move(nmomentum);
-    m_pT = Acts::VectorHelpers::perp(m_momentum);
+  /// Set the space-time position four-vector from scalar components.
+  Particle &setPosition4(Scalar x, Scalar y, Scalar z, Scalar time) {
+    m_position4[0] = x;
+    m_position4[1] = y;
+    m_position4[2] = z;
+    m_position4[3] = time;
+    return *this;
   }
-
-  /// @brief Update the particle with applying energy loss
-  ///
-  /// @param deltaE is the energy loss to be applied
-  void energyLoss(double deltaE) {
-    // particle falls to rest
-    if (m_E - deltaE < m_m) {
-      m_E = m_m;
-      m_p = 0.;
-      m_pT = 0.;
-      m_beta = 0.;
-      m_gamma = 1.;
-      m_momentum = Acts::Vector3D(0., 0., 0.);
-      m_alive = false;
-    }
-    // updatet the parameters
-    m_E -= deltaE;
-    m_p = std::sqrt(m_E * m_E - m_m * m_m);
-    m_momentum = m_p * m_momentum.normalized();
-    m_pT = Acts::VectorHelpers::perp(m_momentum);
-    m_beta = (m_p / m_E);
-    m_gamma = (m_E / m_m);
+  /// Set the direction three-vector
+  Particle &setDirection(const Vector3 &direction) {
+    m_direction = direction;
+    m_direction.normalize();
+    return *this;
   }
-
-  /// @brief Update the particle with a new position and momentum,
-  /// this corresponds to a step update
-  ///
-  /// @param position New position after update
-  /// @param momentum New momentum after update
-  /// @param deltaPathX0 passed since last step
-  /// @param deltaPathL0 passed since last step
-  /// @param deltaTime The time elapsed
-  ///
-  /// @return break condition
-  bool update(const Acts::Vector3D &position, const Acts::Vector3D &momentum,
-              double deltaPahtX0 = 0., double deltaPahtL0 = 0.,
-              double deltaTime = 0.) {
-    m_position = position;
+  /// Set the direction three-vector from scalar components.
+  Particle &setDirection(Scalar dx, Scalar dy, Scalar dz) {
+    m_direction[0] = dx;
+    m_direction[1] = dy;
+    m_direction[2] = dz;
+    m_direction.normalize();
+    return *this;
+  }
+  /// Set the absolute momentum.
+  Particle &setMomentum(Scalar momentum) {
     m_momentum = momentum;
-    m_p = momentum.norm();
-    if (m_p) {
-      m_pT = Acts::VectorHelpers::perp(momentum);
-      m_E = std::sqrt(m_p * m_p + m_m * m_m);
-      m_timeStamp += deltaTime;
-      m_beta = (m_p / m_E);
-      m_gamma = (m_E / m_m);
-
-      // set parameters and check limits
-      m_pathInX0 += deltaPahtX0;
-      m_pathInL0 += deltaPahtL0;
-      m_timeStamp += deltaTime;
-      if (m_pathInX0 >= m_limitInX0 || m_pathInL0 >= m_limitInL0 ||
-          m_timeStamp > m_timeLimit) {
-        m_alive = false;
-      }
+    return *this;
+  }
+  /// Change the energy by the given amount.
+  ///
+  /// Energy loss corresponds to a negative change. If the updated energy
+  /// would result in an unphysical value, the particle is put to rest, i.e.
+  /// its absolute momentum is set to zero.
+  Particle &correctEnergy(Scalar delta) {
+    const auto newEnergy = std::hypot(m_mass, m_momentum) + delta;
+    if (newEnergy <= m_mass) {
+      m_momentum = Scalar(0);
+    } else {
+      m_momentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
     }
-    return !m_alive;
+    return *this;
   }
 
-  /// @brief Access methods: position
-  const Acts::Vector3D &position() const { return m_position; }
+  /// Encoded particle identifier within an event.
+  Barcode id() const { return m_id; }
+  /// PDG particle number that identifies the type.
+  Acts::PdgParticle pdg() const { return m_pdg; }
+  /// Particle charge.
+  Scalar charge() const { return m_charge; }
+  /// Particle mass.
+  Scalar mass() const { return m_mass; }
 
-  /// @brief Access methods: momentum
-  const Acts::Vector3D &momentum() const { return m_momentum; }
+  /// Space-time position four-vector.
+  const Vector4 &position4() const { return m_position4; }
+  /// Three-position, i.e. spatial coordinates without the time.
+  auto position() const { return m_position4.head<3>(); }
+  /// Time coordinate.
+  Scalar time() const { return m_position4[3]; }
+  /// Energy-momentum four-vector.
+  Vector4 momentum4() const {
+    Vector4 mom4;
+    // stored direction is always normalized
+    mom4[0] = m_momentum * m_direction[0];
+    mom4[1] = m_momentum * m_direction[1];
+    mom4[2] = m_momentum * m_direction[2];
+    mom4[3] = energy();
+    return mom4;
+  }
+  /// Three-direction, i.e. the normalized momentum three-vector.
+  const Vector3 &direction() const { return m_direction; }
+  /// Absolute momentum.
+  Scalar momentum() const { return m_momentum; }
+  /// Total energy, i.e. norm of the four-momentum.
+  Scalar energy() const { return std::hypot(m_mass, m_momentum); }
 
-  /// @brief Access methods: p
-  double p() const { return m_p; }
+  /// Charge over absolute momentum.
+  Scalar chargeOverMomentum() const { return m_charge / m_momentum; }
+  /// Relativistic velocity.
+  Scalar beta() const { return m_momentum / energy(); }
+  /// Relativistic gamma factor.
+  Scalar gamma() const { return std::hypot(1, m_momentum / m_mass); }
 
-  /// @brief Access methods: pT
-  double pT() const { return m_pT; }
+  /// Check if the particle is alive, i.e. is not at rest.
+  operator bool() const { return Scalar(0) < m_momentum; }
+  /// Check if the particle is dead, i.e is at rest.
+  bool operator!() const { return m_momentum <= Scalar(0); }
 
-  /// @brief Access methods: E
-  double E() const { return m_E; }
-
-  /// @brief Access methods: m
-  double m() const { return m_m; }
-
-  /// @brief Access methods: beta
-  double beta() const { return m_beta; }
-
-  /// @brief Access methods: gamma
-  double gamma() const { return m_gamma; }
-
-  /// @brief Access methods: charge
-  double q() const { return m_q; }
-
-  /// @brief Access methods: pdg code
-  pdg_type pdg() const { return m_pdg; }
-
-  /// @brief Access methods: barcode
-  barcode_type barcode() const { return m_barcode; }
-
-  /// @brief Access methods: path/X0
-  double pathInX0() const { return m_pathInX0; }
-
-  /// @brief Access methods: limit/X0
-  double limitInX0() const { return m_limitInX0; }
-
-  /// @brief Access methods: pdg code
-  double pathInL0() const { return m_limitInX0; }
-
-  /// @brief Access methods: barcode
-  double limitInL0() const { return m_limitInL0; }
-
-  /// @brief boolean operator indicating the particle to be alive
-  operator bool() { return m_alive; }
+  /// Register material that the particle has passed.
+  ///
+  /// @param thicknessX0 material thickness measured in radiation lengths
+  /// @param thicknessL0 material thickness measured in interaction lengths
+  Particle &addPassedMaterial(Scalar thicknessX0, Scalar thicknessL0) {
+    m_pathX0 += thicknessX0;
+    m_pathL0 += thicknessL0;
+    return *this;
+  }
+  /// Set the material limits.
+  ///
+  /// @param limitX0 maximum radiation lengths the particle can pass
+  /// @param limitL0 maximum interaction lengths the particle can pass
+  Particle &setMaterialLimits(Scalar limitX0, Scalar limitL0) {
+    m_limitX0 = limitX0;
+    m_limitL0 = limitL0;
+    return *this;
+  }
+  /// The passed material measured in radiation lengths.
+  Scalar pathInX0() const { return m_pathX0; }
+  /// The passed material measured in interaction lengths.
+  Scalar pathInL0() const { return m_pathL0; }
+  /// The maximum radation length the particle is allowed to pass.
+  Scalar pathLimitX0() const { return m_limitX0; }
+  /// The maximum interaction length the particle is allowed to pass.
+  Scalar pathLimitL0() const { return m_limitL0; }
 
  private:
-  Acts::Vector3D m_position = Acts::Vector3D(0., 0., 0.);  //!< kinematic info
-  Acts::Vector3D m_momentum = Acts::Vector3D(0., 0., 0.);  //!< kinematic info
-
-  double m_m = 0.;             //!< particle mass
-  double m_E = 0.;             //!< total energy
-  double m_q = 0.;             //!< the charge
-  double m_beta = 0.;          //!< relativistic beta factor
-  double m_gamma = 1.;         //!< relativistic gamma factor
-  double m_p = 0.;             //!< momentum magnitude
-  double m_pT = 0.;            //!< transverse momentum magnitude
-  pdg_type m_pdg = 0;          //!< pdg code of the particle
-  barcode_type m_barcode = 0;  //!< barcode of the particle
-
-  double m_pathInX0 = 0.;  //!< passed path in X0
-  double m_limitInX0 =
-      std::numeric_limits<double>::max();  //!< path limit in X0
-
-  double m_pathInL0 = 0.;  //!< passed path in L0
-  double m_limitInL0 =
-      std::numeric_limits<double>::max();  //!< path limit in X0
-
-  double m_timeStamp = 0.;  //!< passed time elapsed
-  double m_timeLimit = std::numeric_limits<double>::max();  // time limit
-
-  bool m_alive = true;  //!< the particle is alive
+  // identity, i.e. things that do not change over the particle lifetime.
+  /// Particle identifier within the event.
+  Barcode m_id;
+  /// PDG particle number.
+  Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
+  // Particle charge and mass.
+  Scalar m_charge = Scalar(0);
+  Scalar m_mass = Scalar(0);
+  // kinematics, i.e. things that change over the particle lifetime.
+  Vector3 m_direction = Vector3::UnitZ();
+  Scalar m_momentum = Scalar(0);
+  Vector4 m_position4 = Vector4::Zero();
+  // simulation-specific X0/L0 information and limits
+  // these values are here to simplify the simulation of (nuclear) interactions.
+  // instead of checking at every surface whether an interaction should occur we
+  // can draw an overall limit once. the relevant interaction only needs to
+  // be executed once the limit is reached.
+  // this information is not really particle-specific and should probably be
+  // handled separately. for now, storing it directly here is the simplest
+  // solution.
+  Scalar m_pathX0 = Scalar(0);
+  Scalar m_pathL0 = Scalar(0);
+  Scalar m_limitX0 = std::numeric_limits<Scalar>::max();
+  Scalar m_limitL0 = std::numeric_limits<Scalar>::max();
 };
 
 }  // namespace ActsFatras
