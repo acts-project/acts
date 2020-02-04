@@ -228,10 +228,10 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
     //     [          A                                 A                    ]
     //
     // where
-    //        2                                          2 2
-    // A = O_x  + 2*O_x*rStrip*cos(dPhi - phiStrip) + O_y  -
-    // 2*O_y*rStrip*sin(dPhi - phiStrip) + rStrip B = cos(dPhi - phiStrip) C =
-    // -sin(dPhi - phiStrip)
+    //        2                                          2                                             2
+    // A = O_x  + 2*O_x*rStrip*cos(dPhi - phiStrip) + O_y  - 2*O_y*rStrip*sin(dPhi - phiStrip) + rStrip
+    // B = cos(dPhi - phiStrip)
+    // C = -sin(dPhi - phiStrip)
 
     double cosDPhiPhiStrip = std::cos(dphi - phi_strip);
     double sinDPhiPhiStrip = std::sin(dphi - phi_strip);
