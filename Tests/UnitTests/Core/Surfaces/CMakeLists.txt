@@ -1,4 +1,5 @@
 add_unittest(BoundaryCheckTests BoundaryCheckTests.cpp)
+add_unittest(AnnulusBoundsTests AnnulusBoundsTests.cpp)
 add_unittest(ConeBoundsTests ConeBoundsTests.cpp)
 add_unittest(ConeSurfaceTests ConeSurfaceTests.cpp)
 add_unittest(ConvexPolygonBoundsTest ConvexPolygonBoundsTest.cpp)

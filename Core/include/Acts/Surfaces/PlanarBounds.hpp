@@ -16,10 +16,9 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 namespace Acts {
 
-/// forward declare rectangle bounds as boundary box
+/// Forward declare rectangle bounds as boundary box
 class RectangleBounds;
 
-///
 /// @class PlanarBounds
 ///
 /// common base class for all bounds that are in a local x/y cartesian frame

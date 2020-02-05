@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
@@ -96,6 +97,7 @@ void ProtoLayer::measure(const GeometryContext& gctx,
 
     const CylinderSurface* cylSurface =
         dynamic_cast<const CylinderSurface*>(sf);
+
     if (pBounds != nullptr) {
       const auto& sTransform = sf->transform(gctx);
 
@@ -183,9 +185,12 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       envPhi = {dPhi, dPhi};
 
     } else {
-      // check for cylinder bounds
       const CylinderBounds* cBounds =
           dynamic_cast<const CylinderBounds*>(&(sf->bounds()));
+
+      const AnnulusBounds* aBounds =
+          dynamic_cast<const AnnulusBounds*>(&(sf->bounds()));
+
       if (cBounds != nullptr) {
         double r = cBounds->r();
         double z = sf->center(gctx).z();
@@ -207,6 +212,23 @@ void ProtoLayer::measure(const GeometryContext& gctx,
 
         maxPhi = phi + hPhi;
         minPhi = phi - hPhi;
+
+      } else if (aBounds != nullptr) {
+        minR = aBounds->rMin();
+        maxR = aBounds->rMax();
+        double z = sf->center(gctx).z();
+
+        maxX = maxR;
+        minX = -maxR;
+
+        maxY = maxR;
+        minY = -maxR;
+
+        maxZ = z + 0.5 * thickness;
+        minZ = z - 0.5 * thickness;
+
+        maxPhi = aBounds->phiMin();
+        minPhi = aBounds->phiMax();
 
       } else {
         throw std::domain_error(

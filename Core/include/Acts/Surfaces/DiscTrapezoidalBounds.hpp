@@ -115,6 +115,12 @@ class DiscTrapezoidalBounds : public DiscBounds {
   /// given the a tolerance
   bool insideRadialBounds(double R, double tolerance = 0.) const final;
 
+  /// Return a reference radius for binning
+  double binningValueR() const final;
+
+  /// Return a reference phi for binning
+  double binningValuePhi() const final;
+
  private:
   double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
@@ -181,6 +187,14 @@ inline bool DiscTrapezoidalBounds::coversFullAzimuth() const {
 inline bool DiscTrapezoidalBounds::insideRadialBounds(double R,
                                                       double tolerance) const {
   return (R + tolerance > m_rMin and R - tolerance < m_rMax);
+}
+
+inline double DiscTrapezoidalBounds::binningValueR() const {
+  return 0.5 * (m_rMin + m_rMax);
+}
+
+inline double DiscTrapezoidalBounds::binningValuePhi() const {
+  return m_avgPhi;
 }
 
 }  // namespace Acts

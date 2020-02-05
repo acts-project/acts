@@ -296,6 +296,17 @@ class DiscSurface : public Surface {
       const Vector3D& direction,
       const BoundaryCheck& bcheck = false) const final;
 
+  /// Implement the binningValue
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param bValue is the dobule in which you want to bin
+  ///
+  /// @note This calls the parent method except for binR
+  ///
+  /// @return float to be used for the binning schema
+  double binningPositionValue(const GeometryContext& gctx,
+                              BinningValue bValue) const final;
+
   /// Return properly formatted class name for screen output
   std::string name() const override;
 

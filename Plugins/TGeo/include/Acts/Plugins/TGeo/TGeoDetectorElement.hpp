@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,8 +30,7 @@ class DigitizationModule;
 ///
 /// @todo what if shape conversion failes? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
-/// what
-/// if not used with DD4hep?
+/// what if not used with DD4hep?
 ///
 class TGeoDetectorElement : public IdentifiedDetectorElement {
  public:
