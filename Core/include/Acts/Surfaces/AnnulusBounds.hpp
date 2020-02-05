@@ -22,6 +22,13 @@ namespace Acts {
 /// @brief Class that implements a (potentially asymmetric) bounds with
 /// difference between surface bound center and surface coordinate center
 ///
+/// These bounds combine two different systems:
+///  * module system : radial bounds centred on the moduleOrigin
+///  * strip system : phi bounds centred on the stripOrigin
+///
+/// The measurement will be done in the strip system, with r/phi local
+/// coordinates.
+///
 class AnnulusBounds : public DiscBounds {
  public:
   using Transform2D = Eigen::Affine2d;
