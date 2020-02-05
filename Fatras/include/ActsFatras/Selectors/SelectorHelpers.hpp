@@ -19,8 +19,8 @@ template <typename cast_t>
 struct Min {
   double valMin = 0.;
 
-  template <typename detector_t, typename T>
-  bool operator()(const detector_t &, const T &thing) const {
+  template <typename T>
+  bool operator()(const T &thing) const {
     return (valMin <= cast_t()(thing));
   }
 };
@@ -30,8 +30,8 @@ template <typename cast_t>
 struct Max {
   double valMax = std::numeric_limits<double>::max();
 
-  template <typename detector_t, typename T>
-  bool operator()(const detector_t &, const T &thing) const {
+  template <typename T>
+  bool operator()(const T &thing) const {
     return (cast_t()(thing) < valMax);
   }
 };
@@ -44,8 +44,8 @@ struct Range {
   double valMin = std::numeric_limits<double>::lowest();
   double valMax = std::numeric_limits<double>::max();
 
-  template <typename detector_t, typename T>
-  bool operator()(const detector_t &, const T &thing) const {
+  template <typename T>
+  bool operator()(const T &thing) const {
     const auto val = cast_t()(thing);
     return ((valMin <= val) and (val < valMax));
   }

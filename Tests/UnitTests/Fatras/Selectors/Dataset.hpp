@@ -8,8 +8,6 @@
 
 #include <boost/test/data/test_case.hpp>
 
-#include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -17,8 +15,6 @@
 namespace Dataset {
 
 using namespace Acts::UnitLiterals;
-
-const auto detector = Acts::Test::makePercentSlab();
 
 ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double z, double eta) {
   const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);

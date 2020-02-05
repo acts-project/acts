@@ -19,8 +19,7 @@ namespace ActsFatras {
 /// Particle and Antiparticle are treated as two separate types.
 template <int Pdg>
 struct PdgSelector {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (static_cast<int>(particle.pdg()) == Pdg);
   }
 };
@@ -28,8 +27,7 @@ struct PdgSelector {
 /// Select particles and antiparticles of one specific type.
 template <int Pdg>
 struct AbsPdgSelector {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (std::abs(static_cast<int>(particle.pdg())) == std::abs(Pdg));
   }
 };
@@ -39,8 +37,7 @@ struct AbsPdgSelector {
 /// Particle and Antiparticle are treated as two separate types.
 template <int Pdg>
 struct PdgExcluder {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (static_cast<int>(particle.pdg()) != Pdg);
   }
 };
@@ -48,8 +45,7 @@ struct PdgExcluder {
 /// Select all particles except for (anti-)particles of one specific type.
 template <int Pdg>
 struct AbsPdgExcluder {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (std::abs(static_cast<int>(particle.pdg())) != std::abs(Pdg));
   }
 };
