@@ -75,14 +75,14 @@ class LandauDistribution {
 
   /// Generate a random number from the configured Landau distribution.
   template <typename Generator>
-  result_type operator()(Generator &engine) {
-    return (*this)(engine, m_cfg);
+  result_type operator()(Generator &generator) {
+    return (*this)(generator, m_cfg);
   }
   /// Generate a random number from the given Landau distribution.
   template <typename Generator>
-  result_type operator()(Generator &engine, const param_type &params) {
-    double x = std::generate_canonical<double, 10>(engine);
-    return params.location + quantile(x, params.scale);
+  result_type operator()(Generator &generator, const param_type &params) {
+    const auto z = std::uniform_real_distribution<double>()(generator);
+    return params.location + params.scale * quantile(z);
   }
 
   /// Provide standard comparison operators
@@ -98,7 +98,7 @@ class LandauDistribution {
  private:
   param_type m_cfg;
 
-  static double quantile(double z, double xi);
+  static double quantile(double z);
 };
 
 }  // namespace ActsFatras
