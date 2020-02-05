@@ -19,6 +19,19 @@ static constexpr double eps = 1e-10;
 
 BOOST_AUTO_TEST_SUITE(FatrasKinematicCasts)
 
+BOOST_AUTO_TEST_CASE(BackwardParticle) {
+  const auto& particle = Dataset::backwardPion;
+
+  CHECK_SMALL(Vrho()(particle), eps);
+  CHECK_CLOSE_REL(Vz()(particle), -100_mm, eps);
+  CHECK_CLOSE_REL(AbsVz()(particle), 100_mm, eps);
+  CHECK_CLOSE_REL(Eta()(particle), -4.5, eps);
+  CHECK_CLOSE_REL(AbsEta()(particle), 4.5, eps);
+  CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV / std::cosh(4.5), eps);
+  CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
+}
+
 BOOST_AUTO_TEST_CASE(CentralParticle) {
   const auto& particle = Dataset::centralPion;
 
@@ -29,7 +42,7 @@ BOOST_AUTO_TEST_CASE(CentralParticle) {
   CHECK_SMALL(AbsEta()(particle), eps);
   CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV, eps);
   CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
-  // TODO energy
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
 }
 
 BOOST_AUTO_TEST_CASE(ForwardParticle) {
@@ -38,12 +51,11 @@ BOOST_AUTO_TEST_CASE(ForwardParticle) {
   CHECK_SMALL(Vrho()(particle), eps);
   CHECK_CLOSE_REL(Vz()(particle), 100_mm, eps);
   CHECK_CLOSE_REL(AbsVz()(particle), 100_mm, eps);
-  // TODO use value comparisons instead of relative checks
-  BOOST_TEST(4.0 < Eta()(particle));
-  BOOST_TEST(4.0 < AbsEta()(particle));
-  BOOST_TEST(10_MeV < Pt()(particle));
-  BOOST_TEST(1.5_GeV < P()(particle));
-  // TODO energy
+  CHECK_CLOSE_REL(Eta()(particle), 4.5, eps);
+  CHECK_CLOSE_REL(AbsEta()(particle), 4.5, eps);
+  CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV / std::cosh(4.5), eps);
+  CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
