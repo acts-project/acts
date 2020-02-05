@@ -10,49 +10,44 @@
 
 #include <climits>
 
+#include "ActsFatras/EventData/Particle.hpp"
+
 namespace ActsFatras {
 
-// static selectors
+/// Select all objects with an extracted value equal or larger than the cut.
 template <typename cast_t>
 struct Min {
-  cast_t cast;
   double valMin = 0.;
 
-  /// Return true for all particles with transverse momentum
-  /// bigger than the specified minimum value
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &, const particle_t &particle) const {
-    double val = cast(particle);
-    return (val >= valMin);
+  template <typename detector_t, typename T>
+  bool operator()(const detector_t &, const T &thing) const {
+    return (valMin <= cast_t()(thing));
   }
 };
 
+/// Select all objects with an extracted value below the cut.
 template <typename cast_t>
 struct Max {
-  cast_t cast;
   double valMax = std::numeric_limits<double>::max();
 
-  /// Return true for all particles with transverse momentum
-  /// bigger than the specified minimum value
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &, const particle_t &particle) const {
-    double val = cast(particle);
-    return (val <= valMax);
+  template <typename detector_t, typename T>
+  bool operator()(const detector_t &, const T &thing) const {
+    return (cast_t()(thing) < valMax);
   }
 };
 
+/// Select all objects with an extracted value within the range.
+///
+/// The range is defined as the left, half-open interval within the cuts.
 template <typename cast_t>
 struct Range {
-  cast_t cast;
-  double valMin = 0.;
+  double valMin = std::numeric_limits<double>::lowest();
   double valMax = std::numeric_limits<double>::max();
 
-  /// Return true for all particles with transverse momentum
-  /// within the specified range
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &, const particle_t &particle) const {
-    double val = cast(particle);
-    return (val >= valMin && val <= valMax);
+  template <typename detector_t, typename T>
+  bool operator()(const detector_t &, const T &thing) const {
+    const auto val = cast_t()(thing);
+    return ((valMin <= val) and (val < valMax));
   }
 };
 
