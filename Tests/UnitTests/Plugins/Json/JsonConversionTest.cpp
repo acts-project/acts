@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(Json_conversion) {
   ifj << "    \"volumes\": {";
   ifj << "        \"2\": {";
   ifj << "            \"Geoid\": \"[   2 |   0 |   2 |   0 |    0 ]\",";
-  ifj << "            \"Name\": \"\"";
+  ifj << "            \"Name\": \"\",";
   ifj << "            \"layers\": {";
   ifj << "                \"2\": {";
   ifj << "                    \"Geoid\": \"[   2 |   0 |   2 |   0 |    0 ]\",";
@@ -106,8 +106,7 @@ BOOST_AUTO_TEST_CASE(Json_conversion) {
   ifj << "                        \"type\": \"binned\"";
   ifj << "                    }";
   ifj << "                }";
-  ifj << "                ";
-  ifj << "            },";
+  ifj << "            }";
   ifj << "        }";
   ifj << "    }";
   ifj << "}";
