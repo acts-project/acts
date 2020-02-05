@@ -10,53 +10,56 @@
 
 #include <cmath>
 #include <random>
+#include <vector>
 
+#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
 
-/// @class Scatterering
+/// Simulate (multiple) scattering using a configurable scattering model.
 ///
-/// This is the (multiple) scattering plugin to the
-/// Physics list. It needs a scattering formula in order
-/// to provide the the scattering angle in 3D space.
-///
-/// There's two options to apply the scattering
-/// - a parametric action that relates phi and theta (default: off)
-/// - an actuall out of direction scattering applying two random numbers
-template <typename formula_t>
+/// @tparam scattering_model_t Model implementation to draw a scattering angle.
+template <typename scattering_model_t>
 struct Scattering {
   /// The flag to include scattering or not
   bool scattering = true;
-
   /// Include the log term
   bool parametric = false;
-  double projectionFactor = 1. / std::sqrt(2.);
-
   /// The scattering formula
-  formula_t angle;
+  scattering_model_t angle;
 
-  /// This is the scattering call operator
-  template <typename generator_t, typename detector_t, typename particle_t>
-  std::vector<particle_t> operator()(generator_t &gen, const detector_t &det,
-                                     particle_t &in) const {
+  /// Simulate scattering and update the particle parameters.
+  ///
+  /// @param[in]     generator is the random number generator
+  /// @param[in]     slab      defines the passed material
+  /// @param[in,out] particle  is the particle being updated
+  /// @return Empty secondaries containers.
+  ///
+  /// @tparam generator_t is a RandomNumberEngine
+  template <typename generator_t>
+  std::vector<Particle> operator()(generator_t &generator,
+                                   const Acts::MaterialProperties &slab,
+                                   Particle &particle) const {
     // Do nothing if the flag is set to false
     if (not scattering) {
       return {};
     }
 
     // 3D scattering angle
-    double angle3D = angle(gen, det, in);
+    double angle3D = angle(generator, slab, particle);
 
     // parametric scattering
     if (parametric) {
       // the initial values
-      double theta = Acts::VectorHelpers::theta(in.momentum());
-      double phi = Acts::VectorHelpers::phi(in.momentum());
+      double theta = Acts::VectorHelpers::theta(particle.direction());
+      double phi = Acts::VectorHelpers::phi(particle.direction());
       double sinTheta = (sin(theta) * sin(theta) > 10e-10) ? sin(theta) : 1.;
 
       // sample them in an independent way
+      const double projectionFactor = 1. / std::sqrt(2.);
       double deltaTheta = projectionFactor * angle3D;
       double numDetlaPhi = 0.;  //?? @THIS IS WRONG HERE !
       double deltaPhi = projectionFactor * numDetlaPhi / sinTheta;
@@ -81,16 +84,17 @@ struct Scattering {
       double ctheta = std::cos(theta);
 
       // assign the new values
-      in.scatter(in.p() * Acts::Vector3D(cphi * stheta, sphi * stheta, ctheta));
+      particle.setDirection(
+          Acts::Vector3D(cphi * stheta, sphi * stheta, ctheta));
     } else {
       /// uniform distribution
       std::uniform_real_distribution<double> uniformDist(0., 1.);
 
       // Create a random uniform distribution between in the intervall [0,1]
-      double psi = 2. * M_PI * uniformDist(gen);
+      double psi = 2. * M_PI * uniformDist(generator);
 
       // more complex but "more true"
-      Acts::Vector3D pDirection(in.momentum().normalized());
+      Acts::Vector3D pDirection(particle.direction());
       double x = -pDirection.y();
       double y = pDirection.x();
       double z = 0.;
@@ -107,7 +111,7 @@ struct Scattering {
       rotation = Acts::AngleAxis3D(psi, pDirection) *
                  Acts::AngleAxis3D(angle3D, deflector);
       // rotate and set a new direction to the cache
-      in.scatter(in.p() * rotation * pDirection.normalized());
+      particle.setDirection(rotation * pDirection);
     }
     // scattering always returns an empty list
     // - it is a non-distructive process

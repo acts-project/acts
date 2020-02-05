@@ -11,15 +11,15 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
 
-/// @brief The struct to be provided to the Scatterer action
-/// This is the gaussian mixture
+/// Generate scattering angles using a Gaussian mixture model.
 struct GaussianMixture {
   /// Steering parameter
-  bool log_include = true;
-
+  bool optGaussianMixtureG4 = false;
   double gausMixSigma1_a0 = 8.471e-1;
   double gausMixSigma1_a1 = 3.347e-2;
   double gausMixSigma1_a2 = -1.843e-3;
@@ -30,43 +30,37 @@ struct GaussianMixture {
   double gausMixEpsilon_b1 = 1.106e-1;
   double gausMixEpsilon_b2 = -5.729e-3;
 
-  bool optGaussianMixtureG4 = false;
-
-  /// @brief Call operator to perform this scattering
+  /// Generate a single 3D scattering angle.
   ///
-  /// @tparam generator_t is a random number generator type
-  /// @tparam detector_t is the detector information type
-  /// @tparam particle_t is the particle information type
+  /// @param[in]     generator is the random number generator
+  /// @param[in]     slab      defines the passed material
+  /// @param[in,out] particle  is the particle being scattered
+  /// @return a 3d scattering angle
   ///
-  /// @param[in] generator is the random number generator
-  /// @param[in] detector the detector information
-  /// @param[in] particle the particle which is being scattered
-  ///
-  /// @return a scattering angle in 3D
-  template <typename generator_t, typename detector_t, typename particle_t>
-  double operator()(generator_t &generator, const detector_t &detector,
-                    particle_t &particle) const {
+  /// @tparam generator_t is a RandomNumberEngine
+  template <typename generator_t>
+  double operator()(generator_t &generator,
+                    const Acts::MaterialProperties &slab,
+                    Particle &particle) const {
     /// Calculate the highland formula first
-    double qop = particle.q() / particle.p();
     double sigma = Acts::computeMultipleScatteringTheta0(
-        detector, particle.pdg(), particle.m(), qop);
-
+        slab, particle.pdg(), particle.mass(), particle.chargeOverMomentum(),
+        particle.charge());
     double sigma2 = sigma * sigma;
 
     // Gauss distribution, will be sampled with generator
     std::normal_distribution<double> gaussDist(0., 1.);
-
     // Uniform distribution, will be sampled with generator
     std::uniform_real_distribution<double> uniformDist(0., 1.);
 
     // Now correct for the tail fraction
     // d_0'
     double beta2 = particle.beta() * particle.beta();
-    double dprime = detector.thickness() / (detector.material().X0() * beta2);
+    double dprime = slab.thickness() / (slab.material().X0() * beta2);
     double log_dprime = std::log(dprime);
     // d_0''
     double log_dprimeprime =
-        std::log(std::pow(detector.material().Z(), 2.0 / 3.0) * dprime);
+        std::log(std::pow(slab.material().Z(), 2.0 / 3.0) * dprime);
 
     // get epsilon
     double epsilon =
@@ -82,7 +76,7 @@ struct GaussianMixture {
 
     // G4 optimised / native double Gaussian model
     if (optGaussianMixtureG4) {
-      sigma2 = 225. * dprime / (particle.p() * particle.p());
+      sigma2 = 225. * dprime / (particle.momentum() * particle.momentum());
     }
     // throw the random number core/tail
     if (uniformDist(generator) < epsilon) {

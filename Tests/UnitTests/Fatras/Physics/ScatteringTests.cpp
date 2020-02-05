@@ -15,31 +15,55 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Physics/Scattering/GaussianMixture.hpp"
+#include "ActsFatras/Physics/Scattering/GeneralMixture.hpp"
 #include "ActsFatras/Physics/Scattering/Highland.hpp"
 #include "ActsFatras/Physics/Scattering/Scattering.hpp"
 #include "Dataset.hpp"
 
-static constexpr double eps = 1e-10;
+namespace {
 
-BOOST_AUTO_TEST_SUITE(FatrasScattering)
+constexpr double eps = 1e-10;
 
-/// Test the scattering implementation
-BOOST_DATA_TEST_CASE(HighlandScattering, Dataset::particleParameters, phi,
-                     lambda, p, pdg, m, q) {
-  using HighlandScattering = ActsFatras::Scattering<ActsFatras::Highland>;
+using GeneralMixtureScattering =
+    ActsFatras::Scattering<ActsFatras::GeneralMixture>;
+using GaussianMixtureScattering =
+    ActsFatras::Scattering<ActsFatras::GaussianMixture>;
+using HighlandScattering = ActsFatras::Scattering<ActsFatras::Highland>;
 
+// Common test method that will be instantiated for each scattering model.
+template <typename Scattering>
+void run(const Scattering& scattering, const ActsFatras::Particle& before) {
   std::default_random_engine gen;
-  ActsFatras::Particle before =
-      Dataset::makeParticle(phi, lambda, p, pdg, m, q);
   ActsFatras::Particle after = before;
 
-  HighlandScattering scattering;
   const auto outgoing = scattering(gen, Dataset::thinSlab, after);
   // scattering leaves absolute energy/momentum unchanged
   CHECK_CLOSE_REL(after.momentum(), before.momentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
   // scattering creates no new particles
   BOOST_TEST(outgoing.empty());
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_SUITE(FatrasScattering)
+
+BOOST_DATA_TEST_CASE(GeneralMixture, Dataset::particleParameters, phi, lambda,
+                     p, pdg, m, q) {
+  run(GeneralMixtureScattering(),
+      Dataset::makeParticle(phi, lambda, p, pdg, m, q));
+}
+
+BOOST_DATA_TEST_CASE(GaussianMixture, Dataset::particleParameters, phi, lambda,
+                     p, pdg, m, q) {
+  run(GaussianMixtureScattering(),
+      Dataset::makeParticle(phi, lambda, p, pdg, m, q));
+}
+
+BOOST_DATA_TEST_CASE(Highland, Dataset::particleParameters, phi, lambda, p, pdg,
+                     m, q) {
+  run(HighlandScattering(), Dataset::makeParticle(phi, lambda, p, pdg, m, q));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
