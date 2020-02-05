@@ -30,10 +30,8 @@ BOOST_DATA_TEST_CASE(BetheBloch, Dataset::particleParameters, phi, lambda, p,
   ActsFatras::BetheBloch process;
   const auto outgoing = process(gen, Dataset::thickSlab, after);
   // energy loss changes momentum and energy
-  // TODO fix process computation
-  // BOOST_TEST(after.pT() < before.pT());
-  // BOOST_TEST(after.p() < before.p());
-  // BOOST_TEST(after.E() < before.E());
+  BOOST_TEST(after.momentum() < before.momentum());
+  BOOST_TEST(after.energy() < before.energy());
   // energy loss creates no new particles
   BOOST_TEST(outgoing.empty());
 }
@@ -48,10 +46,8 @@ BOOST_DATA_TEST_CASE(BetheHeitler, Dataset::particleParameters, phi, lambda, p,
   ActsFatras::BetheHeitler process;
   const auto outgoing = process(gen, Dataset::thickSlab, after);
   // energy loss changes momentum and energy
-  // TODO fix process computation
-  // BOOST_TEST(after.pT() < before.pT());
-  // BOOST_TEST(after.p() < before.p());
-  // BOOST_TEST(after.E() < before.E());
+  BOOST_TEST(after.momentum() < before.momentum());
+  BOOST_TEST(after.energy() < before.energy());
   // energy loss creates no new particles
   BOOST_TEST(outgoing.empty());
 }

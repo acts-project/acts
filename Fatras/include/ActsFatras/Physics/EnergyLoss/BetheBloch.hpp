@@ -8,69 +8,68 @@
 
 #pragma once
 
+#include <vector>
+
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Utilities/LandauDistribution.hpp"
 
 namespace ActsFatras {
 
-/// @brief The struct for the EnergyLoss physics list
+/// Simulate energy loss using the Bethe-Bloch/Landau description.
 ///
-/// This generates the energy loss according to the Bethe-Bloch
-/// description, applying a landau generated enery loss
-///
-/// It follows the interface of EnergyLoss samplers in Fatras
-/// that could return radiated photons for further processing,
-/// however, for the Bethe-Bloch application the return vector
-/// is always 0.
+/// Energy loss is computed using the most probable value and appropriate
+/// fluctuations from a Landau distribution. No secondaries are generated
+/// for the removed energy.
 struct BetheBloch {
   /// The flag to include BetheBloch process or not
   bool betheBloch = true;
-
   /// Scaling for most probable value
   double scaleFactorMPV = 1.;
-
   /// Scaling for Sigma
   double scaleFactorSigma = 1.;
 
-  /// @brief Call operator for the Bethe Bloch energy loss
+  /// Simulate energy loss and update the particle parameters.
   ///
-  /// @tparam generator_t is a random number generator type
-  /// @tparam detector_t is the detector information type
-  /// @tparam particle_t is the particle information type
+  /// @param[in]     generator is the random number generator
+  /// @param[in]     slab      defines the passed material
+  /// @param[in,out] particle  is the particle being updated
+  /// @return Empty secondaries containers.
   ///
-  /// @param[in] generator is the random number generator
-  /// @param[in] detector the detector information
-  /// @param[in] particle the particle which is being scattered
-  ///
-  /// @return empty vector for BetheBloch - no secondaries created
-  template <typename generator_t, typename detector_t, typename particle_t>
-  std::vector<particle_t> operator()(generator_t &generator,
-                                     const detector_t &detector,
-                                     particle_t &particle) const {
+  /// @tparam generator_t is a RandomNumberEngine
+  template <typename generator_t>
+  std::vector<Particle> operator()(generator_t &generator,
+                                   const Acts::MaterialProperties &slab,
+                                   Particle &particle) const {
     // Do nothing if the flag is set to false
     if (not betheBloch) {
       return {};
     }
 
-    // Create a random landau distribution between in the intervall [0,1]
-    LandauDistribution landauDist(0., 1.);
-    double landau = landauDist(generator);
-    double qop = particle.q() / particle.p();
-
-    // @TODO Double investigate if we could do one call
-    double energyLoss = Acts::computeEnergyLossLandau(
-        detector, particle.pdg(), particle.m(), qop, particle.q());
-    double energyLossSigma = Acts::computeEnergyLossLandauSigma(
-        detector, particle.pdg(), particle.m(), qop, particle.q());
+    // compute energy loss distribution parameters
+    const auto pdg = particle.pdg();
+    const auto m = particle.mass();
+    const auto qOverP = particle.chargeOverMomentum();
+    const auto q = particle.charge();
+    // most probable value
+    const auto energyLoss =
+        Acts::computeEnergyLossLandau(slab, pdg, m, qOverP, q);
+    // Gaussian-equivalent sigma
+    const auto energyLossSigma =
+        Acts::computeEnergyLossLandauSigma(slab, pdg, m, qOverP, q);
 
     // Simulate the energy loss
-    double sampledEnergyLoss = scaleFactorMPV * std::fabs(energyLoss) +
-                               scaleFactorSigma * energyLossSigma * landau;
+    // TODO landau location and scale parameters are not identical to the most
+    //      probable value and the Gaussian-equivalent sigma
+    LandauDistribution lossDistribution(scaleFactorMPV * energyLoss,
+                                        scaleFactorSigma * energyLossSigma);
+    const auto loss = lossDistribution(generator);
 
     // Apply the energy loss
-    particle.energyLoss(sampledEnergyLoss);
+    particle.correctEnergy(-loss);
 
-    // return empty children
+    // Generates no new particles
     return {};
   }
 };
