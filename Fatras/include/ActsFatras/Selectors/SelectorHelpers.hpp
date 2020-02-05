@@ -8,9 +8,11 @@
 
 #pragma once
 
-#include <climits>
+#include <functional>
+#include <limits>
 
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Selectors/detail/combine_selectors.hpp"
 
 namespace ActsFatras {
 
@@ -50,5 +52,15 @@ struct Range {
     return ((valMin <= val) and (val < valMax));
   }
 };
+
+/// Select objects that fullfil all selectors.
+template <typename... selectors_t>
+using CombineAnd =
+    detail::CombineSelectors<true, std::logical_and<bool>, selectors_t...>;
+
+/// Select objects that fullfil at least one selector.
+template <typename... selectors_t>
+using CombineOr =
+    detail::CombineSelectors<false, std::logical_or<bool>, selectors_t...>;
 
 }  // namespace ActsFatras
