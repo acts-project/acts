@@ -13,7 +13,8 @@
 
 #include <type_traits>
 
-#ifndef _LIBCPP_VERSION
+// only if clang and libstdc++
+#if !defined(_LIBCPP_VERSION) && defined(__clang__)
 
 // Workaround for building on clang+libstdc++
 // See https://gitlab.cern.ch/atlas/atlasexternals/merge_requests/563
