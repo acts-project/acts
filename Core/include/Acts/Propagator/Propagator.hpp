@@ -8,6 +8,9 @@
 
 #pragma once
 
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+
 #include <cmath>
 #include <functional>
 #include <memory>
