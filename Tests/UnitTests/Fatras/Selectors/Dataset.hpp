@@ -50,6 +50,8 @@ const auto centralPion =
     makeParticle(0_mm, 0.0, Acts::PdgParticle::ePionMinus, massPion, -1_e);
 const auto forwardPion =
     makeParticle(100_mm, 4.5, Acts::PdgParticle::ePionMinus, massPion, -1_e);
+const auto centralNeutron =
+    makeParticle(1_mm, 0.1, Acts::PdgParticle::eNeutron, 1_GeV, 0_e);
 
 }  // namespace
 }  // namespace Dataset
