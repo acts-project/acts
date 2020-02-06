@@ -260,6 +260,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
   };
 
   double stepSizeScaling = 1.;
+  size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (!tryRungeKuttaStep(state.stepping.stepSize)) {
@@ -280,6 +281,14 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
       // Not moving due to too low momentum needs an aborter
       return EigenStepperError::StepSizeStalled;
     }
+
+    // If the parameter is off track too much or given stepSize is not
+    // appropriate
+    if (nStepTrials > state.options.maxRungeKuttaStepTrials) {
+      // Too many trials, have to abort
+      return EigenStepperError::StepSizeAdjustmentFailed;
+    }
+    nStepTrials++;
   }
 
   // use the adjusted step size

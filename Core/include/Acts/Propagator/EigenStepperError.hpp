@@ -14,7 +14,11 @@
 
 namespace Acts {
 // This is the custom error code enum
-enum class EigenStepperError { StepSizeStalled = 1, StepInvalid = 2 };
+enum class EigenStepperError {
+  StepSizeStalled = 1,
+  StepInvalid = 2,
+  StepSizeAdjustmentFailed = 3
+};
 
 namespace detail {
 // Define a custom error code category derived from std::error_category
@@ -29,6 +33,8 @@ class EigenStepperErrorCategory : public std::error_category {
         return "Step size fell below minimum threshold";
       case EigenStepperError::StepInvalid:
         return "Step calculation was invalid";
+      case EigenStepperError::StepSizeAdjustmentFailed:
+        return "Step size adjustment exceeds maximum trials";
       default:
         return "unknown";
     }
