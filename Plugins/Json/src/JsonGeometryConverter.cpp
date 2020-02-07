@@ -681,7 +681,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
         BinUtility(1, -1 * cylinderBounds->halflengthZ(),
                    cylinderBounds->halflengthZ(), Acts::open, Acts::binZ);
   }
-  if (annulusBounds  != nullptr) {
+  if (annulusBounds != nullptr) {
     bUtility += BinUtility(1, annulusBounds->phiMin(), annulusBounds->phiMax(),
                            Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
