@@ -45,7 +45,8 @@ namespace Acts {
 ///
 /// It contains the context of the track finder call, the source link selector
 /// config, the optional surface where to express the track finding/fitting
-/// result and config for material effects
+/// result, config for material effects and whether to run smoothing to get
+/// fitted parameters
 ///
 /// @note the context objects must be provided
 template <typename source_link_selector_t>
@@ -70,19 +71,21 @@ struct TrackFinderOptions {
   /// expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
+  /// @param rSmoothing Whether to run smoothing to get fitted parameter
   TrackFinderOptions(std::reference_wrapper<const GeometryContext> gctx,
                      std::reference_wrapper<const MagneticFieldContext> mctx,
                      std::reference_wrapper<const CalibrationContext> cctx,
                      const SourceLinkSelectorConfigType& slsCfg,
                      const Surface* rSurface = nullptr, bool mScattering = true,
-                     bool eLoss = true)
+                     bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
         sourcelinkSelectorConfig(slsCfg),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
-        energyLoss(eLoss) {}
+        energyLoss(eLoss),
+        smoothing(rSmoothing) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -102,6 +105,9 @@ struct TrackFinderOptions {
 
   /// Whether to consider energy loss.
   bool energyLoss = true;
+
+  /// Whether to run smoothing to get fitted parameter
+  bool smoothing = true;
 };
 
 template <typename source_link_t>
@@ -279,6 +285,9 @@ class TrackFinder {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
+    /// Whether to run smoothing to get fitted parameter
+    bool smoothing = true;
+
     /// @brief Track finder actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -379,52 +388,60 @@ class TrackFinder {
       // and getting the fitted parameter. This needs to be accomplished in
       // different propagation steps
       if (result.forwardFiltered and not result.trackTips.empty()) {
-        // Finalization
-        // - Run smoothing for found track indexed with iSmoothed
-        if (not result.smoothed) {
-          result.currentTip = result.trackTips.at(result.iSmoothed);
-          ACTS_VERBOSE("Finalize/run smoothing for track "
-                       << result.iSmoothed
-                       << " with entry index = " << result.currentTip);
-          // -> Sort the track states (as now the path length is set)
-          // -> Call the smoothing
-          // -> Set a stop condition when all track states have been handled
-          auto res = finalize(state, stepper, result);
-          if (!res.ok()) {
-            ACTS_ERROR("Error in finalize: " << res.error());
-            result.result = res.error();
+        if (not smoothing) {
+          // If not run smoothing, manually set the targetReached to abort the
+          // propagation
+          ACTS_VERBOSE("Finish track finding without smoothing");
+          state.navigation.targetReached = true;
+        } else {
+          // Finalization
+          // - Run smoothing for found track indexed with iSmoothed
+          if (not result.smoothed) {
+            result.currentTip = result.trackTips.at(result.iSmoothed);
+            ACTS_VERBOSE("Finalize/run smoothing for track "
+                         << result.iSmoothed
+                         << " with entry index = " << result.currentTip);
+            // -> Sort the track states (as now the path length is set)
+            // -> Call the smoothing
+            // -> Set a stop condition when all track states have been handled
+            auto res = finalize(state, stepper, result);
+            if (!res.ok()) {
+              ACTS_ERROR("Error in finalize: " << res.error());
+              result.result = res.error();
+            }
+            result.smoothed = true;
           }
-          result.smoothed = true;
-        }
 
-        // Post-finalization:
-        // - Progress to target/reference surface and built the final track
-        // parameters for found track indexed with iSmoothed
-        if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
-          ACTS_VERBOSE("Completing the track "
-                       << result.iSmoothed
-                       << " with entry index = " << result.currentTip);
-          // Transport & bind the parameter to the final surface
-          auto fittedState =
-              stepper.boundState(state.stepping, *targetSurface, true);
-          // Assign the fitted parameters
-          result.fittedParameters.emplace(
-              result.currentTip, std::get<BoundParameters>(fittedState));
-          // If there are more trajectories to handle:
-          // -> set the targetReached status to false
-          // -> set the smoothed status to false
-          // -> update the index of track to be smoothed
-          if (result.iSmoothed < result.trackTips.size() - 1) {
-            state.navigation.targetReached = false;
-            result.smoothed = false;
-            result.iSmoothed++;
-            // To avoid meaningless navigation target call
-            state.stepping.stepSize =
-                ConstrainedStep(state.options.maxStepSize);
-            // Need to go back to start targeting for the rest tracks
-            state.stepping.navDir = forward;
-          } else {
-            ACTS_VERBOSE("Finish track finding and fitting");
+          // Post-finalization:
+          // - Progress to target/reference surface and built the final track
+          // parameters for found track indexed with iSmoothed
+          if (result.smoothed and
+              targetReached(state, stepper, *targetSurface)) {
+            ACTS_VERBOSE("Completing the track "
+                         << result.iSmoothed
+                         << " with entry index = " << result.currentTip);
+            // Transport & bind the parameter to the final surface
+            auto fittedState =
+                stepper.boundState(state.stepping, *targetSurface, true);
+            // Assign the fitted parameters
+            result.fittedParameters.emplace(
+                result.currentTip, std::get<BoundParameters>(fittedState));
+            // If there are more trajectories to handle:
+            // -> set the targetReached status to false
+            // -> set the smoothed status to false
+            // -> update the index of track to be smoothed
+            if (result.iSmoothed < result.trackTips.size() - 1) {
+              state.navigation.targetReached = false;
+              result.smoothed = false;
+              result.iSmoothed++;
+              // To avoid meaningless navigation target call
+              state.stepping.stepSize =
+                  ConstrainedStep(state.options.maxStepSize);
+              // Need to go back to start targeting for the rest tracks
+              state.stepping.navDir = forward;
+            } else {
+              ACTS_VERBOSE("Finish track finding and fitting");
+            }
           }
         }
       }
@@ -1035,6 +1052,7 @@ class TrackFinder {
     trackFinderActor.targetSurface = tfOptions.referenceSurface;
     trackFinderActor.multipleScattering = tfOptions.multipleScattering;
     trackFinderActor.energyLoss = tfOptions.energyLoss;
+    trackFinderActor.smoothing = tfOptions.smoothing;
 
     // Set config and logger for source link selector
     trackFinderActor.m_sourcelinkSelector.m_config =
@@ -1142,6 +1160,7 @@ class TrackFinder {
     trackFinderActor.targetSurface = tfOptions.referenceSurface;
     trackFinderActor.multipleScattering = tfOptions.multipleScattering;
     trackFinderActor.energyLoss = tfOptions.energyLoss;
+    trackFinderActor.smoothing = tfOptions.smoothing;
 
     // Set config and logger for source link selector
     trackFinderActor.m_sourcelinkSelector.m_config =
