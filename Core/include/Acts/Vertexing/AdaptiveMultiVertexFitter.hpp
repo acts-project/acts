@@ -47,6 +47,7 @@ class AdaptiveMultiVertexFitter {
  public:
   /// @brief Helper struct for storing vertex related information
   struct VertexInfo {
+
     // The linearization point
     Acts::SpacePointVector linPoint{Acts::SpacePointVector::Zero()};
 
@@ -55,6 +56,8 @@ class AdaptiveMultiVertexFitter {
 
     // Old position from last iteration
     Acts::SpacePointVector oldPosition;
+
+    Acts::SpacePointVector seedPosition;
 
     // Needs relinearization bool
     bool relinearize;
@@ -98,6 +101,15 @@ class AdaptiveMultiVertexFitter {
         }
       }
     }
+
+    State(std::vector<Vertex<input_track_t>*>& vtxList) {
+      for (auto& vtx : vtxList) {
+        // Add vertex link to each track
+        for (auto& trkAtVtx : vtx->tracks()) {
+          trkInfoMap[trkAtVtx.id].linksToVertices.push_back(vtx);
+        }
+      }
+    }
   };
 
   struct Config {
@@ -121,7 +133,7 @@ class AdaptiveMultiVertexFitter {
     AnnealingUtility annealingTool;
 
     // Number of max iterations
-    unsigned int maxIterations{50};
+    unsigned int maxIterations{30};
 
     // Max distance to linearization point allowed
     // without relinearization

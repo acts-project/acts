@@ -29,7 +29,7 @@ namespace KalmanVertexUpdater {
 /// @param trk Track to be added to vtx
 template <typename input_track_t>
 Result<void> updateVertexWithTrack(Vertex<input_track_t>* vtx,
-                                   TrackAtVertex<input_track_t>& trk);
+                                   TrackAtVertex<input_track_t>* trk);
 
 /// @brief Updates vertex position
 ///
@@ -74,15 +74,7 @@ double trackParametersChi2(const Vertex<input_track_t>& vtx,
 /// @param sign +1 (add track) or -1 (remove track)
 template <typename input_track_t>
 Result<void> update(Vertex<input_track_t>* vtx,
-                    TrackAtVertex<input_track_t>& trk, int sign);
-
-/// @brief Removes track from vertex if it is attached
-///
-/// @param vtx The vertex
-/// @param trk The track
-template <typename input_track_t>
-void removeTrackIf(Vertex<input_track_t>* vtx,
-                   const TrackAtVertex<input_track_t>& trk);
+                    TrackAtVertex<input_track_t>* trk, int sign);
 }  // Namespace detail
 
 }  // Namespace KalmanVertexUpdater

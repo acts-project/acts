@@ -11,7 +11,7 @@
 
 template <typename input_track_t>
 Acts::Result<void> Acts::KalmanVertexUpdater::updateVertexWithTrack(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) {
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>* trk) {
   if (vtx == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -35,35 +35,36 @@ Acts::KalmanVertexUpdater::updatePosition(
   }
 
   // Retrieve linTrack information
-  const SpacePointToBoundMatrix& posJac = linTrack.positionJacobian;
-  const ActsMatrixD<BoundParsDim, 3>& momJac =
-      linTrack.momentumJacobian;  // B_k in comments below
-  const BoundVector& trkParams = linTrack.parametersAtPCA;
-  const BoundVector& constTerm = linTrack.constantTerm;
-  const BoundSymMatrix& trkParamWeight =
-      linTrack.covarianceAtPCA.inverse();  // G_k in comments below
+  // To make 4-D compatible, remove block<> and head<> statements
+  const auto& posJac = linTrack.positionJacobian.block<5,3>(0,0);
+  const auto& momJac =
+      linTrack.momentumJacobian.block<5,3>(0,0);  // B_k in comments below
+  const auto& trkParams = linTrack.parametersAtPCA.head<5>();
+  const auto& constTerm = linTrack.constantTerm.head<5>();
+  const auto& trkParamWeight =
+      linTrack.covarianceAtPCA.block<5,5>(0,0).inverse();  // G_k in comments below
 
   // Vertex to be updated
-  const SpacePointVector& oldVtxPos = vtx->fullPosition();
-  const SpacePointSymMatrix& oldVtxWeight = vtx->fullCovariance().inverse();
+  const auto& oldVtxPos = vtx->position();
+  const auto& oldVtxWeight = vtx->covariance().inverse();
 
   // W_k matrix
   ActsSymMatrixD<3> wMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
-  BoundSymMatrix gBmat =
+  auto gBmat =
       trkParamWeight - trkParamWeight * (momJac * (wMat * momJac.transpose())) *
                            trkParamWeight.transpose();
 
   // New vertex cov matrix
-  SpacePointSymMatrix newVtxCov =
+  auto newVtxCov =
       (oldVtxWeight +
        trackWeight * sign * posJac.transpose() * (gBmat * posJac))
           .inverse();
 
   // New vertex position
-  SpacePointVector newVtxPos =
+  auto newVtxPos =
       newVtxCov *
       (oldVtxWeight * oldVtxPos + trackWeight * sign * posJac.transpose() *
                                       gBmat * (trkParams - constTerm));
@@ -73,9 +74,9 @@ Acts::KalmanVertexUpdater::updatePosition(
   Vertex<input_track_t> returnVertex;
 
   // Set position
-  returnVertex.setFullPosition(newVtxPos);
+  returnVertex.setPosition(newVtxPos);
   // Set cov
-  returnVertex.setFullCovariance(newVtxCov);
+  returnVertex.setCovariance(newVtxCov);
   // Set fit quality
   returnVertex.setFitQuality(vtx->fitQuality().first, vtx->fitQuality().second);
 
@@ -124,10 +125,10 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
 
 template <typename input_track_t>
 Acts::Result<void> Acts::KalmanVertexUpdater::detail::update(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk, int sign) {
-  double trackWeight = trk.trackWeight;
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>* trk, int sign) {
+  double trackWeight = trk->trackWeight;
 
-  auto res = updatePosition(vtx, trk.linearizedState, trackWeight, sign);
+  auto res = updatePosition(vtx, trk->linearizedState, trackWeight, sign);
 
   if (!res.ok()) {
     return res.error();
@@ -142,7 +143,7 @@ Acts::Result<void> Acts::KalmanVertexUpdater::detail::update(
 
   // Chi2 wrt to track parameters
   double trkChi2 =
-      detail::trackParametersChi2<input_track_t>(tempVtx, trk.linearizedState);
+      detail::trackParametersChi2<input_track_t>(tempVtx, trk->linearizedState);
 
   // Calculate new chi2
   chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, &tempVtx) +
@@ -160,35 +161,14 @@ Acts::Result<void> Acts::KalmanVertexUpdater::detail::update(
   // by removing it first and adding new one.
   // Otherwise just adds track to existing list of tracks at vertex
   if (sign > 0) {
-    // Remove old track if already there
-    detail::removeTrackIf<input_track_t>(vtx, trk);
-    // Add track with updated ndf
-    auto tracksAtVertex = vtx->tracks();
-    // Update track and add to list
-    trk.chi2Track = trkChi2;
-    trk.ndf = 2 * trackWeight;
-    tracksAtVertex.push_back(trk);
-    vtx->setTracksAtVertex(tracksAtVertex);
+    // Update track
+    trk->chi2Track = trkChi2;
+    trk->ndf = 2 * trackWeight;
   }
   // Remove trk from current vertex
   if (sign < 0) {
-    detail::removeTrackIf<input_track_t>(vtx, trk);
+    trk->trackWeight = 0;
   }
 
   return {};
-}
-
-template <typename input_track_t>
-void Acts::KalmanVertexUpdater::detail::removeTrackIf(
-    Vertex<input_track_t>* vtx, const TrackAtVertex<input_track_t>& trk) {
-  auto tracksAtVertex = vtx->tracks();
-  auto removeIter = std::find_if(tracksAtVertex.begin(), tracksAtVertex.end(),
-                                 [&trk](const auto& trkAtVertex) {
-                                   return trk.fittedParams.parameters() ==
-                                          trkAtVertex.fittedParams.parameters();
-                                 });
-  if (removeIter != tracksAtVertex.end()) {
-    tracksAtVertex.erase(removeIter);
-  }
-  vtx->setTracksAtVertex(tracksAtVertex);
 }
