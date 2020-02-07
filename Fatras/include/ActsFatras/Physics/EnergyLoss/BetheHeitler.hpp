@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include <array>
 #include <random>
-#include <vector>
 
 #include "Acts/Material/MaterialProperties.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -34,9 +34,9 @@ struct BetheHeitler {
   ///
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
-  std::vector<Particle> operator()(generator_t &generator,
-                                   const Acts::MaterialProperties &slab,
-                                   Particle &particle) const {
+  std::array<Particle, 0> operator()(generator_t &generator,
+                                     const Acts::MaterialProperties &slab,
+                                     Particle &particle) const {
     // Take a random gamma-distributed value - depending on t/X0
     std::gamma_distribution<double> gDist(slab.thicknessInX0() / std::log(2.0),
                                           1.0);
