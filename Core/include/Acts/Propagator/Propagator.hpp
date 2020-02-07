@@ -8,6 +8,9 @@
 
 #pragma once
 
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+
 #include <cmath>
 #include <functional>
 #include <memory>
@@ -94,6 +97,7 @@ struct PropagatorOptions {
     eoptions.absPdgCode = absPdgCode;
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
+    eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
     eoptions.maxStepSize = direction * std::abs(maxStepSize);
     eoptions.targetTolerance = targetTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
@@ -125,6 +129,9 @@ struct PropagatorOptions {
 
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
+
+  /// Maximum number of Runge-Kutta steps for the stepper step call
+  unsigned int maxRungeKuttaStepTrials = 10000;
 
   /// Absolute maximum step size
   double maxStepSize = std::numeric_limits<double>::max();

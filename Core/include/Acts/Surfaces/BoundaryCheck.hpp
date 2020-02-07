@@ -126,6 +126,9 @@ class BoundaryCheck {
   // Broadcast the tolerance
   const Vector2D& tolerance() const;
 
+  // Return the covariance matrix
+  ActsSymMatrixD<2> covariance() const;
+
  private:
   /// Return a new BoundaryCheck with updated covariance.
   /// @param jacobian Tranform Jacobian for the covariance
@@ -183,6 +186,10 @@ inline Acts::BoundaryCheck::Type Acts::BoundaryCheck::type() const {
 
 inline const Acts::Vector2D& Acts::BoundaryCheck::tolerance() const {
   return m_tolerance;
+}
+
+inline Acts::ActsSymMatrixD<2> Acts::BoundaryCheck::covariance() const {
+  return m_weight.inverse();
 }
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool check)

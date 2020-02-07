@@ -22,6 +22,12 @@ namespace Acts {
 
 class DiscBounds : public SurfaceBounds {
  public:
+  /// Returns a reference radius for binning
+  virtual double binningValueR() const = 0;
+
+  /// Returns a refererance phi for binning
+  virtual double binningValuePhi() const = 0;
+
   /// Returns true for full phi coverage
   virtual bool coversFullAzimuth() const = 0;
 

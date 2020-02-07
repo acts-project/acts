@@ -178,6 +178,38 @@ integration_tests_cc7_lcg96:
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
 
+# CC7, LCG96, LLVM9 + libstdc++
+
+build_cc7_lcg96_llvm9:
+  <<: *template_build
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
+    - export LLVM_ACTS_VERSION=9.0.0
+    - set +e && source CI/setup_llvm.sh; set -e
+
+unit_tests_cc7_lcg96_llvm9:
+  <<: *template_unit_tests
+  dependencies:
+    - build_cc7_lcg96_llvm9
+  needs: ["build_cc7_lcg96_llvm9"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
+    - export LLVM_ACTS_VERSION=9.0.0
+    - set +e && source CI/setup_llvm.sh; set -e
+
+integration_tests_cc7_lcg96_llvm9:
+  <<: *template_integration_tests
+  dependencies:
+    - build_cc7_lcg96_llvm9
+  needs: ["build_cc7_lcg96_llvm9"]
+  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg96.sh; set -e
+    - export LLVM_ACTS_VERSION=9.0.0
+    - set +e && source CI/setup_llvm.sh; set -e
+
 # SLC6, LCG96, build w/ legacy disabled
 
 build_cc7_lcg96_no_legacy:

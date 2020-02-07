@@ -150,10 +150,10 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
     double rMax, double zMin, double zMax, const std::string& volumeName,
     BinningType bType) const {
-  // that's what is needed
+  // The Bounds to e created
   CylinderVolumeBounds* cBounds = nullptr;
 
-  // screen output
+  // Screen output
   ACTS_VERBOSE("Create cylindrical TrackingVolume '" << volumeName << "'.");
   ACTS_VERBOSE("    -> with given dimensions of (rMin/rMax/zMin/Max) = "
                << rMin << " / " << rMax << " / " << zMin << " / " << zMax);

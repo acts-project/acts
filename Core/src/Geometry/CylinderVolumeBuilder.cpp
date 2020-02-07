@@ -11,6 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include <algorithm>
+#include <vector>
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -198,36 +200,143 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                 m_cfg.volumeName + "::Barrel")
           : nullptr;
 
-  // the negative endcap is created if present
-  auto nEndcap =
-      wConfig.nVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.nVolumeConfig.layers,
-                wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-                wConfig.nVolumeConfig.rMin, wConfig.nVolumeConfig.rMax,
-                wConfig.nVolumeConfig.zMin, wConfig.nVolumeConfig.zMax,
-                m_cfg.volumeName + "::NegativeEndcap")
-          : nullptr;
+  // Helper method to check for
 
-  // the positive endcap is created
-  auto pEndcap =
-      wConfig.pVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.pVolumeConfig.layers,
-                wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-                wConfig.pVolumeConfig.rMin, wConfig.pVolumeConfig.rMax,
-                wConfig.pVolumeConfig.zMin, wConfig.pVolumeConfig.zMax,
-                m_cfg.volumeName + "::PositiveEndcap")
-          : nullptr;
+  // Helper method to create endcap volume
+  auto createEndcap =
+      [&](VolumeConfig& centralConfig, VolumeConfig& endcapConfig,
+          const std::string& endcapName) -> MutableTrackingVolumePtr {
+    // No config - no volume
+    if (not endcapConfig) {
+      return nullptr;
+    }
+    // Check for ring layout
+    if (m_cfg.checkRingLayout) {
+      ACTS_DEBUG("Configured to check for ring layout - parsing layers.");
+      // Parsing loop for ring layout
+      std::vector<double> innerRadii = {};
+      std::vector<double> outerRadii = {};
+      for (const auto& elay : endcapConfig.layers) {
+        auto discBounds = dynamic_cast<const RadialBounds*>(
+            &(elay->surfaceRepresentation().bounds()));
+        if (discBounds != nullptr) {
+          double tolerance = m_cfg.ringTolerance;
+          // Search for the rmin value  - and insert if necessary
+          double rMin = discBounds->rMin();
+          auto innerSearch = std::find_if(
+              innerRadii.begin(), innerRadii.end(), [&](double reference) {
+                return std::abs(rMin - reference) < tolerance;
+              });
+          if (innerSearch == innerRadii.end()) {
+            innerRadii.push_back(rMin);
+          }
+          // Search for the rmax value - and insert if necessary
+          double rMax = discBounds->rMax();
+          auto outerSearch = std::find_if(
+              outerRadii.begin(), outerRadii.end(), [&](double reference) {
+                return std::abs(rMax - reference) < tolerance;
+              });
+          if (outerSearch == outerRadii.end()) {
+            outerRadii.push_back(rMax);
+          }
+        }
+      }
+      // Result of the parsing loop
+      if (innerRadii.size() == outerRadii.size() and not innerRadii.empty()) {
+        bool consistent = true;
+        // The inter volume radii
+        std::vector<double> interRadii = {};
+        for (int ir = 1; ir < int(innerRadii.size()); ++ir) {
+          // Check whether inner/outer radii are consistent
+          if (outerRadii[ir - 1] < innerRadii[ir]) {
+            interRadii.push_back(0.5 * (outerRadii[ir - 1] + innerRadii[ir]));
+          } else {
+            consistent = false;
+            break;
+          }
+        }
+        // Continue if the ring layout is consistent
+        if (consistent) {
+          ACTS_DEBUG("Ring layout detection: " << innerRadii.size()
+                                               << " volumes.");
+          // Separate the Layers into volumes
+          std::vector<std::pair<double, double>> volumeRminRmax = {};
+          for (unsigned int ii = 0; ii < interRadii.size(); ++ii) {
+            if (ii == 0) {
+              volumeRminRmax.push_back({endcapConfig.rMin, interRadii[ii]});
+            }
+            if (ii + 1 < interRadii.size()) {
+              volumeRminRmax.push_back({interRadii[ii], interRadii[ii + 1]});
+            } else {
+              volumeRminRmax.push_back({interRadii[ii], endcapConfig.rMax});
+            }
+          }
+          auto ringLayers =
+              std::vector<LayerVector>(innerRadii.size(), LayerVector());
+          // Filling loop
+          for (const auto& elay : endcapConfig.layers) {
+            // Getting the reference radius
+            double test =
+                elay->surfaceRepresentation().binningPositionValue(gctx, binR);
+            // Find the right bin
+            auto ringVolume = std::find_if(
+                volumeRminRmax.begin(), volumeRminRmax.end(),
+                [&](const auto& reference) {
+                  return (test > reference.first and test < reference.second);
+                });
+            if (ringVolume != volumeRminRmax.end()) {
+              unsigned int ringBin =
+                  std::distance(volumeRminRmax.begin(), ringVolume);
+              ringLayers[ringBin].push_back(elay);
+            }
+          }
+          // Subvolume construction
+          ACTS_DEBUG("Ring layout configuration: ");
+          // Endcap container
+          std::vector<TrackingVolumePtr> endcapContainer;
+          unsigned int ir = 0;
+          for (auto& rLayers : ringLayers) {
+            ACTS_DEBUG(" - ring volume " << ir << " with " << rLayers.size()
+                                         << " layers, and rmin/rmax = "
+                                         << volumeRminRmax[ir].first << "/"
+                                         << volumeRminRmax[ir].second);
+            endcapContainer.push_back(tvHelper->createTrackingVolume(
+                gctx, rLayers, centralConfig.volumes, m_cfg.volumeMaterial,
+                volumeRminRmax[ir].first, volumeRminRmax[ir].second,
+                endcapConfig.zMin, endcapConfig.zMax,
+                m_cfg.volumeName + endcapName + std::string("::Ring") +
+                    std::to_string(ir)));
+            ++ir;
+          }
+          // Return a container of ring volumes
+          return tvHelper->createContainerTrackingVolume(gctx, endcapContainer);
+        }
+      }
+    }
+
+    // No ring layout - return single volume
+    return tvHelper->createTrackingVolume(
+        gctx, endcapConfig.layers, centralConfig.volumes, m_cfg.volumeMaterial,
+        endcapConfig.rMin, endcapConfig.rMax, endcapConfig.zMin,
+        endcapConfig.zMax, m_cfg.volumeName + endcapName);
+  };
+
+  // The negative endcap is created if present
+  auto nEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.nVolumeConfig,
+                              "::NegativeEndcap");
+
+  // The positive endcap is created if present
+  auto pEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.pVolumeConfig,
+                              "::PositiveEndcap");
 
   ACTS_DEBUG("Newly created volume(s) will be " << wConfig.wConditionScreen);
-  // standalone container, full wrapping, full insertion & if no existing volume
+  // Standalone container, full wrapping, full insertion & if no existing volume
   // is present needs a bare triple
   if (wConfig.wCondition == Wrapping || wConfig.wCondition == Inserting ||
       wConfig.wCondition == NoWrapping) {
     ACTS_VERBOSE("Combined new container is being built.");
-    // stuff into the container what you have
-    std::vector<std::shared_ptr<const TrackingVolume>> volumesContainer;
+    // Stuff into the container what you have
+    std::vector<TrackingVolumePtr> volumesContainer;
     if (nEndcap) {
       volumesContainer.push_back(nEndcap);
       volume = nEndcap;
@@ -284,12 +393,12 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     volume = nEndcap ? nEndcap : (barrel ? barrel : pEndcap);
   }
 
-  // prepare the gap volumes first
+  // Prepare the gap volumes first
   TrackingVolumePtr existingVolumeCp = existingVolume;
-  // check if further action is needed on existing volumes and gap volumes
+  // Check if further action is needed on existing volumes and gap volumes
   if (existingVolumeCp) {
-    // check if gaps are needed
-    std::vector<std::shared_ptr<const TrackingVolume>> existingContainer;
+    // Check if gaps are needed
+    std::vector<TrackingVolumePtr> existingContainer;
     if (wConfig.fGapVolumeConfig) {
       // create the gap volume
       auto fGap = tvHelper->createGapTrackingVolume(
@@ -312,7 +421,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       existingContainer.push_back(sGap);
     }
 
-    // and low lets create the new existing volume with gaps
+    // And low lets create the new existing volume with gaps
     existingVolumeCp =
         existingContainer.size() > 1
             ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
@@ -334,7 +443,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
             ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
             : existingVolumeCp;
 
-    std::vector<std::shared_ptr<const TrackingVolume>> totalContainer;
+    std::vector<TrackingVolumePtr> totalContainer;
     // check what to do with the existing
     if (wConfig.wCondition == Attaching ||
         wConfig.wCondition == CentralWrapping ||
@@ -412,7 +521,6 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
         takeBigger(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
         takeSmaller(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
         takeBigger(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
-        //!< @todo check for Endcap Ring config
       }
     }
     for (auto& volume : mtvVector) {
@@ -427,7 +535,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
     }
   }
 
-  // set the layers to the layer vector
+  // Set the layers to the layer vector
   lConfig.layers = lVector;
   // set the layers to the layer vector
   lConfig.volumes = mtvVector;
