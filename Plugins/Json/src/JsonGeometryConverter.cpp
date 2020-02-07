@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <Acts/Surfaces/AnnulusBounds.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/SurfaceBounds.hpp>
@@ -589,17 +590,26 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
       dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
   const Acts::CylinderBounds* cylinderBounds =
       dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
+  const Acts::AnnulusBounds* annulusBounds =
+      dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
 
-  if (radialBounds != nullptr) {
+  if (radialBounds) {
     sjson[m_cfg.surfacetypekey] = "Disk";
     sjson[m_cfg.surfacepositionkey] = sTransform.translation().z();
     sjson[m_cfg.surfacerangekey] = {radialBounds->rMin(), radialBounds->rMax()};
   }
-  if (cylinderBounds != nullptr) {
+  if (cylinderBounds) {
     sjson[m_cfg.surfacetypekey] = "Cylinder";
     sjson[m_cfg.surfacepositionkey] = cylinderBounds->r();
     sjson[m_cfg.surfacerangekey] = {-1 * cylinderBounds->halflengthZ(),
                                     cylinderBounds->halflengthZ()};
+  }
+  if (annulusBounds) {
+    sjson[m_cfg.surfacetypekey] = "Annulus";
+    sjson[m_cfg.surfacepositionkey] = sTransform.translation().z();
+    sjson[m_cfg.surfacerangekey] = {
+        {annulusBounds->rMin(), annulusBounds->rMax()},
+        {annulusBounds->phiMin(), annulusBounds->phiMax()}};
   }
 }
 
@@ -651,17 +661,31 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
       dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
   const Acts::CylinderBounds* cylinderBounds =
       dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
+  const Acts::AnnulusBounds* annulusBounds =
+      dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
 
-  if (radialBounds != nullptr) {
-    bUtility += BinUtility(1, -1 * M_PI, M_PI, Acts::closed, Acts::binPhi);
+  if (radialBounds) {
+    bUtility += BinUtility(
+        1, radialBounds->averagePhi() - radialBounds->halfPhiSector(),
+        radialBounds->averagePhi() + radialBounds->halfPhiSector(),
+        Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
                            Acts::open, Acts::binR);
   }
-  if (cylinderBounds != nullptr) {
-    bUtility += BinUtility(1, -1 * M_PI, M_PI, Acts::closed, Acts::binPhi);
+  if (cylinderBounds) {
+    bUtility += BinUtility(
+        1, cylinderBounds->averagePhi() - cylinderBounds->halfPhiSector(),
+        cylinderBounds->averagePhi() + cylinderBounds->halfPhiSector(),
+        Acts::closed, Acts::binPhi);
     bUtility +=
         BinUtility(1, -1 * cylinderBounds->halflengthZ(),
                    cylinderBounds->halflengthZ(), Acts::open, Acts::binZ);
+  }
+  if (annulusBounds) {
+    bUtility += BinUtility(1, annulusBounds->phiMin(), annulusBounds->phiMax(),
+                           Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
+                           Acts::open, Acts::binR);
   }
   return bUtility;
 }
