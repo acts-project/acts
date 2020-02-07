@@ -593,18 +593,18 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
   const Acts::AnnulusBounds* annulusBounds =
       dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
 
-  if (radialBounds) {
+  if (radialBounds != nullptr) {
     sjson[m_cfg.surfacetypekey] = "Disk";
     sjson[m_cfg.surfacepositionkey] = sTransform.translation().z();
     sjson[m_cfg.surfacerangekey] = {radialBounds->rMin(), radialBounds->rMax()};
   }
-  if (cylinderBounds) {
+  if (cylinderBounds != nullptr) {
     sjson[m_cfg.surfacetypekey] = "Cylinder";
     sjson[m_cfg.surfacepositionkey] = cylinderBounds->r();
     sjson[m_cfg.surfacerangekey] = {-1 * cylinderBounds->halflengthZ(),
                                     cylinderBounds->halflengthZ()};
   }
-  if (annulusBounds) {
+  if (annulusBounds != nullptr) {
     sjson[m_cfg.surfacetypekey] = "Annulus";
     sjson[m_cfg.surfacepositionkey] = sTransform.translation().z();
     sjson[m_cfg.surfacerangekey] = {
@@ -664,7 +664,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
   const Acts::AnnulusBounds* annulusBounds =
       dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
 
-  if (radialBounds) {
+  if (radialBounds != nullptr) {
     bUtility += BinUtility(
         1, radialBounds->averagePhi() - radialBounds->halfPhiSector(),
         radialBounds->averagePhi() + radialBounds->halfPhiSector(),
@@ -672,7 +672,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
     bUtility += BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
                            Acts::open, Acts::binR);
   }
-  if (cylinderBounds) {
+  if (cylinderBounds != nullptr) {
     bUtility += BinUtility(
         1, cylinderBounds->averagePhi() - cylinderBounds->halfPhiSector(),
         cylinderBounds->averagePhi() + cylinderBounds->halfPhiSector(),
@@ -681,7 +681,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
         BinUtility(1, -1 * cylinderBounds->halflengthZ(),
                    cylinderBounds->halflengthZ(), Acts::open, Acts::binZ);
   }
-  if (annulusBounds) {
+  if (annulusBounds  != nullptr) {
     bUtility += BinUtility(1, annulusBounds->phiMin(), annulusBounds->phiMax(),
                            Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
