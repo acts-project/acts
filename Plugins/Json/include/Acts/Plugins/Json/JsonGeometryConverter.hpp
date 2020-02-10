@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <Acts/Surfaces/Surface.hpp>
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -38,6 +39,7 @@ class JsonGeometryConverter {
   using geo_id_value = uint64_t;
 
   using SurfaceMaterialRep = std::map<geo_id_value, const ISurfaceMaterial*>;
+  using SurfaceRep = std::map<geo_id_value, const Surface*>;
   using VolumeMaterialRep = std::map<geo_id_value, const IVolumeMaterial*>;
 
   /// @brief Layer representation for Json writing
@@ -46,8 +48,11 @@ class JsonGeometryConverter {
     GeometryID layerID;
 
     SurfaceMaterialRep sensitives;
+    SurfaceRep sensitiveSurfaces;
     SurfaceMaterialRep approaches;
+    SurfaceRep approacheSurfaces;
     const ISurfaceMaterial* representing = nullptr;
+    const Surface* representingSurface = nullptr;
 
     /// The LayerRep is actually worth it to write out
     operator bool() const {
@@ -66,6 +71,7 @@ class JsonGeometryConverter {
 
     std::map<geo_id_value, LayerRep> layers;
     SurfaceMaterialRep boundaries;
+    SurfaceRep boundarySurfaces;
     const IVolumeMaterial* material = nullptr;
 
     /// The VolumeRep is actually worth it to write out
@@ -90,7 +96,7 @@ class JsonGeometryConverter {
     /// The volume identification string
     std::string volkey = "volumes";
     /// The name identification
-    std::string namekey = "name";
+    std::string namekey = "Name";
     /// The boundary surface string
     std::string boukey = "boundaries";
     /// The layer identification string
@@ -112,7 +118,17 @@ class JsonGeometryConverter {
     /// The data key
     std::string datakey = "data";
     /// The geoid key
-    std::string geoidkey = "geoid";
+    std::string geoidkey = "Geoid";
+    /// The surface geoid key
+    std::string surfacegeoidkey = "SGeoid";
+    /// The mapping key, add surface to map if true
+    std::string mapkey = "matSurface";
+    /// The surface type key
+    std::string surfacetypekey = "stype";
+    /// The surface position key
+    std::string surfacepositionkey = "sposition";
+    /// The surface range key
+    std::string surfacerangekey = "srange";
     /// The default logger
     std::shared_ptr<const Logger> logger;
     /// The name of the writer
@@ -128,6 +144,8 @@ class JsonGeometryConverter {
     bool processBoundaries = true;
     /// Steering to handle volume data
     bool processVolumes = true;
+    /// Add proto material to all surfaces
+    bool processnonmaterial = false;
     /// Write out data
     bool writeData = true;
 
@@ -196,6 +214,16 @@ class JsonGeometryConverter {
   ///
   /// @param the SurfaceMaterial
   nlohmann::json surfaceMaterialToJson(const ISurfaceMaterial& sMaterial);
+
+  /// Add surface information to json surface
+  ///
+  /// @param The json surface The surface
+  void addSurfaceToJson(nlohmann::json& sjson, const Surface* surface);
+
+  /// Default BinUtility to create proto material
+  ///
+  /// @param the Surface
+  Acts::BinUtility DefaultBin(const Acts::Surface& surface);
 
   /// The config class
   Config m_cfg;
