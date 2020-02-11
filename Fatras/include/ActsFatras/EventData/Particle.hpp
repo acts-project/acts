@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 
 #include "Acts/Utilities/Definitions.hpp"
@@ -16,6 +17,13 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 namespace ActsFatras {
+
+/// Process type identifier.
+///
+/// Encodes the type of process that generated the particle.
+enum class ProcessType : uint32_t {
+  eUndefined = 0,
+};
 
 /// Simulation particle information and kinematic state.
 class Particle {
@@ -42,6 +50,8 @@ class Particle {
   Particle &operator=(const Particle &) = default;
   Particle &operator=(Particle &&) = default;
 
+  /// Set the process type that generated this particle.
+  Particle &process(ProcessType proc) { return m_process = proc, *this; }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
     m_position4 = pos4;
@@ -97,6 +107,8 @@ class Particle {
 
   /// Encoded particle identifier within an event.
   Barcode id() const { return m_id; }
+  /// Which type of process generated this particle.
+  ProcessType process() const { return m_process; }
   /// PDG particle number that identifies the type.
   Acts::PdgParticle pdg() const { return m_pdg; }
   /// Particle charge.
@@ -170,6 +182,8 @@ class Particle {
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
   Barcode m_id;
+  /// Process type specifier.
+  ProcessType m_process = ProcessType::eUndefined;
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
