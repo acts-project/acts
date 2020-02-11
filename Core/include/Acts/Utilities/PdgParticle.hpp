@@ -8,10 +8,12 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace Acts {
 
 /// Symbolic values for commonly used PDG particle numbers.
-enum PdgParticle : int {
+enum PdgParticle : int32_t {
   eInvalid = 0,
   eElectron = 11,
   eAntiElectron = -eElectron,
