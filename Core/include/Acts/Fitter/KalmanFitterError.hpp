@@ -15,10 +15,11 @@
 namespace Acts {
 // This is the custom error code enum
 enum class KalmanFitterError {
-  UpdateFailed = 1,
-  SmoothFailed = 2,
-  OutputConversionFailed = 3,
-  PropagationInVain = 4
+  ForwardUpdateFailed = 1,
+  BackwardUpdateFailed = 2,
+  SmoothFailed = 3,
+  OutputConversionFailed = 4,
+  PropagationInVain = 5
 };
 
 namespace detail {
@@ -30,8 +31,10 @@ class KalmanFitterErrorCategory : public std::error_category {
   // Return what each enum means in text
   std::string message(int c) const final {
     switch (static_cast<KalmanFitterError>(c)) {
-      case KalmanFitterError::UpdateFailed:
-        return "Kalman update failed";
+      case KalmanFitterError::ForwardUpdateFailed:
+        return "Kalman forward update failed";
+      case KalmanFitterError::BackwardUpdateFailed:
+        return "Kalman backward update failed";
       case KalmanFitterError::SmoothFailed:
         return "Kalman smooth failed";
       case KalmanFitterError::OutputConversionFailed:

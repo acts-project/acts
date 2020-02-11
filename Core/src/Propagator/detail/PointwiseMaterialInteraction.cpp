@@ -44,11 +44,11 @@ void PointwiseMaterialInteraction::covarianceContributions(
   }
 }
 
-double PointwiseMaterialInteraction::updateVariance(double variance,
-                                                    double change) const {
-  // Add/Subtract the change (depending on the direction)
+double PointwiseMaterialInteraction::updateVariance(
+    double variance, double change, NoiseUpdateMode updateMode) const {
+  // Add/Subtract the change
   // Protect the variance against becoming negative
-  return std::max(0., variance + std::copysign(change, nav));
+  return std::max(0., variance + std::copysign(change, updateMode));
 }
 }  // namespace detail
 }  // end of namespace Acts

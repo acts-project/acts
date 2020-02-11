@@ -55,6 +55,12 @@ enum MaterialUpdateStage : int {
   postUpdate = 1
 };
 
+/// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
+/// transport
+/// - removeNoise: subtract noise term
+/// - addNoise: add noise term
+enum NoiseUpdateMode : int { removeNoise = -1, addNoise = 1 };
+
 // Eigen definitions
 template <typename T, unsigned int rows, unsigned int cols>
 using ActsMatrix = Eigen::Matrix<T, rows, cols>;
