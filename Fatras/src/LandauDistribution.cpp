@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Kernel/LandauDistribution.hpp"
+#include "ActsFatras/Utilities/LandauDistribution.hpp"
 
 double ActsFatras::LandauDistribution::quantile(double z) {
   // LANDAU quantile : algorithm from CERNLIB G110 ranlan

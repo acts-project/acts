@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/Interactions.hpp"
-#include "ActsFatras/Kernel/LandauDistribution.hpp"
+#include "ActsFatras/Utilities/LandauDistribution.hpp"
 
 namespace ActsFatras {
 
