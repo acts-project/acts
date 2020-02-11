@@ -8,31 +8,26 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialProperties.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
 namespace ActsFatras {
 
-struct X0Limit {
-  /// Return true if the limit in X0 is reached
-  /// @todo modify, return what's left from the detector: needs non-const
-  /// detector
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &detector,
-                  const particle_t &particle) const {
-    return particle.pathInX0() +
-               detector.thickness() / detector.material().X0() >=
-           particle.limitInX0();
+/// Select particles whose X0 limit would be reached after material passage.
+struct PathLimitX0 {
+  bool operator()(const Acts::MaterialProperties &slab,
+                  const Particle &particle) const {
+    return particle.pathLimitX0() <
+           (particle.pathInX0() + slab.thicknessInX0());
   }
 };
 
-struct L0Limit {
-  /// Return true if the limit in X0 is reached
-  /// @todo modify, return what's left from the detector: needs non-const
-  /// detector
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &detector,
-                  const particle_t &particle) const {
-    return particle.pathInL0() +
-               detector.thickness() / detector.material().L0() >=
-           particle.limitInL0();
+/// Select particles whose L0 limit would be reached after material passage.
+struct PathLimitL0 {
+  bool operator()(const Acts::MaterialProperties &slab,
+                  const Particle &particle) const {
+    return particle.pathLimitL0() <
+           (particle.pathInL0() + slab.thicknessInL0());
   }
 };
 
