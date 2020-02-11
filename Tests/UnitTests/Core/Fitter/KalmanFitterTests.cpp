@@ -373,6 +373,25 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK(!Acts::Test::checkCloseRel(fittedParameters.parameters(),
                                          fittedWithHoleParameters.parameters(),
                                          1e-6));
+  // Run KF fit in backward filtering mode
+  kfOptions.backwardFiltering = true;
+  // Fit the track
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto fittedWithBwdFiltering = *fitRes;
+  // Check the filtering and smoothing status flag
+  BOOST_CHECK(fittedWithBwdFiltering.forwardFiltered);
+  BOOST_CHECK(not fittedWithBwdFiltering.smoothed);
+
+  // Count the number of 'smoothed' states
+  auto& trackTip = fittedWithBwdFiltering.trackTip;
+  auto& mj = fittedWithBwdFiltering.fittedStates;
+  size_t nSmoothed = 0;
+  mj.visitBackwards(trackTip, [&](const auto& state) {
+    if (state.hasSmoothed())
+      nSmoothed++;
+  });
+  BOOST_CHECK_EQUAL(nSmoothed, 6u);
 }
 
 }  // namespace Test

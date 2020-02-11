@@ -144,9 +144,11 @@ struct PointwiseMaterialInteraction {
   ///
   /// @param [in] variance A diagonal entry of the covariance matrix
   /// @param [in] change The change that may be applied to it
+  /// @param [in] updateMode The noise update mode (in default: add noise)
   ///
   /// @return The updated variance
-  double updateVariance(double variance, double change) const;
+  double updateVariance(double variance, double change,
+                        NoiseUpdateMode updateMode = addNoise) const;
 };
 }  // namespace detail
 }  // end of namespace Acts

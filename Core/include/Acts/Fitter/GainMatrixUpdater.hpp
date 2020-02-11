@@ -24,7 +24,7 @@ namespace Acts {
 
 /// @brief Update step of Kalman Filter using gain matrix formalism
 ///
-/// @tparam parameters_t Type of the parameters to be updated
+/// @tparam parameters_t Type of the parameters to be filtered
 /// @tparam jacobian_t Type of the Transport jacobian
 ///
 template <typename parameters_t>
@@ -46,13 +46,15 @@ class GainMatrixUpdater {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param trackState the measured track state
+  /// @param direction the navigation direction
   ///
   /// @return Bool indicating whether this update was 'successful'
   /// @note Non-'successful' updates could be holes or outliers,
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  Result<void> operator()(const GeometryContext& /*gctx*/,
-                          track_state_t trackState) const {
+  Result<void> operator()(
+      const GeometryContext& /*gctx*/, track_state_t trackState,
+      const NavigationDirection& direction = forward) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
     // let's make sure the types are consistent
     using SourceLink = typename track_state_t::SourceLink;
@@ -60,6 +62,9 @@ class GainMatrixUpdater {
         typename MultiTrajectory<SourceLink>::TrackStateProxy;
     static_assert(std::is_same_v<track_state_t, TrackStateProxy>,
                   "Given track state type is not a track state proxy");
+
+    using CovMatrix_t = typename parameters_t::CovMatrix_t;
+    using ParVector_t = typename parameters_t::ParVector_t;
 
     // we should definitely have an uncalibrated measurement here
     assert(trackState.hasUncalibrated());
@@ -110,8 +115,11 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
           if (K.hasNaN()) {
-            error = KalmanFitterError::UpdateFailed;  // set to error
-            return false;                             // abort execution
+            error =
+                (direction == forward)
+                    ? KalmanFitterError::ForwardUpdateFailed
+                    : KalmanFitterError::BackwardUpdateFailed;  // set to error
+            return false;  // abort execution
           }
 
           filtered = predicted + K * (calibrated - H * predicted);
@@ -137,6 +145,11 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Chi2: " << trackState.chi2());
           return true;  // continue execution
         });
+
+    if (error) {
+      // error is set, return result
+      return *error;
+    }
 
     // always succeed, no outlier logic yet
     return Result<void>::success();
