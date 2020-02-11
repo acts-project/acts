@@ -8,8 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <random>
-
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 

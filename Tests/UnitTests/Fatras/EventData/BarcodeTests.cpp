@@ -8,8 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <random>
-
 #include "ActsFatras/EventData/Barcode.hpp"
 
 using ActsFatras::Barcode;
