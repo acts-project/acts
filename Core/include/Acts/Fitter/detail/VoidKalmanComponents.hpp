@@ -115,8 +115,8 @@ struct VoidOutlierFinder {
   /// @brief nested config struct
   ///
   struct Config {
-    // Allowed maximum chi2
-    double maxChi2 = std::numeric_limits<double>::max();
+    // Allowed chi2 cut-off
+    double chi2Cutoff = std::numeric_limits<double>::max();
   };
   /// @brief Public call mimicking an outlier finder
   ///
@@ -127,7 +127,7 @@ struct VoidOutlierFinder {
   /// @return Whether it's outlier or not
   template <typename track_state_t>
   bool operator()(const track_state_t& trackState) const {
-    if (trackState.chi2 > m_config.maxChi2) {
+    if (trackState.chi2 > m_config.chi2Cutoff) {
       return true;
     }
     return false;

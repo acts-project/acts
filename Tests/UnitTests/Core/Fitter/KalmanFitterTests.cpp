@@ -225,7 +225,7 @@ struct MinimalOutlierFinder {
   ///
   struct Config {
     /// The measurement significance criteria
-    double measurementSignificance = 0;
+    double measurementSignificanceCutoff = 0;
 
     /// The chi2 round-off error
     double chi2Tolerance = 10e-5;
@@ -251,7 +251,7 @@ struct MinimalOutlierFinder {
     // The p-Value
     double pValue = 1 - boost::math::cdf(chiDist, chi2);
     // If pValue is NOT significant enough => outlier
-    return pValue > m_config.measurementSignificance ? false : true;
+    return pValue > m_config.measurementSignificanceCutoff ? false : true;
   }
 
   /// The config
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   using OutlierFinderConfig = typename MinimalOutlierFinder::Config;
   OutlierFinderConfig ofConfig;
-  ofConfig.measurementSignificance = 0.05;
+  ofConfig.measurementSignificanceCutoff = 0.05;
 
   KalmanFitter kFitter(rPropagator,
                        getDefaultLogger("KalmanFilter", Logging::VERBOSE));

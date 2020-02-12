@@ -49,10 +49,10 @@ namespace Acts {
 template <typename outlier_finder_t = VoidOutlierFinder>
 struct KalmanFitterOptions {
   // Broadcast the outlier finder type
-  using OutlierFinderType = outlier_finder_t;
+  using OutlierFinder = outlier_finder_t;
 
   // Broadcast the outlier finder config type
-  using OutlierFinderConfigType = typename OutlierFinderType::Config;
+  using OutlierFinderConfig = typename OutlierFinder::Config;
 
   /// Deleted default constructor
   KalmanFitterOptions() = delete;
@@ -70,7 +70,7 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      const OutlierFinderConfigType& ofCfg,
+                      const OutlierFinderConfig& ofCfg,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
@@ -91,7 +91,7 @@ struct KalmanFitterOptions {
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   /// The config for the outlier finder
-  OutlierFinderConfigType outlierFinderConfig;
+  OutlierFinderConfig outlierFinderConfig;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -927,9 +927,8 @@ class KalmanFitter {
                   "Source link does not fulfill SourceLinkConcept");
 
     static_assert(
-        std::is_same<
-            outlier_finder_t,
-            typename kalman_fitter_options_t::OutlierFinderType>::value,
+        std::is_same<outlier_finder_t,
+                     typename kalman_fitter_options_t::OutlierFinder>::value,
         "Inconsistent type of outlier finder between kalman fitter and "
         "kalman fitter options");
 
@@ -1027,9 +1026,8 @@ class KalmanFitter {
                   "Source link does not fulfill SourceLinkConcept");
 
     static_assert(
-        std::is_same<
-            outlier_finder_t,
-            typename kalman_fitter_options_t::OutlierFinderType>::value,
+        std::is_same<outlier_finder_t,
+                     typename kalman_fitter_options_t::OutlierFinder>::value,
         "Inconsistent type of outlier finder between kalman fitter and "
         "kalman fitter options");
 
