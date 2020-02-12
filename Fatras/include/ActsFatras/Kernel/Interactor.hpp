@@ -19,7 +19,6 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
-#include "ActsFatras/Kernel/detail/RandomNumberDistributions.hpp"
 
 namespace ActsFatras {
 
