@@ -534,6 +534,8 @@ class KalmanFitter {
             // which is a bit awkward.
             stepper.update(state.stepping, trackStateProxy.filteredParameters(
                                                state.options.geoContext));
+            // We count the state with measurement
+            ++result.measurementStates;
           } else {
             ACTS_VERBOSE(
                 "Filtering step successful. But measurement is deterimined to "
@@ -545,8 +547,6 @@ class KalmanFitter {
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
         }
-        // We count the state with measurement
-        ++result.measurementStates;
         // We count the processed state
         ++result.processedStates;
       } else {

@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/unit_test.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK(!Acts::Test::checkCloseRel(fittedParameters.parameters(),
                                          fittedWithHoleParameters.parameters(),
                                          1e-6));
-  
+
   // Run KF fit in backward filtering mode
   kfOptions.backwardFiltering = true;
   // Fit the track
@@ -451,8 +451,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK(not fittedWithBwdFiltering.smoothed);
 
   // Count the number of 'smoothed' states
-  auto& trackTip = fittedWithBwdFiltering.trackTip;
-  auto& mj = fittedWithBwdFiltering.fittedStates;
+  auto trackTip = fittedWithBwdFiltering.trackTip;
+  auto mj = fittedWithBwdFiltering.fittedStates;
   size_t nSmoothed = 0;
   mj.visitBackwards(trackTip, [&](const auto& state) {
     if (state.hasSmoothed())
@@ -476,8 +476,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto& fittedWithOneOutlier = *fitRes;
 
   // Count the number of outliers
-  auto& trackTip = fittedWithOneOutlier.trackTip;
-  auto& mj = fittedWithOneOutlier.fittedStates;
+  trackTip = fittedWithOneOutlier.trackTip;
+  mj = fittedWithOneOutlier.fittedStates;
   size_t nOutliers = 0;
   mj.visitBackwards(trackTip, [&](const auto& state) {
     auto typeFlags = state.typeFlags();
