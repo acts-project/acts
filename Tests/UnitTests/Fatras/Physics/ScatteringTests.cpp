@@ -37,7 +37,7 @@ void test(const Scattering& scattering, const ActsFatras::Particle& before) {
   std::default_random_engine gen;
   ActsFatras::Particle after = before;
 
-  const auto outgoing = scattering(gen, Dataset::thinSlab, after);
+  const auto outgoing = scattering(gen, Acts::Test::makePercentSlab(), after);
   // scattering leaves absolute energy/momentum unchanged
   CHECK_CLOSE_REL(after.momentum(), before.momentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);

@@ -19,11 +19,6 @@ namespace Dataset {
 namespace data = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-// default test material
-const auto material = Acts::Test::makeBeryllium();
-const Acts::MaterialProperties thinSlab(material, 1_mm);
-const Acts::MaterialProperties thickSlab(material, 15_cm);
-
 // particle identity
 const auto particlePdg = data::make({
     Acts::PdgParticle::eElectron,

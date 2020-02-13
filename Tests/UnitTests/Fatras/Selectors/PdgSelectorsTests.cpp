@@ -13,7 +13,7 @@
 #include "Dataset.hpp"
 
 namespace {
-const auto& detector = Dataset::thinSlab;
+const auto& detector = Dataset::detector;
 const auto& electron = Dataset::centralElectron;
 const auto& positron = Dataset::centralPositron;
 const auto& muon = Dataset::centralMuon;
