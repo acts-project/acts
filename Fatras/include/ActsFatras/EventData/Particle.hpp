@@ -9,21 +9,14 @@
 #pragma once
 
 #include <cmath>
-#include <cstdint>
 #include <limits>
 
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 
 namespace ActsFatras {
-
-/// Process type identifier.
-///
-/// Encodes the type of process that generated the particle.
-enum class ProcessType : uint32_t {
-  eUndefined = 0,
-};
 
 /// Simulation particle information and kinematic state.
 class Particle {
