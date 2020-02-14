@@ -52,10 +52,10 @@ namespace Acts {
 template <typename source_link_selector_t>
 struct TrackFinderOptions {
   // Broadcast the source link selector type
-  using SourceLinkSelectorType = source_link_selector_t;
+  using SourceLinkSelector = source_link_selector_t;
 
   // Broadcast the source link selector config type
-  using SourceLinkSelectorConfigType = typename SourceLinkSelectorType::Config;
+  using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
 
   /// Deleted default constructor
   TrackFinderOptions() = delete;
@@ -75,7 +75,7 @@ struct TrackFinderOptions {
   TrackFinderOptions(std::reference_wrapper<const GeometryContext> gctx,
                      std::reference_wrapper<const MagneticFieldContext> mctx,
                      std::reference_wrapper<const CalibrationContext> cctx,
-                     const SourceLinkSelectorConfigType& slsCfg,
+                     const SourceLinkSelectorConfig& slsCfg,
                      const Surface* rSurface = nullptr, bool mScattering = true,
                      bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
@@ -95,7 +95,7 @@ struct TrackFinderOptions {
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   /// The config for the source link selector
-  SourceLinkSelectorConfigType sourcelinkSelectorConfig;
+  SourceLinkSelectorConfig sourcelinkSelectorConfig;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -733,79 +733,90 @@ class TrackFinder {
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, postUpdate);
       } else {
-        // No source links on surface, add either hole or passive material
-        // TrackState entry multi trajectory No storage allocation for
-        // uncalibrated/calibrated measurement and filtered parameter
-        result.currentTip = result.fittedStates.addTrackState(
-            ~(TrackStatePropMask::Uncalibrated |
-              TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
-            result.currentTip);
+        // Create state if there is measurement on this surface
+        if (preTipState.nMeasurements > 0) {
+          // No source links on surface, add either hole or passive material
+          // TrackState entry multi trajectory No storage allocation for
+          // uncalibrated/calibrated measurement and filtered parameter
+          result.currentTip = result.fittedStates.addTrackState(
+              ~(TrackStatePropMask::Uncalibrated |
+                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
+              result.currentTip);
 
-        ACTS_VERBOSE("Creating non-sourcelink track state with tip = "
-                     << result.currentTip);
+          ACTS_VERBOSE("Creating non-sourcelink track state with tip = "
+                       << result.currentTip);
 
-        // Count the number of processedStates, measurements, outliers and holes
-        auto tipState =
-            TipState{preTipState.nStates + 1, preTipState.nMeasurements,
-                     preTipState.nOutliers, preTipState.nHoles};
+          // Count the number of processedStates, measurements, outliers and
+          // holes
+          auto tipState =
+              TipState{preTipState.nStates + 1, preTipState.nMeasurements,
+                       preTipState.nOutliers, preTipState.nHoles};
 
-        // now get track state proxy back
-        auto trackStateProxy =
-            result.fittedStates.getTrackState(result.currentTip);
+          // now get track state proxy back
+          auto trackStateProxy =
+              result.fittedStates.getTrackState(result.currentTip);
 
-        // Set the track state flags
-        auto& typeFlags = trackStateProxy.typeFlags();
-        typeFlags.set(TrackStateFlag::MaterialFlag);
-        typeFlags.set(TrackStateFlag::ParameterFlag);
+          // Set the track state flags
+          auto& typeFlags = trackStateProxy.typeFlags();
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+          typeFlags.set(TrackStateFlag::ParameterFlag);
 
-        if (surface->associatedDetectorElement() != nullptr) {
-          ACTS_VERBOSE("Detected hole on " << surface->geoID());
-          // If the surface is sensitive, set the hole type flag
-          typeFlags.set(TrackStateFlag::HoleFlag);
+          if (surface->associatedDetectorElement() != nullptr) {
+            ACTS_VERBOSE("Detected hole on " << surface->geoID());
+            // If the surface is sensitive, set the hole type flag
+            typeFlags.set(TrackStateFlag::HoleFlag);
 
-          // Increment of number of holes
-          tipState.nHoles++;
+            // Increment of number of holes
+            tipState.nHoles++;
 
-          // Transport & bind the state to the current surface
-          auto [boundParams, jacobian, pathLength] =
-              stepper.boundState(state.stepping, *surface, true);
+            // Transport & bind the state to the current surface
+            auto [boundParams, jacobian, pathLength] =
+                stepper.boundState(state.stepping, *surface, true);
 
-          // Set the surface
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+            // Set the surface
+            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
-          // Fill the track state
-          trackStateProxy.predicted() = boundParams.parameters();
-          trackStateProxy.predictedCovariance() = *boundParams.covariance();
-          trackStateProxy.jacobian() = jacobian;
-          trackStateProxy.pathLength() = pathLength;
+            // Fill the track state
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = *boundParams.covariance();
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+          } else {
+            ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
+
+            // Transport & get curvilinear state instead of bound state
+            auto [curvilinearParams, jacobian, pathLength] =
+                stepper.curvilinearState(state.stepping, true);
+
+            // Set the surface
+            trackStateProxy.setReferenceSurface(
+                Surface::makeShared<PlaneSurface>(
+                    curvilinearParams.position(),
+                    curvilinearParams.momentum()));
+
+            // Fill the track state
+            trackStateProxy.predicted() = curvilinearParams.parameters();
+            trackStateProxy.predictedCovariance() =
+                *curvilinearParams.covariance();
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+          }
+
+          // Set the filtered parameter index to be the same with predicted
+          // parameter
+          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+
+          // Check if need to stop this branch
+          if (not m_branchStopper(result.fittedStates, result.currentTip)) {
+            // Remember the active tip and its state
+            result.activeTips.emplace(result.currentTip, std::move(tipState));
+            // Count the valid branches on current surface
+            nBranchesOnSurface++;
+          }
+
         } else {
-          ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
-
-          // Transport & get curvilinear state instead of bound state
-          auto [curvilinearParams, jacobian, pathLength] =
-              stepper.curvilinearState(state.stepping, true);
-
-          // Set the surface
-          trackStateProxy.setReferenceSurface(Surface::makeShared<PlaneSurface>(
-              curvilinearParams.position(), curvilinearParams.momentum()));
-
-          // Fill the track state
-          trackStateProxy.predicted() = curvilinearParams.parameters();
-          trackStateProxy.predictedCovariance() =
-              *curvilinearParams.covariance();
-          trackStateProxy.jacobian() = jacobian;
-          trackStateProxy.pathLength() = pathLength;
-        }
-
-        // Set the filtered parameter index to be the same with predicted
-        // parameter
-        trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
-
-        // Check if need to stop this branch
-        if (not m_branchStopper(result.fittedStates, result.currentTip)) {
-          // Remember the active tip and its state
-          result.activeTips.emplace(result.currentTip, std::move(tipState));
-          // Count the valid branches on current surface
+          // Even no state is created, this branch is still valid. Count the
+          // branch on current surface
           nBranchesOnSurface++;
         }
 
@@ -939,8 +950,11 @@ class TrackFinder {
       // Reverse the propagation direction
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);
-      state.options.direction = backward;
       state.stepping.navDir = backward;
+      // Set accumulatd path to zero before targeting surface
+      state.stepping.pathAccumulated = 0.;
+      // Not sure if the following line helps anything
+      state.options.direction = backward;
 
       return Result<void>::success();
     }
@@ -1020,7 +1034,7 @@ class TrackFinder {
     static_assert(
         std::is_same<
             source_link_selector_t,
-            typename track_finder_options_t::SourceLinkSelectorType>::value,
+            typename track_finder_options_t::SourceLinkSelector>::value,
         "Inconsistent type of source link selector between track finder and "
         "track finder options");
 
@@ -1128,7 +1142,7 @@ class TrackFinder {
     static_assert(
         std::is_same<
             source_link_selector_t,
-            typename track_finder_options_t::SourceLinkSelectorType>::value,
+            typename track_finder_options_t::SourceLinkSelector>::value,
         "Inconsistent type of source link selector between track finder and "
         "track finder options");
 
@@ -1188,7 +1202,7 @@ class TrackFinder {
     /// Get the result of the track finding
     auto trackFinderResult = propRes.template get<TrackFinderResult>();
 
-    /// It could happen that propagation reaches path limit or max step size
+    /// It could happen that propagation reaches max step size
     /// before the track finding is finished.
     if (trackFinderResult.result.ok() and
         not trackFinderResult.forwardFiltered) {
