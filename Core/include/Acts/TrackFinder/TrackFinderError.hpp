@@ -20,7 +20,7 @@ enum class TrackFinderError {
   OutputConversionFailed = 3,
   SourcelinkSelectionFailed = 4,
   NoTracksFound = 5,
-  PropagationReachesLimit = 6
+  PropagationReachesMaxSteps = 6
 };
 
 namespace detail {
@@ -42,8 +42,8 @@ class TrackFinderErrorCategory : public std::error_category {
         return "Source link selection failed";
       case TrackFinderError::NoTracksFound:
         return "No track is found";
-      case TrackFinderError::PropagationReachesLimit:
-        return "Propagation reaches path limit before track finding is "
+      case TrackFinderError::PropagationReachesMaxSteps:
+        return "Propagation reaches max steps before track finding is "
                "finished";
       default:
         return "unknown";
