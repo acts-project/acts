@@ -57,12 +57,14 @@ const auto particleParameters = momentumPhi * momentumLambda * momentumAbs *
 
 // utility function to build a particle from the dataset parameters
 inline ActsFatras::Particle makeParticle(double phi, double lambda, double p,
-                                         int pdg, double m, double q) {
-  Acts::Vector3D pos(0, 0, 0);
-  Acts::Vector3D mom(p * std::cos(lambda) * std::cos(phi),
-                     p * std::cos(lambda) * std::sin(phi),
-                     p * std::sin(lambda));
-  return {pos, mom, m, q, pdg};
+                                         Acts::PdgParticle pdg, double m,
+                                         double q) {
+  const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);
+  return ActsFatras::Particle(id, pdg, m, q)
+      .setPosition4(0, 0, 0, 0)
+      .setDirection(std::cos(lambda) * std::cos(phi),
+                    std::cos(lambda) * std::sin(phi), std::sin(lambda))
+      .setMomentum(p);
 }
 
 }  // namespace

@@ -6,11 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Kernel/LandauDistribution.hpp"
+#include "ActsFatras/Utilities/LandauDistribution.hpp"
 
-double ActsFatras::LandauDistribution::quantile(double z, double xi) {
+double ActsFatras::LandauDistribution::quantile(double z) {
   // LANDAU quantile : algorithm from CERNLIB G110 ranlan
-  // with scale parameter xi
   // Converted by Rene Brun from CERNLIB routine ranlan(G110),
   // Moved and adapted to QuantFuncMathCore by B. List 29.4.2010
 
@@ -180,8 +179,6 @@ double ActsFatras::LandauDistribution::quantile(double z, double xi) {
       40.157721, 41.622399, 43.202525, 44.912465, 46.769077, 48.792279,
       51.005773, 53.437996, 56.123356, 59.103894};
 
-  if (xi <= 0)
-    return 0;
   if (z <= 0)
     return -std::numeric_limits<double>::infinity();
   if (z >= 1)
@@ -214,5 +211,5 @@ double ActsFatras::LandauDistribution::quantile(double z, double xi) {
                ((1 + 6.06511919E3 * u + 6.94021044E5 * v) * u);
     }
   }
-  return xi * ranlan;
+  return ranlan;
 }

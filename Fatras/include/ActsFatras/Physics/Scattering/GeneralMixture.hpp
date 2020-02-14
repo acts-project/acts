@@ -11,47 +11,40 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
 
-/// This scatter emulated core and tail scattering
+/// Generate scattering angles using a general mixture model.
 ///
-/// General mixture model Fruehwirth, M. Liendl.
-/// Comp. Phys. Comm. 141 (2001) 230-246
+/// Emulates core and tail scattering as described in
+///
+///     General mixture model Fruehwirth, M. Liendl.
+///     Comp. Phys. Comm. 141 (2001) 230-246
+///
 struct GeneralMixture {
   /// Steering parameter
   bool log_include = true;
-
-  //- Scale the mixture level
+  /// Scale the mixture level
   double genMixtureScalor = 1.;
 
-  /// @brief Call operator to perform this scattering
+  /// Generate a single 3D scattering angle.
   ///
-  /// @tparam generator_t is a random number generator type
-  /// @tparam detector_t is the detector information type
-  /// @tparam particle_t is the particle information type
+  /// @param[in]     generator is the random number generator
+  /// @param[in]     slab      defines the passed material
+  /// @param[in,out] particle  is the particle being scattered
+  /// @return a 3d scattering angle
   ///
-  /// @param[in] generator is the random number generator
-  /// @param[in] detector the detector information
-  /// @param[in] particle the particle which is being scattered
-  ///
-  /// @return a scattering angle in 3D
-  template <typename generator_t, typename detector_t, typename particle_t>
-  double operator()(generator_t &generator, const detector_t &detector,
-                    particle_t &particle) const {
-    // scale the path length to the radiation length
-    // @todo path correction factor
-    double tInX0 = detector.thickness() / detector.material().X0();
+  /// @tparam generator_t is a RandomNumberEngine
+  template <typename generator_t>
+  double operator()(generator_t &generator,
+                    const Acts::MaterialProperties &slab,
+                    Particle &particle) const {
+    double theta = 0.0;
 
-    // material properties
-    double Z = detector.material().Z();  // charge layer material
-
-    double theta(0.);
-
-    if (std::abs(particle.pdg()) != 11) {
-      /// Uniform distribution, will be sampled with generator
-      std::uniform_real_distribution<double> uniformDist(0., 1.);
-
+    if (std::abs(particle.pdg()) != Acts::PdgParticle::eElectron) {
       //----------------------------------------------------------------------------
       // see Mixture models of multiple scattering: computation and simulation.
       // -
@@ -61,39 +54,37 @@ struct GeneralMixture {
       std::array<double, 4> scattering_params;
       // Decide which mixture is best
       double beta2 = (particle.beta() * particle.beta());
-      double tob2 = tInX0 / beta2;
-      if (tob2 > 0.6 / std::pow(Z, 0.6)) {
+      double tInX0 = slab.thicknessInX0();
+      double tob2 = slab.thicknessInX0() / beta2;
+      if (tob2 > 0.6 / std::pow(slab.material().Z(), 0.6)) {
         // Gaussian mixture or pure Gaussian
         if (tob2 > 10) {
-          scattering_params = getGaussian(particle.beta(), particle.p(), tInX0,
-                                          genMixtureScalor);
+          scattering_params = getGaussian(particle.beta(), particle.momentum(),
+                                          tInX0, genMixtureScalor);
         } else {
           scattering_params =
-              getGaussmix(particle.beta(), particle.p(), tInX0,
-                          detector.material().Z(), genMixtureScalor);
+              getGaussmix(particle.beta(), particle.momentum(), tInX0,
+                          slab.material().Z(), genMixtureScalor);
         }
         // Simulate
-        theta = gaussmix(uniformDist, generator, scattering_params);
+        theta = gaussmix(generator, scattering_params);
       } else {
         // Semigaussian mixture - get parameters
         auto scattering_params_sg =
-            getSemigauss(particle.beta(), particle.p(), tInX0,
-                         detector.material().Z(), genMixtureScalor);
+            getSemigauss(particle.beta(), particle.momentum(), tInX0,
+                         slab.material().Z(), genMixtureScalor);
         // Simulate
-        theta = semigauss(uniformDist, generator, scattering_params_sg);
+        theta = semigauss(generator, scattering_params_sg);
       }
     } else {
-      /// Gauss distribution, will be sampled with generator
-      std::normal_distribution<double> gaussDist(0., 1.);
-
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random
-      double qop = particle.q() / particle.p();
-      double theta0 = Acts::computeMultipleScatteringTheta0(
-          detector, particle.pdg(), particle.m(), qop);
-      theta = theta0 * gaussDist(generator);
+      const auto theta0 = Acts::computeMultipleScatteringTheta0(
+          slab, particle.pdg(), particle.mass(), particle.chargeOverMomentum(),
+          particle.charge());
+      theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }
-    // return scaled by sqare root of two
+    // scale from planar to 3d angle
     return M_SQRT2 * theta;
   }
 
@@ -163,8 +154,9 @@ struct GeneralMixture {
   ///
   /// @return a double value that represents the gaussian mixture
   template <typename generator_t>
-  double gaussmix(UniformDist &udist, generator_t &generator,
+  double gaussmix(generator_t &generator,
                   const std::array<double, 4> &scattering_params) const {
+    std::uniform_real_distribution<double> udist(0.0, 1.0);
     double sigma_tot = scattering_params[0];
     double var1 = scattering_params[1];
     double var2 = scattering_params[2];
@@ -186,8 +178,9 @@ struct GeneralMixture {
   ///
   /// @return a double value that represents the gaussian mixture
   template <typename generator_t>
-  double semigauss(UniformDist &udist, generator_t &generator,
+  double semigauss(generator_t &generator,
                    const std::array<double, 6> &scattering_params) const {
+    std::uniform_real_distribution<double> udist(0.0, 1.0);
     double a = scattering_params[0];
     double b = scattering_params[1];
     double var1 = scattering_params[2];

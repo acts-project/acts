@@ -8,57 +8,49 @@
 
 #pragma once
 
+#include <cstdlib>
+
+#include "ActsFatras/EventData/Particle.hpp"
+
 namespace ActsFatras {
 
-template <int pdg_t>
-struct AbsPdgSelector {
-  // absolute Pdg selection
-  const int saPDG = pdg_t;
-
-  /// Return true for all particles with | pdg | matching
-  /// the selection criteria
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &, const particle_t &particle) const {
-    return (particle.pdg() * particle.pdg() == saPDG * saPDG);
-  }
-};
-
-template <int pdg_t>
+/// Select particles of one specific type.
+///
+/// Particle and Antiparticle are treated as two separate types.
+template <int Pdg>
 struct PdgSelector {
-  // Pdg selection
-  const int saPDG = pdg_t;
-
-  /// Return true for all particles with pdg matching
-  /// the selection criteria
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &, const particle_t &particle) const {
-    return (particle.pdg() == saPDG);
+  template <typename detector_t>
+  bool operator()(const detector_t &, const Particle &particle) const {
+    return (static_cast<int>(particle.pdg()) == Pdg);
   }
 };
 
-template <int pdg_t>
-struct AbsPdgExcluder {
-  // absolute Pdg selection
-  const int saPDG = pdg_t;
-
-  /// Return true for all particles with | pdg | matching
-  /// the selection criteria
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &, const particle_t &particle) const {
-    return !(particle.pdg() * particle.pdg() == saPDG * saPDG);
+/// Select particles and antiparticles of one specific type.
+template <int Pdg>
+struct AbsPdgSelector {
+  template <typename detector_t>
+  bool operator()(const detector_t &, const Particle &particle) const {
+    return (std::abs(static_cast<int>(particle.pdg())) == std::abs(Pdg));
   }
 };
 
-template <int pdg_t>
+/// Select all particles except one specific type.
+///
+/// Particle and Antiparticle are treated as two separate types.
+template <int Pdg>
 struct PdgExcluder {
-  // Pdg selection
-  const int saPDG = pdg_t;
+  template <typename detector_t>
+  bool operator()(const detector_t &, const Particle &particle) const {
+    return (static_cast<int>(particle.pdg()) != Pdg);
+  }
+};
 
-  /// Return true for all particles with pdg matching
-  /// the selection criteria
-  template <typename detector_t, typename particle_t>
-  bool operator()(const detector_t &, const particle_t &particle) const {
-    return !(particle.pdg() == saPDG);
+/// Select all particles except for (anti-)particles of one specific type.
+template <int Pdg>
+struct AbsPdgExcluder {
+  template <typename detector_t>
+  bool operator()(const detector_t &, const Particle &particle) const {
+    return (std::abs(static_cast<int>(particle.pdg())) != std::abs(Pdg));
   }
 };
 

@@ -22,13 +22,16 @@ class LandauDistribution {
     /// Parameters must link back to the host distribution.
     using distribution_type = LandauDistribution;
 
-    /// Mean of the Landau distribution
-    double mean = 0.;
-    /// Scale of the Landau distribution
-    double scale = 1.;
+    /// Location parameter.
+    ///
+    /// @warning This is neither the mean nor the most probable value.
+    double location = 0.0;
+    /// Scale parameter.
+    double scale = 1.0;
 
     /// Construct from parameters.
-    param_type(double mean_, double scale_) : mean(mean_), scale(scale_) {}
+    param_type(double location_, double scale_)
+        : location(location_), scale(scale_) {}
     // Explicitlely defaulted construction and assignment
     param_type() = default;
     param_type(const param_type &) = default;
@@ -38,7 +41,7 @@ class LandauDistribution {
 
     /// Parameters should be EqualityComparable
     friend bool operator==(const param_type &lhs, const param_type &rhs) {
-      return (lhs.mean == rhs.mean) and (lhs.scale == rhs.scale);
+      return (lhs.location == rhs.location) and (lhs.scale == rhs.scale);
     }
     friend bool operator!=(const param_type &lhs, const param_type &rhs) {
       return not(lhs == rhs);
@@ -48,7 +51,7 @@ class LandauDistribution {
   using result_type = double;
 
   /// Construct directly from the distribution parameters.
-  LandauDistribution(double mean, double scale) : m_cfg(mean, scale) {}
+  LandauDistribution(double location, double scale) : m_cfg(location, scale) {}
   /// Construct from a parameter object.
   LandauDistribution(const param_type &cfg) : m_cfg(cfg) {}
   // Explicitlely defaulted construction and assignment
@@ -72,14 +75,14 @@ class LandauDistribution {
 
   /// Generate a random number from the configured Landau distribution.
   template <typename Generator>
-  result_type operator()(Generator &engine) {
-    return (*this)(engine, m_cfg);
+  result_type operator()(Generator &generator) {
+    return (*this)(generator, m_cfg);
   }
   /// Generate a random number from the given Landau distribution.
   template <typename Generator>
-  result_type operator()(Generator &engine, const param_type &params) {
-    double x = std::generate_canonical<double, 10>(engine);
-    return params.mean + quantile(x, params.scale);
+  result_type operator()(Generator &generator, const param_type &params) {
+    const auto z = std::uniform_real_distribution<double>()(generator);
+    return params.location + params.scale * quantile(z);
   }
 
   /// Provide standard comparison operators
@@ -95,7 +98,7 @@ class LandauDistribution {
  private:
   param_type m_cfg;
 
-  static double quantile(double z, double xi);
+  static double quantile(double z);
 };
 
 }  // namespace ActsFatras

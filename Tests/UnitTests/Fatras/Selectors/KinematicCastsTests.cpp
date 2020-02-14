@@ -19,31 +19,43 @@ static constexpr double eps = 1e-10;
 
 BOOST_AUTO_TEST_SUITE(FatrasKinematicCasts)
 
+BOOST_AUTO_TEST_CASE(BackwardParticle) {
+  const auto& particle = Dataset::backwardPion;
+
+  CHECK_SMALL(Vrho()(particle), eps);
+  CHECK_CLOSE_REL(Vz()(particle), -100_mm, eps);
+  CHECK_CLOSE_REL(AbsVz()(particle), 100_mm, eps);
+  CHECK_CLOSE_REL(Eta()(particle), -4.5, eps);
+  CHECK_CLOSE_REL(AbsEta()(particle), 4.5, eps);
+  CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV / std::cosh(4.5), eps);
+  CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
+}
+
 BOOST_AUTO_TEST_CASE(CentralParticle) {
   const auto& particle = Dataset::centralPion;
 
-  CHECK_SMALL(vR()(particle), eps);
-  CHECK_SMALL(vZ()(particle), eps);
+  CHECK_SMALL(Vrho()(particle), eps);
+  CHECK_SMALL(Vz()(particle), eps);
   CHECK_SMALL(AbsVz()(particle), eps);
-  CHECK_SMALL(eta()(particle), eps);
-  CHECK_SMALL(absEta()(particle), eps);
-  CHECK_CLOSE_REL(pT()(particle), 1.5_GeV, eps);
-  CHECK_CLOSE_REL(p()(particle), 1.5_GeV, eps);
-  // TODO energy
+  CHECK_SMALL(Eta()(particle), eps);
+  CHECK_SMALL(AbsEta()(particle), eps);
+  CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV, eps);
+  CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
 }
 
 BOOST_AUTO_TEST_CASE(ForwardParticle) {
   const auto& particle = Dataset::forwardPion;
 
-  CHECK_SMALL(vR()(particle), eps);
-  CHECK_CLOSE_REL(vZ()(particle), 100_mm, eps);
+  CHECK_SMALL(Vrho()(particle), eps);
+  CHECK_CLOSE_REL(Vz()(particle), 100_mm, eps);
   CHECK_CLOSE_REL(AbsVz()(particle), 100_mm, eps);
-  // TODO use value comparisons instead of relative checks
-  BOOST_TEST(4.0 < eta()(particle));
-  BOOST_TEST(4.0 < absEta()(particle));
-  BOOST_TEST(10_MeV < pT()(particle));
-  BOOST_TEST(1.5_GeV < p()(particle));
-  // TODO energy
+  CHECK_CLOSE_REL(Eta()(particle), 4.5, eps);
+  CHECK_CLOSE_REL(AbsEta()(particle), 4.5, eps);
+  CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV / std::cosh(4.5), eps);
+  CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

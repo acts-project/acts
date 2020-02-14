@@ -11,36 +11,34 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
 
-/// @The struct for the Highland-based scattering
+/// Generate scattering angles using the Highland/PDG parametrization.
 ///
-/// This will scatter particles with a single gaussian distribution
-/// according to the highland formula.
+/// The angles are drawn from a single normal distribution with a width
+/// given by the Highland/PDG formula.
 struct Highland {
-  /// @brief Call operator to perform this scattering
+  /// Generate a single 3D scattering angle.
   ///
-  /// @tparam generator_t is a random number generator type
-  /// @tparam detector_t is the detector information type
-  /// @tparam particle_t is the particle information type
+  /// @param[in]     generator is the random number generator
+  /// @param[in]     slab      defines the passed material
+  /// @param[in,out] particle  is the particle being scattered
+  /// @return a 3d scattering angle
   ///
-  /// @param[in] generator is the random number generator
-  /// @param[in] detector the detector information
-  /// @param[in] particle the particle which is being scattered
-  ///
-  /// @return a scattering angle in 3D
-  template <typename generator_t, typename detector_t, typename particle_t>
-  double operator()(generator_t &generator, const detector_t &detector,
-                    particle_t &particle) const {
-    // Gauss distribution, will be sampled sampled with generator
-    std::normal_distribution<double> gaussDist(0., 1.);
-
-    double qop = particle.q() / particle.p();
-    double theta0 = Acts::computeMultipleScatteringTheta0(
-        detector, particle.pdg(), particle.m(), qop, particle.q());
-    // Return projection factor times sigma times grauss random
-    return M_SQRT2 * theta0 * gaussDist(generator);
+  /// @tparam generator_t is a RandomNumberEngine
+  template <typename generator_t>
+  double operator()(generator_t &generator,
+                    const Acts::MaterialProperties &slab,
+                    Particle &particle) const {
+    // compute the planar scattering angle
+    const auto theta0 = Acts::computeMultipleScatteringTheta0(
+        slab, particle.pdg(), particle.mass(), particle.chargeOverMomentum(),
+        particle.charge());
+    // draw from the normal distribution representing the 3d angle distribution
+    return std::normal_distribution<double>(0.0, M_SQRT2 * theta0)(generator);
   }
 };
 

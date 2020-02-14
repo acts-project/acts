@@ -9,57 +9,54 @@
 #pragma once
 
 #include <random>
+#include <vector>
+
+#include "Acts/Material/MaterialProperties.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
 
-const double log_2 = std::log(2.);
-
-/// The struct for the EnergyLoss physics list
+/// Simulate electron energy loss using the Bethe-Heitler description.
 ///
-/// Bethe-Heitler for electron brem description as described here:
+/// Bethe-Heitler for electron bremsstrahlung description as described here:
 /// "A Gaussian-mixture approximation of the Bethe–Heitler model of electron
 /// energy loss by bremsstrahlung" R. Frühwirth
-///
 struct BetheHeitler {
   /// The flag to include BetheHeitler process or not
   bool betheHeitler = true;
-
   /// A scaling factor to
   double scaleFactor = 1.;
 
-  /// @brief Call operator for the Bethe-Heitler energy loss
+  /// Simulate energy loss and update the particle parameters.
   ///
-  /// @tparam generator_t is a random number generator type
-  /// @tparam detector_t is the detector information type
-  /// @tparam particle_t is the particle information type
+  /// @param[in]     generator is the random number generator
+  /// @param[in]     slab      defines the passed material
+  /// @param[in,out] particle  is the particle being updated
+  /// @return Empty secondaries containers.
   ///
-  /// @param[in] generator is the random number generator
-  /// @param[in] detector the detector information
-  /// @param[in] particle the particle which is being scattered
-  ///
-  /// @return eventually produced photons
-  template <typename generator_t, typename detector_t, typename particle_t>
-  std::vector<particle_t> operator()(generator_t &generator,
-                                     const detector_t &detector,
-                                     particle_t &particle) const {
+  /// @tparam generator_t is a RandomNumberEngine
+  template <typename generator_t>
+  std::vector<Particle> operator()(generator_t &generator,
+                                   const Acts::MaterialProperties &slab,
+                                   Particle &particle) const {
     // Do nothing if the flag is set to false
     if (not betheHeitler) {
       return {};
     }
 
-    double tInX0 = detector.thickness() / detector.material().X0();
-
     // Take a random gamma-distributed value - depending on t/X0
-    std::gamma_distribution<double> gDist(tInX0 / log_2, 1.);
+    std::gamma_distribution<double> gDist(slab.thicknessInX0() / std::log(2.0),
+                                          1.0);
 
-    double u = gDist(generator);
-    double z = std::exp(-1. * u);
-    double sampledEnergyLoss = std::abs(scaleFactor * particle.E() * (z - 1.));
+    const auto u = gDist(generator);
+    const auto z = std::exp(-u);
+    const auto sampledEnergyLoss =
+        std::abs(scaleFactor * particle.energy() * (z - 1.));
 
     // apply the energy loss
-    particle.energyLoss(sampledEnergyLoss);
+    particle.correctEnergy(-sampledEnergyLoss);
 
-    // @TODO return photons, needs particle_creator_t
+    // TODO return the lost energy as a photon
     return {};
   }
 };
