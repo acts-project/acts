@@ -1093,11 +1093,11 @@ class TrackFinder {
     /// before the track finding is finished.
     /// @TODO: tune source link selector or propagation options to suppress this
     /// It can also due to the fact that the navigation never breaks (as in KF
-    /// fit call)
+    /// fit call?)
     if (trackFinderResult.result.ok() and
         not trackFinderResult.forwardFiltered) {
       trackFinderResult.result =
-          Result<void>(TrackFinderError::PropagationReachesLimit);
+          Result<void>(TrackFinderError::PropagationReachesMaxSteps);
     }
 
     if (!trackFinderResult.result.ok()) {
@@ -1207,7 +1207,7 @@ class TrackFinder {
     if (trackFinderResult.result.ok() and
         not trackFinderResult.forwardFiltered) {
       trackFinderResult.result =
-          Result<void>(TrackFinderError::PropagationReachesLimit);
+          Result<void>(TrackFinderError::PropagationReachesMaxSteps);
     }
 
     if (!trackFinderResult.result.ok()) {
