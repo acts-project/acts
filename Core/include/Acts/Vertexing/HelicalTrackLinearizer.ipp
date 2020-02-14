@@ -21,22 +21,31 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
-  // Variables to store track params and position at PCA to linPointPos
-  BoundVector paramsAtPCA;
-  SpacePointVector positionAtPCA{SpacePointVector::Zero()};
-  BoundSymMatrix parCovarianceAtPCA;
-
+  const BoundParameters* endParams = nullptr;
+  std::unique_ptr<const BoundParameters> uParams = nullptr;
   // Do the propagation to linPointPos
   auto result =
       m_cfg.propagator->propagate(*params, *perigeeSurface, m_cfg.pOptions);
   if (result.ok()) {
-    const auto& propRes = *result;
-    paramsAtPCA = propRes.endParameters->parameters();
-    VectorHelpers::position(positionAtPCA) = propRes.endParameters->position();
-    parCovarianceAtPCA = *propRes.endParameters->covariance();
+
+    uParams = std::move((*result).endParameters);
+    endParams = uParams.get();
 
   } else {
     return result.error();
+  }
+
+  BoundVector paramsAtPCA = endParams->parameters();
+  SpacePointVector positionAtPCA;
+  VectorHelpers::position(positionAtPCA) = endParams->position();
+  BoundSymMatrix parCovarianceAtPCA = *(endParams->covariance());
+
+  if(endParams->covariance()->determinant() <= 0){
+
+    // Use the original parameters
+     paramsAtPCA = params->parameters();
+     VectorHelpers::position(positionAtPCA) = params->position();
+     parCovarianceAtPCA = *(params->covariance());
   }
 
   // phiV and functions
@@ -56,14 +65,17 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   Vector3D momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
-  double Bz = m_cfg.bField.getField(linPointPos)[eZ];
+  double Bz = m_cfg.bField.getField(VectorHelpers::position(positionAtPCA))[eZ];
+
 
   double rho;
+  double rho2;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
     rho = m_cfg.maxRho;
   } else {
     // signed(!) rho
+    rho2 = sinTh / (qOvP * Bz);
     rho = sinTh * (1. / qOvP) / Bz;
   }
 
@@ -72,6 +84,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   double Y = positionAtPCA(1) - linPointPos.y() - rho * cosPhiV;
   double S2 = (X * X + Y * Y);
   double S = std::sqrt(S2);
+
 
   /// F(V, p_i) at PCA in Billoir paper
   /// (see FullBilloirVertexFitter.hpp for paper reference,
@@ -149,6 +162,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // Last two rows:
   momentumJacobian(3, 1) = 1.;
   momentumJacobian(4, 2) = 1.;
+
 
   // const term F(V_0, p_0) in Talyor expansion
   BoundVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
