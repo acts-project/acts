@@ -115,7 +115,7 @@ class Vertex {
   SpacePointSymMatrix m_covariance = SpacePointSymMatrix::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = std::numeric_limits<double>::max();  // chi2 of the fit
-  int m_numberDoF = 0;  // number of degrees of freedom
+  double m_numberDoF = 0.;  // number of degrees of freedom
 };
 
 }  // namespace Acts
