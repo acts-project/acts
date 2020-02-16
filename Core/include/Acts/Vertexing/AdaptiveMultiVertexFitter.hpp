@@ -47,7 +47,6 @@ class AdaptiveMultiVertexFitter {
  public:
   /// @brief Helper struct for storing vertex related information
   struct VertexInfo {
-
     // The linearization point
     Acts::SpacePointVector linPoint{Acts::SpacePointVector::Zero()};
 

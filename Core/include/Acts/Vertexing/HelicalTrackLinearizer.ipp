@@ -27,7 +27,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   auto result =
       m_cfg.propagator->propagate(*params, *perigeeSurface, m_cfg.pOptions);
   if (result.ok()) {
-
     uParams = std::move((*result).endParameters);
     endParams = uParams.get();
 
@@ -40,12 +39,11 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   VectorHelpers::position(positionAtPCA) = endParams->position();
   BoundSymMatrix parCovarianceAtPCA = *(endParams->covariance());
 
-  if(endParams->covariance()->determinant() <= 0){
-
+  if (endParams->covariance()->determinant() <= 0) {
     // Use the original parameters
-     paramsAtPCA = params->parameters();
-     VectorHelpers::position(positionAtPCA) = params->position();
-     parCovarianceAtPCA = *(params->covariance());
+    paramsAtPCA = params->parameters();
+    VectorHelpers::position(positionAtPCA) = params->position();
+    parCovarianceAtPCA = *(params->covariance());
   }
 
   // phiV and functions
@@ -67,7 +65,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // get B-field z-component at current position
   double Bz = m_cfg.bField.getField(VectorHelpers::position(positionAtPCA))[eZ];
 
-
   double rho;
   double rho2;
   // Curvature is infinite w/o b field
@@ -84,7 +81,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   double Y = positionAtPCA(1) - linPointPos.y() - rho * cosPhiV;
   double S2 = (X * X + Y * Y);
   double S = std::sqrt(S2);
-
 
   /// F(V, p_i) at PCA in Billoir paper
   /// (see FullBilloirVertexFitter.hpp for paper reference,
@@ -162,7 +158,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // Last two rows:
   momentumJacobian(3, 1) = 1.;
   momentumJacobian(4, 2) = 1.;
-
 
   // const term F(V_0, p_0) in Talyor expansion
   BoundVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
