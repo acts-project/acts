@@ -15,8 +15,8 @@ namespace ActsFatras {
 
 /// Select particles whose X0 limit would be reached after material passage.
 struct PathLimitX0 {
-  bool operator()(const Acts::MaterialProperties &slab,
-                  const Particle &particle) const {
+  bool operator()(const Particle &particle,
+                  const Acts::MaterialProperties &slab) const {
     return particle.pathLimitX0() <
            (particle.pathInX0() + slab.thicknessInX0());
   }
@@ -24,8 +24,8 @@ struct PathLimitX0 {
 
 /// Select particles whose L0 limit would be reached after material passage.
 struct PathLimitL0 {
-  bool operator()(const Acts::MaterialProperties &slab,
-                  const Particle &particle) const {
+  bool operator()(const Particle &particle,
+                  const Acts::MaterialProperties &slab) const {
     return particle.pathLimitL0() <
            (particle.pathInL0() + slab.thicknessInL0());
   }
