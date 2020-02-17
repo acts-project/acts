@@ -23,8 +23,6 @@ namespace ActsFatras {
 /// @tparam scattering_model_t Model implementation to draw a scattering angle.
 template <typename scattering_model_t>
 struct Scattering {
-  /// The flag to include scattering or not
-  bool scattering = true;
   /// The scattering formula
   scattering_model_t angle;
 
@@ -40,11 +38,6 @@ struct Scattering {
   std::vector<Particle> operator()(generator_t &generator,
                                    const Acts::MaterialProperties &slab,
                                    Particle &particle) const {
-    // Do nothing if the flag is set to false
-    if (not scattering) {
-      return {};
-    }
-
     // the scattered direction can be computed by rotating the initial direction
     // around a vector orthogonal to the initial direction, i.e. the scattering
     // deflector, by the scattering angle. there are an infinite number of
