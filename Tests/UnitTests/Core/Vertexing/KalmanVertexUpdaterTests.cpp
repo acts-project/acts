@@ -166,8 +166,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // After update, vertex should be closer to the track
     BOOST_CHECK(newDistance < oldDistance);
 
-    // Track should have been added to the vertex
-    BOOST_CHECK(vtx.tracks().size() > 0);
+    // Note: KalmanVertexUpdater updates the vertex w.r.t. the
+    // newly given track, but does NOT add the track the the
+    // TrackAtVertex list. Has to be done manually after calling
+    // the update method.
+    BOOST_CHECK(vtx.tracks().size() == 0);
 
   }  // end for loop
 
