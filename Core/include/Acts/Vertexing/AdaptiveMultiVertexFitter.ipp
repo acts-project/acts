@@ -90,16 +90,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         currentVtx->setCovariance(state.vtxInfoMap[currentVtx]
                                       .constraintVertex.fullCovariance()
                                       .template block<3, 3>(0, 0));
-        std::cout << "3" << std::endl;
-        std::cout << state.vtxInfoMap[currentVtx]
-                         .constraintVertex.fullCovariance()
-                         .template block<3, 3>(0, 0)
-                  << std::endl;
-
       }
 
       else if (currentVtx->fullCovariance() == SpacePointSymMatrix::Zero()) {
-        std::cout << "4" << std::endl;
         return VertexingError::NoCovariance;
       }
       auto weight =
