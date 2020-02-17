@@ -44,49 +44,18 @@ Acts::KalmanVertexUpdater::updatePosition(
   const auto& trkParamWeight = (linTrack.covarianceAtPCA.block<5, 5>(0, 0))
                                    .inverse();  // G_k in comments below
 
-  std::cout << "k1" << std::endl;
-  std::cout << posJac << std::endl;
-
-  std::cout << "k2" << std::endl;
-  std::cout << momJac << std::endl;
-
-  std::cout << "k3" << std::endl;
-  std::cout << trkParams << std::endl;
-
-  std::cout << "k4" << std::endl;
-  std::cout << constTerm << std::endl;
-
-  std::cout << "k5" << std::endl;
-  std::cout << trkParamWeight << std::endl;
-
   // Vertex to be updated
   const auto& oldVtxPos = vtx->position();
   const auto& oldVtxWeight = (vtx->covariance()).inverse().eval();
-
-  std::cout << "k6" << std::endl;
-  std::cout << oldVtxPos << std::endl;
-
-  std::cout << "k7" << std::endl;
-  std::cout << oldVtxWeight << std::endl;
-
-  std::cout << "k8" << std::endl;
-  std::cout << vtx->covariance() << std::endl;
 
   // W_k matrix
   ActsSymMatrixD<3> wMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
-  std::cout << "k9" << std::endl;
-  std::cout << wMat << std::endl;
-
   // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
   auto gBmat = trkParamWeight - trkParamWeight *
                                     (momJac * (wMat * momJac.transpose())) *
                                     trkParamWeight.transpose();
-
-  std::cout << "k10" << std::endl;
-  std::cout << gBmat << std::endl;
-                                  
   // New vertex cov matrix
   auto newVtxCov = (oldVtxWeight +
                     trackWeight * sign * posJac.transpose() * (gBmat * posJac))

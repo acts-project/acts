@@ -62,9 +62,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // in previous iteration afterwards
       currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
-      std::cout << "1" << std::endl;
-      std::cout << currentVtxInfo.oldPosition << std::endl;
-
       // Determine if relinearization is needed
       if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).norm() >
           m_cfg.maxDistToLinPoint) {
@@ -104,10 +101,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     // all vertices, run again over all vertices to set track weights
     // and update the vertex
     setWeightsAndUpdate(state, linearizer);
-
-    for(auto currentVtx : state.vertexCollection){
-      std::cout << "vtxpos: " << currentVtx->fullPosition() << std::endl;
-    }
 
     if (!state.annealingState.equilibriumReached) {
       m_cfg.annealingTool.anneal(state.annealingState);
@@ -300,8 +293,6 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
 
     auto oldTracks = vtx->tracks();
 
-    std::cout << "old vtx pos before kal: " << vtx->fullPosition() << std::endl;
-
     for (const auto& trkAtVtx : oldTracks) {
       // Create copy of current trackAtVertex in order
       // to modify it below
@@ -345,7 +336,6 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
 
     vtx->setTracksAtVertex(newTracks);
 
-    std::cout << "new vtx pos after kal: " << vtx->fullPosition() << std::endl;
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
   }  // End loop over vertex collection
 
@@ -392,7 +382,6 @@ bool Acts::AdaptiveMultiVertexFitter<
                 vtx->fullPosition().template head<3>();
     const auto& vtxWgt =
         (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
-    std::cout << "vtxWgt: " << vtxWgt << std::endl;
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;
