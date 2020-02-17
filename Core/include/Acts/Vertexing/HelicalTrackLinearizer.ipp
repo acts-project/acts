@@ -159,9 +159,23 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   momentumJacobian(3, 1) = 1.;
   momentumJacobian(4, 2) = 1.;
 
+  std::cout << "h1" << std::endl;
+  std::cout << predParamsAtPCA << std::endl;
+  std::cout << "h2" << std::endl;
+  std::cout << positionAtPCA << std::endl;
+  std::cout << "h3" << std::endl;
+  std::cout << positionJacobian << std::endl;
+  std::cout << "h4" << std::endl;
+  std::cout << momentumJacobian << std::endl;
+  std::cout << "h5" << std::endl;
+  std::cout << momentumAtPCA << std::endl;
+
   // const term F(V_0, p_0) in Talyor expansion
   BoundVector constTerm = predParamsAtPCA - positionJacobian * positionAtPCA -
                           momentumJacobian * momentumAtPCA;
+
+  std::cout << "h6" << std::endl;
+  std::cout << constTerm << std::endl;
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, linPoint,
                          positionJacobian, momentumJacobian, positionAtPCA,
