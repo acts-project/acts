@@ -105,6 +105,10 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     // and update the vertex
     setWeightsAndUpdate(state, linearizer);
 
+    for(auto currentVtx : state.vertexCollection){
+      std::cout << "vtxpos: " << currentVtx->fullPosition() << std::endl;
+    }
+
     if (!state.annealingState.equilibriumReached) {
       m_cfg.annealingTool.anneal(state.annealingState);
     }
@@ -296,6 +300,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
 
     auto oldTracks = vtx->tracks();
 
+    std::cout << "old vtx pos before kal: " << vtx->fullPosition() << std::endl;
+
     for (const auto& trkAtVtx : oldTracks) {
       // Create copy of current trackAtVertex in order
       // to modify it below
@@ -325,7 +331,6 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
           newTrkPtr->linearizedState = *result;
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
-
         // Update the vertex with the new track
         auto updateRes =
             KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(
@@ -340,6 +345,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
 
     vtx->setTracksAtVertex(newTracks);
 
+    std::cout << "new vtx pos after kal: " << vtx->fullPosition() << std::endl;
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
   }  // End loop over vertex collection
 

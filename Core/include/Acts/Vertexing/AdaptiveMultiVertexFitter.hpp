@@ -54,9 +54,10 @@ class AdaptiveMultiVertexFitter {
     Acts::Vertex<input_track_t> constraintVertex;
 
     // Old position from last iteration
-    Acts::SpacePointVector oldPosition;
+    Acts::SpacePointVector oldPosition{Acts::SpacePointVector::Zero()};
 
-    Acts::SpacePointVector seedPosition;
+    // Seed position
+    Acts::SpacePointVector seedPosition{Acts::SpacePointVector::Zero()};
 
     // Needs relinearization bool
     bool relinearize;
