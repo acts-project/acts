@@ -77,7 +77,10 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
           SpacePointSymMatrix::Zero()) {
         std::cout << "2" << std::endl;
-        std::cout << state.vtxInfoMap[currentVtx].constraintVertex.fullPosition().template head<3>() << std::endl;
+        std::cout << state.vtxInfoMap[currentVtx]
+                         .constraintVertex.fullPosition()
+                         .template head<3>()
+                  << std::endl;
 
         currentVtx->setPosition(state.vtxInfoMap[currentVtx]
                                     .constraintVertex.fullPosition()
@@ -88,8 +91,10 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
                                       .constraintVertex.fullCovariance()
                                       .template block<3, 3>(0, 0));
         std::cout << "3" << std::endl;
-        std::cout << state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance().template block<3, 3>(0, 0) << std::endl;
-
+        std::cout << state.vtxInfoMap[currentVtx]
+                         .constraintVertex.fullCovariance()
+                         .template block<3, 3>(0, 0)
+                  << std::endl;
 
       }
 
@@ -100,7 +105,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       auto weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
       std::cout << "5" << std::endl;
-        std::cout << weight << std::endl;
+      std::cout << weight << std::endl;
 
       auto covAnn = currentVtx->fullCovariance() * weight;
       currentVtx->setCovariance(covAnn.template block<3, 3>(0, 0));
@@ -321,7 +326,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
 
       std::cout << "17" << std::endl;
-      std::cout << newTrkPtr->trackWeight << ", " << m_cfg.minWeight << ", " << trkAtVtx.vertexCompatibility << std::endl;
+      std::cout << newTrkPtr->trackWeight << ", " << m_cfg.minWeight << ", "
+                << trkAtVtx.vertexCompatibility << std::endl;
 
       if (newTrkPtr->trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
