@@ -104,8 +104,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       }
       auto weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
-      std::cout << "5" << std::endl;
-      std::cout << weight << std::endl;
 
       auto covAnn = currentVtx->fullCovariance() * weight;
       currentVtx->setCovariance(covAnn.template block<3, 3>(0, 0));
