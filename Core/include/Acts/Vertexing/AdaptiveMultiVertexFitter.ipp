@@ -62,6 +62,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // in previous iteration afterwards
       currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
+      std::cout << "1" << std::endl;
+      std::cout << currentVtxInfo.oldPosition << std::endl;
+
       // Determine if relinearization is needed
       if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).norm() >
           m_cfg.maxDistToLinPoint) {
@@ -73,6 +76,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
           SpacePointSymMatrix::Zero()) {
+        std::cout << "2" << std::endl;
+        std::cout << state.vtxInfoMap[currentVtx].constraintVertex.fullPosition().template head<3>() << std::endl;
+
         currentVtx->setPosition(state.vtxInfoMap[currentVtx]
                                     .constraintVertex.fullPosition()
                                     .template head<3>());
@@ -81,14 +87,21 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         currentVtx->setCovariance(state.vtxInfoMap[currentVtx]
                                       .constraintVertex.fullCovariance()
                                       .template block<3, 3>(0, 0));
+        std::cout << "3" << std::endl;
+        std::cout << state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance().template block<3, 3>(0, 0) << std::endl;
+
 
       }
 
       else if (currentVtx->fullCovariance() == SpacePointSymMatrix::Zero()) {
+        std::cout << "4" << std::endl;
         return VertexingError::NoCovariance;
       }
       auto weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
+      std::cout << "5" << std::endl;
+        std::cout << weight << std::endl;
+
       auto covAnn = currentVtx->fullCovariance() * weight;
       currentVtx->setCovariance(covAnn.template block<3, 3>(0, 0));
 
@@ -96,6 +109,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // at current vertex
       setAllVertexCompatibilities(state, geoContext, currentVtx);
     }  // End loop over vertex collection
+
     // Now after having estimated all compatibilities of all tracks at
     // all vertices, run again over all vertices to set track weights
     // and update the vertex
@@ -306,6 +320,9 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
       newTrkPtr->trackWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
 
+      std::cout << "17" << std::endl;
+      std::cout << newTrkPtr->trackWeight << ", " << m_cfg.minWeight << ", " << trkAtVtx.vertexCompatibility << std::endl;
+
       if (newTrkPtr->trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
         if (newTrkPtr->linearizedState.covarianceAtPCA ==
@@ -335,9 +352,6 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
     }  // End loop over tracks at vertex
 
     vtx->setTracksAtVertex(newTracks);
-
-    for (const auto& trkAtVtx : vtx->tracks()) {
-    }
 
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
   }  // End loop over vertex collection
@@ -385,7 +399,7 @@ bool Acts::AdaptiveMultiVertexFitter<
                 vtx->fullPosition().template head<3>();
     const auto& vtxWgt =
         (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
-        std::cout << "vtxWgt: " << vtxWgt << std::endl;
+    std::cout << "vtxWgt: " << vtxWgt << std::endl;
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;

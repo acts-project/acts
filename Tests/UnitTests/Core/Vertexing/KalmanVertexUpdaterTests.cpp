@@ -63,7 +63,7 @@ std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
 /// @brief Unit test for KalmanVertexUpdater
 ///
 BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
-  bool debug = true;
+  bool debug = false;
 
   // Number of tests
   unsigned int nTests = 10;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SpacePointSymMatrix::Identity()*0.01);
+    vtx.setFullCovariance(SpacePointSymMatrix::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     auto res = KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(

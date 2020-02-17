@@ -487,19 +487,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   CHECK_CLOSE_ABS(vtx1Pos, expVtx1Pos, 0.001_mm);
   CHECK_CLOSE_ABS(vtx1Cov, expVtx1Cov, 0.001_mm);
   for (int i = 0; i < expVtx1TrkWeights.size(); i++) {
-    CHECK_CLOSE_ABS(expVtx1TrkWeights[i], vtx1Trks[i].trackWeight, 0.001);
+    CHECK_CLOSE_ABS(vtx1Trks[i].trackWeight, expVtx1TrkWeights[i], 0.001);
   }
-  CHECK_CLOSE_ABS(expVtx1chi2, vtx1FQ.first, 0.001);
-  CHECK_CLOSE_ABS(expVtx1ndf, vtx1FQ.second, 0.001);
+  CHECK_CLOSE_ABS(vtx1FQ.first, expVtx1chi2, 0.001);
+  CHECK_CLOSE_ABS(vtx1FQ.second, expVtx1ndf, 0.001);
 
   // Vertex 2
   CHECK_CLOSE_ABS(vtx2Pos, expVtx2Pos, 0.001_mm);
   CHECK_CLOSE_ABS(vtx2Cov, expVtx2Cov, 0.001_mm);
   for (int i = 0; i < expVtx2TrkWeights.size(); i++) {
-    CHECK_CLOSE_ABS(expVtx2TrkWeights[i], vtx2Trks[i].trackWeight, 0.001);
+    CHECK_CLOSE_ABS(vtx2Trks[i].trackWeight, expVtx2TrkWeights[i], 0.001);
   }
-  CHECK_CLOSE_ABS(expVtx2chi2, vtx2FQ.first, 0.001);
-  CHECK_CLOSE_ABS(expVtx2ndf, vtx2FQ.second, 0.001);
+  CHECK_CLOSE_ABS(vtx2FQ.first, expVtx2chi2, 0.001);
+  CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2ndf, 0.001);
 }
 
 }  // namespace Test
