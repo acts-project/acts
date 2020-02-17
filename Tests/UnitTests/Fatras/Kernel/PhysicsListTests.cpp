@@ -84,6 +84,10 @@ BOOST_AUTO_TEST_CASE(SingleFatal) {
 
   // fatal process must always abort
   BOOST_TEST(fatalList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  // unless we disable it
+  fatalList.disable<FatalProcess>();
+  BOOST_TEST(
+      not fatalList(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 
 BOOST_AUTO_TEST_CASE(SterileFatal) {
@@ -93,6 +97,10 @@ BOOST_AUTO_TEST_CASE(SterileFatal) {
 
   // the contained fatal process must always abort
   BOOST_TEST(physicsList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  // with the fatal process disabled, it should go through again
+  physicsList.disable<FatalProcess>();
+  BOOST_TEST(
+      not physicsList(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
