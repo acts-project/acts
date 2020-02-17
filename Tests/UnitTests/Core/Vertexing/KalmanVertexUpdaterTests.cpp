@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     BOOST_CHECK(newDistance < oldDistance);
 
     // Note: KalmanVertexUpdater updates the vertex w.r.t. the
-    // newly given track, but does NOT add the track the the
+    // newly given track, but does NOT add the track to the
     // TrackAtVertex list. Has to be done manually after calling
     // the update method.
     BOOST_CHECK(vtx.tracks().size() == 0);

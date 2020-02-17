@@ -24,7 +24,7 @@ namespace KalmanVertexUpdater {
 
 /// @brief Updates vertex with knowledge of new track
 /// @note KalmanVertexUpdater updates the vertex w.r.t. the
-/// newly given track, but does NOT add the track the the
+/// newly given track, but does NOT add the track to the
 /// TrackAtVertex list. Has to be done manually after calling
 /// this method
 ///
