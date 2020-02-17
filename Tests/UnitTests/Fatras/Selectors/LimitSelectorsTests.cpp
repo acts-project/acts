@@ -21,7 +21,7 @@ namespace {
 ActsFatras::Particle makeParticleCloseToLimit() {
   // create particle and move it close to the X0/L0 limit
   auto particle = Dataset::centralPion;
-  particle.addPassedMaterial(0.125, 0.0125);
+  particle.setMaterialPassed(0.125, 0.0125);
   particle.setMaterialLimits(
       0.125 + 1.125 * Dataset::thinSlab.thicknessInX0(),
       0.0125 + 1.125 * Dataset::thinSlab.thicknessInL0());

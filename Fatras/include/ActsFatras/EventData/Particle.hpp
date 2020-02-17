@@ -151,13 +151,13 @@ class Particle {
   /// Check if the particle is dead, i.e is at rest.
   bool operator!() const { return m_momentum <= Scalar(0); }
 
-  /// Register material that the particle has passed.
+  /// Set the material that the particle has passed.
   ///
-  /// @param thicknessX0 material thickness measured in radiation lengths
-  /// @param thicknessL0 material thickness measured in interaction lengths
-  Particle &addPassedMaterial(Scalar thicknessX0, Scalar thicknessL0) {
-    m_pathX0 += thicknessX0;
-    m_pathL0 += thicknessL0;
+  /// @param pathX0 passed material measured in radiation lengths
+  /// @param pathL0 passed thickness measured in interaction lengths
+  Particle &setMaterialPassed(Scalar pathX0, Scalar pathL0) {
+    m_pathX0 = pathX0;
+    m_pathL0 = pathL0;
     return *this;
   }
   /// Set the material limits.
