@@ -57,7 +57,7 @@ Acts::KalmanVertexUpdater::updatePosition(
 
   // Vertex to be updated
   const auto& oldVtxPos = vtx->position();
-  const auto& oldVtxWeight = (vtx->covariance()).inverse().eval();
+  const auto& oldVtxWeight = (vtx->covariance()).inverse();
   std::cout << "5.1" << std::endl;
   std::cout << vtx->covariance() << std::endl;
 
