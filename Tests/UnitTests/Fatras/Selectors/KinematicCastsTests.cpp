@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <limits>
+
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "Dataset.hpp"
@@ -15,7 +17,10 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras::Casts;
 
-static constexpr double eps = 1e-10;
+namespace {
+// TODO why does this have to be so high to avoid failure in eta tests?
+constexpr auto eps = 128 * std::numeric_limits<double>::epsilon();
+}  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasKinematicCasts)
 
@@ -29,7 +34,8 @@ BOOST_AUTO_TEST_CASE(BackwardParticle) {
   CHECK_CLOSE_REL(AbsEta()(particle), 4.5, eps);
   CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV / std::cosh(4.5), eps);
   CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
-  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
+  // allow higher threshold to allow for potential mass term differences
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, 139.57018_MeV), 1e-7);
 }
 
 BOOST_AUTO_TEST_CASE(CentralParticle) {
@@ -42,7 +48,8 @@ BOOST_AUTO_TEST_CASE(CentralParticle) {
   CHECK_SMALL(AbsEta()(particle), eps);
   CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV, eps);
   CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
-  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
+  // allow higher threshold to allow for potential mass term differences
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, 139.57018_MeV), 1e-7);
 }
 
 BOOST_AUTO_TEST_CASE(ForwardParticle) {
@@ -55,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ForwardParticle) {
   CHECK_CLOSE_REL(AbsEta()(particle), 4.5, eps);
   CHECK_CLOSE_REL(Pt()(particle), 1.5_GeV / std::cosh(4.5), eps);
   CHECK_CLOSE_REL(P()(particle), 1.5_GeV, eps);
-  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, Dataset::massPion), eps);
+  // allow higher threshold to allow for potential mass term differences
+  CHECK_CLOSE_REL(E()(particle), std::hypot(1.5_GeV, 139.57018_MeV), 1e-7);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

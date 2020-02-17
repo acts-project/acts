@@ -14,12 +14,11 @@
 
 using namespace Acts::UnitLiterals;
 
-BOOST_AUTO_TEST_SUITE(LimitSelectors)
-
+namespace {
 // Construct a particle that is close to its X0/L0 path limit.
 //
 // Passing a thin slab should still be Ok, but the thick slab should not.
-static ActsFatras::Particle makeParticleCloseToLimit() {
+ActsFatras::Particle makeParticleCloseToLimit() {
   // create particle and move it close to the X0/L0 limit
   auto particle = Dataset::centralPion;
   particle.addPassedMaterial(0.125, 0.0125);
@@ -28,6 +27,9 @@ static ActsFatras::Particle makeParticleCloseToLimit() {
       0.0125 + 1.125 * Dataset::thinSlab.thicknessInL0());
   return particle;
 }
+}  // namespace
+
+BOOST_AUTO_TEST_SUITE(LimitSelectors)
 
 BOOST_AUTO_TEST_CASE(PathLimitX0) {
   ActsFatras::PathLimitX0 select;

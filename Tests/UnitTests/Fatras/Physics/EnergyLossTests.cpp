@@ -20,11 +20,10 @@
 
 BOOST_AUTO_TEST_SUITE(FatrasEnergyLoss)
 
-BOOST_DATA_TEST_CASE(BetheBloch, Dataset::particleParameters, phi, lambda, p,
-                     pdg, m, q) {
+BOOST_DATA_TEST_CASE(BetheBloch, Dataset::particleParameters, pdg, phi, lambda,
+                     p) {
   std::default_random_engine gen;
-  ActsFatras::Particle before =
-      Dataset::makeParticle(phi, lambda, p, pdg, m, q);
+  ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, lambda, p);
   ActsFatras::Particle after = before;
 
   ActsFatras::BetheBloch process;
@@ -36,11 +35,10 @@ BOOST_DATA_TEST_CASE(BetheBloch, Dataset::particleParameters, phi, lambda, p,
   BOOST_TEST(outgoing.empty());
 }
 
-BOOST_DATA_TEST_CASE(BetheHeitler, Dataset::particleParameters, phi, lambda, p,
-                     pdg, m, q) {
+BOOST_DATA_TEST_CASE(BetheHeitler, Dataset::particleParameters, pdg, phi,
+                     lambda, p) {
   std::default_random_engine gen;
-  ActsFatras::Particle before =
-      Dataset::makeParticle(phi, lambda, p, pdg, m, q);
+  ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, lambda, p);
   ActsFatras::Particle after = before;
 
   ActsFatras::BetheHeitler process;

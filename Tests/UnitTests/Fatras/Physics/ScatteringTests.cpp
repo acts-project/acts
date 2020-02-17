@@ -50,21 +50,19 @@ void test(const Scattering& scattering, const ActsFatras::Particle& before) {
 
 BOOST_AUTO_TEST_SUITE(FatrasScattering)
 
-BOOST_DATA_TEST_CASE(GeneralMixture, Dataset::particleParameters, phi, lambda,
-                     p, pdg, m, q) {
-  test(GeneralMixtureScattering(),
-       Dataset::makeParticle(phi, lambda, p, pdg, m, q));
+BOOST_DATA_TEST_CASE(GeneralMixture, Dataset::particleParameters, pdg, phi,
+                     lambda, p) {
+  test(GeneralMixtureScattering(), Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
-BOOST_DATA_TEST_CASE(GaussianMixture, Dataset::particleParameters, phi, lambda,
-                     p, pdg, m, q) {
-  test(GaussianMixtureScattering(),
-       Dataset::makeParticle(phi, lambda, p, pdg, m, q));
+BOOST_DATA_TEST_CASE(GaussianMixture, Dataset::particleParameters, pdg, phi,
+                     lambda, p) {
+  test(GaussianMixtureScattering(), Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
-BOOST_DATA_TEST_CASE(Highland, Dataset::particleParameters, phi, lambda, p, pdg,
-                     m, q) {
-  test(HighlandScattering(), Dataset::makeParticle(phi, lambda, p, pdg, m, q));
+BOOST_DATA_TEST_CASE(Highland, Dataset::particleParameters, pdg, phi, lambda,
+                     p) {
+  test(HighlandScattering(), Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
