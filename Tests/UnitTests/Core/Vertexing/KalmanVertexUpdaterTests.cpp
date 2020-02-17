@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SpacePointSymMatrix::Identity());
+    vtx.setFullCovariance(SpacePointSymMatrix::Identity()*0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     auto res = KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(
