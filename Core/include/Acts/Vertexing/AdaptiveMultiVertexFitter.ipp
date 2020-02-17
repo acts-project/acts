@@ -76,12 +76,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
           SpacePointSymMatrix::Zero()) {
-        std::cout << "2" << std::endl;
-        std::cout << state.vtxInfoMap[currentVtx]
-                         .constraintVertex.fullPosition()
-                         .template head<3>()
-                  << std::endl;
-
         currentVtx->setPosition(state.vtxInfoMap[currentVtx]
                                     .constraintVertex.fullPosition()
                                     .template head<3>());
