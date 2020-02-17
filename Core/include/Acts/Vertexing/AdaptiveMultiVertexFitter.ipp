@@ -325,10 +325,6 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
       newTrkPtr->trackWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
 
-      std::cout << "17" << std::endl;
-      std::cout << newTrkPtr->trackWeight << ", " << m_cfg.minWeight << ", "
-                << trkAtVtx.vertexCompatibility << std::endl;
-
       if (newTrkPtr->trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
         if (newTrkPtr->linearizedState.covarianceAtPCA ==
