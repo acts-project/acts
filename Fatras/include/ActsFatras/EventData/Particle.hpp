@@ -58,7 +58,7 @@ class Particle {
   Particle &operator=(Particle &&) = default;
 
   /// Set the process type that generated this particle.
-  Particle &process(ProcessType proc) { return m_process = proc, *this; }
+  Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
     m_position4 = pos4;
