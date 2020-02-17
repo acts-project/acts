@@ -384,7 +384,7 @@ bool Acts::AdaptiveMultiVertexFitter<
     auto diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
                 vtx->fullPosition().template head<3>();
     const auto& vtxWgt =
-        vtx->fullCovariance().template block<3, 3>(0, 0).inverse();
+        (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
         std::cout << "vtxWgt: " << vtxWgt << std::endl;
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
