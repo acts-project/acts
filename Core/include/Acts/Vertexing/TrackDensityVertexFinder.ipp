@@ -36,7 +36,8 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
 
   ActsSymMatrixD<3> seedCov = vFinderOptions.vertexConstraint.covariance();
 
-  if (m_cfg.findWithWidth && std::isnormal(zAndWidth.second)) {
+  // Check if a constraint is provided and set the new z position constraint
+  if (seedCov != ActsSymMatrixD<3>::Zero() && std::isnormal(zAndWidth.second)) {
     seedCov(eZ, eZ) = zAndWidth.second * zAndWidth.second;
   }
 

@@ -44,8 +44,6 @@ class TrackDensityVertexFinder {
   struct Config {
     // The track density estimator
     track_density_t trackDensityEstimator;
-    // Run the vertex finder with width information
-    bool findWithWidth = false;
   };
 
   /// @brief Function that finds single vertex candidate
