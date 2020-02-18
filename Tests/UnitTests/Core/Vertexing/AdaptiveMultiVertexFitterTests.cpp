@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtx1Constr.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::VertexInfo vtxInfo1;
+  VertexInfo<BoundParameters> vtxInfo1;
   vtxInfo1.linPoint.setZero();
   vtxInfo1.linPoint.head<3>() = vtxPos1;
   vtxInfo1.constraintVertex = vtx1Constr;
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtx2Constr.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::VertexInfo vtxInfo2;
+  VertexInfo<BoundParameters> vtxInfo2;
   vtxInfo2.linPoint.setZero();
   vtxInfo2.linPoint.head<3>() = vtxPos2;
   vtxInfo2.constraintVertex = vtx2Constr;

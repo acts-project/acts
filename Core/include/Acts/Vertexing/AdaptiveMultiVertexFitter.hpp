@@ -18,6 +18,7 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterOptions.hpp"
+#include "Acts/Vertexing/AMVFInfo.hpp"
 
 #include <functional>
 
@@ -49,34 +50,6 @@ class AdaptiveMultiVertexFitter {
       ImpactPoint3dEstimator<InputTrack_t, Propagator_t>;
 
  public:
-  /// @brief Helper struct for storing vertex related information
-  struct VertexInfo {
-    // The linearization point
-    Acts::SpacePointVector linPoint{Acts::SpacePointVector::Zero()};
-
-    // The constraint vertex
-    Acts::Vertex<input_track_t> constraintVertex;
-
-    // Old position from last iteration
-    Acts::SpacePointVector oldPosition{Acts::SpacePointVector::Zero()};
-
-    // Seed position
-    Acts::SpacePointVector seedPosition{Acts::SpacePointVector::Zero()};
-
-    // Needs relinearization bool
-    bool relinearize;
-  };
-
-  /// @brief Helper struct for storing TrackAtVertex related
-  struct TrackAtVertexInfo {
-    // Links to vertices currently using the TrackAtVertex object
-    std::vector<Vertex<input_track_t>*> linksToVertices;
-
-    // Track parameters at point of closest approach in 3d as
-    // retrieved by ImpactPoint3dEstimator::getParamsAtClosestApproach
-    std::unique_ptr<const BoundParameters> ip3dParams;
-  };
-
   /// @brief The fitter state
   struct State {
     // Vertex collection to be fitted
@@ -86,10 +59,10 @@ class AdaptiveMultiVertexFitter {
     AnnealingUtility::State annealingState;
 
     // Map to store vertices information
-    std::map<Vertex<InputTrack_t>*, VertexInfo> vtxInfoMap;
+    std::map<Vertex<InputTrack_t>*, VertexInfo<InputTrack_t>> vtxInfoMap;
 
     // Map to store tracks information
-    std::map<unsigned long, TrackAtVertexInfo> trkInfoMap;
+    std::map<unsigned long, TrackAtVertexInfo<InputTrack_t>> trkInfoMap;
 
     /// @brief Default State constructor
     State() = default;

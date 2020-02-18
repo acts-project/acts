@@ -55,7 +55,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto currentVtx : state.vertexCollection) {
-      VertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
+      VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
       currentVtxInfo.relinearize = false;
       // Store old position of vertex, i.e. seed position
       // in case of first iteration or position determined
@@ -232,7 +232,7 @@ Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(State& state, const GeometryContext& geoContext,
                                 Vertex<input_track_t>* currentVtx) const {
-  VertexInfo& currentVtxInfo = state.vtxInfoMap[currentVtx];
+  VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
   // Create empty list of new TrackAtVertex objects
   // to be filled below. Needed due to constness of
   // tracksAtVertex list at vertex
