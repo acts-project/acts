@@ -1,1 +1,1 @@
-add_unittest(TrackFinderTests TrackFinderTests.cpp)
+add_unittest(CombinatorialKalmanFilterTests CombinatorialKalmanFilterTests.cpp)
