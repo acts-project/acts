@@ -8,13 +8,12 @@
 
 #pragma once
 
-#include <cmath>
 #include <random>
 #include <vector>
 
 #include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Utilities/CurvilinearUnitVectors.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
@@ -26,8 +25,6 @@ template <typename scattering_model_t>
 struct Scattering {
   /// The flag to include scattering or not
   bool scattering = true;
-  /// Include the log term
-  bool parametric = false;
   /// The scattering formula
   scattering_model_t angle;
 
@@ -48,73 +45,33 @@ struct Scattering {
       return {};
     }
 
-    // 3D scattering angle
-    double angle3D = angle(generator, slab, particle);
+    // the scattered direction can be computed by rotating the initial direction
+    // around a vector orthogonal to the initial direction, i.e. the scattering
+    // deflector, by the scattering angle. there are an infinite number of
+    // vectors orthogonal to the initial direction. the deflector is rotated by
+    // some angle relative to some fixpoint.
+    //
+    // thus two random angles are required: the random deflector orientation
+    // angle drawn uniformly from the [-pi,pi) range and the scattering angle
+    // drawn from the specific scattering model distribution.
 
-    // parametric scattering
-    if (parametric) {
-      // the initial values
-      double theta = Acts::VectorHelpers::theta(particle.direction());
-      double phi = Acts::VectorHelpers::phi(particle.direction());
-      double sinTheta = (sin(theta) * sin(theta) > 10e-10) ? sin(theta) : 1.;
+    // draw the random orientation angle
+    const auto psi =
+        std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
+    // draw the scattering angle
+    const auto theta = angle(generator, slab, particle);
 
-      // sample them in an independent way
-      const double projectionFactor = 1. / std::sqrt(2.);
-      double deltaTheta = projectionFactor * angle3D;
-      double numDetlaPhi = 0.;  //?? @THIS IS WRONG HERE !
-      double deltaPhi = projectionFactor * numDetlaPhi / sinTheta;
+    Acts::Vector3D direction = particle.direction();
+    // construct the combined rotation to the scattered direction
+    Acts::RotationMatrix3D rotation(
+        // rotation of the scattering deflector axis relative to the reference
+        Acts::AngleAxis3D(psi, direction) *
+        // rotation by the scattering angle around the deflector axis
+        Acts::AngleAxis3D(theta, Acts::makeCurvilinearUnitU(direction)));
+    direction.applyOnTheLeft(rotation);
+    particle.setDirection(direction);
 
-      // @todo: use bound parameter
-      // (i) phi
-      phi += deltaPhi;
-      if (phi >= M_PI)
-        phi -= M_PI;
-      else if (phi < -M_PI)
-        phi += M_PI;
-      // (ii) theta
-      theta += deltaTheta;
-      if (theta > M_PI)
-        theta -= M_PI;
-      else if (theta < 0.)
-        theta += M_PI;
-
-      double sphi = std::sin(phi);
-      double cphi = std::cos(phi);
-      double stheta = std::sin(theta);
-      double ctheta = std::cos(theta);
-
-      // assign the new values
-      particle.setDirection(
-          Acts::Vector3D(cphi * stheta, sphi * stheta, ctheta));
-    } else {
-      /// uniform distribution
-      std::uniform_real_distribution<double> uniformDist(0., 1.);
-
-      // Create a random uniform distribution between in the intervall [0,1]
-      double psi = 2. * M_PI * uniformDist(generator);
-
-      // more complex but "more true"
-      Acts::Vector3D pDirection(particle.direction());
-      double x = -pDirection.y();
-      double y = pDirection.x();
-      double z = 0.;
-
-      // if it runs along the z axis - no good ==> take the x axis
-      if (pDirection.z() * pDirection.z() > 0.999999) {
-        x = 1.;
-        y = 0.;
-      }
-      // deflector direction
-      Acts::Vector3D deflector(x, y, z);
-      // rotate the new direction for scattering using theta and  psi
-      Acts::RotationMatrix3D rotation;
-      rotation = Acts::AngleAxis3D(psi, pDirection) *
-                 Acts::AngleAxis3D(angle3D, deflector);
-      // rotate and set a new direction to the cache
-      particle.setDirection(rotation * pDirection);
-    }
-    // scattering always returns an empty list
-    // - it is a non-distructive process
+    // scattering is non-destructive and produces no secondaries
     return {};
   }
 };
