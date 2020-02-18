@@ -14,7 +14,7 @@
 
 namespace Acts {
 // This is the custom error code enum
-enum class TrackFinderError {
+enum class CombinatorialKalmanFilterError {
   UpdateFailed = 1,
   SmoothFailed = 2,
   OutputConversionFailed = 3,
@@ -25,24 +25,26 @@ enum class TrackFinderError {
 
 namespace detail {
 // Define a custom error code category derived from std::error_category
-class TrackFinderErrorCategory : public std::error_category {
+class CombinatorialKalmanFilterErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category
-  const char* name() const noexcept final { return "TrackFinderError"; }
+  const char* name() const noexcept final {
+    return "CombinatorialKalmanFilterError";
+  }
   // Return what each enum means in text
   std::string message(int c) const final {
-    switch (static_cast<TrackFinderError>(c)) {
-      case TrackFinderError::UpdateFailed:
+    switch (static_cast<CombinatorialKalmanFilterError>(c)) {
+      case CombinatorialKalmanFilterError::UpdateFailed:
         return "Kalman update failed";
-      case TrackFinderError::SmoothFailed:
+      case CombinatorialKalmanFilterError::SmoothFailed:
         return "Kalman smooth failed";
-      case TrackFinderError::OutputConversionFailed:
+      case CombinatorialKalmanFilterError::OutputConversionFailed:
         return "Kalman output conversion failed";
-      case TrackFinderError::SourcelinkSelectionFailed:
+      case CombinatorialKalmanFilterError::SourcelinkSelectionFailed:
         return "Source link selection failed";
-      case TrackFinderError::NoTracksFound:
+      case CombinatorialKalmanFilterError::NoTracksFound:
         return "No track is found";
-      case TrackFinderError::PropagationReachesMaxSteps:
+      case CombinatorialKalmanFilterError::PropagationReachesMaxSteps:
         return "Propagation reaches max steps before track finding is "
                "finished";
       default:
@@ -53,19 +55,20 @@ class TrackFinderErrorCategory : public std::error_category {
 }  // namespace detail
 
 // Declare a global function returning a static instance of the custom category
-extern inline const detail::TrackFinderErrorCategory&
-TrackFinderErrorCategory() {
-  static detail::TrackFinderErrorCategory c;
+extern inline const detail::CombinatorialKalmanFilterErrorCategory&
+CombinatorialKalmanFilterErrorCategory() {
+  static detail::CombinatorialKalmanFilterErrorCategory c;
   return c;
 }
 
-inline std::error_code make_error_code(Acts::TrackFinderError e) {
-  return {static_cast<int>(e), Acts::TrackFinderErrorCategory()};
+inline std::error_code make_error_code(Acts::CombinatorialKalmanFilterError e) {
+  return {static_cast<int>(e), Acts::CombinatorialKalmanFilterErrorCategory()};
 }
 }  // namespace Acts
 
 namespace std {
 // register with STL
 template <>
-struct is_error_code_enum<Acts::TrackFinderError> : std::true_type {};
+struct is_error_code_enum<Acts::CombinatorialKalmanFilterError>
+    : std::true_type {};
 }  // namespace std

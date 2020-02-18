@@ -25,7 +25,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
-#include "Acts/TrackFinder/TrackFinderError.hpp"
+#include "Acts/TrackFinder/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinder/detail/VoidTrackFinderComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -39,18 +39,18 @@
 
 namespace Acts {
 
-/// @brief Options struct how the Track Finder is called
+/// @brief Options struct how the CombinatorialKalmanFilter (CKF) is called
 ///
 /// @tparam source_link_selector_t The source link selector type
 ///
-/// It contains the context of the track finder call, the source link selector
+/// It contains the context of the CKF call, the source link selector
 /// config, the optional surface where to express the track finding/fitting
 /// result, config for material effects and whether to run smoothing to get
 /// fitted parameters
 ///
 /// @note the context objects must be provided
 template <typename source_link_selector_t>
-struct TrackFinderOptions {
+struct CombinatorialKalmanFilterOptions {
   // Broadcast the source link selector type
   using SourceLinkSelector = source_link_selector_t;
 
@@ -58,26 +58,26 @@ struct TrackFinderOptions {
   using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
 
   /// Deleted default constructor
-  TrackFinderOptions() = delete;
+  CombinatorialKalmanFilterOptions() = delete;
 
   /// PropagatorOptions with context
   ///
-  /// @param gctx The goemetry context for this track finding
-  /// @param mctx The magnetic context for this track finding
-  /// @param cctx The calibration context for this track finding
+  /// @param gctx The goemetry context for this track finding/fitting
+  /// @param mctx The magnetic context for this track finding/fitting
+  /// @param cctx The calibration context for this track finding/fitting
   /// @param slsCfg The config for the source link selector for this track
-  /// finding
+  /// finding/fitting
   /// @param rSurface The reference surface for the eventual track fitting to be
   /// expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   /// @param rSmoothing Whether to run smoothing to get fitted parameter
-  TrackFinderOptions(std::reference_wrapper<const GeometryContext> gctx,
-                     std::reference_wrapper<const MagneticFieldContext> mctx,
-                     std::reference_wrapper<const CalibrationContext> cctx,
-                     const SourceLinkSelectorConfig& slsCfg,
-                     const Surface* rSurface = nullptr, bool mScattering = true,
-                     bool eLoss = true, bool rSmoothing = true)
+  CombinatorialKalmanFilterOptions(
+      std::reference_wrapper<const GeometryContext> gctx,
+      std::reference_wrapper<const MagneticFieldContext> mctx,
+      std::reference_wrapper<const CalibrationContext> cctx,
+      const SourceLinkSelectorConfig& slsCfg, const Surface* rSurface = nullptr,
+      bool mScattering = true, bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -111,7 +111,7 @@ struct TrackFinderOptions {
 };
 
 template <typename source_link_t>
-struct TrackFinderResult {
+struct CombinatorialKalmanFilterResult {
   /// Struct to keep track of track quality
   struct TipState {
     // Total number of states
@@ -157,7 +157,7 @@ struct TrackFinderResult {
   Result<void> result{Result<void>::success()};
 };
 
-/// @brief Track finder implementation of Acts as a plugin
+/// @brief CombinatorialKalmanFilter implementation of Acts as a plugin
 ///
 /// to the Propgator
 ///
@@ -170,7 +170,7 @@ struct TrackFinderResult {
 /// @tparam input_converter_t Type of the input converter class
 /// @tparam output_converter_t Type of the output converter class
 ///
-/// The track finder contains an Actor and a Sequencer sub-class.
+/// The CombinatorialKalmanFilter contains an Actor and a Sequencer sub-class.
 /// The Sequencer has to be part of the Navigator of the Propagator
 /// in order to initialize and provide the measurement surfaces.
 ///
@@ -186,9 +186,9 @@ struct TrackFinderResult {
 ///   to calibrate measurements using track information, this could be
 ///    e.g. sagging for wires, module deformations, etc.
 ///
-/// Measurements are not required to be ordered for the track finder,
-/// measurement ordering needs to be figured out by the navigation of
-/// the propagator.
+/// Measurements are not required to be ordered for the
+/// CombinatorialKalmanFilter, measurement ordering needs to be figured out by
+/// the navigation of the propagator.
 ///
 /// The Input converter is a converter that transforms the input
 /// measurement/track/segments into a set of FittableMeasurements
@@ -204,20 +204,21 @@ template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename calibrator_t = VoidMeasurementCalibrator,
           typename input_converter_t = VoidKalmanComponents,
           typename output_converter_t = VoidKalmanComponents>
-class TrackFinder {
+class CombinatorialKalmanFilter {
  public:
   /// Shorthand definition
   using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
 
   /// Default constructor is deleted
-  TrackFinder() = delete;
+  CombinatorialKalmanFilter() = delete;
 
   /// Constructor from arguments
-  TrackFinder(propagator_t pPropagator,
-              std::unique_ptr<const Logger> logger =
-                  getDefaultLogger("TrackFinder", Logging::INFO),
-              input_converter_t pInputCnv = input_converter_t(),
-              output_converter_t pOutputCnv = output_converter_t())
+  CombinatorialKalmanFilter(
+      propagator_t pPropagator,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("CombinatorialKalmanFilter", Logging::INFO),
+      input_converter_t pInputCnv = input_converter_t(),
+      output_converter_t pOutputCnv = output_converter_t())
       : m_propagator(std::move(pPropagator)),
         m_inputConverter(std::move(pInputCnv)),
         m_outputConverter(std::move(pOutputCnv)),
@@ -246,12 +247,12 @@ class TrackFinder {
   static constexpr bool isDirectNavigator =
       std::is_same<KalmanNavigator, DirectNavigator>::value;
 
-  /// @brief Propagator Actor plugin for the TrackFinder
+  /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
   /// @tparam parameters_t The type of parameters used for "local" paremeters.
   ///
-  /// The TrackFinderActor does not rely on the measurements to be
+  /// The CombinatorialKalmanFilterActor does not rely on the measurements to be
   /// sorted along the track.
   template <typename source_link_t, typename parameters_t>
   class Actor {
@@ -268,7 +269,7 @@ class TrackFinder {
           m_calibrator(std::move(pCalibrator)) {}
 
     /// Broadcast the result_type
-    using result_type = TrackFinderResult<source_link_t>;
+    using result_type = CombinatorialKalmanFilterResult<source_link_t>;
 
     /// Broadcast the track tip state type
     using TipState = typename result_type::TipState;
@@ -288,7 +289,7 @@ class TrackFinder {
     /// Whether to run smoothing to get fitted parameter
     bool smoothing = true;
 
-    /// @brief Track finder actor operation
+    /// @brief CombinatorialKalmanFilter actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
@@ -299,7 +300,7 @@ class TrackFinder {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
-      ACTS_VERBOSE("TrackFinder step");
+      ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       // Initialization:
       // - Only when track states are not set
@@ -373,7 +374,7 @@ class TrackFinder {
               "Propagation jumps to branch with tip = " << result.currentTip);
           reset(state, stepper, result);
         } else {
-          ACTS_VERBOSE("Finish forward track finding with "
+          ACTS_VERBOSE("Finish forward Kalman filtering with "
                        << result.trackTips.size() << " found tracks");
           result.forwardFiltered = true;
         }
@@ -381,7 +382,8 @@ class TrackFinder {
 
       // No found tracks is taken as an error
       if (result.forwardFiltered and result.trackTips.empty()) {
-        result.result = Result<void>(TrackFinderError::NoTracksFound);
+        result.result =
+            Result<void>(CombinatorialKalmanFilterError::NoTracksFound);
       }
 
       // If there are found tracks, iterate over the found tracks for smoothing
@@ -391,7 +393,7 @@ class TrackFinder {
         if (not smoothing) {
           // If not run smoothing, manually set the targetReached to abort the
           // propagation
-          ACTS_VERBOSE("Finish track finding without smoothing");
+          ACTS_VERBOSE("Finish forward Kalman filtering without smoothing");
           state.navigation.targetReached = true;
         } else {
           // Finalization
@@ -440,14 +442,15 @@ class TrackFinder {
               // Need to go back to start targeting for the rest tracks
               state.stepping.navDir = forward;
             } else {
-              ACTS_VERBOSE("Finish track finding and fitting");
+              ACTS_VERBOSE(
+                  "Finish forward Kalman filtering and backward smoothing");
             }
           }
         }
       }
     }
 
-    /// @brief Track finder actor operation : initialize
+    /// @brief CombinatorialKalmanFilter actor operation : initialize
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
@@ -503,7 +506,7 @@ class TrackFinder {
       materialInteractor(state.navigation.startSurface, state, stepper);
     }
 
-    /// @brief Track finder actor operation :
+    /// @brief CombinatorialKalmanFilter actor operation :
     /// - filtering for all measurement(s) on surface
     /// - store selected track states in multiTrajectory
     /// - update propagator state to the (last) selected track state
@@ -563,9 +566,10 @@ class TrackFinder {
 
         // No returned source link is taken as error
         if (candidateIndices.empty()) {
-          ACTS_ERROR("Source link selection failed: "
-                     << TrackFinderError::SourcelinkSelectionFailed);
-          return TrackFinderError::SourcelinkSelectionFailed;
+          ACTS_ERROR(
+              "Source link selection failed: "
+              << CombinatorialKalmanFilterError::SourcelinkSelectionFailed);
+          return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
         } else {
           // Remember the tip of the neighbor state on this surface
           size_t neighborTip = SIZE_MAX;
@@ -833,7 +837,7 @@ class TrackFinder {
               "Propagation jumps to branch with tip = " << result.currentTip);
           reset(state, stepper, result);
         } else {
-          ACTS_VERBOSE("Stop forward track finding with "
+          ACTS_VERBOSE("Stop forward Kalman filtering with "
                        << result.trackTips.size() << " found tracks");
           result.forwardFiltered = true;
         }
@@ -842,7 +846,7 @@ class TrackFinder {
       return Result<void>::success();
     }
 
-    /// @brief Track finder actor operation : material interaction
+    /// @brief CombinatorialKalmanFilter actor operation : material interaction
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
@@ -922,7 +926,7 @@ class TrackFinder {
       // Return error if the track has no measurement states (but this should
       // not happen)
       if (measurementIndices.empty()) {
-        return TrackFinderError::SmoothFailed;
+        return CombinatorialKalmanFilterError::SmoothFailed;
       }
       // Screen output for debugging
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -959,16 +963,17 @@ class TrackFinder {
       return Result<void>::success();
     }
 
-    /// Pointer to a logger that is owned by the parent, TrackFinder
+    /// Pointer to a logger that is owned by the parent,
+    /// CombinatorialKalmanFilter
     const Logger* m_logger;
 
     /// Getter for the logger, to support logging macros
     const Logger& logger() const { return *m_logger; }
 
-    /// The track finder updater
+    /// The CombinatorialKalmanFilter updater
     updater_t m_updater;
 
-    /// The track finder smoother
+    /// The CombinatorialKalmanFilter smoother
     smoother_t m_smoother;
 
     /// The source link selector
@@ -1008,12 +1013,14 @@ class TrackFinder {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam track_finder_options_t Type of the track finder options
+  /// @tparam comb_kalman_filter_options_t Type of the CombinatorialKalmanFilter
+  /// options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
-  /// @param tfOptions TrackFinderOptions steering the track finding
+  /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
+  /// finding
   /// @note The input measurements are given in the form of @c SourceLinks.
   /// It's
   /// @c calibrator_t's job to turn them into calibrated measurements used in
@@ -1021,12 +1028,13 @@ class TrackFinder {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename track_finder_options_t,
+            typename comb_kalman_filter_options_t,
             typename parameters_t = BoundParameters,
-            typename result_t = Result<TrackFinderResult<source_link_t>>>
+            typename result_t =
+                Result<CombinatorialKalmanFilterResult<source_link_t>>>
   auto findTracks(const std::vector<source_link_t>& sourcelinks,
                   const start_parameters_t& sParameters,
-                  const track_finder_options_t& tfOptions) const
+                  const comb_kalman_filter_options_t& tfOptions) const
       -> std::enable_if_t<!isDirectNavigator, result_t> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
@@ -1034,9 +1042,10 @@ class TrackFinder {
     static_assert(
         std::is_same<
             source_link_selector_t,
-            typename track_finder_options_t::SourceLinkSelector>::value,
-        "Inconsistent type of source link selector between track finder and "
-        "track finder options");
+            typename comb_kalman_filter_options_t::SourceLinkSelector>::value,
+        "Inconsistent type of source link selector between "
+        "CombinatorialKalmanFilter and "
+        " CombinatorialKalmanFilter options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
@@ -1048,36 +1057,38 @@ class TrackFinder {
     }
 
     // Create the ActionList and AbortList
-    using TrackFinderAborter = Aborter<source_link_t, parameters_t>;
-    using TrackFinderActor = Actor<source_link_t, parameters_t>;
-    using TrackFinderResult = typename TrackFinderActor::result_type;
-    using Actors = ActionList<TrackFinderActor>;
-    using Aborters = AbortList<TrackFinderAborter>;
+    using CombinatorialKalmanFilterAborter =
+        Aborter<source_link_t, parameters_t>;
+    using CombinatorialKalmanFilterActor = Actor<source_link_t, parameters_t>;
+    using CombinatorialKalmanFilterResult =
+        typename CombinatorialKalmanFilterActor::result_type;
+    using Actors = ActionList<CombinatorialKalmanFilterActor>;
+    using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
                                                     tfOptions.magFieldContext);
 
     // Catch the actor and set the measurements
-    auto& trackFinderActor =
-        propOptions.actionList.template get<TrackFinderActor>();
-    trackFinderActor.m_logger = m_logger.get();
-    trackFinderActor.inputMeasurements = std::move(inputMeasurements);
-    trackFinderActor.targetSurface = tfOptions.referenceSurface;
-    trackFinderActor.multipleScattering = tfOptions.multipleScattering;
-    trackFinderActor.energyLoss = tfOptions.energyLoss;
-    trackFinderActor.smoothing = tfOptions.smoothing;
+    auto& combKalmanActor =
+        propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
+    combKalmanActor.m_logger = m_logger.get();
+    combKalmanActor.inputMeasurements = std::move(inputMeasurements);
+    combKalmanActor.targetSurface = tfOptions.referenceSurface;
+    combKalmanActor.multipleScattering = tfOptions.multipleScattering;
+    combKalmanActor.energyLoss = tfOptions.energyLoss;
+    combKalmanActor.smoothing = tfOptions.smoothing;
 
     // Set config and logger for source link selector
-    trackFinderActor.m_sourcelinkSelector.m_config =
+    combKalmanActor.m_sourcelinkSelector.m_config =
         tfOptions.sourcelinkSelectorConfig;
-    trackFinderActor.m_sourcelinkSelector.m_logger = m_logger;
+    combKalmanActor.m_sourcelinkSelector.m_logger = m_logger;
 
     // also set logger on updater and smoother
-    trackFinderActor.m_updater.m_logger = m_logger;
-    trackFinderActor.m_smoother.m_logger = m_logger;
+    combKalmanActor.m_updater.m_logger = m_logger;
+    combKalmanActor.m_smoother.m_logger = m_logger;
 
-    // Run the track finder
+    // Run the CombinatorialKalmanFilter
     auto result = m_propagator.template propagate(sParameters, propOptions);
 
     if (!result.ok()) {
@@ -1086,26 +1097,26 @@ class TrackFinder {
 
     const auto& propRes = *result;
 
-    /// Get the result of the track finder
-    auto trackFinderResult = propRes.template get<TrackFinderResult>();
+    /// Get the result of the CombinatorialKalmanFilter
+    auto combKalmanResult =
+        propRes.template get<CombinatorialKalmanFilterResult>();
 
     /// It could happen that propagation reaches max step size
     /// before the track finding is finished.
     /// @TODO: tune source link selector or propagation options to suppress this
     /// It can also due to the fact that the navigation never breaks (as in KF
     /// fit call?)
-    if (trackFinderResult.result.ok() and
-        not trackFinderResult.forwardFiltered) {
-      trackFinderResult.result =
-          Result<void>(TrackFinderError::PropagationReachesMaxSteps);
+    if (combKalmanResult.result.ok() and not combKalmanResult.forwardFiltered) {
+      combKalmanResult.result = Result<void>(
+          CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
     }
 
-    if (!trackFinderResult.result.ok()) {
-      return trackFinderResult.result.error();
+    if (!combKalmanResult.result.ok()) {
+      return combKalmanResult.result.error();
     }
 
     // Return the converted Track
-    return m_outputConverter(std::move(trackFinderResult));
+    return m_outputConverter(std::move(combKalmanResult));
   }
 
   /// Fit implementation of the foward filter, calls the
@@ -1114,12 +1125,14 @@ class TrackFinder {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam track_finder_options_t Type of the track finder options
+  /// @tparam comb_kalman_filter_options_t Type of the CombinatorialKalmanFilter
+  /// options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
-  /// @param tfOptions TrackFinderOptions steering the track finding
+  /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
+  /// finding
   /// @param sSequence surface sequence used to initialize a DirectNavigator
   /// @note The input measurements are given in the form of @c SourceLinks.
   /// It's
@@ -1128,12 +1141,13 @@ class TrackFinder {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename track_finder_options_t,
+            typename comb_kalman_filter_options_t,
             typename parameters_t = BoundParameters,
-            typename result_t = Result<TrackFinderResult<source_link_t>>>
+            typename result_t =
+                Result<CombinatorialKalmanFilterResult<source_link_t>>>
   auto findTracks(const std::vector<source_link_t>& sourcelinks,
                   const start_parameters_t& sParameters,
-                  const track_finder_options_t& tfOptions,
+                  const comb_kalman_filter_options_t& tfOptions,
                   const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator, result_t> {
     static_assert(SourceLinkConcept<source_link_t>,
@@ -1142,9 +1156,10 @@ class TrackFinder {
     static_assert(
         std::is_same<
             source_link_selector_t,
-            typename track_finder_options_t::SourceLinkSelector>::value,
-        "Inconsistent type of source link selector between track finder and "
-        "track finder options");
+            typename comb_kalman_filter_options_t::SourceLinkSelector>::value,
+        "Inconsistent type of source link selector between "
+        "CombinatorialKalmanFilter and "
+        " CombinatorialKalmanFilter options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
@@ -1156,41 +1171,44 @@ class TrackFinder {
     }
 
     // Create the ActionList and AbortList
-    using TrackFinderAborter = Aborter<source_link_t, parameters_t>;
-    using TrackFinderActor = Actor<source_link_t, parameters_t>;
-    using TrackFinderResult = typename TrackFinderActor::result_type;
-    using Actors = ActionList<DirectNavigator::Initializer, TrackFinderActor>;
-    using Aborters = AbortList<TrackFinderAborter>;
+    using CombinatorialKalmanFilterAborter =
+        Aborter<source_link_t, parameters_t>;
+    using CombinatorialKalmanFilterActor = Actor<source_link_t, parameters_t>;
+    using CombinatorialKalmanFilterResult =
+        typename CombinatorialKalmanFilterActor::result_type;
+    using Actors = ActionList<DirectNavigator::Initializer,
+                              CombinatorialKalmanFilterActor>;
+    using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
                                                     tfOptions.magFieldContext);
 
     // Catch the actor and set the measurements
-    auto& trackFinderActor =
-        propOptions.actionList.template get<TrackFinderActor>();
-    trackFinderActor.m_logger = m_logger.get();
-    trackFinderActor.inputMeasurements = std::move(inputMeasurements);
-    trackFinderActor.targetSurface = tfOptions.referenceSurface;
-    trackFinderActor.multipleScattering = tfOptions.multipleScattering;
-    trackFinderActor.energyLoss = tfOptions.energyLoss;
-    trackFinderActor.smoothing = tfOptions.smoothing;
+    auto& combKalmanActor =
+        propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
+    combKalmanActor.m_logger = m_logger.get();
+    combKalmanActor.inputMeasurements = std::move(inputMeasurements);
+    combKalmanActor.targetSurface = tfOptions.referenceSurface;
+    combKalmanActor.multipleScattering = tfOptions.multipleScattering;
+    combKalmanActor.energyLoss = tfOptions.energyLoss;
+    combKalmanActor.smoothing = tfOptions.smoothing;
 
     // Set config and logger for source link selector
-    trackFinderActor.m_sourcelinkSelector.m_config =
+    combKalmanActor.m_sourcelinkSelector.m_config =
         tfOptions.sourcelinkSelectorConfig;
-    trackFinderActor.m_sourcelinkSelector.m_logger = m_logger;
+    combKalmanActor.m_sourcelinkSelector.m_logger = m_logger;
 
     // also set logger on updater and smoother
-    trackFinderActor.m_updater.m_logger = m_logger;
-    trackFinderActor.m_smoother.m_logger = m_logger;
+    combKalmanActor.m_updater.m_logger = m_logger;
+    combKalmanActor.m_smoother.m_logger = m_logger;
 
     // Set the surface sequence
     auto& dInitializer =
         propOptions.actionList.template get<DirectNavigator::Initializer>();
     dInitializer.surfaceSequence = sSequence;
 
-    // Run the track finder
+    // Run the CombinatorialKalmanFilter
     auto result = m_propagator.template propagate(sParameters, propOptions);
 
     if (!result.ok()) {
@@ -1200,22 +1218,22 @@ class TrackFinder {
     const auto& propRes = *result;
 
     /// Get the result of the track finding
-    auto trackFinderResult = propRes.template get<TrackFinderResult>();
+    auto combKalmanResult =
+        propRes.template get<CombinatorialKalmanFilterResult>();
 
     /// It could happen that propagation reaches max step size
     /// before the track finding is finished.
-    if (trackFinderResult.result.ok() and
-        not trackFinderResult.forwardFiltered) {
-      trackFinderResult.result =
-          Result<void>(TrackFinderError::PropagationReachesMaxSteps);
+    if (combKalmanResult.result.ok() and not combKalmanResult.forwardFiltered) {
+      combKalmanResult.result = Result<void>(
+          CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
     }
 
-    if (!trackFinderResult.result.ok()) {
-      return trackFinderResult.result.error();
+    if (!combKalmanResult.result.ok()) {
+      return combKalmanResult.result.error();
     }
 
     // Return the converted Track
-    return m_outputConverter(std::move(trackFinderResult));
+    return m_outputConverter(std::move(combKalmanResult));
   }
 };  // namespace Acts
 

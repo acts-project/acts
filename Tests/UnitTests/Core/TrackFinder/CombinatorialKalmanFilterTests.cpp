@@ -35,7 +35,7 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFinder/CKFSourceLinkSelector.hpp"
-#include "Acts/TrackFinder/TrackFinder.hpp"
+#include "Acts/TrackFinder/CombinatorialKalmanFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -166,9 +166,10 @@ struct MeasurementCreator {
 };
 
 ///
-/// @brief Unit test for track finder with measurements along the x-axis
+/// @brief Unit test for CombinatorialKalmanFilter with measurements along the
+/// x-axis
 ///
-BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
+BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   // Build detector
   CubicTrackingGeometry cGeometry(tgContext);
   auto detector = cGeometry();
@@ -268,8 +269,8 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
   // There should be 18 source links in total
   BOOST_CHECK_EQUAL(sourcelinks.size(), 18);
 
-  // The TrackFinder - we use the eigen stepper for covariance transport
-  // Build navigator for the measurement creatoin
+  // The CombinatorialKalmanFilter - we use the eigen stepper for covariance
+  // transport Build navigator for the measurement creatoin
   Navigator rNavigator(detector);
   rNavigator.resolvePassive = false;
   rNavigator.resolveMaterial = true;
@@ -285,8 +286,9 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
   using Updater = GainMatrixUpdater<BoundParameters>;
   using Smoother = GainMatrixSmoother<BoundParameters>;
   using SourceLinkSelector = CKFSourceLinkSelector;
-  using TrackFinder =
-      TrackFinder<RecoPropagator, Updater, Smoother, SourceLinkSelector>;
+  using CombinatorialKalmanFilter =
+      CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother,
+                                SourceLinkSelector>;
 
   using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
   SourceLinkSelectorConfig slsConfig;
@@ -302,10 +304,12 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
   slsConfig.volumeMaxChi2 = {{2, 7}, {3, 8}};
   slsConfig.maxChi2 = 8;
 
-  TrackFinder tFinder(rPropagator,
-                      getDefaultLogger("TrackFinder", Logging::VERBOSE));
+  CombinatorialKalmanFilter cKF(
+      rPropagator,
+      getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE));
 
-  // Run the KamanFitter for track finding from different starting parameter
+  // Run the CombinaltorialKamanFitter for track finding from different starting
+  // parameter
   for (const auto& [trackID, pos] : startingPos) {
     // Set initial parameters for the particle track
     Covariance cov;
@@ -325,13 +329,13 @@ BOOST_AUTO_TEST_CASE(track_finder_zero_field) {
 
     const Surface* rSurface = &rStart.referenceSurface();
 
-    TrackFinderOptions<SourceLinkSelector> tfOptions(
+    CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
         tgContext, mfContext, calContext, slsConfig, rSurface);
 
     // Found the track(s)
-    auto trackFindingRes = tFinder.findTracks(sourcelinks, rStart, tfOptions);
-    BOOST_CHECK(trackFindingRes.ok());
-    auto foundTrack = *trackFindingRes;
+    auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);
+    BOOST_CHECK(combKalmanFilterRes.ok());
+    auto foundTrack = *combKalmanFilterRes;
     auto& fittedStates = foundTrack.fittedStates;
     auto& trackTips = foundTrack.trackTips;
 
