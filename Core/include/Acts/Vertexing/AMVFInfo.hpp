@@ -8,39 +8,48 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
 
 /// @brief Helper struct for storing vertex related information
-  template<typename input_track_t>
-  struct VertexInfo {
-    // The linearization point
-    Acts::SpacePointVector linPoint{Acts::SpacePointVector::Zero()};
+template <typename input_track_t>
+struct VertexInfo {
+  VertexInfo() = default;
 
-    // The constraint vertex
-    Acts::Vertex<input_track_t> constraintVertex;
+  VertexInfo(const Acts::Vertex<input_track_t>& vtx,
+             const Acts::SpacePointVector& pos)
+      : constraintVertex(vtx),
+        linPoint(pos),
+        oldPosition(pos),
+        seedPosition(pos) {}
 
-    // Old position from last iteration
-    Acts::SpacePointVector oldPosition;
+  // The constraint vertex
+  Acts::Vertex<input_track_t> constraintVertex;
 
-    Acts::SpacePointVector seedPosition;
+  // The linearization point
+  Acts::SpacePointVector linPoint{Acts::SpacePointVector::Zero()};
 
-    // Needs relinearization bool
-    bool relinearize;
-  };
+  // Old position from last iteration
+  Acts::SpacePointVector oldPosition{Acts::SpacePointVector::Zero()};
 
-  /// @brief Helper struct for storing TrackAtVertex related
-  template<typename input_track_t>
-  struct TrackAtVertexInfo {
-    // Links to vertices currently using the TrackAtVertex object
-    std::vector<Vertex<input_track_t>*> linksToVertices;
+  Acts::SpacePointVector seedPosition{Acts::SpacePointVector::Zero()};
 
-    // Track parameters at point of closest approach in 3d as
-    // retrieved by ImpactPoint3dEstimator::getParamsAtClosestApproach
-    std::unique_ptr<const BoundParameters> ip3dParams;
-  };
+  // Needs relinearization bool
+  bool relinearize;
+};
 
-} // Acts namespace
+/// @brief Helper struct for storing TrackAtVertex related
+template <typename input_track_t>
+struct TrackAtVertexInfo {
+  // Links to vertices currently using the TrackAtVertex object
+  std::vector<Vertex<input_track_t>*> linksToVertices;
+
+  // Track parameters at point of closest approach in 3d as
+  // retrieved by ImpactPoint3dEstimator::getParamsAtClosestApproach
+  std::unique_ptr<const BoundParameters> ip3dParams;
+};
+
+}  // namespace Acts

@@ -57,6 +57,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       // No seed found anymore, break and stop primary vertex finding
       break;
     }
+
+    VertexInfo<InputTrack_t> vtxCandidateInfo(finderOptions.vertexConstraint,
+                                              vtxCandidate.fullPosition());
   }
 
   return allVertices;
