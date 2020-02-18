@@ -39,8 +39,12 @@ class AdaptiveMultiVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");
 
+ public:
   using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
+  using Linearizer_t = linearizer_t;
+
+ private:
   using ImpactPointEstimator =
       ImpactPoint3dEstimator<InputTrack_t, Propagator_t>;
 
@@ -188,7 +192,7 @@ class AdaptiveMultiVertexFitter {
   /// @return Result<void> object
   Result<void> fit(
       State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
-      const linearizer_t& linearizer,
+      const Linearizer_t& linearizer,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
   /// @brief Adds new vertex to an existing multi-vertex fit
@@ -216,7 +220,7 @@ class AdaptiveMultiVertexFitter {
   /// @return Result<void> object
   Result<void> addVtxToFit(
       State& state, Vertex<InputTrack_t>& newVertex,
-      const linearizer_t& linearizer,
+      const Linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
  private:
@@ -245,7 +249,7 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Result<void> object
   Result<void> fitImpl(
-      State& state, const linearizer_t& linearizer,
+      State& state, const Linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Tests if vertex is already in list of vertices or not
@@ -286,7 +290,7 @@ class AdaptiveMultiVertexFitter {
   /// @param state The state object
   /// @param linearizer The track linearizer
   Result<void> setWeightsAndUpdate(State& state,
-                                   const linearizer_t& linearizer) const;
+                                   const Linearizer_t& linearizer) const;
 
   /// @brief Collects all compatibility values of the track `trk`
   /// at all vertices it is currently attached to and outputs
