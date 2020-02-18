@@ -3,7 +3,7 @@ fs~=2.2
 fs.sshfs==0.11.0
 tabulate==0.8.2
 codereport==0.2.*
-python-gitlab==1.6.0
+python-gitlab==2.0.1
 python-dateutil==2.7.5
 gcovr==4.1
 markdown==3.1
