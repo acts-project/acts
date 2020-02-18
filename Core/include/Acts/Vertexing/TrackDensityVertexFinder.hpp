@@ -11,10 +11,10 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
-#include "Acts/Vertexing/GaussianTrackDensity.hpp"
 
 namespace Acts {
 
@@ -35,8 +35,8 @@ template <typename vfitter_t, typename track_density_t = GaussianTrackDensity>
 class TrackDensityVertexFinder {
   // Provided vertex fitter type should comply with the VertexFitterConcept
   // to ensure providing an input track type InputTrack_t
-  
-  //static_assert(VertexFitterConcept<vfitter_t>,
+
+  // static_assert(VertexFitterConcept<vfitter_t>,
   //              "Vertex fitter does not fulfill vertex fitter concept.");
 
   using InputTrack_t = typename vfitter_t::InputTrack_t;

@@ -18,6 +18,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     return VertexingError::EmptyInput;
   }
 
+  // Create copy of finder options, will be modified after seeding
+  // to set the correct vertex constraint
+  VertexFinderOptions<InputTrack_t> finderOptions = vFinderOptions;
+
   // Original tracks
   const std::vector<InputTrack_t>& origTracks = allTracks;
   // Tracks for seeding
@@ -33,22 +37,29 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
   // Construct the vertex fitter options from vertex finder options
   VertexFitterOptions<InputTrack_t> vFitterOptions(
-      vFinderOptions.geoContext, vFinderOptions.magFieldContext,
-      vFinderOptions.vertexConstraint);
+      finderOptions.geoContext, finderOptions.magFieldContext,
+      finderOptions.vertexConstraint);
+
+  std::vector<Vertex<InputTrack_t>> allVertices;
 
   int iteration = 0;
   while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
           ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
          iteration < m_cfg.maxIterations) {
-    auto seedRes = doSeeding(seedTracks, vFinderOptions);
+    // Retrieve seed vertex from all remaining seedTracks
+    auto seedRes = doSeeding(seedTracks, finderOptions);
     if (!seedRes.ok()) {
       return seedRes.error();
     }
     Vertex<InputTrack_t> vtxCandidate = *seedRes;
+
+    if (vtxCandidate.position().z() == 0.) {
+      // No seed found anymore, break and stop primary vertex finding
+      break;
+    }
   }
 
-  // debug
-  return {};
+  return allVertices;
 }
 
 template <typename vfitter_t, typename sfinder_t>
@@ -56,10 +67,29 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     const std::vector<InputTrack_t>& trackVector,
     VertexFinderOptions<InputTrack_t>& vFinderOptions) const
     -> Result<Vertex<InputTrack_t>> {
-  Vertex<InputTrack_t> seedVertex =
-      m_cfg.seedFinder.find(trackVector, vFinderOptions).back();
+  // Run seed finder
+  auto seedRes = m_cfg.seedFinder.find(trackVector, vFinderOptions);
+
+  if (!seedRes.ok()) {
+    return seedRes.error();
+  }
+
+  Vertex<InputTrack_t> seedVertex = (*seedRes).back();
 
   if (m_cfg.useBeamSpotConstraint) {
-    vFinderOptions.vertexConstraint = seedVertex;
+    if (m_cfg.useSeedConstraint) {
+      vFinderOptions.vertexConstraint.setFullPosition(
+          seedVertex.fullPosition());
+      vFinderOptions.vertexConstraint.setFullCovariance(
+          seedVertex.fullCovariance());
+    }
+  } else {
+    vFinderOptions.vertexConstraint.setFullPosition(seedVertex.fullPosition());
+    vFinderOptions.vertexConstraint.setFullCovariance(
+        SpacePointSymMatrix::Identity() * m_cfg.looseConstrValue);
+    vFinderOptions.vertexConstraint.setFitQuality(
+        m_cfg.defaultConstrFitQuality);
   }
+
+  return seedVertex;
 }

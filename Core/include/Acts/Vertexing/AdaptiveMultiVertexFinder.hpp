@@ -168,11 +168,16 @@ class AdaptiveMultiVertexFinder {
      */
     bool useSeedConstraint = true;
 
+    // Diagonal constraint covariance entries in case
+    // no beamspot constraint is provided
+    double looseConstrValue = 1e+8;
+    // Default fitQuality for constraint vertex in case no beamspot
+    // constraint is provided
+    std::pair<double, double> defaultConstrFitQuality{0., -3.};
+
   };  // Config struct
 
-  struct State {
-    // This is the state
-  };
+  struct State {};
 
   /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
