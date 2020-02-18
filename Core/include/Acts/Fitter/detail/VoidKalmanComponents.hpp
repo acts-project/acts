@@ -110,4 +110,31 @@ struct VoidKalmanSmoother {
   }
 };
 
+/// @brief void outlier finder
+struct VoidOutlierFinder {
+  /// @brief nested config struct
+  ///
+  struct Config {
+    // Allowed chi2 cut-off
+    double chi2Cutoff = std::numeric_limits<double>::max();
+  };
+  /// @brief Public call mimicking an outlier finder
+  ///
+  /// @tparam track_state_t Type of the track state
+  ///
+  /// @param trackState The trackState to investigate
+  ///
+  /// @return Whether it's outlier or not
+  template <typename track_state_t>
+  bool operator()(const track_state_t& trackState) const {
+    if (trackState.chi2 > m_config.chi2Cutoff) {
+      return true;
+    }
+    return false;
+  }
+
+  /// The config
+  Config m_config;
+};
+
 }  // namespace Acts
