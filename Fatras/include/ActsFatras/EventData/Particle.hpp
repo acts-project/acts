@@ -53,6 +53,8 @@ class Particle {
   /// Set the process type that generated this particle.
   Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
   /// Set the space-time position four-vector.
+  ///
+  /// The component order is [x,y,z,t].
   Particle &setPosition4(const Vector4 &pos4) {
     m_position4 = pos4;
     return *this;
@@ -117,12 +119,16 @@ class Particle {
   Scalar mass() const { return m_mass; }
 
   /// Space-time position four-vector.
+  ///
+  /// The component order is [x,y,z,t].
   const Vector4 &position4() const { return m_position4; }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_position4.head<3>(); }
   /// Time coordinate.
   Scalar time() const { return m_position4[3]; }
   /// Energy-momentum four-vector.
+  ///
+  /// The component order is [px,py,pz,E].
   Vector4 momentum4() const {
     Vector4 mom4;
     // stored direction is always normalized
