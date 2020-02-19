@@ -1,6 +1,8 @@
 add_library(
   ActsFatras SHARED
-  src/LandauDistribution.cpp)
+  src/LandauDistribution.cpp
+  src/Particle.cpp
+  src/ParticleData.cpp)
 target_compile_features(
   ActsFatras
   PUBLIC cxx_std_17)

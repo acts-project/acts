@@ -36,22 +36,29 @@ class Particle {
   Particle() = default;
   /// Construct a particle at rest with explicit mass and charge.
   ///
-  /// @param id     Encoded identifier within an event
+  /// @param id     Particle identifier within an event
   /// @param pdg    PDG particle number
-  /// @param mass   Particle mass in native units
   /// @param charge Particle charge in native units
+  /// @param mass   Particle mass in native units
   ///
   /// @warning It is the users responsibility that charge and mass match
   ///          the PDG particle number.
-  Particle(Barcode id, Acts::PdgParticle pdg, Scalar mass, Scalar charge)
+  Particle(Barcode id, Acts::PdgParticle pdg, Scalar charge, Scalar mass)
       : m_id(id), m_pdg(pdg), m_charge(charge), m_mass(mass) {}
+  /// Construct a particle at rest from a PDG particle number.
+  ///
+  /// @param id  Particle identifier within an event
+  /// @param pdg PDG particle number
+  ///
+  /// Charge and mass are retrieved from the particle data table.
+  Particle(Barcode id, Acts::PdgParticle pdg);
   Particle(const Particle &) = default;
   Particle(Particle &&) = default;
   Particle &operator=(const Particle &) = default;
   Particle &operator=(Particle &&) = default;
 
   /// Set the process type that generated this particle.
-  Particle &process(ProcessType proc) { return m_process = proc, *this; }
+  Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
     m_position4 = pos4;
@@ -105,7 +112,7 @@ class Particle {
     return *this;
   }
 
-  /// Encoded particle identifier within an event.
+  /// Particle identifier within an event.
   Barcode id() const { return m_id; }
   /// Which type of process generated this particle.
   ProcessType process() const { return m_process; }
