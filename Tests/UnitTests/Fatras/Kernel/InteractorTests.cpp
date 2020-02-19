@@ -21,10 +21,7 @@
 using namespace ActsFatras;
 
 namespace {
-
 constexpr auto eps = std::numeric_limits<Particle::Scalar>::epsilon();
-
-using Generator = std::default_random_engine;
 
 struct MockPhysicsList {
   double energyLoss = 0;
@@ -77,12 +74,12 @@ struct MockPropagatorState {
 
 template <typename SurfaceSelector>
 struct Fixture {
-  using Interactor =
-      typename ActsFatras::Interactor<std::default_random_engine,
-                                      MockPhysicsList, SurfaceSelector>;
+  using Generator = std::ranlux48;
+  using Interactor = typename ActsFatras::Interactor<Generator, MockPhysicsList,
+                                                     SurfaceSelector>;
   using InteractorResult = typename Interactor::result_type;
 
-  std::default_random_engine generator;
+  Generator generator;
   std::shared_ptr<Acts::Surface> surface;
   Interactor interactor;
   InteractorResult result;
@@ -90,7 +87,7 @@ struct Fixture {
   MockStepper stepper;
 
   Fixture(double energyLoss, std::shared_ptr<Acts::Surface> surface_)
-      : surface(std::move(surface_)) {
+      : generator(42), surface(std::move(surface_)) {
     // use zero-mass to simplify the math
     const auto particle =
         Particle(Barcode().setVertexPrimary(12u).setParticle(3u),
@@ -124,7 +121,6 @@ std::shared_ptr<Acts::Surface> makeMaterialSurface() {
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(std::move(slab)));
   return surface;
 }
-
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasInteractor)

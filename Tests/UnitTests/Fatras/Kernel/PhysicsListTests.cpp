@@ -19,7 +19,6 @@
 using namespace Acts::UnitLiterals;
 
 namespace {
-
 /// Physics process that does not trigger a break
 struct SterileProcess {
   int some_parameter = 0;
@@ -43,12 +42,11 @@ struct FatalProcess {
 };
 
 struct Fixture {
-  std::default_random_engine generator;
+  std::ranlux48 generator{23};
   Acts::MaterialProperties slab =
       Acts::MaterialProperties(Acts::Test::makeBeryllium(), 1_mm);
   ActsFatras::Particle inputParticle;
 };
-
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasPhysicsList)
