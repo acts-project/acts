@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                              std::move(ipEst));
+                              std::move(ipEst), std::move(linearizer));
 
   Finder finder(finderConfig);
 
@@ -100,6 +100,16 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   VertexFinderOptions<BoundParameters> finderOptions(tgContext, mfContext);
 
   std::cout << &finderOptions << std::endl;
+
+  Transform3D transform;
+  ActsSymMatrixD<3> rotMat;
+  rotMat << -0.780869, 0.624695, 3.79565e-17, 0.455842, 0.569803, 0.683763,
+      0.427144, 0.53393, -0.729704;
+  transform.rotate(rotMat);
+  transform.translation() = Vector3D(1, 2, 3);
+
+  std::cout << "translation: " << transform.translation() << std::endl;
+  std::cout << "rot: " << transform.rotation() << std::endl;
 
   auto bla = finder.find(tracks, finderOptions);
 }

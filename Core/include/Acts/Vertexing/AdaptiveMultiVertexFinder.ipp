@@ -63,9 +63,12 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     if (!seedRes.ok()) {
       return seedRes.error();
     }
-    Vertex<InputTrack_t> vtxCandidate = *seedRes;
 
-    if (vtxCandidate.position().z() == 0.) {
+    allVertices.push_back(*seedRes);
+
+    Vertex<InputTrack_t>* vtxCandidate = &(allVertices.back());
+
+    if (vtxCandidate->position().z() == 0.) {
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
       break;
@@ -77,11 +80,19 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       return resPrep.error();
     }
     if (!(*resPrep)) {
-      // Could not prepare the vertex for the fit anymore, break.
+      ACTS_DEBUG("Could not prepare for fit anymore. Break.");
       break;
     }
-
-    // state.vtxInfoMap[&vtxCandidate] = vtxInfo1;
+    // Update fitter state with all vertices
+    fitterState.updateVertexList(allVertices);
+    // Perform the fit
+    auto fitResult = m_cfg.vertexFitter.addVtxToFit(
+        fitterState, *vtxCandidate, m_cfg.linearizer, vFitterOptions);
+    if (!fitResult.ok()) {
+      return fitResult.error();
+    }
+    ACTS_DEBUG("New position of current vertex after fit: "
+               << vtxCandidate->fullPosition());
   }
 
   return allVertices;
@@ -100,7 +111,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
   }
 
   Vertex<InputTrack_t> seedVertex = (*seedRes).back();
-
+  // Update constraints according to seed vertex
   if (m_cfg.useBeamSpotConstraint) {
     if (m_cfg.useSeedConstraint) {
       vFinderOptions.vertexConstraint.setFullPosition(
@@ -138,14 +149,14 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::estimateDeltaZ(
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
-    const BoundParameters& track, const Vertex<InputTrack_t>& vtx) const
+    const BoundParameters& track, const Vertex<InputTrack_t>* vtx) const
     -> Result<double> {
   // TODO: In original implementation the covariance of the given vertex is set
   // to zero. I did the same here now, but consider removing this and just
   // passing the vtx object to the estimator without changing its covariance.
   // After all, the vertex seed does have a non-zero convariance in general and
   // it probably should be used.
-  Vertex<InputTrack_t> newVtx = vtx;
+  Vertex<InputTrack_t> newVtx = *vtx;
   newVtx.setFullCovariance(SpacePointSymMatrix::Zero());
 
   double significance = 0.;
@@ -168,7 +179,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     addCompatibleTracksToVertex(const std::vector<InputTrack_t>& tracks,
-                                Vertex<InputTrack_t>& vtx) const
+                                Vertex<InputTrack_t>* vtx) const
     -> Result<void> {
   std::vector<TrackAtVertex<InputTrack_t>> tracksAtVtx;
 
@@ -179,14 +190,14 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       return sigRes.error();
     }
     double ipSig = *sigRes;
-    if ((std::abs(estimateDeltaZ(params, vtx.position())) <
+    if ((std::abs(estimateDeltaZ(params, vtx->position())) <
          m_cfg.tracksMaxZinterval) &&
         (ipSig < m_cfg.tracksMaxSignificance)) {
       tracksAtVtx.push_back(TrackAtVertex(params, trk));
     }
   }
 
-  vtx.setTracksAtVertex(tracksAtVtx);
+  vtx->setTracksAtVertex(tracksAtVtx);
 
   return {};
 }
@@ -195,20 +206,21 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     canRecoverFromNoCompatibleTracks(
         const std::vector<InputTrack_t>& myTracks,
-        const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>& vtx,
+        const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
         const VertexFinderOptions<InputTrack_t>& vFinderOptions,
         FitterState_t& fitterState) const -> Result<bool> {
   // Recover from cases where no compatible tracks to vertex
   // candidate were found
   // TODO: This is for now how it's done in athena... this look a bit
   // nasty to me
-  if (vtx.tracks().empty()) {
+  if (vtx->tracks().empty()) {
+    // Find nearest track to vertex candidate
     double smallestDeltaZ = std::numeric_limits<double>::max();
     double newZ = 0;
     bool nearTrackFound = false;
     for (const auto& trk : seedTracks) {
       double zDistance = std::abs(m_extractParameters(trk).position()[eZ] -
-                                  vtx.position()[eZ]);
+                                  vtx->position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
         nearTrackFound = true;
@@ -218,11 +230,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     if (nearTrackFound) {
       // TODO: check athena actualcandidate position here (has not changed?)
       // TODO: so do I want to change the vtx position here?
-      vtx.setFullPosition(SpacePointVector(0., 0., newZ, 0.));
+      vtx->setFullPosition(SpacePointVector(0., 0., newZ, 0.));
 
-      // TODO: do sth with fitterstate here
-      // vtxInfo = VertexInfo<InputTrack_t>(vFinderOptions.vertexConstraint,
-      //                                   vtx.fullPosition());
+      // Update vertex info for current vertex
+      fitterState.vtxInfoMap[vtx] = VertexInfo<InputTrack_t>(
+          vFinderOptions.vertexConstraint, vtx->fullPosition());
 
       // Try to add compatible track with adapted vertex position
       auto res = addCompatibleTracksToVertex(myTracks, vtx);
@@ -230,7 +242,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         return Result<bool>::failure(res.error());
       }
 
-      if (vtx.tracks().empty()) {
+      if (vtx->tracks().empty()) {
         ACTS_DEBUG(
             "No tracks near seed were found, while at least one was "
             "expected. Break.");
@@ -250,18 +262,19 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     canPrepareVertexForFit(
         const std::vector<InputTrack_t>& myTracks,
-        const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>& vtx,
+        const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
         const VertexFinderOptions<InputTrack_t>& vFinderOptions,
         FitterState_t& fitterState) const -> Result<bool> {
-  // TODO: do something with state here
-  VertexInfo<InputTrack_t> vtxCandidateInfo(vFinderOptions.vertexConstraint,
-                                            vtx.fullPosition());
+  // Add vertex info to fitter state
+  fitterState.vtxInfoMap[vtx] = VertexInfo<InputTrack_t>(
+      vFinderOptions.vertexConstraint, vtx->fullPosition());
 
+  // Add all compatible tracks to vertex
   auto resComp = addCompatibleTracksToVertex(myTracks, vtx);
   if (!resComp.ok()) {
     return Result<bool>::failure(resComp.error());
   }
-
+  // Try to recover from cases where adding compatible track was not possible
   auto resRec = canRecoverFromNoCompatibleTracks(myTracks, seedTracks, vtx,
                                                  vFinderOptions, fitterState);
   if (!resRec.ok()) {

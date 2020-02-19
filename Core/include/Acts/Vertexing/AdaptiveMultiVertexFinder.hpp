@@ -49,20 +49,26 @@ class AdaptiveMultiVertexFinder {
     /// @param fitter The vertex fitter
     /// @param sfinder The seed finder
     /// @param ipEst TrackToVertexIPEstimator
+    /// @param lin Track linearizer
     Config(vfitter_t fitter, sfinder_t sfinder,
-           TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEst)
+           TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEst,
+           Linearizer_t lin)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
-          ipEstimator(std::move(ipEst)) {}
+          ipEstimator(std::move(ipEst)),
+          linearizer(std::move(lin)) {}
 
     // Vertex fitter
     vfitter_t vertexFitter;
 
-    /// Vertex seed finder
+    // Vertex seed finder
     sfinder_t seedFinder;
 
     // TrackToVertexIPEstimator
     TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEstimator;
+
+    // Track linearizer
+    Linearizer_t linearizer;
 
     /// TODO: Update descriptions!
     /** Define a beam constraint for the fit */
@@ -265,14 +271,14 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return The IP significance
   Result<double> getIPSignificance(const BoundParameters& track,
-                                   const Vertex<InputTrack_t>& vtx) const;
+                                   const Vertex<InputTrack_t>* vtx) const;
 
   /// @brief Adds compatible track to vertex candidate
   ///
   /// @param tracks The tracks
   /// @param[out] vtx The vertex candidate
   Result<void> addCompatibleTracksToVertex(
-      const std::vector<InputTrack_t>& tracks, Vertex<InputTrack_t>& vtx) const;
+      const std::vector<InputTrack_t>& tracks, Vertex<InputTrack_t>* vtx) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// where added to the vertex candidate after seeding
@@ -287,7 +293,7 @@ class AdaptiveMultiVertexFinder {
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
       const std::vector<InputTrack_t>& myTracks,
-      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>& vtx,
+      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions,
       FitterState_t& fitterState) const;
 
@@ -303,7 +309,7 @@ class AdaptiveMultiVertexFinder {
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
       const std::vector<InputTrack_t>& myTracks,
-      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>& vtx,
+      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions,
       FitterState_t& fitterState) const;
 };
