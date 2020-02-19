@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <ostream>
+#include <iosfwd>
 #include <string_view>
 
 #include "Acts/Utilities/PdgParticle.hpp"
@@ -41,13 +41,6 @@ namespace Acts {
 ///       to contain the full particle data table, it can only be defined
 ///       here. It also only extends the output and should not have any
 ///       side effects. We are probably fine.
-inline std::ostream& operator<<(std::ostream& os, PdgParticle pdg) {
-  const auto name = ActsFatras::findName(pdg);
-  os << static_cast<int32_t>(pdg);
-  if (not name.empty()) {
-    os << '|' << name;
-  }
-  return os;
-}
+std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 
 }  // namespace Acts
