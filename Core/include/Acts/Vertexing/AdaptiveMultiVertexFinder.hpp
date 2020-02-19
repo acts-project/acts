@@ -135,7 +135,7 @@ class AdaptiveMultiVertexFinder {
      * the track is not updated during that iteration.
      */
 
-    double minweight = 0.0001;
+    double minWeight = 0.0001;
 
     /*
      * Maximum amount of iterations allowed for vertex finding.
@@ -236,9 +236,34 @@ class AdaptiveMultiVertexFinder {
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
 
+  /// @brief Calls the seed finder and sets constraints on the found seed
+  /// vertex if desired
+  ///
+  /// @param trackVector All tracks to be used for seeding
+  /// @param vFinderOptions Vertex finder options
+  ///
+  /// @return The seed vertex
   Result<Vertex<InputTrack_t>> doSeeding(
       const std::vector<InputTrack_t>& trackVector,
       VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+
+  /// @brief Estimates delta Z between a track and a vertex position
+  ///
+  /// @param track The track
+  /// @param vtxPos The vertex position
+  ///
+  /// @return The delta Z estimate
+  double estimateDeltaZ(const BoundParameters& track,
+                        const Vector3D& vtxPos) const;
+
+  /// @brief Calculates the IP significance of a track to a given vertex
+  ///
+  /// @param track The track
+  /// @param vtx The vertex
+  ///
+  /// @return The IP significance
+  Result<double> getIPSignificance(const BoundParameters& track,
+                                   const Vertex<InputTrack_t>& vtx) const;
 };
 
 }  // namespace Acts

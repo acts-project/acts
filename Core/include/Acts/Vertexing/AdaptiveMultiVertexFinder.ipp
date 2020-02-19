@@ -96,3 +96,49 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
 
   return seedVertex;
 }
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::estimateDeltaZ(
+    const BoundParameters& track, const Vector3D& vtxPos) const -> double {
+  Vector3D trackPos = track.position();
+
+  double phi = track.parameters()[ParID_t::ePHI];
+  double th = track.parameters()[ParID_t::eTHETA];
+
+  double X = trackPos[eX] - vtxPos.x();
+  double Y = trackPos[eY] - vtxPos.y();
+
+  double deltaZ = trackPos[eZ] - vtxPos.z() -
+                  1. / std::tan(th) * (X * std::cos(phi) + Y * std::sin(phi));
+
+  return deltaZ;
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
+    const BoundParameters& track, const Vertex<InputTrack_t>& vtx) const
+    -> Result<double> {
+  // TODO: In original implementation the covariance of the given vertex is set
+  // to zero. I did the same here now, but consider removing this and just
+  // passing the vtx object to the estimator without changing its covariance.
+  // After all, the vertex seed does have a non-zero convariance in general and
+  // it probably should be used.
+  Vertex<InputTrack_t> newVtx = vtx;
+  newVtx.setFullCovariance(SpacePointSymMatrix::Zero());
+
+  double significance = 0.;
+
+  auto estRes = m_cfg.ipEstimator.estimate(track, newVtx);
+  if (!estRes.ok()) {
+    return estRes.error();
+  }
+
+  auto ipas = std::move(*estRes);
+
+  if (ipas->sigmad0 > 0 && ipas->sigmaz0 > 0) {
+    significance = std::sqrt(std::pow(ipas->IPd0 / ipas->sigmad0, 2) +
+                             std::pow(ipas->IPz0 / ipas->sigmaz0, 2));
+  }
+
+  return significance;
+}
