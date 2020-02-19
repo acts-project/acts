@@ -71,6 +71,14 @@ class AdaptiveMultiVertexFitter {
     ///
     /// @param vtxList List of all vertices with trackAtVertex information
     State(std::vector<Vertex<input_track_t>>& vtxList) {
+      updateVertexList(vtxList);
+    }
+
+    State(std::vector<Vertex<input_track_t>*>& vtxList) {
+      updateVertexList(vtxList);
+    }
+
+    void updateVertexList(std::vector<Vertex<input_track_t>>& vtxList) {
       for (auto& vtx : vtxList) {
         // Add vertex link to each track
         for (auto& trkAtVtx : vtx.tracks()) {
@@ -79,7 +87,7 @@ class AdaptiveMultiVertexFitter {
       }
     }
 
-    State(std::vector<Vertex<input_track_t>*>& vtxList) {
+    void updateVertexList(std::vector<Vertex<input_track_t>*>& vtxList) {
       for (auto& vtx : vtxList) {
         // Add vertex link to each track
         for (auto& trkAtVtx : vtx->tracks()) {

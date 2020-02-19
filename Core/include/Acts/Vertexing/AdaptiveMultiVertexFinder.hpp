@@ -38,6 +38,8 @@ template <typename vfitter_t, typename sfinder_t>
 class AdaptiveMultiVertexFinder {
   using Propagator_t = typename vfitter_t::Propagator_t;
   using InputTrack_t = typename vfitter_t::InputTrack_t;
+  using Linearizer_t = typename vfitter_t::Linearizer_t;
+  using FitterState_t = typename vfitter_t::State;
 
  public:
   /// @struct Config Configuration struct
@@ -79,7 +81,7 @@ class AdaptiveMultiVertexFinder {
      * consider a lot of tracks which just slow down the fit.
      */
 
-    double TracksMaxZinterval = 4_mm;
+    double tracksMaxZinterval = 4_mm;
 
     /**
      * After having added one vertex to the fit and having
@@ -264,6 +266,46 @@ class AdaptiveMultiVertexFinder {
   /// @return The IP significance
   Result<double> getIPSignificance(const BoundParameters& track,
                                    const Vertex<InputTrack_t>& vtx) const;
+
+  /// @brief Adds compatible track to vertex candidate
+  ///
+  /// @param tracks The tracks
+  /// @param[out] vtx The vertex candidate
+  Result<void> addCompatibleTracksToVertex(
+      const std::vector<InputTrack_t>& tracks, Vertex<InputTrack_t>& vtx) const;
+
+  /// @brief Method that tries to recover from cases where no tracks
+  /// where added to the vertex candidate after seeding
+  ///
+  /// @param myTracks The tracks to be considered (either origTrack or
+  /// seedTracks)
+  /// @param seedTracks The seed tracks
+  /// @param[out] vtx The vertex candidate
+  /// @param vFinderOptions Vertex finder options
+  /// @param[out] fitterState The vertex fitter state
+  ///
+  /// return True if recovery was successful, false otherwise
+  Result<bool> canRecoverFromNoCompatibleTracks(
+      const std::vector<InputTrack_t>& myTracks,
+      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>& vtx,
+      const VertexFinderOptions<InputTrack_t>& vFinderOptions,
+      FitterState_t& fitterState) const;
+
+  /// @brief Method that tries to prepare the vertex for the fit
+  ///
+  /// @param myTracks The tracks to be considered (either origTrack or
+  /// seedTracks)
+  /// @param seedTracks The seed tracks
+  /// @param[out] vtx The vertex candidate
+  /// @param vFinderOptions Vertex finder options
+  /// @param[out] fitterState The vertex fitter state
+  ///
+  /// @return True if preparation was successful, false otherwise
+  Result<bool> canPrepareVertexForFit(
+      const std::vector<InputTrack_t>& myTracks,
+      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>& vtx,
+      const VertexFinderOptions<InputTrack_t>& vFinderOptions,
+      FitterState_t& fitterState) const;
 };
 
 }  // namespace Acts

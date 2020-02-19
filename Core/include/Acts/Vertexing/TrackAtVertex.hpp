@@ -32,11 +32,29 @@ struct TrackAtVertex {
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalParams Original perigee parameter
-
   TrackAtVertex(double chi2perTrack, const BoundParameters& paramsAtVertex,
                 const input_track_t& originalParams)
       : chi2Track(chi2perTrack),
-        ndf(0),
+        ndf(0.),
+        fittedParams(paramsAtVertex),
+        originalTrack(originalParams),
+        trackWeight(1.),
+        vertexCompatibility(0.) {
+    // Create unique ID for this object
+    boost::hash_combine(id, this);
+    boost::hash_combine(id, paramsAtVertex.parameters()[0]);
+    boost::hash_combine(id, paramsAtVertex.parameters()[1]);
+  }
+
+  /// @brief Constructor with default chi2
+  ///
+  /// @param chi2perTrack Chi2 of track
+  /// @param paramsAtVertex Fitted perigee parameter
+  /// @param originalParams Original perigee parameter
+  TrackAtVertex(const BoundParameters& paramsAtVertex,
+                const input_track_t& originalParams)
+      : chi2Track(0.),
+        ndf(0.),
         fittedParams(paramsAtVertex),
         originalTrack(originalParams),
         trackWeight(1.),
