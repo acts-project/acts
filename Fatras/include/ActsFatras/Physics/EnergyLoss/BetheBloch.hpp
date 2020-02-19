@@ -23,8 +23,6 @@ namespace ActsFatras {
 /// fluctuations from a Landau distribution. No secondaries are generated
 /// for the removed energy.
 struct BetheBloch {
-  /// The flag to include BetheBloch process or not
-  bool betheBloch = true;
   /// Scaling for most probable value
   double scaleFactorMPV = 1.;
   /// Scaling for Sigma
@@ -42,11 +40,6 @@ struct BetheBloch {
   std::vector<Particle> operator()(generator_t &generator,
                                    const Acts::MaterialProperties &slab,
                                    Particle &particle) const {
-    // Do nothing if the flag is set to false
-    if (not betheBloch) {
-      return {};
-    }
-
     // compute energy loss distribution parameters
     const auto pdg = particle.pdg();
     const auto m = particle.mass();
