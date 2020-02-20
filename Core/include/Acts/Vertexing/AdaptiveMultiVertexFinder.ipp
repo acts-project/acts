@@ -59,12 +59,12 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     }
 
     // Retrieve seed vertex from all remaining seedTracks
-    auto seedRes = doSeeding(seedTracks, finderOptions);
-    if (!seedRes.ok()) {
-      return seedRes.error();
+    auto seedResult = doSeeding(seedTracks, finderOptions);
+    if (!seedResult.ok()) {
+      return seedResult.error();
     }
 
-    allVertices.push_back(*seedRes);
+    allVertices.push_back(*seedResult);
 
     Vertex<InputTrack_t>* vtxCandidate = &(allVertices.back());
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
@@ -76,12 +76,12 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       break;
     }
 
-    auto resPrep = canPrepareVertexForFit(myTracks, seedTracks, vtxCandidate,
-                                          finderOptions, fitterState);
-    if (!resPrep.ok()) {
-      return resPrep.error();
+    auto prepResult = canPrepareVertexForFit(myTracks, seedTracks, vtxCandidate,
+                                             finderOptions, fitterState);
+    if (!prepResult.ok()) {
+      return prepResult.error();
     }
-    if (!(*resPrep)) {
+    if (!(*prepResult)) {
       ACTS_DEBUG("Could not prepare for fit anymore. Break.");
       break;
     }
@@ -102,6 +102,40 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, nCompatibleTracks,
                                    isGoodVertex);
     ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
+
+    if (nCompatibleTracks > 0) {
+      removeCompatibleTracksFromSeedTracks(vtxCandidate, seedTracks);
+    } else {
+      bool removedNonCompatibleTrack =
+          canRemoveNonCompatibleTrackFromSeedTracks(vtxCandidate, seedTracks);
+
+      if (!removedNonCompatibleTrack) {
+        ACTS_DEBUG(
+            "Could not remove any further track from seed tracks. Break.");
+        break;
+      }
+    }
+
+    bool keepVertex = keepNewVertex(vtxCandidate, allVertices, isGoodVertex);
+    ACTS_DEBUG("New vertex will be saved: " << keepVertex);
+
+    // Delete vertex from allVertices list again if it's not kept
+    if (not keepVertex) {
+      allVertices.pop_back();
+      // Update fitter state with removed vertex candidate
+      fitterState.updateVertexList(allVertices);
+      // Prepare for final fit
+      std::vector<Vertex<InputTrack_t>*> vtxPtrVec;
+      for (auto& vtx : allVertices) {
+        vtxPtrVec.push_back(&vtx);
+      }
+      // Do the fit with removed vertex
+      auto fitResult = m_cfg.vertexFitter.fit(fitterState, vtxPtrVec,
+                                              m_cfg.linearizer, vFitterOptions);
+      if (!fitResult.ok()) {
+        return fitResult.error();
+      }
+    }
   }
 
   return allVertices;
@@ -113,13 +147,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     VertexFinderOptions<InputTrack_t>& vFinderOptions) const
     -> Result<Vertex<InputTrack_t>> {
   // Run seed finder
-  auto seedRes = m_cfg.seedFinder.find(trackVector, vFinderOptions);
+  auto seedResult = m_cfg.seedFinder.find(trackVector, vFinderOptions);
 
-  if (!seedRes.ok()) {
-    return seedRes.error();
+  if (!seedResult.ok()) {
+    return seedResult.error();
   }
 
-  Vertex<InputTrack_t> seedVertex = (*seedRes).back();
+  Vertex<InputTrack_t> seedVertex = (*seedResult).back();
   // Update constraints according to seed vertex
   if (m_cfg.useBeamSpotConstraint) {
     if (m_cfg.useSeedConstraint) {
@@ -300,20 +334,20 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
                                    int& nCompatibleTracks,
                                    bool& isGoodVertex) const -> void {
   for (const auto& trk : vtx->tracks()) {
-    if ((trk.vertexCompatibility() < m_cfg.maxVertexChi2 &&
+    if ((trk.vertexCompatibility < m_cfg.maxVertexChi2 &&
          m_cfg.useFastCompatibility) ||
-        (trk.trackWeight() > m_cfg.minweight &&
-         trk.chi2Track() < m_cfg.maxVertexChi2 &&
-         !m_cfg.useFastCompatibility)) {
+        (trk.trackWeight > m_cfg.minWeight &&
+         trk.chi2Track < m_cfg.maxVertexChi2 && !m_cfg.useFastCompatibility)) {
       auto foundIter = std::find_if(
           seedTracks.begin(), seedTracks.end(), [&trk, this](auto seedTrk) {
-            return trk == m_extractParameters(seedTrk);
+            return m_extractParameters(trk.originalTrack) ==
+                   m_extractParameters(seedTrk);
           });
       if (foundIter != seedTracks.end()) {
         nCompatibleTracks++;
         ACTS_DEBUG("Compatible track found.");
 
-        if (m_cfg.addSingleTrackVertices && m_cfg.useBeamConstraint) {
+        if (m_cfg.addSingleTrackVertices && m_cfg.useBeamSpotConstraint) {
           isGoodVertex = true;
           break;
         }
@@ -324,4 +358,151 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       }
     }
   }  // end loop over all tracks at vertex
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
+    removeCompatibleTracksFromSeedTracks(
+        const Vertex<InputTrack_t>* vtx,
+        std::vector<InputTrack_t>& seedTracks) const -> void {
+  for (const auto& trk : vtx->tracks()) {
+    if ((trk.vertexCompatibility < m_cfg.maxVertexChi2 &&
+         m_cfg.useFastCompatibility) ||
+        (trk.trackWeight > m_cfg.minWeight &&
+         trk.chi2Track < m_cfg.maxVertexChi2 && !m_cfg.useFastCompatibility)) {
+      // Find and remove track from seedTracks
+      auto foundSeedIter = std::find_if(
+          seedTracks.begin(), seedTracks.end(), [&trk, this](auto seedTrk) {
+            return m_extractParameters(trk.originalTrack) ==
+                   m_extractParameters(seedTrk);
+          });
+      if (foundSeedIter != seedTracks.end()) {
+        seedTracks.erase(foundSeedIter);
+      } else {
+        ACTS_DEBUG("Track not found in seedTracks!");
+      }
+    }
+  }
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
+    canRemoveNonCompatibleTrackFromSeedTracks(
+        const Vertex<InputTrack_t>* vtx,
+        std::vector<InputTrack_t>& seedTracks) const -> bool {
+  // Try to find the track with highest compatibility
+  double maxCompatibility = 0;
+  typename std::vector<InputTrack_t>::iterator maxCompSeedIt;
+  for (const auto& trk : vtx->tracks()) {
+    double compatibility = trk.vertexCompatibility;
+    if (compatibility > maxCompatibility) {
+      // Try to find track in seed tracks
+      auto foundSeedIter = std::find_if(
+          seedTracks.begin(), seedTracks.end(), [&trk, this](auto seedTrk) {
+            return m_extractParameters(trk.originalTrack) ==
+                   m_extractParameters(seedTrk);
+          });
+      if (foundSeedIter != seedTracks.end()) {
+        maxCompatibility = compatibility;
+        maxCompSeedIt = foundSeedIter;
+      }
+    }
+  }
+  if (maxCompSeedIt != seedTracks.end()) {
+    // Remove track with highest compatibility from seed tracks
+    seedTracks.erase(maxCompSeedIt);
+  } else {
+    // Could not find any seed with compatibility > 0, use alternative
+    // method to remove a track from seed tracks: Closest track in z to
+    // vtx candidate
+    double smallestDeltaZ = std::numeric_limits<double>::max();
+    auto smallestDzSeedIter = std::find_if(
+        seedTracks.begin(), seedTracks.end(),
+        [&vtx, &smallestDeltaZ, this](auto trk) {
+          double zDistance = std::abs(m_extractParameters(trk).position()[eZ] -
+                                      vtx->position()[eZ]);
+          if (zDistance < smallestDeltaZ) {
+            smallestDeltaZ = zDistance;
+            return true;
+          }
+          return false;
+        });
+    if (smallestDzSeedIter != seedTracks.end()) {
+      seedTracks.erase(smallestDzSeedIter);
+    } else {
+      ACTS_DEBUG("No track found to remove. Stop vertex finding now.");
+      return false;
+    }
+  }
+  return true;
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
+    const Vertex<InputTrack_t>* vtx,
+    const std::vector<Vertex<InputTrack_t>>& allVertices,
+    bool isGoodVertex) const -> bool {
+  if (not isGoodVertex) {
+    return false;
+  }
+
+  double contamination = 0.;
+  double contaminationNum = 0;
+  double contaminationDeNom = 0;
+  for (const auto& trk : vtx->tracks()) {
+    double trackWeight = trk.trackWeight;
+    contaminationNum += trackWeight * (1. - trackWeight);
+    contaminationDeNom += trackWeight * trackWeight;
+  }
+  if (contaminationDeNom != 0) {
+    contamination = contaminationNum / contaminationDeNom;
+  }
+  if (contamination > m_cfg.maximumVertexContamination) {
+    return false;
+  }
+
+  if (isMergedVertex(vtx, allVertices)) {
+    return false;
+  }
+
+  return true;
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
+    const Vertex<InputTrack_t>* vtx,
+    const std::vector<Vertex<InputTrack_t>>& allVertices) const -> bool {
+  const SpacePointVector& candidatePos = vtx->fullPosition();
+  const SpacePointSymMatrix& candidateCov = vtx->fullCovariance();
+  const double candidateZPos = candidatePos[eZ];
+  const double candidateZCov = candidateCov(eZ, eZ);
+  for (const auto& otherVtx : allVertices) {
+    const SpacePointVector& otherPos = otherVtx.fullPosition();
+    const SpacePointSymMatrix& otherCov = otherVtx.fullCovariance();
+    const double otherZPos = otherPos[eZ];
+    const double otherZCov = otherCov(eZ, eZ);
+
+    const auto deltaPos = otherPos - candidatePos;
+    const auto deltaZPos = otherZPos - candidateZPos;
+    const auto sumCovZ = otherZCov + candidateZCov;
+
+    double significance;
+    if (not m_cfg.do3dSplitting) {
+      // Use only z significance
+      if (sumCovZ > 0.) {
+        significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
+      } else {
+        return true;
+      }
+    } else {
+      // Use full 3d information for significance
+      auto sumCov = candidateCov + otherCov;
+      significance =
+          std::sqrt(deltaPos.dot((sumCov.inverse().eval()) * deltaPos));
+    }
+    if (significance < m_cfg.cutVertexDependence) {
+      return true;
+    }
+  }
+  return false;
 }

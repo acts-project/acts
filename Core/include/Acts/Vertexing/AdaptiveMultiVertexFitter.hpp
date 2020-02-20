@@ -79,6 +79,7 @@ class AdaptiveMultiVertexFitter {
     }
 
     void updateVertexList(std::vector<Vertex<input_track_t>>& vtxList) {
+      trkInfoMap.clear();
       for (auto& vtx : vtxList) {
         // Add vertex link to each track
         for (auto& trkAtVtx : vtx.tracks()) {
@@ -88,6 +89,7 @@ class AdaptiveMultiVertexFitter {
     }
 
     void updateVertexList(std::vector<Vertex<input_track_t>*>& vtxList) {
+      trkInfoMap.clear();
       for (auto& vtx : vtxList) {
         // Add vertex link to each track
         for (auto& trkAtVtx : vtx->tracks()) {

@@ -313,10 +313,60 @@ class AdaptiveMultiVertexFinder {
       const VertexFinderOptions<InputTrack_t>& vFinderOptions,
       FitterState_t& fitterState) const;
 
+  /// @brief Method that checks if vertex is a good vertex and if
+  /// compatible tracks are available
+  ///
+  /// @param vtx The vertex candidate
+  /// @param seedTracks The seed tracks
+  /// @param[out] nCompatibleTracks Number of compatible tracks
+  /// @param[out] isGoodVertex Vertex is good vertex
   void checkVertexAndCompatibleTracks(
       const Vertex<InputTrack_t>* vtx,
       const std::vector<InputTrack_t>& seedTracks, int& nCompatibleTracks,
       bool& isGoodVertex) const;
+
+  /// @brief Method that removes all tracks that are compatible with
+  /// current vertex from seedTracks
+  ///
+  /// @param vtx The vertex candidate
+  /// @param[out] seedTracks The seed tracks
+  void removeCompatibleTracksFromSeedTracks(
+      const Vertex<InputTrack_t>* vtx,
+      std::vector<InputTrack_t>& seedTracks) const;
+
+  /// @brief Method that tries to remove a non-compatible track
+  /// from seed tracks after removing a compatible track failed.
+  ///
+  /// @param vtx The vertex candidate
+  /// @param[out] seedTracks The seed tracks
+  ///
+  /// @return Non-compatible track was removed
+  bool canRemoveNonCompatibleTrackFromSeedTracks(
+      const Vertex<InputTrack_t>* vtx,
+      std::vector<InputTrack_t>& seedTracks) const;
+
+  /// @brief Method that evaluates if the new vertex candidate should
+  /// be kept, i.e. saved, or not
+  ///
+  /// @param vtx The vertex candidate
+  /// @param allVertices All so far found vertices
+  /// @param isGoodVertex Vertex is good vertex
+  ///
+  /// @return Keep new vertex
+  bool keepNewVertex(const Vertex<InputTrack_t>* vtx,
+                     const std::vector<Vertex<InputTrack_t>>& allVertices,
+                     bool isGoodVertex) const;
+
+  /// @brief Method that evaluates if the new vertex candidate is
+  /// merged with one of the previously found vertices
+  ///
+  /// @param vtx The vertex candidate
+  /// @param allVertices All so far found vertices
+  ///
+  /// @return Vertex is merged
+  bool isMergedVertex(
+      const Vertex<InputTrack_t>* vtx,
+      const std::vector<Vertex<InputTrack_t>>& allVertices) const;
 };
 
 }  // namespace Acts
