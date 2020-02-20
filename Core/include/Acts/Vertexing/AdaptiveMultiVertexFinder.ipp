@@ -67,6 +67,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     allVertices.push_back(*seedRes);
 
     Vertex<InputTrack_t>* vtxCandidate = &(allVertices.back());
+    ACTS_DEBUG("Position of current vertex candidate after seeding: "
+               << vtxCandidate->fullPosition());
 
     if (vtxCandidate->position().z() == 0.) {
       ACTS_DEBUG(
@@ -91,8 +93,15 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     if (!fitResult.ok()) {
       return fitResult.error();
     }
-    ACTS_DEBUG("New position of current vertex after fit: "
+    ACTS_DEBUG("New position of current vertex candidate after fit: "
                << vtxCandidate->fullPosition());
+
+    // Check if vertex is good vertex
+    bool isGoodVertex = false;
+    int nCompatibleTracks = 0;
+    checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, nCompatibleTracks,
+                                   isGoodVertex);
+    ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
   }
 
   return allVertices;
@@ -282,4 +291,37 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
   }
 
   return Result<bool>::success(*resRec);
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
+    checkVertexAndCompatibleTracks(const Vertex<InputTrack_t>* vtx,
+                                   const std::vector<InputTrack_t>& seedTracks,
+                                   int& nCompatibleTracks,
+                                   bool& isGoodVertex) const -> void {
+  for (const auto& trk : vtx->tracks()) {
+    if ((trk.vertexCompatibility() < m_cfg.maxVertexChi2 &&
+         m_cfg.useFastCompatibility) ||
+        (trk.trackWeight() > m_cfg.minweight &&
+         trk.chi2Track() < m_cfg.maxVertexChi2 &&
+         !m_cfg.useFastCompatibility)) {
+      auto foundIter = std::find_if(
+          seedTracks.begin(), seedTracks.end(), [&trk, this](auto seedTrk) {
+            return trk == m_extractParameters(seedTrk);
+          });
+      if (foundIter != seedTracks.end()) {
+        nCompatibleTracks++;
+        ACTS_DEBUG("Compatible track found.");
+
+        if (m_cfg.addSingleTrackVertices && m_cfg.useBeamConstraint) {
+          isGoodVertex = true;
+          break;
+        }
+        if (nCompatibleTracks > 1) {
+          isGoodVertex = true;
+          break;
+        }
+      }
+    }
+  }  // end loop over all tracks at vertex
 }

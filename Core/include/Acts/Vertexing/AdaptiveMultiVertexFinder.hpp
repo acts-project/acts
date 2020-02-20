@@ -312,6 +312,11 @@ class AdaptiveMultiVertexFinder {
       const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions,
       FitterState_t& fitterState) const;
+
+  void checkVertexAndCompatibleTracks(
+      const Vertex<InputTrack_t>* vtx,
+      const std::vector<InputTrack_t>& seedTracks, int& nCompatibleTracks,
+      bool& isGoodVertex) const;
 };
 
 }  // namespace Acts
