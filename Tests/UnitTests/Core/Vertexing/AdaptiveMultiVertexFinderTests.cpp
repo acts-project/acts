@@ -108,6 +108,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   transform.rotate(rotMat);
   transform.translation() = Vector3D(1, 2, 3);
 
+  if (debugMode) {
+    std::cout << "Debug mode." << std::endl;
+  }
   std::cout << "translation: " << transform.translation() << std::endl;
   std::cout << "rot: " << transform.rotation() << std::endl;
 
