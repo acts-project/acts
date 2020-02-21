@@ -76,7 +76,8 @@ struct GaussianMixture {
 
     // G4 optimised / native double Gaussian model
     if (optGaussianMixtureG4) {
-      sigma2 = 225. * dprime / (particle.momentum() * particle.momentum());
+      sigma2 =
+          225. * dprime / (particle.absMomentum() * particle.absMomentum());
     }
     // throw the random number core/tail
     if (uniformDist(generator) < epsilon) {

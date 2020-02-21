@@ -8,6 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <limits>
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -15,6 +18,10 @@ using Acts::PdgParticle;
 using ActsFatras::Barcode;
 using ActsFatras::Particle;
 using namespace Acts::UnitLiterals;
+
+namespace {
+constexpr auto eps = std::numeric_limits<Particle::Scalar>::epsilon();
+}
 
 BOOST_AUTO_TEST_SUITE(FatrasParticle)
 
@@ -32,8 +39,9 @@ BOOST_AUTO_TEST_CASE(Construct) {
   BOOST_TEST(particle.position4().y() == particle.position().y());
   BOOST_TEST(particle.position4().z() == particle.position().z());
   BOOST_TEST(particle.position4().w() == particle.time());
-  // particle direction is undefined
-  BOOST_TEST(particle.momentum() == Particle::Scalar(0));
+  // particle direction is undefined, but must be normalized
+  CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
+  BOOST_TEST(particle.absMomentum() == Particle::Scalar(0));
   // particle is created at rest and thus not alive
   BOOST_TEST(not particle);
 }
@@ -42,7 +50,7 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   const auto id = Barcode().setVertexPrimary(1).setParticle(42);
   auto particle = Particle(id, PdgParticle::eProton, 1_GeV, 1_e)
                       .setDirection(Particle::Vector3::UnitX())
-                      .setMomentum(2_GeV);
+                      .setAbsMomentum(2_GeV);
 
   BOOST_TEST(particle.mass() == 1_GeV);
   // check that the particle has some input energy
@@ -50,23 +58,28 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_TEST(particle.momentum4().y() == 0_GeV);
   BOOST_TEST(particle.momentum4().z() == 0_GeV);
   BOOST_TEST(particle.momentum4().w() == std::hypot(1_GeV, 2_GeV));
-  BOOST_TEST(particle.momentum() == 2_GeV);
+  BOOST_TEST(particle.absMomentum() == 2_GeV);
   BOOST_TEST(particle.energy() == std::hypot(1_GeV, 2_GeV));
+  // particle direction must be normalized
+  CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // loose some energy
   particle.correctEnergy(-100_MeV);
-  BOOST_TEST(particle.momentum() < 2_GeV);
+  BOOST_TEST(particle.absMomentum() < 2_GeV);
   BOOST_TEST(particle.energy() ==
              Particle::Scalar(std::hypot(1_GeV, 2_GeV) - 100_MeV));
+  CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // particle is still alive
   BOOST_TEST(particle);
   // loose a lot of energy
   particle.correctEnergy(-3_GeV);
-  BOOST_TEST(particle.momentum() == Particle::Scalar(0));
+  BOOST_TEST(particle.absMomentum() == Particle::Scalar(0));
   BOOST_TEST(particle.energy() == particle.mass());
+  CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // lossing even more energy does nothing
   particle.correctEnergy(-10_GeV);
-  BOOST_TEST(particle.momentum() == Particle::Scalar(0));
+  BOOST_TEST(particle.absMomentum() == Particle::Scalar(0));
   BOOST_TEST(particle.energy() == particle.mass());
+  CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // particle is not alive anymore
   BOOST_TEST(not particle);
 }

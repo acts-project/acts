@@ -94,15 +94,15 @@ struct Fixture {
                  Acts::PdgParticle::eProton, 0, 1)
             .setPosition4(1, 2, 3, 4)
             .setDirection(1, 0, 0)
-            .setMomentum(100);
+            .setAbsMomentum(100);
     interactor.generator = &generator;
     interactor.physics.energyLoss = energyLoss;
     interactor.particle = particle;
     state.navigation.currentSurface = surface.get();
     state.stepping.position = particle.position();
     state.stepping.time = particle.time();
-    state.stepping.direction = particle.direction();
-    state.stepping.momentum = particle.momentum();
+    state.stepping.direction = particle.unitDirection();
+    state.stepping.momentum = particle.absMomentum();
   }
 };
 

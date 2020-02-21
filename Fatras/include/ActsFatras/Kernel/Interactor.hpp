@@ -100,7 +100,7 @@ struct Interactor {
             .setPosition4(stepper.position(state.stepping),
                           stepper.time(state.stepping))
             .setDirection(stepper.direction(state.stepping))
-            .setMomentum(stepper.momentum(state.stepping));
+            .setAbsMomentum(stepper.momentum(state.stepping));
     // we want to keep the particle state before and after the interaction.
     // since the particle is modified in-place we need a copy.
     auto after = before;
@@ -110,7 +110,7 @@ struct Interactor {
       Acts::Vector2D local;
       // TODO what to do in case of invalid return value?
       surface.globalToLocal(state.geoContext, before.position(),
-                            before.direction(), local);
+                            before.unitDirection(), local);
       Acts::MaterialProperties slab =
           surface.surfaceMaterial()->materialProperties(local);
 
@@ -120,7 +120,8 @@ struct Interactor {
         auto normal = surface.normal(state.geoContext, local);
         // dot-product(unit normal, direction) = cos(incidence angle)
         // particle direction is normalized, not sure about surface normal
-        auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
+        auto cosIncidenceInv =
+            normal.norm() / normal.dot(before.unitDirection());
         slab.scaleThickness(cosIncidenceInv);
         // TODO how to communicate the break condition to the propagator?
         physics(*generator, slab, after, result.generatedParticles);
@@ -150,8 +151,8 @@ struct Interactor {
     }
 
     // continue the propagation with the modified parameters
-    stepper.update(state.stepping, after.position(), after.direction(),
-                   after.momentum(), after.time());
+    stepper.update(state.stepping, after.position(), after.unitDirection(),
+                   after.absMomentum(), after.time());
   }
 
   /// Pure observer interface. Does not apply to the Fatras simulator.

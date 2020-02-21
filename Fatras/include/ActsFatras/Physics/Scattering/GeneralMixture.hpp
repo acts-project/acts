@@ -59,11 +59,11 @@ struct GeneralMixture {
       if (tob2 > 0.6 / std::pow(slab.material().Z(), 0.6)) {
         // Gaussian mixture or pure Gaussian
         if (tob2 > 10) {
-          scattering_params = getGaussian(particle.beta(), particle.momentum(),
-                                          tInX0, genMixtureScalor);
+          scattering_params = getGaussian(
+              particle.beta(), particle.absMomentum(), tInX0, genMixtureScalor);
         } else {
           scattering_params =
-              getGaussmix(particle.beta(), particle.momentum(), tInX0,
+              getGaussmix(particle.beta(), particle.absMomentum(), tInX0,
                           slab.material().Z(), genMixtureScalor);
         }
         // Simulate
@@ -71,7 +71,7 @@ struct GeneralMixture {
       } else {
         // Semigaussian mixture - get parameters
         auto scattering_params_sg =
-            getSemigauss(particle.beta(), particle.momentum(), tInX0,
+            getSemigauss(particle.beta(), particle.absMomentum(), tInX0,
                          slab.material().Z(), genMixtureScalor);
         // Simulate
         theta = semigauss(generator, scattering_params_sg);

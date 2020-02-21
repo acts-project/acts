@@ -40,10 +40,10 @@ void test(const Scattering& scattering, uint32_t seed,
 
   const auto outgoing = scattering(gen, Acts::Test::makePercentSlab(), after);
   // scattering leaves absolute energy/momentum unchanged
-  CHECK_CLOSE_REL(after.momentum(), before.momentum(), eps);
+  CHECK_CLOSE_REL(after.absMomentum(), before.absMomentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
   // scattering has changed the direction
-  BOOST_TEST(before.direction().dot(after.direction()) < 1);
+  BOOST_TEST(before.unitDirection().dot(after.unitDirection()) < 1);
   // scattering creates no new particles
   BOOST_TEST(outgoing.empty());
 }

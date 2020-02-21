@@ -75,21 +75,21 @@ class Particle {
   }
   /// Set the direction three-vector
   Particle &setDirection(const Vector3 &direction) {
-    m_direction = direction;
-    m_direction.normalize();
+    m_unitDirection = direction;
+    m_unitDirection.normalize();
     return *this;
   }
   /// Set the direction three-vector from scalar components.
   Particle &setDirection(Scalar dx, Scalar dy, Scalar dz) {
-    m_direction[0] = dx;
-    m_direction[1] = dy;
-    m_direction[2] = dz;
-    m_direction.normalize();
+    m_unitDirection[0] = dx;
+    m_unitDirection[1] = dy;
+    m_unitDirection[2] = dz;
+    m_unitDirection.normalize();
     return *this;
   }
   /// Set the absolute momentum.
-  Particle &setMomentum(Scalar momentum) {
-    m_momentum = momentum;
+  Particle &setAbsMomentum(Scalar absMomentum) {
+    m_absMomentum = absMomentum;
     return *this;
   }
   /// Change the energy by the given amount.
@@ -98,11 +98,11 @@ class Particle {
   /// would result in an unphysical value, the particle is put to rest, i.e.
   /// its absolute momentum is set to zero.
   Particle &correctEnergy(Scalar delta) {
-    const auto newEnergy = std::hypot(m_mass, m_momentum) + delta;
+    const auto newEnergy = std::hypot(m_mass, m_absMomentum) + delta;
     if (newEnergy <= m_mass) {
-      m_momentum = Scalar(0);
+      m_absMomentum = Scalar(0);
     } else {
-      m_momentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
+      m_absMomentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
     }
     return *this;
   }
@@ -132,30 +132,30 @@ class Particle {
   Vector4 momentum4() const {
     Vector4 mom4;
     // stored direction is always normalized
-    mom4[0] = m_momentum * m_direction[0];
-    mom4[1] = m_momentum * m_direction[1];
-    mom4[2] = m_momentum * m_direction[2];
+    mom4[0] = m_absMomentum * m_unitDirection[0];
+    mom4[1] = m_absMomentum * m_unitDirection[1];
+    mom4[2] = m_absMomentum * m_unitDirection[2];
     mom4[3] = energy();
     return mom4;
   }
-  /// Three-direction, i.e. the normalized momentum three-vector.
-  const Vector3 &direction() const { return m_direction; }
+  /// Unit three-direction, i.e. the normalized momentum three-vector.
+  const Vector3 &unitDirection() const { return m_unitDirection; }
   /// Absolute momentum.
-  Scalar momentum() const { return m_momentum; }
+  Scalar absMomentum() const { return m_absMomentum; }
   /// Total energy, i.e. norm of the four-momentum.
-  Scalar energy() const { return std::hypot(m_mass, m_momentum); }
+  Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Charge over absolute momentum.
-  Scalar chargeOverMomentum() const { return m_charge / m_momentum; }
+  Scalar chargeOverMomentum() const { return m_charge / m_absMomentum; }
   /// Relativistic velocity.
-  Scalar beta() const { return m_momentum / energy(); }
+  Scalar beta() const { return m_absMomentum / energy(); }
   /// Relativistic gamma factor.
-  Scalar gamma() const { return std::hypot(1, m_momentum / m_mass); }
+  Scalar gamma() const { return std::hypot(1, m_absMomentum / m_mass); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  operator bool() const { return Scalar(0) < m_momentum; }
+  operator bool() const { return Scalar(0) < m_absMomentum; }
   /// Check if the particle is dead, i.e is at rest.
-  bool operator!() const { return m_momentum <= Scalar(0); }
+  bool operator!() const { return m_absMomentum <= Scalar(0); }
 
   /// Set the material that the particle has passed.
   ///
@@ -196,8 +196,8 @@ class Particle {
   Scalar m_charge = Scalar(0);
   Scalar m_mass = Scalar(0);
   // kinematics, i.e. things that change over the particle lifetime.
-  Vector3 m_direction = Vector3::UnitZ();
-  Scalar m_momentum = Scalar(0);
+  Vector3 m_unitDirection = Vector3::UnitZ();
+  Scalar m_absMomentum = Scalar(0);
   Vector4 m_position4 = Vector4::Zero();
   // simulation-specific X0/L0 information and limits
   // these values are here to simplify the simulation of (nuclear) interactions.
