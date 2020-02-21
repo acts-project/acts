@@ -53,7 +53,7 @@ struct Interactor {
   /// Interaction result (and intermediate state).
   struct result_type {
     /// Accumulated material during the propagation.
-    /// The initial particle can already have some passed material. We nned the
+    /// The initial particle can already have some passed material. We need the
     /// particle to store the full material path but still keep track of the
     /// additional accumulated material during simulation.
     Particle::Scalar pathInX0 = 0;
