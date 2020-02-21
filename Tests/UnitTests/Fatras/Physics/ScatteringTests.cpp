@@ -19,17 +19,10 @@
 #include "ActsFatras/Physics/Scattering/GaussianMixture.hpp"
 #include "ActsFatras/Physics/Scattering/GeneralMixture.hpp"
 #include "ActsFatras/Physics/Scattering/Highland.hpp"
-#include "ActsFatras/Physics/Scattering/Scattering.hpp"
 #include "Dataset.hpp"
 
 namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
-
-using GeneralMixtureScattering =
-    ActsFatras::Scattering<ActsFatras::GeneralMixture>;
-using GaussianMixtureScattering =
-    ActsFatras::Scattering<ActsFatras::GaussianMixture>;
-using HighlandScattering = ActsFatras::Scattering<ActsFatras::Highland>;
 
 // Common test method that will be instantiated for each scattering model.
 template <typename Scattering>
@@ -53,18 +46,19 @@ BOOST_AUTO_TEST_SUITE(FatrasScattering)
 
 BOOST_DATA_TEST_CASE(GeneralMixture, Dataset::parameters, pdg, phi, lambda, p,
                      seed) {
-  test(GeneralMixtureScattering(), seed,
+  test(ActsFatras::GeneralMixtureScattering(), seed,
        Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
 BOOST_DATA_TEST_CASE(GaussianMixture, Dataset::parameters, pdg, phi, lambda, p,
                      seed) {
-  test(GaussianMixtureScattering(), seed,
+  test(ActsFatras::GaussianMixtureScattering(), seed,
        Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
 BOOST_DATA_TEST_CASE(Highland, Dataset::parameters, pdg, phi, lambda, p, seed) {
-  test(HighlandScattering(), seed, Dataset::makeParticle(pdg, phi, lambda, p));
+  test(ActsFatras::HighlandScattering(), seed,
+       Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

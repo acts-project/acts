@@ -11,10 +11,10 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Physics/Scattering/detail/Scattering.hpp"
 
 namespace ActsFatras {
+namespace detail {
 
 /// Generate scattering angles using a Gaussian mixture model.
 struct GaussianMixture {
@@ -87,5 +87,9 @@ struct GaussianMixture {
     return M_SQRT2 * std::sqrt(sigma2) * gaussDist(generator);
   }
 };
+
+}  // namespace detail
+
+using GaussianMixtureScattering = detail::Scattering<detail::GaussianMixture>;
 
 }  // namespace ActsFatras

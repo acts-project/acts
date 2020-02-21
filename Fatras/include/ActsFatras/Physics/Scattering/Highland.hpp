@@ -11,10 +11,10 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Physics/Scattering/detail/Scattering.hpp"
 
 namespace ActsFatras {
+namespace detail {
 
 /// Generate scattering angles using the Highland/PDG parametrization.
 ///
@@ -41,5 +41,9 @@ struct Highland {
     return std::normal_distribution<double>(0.0, M_SQRT2 * theta0)(generator);
   }
 };
+
+}  // namespace detail
+
+using HighlandScattering = detail::Scattering<detail::Highland>;
 
 }  // namespace ActsFatras

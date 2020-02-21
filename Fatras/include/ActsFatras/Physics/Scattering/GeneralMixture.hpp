@@ -11,11 +11,11 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Physics/Scattering/detail/Scattering.hpp"
 
 namespace ActsFatras {
+namespace detail {
 
 /// Generate scattering angles using a general mixture model.
 ///
@@ -194,5 +194,9 @@ struct GeneralMixture {
       return a * b * std::sqrt((1 - u) / (u * b * b + a * a)) * sigma_tot;
   }
 };
+
+}  // namespace detail
+
+using GeneralMixtureScattering = detail::Scattering<detail::GeneralMixture>;
 
 }  // namespace ActsFatras

@@ -17,6 +17,7 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
+namespace detail {
 
 /// Simulate (multiple) scattering using a configurable scattering model.
 ///
@@ -69,4 +70,5 @@ struct Scattering {
   }
 };
 
+}  // namespace detail
 }  // namespace ActsFatras
