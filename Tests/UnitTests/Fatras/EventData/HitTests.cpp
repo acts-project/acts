@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(WithoutInteraction) {
   auto m4 = Hit::Vector4(1, 1, 1, 4);
   auto h = Hit(gid, pid, p4, m4, m4, 12u);
 
-  BOOST_TEST(h.geoId() == gid);
+  BOOST_TEST(h.geometryId() == gid);
   BOOST_TEST(h.particleId() == pid);
   BOOST_TEST(h.index() == 12u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
@@ -38,9 +38,11 @@ BOOST_AUTO_TEST_CASE(WithoutInteraction) {
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_REL(h.momentum4Before(), m4, eps);
   CHECK_CLOSE_REL(h.momentum4After(), m4, eps);
-  CHECK_CLOSE_REL(h.directionBefore(), Hit::Vector3(1, 1, 1).normalized(), eps);
-  CHECK_CLOSE_REL(h.directionAfter(), Hit::Vector3(1, 1, 1).normalized(), eps);
-  CHECK_CLOSE_REL(h.direction(), Hit::Vector3(1, 1, 1).normalized(), eps);
+  CHECK_CLOSE_REL(h.unitDirectionBefore(), Hit::Vector3(1, 1, 1).normalized(),
+                  eps);
+  CHECK_CLOSE_REL(h.unitDirectionAfter(), Hit::Vector3(1, 1, 1).normalized(),
+                  eps);
+  CHECK_CLOSE_REL(h.unitDirection(), Hit::Vector3(1, 1, 1).normalized(), eps);
   CHECK_SMALL(h.depositedEnergy(), eps);
 }
 
@@ -52,7 +54,7 @@ BOOST_AUTO_TEST_CASE(WithEnergyLoss) {
   auto m41 = Hit::Vector4(1.5, 0, 0, 1.5);
   auto h = Hit(gid, pid, p4, m40, m41, 13u);
 
-  BOOST_TEST(h.geoId() == gid);
+  BOOST_TEST(h.geometryId() == gid);
   BOOST_TEST(h.particleId() == pid);
   BOOST_TEST(h.index() == 13u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
@@ -60,9 +62,10 @@ BOOST_AUTO_TEST_CASE(WithEnergyLoss) {
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4Before(), m40, eps, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4After(), m41, eps, eps);
-  CHECK_CLOSE_OR_SMALL(h.directionBefore(), Hit::Vector3(1, 0, 0), eps, eps);
-  CHECK_CLOSE_OR_SMALL(h.directionAfter(), Hit::Vector3(1, 0, 0), eps, eps);
-  CHECK_CLOSE_OR_SMALL(h.direction(), Hit::Vector3(1, 0, 0), eps, eps);
+  CHECK_CLOSE_OR_SMALL(h.unitDirectionBefore(), Hit::Vector3(1, 0, 0), eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(h.unitDirectionAfter(), Hit::Vector3(1, 0, 0), eps, eps);
+  CHECK_CLOSE_OR_SMALL(h.unitDirection(), Hit::Vector3(1, 0, 0), eps, eps);
   CHECK_CLOSE_REL(h.depositedEnergy(), 0.5, eps);
 }
 
@@ -74,7 +77,7 @@ BOOST_AUTO_TEST_CASE(WithScattering) {
   auto m41 = Hit::Vector4(0, -2, 2, 5);
   auto h = Hit(gid, pid, p4, m40, m41, 42u);
 
-  BOOST_TEST(h.geoId() == gid);
+  BOOST_TEST(h.geometryId() == gid);
   BOOST_TEST(h.particleId() == pid);
   BOOST_TEST(h.index() == 42u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
@@ -82,11 +85,11 @@ BOOST_AUTO_TEST_CASE(WithScattering) {
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4Before(), m40, eps, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4After(), m41, eps, eps);
-  CHECK_CLOSE_OR_SMALL(h.directionBefore(), Hit::Vector3(1, 0, 1).normalized(),
-                       eps, eps);
-  CHECK_CLOSE_OR_SMALL(h.directionAfter(), Hit::Vector3(0, -1, 1).normalized(),
-                       eps, eps);
-  CHECK_CLOSE_REL(h.direction(), Hit::Vector3(1, -1, 2).normalized(), eps);
+  CHECK_CLOSE_OR_SMALL(h.unitDirectionBefore(),
+                       Hit::Vector3(1, 0, 1).normalized(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(h.unitDirectionAfter(),
+                       Hit::Vector3(0, -1, 1).normalized(), eps, eps);
+  CHECK_CLOSE_REL(h.unitDirection(), Hit::Vector3(1, -1, 2).normalized(), eps);
   CHECK_SMALL(h.depositedEnergy(), eps);
 }
 
@@ -98,7 +101,7 @@ BOOST_AUTO_TEST_CASE(WithEverything) {
   auto m41 = Hit::Vector4(2, 1, 2, 4);
   auto h = Hit(gid, pid, p4, m40, m41, 1u);
 
-  BOOST_TEST(h.geoId() == gid);
+  BOOST_TEST(h.geometryId() == gid);
   BOOST_TEST(h.particleId() == pid);
   BOOST_TEST(h.index() == 1u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
@@ -106,10 +109,12 @@ BOOST_AUTO_TEST_CASE(WithEverything) {
   CHECK_CLOSE_REL(h.time(), 4, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4Before(), m40, eps, eps);
   CHECK_CLOSE_OR_SMALL(h.momentum4After(), m41, eps, eps);
-  CHECK_CLOSE_REL(h.directionBefore(), Hit::Vector3(3, 2, 2).normalized(), eps);
-  CHECK_CLOSE_REL(h.directionAfter(), Hit::Vector3(2, 1, 2).normalized(), eps);
+  CHECK_CLOSE_REL(h.unitDirectionBefore(), Hit::Vector3(3, 2, 2).normalized(),
+                  eps);
+  CHECK_CLOSE_REL(h.unitDirectionAfter(), Hit::Vector3(2, 1, 2).normalized(),
+                  eps);
   CHECK_CLOSE_REL(
-      h.direction(),
+      h.unitDirection(),
       Hit::Vector3(0.7023994590205035, 0.41229136135810396, 0.5802161953247991),
       eps);
   CHECK_CLOSE_REL(h.depositedEnergy(), 1, eps);
