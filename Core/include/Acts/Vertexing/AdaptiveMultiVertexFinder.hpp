@@ -18,9 +18,6 @@
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
 
 namespace Acts {
-
-using namespace Acts::UnitLiterals;
-
 /// @class AdaptiveMultiVertexFinder
 ///
 /// @brief Implements an iterative vertex finder
@@ -70,116 +67,76 @@ class AdaptiveMultiVertexFinder {
     // Track linearizer
     Linearizer_t linearizer;
 
-    /// TODO: Update descriptions!
-    /** Define a beam constraint for the fit */
+    // Use a beam spot constraint, vertexConstraint in VertexFinderOptions
+    // has to be set in this case
     bool useBeamSpotConstraint = true;
 
-    /**
-     * When adding a new vertex to the multi vertex fit,
-     * only the tracks whose Z at PCA is closer
-     * to the seeded by more than this TracksMaxZinterval
-     * value are added to this new vertex.
-     *
-     * Default is 4 mm. If you cut too hard, you cut out
-     * the good cases where the seed finder is not
-     * reliable, but the fit would be still able to converge
-     * towards the right vertex. If you cut too soft, you
-     * consider a lot of tracks which just slow down the fit.
-     */
+    // Max z interval used for adding tracks to fit:
+    // When adding a new vertex to the multi vertex fit,
+    // only the tracks whose z at PCA is closer
+    // to the seeded vertex than tracksMaxZinterval
+    // are added to this new vertex.
+    //
+    // Note: Default is 4 mm. If you cut too hard, you cut out
+    // the good cases where the seed finder is not
+    // reliable, but the fit would be still able to converge
+    // towards the right vertex. If you cut too soft, you
+    // consider a lot of tracks which just slow down the fit.
+    double tracksMaxZinterval = 4. * Acts::UnitConstants::mm;
 
-    double tracksMaxZinterval = 4_mm;
-
-    /**
-     * After having added one vertex to the fit and having
-     * performed the MultiVertex fit again, all the tracks
-     * which are compatible to the new vertex by more than
-     * this maxVertexChi2 (in units of chi2) value are eliminated from the
-     * tracks from which still to seed the next vertex.
-     *
-     */
-
-    double maxVertexChi2 = 18.42;
-
-    /**
-     * As a default the realMultiVertex should stay to false (because this is
-     * very well tested).
-     *
-     * If switched to true, all the tracks are considered to be added to the new
-     * vertex after this new one is seeded, and not only the ones which are
-     * considered as outliers of previous fitted vertices.
-     *
-     * The presence of a core of tracks the previous vertices are as attached to
-     * stabilizes the fit quite drastically. In case of luminosities higher than
-     * the low lumi scenario, one should probably to try to switch this on, or,
-     * if this doesn't work, decrease the maxVertexChi2 and the
-     * cleaningZinterval to lower values.
-     */
-
-    bool realMultiVertex = false;
-
-    /*
-     * Decides if you want to use the vtxCompatibility() of the track (set to
-     * true) or the chi2() (set to false) as an estimate for a track being an
-     * outlier or not. The vtxCompatibility() is the default. In case the track
-     * refitting is switched on in the AdaptiveMultiVertex fitter, you may want
-     * to use the refitted chi2().
-     *
-     */
-
-    bool useFastCompatibility = true;
-
-    /*
-     * Maximum significance on the distance between two vertices
-     * to allow merging of two vertices.
-     *
-     */
-
-    double cutVertexDependence = 3.;
-
-    /*
-     * Has to be setup equal to the minimum weight set in the fitter.
-     *
-     * In the fitting, when a track has a weight lower than this value,
-     * the track is not updated during that iteration.
-     */
-
-    double minWeight = 0.0001;
-
-    /*
-     * Maximum amount of iterations allowed for vertex finding.
-     *
-     * The more vertices you have in the event, the more iterations you have to
-     * allow (safe factor: number of expected vertices * 10)
-     *
-     */
-
-    int maxIterations = 1000;
-
-    /*
-     * Fit also single track vertices
-     * (could be usefull for example for H-> gamma gamma)\
-     *
-     */
-
-    bool addSingleTrackVertices = false;
-
-    bool do3dSplitting = false;
-
-    double maximumVertexContamination = 0.5;
-
-    /*
-     * Maximum allowed significance of track position to vertex seed
-     */
+    // Maximum allowed significance of track position to vertex seed
+    // to consider track as compatible track for vertex fit
     double tracksMaxSignificance = 5.;
 
-    /*
-     * Toggle vertex seed constraint on/off
-     */
+    // Max chi2 value for which tracks are considered compatible with
+    // the fitted vertex. These tracks are removed from the seedTracks
+    // after the fit has been performed.
+    double maxVertexChi2 = 18.42;
+
+    // Perform a 'real' multi-vertex fit as intended by the algorithm.
+    // If switched to true, always all (!) tracks are considered to be
+    // added to the new vertex candidate after seeding. If switched to
+    // false, only the seedTracks, i.e. all tracks that are considered
+    // as outliers of previously fitted vertices, are used.
+    bool realMultiVertex = false;
+
+    // Decides if you want to use the ```vertexCompatibility``` of the
+    //  track (set to true) or the ```chi2Track``` (set to false) as an
+    // estimate for a track being an outlier or not.
+    // In case the track refitting is switched on in the AMVFitter, you
+    // may want to use the refitted ```chi2Track```.
+    bool useFastCompatibility = true;
+
+    // Maximum significance on the distance between two vertices
+    // to allow merging of two vertices.
+    double maxMergeVertexSignificance = 3.;
+
+    // Minimum weight a track has to have to be considered a compatible
+    // track with a vertex candidate.
+    //
+    // Note: This value has to be the same as the one in the AMVFitter.
+    double minWeight = 0.0001;
+
+    // Maximal number of iterations in the finding procedure
+    int maxIterations = 1000;
+
+    // Include also single track vertices
+    bool addSingleTrackVertices = false;
+
+    // Use 3d information fo evaluating the vertex distance significance
+    // for vertex merging/splitting
+    bool do3dSplitting = false;
+
+    // Maximum vertex contamination value
+    double maximumVertexContamination = 0.5;
+
+    // Use seed vertex as a constraint for the fit
     bool useSeedConstraint = true;
 
     // Diagonal constraint covariance entries in case
     // no beamspot constraint is provided
     double looseConstrValue = 1e+8;
+
     // Default fitQuality for constraint vertex in case no beamspot
     // constraint is provided
     std::pair<double, double> defaultConstrFitQuality{0., -3.};

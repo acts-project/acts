@@ -500,7 +500,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
       significance =
           std::sqrt(deltaPos.dot((sumCov.inverse().eval()) * deltaPos));
     }
-    if (significance < m_cfg.cutVertexDependence) {
+    if (significance < m_cfg.maxMergeVertexSignificance) {
       return true;
     }
   }
