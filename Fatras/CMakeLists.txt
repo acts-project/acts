@@ -3,7 +3,8 @@ add_library(
   src/LandauDistribution.cpp
   src/Particle.cpp
   src/ParticleData.cpp
-  src/ProcessType.cpp)
+  src/ProcessType.cpp
+  src/StandardPhysicsLists.cpp)
 target_compile_features(
   ActsFatras
   PUBLIC cxx_std_17)
