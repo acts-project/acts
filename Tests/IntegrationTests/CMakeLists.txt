@@ -34,4 +34,5 @@ add_integrationtest(BVHNavigation BVHNavigationTest.cpp)
 add_integrationtest(InterpolatedSolenoidBField InterpolatedSolenoidBFieldTest.cpp)
 add_integrationtest(Propagation PropagationTests.cpp)
 
+add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory_if(Legacy ACTS_BUILD_LEGACY)
