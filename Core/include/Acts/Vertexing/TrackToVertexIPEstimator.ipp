@@ -21,7 +21,7 @@ Acts::TrackToVertexIPEstimator<
   // trajectory anymore
 
   const Vector3D& lp = vtx.position();
-
+  
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(lp);
 
@@ -80,7 +80,7 @@ Acts::TrackToVertexIPEstimator<
     newIPandSigma->PVsigmaz0SinTheta =
         std::sqrt(std::sin(theta) * vtxZZCov * std::sin(theta));
     newIPandSigma->IPz0 = z0;
-    newIPandSigma->sigmaz0 = std::sqrt(vtxZZCov + perigeeCov(eZ, eZ));
+    newIPandSigma->sigmaz0 = std::sqrt(vtxZZCov + perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
     newIPandSigma->PVsigmaz0 = std::sqrt(vtxZZCov);
   } else {
     ACTS_WARNING(
@@ -93,7 +93,7 @@ Acts::TrackToVertexIPEstimator<
     newIPandSigma->PVsigmaz0SinTheta = 0;
 
     newIPandSigma->IPz0 = z0;
-    newIPandSigma->sigmaz0 = std::sqrt(perigeeCov(eZ, eZ));
+    newIPandSigma->sigmaz0 = std::sqrt(perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
     newIPandSigma->PVsigmaz0 = 0;
   }
 
