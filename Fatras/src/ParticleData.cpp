@@ -14,6 +14,7 @@
 #include <iterator>
 #include <limits>
 #include <optional>
+#include <ostream>
 
 #include "Acts/Utilities/Units.hpp"
 
@@ -58,4 +59,13 @@ float ActsFatras::findMass(Acts::PdgParticle pdg) {
 
 std::string_view ActsFatras::findName(Acts::PdgParticle pdg) {
   return findByPdg(static_cast<int32_t>(pdg), kParticlesName).value_or("");
+}
+
+std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
+  const auto name = ActsFatras::findName(pdg);
+  os << static_cast<int32_t>(pdg);
+  if (not name.empty()) {
+    os << '|' << name;
+  }
+  return os;
 }

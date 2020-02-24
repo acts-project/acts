@@ -18,9 +18,7 @@ namespace Dataset {
 
 using namespace Acts::UnitLiterals;
 
-const auto material = Acts::Test::makeBeryllium();
-const Acts::MaterialProperties thinSlab(material, 1_mm);
-const Acts::MaterialProperties thickSlab(material, 15_cm);
+const auto detector = Acts::Test::makePercentSlab();
 
 ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double z, double eta) {
   const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);

@@ -13,7 +13,6 @@
 #include "ActsFatras/Kernel/SelectorList.hpp"
 
 namespace {
-
 // mock-up objects for particle and detector.
 
 struct Object {
@@ -64,7 +63,6 @@ struct Fixture {
   Object objWrongFeature = {2, "same_name"};
   Environment envWrongFeature = {2};
 };
-
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasSelectorList)

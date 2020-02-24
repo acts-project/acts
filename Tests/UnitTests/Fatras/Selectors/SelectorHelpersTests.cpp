@@ -13,7 +13,7 @@
 #include "Dataset.hpp"
 
 namespace {
-const auto& detector = Dataset::thinSlab;
+const auto& detector = Dataset::detector;
 const auto& backward = Dataset::backwardPion;
 const auto& central = Dataset::centralPion;
 const auto& forward = Dataset::forwardPion;

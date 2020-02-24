@@ -14,7 +14,7 @@
 using namespace ActsFatras;
 
 namespace {
-const auto& detector = Dataset::thinSlab;
+const auto& detector = Dataset::detector;
 }
 
 BOOST_AUTO_TEST_SUITE(FatrasChargeSelectors)

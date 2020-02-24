@@ -8,6 +8,8 @@
 
 #include <boost/test/data/test_case.hpp>
 
+#include <cstdint>
+
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
@@ -18,11 +20,6 @@ namespace Dataset {
 
 namespace data = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
-
-// default test material
-const auto material = Acts::Test::makeBeryllium();
-const Acts::MaterialProperties thinSlab(material, 1_mm);
-const Acts::MaterialProperties thickSlab(material, 15_cm);
 
 // particle identity
 const auto particlePdg = data::make({
@@ -37,10 +34,13 @@ const auto momentumPhi = data::xrange(0_degree, 360_degree, 60_degree);
 const auto momentumLambda = data::xrange(-45_degree, 45_degree, 15_degree);
 const auto momentumAbs = data::xrange(500_MeV, 10_GeV, 500_MeV);
 
-// combined particle dataset:
-// cartesian grid over kinematic parameters, join over identity parameters
-const auto particleParameters =
-    particlePdg * momentumPhi * momentumLambda * momentumAbs;
+// seeds for the random number generator
+const auto rngSeed =
+    data::xrange<uint32_t>((data::begin = 2u, data::step = 3u));
+
+// combined parameter set
+const auto parameters =
+    particlePdg * momentumPhi * momentumLambda * momentumAbs ^ rngSeed;
 
 // utility function to build a particle from the dataset parameters
 inline ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double phi,

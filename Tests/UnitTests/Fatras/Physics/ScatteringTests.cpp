@@ -33,11 +33,12 @@ using HighlandScattering = ActsFatras::Scattering<ActsFatras::Highland>;
 
 // Common test method that will be instantiated for each scattering model.
 template <typename Scattering>
-void test(const Scattering& scattering, const ActsFatras::Particle& before) {
-  std::default_random_engine gen;
+void test(const Scattering& scattering, uint32_t seed,
+          const ActsFatras::Particle& before) {
+  std::ranlux48 gen(seed);
   ActsFatras::Particle after = before;
 
-  const auto outgoing = scattering(gen, Dataset::thinSlab, after);
+  const auto outgoing = scattering(gen, Acts::Test::makePercentSlab(), after);
   // scattering leaves absolute energy/momentum unchanged
   CHECK_CLOSE_REL(after.momentum(), before.momentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
@@ -50,19 +51,20 @@ void test(const Scattering& scattering, const ActsFatras::Particle& before) {
 
 BOOST_AUTO_TEST_SUITE(FatrasScattering)
 
-BOOST_DATA_TEST_CASE(GeneralMixture, Dataset::particleParameters, pdg, phi,
-                     lambda, p) {
-  test(GeneralMixtureScattering(), Dataset::makeParticle(pdg, phi, lambda, p));
+BOOST_DATA_TEST_CASE(GeneralMixture, Dataset::parameters, pdg, phi, lambda, p,
+                     seed) {
+  test(GeneralMixtureScattering(), seed,
+       Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
-BOOST_DATA_TEST_CASE(GaussianMixture, Dataset::particleParameters, pdg, phi,
-                     lambda, p) {
-  test(GaussianMixtureScattering(), Dataset::makeParticle(pdg, phi, lambda, p));
+BOOST_DATA_TEST_CASE(GaussianMixture, Dataset::parameters, pdg, phi, lambda, p,
+                     seed) {
+  test(GaussianMixtureScattering(), seed,
+       Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
-BOOST_DATA_TEST_CASE(Highland, Dataset::particleParameters, pdg, phi, lambda,
-                     p) {
-  test(HighlandScattering(), Dataset::makeParticle(pdg, phi, lambda, p));
+BOOST_DATA_TEST_CASE(Highland, Dataset::parameters, pdg, phi, lambda, p, seed) {
+  test(HighlandScattering(), seed, Dataset::makeParticle(pdg, phi, lambda, p));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

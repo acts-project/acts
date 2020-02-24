@@ -21,10 +21,9 @@ namespace {
 ActsFatras::Particle makeParticleCloseToLimit() {
   // create particle and move it close to the X0/L0 limit
   auto particle = Dataset::centralPion;
-  particle.addPassedMaterial(0.125, 0.0125);
-  particle.setMaterialLimits(
-      0.125 + 1.125 * Dataset::thinSlab.thicknessInX0(),
-      0.0125 + 1.125 * Dataset::thinSlab.thicknessInL0());
+  particle.setMaterialPassed(0.125, 0.0125);
+  // limit is a bit above 1% in radiation/interaction length
+  particle.setMaterialLimits(0.125 + 0.0125, 0.0125 + 0.0125);
   return particle;
 }
 }  // namespace
@@ -35,18 +34,18 @@ BOOST_AUTO_TEST_CASE(PathLimitX0) {
   ActsFatras::PathLimitX0 select;
   auto particle = makeParticleCloseToLimit();
   // particle is still within limits for thin block
-  BOOST_TEST(not select(Dataset::thinSlab, particle));
+  BOOST_TEST(not select(Acts::Test::makePercentSlab(), particle));
   // particle would pass limits for thick block
-  BOOST_TEST(select(Dataset::thickSlab, particle));
+  BOOST_TEST(select(Acts::Test::makeUnitSlab(), particle));
 }
 
 BOOST_AUTO_TEST_CASE(PathLimitL0) {
   ActsFatras::PathLimitL0 select;
   auto particle = makeParticleCloseToLimit();
   // particle is still within limits for thin block
-  BOOST_TEST(not select(Dataset::thinSlab, particle));
+  BOOST_TEST(not select(Acts::Test::makePercentSlab(), particle));
   // particle would pass limits for thick block
-  BOOST_TEST(select(Dataset::thickSlab, particle));
+  BOOST_TEST(select(Acts::Test::makeUnitSlab(), particle));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
