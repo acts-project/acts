@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <iosfwd>
 #include <limits>
 
 #include "Acts/Utilities/Definitions.hpp"
@@ -213,5 +214,7 @@ class Particle {
   Scalar m_limitX0 = std::numeric_limits<Scalar>::max();
   Scalar m_limitL0 = std::numeric_limits<Scalar>::max();
 };
+
+std::ostream &operator<<(std::ostream &os, const Particle &particle);
 
 }  // namespace ActsFatras
