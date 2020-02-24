@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-/////////////////////////////////////////////////////////////////
-// PerigeeSurface.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include "Acts/Geometry/GeometryStatics.hpp"
@@ -85,6 +81,15 @@ class PerigeeSurface : public LineSurface {
   /// @return ostreamn obect which was streamed into
   std::ostream& toStream(const GeometryContext& gctx,
                          std::ostream& sl) const final;
+
+  /// Return a Polyhedron for the surfaces
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param lseg is ignored for a perigee @note ignored
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                      size_t /*ignored*/) const final;
 
  private:
   /// Clone method implementation

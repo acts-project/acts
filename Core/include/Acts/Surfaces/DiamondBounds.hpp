@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// DiamondBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <cmath>
@@ -48,12 +44,16 @@ class DiamondBounds : public PlanarBounds {
   /// @image html DiamondBounds.svg
   DiamondBounds(double x1, double x2, double x3, double y1, double y2);
 
-  ~DiamondBounds() override;
+  /// Defaulted desctructor
+  ~DiamondBounds() override = default;
 
+  /// Virtual constructor
   DiamondBounds* clone() const final;
 
+  /// Enumeration type
   BoundsType type() const final;
 
+  /// The value store for persistency
   std::vector<TDD_real_t> valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
@@ -72,8 +72,15 @@ class DiamondBounds : public PlanarBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// Return the vertices - or, the points of the extremas
-  std::vector<Vector2D> vertices() const final;
+  /// Return the vertices
+  ///
+  /// @param lseg the number of segments used to approximate
+  /// and eventually curved line
+  ///
+  /// @note the number of segements is ignored for this representation
+  ///
+  /// @return vector for vertices in 2D
+  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

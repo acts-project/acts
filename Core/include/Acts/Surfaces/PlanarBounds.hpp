@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// PlanarBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <vector>
@@ -26,10 +22,20 @@ class RectangleBounds;
 ///
 class PlanarBounds : public SurfaceBounds {
  public:
-  /// Return the vertices - or, the points of the extremas
-  virtual std::vector<Vector2D> vertices() const = 0;
+  /// Return the vertices
+  ///
+  /// @param lseg the number of segments used to approximate
+  /// and eventually curved line
+  ///
+  /// @note that the extremas are given, which may slightly alter the
+  /// number of segments returned
+  ///
+  /// @return vector for vertices in 2D
+  virtual std::vector<Vector2D> vertices(unsigned int lseg = 1) const = 0;
 
-  // Bounding box parameters
+  /// Bounding box parameters
+  ///
+  /// @return rectangle bounds for a bounding box
   virtual const RectangleBounds& boundingBox() const = 0;
 };
 

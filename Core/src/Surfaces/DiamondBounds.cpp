@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// DiamondBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -28,8 +24,6 @@ Acts::DiamondBounds::DiamondBounds(double x1, double x2, double x3, double y1,
   throw_assert((x1 <= x2), "Hexagon must be a convex polygon");
   throw_assert((x3 <= x2), "Hexagon must be a convex polygon");
 }
-
-Acts::DiamondBounds::~DiamondBounds() = default;
 
 Acts::DiamondBounds* Acts::DiamondBounds::clone() const {
   return new DiamondBounds(*this);
@@ -59,10 +53,12 @@ double Acts::DiamondBounds::distanceToBoundary(
   return BoundaryCheck(true).distance(lposition, vertices());
 }
 
-std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices() const {
-  // vertices starting from lower right in clock-wise order
-  return {{x1(), -y1()}, {x2(), 0},  {x3(), y2()},
-          {-x3(), y2()}, {-x2(), 0}, {-x1(), -y1()}};
+std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices(
+    unsigned int /*lseg*/) const {
+  // Vertices starting at lower left (min rel. phi)
+  // counter-clockwise
+  return {{-x1(), -y1()}, {x1(), -y1()}, {x2(), 0.},
+          {x3(), y2()},   {-x3(), y2()}, {-x2(), 0.}};
 }
 
 const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {

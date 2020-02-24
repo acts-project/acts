@@ -169,10 +169,6 @@ BOOST_AUTO_TEST_CASE(obj_output_test) {
   BOOST_CHECK(output.is_equal(exp));
 
   obj.clear();
-
-  BOOST_CHECK_THROW(obj.line({1, 0, 0}, {0, 1, 0}), std::runtime_error);
-
-  obj.clear();
   obj.face({{1, 0, 0}, {1, 1, 0}, {0, 1, 0}});
   output << obj;
 

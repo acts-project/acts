@@ -14,7 +14,7 @@
 
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"

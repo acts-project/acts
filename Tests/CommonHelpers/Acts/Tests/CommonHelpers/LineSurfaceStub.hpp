@@ -57,6 +57,17 @@ class LineSurfaceStub : public LineSurface {
 
   using Surface::normal;
 
+  /// Return a Polyhedron for the surfaces
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param lseg is ignored for a perigee @note ignored
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
+                                      size_t /*lseg*/) const final {
+    return Polyhedron({}, {}, {});
+  }
+
  private:
   Surface* clone_impl(const GeometryContext& /*gctx*/,
                       const Transform3D& /*unused*/) const {

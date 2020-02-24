@@ -1,16 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// EllipseBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Surfaces/EllipseBounds.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -33,8 +30,6 @@ Acts::EllipseBounds::EllipseBounds(double minRadius0, double minRadius1,
       m_halfPhi(std::abs(halfPhi)),
       m_boundingBox(std::max(minRadius0, maxRadius0),
                     std::max(minRadius1, maxRadius1)) {}
-
-Acts::EllipseBounds::~EllipseBounds() = default;
 
 Acts::EllipseBounds* Acts::EllipseBounds::clone() const {
   return new EllipseBounds(*this);
@@ -145,9 +140,10 @@ double Acts::EllipseBounds::distanceToBoundary(
   return sf;
 }
 
-std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices() const {
-  // 2017-04-08 msmk: this is definitely too coarse
-  return {{rMaxX(), 0}, {0, rMaxY()}, {-rMaxX(), 0}, {0, -rMaxY()}};
+std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices(
+    unsigned int lseg) const {
+  return detail::VerticesHelper::ellispoidVertices(
+      m_rMinX, m_rMinY, m_rMaxX, m_rMaxY, m_avgPhi, m_halfPhi, lseg);
 }
 
 const Acts::RectangleBounds& Acts::EllipseBounds::boundingBox() const {

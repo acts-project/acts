@@ -1,20 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// PlaneSurface.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include <limits>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -190,6 +187,17 @@ class PlaneSurface : public Surface {
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction,
       const BoundaryCheck& bcheck = false) const final;
+
+  /// Return a Polyhedron for the surfaces
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param lseg Number of segments along curved lines, it represents
+  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// are given
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                      size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

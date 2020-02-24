@@ -1,16 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// AnnulusBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -111,9 +108,37 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::corners() const {
           rot * m_inLeftStripPC, rot * m_inRightStripPC};
 }
 
-std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices() const {
-  return {m_outRightStripXY, m_outLeftStripXY, m_inLeftStripXY,
-          m_inRightStripXY};
+std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
+    unsigned int lseg) const {
+  // List of vertices counter-clockwise starting with left inner
+  std::vector<Acts::Vector2D> rvertices;
+
+  double phiMinInner = VectorHelpers::phi(m_inLeftStripXY);
+  double phiMaxInner = VectorHelpers::phi(m_inRightStripXY);
+  double phiMinOuter = VectorHelpers::phi(m_outRightStripXY);
+  double phiMaxOuter = VectorHelpers::phi(m_outLeftStripXY);
+
+  std::vector<double> phisInner =
+      detail::VerticesHelper::phiSegments(phiMinInner, phiMaxInner);
+  std::vector<double> phisOuter =
+      detail::VerticesHelper::phiSegments(phiMinOuter, phiMaxOuter);
+
+  // Inner bow from phi_min -> phi_max
+  for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
+    int addon = (iseg == phisInner.size() - 2) ? 1 : 0;
+    detail::VerticesHelper::createSegment<Vector2D, Eigen::Affine2d>(
+        rvertices, {rMin(), rMin()}, phisInner[iseg], phisInner[iseg + 1], lseg,
+        addon);
+  }
+  // Upper bow from phi_min -> phi_max
+  for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
+    int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
+    detail::VerticesHelper::createSegment<Vector2D, Eigen::Affine2d>(
+        rvertices, {rMax(), rMax()}, phisOuter[iseg], phisOuter[iseg + 1], lseg,
+        addon);
+  }
+
+  return rvertices;
 }
 
 bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,

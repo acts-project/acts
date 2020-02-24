@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// RadialBounds.h, (c) ATLAS Detector software
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <cmath>
@@ -59,12 +55,16 @@ class RadialBounds : public DiscBounds {
   /// coverage)
   RadialBounds(double minrad, double maxrad, double avephi, double hphisec);
 
-  ~RadialBounds() override;
+  /// Defaulted Destructor
+  ~RadialBounds() override = default;
 
+  /// Virtual constructor
   RadialBounds* clone() const final;
 
+  /// Return the type enumerator
   SurfaceBounds::BoundsType type() const final;
 
+  /// Value store to be written out
   std::vector<TDD_real_t> valueStore() const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
@@ -122,6 +122,18 @@ class RadialBounds : public DiscBounds {
   ///
   /// @param lposition The local position in polar coordinates
   Vector2D shifted(const Vector2D& lposition) const;
+
+  /// This method returns the xy coordinates of vertices along
+  /// the radial bounds
+  ///
+  /// @param lseg the number of segments used to approximate
+  /// and eventually curved line
+  ///
+  /// @note that the extremas are given, which may slightly alter the
+  /// number of segments returned
+  ///
+  /// @return vector for vertices in 2D
+  std::vector<Vector2D> vertices(unsigned int lseg) const;
 };
 
 inline double RadialBounds::rMin() const {

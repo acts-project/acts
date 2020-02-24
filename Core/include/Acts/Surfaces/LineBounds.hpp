@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// LineBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -33,12 +29,16 @@ class LineBounds : public SurfaceBounds {
   /// @param halez is the half length in z, defualt = 0.
   LineBounds(double radius = 0., double halez = 0.);
 
-  ~LineBounds() override;
+  /// Defaulted destructor
+  ~LineBounds() override = default;
 
+  /// Virtual constructor
   LineBounds* clone() const final;
 
+  /// Type enumeration
   BoundsType type() const final;
 
+  /// Return the intrinsic values
   std::vector<TDD_real_t> valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive

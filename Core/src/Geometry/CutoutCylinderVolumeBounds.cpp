@@ -145,18 +145,3 @@ std::ostream& Acts::CutoutCylinderVolumeBounds::toStream(
   sl << "dz1 = " << m_dz1 << " dz2 = " << m_dz2;
   return sl;
 }
-
-void Acts::CutoutCylinderVolumeBounds::draw(
-    IVisualization& helper, const Transform3D& transform) const {
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces =
-      decomposeToSurfaces(&transform);
-  for (const auto& srf : surfaces) {
-    auto cyl = dynamic_cast<const CylinderSurface*>(srf.get());
-    auto disc = dynamic_cast<const DiscSurface*>(srf.get());
-    if (cyl != nullptr) {
-      cyl->polyhedronRepresentation(50).draw(helper);
-    } else {
-      disc->polyhedronRepresentation(50).draw(helper);
-    }
-  }
-}

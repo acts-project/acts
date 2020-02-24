@@ -36,16 +36,17 @@ enum BinningType { equidistant, arbitrary };
 enum BinningOption { open, closed };
 
 /// @enum BinningValue how to take the global / local position
-enum BinningValue {
-  binX,
-  binY,
-  binZ,
-  binR,
-  binPhi,
-  binRPhi,
-  binH,
-  binEta,
-  binMag
+enum BinningValue : int {
+  binX = 0,
+  binY = 1,
+  binZ = 2,
+  binR = 3,
+  binPhi = 4,
+  binRPhi = 5,
+  binH = 6,
+  binEta = 7,
+  binMag = 8,
+  binValues = 9
 };
 
 /// @brief screen output option

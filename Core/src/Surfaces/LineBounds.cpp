@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// LineBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/LineBounds.hpp"
 
@@ -17,8 +13,6 @@
 
 Acts::LineBounds::LineBounds(double radius, double halez)
     : m_radius(std::abs(radius)), m_halfZ(std::abs(halez)) {}
-
-Acts::LineBounds::~LineBounds() = default;
 
 Acts::LineBounds* Acts::LineBounds::clone() const {
   return new LineBounds(*this);

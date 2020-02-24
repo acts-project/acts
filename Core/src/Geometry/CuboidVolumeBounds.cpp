@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// CuboidVolumeBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include <cmath>
 #include <iostream>
@@ -57,15 +53,14 @@ Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
   return *this;
 }
 
-std::vector<std::shared_ptr<const Acts::Surface>>
-Acts::CuboidVolumeBounds::decomposeToSurfaces(
+Acts::SurfacePtrVector Acts::CuboidVolumeBounds::decomposeToSurfaces(
     const Transform3D* transformPtr) const {
   // the transform - apply when given
   Transform3D transform =
       (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
   const Transform3D* tTransform = nullptr;
 
-  std::vector<std::shared_ptr<const Acts::Surface>> rSurfaces;
+  SurfacePtrVector rSurfaces;
   rSurfaces.reserve(6);
   // face surfaces xy -------------------------------------
   //   (1) - at negative local z

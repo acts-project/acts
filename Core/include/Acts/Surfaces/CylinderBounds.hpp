@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// CylinderBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <cmath>
@@ -72,12 +68,16 @@ class CylinderBounds : public SurfaceBounds {
   CylinderBounds(double radius, double averagePhi, double halfPhi,
                  double halfZ);
 
-  ~CylinderBounds() override;
+  /// Defaulted destructor
+  ~CylinderBounds() override = default;
 
+  /// Virtual constructor
   CylinderBounds* clone() const final;
 
+  /// Type enumeration
   BoundsType type() const final;
 
+  /// The value store
   std::vector<TDD_real_t> valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive

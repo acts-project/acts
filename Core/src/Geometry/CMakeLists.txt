@@ -11,6 +11,7 @@ target_sources_local(
     CylinderVolumeBounds.cpp
     CylinderVolumeBuilder.cpp
     CylinderVolumeHelper.cpp
+    Extent.cpp
     DiscLayer.cpp
     DoubleTrapezoidVolumeBounds.cpp
     GenericApproachDescriptor.cpp
@@ -23,6 +24,7 @@ target_sources_local(
     NavigationLayer.cpp
     PassiveLayerBuilder.cpp
     PlaneLayer.cpp
+    Polyhedron.cpp
     ProtoLayer.cpp
     SurfaceArrayCreator.cpp
     TrackingGeometry.cpp

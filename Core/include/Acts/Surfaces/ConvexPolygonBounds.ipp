@@ -126,7 +126,8 @@ double Acts::ConvexPolygonBounds<N>::distanceToBoundary(
 }
 
 template <int N>
-std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<N>::vertices() const {
+std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<N>::vertices(
+    unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }
 
@@ -164,8 +165,8 @@ double Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::distanceToBoundary(
   return BoundaryCheck(true).distance(lposition, m_vertices);
 }
 
-std::vector<Acts::Vector2D>
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::vertices() const {
+std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<
+    Acts::PolygonDynamic>::vertices(unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }
 

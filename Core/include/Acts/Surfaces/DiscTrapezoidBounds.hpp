@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// DiscTrapezoidalBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <cmath>
@@ -20,14 +16,14 @@
 namespace Acts {
 
 ///
-/// @class DiscTrapezoidalBounds
+/// @class DiscTrapezoidBounds
 ///
 /// Class to describe the bounds for a planar DiscSurface.
 /// By providing an argument for hphisec, the bounds can
 /// be restricted to a phi-range around the center position.
 ///
 
-class DiscTrapezoidalBounds : public DiscBounds {
+class DiscTrapezoidBounds : public DiscBounds {
  public:
   /// @enum BoundValues
   /// enumeration for readability
@@ -41,26 +37,29 @@ class DiscTrapezoidalBounds : public DiscBounds {
     bv_length = 6
   };
 
-  DiscTrapezoidalBounds() = delete;
+  DiscTrapezoidBounds() = delete;
 
   /// Constructor for a symmetric Trapezoid giving min X length, max X length,
   /// Rmin and R max
   /// @param minhalfx half length in X at min radius
   /// @param maxhalfx half length in X at maximum radius
-  /// @param maxR outer radius
   /// @param minR inner radius
+  /// @param maxR outer radius
   /// @param avephi average phi value
   /// @param stereo optional stero angle applied
-  DiscTrapezoidalBounds(double minhalfx, double maxhalfx, double maxR,
-                        double minR, double avephi = M_PI_2,
-                        double stereo = 0.);
+  DiscTrapezoidBounds(double minhalfx, double maxhalfx, double minR,
+                      double maxR, double avephi = M_PI_2, double stereo = 0.);
 
-  ~DiscTrapezoidalBounds() override;
+  /// Defaulted Destructor
+  ~DiscTrapezoidBounds() override = default;
 
-  DiscTrapezoidalBounds* clone() const final;
+  /// Overloaded clone method
+  DiscTrapezoidBounds* clone() const final;
 
+  /// Type identifier
   SurfaceBounds::BoundsType type() const final;
 
+  /// Value store for persistency
   std::vector<TDD_real_t> valueStore() const final;
 
   ///  This method cheks if the radius given in the LocalPosition is inside
@@ -121,6 +120,17 @@ class DiscTrapezoidalBounds : public DiscBounds {
   /// Return a reference phi for binning
   double binningValuePhi() const final;
 
+  /// This method returns the xy coordinates of the four corners of the
+  /// bounds in module coorindates (in xy)
+  ///
+  /// @param lseg the number of segments used to approximate
+  /// and eventually curved line
+  ///
+  /// @note that the number of segments are ignored for this surface
+  ///
+  /// @return vector for vertices in 2D
+  std::vector<Vector2D> vertices(unsigned int lseg) const;
+
  private:
   double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
@@ -138,62 +148,62 @@ class DiscTrapezoidalBounds : public DiscBounds {
   ActsMatrixD<2, 2> jacobianToLocalCartesian(const Vector2D& lposition) const;
 };
 
-inline double DiscTrapezoidalBounds::rMin() const {
+inline double DiscTrapezoidBounds::rMin() const {
   return m_rMin;
 }
 
-inline double DiscTrapezoidalBounds::rMax() const {
+inline double DiscTrapezoidBounds::rMax() const {
   return m_rMax;
 }
 
-inline double DiscTrapezoidalBounds::minHalflengthX() const {
+inline double DiscTrapezoidBounds::minHalflengthX() const {
   return m_minHalfX;
 }
 
-inline double DiscTrapezoidalBounds::maxHalflengthX() const {
+inline double DiscTrapezoidBounds::maxHalflengthX() const {
   return m_maxHalfX;
 }
 
-inline double DiscTrapezoidalBounds::averagePhi() const {
+inline double DiscTrapezoidBounds::averagePhi() const {
   return m_avgPhi;
 }
 
-inline double DiscTrapezoidalBounds::stereo() const {
+inline double DiscTrapezoidBounds::stereo() const {
   return m_stereo;
 }
 
-inline double DiscTrapezoidalBounds::halfPhiSector() const {
+inline double DiscTrapezoidBounds::halfPhiSector() const {
   auto minHalfPhi = std::asin(m_minHalfX / m_rMin);
   auto maxHalfPhi = std::asin(m_maxHalfX / m_rMax);
   return std::max(minHalfPhi, maxHalfPhi);
 }
 
-inline double DiscTrapezoidalBounds::rCenter() const {
+inline double DiscTrapezoidBounds::rCenter() const {
   auto hmin = std::sqrt(m_rMin * m_rMin - m_minHalfX * m_minHalfX);
   auto hmax = std::sqrt(m_rMax * m_rMax - m_maxHalfX * m_maxHalfX);
   return (hmin + hmax) / 2.0;
 }
 
-inline double DiscTrapezoidalBounds::halflengthY() const {
+inline double DiscTrapezoidBounds::halflengthY() const {
   auto hmin = std::sqrt(m_rMin * m_rMin - m_minHalfX * m_minHalfX);
   auto hmax = std::sqrt(m_rMax * m_rMax - m_maxHalfX * m_maxHalfX);
   return (hmax - hmin) / 2.0;
 }
 
-inline bool DiscTrapezoidalBounds::coversFullAzimuth() const {
+inline bool DiscTrapezoidBounds::coversFullAzimuth() const {
   return false;
 }
 
-inline bool DiscTrapezoidalBounds::insideRadialBounds(double R,
-                                                      double tolerance) const {
+inline bool DiscTrapezoidBounds::insideRadialBounds(double R,
+                                                    double tolerance) const {
   return (R + tolerance > m_rMin and R - tolerance < m_rMax);
 }
 
-inline double DiscTrapezoidalBounds::binningValueR() const {
+inline double DiscTrapezoidBounds::binningValueR() const {
   return 0.5 * (m_rMin + m_rMax);
 }
 
-inline double DiscTrapezoidalBounds::binningValuePhi() const {
+inline double DiscTrapezoidBounds::binningValuePhi() const {
   return m_avgPhi;
 }
 

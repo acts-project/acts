@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// BoundaryCheck.hpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <cfloat>
@@ -16,6 +12,7 @@
 #include <iterator>
 #include <vector>
 
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
@@ -136,15 +133,6 @@ class BoundaryCheck {
   ///          for the tolerance based check.
   BoundaryCheck transformed(const ActsMatrixD<2, 2>& jacobian) const;
 
-  /// Check if the point is inside the polygon w/o any tolerances.
-  template <typename Vector2DContainer>
-  bool isInsidePolygon(const Vector2D& point,
-                       const Vector2DContainer& vertices) const;
-
-  /// Check if the point is inside the aligned box
-  bool isInsideRectangle(const Vector2D& point, const Vector2D& lowerLeft,
-                         const Vector2D& upperRight) const;
-
   /// Check if the distance vector is within the absolute or relative limits.
   bool isTolerated(const Vector2D& delta) const;
 
@@ -173,7 +161,7 @@ class BoundaryCheck {
   friend class RectangleBounds;
   // To be able to use `transformed`
   friend class CylinderBounds;
-  friend class DiscTrapezoidalBounds;
+  friend class DiscTrapezoidBounds;
   // EllipseBounds needs a custom implementation
   friend class EllipseBounds;
 };
@@ -230,7 +218,7 @@ inline bool Acts::BoundaryCheck::isInside(
   if (m_type == Type::eNone) {
     // The null boundary check always succeeds
     return true;
-  } else if (isInsidePolygon(point, vertices)) {
+  } else if (detail::VerticesHelper::isInsidePolygon(point, vertices)) {
     // If the point falls inside the polygon, the check always succeeds
     return true;
   } else if (m_tolerance == Vector2D(0., 0.)) {
@@ -253,53 +241,10 @@ inline bool Acts::BoundaryCheck::isInside(
   }
 }
 
-template <typename Vector2DContainer>
-inline bool Acts::BoundaryCheck::isInsidePolygon(
-    const Vector2D& point, const Vector2DContainer& vertices) const {
-  // when we move along the edges of a convex polygon, a point on the inside of
-  // the polygon will always appear on the same side of each edge.
-  // a point on the outside will switch sides at least once.
-
-  // returns which side of the connecting line between `ll0` and `ll1` the point
-  // `p` is on. computes the sign of the z-component of the cross-product
-  // between the line normal vector and the vector from `ll0` to `p`.
-  auto lineSide = [&](auto&& ll0, auto&& ll1) {
-    auto normal = ll1 - ll0;
-    auto delta = point - ll0;
-    return std::signbit((normal[0] * delta[1]) - (normal[1] * delta[0]));
-  };
-
-  auto iv = std::begin(vertices);
-  Vector2D l0 = *iv;
-  Vector2D l1 = *(++iv);
-  // use vertex0 to vertex1 to define reference sign and compare w/ all edges
-  auto reference = lineSide(l0, l1);
-  for (++iv; iv != std::end(vertices); ++iv) {
-    l0 = l1;
-    l1 = *iv;
-    if (lineSide(l0, l1) != reference) {
-      return false;
-    }
-  }
-  // manual check for last edge from last vertex back to the first vertex
-  if (lineSide(l1, *std::begin(vertices)) != reference) {
-    return false;
-  }
-  // point was always on the same side. point must be inside.
-  return true;
-}
-
-inline bool Acts::BoundaryCheck::isInsideRectangle(
-    const Vector2D& point, const Vector2D& lowerLeft,
-    const Vector2D& upperRight) const {
-  return (lowerLeft[0] <= point[0]) && (point[0] < upperRight[0]) &&
-         (lowerLeft[1] <= point[1]) && (point[1] < upperRight[1]);
-}
-
 inline bool Acts::BoundaryCheck::isInside(const Vector2D& point,
                                           const Vector2D& lowerLeft,
                                           const Vector2D& upperRight) const {
-  if (isInsideRectangle(point, lowerLeft, upperRight)) {
+  if (detail::VerticesHelper::isInsideRectangle(point, lowerLeft, upperRight)) {
     return true;
   } else {
     Vector2D closestPoint;
@@ -328,7 +273,7 @@ inline double Acts::BoundaryCheck::distance(
   // TODO 2017-04-06 msmk: this should be calculable directly
   double d = squaredNorm(point - computeClosestPointOnPolygon(point, vertices));
   d = std::sqrt(d);
-  return isInsidePolygon(point, vertices) ? -d : d;
+  return detail::VerticesHelper::isInsidePolygon(point, vertices) ? -d : d;
 }
 
 inline double Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
@@ -339,7 +284,10 @@ inline double Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
     double d = (point - computeEuclideanClosestPointOnRectangle(
                             point, lowerLeft, upperRight))
                    .norm();
-    return isInsideRectangle(point, lowerLeft, upperRight) ? -d : d;
+    return detail::VerticesHelper::isInsideRectangle(point, lowerLeft,
+                                                     upperRight)
+               ? -d
+               : d;
 
   } else /* Type::eChi2 */ {
     Vector2D vertices[] = {{lowerLeft[0], lowerLeft[1]},

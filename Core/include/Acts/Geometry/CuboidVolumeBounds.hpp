@@ -6,11 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// CuboidVolumeBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
+
 #include <cmath>
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -84,11 +81,9 @@ class CuboidVolumeBounds : public VolumeBounds {
   bool inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into boundarySurfaces
-  /// @note this method is a pure factory the volume is resposible
-  /// for the memory management
   ///
   /// @param transformPtr is the transfrom of the volume
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
+  SurfacePtrVector decomposeToSurfaces(
       const Transform3D* transformPtr) const override;
 
   /// Construct bounding box for this shape

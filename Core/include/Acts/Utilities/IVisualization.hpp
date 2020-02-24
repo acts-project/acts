@@ -13,75 +13,80 @@
 
 namespace Acts {
 
-/**
- * Partially abstract base class which provides an interface to visualization
- * helper classes. It provides a number of methods that all the helpers need to
- * conform to. It also provides a `color_type` typedef, but not all of the
- * helpers actually support that.
- */
+/// Partially abstract base class which provides an interface to visualization
+/// helper classes. It provides a number of methods that all the helpers need to
+/// conform to. It also provides a `color_type` typedef, but not all of the
+/// helpers actually support that.
+///
 class IVisualization {
  public:
-  /**
-   * The color typedef. It's an array of three numbers [0, 255] indicating RGB
-   * color values.
-   */
+  /// The color typedef. It's an array of three numbers [0, 255] indicating RGB
+  /// color values.
+  ///
   using color_type = std::array<int, 3>;
 
-  /**
-   * Draw a vertex at a given location and a color.
-   * @param vtx The vertex position
-   * @param color The color
-   */
+  /// The face type
+  using face_type = std::vector<size_t>;
+
+  /// Draw a vertex at a given location and a color.
+  /// @param vtx The vertex position
+  /// @param color The color
+  ///
   virtual void vertex(const Vector3D& vtx,
                       color_type color = {120, 120, 120}) = 0;
 
-  /**
-   * Draw a face that connects a list of vertices.
-   * @note Depending on the helper implementation, out of plane vertices might
-   * be handled differently.
-   * @param vtxs The vertices that make up the face
-   * @param color The color of the face
-   */
+  /// Draw a face that connects a list of vertices.
+  /// @note Depending on the helper implementation, out of plane vertices might
+  /// be handled differently.
+  /// @param vtxs The vertices that make up the face
+  /// @param color The color of the face
+  ///
   virtual void face(const std::vector<Vector3D>& vtxs,
                     color_type color = {120, 120, 120}) = 0;
 
-  /**
-   * Draw a line from a vertex to another
-   * @param a The start vertex
-   * @param b The end vertex
-   * @param color The color of the line
-   */
+  /// Draw a faces that connects a list of vertices - expert only
+  ///
+  /// @note Depending on the helper implementation, out of plane vertices might
+  /// be handled differently.
+  /// @param vtxs The vertices that make up the faceS
+  /// @param faces The face presectiotions (i.e. connecting vertices)
+  /// @param color The color of the face
+  ///
+  virtual void faces(const std::vector<Vector3D>& vtxs,
+                     const std::vector<face_type>& faces,
+                     color_type color = {120, 120, 120}) = 0;
+
+  /// Draw a line from a vertex to another
+  /// @param a The start vertex
+  /// @param b The end vertex
+  /// @param color The color of the line
+  ///
   virtual void line(const Vector3D& a, const Vector3D& b,
                     color_type color = {120, 120, 120}) = 0;
 
-  /**
-   * Write the content of the helper to an outstream.
-   * @param os The output stream
-   */
+  /// Write the content of the helper to an outstream.
+  /// @param os The output stream
+  ///
   virtual void write(std::ostream& os) const = 0;
 
-  /**
-   * Remove all contents of this helper
-   */
+  /// Remove all contents of this helper
+  ///
   virtual void clear() = 0;
 
-  /**
-   * Below are helper functions, which share the same interface as the ones
-   * above, but explicitly accept float values (instead of double), converts
-   * them and calls the above methods.
-   */
+  /// Below are helper functions, which share the same interface as the ones
+  /// above, but explicitly accept float values (instead of double), converts
+  /// them and calls the above methods.
+  ///
 
-  /**
-   * @copydoc Acts::IVisualization::vertex(const Vector3D&, color_type)
-   */
+  /// @copydoc Acts::IVisualization::vertex(const Vector3D&, color_type)
+  ///
   void vertex(const Vector3F& vtx, color_type color = {120, 120, 120}) {
     Vector3D vtxd = vtx.template cast<double>();
     vertex(vtxd, color);
   }
 
-  /**
-   * @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, color_type)
-   */
+  /// @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, color_type)
+  ///
   void face(const std::vector<Vector3F>& vtxs,
             color_type color = {120, 120, 120}) {
     std::vector<Vector3D> vtxsd;
@@ -90,10 +95,9 @@ class IVisualization {
     face(vtxsd, color);
   }
 
-  /**
-   * @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
-   * color_type)
-   */
+  ///  @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
+  /// color_type)
+  ///
   void line(const Vector3F& a, const Vector3F& b,
             color_type color = {120, 120, 120}) {
     Vector3D ad = a.template cast<double>();
