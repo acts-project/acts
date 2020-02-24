@@ -10,5 +10,5 @@
 
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
-ActsFatras::Particle::Particle(Barcode id, Acts::PdgParticle pdg)
-    : Particle(id, pdg, findCharge(pdg), findMass(pdg)) {}
+ActsFatras::Particle::Particle(Barcode particleId, Acts::PdgParticle pdg)
+    : Particle(particleId, pdg, findCharge(pdg), findMass(pdg)) {}

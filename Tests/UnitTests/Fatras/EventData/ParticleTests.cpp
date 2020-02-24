@@ -26,10 +26,10 @@ constexpr auto eps = std::numeric_limits<Particle::Scalar>::epsilon();
 BOOST_AUTO_TEST_SUITE(FatrasParticle)
 
 BOOST_AUTO_TEST_CASE(Construct) {
-  const auto id = Barcode().setVertexPrimary(1).setParticle(42);
-  const auto particle = Particle(id, PdgParticle::eProton, 1_GeV, 1_e);
+  const auto pid = Barcode().setVertexPrimary(1).setParticle(42);
+  const auto particle = Particle(pid, PdgParticle::eProton, 1_GeV, 1_e);
 
-  BOOST_TEST(particle.id() == id);
+  BOOST_TEST(particle.particleId() == pid);
   BOOST_TEST(particle.pdg() == PdgParticle::eProton);
   // particle is at rest at the origin
   BOOST_TEST(particle.position4() == Particle::Vector4::Zero());
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(Construct) {
 }
 
 BOOST_AUTO_TEST_CASE(CorrectEnergy) {
-  const auto id = Barcode().setVertexPrimary(1).setParticle(42);
-  auto particle = Particle(id, PdgParticle::eProton, 1_GeV, 1_e)
+  const auto pid = Barcode().setVertexPrimary(1).setParticle(42);
+  auto particle = Particle(pid, PdgParticle::eProton, 1_GeV, 1_e)
                       .setDirection(Particle::Vector3::UnitX())
                       .setAbsMomentum(2_GeV);
 
