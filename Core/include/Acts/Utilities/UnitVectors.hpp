@@ -8,12 +8,53 @@
 
 #pragma once
 
+#include <cmath>
 #include <limits>
 #include <utility>
 
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
+
+/// Construct a normalized direction vector from phi angle and pseudorapidity.
+///
+/// @param phi is the direction angle in the x-y plane.
+/// @param eta is the pseudorapidity towards the z-axis.
+///
+/// @note The input arguments intentionally use the same template type so that
+///       a compile error occurs if inconsistent input types are used. Avoids
+///       unexpected implicit type conversions and forces the user to
+///       explicitely cast missmatched input types.
+template <typename T>
+inline ActsVector<T, 3> makeDirectionUnitFromPhiEta(T phi, T eta) {
+  const auto coshEta = std::cosh(eta);
+  const auto tanhEta = std::tanh(eta);
+  return {
+      std::cos(phi) / coshEta,
+      std::sin(phi) / coshEta,
+      std::tanh(eta),
+  };
+}
+
+/// Construct a normalized direction vector from phi and theta angle.
+///
+/// @param phi is the direction angle in radian in the x-y plane.
+/// @param theta is the polar angle in radian towards the z-axis.
+///
+/// @note The input arguments intentionally use the same template type so that
+///       a compile error occurs if inconsistent input types are used. Avoids
+///       unexpected implicit type conversions and forces the user to
+///       explicitely cast missmatched input types.
+template <typename T>
+inline ActsVector<T, 3> makeDirectionUnitFromPhiTheta(T phi, T theta) {
+  const auto cosTheta = std::cos(theta);
+  const auto sinTheta = std::sin(theta);
+  return {
+      std::cos(phi) * sinTheta,
+      std::sin(phi) * sinTheta,
+      cosTheta,
+  };
+}
 
 /// Construct the first curvilinear unit vector `U` for the given direction.
 ///
