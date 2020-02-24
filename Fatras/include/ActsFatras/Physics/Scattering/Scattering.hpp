@@ -12,8 +12,8 @@
 #include <random>
 
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Utilities/CurvilinearUnitVectors.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {

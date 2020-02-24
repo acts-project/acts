@@ -11,7 +11,7 @@
 #include <limits>
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/CurvilinearUnitVectors.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 using Acts::Vector3D;
 
@@ -19,9 +19,9 @@ namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
 
 template <typename Direction, typename RefUnitU, typename RefUnitV>
-void test(const Eigen::MatrixBase<Direction>& direction,
-          const Eigen::MatrixBase<RefUnitU>& refU,
-          const Eigen::MatrixBase<RefUnitV>& refV) {
+void testCurvilinear(const Eigen::MatrixBase<Direction>& direction,
+                     const Eigen::MatrixBase<RefUnitU>& refU,
+                     const Eigen::MatrixBase<RefUnitV>& refV) {
   const auto u = Acts::makeCurvilinearUnitU(direction);
   const auto uv = Acts::makeCurvilinearUnitVectors(direction);
   // verify normalization
@@ -44,28 +44,28 @@ void test(const Eigen::MatrixBase<Direction>& direction,
 }
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(CurvilinearUnitVectors)
+BOOST_AUTO_TEST_SUITE(UnitVectors)
 
 BOOST_AUTO_TEST_CASE(DirectionTransverse) {
   // curvilinear system w/ direction in the transverse plane
-  test(Vector3D(1, 1, 0), Vector3D(-1, 1, 0).normalized(),
-       Vector3D(0, 0, 1).normalized());
+  testCurvilinear(Vector3D(1, 1, 0), Vector3D(-1, 1, 0).normalized(),
+                  Vector3D(0, 0, 1).normalized());
 }
 
 BOOST_AUTO_TEST_CASE(DirectionPositiveZ) {
   // curvilinear system w/ direction along z
-  test(Vector3D(0, 0, 1), Vector3D(1, 0, 0), Vector3D(0, 1, 0));
+  testCurvilinear(Vector3D(0, 0, 1), Vector3D(1, 0, 0), Vector3D(0, 1, 0));
 }
 
 BOOST_AUTO_TEST_CASE(DirectionNegativeZ) {
   // curvilinear system w/ direction along z
-  test(Vector3D(0, 0, -1), Vector3D(1, 0, 0), Vector3D(0, -1, 0));
+  testCurvilinear(Vector3D(0, 0, -1), Vector3D(1, 0, 0), Vector3D(0, -1, 0));
 }
 
 BOOST_AUTO_TEST_CASE(DirectionCloseToZ) {
   // curvilinear system w/ direction close to z
-  test(Vector3D(0, 32 * eps, 1 - 32 * eps), Vector3D(-1, 0, 0),
-       Vector3D(0, -1, 32 * eps));
+  testCurvilinear(Vector3D(0, 32 * eps, 1 - 32 * eps), Vector3D(-1, 0, 0),
+                  Vector3D(0, -1, 32 * eps));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
