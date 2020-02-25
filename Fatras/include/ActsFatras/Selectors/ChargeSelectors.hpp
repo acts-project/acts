@@ -14,32 +14,28 @@ namespace ActsFatras {
 
 /// Select neutral particles.
 struct NeutralSelector {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (particle.charge() == Particle::Scalar(0));
   }
 };
 
 /// Select all charged particles.
 struct ChargedSelector {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (particle.charge() != Particle::Scalar(0));
   }
 };
 
 /// Select positively charged particles.
 struct PositiveSelector {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (Particle::Scalar(0) < particle.charge());
   }
 };
 
 /// Select negatively charged particles.
 struct NegativeSelector {
-  template <typename detector_t>
-  bool operator()(const detector_t &, const Particle &particle) const {
+  bool operator()(const Particle &particle) const {
     return (particle.charge() < Particle::Scalar(0));
   }
 };

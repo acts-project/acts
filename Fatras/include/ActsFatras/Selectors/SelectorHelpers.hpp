@@ -8,9 +8,11 @@
 
 #pragma once
 
-#include <climits>
+#include <functional>
+#include <limits>
 
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Selectors/detail/combine_selectors.hpp"
 
 namespace ActsFatras {
 
@@ -19,8 +21,8 @@ template <typename cast_t>
 struct Min {
   double valMin = 0.;
 
-  template <typename detector_t, typename T>
-  bool operator()(const detector_t &, const T &thing) const {
+  template <typename T>
+  bool operator()(const T &thing) const {
     return (valMin <= cast_t()(thing));
   }
 };
@@ -30,8 +32,8 @@ template <typename cast_t>
 struct Max {
   double valMax = std::numeric_limits<double>::max();
 
-  template <typename detector_t, typename T>
-  bool operator()(const detector_t &, const T &thing) const {
+  template <typename T>
+  bool operator()(const T &thing) const {
     return (cast_t()(thing) < valMax);
   }
 };
@@ -44,11 +46,21 @@ struct Range {
   double valMin = std::numeric_limits<double>::lowest();
   double valMax = std::numeric_limits<double>::max();
 
-  template <typename detector_t, typename T>
-  bool operator()(const detector_t &, const T &thing) const {
+  template <typename T>
+  bool operator()(const T &thing) const {
     const auto val = cast_t()(thing);
     return ((valMin <= val) and (val < valMax));
   }
 };
+
+/// Select objects that fullfil all selectors.
+template <typename... selectors_t>
+using CombineAnd =
+    detail::CombineSelectors<true, std::logical_and<bool>, selectors_t...>;
+
+/// Select objects that fullfil at least one selector.
+template <typename... selectors_t>
+using CombineOr =
+    detail::CombineSelectors<false, std::logical_or<bool>, selectors_t...>;
 
 }  // namespace ActsFatras

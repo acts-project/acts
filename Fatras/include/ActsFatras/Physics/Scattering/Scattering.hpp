@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include <array>
 #include <random>
-#include <vector>
 
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/CurvilinearUnitVectors.hpp"
@@ -35,14 +35,14 @@ struct Scattering {
   ///
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
-  std::vector<Particle> operator()(generator_t &generator,
-                                   const Acts::MaterialProperties &slab,
-                                   Particle &particle) const {
-    // the scattered direction can be computed by rotating the initial direction
-    // around a vector orthogonal to the initial direction, i.e. the scattering
-    // deflector, by the scattering angle. there are an infinite number of
-    // vectors orthogonal to the initial direction. the deflector is rotated by
-    // some angle relative to some fixpoint.
+  std::array<Particle, 0> operator()(generator_t &generator,
+                                     const Acts::MaterialProperties &slab,
+                                     Particle &particle) const {
+    // the scattered direction can be computed by rotating the initial
+    // direction around a vector orthogonal to the initial direction, i.e. the
+    // scattering deflector, by the scattering angle. there are an infinite
+    // number of vectors orthogonal to the initial direction. the deflector is
+    // rotated by some angle relative to some fixpoint.
     //
     // thus two random angles are required: the random deflector orientation
     // angle drawn uniformly from the [-pi,pi) range and the scattering angle
