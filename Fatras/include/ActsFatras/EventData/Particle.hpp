@@ -52,6 +52,17 @@ class Particle {
   Particle &operator=(const Particle &) = default;
   Particle &operator=(Particle &&) = default;
 
+  /// Construct a new particle with a new identifier but same kinematics.
+  ///
+  /// @note This is intentionally not a regular setter. The particle id
+  ///       is used to identify the whole particle. Setting it on an existing
+  ///       particle is usually a mistake.
+  Particle withParticleId(Barcode particleId) const {
+    Particle p = *this;
+    p.m_particleId = particleId;
+    return p;
+  }
+
   /// Set the process type that generated this particle.
   Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
   /// Set the space-time position four-vector.
