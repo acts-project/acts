@@ -18,10 +18,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     return VertexingError::EmptyInput;
   }
 
-  // Create copy of finder options, will be modified after seeding
-  // to set the correct vertex constraint
-  VertexFinderOptions<InputTrack_t> finderOptions = vFinderOptions;
-
   // Original tracks
   const std::vector<InputTrack_t>& origTracks = allTracks;
   // Tracks for seeding
@@ -37,17 +33,20 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
   // Construct the vertex fitter options from vertex finder options
   VertexFitterOptions<InputTrack_t> vFitterOptions(
-      finderOptions.geoContext, finderOptions.magFieldContext,
-      finderOptions.vertexConstraint);
+      vFinderOptions.geoContext, vFinderOptions.magFieldContext,
+      vFinderOptions.vertexConstraint);
 
   FitterState_t fitterState;
 
-  std::vector<Vertex<InputTrack_t>> allVertices;
+  std::vector<std::unique_ptr<Vertex<InputTrack_t>>> allVertices;
+
+  std::vector<Vertex<InputTrack_t>*> allVerticesPtr;
 
   int iteration = 0;
   while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
           ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
          iteration < m_cfg.maxIterations) {
+  	
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     // TODO: This involves a lot of copying. Change the way of accessing tracks
@@ -57,42 +56,42 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     } else {
       myTracks = seedTracks;
     }
-
+    Vertex<InputTrack_t> currentConstraint = vFinderOptions.vertexConstraint;
     // Retrieve seed vertex from all remaining seedTracks
-    auto seedResult = doSeeding(seedTracks, finderOptions);
-    if (!seedResult.ok()) {
+    auto seedResult = doSeeding(seedTracks, currentConstraint, vFinderOptions);
+    if (!seedResult.ok()) {    	
       return seedResult.error();
-    }
+    }    
+    allVertices.push_back(std::make_unique<Vertex<InputTrack_t>>(*seedResult));
 
-    allVertices.push_back(*seedResult);
+    Vertex<InputTrack_t>* vtxCandidate = (allVertices.back()).get();
+    allVerticesPtr.push_back(vtxCandidate);
 
-    Vertex<InputTrack_t>* vtxCandidate = &(allVertices.back());
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
                << vtxCandidate->fullPosition());
-
-    if (vtxCandidate->position().z() == 0.) {
+    if (vtxCandidate->position().z() == 0.) {    	
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
       break;
     }
-
     auto prepResult = canPrepareVertexForFit(myTracks, seedTracks, vtxCandidate,
-                                             finderOptions, fitterState);
-    if (!prepResult.ok()) {
+                                             currentConstraint, fitterState);
+
+    if (!prepResult.ok()) {    	
       return prepResult.error();
     }
-    if (!(*prepResult)) {
+    if (!(*prepResult)) {    	
       ACTS_DEBUG("Could not prepare for fit anymore. Break.");
       break;
     }
     // Update fitter state with all vertices
-    fitterState.updateVertexList(allVertices);
+    fitterState.updateVertexList(allVerticesPtr);    
     // Perform the fit
     auto fitResult = m_cfg.vertexFitter.addVtxToFit(
         fitterState, *vtxCandidate, m_cfg.linearizer, vFitterOptions);
-    if (!fitResult.ok()) {
+    if (!fitResult.ok()) {    	
       return fitResult.error();
-    }
+    }    
     ACTS_DEBUG("New position of current vertex candidate after fit: "
                << vtxCandidate->fullPosition());
 
@@ -101,8 +100,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     int nCompatibleTracks = 0;
     checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, nCompatibleTracks,
                                    isGoodVertex);
-    ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
 
+    ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);    
     if (nCompatibleTracks > 0) {
       removeCompatibleTracksFromSeedTracks(vtxCandidate, seedTracks);
     } else {
@@ -114,40 +113,47 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
             "Could not remove any further track from seed tracks. Break.");
         break;
       }
-    }
-
-    bool keepVertex = keepNewVertex(vtxCandidate, allVertices, isGoodVertex);
+    }    
+    bool keepVertex = keepNewVertex(vtxCandidate, allVerticesPtr, isGoodVertex);
     ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
     // Delete vertex from allVertices list again if it's not kept
     if (not keepVertex) {
       allVertices.pop_back();
+      allVerticesPtr.pop_back();
       // Update fitter state with removed vertex candidate
-      fitterState.updateVertexList(allVertices);
-      // Prepare for final fit
-      std::vector<Vertex<InputTrack_t>*> vtxPtrVec;
-      for (auto& vtx : allVertices) {
-        vtxPtrVec.push_back(&vtx);
-      }
+      fitterState.updateVertexList(allVerticesPtr);
+    
       // Do the fit with removed vertex
-      auto fitResult = m_cfg.vertexFitter.fit(fitterState, vtxPtrVec,
+      auto fitResult = m_cfg.vertexFitter.fit(fitterState, allVerticesPtr,
                                               m_cfg.linearizer, vFitterOptions);
-      if (!fitResult.ok()) {
+      if (!fitResult.ok()) {      	
         return fitResult.error();
-      }
-    }
+      }      
+    }  
+    iteration++;  
+  } // end while loop
+
+  std::vector<Vertex<InputTrack_t>> outputVec;
+
+  for(auto vtx : allVerticesPtr){
+    outputVec.push_back(*vtx);
   }
 
-  return allVertices;
+  return outputVec;
 }
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     const std::vector<InputTrack_t>& trackVector,
-    VertexFinderOptions<InputTrack_t>& vFinderOptions) const
+    Vertex<InputTrack_t>& currentConstraint,
+    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
     -> Result<Vertex<InputTrack_t>> {
+
+  VertexFinderOptions<InputTrack_t> seedOptions = vFinderOptions;
+  seedOptions.vertexConstraint = currentConstraint;
   // Run seed finder
-  auto seedResult = m_cfg.seedFinder.find(trackVector, vFinderOptions);
+  auto seedResult = m_cfg.seedFinder.find(trackVector, seedOptions);
 
   if (!seedResult.ok()) {
     return seedResult.error();
@@ -156,17 +162,20 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
   Vertex<InputTrack_t> seedVertex = (*seedResult).back();
   // Update constraints according to seed vertex
   if (m_cfg.useBeamSpotConstraint) {
+  	if (currentConstraint.fullCovariance() == SpacePointSymMatrix::Zero()){
+  		ACTS_WARNING("No constraint provided, but useBeamSpotConstraint set to true.");
+  	}
     if (m_cfg.useSeedConstraint) {
-      vFinderOptions.vertexConstraint.setFullPosition(
+      currentConstraint.setFullPosition(
           seedVertex.fullPosition());
-      vFinderOptions.vertexConstraint.setFullCovariance(
+      currentConstraint.setFullCovariance(
           seedVertex.fullCovariance());
     }
   } else {
-    vFinderOptions.vertexConstraint.setFullPosition(seedVertex.fullPosition());
-    vFinderOptions.vertexConstraint.setFullCovariance(
+    currentConstraint.setFullPosition(seedVertex.fullPosition());
+    currentConstraint.setFullCovariance(
         SpacePointSymMatrix::Identity() * m_cfg.looseConstrValue);
-    vFinderOptions.vertexConstraint.setFitQuality(
+    currentConstraint.setFitQuality(
         m_cfg.defaultConstrFitQuality);
   }
 
@@ -250,7 +259,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     canRecoverFromNoCompatibleTracks(
         const std::vector<InputTrack_t>& myTracks,
         const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
-        const VertexFinderOptions<InputTrack_t>& vFinderOptions,
+        const Vertex<InputTrack_t>& currentConstraint,
         FitterState_t& fitterState) const -> Result<bool> {
   // Recover from cases where no compatible tracks to vertex
   // candidate were found
@@ -267,6 +276,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
         nearTrackFound = true;
+
         newZ = m_extractParameters(trk).position()[eZ];
       }
     }
@@ -277,7 +287,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 
       // Update vertex info for current vertex
       fitterState.vtxInfoMap[vtx] = VertexInfo<InputTrack_t>(
-          vFinderOptions.vertexConstraint, vtx->fullPosition());
+          currentConstraint, vtx->fullPosition());
 
       // Try to add compatible track with adapted vertex position
       auto res = addCompatibleTracksToVertex(myTracks, vtx);
@@ -306,11 +316,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     canPrepareVertexForFit(
         const std::vector<InputTrack_t>& myTracks,
         const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
-        const VertexFinderOptions<InputTrack_t>& vFinderOptions,
+        const Vertex<InputTrack_t>& currentConstraint,
         FitterState_t& fitterState) const -> Result<bool> {
   // Add vertex info to fitter state
   fitterState.vtxInfoMap[vtx] = VertexInfo<InputTrack_t>(
-      vFinderOptions.vertexConstraint, vtx->fullPosition());
+      currentConstraint, vtx->fullPosition());
 
   // Add all compatible tracks to vertex
   auto resComp = addCompatibleTracksToVertex(myTracks, vtx);
@@ -319,7 +329,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
   }
   // Try to recover from cases where adding compatible track was not possible
   auto resRec = canRecoverFromNoCompatibleTracks(myTracks, seedTracks, vtx,
-                                                 vFinderOptions, fitterState);
+                                                 currentConstraint, fitterState);
   if (!resRec.ok()) {
     return Result<bool>::failure(resRec.error());
   }
@@ -440,7 +450,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
     const Vertex<InputTrack_t>* vtx,
-    const std::vector<Vertex<InputTrack_t>>& allVertices,
+    const std::vector<Vertex<InputTrack_t>*>& allVertices,
     bool isGoodVertex) const -> bool {
   if (not isGoodVertex) {
     return false;
@@ -471,14 +481,18 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const Vertex<InputTrack_t>* vtx,
-    const std::vector<Vertex<InputTrack_t>>& allVertices) const -> bool {
+    const std::vector<Vertex<InputTrack_t>*>& allVertices) const -> bool {
   const SpacePointVector& candidatePos = vtx->fullPosition();
   const SpacePointSymMatrix& candidateCov = vtx->fullCovariance();
   const double candidateZPos = candidatePos[eZ];
   const double candidateZCov = candidateCov(eZ, eZ);
-  for (const auto& otherVtx : allVertices) {
-    const SpacePointVector& otherPos = otherVtx.fullPosition();
-    const SpacePointSymMatrix& otherCov = otherVtx.fullCovariance();
+
+  for (const auto otherVtx : allVertices) {
+    if(vtx == otherVtx){
+      continue;
+    }
+    const SpacePointVector& otherPos = otherVtx->fullPosition();
+    const SpacePointSymMatrix& otherCov = otherVtx->fullCovariance();
     const double otherZPos = otherPos[eZ];
     const double otherZCov = otherCov(eZ, eZ);
 
