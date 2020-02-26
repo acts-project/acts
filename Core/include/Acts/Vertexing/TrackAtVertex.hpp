@@ -12,6 +12,7 @@
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
+#include <chrono>
 
 namespace Acts {
 
@@ -41,9 +42,13 @@ struct TrackAtVertex {
         trackWeight(1.),
         vertexCompatibility(0.) {
     // Create unique ID for this object
+    unsigned long int now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    
     boost::hash_combine(id, this);
     boost::hash_combine(id, paramsAtVertex.parameters()[0]);
     boost::hash_combine(id, paramsAtVertex.parameters()[1]);
+    boost::hash_combine(id, now);
+    
   }
 
   /// @brief Constructor with default chi2
@@ -60,9 +65,12 @@ struct TrackAtVertex {
         trackWeight(1.),
         vertexCompatibility(0.) {
     // Create unique ID for this object
+    unsigned long int now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    
     boost::hash_combine(id, this);
     boost::hash_combine(id, paramsAtVertex.parameters()[0]);
     boost::hash_combine(id, paramsAtVertex.parameters()[1]);
+    boost::hash_combine(id, now);
   }
 
   /// Chi2 of track
