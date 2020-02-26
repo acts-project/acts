@@ -62,8 +62,10 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // in previous iteration afterwards
       currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
+      auto dist = currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
+      double perpDist = std::sqrt(dist[0] * dist[0] + dist[1] * dist[1]);
       // Determine if relinearization is needed
-      if ((currentVtxInfo.oldPosition - currentVtxInfo.linPoint).norm() >
+      if (perpDist >
           m_cfg.maxDistToLinPoint) {
         // Relinearization needed, distance too big
         currentVtxInfo.relinearize = true;
@@ -89,6 +91,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       auto weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
 
+
       auto covAnn = currentVtx->fullCovariance() * weight;
       currentVtx->setCovariance(covAnn.template block<3, 3>(0, 0));
 
@@ -101,7 +104,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     // all vertices, run again over all vertices to set track weights
     // and update the vertex
     setWeightsAndUpdate(state, linearizer);
-
     if (!state.annealingState.equilibriumReached) {
       m_cfg.annealingTool.anneal(state.annealingState);
     }
@@ -270,7 +272,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     if (!compRes.ok()) {
       return compRes.error();
     }
-
     double comp = *compRes;
     newTrkPtr->vertexCompatibility = *compRes;
   }
@@ -292,7 +293,6 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
     newTracks.reserve(vtx->tracks().size());
 
     auto oldTracks = vtx->tracks();
-
     for (const auto& trkAtVtx : oldTracks) {
       // Create copy of current trackAtVertex in order
       // to modify it below
@@ -304,8 +304,9 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
         return collectRes.error();
       }
       // Set trackWeight for current track
-      newTrkPtr->trackWeight = m_cfg.annealingTool.getWeight(
+      double currentTrkWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
+      newTrkPtr->trackWeight = currentTrkWeight;
 
       if (newTrkPtr->trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
