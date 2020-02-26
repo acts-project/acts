@@ -91,7 +91,7 @@ class AdaptiveMultiVertexFitter {
     void updateVertexList(std::vector<Vertex<input_track_t>*>& vtxList) {
       trkInfoMap.clear();
       for (auto& vtx : vtxList) {
-        // Add vertex link to each track
+        // Add vertex link to each track  
         for (auto& trkAtVtx : vtx->tracks()) {
           trkInfoMap[trkAtVtx.id].linksToVertices.push_back(vtx);
         }
@@ -127,7 +127,7 @@ class AdaptiveMultiVertexFitter {
     double maxDistToLinPoint{0.5};
 
     // Minimum track weight needed for track to be considered
-    double minWeight{0.001};
+    double minWeight{0.0001};
 
     // Max relative shift of vertex during one iteration
     double maxRelativeShift{0.01};
