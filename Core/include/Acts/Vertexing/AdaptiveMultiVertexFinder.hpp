@@ -82,7 +82,7 @@ class AdaptiveMultiVertexFinder {
     // reliable, but the fit would be still able to converge
     // towards the right vertex. If you cut too soft, you
     // consider a lot of tracks which just slow down the fit.
-    double tracksMaxZinterval = 4. * Acts::UnitConstants::mm;
+    double tracksMaxZinterval = 3. * Acts::UnitConstants::mm;
 
     // Maximum allowed significance of track position to vertex seed
     // to consider track as compatible track for vertex fit
@@ -98,7 +98,7 @@ class AdaptiveMultiVertexFinder {
     // added to the new vertex candidate after seeding. If switched to
     // false, only the seedTracks, i.e. all tracks that are considered
     // as outliers of previously fitted vertices, are used.
-    bool realMultiVertex = false;
+    bool realMultiVertex = true;
 
     // Decides if you want to use the ```vertexCompatibility``` of the
     //  track (set to true) or the ```chi2Track``` (set to false) as an
@@ -118,7 +118,7 @@ class AdaptiveMultiVertexFinder {
     double minWeight = 0.0001;
 
     // Maximal number of iterations in the finding procedure
-    int maxIterations = 1000;
+    int maxIterations = 100;
 
     // Include also single track vertices
     bool addSingleTrackVertices = false;
@@ -205,12 +205,14 @@ class AdaptiveMultiVertexFinder {
   /// vertex if desired
   ///
   /// @param trackVector All tracks to be used for seeding
+  /// @param currentConstraint Vertex constraint
   /// @param vFinderOptions Vertex finder options
   ///
   /// @return The seed vertex
   Result<Vertex<InputTrack_t>> doSeeding(
       const std::vector<InputTrack_t>& trackVector,
-      VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+      Vertex<InputTrack_t>& currentConstraint,
+      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
   /// @brief Estimates delta Z between a track and a vertex position
   ///
@@ -244,14 +246,14 @@ class AdaptiveMultiVertexFinder {
   /// seedTracks)
   /// @param seedTracks The seed tracks
   /// @param[out] vtx The vertex candidate
-  /// @param vFinderOptions Vertex finder options
+  /// @param currentConstraint Vertex constraint
   /// @param[out] fitterState The vertex fitter state
   ///
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
       const std::vector<InputTrack_t>& myTracks,
       const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions,
+      const Vertex<InputTrack_t>& currentConstraint,
       FitterState_t& fitterState) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
@@ -260,14 +262,14 @@ class AdaptiveMultiVertexFinder {
   /// seedTracks)
   /// @param seedTracks The seed tracks
   /// @param[out] vtx The vertex candidate
-  /// @param vFinderOptions Vertex finder options
+  /// @param currentConstraint Vertex constraint
   /// @param[out] fitterState The vertex fitter state
   ///
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
       const std::vector<InputTrack_t>& myTracks,
       const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions,
+      const Vertex<InputTrack_t>& currentConstraint,
       FitterState_t& fitterState) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
@@ -311,7 +313,7 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return Keep new vertex
   bool keepNewVertex(const Vertex<InputTrack_t>* vtx,
-                     const std::vector<Vertex<InputTrack_t>>& allVertices,
+                     const std::vector<Vertex<InputTrack_t>*>& allVertices,
                      bool isGoodVertex) const;
 
   /// @brief Method that evaluates if the new vertex candidate is
@@ -323,7 +325,7 @@ class AdaptiveMultiVertexFinder {
   /// @return Vertex is merged
   bool isMergedVertex(
       const Vertex<InputTrack_t>* vtx,
-      const std::vector<Vertex<InputTrack_t>>& allVertices) const;
+      const std::vector<Vertex<InputTrack_t>*>& allVertices) const;
 };
 
 }  // namespace Acts
