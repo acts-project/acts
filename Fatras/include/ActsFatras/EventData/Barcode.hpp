@@ -40,7 +40,7 @@ namespace ActsFatras {
 /// a consequence is that only non-zero generation can have non-zero
 /// sub-particle numbers. A non-zero generation indicates that the particle
 /// is a descendant of the original particle, e.g. from interactions or decay,
-/// while the sub-particle number identifies the the descendat particle.
+/// while the sub-particle number identifies the descendant particle.
 ///
 /// With this encoding, non-primary particles and their primary parent can
 /// be easily identified at the expense of not storing the exact decay history.
