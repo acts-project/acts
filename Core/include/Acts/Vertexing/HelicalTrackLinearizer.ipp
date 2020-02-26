@@ -37,7 +37,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   VectorHelpers::position(positionAtPCA) = endParams->position();
   BoundSymMatrix parCovarianceAtPCA = *(endParams->covariance());
 
-  if (endParams->covariance()->determinant() <= 0) {
+  if (endParams->covariance()->determinant() == 0) {
     // Use the original parameters
     paramsAtPCA = params->parameters();
     VectorHelpers::position(positionAtPCA) = params->position();
