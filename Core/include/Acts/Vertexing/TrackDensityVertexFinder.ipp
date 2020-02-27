@@ -8,16 +8,16 @@
 
 template <typename vfitter_t, typename track_density_t>
 auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
-    const std::vector<InputTrack_t>& trackVector,
+    const std::vector<const InputTrack_t*>& trackVector,
     const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   typename track_density_t::State densityState;
 
-  std::vector<BoundParameters> trackList;
+  std::vector<const BoundParameters> trackList;
   trackList.reserve(trackVector.size());
 
   for (const auto& trk : trackVector) {
-    trackList.push_back(m_extractParameters(trk));
+    trackList.push_back(m_extractParameters(*trk));
   }
 
   // Calculate z seed position

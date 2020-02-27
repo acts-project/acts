@@ -56,7 +56,7 @@ class TrackDensityVertexFinder {
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<InputTrack_t>& trackVector,
+      const std::vector<const InputTrack_t*>& trackVector,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
   /// @brief Constructor used if InputTrack_t type == BoundParameters

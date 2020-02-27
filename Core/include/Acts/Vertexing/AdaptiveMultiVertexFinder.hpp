@@ -181,7 +181,7 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return Vector of all reconstructed vertices
   Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<InputTrack_t>& allTracks,
+      const std::vector<const InputTrack_t*>& allTracks,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
  private:
@@ -210,7 +210,7 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return The seed vertex
   Result<Vertex<InputTrack_t>> doSeeding(
-      const std::vector<InputTrack_t>& trackVector,
+      const std::vector<const InputTrack_t*>& trackVector,
       Vertex<InputTrack_t>& currentConstraint,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
@@ -237,7 +237,7 @@ class AdaptiveMultiVertexFinder {
   /// @param tracks The tracks
   /// @param[out] vtx The vertex candidate
   Result<void> addCompatibleTracksToVertex(
-      const std::vector<InputTrack_t>& tracks, Vertex<InputTrack_t>* vtx) const;
+      const std::vector<const InputTrack_t*>& tracks, Vertex<InputTrack_t>* vtx) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// where added to the vertex candidate after seeding
@@ -251,8 +251,8 @@ class AdaptiveMultiVertexFinder {
   ///
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
-      const std::vector<InputTrack_t>& myTracks,
-      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
+      const std::vector<const InputTrack_t*>& myTracks,
+      const std::vector<const InputTrack_t*>& seedTracks, Vertex<InputTrack_t>* vtx,
       const Vertex<InputTrack_t>& currentConstraint,
       FitterState_t& fitterState) const;
 
@@ -267,8 +267,8 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
-      const std::vector<InputTrack_t>& myTracks,
-      const std::vector<InputTrack_t>& seedTracks, Vertex<InputTrack_t>* vtx,
+      const std::vector<const InputTrack_t*>& myTracks,
+      const std::vector<const InputTrack_t*>& seedTracks, Vertex<InputTrack_t>* vtx,
       const Vertex<InputTrack_t>& currentConstraint,
       FitterState_t& fitterState) const;
 
@@ -281,7 +281,7 @@ class AdaptiveMultiVertexFinder {
   /// @param[out] isGoodVertex Vertex is good vertex
   void checkVertexAndCompatibleTracks(
       const Vertex<InputTrack_t>* vtx,
-      const std::vector<InputTrack_t>& seedTracks, int& nCompatibleTracks,
+      const std::vector<const InputTrack_t*>& seedTracks, int& nCompatibleTracks,
       bool& isGoodVertex) const;
 
   /// @brief Method that removes all tracks that are compatible with
@@ -291,7 +291,7 @@ class AdaptiveMultiVertexFinder {
   /// @param[out] seedTracks The seed tracks
   void removeCompatibleTracksFromSeedTracks(
       const Vertex<InputTrack_t>* vtx,
-      std::vector<InputTrack_t>& seedTracks) const;
+      std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Method that tries to remove a non-compatible track
   /// from seed tracks after removing a compatible track failed.
@@ -302,7 +302,7 @@ class AdaptiveMultiVertexFinder {
   /// @return Non-compatible track was removed
   bool canRemoveNonCompatibleTrackFromSeedTracks(
       const Vertex<InputTrack_t>* vtx,
-      std::vector<InputTrack_t>& seedTracks) const;
+      std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not
