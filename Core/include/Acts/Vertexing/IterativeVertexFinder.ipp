@@ -211,7 +211,7 @@ Acts::Result<double>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
     const BoundParameters& params, const Vertex<InputTrack_t>& vertex) const {
   // Linearize track
-  auto result = m_cfg.linearizer.linearizeTrack(&params, vertex.fullPosition());
+  auto result = m_cfg.linearizer.linearizeTrack(params, vertex.fullPosition());
   if (!result.ok()) {
     return result.error();
   }

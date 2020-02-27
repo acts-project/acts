@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
     BoundParameters fittedParams = trackAtVtx.fittedParams;
 
     LinearizedTrack linTrack =
-        linearizer.linearizeTrack(&fittedParams, vertexPosition).value();
+        linearizer.linearizeTrack(fittedParams, vertexPosition).value();
     trackAtVtx.linearizedState = linTrack;
     tracksWithLinState.push_back(trackAtVtx);
   }

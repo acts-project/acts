@@ -114,7 +114,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = linearizer.linearizeTrack(&trackParams, linPoint);
+      auto result = linearizer.linearizeTrack(trackParams, linPoint);
       if (result.ok()) {
         const auto linTrack = *result;
         double d0 = linTrack.parametersAtPCA[ParID_t::eLOC_D0];

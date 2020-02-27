@@ -30,7 +30,7 @@ namespace concept {
       struct LinearizerConcept {
 
          constexpr static bool linTrack_exists = has_method<const S, Result<LinearizedTrack>,
-         linTrack_t, const BoundParameters*,
+         linTrack_t, const BoundParameters&,
                      const SpacePointVector&>;
   
         static_assert(linTrack_exists, "linearizeTrack method not found");

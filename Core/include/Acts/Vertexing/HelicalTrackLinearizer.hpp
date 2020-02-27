@@ -107,7 +107,7 @@ class HelicalTrackLinearizer {
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(
-      const BoundParameters* params, const SpacePointVector& linPoint) const;
+      const BoundParameters& params, const SpacePointVector& linPoint) const;
 
  private:
   /// Configuration object

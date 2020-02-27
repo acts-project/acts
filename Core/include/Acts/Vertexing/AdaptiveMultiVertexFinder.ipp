@@ -18,18 +18,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     return VertexingError::EmptyInput;
   }
 
+  std::vector<const InputTrack_t*> seedTracks;
+  for(const auto& trk : allTracks){
+    seedTracks.push_back(&trk);
+  }
+
   // Original tracks
-  const std::vector<InputTrack_t>& origTracks = allTracks;
-  // Tracks for seeding
-  // Note: Remains to be investigated if another container (e.g. std::list)
-  // or also std::vector<InputTrack_t*> is a faster option since erasures
-  // of tracks is quite expensive with std::vector.
-  // std::vector<InputTrack_t*> would however also come with an overhead
-  // since m_cfg.vertexFitter.fit and m_cfg.seedFinder.find take
-  // vector<InputTrack_t> and hence a lot of copying would be required.
-  // Maybe use std::vector<InputTrack_t*> and adapt fit accordingly to
-  // also take pointers to tracks instead of the track object.
-  std::vector<InputTrack_t> seedTracks = allTracks;
+  const std::vector<const InputTrack_t*> origTracks = seedTracks;
 
   // Construct the vertex fitter options from vertex finder options
   VertexFitterOptions<InputTrack_t> vFitterOptions(
@@ -49,7 +44,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     // TODO: This involves a lot of copying. Change the way of accessing tracks
-    std::vector<InputTrack_t> myTracks;
+    std::vector<const InputTrack_t*> myTracks;
     if (m_cfg.realMultiVertex == true) {
       myTracks = origTracks;
     } else {

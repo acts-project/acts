@@ -11,10 +11,7 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundParameters* params, const SpacePointVector& linPoint) const {
-  if (params == nullptr) {
-    return LinearizedTrack();
-  }
+        const BoundParameters& params, const SpacePointVector& linPoint) const {
 
   Vector3D linPointPos = VectorHelpers::position(linPoint);
 
@@ -24,7 +21,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   const BoundParameters* endParams = nullptr;
   // Do the propagation to linPointPos
   auto result =
-      m_cfg.propagator->propagate(*params, *perigeeSurface, m_cfg.pOptions);
+      m_cfg.propagator->propagate(params, *perigeeSurface, m_cfg.pOptions);
   if (result.ok()) {
     endParams = (*result).endParameters.get();
 
@@ -39,9 +36,9 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   if (endParams->covariance()->determinant() == 0) {
     // Use the original parameters
-    paramsAtPCA = params->parameters();
-    VectorHelpers::position(positionAtPCA) = params->position();
-    parCovarianceAtPCA = *(params->covariance());
+    paramsAtPCA = params.parameters();
+    VectorHelpers::position(positionAtPCA) = params.position();
+    parCovarianceAtPCA = *(params.covariance());
   }
 
   // phiV and functions

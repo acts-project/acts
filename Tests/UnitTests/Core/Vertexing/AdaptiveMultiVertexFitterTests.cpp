@@ -61,7 +61,7 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 /// @brief Unit test for AdaptiveMultiVertexFitter
 ///
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
-  bool debugMode = true;
+  bool debugMode = false;
 
   // Set up RNG
   int mySeed = 31415;
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 /// test values are used here
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set debug mode
-  bool debugMode = true;
+  bool debugMode = false;
   // Set up constant B-Field
   ConstantBField bField(Vector3D(0., 0., 2_T));
 
