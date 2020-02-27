@@ -214,10 +214,9 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   }
 
   std::vector<const BoundParameters*> trackPtrVec;
-  for(const auto& trk : trackVec){
+  for (const auto& trk : trackVec) {
     trackPtrVec.push_back(&trk);
   }
-
 
   auto res3 = finder.find(trackPtrVec, vFinderOptions);
   if (!res3.ok()) {

@@ -229,15 +229,17 @@ class AdaptiveMultiVertexFinder {
   /// @param vtx The vertex
   ///
   /// @return The IP significance
-  Result<double> getIPSignificance(const BoundParameters& track,
+  Result<double> getIPSignificance(const InputTrack_t* track,
                                    const Vertex<InputTrack_t>* vtx) const;
 
   /// @brief Adds compatible track to vertex candidate
   ///
   /// @param tracks The tracks
-  /// @param[out] vtx The vertex candidate
+  /// @param vtx The vertex candidate
+  /// @param[out] fitterState The vertex fitter state
   Result<void> addCompatibleTracksToVertex(
-      const std::vector<const InputTrack_t*>& tracks, Vertex<InputTrack_t>* vtx) const;
+      const std::vector<const InputTrack_t*>& tracks, Vertex<InputTrack_t>* vtx,
+      FitterState_t& fitterState) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// where added to the vertex candidate after seeding
@@ -252,8 +254,8 @@ class AdaptiveMultiVertexFinder {
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
       const std::vector<const InputTrack_t*>& myTracks,
-      const std::vector<const InputTrack_t*>& seedTracks, Vertex<InputTrack_t>* vtx,
-      const Vertex<InputTrack_t>& currentConstraint,
+      const std::vector<const InputTrack_t*>& seedTracks,
+      Vertex<InputTrack_t>* vtx, const Vertex<InputTrack_t>& currentConstraint,
       FitterState_t& fitterState) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
@@ -268,8 +270,8 @@ class AdaptiveMultiVertexFinder {
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
       const std::vector<const InputTrack_t*>& myTracks,
-      const std::vector<const InputTrack_t*>& seedTracks, Vertex<InputTrack_t>* vtx,
-      const Vertex<InputTrack_t>& currentConstraint,
+      const std::vector<const InputTrack_t*>& seedTracks,
+      Vertex<InputTrack_t>* vtx, const Vertex<InputTrack_t>& currentConstraint,
       FitterState_t& fitterState) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
@@ -279,30 +281,34 @@ class AdaptiveMultiVertexFinder {
   /// @param seedTracks The seed tracks
   /// @param[out] nCompatibleTracks Number of compatible tracks
   /// @param[out] isGoodVertex Vertex is good vertex
+  /// @param fitterState The vertex fitter state
   void checkVertexAndCompatibleTracks(
-      const Vertex<InputTrack_t>* vtx,
-      const std::vector<const InputTrack_t*>& seedTracks, int& nCompatibleTracks,
-      bool& isGoodVertex) const;
+      Vertex<InputTrack_t>* vtx,
+      const std::vector<const InputTrack_t*>& seedTracks,
+      int& nCompatibleTracks, bool& isGoodVertex,
+      FitterState_t& fitterState) const;
 
   /// @brief Method that removes all tracks that are compatible with
   /// current vertex from seedTracks
   ///
   /// @param vtx The vertex candidate
   /// @param[out] seedTracks The seed tracks
+  /// @param fitterState The vertex fitter state
   void removeCompatibleTracksFromSeedTracks(
-      const Vertex<InputTrack_t>* vtx,
-      std::vector<const InputTrack_t*>& seedTracks) const;
+      Vertex<InputTrack_t>* vtx, std::vector<const InputTrack_t*>& seedTracks,
+      FitterState_t& fitterState) const;
 
   /// @brief Method that tries to remove a non-compatible track
   /// from seed tracks after removing a compatible track failed.
   ///
   /// @param vtx The vertex candidate
   /// @param[out] seedTracks The seed tracks
+  /// @param fitterState The vertex fitter state
   ///
   /// @return Non-compatible track was removed
   bool canRemoveNonCompatibleTrackFromSeedTracks(
-      const Vertex<InputTrack_t>* vtx,
-      std::vector<const InputTrack_t*>& seedTracks) const;
+      Vertex<InputTrack_t>* vtx, std::vector<const InputTrack_t*>& seedTracks,
+      FitterState_t& fitterState) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not
@@ -310,11 +316,12 @@ class AdaptiveMultiVertexFinder {
   /// @param vtx The vertex candidate
   /// @param allVertices All so far found vertices
   /// @param isGoodVertex Vertex is good vertex
+  /// @param fitterState The vertex fitter state
   ///
   /// @return Keep new vertex
-  bool keepNewVertex(const Vertex<InputTrack_t>* vtx,
+  bool keepNewVertex(Vertex<InputTrack_t>* vtx,
                      const std::vector<Vertex<InputTrack_t>*>& allVertices,
-                     bool isGoodVertex) const;
+                     bool isGoodVertex, FitterState_t& fitterState) const;
 
   /// @brief Method that evaluates if the new vertex candidate is
   /// merged with one of the previously found vertices

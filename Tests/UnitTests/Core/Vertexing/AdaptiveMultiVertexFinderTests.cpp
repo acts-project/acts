@@ -32,7 +32,7 @@ using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
-std::vector<BoundParameters> getAthenaTracks();
+std::vector<const BoundParameters> getAthenaTracks();
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   Finder finder(finderConfig);
 
-  std::vector<BoundParameters> tracks = getAthenaTracks();
+  std::vector<const BoundParameters> tracks = getAthenaTracks();
 
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
@@ -117,6 +117,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     }
   }
 
+  std::vector<const BoundParameters*> tracksPtr;
+  for (const auto& trk : tracks) {
+    tracksPtr.push_back(&trk);
+  }
+
   VertexFinderOptions<BoundParameters> finderOptions(tgContext, mfContext);
 
   Vector3D constraintPos{-0.5_mm, -0.5_mm, 0_mm};
@@ -129,7 +134,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   finderOptions.vertexConstraint = constraintVtx;
 
-  auto findResult = finder.find(tracks, finderOptions);
+  auto findResult = finder.find(tracksPtr, finderOptions);
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
@@ -154,8 +159,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 }
 
 // Return all tracks of one single event as reconstructed in athena.
-std::vector<BoundParameters> getAthenaTracks() {
-  std::vector<BoundParameters> tracks;
+std::vector<const BoundParameters> getAthenaTracks() {
+  std::vector<const BoundParameters> tracks;
 
   // track 0 :
   BoundVector params0;

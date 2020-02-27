@@ -216,8 +216,8 @@ Acts::Result<void> Acts::
 
   // Loop over all tracks at current vertex
   for (const auto& trk : currentVtxInfo.trackLinks) {
-    auto res =
-        m_cfg.ipEst.getParamsAtClosestApproach(geoContext, m_extractParameters(*trk), seedPos);
+    auto res = m_cfg.ipEst.getParamsAtClosestApproach(
+        geoContext, m_extractParameters(*trk), seedPos);
     if (!res.ok()) {
       return res.error();
     }
@@ -245,7 +245,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     if (currentVtxInfo.ip3dParams.find(trk) ==
         currentVtxInfo.ip3dParams.end()) {
       auto res = m_cfg.ipEst.getParamsAtClosestApproach(
-          geoContext, m_extractParameters(*trk), VectorHelpers::position(currentVtxInfo.linPoint));
+          geoContext, m_extractParameters(*trk),
+          VectorHelpers::position(currentVtxInfo.linPoint));
       if (!res.ok()) {
         return res.error();
       }
@@ -292,8 +293,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
         if (trkAtVtx.linearizedState.covarianceAtPCA ==
                 BoundSymMatrix::Zero() ||
             state.vtxInfoMap[vtx].relinearize) {
-          auto result =
-              linearizer.linearizeTrack(m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition);
+          auto result = linearizer.linearizeTrack(
+              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition);
           if (!result.ok()) {
             return result.error();
           }

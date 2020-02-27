@@ -9,19 +9,22 @@
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 
 double Acts::GaussianTrackDensity::globalMaximum(
-    const std::vector<const Acts::BoundParameters>& trackList, State& state) const {
+    const std::vector<const Acts::BoundParameters>& trackList,
+    State& state) const {
   addTracks(trackList, state);
   return state.trackDensity.globalMaximum(state.trackDensityState);
 }
 
 std::pair<double, double> Acts::GaussianTrackDensity::globalMaximumWithWidth(
-    const std::vector<const Acts::BoundParameters>& trackList, State& state) const {
+    const std::vector<const Acts::BoundParameters>& trackList,
+    State& state) const {
   addTracks(trackList, state);
   return state.trackDensity.globalMaximumWithWidth(state.trackDensityState);
 }
 
 void Acts::GaussianTrackDensity::addTracks(
-    const std::vector<const Acts::BoundParameters>& trackList, State& state) const {
+    const std::vector<const Acts::BoundParameters>& trackList,
+    State& state) const {
   const double d0SignificanceCut =
       m_cfg.d0MaxSignificance * m_cfg.d0MaxSignificance;
   const double z0SignificanceCut =

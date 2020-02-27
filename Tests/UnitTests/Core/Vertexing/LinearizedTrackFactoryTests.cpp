@@ -136,8 +136,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
-        linFactory.linearizeTrack(parameters, SpacePointVector::Zero())
-            .value();
+        linFactory.linearizeTrack(parameters, SpacePointVector::Zero()).value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
@@ -226,8 +225,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
-        linFactory.linearizeTrack(parameters, SpacePointVector::Zero())
-            .value();
+        linFactory.linearizeTrack(parameters, SpacePointVector::Zero()).value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
