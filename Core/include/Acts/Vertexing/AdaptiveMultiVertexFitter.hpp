@@ -61,39 +61,45 @@ class AdaptiveMultiVertexFitter {
     // Map to store vertices information
     std::map<Vertex<InputTrack_t>*, VertexInfo<InputTrack_t>> vtxInfoMap;
 
-    // Map to store tracks information
-    std::map<unsigned long, TrackAtVertexInfo<InputTrack_t>> trkInfoMap;
+    std::multimap<const InputTrack_t*, Vertex<InputTrack_t>*>
+        trackToVerticesMultiMap;
+
+    std::map<std::pair<const InputTrack_t*, Vertex<InputTrack_t>*>,
+             TrackAtVertex<InputTrack_t>>
+        tracksAtVerticesMap;
 
     /// @brief Default State constructor
     State() = default;
 
-    /// @brief State constructor to initialize trkInfoMap::linksToVertices
+    /// @brief State constructor to initialize trackToVerticesMultiMap
     ///
     /// @param vtxList List of all vertices with trackAtVertex information
     State(std::vector<Vertex<input_track_t>>& vtxList) {
-      updateVertexList(vtxList);
+      updateTrkToVerticesMultiMap(vtxList);
     }
 
     State(std::vector<Vertex<input_track_t>*>& vtxList) {
-      updateVertexList(vtxList);
+      updateTrkToVerticesMultiMap(vtxList);
     }
 
-    void updateVertexList(std::vector<Vertex<input_track_t>>& vtxList) {
-      trkInfoMap.clear();
+    void updateTrkToVerticesMultiMap(
+        std::vector<Vertex<input_track_t>>& vtxList) {
+      trackToVerticesMultiMap.clear();
       for (auto& vtx : vtxList) {
-        // Add vertex link to each track
-        for (auto& trkAtVtx : vtx.tracks()) {
-          trkInfoMap[trkAtVtx.id].linksToVertices.push_back(&vtx);
+        // Add vertex link for each track
+        for (auto& trk : vtxInfoMap[&vtx].trackLinks) {
+          trackToVerticesMultiMap.insert(std::make_pair(trk, &vtx));
         }
       }
     }
 
-    void updateVertexList(std::vector<Vertex<input_track_t>*>& vtxList) {
-      trkInfoMap.clear();
-      for (auto& vtx : vtxList) {
-        // Add vertex link to each track  
-        for (auto& trkAtVtx : vtx->tracks()) {
-          trkInfoMap[trkAtVtx.id].linksToVertices.push_back(vtx);
+    void updateTrkToVerticesMultiMap(
+        std::vector<Vertex<input_track_t>*>& vtxList) {
+      trackToVerticesMultiMap.clear();
+      for (auto vtx : vtxList) {
+        // Add vertex link for each track
+        for (auto trk : vtxInfoMap[vtx].trackLinks) {
+          trackToVerticesMultiMap.insert(std::make_pair(trk, vtx));
         }
       }
     }
@@ -284,7 +290,7 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Vector of compatibility values
   Result<std::vector<double>> collectTrackToVertexCompatibilities(
-      State& state, const TrackAtVertex<InputTrack_t>& trk) const;
+      State& state, const InputTrack_t* trk) const;
 
   /// @brief Determines if vertex position has shifted more than
   /// m_cfg.maxRelativeShift in last iteration

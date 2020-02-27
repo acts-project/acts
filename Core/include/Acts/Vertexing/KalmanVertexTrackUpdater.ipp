@@ -34,13 +34,14 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   const auto& posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
   const auto& momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
   const auto& trkParams = linTrack.parametersAtPCA.head<5>();
-  const auto& trkParamWeight = (linTrack.covarianceAtPCA.block<5, 5>(0, 0)).inverse();
+  const auto& trkParamWeight =
+      (linTrack.covarianceAtPCA.block<5, 5>(0, 0)).inverse();
 
   // Calculate S matrix
   ActsSymMatrixD<3> sMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
-  const auto& residual = linTrack.constantTerm.head<5>();;
+  const auto& residual = linTrack.constantTerm.head<5>();
 
   // Refit track momentum
   Vector3D newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
@@ -80,34 +81,37 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
       (reducedVtx.fullCovariance().template block<3, 3>(0, 0)).inverse();
 
   // Difference in positions
-  auto posDiff = (vtx->fullPosition() - reducedVtx.fullPosition()).template head<3>();
+  auto posDiff =
+      (vtx->fullPosition() - reducedVtx.fullPosition()).template head<3>();
 
   // Get smoothed params
-  auto smParams = trkParams - (residual + posJac * vtx->fullPosition().template head<3>() +
-                                      momJac * newTrkMomentum);
+  auto smParams =
+      trkParams - (residual + posJac * vtx->fullPosition().template head<3>() +
+                   momJac * newTrkMomentum);
 
   // New chi2 to be set later
   double chi2 = posDiff.dot(reducedVtxWeight * posDiff) +
                 smParams.dot(trkParamWeight * smParams);
 
-
   // Not yet 4d ready. This can be removed together will all head<> statements,
   // once time is consistently introduced to vertexing
-  ActsMatrixD<SpacePointDim, 3> newFullTrkCov(ActsMatrixD<SpacePointDim, 3>::Zero());
-  newFullTrkCov.block<3,3>(0,0) = newTrkCov;
+  ActsMatrixD<SpacePointDim, 3> newFullTrkCov(
+      ActsMatrixD<SpacePointDim, 3>::Zero());
+  newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
 
   SpacePointSymMatrix vtxFullWeight(SpacePointSymMatrix::Zero());
-  vtxFullWeight.block<3,3>(0,0) = vtxWeight;
+  vtxFullWeight.block<3, 3>(0, 0) = vtxWeight;
 
   SpacePointSymMatrix vtxFullCov(SpacePointSymMatrix::Zero());
-  vtxFullCov.block<3,3>(0,0) = vtxCov;
+  vtxFullCov.block<3, 3>(0, 0) = vtxCov;
 
   const auto& fullPerTrackCov = detail::createFullTrackCovariance(
       sMat, newFullTrkCov, vtxFullWeight, vtxFullCov, newTrkParams);
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(VectorHelpers::position(vtx->fullPosition()));
+      Surface::makeShared<PerigeeSurface>(
+          VectorHelpers::position(vtx->fullPosition()));
 
   BoundParameters refittedPerigee = BoundParameters(
       gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
@@ -128,15 +132,16 @@ Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
   ActsSymMatrixD<3> momCov =
-      sMat + (newTrkCov.block<3,3>(0,0)).transpose() * (vtxWeight.block<3,3>(0,0) * newTrkCov.block<3,3>(0,0));
+      sMat + (newTrkCov.block<3, 3>(0, 0)).transpose() *
+                 (vtxWeight.block<3, 3>(0, 0) * newTrkCov.block<3, 3>(0, 0));
 
   // Full (x,y,z,phi, theta, q/p) covariance matrix
   // To be made 7d again after switching to (x,y,z,phi, theta, q/p, t)
   ActsSymMatrixD<6> fullTrkCov(ActsSymMatrixD<6>::Zero());
 
-  fullTrkCov.block<3, 3>(0, 0) = vtxCov.block<3,3>(0,0);
-  fullTrkCov.block<3, 3>(0, 3) = newTrkCov.block<3,3>(0,0);
-  fullTrkCov.block<3, 3>(3, 0) = (newTrkCov.block<3,3>(0,0)).transpose();
+  fullTrkCov.block<3, 3>(0, 0) = vtxCov.block<3, 3>(0, 0);
+  fullTrkCov.block<3, 3>(0, 3) = newTrkCov.block<3, 3>(0, 0);
+  fullTrkCov.block<3, 3>(3, 0) = (newTrkCov.block<3, 3>(0, 0)).transpose();
   fullTrkCov.block<3, 3>(3, 3) = momCov;
 
   // Combined track jacobian
@@ -156,7 +161,8 @@ Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
 
   // Full perigee track covariance
   BoundMatrix fullPerTrackCov(BoundMatrix::Identity());
-  fullPerTrackCov.block<5,5>(0,0) = (trkJac * (fullTrkCov * trkJac.transpose()));
+  fullPerTrackCov.block<5, 5>(0, 0) =
+      (trkJac * (fullTrkCov * trkJac.transpose()));
 
   return fullPerTrackCov;
 }

@@ -35,21 +35,17 @@ struct VertexInfo {
   // Old position from last iteration
   Acts::SpacePointVector oldPosition{Acts::SpacePointVector::Zero()};
 
+  // The seed position
   Acts::SpacePointVector seedPosition{Acts::SpacePointVector::Zero()};
 
   // Needs relinearization bool
   bool relinearize;
-};
 
-/// @brief Helper struct for storing TrackAtVertex related
-template <typename input_track_t>
-struct TrackAtVertexInfo {
-  // Links to vertices currently using the TrackAtVertex object
-  std::vector<Vertex<input_track_t>*> linksToVertices;
+  // Vector of all track currently held by vertex
+  std::vector<const input_track_t*> trackLinks;
 
-  // Track parameters at point of closest approach in 3d as
-  // retrieved by ImpactPoint3dEstimator::getParamsAtClosestApproach
-  std::unique_ptr<const BoundParameters> ip3dParams;
+  std::map<const input_track_t*, std::unique_ptr<const BoundParameters>>
+      ip3dParams;
 };
 
 }  // namespace Acts

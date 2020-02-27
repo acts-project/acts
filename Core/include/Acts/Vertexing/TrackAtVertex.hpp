@@ -9,10 +9,10 @@
 #pragma once
 
 #include <boost/functional/hash.hpp>
+#include <chrono>
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
-#include <chrono>
 
 namespace Acts {
 
@@ -42,13 +42,15 @@ struct TrackAtVertex {
         trackWeight(1.),
         vertexCompatibility(0.) {
     // Create unique ID for this object
-    unsigned long int now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    
+    unsigned long int now =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count();
+
     boost::hash_combine(id, this);
     boost::hash_combine(id, paramsAtVertex.parameters()[0]);
     boost::hash_combine(id, paramsAtVertex.parameters()[1]);
     boost::hash_combine(id, now);
-    
   }
 
   /// @brief Constructor with default chi2
@@ -65,8 +67,11 @@ struct TrackAtVertex {
         trackWeight(1.),
         vertexCompatibility(0.) {
     // Create unique ID for this object
-    unsigned long int now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    
+    unsigned long int now =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count();
+
     boost::hash_combine(id, this);
     boost::hash_combine(id, paramsAtVertex.parameters()[0]);
     boost::hash_combine(id, paramsAtVertex.parameters()[1]);
@@ -86,7 +91,11 @@ struct TrackAtVertex {
   BoundParameters fittedParams;
 
   /// Original input track
+  // TODO: to be fully replaced by pointer version below
   input_track_t originalTrack;
+
+  /// Original input parameters
+  input_track_t* originalTrack2;
 
   /// Weight of track in fit
   double trackWeight;
@@ -100,6 +109,10 @@ struct TrackAtVertex {
 
   /// Unique ID
   unsigned long id;
+
+  // Track parameters at point of closest approach in 3d as
+  // retrieved by ImpactPoint3dEstimator::getParamsAtClosestApproach
+  // std::unique_ptr<const BoundParameters> ip3dParams;
 };
 
 }  // namespace Acts
