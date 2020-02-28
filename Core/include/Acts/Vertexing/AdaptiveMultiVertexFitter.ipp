@@ -54,6 +54,15 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
   while (nIter < m_cfg.maxIterations &&
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
+    std::cout << "\nfit: niter: " << nIter << std::endl;
+
+    int vc = 0;
+    for (auto currentVtx : state.vertexCollection) {
+      vc++;
+        std::cout << "\n" << vc <<". vertex, ntracks: " << state.vtxInfoMap[currentVtx].trackLinks.size() << std::endl;
+    }
+
+
     for (auto currentVtx : state.vertexCollection) {
       VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
       currentVtxInfo.relinearize = false;

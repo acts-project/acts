@@ -38,6 +38,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
           ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
          iteration < m_cfg.maxIterations) {
+
+    std::cout << "iteration: " << iteration << std::endl;
+    std::cout << "number of seedtracks left: " << seedTracks.size() << std::endl;
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     std::vector<const InputTrack_t*> myTracks;
@@ -57,6 +60,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     Vertex<InputTrack_t>* vtxCandidate = (allVertices.back()).get();
     allVerticesPtr.push_back(vtxCandidate);
 
+    std::cout << iteration << ". vertex, adress: " << vtxCandidate << std::endl;
+    std::cout << "\t seed z pos: " << vtxCandidate->position()[2] << std::endl;
+
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
                << vtxCandidate->fullPosition());
     if (vtxCandidate->position().z() == 0.) {
@@ -67,6 +73,19 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     auto prepResult = canPrepareVertexForFit(myTracks, seedTracks, vtxCandidate,
                                              currentConstraint, fitterState);
 
+    std::cout << "\tRunning addVtxTofit(); The current candidate has " 
+    << fitterState.vtxInfoMap[vtxCandidate].trackLinks.size() <<
+                      " tracks in the vector" << std::endl;
+    //std::cout << "\t number of track at current vertex: " << fitterState.vtxInfoMap[vtxCandidate].trackLinks.size() << std::endl;
+
+    int c1 = 0;
+    for(auto& trk : fitterState.vtxInfoMap[vtxCandidate].trackLinks){
+      c1++;
+      // std::cout << "\t" << c1 << ". trkAtVtx: "
+      //    << fitterState.tracksAtVerticesMap.at(std::make_pair(trk,vtxCandidate)).fittedParams.parameters()[0] << std::endl;
+    }
+
+
     if (!prepResult.ok()) {
       return prepResult.error();
     }
@@ -76,12 +95,24 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     }
     // Update fitter state with all vertices
     fitterState.updateTrkToVerticesMultiMap(allVerticesPtr);
+
+    c1 = 0;
+    std::cout << "\t number of vertices per track: " << std::endl;
+    for(auto& trk : fitterState.vtxInfoMap[vtxCandidate].trackLinks){
+      c1++;
+      auto range = fitterState.trackToVerticesMultiMap.equal_range(trk);
+      // std::cout << "\t\t" << c1 << ". track: "
+      //   << std::distance(range.first, range.second) << std::endl;
+    }
+
+
     // Perform the fit
     auto fitResult = m_cfg.vertexFitter.addVtxToFit(
         fitterState, *vtxCandidate, m_cfg.linearizer, vFitterOptions);
     if (!fitResult.ok()) {
       return fitResult.error();
     }
+    std::cout << "\t new vtx z pos after fit: " << vtxCandidate->position()[2] << std::endl;
     ACTS_DEBUG("New position of current vertex candidate after fit: "
                << vtxCandidate->fullPosition());
 
@@ -90,6 +121,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     int nCompatibleTracks = 0;
     checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, nCompatibleTracks,
                                    isGoodVertex, fitterState);
+
+    std::cout << "\t with nCompatibleTracks: " << nCompatibleTracks << std::endl;
+    std::cout << "\t is good vertex: " << isGoodVertex << std::endl;
 
     ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
     if (nCompatibleTracks > 0) {
@@ -325,6 +359,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
   if (!resComp.ok()) {
     return Result<bool>::failure(resComp.error());
   }
+
+  std::cout << "\tnumber of tracks added to vtx candidate passing IP and z cuts: " 
+  << fitterState.vtxInfoMap[vtx].trackLinks.size() << std::endl;
+      
   // Try to recover from cases where adding compatible track was not possible
   auto resRec = canRecoverFromNoCompatibleTracks(
       myTracks, seedTracks, vtx, currentConstraint, fitterState);
@@ -366,12 +404,12 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
           isGoodVertex = true;
           break;
         }
-      }
-    } else {
+      } else {
       // TODO: can this else case actually happen? If not,
       // just remove std::find_if above, since it's not necessary
-      std::cout << "ELSE CASE!" << std::endl;
-    }
+      //std::cout << "ELSE CASE!1" << std::endl;
+      }
+    } 
   }  // end loop over all tracks at vertex
 }
 
@@ -398,7 +436,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       } else {
         // TODO: can this else case actually happen? If not,
         // just remove std::find_if above, since it's not necessary
-        std::cout << "ELSE CASE!" << std::endl;
+        //std::cout << "ELSE CASE!2" << std::endl;
         ACTS_DEBUG("Track not found in seedTracks!");
       }
     }
@@ -430,7 +468,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       } else {
         // TODO: can this else case actually happen? If not,
         // just remove std::find_if above, since it's not necessary
-        std::cout << "ELSE CASE!" << std::endl;
+        //std::cout << "ELSE CASE!3" << std::endl;
       }
     }
   }
