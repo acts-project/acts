@@ -240,8 +240,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         (ipSig < m_cfg.tracksMaxSignificance)) {
       // Create TrackAtVertex objects, unique for each (track, vertex) pair
       // fitterState.tracksAtVerticesMap.clear();
-      fitterState.tracksAtVerticesMap.insert(std::make_pair(
-          std::make_pair(trk, vtx), TrackAtVertex(params, *trk)));
+      fitterState.tracksAtVerticesMap.insert(
+          std::make_pair(std::make_pair(trk, vtx), TrackAtVertex(params, trk)));
 
       // Add the original track parameters to the list for vtx
       fitterState.vtxInfoMap[vtx].trackLinks.push_back(trk);

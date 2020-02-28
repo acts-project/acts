@@ -150,7 +150,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     VertexFinder finder(cfg);
 
     // Vector to be filled with all tracks in current event
-    std::vector<BoundParameters> tracks;
+    std::vector<std::unique_ptr<const BoundParameters>> tracks;
+
+    std::vector<const BoundParameters*> tracksPtr;
 
     // Vector to be filled with truth vertices for later comparison
     std::vector<Vertex<BoundParameters>> trueVertices;
@@ -211,9 +213,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
         auto params = BoundParameters(tgContext, std::move(covMat), paramVec,
                                       perigeeSurface);
 
-        tracks.push_back(params);
+        tracks.push_back(std::make_unique<BoundParameters>(params));
 
-        TrackAtVertex<BoundParameters> trAtVt(0., params, params);
+        TrackAtVertex<BoundParameters> trAtVt(0., params, tracks.back().get());
         tracksAtTrueVtx.push_back(trAtVt);
       }
 
@@ -225,10 +227,14 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // shuffle list of tracks
     std::shuffle(std::begin(tracks), std::end(tracks), gen);
 
+    for (const auto& trk : tracks) {
+      tracksPtr.push_back(trk.get());
+    }
+
     VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
     // find vertices
-    auto res = finder.find(tracks, vFinderOptions);
+    auto res = finder.find(tracksPtr, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
@@ -364,10 +370,12 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     VertexFinder finder(cfg, extractParameters);
 
     // Same for user track type tracks
-    std::vector<InputTrack> tracks;
+    std::vector<std::unique_ptr<const InputTrack>> tracks;
+
+    std::vector<const InputTrack*> tracksPtr;
 
     // Vector to be filled with truth vertices for later comparison
-    std::vector<Vertex<BoundParameters>> trueVertices;
+    std::vector<Vertex<InputTrack>> trueVertices;
 
     // start creating event with nVertices vertices
     unsigned int nVertices = nVertexDist(gen);
@@ -390,8 +398,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       double z = vZDist(gen);
 
       // True vertex
-      Vertex<BoundParameters> trueV(Vector3D(x, y, z));
-      std::vector<TrackAtVertex<BoundParameters>> tracksAtTrueVtx;
+      Vertex<InputTrack> trueV(Vector3D(x, y, z));
+      std::vector<TrackAtVertex<InputTrack>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
       double d0_v = sqrt(x * x + y * y);
@@ -426,11 +434,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
         auto paramsUT = InputTrack(BoundParameters(tgContext, std::move(covMat),
                                                    paramVec, perigeeSurface));
 
-        tracks.push_back(paramsUT);
+        tracks.push_back(std::make_unique<InputTrack>(paramsUT));
 
         auto params = extractParameters(paramsUT);
 
-        TrackAtVertex<BoundParameters> trAtVt(0., params, params);
+        TrackAtVertex<InputTrack> trAtVt(0., params, tracks.back().get());
         tracksAtTrueVtx.push_back(trAtVt);
       }
 
@@ -442,11 +450,14 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // shuffle list of tracks
     std::shuffle(std::begin(tracks), std::end(tracks), gen);
 
-    VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+    for (const auto& trk : tracks) {
+      tracksPtr.push_back(trk.get());
+    }
+
     VertexFinderOptions<InputTrack> vFinderOptionsUT(tgContext, mfContext);
 
     // find vertices
-    auto res = finder.find(tracks, vFinderOptionsUT);
+    auto res = finder.find(tracksPtr, vFinderOptionsUT);
 
     BOOST_CHECK(res.ok());
 

@@ -21,12 +21,12 @@ template <typename input_track_t>
 struct BilloirTrack {
   using Jacobian = Acts::SpacePointToBoundMatrix;
 
-  BilloirTrack(const input_track_t& params, Acts::LinearizedTrack lTrack)
+  BilloirTrack(const input_track_t* params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const input_track_t originalTrack;
+  const input_track_t* originalTrack;
   Acts::LinearizedTrack linTrack;
   double chi2;
   Jacobian DiMat;                                  // position jacobian
@@ -63,7 +63,7 @@ struct BilloirVertex {
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<Acts::Vertex<input_track_t>>
 Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
-    const std::vector<input_track_t>& paramVector,
+    const std::vector<const input_track_t*>& paramVector,
     const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   double chi2 = std::numeric_limits<double>::max();
@@ -105,8 +105,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     BilloirVertex billoirVertex;
     int iTrack = 0;
     // iterate over all tracks
-    for (const input_track_t& trackContainer : paramVector) {
-      const auto& trackParams = extractParameters(trackContainer);
+    for (const input_track_t* trackContainer : paramVector) {
+      const auto& trackParams = extractParameters(*trackContainer);
       if (nIter == 0) {
         double phi = trackParams.parameters()[ParID_t::ePHI];
         double theta = trackParams.parameters()[ParID_t::eTHETA];

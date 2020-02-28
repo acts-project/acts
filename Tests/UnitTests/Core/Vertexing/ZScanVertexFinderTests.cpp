@@ -135,6 +135,11 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                                        perigeeSurface));
     }
 
+    std::vector<const BoundParameters*> tracksPtr;
+    for (const auto& trk : tracks) {
+      tracksPtr.push_back(&trk);
+    }
+
     using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
@@ -150,7 +155,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracks, vFinderOptions);
+    auto res = finder.find(tracksPtr, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 
@@ -250,6 +255,11 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                                                   paramVec, perigeeSurface)));
     }
 
+    std::vector<const InputTrack*> tracksPtr;
+    for (const auto& trk : tracks) {
+      tracksPtr.push_back(&trk);
+    }
+
     using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<VertexFinder>,
@@ -270,7 +280,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracks, vFinderOptions);
+    auto res = finder.find(tracksPtr, vFinderOptions);
 
     BOOST_CHECK(res.ok());
 

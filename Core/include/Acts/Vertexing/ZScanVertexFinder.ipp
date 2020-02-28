@@ -8,7 +8,7 @@
 
 template <typename vfitter_t>
 auto Acts::ZScanVertexFinder<vfitter_t>::find(
-    const std::vector<InputTrack_t>& trackVector,
+    const std::vector<const InputTrack_t*>& trackVector,
     const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Determine if we use constraint or not
@@ -22,9 +22,9 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   // calculated
   std::vector<std::pair<double, double>> zPositions;
 
-  for (auto& iTrk : trackVector) {
+  for (const auto& iTrk : trackVector) {
     // Extract BoundParameters from InputTrack_t object
-    const BoundParameters& params = m_extractParameters(iTrk);
+    const BoundParameters& params = m_extractParameters(*iTrk);
 
     std::pair<double, double> z0AndWeight;
     std::unique_ptr<ImpactParametersAndSigma> ipas = nullptr;

@@ -30,29 +30,35 @@ struct TrackAtVertex {
   ///
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
-  /// @param originalParams Original perigee parameter
+  /// @param originalTrack Original perigee parameter
   TrackAtVertex(double chi2perTrack, const BoundParameters& paramsAtVertex,
-                const input_track_t& originalParams)
-      : chi2Track(chi2perTrack),
+                const input_track_t* originalTrack)
+      : fittedParams(paramsAtVertex),
+        originalParams(originalTrack),
+        chi2Track(chi2perTrack),
         ndf(0.),
-        fittedParams(paramsAtVertex),
-        originalTrack(originalParams),
-        trackWeight(1.),
-        vertexCompatibility(0.) {}
+        vertexCompatibility(0.),
+        trackWeight(1.) {}
 
   /// @brief Constructor with default chi2
   ///
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
-  /// @param originalParams Original perigee parameter
+  /// @param originalTrack Original perigee parameter
   TrackAtVertex(const BoundParameters& paramsAtVertex,
-                const input_track_t& originalParams)
-      : chi2Track(0.),
+                const input_track_t* originalTrack)
+      : fittedParams(paramsAtVertex),
+        originalParams(originalTrack),
+        chi2Track(0.),
         ndf(0.),
-        fittedParams(paramsAtVertex),
-        originalTrack(originalParams),
-        trackWeight(1.),
-        vertexCompatibility(0.) {}
+        vertexCompatibility(0.),
+        trackWeight(1.) {}
+
+  /// Fitted perigee
+  BoundParameters fittedParams;
+
+  /// Original input parameters
+  const input_track_t* originalParams;
 
   /// Chi2 of track
   double chi2Track;
@@ -63,25 +69,15 @@ struct TrackAtVertex {
   /// non-interger values
   double ndf;
 
-  /// Fitted perigee
-  BoundParameters fittedParams;
-
-  /// Original input track
-  // TODO: to be fully replaced by pointer version below
-  input_track_t originalTrack;
-
-  /// Original input parameters
-  input_track_t* originalTrack2;
+  /// Value of the compatibility of the track to the actual vertex, based
+  /// on the estimation of the 3d distance between the track and the vertex
+  double vertexCompatibility;
 
   /// Weight of track in fit
   double trackWeight;
 
   /// The linearized state of the track at vertex
   LinearizedTrack linearizedState;
-
-  /// Value of the compatibility of the track to the actual vertex, based
-  /// on the estimation of the 3d distance between the track and the vertex
-  double vertexCompatibility;
 };
 
 }  // namespace Acts
