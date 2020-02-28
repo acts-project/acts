@@ -333,6 +333,11 @@ class AdaptiveMultiVertexFinder {
   bool isMergedVertex(
       const Vertex<InputTrack_t>* vtx,
       const std::vector<Vertex<InputTrack_t>*>& allVertices) const;
+
+  // TODO
+  std::vector<Vertex<InputTrack_t>> getVertexOutputList(
+      const std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
+      FitterState_t& fitterState) const;
 };
 
 }  // namespace Acts

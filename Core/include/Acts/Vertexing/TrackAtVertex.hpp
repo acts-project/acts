@@ -38,8 +38,7 @@ struct TrackAtVertex {
         fittedParams(paramsAtVertex),
         originalTrack(originalParams),
         trackWeight(1.),
-        vertexCompatibility(0.) {
-  }
+        vertexCompatibility(0.) {}
 
   /// @brief Constructor with default chi2
   ///
@@ -53,8 +52,7 @@ struct TrackAtVertex {
         fittedParams(paramsAtVertex),
         originalTrack(originalParams),
         trackWeight(1.),
-        vertexCompatibility(0.) {
-  }
+        vertexCompatibility(0.) {}
 
   /// Chi2 of track
   double chi2Track;
@@ -84,7 +82,6 @@ struct TrackAtVertex {
   /// Value of the compatibility of the track to the actual vertex, based
   /// on the estimation of the 3d distance between the track and the vertex
   double vertexCompatibility;
-
 };
 
 }  // namespace Acts
