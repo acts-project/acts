@@ -334,7 +334,12 @@ class AdaptiveMultiVertexFinder {
       const Vertex<InputTrack_t>* vtx,
       const std::vector<Vertex<InputTrack_t>*>& allVertices) const;
 
-  // TODO
+  /// @brief Prepares the output vector of vertices
+  ///
+  /// @param allVerticesPtr Vector of pointers to vertices
+  /// @param fitterState The vertex fitter state
+  ///
+  /// @return The output vertex collection
   std::vector<Vertex<InputTrack_t>> getVertexOutputList(
       const std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
       FitterState_t& fitterState) const;
