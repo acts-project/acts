@@ -62,6 +62,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     if (vtxCandidate->position().z() == 0.) {
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
+      allVertices.pop_back();
+      allVerticesPtr.pop_back();
       break;
     }
     auto prepResult = canPrepareVertexForFit(myTracks, seedTracks, vtxCandidate,
@@ -72,6 +74,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     }
     if (!(*prepResult)) {
       ACTS_DEBUG("Could not prepare for fit anymore. Break.");
+      allVertices.pop_back();
+      allVerticesPtr.pop_back();
       break;
     }
     // Update fitter state with all vertices
@@ -104,6 +108,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       if (!removedNonCompatibleTrack) {
         ACTS_DEBUG(
             "Could not remove any further track from seed tracks. Break.");
+        allVertices.pop_back();
+        allVerticesPtr.pop_back();
         break;
       }
     }
