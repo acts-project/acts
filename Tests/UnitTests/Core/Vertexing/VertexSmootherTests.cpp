@@ -139,8 +139,13 @@ BOOST_AUTO_TEST_CASE(sequential_vertex_smoother_test) {
                                      perigeeSurface));
   }
 
+  std::vector<const BoundParameters*> tracksPtr;
+  for (const auto& trk : tracks) {
+    tracksPtr.push_back(&trk);
+  }
+
   Vertex<BoundParameters> fittedVertex =
-      billoirFitter.fit(tracks, linearizer, vfOptions).value();
+      billoirFitter.fit(tracksPtr, linearizer, vfOptions).value();
 
   // copy vertex for later comparison
   Vertex<BoundParameters> vertexBeforeSmoothing = fittedVertex;
