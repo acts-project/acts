@@ -22,13 +22,11 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
   const BoundParameters* endParams = nullptr;
-  std::unique_ptr<const BoundParameters> uParams = nullptr;
   // Do the propagation to linPointPos
   auto result =
       m_cfg.propagator->propagate(*params, *perigeeSurface, m_cfg.pOptions);
   if (result.ok()) {
-    uParams = std::move((*result).endParameters);
-    endParams = uParams.get();
+    endParams = (*result).endParameters.get();
 
   } else {
     return result.error();
