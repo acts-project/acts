@@ -50,9 +50,8 @@ class GaussianTrackDensity {
   /// @param state The GaussianTrackDensity state
   ///
   /// @return The z position of the maximum
-  double globalMaximum(
-      const std::vector<const Acts::BoundParameters>& trackList,
-      State& state) const;
+  double globalMaximum(const std::vector<Acts::BoundParameters>& trackList,
+                       State& state) const;
 
   /// @brief Calculates the global maximum with width
   ///
@@ -61,8 +60,7 @@ class GaussianTrackDensity {
   ///
   /// @return The z position of the maximum and its width
   std::pair<double, double> globalMaximumWithWidth(
-      const std::vector<const Acts::BoundParameters>& trackList,
-      State& state) const;
+      const std::vector<Acts::BoundParameters>& trackList, State& state) const;
 
  private:
   /// The configuration
@@ -72,7 +70,7 @@ class GaussianTrackDensity {
   ///
   /// @param trackList The list of tracks
   /// @param state The GaussianTrackDensity state
-  void addTracks(const std::vector<const Acts::BoundParameters>& trackList,
+  void addTracks(const std::vector<Acts::BoundParameters>& trackList,
                  State& state) const;
 };
 }  // namespace Acts

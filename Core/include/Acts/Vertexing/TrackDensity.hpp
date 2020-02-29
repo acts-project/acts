@@ -66,9 +66,9 @@ class TrackDensity {
     }
   };
 
-  using TrackMap = std::map<BoundParameters, TrackEntry, predPerigee>;
-  using LowerMap = std::map<TrackEntry, BoundParameters, predEntryByMax>;
-  using UpperMap = std::map<TrackEntry, BoundParameters, predEntryByMin>;
+  using TrackMap = std::map<const BoundParameters, TrackEntry, predPerigee>;
+  using LowerMap = std::map<TrackEntry, const BoundParameters, predEntryByMax>;
+  using UpperMap = std::map<TrackEntry, const BoundParameters, predEntryByMin>;
 
   /// @brief The Config struct
   struct Config {
@@ -82,7 +82,7 @@ class TrackDensity {
     double maxZRange = 0;
 
     // Maps to cache track information
-    std::set<BoundParameters, predPerigee> trackSet;
+    std::set<const BoundParameters, predPerigee> trackSet;
     LowerMap lowerMap;
     UpperMap upperMap;
   };
