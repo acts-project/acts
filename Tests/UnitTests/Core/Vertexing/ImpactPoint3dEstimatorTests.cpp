@@ -20,6 +20,8 @@
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts {
 namespace Test {
 
@@ -30,17 +32,17 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+std::uniform_real_distribution<> pTDist(0.4_GeV, 10._GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
 std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
+std::uniform_real_distribution<> resIPDist(0., 100._um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
@@ -61,7 +63,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2._T));
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -301,7 +303,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 /// Tracking/TrkVertexFitter/TrkVertexFitterUtils/test/ImpactPoint3dEstimator_test
 BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.9971546939) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 1.9971546939_T));
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
