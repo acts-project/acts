@@ -1,6 +1,5 @@
 add_unittest(AnnealingUtilityTests AnnealingUtilityTests.cpp)
 add_unittest(AxesTests AxesTests.cpp)
-add_unittest(BenchmarkTools BenchmarkTools.cpp)
 add_unittest(BFieldMapUtilsTests BFieldMapUtilsTests.cpp)
 add_unittest(BinningDataTests BinningDataTests.cpp)
 add_unittest(BinUtilityTests BinUtilityTests.cpp)
