@@ -71,17 +71,6 @@ class AdaptiveMultiVertexFitter {
     /// @brief Default State constructor
     State() = default;
 
-    /// @brief State constructor to initialize trackToVerticesMultiMap
-    ///
-    /// @param vtxList List of all vertices with trackAtVertex information
-    State(std::vector<Vertex<input_track_t>>& vtxList) {
-      updateTrkToVerticesMultiMap(vtxList);
-    }
-
-    State(std::vector<Vertex<input_track_t>*>& vtxList) {
-      updateTrkToVerticesMultiMap(vtxList);
-    }
-
     void updateTrkToVerticesMultiMap(
         std::vector<Vertex<input_track_t>>& vtxList) {
       trackToVerticesMultiMap.clear();
