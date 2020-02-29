@@ -67,8 +67,8 @@ class TrackDensity {
   };
 
   using TrackMap = std::map<const BoundParameters, TrackEntry, predPerigee>;
-  using LowerMap = std::map<TrackEntry, const BoundParameters, predEntryByMax>;
-  using UpperMap = std::map<TrackEntry, const BoundParameters, predEntryByMin>;
+  using LowerMap = std::map<TrackEntry, BoundParameters, predEntryByMax>;
+  using UpperMap = std::map<TrackEntry, BoundParameters, predEntryByMin>;
 
   /// @brief The Config struct
   struct Config {
