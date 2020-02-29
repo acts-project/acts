@@ -101,7 +101,7 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   const auto& trkParams = linTrack.parametersAtPCA.head<5>();
   const auto& constTerm = linTrack.constantTerm.head<5>();
   const auto& trkParamWeight =
-      (linTrack.covarianceAtPCA.block<5, 5>(0, 0)).inverse();
+      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Calculate temp matrix S
   ActsSymMatrixD<3> matS =
