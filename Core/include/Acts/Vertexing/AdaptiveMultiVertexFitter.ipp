@@ -223,8 +223,7 @@ Acts::Result<void> Acts::
       return res.error();
     }
     // Set ip3dParams for current trackAtVertex
-    currentVtxInfo.ip3dParams.insert(
-        std::make_pair(trk, std::move(res.value())));
+    currentVtxInfo.ip3dParams.insert(std::make_pair(trk, *(res.value())));
   }
   return {};
 }
@@ -254,11 +253,11 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
       // Set ip3dParams for current trackAtVertex
       auto value = std::move(res.value());
 
-      currentVtxInfo.ip3dParams.insert(std::make_pair(trk, std::move(value)));
+      currentVtxInfo.ip3dParams.insert(std::make_pair(trk, *value));
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.getVertexCompatibility(
-        geoContext, currentVtxInfo.ip3dParams.at(trk).get(),
+        geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
         VectorHelpers::position(currentVtxInfo.oldPosition));
     if (!compRes.ok()) {
       return compRes.error();
@@ -304,8 +303,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
         }
         // Update the vertex with the new track
         auto updateRes =
-            KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(
-                vtx, trkAtVtx);
+            KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(vtx,
+                                                                      trkAtVtx);
         if (!updateRes.ok()) {
           return updateRes.error();
         }

@@ -141,6 +141,13 @@ class AdaptiveMultiVertexFinder {
     // constraint is provided
     std::pair<double, double> defaultConstrFitQuality{0., -3.};
 
+    // Do an adaptive multi vertex fit after
+    // a bad vertex was removed.
+    // If false, the old fitter state is just copied,
+    // this should give the same results with better
+    // performance. To be further investigated.
+    bool refitAfterBadVertex = true;
+
   };  // Config struct
 
   struct State {};

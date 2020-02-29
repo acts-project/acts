@@ -38,6 +38,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
           ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
          iteration < m_cfg.maxIterations) {
+    auto oldFitterState = fitterState;
+
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     std::vector<const InputTrack_t*> myTracks;
@@ -121,17 +123,32 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     if (not keepVertex) {
       allVertices.pop_back();
       allVerticesPtr.pop_back();
-      // Update fitter state with removed vertex candidate
-      fitterState.updateTrkToVerticesMultiMap(allVerticesPtr);
 
-      // TODO: clean tracksAtVerticesMap maybe here? i.e. remove all entries
-      // with old vertex?
+      if (!m_cfg.refitAfterBadVertex) {
+        fitterState.vertexCollection = oldFitterState.vertexCollection;
+        fitterState.annealingState = oldFitterState.annealingState;
+        fitterState.vtxInfoMap.clear();
+        for (const auto& vtx : allVerticesPtr) {
+          fitterState.vtxInfoMap.insert(
+              std::make_pair(vtx, oldFitterState.vtxInfoMap[vtx]));
+        }
+        fitterState.trackToVerticesMultiMap =
+            oldFitterState.trackToVerticesMultiMap;
+        fitterState.tracksAtVerticesMap = oldFitterState.tracksAtVerticesMap;
 
-      // Do the fit with removed vertex
-      auto fitResult = m_cfg.vertexFitter.fit(fitterState, allVerticesPtr,
-                                              m_cfg.linearizer, vFitterOptions);
-      if (!fitResult.ok()) {
-        return fitResult.error();
+      } else {
+        // Update fitter state with removed vertex candidate
+        fitterState.updateTrkToVerticesMultiMap(allVerticesPtr);
+
+        // TODO: clean tracksAtVerticesMap maybe here? i.e. remove all entries
+        // with old vertex?
+
+        // Do the fit with removed vertex
+        auto fitResult = m_cfg.vertexFitter.fit(
+            fitterState, allVerticesPtr, m_cfg.linearizer, vFitterOptions);
+        if (!fitResult.ok()) {
+          return fitResult.error();
+        }
       }
     }
     iteration++;

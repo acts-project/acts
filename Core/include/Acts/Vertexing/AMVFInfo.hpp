@@ -44,8 +44,7 @@ struct VertexInfo {
   // Vector of all track currently held by vertex
   std::vector<const input_track_t*> trackLinks;
 
-  std::map<const input_track_t*, std::unique_ptr<const BoundParameters>>
-      ip3dParams;
+  std::map<const input_track_t*, const BoundParameters> ip3dParams;
 };
 
 }  // namespace Acts
