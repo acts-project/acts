@@ -325,7 +325,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
         // Update the vertex with the new track
         auto updateRes =
             KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(
-                vtx, newTrkPtr);
+                vtx, *newTrkPtr);
         if (!updateRes.ok()) {
           return updateRes.error();
         }

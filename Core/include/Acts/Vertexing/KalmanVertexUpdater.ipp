@@ -11,7 +11,7 @@
 
 template <typename input_track_t>
 Acts::Result<void> Acts::KalmanVertexUpdater::updateVertexWithTrack(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>* trk) {
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) {
   if (vtx == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -123,10 +123,10 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
 
 template <typename input_track_t>
 Acts::Result<void> Acts::KalmanVertexUpdater::detail::update(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>* trk, int sign) {
-  double trackWeight = trk->trackWeight;
+    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk, int sign) {
+  double trackWeight = trk.trackWeight;
 
-  auto res = updatePosition(vtx, trk->linearizedState, trackWeight, sign);
+  auto res = updatePosition(vtx, trk.linearizedState, trackWeight, sign);
 
   if (!res.ok()) {
     return res.error();
@@ -141,7 +141,7 @@ Acts::Result<void> Acts::KalmanVertexUpdater::detail::update(
 
   // Chi2 wrt to track parameters
   double trkChi2 =
-      detail::trackParametersChi2<input_track_t>(tempVtx, trk->linearizedState);
+      detail::trackParametersChi2<input_track_t>(tempVtx, trk.linearizedState);
 
   // Calculate new chi2
   chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, &tempVtx) +
@@ -160,12 +160,12 @@ Acts::Result<void> Acts::KalmanVertexUpdater::detail::update(
   // Otherwise just adds track to existing list of tracks at vertex
   if (sign > 0) {
     // Update track
-    trk->chi2Track = trkChi2;
-    trk->ndf = 2 * trackWeight;
+    trk.chi2Track = trkChi2;
+    trk.ndf = 2 * trackWeight;
   }
   // Remove trk from current vertex
   if (sign < 0) {
-    trk->trackWeight = 0;
+    trk.trackWeight = 0;
   }
 
   return {};
