@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     vtxPtrList.push_back(&vtx);
   }
 
-  std::vector<const BoundParameters> allTracks;
+  std::vector<BoundParameters> allTracks;
 
   unsigned int nTracksPerVtx = 4;
   // Construct nTracksPerVtx * 3 (3 vertices) random track emerging

@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   Finder finder(finderConfig);
 
-  std::vector<const BoundParameters> tracks = getAthenaTracks();
+  auto tracks = getAthenaTracks();
 
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;

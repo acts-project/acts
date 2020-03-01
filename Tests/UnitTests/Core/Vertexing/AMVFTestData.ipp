@@ -24,8 +24,8 @@ using Covariance = Acts::BoundSymMatrix;
 
 GeometryContext gctx = GeometryContext();
 // Return all tracks of one single event as reconstructed in athena.
-std::vector<const BoundParameters> getAthenaTracks() {
-  std::vector<const BoundParameters> tracks;
+std::vector<BoundParameters> getAthenaTracks() {
+  std::vector<BoundParameters> tracks;
 
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0, 0, 0));
