@@ -63,7 +63,7 @@ std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
 /// @brief Unit test for KalmanVertexUpdater
 ///
 BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
-  bool debug = true;
+  bool debug = false;
 
   // Number of tests
   unsigned int nTests = 10;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SpacePointSymMatrix::Identity());
+    vtx.setFullCovariance(SpacePointSymMatrix::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     auto res = KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(
@@ -166,8 +166,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // After update, vertex should be closer to the track
     BOOST_CHECK(newDistance < oldDistance);
 
-    // Track should have been added to the vertex
-    BOOST_CHECK(vtx.tracks().size() > 0);
+    // Note: KalmanVertexUpdater updates the vertex w.r.t. the
+    // newly given track, but does NOT add the track to the
+    // TrackAtVertex list. Has to be done manually after calling
+    // the update method.
+    BOOST_CHECK(vtx.tracks().size() == 0);
 
   }  // end for loop
 

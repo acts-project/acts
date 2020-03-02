@@ -22,11 +22,14 @@ namespace KalmanVertexUpdater {
 /// Vertex reconstruction and track bundling at the lep collider using
 /// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
 
-/// @brief Method adding single track to vertex estimate
-/// and updates vertex
+/// @brief Updates vertex with knowledge of new track
+/// @note KalmanVertexUpdater updates the vertex w.r.t. the
+/// newly given track, but does NOT add the track to the
+/// TrackAtVertex list. Has to be done manually after calling
+/// this method
 ///
 /// @param vtx Vertex to be updated
-/// @param trk Track to be added to vtx
+/// @param trk Track to be used for updating the vertex
 template <typename input_track_t>
 Result<void> updateVertexWithTrack(Vertex<input_track_t>* vtx,
                                    TrackAtVertex<input_track_t>& trk);
@@ -75,14 +78,6 @@ double trackParametersChi2(const Vertex<input_track_t>& vtx,
 template <typename input_track_t>
 Result<void> update(Vertex<input_track_t>* vtx,
                     TrackAtVertex<input_track_t>& trk, int sign);
-
-/// @brief Removes track from vertex if it is attached
-///
-/// @param vtx The vertex
-/// @param trk The track
-template <typename input_track_t>
-void removeTrackIf(Vertex<input_track_t>* vtx,
-                   const TrackAtVertex<input_track_t>& trk);
 }  // Namespace detail
 
 }  // Namespace KalmanVertexUpdater

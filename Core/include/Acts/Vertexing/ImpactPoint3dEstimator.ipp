@@ -111,7 +111,7 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
 
   // track covariance
   auto cov = trkParams->covariance();
-  ActsSymMatrixD<2> myWeightXY = (*cov).block<2, 2>(0, 0).inverse();
+  ActsSymMatrixD<2> myWeightXY = cov->block<2, 2>(0, 0).inverse();
 
   // 2-dim residual
   Vector2D myXYpos =

@@ -54,7 +54,10 @@ class AdaptiveMultiVertexFitter {
     Acts::Vertex<input_track_t> constraintVertex;
 
     // Old position from last iteration
-    Acts::SpacePointVector oldPosition;
+    Acts::SpacePointVector oldPosition{Acts::SpacePointVector::Zero()};
+
+    // Seed position
+    Acts::SpacePointVector seedPosition{Acts::SpacePointVector::Zero()};
 
     // Needs relinearization bool
     bool relinearize;
@@ -83,6 +86,30 @@ class AdaptiveMultiVertexFitter {
 
     // Map to store tracks information
     std::map<unsigned long, TrackAtVertexInfo> trkInfoMap;
+
+    /// @brief Default State constructor
+    State() = default;
+
+    /// @brief State constructor to initialize trkInfoMap::linksToVertices
+    ///
+    /// @param vtxList List of all vertices with trackAtVertex information
+    State(std::vector<Vertex<input_track_t>>& vtxList) {
+      for (auto& vtx : vtxList) {
+        // Add vertex link to each track
+        for (auto& trkAtVtx : vtx.tracks()) {
+          trkInfoMap[trkAtVtx.id].linksToVertices.push_back(&vtx);
+        }
+      }
+    }
+
+    State(std::vector<Vertex<input_track_t>*>& vtxList) {
+      for (auto& vtx : vtxList) {
+        // Add vertex link to each track
+        for (auto& trkAtVtx : vtx->tracks()) {
+          trkInfoMap[trkAtVtx.id].linksToVertices.push_back(vtx);
+        }
+      }
+    }
   };
 
   struct Config {
@@ -106,7 +133,7 @@ class AdaptiveMultiVertexFitter {
     AnnealingUtility annealingTool;
 
     // Number of max iterations
-    unsigned int maxIterations{50};
+    unsigned int maxIterations{30};
 
     // Max distance to linearization point allowed
     // without relinearization
@@ -136,7 +163,7 @@ class AdaptiveMultiVertexFitter {
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
-  /// @brief Constructor for user-defined InputTrack_t type =! BoundParameters
+  /// @brief Constructor for user-defined InputTrack_t type != BoundParameters
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from InputTrack_t object
@@ -149,6 +176,20 @@ class AdaptiveMultiVertexFitter {
       : m_cfg(std::move(cfg)),
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
+
+  /// @brief The actual fit function, performs a simultaneous
+  /// fit of all vertices in `verticesToFit` by invoking `fitImpl`
+  ///
+  /// @param state The state object
+  /// @param verticesToFit Vector containing all vertices to be fitted
+  /// @param linearizer The track linearizer
+  /// @param vFitterOptions Vertex fitter options
+  ///
+  /// @return Result<void> object
+  Result<void> fit(
+      State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
+      const linearizer_t& linearizer,
+      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
 
   /// @brief Adds new vertex to an existing multi-vertex fit
   /// and fits everything together (by invoking the fit_impl method):
@@ -173,7 +214,7 @@ class AdaptiveMultiVertexFitter {
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object
-  Result<void> fit(
+  Result<void> addVtxToFit(
       State& state, Vertex<InputTrack_t>& newVertex,
       const linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
@@ -195,7 +236,7 @@ class AdaptiveMultiVertexFitter {
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
 
-  /// @brief The actual fit function, performs a simulaneous
+  /// @brief The actual fit function, performs a simultaneous
   ///   fit of all vertices in state.vertexCollection
   ///
   /// @param state The state object
@@ -203,7 +244,7 @@ class AdaptiveMultiVertexFitter {
   /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Result<void> object
-  Result<void> fit_impl(
+  Result<void> fitImpl(
       State& state, const linearizer_t& linearizer,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 

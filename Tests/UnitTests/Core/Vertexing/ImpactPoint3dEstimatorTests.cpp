@@ -20,6 +20,8 @@
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts {
 namespace Test {
 
@@ -30,17 +32,17 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+std::uniform_real_distribution<> pTDist(0.4_GeV, 10._GeV);
 // Track phi distribution
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
 // Track theta distribution
 std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
+std::uniform_real_distribution<> resIPDist(0., 100._um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
@@ -61,7 +63,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2._T));
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -181,7 +183,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2.) * units::_T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -294,6 +296,56 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
       BOOST_CHECK(res > 0.);
     }
   }
+}
+
+/// @brief Unit test for ImpactPoint 3d estimator, using same
+/// configuration and test values as in Athena unit test algorithm
+/// Tracking/TrkVertexFitter/TrkVertexFitterUtils/test/ImpactPoint3dEstimator_test
+BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
+  // Set up constant B-Field
+  ConstantBField bField(Vector3D(0., 0., 1.9971546939_T));
+
+  // Set up Eigenstepper
+  EigenStepper<ConstantBField> stepper(bField);
+
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator>(stepper);
+  PropagatorOptions<> pOptions(tgContext, mfContext);
+
+  // Set up the ImpactPoint3dEstimator
+  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+      bField, propagator, pOptions);
+
+  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
+
+  // Use same values as in Athena unit test
+  Vector3D pos1(2_mm, 1_mm, -10_mm);
+  Vector3D mom1(400_MeV, 600_MeV, 200_MeV);
+  Vector3D vtxPos(1.2_mm, 0.8_mm, -7_mm);
+
+  // Start creating some track parameters
+  Covariance covMat = Covariance::Identity();
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos1);
+
+  // Some fixed track parameter values
+  BoundParameters params1(tgContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
+
+  auto res1 = ipEstimator.calculateDistance(tgContext, params1, vtxPos);
+  BOOST_CHECK(res1.ok());
+  double distance = (*res1);
+
+  // Desired result from Athena unit test
+  const double result = 3.10391_mm;
+  CHECK_CLOSE_ABS(distance, result, 0.00001_mm);
+
+  auto res2 =
+      ipEstimator.getParamsAtClosestApproach(tgContext, params1, vtxPos);
+  BOOST_CHECK(res2.ok());
+  BoundParameters endParams = std::move(**res2);
+  Vector3D surfaceCenter = endParams.referenceSurface().center(tgContext);
+
+  BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
 }
 
 }  // namespace Test
