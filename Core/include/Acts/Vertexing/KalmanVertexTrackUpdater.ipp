@@ -66,23 +66,21 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   auto newTrkCov =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
 
+  Vector3D newVertexPos = Vector3D::Zero();
+  ActsSymMatrixD<3> newVertexCov = ActsSymMatrixD<3>::Zero();
+  ActsSymMatrixD<3> oldVertexWeight = ActsSymMatrixD<3>::Zero();
+  ActsSymMatrixD<5> tempWeight = ActsSymMatrixD<5>::Zero();
+
   // Now determine the smoothed chi2 of the track in the following
-  auto res = KalmanVertexUpdater::updatePosition<input_track_t>(
-      vtx, linTrack, track.trackWeight, -1);
-
-  if (!res.ok()) {
-    return res.error();
-  }
-
-  Vertex<input_track_t> reducedVtx = *res;
+  KalmanVertexUpdater::updatePosition<input_track_t>(
+      vtx, linTrack, track.trackWeight, -1, newVertexPos, newVertexCov,
+      oldVertexWeight, tempWeight);
 
   // Corresponding weight matrix
-  const auto reducedVtxWeight =
-      (reducedVtx.fullCovariance().template block<3, 3>(0, 0)).inverse();
+  const auto reducedVtxWeight = newVertexCov.inverse();
 
   // Difference in positions
-  auto posDiff =
-      (vtx->fullPosition() - reducedVtx.fullPosition()).template head<3>();
+  auto posDiff = vtx->position() - newVertexPos;
 
   // Get smoothed params
   auto smParams =

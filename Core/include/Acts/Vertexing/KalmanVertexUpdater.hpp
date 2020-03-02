@@ -31,8 +31,8 @@ namespace KalmanVertexUpdater {
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
 template <typename input_track_t>
-Result<void> updateVertexWithTrack(Vertex<input_track_t>* vtx,
-                                   TrackAtVertex<input_track_t>& trk);
+void updateVertexWithTrack(Vertex<input_track_t>* vtx,
+                           TrackAtVertex<input_track_t>& trk);
 
 /// @brief Updates vertex position
 ///
@@ -40,34 +40,44 @@ Result<void> updateVertexWithTrack(Vertex<input_track_t>* vtx,
 /// @param linTrack Linearized version of track to be added or removed
 /// @param trackWeight Track weight
 /// @param sign +1 (add track) or -1 (remove track)
+/// @param[out] newVtxPos The new vertex position
+/// @param[out] newVtxCov The new vertex covariance
+/// @param[out] oldVtxWeight The old vertex weight
+/// @param[out] trkParamWeight The track parameter weight
 ///
 /// @return Vertex with updated position and covariance
 template <typename input_track_t>
-Result<Vertex<input_track_t>> updatePosition(const Vertex<input_track_t>* vtx,
-                                             const LinearizedTrack& linTrack,
-                                             double trackWeight, int sign);
+void updatePosition(const Acts::Vertex<input_track_t>* vtx,
+                    const Acts::LinearizedTrack& linTrack, double trackWeight,
+                    int sign, Vector3D& newVtxPos, ActsSymMatrixD<3>& newVtxCov,
+                    ActsSymMatrixD<3>& oldVtxWeight,
+                    ActsSymMatrixD<5>& trkParamWeight);
 
 namespace detail {
 /// @brief Takes old and new vtx and calculates position chi2
 ///
 /// @param oldVtx Old vertex
 /// @param newVtx New vertex
+/// @param oldVertexWeight The old vertex weight
 ///
 /// @return Chi2
 template <typename input_track_t>
 double vertexPositionChi2(const Vertex<input_track_t>* oldVtx,
-                          const Vertex<input_track_t>* newVtx);
+                          const Vector3D& newVtxPos,
+                          const ActsSymMatrixD<3>& oldVertexWeight);
 
 /// @brief Calculates chi2 of refitted track parameters
 /// w.r.t. updated vertex
 ///
 /// @param vtx The already updated vertex
 /// @param linTrack Linearized version of track
+/// @param trkParamWeight The track parameter weight
 ///
 /// @return Chi2
 template <typename input_track_t>
-double trackParametersChi2(const Vertex<input_track_t>& vtx,
-                           const LinearizedTrack& linTrack);
+double trackParametersChi2(const Vector3D& vtxPos,
+                           const LinearizedTrack& linTrack,
+                           const ActsSymMatrixD<5>& trkParamWeight);
 
 /// @brief Adds or removes (depending on `sign`) tracks from vertex
 /// and updates the vertex
@@ -76,8 +86,8 @@ double trackParametersChi2(const Vertex<input_track_t>& vtx,
 /// @param trk Track to be added to/removed from vtx
 /// @param sign +1 (add track) or -1 (remove track)
 template <typename input_track_t>
-Result<void> update(Vertex<input_track_t>* vtx,
-                    TrackAtVertex<input_track_t>& trk, int sign);
+void update(Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk,
+            int sign);
 }  // Namespace detail
 
 }  // Namespace KalmanVertexUpdater

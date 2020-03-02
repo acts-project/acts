@@ -47,8 +47,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // theta and functions
   double th = paramsAtPCA(ParID_t::eTHETA);
-  double sinTh = std::sin(th);
-  double tanTh = std::tan(th);
+  const double sinTh = std::sin(th);
+  const double tanTh = std::tan(th);
 
   // q over p
   double qOvP = paramsAtPCA(ParID_t::eQOP);
@@ -73,8 +73,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // Eq. 5.34 in Ref(1) (see .hpp)
   double X = positionAtPCA(0) - linPointPos.x() + rho * sinPhiV;
   double Y = positionAtPCA(1) - linPointPos.y() - rho * cosPhiV;
-  double S2 = (X * X + Y * Y);
-  double S = std::sqrt(S2);
+  const double S2 = (X * X + Y * Y);
+  const double S = std::sqrt(S2);
 
   /// F(V, p_i) at PCA in Billoir paper
   /// (see FullBilloirVertexFitter.hpp for paper reference,
@@ -110,9 +110,11 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   positionJacobian(0, 0) = -sgnH * X / S;
   positionJacobian(0, 1) = -sgnH * Y / S;
 
+  const double S2tanTh = S2 * tanTh;
+
   // Second row
-  positionJacobian(1, 0) = rho * Y / (tanTh * S2);
-  positionJacobian(1, 1) = -rho * X / (tanTh * S2);
+  positionJacobian(1, 0) = rho * Y / S2tanTh;
+  positionJacobian(1, 1) = -rho * X / S2tanTh;
   positionJacobian(1, 2) = 1.;
 
   // Third row
@@ -139,15 +141,17 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   momentumJacobian(0, 1) = qOvSred * rho / tanTh;
   momentumJacobian(0, 2) = -qOvSred * rho / qOvP;
 
+  const double rhoOverS2 = rho / S2;
+
   // Second row
-  momentumJacobian(1, 0) = (1 - rho * Q / S2) * rho / tanTh;
-  momentumJacobian(1, 1) = (dPhi + rho * R / (S2 * tanTh * tanTh)) * rho;
-  momentumJacobian(1, 2) = (dPhi - rho * R / S2) * rho / (qOvP * tanTh);
+  momentumJacobian(1, 0) = (1 - rhoOverS2 * Q) * rho / tanTh;
+  momentumJacobian(1, 1) = (dPhi + rho * R / (S2tanTh * tanTh)) * rho;
+  momentumJacobian(1, 2) = (dPhi - rhoOverS2 * R) * rho / (qOvP * tanTh);
 
   // Third row
-  momentumJacobian(2, 0) = rho * Q / S2;
-  momentumJacobian(2, 1) = -rho * R / (S2 * tanTh);
-  momentumJacobian(2, 2) = rho * R / (qOvP * S2);
+  momentumJacobian(2, 0) = rhoOverS2 * Q;
+  momentumJacobian(2, 1) = -rho * R / S2tanTh;
+  momentumJacobian(2, 2) = rhoOverS2 * R / qOvP;
 
   // Last two rows:
   momentumJacobian(3, 1) = 1.;

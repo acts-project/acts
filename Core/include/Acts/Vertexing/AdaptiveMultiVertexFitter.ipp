@@ -278,14 +278,10 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
     for (const auto& trk : currentVtxInfo.trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
 
-      // Get all compatibilities of track to all vertices it is attached to
-      auto collectRes = collectTrackToVertexCompatibilities(state, trk);
-      if (!collectRes.ok()) {
-        return collectRes.error();
-      }
       // Set trackWeight for current track
       double currentTrkWeight = m_cfg.annealingTool.getWeight(
-          state.annealingState, trkAtVtx.vertexCompatibility, *collectRes);
+          state.annealingState, trkAtVtx.vertexCompatibility,
+          collectTrackToVertexCompatibilities(state, trk));
       trkAtVtx.trackWeight = currentTrkWeight;
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
@@ -302,12 +298,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
         // Update the vertex with the new track
-        auto updateRes =
-            KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(vtx,
-                                                                      trkAtVtx);
-        if (!updateRes.ok()) {
-          return updateRes.error();
-        }
+        KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(vtx,
+                                                                  trkAtVtx);
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
@@ -320,11 +312,12 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<std::vector<double>>
+std::vector<double>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     collectTrackToVertexCompatibilities(State& state,
                                         const input_track_t* trk) const {
   std::vector<double> trkToVtxCompatibilities;
+  trkToVtxCompatibilities.reserve(state.vertexCollection.size());
   auto range = state.trackToVerticesMultiMap.equal_range(trk);
 
   for (auto vtxIter = range.first; vtxIter != range.second; ++vtxIter) {
