@@ -162,13 +162,6 @@ class Particle {
   /// Total energy, i.e. norm of the four-momentum.
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
-  /// Charge over absolute momentum.
-  Scalar chargeOverMomentum() const { return m_charge / m_absMomentum; }
-  /// Relativistic velocity.
-  Scalar beta() const { return m_absMomentum / energy(); }
-  /// Relativistic gamma factor.
-  Scalar gamma() const { return std::hypot(1, m_absMomentum / m_mass); }
-
   /// Check if the particle is alive, i.e. is not at rest.
   operator bool() const { return Scalar(0) < m_absMomentum; }
   /// Check if the particle is dead, i.e is at rest.
