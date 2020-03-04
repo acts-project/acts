@@ -41,6 +41,7 @@ BOOST_AUTO_TEST_CASE(Construct) {
   BOOST_TEST(particle.position4().w() == particle.time());
   // particle direction is undefined, but must be normalized
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
+  BOOST_TEST(particle.transverseMomentum() == Particle::Scalar(0));
   BOOST_TEST(particle.absMomentum() == Particle::Scalar(0));
   // particle is created at rest and thus not alive
   BOOST_TEST(not particle);
@@ -58,12 +59,14 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_TEST(particle.momentum4().y() == 0_GeV);
   BOOST_TEST(particle.momentum4().z() == 0_GeV);
   BOOST_TEST(particle.momentum4().w() == std::hypot(1_GeV, 2_GeV));
+  BOOST_TEST(particle.transverseMomentum() == 2_GeV);
   BOOST_TEST(particle.absMomentum() == 2_GeV);
   BOOST_TEST(particle.energy() == std::hypot(1_GeV, 2_GeV));
   // particle direction must be normalized
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // loose some energy
   particle.correctEnergy(-100_MeV);
+  BOOST_TEST(particle.transverseMomentum() < 2_GeV);
   BOOST_TEST(particle.absMomentum() < 2_GeV);
   BOOST_TEST(particle.energy() ==
              Particle::Scalar(std::hypot(1_GeV, 2_GeV) - 100_MeV));
@@ -72,11 +75,13 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_TEST(particle);
   // loose a lot of energy
   particle.correctEnergy(-3_GeV);
+  BOOST_TEST(particle.transverseMomentum() == Particle::Scalar(0));
   BOOST_TEST(particle.absMomentum() == Particle::Scalar(0));
   BOOST_TEST(particle.energy() == particle.mass());
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // lossing even more energy does nothing
   particle.correctEnergy(-10_GeV);
+  BOOST_TEST(particle.transverseMomentum() == Particle::Scalar(0));
   BOOST_TEST(particle.absMomentum() == Particle::Scalar(0));
   BOOST_TEST(particle.energy() == particle.mass());
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);

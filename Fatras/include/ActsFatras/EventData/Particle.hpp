@@ -153,6 +153,10 @@ class Particle {
   }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
   const Vector3 &unitDirection() const { return m_unitDirection; }
+  /// Absolute momentum in the x-y plane.
+  Scalar transverseMomentum() const {
+    return m_absMomentum * m_unitDirection.head<2>().norm();
+  }
   /// Absolute momentum.
   Scalar absMomentum() const { return m_absMomentum; }
   /// Total energy, i.e. norm of the four-momentum.
