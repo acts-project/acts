@@ -150,8 +150,6 @@ class AdaptiveMultiVertexFinder {
 
   };  // Config struct
 
-  struct State {};
-
   /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
   /// @param cfg Configuration object

@@ -369,10 +369,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
          !m_cfg.useFastCompatibility)) {
       // TODO: Understand why looking for compatible tracks only in seed tracks
       // and not also in all tracks
-      auto foundIter = std::find_if(
-          seedTracks.begin(), seedTracks.end(), [&trk, this](auto seedTrk) {
-            return m_extractParameters(*trk) == m_extractParameters(*seedTrk);
-          });
+      auto foundIter =
+          std::find_if(seedTracks.begin(), seedTracks.end(),
+                       [&trk, this](auto seedTrk) { return trk == seedTrk; });
       if (foundIter != seedTracks.end()) {
         nCompatibleTracks++;
         ACTS_DEBUG("Compatible track found.");
@@ -404,10 +403,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
          trkAtVtx.chi2Track < m_cfg.maxVertexChi2 &&
          !m_cfg.useFastCompatibility)) {
       // Find and remove track from seedTracks
-      auto foundSeedIter = std::find_if(
-          seedTracks.begin(), seedTracks.end(), [&trk, this](auto seedTrk) {
-            return m_extractParameters(*trk) == m_extractParameters(*seedTrk);
-          });
+      auto foundSeedIter =
+          std::find_if(seedTracks.begin(), seedTracks.end(),
+                       [&trk, this](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         seedTracks.erase(foundSeedIter);
       }
@@ -422,7 +420,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         FitterState_t& fitterState) const -> bool {
   // Try to find the track with highest compatibility
   double maxCompatibility = 0;
-  typename std::vector<const InputTrack_t*>::iterator maxCompSeedIt;
+  typename std::vector<const InputTrack_t*>::iterator maxCompSeedIt =
+      seedTracks.end();
 
   for (const auto& trk : fitterState.vtxInfoMap[vtx].trackLinks) {
     const auto& trkAtVtx =
@@ -430,10 +429,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     double compatibility = trkAtVtx.vertexCompatibility;
     if (compatibility > maxCompatibility) {
       // Try to find track in seed tracks
-      auto foundSeedIter = std::find_if(
-          seedTracks.begin(), seedTracks.end(), [&trk, this](auto seedTrk) {
-            return m_extractParameters(*trk) == m_extractParameters(*seedTrk);
-          });
+      auto foundSeedIter =
+          std::find_if(seedTracks.begin(), seedTracks.end(),
+                       [&trk, this](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         maxCompatibility = compatibility;
         maxCompSeedIt = foundSeedIter;
