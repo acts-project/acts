@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <iosfwd>
 
 namespace Acts {
@@ -113,3 +114,13 @@ class GeometryID {
 std::ostream& operator<<(std::ostream& os, GeometryID id);
 
 }  // namespace Acts
+
+// specialize std::hash so GeometryId can be used e.g. in an unordered_map
+namespace std {
+template <>
+struct hash<Acts::GeometryID> {
+  auto operator()(Acts::GeometryID gid) const noexcept {
+    return std::hash<Acts::GeometryID::Value>()(gid.value());
+  }
+};
+}  // namespace std
