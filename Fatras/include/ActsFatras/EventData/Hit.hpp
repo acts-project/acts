@@ -102,7 +102,7 @@ class Hit {
   ///
   /// @retval positive if the particle lost energy when it passed the surface
   /// @retval negative if magic was involved
-  Scalar depositedEnergy() const { return m_before4.w() - m_after4.w(); }
+  Scalar depositedEnergy() const { return m_before4[3] - m_after4[3]; }
 
  private:
   /// Identifier of the surface.
