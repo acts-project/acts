@@ -121,20 +121,20 @@ class Particle {
   }
 
   /// Particle identifier within an event.
-  Barcode particleId() const { return m_particleId; }
+  constexpr Barcode particleId() const { return m_particleId; }
   /// Which type of process generated this particle.
-  ProcessType process() const { return m_process; }
+  constexpr ProcessType process() const { return m_process; }
   /// PDG particle number that identifies the type.
-  Acts::PdgParticle pdg() const { return m_pdg; }
+  constexpr Acts::PdgParticle pdg() const { return m_pdg; }
   /// Particle charge.
-  Scalar charge() const { return m_charge; }
+  constexpr Scalar charge() const { return m_charge; }
   /// Particle mass.
-  Scalar mass() const { return m_mass; }
+  constexpr Scalar mass() const { return m_mass; }
 
   /// Space-time position four-vector.
   ///
   /// The component order is [x,y,z,t].
-  const Vector4 &position4() const { return m_position4; }
+  constexpr const Vector4 &position4() const { return m_position4; }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_position4.head<3>(); }
   /// Time coordinate.
@@ -158,20 +158,20 @@ class Particle {
     return m_absMomentum * m_unitDirection.head<2>().norm();
   }
   /// Absolute momentum.
-  Scalar absMomentum() const { return m_absMomentum; }
+  constexpr Scalar absMomentum() const { return m_absMomentum; }
   /// Total energy, i.e. norm of the four-momentum.
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  operator bool() const { return Scalar(0) < m_absMomentum; }
+  constexpr operator bool() const { return Scalar(0) < m_absMomentum; }
   /// Check if the particle is dead, i.e is at rest.
-  bool operator!() const { return m_absMomentum <= Scalar(0); }
+  constexpr bool operator!() const { return m_absMomentum <= Scalar(0); }
 
   /// Set the material that the particle has passed.
   ///
   /// @param pathX0 passed material measured in radiation lengths
   /// @param pathL0 passed thickness measured in interaction lengths
-  Particle &setMaterialPassed(Scalar pathX0, Scalar pathL0) {
+  constexpr Particle &setMaterialPassed(Scalar pathX0, Scalar pathL0) {
     m_pathX0 = pathX0;
     m_pathL0 = pathL0;
     return *this;
@@ -180,19 +180,19 @@ class Particle {
   ///
   /// @param limitX0 maximum radiation lengths the particle can pass
   /// @param limitL0 maximum interaction lengths the particle can pass
-  Particle &setMaterialLimits(Scalar limitX0, Scalar limitL0) {
+  constexpr Particle &setMaterialLimits(Scalar limitX0, Scalar limitL0) {
     m_limitX0 = limitX0;
     m_limitL0 = limitL0;
     return *this;
   }
   /// The passed material measured in radiation lengths.
-  Scalar pathInX0() const { return m_pathX0; }
+  constexpr Scalar pathInX0() const { return m_pathX0; }
   /// The passed material measured in interaction lengths.
-  Scalar pathInL0() const { return m_pathL0; }
+  constexpr Scalar pathInL0() const { return m_pathL0; }
   /// The maximum radation length the particle is allowed to pass.
-  Scalar pathLimitX0() const { return m_limitX0; }
+  constexpr Scalar pathLimitX0() const { return m_limitX0; }
   /// The maximum interaction length the particle is allowed to pass.
-  Scalar pathLimitL0() const { return m_limitL0; }
+  constexpr Scalar pathLimitL0() const { return m_limitL0; }
 
  private:
   // identity, i.e. things that do not change over the particle lifetime.
