@@ -51,9 +51,6 @@ struct KalmanFitterOptions {
   // Broadcast the outlier finder type
   using OutlierFinder = outlier_finder_t;
 
-  // Broadcast the outlier finder config type
-  using OutlierFinderConfig = typename OutlierFinder::Config;
-
   /// Deleted default constructor
   KalmanFitterOptions() = delete;
 
@@ -70,14 +67,14 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      const OutlierFinderConfig& ofCfg,
+                      const OutlierFinder& outlierFinder,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        outlierFinderConfig(ofCfg),
+        outlierFinder(outlierFinder),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
@@ -91,7 +88,7 @@ struct KalmanFitterOptions {
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   /// The config for the outlier finder
-  OutlierFinderConfig outlierFinderConfig;
+  OutlierFinder outlierFinder;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -962,7 +959,7 @@ class KalmanFitter {
     kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
 
     // Set config for outlier finder
-    kalmanActor.m_outlierFinder.m_config = kfOptions.outlierFinderConfig;
+    kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;
