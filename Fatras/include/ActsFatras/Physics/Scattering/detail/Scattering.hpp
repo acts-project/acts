@@ -12,11 +12,12 @@
 #include <random>
 
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Utilities/CurvilinearUnitVectors.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
+namespace detail {
 
 /// Simulate (multiple) scattering using a configurable scattering model.
 ///
@@ -54,7 +55,7 @@ struct Scattering {
     // draw the scattering angle
     const auto theta = angle(generator, slab, particle);
 
-    Acts::Vector3D direction = particle.direction();
+    Acts::Vector3D direction = particle.unitDirection();
     // construct the combined rotation to the scattered direction
     Acts::RotationMatrix3D rotation(
         // rotation of the scattering deflector axis relative to the reference
@@ -69,4 +70,5 @@ struct Scattering {
   }
 };
 
+}  // namespace detail
 }  // namespace ActsFatras

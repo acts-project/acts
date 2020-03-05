@@ -94,15 +94,15 @@ struct Fixture {
                  Acts::PdgParticle::eProton, 0, 1)
             .setPosition4(1, 2, 3, 4)
             .setDirection(1, 0, 0)
-            .setMomentum(100);
+            .setAbsMomentum(100);
     interactor.generator = &generator;
     interactor.physics.energyLoss = energyLoss;
     interactor.particle = particle;
     state.navigation.currentSurface = surface.get();
     state.stepping.position = particle.position();
     state.stepping.time = particle.time();
-    state.stepping.direction = particle.direction();
-    state.stepping.momentum = particle.momentum();
+    state.stepping.direction = particle.unitDirection();
+    state.stepping.momentum = particle.absMomentum();
   }
 };
 
@@ -142,7 +142,8 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_TEST(f.result.hits[1].index() == 1u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.id() == f.interactor.particle.id());
+  BOOST_TEST(f.result.particle.particleId() ==
+             f.interactor.particle.particleId());
   BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
   BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
@@ -169,7 +170,8 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_TEST(f.result.hits[1].index() == 1u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.id() == f.interactor.particle.id());
+  BOOST_TEST(f.result.particle.particleId() ==
+             f.interactor.particle.particleId());
   BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
   BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
@@ -193,7 +195,8 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_TEST(f.result.hits.size() == 0u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.id() == f.interactor.particle.id());
+  BOOST_TEST(f.result.particle.particleId() ==
+             f.interactor.particle.particleId());
   BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
   BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
@@ -217,7 +220,8 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   BOOST_TEST(f.result.hits.size() == 0u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.id() == f.interactor.particle.id());
+  BOOST_TEST(f.result.particle.particleId() ==
+             f.interactor.particle.particleId());
   BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
   BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());

@@ -40,7 +40,7 @@ namespace ActsFatras {
 /// a consequence is that only non-zero generation can have non-zero
 /// sub-particle numbers. A non-zero generation indicates that the particle
 /// is a descendant of the original particle, e.g. from interactions or decay,
-/// while the sub-particle number identifies the the descendat particle.
+/// while the sub-particle number identifies the descendant particle.
 ///
 /// With this encoding, non-primary particles and their primary parent can
 /// be easily identified at the expense of not storing the exact decay history.
@@ -92,7 +92,12 @@ namespace ActsFatras {
 /// generation to contain unique values. However, this can only be done when all
 /// particles are known.
 class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
+  using Base = Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16>;
+
  public:
+  using Base::Base;
+  using Base::Value;
+
   /// Return the primary vertex identifier.
   constexpr Value vertexPrimary() const { return level(0); }
   /// Return the secondary vertex identifier.
@@ -124,3 +129,13 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
 };
 
 }  // namespace ActsFatras
+
+// specialize std::hash so Barcode can be used e.g. in an unordered_map
+namespace std {
+template <>
+struct hash<ActsFatras::Barcode> {
+  auto operator()(ActsFatras::Barcode barcode) const noexcept {
+    return std::hash<ActsFatras::Barcode::Value>()(barcode.value());
+  }
+};
+}  // namespace std

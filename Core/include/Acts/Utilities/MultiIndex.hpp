@@ -148,15 +148,13 @@ class MultiIndex {
 
 }  // namespace Acts
 
+// specialize std::hash so MultiIndex can be used e.g. in an unordered_map
 namespace std {
-
-// specialize std::hash so the MultiIndex can be used e.g. in an unordered_map
 template <typename Storage, std::size_t... BitsPerLevel>
 struct hash<Acts::MultiIndex<Storage, BitsPerLevel...>> {
-  constexpr auto operator()(
-      Acts::MultiIndex<Storage, BitsPerLevel...> idx) const noexcept {
+  auto operator()(Acts::MultiIndex<Storage, BitsPerLevel...> idx) const
+      noexcept {
     return std::hash<Storage>()(idx.value());
   }
 };
-
 }  // namespace std

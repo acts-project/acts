@@ -44,12 +44,12 @@ class Hit {
   /// users responsibility to ensure that the position correspond to a
   /// position on the given surface. The four-vector component order must be
   /// [x,y,z,t] and [px,py,pz,E].
-  template <typename Position4, typename Momentum4>
-  Hit(Acts::GeometryID geoId, Barcode particleId,
+  template <typename Position4, typename Momentum40, typename Momentum41>
+  Hit(Acts::GeometryID geometryId, Barcode particleId,
       const Eigen::MatrixBase<Position4>& pos4,
-      const Eigen::MatrixBase<Momentum4>& before4,
-      const Eigen::MatrixBase<Momentum4>& after4, int32_t index_ = -1)
-      : m_geoId(geoId),
+      const Eigen::MatrixBase<Momentum40>& before4,
+      const Eigen::MatrixBase<Momentum41>& after4, int32_t index_ = -1)
+      : m_geometryId(geometryId),
         m_particleId(particleId),
         m_index(index_),
         m_pos4(pos4),
@@ -61,13 +61,13 @@ class Hit {
   Hit& operator=(Hit&&) = default;
 
   /// Geometry identifier of the hit surface.
-  Acts::GeometryID geoId() const { return m_geoId; }
+  constexpr Acts::GeometryID geometryId() const { return m_geometryId; }
   /// Particle identifier of the particle that generated the hit.
-  Barcode particleId() const { return m_particleId; }
+  constexpr Barcode particleId() const { return m_particleId; }
   /// Hit index along the particle trajectory.
   ///
   /// @retval negative if the hit index is undefined.
-  int32_t index() const { return m_index; }
+  constexpr int32_t index() const { return m_index; }
 
   /// Space-time position four-vector.
   ///
@@ -86,12 +86,14 @@ class Hit {
   ///
   /// The component order is [px,py,pz,E].
   const Vector4& momentum4After() const { return m_after4; }
-  /// Particle direction before the hit.
-  Vector3 directionBefore() const { return m_before4.head<3>().normalized(); }
-  /// Particle direction after the hit.
-  Vector3 directionAfter() const { return m_after4.head<3>().normalized(); }
-  /// Average particle direction while passing through the surface.
-  Vector3 direction() const {
+  /// Normalized particle direction vector before the hit.
+  Vector3 unitDirectionBefore() const {
+    return m_before4.head<3>().normalized();
+  }
+  /// Normalized particle direction vector the hit.
+  Vector3 unitDirectionAfter() const { return m_after4.head<3>().normalized(); }
+  /// Average normalized particle direction vector through the surface.
+  Vector3 unitDirection() const {
     auto dir0 = m_before4 / (2 * m_before4.head<3>().norm());
     auto dir1 = m_after4 / (2 * m_after4.head<3>().norm());
     return (dir0 + dir1).head<3>().normalized();
@@ -100,11 +102,11 @@ class Hit {
   ///
   /// @retval positive if the particle lost energy when it passed the surface
   /// @retval negative if magic was involved
-  Scalar depositedEnergy() const { return m_before4.w() - m_after4.w(); }
+  Scalar depositedEnergy() const { return m_before4[3] - m_after4[3]; }
 
  private:
   /// Identifier of the surface.
-  Acts::GeometryID m_geoId;
+  Acts::GeometryID m_geometryId;
   /// Identifier of the generating particle.
   Barcode m_particleId;
   /// Index of the hit along the particle trajectory.

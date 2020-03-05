@@ -11,11 +11,11 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Physics/Scattering/detail/Scattering.hpp"
 
 namespace ActsFatras {
+namespace detail {
 
 /// Generate scattering angles using a general mixture model.
 ///
@@ -53,17 +53,22 @@ struct GeneralMixture {
       //----------------------------------------------------------------------------
       std::array<double, 4> scattering_params;
       // Decide which mixture is best
-      double beta2 = (particle.beta() * particle.beta());
+      //   beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
+      // 1/beta² = 1 + (m/p)²
+      //    beta = 1/sqrt(1 + (m/p)²)
+      double mOverP = particle.mass() / particle.absMomentum();
+      double beta2Inv = 1 + mOverP * mOverP;
+      double beta = 1 / std::sqrt(beta2Inv);
       double tInX0 = slab.thicknessInX0();
-      double tob2 = slab.thicknessInX0() / beta2;
+      double tob2 = tInX0 * beta2Inv;
       if (tob2 > 0.6 / std::pow(slab.material().Z(), 0.6)) {
         // Gaussian mixture or pure Gaussian
         if (tob2 > 10) {
-          scattering_params = getGaussian(particle.beta(), particle.momentum(),
-                                          tInX0, genMixtureScalor);
+          scattering_params = getGaussian(beta, particle.absMomentum(), tInX0,
+                                          genMixtureScalor);
         } else {
           scattering_params =
-              getGaussmix(particle.beta(), particle.momentum(), tInX0,
+              getGaussmix(beta, particle.absMomentum(), tInX0,
                           slab.material().Z(), genMixtureScalor);
         }
         // Simulate
@@ -71,7 +76,7 @@ struct GeneralMixture {
       } else {
         // Semigaussian mixture - get parameters
         auto scattering_params_sg =
-            getSemigauss(particle.beta(), particle.momentum(), tInX0,
+            getSemigauss(beta, particle.absMomentum(), tInX0,
                          slab.material().Z(), genMixtureScalor);
         // Simulate
         theta = semigauss(generator, scattering_params_sg);
@@ -80,8 +85,8 @@ struct GeneralMixture {
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random
       const auto theta0 = Acts::computeMultipleScatteringTheta0(
-          slab, particle.pdg(), particle.mass(), particle.chargeOverMomentum(),
-          particle.charge());
+          slab, particle.pdg(), particle.mass(),
+          particle.charge() / particle.absMomentum(), particle.charge());
       theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }
     // scale from planar to 3d angle
@@ -194,5 +199,9 @@ struct GeneralMixture {
       return a * b * std::sqrt((1 - u) / (u * b * b + a * a)) * sigma_tot;
   }
 };
+
+}  // namespace detail
+
+using GeneralMixtureScattering = detail::Scattering<detail::GeneralMixture>;
 
 }  // namespace ActsFatras

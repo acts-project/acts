@@ -11,10 +11,10 @@
 #include <random>
 
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Physics/Scattering/detail/Scattering.hpp"
 
 namespace ActsFatras {
+namespace detail {
 
 /// Generate scattering angles using a Gaussian mixture model.
 struct GaussianMixture {
@@ -44,8 +44,8 @@ struct GaussianMixture {
                     Particle &particle) const {
     /// Calculate the highland formula first
     double sigma = Acts::computeMultipleScatteringTheta0(
-        slab, particle.pdg(), particle.mass(), particle.chargeOverMomentum(),
-        particle.charge());
+        slab, particle.pdg(), particle.mass(),
+        particle.charge() / particle.absMomentum(), particle.charge());
     double sigma2 = sigma * sigma;
 
     // Gauss distribution, will be sampled with generator
@@ -55,8 +55,11 @@ struct GaussianMixture {
 
     // Now correct for the tail fraction
     // d_0'
-    double beta2 = particle.beta() * particle.beta();
-    double dprime = slab.thickness() / (slab.material().X0() * beta2);
+    // beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
+    // 1/beta² = 1 + (m/p)²
+    double mOverP = particle.mass() / particle.absMomentum();
+    double beta2inv = 1 + mOverP * mOverP;
+    double dprime = slab.thicknessInX0() * beta2inv;
     double log_dprime = std::log(dprime);
     // d_0''
     double log_dprimeprime =
@@ -76,7 +79,8 @@ struct GaussianMixture {
 
     // G4 optimised / native double Gaussian model
     if (optGaussianMixtureG4) {
-      sigma2 = 225. * dprime / (particle.momentum() * particle.momentum());
+      sigma2 =
+          225. * dprime / (particle.absMomentum() * particle.absMomentum());
     }
     // throw the random number core/tail
     if (uniformDist(generator) < epsilon) {
@@ -86,5 +90,9 @@ struct GaussianMixture {
     return M_SQRT2 * std::sqrt(sigma2) * gaussDist(generator);
   }
 };
+
+}  // namespace detail
+
+using GaussianMixtureScattering = detail::Scattering<detail::GaussianMixture>;
 
 }  // namespace ActsFatras

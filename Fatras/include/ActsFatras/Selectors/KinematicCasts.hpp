@@ -40,7 +40,7 @@ struct AbsVz {
 struct Eta {
   double operator()(const Particle& particle) const {
     // particle direction is always normalized, i.e. dz = pz / p
-    return std::atanh(particle.direction().z());
+    return std::atanh(particle.unitDirection().z());
   }
 };
 
@@ -48,7 +48,7 @@ struct Eta {
 struct AbsEta {
   double operator()(const Particle& particle) const {
     // particle direction is always normalized, i.e. dz = pz / p
-    return std::atanh(std::abs(particle.direction().z()));
+    return std::atanh(std::abs(particle.unitDirection().z()));
   }
 };
 
@@ -56,15 +56,15 @@ struct AbsEta {
 struct Pt {
   double operator()(const Particle& particle) const {
     // particle direction is always normalized, i.e. dt²+dz²=1 w/ dt²=dx²+dy²
-    return particle.momentum() *
-           std::hypot(particle.direction().x(), particle.direction().y());
+    return particle.absMomentum() * std::hypot(particle.unitDirection().x(),
+                                               particle.unitDirection().y());
   }
 };
 
 /// Retrieve the absolute momentum.
 struct P {
   double operator()(const Particle& particle) const {
-    return particle.momentum();
+    return particle.absMomentum();
   }
 };
 
