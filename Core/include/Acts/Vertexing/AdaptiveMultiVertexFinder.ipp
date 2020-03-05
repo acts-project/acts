@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Vertexing/VertexFitterOptions.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename vfitter_t, typename sfinder_t>
@@ -91,7 +90,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     }
     ACTS_DEBUG("New position of current vertex candidate after fit: "
                << vtxCandidate->fullPosition());
-
     // Check if vertex is good vertex
     bool isGoodVertex = false;
     int nCompatibleTracks = 0;
@@ -106,7 +104,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       bool removedNonCompatibleTrack =
           canRemoveNonCompatibleTrackFromSeedTracks(vtxCandidate, seedTracks,
                                                     fitterState);
-
       if (!removedNonCompatibleTrack) {
         ACTS_DEBUG(
             "Could not remove any further track from seed tracks. Break.");
@@ -121,34 +118,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
     // Delete vertex from allVertices list again if it's not kept
     if (not keepVertex) {
-      allVertices.pop_back();
-      allVerticesPtr.pop_back();
-
-      if (!m_cfg.refitAfterBadVertex) {
-        fitterState.vertexCollection = oldFitterState.vertexCollection;
-        fitterState.annealingState = oldFitterState.annealingState;
-        fitterState.vtxInfoMap.clear();
-        for (const auto& vtx : allVerticesPtr) {
-          fitterState.vtxInfoMap.insert(
-              std::make_pair(vtx, oldFitterState.vtxInfoMap[vtx]));
-        }
-        fitterState.trackToVerticesMultiMap =
-            oldFitterState.trackToVerticesMultiMap;
-        fitterState.tracksAtVerticesMap = oldFitterState.tracksAtVerticesMap;
-
-      } else {
-        // Update fitter state with removed vertex candidate
-        fitterState.updateTrkToVerticesMultiMap(allVerticesPtr);
-
-        // TODO: clean tracksAtVerticesMap maybe here? i.e. remove all entries
-        // with old vertex?
-
-        // Do the fit with removed vertex
-        auto fitResult = m_cfg.vertexFitter.fit(
-            fitterState, allVerticesPtr, m_cfg.linearizer, vFitterOptions);
-        if (!fitResult.ok()) {
-          return fitResult.error();
-        }
+      auto deleteVertexResult =
+          deleteLastVertex(allVertices, allVerticesPtr, fitterState,
+                           oldFitterState, vFitterOptions);
+      if (not deleteVertexResult.ok()) {
+        return deleteVertexResult.error();
       }
     }
     iteration++;
@@ -541,6 +515,45 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     }
   }
   return false;
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
+    std::vector<std::unique_ptr<Vertex<InputTrack_t>>>& allVertices,
+    std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
+    FitterState_t& fitterState, FitterState_t& oldFitterState,
+    const VertexFitterOptions<InputTrack_t>& vFitterOptions) const
+    -> Result<void> {
+  allVertices.pop_back();
+  allVerticesPtr.pop_back();
+
+  if (!m_cfg.refitAfterBadVertex) {
+    fitterState.vertexCollection = oldFitterState.vertexCollection;
+    fitterState.annealingState = oldFitterState.annealingState;
+    fitterState.vtxInfoMap.clear();
+    for (const auto& vtx : allVerticesPtr) {
+      fitterState.vtxInfoMap.insert(
+          std::make_pair(vtx, oldFitterState.vtxInfoMap[vtx]));
+    }
+    fitterState.trackToVerticesMultiMap =
+        oldFitterState.trackToVerticesMultiMap;
+    fitterState.tracksAtVerticesMap = oldFitterState.tracksAtVerticesMap;
+
+  } else {
+    // Update fitter state with removed vertex candidate
+    fitterState.updateTrkToVerticesMultiMap(allVerticesPtr);
+
+    // TODO: clean tracksAtVerticesMap maybe here? i.e. remove all entries
+    // with old vertex?
+
+    // Do the fit with removed vertex
+    auto fitResult = m_cfg.vertexFitter.fit(fitterState, allVerticesPtr,
+                                            m_cfg.linearizer, vFitterOptions);
+    if (!fitResult.ok()) {
+      return fitResult.error();
+    }
+  }
+  return {};
 }
 
 template <typename vfitter_t, typename sfinder_t>

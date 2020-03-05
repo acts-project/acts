@@ -16,6 +16,7 @@
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
+#include "Acts/Vertexing/VertexFitterOptions.hpp"
 
 namespace Acts {
 /// @class AdaptiveMultiVertexFinder
@@ -338,6 +339,22 @@ class AdaptiveMultiVertexFinder {
   bool isMergedVertex(
       const Vertex<InputTrack_t>* vtx,
       const std::vector<Vertex<InputTrack_t>*>& allVertices) const;
+
+  /// @brief Method that deletes last vertex from list of all vertices
+  /// and either refits all vertices afterwards (if refitAfterBadVertex)
+  /// of reverts to the old state of the vertex fitter before the bad
+  /// vertex was added to the fit (if not refitAfterBadVertex).
+  ///
+  /// @param allVertices Vector containing the unique_ptr to vertices
+  /// @param allVerticesPtr Vector containing the actual addresses
+  /// @param fitterState The current vertex fitter state
+  /// @param oldFitterState The old vertex fitter state
+  /// @param vFitterOptions The vertex fitter options
+  Result<void> deleteLastVertex(
+      std::vector<std::unique_ptr<Vertex<InputTrack_t>>>& allVertices,
+      std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
+      FitterState_t& fitterState, FitterState_t& oldFitterState,
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Prepares the output vector of vertices
   ///
