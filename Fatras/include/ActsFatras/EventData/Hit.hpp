@@ -61,13 +61,13 @@ class Hit {
   Hit& operator=(Hit&&) = default;
 
   /// Geometry identifier of the hit surface.
-  Acts::GeometryID geometryId() const { return m_geometryId; }
+  constexpr Acts::GeometryID geometryId() const { return m_geometryId; }
   /// Particle identifier of the particle that generated the hit.
-  Barcode particleId() const { return m_particleId; }
+  constexpr Barcode particleId() const { return m_particleId; }
   /// Hit index along the particle trajectory.
   ///
   /// @retval negative if the hit index is undefined.
-  int32_t index() const { return m_index; }
+  constexpr int32_t index() const { return m_index; }
 
   /// Space-time position four-vector.
   ///
