@@ -19,7 +19,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
     return VertexingError::EmptyInput;
   }
 
-  const auto& vtxPos = vtx->fullPosition().template head<3>();
+  const auto vtxPos = vtx->fullPosition().template head<3>();
 
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
