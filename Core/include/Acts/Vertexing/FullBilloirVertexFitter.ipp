@@ -116,12 +116,13 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
       auto result = linearizer.linearizeTrack(trackParams, linPoint);
       if (result.ok()) {
-        const auto linTrack = *result;
-        double d0 = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
-        double z0 = linTrack.parametersAtPCA[ParID_t::eLOC_Z0];
-        double phi = linTrack.parametersAtPCA[ParID_t::ePHI];
-        double theta = linTrack.parametersAtPCA[ParID_t::eTHETA];
-        double qOverP = linTrack.parametersAtPCA[ParID_t::eQOP];
+        const auto& linTrack = *result;
+        const auto& parametersAtPCA = linTrack.parametersAtPCA;
+        double d0 = parametersAtPCA[ParID_t::eLOC_D0];
+        double z0 = parametersAtPCA[ParID_t::eLOC_Z0];
+        double phi = parametersAtPCA[ParID_t::ePHI];
+        double theta = parametersAtPCA[ParID_t::eTHETA];
+        double qOverP = parametersAtPCA[ParID_t::eQOP];
 
         // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
         double fPhi = trackMomenta[iTrack][0];
@@ -143,7 +144,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         // cache some matrix multiplications
         BoundToSpacePointMatrix DtWmat;
         ActsMatrixD<3, BoundParsDim> EtWmat;
-        BoundSymMatrix Wi = linTrack.covarianceAtPCA.inverse();
+        BoundSymMatrix Wi = linTrack.weightAtPCA;
 
         DtWmat = Dmat.transpose() * Wi;
         EtWmat = Emat.transpose() * Wi;
@@ -274,7 +275,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       bTrack.chi2 =
           ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
                .transpose())
-              .dot(bTrack.linTrack.covarianceAtPCA.inverse() *
+              .dot(bTrack.linTrack.weightAtPCA *
                    (bTrack.deltaQ - bTrack.DiMat * deltaV -
                     bTrack.EiMat * deltaP));
       newChi2 += bTrack.chi2;
