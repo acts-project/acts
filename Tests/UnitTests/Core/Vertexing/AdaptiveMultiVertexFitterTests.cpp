@@ -229,7 +229,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
-  std::cout << "HERE 0" << std::endl;
   auto res1 = fitter.addVtxToFit(state, vtxList[0], linearizer, fitterOptions);
 
   if (debugMode) {

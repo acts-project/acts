@@ -58,7 +58,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   newTrkParams(ParID_t::eQOP) = newTrkMomentum(2);           // qOverP
 
   // Vertex covariance and weight matrices
-  const auto& vtxCov = vtx->fullCovariance().template block<3, 3>(0, 0);
+  const auto vtxCov = vtx->fullCovariance().template block<3, 3>(0, 0);
   const auto vtxWeight = vtxCov.inverse();
 
   // New track covariance matrix
