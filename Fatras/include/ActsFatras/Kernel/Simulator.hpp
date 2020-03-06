@@ -77,7 +77,8 @@ struct ParticleSimulator {
         Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
     using InteractResult = typename Interact::result_type;
     using Actions = Acts::ActionList<Interact, Acts::detail::DebugOutputActor>;
-    using Abort = Acts::AbortList<Acts::detail::EndOfWorldReached>;
+    using Abort = Acts::AbortList<typename Interact::ParticleNotAlive,
+                                  Acts::detail::EndOfWorldReached>;
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
