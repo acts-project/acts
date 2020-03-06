@@ -42,7 +42,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     std::vector<const InputTrack_t*> myTracks;
-    if (m_cfg.realMultiVertex == true) {
+    if (m_cfg.doRealMultiVertex) {
       myTracks = origTracks;
     } else {
       myTracks = seedTracks;
@@ -91,10 +91,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     ACTS_DEBUG("New position of current vertex candidate after fit: "
                << vtxCandidate->fullPosition());
     // Check if vertex is good vertex
-    bool isGoodVertex = false;
-    int nCompatibleTracks = 0;
-    checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, nCompatibleTracks,
-                                   isGoodVertex, fitterState);
+    auto [nCompatibleTracks, isGoodVertex] =
+        checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitterState);
 
     ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
     if (nCompatibleTracks > 0) {
@@ -112,8 +110,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
         break;
       }
     }
-    bool keepVertex =
-        keepNewVertex(vtxCandidate, allVerticesPtr, isGoodVertex, fitterState);
+    bool keepVertex = isGoodVertex &&
+                      keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
     ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
     // Delete vertex from allVertices list again if it's not kept
@@ -231,8 +229,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         (ipSig < m_cfg.tracksMaxSignificance)) {
       // Create TrackAtVertex objects, unique for each (track, vertex) pair
       // fitterState.tracksAtVerticesMap.clear();
-      fitterState.tracksAtVerticesMap.insert(
-          std::make_pair(std::make_pair(trk, vtx), TrackAtVertex(params, trk)));
+      fitterState.tracksAtVerticesMap.emplace(std::make_pair(trk, vtx),
+                                              TrackAtVertex(params, trk));
 
       // Add the original track parameters to the list for vtx
       fitterState.vtxInfoMap[vtx].trackLinks.push_back(trk);
@@ -331,8 +329,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     checkVertexAndCompatibleTracks(
         Vertex<InputTrack_t>* vtx,
         const std::vector<const InputTrack_t*>& seedTracks,
-        int& nCompatibleTracks, bool& isGoodVertex,
-        FitterState_t& fitterState) const -> void {
+        FitterState_t& fitterState) const -> std::pair<int, bool> {
+  bool isGoodVertex = false;
+  int nCompatibleTracks = 0;
   for (const auto& trk : fitterState.vtxInfoMap[vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
@@ -361,6 +360,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       }
     }
   }  // end loop over all tracks at vertex
+
+  return {nCompatibleTracks, isGoodVertex};
 }
 
 template <typename vfitter_t, typename sfinder_t>
@@ -394,9 +395,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         FitterState_t& fitterState) const -> bool {
   // Try to find the track with highest compatibility
   double maxCompatibility = 0;
-  typename std::vector<const InputTrack_t*>::iterator maxCompSeedIt =
-      seedTracks.end();
 
+  auto maxCompSeedIt = seedTracks.end();
   for (const auto& trk : fitterState.vtxInfoMap[vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
@@ -444,12 +444,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
     Vertex<InputTrack_t>* vtx,
-    const std::vector<Vertex<InputTrack_t>*>& allVertices, bool isGoodVertex,
+    const std::vector<Vertex<InputTrack_t>*>& allVertices,
     FitterState_t& fitterState) const -> bool {
-  if (not isGoodVertex) {
-    return false;
-  }
-
   double contamination = 0.;
   double contaminationNum = 0;
   double contaminationDeNom = 0;
@@ -532,8 +528,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     fitterState.annealingState = oldFitterState.annealingState;
     fitterState.vtxInfoMap.clear();
     for (const auto& vtx : allVerticesPtr) {
-      fitterState.vtxInfoMap.insert(
-          std::make_pair(vtx, oldFitterState.vtxInfoMap[vtx]));
+      fitterState.vtxInfoMap.emplace(vtx, oldFitterState.vtxInfoMap[vtx]);
     }
     fitterState.trackToVerticesMultiMap =
         oldFitterState.trackToVerticesMultiMap;

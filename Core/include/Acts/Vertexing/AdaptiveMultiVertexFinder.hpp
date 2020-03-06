@@ -99,7 +99,7 @@ class AdaptiveMultiVertexFinder {
     // added to the new vertex candidate after seeding. If switched to
     // false, only the seedTracks, i.e. all tracks that are considered
     // as outliers of previously fitted vertices, are used.
-    bool realMultiVertex = true;
+    bool doRealMultiVertex = true;
 
     // Decides if you want to use the ```vertexCompatibility``` of the
     //  track (set to true) or the ```chi2Track``` (set to false) as an
@@ -285,13 +285,12 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @param vtx The vertex candidate
   /// @param seedTracks The seed tracks
-  /// @param[out] nCompatibleTracks Number of compatible tracks
-  /// @param[out] isGoodVertex Vertex is good vertex
   /// @param fitterState The vertex fitter state
-  void checkVertexAndCompatibleTracks(
+  ///
+  /// @return pair(nCompatibleTracks, isGoodVertex)
+  std::pair<int, bool> checkVertexAndCompatibleTracks(
       Vertex<InputTrack_t>* vtx,
       const std::vector<const InputTrack_t*>& seedTracks,
-      int& nCompatibleTracks, bool& isGoodVertex,
       FitterState_t& fitterState) const;
 
   /// @brief Method that removes all tracks that are compatible with
@@ -321,13 +320,12 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @param vtx The vertex candidate
   /// @param allVertices All so far found vertices
-  /// @param isGoodVertex Vertex is good vertex
   /// @param fitterState The vertex fitter state
   ///
   /// @return Keep new vertex
   bool keepNewVertex(Vertex<InputTrack_t>* vtx,
                      const std::vector<Vertex<InputTrack_t>*>& allVertices,
-                     bool isGoodVertex, FitterState_t& fitterState) const;
+                     FitterState_t& fitterState) const;
 
   /// @brief Method that evaluates if the new vertex candidate is
   /// merged with one of the previously found vertices
