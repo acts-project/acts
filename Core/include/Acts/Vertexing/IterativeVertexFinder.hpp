@@ -154,7 +154,7 @@ class IterativeVertexFinder {
   /// overwritten to return BoundParameters for other InputTrack_t objects.
   ///
   /// @param InputTrack_t object to extract track parameters from
-  const std::function<BoundParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

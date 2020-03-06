@@ -78,7 +78,7 @@ class AdaptiveMultiVertexFinder {
     // to the seeded vertex than tracksMaxZinterval
     // are added to this new vertex.
     //
-    // Note: Default is 4 mm. If you cut too hard, you cut out
+    // Note: If you cut too hard, you cut out
     // the good cases where the seed finder is not
     // reliable, but the fit would be still able to converge
     // towards the right vertex. If you cut too soft, you
@@ -199,7 +199,7 @@ class AdaptiveMultiVertexFinder {
   /// overwritten to return BoundParameters for other InputTrack_t objects.
   ///
   /// @param InputTrack_t object to extract track parameters from
-  const std::function<BoundParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -248,7 +248,7 @@ class AdaptiveMultiVertexFinder {
       FitterState_t& fitterState) const;
 
   /// @brief Method that tries to recover from cases where no tracks
-  /// where added to the vertex candidate after seeding
+  /// were added to the vertex candidate after seeding
   ///
   /// @param allTracks The tracks to be considered (either origTrack or
   /// seedTracks)
