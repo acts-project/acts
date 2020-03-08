@@ -420,17 +420,16 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     // method to remove a track from seed tracks: Closest track in z to
     // vtx candidate
     double smallestDeltaZ = std::numeric_limits<double>::max();
-    auto smallestDzSeedIter = std::find_if(
-        seedTracks.begin(), seedTracks.end(),
-        [&vtx, &smallestDeltaZ, this](auto trk) {
-          double zDistance = std::abs(m_extractParameters(*trk).position()[eZ] -
-                                      vtx.position()[eZ]);
-          if (zDistance < smallestDeltaZ) {
-            smallestDeltaZ = zDistance;
-            return true;
-          }
-          return false;
-        });
+    auto smallestDzSeedIter = seedTracks.end();
+    for (auto trkIter = seedTracks.begin(); trkIter != seedTracks.end();
+         trkIter++) {
+      double zDistance = std::abs(
+          m_extractParameters(**trkIter).position()[eZ] - vtx.position()[eZ]);
+      if (zDistance < smallestDeltaZ) {
+        smallestDeltaZ = zDistance;
+        smallestDzSeedIter = trkIter;
+      }
+    }
     if (smallestDzSeedIter != seedTracks.end()) {
       seedTracks.erase(smallestDzSeedIter);
     } else {

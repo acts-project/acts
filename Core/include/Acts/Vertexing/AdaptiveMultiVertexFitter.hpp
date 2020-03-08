@@ -77,7 +77,7 @@ class AdaptiveMultiVertexFitter {
       for (auto& vtx : vtxList) {
         // Add vertex link for each track
         for (auto& trk : vtxInfoMap[&vtx].trackLinks) {
-          trackToVerticesMultiMap.insert(std::make_pair(trk, &vtx));
+          trackToVerticesMultiMap.emplace(trk, &vtx);
         }
       }
     }
@@ -88,7 +88,7 @@ class AdaptiveMultiVertexFitter {
       for (auto vtx : vtxList) {
         // Add vertex link for each track
         for (auto trk : vtxInfoMap[vtx].trackLinks) {
-          trackToVerticesMultiMap.insert(std::make_pair(trk, vtx));
+          trackToVerticesMultiMap.emplace(trk, vtx);
         }
       }
     }
