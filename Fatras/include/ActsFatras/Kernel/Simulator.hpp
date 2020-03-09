@@ -65,17 +65,15 @@ struct ParticleSimulator {
   ///
   /// @tparam generator_t is the type of the random number generator
   template <typename generator_t>
-  Acts::Result<typename Interactor<generator_t, physics_list_t,
-                                   hit_surface_selector_t>::result_type>
-  simulate(const Acts::GeometryContext &geoCtx,
-           const Acts::MagneticFieldContext &magCtx, generator_t &generator,
-           const Particle &particle) const {
+  Acts::Result<InteractorResult> simulate(
+      const Acts::GeometryContext &geoCtx,
+      const Acts::MagneticFieldContext &magCtx, generator_t &generator,
+      const Particle &particle) const {
     assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
     using Interact =
         Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
-    using InteractResult = typename Interact::result_type;
     using Actions = Acts::ActionList<Interact, Acts::detail::DebugOutputActor>;
     using Abort = Acts::AbortList<typename Interact::ParticleNotAlive,
                                   Acts::detail::EndOfWorldReached>;
@@ -103,7 +101,7 @@ struct ParticleSimulator {
           particle.time());
       auto result = propagator.propagate(start, options);
       if (result.ok()) {
-        return result.value().template get<InteractResult>();
+        return result.value().template get<InteractorResult>();
       } else {
         return result.error();
       }
@@ -113,7 +111,7 @@ struct ParticleSimulator {
           particle.absMomentum() * particle.unitDirection(), particle.time());
       auto result = propagator.propagate(start, options);
       if (result.ok()) {
-        return result.value().template get<InteractResult>();
+        return result.value().template get<InteractorResult>();
       } else {
         return result.error();
       }
@@ -252,11 +250,10 @@ struct Simulator {
 
   /// Copy Interactor results to output containers.
   ///
-  /// @tparam interactor_result_t is an Interactor result struct
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
-  template <typename interactor_result_t, typename particles_t, typename hits_t>
-  void copyOutputs(const interactor_result_t &result,
+  template <typename particles_t, typename hits_t>
+  void copyOutputs(const InteractorResult &result,
                    particles_t &particlesInitial, particles_t &particlesFinal,
                    hits_t &hits) const {
     // initial particle state was already pushed to the container before
