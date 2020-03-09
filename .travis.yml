@@ -45,7 +45,7 @@ script:
     docker exec -ti CI_container 
     source CI/setup_lcg$LCG.sh ; 
     mkdir build && cd build
-    && cmake .. ${COMMON_BUILD_OPTIONS} -DCMAKE_BUILD_TYP=${BUILD_TYPE}
+    && cmake .. ${COMMON_BUILD_OPTIONS} -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     && cmake --build . -- -j$(nproc)
     && cmake --build . -- test
     && cmake --build . -- integrationtests
