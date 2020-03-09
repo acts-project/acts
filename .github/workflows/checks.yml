@@ -28,3 +28,12 @@ jobs:
       run: >
         CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
 
+  build:
+    runs-on: ubuntu-18.04
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu1910
+    steps:
+    - uses: actions/checkout@v1
+    - name: Check
+      run: >
+        mkdir build && cd build
+        && cmake .. -DACTS_BUILD_UNITTESTS=ON
