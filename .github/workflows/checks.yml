@@ -3,12 +3,28 @@ name: checks
 on: [push]
 
 jobs:
-  license:
+  format:
     runs-on: ubuntu-18.04
     container: gitlab-registry.cern.ch/acts/machines/check_llvm8:latest
     steps:
     - uses: actions/checkout@v1
-
-    - name: Build
+    - name: Check
       run: CI/check_format . 
+  license:
+    runs-on: ubuntu-18.04
+    container: python:alpine3.6
+    steps:
+    - uses: actions/checkout@v1
+    - name: Check
+      run:
+        - apk add --no-cache git
+        - CI/check_license.py . --exclude "*thirdparty/*"
+  include_guars:
+    runs-on: ubuntu-18.04
+    container: python:alpine3.6
+    steps:
+    - uses: actions/checkout@v1
+    - name: Check
+      run:
+        - CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
 
