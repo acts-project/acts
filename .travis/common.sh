@@ -3,7 +3,7 @@ set -e
 
 echo "BEGIN: $(date)"
 
-set -a && source ci.env && set +a
+source .travis/.env
 
 source CI/setup_lcg${LCG}.sh || true
 
