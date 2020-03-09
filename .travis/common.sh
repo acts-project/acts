@@ -3,6 +3,8 @@ set -e
 
 echo "BEGIN: $(date)"
 
+set -a && source ci.env && set +a
+
 source CI/setup_lcg${LCG}.sh || true
 
 mkdir build
