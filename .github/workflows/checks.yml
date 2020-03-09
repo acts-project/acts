@@ -37,3 +37,4 @@ jobs:
       run: >
         mkdir build && cd build
         && cmake .. -DACTS_BUILD_UNITTESTS=ON
+        && cmake --build . -- -j$(nproc)
