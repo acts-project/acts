@@ -83,8 +83,8 @@ ATLASCuts<SpacePoint>::cutPerMiddleSP(
         newSeedsVector.push_back(std::move(seeds[i]));
       }
     }
-    return std::move(newSeedsVector);
+    return newSeedsVector;
   }
-  return std::move(seeds);
+  return seeds;
 }
 }  // namespace Acts

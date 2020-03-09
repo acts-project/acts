@@ -1,52 +1,87 @@
 language: cpp
 
-matrix:
-  include:
-    - os: osx
-      osx_image: xcode10.2
-      before_install:
-        - brew install eigen
-    - os: linux
-      addons:
-        apt:
-          update: true
-          sources:
-            - sourceline: 'ppa:mhier/libboost-latest'
-            - ubuntu-toolchain-r-test
-          packages:
-            - libeigen3-dev
-            - boost1.67
-            - cmake
-            - g++-7
-      env: CC=gcc-7 CXX=g++-7
-    - os: linux
-      sudo: required
-      before_install:
-        - wget --no-check-certificate https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb
-        - sudo dpkg -i cvmfs-release-latest_all.deb
-        - sudo apt-get update
-        - sudo apt-get install cvmfs cvmfs-config-default
-        - rm -f cvmfs-release-latest_all.deb
-        - wget --no-check-certificate https://lcd-data.web.cern.ch/lcd-data/CernVM/default.local
-        - sudo mkdir -p /etc/cvmfs
-        - sudo mv default.local /etc/cvmfs/default.local
-        - sudo /etc/init.d/autofs stop
-        - sudo cvmfs_config setup
-        - sudo mkdir -p /cvmfs/sft.cern.ch
-        - sudo mount -t cvmfs sft.cern.ch /cvmfs/sft.cern.ch
-        - ls /cvmfs/sft.cern.ch
-      services:
-        - docker
-      script:
-        - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -d gitlab-registry.cern.ch/acts/machines/cc7 /bin/bash
-        - docker exec -ti CI_container /bin/bash -c "source CI/setup_lcg94.sh && mkdir build && cd build && cmake .. -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on && cmake --build . -- -j$(nproc) && cmake --build . -- test"
+# matrix:
+  # include:
+    # - os: linux
+      # sudo: required
+      # before_install:
+        # - wget --no-check-certificate https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb
+        # - sudo dpkg -i cvmfs-release-latest_all.deb
+        # - sudo apt-get update
+        # - sudo apt-get install cvmfs cvmfs-config-default
+        # - rm -f cvmfs-release-latest_all.deb
+        # - wget --no-check-certificate https://lcd-data.web.cern.ch/lcd-data/CernVM/default.local
+        # - sudo mkdir -p /etc/cvmfs
+        # - sudo mv default.local /etc/cvmfs/default.local
+        # - sudo /etc/init.d/autofs stop
+        # - sudo cvmfs_config setup
+        # - ls /cvmfs/sft.cern.ch
+      # env: CI_SCRIPT=$PWD/.travis/cc7_lcg96.sh IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
+      # services:
+        # - docker
+      # script:
+        # - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -v"$CI_SCRIPT:/entrypoint.sh:ro" -d $IMAGE /bin/bash
+        # - docker exec -ti CI_container /entrypoint.sh
+        #o
 
+if: branch = master
+
+os: linux
+before_install:
+  - wget --no-check-certificate https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb
+  - sudo dpkg -i cvmfs-release-latest_all.deb
+  - sudo apt-get update
+  - sudo apt-get install cvmfs cvmfs-config-default
+  - rm -f cvmfs-release-latest_all.deb
+  - wget --no-check-certificate https://lcd-data.web.cern.ch/lcd-data/CernVM/default.local
+  - sudo mkdir -p /etc/cvmfs
+  - sudo mv default.local /etc/cvmfs/default.local
+  - sudo /etc/init.d/autofs stop
+  - sudo cvmfs_config setup
+  - ls /cvmfs/sft.cern.ch
+services:
+  - docker
 script:
-  - mkdir build && cd build
-  - cmake .. -DCMAKE_CXX_FLAGS="-std=c++17" -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_LEGACY=on
-  - cmake --build . -- -j$(nproc)
-  - cmake --build . -- test
+  - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -d $IMAGE /bin/bash
+  - >
+    docker exec -ti CI_container /bin/bash -c "
+    source CI/setup_lcg$LCG.sh ; 
+    mkdir build && cd build
+    && cmake .. ${COMMON_BUILD_OPTIONS} 
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} 
+    -DACTS_BUILD_LEGACY=on 
+    -DACTS_BUILD_DD4HEP_PLUGIN=on 
+    -DACTS_BUILD_TGEO_PLUGIN=on
+    -DACTS_BUILD_INTEGRATIONTESTS=on
+    && cmake --build . -- -j$(nproc)
+    && cmake --build . -- test
+    && cmake --build . -- integrationtests"
 
+env: 
+  global:
+    COMMON_BUILD_OPTIONS: "'-DCMAKE_CXX_FLAGS=\"-Werror -fdiagnostics-color=always\" -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_BENCHMARKS=on -DACTS_BUILD_FATRAS=on -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_UNITTESTS=on'"
+    BUILD_TYPE: Release
+  jobs:
+   - LCG=95 IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
+   - LCG=96 IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
+   - LCG=95 IMAGE=gitlab-registry.cern.ch/acts/machines/slc6
 
+# matrix:
+  # include:
+    # env: LCG=96 IMAGE=gitlab-registry.cern.ch/acts/machines/cc7 BUILD_TYPE=Debug
+    # script:
+      # - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -d $IMAGE /bin/bash
+      # - >
+        # docker exec -ti CI_container /bin/bash -c "
+        # source CI/setup_lcg$LCG.sh ; 
+        # mkdir build && cd build
+        # && cmake .. ${COMMON_BUILD_OPTIONS} 
+        # -DCMAKE_BUILD_TYPE=${BUILD_TYPE} 
+        # -DACTS_BUILD_LEGACY=on 
+        # -DACTS_BUILD_DD4HEP_PLUGIN=on 
+        # -DACTS_BUILD_TGEO_PLUGIN=on
+        # && cmake --build . -- -j$(nproc)
+        # && cmake --build . -- test
+        # && env -i bash ../CI/coverage_environment.sh \"../CI/test_coverage --gcov $(which gcov)\""
 
 

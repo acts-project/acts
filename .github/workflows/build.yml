@@ -1,0 +1,140 @@
+name: Build
+
+on:
+  - push
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu1910
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: >
+        mkdir build && cd build
+        && cmake ..
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_CXX_STANDARD=17
+        -DACTS_BUILD_UNITTESTS=ON
+        -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
+        -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+        -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+        -DACTS_BUILD_JSON_PLUGIN=on
+        -DACTS_BUILD_BENCHMARKS=on
+        -DACTS_BUILD_FATRAS=on
+        -DACTS_BUILD_EXAMPLES=on
+        -DACTS_BUILD_UNITTESTS=on
+        -DACTS_BUILD_LEGACY=on
+        -DACTS_BUILD_DD4HEP_PLUGIN=on
+        -DACTS_BUILD_TGEO_PLUGIN=on
+        -DACTS_BUILD_INTEGRATIONTESTS=on
+        && cmake --build . -- -j$(nproc)
+        && cmake --build . -- test
+        && cmake --build . -- integrationtests
+
+  build_lcg:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}_lcg${{ matrix.lcg }}:latest
+    strategy:
+      matrix:
+        os:
+          - cc7
+          - slc6
+        lcg:
+          - 95
+          - 96
+        exclude:
+          - os: slc6
+            lcg: 96
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build on ${{ matrix.os }}, LCG${{ matrix.lcg }}
+        run: .github/workflows/build_job.sh ${{ matrix.lcg }} ${{ matrix.os }}
+
+
+  # build_cc7_lcg95:
+    # runs-on: ubuntu-18.04
+    # container: gitlab-registry.cern.ch/acts/machines/cc7_lcg95:latest
+    # steps:
+    # - uses: actions/checkout@v1
+    # - name: Build
+      # run: >
+        # source /opt/lcg/views/LCG_95apython3/x86_64-centos7-gcc8-opt/setup.sh
+        # && mkdir build && cd build
+        # && cmake ..
+        # -DCMAKE_BUILD_TYPE=Release
+        # -DCMAKE_CXX_STANDARD=17
+        # -DACTS_BUILD_UNITTESTS=ON
+        # -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
+        # -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+        # -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+        # -DACTS_BUILD_JSON_PLUGIN=on
+        # -DACTS_BUILD_BENCHMARKS=on
+        # -DACTS_BUILD_FATRAS=on
+        # -DACTS_BUILD_EXAMPLES=on
+        # -DACTS_BUILD_UNITTESTS=on
+        # -DACTS_BUILD_LEGACY=on
+        # -DACTS_BUILD_DD4HEP_PLUGIN=on
+        # -DACTS_BUILD_TGEO_PLUGIN=on
+        # -DACTS_BUILD_INTEGRATIONTESTS=on
+        # && cmake --build . -- -j$(nproc)
+        # && cmake --build . -- test
+        # && cmake --build . -- integrationtests
+
+  # build_cc7_lcg96:
+    # runs-on: ubuntu-18.04
+    # container: gitlab-registry.cern.ch/acts/machines/cc7_lcg96:latest
+    # steps:
+    # - uses: actions/checkout@v1
+    # - name: Build
+      # run: >
+        # source /opt/lcg/views/LCG_96/x86_64-centos7-gcc8-opt/setup.sh
+        # && mkdir build && cd build
+        # && cmake ..
+        # -DCMAKE_BUILD_TYPE=Release
+        # -DCMAKE_CXX_STANDARD=17
+        # -DACTS_BUILD_UNITTESTS=ON
+        # -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
+        # -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+        # -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+        # -DACTS_BUILD_JSON_PLUGIN=on
+        # -DACTS_BUILD_BENCHMARKS=on
+        # -DACTS_BUILD_FATRAS=on
+        # -DACTS_BUILD_EXAMPLES=on
+        # -DACTS_BUILD_UNITTESTS=on
+        # -DACTS_BUILD_LEGACY=on
+        # -DACTS_BUILD_DD4HEP_PLUGIN=on
+        # -DACTS_BUILD_TGEO_PLUGIN=on
+        # -DACTS_BUILD_INTEGRATIONTESTS=on
+        # && cmake --build . -- -j$(nproc)
+        # && cmake --build . -- test
+        # && cmake --build . -- integrationtests
+
+  # build_slc6_lcg95:
+    # runs-on: ubuntu-18.04
+    # container: gitlab-registry.cern.ch/acts/machines/slc6_lcg95:latest
+    # steps:
+    # - uses: actions/checkout@v1
+    # - name: Build
+      # run: >
+        # source /opt/lcg/views/LCG_95apython3/x86_64-slc6-gcc8-opt/setup.sh
+        # && mkdir build && cd build
+        # && cmake ..
+        # -DCMAKE_BUILD_TYPE=Release
+        # -DCMAKE_CXX_STANDARD=17
+        # -DACTS_BUILD_UNITTESTS=ON
+        # -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
+        # -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+        # -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+        # -DACTS_BUILD_JSON_PLUGIN=on
+        # -DACTS_BUILD_BENCHMARKS=on
+        # -DACTS_BUILD_FATRAS=on
+        # -DACTS_BUILD_EXAMPLES=on
+        # -DACTS_BUILD_UNITTESTS=on
+        # -DACTS_BUILD_LEGACY=on
+        # -DACTS_BUILD_DD4HEP_PLUGIN=on
+        # -DACTS_BUILD_TGEO_PLUGIN=on
+        # -DACTS_BUILD_INTEGRATIONTESTS=on
+        # && cmake --build . -- -j$(nproc)
+        # && cmake --build . -- test
+        # && cmake --build . -- integrationtests

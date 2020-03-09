@@ -81,29 +81,30 @@ using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
 
 // parameters for data-driven test cases
 
-const auto rangePdg = boost::unit_test::data::make({
-    Acts::PdgParticle::eElectron,
-    Acts::PdgParticle::eMuon,
-    Acts::PdgParticle::ePionPlus,
-    Acts::PdgParticle::ePionZero,
-});
-const auto rangePhi = boost::unit_test::data::make({
+const auto rangePdg =
+    boost::unit_test::data::make(std::vector<Acts::PdgParticle>{
+        Acts::PdgParticle::eElectron,
+        Acts::PdgParticle::eMuon,
+        Acts::PdgParticle::ePionPlus,
+        Acts::PdgParticle::ePionZero,
+    });
+const auto rangePhi = boost::unit_test::data::make(std::vector<double>{
     -135_degree,
     -45_degree,
     45_degree,
     135_degree,
 });
-const auto rangeEta = boost::unit_test::data::make({
+const auto rangeEta = boost::unit_test::data::make(std::vector<double>{
     -1.0,
     0.0,
     1.0,
     3.0,
 });
-const auto rangeP = boost::unit_test::data::make({
+const auto rangeP = boost::unit_test::data::make(std::vector<double>{
     1_GeV,
     10_GeV,
 });
-const auto rangeNumParticles = boost::unit_test::data::make({
+const auto rangeNumParticles = boost::unit_test::data::make(std::vector<int>{
     1,
     2,
 });
