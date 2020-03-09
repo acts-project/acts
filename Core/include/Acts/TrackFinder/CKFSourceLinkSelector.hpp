@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/TrackFinder/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -56,10 +57,10 @@ struct CKFSourceLinkSelector {
     double maxNumSourcelinksOnSurface = std::numeric_limits<size_t>::max();
 
     // Volume-level maximum number of source links on surface
-    VolumeNumMeas volumeMaxNumSourcelinks;
+    VolumeNumMeas volumeMaxNumSourcelinksOnSurface;
 
     // Layer-level maximum number of source links on surface
-    LayerNumMeas LayerMaxNumSourcelinks;
+    LayerNumMeas layerMaxNumSourcelinksOnSurface;
   };
 
   /// @brief Default constructor
@@ -87,21 +88,81 @@ struct CKFSourceLinkSelector {
   ///
   /// @return the compatible or outlier source link indice(s)
   template <typename calibrator_t, typename source_link_t>
-  std::pair<std::vector<size_t>, bool> operator()(
+  Result<std::pair<std::vector<size_t>, bool>> operator()(
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
 
-    std::vector<size_t> candidateIndices;
+    auto surface = &predictedParams.referenceSurface();
+    // Get volume and layer ID
+    auto geoID = surface->geoID();
+    auto volumeID = geoID.volume();
+    auto layerID = geoID.layer();
 
+    // First check if the layer-level criteria is configured.
+    // If not, check if the volume-level criteria is configured.
+    // Otherwise, use world criteria
+    double chi2Cutoff = std::numeric_limits<double>::max();
+    size_t numSlsCutoff = std::numeric_limits<size_t>::max();
+    // Get the allowed maximum chi2 on this surface
+    while (true) {
+      // layer-level criteria
+      auto lvMaxChi2 = m_config.layerMaxChi2.find(volumeID);
+      if (lvMaxChi2 != m_config.layerMaxChi2.end()) {
+        auto lvlMaxChi2 = lvMaxChi2->second.find(layerID);
+        if (lvlMaxChi2 != lvMaxChi2->second.end()) {
+          chi2Cutoff = lvlMaxChi2->second;
+          break;
+        }
+      }
+      // volume-level criteria
+      auto vvMaxChi2 = m_config.volumeMaxChi2.find(volumeID);
+      if (vvMaxChi2 != m_config.volumeMaxChi2.end()) {
+        chi2Cutoff = vvMaxChi2->second;
+        break;
+      }
+      // world-level criteria
+      chi2Cutoff = m_config.maxChi2;
+      break;
+    }
+
+    // Get the allowed maximum number of source link candidates on this surface
+    while (true) {
+      // layer-level criteria
+      auto lvMaxNumSls =
+          m_config.layerMaxNumSourcelinksOnSurface.find(volumeID);
+      if (lvMaxNumSls != m_config.layerMaxNumSourcelinksOnSurface.end()) {
+        auto lvlMaxNumSls = lvMaxNumSls->second.find(layerID);
+        if (lvlMaxNumSls != lvMaxNumSls->second.end()) {
+          numSlsCutoff = lvlMaxNumSls->second;
+          break;
+        }
+      }
+      // volume-level criteria
+      auto vvMaxNumSls =
+          m_config.volumeMaxNumSourcelinksOnSurface.find(volumeID);
+      if (vvMaxNumSls != m_config.volumeMaxNumSourcelinksOnSurface.end()) {
+        numSlsCutoff = vvMaxNumSls->second;
+        break;
+      }
+      // world-level criteria
+      numSlsCutoff = m_config.maxNumSourcelinksOnSurface;
+      break;
+    }
+
+    std::vector<std::pair<size_t, double>> candidateChi2;
     double minChi2 = std::numeric_limits<double>::max();
     size_t minIndex = 0;
     size_t index = 0;
+    // Loop over all source links to select the compatible source links
     for (const auto& sourcelink : sourcelinks) {
       std::visit(
           [&](const auto& calibrated) {
+            // The measurement surface should be the same as parameter surface
+            assert(&calibrated.referenceSurface() == surface);
+
             // type of measurement
             using meas_t =
                 typename std::remove_const<typename std::remove_reference<
@@ -126,71 +187,59 @@ struct CKFSourceLinkSelector {
                            residual)
                               .eval()(0, 0);
 
-            // Get the surface info
-            auto surface = &calibrated.referenceSurface();
-            if (surface and surface->associatedDetectorElement()) {
-              auto geoID = surface->geoID();
-              auto volumeID = geoID.volume();
-              auto layerID = geoID.layer();
-              // First check if the layer-level criteria is configured.
-              // If not, check if the volume-level criteria is configured.
-              // Otherwise, use world criteria
-              double chi2Cut;
-              while (true) {
-                auto dvMaxChi2 = m_config.layerMaxChi2.find(volumeID);
-                if (dvMaxChi2 != m_config.layerMaxChi2.end()) {
-                  auto dvlMaxChi2 = dvMaxChi2->second.find(layerID);
-                  if (dvlMaxChi2 != dvMaxChi2->second.end()) {
-                    chi2Cut = dvlMaxChi2->second;
-                    break;
-                  }
-                }
-
-                auto vvMaxChi2 = m_config.volumeMaxChi2.find(volumeID);
-                if (vvMaxChi2 != m_config.volumeMaxChi2.end()) {
-                  chi2Cut = vvMaxChi2->second;
-                  break;
-                }
-
-                chi2Cut = m_config.maxChi2;
-                break;
-              }
-
-              ACTS_VERBOSE("Chi2: " << chi2
-                                    << " and Chi2 criteria: " << chi2Cut);
-              // Push the source link and tag it as measurement if satisfying
-              // criteria
-              if (chi2 < chi2Cut) {
-                candidateIndices.push_back(index);
-              }
-              // To search for the source link with the min chisq
-              if (chi2 < minChi2) {
-                minChi2 = chi2;
-                minIndex = index;
-              }
+            ACTS_VERBOSE("Chi2: " << chi2
+                                  << " and Chi2 criteria: " << chi2Cutoff);
+            // Push the source link and tag it as measurement if satisfying
+            // criteria
+            if (chi2 < chi2Cutoff) {
+              candidateChi2.push_back({index, chi2});
+            }
+            // To search for the source link with the min chisq
+            if (chi2 < minChi2) {
+              minChi2 = chi2;
+              minIndex = index;
             }
           },
           calibrator(sourcelink, predictedParams));
       index++;
     }
 
-    // TODO: check the number of source links against provided criteria
-    //-> sort the chi2 for source link candidates
-    //-> remove the 'overflow' source links
+    // Check the number of source links against provided criteria
+    // Sort the source link candidates based on chi2
+    sort(candidateChi2.begin(), candidateChi2.end(),
+         [=](const std::pair<size_t, double>& achi2,
+             const std::pair<size_t, double>& bchi2) {
+           return achi2.second < bchi2.second;
+         });
+    // Only store the allowed number of source link candidates
+    std::vector<size_t> candidateIndices;
+    size_t nCandidates = 0;
+    for (const auto& [id, chi2] : candidateChi2) {
+      if (numSlsCutoff <= nCandidates) {
+        break;
+      }
+      candidateIndices.push_back(id);
+      nCandidates++;
+    }
 
     ACTS_VERBOSE(
         "Number of measurement candidates: " << candidateIndices.size());
 
-    bool isOutlier = false;
     // If there is no selected source link, return the source link with the best
     // chisq and tag it as an outlier
+    bool isOutlier = false;
     if (index > 0 and candidateIndices.empty()) {
       candidateIndices.push_back(minIndex);
       isOutlier = true;
       ACTS_DEBUG("No measurement candidate. Return an outlier source link.");
     }
 
-    return {std::move(candidateIndices), isOutlier};
+    // Return error if neither source link candidates nor outlier
+    if (candidateIndices.empty()) {
+      return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
+    }
+
+    return std::make_pair(std::move(candidateIndices), isOutlier);
   }
 
   /// The config

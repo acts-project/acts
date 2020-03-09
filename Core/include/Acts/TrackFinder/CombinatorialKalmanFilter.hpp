@@ -561,16 +561,13 @@ class CombinatorialKalmanFilter {
         // measurements or outlier.
         // Calibrator is passed to the selector because
         // selection has to be done based on calibrated measurement
-        auto [candidateIndices, isOutlier] =
+        auto slSelectionRes =
             m_sourcelinkSelector(m_calibrator, boundParams, sourcelinks);
-
-        // No returned source link is taken as error
-        if (candidateIndices.empty()) {
-          ACTS_ERROR(
-              "Source link selection failed: "
-              << CombinatorialKalmanFilterError::SourcelinkSelectionFailed);
-          return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
+        if (!slSelectionRes.ok()) {
+          return slSelectionRes.error();
         } else {
+          auto [candidateIndices, isOutlier] = slSelectionRes.value();
+
           // Remember the tip of the neighbor state on this surface
           size_t neighborTip = SIZE_MAX;
 
@@ -1068,6 +1065,8 @@ class CombinatorialKalmanFilter {
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
                                                     tfOptions.magFieldContext);
+    // Set max steps
+    propOptions.maxSteps = 10000;
 
     // Catch the actor and set the measurements
     auto& combKalmanActor =
@@ -1183,6 +1182,9 @@ class CombinatorialKalmanFilter {
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
                                                     tfOptions.magFieldContext);
+
+    // Set max steps
+    propOptions.maxSteps = 10000;
 
     // Catch the actor and set the measurements
     auto& combKalmanActor =
