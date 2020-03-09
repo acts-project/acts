@@ -42,13 +42,13 @@ services:
 script:
   - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -d $IMAGE /bin/bash
   - > 
-    docker exec -ti CI_container 
+    docker exec -ti CI_container /bin/bash -c "
     source CI/setup_lcg$LCG.sh ; 
     mkdir build && cd build
     && cmake .. ${COMMON_BUILD_OPTIONS} -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     && cmake --build . -- -j$(nproc)
     && cmake --build . -- test
-    && cmake --build . -- integrationtests
+    && cmake --build . -- integrationtests"
 
 env: 
   global:
