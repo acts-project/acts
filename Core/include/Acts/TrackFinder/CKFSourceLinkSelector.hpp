@@ -45,7 +45,7 @@ struct CKFSourceLinkSelector {
     using LayerNumMeas = std::map<GeometryID::Value, VolumeNumMeas>;
 
     // Global maximum chi2
-    double maxChi2 = 10;
+    double maxChi2 = std::numeric_limits<double>::max();
 
     // Volume-level maximum chi2
     VolumeChisq volumeMaxChi2;
@@ -54,7 +54,7 @@ struct CKFSourceLinkSelector {
     LayerChisq layerMaxChi2;
 
     // Global maximum number of source links on surface
-    size_t maxNumSourcelinksOnSurface = std::numeric_limits<size_t>::max();
+    size_t maxNumSourcelinksOnSurface = 1;
 
     // Volume-level maximum number of source links on surface
     VolumeNumMeas volumeMaxNumSourcelinksOnSurface;

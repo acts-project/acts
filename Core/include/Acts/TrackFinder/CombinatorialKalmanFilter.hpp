@@ -199,7 +199,7 @@ struct CombinatorialKalmanFilterResult {
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
-          typename source_link_selector_t = VoidSourceLinkSelector,
+          typename source_link_selector_t = CKFSourceLinkSelector,
           typename branch_stopper_t = VoidBranchStopper,
           typename calibrator_t = VoidMeasurementCalibrator,
           typename input_converter_t = VoidKalmanComponents,
