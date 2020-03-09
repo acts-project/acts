@@ -9,7 +9,7 @@ mkdir build
 cd build
 
 
-cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release \
+cmake .. -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always" \
   -DACTS_BUILD_DIGITIZATION_PLUGIN=on \
   -DACTS_BUILD_IDENTIFICATION_PLUGIN=on \

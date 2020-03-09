@@ -4,7 +4,8 @@ on: [push]
 
 jobs:
   license:
-    runs-on: docker://gitlab-registry.cern.ch/acts/machines/check_llvm8:latest
+    runs-on: ubuntu-18.04
+    container: gitlab-registry.cern.ch/acts/machines/check_llvm8:latest
     steps:
     - uses: actions/checkout@v1
 
