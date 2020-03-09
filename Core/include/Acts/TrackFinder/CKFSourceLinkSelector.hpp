@@ -54,7 +54,7 @@ struct CKFSourceLinkSelector {
     LayerChisq layerMaxChi2;
 
     // Global maximum number of source links on surface
-    double maxNumSourcelinksOnSurface = std::numeric_limits<size_t>::max();
+    size_t maxNumSourcelinksOnSurface = std::numeric_limits<size_t>::max();
 
     // Volume-level maximum number of source links on surface
     VolumeNumMeas volumeMaxNumSourcelinksOnSurface;
@@ -127,6 +127,7 @@ struct CKFSourceLinkSelector {
       chi2Cutoff = m_config.maxChi2;
       break;
     }
+    ACTS_VERBOSE("Allowed maximum chisq: " << chi2Cutoff);
 
     // Get the allowed maximum number of source link candidates on this surface
     while (true) {
@@ -151,6 +152,7 @@ struct CKFSourceLinkSelector {
       numSlsCutoff = m_config.maxNumSourcelinksOnSurface;
       break;
     }
+    ACTS_VERBOSE("Allowed maximum number of source links: " << numSlsCutoff);
 
     std::vector<std::pair<size_t, double>> candidateChi2;
     double minChi2 = std::numeric_limits<double>::max();
@@ -187,8 +189,7 @@ struct CKFSourceLinkSelector {
                            residual)
                               .eval()(0, 0);
 
-            ACTS_VERBOSE("Chi2: " << chi2
-                                  << " and Chi2 criteria: " << chi2Cutoff);
+            ACTS_VERBOSE("Chi2: " << chi2);
             // Push the source link and tag it as measurement if satisfying
             // criteria
             if (chi2 < chi2Cutoff) {
