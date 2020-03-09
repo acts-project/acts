@@ -45,7 +45,7 @@ script:
   # - echo $CI_SCRIPT
   # - stat $CI_SCRIPT
   #
-  - source .travis/helpers.sh
+  - source $PWD/.travis/helpers.sh
   # - echo "export LCG=${LCG}" >> .travis/.env
   # - (echo -n "export COMMON_BUILD_OPTIONS=" && printf '%q' "\"${COMMON_BUILD_OPTIONS}\"") >> .travis/.env
   # - echo "export BUILD_TYPE=${BUILD_TYPE}" >> .travis/.env
