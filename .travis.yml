@@ -46,16 +46,16 @@ script:
 
 env: 
   global:
-    - >
-      COMMON_BUILD_OPTIONS='-DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
-                            -DACTS_BUILD_DIGITIZATION_PLUGIN=on 
-                            -DACTS_BUILD_IDENTIFICATION_PLUGIN=on 
-                            -DACTS_BUILD_JSON_PLUGIN=on 
-                            -DACTS_BUILD_BENCHMARKS=on 
-                            -DACTS_BUILD_FATRAS=on 
-                            -DACTS_BUILD_EXAMPLES=on 
-                            -DACTS_BUILD_INTEGRATIONTESTS=on 
-                            -DACTS_BUILD_UNITTESTS=on'
+    - COMMON_BUILD_OPTIONS: >
+      -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
+      -DACTS_BUILD_DIGITIZATION_PLUGIN=on 
+      -DACTS_BUILD_IDENTIFICATION_PLUGIN=on 
+      -DACTS_BUILD_JSON_PLUGIN=on 
+      -DACTS_BUILD_BENCHMARKS=on 
+      -DACTS_BUILD_FATRAS=on 
+      -DACTS_BUILD_EXAMPLES=on 
+      -DACTS_BUILD_INTEGRATIONTESTS=on 
+      -DACTS_BUILD_UNITTESTS=on
   jobs:
    - LCG=95 CI_SCRIPT=$PWD/.travis/common.sh IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
    - LCG=96 CI_SCRIPT=$PWD/.travis/common.sh IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
