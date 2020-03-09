@@ -3,8 +3,6 @@ set -e
 
 echo "BEGIN: $(date)"
 
-ls -al .travis
-echo "sourcing .travis/.env"
 cat .travis/.env
 source .travis/.env
 
