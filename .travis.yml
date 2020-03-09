@@ -49,16 +49,17 @@ script:
   # - echo "export LCG=${LCG}" >> .travis/.env
   # - (echo -n "export COMMON_BUILD_OPTIONS=" && printf '%q' "\"${COMMON_BUILD_OPTIONS}\"") >> .travis/.env
   # - echo "export BUILD_TYPE=${BUILD_TYPE}" >> .travis/.env
-  - echo "export LCG=\"$(esc_var "${LCG}")\"" >> .travis/.env
-  - echo "export COMMON_BUILD_OPTIONS=\"$(esc_var "${COMMON_BUILD_OPTIONS}")\"" >> .travis/.env
-  - echo "export BUILD_TYPE=\"$(esc_var "${BUILD_TYPE}")\"" >> .travis/.env
+  - echo "export LCG=$(esc_var "${LCG}")" >> .travis/.env
+  - echo "export COMMON_BUILD_OPTIONS=$(esc_var "${COMMON_BUILD_OPTIONS}")" >> .travis/.env
+  - echo "export BUILD_TYPE=$(esc_var "${BUILD_TYPE}")" >> .travis/.env
 
+  - cat .travis/env
   - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -v"$CI_SCRIPT:/entrypoint.sh:ro" -d $IMAGE /bin/bash
   - docker exec -ti CI_container /entrypoint.sh
 
 env: 
   global:
-    COMMON_BUILD_OPTIONS: "'-DCMAKE_CXX_FLAGS=\"-Werror\ -fdiagnostics-color=always\" -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_BENCHMARKS=on -DACTS_BUILD_FATRAS=on -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_INTEGRATIONTESTS=on -DACTS_BUILD_UNITTESTS=on'"
+    COMMON_BUILD_OPTIONS: "'-DCMAKE_CXX_FLAGS=\"-Werror -fdiagnostics-color=always\" -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_BENCHMARKS=on -DACTS_BUILD_FATRAS=on -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_INTEGRATIONTESTS=on -DACTS_BUILD_UNITTESTS=on'"
     BUILD_TYPE: Release
   jobs:
    - LCG=95 CI_SCRIPT=$PWD/.travis/common.sh IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
