@@ -46,9 +46,9 @@ script:
   # - echo $CI_SCRIPT
   # - stat $CI_SCRIPT
   #
-  - echo "export LCG=${LCG}" > .travis/.env
-  - echo "export COMMON_BUILD_OPTIONS='${COMMON_BUILD_OPTIONS}'" > .travis/.env
-  - echo "export BUILD_TYPE=${BUILD_TYPE}" > .travis/.env
+  - echo "export LCG=${LCG}" >> .travis/.env
+  - echo "export COMMON_BUILD_OPTIONS='${COMMON_BUILD_OPTIONS}'" >> .travis/.env
+  - echo "export BUILD_TYPE=${BUILD_TYPE}" >> .travis/.env
   - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -v"$CI_SCRIPT:/entrypoint.sh:ro" -d $IMAGE /bin/bash
   - docker exec -ti CI_container /entrypoint.sh
 
