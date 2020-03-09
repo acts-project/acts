@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+echo "BEGIN: $(date)"
+
 source CI/setup_lcg96.sh || true
 
 mkdir build
