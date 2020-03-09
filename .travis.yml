@@ -15,11 +15,10 @@ matrix:
         - sudo mv default.local /etc/cvmfs/default.local
         - sudo /etc/init.d/autofs stop
         - sudo cvmfs_config setup
-        # - sudo mkdir -p /cvmfs/sft.cern.ch
-        # - sudo mount -t cvmfs sft.cern.ch /cvmfs/sft.cern.ch
         - ls /cvmfs/sft.cern.ch
+      env: CI_SCRIPT=$PWD/.travis/cc7_lcg96.sh
       services:
         - docker
       script:
-        - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -v"$PWD/.travis/cc7_lcg96.sh:/entrypoint.sh:ro" -d gitlab-registry.cern.ch/acts/machines/cc7 /bin/bash
+        - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -v"$CI_SCRIPT:/entrypoint.sh:ro" -d gitlab-registry.cern.ch/acts/machines/cc7 /bin/bash
         - docker exec -ti CI_container /entrypoint.sh
