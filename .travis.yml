@@ -21,4 +21,5 @@ matrix:
       services:
         - docker
       script:
-        - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -v"$PWD/.travis/cc7_lcg96.sh:/entrypoint.sh:ro" -d gitlab-registry.cern.ch/acts/machines/cc7 /entrypoint.sh
+        - docker run -ti --name CI_container -v ${PWD}:/src -w /src -v"/cvmfs:/cvmfs:ro" -v"$PWD/.travis/cc7_lcg96.sh:/entrypoint.sh:ro" -d gitlab-registry.cern.ch/acts/machines/cc7 /bin/bash
+        - docker exec -ti CI_container /entrypoint.sh
