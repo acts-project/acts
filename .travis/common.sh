@@ -5,6 +5,7 @@ echo "BEGIN: $(date)"
 
 cat .travis/.env
 source .travis/.env
+source .travis/common_build_options.sh
 
 source CI/setup_lcg${LCG}.sh || true
 
