@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/KalmanVertexTrackUpdater.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
-#include "Acts/Vertexing/VertexSmoother.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t, typename linearizer_t>
@@ -114,14 +114,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
   // Check if smoothing is required
   if (m_cfg.doSmoothing) {
-    for (auto vtx : state.vertexCollection) {
-      // Smooth all tracks at vertex `vtx`
-      auto smoothRes = VertexSmoothing::smoothVertexSequentially<input_track_t>(
-          geoContext, vtx);
-      if (!smoothRes.ok()) {
-        return smoothRes.error();
-      }
-    }
+    doVertexSmoothing(state, geoContext);
   }
 
   return {};
@@ -298,7 +291,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
         // Update the vertex with the new track
-        KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(vtx,
+        KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(*vtx,
                                                                   trkAtVtx);
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
@@ -343,4 +336,16 @@ bool Acts::AdaptiveMultiVertexFitter<
     }
   }
   return true;
+}
+
+template <typename input_track_t, typename linearizer_t>
+void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
+    doVertexSmoothing(State& state, const GeometryContext& geoContext) const {
+  for (const auto vtx : state.vertexCollection) {
+    for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
+      KalmanVertexTrackUpdater::update<input_track_t>(
+          geoContext, state.tracksAtVerticesMap.at(std::make_pair(trk, vtx)),
+          *vtx);
+    }
+  }
 }

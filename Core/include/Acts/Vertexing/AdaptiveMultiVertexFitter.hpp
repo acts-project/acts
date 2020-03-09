@@ -288,6 +288,13 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return False if shift was larger than maxRelativeShift
   bool checkSmallShift(State& state) const;
+
+  /// @brief Updates tracks for current vertex with knowledge
+  /// of current vertex position
+  ///
+  /// @param state The state object
+  /// @param geoContext The geometry context
+  void doVertexSmoothing(State& state, const GeometryContext& geoContext) const;
 };
 
 }  // namespace Acts

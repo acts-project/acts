@@ -12,14 +12,10 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
-    const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
-    const Vertex<input_track_t>* vtx) {
-  if (vtx == nullptr) {
-    return VertexingError::EmptyInput;
-  }
-
-  const auto vtxPos = vtx->fullPosition().template head<3>();
+void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
+                                            TrackAtVertex<input_track_t>& track,
+                                            const Vertex<input_track_t>& vtx) {
+  const auto vtxPos = vtx.fullPosition().template head<3>();
 
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
@@ -27,7 +23,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   // Check if linearized state exists
   if (linTrack.covarianceAtPCA.determinant() == 0.) {
     // Track has no linearized state, returning w/o update
-    return {};
+    return;
   }
 
   // Retrieve linTrack information
@@ -58,7 +54,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   newTrkParams(ParID_t::eQOP) = newTrkMomentum(2);           // qOverP
 
   // Vertex covariance and weight matrices
-  const auto vtxCov = vtx->fullCovariance().template block<3, 3>(0, 0);
+  const auto vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
   const auto vtxWeight = vtxCov.inverse();
 
   // New track covariance matrix
@@ -75,11 +71,11 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   const auto& reducedVtxWeight = matrixCache.newVertexWeight;
 
   // Difference in positions
-  auto posDiff = vtx->position() - matrixCache.newVertexPos;
+  auto posDiff = vtx.position() - matrixCache.newVertexPos;
 
   // Get smoothed params
   auto smParams =
-      trkParams - (residual + posJac * vtx->fullPosition().template head<3>() +
+      trkParams - (residual + posJac * vtx.fullPosition().template head<3>() +
                    momJac * newTrkMomentum);
 
   // New chi2 to be set later
@@ -104,7 +100,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(
-          VectorHelpers::position(vtx->fullPosition()));
+          VectorHelpers::position(vtx.fullPosition()));
 
   BoundParameters refittedPerigee = BoundParameters(
       gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
@@ -114,7 +110,7 @@ Acts::Result<void> Acts::KalmanVertexTrackUpdater::update(
   track.chi2Track = chi2;
   track.ndf = 2 * track.trackWeight;
 
-  return {};
+  return;
 }
 
 Acts::BoundMatrix

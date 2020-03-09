@@ -11,13 +11,13 @@
 
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::updateVertexWithTrack(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk) {
+    Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk) {
   detail::update<input_track_t>(vtx, trk, 1);
 }
 
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::detail::update(
-    Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk, int sign) {
+    Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
   double trackWeight = trk.trackWeight;
 
   MatrixCache matrixCache;
@@ -25,7 +25,7 @@ void Acts::KalmanVertexUpdater::detail::update(
   updatePosition(vtx, trk.linearizedState, trackWeight, sign, matrixCache);
 
   // Get fit quality parameters wrt to old vertex
-  std::pair fitQuality = vtx->fitQuality();
+  std::pair fitQuality = vtx.fitQuality();
   double chi2 = fitQuality.first;
   double ndf = fitQuality.second;
 
@@ -41,9 +41,9 @@ void Acts::KalmanVertexUpdater::detail::update(
   ndf += sign * trackWeight * 2.;
 
   // Updating the vertex
-  vtx->setPosition(matrixCache.newVertexPos);
-  vtx->setCovariance(matrixCache.newVertexCov);
-  vtx->setFitQuality(chi2, ndf);
+  vtx.setPosition(matrixCache.newVertexPos);
+  vtx.setCovariance(matrixCache.newVertexCov);
+  vtx.setFitQuality(chi2, ndf);
 
   // Updates track at vertex if already there
   // by removing it first and adding new one.
@@ -61,7 +61,7 @@ void Acts::KalmanVertexUpdater::detail::update(
 
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::updatePosition(
-    const Acts::Vertex<input_track_t>* vtx,
+    const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign,
     MatrixCache& matrixCache) {
   // Retrieve linTrack information
@@ -74,8 +74,8 @@ void Acts::KalmanVertexUpdater::updatePosition(
   const auto& trkParamWeight = linTrack.weightAtPCA.block<5, 5>(0, 0);
 
   // Vertex to be updated
-  const auto& oldVtxPos = vtx->position();
-  matrixCache.oldVertexWeight = (vtx->covariance()).inverse();
+  const auto& oldVtxPos = vtx.position();
+  matrixCache.oldVertexWeight = (vtx.covariance()).inverse();
 
   // W_k matrix
   matrixCache.momWeightInv =
@@ -101,8 +101,8 @@ void Acts::KalmanVertexUpdater::updatePosition(
 
 template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
-    const Vertex<input_track_t>* oldVtx, const MatrixCache& matrixCache) {
-  auto posDiff = matrixCache.newVertexPos - oldVtx->position();
+    const Vertex<input_track_t>& oldVtx, const MatrixCache& matrixCache) {
+  auto posDiff = matrixCache.newVertexPos - oldVtx.position();
 
   // Calculate and return corresponding chi2
   return posDiff.transpose() * (matrixCache.oldVertexWeight * posDiff);

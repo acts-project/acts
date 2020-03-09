@@ -150,10 +150,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Vertex<BoundParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    auto res = KalmanVertexTrackUpdater::update<BoundParameters>(
-        tgContext, trkAtVtx, &vtx);
-
-    BOOST_CHECK(res.ok());
+    KalmanVertexTrackUpdater::update<BoundParameters>(tgContext, trkAtVtx, vtx);
 
     // The old distance
     double oldDistance =

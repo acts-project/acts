@@ -41,7 +41,7 @@ struct MatrixCache {
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
 template <typename input_track_t>
-void updateVertexWithTrack(Vertex<input_track_t>* vtx,
+void updateVertexWithTrack(Vertex<input_track_t>& vtx,
                            TrackAtVertex<input_track_t>& trk);
 
 /// @brief Updates vertex position
@@ -54,7 +54,7 @@ void updateVertexWithTrack(Vertex<input_track_t>* vtx,
 ///
 /// @return Vertex with updated position and covariance
 template <typename input_track_t>
-void updatePosition(const Acts::Vertex<input_track_t>* vtx,
+void updatePosition(const Acts::Vertex<input_track_t>& vtx,
                     const Acts::LinearizedTrack& linTrack, double trackWeight,
                     int sign, MatrixCache& matrixCache);
 
@@ -67,7 +67,7 @@ namespace detail {
 ///
 /// @return Chi2
 template <typename input_track_t>
-double vertexPositionChi2(const Vertex<input_track_t>* oldVtx,
+double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
                           const MatrixCache& matrixCache);
 
 /// @brief Calculates chi2 of refitted track parameters
@@ -88,7 +88,7 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
 /// @param trk Track to be added to/removed from vtx
 /// @param sign +1 (add track) or -1 (remove track)
 template <typename input_track_t>
-void update(Vertex<input_track_t>* vtx, TrackAtVertex<input_track_t>& trk,
+void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
             int sign);
 }  // Namespace detail
 
