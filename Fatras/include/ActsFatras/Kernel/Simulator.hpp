@@ -28,6 +28,7 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/Interactor.hpp"
+#include "ActsFatras/Kernel/detail/SimulatorError.hpp"
 
 namespace ActsFatras {
 
@@ -209,8 +210,7 @@ struct Simulator {
       // required to allow correct particle id numbering for secondaries later
       if ((inputParticle.particleId().generation() != 0u) or
           (inputParticle.particleId().subParticle() != 0u)) {
-        // TODO add meaningfull error code
-        return std::error_code(-1, std::generic_category());
+        return detail::SimulatorError::eInvalidInputParticleId;
       }
 
       // Do a *depth-first* simulation of the particle and its secondaries,
