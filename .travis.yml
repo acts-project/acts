@@ -50,4 +50,4 @@ env:
   jobs:
    - LCG=95 CI_SCRIPT=$PWD/.travis/common.sh IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
    - LCG=96 CI_SCRIPT=$PWD/.travis/common.sh IMAGE=gitlab-registry.cern.ch/acts/machines/cc7
-   - LCG=95 CI_SCRIPT=$PWD/.travis/common5.sh IMAGE=gitlab-registry.cern.ch/acts/machines/slc6
+   - LCG=95 CI_SCRIPT=$PWD/.travis/common.sh IMAGE=gitlab-registry.cern.ch/acts/machines/slc6
