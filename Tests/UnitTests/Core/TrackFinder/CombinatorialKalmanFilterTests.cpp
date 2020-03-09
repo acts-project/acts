@@ -303,6 +303,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   //-> strip: 8
   slsConfig.volumeMaxChi2 = {{2, 7}, {3, 8}};
   slsConfig.maxChi2 = 8;
+  // Set the allowed maximum number of source links to be large enough
+  slsConfig.maxNumSourcelinksOnSurface = 100;
 
   CombinatorialKalmanFilter cKF(
       rPropagator,
