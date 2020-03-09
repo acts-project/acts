@@ -19,7 +19,7 @@ jobs:
       run: >
         apk add --no-cache git
         && CI/check_license.py . --exclude "*thirdparty/*"
-  include_guars:
+  include_guards:
     runs-on: ubuntu-18.04
     container: python:alpine3.6
     steps:
