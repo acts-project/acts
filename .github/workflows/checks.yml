@@ -61,6 +61,8 @@ jobs:
   build_debug:
     runs-on: ubuntu-18.04
     container: gitlab-registry.cern.ch/acts/machines/ubuntu1910
+    on:
+      - pull_request
     steps:
     - uses: actions/checkout@v1
     - name: Build
