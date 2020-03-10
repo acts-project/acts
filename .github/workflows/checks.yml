@@ -82,13 +82,10 @@ jobs:
         -DACTS_BUILD_INTEGRATIONTESTS=off
         && cmake --build . -- -j$(nproc)
         && cmake --build . -- test
-        && apt-get update
-        && apt-get install -y python3-pip
         && pip3 install gcovr
         && ../CI/test_coverage
     - name: Upload coverage
       uses: codecov/codecov-action@v1
       with:
         file: ./build/coverage/cov.xml
-        name: codecov-umbrella # optional
 
