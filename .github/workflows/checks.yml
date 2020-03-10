@@ -81,4 +81,29 @@ jobs:
         -DACTS_BUILD_TGEO_PLUGIN=on
         -DACTS_BUILD_INTEGRATIONTESTS=off
         && cmake --build . -- -j$(nproc)
+    - name: Upload files for debug build
+      uses: actions/upload-artifact@v1
+      with:
+        name: build_files
+        path: build
+
+  coverage:
+    runs-on: ubuntu-18.04
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu1910
+    needs: build_debug
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download files for debug build
+      uses: actions/download-artifact@v1
+      with:
+        name: build_files
+    - name: Run tests and collect coverage
+      run: >
+        cd build
         && cmake --build . -- test
+        && ../CI/test_coverage
+    - name: Upload coverage files
+      uses: actions/upload-artifact@v1
+      with:
+        name: cov_files
+        path: build/coverage
