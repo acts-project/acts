@@ -98,12 +98,13 @@ jobs:
       with:
         name: build_files
     - name: Run tests and collect coverage
-      run: >
+      run: |
         cd build
-        && cmake --build . -- test
-        && ../CI/test_coverage
-    - name: Upload coverage files
-      uses: actions/upload-artifact@v1
+        cmake --build . -- test
+        ../CI/test_coverage
+    - name: Upload coverage
+    - uses: codecov/codecov-action@v1
       with:
-        name: cov_files
-        path: build/coverage
+        file: ./build/coverage/cov.xml
+        name: codecov-umbrella # optional
+
