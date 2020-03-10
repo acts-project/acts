@@ -85,7 +85,7 @@ jobs:
         && cmake --build . -- -j$(nproc)
         && cmake --build . -- test
         && pip3 install gcovr
-        && ../CI/test_coverage
+        && /usr/bin/python3 ../CI/test_coverage
     - name: Upload coverage
       uses: codecov/codecov-action@v1
       with:
