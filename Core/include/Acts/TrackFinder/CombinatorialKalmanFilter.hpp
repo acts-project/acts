@@ -355,10 +355,11 @@ class CombinatorialKalmanFilter {
             if (tipState.nMeasurements > 0) {
               // Record the tips if there are measurements
               ACTS_VERBOSE("Find track with entry index = "
-                           << result.currentTip << " and there are nMeasurements = "
-                           << tipState.nMeasurements << ", nOutliers = "
-                           << tipState.nOutliers << ", nHoles = "
-                           << tipState.nHoles << " on track");
+                           << result.currentTip
+                           << " and there are nMeasurements = "
+                           << tipState.nMeasurements
+                           << ", nOutliers = " << tipState.nOutliers
+                           << ", nHoles = " << tipState.nHoles << " on track");
               result.trackTips.push_back(result.currentTip);
             }
             // Remove the tip from list of active tips
