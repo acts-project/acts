@@ -334,11 +334,11 @@ class CombinatorialKalmanFilter {
       }
 
       // Stopping forward filtering:
-      // - when there is no active tip
+      // - When navigation breaks and no active tip is present
       if (state.navigation.navigationBreak and not result.forwardFiltered) {
         // Record the tips on current surface as trajectory entry indices
-        // Taking advantage of fact that those tips are consecutive in list of
-        // active tips
+        // (taking advantage of fact that those tips are consecutive in list of
+        // active tips) and remove those tips from active tips
         if (not result.activeTips.empty()) {
           result.currentTip = result.activeTips.rbegin()->first;
           // Get the index of previous state
@@ -354,100 +354,95 @@ class CombinatorialKalmanFilter {
             auto tipState = result.activeTips.rbegin()->second;
             if (tipState.nMeasurements > 0) {
               // Record the tips if there are measurements
-              ACTS_VERBOSE("Found track with entry index = "
-                           << result.currentTip << " and "
-                           << tipState.nMeasurements << " measurements and "
-                           << tipState.nOutliers << " outliers and "
-                           << tipState.nHoles << " holes");
+              ACTS_VERBOSE("Find track with entry index = "
+                           << result.currentTip << " and there are nMeasurements = "
+                           << tipState.nMeasurements << ", nOutliers = "
+                           << tipState.nOutliers << ", nHoles = "
+                           << tipState.nHoles << " on track");
               result.trackTips.push_back(result.currentTip);
             }
             // Remove the tip from list of active tips
             result.activeTips.erase(result.currentTip);
           }
         }
-
-        // If there is still active tip, reset propagation state to track
-        // state at last tip of active tips
-        if (not result.activeTips.empty()) {
+        // If no more active tip, done with forward filtering; Otherwise, reset
+        // propagation state to track state at last tip of active tips
+        if (result.activeTips.empty()) {
+          ACTS_VERBOSE("Forward Kalman filtering finds "
+                       << result.trackTips.size() << " tracks");
+          result.forwardFiltered = true;
+        } else {
           result.currentTip = result.activeTips.rbegin()->first;
           ACTS_VERBOSE(
               "Propagation jumps to branch with tip = " << result.currentTip);
           reset(state, stepper, result);
-        } else {
-          ACTS_VERBOSE("Finish forward Kalman filtering with "
-                       << result.trackTips.size() << " found tracks");
-          result.forwardFiltered = true;
         }
       }
 
-      // No found tracks is taken as an error
-      if (result.forwardFiltered and result.trackTips.empty()) {
-        result.result =
-            Result<void>(CombinatorialKalmanFilterError::NoTracksFound);
-      }
-
-      // If there are found tracks, iterate over the found tracks for smoothing
-      // and getting the fitted parameter. This needs to be accomplished in
-      // different propagation steps
-      if (result.forwardFiltered and not result.trackTips.empty()) {
-        if (not smoothing) {
-          // If not run smoothing, manually set the targetReached to abort the
-          // propagation
-          ACTS_VERBOSE("Finish forward Kalman filtering without smoothing");
-          state.navigation.targetReached = true;
+      // Post-processing after forward filtering
+      if (result.forwardFiltered) {
+        // Return error if forward filtering finds no tracks
+        if (result.trackTips.empty()) {
+          result.result =
+              Result<void>(CombinatorialKalmanFilterError::NoTracksFound);
         } else {
-          // Finalization
-          // - Run smoothing for found track indexed with iSmoothed
-          if (not result.smoothed) {
-            result.currentTip = result.trackTips.at(result.iSmoothed);
-            ACTS_VERBOSE("Finalize/run smoothing for track "
-                         << result.iSmoothed
-                         << " with entry index = " << result.currentTip);
-            // -> Sort the track states (as now the path length is set)
-            // -> Call the smoothing
-            // -> Set a stop condition when all track states have been handled
-            auto res = finalize(state, stepper, result);
-            if (!res.ok()) {
-              ACTS_ERROR("Error in finalize: " << res.error());
-              result.result = res.error();
-            }
-            result.smoothed = true;
-          }
-
-          // Post-finalization:
-          // - Progress to target/reference surface and built the final track
-          // parameters for found track indexed with iSmoothed
-          if (result.smoothed and
-              targetReached(state, stepper, *targetSurface)) {
-            ACTS_VERBOSE("Completing the track "
-                         << result.iSmoothed
-                         << " with entry index = " << result.currentTip);
-            // Transport & bind the parameter to the final surface
-            auto fittedState =
-                stepper.boundState(state.stepping, *targetSurface, true);
-            // Assign the fitted parameters
-            result.fittedParameters.emplace(
-                result.currentTip, std::get<BoundParameters>(fittedState));
-            // If there are more trajectories to handle:
-            // -> set the targetReached status to false
-            // -> set the smoothed status to false
-            // -> update the index of track to be smoothed
-            if (result.iSmoothed < result.trackTips.size() - 1) {
-              state.navigation.targetReached = false;
-              result.smoothed = false;
-              result.iSmoothed++;
-              // To avoid meaningless navigation target call
-              state.stepping.stepSize =
-                  ConstrainedStep(state.options.maxStepSize);
-              // Need to go back to start targeting for the rest tracks
-              state.stepping.navDir = forward;
-            } else {
+          if (not smoothing) {
+            // Manually set the targetReached to abort the propagation
+            ACTS_VERBOSE("Finish forward Kalman filtering");
+            state.navigation.targetReached = true;
+          } else {
+            // Iterate over the found tracks for smoothing and getting the
+            // fitted parameter. This needs to be accomplished in different
+            // propagation steps:
+            // -> first run smoothing for found track indexed with iSmoothed
+            if (not result.smoothed) {
+              result.currentTip = result.trackTips.at(result.iSmoothed);
               ACTS_VERBOSE(
-                  "Finish forward Kalman filtering and backward smoothing");
+                  "Finalize/run smoothing for track with entry index = "
+                  << result.currentTip);
+              // -> Sort the track states (as now the path length is set)
+              // -> Call the smoothing
+              // -> Set a stop condition when all track states have been handled
+              auto res = finalize(state, stepper, result);
+              if (!res.ok()) {
+                ACTS_ERROR("Error in finalize: " << res.error());
+                result.result = res.error();
+              }
+              result.smoothed = true;
             }
-          }
-        }
-      }
+            // -> then progress to target/reference surface and built the final
+            // track parameters for found track indexed with iSmoothed
+            if (result.smoothed and
+                targetReached(state, stepper, *targetSurface)) {
+              ACTS_VERBOSE("Completing the track with entry index = "
+                           << result.currentTip);
+              // Transport & bind the parameter to the final surface
+              auto fittedState =
+                  stepper.boundState(state.stepping, *targetSurface, true);
+              // Assign the fitted parameters
+              result.fittedParameters.emplace(
+                  result.currentTip, std::get<BoundParameters>(fittedState));
+              // If there are more trajectories to handle:
+              // -> set the targetReached status to false
+              // -> set the smoothed status to false
+              // -> update the index of track to be smoothed
+              if (result.iSmoothed < result.trackTips.size() - 1) {
+                state.navigation.targetReached = false;
+                result.smoothed = false;
+                result.iSmoothed++;
+                // To avoid meaningless navigation target call
+                state.stepping.stepSize =
+                    ConstrainedStep(state.options.maxStepSize);
+                // Need to go back to start targeting for the rest tracks
+                state.stepping.navDir = forward;
+              } else {
+                ACTS_VERBOSE(
+                    "Finish forward Kalman filtering and backward smoothing");
+              }
+            }
+          }  // if run smoothing
+        }    // if there are found tracks
+      }      // if forward filtering is done
     }
 
     /// @brief CombinatorialKalmanFilter actor operation : initialize
