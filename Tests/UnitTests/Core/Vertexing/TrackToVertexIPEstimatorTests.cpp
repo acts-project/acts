@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
         BoundParameters(tgContext, std::move(covMat), paramVec, perigeeSurface);
 
     // Check if IP are retrieved
-    std::unique_ptr<ImpactParametersAndSigma> output =
+    ImpactParametersAndSigma output =
         ipEst.estimate(track, myConstraint).value();
-    BOOST_CHECK_NE(output->IPd0, 0.);
-    BOOST_CHECK_NE(output->IPz0, 0.);
+    BOOST_CHECK_NE(output.IPd0, 0.);
+    BOOST_CHECK_NE(output.IPz0, 0.);
   }
 }
 }  // namespace Test

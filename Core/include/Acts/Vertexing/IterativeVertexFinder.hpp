@@ -16,7 +16,6 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
-#include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"

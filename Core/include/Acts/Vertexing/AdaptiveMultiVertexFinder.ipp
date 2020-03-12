@@ -192,20 +192,21 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
   // After all, the vertex seed does have a non-zero convariance in general and
   // it probably should be used.
   Vertex<InputTrack_t> newVtx = vtx;
-  newVtx.setFullCovariance(SpacePointSymMatrix::Zero());
-
-  double significance = 0.;
+  if (not m_cfg.useVertexCovForIPEstimation) {
+    newVtx.setFullCovariance(SpacePointSymMatrix::Zero());
+  }
 
   auto estRes = m_cfg.ipEstimator.estimate(*track, newVtx);
   if (!estRes.ok()) {
     return estRes.error();
   }
 
-  auto ipas = std::move(*estRes);
+  ImpactParametersAndSigma ipas = *estRes;
 
-  if (ipas->sigmad0 > 0 && ipas->sigmaz0 > 0) {
-    significance = std::sqrt(std::pow(ipas->IPd0 / ipas->sigmad0, 2) +
-                             std::pow(ipas->IPz0 / ipas->sigmaz0, 2));
+  double significance = 0.;
+  if (ipas.sigmad0 > 0 && ipas.sigmaz0 > 0) {
+    significance = std::sqrt(std::pow(ipas.IPd0 / ipas.sigmad0, 2) +
+                             std::pow(ipas.IPz0 / ipas.sigmaz0, 2));
   }
 
   return significance;
@@ -267,8 +268,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       }
     }
     if (nearTrackFound) {
-      // TODO: check athena actualcandidate position here (has not changed?)
-      // TODO: so do I want to change the vtx position here?
       vtx.setFullPosition(SpacePointVector(0., 0., newZ, 0.));
 
       // Update vertex info for current vertex

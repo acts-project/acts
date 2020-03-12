@@ -27,25 +27,25 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     const BoundParameters& params = m_extractParameters(*iTrk);
 
     std::pair<double, double> z0AndWeight;
-    std::unique_ptr<ImpactParametersAndSigma> ipas = nullptr;
+    ImpactParametersAndSigma ipas;
     if (useConstraint &&
         vFinderOptions.vertexConstraint.covariance()(0, 0) != 0) {
       auto estRes =
           m_cfg.ipEstimator.estimate(params, vFinderOptions.vertexConstraint);
       if (estRes.ok()) {
-        ipas = std::move(*estRes);
+        ipas = *estRes;
       } else {
         return estRes.error();
       }
     }
 
-    if (ipas != nullptr && ipas->sigmad0 > 0) {
+    if (ipas.sigmad0 > 0) {
       // calculate z0
       z0AndWeight.first =
-          ipas->IPz0 + vFinderOptions.vertexConstraint.position().z();
+          ipas.IPz0 + vFinderOptions.vertexConstraint.position().z();
 
       // calculate chi2 of IP
-      double chi2IP = std::pow(ipas->IPd0 / ipas->sigmad0, 2);
+      double chi2IP = std::pow(ipas.IPd0 / ipas.sigmad0, 2);
 
       if (!m_cfg.disableAllWeights) {
         z0AndWeight.second =

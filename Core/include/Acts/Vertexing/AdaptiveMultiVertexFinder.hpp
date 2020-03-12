@@ -149,6 +149,12 @@ class AdaptiveMultiVertexFinder {
     // performance. To be further investigated.
     bool refitAfterBadVertex = true;
 
+    // Use the full available vertex covariance information after
+    // seeding for the IP estimation. In original implementation
+    // this is not (!) done, however, this is probably not correct.
+    // So definitely consider setting this to true.
+    bool useVertexCovForIPEstimation = false;
+
   };  // Config struct
 
   /// @brief Constructor used if InputTrack_t type == BoundParameters
