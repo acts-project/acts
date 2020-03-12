@@ -71,24 +71,21 @@ class AdaptiveMultiVertexFitter {
     /// @brief Default State constructor
     State() = default;
 
-    void updateTrkToVerticesMultiMap(
-        std::vector<Vertex<input_track_t>>& vtxList) {
-      trackToVerticesMultiMap.clear();
-      for (auto& vtx : vtxList) {
-        // Add vertex link for each track
-        for (auto& trk : vtxInfoMap[&vtx].trackLinks) {
-          trackToVerticesMultiMap.emplace(trk, &vtx);
-        }
+    // Adds a vertex to trackToVerticesMultiMap
+    void addVertexToMultiMap(Vertex<InputTrack_t>& vtx) {
+      for (auto trk : vtxInfoMap[&vtx].trackLinks) {
+        trackToVerticesMultiMap.emplace(trk, &vtx);
       }
     }
 
-    void updateTrkToVerticesMultiMap(
-        std::vector<Vertex<input_track_t>*>& vtxList) {
-      trackToVerticesMultiMap.clear();
-      for (auto vtx : vtxList) {
-        // Add vertex link for each track
-        for (auto trk : vtxInfoMap[vtx].trackLinks) {
-          trackToVerticesMultiMap.emplace(trk, vtx);
+    // Removes a vertex from trackToVerticesMultiMap
+    void removeVertexFromMultiMap(Vertex<InputTrack_t>& vtx) {
+      for (auto iter = trackToVerticesMultiMap.begin();
+           iter != trackToVerticesMultiMap.end();) {
+        if (iter->second == &vtx) {
+          iter = trackToVerticesMultiMap.erase(iter);
+        } else {
+          ++iter;
         }
       }
     }
@@ -169,9 +166,9 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Result<void> object
   Result<void> fit(
-      State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
+      State& state, const std::vector<Vertex<InputTrack_t>*>& verticesToFit,
       const Linearizer_t& linearizer,
-      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Adds new vertex to an existing multi-vertex fit
   /// and fits everything together (by invoking the fit_impl method):

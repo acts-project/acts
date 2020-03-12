@@ -201,19 +201,15 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     }
   }
 
-  if (debugMode) {
-    std::cout << "Tracks linked to each vertex: " << std::endl;
-    int c = 0;
-    for (auto& vtx : vtxPtrList) {
-      c++;
-      std::cout << c << ". vertex, with ptr: " << vtx << std::endl;
+  for (auto& vtx : vtxPtrList) {
+    state.addVertexToMultiMap(*vtx);
+    if (debugMode) {
+      std::cout << "Vertex, with ptr: " << vtx << std::endl;
       for (auto& trk : state.vtxInfoMap[vtx].trackLinks) {
         std::cout << "\t track ptr: " << trk << std::endl;
       }
     }
   }
-
-  state.updateTrkToVerticesMultiMap(vtxPtrList);
 
   if (debugMode) {
     std::cout << "Checking all vertices linked to a single track: "
@@ -483,7 +479,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.vtxInfoMap[&vtx1] = std::move(vtxInfo1);
   state.vtxInfoMap[&vtx2] = std::move(vtxInfo2);
 
-  state.updateTrkToVerticesMultiMap(vtxList);
+  state.addVertexToMultiMap(vtx1);
+  state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
   fitter.fit(state, vtxList, linearizer, fitterOptions);

@@ -343,12 +343,14 @@ class AdaptiveMultiVertexFinder {
   /// of reverts to the old state of the vertex fitter before the bad
   /// vertex was added to the fit (if not refitAfterBadVertex).
   ///
+  /// @param vtx The last added vertex which will be removed
   /// @param allVertices Vector containing the unique_ptr to vertices
   /// @param allVerticesPtr Vector containing the actual addresses
   /// @param fitterState The current vertex fitter state
   /// @param oldFitterState The old vertex fitter state
   /// @param vFitterOptions The vertex fitter options
   Result<void> deleteLastVertex(
+      Vertex<InputTrack_t>& vtx,
       std::vector<std::unique_ptr<Vertex<InputTrack_t>>>& allVertices,
       std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
       FitterState_t& fitterState, FitterState_t& oldFitterState,

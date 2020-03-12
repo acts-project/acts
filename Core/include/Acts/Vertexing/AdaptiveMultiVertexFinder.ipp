@@ -80,7 +80,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       break;
     }
     // Update fitter state with all vertices
-    fitterState.updateTrkToVerticesMultiMap(allVerticesPtr);
+    fitterState.addVertexToMultiMap(vtxCandidate);
 
     // Perform the fit
     auto fitResult = m_cfg.vertexFitter.addVtxToFit(
@@ -117,8 +117,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     // Delete vertex from allVertices list again if it's not kept
     if (not keepVertex) {
       auto deleteVertexResult =
-          deleteLastVertex(allVertices, allVerticesPtr, fitterState,
-                           oldFitterState, vFitterOptions);
+          deleteLastVertex(vtxCandidate, allVertices, allVerticesPtr,
+                           fitterState, oldFitterState, vFitterOptions);
       if (not deleteVertexResult.ok()) {
         return deleteVertexResult.error();
       }
@@ -514,6 +514,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
+    Vertex<InputTrack_t>& vtx,
     std::vector<std::unique_ptr<Vertex<InputTrack_t>>>& allVertices,
     std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
     FitterState_t& fitterState, FitterState_t& oldFitterState,
@@ -535,7 +536,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
 
   } else {
     // Update fitter state with removed vertex candidate
-    fitterState.updateTrkToVerticesMultiMap(allVerticesPtr);
+    fitterState.removeVertexFromMultiMap(vtx);
 
     // TODO: clean tracksAtVerticesMap maybe here? i.e. remove all entries
     // with old vertex?
