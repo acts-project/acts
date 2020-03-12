@@ -39,7 +39,7 @@ struct VertexInfo {
   Acts::SpacePointVector seedPosition{Acts::SpacePointVector::Zero()};
 
   // Needs relinearization bool
-  bool relinearize;
+  bool relinearize = true;
 
   // Vector of all track currently held by vertex
   std::vector<const input_track_t*> trackLinks;

@@ -182,20 +182,22 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
        iTrack++) {
     // Index of current vertex
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
-    state.vtxInfoMap[&vtxList[vtxIdx]].trackLinks.push_back(&allTracks[iTrack]);
+    state.vtxInfoMap[&(vtxList[vtxIdx])].trackLinks.push_back(
+        &(allTracks[iTrack]));
     state.tracksAtVerticesMap.insert(
-        std::make_pair(std::make_pair(&allTracks[iTrack], &vtxList[vtxIdx]),
+        std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
                        TrackAtVertex<BoundParameters>(1., allTracks[iTrack],
-                                                      &allTracks[iTrack])));
+                                                      &(allTracks[iTrack]))));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track
     if (iTrack == 0) {
-      state.vtxInfoMap[&vtxList[1]].trackLinks.push_back(&allTracks[iTrack]);
+      state.vtxInfoMap[&(vtxList.at(1))].trackLinks.push_back(
+          &(allTracks[iTrack]));
       state.tracksAtVerticesMap.insert(
-          std::make_pair(std::make_pair(&allTracks[iTrack], &vtxList[1]),
+          std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
                          TrackAtVertex<BoundParameters>(1., allTracks[iTrack],
-                                                        &allTracks[iTrack])));
+                                                        &(allTracks[iTrack]))));
     }
   }
 
@@ -229,8 +231,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
-  auto res1 = fitter.addVtxToFit(state, vtxList[0], linearizer, fitterOptions);
-
+  auto res1 =
+      fitter.addVtxToFit(state, vtxList.at(0), linearizer, fitterOptions);
   if (debugMode) {
     std::cout << "Tracks linked to each vertex AFTER fit: " << std::endl;
     int c = 0;
@@ -259,47 +261,51 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   if (debugMode) {
     std::cout << "Vertex positions after fit of vertex 1 and 2:" << std::endl;
-    std::cout << "Vtx 1, seed position:\n " << seedListCopy[0].fullPosition()
-              << "\nFitted position:\n " << vtxList[0].fullPosition()
+    std::cout << "Vtx 1, seed position:\n " << seedListCopy.at(0).fullPosition()
+              << "\nFitted position:\n " << vtxList.at(0).fullPosition()
               << std::endl;
-    std::cout << "Vtx 2, seed position:\n " << seedListCopy[1].fullPosition()
-              << "\nFitted position:\n " << vtxList[1].fullPosition()
+    std::cout << "Vtx 2, seed position:\n " << seedListCopy.at(1).fullPosition()
+              << "\nFitted position:\n " << vtxList.at(1).fullPosition()
               << std::endl;
-    std::cout << "Vtx 3, seed position:\n " << seedListCopy[2].fullPosition()
-              << "\nFitted position:\n " << vtxList[2].fullPosition()
+    std::cout << "Vtx 3, seed position:\n " << seedListCopy.at(2).fullPosition()
+              << "\nFitted position:\n " << vtxList.at(2).fullPosition()
               << std::endl;
   }
 
   // After fit of first vertex, only first and second vertex seed
   // should have been modified while third vertex should remain untouched
-  BOOST_CHECK_NE(vtxList[0].fullPosition(), seedListCopy[0].fullPosition());
-  BOOST_CHECK_NE(vtxList[1].fullPosition(), seedListCopy[1].fullPosition());
-  BOOST_CHECK_EQUAL(vtxList[2].fullPosition(), seedListCopy[2].fullPosition());
+  BOOST_CHECK_NE(vtxList.at(0).fullPosition(),
+                 seedListCopy.at(0).fullPosition());
+  BOOST_CHECK_NE(vtxList.at(1).fullPosition(),
+                 seedListCopy.at(1).fullPosition());
+  BOOST_CHECK_EQUAL(vtxList.at(2).fullPosition(),
+                    seedListCopy.at(2).fullPosition());
 
-  CHECK_CLOSE_ABS(vtxList[0].fullPosition(), seedListCopy[0].fullPosition(),
-                  1_mm);
-  CHECK_CLOSE_ABS(vtxList[1].fullPosition(), seedListCopy[1].fullPosition(),
-                  1_mm);
+  CHECK_CLOSE_ABS(vtxList.at(0).fullPosition(),
+                  seedListCopy.at(0).fullPosition(), 1_mm);
+  CHECK_CLOSE_ABS(vtxList.at(1).fullPosition(),
+                  seedListCopy.at(1).fullPosition(), 1_mm);
 
-  auto res2 = fitter.addVtxToFit(state, vtxList[2], linearizer, fitterOptions);
-
+  auto res2 =
+      fitter.addVtxToFit(state, vtxList.at(2), linearizer, fitterOptions);
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
-  BOOST_CHECK_NE(vtxList[2].fullPosition(), seedListCopy[2].fullPosition());
-  CHECK_CLOSE_ABS(vtxList[2].fullPosition(), seedListCopy[2].fullPosition(),
-                  1_mm);
+  BOOST_CHECK_NE(vtxList.at(2).fullPosition(),
+                 seedListCopy.at(2).fullPosition());
+  CHECK_CLOSE_ABS(vtxList.at(2).fullPosition(),
+                  seedListCopy.at(2).fullPosition(), 1_mm);
 
   if (debugMode) {
     std::cout << "Vertex positions after fit of vertex 3:" << std::endl;
-    std::cout << "Vtx 1, seed position:\n " << seedListCopy[0].fullPosition()
-              << "\nFitted position:\n " << vtxList[0].fullPosition()
+    std::cout << "Vtx 1, seed position:\n " << seedListCopy.at(0).fullPosition()
+              << "\nFitted position:\n " << vtxList.at(0).fullPosition()
               << std::endl;
-    std::cout << "Vtx 2, seed position:\n " << seedListCopy[1].fullPosition()
-              << "\nFitted position:\n " << vtxList[1].fullPosition()
+    std::cout << "Vtx 2, seed position:\n " << seedListCopy.at(1).fullPosition()
+              << "\nFitted position:\n " << vtxList.at(1).fullPosition()
               << std::endl;
-    std::cout << "Vtx 3, seed position:\n " << seedListCopy[2].fullPosition()
-              << "\nFitted position:\n " << vtxList[2].fullPosition()
+    std::cout << "Vtx 3, seed position:\n " << seedListCopy.at(2).fullPosition()
+              << "\nFitted position:\n " << vtxList.at(2).fullPosition()
               << std::endl;
   }
 }
@@ -482,15 +488,15 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Fit vertices
   fitter.fit(state, vtxList, linearizer, fitterOptions);
 
-  auto vtx1Pos = state.vertexCollection[0]->position();
-  auto vtx1Cov = state.vertexCollection[0]->covariance();
-  // auto vtx1Trks = state.vertexCollection[0]->tracks();
-  auto vtx1FQ = state.vertexCollection[0]->fitQuality();
+  auto vtx1Pos = state.vertexCollection.at(0)->position();
+  auto vtx1Cov = state.vertexCollection.at(0)->covariance();
+  // auto vtx1Trks = state.vertexCollection.at(0)->tracks();
+  auto vtx1FQ = state.vertexCollection.at(0)->fitQuality();
 
-  auto vtx2Pos = state.vertexCollection[1]->position();
-  auto vtx2Cov = state.vertexCollection[1]->covariance();
-  // auto vtx2Trks = state.vertexCollection[1]->tracks();
-  auto vtx2FQ = state.vertexCollection[1]->fitQuality();
+  auto vtx2Pos = state.vertexCollection.at(1)->position();
+  auto vtx2Cov = state.vertexCollection.at(1)->covariance();
+  // auto vtx2Trks = state.vertexCollection.at(1)->tracks();
+  auto vtx2FQ = state.vertexCollection.at(1)->fitQuality();
 
   if (debugMode) {
     // Vertex 1

@@ -27,16 +27,16 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
   }
 
   // Retrieve linTrack information
-  const auto& posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
-  const auto& momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
-  const auto& trkParams = linTrack.parametersAtPCA.head<5>();
-  const auto& trkParamWeight = linTrack.weightAtPCA.block<5, 5>(0, 0);
+  const auto posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
+  const auto momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
+  const auto trkParams = linTrack.parametersAtPCA.head<5>();
+  const auto trkParamWeight = linTrack.weightAtPCA.block<5, 5>(0, 0);
 
   // Calculate S matrix
   ActsSymMatrixD<3> sMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
-  const auto& residual = linTrack.constantTerm.head<5>();
+  const auto residual = linTrack.constantTerm.head<5>();
 
   // Refit track momentum
   Vector3D newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
@@ -94,7 +94,7 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
   SpacePointSymMatrix vtxFullCov(SpacePointSymMatrix::Zero());
   vtxFullCov.block<3, 3>(0, 0) = vtxCov;
 
-  const auto& fullPerTrackCov = detail::createFullTrackCovariance(
+  const auto fullPerTrackCov = detail::createFullTrackCovariance(
       sMat, newFullTrkCov, vtxFullWeight, vtxFullCov, newTrkParams);
 
   // Create new refitted parameters

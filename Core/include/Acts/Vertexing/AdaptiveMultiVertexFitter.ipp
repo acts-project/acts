@@ -63,7 +63,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // in previous iteration afterwards
       currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
-      auto dist = currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
+      SpacePointVector dist =
+          currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
       double perpDist = std::sqrt(dist[0] * dist[0] + dist[1] * dist[1]);
       // Determine if relinearization is needed
       if (perpDist > m_cfg.maxDistToLinPoint) {
@@ -75,24 +76,21 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
           SpacePointSymMatrix::Zero()) {
-        currentVtx->setPosition(state.vtxInfoMap[currentVtx]
-                                    .constraintVertex.fullPosition()
-                                    .template head<3>());
+        currentVtx->setFullPosition(
+            state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
         currentVtx->setFitQuality(
             state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
-        currentVtx->setCovariance(state.vtxInfoMap[currentVtx]
-                                      .constraintVertex.fullCovariance()
-                                      .template block<3, 3>(0, 0));
+        currentVtx->setFullCovariance(
+            state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
       }
 
       else if (currentVtx->fullCovariance() == SpacePointSymMatrix::Zero()) {
         return VertexingError::NoCovariance;
       }
-      auto weight =
+      double weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
 
-      auto covAnn = currentVtx->fullCovariance() * weight;
-      currentVtx->setCovariance(covAnn.template block<3, 3>(0, 0));
+      currentVtx->setFullCovariance(currentVtx->fullCovariance() * weight);
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
@@ -216,7 +214,7 @@ Acts::Result<void> Acts::
       return res.error();
     }
     // Set ip3dParams for current trackAtVertex
-    currentVtxInfo.ip3dParams.insert(std::make_pair(trk, *(res.value())));
+    currentVtxInfo.ip3dParams.emplace(trk, *(res.value()));
   }
   return {};
 }
@@ -244,9 +242,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
         return res.error();
       }
       // Set ip3dParams for current trackAtVertex
-      auto value = std::move(res.value());
-
-      currentVtxInfo.ip3dParams.insert(std::make_pair(trk, *value));
+      currentVtxInfo.ip3dParams.emplace(trk, *(res.value()));
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.getVertexCompatibility(

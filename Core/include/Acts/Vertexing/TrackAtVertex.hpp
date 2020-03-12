@@ -61,20 +61,20 @@ struct TrackAtVertex {
   const input_track_t* originalParams;
 
   /// Chi2 of track
-  double chi2Track;
+  double chi2Track = 0;
 
   /// Number degrees of freedom
   /// Note: Can be different from integer value
   /// since annealing can result in effective
   /// non-interger values
-  double ndf;
+  double ndf = 0;
 
   /// Value of the compatibility of the track to the actual vertex, based
   /// on the estimation of the 3d distance between the track and the vertex
-  double vertexCompatibility;
+  double vertexCompatibility = 0;
 
   /// Weight of track in fit
-  double trackWeight;
+  double trackWeight = 0;
 
   /// The linearized state of the track at vertex
   LinearizedTrack linearizedState;

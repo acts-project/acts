@@ -28,7 +28,6 @@ struct MatrixCache {
   ActsSymMatrixD<3> newVertexCov = ActsSymMatrixD<3>::Zero();
   ActsSymMatrixD<3> newVertexWeight = ActsSymMatrixD<3>::Zero();
   ActsSymMatrixD<3> oldVertexWeight = ActsSymMatrixD<3>::Zero();
-  ActsSymMatrixD<5> trkParamWeight = ActsSymMatrixD<5>::Zero();
   ActsSymMatrixD<3> momWeightInv = ActsSymMatrixD<3>::Zero();
 };
 
