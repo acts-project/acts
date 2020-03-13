@@ -62,8 +62,32 @@ enum FreeParametersIndices : unsigned int {
   FreeParsDim = eFreeParametersSize,
 };
 
-/// The dimension of a space point
-constexpr unsigned int SpacePointDim = 4;
+/// Components of a space point vector.
+///
+/// To be used to access components by named indices instead of just numbers.
+/// This must be a regular `enum` and not a scoped `enum class` to allow
+/// implicit conversion to an integer. The enum value are thus visible directly
+/// in `namespace Acts` and are prefixed to avoid naming collisions.
+///
+/// Within the same context either the position-like or the momentum-like
+/// indices must be used exclusively.
+enum SpacePointIndices : unsigned int {
+  // For position four-vectors
+  // The spatial position components must be stored as one continous block.
+  eSpacePos0 = 0u,
+  eSpacePos1 = eSpacePos0 + 1u,
+  eSpacePos2 = eSpacePos0 + 2u,
+  eSpaceTime = 3u,
+  // Last uninitialized value contains the total number of components
+  eSpacePointSize,
+  // Aliases for  momentum four-vectors to allow clearer code
+  eSpaceMom0 = eSpacePos0,
+  eSpaceMom1 = eSpacePos1,
+  eSpaceMom2 = eSpacePos2,
+  eSpaceEnergy = eSpaceTime,
+  // for backward compatibility
+  SpacePointDim = eSpacePointSize,
+};
 
 using ParID_t = ParDef;
 using ParValue_t = double;
