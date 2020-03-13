@@ -134,31 +134,27 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer.linearizeTrack(&params, SpacePointVector::Zero()).value();
+        linearizer.linearizeTrack(params, SpacePointVector::Zero()).value();
 
     // Create TrackAtVertex
-    TrackAtVertex<BoundParameters> trkAtVtx(0., params, params);
+    TrackAtVertex<BoundParameters> trkAtVtx(0., params, &params);
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
 
-    // Copy track for later comparison of old and new version
-    TrackAtVertex<BoundParameters> trkCopy = trkAtVtx;
+    // Copy parameters for later comparison of old and new version
+    auto fittedParamsCopy = trkAtVtx.fittedParams;
 
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    auto res = KalmanVertexTrackUpdater::update<BoundParameters>(
-        tgContext, trkAtVtx, &vtx);
-
-    BOOST_CHECK(res.ok());
+    KalmanVertexTrackUpdater::update<BoundParameters>(tgContext, trkAtVtx, vtx);
 
     // The old distance
     double oldDistance =
-        ip3dEst.calculateDistance(tgContext, trkCopy.fittedParams, vtxPos)
-            .value();
+        ip3dEst.calculateDistance(tgContext, fittedParamsCopy, vtxPos).value();
 
     // The new distance after update
     double newDistance =
@@ -170,7 +166,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     }
 
     // Parameters should have changed
-    BOOST_CHECK_NE(trkCopy.fittedParams, trkAtVtx.fittedParams);
+    BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
 
     // After update, track should be closer to the vertex
     BOOST_CHECK(newDistance < oldDistance);

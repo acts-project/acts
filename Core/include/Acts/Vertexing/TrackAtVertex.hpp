@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <boost/functional/hash.hpp>
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
@@ -31,49 +30,54 @@ struct TrackAtVertex {
   ///
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
-  /// @param originalParams Original perigee parameter
-
+  /// @param originalTrack Original perigee parameter
   TrackAtVertex(double chi2perTrack, const BoundParameters& paramsAtVertex,
-                const input_track_t& originalParams)
-      : chi2Track(chi2perTrack),
-        ndf(0),
-        fittedParams(paramsAtVertex),
-        originalTrack(originalParams),
-        trackWeight(1.),
-        vertexCompatibility(0.) {
-    // Create unique ID for this object
-    boost::hash_combine(id, this);
-    boost::hash_combine(id, paramsAtVertex.parameters()[0]);
-    boost::hash_combine(id, paramsAtVertex.parameters()[1]);
-  }
+                const input_track_t* originalTrack)
+      : fittedParams(paramsAtVertex),
+        originalParams(originalTrack),
+        chi2Track(chi2perTrack),
+        ndf(0.),
+        vertexCompatibility(0.),
+        trackWeight(1.) {}
+
+  /// @brief Constructor with default chi2
+  ///
+  /// @param chi2perTrack Chi2 of track
+  /// @param paramsAtVertex Fitted perigee parameter
+  /// @param originalTrack Original perigee parameter
+  TrackAtVertex(const BoundParameters& paramsAtVertex,
+                const input_track_t* originalTrack)
+      : fittedParams(paramsAtVertex),
+        originalParams(originalTrack),
+        chi2Track(0.),
+        ndf(0.),
+        vertexCompatibility(0.),
+        trackWeight(1.) {}
+
+  /// Fitted perigee
+  BoundParameters fittedParams;
+
+  /// Original input parameters
+  const input_track_t* originalParams;
 
   /// Chi2 of track
-  double chi2Track;
+  double chi2Track = 0;
 
   /// Number degrees of freedom
   /// Note: Can be different from integer value
   /// since annealing can result in effective
   /// non-interger values
-  double ndf;
-
-  /// Fitted perigee
-  BoundParameters fittedParams;
-
-  /// Original input track
-  input_track_t originalTrack;
-
-  /// Weight of track in fit
-  double trackWeight;
-
-  /// The linearized state of the track at vertex
-  LinearizedTrack linearizedState;
+  double ndf = 0;
 
   /// Value of the compatibility of the track to the actual vertex, based
   /// on the estimation of the 3d distance between the track and the vertex
-  double vertexCompatibility;
+  double vertexCompatibility = 0;
 
-  /// Unique ID
-  unsigned long id;
+  /// Weight of track in fit
+  double trackWeight = 0;
+
+  /// The linearized state of the track at vertex
+  LinearizedTrack linearizedState;
 };
 
 }  // namespace Acts

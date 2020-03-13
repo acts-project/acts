@@ -136,8 +136,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
-        linFactory.linearizeTrack(&parameters, SpacePointVector::Zero())
-            .value();
+        linFactory.linearizeTrack(parameters, SpacePointVector::Zero()).value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
@@ -146,40 +145,6 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     BOOST_CHECK_NE(linTrack.momentumJacobian, matBound2MomZero);
     BOOST_CHECK_NE(linTrack.constantTerm, vecBoundZero);
   }
-}
-
-BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test) {
-  ConstantBField bField(0.0, 0.0, 1_T);
-
-  // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
-
-  // Set up propagator with void navigator
-  auto propagator =
-      std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
-
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
-  Linearizer linFactory(ltConfig);
-
-  BoundVector vecBoundZero = BoundVector::Zero();
-  BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-  SpacePointVector vecSPZero = SpacePointVector::Zero();
-  SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
-  ActsMatrixD<BoundParsDim, 3> matBound2MomZero =
-      ActsMatrixD<BoundParsDim, 3>::Zero();
-
-  LinearizedTrack linTrack =
-      linFactory.linearizeTrack(nullptr, SpacePointVector(1., 2., 3., 4.))
-          .value();
-
-  BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vecBoundZero);
-  BOOST_CHECK_EQUAL(linTrack.covarianceAtPCA, matBoundZero);
-  BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vecSPZero);
-  BOOST_CHECK_EQUAL(linTrack.positionJacobian, matBound2SPZero);
-  BOOST_CHECK_EQUAL(linTrack.momentumJacobian, matBound2MomZero);
-  BOOST_CHECK_EQUAL(linTrack.constantTerm, vecBoundZero);
 }
 
 ///
@@ -260,8 +225,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
-        linFactory.linearizeTrack(&parameters, SpacePointVector::Zero())
-            .value();
+        linFactory.linearizeTrack(parameters, SpacePointVector::Zero()).value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);

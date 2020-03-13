@@ -24,8 +24,8 @@ Acts::Vertex<input_track_t>::Vertex(const SpacePointVector& position)
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
     const Vector3D& position, const ActsSymMatrixD<3>& covariance,
-    std::vector<TrackAtVertex<input_track_t>>& tracks)
-    : m_tracksAtVertex(std::move(tracks)) {
+    const std::vector<TrackAtVertex<input_track_t>>& tracks)
+    : m_tracksAtVertex(tracks) {
   m_position.setZero();
   VectorHelpers::position(m_position) = position;
   m_covariance.setZero();
@@ -35,10 +35,10 @@ Acts::Vertex<input_track_t>::Vertex(
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
     const SpacePointVector& position, const SpacePointSymMatrix& covariance,
-    std::vector<TrackAtVertex<input_track_t>>& tracks)
+    const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_position(position),
       m_covariance(covariance),
-      m_tracksAtVertex(std::move(tracks)) {}
+      m_tracksAtVertex(tracks) {}
 
 template <typename input_track_t>
 Acts::Vector3D Acts::Vertex<input_track_t>::position() const {
@@ -81,6 +81,7 @@ std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
                                               ParValue_t time) {
+  m_position.setZero();
   VectorHelpers::position(m_position) = position;
   VectorHelpers::time(m_position) = time;
 }
@@ -99,6 +100,7 @@ void Acts::Vertex<input_track_t>::setTime(ParValue_t time) {
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setCovariance(
     const ActsSymMatrixD<3>& covariance) {
+  m_covariance.setZero();
   m_covariance.block<3, 3>(0, 0) = covariance;
 }
 
@@ -111,7 +113,7 @@ void Acts::Vertex<input_track_t>::setFullCovariance(
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setTracksAtVertex(
     const std::vector<TrackAtVertex<input_track_t>>& tracks) {
-  m_tracksAtVertex = std::move(tracks);
+  m_tracksAtVertex = tracks;
 }
 
 template <typename input_track_t>

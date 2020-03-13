@@ -131,10 +131,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer.linearizeTrack(&params, SpacePointVector::Zero()).value();
+        linearizer.linearizeTrack(params, SpacePointVector::Zero()).value();
 
     // Create TrackAtVertex
-    TrackAtVertex<BoundParameters> trkAtVtx(0., params, params);
+    TrackAtVertex<BoundParameters> trkAtVtx(0., params, &params);
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
@@ -145,10 +145,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     vtx.setFullCovariance(SpacePointSymMatrix::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
-    auto res = KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(
-        &vtx, trkAtVtx);
-
-    BOOST_CHECK(res.ok());
+    KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(vtx, trkAtVtx);
 
     if (debug) {
       std::cout << "Old vertex position: " << vtxPos << std::endl;

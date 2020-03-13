@@ -108,7 +108,7 @@ class ZScanVertexFinder {
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<InputTrack_t>& trackVector,
+      const std::vector<const InputTrack_t*>& trackVector,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
  private:

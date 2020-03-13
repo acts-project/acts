@@ -22,6 +22,15 @@ namespace KalmanVertexUpdater {
 /// Vertex reconstruction and track bundling at the lep collider using
 /// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
 
+/// Cache object to store matrix information
+struct MatrixCache {
+  Vector3D newVertexPos = Vector3D::Zero();
+  ActsSymMatrixD<3> newVertexCov = ActsSymMatrixD<3>::Zero();
+  ActsSymMatrixD<3> newVertexWeight = ActsSymMatrixD<3>::Zero();
+  ActsSymMatrixD<3> oldVertexWeight = ActsSymMatrixD<3>::Zero();
+  ActsSymMatrixD<3> momWeightInv = ActsSymMatrixD<3>::Zero();
+};
+
 /// @brief Updates vertex with knowledge of new track
 /// @note KalmanVertexUpdater updates the vertex w.r.t. the
 /// newly given track, but does NOT add the track to the
@@ -31,8 +40,8 @@ namespace KalmanVertexUpdater {
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
 template <typename input_track_t>
-Result<void> updateVertexWithTrack(Vertex<input_track_t>* vtx,
-                                   TrackAtVertex<input_track_t>& trk);
+void updateVertexWithTrack(Vertex<input_track_t>& vtx,
+                           TrackAtVertex<input_track_t>& trk);
 
 /// @brief Updates vertex position
 ///
@@ -40,34 +49,36 @@ Result<void> updateVertexWithTrack(Vertex<input_track_t>* vtx,
 /// @param linTrack Linearized version of track to be added or removed
 /// @param trackWeight Track weight
 /// @param sign +1 (add track) or -1 (remove track)
+/// @param[out] matrixCache A cache to store matrix information
 ///
 /// @return Vertex with updated position and covariance
 template <typename input_track_t>
-Result<Vertex<input_track_t>> updatePosition(const Vertex<input_track_t>* vtx,
-                                             const LinearizedTrack& linTrack,
-                                             double trackWeight, int sign);
+void updatePosition(const Acts::Vertex<input_track_t>& vtx,
+                    const Acts::LinearizedTrack& linTrack, double trackWeight,
+                    int sign, MatrixCache& matrixCache);
 
 namespace detail {
+
 /// @brief Takes old and new vtx and calculates position chi2
 ///
 /// @param oldVtx Old vertex
-/// @param newVtx New vertex
+/// @param matrixCache A cache to store matrix information
 ///
 /// @return Chi2
 template <typename input_track_t>
-double vertexPositionChi2(const Vertex<input_track_t>* oldVtx,
-                          const Vertex<input_track_t>* newVtx);
+double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
+                          const MatrixCache& matrixCache);
 
 /// @brief Calculates chi2 of refitted track parameters
 /// w.r.t. updated vertex
 ///
-/// @param vtx The already updated vertex
 /// @param linTrack Linearized version of track
+/// @param matrixCache A cache to store matrix information
 ///
 /// @return Chi2
 template <typename input_track_t>
-double trackParametersChi2(const Vertex<input_track_t>& vtx,
-                           const LinearizedTrack& linTrack);
+double trackParametersChi2(const LinearizedTrack& linTrack,
+                           const MatrixCache& matrixCache);
 
 /// @brief Adds or removes (depending on `sign`) tracks from vertex
 /// and updates the vertex
@@ -76,8 +87,8 @@ double trackParametersChi2(const Vertex<input_track_t>& vtx,
 /// @param trk Track to be added to/removed from vtx
 /// @param sign +1 (add track) or -1 (remove track)
 template <typename input_track_t>
-Result<void> update(Vertex<input_track_t>* vtx,
-                    TrackAtVertex<input_track_t>& trk, int sign);
+void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
+            int sign);
 }  // Namespace detail
 
 }  // Namespace KalmanVertexUpdater

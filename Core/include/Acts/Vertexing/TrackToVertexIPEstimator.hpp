@@ -77,7 +77,7 @@ class TrackToVertexIPEstimator {
   ///
   /// @param track Track to estimate IP from
   /// @param vtx Vertex the track belongs to
-  Result<std::unique_ptr<ImpactParametersAndSigma>> estimate(
+  Result<ImpactParametersAndSigma> estimate(
       const BoundParameters& track, const Vertex<input_track_t>& vtx) const;
 
  private:

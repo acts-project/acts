@@ -21,12 +21,12 @@ template <typename input_track_t>
 struct BilloirTrack {
   using Jacobian = Acts::SpacePointToBoundMatrix;
 
-  BilloirTrack(const input_track_t& params, Acts::LinearizedTrack lTrack)
+  BilloirTrack(const input_track_t* params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const input_track_t originalTrack;
+  const input_track_t* originalTrack;
   Acts::LinearizedTrack linTrack;
   double chi2;
   Jacobian DiMat;                                  // position jacobian
@@ -63,7 +63,7 @@ struct BilloirVertex {
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<Acts::Vertex<input_track_t>>
 Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
-    const std::vector<input_track_t>& paramVector,
+    const std::vector<const input_track_t*>& paramVector,
     const linearizer_t& linearizer,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const {
   double chi2 = std::numeric_limits<double>::max();
@@ -105,8 +105,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     BilloirVertex billoirVertex;
     int iTrack = 0;
     // iterate over all tracks
-    for (const input_track_t& trackContainer : paramVector) {
-      const auto& trackParams = extractParameters(trackContainer);
+    for (const input_track_t* trackContainer : paramVector) {
+      const auto& trackParams = extractParameters(*trackContainer);
       if (nIter == 0) {
         double phi = trackParams.parameters()[ParID_t::ePHI];
         double theta = trackParams.parameters()[ParID_t::eTHETA];
@@ -114,14 +114,15 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = linearizer.linearizeTrack(&trackParams, linPoint);
+      auto result = linearizer.linearizeTrack(trackParams, linPoint);
       if (result.ok()) {
-        const auto linTrack = *result;
-        double d0 = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
-        double z0 = linTrack.parametersAtPCA[ParID_t::eLOC_Z0];
-        double phi = linTrack.parametersAtPCA[ParID_t::ePHI];
-        double theta = linTrack.parametersAtPCA[ParID_t::eTHETA];
-        double qOverP = linTrack.parametersAtPCA[ParID_t::eQOP];
+        const auto& linTrack = *result;
+        const auto& parametersAtPCA = linTrack.parametersAtPCA;
+        double d0 = parametersAtPCA[ParID_t::eLOC_D0];
+        double z0 = parametersAtPCA[ParID_t::eLOC_Z0];
+        double phi = parametersAtPCA[ParID_t::ePHI];
+        double theta = parametersAtPCA[ParID_t::eTHETA];
+        double qOverP = parametersAtPCA[ParID_t::eQOP];
 
         // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
         double fPhi = trackMomenta[iTrack][0];
@@ -143,7 +144,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         // cache some matrix multiplications
         BoundToSpacePointMatrix DtWmat;
         ActsMatrixD<3, BoundParsDim> EtWmat;
-        BoundSymMatrix Wi = linTrack.covarianceAtPCA.inverse();
+        BoundSymMatrix Wi = linTrack.weightAtPCA;
 
         DtWmat = Dmat.transpose() * Wi;
         EtWmat = Emat.transpose() * Wi;
@@ -274,7 +275,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       bTrack.chi2 =
           ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
                .transpose())
-              .dot(bTrack.linTrack.covarianceAtPCA.inverse() *
+              .dot(bTrack.linTrack.weightAtPCA *
                    (bTrack.deltaQ - bTrack.DiMat * deltaV -
                     bTrack.EiMat * deltaP));
       newChi2 += bTrack.chi2;

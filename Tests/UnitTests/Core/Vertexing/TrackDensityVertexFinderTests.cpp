@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
                            perigeeSurface);
 
   // Vectors of track parameters in different orders
-  std::vector<BoundParameters> vec1 = {params1a, params1b, params1c};
-  std::vector<BoundParameters> vec2 = {params1c, params1a, params1b};
+  std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
+  std::vector<const BoundParameters*> vec2 = {&params1c, &params1a, &params1b};
 
   auto res1 = finder.find(vec1, vFinderOptions);
   auto res2 = finder.find(vec2, vFinderOptions);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
                            perigeeSurface);
 
   // Vector of track parameters
-  std::vector<BoundParameters> vec1 = {params1a, params1b, params1c};
+  std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
 
   auto res = finder.find(vec1, vFinderOptions);
 
@@ -213,7 +213,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
                                        perigeeSurface));
   }
 
-  auto res3 = finder.find(trackVec, vFinderOptions);
+  std::vector<const BoundParameters*> trackPtrVec;
+  for (const auto& trk : trackVec) {
+    trackPtrVec.push_back(&trk);
+  }
+
+  auto res3 = finder.find(trackPtrVec, vFinderOptions);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -286,7 +291,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
       BoundParameters(tgContext, covMat, pos1c, mom1c, -1, 0, perigeeSurface));
 
   // Vector of track parameters
-  std::vector<InputTrack> vec1 = {params1a, params1b, params1c};
+  std::vector<const InputTrack*> vec1 = {&params1a, &params1b, &params1c};
 
   auto res = finder.find(vec1, vFinderOptions);
 

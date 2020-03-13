@@ -41,7 +41,7 @@ class Vertex {
   /// @param covariance Position covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
   Vertex(const Vector3D& position, const ActsSymMatrixD<3>& covariance,
-         std::vector<TrackAtVertex<input_track_t>>& tracks);
+         const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @brief Vertex constructor
   ///
@@ -50,7 +50,7 @@ class Vertex {
   /// @param tracks Vector of tracks associated with the vertex
   Vertex(const SpacePointVector& position,
          const SpacePointSymMatrix& covariance,
-         std::vector<TrackAtVertex<input_track_t>>& tracks);
+         const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
   Vector3D position() const;
@@ -114,8 +114,8 @@ class Vertex {
   SpacePointVector m_position = SpacePointVector::Zero();
   SpacePointSymMatrix m_covariance = SpacePointSymMatrix::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
-  double m_chiSquared = std::numeric_limits<double>::max();  // chi2 of the fit
-  double m_numberDoF = 0.;  // number of degrees of freedom
+  double m_chiSquared = 1e9;  // chi2 of the fit
+  double m_numberDoF = 0.;    // number of degrees of freedom
 };
 
 }  // namespace Acts

@@ -16,7 +16,6 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
-#include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderOptions.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
@@ -142,7 +141,7 @@ class IterativeVertexFinder {
   ///
   /// @return Collection of vertices found by finder
   Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<InputTrack_t>& trackVector,
+      const std::vector<const InputTrack_t*>& trackVector,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
  private:
@@ -154,7 +153,7 @@ class IterativeVertexFinder {
   /// overwritten to return BoundParameters for other InputTrack_t objects.
   ///
   /// @param InputTrack_t object to extract track parameters from
-  const std::function<BoundParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -167,15 +166,15 @@ class IterativeVertexFinder {
   /// @param seedTracks Seeding tracks
   /// @param vFinderOptions Vertex finder options
   Result<Vertex<InputTrack_t>> getVertexSeed(
-      const std::vector<InputTrack_t>& seedTracks,
+      const std::vector<const InputTrack_t*>& seedTracks,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
   /// @brief Removes all tracks in perigeesToFit from seedTracks
   ///
   /// @param perigeesToFit Tracks to be removed from seedTracks
   /// @param seedTracks List to remove tracks from
-  void removeAllTracks(const std::vector<InputTrack_t>& perigeesToFit,
-                       std::vector<InputTrack_t>& seedTracks) const;
+  void removeAllTracks(const std::vector<const InputTrack_t*>& perigeesToFit,
+                       std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Function for calculating how compatible
   /// a given track is to a given vertex
@@ -193,8 +192,9 @@ class IterativeVertexFinder {
   /// @param perigeesToFit Tracks used to fit `myVertex`
   /// @param seedTracks Tracks used for vertex seeding
   Result<void> removeUsedCompatibleTracks(
-      Vertex<InputTrack_t>& myVertex, std::vector<InputTrack_t>& perigeesToFit,
-      std::vector<InputTrack_t>& seedTracks) const;
+      Vertex<InputTrack_t>& myVertex,
+      std::vector<const InputTrack_t*>& perigeesToFit,
+      std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///
@@ -204,10 +204,10 @@ class IterativeVertexFinder {
   /// @param perigeesToFitSplitVertexOut Perigees to fit split vertex
   /// @param vFinderOptions Vertex finder options
   Result<void> fillPerigeesToFit(
-      const std::vector<InputTrack_t>& perigeeList,
+      const std::vector<const InputTrack_t*>& perigeeList,
       const Vertex<InputTrack_t>& seedVertex,
-      std::vector<InputTrack_t>& perigeesToFitOut,
-      std::vector<InputTrack_t>& perigeesToFitSplitVertexOut,
+      std::vector<const InputTrack_t*>& perigeesToFitOut,
+      std::vector<const InputTrack_t*>& perigeesToFitSplitVertexOut,
       const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
 
   /// @brief Function that reassigns tracks from other vertices
@@ -224,9 +224,9 @@ class IterativeVertexFinder {
   Result<bool> reassignTracksToNewVertex(
       std::vector<Vertex<InputTrack_t>>& vertexCollection,
       Vertex<InputTrack_t>& currentVertex,
-      std::vector<InputTrack_t>& perigeesToFit,
-      std::vector<InputTrack_t>& seedTracks,
-      const std::vector<InputTrack_t>& origTracks,
+      std::vector<const InputTrack_t*>& perigeesToFit,
+      std::vector<const InputTrack_t*>& seedTracks,
+      const std::vector<const InputTrack_t*>& origTracks,
       const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
 
   /// @brief Counts all tracks that are significant for a vertex

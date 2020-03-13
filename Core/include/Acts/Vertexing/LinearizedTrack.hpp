@@ -46,6 +46,7 @@ struct LinearizedTrack {
 
   LinearizedTrack(const BoundVector& paramsAtPCA,
                   const BoundSymMatrix& parCovarianceAtPCA,
+                  const BoundSymMatrix& parWeightAtPCA,
                   const SpacePointVector& linPoint,
                   const SpacePointToBoundMatrix& posJacobian,
                   const ActsMatrixD<BoundParsDim, 3>& momJacobian,
@@ -53,6 +54,7 @@ struct LinearizedTrack {
                   const BoundVector& constTerm)
       : parametersAtPCA(paramsAtPCA),
         covarianceAtPCA(parCovarianceAtPCA),
+        weightAtPCA(parWeightAtPCA),
         linearizationPoint(linPoint),
         positionJacobian(posJacobian),
         momentumJacobian(momJacobian),
@@ -62,6 +64,7 @@ struct LinearizedTrack {
 
   BoundVector parametersAtPCA{BoundVector::Zero()};
   BoundSymMatrix covarianceAtPCA{BoundSymMatrix::Zero()};
+  BoundSymMatrix weightAtPCA{BoundSymMatrix::Zero()};
   SpacePointVector linearizationPoint{SpacePointVector::Zero()};
   SpacePointToBoundMatrix positionJacobian{SpacePointToBoundMatrix::Zero()};
   ActsMatrixD<BoundParsDim, 3> momentumJacobian{

@@ -19,10 +19,10 @@ class AnnealingUtility {
   /// Resetting the state is done by just creating a new instance
   struct State {
     // Points to current temperature value in m_cfg.setOfTemperatures
-    unsigned int currentTemperatureIndex = 0;
+    unsigned int currentTemperatureIndex{0};
 
     // Checks if equilibrium is reached
-    bool equilibriumReached = false;
+    bool equilibriumReached{false};
   };
 
   /// @brief The configuration struct

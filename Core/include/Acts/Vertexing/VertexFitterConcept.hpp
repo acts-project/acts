@@ -33,7 +33,7 @@ namespace concept {
       struct VertexFitterConcept {
         constexpr static bool fit_exists = has_method<const S, Result<Vertex<typename S::InputTrack_t>>,
          fit_t, 
-         const std::vector<typename S::InputTrack_t>&, 
+         const std::vector<const typename S::InputTrack_t*>&, 
          const typename S::Linearizer_t&,
          const VertexFitterOptions<typename S::InputTrack_t>&>;
         static_assert(fit_exists, "fit method not found");

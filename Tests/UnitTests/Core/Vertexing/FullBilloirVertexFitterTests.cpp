@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   myConstraint.setFullCovariance(std::move(myCovMat));
   myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
 
-  std::vector<BoundParameters> emptyVector;
+  const std::vector<const BoundParameters*> emptyVector;
 
   VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext,
                                                  myConstraint);
@@ -205,15 +205,21 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
+
+    std::vector<const BoundParameters*> tracksPtr;
+    for (const auto& trk : tracks) {
+      tracksPtr.push_back(&trk);
+    }
+
     // Do the actual fit with 4 tracks without constraint
     Vertex<BoundParameters> fittedVertex =
-        billoirFitter.fit(tracks, linearizer, vfOptions).value();
+        billoirFitter.fit(tracksPtr, linearizer, vfOptions).value();
     if (fittedVertex.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1_mm);
     }
     // Do the fit with a constraint
     Vertex<BoundParameters> fittedVertexConstraint =
-        billoirFitter.fit(tracks, linearizer, vfOptionsConstr).value();
+        billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr).value();
     if (fittedVertexConstraint.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
@@ -341,15 +347,20 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
                                                   paramVec, perigeeSurface)));
     }
 
+    std::vector<const InputTrack*> tracksPtr;
+    for (const auto& trk : tracks) {
+      tracksPtr.push_back(&trk);
+    }
+
     // Do the actual fit with 4 tracks without constraint
     Vertex<InputTrack> fittedVertex =
-        billoirFitter.fit(tracks, linearizer, vfOptions).value();
+        billoirFitter.fit(tracksPtr, linearizer, vfOptions).value();
     if (fittedVertex.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1_mm);
     }
     // Do the fit with a constraint
     Vertex<InputTrack> fittedVertexConstraint =
-        billoirFitter.fit(tracks, linearizer, vfOptionsConstr).value();
+        billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr).value();
     if (fittedVertexConstraint.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }

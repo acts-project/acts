@@ -10,8 +10,7 @@
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<std::unique_ptr<Acts::ImpactParametersAndSigma>>
-Acts::TrackToVertexIPEstimator<
+Acts::Result<Acts::ImpactParametersAndSigma> Acts::TrackToVertexIPEstimator<
     input_track_t, propagator_t,
     propagator_options_t>::estimate(const BoundParameters& track,
                                     const Vertex<input_track_t>& vtx) const {
@@ -19,11 +18,8 @@ Acts::TrackToVertexIPEstimator<
   // towards
   // the vertex position. By this time the vertex should NOT contain this
   // trajectory anymore
-
-  const Vector3D& lp = vtx.position();
-
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(lp);
+      Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Do the propagation to linPoint
   auto result =
@@ -47,18 +43,18 @@ Acts::TrackToVertexIPEstimator<
 
   ActsVectorD<2> d0JacXY(-std::sin(phi), std::cos(phi));
 
-  std::unique_ptr<ImpactParametersAndSigma> newIPandSigma =
-      std::make_unique<ImpactParametersAndSigma>();
-  newIPandSigma->IPd0 = d0;
+  ImpactParametersAndSigma newIPandSigma;
+
+  newIPandSigma.IPd0 = d0;
   double d0_PVcontrib = d0JacXY.transpose() * (vrtXYCov * d0JacXY);
   if (d0_PVcontrib >= 0) {
-    newIPandSigma->sigmad0 = std::sqrt(
+    newIPandSigma.sigmad0 = std::sqrt(
         d0_PVcontrib + perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0));
-    newIPandSigma->PVsigmad0 = std::sqrt(d0_PVcontrib);
+    newIPandSigma.PVsigmad0 = std::sqrt(d0_PVcontrib);
   } else {
-    newIPandSigma->sigmad0 =
+    newIPandSigma.sigmad0 =
         std::sqrt(perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0));
-    newIPandSigma->PVsigmad0 = 0;
+    newIPandSigma.PVsigmad0 = 0;
   }
 
   ActsSymMatrixD<2> covPerigeeZ0Theta;
@@ -72,30 +68,32 @@ Acts::TrackToVertexIPEstimator<
   ActsVectorD<2> z0JacZ0Theta(std::sin(theta), z0 * std::cos(theta));
 
   if (vtxZZCov >= 0) {
-    newIPandSigma->IPz0SinTheta = z0 * std::sin(theta);
-    newIPandSigma->sigmaz0SinTheta = std::sqrt(
+    newIPandSigma.IPz0SinTheta = z0 * std::sin(theta);
+    newIPandSigma.sigmaz0SinTheta = std::sqrt(
         z0JacZ0Theta.transpose() * (covPerigeeZ0Theta * z0JacZ0Theta) +
         std::sin(theta) * vtxZZCov * std::sin(theta));
 
-    newIPandSigma->PVsigmaz0SinTheta =
+    newIPandSigma.PVsigmaz0SinTheta =
         std::sqrt(std::sin(theta) * vtxZZCov * std::sin(theta));
-    newIPandSigma->IPz0 = z0;
-    newIPandSigma->sigmaz0 = std::sqrt(vtxZZCov + perigeeCov(eZ, eZ));
-    newIPandSigma->PVsigmaz0 = std::sqrt(vtxZZCov);
+    newIPandSigma.IPz0 = z0;
+    newIPandSigma.sigmaz0 =
+        std::sqrt(vtxZZCov + perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
+    newIPandSigma.PVsigmaz0 = std::sqrt(vtxZZCov);
   } else {
     ACTS_WARNING(
         "Contribution to z0_err from PV is negative: Error in PV "
         "error matrix! Removing contribution from PV");
-    newIPandSigma->IPz0SinTheta = z0 * std::sin(theta);
+    newIPandSigma.IPz0SinTheta = z0 * std::sin(theta);
     double sigma2z0sinTheta =
         (z0JacZ0Theta.transpose() * (covPerigeeZ0Theta * z0JacZ0Theta));
-    newIPandSigma->sigmaz0SinTheta = std::sqrt(sigma2z0sinTheta);
-    newIPandSigma->PVsigmaz0SinTheta = 0;
+    newIPandSigma.sigmaz0SinTheta = std::sqrt(sigma2z0sinTheta);
+    newIPandSigma.PVsigmaz0SinTheta = 0;
 
-    newIPandSigma->IPz0 = z0;
-    newIPandSigma->sigmaz0 = std::sqrt(perigeeCov(eZ, eZ));
-    newIPandSigma->PVsigmaz0 = 0;
+    newIPandSigma.IPz0 = z0;
+    newIPandSigma.sigmaz0 =
+        std::sqrt(perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
+    newIPandSigma.PVsigmaz0 = 0;
   }
 
-  return std::move(newIPandSigma);
+  return newIPandSigma;
 }
