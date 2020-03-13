@@ -34,8 +34,33 @@ enum ParDef : unsigned int {
   BoundParsDim  /// < The local dimensions
 };
 
-/// The dimensions of tracks in free coordinates
-constexpr unsigned int FreeParsDim = 8;
+/// Components of a free track parameters vector.
+///
+/// To be used to access components by named indices instead of just numbers.
+/// This must be a regular `enum` and not a scoped `enum class` to allow
+/// implicit conversion to an integer. The enum value are thus visible directly
+/// in `namespace Acts` and are prefixed to avoid naming collisions.
+enum FreeParametersIndices : unsigned int {
+  // Spatial position
+  // The spatial position components must be stored as one continous block.
+  eFreePos0 = 0u,
+  eFreePos1 = eFreePos0 + 1u,
+  eFreePos2 = eFreePos0 + 2u,
+  // Time
+  eFreeTime = 3u,
+  // (Unit) direction
+  // The direction components must be stored as one continous block.
+  eFreeDir0 = 4u,
+  eFreeDir1 = eFreeDir0 + 1u,
+  eFreeDir2 = eFreeDir0 + 2u,
+  // Global inverse-momentum-like parameter, i.e. q/p or 1/p
+  // See BoundParametersIndices for further information
+  eFreeQOverP = 7u,
+  // Last uninitialized value contains the total number of components
+  eFreeParametersSize,
+  // For backward compatibility
+  FreeParsDim = eFreeParametersSize,
+};
 
 /// The dimension of a space point
 constexpr unsigned int SpacePointDim = 4;
