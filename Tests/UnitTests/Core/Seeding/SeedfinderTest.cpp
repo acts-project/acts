@@ -67,50 +67,49 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
 }
 
 int main(int argc, char** argv) {
-
-  std::string file {"sp.txt"};
+  std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
 
   int opt;
   while ((opt = getopt(argc, argv, "hf:q")) != -1) {
     switch (opt) {
-    case 'f':
-      file = optarg;
-      break;
-    case 'q':
-      quiet = true;
-      break;
-    case 'h':
-      help = true;
-    default: /* '?' */
-      std::cerr << "Usage: " << argv[0]
-                << " [-hq] [-f FILENAME]\n";
-      if (help) {
-        std::cout << "      -h : this help" << std::endl;
-        std::cout << "      -f FILE : read spacepoints from FILE. Default is \""
-                  << file << "\"" << std::endl;
-        std::cout << "      -q : don't print out all found seeds" << std::endl;
-      }
-      
-      exit(EXIT_FAILURE);
+      case 'f':
+        file = optarg;
+        break;
+      case 'q':
+        quiet = true;
+        break;
+      case 'h':
+        help = true;
+      default: /* '?' */
+        std::cerr << "Usage: " << argv[0] << " [-hq] [-f FILENAME]\n";
+        if (help) {
+          std::cout << "      -h : this help" << std::endl;
+          std::cout
+              << "      -f FILE : read spacepoints from FILE. Default is \""
+              << file << "\"" << std::endl;
+          std::cout << "      -q : don't print out all found seeds"
+                    << std::endl;
+        }
+
+        exit(EXIT_FAILURE);
     }
   }
 
   std::ifstream f(file);
-  if(!f.good()) {
+  if (!f.good()) {
     std::cerr << "input file \"" << file << "\" does not exist\n";
     exit(EXIT_FAILURE);
-  } 
+  }
 
-  auto start_read       = std::chrono::system_clock::now();  
+  auto start_read = std::chrono::system_clock::now();
   std::vector<const SpacePoint*> spVec = readFile(file);
-  auto end_read       = std::chrono::system_clock::now();
+  auto end_read = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_read = end_read - start_read;
 
-  std::cout << "read " << spVec.size() << " SP from file " << file
-            << " in " << elapsed_read.count() << "s"
-            << std::endl;
+  std::cout << "read " << spVec.size() << " SP from file " << file << " in "
+            << elapsed_read.count() << "s" << std::endl;
 
   Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
