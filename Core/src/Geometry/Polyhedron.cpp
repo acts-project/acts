@@ -14,10 +14,10 @@ Acts::Polyhedron& Acts::Polyhedron::operator+=(const Acts::Polyhedron& other) {
   size_t cvert = vertices.size();
   vertices.insert(vertices.end(), other.vertices.begin(), other.vertices.end());
   /// Add the new faces with offsets
-  auto join = [&](std::vector<face_type>& existing,
-                  const std::vector<face_type>& additional) -> void {
+  auto join = [&](std::vector<Face>& existing,
+                  const std::vector<Face>& additional) -> void {
     for (const auto& aface : additional) {
-      face_type nface = aface;
+      Face nface = aface;
       std::transform(nface.begin(), nface.end(), nface.begin(),
                      [&](size_t x) { return (x + cvert); });
       existing.push_back(nface);

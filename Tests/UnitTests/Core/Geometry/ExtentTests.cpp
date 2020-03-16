@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
   // Create a second Extent
   Extent otherExt;
-  otherExt += gExt;
+  otherExt.extend(gExt);
 
   CHECK_CLOSE_ABS(otherExt.min(binX), 15_mm, 1e-6);
   CHECK_CLOSE_ABS(otherExt.max(binX), 18_mm, 1e-6);

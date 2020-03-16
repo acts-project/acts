@@ -198,8 +198,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
-  std::vector<Polyhedron::face_type> faces;
-  std::vector<Polyhedron::face_type> triangularMesh;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
 
   if (bounds().minZ() == -std::numeric_limits<double>::infinity() or
       bounds().maxZ() == std::numeric_limits<double>::infinity()) {

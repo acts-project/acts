@@ -8,12 +8,11 @@
 
 #include "Acts/Geometry/Extent.hpp"
 
-// STD/STL
-#include <iostream>
+#include <ostream>
 
 std::ostream& Acts::Extent::toStream(std::ostream& sl) const {
   sl << "Extent in space : " << std::endl;
-  for (size_t ib = 0; ib < size_t(binValues); ++ib) {
+  for (size_t ib = 0; ib < static_cast<size_t>(binValues); ++ib) {
     sl << "  - value :" << std::setw(10) << binningValueNames[ib]
        << " | range = [" << ranges[ib].first << ", " << ranges[ib].second << "]"
        << std::endl;

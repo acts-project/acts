@@ -8,16 +8,17 @@
 
 #pragma once
 
-#include <iostream>
-#include <utility>
-#include <vector>
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <iosfwd>
+#include <utility>
+#include <vector>
+
 namespace Acts {
 
-using range_type = std::pair<double, double>;
+using Range = std::pair<double, double>;
 
 // @brief Extent in space
 ///
@@ -29,22 +30,21 @@ struct Extent {
   static constexpr double maxval = std::numeric_limits<double>::max();
 
   /// Start value
-  static constexpr range_type maxrange = {maxval, -maxval};
+  static constexpr Range maxrange = {maxval, -maxval};
 
   // The different ranges
-  std::vector<range_type> ranges = std::vector<range_type>(9, maxrange);
+  std::vector<Range> ranges = std::vector<Range>(9, maxrange);
 
   // Constructor
   Extent() = default;
 
-  /// Merge another extent in - using operator+=
+  /// Extend with another extent
   /// @param other is the source Extent
-  Extent& operator+=(const Extent& other) {
+  void extend(const Extent& other) {
     for (auto ir = 0; ir < other.ranges.size(); ++ir) {
       ranges[ir].first = std::min(ranges[ir].first, other.ranges[ir].first);
       ranges[ir].second = std::max(ranges[ir].second, other.ranges[ir].second);
     }
-    return (*this);
   }
 
   /// Convert to output stream for screen output
@@ -79,9 +79,9 @@ struct Extent {
       ranges[bval].first = std::min(value, ranges[bval].first);
       ranges[bval].second = std::max(value, ranges[bval].second);
     };
-    // Walk through the binnin parameters
+    // Walk through the binning parameters
     for (int bval = 0; bval < binValues; ++bval) {
-      BinningValue bValue = (BinningValue)bval;
+      BinningValue bValue = static_cast<BinningValue>(bval);
       minMax(bValue, VectorHelpers::cast(vtx, bValue));
     }
   }

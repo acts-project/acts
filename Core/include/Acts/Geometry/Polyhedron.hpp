@@ -8,12 +8,13 @@
 
 #pragma once
 
-#include <limits>
-#include <vector>
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <limits>
+#include <vector>
 
 namespace Acts {
 
@@ -27,7 +28,7 @@ namespace Acts {
 /// that need to be connected to form a face.
 /// This allows the @c objString method to produce a ready-to-go obj output.
 struct Polyhedron {
-  using face_type = std::vector<size_t>;
+  using Face = std::vector<size_t>;
 
   /// Default constructor
   Polyhedron() = default;
@@ -39,8 +40,8 @@ struct Polyhedron {
   /// @param radialCheck A dedicated check for radial extent done
   /// @note This creates copies of the input vectors
   Polyhedron(const std::vector<Vector3D>& verticesIn,
-             const std::vector<face_type>& facesIn,
-             const std::vector<face_type>& triangularMeshIn,
+             const std::vector<Face>& facesIn,
+             const std::vector<Face>& triangularMeshIn,
              bool radialCheck = false)
       : vertices(verticesIn),
         faces(facesIn),
@@ -52,12 +53,12 @@ struct Polyhedron {
   /// List of faces connecting the vertices.
   /// each face is a list of vertices v
   /// corresponding to the vertex vector above
-  std::vector<face_type> faces;
+  std::vector<Face> faces;
 
   /// List of faces connecting the vertices.
   /// each face is a list of vertices v
   /// - in this case restricted to a triangular representation
-  std::vector<face_type> triangularMesh;
+  std::vector<Face> triangularMesh;
 
   /// Add another Polyhedrons
   ///

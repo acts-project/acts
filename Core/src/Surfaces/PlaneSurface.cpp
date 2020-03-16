@@ -122,8 +122,8 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
-  std::vector<Polyhedron::face_type> faces;
-  std::vector<Polyhedron::face_type> triangularMesh;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
 
   // If you have bounds you can create a polyhedron representation
   if (m_bounds) {
