@@ -127,48 +127,4 @@ enum SpacePointIndices : unsigned int {
 /// Underlying fundamental scalar type for space points.
 using SpacePointScalar = double;
 
-using ParDef = BoundParametersIndices;
-using ParID_t = BoundParametersIndices;
-using ParValue_t = BoundParametersScalar;
-
-template <ParID_t>
-struct par_type;
-
-template <ParID_t par>
-using par_type_t = typename par_type<par>::type;
-
-template <>
-struct par_type<ParDef::eLOC_0> {
-  using type = local_parameter;
-};
-
-template <>
-struct par_type<ParDef::eLOC_1> {
-  using type = local_parameter;
-};
-
-template <>
-struct par_type<ParDef::ePHI> {
-  static constexpr double pMin() { return -M_PI; }
-  static constexpr double pMax() { return M_PI; }
-  using type = cyclic_parameter<double, pMin, pMax>;
-};
-
-template <>
-struct par_type<ParDef::eTHETA> {
-  static constexpr double pMin() { return 0; }
-  static constexpr double pMax() { return M_PI; }
-  using type = bound_parameter<double, pMin, pMax>;
-};
-
-template <>
-struct par_type<ParDef::eQOP> {
-  using type = unbound_parameter;
-};
-
-template <>
-struct par_type<ParDef::eT> {
-  using type = unbound_parameter;
-};
-
 }  // namespace Acts
