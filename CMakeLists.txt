@@ -30,10 +30,9 @@ option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_DOC "Build documentation" OFF)
-
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
-set(ACTS_PARAMETER_DEFINITIONS_PLUGIN "Acts/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
+set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 
 # handle inter-plugin dependencies
 # DD4hepPlugin depends on TGeoPlugin
