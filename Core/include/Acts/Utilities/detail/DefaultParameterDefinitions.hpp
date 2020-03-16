@@ -7,11 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// STL include(s)
+
 #include <cmath>
 
-// Acts includes
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterTypes.hpp"
 
 namespace Acts {
@@ -131,60 +129,7 @@ using SpacePointScalar = double;
 
 using ParDef = BoundParametersIndices;
 using ParID_t = BoundParametersIndices;
-using ParValue_t = double;
-
-///
-/// Type namings with bound parameters
-///
-
-/// Vector of bound parameters
-using BoundVector = ActsVector<ParValue_t, BoundParsDim>;
-/// Row vector of bound parameters
-using BoundRowVector = ActsRowVector<ParValue_t, BoundParsDim>;
-/// Matrix of bound-to-bound parameters
-using BoundMatrix = ActsMatrix<ParValue_t, BoundParsDim, BoundParsDim>;
-/// Symmetrical matrix of bound-to-bound parameters
-using BoundSymMatrix = ActsSymMatrix<ParValue_t, BoundParsDim>;
-
-///
-/// Type naming with free parameters
-///
-
-/// Vector of free track parameters
-using FreeVector = ActsVector<ParValue_t, FreeParsDim>;
-/// Matrix of free-to-free parameters
-using FreeMatrix = ActsMatrix<ParValue_t, FreeParsDim, FreeParsDim>;
-/// Symmetrical matrix of free-to-free parameters
-using FreeSymMatrix = ActsSymMatrix<ParValue_t, FreeParsDim>;
-
-///
-/// Type namings with bound & free parameters
-///
-
-/// Matrix of bound-to-free parameters
-using BoundToFreeMatrix = ActsMatrix<ParValue_t, FreeParsDim, BoundParsDim>;
-/// Matrix of free-to-bound parameters
-using FreeToBoundMatrix = ActsMatrix<ParValue_t, BoundParsDim, FreeParsDim>;
-
-///
-/// Type namings with space points
-///
-
-/// Vector with space point parameters
-using SpacePointVector = ActsVector<ParValue_t, SpacePointDim>;
-/// Symmetrical matrix of space point-to-space point
-using SpacePointSymMatrix = ActsSymMatrix<ParValue_t, SpacePointDim>;
-
-///
-/// Type namings with space points & bound parameters
-///
-
-/// Matrix of space point-to-bound parameters
-using SpacePointToBoundMatrix =
-    ActsMatrix<ParValue_t, BoundParsDim, SpacePointDim>;
-/// Matrix with bound parameters-to-space point
-using BoundToSpacePointMatrix =
-    ActsMatrix<ParValue_t, SpacePointDim, BoundParsDim>;
+using ParValue_t = BoundParametersScalar;
 
 template <ParID_t>
 struct par_type;
@@ -225,4 +170,5 @@ template <>
 struct par_type<ParDef::eT> {
   using type = unbound_parameter;
 };
+
 }  // namespace Acts

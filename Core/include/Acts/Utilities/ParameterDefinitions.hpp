@@ -7,12 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include <type_traits>
+
+#include "Acts/Utilities/Definitions.hpp"
+
 #ifdef ACTS_PARAMETER_DEFINITIONS_PLUGIN
 #include ACTS_PARAMETER_DEFINITIONS_PLUGIN
 #endif
 
-/// testing requirements on parameter definitions
-#include <type_traits>
+namespace Acts {
 
 /// typedefs for parameter identifier and parameter value must be present
 static_assert(std::is_enum<Acts::ParID_t>::value,
@@ -52,3 +56,63 @@ static_assert(Acts::eLOC_Z0 == Acts::eLOC_0 or Acts::eLOC_Z0 == Acts::eLOC_1,
 /// check for par_type_t definition
 static_assert(sizeof(Acts::par_type_t<Acts::eLOC_0>) > 0,
               "'par_type_t' is not defined");
+
+// Matrix and vector types related to bound track parameters.
+
+using BoundVector = ActsVector<BoundParametersScalar, eBoundParametersSize>;
+using BoundRowVector =
+    ActsRowVector<BoundParametersScalar, eBoundParametersSize>;
+using BoundMatrix = ActsMatrix<BoundParametersScalar, eBoundParametersSize,
+                               eBoundParametersSize>;
+using BoundSymMatrix =
+    ActsSymMatrix<BoundParametersScalar, eBoundParametersSize>;
+
+// Matrix and vector types related to free track parameters.
+
+using FreeVector = ActsVector<FreeParametersScalar, eFreeParametersSize>;
+using FreeRowVector = ActsRowVector<FreeParametersScalar, eFreeParametersSize>;
+using FreeMatrix =
+    ActsMatrix<FreeParametersScalar, eFreeParametersSize, eFreeParametersSize>;
+using FreeSymMatrix = ActsSymMatrix<FreeParametersScalar, eFreeParametersSize>;
+
+// Matrix and vector types related to space points.
+
+using SpacePointVector = ActsVector<SpacePointScalar, eSpacePointSize>;
+using SpacePointRowVector = ActsRowVector<SpacePointScalar, eSpacePointSize>;
+using SpacePointSymMatrix =
+    ActsMatrix<SpacePointScalar, eSpacePointSize, eSpacePointSize>;
+using SpacePointSymMatrix = ActsSymMatrix<SpacePointScalar, eSpacePointSize>;
+
+// Mapping to bound track parameters.
+//
+// Assumes that matrices represent maps from another space into the space of
+// bound track parameters. Thus, the bound parameters scalar type is sufficient
+// to retain accuracy.
+
+using FreeToBoundMatrix = ActsMatrix<BoundParametersScalar,
+                                     eBoundParametersSize, eFreeParametersSize>;
+using SpacePointToBoundMatrix =
+    ActsMatrix<BoundParametersScalar, eBoundParametersSize, eSpacePointSize>;
+
+// Mapping to free track parameters.
+//
+// Assumes that matrices represent maps from another space into the space of
+// free track parameters. Thus, the free parameters scalar type is sufficient
+// to retain accuracy.
+
+using BoundToFreeMatrix =
+    ActsMatrix<FreeParametersScalar, eFreeParametersSize, eBoundParametersSize>;
+using SpacePointToFreeMatrix =
+    ActsMatrix<FreeParametersScalar, eFreeParametersSize, eSpacePointSize>;
+
+// Mapping to space points.
+//
+// Assumes that matrices represent maps from another space into the space point
+// space. Thus, the space point scalar type is sufficient to retain accuracy.
+
+using BoundToSpacePointMatrix =
+    ActsMatrix<SpacePointScalar, eSpacePointSize, eBoundParametersSize>;
+using FreeToSpacePointMatrix =
+    ActsMatrix<SpacePointScalar, eSpacePointSize, eFreeParametersSize>;
+
+}  // namespace Acts
