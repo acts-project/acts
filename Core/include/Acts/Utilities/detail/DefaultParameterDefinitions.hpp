@@ -65,6 +65,9 @@ enum BoundParametersIndices : unsigned int {
   BoundParsDim = eBoundParametersSize,
 };
 
+/// Underlying fundamental scalar type for bound track parameters.
+using BoundParametersScalar = double;
+
 /// Components of a free track parameters vector.
 ///
 /// To be used to access components by named indices instead of just numbers.
@@ -93,6 +96,9 @@ enum FreeParametersIndices : unsigned int {
   FreeParsDim = eFreeParametersSize,
 };
 
+/// Underlying fundamental scalar type for free track parameters.
+using FreeParametersScalar = double;
+
 /// Components of a space point vector.
 ///
 /// To be used to access components by named indices instead of just numbers.
@@ -119,6 +125,9 @@ enum SpacePointIndices : unsigned int {
   // for backward compatibility
   SpacePointDim = eSpacePointSize,
 };
+
+/// Underlying fundamental scalar type for space points.
+using SpacePointScalar = double;
 
 using ParDef = BoundParametersIndices;
 using ParID_t = BoundParametersIndices;
