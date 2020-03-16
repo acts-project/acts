@@ -311,6 +311,5 @@ using par_type_t = typename detail::BoundParameterTraits<kIndex>::type;
 // `e{BoundParameters,FreeParameters,SpacePoint}Size` enum values.
 inline constexpr unsigned int BoundParsDim = eBoundParametersSize;
 inline constexpr unsigned int FreeParsDim = eFreeParametersSize;
-inline constexpr unsigned int SpacePointDim = eSpacePointSize;
 
 }  // namespace Acts
