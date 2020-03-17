@@ -52,6 +52,8 @@ struct Interactor {
 
   /// Interaction result (and intermediate state).
   struct result_type {
+    /// Whether the simulation can continue, i.e. particle is still alive.
+    bool isAlive = true;
     /// Accumulated material during the propagation.
     /// The initial particle can already have some passed material. We need the
     /// particle to store the full material path but still keep track of the
@@ -64,6 +66,18 @@ struct Interactor {
     std::vector<Particle> generatedParticles;
     /// Hits created by the propagated particle.
     std::vector<Hit> hits;
+  };
+
+  /// Abort if the particle was killed during a previous interaction.
+  struct ParticleNotAlive {
+    // This references the Interactor to automatically access its result type.
+    using action_type = Interactor;
+
+    template <typename propagator_state_t, typename stepper_t>
+    constexpr bool operator()(propagator_state_t &, const stepper_t &,
+                              const result_type &result) const {
+      return not result.isAlive;
+    }
   };
 
   /// Simulate the interaction with a single surface.
@@ -123,9 +137,11 @@ struct Interactor {
         auto cosIncidenceInv =
             normal.norm() / normal.dot(before.unitDirection());
         slab.scaleThickness(cosIncidenceInv);
-        // TODO how to communicate the break condition to the propagator?
-        physics(*generator, slab, after, result.generatedParticles);
-        // add the accumulated material
+        // physics list returns if the particle was killed.
+        result.isAlive =
+            not physics(*generator, slab, after, result.generatedParticles);
+        // add the accumulated material; assumes the full material was passsed
+        // event if the particle was killed.
         result.pathInX0 += slab.thicknessInX0();
         result.pathInL0 += slab.thicknessInL0();
         // WARNING this overwrites changes that the physics interactions
