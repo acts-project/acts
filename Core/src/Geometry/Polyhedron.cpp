@@ -10,7 +10,7 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
-Acts::Polyhedron& Acts::Polyhedron::operator+=(const Acts::Polyhedron& other) {
+void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   size_t cvert = vertices.size();
   vertices.insert(vertices.end(), other.vertices.begin(), other.vertices.end());
   /// Add the new faces with offsets
@@ -26,8 +26,6 @@ Acts::Polyhedron& Acts::Polyhedron::operator+=(const Acts::Polyhedron& other) {
   // For faces and triangular mesh
   join(faces, other.faces);
   join(triangularMesh, other.triangularMesh);
-
-  return (*this);
 }
 
 Acts::Extent Acts::Polyhedron::extent(const Transform3D& transform) const {

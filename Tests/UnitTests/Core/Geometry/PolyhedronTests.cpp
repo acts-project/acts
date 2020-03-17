@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
 
   // Now add them
   Polyhedron tr;
-  tr += triangle;
+  tr.merge(triangle);
   BOOST_CHECK(tr.vertices == triangle.vertices);
   BOOST_CHECK(tr.faces == triangle.faces);
   BOOST_CHECK(tr.triangularMesh == triangle.triangularMesh);
 
-  tr += rectangle;
+  tr.merge(rectangle);
 
   std::ofstream trStream;
   trStream.open("PolyhedronTriangleRectangle.obj");

@@ -60,10 +60,10 @@ struct Polyhedron {
   /// - in this case restricted to a triangular representation
   std::vector<Face> triangularMesh;
 
-  /// Add another Polyhedrons
+  /// Merge another Polyhedron into this one
   ///
   /// @param other is the source representation
-  Polyhedron& operator+=(const Polyhedron& other);
+  void merge(const Polyhedron& other);
 
   /// Draw method for polyhedrons
   ///
@@ -72,7 +72,7 @@ struct Polyhedron {
   /// @param helper The draw helper object (visitor pattern)
   /// @param triangulate Force the faces to be a triangular mesh
   /// @param decompose Boolean that forces a decomposition into
-  /// individual faces with uniquev ertices.
+  /// individual faces with unique vertices.
   template <typename helper_t>
   void draw(helper_t& helper, bool triangulate = false,
             bool decompose = false) const {

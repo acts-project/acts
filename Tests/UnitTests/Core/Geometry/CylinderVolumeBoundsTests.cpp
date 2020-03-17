@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
     size_t is = 0;
     for (const auto& sf : surfaces) {
       Polyhedron phComponent = sf->polyhedronRepresentation(tgContext, 72);
-      phCombined += phComponent;
+      phCombined.merge(phComponent);
       tPolyhedrons.push_back(
           {writeBase + std::string("_comp_") + std::to_string(is++), false,
            phComponent});
