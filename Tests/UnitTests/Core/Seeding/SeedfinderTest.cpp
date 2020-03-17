@@ -82,6 +82,7 @@ int main(int argc, char** argv) {
         break;
       case 'h':
         help = true;
+        [[fallthrough]];
       default: /* '?' */
         std::cerr << "Usage: " << argv[0] << " [-hq] [-f FILENAME]\n";
         if (help) {
