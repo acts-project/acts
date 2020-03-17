@@ -8,11 +8,12 @@
 
 #pragma once
 
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <numeric>
 #include <utility>
 #include <vector>
-#include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 

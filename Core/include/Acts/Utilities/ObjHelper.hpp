@@ -8,10 +8,11 @@
 
 #pragma once
 
-#include <utility>
-#include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/IVisualization.hpp"
+
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
