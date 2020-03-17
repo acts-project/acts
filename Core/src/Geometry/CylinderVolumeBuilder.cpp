@@ -468,9 +468,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // now create the new container volume
     volume = tvHelper->createContainerTrackingVolume(gctx, totalContainer);
   }
-  // sign the volume and return it
-  volume->sign(GeometrySignature(m_cfg.volumeSignature));
-  // now return what you have
+
   return volume;
 }
 

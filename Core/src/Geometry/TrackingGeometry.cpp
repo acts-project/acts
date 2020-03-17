@@ -46,12 +46,6 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
   return (m_world.get());
 }
 
-void Acts::TrackingGeometry::sign(GeometrySignature geosit,
-                                  GeometryType geotype) {
-  auto mutableWorld = std::const_pointer_cast<TrackingVolume>(m_world);
-  mutableWorld->sign(geosit, geotype);
-}
-
 const Acts::TrackingVolume* Acts::TrackingGeometry::trackingVolume(
     const std::string& name) const {
   auto sVol = m_trackingVolumes.begin();

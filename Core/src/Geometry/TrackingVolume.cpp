@@ -104,33 +104,6 @@ const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
   return this;
 }
 
-void Acts::TrackingVolume::sign(GeometrySignature geosign,
-                                GeometryType geotype) {
-  // never overwrite what is already signed, that's a crime
-  if (m_geometrySignature == Unsigned) {
-    m_geometrySignature = geosign;
-  }
-  m_geometryType = geotype;
-
-  // confined static volumes
-  if (m_confinedVolumes) {
-    for (auto& volumesIter : (m_confinedVolumes->arrayObjects())) {
-      auto mutableVolumesIter =
-          std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->sign(geosign, geotype);
-    }
-  }
-
-  // finally for confined dense volumes
-  if (!m_confinedDenseVolumes.empty()) {
-    for (auto& volumesIter : m_confinedDenseVolumes) {
-      auto mutableVolumesIter =
-          std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->sign(geosign, geotype);
-    }
-  }
-}
-
 const Acts::TrackingVolumeBoundaries& Acts::TrackingVolume::boundarySurfaces()
     const {
   return (m_boundarySurfaces);

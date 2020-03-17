@@ -160,8 +160,6 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
         std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
         std::move(layArr), nullptr, cfg.trackingVolumes, cfg.name);
   }
-  trackVolume->sign(GeometrySignature::Global);
-
   return trackVolume;
 }
 
@@ -221,6 +219,5 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   MutableTrackingVolumePtr mtvp(TrackingVolume::create(
       std::make_shared<const Transform3D>(trafo), volume, trVolArr, "World"));
 
-  mtvp->sign(GeometrySignature::Global);
   return mtvp;
 }

@@ -123,7 +123,6 @@ struct CubicTrackingGeometry {
     auto trackVolume1 = TrackingVolume::create(
         std::make_shared<const Transform3D>(trafoVol1), boundsVol, nullptr,
         std::move(layArr1), nullptr, {}, "Volume 1");
-    trackVolume1->sign(GeometrySignature::Global);
 
     // Build volume for surfaces with positive x-values
     Transform3D trafoVol2(Transform3D::Identity());
@@ -139,8 +138,6 @@ struct CubicTrackingGeometry {
     auto trackVolume2 = TrackingVolume::create(
         std::make_shared<const Transform3D>(trafoVol2), boundsVol, nullptr,
         std::move(layArr2), nullptr, {}, "Volume 2");
-
-    trackVolume2->sign(GeometrySignature::Global);
 
     // Glue volumes
     trackVolume2->glueTrackingVolume(
@@ -174,8 +171,6 @@ struct CubicTrackingGeometry {
     MutableTrackingVolumePtr mtvpWorld(
         TrackingVolume::create(std::make_shared<const Transform3D>(trafoWorld),
                                worldVol, trVolArr, "World"));
-
-    mtvpWorld->sign(GeometrySignature::Global);
 
     // Build and return tracking geometry
     return std::shared_ptr<TrackingGeometry>(

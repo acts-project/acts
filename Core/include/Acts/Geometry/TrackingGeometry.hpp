@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Geometry/GeometrySignature.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <functional>
@@ -106,12 +106,6 @@ class TrackingGeometry {
       const std::function<void(const Acts::Surface*)>& visitor) const;
 
  private:
-  /// Geometry Builder busineess: the geometry builder has to sign
-  ///
-  /// @param geosit is the volume signature
-  /// @param geotype is the volume navigation type
-  void sign(GeometrySignature geosit, GeometryType geotype = Static);
-
   /// The known world - and the beamline
   TrackingVolumePtr m_world;
   std::shared_ptr<const PerigeeSurface> m_beam;
