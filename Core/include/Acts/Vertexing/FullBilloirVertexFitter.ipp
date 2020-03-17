@@ -29,8 +29,8 @@ struct BilloirTrack {
   const input_track_t* originalTrack;
   Acts::LinearizedTrack linTrack;
   double chi2;
-  Jacobian DiMat;                                  // position jacobian
-  Acts::ActsMatrixD<Acts::BoundParsDim, 3> EiMat;  // momentum jacobian
+  Jacobian DiMat;                                          // position jacobian
+  Acts::ActsMatrixD<Acts::eBoundParametersSize, 3> EiMat;  // momentum jacobian
   Acts::ActsSymMatrixD<3> CiMat;   //  = EtWmat * Emat (see below)
   Acts::ActsMatrixD<4, 3> BiMat;   //  = DiMat^T * Wi * EiMat
   Acts::ActsSymMatrixD<3> CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
@@ -141,11 +141,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         Dmat = linTrack.positionJacobian;
 
         // momentum jacobian (E matrix)
-        ActsMatrixD<BoundParsDim, 3> Emat;
+        ActsMatrixD<eBoundParametersSize, 3> Emat;
         Emat = linTrack.momentumJacobian;
         // cache some matrix multiplications
         BoundToSpacePointMatrix DtWmat;
-        ActsMatrixD<3, BoundParsDim> EtWmat;
+        ActsMatrixD<3, eBoundParametersSize> EtWmat;
         BoundSymMatrix Wi = linTrack.weightAtPCA;
 
         DtWmat = Dmat.transpose() * Wi;
@@ -232,7 +232,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // calculate 5x5 covdelta_P matrix
       // d(d0,z0,phi,theta,qOverP, t)/d(x,y,z,phi,theta,qOverP,
       // t)-transformation matrix
-      ActsMatrixD<BoundParsDim, 7> transMat;
+      ActsMatrixD<eBoundParametersSize, 7> transMat;
       transMat.setZero();
       transMat(0, 0) = bTrack.DiMat(0, 0);
       transMat(0, 1) = bTrack.DiMat(0, 1);

@@ -93,16 +93,16 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
 
 BOOST_AUTO_TEST_CASE(visit_measurement_test) {
   // Overallocated full size parameter vector and covariance
-  ActsVectorD<BoundParsDim> parFull;
+  BoundVector parFull;
   parFull.setRandom();
 
-  ActsSymMatrixD<BoundParsDim> covFull;
+  BoundVector covFull;
   covFull.setRandom();
 
   const auto& parFullConst = parFull;
   const auto& covFullConst = covFull;
 
-  for (size_t i = 1; i <= BoundParsDim; i++) {
+  for (size_t i = 1; i <= parFull.size(); i++) {
     visit_measurement(parFull, covFull, i, [&](auto param, auto cov) {
       BOOST_CHECK_EQUAL(param, parFull.head(i));
       BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(i, i));

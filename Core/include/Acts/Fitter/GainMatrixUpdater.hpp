@@ -101,13 +101,13 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Calibrated measurement covariance:\n"
                        << calibrated_covariance);
 
-          const ActsMatrixD<measdim, BoundParsDim> H =
+          const ActsMatrixD<measdim, eBoundParametersSize> H =
               trackState.projector()
-                  .template topLeftCorner<measdim, BoundParsDim>();
+                  .template topLeftCorner<measdim, eBoundParametersSize>();
 
           ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-          const ActsMatrixD<BoundParsDim, measdim> K =
+          const ActsMatrixD<eBoundParametersSize, measdim> K =
               predicted_covariance * H.transpose() *
               (H * predicted_covariance * H.transpose() + calibrated_covariance)
                   .inverse();

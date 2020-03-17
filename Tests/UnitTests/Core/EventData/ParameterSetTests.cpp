@@ -451,27 +451,28 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
  * @sa ParameterSet::projector
  */
 BOOST_AUTO_TEST_CASE(parset_projection_tests) {
-  ActsMatrixD<1, BoundParsDim> phi_proj;
+  ActsMatrixD<1, eBoundParametersSize> phi_proj;
   phi_proj << 0, 0, 1, 0, 0, 0;
 
-  ActsMatrixD<2, BoundParsDim> loc0_qop_proj;
+  ActsMatrixD<2, eBoundParametersSize> loc0_qop_proj;
   loc0_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<2, BoundParsDim> loc1_theta_proj;
+  ActsMatrixD<2, eBoundParametersSize> loc1_theta_proj;
   loc1_theta_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0;
 
-  ActsMatrixD<3, BoundParsDim> loc0_loc1_phi_proj;
+  ActsMatrixD<3, eBoundParametersSize> loc0_loc1_phi_proj;
   loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
 
-  ActsMatrixD<4, BoundParsDim> loc0_phi_theta_qop_proj;
+  ActsMatrixD<4, eBoundParametersSize> loc0_phi_theta_qop_proj;
   loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<5, BoundParsDim> loc0_loc1_phi_theta_qop_proj;
+  ActsMatrixD<5, eBoundParametersSize> loc0_loc1_phi_theta_qop_proj;
   loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<BoundParsDim, BoundParsDim> loc0_loc1_phi_theta_qop_t_proj;
+  ActsMatrixD<eBoundParametersSize, eBoundParametersSize>
+      loc0_loc1_phi_theta_qop_t_proj;
   loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 

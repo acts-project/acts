@@ -114,7 +114,7 @@ inline const BoundRowVector Surface::derivativeFactors(
   ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
   norm_vec /= (norm_vec * direction);
   // calculate the s factors
-  return (norm_vec * jacobian.topLeftCorner<3, BoundParsDim>());
+  return (norm_vec * jacobian.topLeftCorner<3, eBoundParametersSize>());
 }
 
 inline const DetectorElementBase* Surface::associatedDetectorElement() const {

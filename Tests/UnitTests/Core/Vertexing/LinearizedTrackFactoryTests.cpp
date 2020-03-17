@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
   SpacePointVector vecSPZero = SpacePointVector::Zero();
   SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
-  ActsMatrixD<BoundParsDim, 3> matBound2MomZero =
-      ActsMatrixD<BoundParsDim, 3>::Zero();
+  ActsMatrixD<eBoundParametersSize, 3> matBound2MomZero =
+      ActsMatrixD<eBoundParametersSize, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
@@ -221,8 +221,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
   SpacePointVector vecSPZero = SpacePointVector::Zero();
   SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
-  ActsMatrixD<BoundParsDim, 3> matBound2MomZero =
-      ActsMatrixD<BoundParsDim, 3>::Zero();
+  ActsMatrixD<eBoundParametersSize, 3> matBound2MomZero =
+      ActsMatrixD<eBoundParametersSize, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
