@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// CylinderSurface.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -16,8 +12,8 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
@@ -228,13 +224,16 @@ class CylinderSurface : public Surface {
   /// Return method for properly formatted output string
   std::string name() const override;
 
-  /// Return a PolyhedronRepresentation for this object
+  /// Return a Polyhedron for a cylinder
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param l0div Number of divisions along l0 (phi)
-  /// @param l1div Number of divisions along l1 (z)
-  virtual PolyhedronRepresentation polyhedronRepresentation(
-      const GeometryContext& gctx, size_t l0div = 10, size_t l1div = 1) const;
+  /// @param lseg Number of segments along curved lines, it represents
+  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// are given
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                      size_t lseg) const override;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)

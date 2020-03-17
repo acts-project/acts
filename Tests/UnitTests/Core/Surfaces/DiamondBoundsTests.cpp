@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   /// Test vertices (does this need to be implemented in this class??
   // auto v=diamondBoundsObject.vertices();
   std::vector<Vector2D> referenceVertices{
-      {minHalfX, -halfY1}, {midHalfX, 0.},  {maxHalfX, halfY2},
-      {-maxHalfX, halfY2}, {-midHalfX, 0.}, {-minHalfX, -halfY1}};
+      {-minHalfX, -halfY1}, {minHalfX, -halfY1}, {midHalfX, 0.},
+      {maxHalfX, halfY2},   {-maxHalfX, halfY2}, {-midHalfX, 0.}};
   const auto& actualVertices = diamondBoundsObject.vertices();
   BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(), actualVertices.cend(),
                                 referenceVertices.cbegin(),

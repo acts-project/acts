@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-/////////////////////////////////////////////////////////////////
-// StrawSurface.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -20,7 +16,7 @@
 namespace Acts {
 
 class DetectorElementBase;
-struct PolyhedronRepresentation;
+struct Polyhedron;
 
 ///  @class StrawSurface
 ///
@@ -97,12 +93,16 @@ class StrawSurface : public LineSurface {
   /// Return properly formatted class name for screen output */
   std::string name() const final;
 
-  /// Return a PolyhedronRepresentation for this object
+  /// Return a Polyhedron for the surfaces
+  ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param l0div Number of divisions along l0 (phi)
-  /// @param l1div Number of divisions along l1 (z)
-  virtual PolyhedronRepresentation polyhedronRepresentation(
-      const GeometryContext& gctx, size_t l0div = 10, size_t l1div = 1) const;
+  /// @param lseg Number of segments along curved lines, it represents
+  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// are given @note if lseg is set to 1 then only the straw is created
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                      size_t lseg) const final;
 
  private:
   /// Clone method implementation

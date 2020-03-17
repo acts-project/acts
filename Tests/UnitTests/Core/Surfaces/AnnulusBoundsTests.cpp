@@ -32,80 +32,6 @@ double maxPhi = 1.33970;
 
 Vector2D offset(-2., 2.);
 
-bool writeObj = false;
-
-static void writeAnnulusDiscObj(
-    std::ofstream& stream, double scalor, unsigned int nSegments,
-    const Acts::Transform3D& transform,
-    const std::vector<Acts::Vector2D>& vertices,
-    const Acts::Vector3D& os = Acts::Vector3D(0., 0., 0.)) {
-  unsigned int cvc = 0;
-
-  std::vector<Acts::Vector3D> gVertices;
-  // Write the vertices
-  for (auto& v : vertices) {
-    gVertices.push_back(transform * Acts::Vector3D(v.x(), v.y(), 0.));
-  }
-
-  // Complete if there are segments defined for a bow
-  if (nSegments > 1) {
-    /// Fill the vertices in betwen
-    auto fillBow =
-        [&](const Acts::Vector3D& first,
-            const Acts::Vector3D& second) -> std::vector<Acts::Vector3D> {
-      // The completed list of vertices
-      std::vector<Acts::Vector3D> completed3D;
-
-      double oseg = 1. / nSegments;
-      double phif = Acts::VectorHelpers::phi(first);
-      double phis = Acts::VectorHelpers::phi(second);
-      double phiD = (phis - phif);
-
-      if (std::abs(phiD) > M_PI and phif * phis < 0.) {
-        phiD += phiD < 0. ? 2 * M_PI : -2 * M_PI;
-      }
-
-      double rf = Acts::VectorHelpers::perp(first);
-      double rs = Acts::VectorHelpers::perp(second);
-      double zf = first.z();
-      double zs = second.z();
-
-      phiD *= oseg;
-      double rD = (rs - rf) * oseg;
-      double zD = (zs - zf) * oseg;
-
-      for (unsigned int is = 0; is < nSegments + 1; ++is) {
-        double r = rf + is * rD;
-        double phi = phif + is * phiD;
-        double z = zf + is * zD;
-        completed3D.push_back(Acts::Vector3D(r * cos(phi), r * sin(phi), z) -
-                              os);
-      }
-      // Reassing the global points
-      return completed3D;
-    };
-    // Fill the bows
-    auto completedBow1 = fillBow(gVertices[0], gVertices[1]);
-    auto completedBow2 = fillBow(gVertices[2], gVertices[3]);
-    // Clear the vertices
-    gVertices = completedBow1;
-    gVertices.insert(gVertices.end(), completedBow2.begin(),
-                     completedBow2.end());
-  }
-
-  // Write the vertices
-  for (const auto& gv : gVertices) {
-    stream << "v " << scalor * gv.x() << " " << scalor * gv.y() << " "
-           << scalor * gv.z() << std::endl;
-  }
-  // Write the faces
-  stream << "f";
-  for (unsigned int iv = 0; iv < gVertices.size(); ++iv) {
-    stream << " " << cvc + iv + 1;
-  }
-  stream << std::endl;
-}
-
 /// Unit tests for AnnulusBounds constrcuctors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
   //
@@ -115,56 +41,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
 
   AnnulusBounds copied(original);
   BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Annulus);
-
-  if (writeObj) {
-    std::ofstream rOut;
-    rOut.open("AnnulusDisc.obj");
-    unsigned int nSegments = 72;
-    double phiStep = 2 * M_PI / nSegments;
-    for (unsigned int is = 0; is < nSegments; ++is) {
-      double phi = is * phiStep - M_PI;
-      double cphi = std::cos(phi);
-      double sphi = std::sin(phi);
-      rOut << "v " << minRadius * cphi << " " << minRadius * sphi << " 0."
-           << std::endl;
-      rOut << "v " << maxRadius * cphi << " " << maxRadius * sphi << " 0."
-           << std::endl;
-    }
-    for (unsigned int il = 1; il < 2 * nSegments; ++il) {
-      rOut << "l " << il << " " << il + 2 << std::endl;
-    }
-    rOut.close();
-
-    std::ofstream abOut;
-    abOut.open("AnnulusBoundTests.obj");
-    writeAnnulusDiscObj(abOut, 1., 12, Transform3D::Identity(),
-                        original.vertices(),
-                        Vector3D(offset.x(), offset.y(), 0.));
-    abOut << std::endl;
-    abOut.close();
-
-    std::ofstream linesOut;
-    linesOut.open("AnnulusLines.obj");
-    auto writeVertex = [&](const Vector2D& v,
-                           const Vector2D& o = Vector2D(0., 0.)) -> void {
-      linesOut << "v " << v.x() - o.x() << " " << v.y() - o.y() << " 0"
-               << std::endl;
-    };
-
-    // write extra lines
-    auto vertices = original.vertices();
-    Vector2D sideA = vertices[0] - vertices[3];
-    Vector2D sideB = vertices[1] - vertices[2];
-
-    writeVertex(-offset);
-    writeVertex(vertices[3] - 10 * sideA, offset);
-    writeVertex(vertices[3] + 11 * sideA, offset);
-    writeVertex(vertices[2] - 10 * sideB, offset);
-    writeVertex(vertices[2] + 11 * sideB, offset);
-    linesOut << "l 2 3" << std::endl;
-    linesOut << "l 4 5" << std::endl;
-    linesOut.close();
-  }
 }
 
 /// Unit tests for AnnulusBounds properties
@@ -208,12 +84,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   BOOST_CHECK(aBounds.insideRadialBounds(9.));
   BOOST_CHECK(!aBounds.insideRadialBounds(18.));
 
-  /// Check binning value
-  // double binningValueR();
-
-  /// Check the value in phi
-  // CHECK_CLOSE_ABS(0.5*(minPhi+maxPhi), aBounds.binningValuePhi(), 1e-6);
-
   /// Test rMin
   BOOST_CHECK_EQUAL(aBounds.rMin(), minRadius);
   //
@@ -224,15 +94,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   //
   /// Test phiMax
   BOOST_CHECK_EQUAL(aBounds.rMax(), maxRadius);
-
-  if (writeObj) {
-    std::ofstream testOut;
-    testOut.open("AnnulusTestPoints.obj");
-    for (const auto& vc : testPoints) {
-      testOut << "v " << vc.x() << " " << vc.y() << " " << 0 << std::endl;
-    }
-    testOut.close();
-  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

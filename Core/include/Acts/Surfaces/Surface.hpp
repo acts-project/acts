@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// Surface.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -16,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -452,6 +449,21 @@ class Surface : public virtual GeometryObject,
 
   /// Return properly formatted class name
   virtual std::string name() const = 0;
+
+  /// Return a Polyhedron for this object
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param lseg Number of segments along curved lines, if the lseg
+  /// is set to one, only the corners and the extrema are given,
+  /// otherwise it represents the number of segments for a full 2*M_PI
+  /// circle and is scaled to the relevant sector
+  ///
+  /// @note An internal surface transform can invalidate the extrema
+  /// in the transformed space
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                              size_t lseg) const = 0;
 
  protected:
   /// Transform3D definition that positions

@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   CHECK_CLOSE_ABS(rect.max(), Vector2D(halfX, halfY), 1e-6);
 
   const std::vector<Vector2D> coords = {
-      {10., -5.}, {10., 5.}, {-10., 5.}, {-10., -5.}};
+      {-10., -5.}, {10., -5.}, {10., 5.}, {-10., 5.}};
   // equality, ensure ordering is ok
   const auto& rectVertices = rect.vertices();
   BOOST_CHECK_EQUAL_COLLECTIONS(coords.cbegin(), coords.cend(),

@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/DefaultParameterDefinitions.hpp"
@@ -160,6 +161,34 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
   }
 
   return std::atanh(v[2] / v.norm());
+}
+
+/// Helper method to cast out the binning value from a 3D Vector
+///
+/// For this method a 3D vector is required to guarantee all potential
+/// binning values
+///
+static double cast(const Vector3D& position, BinningValue bval) {
+  if (bval < 3)
+    return position[bval];
+  switch (bval) {
+    case binR:
+      return perp(position);
+      break;
+    case binPhi:
+      return phi(position);
+      break;
+    case binH:
+      return theta(position);
+      break;
+    case binEta:
+      return eta(position);
+      break;
+    case binMag:
+      return position.norm();
+      break;
+  }
+  return 0.;
 }
 
 /// @brief Calculates column-wise cross products of a matrix and a vector and

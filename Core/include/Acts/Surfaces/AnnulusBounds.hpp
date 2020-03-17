@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// AnnulusBounds.hpp
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -133,11 +129,20 @@ class AnnulusBounds : public DiscBounds {
   std::vector<Vector2D> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
-  /// bounds in module coorindates
+  /// bounds in module coorindates (in x/y)
   /// Starting from the upper right (max R, pos locX) and proceding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
-  std::vector<Vector2D> vertices() const;
+  ///
+  ///
+  /// @param lseg the number of segments used to approximate
+  /// and eventually curved line
+  ///
+  /// @note that the extremas are given, which may slightly alter the
+  /// number of segments returned
+  ///
+  /// @return vector for vertices in 2D
+  std::vector<Vector2D> vertices(unsigned int lseg) const;
 
  private:
   double m_rMin;

@@ -1,16 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// RadialBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
@@ -26,8 +23,6 @@ Acts::RadialBounds::RadialBounds(double minrad, double maxrad, double avephi,
       m_rMax(std::max(minrad, maxrad)),
       m_avgPhi(detail::radian_sym(avephi)),
       m_halfPhi(std::abs(hphisec)) {}
-
-Acts::RadialBounds::~RadialBounds() = default;
 
 Acts::RadialBounds* Acts::RadialBounds::clone() const {
   return new RadialBounds(*this);
@@ -65,6 +60,12 @@ double Acts::RadialBounds::distanceToBoundary(
   return BoundaryCheck(true).distance(shifted(lposition),
                                       Vector2D(rMin(), -halfPhiSector()),
                                       Vector2D(rMax(), halfPhiSector()));
+}
+
+std::vector<Acts::Vector2D> Acts::RadialBounds::vertices(
+    unsigned int lseg) const {
+  return detail::VerticesHelper::circularVertices(m_rMin, m_rMax, m_avgPhi,
+                                                  m_halfPhi, lseg);
 }
 
 // ostream operator overload

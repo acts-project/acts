@@ -1,21 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// StrawSurface.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
-
 #include <iomanip>
 #include <iostream>
 #include <utility>
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 
@@ -58,36 +55,43 @@ Acts::StrawSurface* Acts::StrawSurface::clone_impl(
   return new StrawSurface(gctx, *this, shift);
 }
 
-Acts::PolyhedronRepresentation Acts::StrawSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t l0div, size_t /*l1div*/) const {
+Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, size_t lseg) const {
+  // Prepare vertices and faces
   std::vector<Vector3D> vertices;
-  std::vector<std::vector<size_t>> faces;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
 
-  if (l0div == 1) {
-    throw std::domain_error("Polyhedron repr of straw with 1 div is undefined");
+  const Transform3D& ctransform = transform(gctx);
+  // Draw the bounds if more than one segment are chosen
+  if (lseg > 1) {
+    auto phiSegs = detail::VerticesHelper::phiSegments();
+    // Write the two bows/circles on either side
+    std::vector<int> sides = {-1, 1};
+    for (auto& side : sides) {
+      for (size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
+        int addon = (iseg == phiSegs.size() - 2) ? 1 : 0;
+        /// Helper method to create the segment
+        detail::VerticesHelper::createSegment(
+            vertices, {m_bounds->r(), m_bounds->r()}, phiSegs[iseg],
+            phiSegs[iseg + 1], lseg, addon,
+            Vector3D(0., 0., side * m_bounds->halflengthZ()), ctransform);
+      }
+    }
+    auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
+    faces = facesMesh.first;
+    triangularMesh = facesMesh.second;
   }
 
-  double phistep = 2 * M_PI / l0div;
-  double hlZ = m_bounds->halflengthZ();
-  double r = m_bounds->r();
+  size_t bvertices = vertices.size();
+  Vector3D left(0, 0, -m_bounds->halflengthZ());
+  Vector3D right(0, 0, m_bounds->halflengthZ());
+  // The central wire/straw
+  vertices.push_back(ctransform * left);
+  vertices.push_back(ctransform * right);
+  faces.push_back({bvertices, bvertices + 1});
+  vertices.push_back(ctransform * Vector3D(0., 0., 0.));
+  triangularMesh.push_back({bvertices, bvertices + 2, bvertices + 1});
 
-  Vector3D left(r, 0, -hlZ);
-  Vector3D right(r, 0, hlZ);
-
-  const Transform3D& sfTransform = transform(gctx);
-
-  for (size_t i = 0; i < l0div; i++) {
-    Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
-    vertices.push_back(sfTransform * rot * left);
-    vertices.push_back(sfTransform * rot * right);
-  }
-
-  for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {
-    faces.push_back({v, v + 1, v + 3, v + 2});
-  }
-  if (l0div > 2) {
-    faces.push_back({vertices.size() - 2, vertices.size() - 1, 1, 0});
-  }
-
-  return PolyhedronRepresentation(vertices, faces);
+  return Polyhedron(vertices, faces, triangularMesh);
 }

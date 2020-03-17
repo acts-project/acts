@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// ConeBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <cfloat>
@@ -41,6 +37,7 @@ class ConeBounds : public SurfaceBounds {
     bv_length = 5
   };
 
+  // Deleted default constructor
   ConeBounds() = delete;
 
   /// Constructor - open cone with alpha, by default a full cone
@@ -65,12 +62,16 @@ class ConeBounds : public SurfaceBounds {
   ConeBounds(double alpha, double zmin, double zmax, double halfphi = M_PI,
              double avphi = 0.);
 
-  ~ConeBounds() override;
+  /// Defaulted destructor
+  ~ConeBounds() override = default;
 
+  /// Virtual constructor
   ConeBounds* clone() const final;
 
+  /// The type enumeration
   BoundsType type() const final;
 
+  /// The value store for persistency
   std::vector<TDD_real_t> valueStore() const final;
 
   /// inside method for local position

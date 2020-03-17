@@ -1,23 +1,22 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// PlaneSurface.cpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <numeric>
 
+#include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
@@ -117,4 +116,50 @@ const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
     return (*m_bounds.get());
   }
   return s_noBounds;
+}
+
+Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, size_t lseg) const {
+  // Prepare vertices and faces
+  std::vector<Vector3D> vertices;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
+
+  // If you have bounds you can create a polyhedron representation
+  if (m_bounds) {
+    auto vertices2D = m_bounds->vertices(lseg);
+    vertices.reserve(vertices2D.size() + 1);
+    for (const auto& v2D : vertices2D) {
+      vertices.push_back(transform(gctx) * Vector3D(v2D.x(), v2D.y(), 0.));
+    }
+    bool isEllipse = bounds().type() == SurfaceBounds::Ellipse;
+    bool innerExists = false, coversFull = false;
+    if (isEllipse) {
+      auto vStore = bounds().valueStore();
+      innerExists = std::abs(vStore[EllipseBounds::BoundValues::bv_rMinX]) <
+                    s_onSurfaceTolerance;
+      coversFull =
+          std::abs(vStore[EllipseBounds::BoundValues::bv_halfPhiSector]) <
+          M_PI - s_onSurfaceTolerance;
+    }
+    // All of those can be described as convex
+    // @todo same as for Discs: coversFull is not the right criterium
+    // for triangulation
+    if (not isEllipse or not innerExists or not coversFull) {
+      auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices);
+      faces = facesMesh.first;
+      triangularMesh = facesMesh.second;
+    } else {
+      // Two concentric rings, we use the pure concentric method momentarily,
+      // but that creates too  many unneccesarry faces, when only two
+      // are needed to descibe the mesh, @todo investigate merging flag
+      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
+      faces = facesMesh.first;
+      triangularMesh = facesMesh.second;
+    }
+  } else {
+    throw std::domain_error(
+        "Polyhedron repr of boundless surface not possible.");
+  }
+  return Polyhedron(vertices, faces, triangularMesh);
 }

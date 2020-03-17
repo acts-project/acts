@@ -70,8 +70,15 @@ class TriangleBounds : public PlanarBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// This method returns the coordinates of vertices
-  std::vector<Vector2D> vertices() const final;
+  /// Return the vertices
+  ///
+  /// @param lseg the number of segments used to approximate
+  /// and eventually curved line
+  ///
+  /// @note the number of segements is ignored in this representation
+  ///
+  /// @return vector for vertices in 2D
+  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

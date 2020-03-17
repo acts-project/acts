@@ -1,16 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// ConeSurface.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
-#include "Acts/Surfaces/ConeSurface.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -18,6 +12,9 @@
 #include <iostream>
 #include <utility>
 
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -195,4 +192,88 @@ const Acts::Vector3D Acts::ConeSurface::normal(
 const Acts::ConeBounds& Acts::ConeSurface::bounds() const {
   // is safe because no constructor w/o bounds exists
   return (*m_bounds.get());
+}
+
+Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, size_t lseg) const {
+  // Prepare vertices and faces
+  std::vector<Vector3D> vertices;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
+
+  if (bounds().minZ() == -std::numeric_limits<double>::infinity() or
+      bounds().maxZ() == std::numeric_limits<double>::infinity()) {
+    throw std::domain_error(
+        "Polyhedron repr of boundless surface not possible");
+  }
+
+  auto ctransform = transform(gctx);
+
+  // The tip - created only once and only
+  // if the we don't have a cut-off cone
+  bool tipExists = false;
+  if (bounds().minZ() * bounds().maxZ() <= s_onSurfaceTolerance) {
+    vertices.push_back(ctransform * Vector3D(0., 0., 0.));
+    tipExists = true;
+  }
+
+  // Cone parameters
+  double hPhiSec = bounds().halfPhiSector();
+  double avgPhi = bounds().averagePhi();
+  bool fullCone = (hPhiSec == M_PI);
+
+  // Get the phi segments from the helper
+  auto phiSegs = fullCone ? detail::VerticesHelper::phiSegments()
+                          : detail::VerticesHelper::phiSegments(
+                                avgPhi - hPhiSec, avgPhi + hPhiSec, {avgPhi});
+
+  // Negative cone if exists
+  std::vector<double> coneSides;
+  if (std::abs(bounds().minZ()) > s_onSurfaceTolerance) {
+    coneSides.push_back(bounds().minZ());
+  }
+  if (std::abs(bounds().maxZ()) > s_onSurfaceTolerance) {
+    coneSides.push_back(bounds().maxZ());
+  }
+  for (auto& z : coneSides) {
+    // Remember the first vertex
+    size_t firstIv = vertices.size();
+    // Radius and z offset
+    double r = std::abs(z) * bounds().tanAlpha();
+    Vector3D zoffset(0., 0., z);
+    for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
+      int addon = (iseg == phiSegs.size() - 2 and not fullCone) ? 1 : 0;
+      detail::VerticesHelper::createSegment(vertices, {r, r}, phiSegs[iseg],
+                                            phiSegs[iseg + 1], lseg, addon,
+                                            zoffset, ctransform);
+    }
+    // Create the faces
+    if (tipExists) {
+      for (size_t iv = firstIv + 2; iv < vertices.size() + 1; ++iv) {
+        size_t one = 0, two = iv - 1, three = iv - 2;
+        if (z < 0.) {
+          std::swap(two, three);
+        }
+        faces.push_back({one, two, three});
+      }
+      // Complete cone if necessary
+      if (fullCone) {
+        if (z > 0.) {
+          faces.push_back({0, firstIv, vertices.size() - 1});
+        } else {
+          faces.push_back({0, vertices.size() - 1, firstIv});
+        }
+      }
+    }
+  }
+  // if no tip exists, connect the two bows
+  if (tipExists) {
+    triangularMesh = faces;
+  } else {
+    auto facesMesh =
+        detail::FacesHelper::cylindricalFaceMesh(vertices, fullCone);
+    faces = facesMesh.first;
+    triangularMesh = facesMesh.second;
+  }
+  return Polyhedron(vertices, faces, triangularMesh);
 }

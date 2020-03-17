@@ -1,24 +1,20 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// CylinderSurface.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
-
 #include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <utility>
 
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 using Acts::VectorHelpers::perp;
@@ -189,37 +185,37 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
   return (*m_bounds.get());
 }
 
-Acts::PolyhedronRepresentation Acts::CylinderSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t l0div, size_t /*unused*/) const {
+Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, size_t lseg) const {
+  // Prepare vertices and faces
   std::vector<Vector3D> vertices;
-  std::vector<std::vector<size_t>> faces;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
 
-  if (l0div <= 1) {
-    throw std::domain_error(
-        "Polyhedron repr of cylinder with 1 div is undefined");
+  auto ctrans = transform(gctx);
+  bool fullCylinder = bounds().coversFullAzimuth();
+
+  // Get the phi segments from the helper - ensures extra points
+  auto phiSegs = fullCylinder
+                     ? detail::VerticesHelper::phiSegments()
+                     : detail::VerticesHelper::phiSegments(
+                           bounds().averagePhi() - bounds().halfPhiSector(),
+                           bounds().averagePhi() + bounds().halfPhiSector(),
+                           {bounds().averagePhi()});
+
+  // Write the two bows/circles on either side
+  std::vector<int> sides = {-1, 1};
+  for (auto& side : sides) {
+    for (size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
+      int addon = (iseg == phiSegs.size() - 2 and not fullCylinder) ? 1 : 0;
+      /// Helper method to create the segment
+      detail::VerticesHelper::createSegment(
+          vertices, {bounds().r(), bounds().r()}, phiSegs[iseg],
+          phiSegs[iseg + 1], lseg, addon,
+          Vector3D(0., 0., side * bounds().halflengthZ()), ctrans);
+    }
   }
-
-  double phistep = 2 * M_PI / l0div;
-  double hlZ = bounds().halflengthZ();
-  double r = bounds().r();
-
-  Vector3D left(r, 0, -hlZ);
-  Vector3D right(r, 0, hlZ);
-
-  const Transform3D& sfTransform = transform(gctx);
-
-  for (size_t i = 0; i < l0div; i++) {
-    Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
-    vertices.push_back(sfTransform * rot * left);
-    vertices.push_back(sfTransform * rot * right);
-  }
-
-  for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {
-    faces.push_back({v, v + 1, v + 3, v + 2});
-  }
-  if (l0div > 2) {
-    faces.push_back({vertices.size() - 2, vertices.size() - 1, 1, 0});
-  }
-
-  return PolyhedronRepresentation(vertices, faces);
+  auto facesMesh =
+      detail::FacesHelper::cylindricalFaceMesh(vertices, fullCylinder);
+  return Polyhedron(vertices, facesMesh.first, facesMesh.second);
 }

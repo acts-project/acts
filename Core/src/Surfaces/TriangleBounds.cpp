@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// TriangleBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/TriangleBounds.hpp"
 
@@ -57,7 +53,8 @@ double Acts::TriangleBounds::distanceToBoundary(
   return BoundaryCheck(true).distance(lposition, m_vertices);
 }
 
-std::vector<Acts::Vector2D> Acts::TriangleBounds::vertices() const {
+std::vector<Acts::Vector2D> Acts::TriangleBounds::vertices(
+    unsigned int /*lseg*/) const {
   return {std::begin(m_vertices), std::end(m_vertices)};
 }
 

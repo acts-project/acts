@@ -1,26 +1,25 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// DiscSurface.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Surfaces/DiscSurface.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <numeric>
 #include <utility>
+#include <vector>
 
-#include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -48,7 +47,7 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double minR, double avephi, double stereo)
     : GeometryObject(),
       Surface(std::move(htrans)),
-      m_bounds(std::make_shared<const DiscTrapezoidalBounds>(
+      m_bounds(std::make_shared<const DiscTrapezoidBounds>(
           minhalfx, maxhalfx, maxR, minR, avephi, stereo)) {}
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
@@ -99,8 +98,8 @@ bool Acts::DiscSurface::globalToLocal(const GeometryContext& gctx,
 
 const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
     const Vector2D& locpol) const {
-  const DiscTrapezoidalBounds* dtbo =
-      dynamic_cast<const Acts::DiscTrapezoidalBounds*>(&(bounds()));
+  const DiscTrapezoidBounds* dtbo =
+      dynamic_cast<const Acts::DiscTrapezoidBounds*>(&(bounds()));
   if (dtbo != nullptr) {
     double rMedium = dtbo->rCenter();
     double phi = dtbo->averagePhi();
@@ -153,42 +152,46 @@ const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
   return s_noBounds;
 }
 
-Acts::PolyhedronRepresentation Acts::DiscSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t l0div, size_t /*unused*/) const {
+Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, size_t lseg) const {
+  // Prepare vertices and faces
   std::vector<Vector3D> vertices;
-  std::vector<std::vector<size_t>> faces;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
 
-  if (l0div < 3) {
-    throw std::domain_error("Polyhedron repr of disk with <3 div is undefined");
-  }
-
-  auto bounds = std::dynamic_pointer_cast<const RadialBounds>(m_bounds);
-  if (!bounds) {
+  // Understand the disc
+  bool fullDisc = m_bounds->coversFullAzimuth();
+  bool toCenter = m_bounds->rMin() < s_onSurfaceTolerance;
+  // If you have bounds you can create a polyhedron representation
+  if (m_bounds) {
+    auto vertices2D = m_bounds->vertices(lseg);
+    vertices.reserve(vertices2D.size() + 1);
+    Vector3D wCenter(0., 0., 0);
+    for (const auto& v2D : vertices2D) {
+      vertices.push_back(transform(gctx) * Vector3D(v2D.x(), v2D.y(), 0.));
+      wCenter += (*vertices.rbegin());
+    }
+    // These are convex shapes, use the helper method
+    // For rings there's a sweet spot when this stops working
+    if (m_bounds->type() == SurfaceBounds::DiscTrapezoidal or toCenter or
+        not fullDisc) {
+      // Transformt hem into the vertex frame
+      wCenter *= 1. / vertices.size();
+      vertices.push_back(wCenter);
+      auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
+      faces = facesMesh.first;
+      triangularMesh = facesMesh.second;
+    } else {
+      // Two concentric rings, we use the pure concentric method momentarily,
+      // but that creates too  many unneccesarry faces, when only two
+      // are needed to descibe the mesh, @todo investigate merging flag
+      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
+      faces = facesMesh.first;
+      triangularMesh = facesMesh.second;
+    }
+  } else {
     throw std::domain_error(
-        "Polyhedron repr of disk with non RadialBounds currently unsupported");
+        "Polyhedron repr of boundless surface not possible.");
   }
-
-  double phistep = 2 * M_PI / l0div;
-  double rMin = bounds->rMin();
-  double rMax = bounds->rMax();
-
-  Vector3D inner(rMin, 0, 0);
-  Vector3D outer(rMax, 0, 0);
-
-  const Transform3D& sfTransform = transform(gctx);
-
-  for (size_t i = 0; i < l0div; i++) {
-    Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
-    vertices.push_back(sfTransform * rot * inner);
-    vertices.push_back(sfTransform * rot * outer);
-  }
-
-  for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {
-    faces.push_back({v, v + 1, v + 3, v + 2});
-  }
-  if (l0div > 2) {
-    faces.push_back({vertices.size() - 2, vertices.size() - 1, 1, 0});
-  }
-
-  return PolyhedronRepresentation(vertices, faces);
+  return Polyhedron(vertices, faces, triangularMesh);
 }

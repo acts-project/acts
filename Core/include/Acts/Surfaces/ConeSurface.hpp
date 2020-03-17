@@ -1,18 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// ConeSurface.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -196,7 +193,7 @@ class ConeSurface : public Surface {
                                 const Vector3D& direction,
                                 const BoundaryCheck& bcheck) const final;
 
-  /// the pathCorrection for derived classes with thickness
+  /// The pathCorrection for derived classes with thickness
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global potion at the correction point
@@ -204,6 +201,19 @@ class ConeSurface : public Surface {
   /// @return is the path correction due to incident angle
   double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
                         const Vector3D& direction) const final;
+
+  /// Return a Polyhedron for the surfaces
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param lseg Number of segments along curved lines, it represents
+  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// are given
+  /// @note that a surface transform can invalidate the extrema
+  /// in the transformed space
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                      size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

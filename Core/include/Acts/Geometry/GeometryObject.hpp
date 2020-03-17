@@ -1,19 +1,16 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// GeometryObject.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -30,15 +27,18 @@ namespace Acts {
 ///
 class GeometryObject {
  public:
+  /// Defaulted construrctor
   GeometryObject() = default;
+
+  /// Defaulted copy constructor
   GeometryObject(const GeometryObject&) = default;
 
-  /// constructor from a ready-made value
+  /// Constructor from a value
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
 
-  /// assignment operator
+  /// Assignment operator
   ///
   /// @param geoID the source geoID
   GeometryObject& operator=(const GeometryObject& geoID) {
@@ -48,7 +48,6 @@ class GeometryObject {
     return *this;
   }
 
-  /// Return the value
   /// @return the geometry id by reference
   const GeometryID& geoID() const;
 
@@ -89,28 +88,6 @@ inline void GeometryObject::assignGeoID(const GeometryID& geoID) {
 
 inline double GeometryObject::binningPositionValue(const GeometryContext& gctx,
                                                    BinningValue bValue) const {
-  using VectorHelpers::perp;
-  // now switch
-  switch (bValue) {
-    // case x
-    case Acts::binX: {
-      return binningPosition(gctx, bValue).x();
-    } break;
-    // case y
-    case Acts::binY: {
-      return binningPosition(gctx, bValue).y();
-    } break;
-    // case z
-    case Acts::binZ: {
-      return binningPosition(gctx, bValue).z();
-    } break;
-    // case - to be overwritten by disks
-    case Acts::binR: {
-      return perp(binningPosition(gctx, bValue));
-    } break;
-    // do nothing for the default
-    default:
-      return 0.;
-  }
+  return VectorHelpers::cast(binningPosition(gctx, bValue), bValue);
 }
 }  // namespace Acts

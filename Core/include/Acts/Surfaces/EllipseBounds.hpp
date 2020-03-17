@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// EllipseBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <cmath>
@@ -22,8 +18,8 @@ namespace Acts {
 
 /// @class EllipseBounds
 ///
-/// Class to describe the bounds for a planar EllipseSurface,
-/// i.e. the surface between two ellipses.
+/// Class to describe the bounds for a planar ellispoid
+/// surface.
 /// By providing an argument for hphisec, the bounds can
 /// be restricted to a phi-range around the center position.
 ///
@@ -42,6 +38,7 @@ class EllipseBounds : public PlanarBounds {
     bv_length = 6
   };
 
+  /// Deleted default constructor
   EllipseBounds() = delete;
 
   /// Constructor for full of an ellipsoid disc
@@ -56,12 +53,16 @@ class EllipseBounds : public PlanarBounds {
                 double maxRadius1, double averagePhi = 0.,
                 double halfPhi = M_PI);
 
-  ~EllipseBounds() override;
+  /// Defaulted destructor
+  ~EllipseBounds() override = default;
 
+  /// Clone method for surface cloning
   EllipseBounds* clone() const final;
 
+  /// Type enumeration
   BoundsType type() const final;
 
+  /// Complete value store for persistency
   std::vector<TDD_real_t> valueStore() const final;
 
   /// This method checks if the point given in the local coordinates is between
@@ -80,8 +81,16 @@ class EllipseBounds : public PlanarBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// Return the vertices - or, the points of the extremas
-  std::vector<Vector2D> vertices() const final;
+  /// Return the vertices
+  ///
+  /// @param lseg the number of segments used to approximate
+  /// and eventually curved line, here it refers to the full 2PI Ellipse
+  ///
+  /// @note the number of segements to may be altered by also providing
+  /// the extremas in all direction
+  ///
+  /// @return vector for vertices in 2D
+  std::vector<Vector2D> vertices(unsigned int lseg) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

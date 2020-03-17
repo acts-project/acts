@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-/////////////////////////////////////////////////////////////////
-// PerigeeSurface.cpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
@@ -70,4 +66,25 @@ std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
      << sfCenter.y() << ", " << sfCenter.z() << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, size_t /*lseg*/) const {
+  // Prepare vertices and faces
+  std::vector<Vector3D> vertices;
+  std::vector<Polyhedron::Face> faces;
+  std::vector<Polyhedron::Face> triangularMesh;
+
+  const Transform3D& ctransform = transform(gctx);
+  Vector3D left(0, 0, -100.);
+  Vector3D right(0, 0, 100.);
+
+  // The central wire/straw
+  vertices.push_back(ctransform * left);
+  vertices.push_back(ctransform * right);
+  faces.push_back({0, 1});
+  vertices.push_back(ctransform * Vector3D(0., 0., 0.));
+  triangularMesh.push_back({0, 2, 1});
+
+  return Polyhedron(vertices, faces, triangularMesh);
 }

@@ -1,22 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// DiscSurface.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -63,7 +59,7 @@ class DiscSurface : public Surface {
 
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
-  /// This is n this case you have DiscTrapezoidalBounds
+  /// This is n this case you have DiscTrapezoidBounds
   ///
   /// @param htrans is transform that places the disc in the global 3D space
   /// (can be nullptr)
@@ -310,12 +306,16 @@ class DiscSurface : public Surface {
   /// Return properly formatted class name for screen output
   std::string name() const override;
 
-  /// Return a PolyhedronRepresentation for this object
+  /// Return a Polyhedron for the surfaces
+  ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param l0div Number of divisions along l0 (phi)
-  /// @param l1div Number of divisions along l1 (r)
-  virtual PolyhedronRepresentation polyhedronRepresentation(
-      const GeometryContext& gctx, size_t l0div = 10, size_t l1div = 1) const;
+  /// @param lseg Number of segments along curved lines, it represents
+  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// are given
+  ///
+  /// @return A list of vertices and a face/facett description of it
+  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
+                                      size_t lseg) const override;
 
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)

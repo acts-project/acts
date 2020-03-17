@@ -10,8 +10,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/ObjTestWriter.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -21,6 +23,7 @@ namespace tt = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+
 BOOST_AUTO_TEST_SUITE(Volumes)
 
 /// Unit test for testing the decomposeToSurfaces() function
@@ -95,10 +98,32 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
 }
 
 BOOST_AUTO_TEST_CASE(bounding_box_creation) {
+  GeometryContext tgContext = GeometryContext();
+  std::vector<IdentifiedPolyderon> tPolyhedrons;
+
+  auto combineAndDecompose = [&](const SurfacePtrVector& surfaces,
+                                 const std::string& name) -> void {
+    std::string writeBase = std::string("CylinderVolumeBounds_") + name;
+
+    Polyhedron phCombined;
+    size_t is = 0;
+    for (const auto& sf : surfaces) {
+      Polyhedron phComponent = sf->polyhedronRepresentation(tgContext, 72);
+      phCombined.merge(phComponent);
+      tPolyhedrons.push_back(
+          {writeBase + std::string("_comp_") + std::to_string(is++), false,
+           phComponent});
+    }
+    tPolyhedrons.push_back({writeBase, false, phCombined});
+  };
+
   float tol = 1e-4;
 
   CylinderVolumeBounds cvb(5, 10);
+  auto cvbSurfaces = cvb.decomposeToSurfaces();
+  combineAndDecompose(cvbSurfaces, "Solid");
   auto bb = cvb.boundingBox();
+  ObjTestWriter::writeObj("CylinderVolumeBounds_Solid_BB", bb);
 
   Transform3D rot;
   rot = AngleAxis3D(M_PI / 2., Vector3D::UnitX());
@@ -117,6 +142,9 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   BOOST_CHECK_EQUAL(bb.max(), Vector3D(8, 8, 12));
   BOOST_CHECK_EQUAL(bb.min(), Vector3D(-8, -8, -12));
+  cvbSurfaces = cvb.decomposeToSurfaces();
+  combineAndDecompose(cvbSurfaces, "Tube");
+  ObjTestWriter::writeObj("CylinderVolumeBounds_Tube_BB", bb);
 
   double angle = M_PI / 8.;
   cvb = CylinderVolumeBounds(5, 8, angle, 13);
@@ -125,6 +153,9 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   CHECK_CLOSE_ABS(bb.max(), Vector3D(8, 8 * std::sin(angle), 13), tol);
   CHECK_CLOSE_ABS(
       bb.min(), Vector3D(5 * std::cos(angle), -8 * std::sin(angle), -13), tol);
+  cvbSurfaces = cvb.decomposeToSurfaces();
+  combineAndDecompose(cvbSurfaces, "TubeSector");
+  ObjTestWriter::writeObj("CylinderVolumeBounds_TubeSector_BB", bb);
 
   rot = AngleAxis3D(M_PI / 2., Vector3D::UnitZ());
   bb = cvb.boundingBox(&rot);
@@ -138,6 +169,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   CHECK_CLOSE_ABS(bb.max(), Vector3D(8.40007, 15.2828, 3.88911), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3D(-7.27834, -8.12028, -14.2182), tol);
+  ObjTestWriter::writeObj(tPolyhedrons);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

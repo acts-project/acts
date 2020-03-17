@@ -50,28 +50,28 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0),
       averagePhi(0.0) /*, stereo(0.1)*/;
   /// Test clone
-  DiscTrapezoidBounds discTrapezoidBoundsObject(minHalfX, maxHalfX, rMin, rMax,
+  DiscTrapezoidBounds DiscTrapezoidBoundsObject(minHalfX, maxHalfX, rMin, rMax,
                                                 averagePhi);
-  auto pClonedDiscTrapezoidBounds = discTrapezoidBoundsObject.clone();
+  auto pClonedDiscTrapezoidBounds = DiscTrapezoidBoundsObject.clone();
   BOOST_CHECK_NE(pClonedDiscTrapezoidBounds, nullptr);
   delete pClonedDiscTrapezoidBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(discTrapezoidBoundsObject.type(),
+  BOOST_CHECK_EQUAL(DiscTrapezoidBoundsObject.type(),
                     SurfaceBounds::DiscTrapezoidal);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);
   Vector2D outside(30., 0.);
   Vector2D inSurface(2., 0.0);
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.distanceToBoundary(origin), 2.0,
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.distanceToBoundary(origin), 2.0,
                   1e-6);
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.distanceToBoundary(outside), 24.0,
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.distanceToBoundary(outside), 24.0,
                   1e-6);
   //
   /// Test dump
   boost::test_tools::output_test_stream dumpOuput;
-  discTrapezoidBoundsObject.toStream(dumpOuput);
+  DiscTrapezoidBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(dumpOuput.is_equal(
       "Acts::DiscTrapezoidBounds:  (innerRadius, outerRadius, hMinX, "
       "hMaxX, hlengthY, hPhiSector, averagePhi, rCenter, stereo) = "
@@ -79,47 +79,47 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
       "0.0000000, 2.5243378, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(discTrapezoidBoundsObject.inside(inSurface, BoundaryCheck(true)));
-  BOOST_CHECK(!discTrapezoidBoundsObject.inside(outside, BoundaryCheck(true)));
+  BOOST_CHECK(DiscTrapezoidBoundsObject.inside(inSurface, BoundaryCheck(true)));
+  BOOST_CHECK(!DiscTrapezoidBoundsObject.inside(outside, BoundaryCheck(true)));
   //
   /// Test rMin
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.rMin(), rMin, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMin(), rMin, 1e-6);
   //
   /// Test rMax
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.rMax(), rMax, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMax(), rMax, 1e-6);
   //
   /// Test averagePhi
-  CHECK_SMALL(discTrapezoidBoundsObject.averagePhi(), 1e-9);
+  CHECK_SMALL(DiscTrapezoidBoundsObject.averagePhi(), 1e-9);
   //
   /// Test rCenter (redundant; not configurable)
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.rCenter(), 2.524337798, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rCenter(), 2.524337798, 1e-6);
   //
   /// Test halfPhiSector (redundant; not configurable)
-  CHECK_SMALL(discTrapezoidBoundsObject.stereo(), 1e-6);
+  CHECK_SMALL(DiscTrapezoidBoundsObject.stereo(), 1e-6);
   //
   /// Test minHalflengthX
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.minHalflengthX(), minHalfX, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.minHalflengthX(), minHalfX, 1e-6);
   //
   /// Test maxHalflengthX
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.maxHalflengthX(), maxHalfX, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.maxHalflengthX(), maxHalfX, 1e-6);
   //
   /// Test halflengthY
-  CHECK_CLOSE_REL(discTrapezoidBoundsObject.halflengthY(), 0.792286991, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.halflengthY(), 0.792286991, 1e-6);
 }
 /// Unit test for testing DiscTrapezoidBounds assignment
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsAssignment) {
   double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
       stereo(0.1);
-  DiscTrapezoidBounds discTrapezoidBoundsObject(minHalfX, maxHalfX, rMin, rMax,
+  DiscTrapezoidBounds DiscTrapezoidBoundsObject(minHalfX, maxHalfX, rMin, rMax,
                                                 averagePhi, stereo);
   // operator == not implemented in this class
   //
   /// Test assignment
   DiscTrapezoidBounds assignedDiscTrapezoidBoundsObject(2.1, 6.6, 3.4, 4.2,
                                                         33.);
-  assignedDiscTrapezoidBoundsObject = discTrapezoidBoundsObject;
+  assignedDiscTrapezoidBoundsObject = DiscTrapezoidBoundsObject;
   BOOST_CHECK_EQUAL(assignedDiscTrapezoidBoundsObject,
-                    discTrapezoidBoundsObject);
+                    DiscTrapezoidBoundsObject);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
