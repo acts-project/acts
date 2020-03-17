@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2)) {
       origin3D);
   //
   /// Test bounds
-  BOOST_CHECK_EQUAL(discSurfaceObject->bounds().type(), SurfaceBounds::Disc);
+  BOOST_CHECK_EQUAL(discSurfaceObject->bounds().type(), SurfaceBounds::eDisc);
   //
   Vector3D ignoredMomentum{0., 0., 0.};
   /// Test isOnSurface()

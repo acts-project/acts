@@ -37,8 +37,8 @@ Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
   return {vmin, vmax};
 }
 
-std::vector<TDD_real_t> Acts::ConvexPolygonBoundsBase::valueStore() const {
-  std::vector<TDD_real_t> values;
+std::vector<double> Acts::ConvexPolygonBoundsBase::boundValues() const {
+  std::vector<double> values;
   for (const auto& vtx : vertices()) {
     values.push_back(vtx.x());
     values.push_back(vtx.y());
@@ -110,7 +110,7 @@ Acts::ConvexPolygonBounds<N>* Acts::ConvexPolygonBounds<N>::clone() const {
 
 template <int N>
 Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
-  return SurfaceBounds::ConvexPolygon;
+  return SurfaceBounds::eConvexPolygon;
 }
 
 template <int N>
@@ -152,7 +152,7 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::clone() const {
 
 Acts::SurfaceBounds::BoundsType
 Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
-  return SurfaceBounds::ConvexPolygon;
+  return SurfaceBounds::eConvexPolygon;
 }
 
 bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(

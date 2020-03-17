@@ -39,7 +39,7 @@ class LineBounds : public SurfaceBounds {
   BoundsType type() const final;
 
   /// Return the intrinsic values
-  std::vector<TDD_real_t> valueStore() const final;
+  std::vector<double> boundValues() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

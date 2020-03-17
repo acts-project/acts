@@ -31,13 +31,13 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
   BOOST_CHECK_EQUAL(
       EllipseBounds(minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector)
           .type(),
-      SurfaceBounds::Ellipse);
+      SurfaceBounds::eEllipse);
   //
   /// Copy constructor
   EllipseBounds original(minRad1, minRad2, maxRad1, maxRad2, averagePhi,
                          phiSector);
   EllipseBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Ellipse);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eEllipse);
 }
 
 /// Unit tests for EllipseBounds properties
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
   delete pClonedEllipseBoundsObject;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::Ellipse);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::eEllipse);
   //
   // clone already tested
   //

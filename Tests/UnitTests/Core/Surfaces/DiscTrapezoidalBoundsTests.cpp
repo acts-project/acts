@@ -31,18 +31,18 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
   /// Test construction with dimensions and default stereo
   BOOST_CHECK_EQUAL(
       DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, rMax, averagePhi).type(),
-      SurfaceBounds::DiscTrapezoidal);
+      SurfaceBounds::eDiscTrapezoid);
   //
   /// Test construction with all dimensions
   BOOST_CHECK_EQUAL(
       DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, rMax, averagePhi, stereo)
           .type(),
-      SurfaceBounds::DiscTrapezoidal);
+      SurfaceBounds::eDiscTrapezoid);
   //
   /// Copy constructor
   DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi);
   DiscTrapezoidBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::DiscTrapezoidal);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDiscTrapezoid);
 }
 
 /// Unit tests for DiscTrapezoidBounds properties
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(discTrapezoidBoundsObject.type(),
-                    SurfaceBounds::DiscTrapezoidal);
+                    SurfaceBounds::eDiscTrapezoid);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);

@@ -28,16 +28,15 @@ namespace Acts {
 class ConeBounds : public SurfaceBounds {
  public:
   /// @enum BoundValues for readablility
-  enum BoundValues {
-    bv_alpha = 0,
-    bv_minZ = 1,
-    bv_maxZ = 2,
-    bv_averagePhi = 3,
-    bv_halfPhiSector = 4,
-    bv_length = 5
+  enum BoundValues : int {
+    eAlpha = 0,
+    eMinZ = 1,
+    eMaxZ = 2,
+    eHalfPhiSector = 3,
+    eAveragePhi = 4,
+    eValues = 5
   };
 
-  // Deleted default constructor
   ConeBounds() = delete;
 
   /// Constructor - open cone with alpha, by default a full cone
@@ -62,17 +61,22 @@ class ConeBounds : public SurfaceBounds {
   ConeBounds(double alpha, double zmin, double zmax, double halfphi = M_PI,
              double avphi = 0.);
 
-  /// Defaulted destructor
+  /// Constructor - from parameters vector
+  ///
+  /// @param parametes The parameter vector
+  ConeBounds(const std::vector<double>& parameters);
+
   ~ConeBounds() override = default;
 
-  /// Virtual constructor
   ConeBounds* clone() const final;
 
-  /// The type enumeration
+  /// Return the bounds type
   BoundsType type() const final;
 
-  /// The value store for persistency
-  std::vector<TDD_real_t> valueStore() const final;
+  /// Return the bound values
+  ///
+  /// @return this returns a copy of the internal parameters
+  std::vector<double> boundValues() const final;
 
   /// inside method for local position
   ///
@@ -100,38 +104,18 @@ class ConeBounds : public SurfaceBounds {
   /// @return is the r value associated with z
   double r(double z) const;
 
-  /// Return the average values for the angles
+  /// Return tangent of alpha (pre-computed)
   double tanAlpha() const;
 
-  /// Return the average values for the angles
-  double sinAlpha() const;
-
-  /// Return the average values for the angles
-  double cosAlpha() const;
-
-  /// Return the average values for the angles
-  double alpha() const;
-
-  /// This method returns the minimum z value in the local
-  /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
-  double minZ() const;
-
-  /// This method returns the maximum z value in the local
-  /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
-  double maxZ() const;
-
-  /// This method returns the average phi value
-  /// (i.e. the "middle" phi value for the conical sector we  are describing)
-  double averagePhi() const;
-
-  /// This method returns the half-phi width of the sector
-  /// (so that averagePhi +/- halfPhiSector gives the phi bounds of the cone)
-  double halfPhiSector() const;
+  /// Templated access to the bound parameters
+  template <BoundValues bValue>
+  double get() const {
+    return m_parameters[bValue];
+  }
 
  private:
-  double m_alpha, m_tanAlpha;
-  double m_zMin, m_zMax;
-  double m_avgPhi, m_halfPhi;
+  std::vector<double> m_parameters;
+  double m_tanAlpha;
 
   /// Private helper functin to shift a local 2D position
   ///
@@ -147,31 +131,8 @@ inline double ConeBounds::tanAlpha() const {
   return m_tanAlpha;
 }
 
-inline double ConeBounds::sinAlpha() const {
-  return std::sin(m_alpha);
+inline std::vector<double> ConeBounds::boundValues() const {
+  return m_parameters;
 }
 
-inline double ConeBounds::cosAlpha() const {
-  return std::cos(m_alpha);
-}
-
-inline double ConeBounds::alpha() const {
-  return m_alpha;
-}
-
-inline double ConeBounds::minZ() const {
-  return m_zMin;
-}
-
-inline double ConeBounds::maxZ() const {
-  return m_zMax;
-}
-
-inline double ConeBounds::averagePhi() const {
-  return m_avgPhi;
-}
-
-inline double ConeBounds::halfPhiSector() const {
-  return m_halfPhi;
-}
 }  // namespace Acts

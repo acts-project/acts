@@ -65,7 +65,7 @@ class RadialBounds : public DiscBounds {
   SurfaceBounds::BoundsType type() const final;
 
   /// Value store to be written out
-  std::vector<TDD_real_t> valueStore() const final;
+  std::vector<double> boundValues() const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///

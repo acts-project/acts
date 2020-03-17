@@ -15,13 +15,13 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#ifndef VOLUMEBOUNDS_VALUESTORE_FILL
-#define VOLUMEBOUNDS_VALUESTORE_FILL(val) m_valueStore[bv_##val] = val
+#ifndef VOLUMEBOUNDS_boundValues_FILL
+#define VOLUMEBOUNDS_boundValues_FILL(val) m_boundValues[bv_##val] = val
 #endif
 
-#ifndef VOLUMEBOUNDS_VALUESTORE_ACCESS
-#define VOLUMEBOUNDS_VALUESTORE_ACCESS(val) \
-  double val() const { return m_valueStore[bv_##val]; }
+#ifndef VOLUMEBOUNDS_boundValues_ACCESS
+#define VOLUMEBOUNDS_boundValues_ACCESS(val) \
+  double val() const { return m_boundValues[bv_##val]; }
 #endif
 
 #ifndef VOLUMEBOUNDS_DERIVED_ACCESS

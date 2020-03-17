@@ -26,17 +26,17 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
   // CylinderBounds defaultConstructedCylinderBounds;  // deleted
   double radius(0.5), halfz(10.), halfphi(M_PI / 2.0), averagePhi(M_PI / 2.0);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz).type(),
-                    SurfaceBounds::Cylinder);
+                    SurfaceBounds::eCylinder);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfphi, halfz).type(),
-                    SurfaceBounds::Cylinder);
+                    SurfaceBounds::eCylinder);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, averagePhi, halfphi, halfz).type(),
-                    SurfaceBounds::Cylinder);
+                    SurfaceBounds::eCylinder);
   //
   /// test copy construction;
   CylinderBounds cylinderBounds(radius, halfz);
   CylinderBounds copyConstructedCylinderBounds(cylinderBounds);
   BOOST_CHECK_EQUAL(copyConstructedCylinderBounds.type(),
-                    SurfaceBounds::Cylinder);
+                    SurfaceBounds::eCylinder);
 }
 
 /// Unit tests for CylinderBounds properties
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   delete pCylinderBoundsClone;
 
   /// test for type()
-  BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::Cylinder);
+  BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::eCylinder);
 
   /// test for inside(), 2D coords are r or phi ,z? : needs clarification
   const Vector2D origin{0., 0.};

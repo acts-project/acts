@@ -26,11 +26,11 @@ Acts::TrapezoidBounds* Acts::TrapezoidBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
-  return SurfaceBounds::Trapezoid;
+  return SurfaceBounds::eTrapezoid;
 }
 
-std::vector<TDD_real_t> Acts::TrapezoidBounds::valueStore() const {
-  std::vector<TDD_real_t> values(TrapezoidBounds::bv_length);
+std::vector<double> Acts::TrapezoidBounds::boundValues() const {
+  std::vector<double> values(TrapezoidBounds::bv_length);
   values[TrapezoidBounds::bv_minHalfX] = minHalflengthX();
   values[TrapezoidBounds::bv_maxHalfX] = maxHalflengthX();
   values[TrapezoidBounds::bv_halfY] = halflengthY();

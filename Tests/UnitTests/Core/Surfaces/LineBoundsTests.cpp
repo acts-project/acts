@@ -22,16 +22,16 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
   /// test default construction
   LineBounds defaultConstructedLineBounds;  // implicit
-  BOOST_CHECK_EQUAL(defaultConstructedLineBounds.type(), SurfaceBounds::Line);
+  BOOST_CHECK_EQUAL(defaultConstructedLineBounds.type(), SurfaceBounds::eLine);
   /// test LineBounds(double, double)
   double radius(0.5), halfz(10.);
-  BOOST_CHECK_EQUAL(LineBounds(radius, halfz).type(), SurfaceBounds::Line);
+  BOOST_CHECK_EQUAL(LineBounds(radius, halfz).type(), SurfaceBounds::eLine);
   //
   LineBounds s(1);  // would act as size_t cast to LineBounds
   /// test copy construction;
   LineBounds copyConstructedLineBounds(
       defaultConstructedLineBounds);  // implicit
-  BOOST_CHECK_EQUAL(copyConstructedLineBounds.type(), SurfaceBounds::Line);
+  BOOST_CHECK_EQUAL(copyConstructedLineBounds.type(), SurfaceBounds::eLine);
 }
 
 /// Unit tests for LineBounds properties
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   delete pLineBoundsClone;
 
   /// test for type()
-  BOOST_CHECK_EQUAL(lineBoundsObject.type(), SurfaceBounds::Line);
+  BOOST_CHECK_EQUAL(lineBoundsObject.type(), SurfaceBounds::eLine);
 
   /// test for inside()
   const Vector2D origin{0., 0.};

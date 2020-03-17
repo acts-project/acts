@@ -132,10 +132,10 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     for (const auto& v2D : vertices2D) {
       vertices.push_back(transform(gctx) * Vector3D(v2D.x(), v2D.y(), 0.));
     }
-    bool isEllipse = bounds().type() == SurfaceBounds::Ellipse;
+    bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
     bool innerExists = false, coversFull = false;
     if (isEllipse) {
-      auto vStore = bounds().valueStore();
+      auto vStore = bounds().boundValues();
       innerExists = std::abs(vStore[EllipseBounds::BoundValues::bv_rMinX]) <
                     s_onSurfaceTolerance;
       coversFull =

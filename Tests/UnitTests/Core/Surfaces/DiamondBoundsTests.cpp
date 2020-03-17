@@ -31,12 +31,12 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
   // DiamondBounds d(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   BOOST_CHECK_EQUAL(
       DiamondBounds(minHalfX, midHalfX, maxHalfX, halfY1, halfY2).type(),
-      SurfaceBounds::Diamond);
+      SurfaceBounds::eDiamond);
   //
   /// Copy constructor
   DiamondBounds original(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   DiamondBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Diamond);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDiamond);
 
   // invalid inputs
   BOOST_CHECK_THROW(
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   delete pClonedDiamondBoundsObject;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::Diamond);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::eDiamond);
   // //redundant test
   //
   /// Test minHalflengthX() NOTE: Naming violation

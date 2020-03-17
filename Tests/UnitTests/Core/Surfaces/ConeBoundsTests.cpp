@@ -39,17 +39,17 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   const bool symmetric(false);
   BOOST_TEST_CHECKPOINT("Four parameter constructor (last two at default)");
   ConeBounds defaultConeBounds(alpha, symmetric);
-  BOOST_CHECK_EQUAL(defaultConeBounds.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(defaultConeBounds.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Four parameter constructor");
   ConeBounds fourParameterConstructed(alpha, symmetric, halfPhi, averagePhi);
-  BOOST_CHECK_EQUAL(fourParameterConstructed.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(fourParameterConstructed.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Five parameter constructor (last two at default)");
   ConeBounds defaulted5ParamConeBounds(alpha, zMin, zMax);
-  BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Five parameter constructor)");
   ConeBounds fiveParamConstructedConeBounds(alpha, zMin, zMax, halfPhi,
                                             averagePhi);
-  BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Copy constructor");
   ConeBounds copyConstructedConeBounds(fiveParamConstructedConeBounds);
   BOOST_CHECK_EQUAL(copyConstructedConeBounds, fiveParamConstructedConeBounds);
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   ConeBounds coneBoundsObject(alpha, zMin, zMax, halfPhi, averagePhi);
   //
   /// test for type (redundant)
-  BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::eCone);
   //
   /// test for inside
   BOOST_CHECK(!coneBoundsObject.inside(origin));
@@ -81,23 +81,17 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   /// test for tanAlpha
   CHECK_CLOSE_REL(coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
   //
-  /// test for sinAlpha
-  CHECK_CLOSE_REL(coneBoundsObject.sinAlpha(), std::sin(alpha), 1e-6);
-  //
-  /// test for cosAlpha
-  CHECK_CLOSE_REL(coneBoundsObject.cosAlpha(), std::cos(alpha), 1e-6);
-  //
   /// test for alpha
-  CHECK_CLOSE_REL(coneBoundsObject.alpha(), alpha, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eAlpha>(), alpha, 1e-6);
   //
   /// test for minZ
-  CHECK_CLOSE_REL(coneBoundsObject.minZ(), zMin, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eMinZ>(), zMin, 1e-6);
   //
   /// test for maxZ
-  CHECK_CLOSE_REL(coneBoundsObject.maxZ(), zMax, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eMaxZ>(), zMax, 1e-6);
   //
   /// test for averagePhi
-  CHECK_CLOSE_REL(coneBoundsObject.halfPhiSector(), halfPhi, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eHalfPhiSector>(), halfPhi, 1e-6);
   //
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;

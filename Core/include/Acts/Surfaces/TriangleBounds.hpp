@@ -53,7 +53,7 @@ class TriangleBounds : public PlanarBounds {
 
   BoundsType type() const final;
 
-  std::vector<TDD_real_t> valueStore() const final;
+  std::vector<double> boundValues() const final;
 
   /// This method checks if the provided local coordinates are inside the
   /// surface bounds

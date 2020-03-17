@@ -30,7 +30,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
 
   /// Return vector containing defining parameters
   /// @return the parameters
-  std::vector<TDD_real_t> valueStore() const final;
+  std::vector<double> boundValues() const final;
 
  protected:
   /// Return a rectangle bounds instance that encloses a set of vertices.
@@ -79,7 +79,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @param vertices The vertices
   ConvexPolygonBounds(const vertex_array& vertices);
 
-  /// Defaulted destructor
   ~ConvexPolygonBounds() override = default;
 
   /// Return a copy of this bounds object.

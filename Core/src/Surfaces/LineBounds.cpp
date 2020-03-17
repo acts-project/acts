@@ -19,11 +19,11 @@ Acts::LineBounds* Acts::LineBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
-  return SurfaceBounds::Line;
+  return SurfaceBounds::eLine;
 }
 
-std::vector<TDD_real_t> Acts::LineBounds::valueStore() const {
-  std::vector<TDD_real_t> values(LineBounds::bv_length);
+std::vector<double> Acts::LineBounds::boundValues() const {
+  std::vector<double> values(LineBounds::bv_length);
   values[LineBounds::bv_radius] = r();
   values[LineBounds::bv_halfZ] = halflengthZ();
   return values;

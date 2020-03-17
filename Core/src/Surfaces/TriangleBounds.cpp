@@ -29,11 +29,11 @@ Acts::TriangleBounds* Acts::TriangleBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::TriangleBounds::type() const {
-  return SurfaceBounds::Triangle;
+  return SurfaceBounds::eTriangle;
 }
 
-std::vector<TDD_real_t> Acts::TriangleBounds::valueStore() const {
-  std::vector<TDD_real_t> values(TriangleBounds::bv_length);
+std::vector<double> Acts::TriangleBounds::boundValues() const {
+  std::vector<double> values(TriangleBounds::bv_length);
   values[TriangleBounds::bv_x1] = m_vertices[0].x();
   values[TriangleBounds::bv_y1] = m_vertices[0].y();
   values[TriangleBounds::bv_x2] = m_vertices[1].x();

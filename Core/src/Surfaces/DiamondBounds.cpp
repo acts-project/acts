@@ -30,11 +30,11 @@ Acts::DiamondBounds* Acts::DiamondBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
-  return SurfaceBounds::Diamond;
+  return SurfaceBounds::eDiamond;
 }
 
-std::vector<TDD_real_t> Acts::DiamondBounds::valueStore() const {
-  std::vector<TDD_real_t> values(DiamondBounds::bv_length);
+std::vector<double> Acts::DiamondBounds::boundValues() const {
+  std::vector<double> values(DiamondBounds::bv_length);
   values[DiamondBounds::bv_x1] = x1();
   values[DiamondBounds::bv_x2] = x2();
   values[DiamondBounds::bv_x3] = x3();

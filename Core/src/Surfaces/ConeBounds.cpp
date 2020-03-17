@@ -22,29 +22,19 @@ Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
 
 Acts::ConeBounds::ConeBounds(double alpha, double zmin, double zmax,
                              double halfphi, double avphi)
-    : m_alpha(alpha),
-      m_tanAlpha(std::tan(alpha)),
-      m_zMin(zmin),
-      m_zMax(zmax),
-      m_avgPhi(detail::radian_sym(avphi)),
-      m_halfPhi(std::abs(halfphi)) {}
+    : m_parameters(
+          {alpha, zmin, zmax, std::abs(halfphi), detail::radian_sym(avphi)}),
+      m_tanAlpha(std::tan(alpha)) {}
+
+Acts::ConeBounds::ConeBounds(const std::vector<double>& parameters)
+    : m_parameters(parameters), m_tanAlpha(std::tan(get<eAlpha>())) {}
 
 Acts::ConeBounds* Acts::ConeBounds::clone() const {
   return new ConeBounds(*this);
 }
 
 Acts::SurfaceBounds::BoundsType Acts::ConeBounds::type() const {
-  return SurfaceBounds::Cone;
-}
-
-std::vector<TDD_real_t> Acts::ConeBounds::valueStore() const {
-  std::vector<TDD_real_t> values(ConeBounds::bv_length);
-  values[ConeBounds::bv_alpha] = alpha();
-  values[ConeBounds::bv_minZ] = minZ();
-  values[ConeBounds::bv_maxZ] = maxZ();
-  values[ConeBounds::bv_averagePhi] = averagePhi();
-  values[ConeBounds::bv_halfPhiSector] = halfPhiSector();
-  return values;
+  return SurfaceBounds::eCone;
 }
 
 /// Shift r-phi coordinate to be centered around the average phi.
@@ -57,33 +47,33 @@ Acts::Vector2D Acts::ConeBounds::shifted(
   shifted[eLOC_Z] = lposition[eLOC_Z];
   shifted[eLOC_RPHI] =
       std::isnormal(x)
-          ? (x * radian_sym((lposition[eLOC_RPHI] / x) - averagePhi()))
+          ? (x * radian_sym((lposition[eLOC_RPHI] / x) - get<eAveragePhi>()))
           : lposition[eLOC_RPHI];
   return shifted;
 }
 
 bool Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
                               const Acts::BoundaryCheck& bcheck) const {
-  auto rphiHalf = r(lposition[eLOC_Z]) * halfPhiSector();
-  return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, minZ()),
-                         Vector2D(rphiHalf, maxZ()));
+  auto rphiHalf = r(lposition[eLOC_Z]) * get<eHalfPhiSector>();
+  return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, get<eMinZ>()),
+                         Vector2D(rphiHalf, get<eMaxZ>()));
 }
 
 double Acts::ConeBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
-  auto rphiHalf = r(lposition[eLOC_Z]) * halfPhiSector();
+  auto rphiHalf = r(lposition[eLOC_Z]) * get<eHalfPhiSector>();
   return BoundaryCheck(true).distance(shifted(lposition),
-                                      Vector2D(-rphiHalf, minZ()),
-                                      Vector2D(rphiHalf, maxZ()));
+                                      Vector2D(-rphiHalf, get<eMinZ>()),
+                                      Vector2D(rphiHalf, get<eMaxZ>()));
 }
 
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) "
+  sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) "
         "= ";
-  sl << "(" << m_tanAlpha << ", " << m_zMin << ", " << m_zMax << ", "
-     << m_avgPhi << ", " << m_halfPhi << ")";
+  sl << "(" << m_tanAlpha << ", " << get<eMinZ>() << ", " << get<eMaxZ>()
+     << ", " << get<eHalfPhiSector>() << ", " << get<eAveragePhi>() << ")";
   sl << std::setprecision(-1);
   return sl;
 }

@@ -94,7 +94,6 @@ class Surface : public virtual GeometryObject,
           const Transform3D& shift);
 
  public:
-  /// Destructor
   virtual ~Surface();
 
   /// Factory for producing memory managed instances of Surface.

@@ -37,10 +37,10 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
   //
   /// Test construction with radii and default sector
   auto original = AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
-  BOOST_CHECK_EQUAL(original.type(), SurfaceBounds::Annulus);
+  BOOST_CHECK_EQUAL(original.type(), SurfaceBounds::eAnnulus);
 
   AnnulusBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Annulus);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eAnnulus);
 }
 
 /// Unit tests for AnnulusBounds properties
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   delete pClonedAnnulusBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::Annulus);
+  BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::eAnnulus);
 
   /// Test positions inside/outside
   // - start from cartesian (from test drawing)

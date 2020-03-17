@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   //
   /// Test bounds
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->bounds().type(),
-                    SurfaceBounds::Cylinder);
+                    SurfaceBounds::eCylinder);
   //
   /// Test localToGlobal
   Vector2D localPosition{0., 0.};

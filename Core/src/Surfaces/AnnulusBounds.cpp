@@ -89,8 +89,8 @@ Acts::AnnulusBounds::AnnulusBounds(double minR, double maxR, double minPhi,
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<TDD_real_t> Acts::AnnulusBounds::valueStore() const {
-  std::vector<TDD_real_t> values(AnnulusBounds::bv_length);
+std::vector<double> Acts::AnnulusBounds::boundValues() const {
+  std::vector<double> values(AnnulusBounds::bv_length);
   values[AnnulusBounds::bv_minR] = rMin();
   values[AnnulusBounds::bv_maxR] = rMax();
   values[AnnulusBounds::bv_phiMin] = phiMin();

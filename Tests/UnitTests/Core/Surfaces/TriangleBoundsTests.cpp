@@ -30,12 +30,12 @@ BOOST_AUTO_TEST_CASE(TriangleBoundsConstruction) {
   // TriangleBounds defaultConstructedTriangleBounds;  //deleted
   //
   /// Test construction with vertices
-  BOOST_CHECK_EQUAL(TriangleBounds(vertices).type(), SurfaceBounds::Triangle);
+  BOOST_CHECK_EQUAL(TriangleBounds(vertices).type(), SurfaceBounds::eTriangle);
   //
   /// Copy constructor
   TriangleBounds original(vertices);
   TriangleBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Triangle);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eTriangle);
 }
 
 /// Unit tests for TriangleBounds properties
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(TriangleBoundsProperties) {
   delete pClonedTriangleBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(triangleBoundsObject.type(), SurfaceBounds::Triangle);
+  BOOST_CHECK_EQUAL(triangleBoundsObject.type(), SurfaceBounds::eTriangle);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);

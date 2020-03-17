@@ -44,11 +44,11 @@ Acts::CylinderBounds* Acts::CylinderBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
-  return SurfaceBounds::Cylinder;
+  return SurfaceBounds::eCylinder;
 }
 
-std::vector<TDD_real_t> Acts::CylinderBounds::valueStore() const {
-  std::vector<TDD_real_t> values(CylinderBounds::bv_length);
+std::vector<double> Acts::CylinderBounds::boundValues() const {
+  std::vector<double> values(CylinderBounds::bv_length);
   values[CylinderBounds::bv_radius] = m_radius;
   values[CylinderBounds::bv_averagePhi] = m_avgPhi;
   values[CylinderBounds::bv_halfPhiSector] = m_halfPhi;

@@ -29,11 +29,11 @@ Acts::RadialBounds* Acts::RadialBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::RadialBounds::type() const {
-  return SurfaceBounds::Disc;
+  return SurfaceBounds::eDisc;
 }
 
-std::vector<TDD_real_t> Acts::RadialBounds::valueStore() const {
-  std::vector<TDD_real_t> values(RadialBounds::bv_length);
+std::vector<double> Acts::RadialBounds::boundValues() const {
+  std::vector<double> values(RadialBounds::bv_length);
   values[RadialBounds::bv_rMin] = rMin();
   values[RadialBounds::bv_rMax] = rMax();
   values[RadialBounds::bv_averagePhi] = averagePhi();

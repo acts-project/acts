@@ -28,16 +28,16 @@ BOOST_AUTO_TEST_CASE(RadialBoundsConstruction) {
   //
   /// Test construction with radii and default sector
   BOOST_CHECK_EQUAL(RadialBounds(minRadius, maxRadius).type(),
-                    SurfaceBounds::Disc);
+                    SurfaceBounds::eDisc);
   //
   /// Test construction with radii and sector half angle
   BOOST_CHECK_EQUAL(RadialBounds(minRadius, maxRadius, halfPhiSector).type(),
-                    SurfaceBounds::Disc);
+                    SurfaceBounds::eDisc);
   //
   /// Copy constructor
   RadialBounds original(minRadius, maxRadius);
   RadialBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Disc);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDisc);
 }
 
 /// Unit tests for RadialBounds properties
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   delete pClonedRadialBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(radialBoundsObject.type(), SurfaceBounds::Disc);
+  BOOST_CHECK_EQUAL(radialBoundsObject.type(), SurfaceBounds::eDisc);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);

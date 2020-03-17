@@ -63,7 +63,7 @@ class EllipseBounds : public PlanarBounds {
   BoundsType type() const final;
 
   /// Complete value store for persistency
-  std::vector<TDD_real_t> valueStore() const final;
+  std::vector<double> boundValues() const final;
 
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is

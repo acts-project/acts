@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   const double halfX(10.), halfY(5.);
   RectangleBounds twentyByTenRectangle(halfX, halfY);
   BOOST_CHECK_EQUAL(twentyByTenRectangle.type(),
-                    Acts::SurfaceBounds::Rectangle);
+                    Acts::SurfaceBounds::eRectangle);
   //
   // nonsensical bounds are also permitted, but maybe should not be
   const double zeroHalfX(0.), zeroHalfY(0.);
@@ -54,20 +54,20 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   // BOOST_TEST_MESSAGE("Initialise with zero dimensions");
   RectangleBounds zeroDimensionsRectangle(zeroHalfX, zeroHalfY);
   BOOST_CHECK_EQUAL(zeroDimensionsRectangle.type(),
-                    Acts::SurfaceBounds::Rectangle);
+                    Acts::SurfaceBounds::eRectangle);
   //
   // BOOST_TEST_MESSAGE("Initialise with infinite dimensions");
   RectangleBounds infinite(infHalfX, infHalfY);
-  BOOST_CHECK_EQUAL(infinite.type(), Acts::SurfaceBounds::Rectangle);
+  BOOST_CHECK_EQUAL(infinite.type(), Acts::SurfaceBounds::eRectangle);
   //
   // BOOST_TEST_MESSAGE("Initialise with NaN dimensions");
   RectangleBounds nanRectangle(nanHalfX, nanHalfY);
-  BOOST_CHECK_EQUAL(nanRectangle.type(), Acts::SurfaceBounds::Rectangle);
+  BOOST_CHECK_EQUAL(nanRectangle.type(), Acts::SurfaceBounds::eRectangle);
   //
   // BOOST_TEST_MESSAGE("Initialise with negative dimensions");
   RectangleBounds negativeDimensionedRectangle(negHalfX, negHalfY);
   BOOST_CHECK_EQUAL(negativeDimensionedRectangle.type(),
-                    Acts::SurfaceBounds::Rectangle);
+                    Acts::SurfaceBounds::eRectangle);
 }
 
 /// Unit test for testing RectangleBounds properties

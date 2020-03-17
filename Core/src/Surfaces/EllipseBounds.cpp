@@ -36,11 +36,11 @@ Acts::EllipseBounds* Acts::EllipseBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::EllipseBounds::type() const {
-  return SurfaceBounds::Ellipse;
+  return SurfaceBounds::eEllipse;
 }
 
-std::vector<TDD_real_t> Acts::EllipseBounds::valueStore() const {
-  std::vector<TDD_real_t> values(EllipseBounds::bv_length);
+std::vector<double> Acts::EllipseBounds::boundValues() const {
+  std::vector<double> values(EllipseBounds::bv_length);
   values[EllipseBounds::bv_rMinX] = m_rMinX;
   values[EllipseBounds::bv_rMinY] = m_rMinY;
   values[EllipseBounds::bv_rMaxX] = m_rMaxX;
@@ -72,10 +72,10 @@ bool Acts::EllipseBounds::inside(const Acts::Vector2D& lposition,
 }
 
 // For ellipse bound this is only approximation which is valid
-// only if m_valueStore.at(EllipseBounds::bv_rMinX) ~=
-// m_valueStore.at(EllipseBounds::bv_rMinY)
-// and m_valueStore.at(EllipseBounds::bv_rMaxX) ~=
-// m_valueStore.at(EllipseBounds::bv_rMaxY)
+// only if m_boundValues.at(EllipseBounds::bv_rMinX) ~=
+// m_boundValues.at(EllipseBounds::bv_rMinY)
+// and m_boundValues.at(EllipseBounds::bv_rMaxX) ~=
+// m_boundValues.at(EllipseBounds::bv_rMaxY)
 //
 double Acts::EllipseBounds::distanceToBoundary(
     const Vector2D& lposition) const {

@@ -64,7 +64,7 @@ class AnnulusBounds : public DiscBounds {
   SurfaceBounds::BoundsType type() const final;
 
   /// This returns the stored values for persisitency
-  std::vector<TDD_real_t> valueStore() const final;
+  std::vector<double> boundValues() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -205,7 +205,7 @@ inline AnnulusBounds* AnnulusBounds::clone() const {
 }
 
 inline SurfaceBounds::BoundsType AnnulusBounds::type() const {
-  return SurfaceBounds::Annulus;
+  return SurfaceBounds::eAnnulus;
 }
 
 inline double AnnulusBounds::rMin() const {

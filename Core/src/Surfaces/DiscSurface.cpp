@@ -173,7 +173,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     }
     // These are convex shapes, use the helper method
     // For rings there's a sweet spot when this stops working
-    if (m_bounds->type() == SurfaceBounds::DiscTrapezoidal or toCenter or
+    if (m_bounds->type() == SurfaceBounds::eDiscTrapezoid or toCenter or
         not fullDisc) {
       // Transformt hem into the vertex frame
       wCenter *= 1. / vertices.size();
