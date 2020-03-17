@@ -138,10 +138,7 @@ struct PropagatorState {
       return state.stepSize.toString();
     }
 
-    BoundState boundState(State& state, const Surface& surface,
-                          bool reinitialize = true) const {
-      // suppress unused warning
-      (void)reinitialize;
+    BoundState boundState(State& state, const Surface& surface) const {
       BoundParameters parameters(tgContext, std::nullopt, state.pos,
                                  state.p * state.dir, state.q, state.t,
                                  surface.getSharedPtr());
@@ -150,9 +147,7 @@ struct PropagatorState {
       return bState;
     }
 
-    CurvilinearState curvilinearState(State& state,
-                                      bool reinitialize = true) const {
-      (void)reinitialize;
+    CurvilinearState curvilinearState(State& state) const {
       CurvilinearParameters parameters(std::nullopt, state.pos,
                                        state.p * state.dir, state.q, state.t);
       // Create the bound state
@@ -167,11 +162,10 @@ struct PropagatorState {
                 const Vector3D& /*udirection*/, double /*up*/,
                 double /*time*/) const {}
 
-    void covarianceTransport(State& /*state*/,
-                             bool /*reinitialize = false*/) const {}
+    void covarianceTransport(State& /*state*/) const {}
 
-    void covarianceTransport(State& /*unused*/, const Surface& /*surface*/,
-                             bool /*reinitialize = false*/) const {}
+    void covarianceTransport(State& /*unused*/,
+                             const Surface& /*surface*/) const {}
 
     Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
       // get the field from the cell
