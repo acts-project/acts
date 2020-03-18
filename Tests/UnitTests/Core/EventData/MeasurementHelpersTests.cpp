@@ -93,31 +93,27 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
 
 BOOST_AUTO_TEST_CASE(visit_measurement_test) {
   // Overallocated full size parameter vector and covariance
-  BoundVector parFull;
-  parFull.setRandom();
-
-  BoundVector covFull;
-  covFull.setRandom();
-
+  BoundVector parFull = BoundVector::Random();
+  BoundMatrix covFull = BoundMatrix::Random();
+  // constant variants
   const auto& parFullConst = parFull;
   const auto& covFullConst = covFull;
 
-  for (size_t i = 1; i <= parFull.size(); i++) {
-    visit_measurement(parFull, covFull, i, [&](auto param, auto cov) {
-      BOOST_CHECK_EQUAL(param, parFull.head(i));
-      BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(i, i));
+  for (BoundVector::Index dim = 1; dim <= parFull.size(); ++dim) {
+    visit_measurement(parFull, covFull, dim, [&](auto param, auto cov) {
+      BOOST_CHECK_EQUAL(param, parFull.head(dim));
+      BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(dim, dim));
     });
-
-    visit_measurement(
-        parFullConst, covFullConst, i, [&](const auto param, const auto cov) {
-          BOOST_CHECK_EQUAL(param, parFullConst.head(i));
-          BOOST_CHECK_EQUAL(cov, covFullConst.topLeftCorner(i, i));
-        });
-
-    visit_measurement(parFull, covFull, i,
-                      [&](const auto param, const auto cov) {
-                        BOOST_CHECK_EQUAL(param, parFull.head(i));
-                        BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(i, i));
+    visit_measurement(parFull, covFull, dim,
+                      [&](const auto& param, const auto& cov) {
+                        BOOST_CHECK_EQUAL(param, parFull.head(dim));
+                        BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(dim, dim));
+                      });
+    visit_measurement(parFullConst, covFullConst, dim,
+                      [&](const auto& param, const auto& cov) {
+                        BOOST_CHECK_EQUAL(param, parFullConst.head(dim));
+                        BOOST_CHECK_EQUAL(cov,
+                                          covFullConst.topLeftCorner(dim, dim));
                       });
   }
 }
