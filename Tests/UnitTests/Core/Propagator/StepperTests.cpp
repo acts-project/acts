@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       propOptsDense(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 2_m;
   propOptsDense.abortList = abortList;
-  propOptsDense.maxSteps = 100;
+  propOptsDense.maxSteps = 1000;
   propOptsDense.maxStepSize = 1.5_m;
   propOptsDense.tolerance = 1e-8;
 
