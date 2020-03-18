@@ -94,13 +94,12 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   /// test for averagePhi
   CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eHalfPhiSector>(), halfPhi,
                   1e-6);
-  //
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;
   coneBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(dumpOuput.is_equal(
-      "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) = "
-      "(0.4142136, 3.0000000, 6.0000000, 0.0000000, 0.7853982)"));
+      "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) = "
+      "(0.4142136, 3.0000000, 6.0000000, 0.7853982, 0.0000000)"));
 }
 /// Unit test for testing ConeBounds assignment
 BOOST_AUTO_TEST_CASE(ConeBoundsAssignment) {
