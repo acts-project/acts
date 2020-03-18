@@ -44,13 +44,14 @@ struct DefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D& knew, const Vector3D& bField, const int i = 0,
+         Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP, const int i = 0,
          const double h = 0., const Vector3D& kprev = Vector3D()) {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
       knew = qop * stepper.direction(state.stepping).cross(bField);
+      kQoP = {0., 0., 0., 0.};
     } else {
       knew =
           qop * (stepper.direction(state.stepping) + h * kprev).cross(bField);

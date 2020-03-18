@@ -255,7 +255,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
 
     // Compute and check the local integration error estimate
     error_estimate = std::max(
-        h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() + std::abs(sd.kQoP[0] + sd.kQoP[1] + sd.kQoP[2] + sd.kQoP[3]), 1e-20);
+        h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() + std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])), 1e-20);
     return (error_estimate <= state.options.tolerance);
   };
 

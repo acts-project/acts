@@ -86,7 +86,7 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D& knew, const Vector3D& bField, const int i = 0,
+         Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP, const int i = 0,
          const double h = 0., const Vector3D& kprev = Vector3D()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
@@ -106,6 +106,7 @@ struct DenseEnvironmentExtension {
           (stepper.charge(state.stepping) * stepper.charge(state.stepping));
       //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
       tKi[0] = std::hypot(1, state.options.mass * qop[0]);
+      kQoP[0] = Lambdappi[0];
     } else {
       // Update parameters and check for momentum condition
       updateEnergyLoss(state.options.mass, h, state.stepping, stepper, i);
@@ -122,6 +123,7 @@ struct DenseEnvironmentExtension {
           (stepper.charge(state.stepping) * stepper.charge(state.stepping) *
            UnitConstants::C * UnitConstants::C);
       tKi[i] = std::hypot(1, state.options.mass * qopNew);
+      kQoP[i] = Lambdappi[i];
     }
     return true;
   }
