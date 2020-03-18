@@ -578,7 +578,7 @@ class KalmanFitter {
 
             // Transport & bind the state to the current surface
             auto [boundParams, jacobian, pathLength] =
-                stepper.boundState(state.stepping, *surface, true);
+                stepper.boundState(state.stepping, *surface);
 
             // Fill the track state
             trackStateProxy.predicted() = boundParams.parameters();
@@ -590,7 +590,7 @@ class KalmanFitter {
 
             // Transport & get curvilinear state instead of bound state
             auto [curvilinearParams, jacobian, pathLength] =
-                stepper.curvilinearState(state.stepping, true);
+                stepper.curvilinearState(state.stepping);
 
             // Fill the track state
             trackStateProxy.predicted() = curvilinearParams.parameters();
@@ -649,7 +649,7 @@ class KalmanFitter {
 
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, true);
+            stepper.boundState(state.stepping, *surface);
 
         // Create a detached track state proxy
         auto tempTrackTip =
