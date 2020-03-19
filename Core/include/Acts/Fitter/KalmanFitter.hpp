@@ -747,27 +747,40 @@ class KalmanFitter {
     void materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
-      // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+      // Indicator if having material
+      bool hasMaterial = false;
 
-      // Evaluate the material properties
-      if (interaction.evaluateMaterialProperties(state, updateStage)) {
-        // Evaluate the material effects
-        interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                         energyLoss);
+      if (surface and surface->surfaceMaterial()) {
+        // Prepare relevant input particle properties
+        detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                         stepper);
+        // Evaluate the material properties
+        if (interaction.evaluateMaterialProperties(state, updateStage)) {
+          // Surface has material at this stage
+          hasMaterial = true;
 
-        ACTS_VERBOSE("Material effects on surface: "
-                     << surface->geoID() << " at update stage: " << updateStage
-                     << " are :");
-        ACTS_VERBOSE("eLoss = "
-                     << interaction.Eloss << ", "
-                     << "variancePhi = " << interaction.variancePhi << ", "
-                     << "varianceTheta = " << interaction.varianceTheta << ", "
-                     << "varianceQoverP = " << interaction.varianceQoverP);
+          // Evaluate the material effects
+          interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
+                                                           energyLoss);
 
-        // Update the state and stepper with material effects
-        interaction.updateState(state, stepper);
-      } else {
+          // Screen out material effects info
+          ACTS_VERBOSE("Material effects on surface: "
+                       << surface->geoID()
+                       << " at update stage: " << updateStage << " are :");
+          ACTS_VERBOSE("eLoss = "
+                       << interaction.Eloss << ", "
+                       << "variancePhi = " << interaction.variancePhi << ", "
+                       << "varianceTheta = " << interaction.varianceTheta
+                       << ", "
+                       << "varianceQoverP = " << interaction.varianceQoverP);
+
+          // Update the state and stepper with material effects
+          interaction.updateState(state, stepper);
+        }
+      }
+
+      if (not hasMaterial) {
+        // Screen out message
         ACTS_VERBOSE("No material effects on surface: " << surface->geoID()
                                                         << " at update stage: "
                                                         << updateStage);
