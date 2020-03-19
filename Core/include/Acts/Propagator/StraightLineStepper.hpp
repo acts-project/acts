@@ -146,6 +146,22 @@ class StraightLineStepper {
     return Vector3D(0., 0., 0.);
   }
 
+  /// Global free parameters vector.
+  ///
+  /// @param state Current stepper state
+  FreeVector parameters(const State& state) const {
+    FreeVector params;
+    params[eFreePos0] = state.pos[0];
+    params[eFreePos1] = state.pos[1];
+    params[eFreePos2] = state.pos[2];
+    params[eFreeTime] = state.t;
+    params[eFreeDir0] = state.dir[0];
+    params[eFreeDir1] = state.dir[1];
+    params[eFreeDir2] = state.dir[2];
+    params[eFreeQOverP] = (state.q != 0) ? (state.q / state.p) : (1 / state.p);
+    return params;
+  }
+
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
