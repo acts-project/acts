@@ -290,10 +290,9 @@ class KalmanFitter {
       }
 
       // Update:
-      // - Waiting for a current surface that has material
-      // -> a trackState will be created on surface with material
+      // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
-      if (surface and surface->surfaceMaterial()) {
+      if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -546,7 +545,7 @@ class KalmanFitter {
         }
         // We count the processed state
         ++result.processedStates;
-      } else {
+      } else if (surface->surfaceMaterial() != nullptr) {
         if (result.measurementStates > 0) {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
@@ -708,7 +707,7 @@ class KalmanFitter {
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
         }
-      } else {
+      } else if (surface->surfaceMaterial() != nullptr) {
         // Transport covariance
         if (surface->associatedDetectorElement() != nullptr) {
           ACTS_VERBOSE("Detected hole on " << surface->geoID()
