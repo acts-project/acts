@@ -51,4 +51,5 @@ void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface) const {
   detail::covarianceTransport(state, &surface);
 }
+
 }  // namespace Acts

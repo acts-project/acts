@@ -9,7 +9,7 @@
 #pragma once
 
 #include <cmath>
-#include <functional>
+#include <tuple>
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
