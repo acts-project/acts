@@ -546,6 +546,8 @@ class KalmanFitter {
         // We count the processed state
         ++result.processedStates;
       } else if (surface->surfaceMaterial() != nullptr) {
+        // We only create track states here if there is already measurement
+        // detected
         if (result.measurementStates > 0) {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
@@ -991,7 +993,6 @@ class KalmanFitter {
 
     /// It could happen that the fit ends in zero processed states.
     /// The result gets meaningless so such case is regarded as fit failure.
-    //@TODO: should we require the number of measurments >0 ?
     if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
       kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
     }
