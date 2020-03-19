@@ -24,9 +24,9 @@ Acts::RectangleBounds* Acts::RectangleBounds::clone() const {
   return new RectangleBounds(*this);
 }
 
-std::vector<double> Acts::RectangleBounds::boundValues() const {
-  std::vector<double> values(RectangleBounds::bv_length);
-  values = {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
+Acts::ActsVectorXd Acts::RectangleBounds::values() const {
+  ActsVectorXd values;
+  values << m_min.x(), m_min.y(), m_max.x(), m_max.y();
   return values;
 }
 

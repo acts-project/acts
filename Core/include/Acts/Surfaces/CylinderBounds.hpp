@@ -36,49 +36,34 @@ class CylinderBounds : public SurfaceBounds {
  public:
   /// @enum BoundValues for readablility
   /// nested enumeration object
-  enum BoundValues {
-    bv_radius = 0,
-    bv_averagePhi = 1,
-    bv_halfPhiSector = 2,
-    bv_halfZ = 3,
-    bv_length = 4
+  enum BoundValues : int {
+    eRadius = 0,
+    eHalfLengthZ = 1,
+    eHalfPhiSector = 2,
+    eAveragePhi = 3,
+    eSize = 4
   };
 
   CylinderBounds() = delete;
 
   /// Constructor - full cylinder
   ///
-  /// @param radius is the radius of the cylinder
-  /// @param halez is the half length in z
-  CylinderBounds(double radius, double halfZ);
+  /// @param radius The radius of the cylinder
+  /// @param halfz The half length in z
+  /// @param halfphi The half opening angle
+  /// @param avphi The phi value from which the opening angle spans (both sides)
+  CylinderBounds(double radius, double halfz, double halfphi = M_PI,
+                 double avphi = 0.);
 
-  /// Constructor - open cylinder
-  ///
-  /// @param radius is the radius of the cylinder
-  /// @param halfPhi is the half opening angle
-  /// @param halfZ is the half length in z
-  CylinderBounds(double radius, double halfPhi, double halfZ);
-
-  /// Constructor - open cylinder
-  ///
-  /// @param radius is the radius of the cylinder
-  /// @param avphi is the middle phi position of the segment
-  /// @param halfphi is the half opening angle
-  /// @param halez is the half length in z
-  CylinderBounds(double radius, double averagePhi, double halfPhi,
-                 double halfZ);
-
-  /// Defaulted destructor
   ~CylinderBounds() override = default;
 
-  /// Virtual constructor
   CylinderBounds* clone() const final;
 
   /// Type enumeration
   BoundsType type() const final;
 
-  /// The value store
-  std::vector<double> boundValues() const final;
+  /// The values of the object as dynamically sized vector
+  ActsVectorXd values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -105,52 +90,31 @@ class CylinderBounds : public SurfaceBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const final;
-
-  /// This method returns the radius
-  double r() const;
-
-  /// This method returns the average phi
-  double averagePhi() const;
-
-  /// This method returns the halfPhiSector angle
-  double halfPhiSector() const;
-
-  /// This method returns the halflengthZ
-  double halflengthZ() const;
+  /// Templated access to the bound parameters
+  double get(BoundValues bValue) const { return m_parameters[bValue]; }
 
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
 
+  /// Output Method for std::ostream
+  std::ostream& toStream(std::ostream& sl) const final;
+
  private:
-  /// the bound radius, average, half phi and half Z
-  double m_radius, m_avgPhi, m_halfPhi, m_halfZ;
-  /// an indicator if the bounds are closed
+  /// The bound radius, half Z, half phi and average phi
+  ActsRowVectorD<eSize> m_parameters;
+  /// Indicator if the bounds are closed
   bool m_closed;
 
   Vector2D shifted(const Vector2D& lposition) const;
   ActsSymMatrixD<2> jacobian() const;
 };
 
-inline double CylinderBounds::r() const {
-  return m_radius;
-}
-
-inline double CylinderBounds::averagePhi() const {
-  return m_avgPhi;
-}
-
-inline double CylinderBounds::halfPhiSector() const {
-  return m_halfPhi;
-}
-
-inline double CylinderBounds::halflengthZ() const {
-  return m_halfZ;
+inline ActsVectorXd CylinderBounds::values() const {
+  return m_parameters;
 }
 
 inline bool CylinderBounds::coversFullAzimuth() const {
-  return (m_halfPhi == M_PI);
+  return m_closed;
 }
 
 }  // namespace Acts

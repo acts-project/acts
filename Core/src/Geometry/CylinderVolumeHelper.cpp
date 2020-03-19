@@ -443,13 +443,13 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     if (cylBounds != nullptr) {
       radial = true;
       // get the raw data
-      double currentR = cylBounds->r();
+      double currentR = cylBounds->get(CylinderBounds::eRadius);
       double centerZ = (layerIter->surfaceRepresentation()).center(gctx).z();
       // check for min/max in the cylinder bounds case
       currentRmin = currentR - (0.5 * (layerIter)->thickness());
       currentRmax = currentR + (0.5 * (layerIter)->thickness());
-      currentZmin = centerZ - cylBounds->halflengthZ();
-      currentZmax = centerZ + cylBounds->halflengthZ();
+      currentZmin = centerZ - cylBounds->get(CylinderBounds::eHalfLengthZ);
+      currentZmax = centerZ + cylBounds->get(CylinderBounds::eHalfLengthZ);
     }
     // dynamic cast to the DiscBounds
     const RadialBounds* discBounds = dynamic_cast<const RadialBounds*>(
@@ -789,9 +789,10 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
     // 2 cases: r-Binning and zBinning
     if (faceOne == cylinderCover || faceOne == tubeOuterCover) {
       // (1) create the Boundary CylinderSurface
+      auto cBounds =
+          std::make_shared<CylinderBounds>(rGlueMin, 0.5 * (zMax - zMin));
       std::shared_ptr<const Surface> cSurface =
-          Surface::makeShared<CylinderSurface>(transform, rGlueMin,
-                                               0.5 * (zMax - zMin));
+          Surface::makeShared<CylinderSurface>(transform, cBounds);
       ACTS_VERBOSE(
           "             creating a new cylindrical boundary surface "
           "with bounds = "

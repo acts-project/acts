@@ -37,11 +37,10 @@ Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
   return {vmin, vmax};
 }
 
-std::vector<double> Acts::ConvexPolygonBoundsBase::boundValues() const {
-  std::vector<double> values;
+Acts::ActsVectorXd Acts::ConvexPolygonBoundsBase::values() const {
+  ActsVectorXd values;
   for (const auto& vtx : vertices()) {
-    values.push_back(vtx.x());
-    values.push_back(vtx.y());
+    values << vtx.x(), vtx.y();
   }
   return values;
 }

@@ -16,12 +16,12 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 #ifndef VOLUMEBOUNDS_boundValues_FILL
-#define VOLUMEBOUNDS_boundValues_FILL(val) m_boundValues[bv_##val] = val
+#define VOLUMEBOUNDS_boundValues_FILL(val) m_values[bv_##val] = val
 #endif
 
 #ifndef VOLUMEBOUNDS_boundValues_ACCESS
 #define VOLUMEBOUNDS_boundValues_ACCESS(val) \
-  double val() const { return m_boundValues[bv_##val]; }
+  double val() const { return m_values[bv_##val]; }
 #endif
 
 #ifndef VOLUMEBOUNDS_DERIVED_ACCESS

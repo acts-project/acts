@@ -32,14 +32,10 @@ Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
   return SurfaceBounds::eDiscTrapezoid;
 }
 
-std::vector<double> Acts::DiscTrapezoidBounds::boundValues() const {
-  std::vector<double> values(DiscTrapezoidBounds::bv_length);
-  values[bv_rMin] = rMin();
-  values[bv_rMax] = rMax();
-  values[bv_minHalfX] = minHalflengthX();
-  values[bv_maxHalfX] = maxHalflengthX();
-  values[bv_averagePhi] = averagePhi();
-  values[bv_stereo] = m_stereo;
+Acts::ActsVectorXd Acts::DiscTrapezoidBounds::values() const {
+  ActsVectorXd values;
+  values << rMin(), rMax(), minHalflengthX(), maxHalflengthX(), averagePhi(),
+      m_stereo;
   return values;
 }
 

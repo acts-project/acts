@@ -32,14 +32,10 @@ Acts::SurfaceBounds::BoundsType Acts::TriangleBounds::type() const {
   return SurfaceBounds::eTriangle;
 }
 
-std::vector<double> Acts::TriangleBounds::boundValues() const {
-  std::vector<double> values(TriangleBounds::bv_length);
-  values[TriangleBounds::bv_x1] = m_vertices[0].x();
-  values[TriangleBounds::bv_y1] = m_vertices[0].y();
-  values[TriangleBounds::bv_x2] = m_vertices[1].x();
-  values[TriangleBounds::bv_y2] = m_vertices[1].y();
-  values[TriangleBounds::bv_x3] = m_vertices[2].x();
-  values[TriangleBounds::bv_y3] = m_vertices[2].y();
+Acts::ActsVectorXd Acts::TriangleBounds::values() const {
+  ActsVectorXd values;
+  values << m_vertices[0].x(), m_vertices[0].y(), m_vertices[1].x(),
+      m_vertices[1].y(), m_vertices[2].x(), m_vertices[2].y();
   return values;
 }
 

@@ -29,11 +29,9 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }
 
-std::vector<double> Acts::TrapezoidBounds::boundValues() const {
-  std::vector<double> values(TrapezoidBounds::bv_length);
-  values[TrapezoidBounds::bv_minHalfX] = minHalflengthX();
-  values[TrapezoidBounds::bv_maxHalfX] = maxHalflengthX();
-  values[TrapezoidBounds::bv_halfY] = halflengthY();
+Acts::ActsVectorXd Acts::TrapezoidBounds::values() const {
+  ActsVectorXd values;
+  values << minHalflengthX(), maxHalflengthX(), halflengthY();
   return values;
 }
 

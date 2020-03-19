@@ -60,7 +60,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   SurfaceBounds::BoundsType type() const final;
 
   /// Value store for persistency
-  std::vector<double> boundValues() const final;
+  ActsVectorXd values() const final;
 
   ///  This method cheks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]

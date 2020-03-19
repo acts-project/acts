@@ -20,6 +20,7 @@ namespace Acts {
 class InfiniteBounds : public SurfaceBounds {
  public:
   InfiniteBounds() = default;
+
   ~InfiniteBounds() override = default;
 
   InfiniteBounds* clone() const final { return new InfiniteBounds(); }
@@ -28,7 +29,7 @@ class InfiniteBounds : public SurfaceBounds {
     return SurfaceBounds::eBoundless;
   }
 
-  std::vector<double> boundValues() const final { return {}; }
+  ActsVectorXd values() const final { return ActsVectorXd(); }
 
   /// Method inside() returns true for any case
   ///

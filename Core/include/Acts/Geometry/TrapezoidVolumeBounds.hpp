@@ -170,7 +170,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   RectangleBounds* faceZXRectangleBoundsTop() const;
 
   /// the bounds values
-  std::vector<double> m_boundValues;
+  std::vector<double> m_values;
 };
 
 inline TrapezoidVolumeBounds* TrapezoidVolumeBounds::clone() const {
@@ -178,22 +178,22 @@ inline TrapezoidVolumeBounds* TrapezoidVolumeBounds::clone() const {
 }
 
 inline double TrapezoidVolumeBounds::minHalflengthX() const {
-  return m_boundValues.at(bv_minHalfX);
+  return m_values.at(bv_minHalfX);
 }
 inline double TrapezoidVolumeBounds::maxHalflengthX() const {
-  return m_boundValues.at(bv_maxHalfX);
+  return m_values.at(bv_maxHalfX);
 }
 inline double TrapezoidVolumeBounds::halflengthY() const {
-  return m_boundValues.at(bv_halfY);
+  return m_values.at(bv_halfY);
 }
 inline double TrapezoidVolumeBounds::halflengthZ() const {
-  return m_boundValues.at(bv_halfZ);
+  return m_values.at(bv_halfZ);
 }
 inline double TrapezoidVolumeBounds::alpha() const {
-  return m_boundValues.at(bv_alpha);
+  return m_values.at(bv_alpha);
 }
 inline double TrapezoidVolumeBounds::beta() const {
-  return m_boundValues.at(bv_beta);
+  return m_values.at(bv_beta);
 }
 
 template <class T>
@@ -202,10 +202,9 @@ T& TrapezoidVolumeBounds::dumpT(T& dt) const {
   dt << std::setprecision(5);
   dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
         "= ";
-  dt << "(" << m_boundValues.at(bv_minHalfX) << ", "
-     << m_boundValues.at(bv_halfY) << ", " << m_boundValues.at(bv_halfZ);
-  dt << ", " << m_boundValues.at(bv_alpha) << ", " << m_boundValues.at(bv_beta)
-     << ")";
+  dt << "(" << m_values.at(bv_minHalfX) << ", " << m_values.at(bv_halfY) << ", "
+     << m_values.at(bv_halfZ);
+  dt << ", " << m_values.at(bv_alpha) << ", " << m_values.at(bv_beta) << ")";
   return dt;
 }
 }  // namespace Acts

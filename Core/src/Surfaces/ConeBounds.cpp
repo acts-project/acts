@@ -20,14 +20,15 @@ Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
     : ConeBounds(alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
                  std::numeric_limits<double>::infinity(), halfphi, avphi) {}
 
-Acts::ConeBounds::ConeBounds(double alpha, double zmin, double zmax,
+Acts::ConeBounds::ConeBounds(double alpha, double minz, double maxz,
                              double halfphi, double avphi)
-    : m_parameters(
-          {alpha, zmin, zmax, std::abs(halfphi), detail::radian_sym(avphi)}),
-      m_tanAlpha(std::tan(alpha)) {}
+    : m_parameters(), m_tanAlpha(std::tan(alpha)) {
+  m_parameters << alpha, minz, maxz, std::abs(halfphi),
+      detail::radian_sym(avphi);
+}
 
-Acts::ConeBounds::ConeBounds(const std::vector<double>& parameters)
-    : m_parameters(parameters), m_tanAlpha(std::tan(get<eAlpha>())) {}
+Acts::ConeBounds::ConeBounds(const ActsVectorXd& parameters)
+    : m_parameters(parameters), m_tanAlpha(std::tan(parameters[eAlpha])) {}
 
 Acts::ConeBounds* Acts::ConeBounds::clone() const {
   return new ConeBounds(*this);
@@ -47,24 +48,24 @@ Acts::Vector2D Acts::ConeBounds::shifted(
   shifted[eLOC_Z] = lposition[eLOC_Z];
   shifted[eLOC_RPHI] =
       std::isnormal(x)
-          ? (x * radian_sym((lposition[eLOC_RPHI] / x) - get<eAveragePhi>()))
+          ? (x * radian_sym((lposition[eLOC_RPHI] / x) - get(eAveragePhi)))
           : lposition[eLOC_RPHI];
   return shifted;
 }
 
 bool Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
                               const Acts::BoundaryCheck& bcheck) const {
-  auto rphiHalf = r(lposition[eLOC_Z]) * get<eHalfPhiSector>();
-  return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, get<eMinZ>()),
-                         Vector2D(rphiHalf, get<eMaxZ>()));
+  auto rphiHalf = r(lposition[eLOC_Z]) * get(eHalfPhiSector);
+  return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, get(eMinZ)),
+                         Vector2D(rphiHalf, get(eMaxZ)));
 }
 
 double Acts::ConeBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
-  auto rphiHalf = r(lposition[eLOC_Z]) * get<eHalfPhiSector>();
+  auto rphiHalf = r(lposition[eLOC_Z]) * get(eHalfPhiSector);
   return BoundaryCheck(true).distance(shifted(lposition),
-                                      Vector2D(-rphiHalf, get<eMinZ>()),
-                                      Vector2D(rphiHalf, get<eMaxZ>()));
+                                      Vector2D(-rphiHalf, get(eMinZ)),
+                                      Vector2D(rphiHalf, get(eMaxZ)));
 }
 
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {
@@ -72,8 +73,8 @@ std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(7);
   sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) "
         "= ";
-  sl << "(" << m_tanAlpha << ", " << get<eMinZ>() << ", " << get<eMaxZ>()
-     << ", " << get<eHalfPhiSector>() << ", " << get<eAveragePhi>() << ")";
+  sl << "(" << m_tanAlpha << ", " << get(eMinZ) << ", " << get(eMaxZ) << ", "
+     << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

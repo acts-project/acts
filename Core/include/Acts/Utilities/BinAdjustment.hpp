@@ -76,10 +76,13 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // Default constructor
   BinUtility uBinUtil;
   // The parameters from the cylinder bounds
-  double cR = cBounds.r();
-  double cHz = cBounds.halflengthZ();
-  double minPhi = cBounds.averagePhi() - cBounds.halfPhiSector();
-  double maxPhi = cBounds.averagePhi() + cBounds.halfPhiSector();
+  double cR = cBounds.get(CylinderBounds::eRadius);
+  double cHz = cBounds.get(CylinderBounds::eHalfLengthZ);
+  double avgPhi = cBounds.get(CylinderBounds::eAveragePhi);
+  double halfPhi = cBounds.get(CylinderBounds::eHalfPhiSector);
+  double minPhi = avgPhi - halfPhi;
+  double maxPhi = avgPhi + halfPhi;
+  ;
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
   // Loop over the binning data and adjust the dimensions

@@ -32,12 +32,9 @@ Acts::SurfaceBounds::BoundsType Acts::RadialBounds::type() const {
   return SurfaceBounds::eDisc;
 }
 
-std::vector<double> Acts::RadialBounds::boundValues() const {
-  std::vector<double> values(RadialBounds::bv_length);
-  values[RadialBounds::bv_rMin] = rMin();
-  values[RadialBounds::bv_rMax] = rMax();
-  values[RadialBounds::bv_averagePhi] = averagePhi();
-  values[RadialBounds::bv_halfPhiSector] = halfPhiSector();
+Acts::ActsVectorXd Acts::RadialBounds::values() const {
+  ActsVectorXd values;
+  values << rMin(), rMax(), averagePhi(), halfPhiSector();
   return values;
 }
 

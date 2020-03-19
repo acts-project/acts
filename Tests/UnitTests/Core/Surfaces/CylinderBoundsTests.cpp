@@ -90,17 +90,21 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
                   1e-6);  // fail
 
   /// test for r()
-  CHECK_CLOSE_REL(cylinderBoundsObject.r(), nominalRadius, 1e-6);
+  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eRadius),
+                  nominalRadius, 1e-6);
 
   /// test for averagePhi
-  CHECK_CLOSE_REL(cylinderBoundsObject.averagePhi(), averagePhi, 1e-6);
+  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eAveragePhi),
+                  averagePhi, 1e-6);
 
   /// test for halfPhiSector
-  CHECK_CLOSE_REL(cylinderBoundsSegment.halfPhiSector(), halfphi,
+  CHECK_CLOSE_REL(cylinderBoundsSegment.get(CylinderBounds::eHalfPhiSector),
+                  halfphi,
                   1e-6);  // fail
 
   /// test for halflengthZ (NOTE: Naming violation)
-  CHECK_CLOSE_REL(cylinderBoundsObject.halflengthZ(), nominalHalfLength, 1e-6);
+  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eHalfLengthZ),
+                  nominalHalfLength, 1e-6);
 
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;
@@ -117,7 +121,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
   CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
   CylinderBounds assignedCylinderBounds(10.5, 6.6);
   assignedCylinderBounds = cylinderBoundsObject;
-  BOOST_CHECK_EQUAL(assignedCylinderBounds.r(), cylinderBoundsObject.r());
+  BOOST_CHECK_EQUAL(assignedCylinderBounds.get(CylinderBounds::eRadius),
+                    cylinderBoundsObject.get(CylinderBounds::eRadius));
   BOOST_CHECK_EQUAL(assignedCylinderBounds, cylinderBoundsObject);
 }
 

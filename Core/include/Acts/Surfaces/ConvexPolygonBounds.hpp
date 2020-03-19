@@ -30,7 +30,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
 
   /// Return vector containing defining parameters
   /// @return the parameters
-  std::vector<double> boundValues() const final;
+  ActsVectorXd values() const final;
 
  protected:
   /// Return a rectangle bounds instance that encloses a set of vertices.
@@ -65,7 +65,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
  public:
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
-  /// Default constructor, deleted
   ConvexPolygonBounds() = delete;
 
   /// Constructor from a vector of vertices, to facilitate construction.

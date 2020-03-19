@@ -28,7 +28,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
   SurfaceBounds* clone() const final { return nullptr; }
   BoundsType type() const final { return SurfaceBounds::eOther; }
-  std::vector<double> boundValues() const override { return m_values; }
+  ActsVectorXd values() const override { return m_values; }
   bool inside(const Vector2D& /*lpos*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
@@ -42,7 +42,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
 
  private:
-  std::vector<double> m_values;
+  ActsVectorXd m_values;
 };
 
 namespace Test {
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
 BOOST_AUTO_TEST_CASE(SurfaceBoundsProperties) {
   SurfaceBoundsStub surface(5);
   std::vector<double> reference{0, 1, 2, 3, 4};
-  const auto& boundValues = surface.boundValues();
+  const auto& boundValues = surface.values();
   BOOST_CHECK_EQUAL_COLLECTIONS(reference.cbegin(), reference.cend(),
                                 boundValues.cbegin(), boundValues.cend());
 }
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
   SurfaceBoundsStub assignedSurface;
   assignedSurface = surface;
   BOOST_CHECK_EQUAL(surface, assignedSurface);
-  const auto& surfaceboundValues = surface.boundValues();
-  const auto& assignedboundValues = assignedSurface.boundValues();
+  const auto& surfaceboundValues = surface.values();
+  const auto& assignedboundValues = assignedSurface.values();
   BOOST_CHECK_EQUAL_COLLECTIONS(
       surfaceboundValues.cbegin(), surfaceboundValues.cend(),
       assignedboundValues.cbegin(), assignedboundValues.cend());

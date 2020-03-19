@@ -14,22 +14,22 @@ Acts::ActsExtension::ActsExtension(const std::string& axes) {
 
 Acts::ActsExtension::ActsExtension(const ActsExtension& ext,
                                    const dd4hep::DetElement& /*elem*/)
-    : m_flagStore(ext.m_flagStore), m_boundValues(ext.m_boundValues) {}
+    : m_flagStore(ext.m_flagStore), m_values(ext.m_values) {}
 
 double Acts::ActsExtension::getValue(const std::string& tag,
                                      const std::string& category) const
     noexcept(false) {
-  return getT(m_boundValues, tag, category);
+  return getT(m_values, tag, category);
 }
 
 void Acts::ActsExtension::addValue(double value, const std::string& tag,
                                    const std::string& category) {
-  addT(m_boundValues, value, tag, category, 0.0);
+  addT(m_values, value, tag, category, 0.0);
 }
 
 bool Acts::ActsExtension::hasValue(const std::string& tag,
                                    const std::string& category) const {
-  return hasT(m_boundValues, tag, category);
+  return hasT(m_values, tag, category);
 }
 
 bool Acts::ActsExtension::hasType(const std::string& type,
@@ -63,7 +63,7 @@ std::string Acts::ActsExtension::toString() const {
   }
   rString += "- value store: ";
   rString += '\n';
-  for (auto const& [key, value] : m_boundValues) {
+  for (auto const& [key, value] : m_values) {
     rString += key;
     rString += " : ";
     rString += std::to_string(value);

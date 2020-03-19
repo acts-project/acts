@@ -127,7 +127,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   std::shared_ptr<const RectangleBounds> faceZXRectangleBounds() const;
 
   /// The bound values
-  std::vector<double> m_boundValues;
+  std::vector<double> m_values;
   std::shared_ptr<const RectangleBounds> m_xyBounds;
   std::shared_ptr<const RectangleBounds> m_yzBounds;
   std::shared_ptr<const RectangleBounds> m_zxBounds;
@@ -138,21 +138,21 @@ inline CuboidVolumeBounds* CuboidVolumeBounds::clone() const {
 }
 
 inline bool CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const {
-  return (std::abs(pos.x()) <= m_boundValues.at(bv_halfX) + tol &&
-          std::abs(pos.y()) <= m_boundValues.at(bv_halfY) + tol &&
-          std::abs(pos.z()) <= m_boundValues.at(bv_halfZ) + tol);
+  return (std::abs(pos.x()) <= m_values.at(bv_halfX) + tol &&
+          std::abs(pos.y()) <= m_values.at(bv_halfY) + tol &&
+          std::abs(pos.z()) <= m_values.at(bv_halfZ) + tol);
 }
 
 inline double CuboidVolumeBounds::halflengthX() const {
-  return m_boundValues.at(bv_halfX);
+  return m_values.at(bv_halfX);
 }
 
 inline double CuboidVolumeBounds::halflengthY() const {
-  return m_boundValues.at(bv_halfY);
+  return m_values.at(bv_halfY);
 }
 
 inline double CuboidVolumeBounds::halflengthZ() const {
-  return m_boundValues.at(bv_halfZ);
+  return m_values.at(bv_halfZ);
 }
 
 template <class T>
@@ -160,8 +160,8 @@ T& CuboidVolumeBounds::dumpT(T& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::CuboidVolumeBounds: (halfX, halfY, halfZ) = ";
-  dt << "(" << m_boundValues.at(bv_halfX) << ", " << m_boundValues.at(bv_halfY)
-     << ", " << m_boundValues.at(bv_halfZ) << ")";
+  dt << "(" << m_values.at(bv_halfX) << ", " << m_values.at(bv_halfY) << ", "
+     << m_values.at(bv_halfZ) << ")";
   return dt;
 }
 }  // namespace Acts

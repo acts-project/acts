@@ -135,7 +135,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
     bool innerExists = false, coversFull = false;
     if (isEllipse) {
-      auto vStore = bounds().boundValues();
+      auto vStore = bounds().values();
       innerExists = std::abs(vStore[EllipseBounds::BoundValues::bv_rMinX]) <
                     s_onSurfaceTolerance;
       coversFull =

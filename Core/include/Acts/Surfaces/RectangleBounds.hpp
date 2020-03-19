@@ -47,7 +47,7 @@ class RectangleBounds : public PlanarBounds {
 
   BoundsType type() const final;
 
-  std::vector<double> boundValues() const final;
+  ActsVectorXd values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

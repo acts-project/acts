@@ -22,10 +22,9 @@ Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
   return SurfaceBounds::eLine;
 }
 
-std::vector<double> Acts::LineBounds::boundValues() const {
-  std::vector<double> values(LineBounds::bv_length);
-  values[LineBounds::bv_radius] = r();
-  values[LineBounds::bv_halfZ] = halflengthZ();
+Acts::ActsVectorXd Acts::LineBounds::values() const {
+  ActsVectorXd values;
+  values << r(), halflengthZ();
   return values;
 }
 

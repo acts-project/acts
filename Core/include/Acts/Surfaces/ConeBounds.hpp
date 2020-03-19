@@ -34,7 +34,7 @@ class ConeBounds : public SurfaceBounds {
     eMaxZ = 2,
     eHalfPhiSector = 3,
     eAveragePhi = 4,
-    eValues = 5
+    eSize = 5
   };
 
   ConeBounds() = delete;
@@ -53,18 +53,18 @@ class ConeBounds : public SurfaceBounds {
   /// default a full cone but can optionally make it a conical section
   ///
   /// @param alpha is the opening angle of the cone
-  /// @param zmin cone expanding from minimal z
-  /// @param zmax cone expanding to maximal z
+  /// @param minz cone expanding from minimal z
+  /// @param maxz cone expanding to maximal z
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, double zmin, double zmax, double halfphi = M_PI,
+  ConeBounds(double alpha, double minz, double maxz, double halfphi = M_PI,
              double avphi = 0.);
 
   /// Constructor - from parameters vector
   ///
-  /// @param parametes The parameter vector
-  ConeBounds(const std::vector<double>& parameters);
+  /// @param parameters The parameter vector
+  ConeBounds(const ActsVectorXd& parameters);
 
   ~ConeBounds() override = default;
 
@@ -73,10 +73,10 @@ class ConeBounds : public SurfaceBounds {
   /// Return the bounds type
   BoundsType type() const final;
 
-  /// Return the bound values
+  /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal parameters
-  std::vector<double> boundValues() const final;
+  ActsVectorXd values() const final;
 
   /// inside method for local position
   ///
@@ -107,14 +107,11 @@ class ConeBounds : public SurfaceBounds {
   /// Return tangent of alpha (pre-computed)
   double tanAlpha() const;
 
-  /// Templated access to the bound parameters
-  template <BoundValues bValue>
-  double get() const {
-    return m_parameters[bValue];
-  }
+  /// Access to the bound parameters
+  double get(BoundValues bValue) const { return m_parameters[bValue]; }
 
  private:
-  std::vector<double> m_parameters;
+  ActsRowVectorD<eSize> m_parameters;
   double m_tanAlpha;
 
   /// Private helper functin to shift a local 2D position
@@ -131,7 +128,7 @@ inline double ConeBounds::tanAlpha() const {
   return m_tanAlpha;
 }
 
-inline std::vector<double> ConeBounds::boundValues() const {
+inline ActsVectorXd ConeBounds::values() const {
   return m_parameters;
 }
 

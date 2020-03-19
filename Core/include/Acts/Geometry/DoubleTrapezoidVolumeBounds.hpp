@@ -188,7 +188,7 @@ class DoubleTrapezoidVolumeBounds : public VolumeBounds {
   /// parallel to local zx plane, positive local y
   RectangleBounds* faceZXRectangleBoundsTop() const;
 
-  std::vector<double> m_boundValues;  ///< the internal store
+  std::vector<double> m_values;  ///< the internal store
 };
 
 inline DoubleTrapezoidVolumeBounds* DoubleTrapezoidVolumeBounds::clone() const {
@@ -196,35 +196,35 @@ inline DoubleTrapezoidVolumeBounds* DoubleTrapezoidVolumeBounds::clone() const {
 }
 
 inline double DoubleTrapezoidVolumeBounds::minHalflengthX() const {
-  return m_boundValues.at(bv_minHalfX);
+  return m_values.at(bv_minHalfX);
 }
 
 inline double DoubleTrapezoidVolumeBounds::medHalflengthX() const {
-  return m_boundValues.at(bv_medHalfX);
+  return m_values.at(bv_medHalfX);
 }
 
 inline double DoubleTrapezoidVolumeBounds::maxHalflengthX() const {
-  return m_boundValues.at(bv_maxHalfX);
+  return m_values.at(bv_maxHalfX);
 }
 
 inline double DoubleTrapezoidVolumeBounds::halflengthY1() const {
-  return m_boundValues.at(bv_halfY1);
+  return m_values.at(bv_halfY1);
 }
 
 inline double DoubleTrapezoidVolumeBounds::halflengthY2() const {
-  return m_boundValues.at(bv_halfY2);
+  return m_values.at(bv_halfY2);
 }
 
 inline double DoubleTrapezoidVolumeBounds::halflengthZ() const {
-  return m_boundValues.at(bv_halfZ);
+  return m_values.at(bv_halfZ);
 }
 
 inline double DoubleTrapezoidVolumeBounds::alpha1() const {
-  return m_boundValues.at(bv_alpha1);
+  return m_values.at(bv_alpha1);
 }
 
 inline double DoubleTrapezoidVolumeBounds::alpha2() const {
-  return m_boundValues.at(bv_alpha2);
+  return m_values.at(bv_alpha2);
 }
 
 template <class T>
@@ -233,11 +233,10 @@ T& DoubleTrapezoidVolumeBounds::dumpT(T& dT) const {
   dT << std::setprecision(5);
   dT << "Acts::DoubleTrapezoidVolumeBounds: (minhalfX, medhalfX, maxhalfX, "
         "halfY1, halfY2, halfZ) = ";
-  dT << "(" << m_boundValues.at(bv_minHalfX) << ", "
-     << m_boundValues.at(bv_medHalfX) << ", " << m_boundValues.at(bv_maxHalfX);
-  dT << ", " << m_boundValues.at(bv_halfY1) << ", "
-     << m_boundValues.at(bv_halfY2) << ", " << m_boundValues.at(bv_halfZ)
-     << ")";
+  dT << "(" << m_values.at(bv_minHalfX) << ", " << m_values.at(bv_medHalfX)
+     << ", " << m_values.at(bv_maxHalfX);
+  dT << ", " << m_values.at(bv_halfY1) << ", " << m_values.at(bv_halfY2) << ", "
+     << m_values.at(bv_halfZ) << ")";
   return dT;
 }
 }  // namespace Acts

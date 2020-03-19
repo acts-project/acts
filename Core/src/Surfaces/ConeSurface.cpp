@@ -140,8 +140,8 @@ double Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,
       m_transform ? transform(gctx).inverse() * position : position;
   double phi = VectorHelpers::phi(posLocal);
   double sgn = posLocal.z() > 0. ? -1. : +1.;
-  double cosAlpha = std::cos(bounds().get<ConeBounds::eAlpha>());
-  double sinAlpha = std::sin(bounds().get<ConeBounds::eAlpha>());
+  double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
+  double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3D normalC(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
   if (m_transform) {
     normalC = transform(gctx) * normalC;
@@ -171,8 +171,8 @@ const Acts::Vector3D Acts::ConeSurface::normal(
   double phi =
              lposition[Acts::eLOC_RPHI] / (bounds().r(lposition[Acts::eLOC_Z])),
          sgn = lposition[Acts::eLOC_Z] > 0 ? -1. : +1.;
-  double cosAlpha = std::cos(bounds().get<ConeBounds::eAlpha>());
-  double sinAlpha = std::sin(bounds().get<ConeBounds::eAlpha>());
+  double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
+  double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3D localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha,
                        sgn * sinAlpha);
   return m_transform ? Vector3D(transform(gctx).linear() * localNormal)
@@ -203,8 +203,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   std::vector<Polyhedron::Face> faces;
   std::vector<Polyhedron::Face> triangularMesh;
 
-  double minZ = bounds().get<ConeBounds::eMinZ>();
-  double maxZ = bounds().get<ConeBounds::eMaxZ>();
+  double minZ = bounds().get(ConeBounds::eMinZ);
+  double maxZ = bounds().get(ConeBounds::eMaxZ);
 
   if (minZ == -std::numeric_limits<double>::infinity() or
       maxZ == std::numeric_limits<double>::infinity()) {
@@ -222,8 +222,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   }
 
   // Cone parameters
-  double hPhiSec = bounds().get<ConeBounds::eHalfPhiSector>();
-  double avgPhi = bounds().get<ConeBounds::eAveragePhi>();
+  double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
+  double avgPhi = bounds().get(ConeBounds::eAveragePhi);
   bool fullCone = (hPhiSec == M_PI);
 
   // Get the phi segments from the helper

@@ -39,14 +39,9 @@ Acts::SurfaceBounds::BoundsType Acts::EllipseBounds::type() const {
   return SurfaceBounds::eEllipse;
 }
 
-std::vector<double> Acts::EllipseBounds::boundValues() const {
-  std::vector<double> values(EllipseBounds::bv_length);
-  values[EllipseBounds::bv_rMinX] = m_rMinX;
-  values[EllipseBounds::bv_rMinY] = m_rMinY;
-  values[EllipseBounds::bv_rMaxX] = m_rMaxX;
-  values[EllipseBounds::bv_rMaxY] = m_rMaxY;
-  values[EllipseBounds::bv_averagePhi] = m_avgPhi;
-  values[EllipseBounds::bv_halfPhiSector] = m_halfPhi;
+Acts::ActsVectorXd Acts::EllipseBounds::values() const {
+  ActsVectorXd values;
+  values << m_rMinX, m_rMinY, m_rMaxX, m_rMaxY, m_avgPhi, m_halfPhi;
   return values;
 }
 
@@ -72,10 +67,10 @@ bool Acts::EllipseBounds::inside(const Acts::Vector2D& lposition,
 }
 
 // For ellipse bound this is only approximation which is valid
-// only if m_boundValues.at(EllipseBounds::bv_rMinX) ~=
-// m_boundValues.at(EllipseBounds::bv_rMinY)
-// and m_boundValues.at(EllipseBounds::bv_rMaxX) ~=
-// m_boundValues.at(EllipseBounds::bv_rMaxY)
+// only if m_values.at(EllipseBounds::bv_rMinX) ~=
+// m_values.at(EllipseBounds::bv_rMinY)
+// and m_values.at(EllipseBounds::bv_rMaxX) ~=
+// m_values.at(EllipseBounds::bv_rMaxY)
 //
 double Acts::EllipseBounds::distanceToBoundary(
     const Vector2D& lposition) const {

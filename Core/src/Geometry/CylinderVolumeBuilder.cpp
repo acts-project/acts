@@ -495,12 +495,15 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
           dynamic_cast<const CylinderLayer*>(layer.get());
       if (cLayer != nullptr) {
         // now we have access to all the information
-        double rMinC =
-            cLayer->surfaceRepresentation().bounds().r() - 0.5 * thickness;
-        double rMaxC =
-            cLayer->surfaceRepresentation().bounds().r() + 0.5 * thickness;
+        double rMinC = cLayer->surfaceRepresentation().bounds().get(
+                           CylinderBounds::eRadius) -
+                       0.5 * thickness;
+        double rMaxC = cLayer->surfaceRepresentation().bounds().get(
+                           CylinderBounds::eRadius) +
+                       0.5 * thickness;
 
-        double hZ = cLayer->surfaceRepresentation().bounds().halflengthZ();
+        double hZ = cLayer->surfaceRepresentation().bounds().get(
+            CylinderBounds::eHalfLengthZ);
         takeSmaller(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
         takeBigger(lConfig.rMax, rMaxC + m_cfg.layerEnvelopeR.second);
         takeSmaller(lConfig.zMin, center.z() - hZ - m_cfg.layerEnvelopeZ);

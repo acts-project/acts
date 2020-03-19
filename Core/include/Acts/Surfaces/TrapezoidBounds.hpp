@@ -50,7 +50,7 @@ class TrapezoidBounds : public PlanarBounds {
 
   BoundsType type() const final;
 
-  std::vector<double> boundValues() const final;
+  ActsVectorXd values() const final;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid

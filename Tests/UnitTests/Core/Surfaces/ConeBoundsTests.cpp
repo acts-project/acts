@@ -83,16 +83,16 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   CHECK_CLOSE_REL(coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
   //
   /// test for alpha
-  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eAlpha>(), alpha, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eAlpha), alpha, 1e-6);
   //
   /// test for minZ
-  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eMinZ>(), zMin, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eMinZ), zMin, 1e-6);
   //
   /// test for maxZ
-  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eMaxZ>(), zMax, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eMaxZ), zMax, 1e-6);
   //
   /// test for averagePhi
-  CHECK_CLOSE_REL(coneBoundsObject.get<ConeBounds::eHalfPhiSector>(), halfPhi,
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eHalfPhiSector), halfPhi,
                   1e-6);
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;

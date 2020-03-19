@@ -58,10 +58,11 @@ class SurfaceBounds {
   /// @return is a BoundsType enum
   virtual BoundsType type() const = 0;
 
-  /// Access method for bound values, this is for persistency
+  /// Access method for bound values, this is a dynamically sized
+  /// vector containing the parameters needed to describe these bounds
   ///
   /// @return of the stored values for this SurfaceBounds object
-  virtual std::vector<double> boundValues() const = 0;
+  virtual ActsVectorXd values() const = 0;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -89,7 +90,7 @@ inline bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {
   if (&lhs == &rhs) {
     return true;
   }
-  return (lhs.type() == rhs.type()) && (lhs.boundValues() == rhs.boundValues());
+  return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
 }
 
 inline bool operator!=(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {

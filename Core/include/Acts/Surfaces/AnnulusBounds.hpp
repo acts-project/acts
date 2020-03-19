@@ -64,7 +64,7 @@ class AnnulusBounds : public DiscBounds {
   SurfaceBounds::BoundsType type() const final;
 
   /// This returns the stored values for persisitency
-  std::vector<double> boundValues() const final;
+  ActsVectorXd values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

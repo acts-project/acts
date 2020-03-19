@@ -89,15 +89,10 @@ Acts::AnnulusBounds::AnnulusBounds(double minR, double maxR, double minPhi,
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<double> Acts::AnnulusBounds::boundValues() const {
-  std::vector<double> values(AnnulusBounds::bv_length);
-  values[AnnulusBounds::bv_minR] = rMin();
-  values[AnnulusBounds::bv_maxR] = rMax();
-  values[AnnulusBounds::bv_phiMin] = phiMin();
-  values[AnnulusBounds::bv_phiMax] = phiMax();
-  values[AnnulusBounds::bv_phiAvg] = 0.5 * (phiMin() + phiMax());
-  values[AnnulusBounds::bv_originX] = m_moduleOrigin.x();
-  values[AnnulusBounds::bv_originY] = m_moduleOrigin.y();
+Acts::ActsVectorXd Acts::AnnulusBounds::values() const {
+  ActsVectorXd values;
+  values << rMin(), rMax(), phiMin(), phiMax(), 0.5 * (phiMin() + phiMax()),
+      m_moduleOrigin.x(), m_moduleOrigin.y();
   return values;
 }
 

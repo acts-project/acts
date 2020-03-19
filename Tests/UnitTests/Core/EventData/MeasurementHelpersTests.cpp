@@ -25,8 +25,11 @@ using MeasurementType = Measurement<SourceLink, params...>;
 using FittableMeasurement = FittableMeasurement<SourceLink>;
 
 BOOST_AUTO_TEST_CASE(getSurface_test) {
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
-  auto cylinder2 = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinderBounds = std::make_shared<CylinderBounds>(3, 10);
+
+  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, cylinderBounds);
+  auto cylinder2 =
+      Surface::makeShared<CylinderSurface>(nullptr, cylinderBounds);
 
   ActsSymMatrixD<2> cov;
   cov << 0.04, 0, 0, 0.1;

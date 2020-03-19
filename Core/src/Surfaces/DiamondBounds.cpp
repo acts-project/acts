@@ -33,13 +33,9 @@ Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
 }
 
-std::vector<double> Acts::DiamondBounds::boundValues() const {
-  std::vector<double> values(DiamondBounds::bv_length);
-  values[DiamondBounds::bv_x1] = x1();
-  values[DiamondBounds::bv_x2] = x2();
-  values[DiamondBounds::bv_x3] = x3();
-  values[DiamondBounds::bv_y1] = y1();
-  values[DiamondBounds::bv_y2] = y2();
+Acts::ActsVectorXd Acts::DiamondBounds::values() const {
+  ActsVectorXd values;
+  values << x1(), x2(), x3(), y1(), y2();
   return values;
 }
 
