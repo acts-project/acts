@@ -142,8 +142,8 @@ class RiddersPropagator {
   template <typename options_t, typename parameters_t>
   std::vector<BoundVector> wiggleDimension(
       const options_t& options, const parameters_t& startPars,
-      const unsigned int param, const Surface& target,
-      const BoundVector& nominal, const std::vector<double>& deviations) const;
+      const unsigned int param,
+      const BoundVector& nominal, const std::vector<double>& deviations, const Surface& target) const;
 
   /// @brief This function wiggles one dimension of the starting parameters,
   /// performs the propagation to a surface and collects for each change of the

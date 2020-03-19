@@ -49,8 +49,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     // Wiggle each dimension individually
     for (unsigned int i = 0; i < eBoundSize; i++) {
       derivatives[i] = wiggleDimension(
-          opts, start, i, surface, nominalParameters,
-          deviations);  // TODO: This only works if start is local
+          opts, start, i, nominalParameters,
+          deviations, surface);  // TODO: This only works if start is local
     }
 
     // Exchange the result by Ridders Covariance
@@ -173,14 +173,14 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   std::vector<BoundVector> derivatives;
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
-    parameters_t tp =
+    start_parameters_t tp =
         wiggleStartVector(options.geoContext, h, param, startPars);
 
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 
-    if constexpr (parameters_t::is_local_representation) {
+    if constexpr (start_parameters_t::is_local_representation) {
       // Correct for a possible variation of phi around
       if (param == 2) {
         double phi0 = nominal(Acts::eBoundPhi);
