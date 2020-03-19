@@ -106,6 +106,7 @@ void covarianceTransport(
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
 ///
+<<<<<<< HEAD
 /// @param [in, out] covarianceMatrix The covariance matrix of the state
 /// @param [in, out] jacobian Full jacobian since the last reset
 /// @param [in, out] transportJacobian Global jacobian since the last reset
@@ -119,5 +120,9 @@ void covarianceTransport(BoundSymMatrix& covarianceMatrix,
                          FreeVector& derivatives,
                          BoundToFreeMatrix& jacobianLocalToGlobal,
                          const Vector3D& direction);
+=======
+/// @return Projection jacobian from global to bound parameters
+void covarianceTransport(StepperState& state, const Surface* surface = nullptr);
+>>>>>>> format fixed
 }  // namespace detail
 }  // namespace Acts
