@@ -9,50 +9,53 @@
 #pragma once
 
 #include <cmath>
-#include <functional>
+#include <tuple>
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StepperState.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
+
+class Surface;
+
+namespace detail {
 
 /// @brief These functions perform the transport of a covariance matrix using
 /// given Jacobians. The required data is provided by a @p StepperState object
 /// with some additional data. Since this is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a seperate file.
-namespace detail {
 
-/// Create and return the bound state at the current position
+/// Create and return the bound state at the current position.
 ///
-/// @brief It does not check if the transported state is at the surface, this
-/// needs to be guaranteed by the propagator
-///
-/// @tparam result_t Defines the return type
 /// @param [in] state State that will be presented as @c BoundState
 /// @param [in] surface The surface to which we bind the state
-///
 /// @return A bound state:
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
+///
+/// @warning Calls the covariance transport internally and modifies the state
+///          accordingly on every call, but only if the covariance transport is
+///          enabled. Multiple calls at the same position can thus lead to
+///          ill-defined outputs.
 std::tuple<BoundParameters, BoundMatrix, double> boundState(
     StepperState& state, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
 ///
-/// @brief This creates a curvilinear state.
-///
-/// @tparam result_t Defines the return type
 /// @param [in] state State that will be presented as @c CurvilinearState
-///
 /// @return A curvilinear state:
 ///   - the curvilinear parameters at given position
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
+///
+/// @warning Calls the covariance transport internally and modifies the state
+///          accordingly on every call, but only if the covariance transport is
+///          enabled. Multiple calls at the same position can thus lead to
+///          ill-defined outputs.
 std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
     StepperState& state);
 

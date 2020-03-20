@@ -8,6 +8,8 @@
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
+#include "Acts/Surfaces/Surface.hpp"
+
 namespace Acts {
 namespace {
 /// Some type defs
