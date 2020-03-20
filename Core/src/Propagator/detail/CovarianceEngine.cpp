@@ -159,7 +159,7 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (state.covTransport) {
     // Initialize the transport final frame jacobian
-    covarianceTransport(state, &surface);
+    transportCovarianceToBound(state, surface);
     cov = state.cov;
   }
   // Create the bound parameters
@@ -176,7 +176,7 @@ std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
   // Transport the covariance to here
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (state.covTransport) {
-    covarianceTransport(state);
+    transportCovarianceToCurvilinear(state);
     cov = state.cov;
   }
   // Create the curvilinear parameters
@@ -187,20 +187,52 @@ std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
                          state.pathAccumulated);
 }
 
-void covarianceTransport(StepperState& state, const Surface* surface) {
-  state.jacToGlobal = state.jacTransport * state.jacToGlobal;
+void transportCovarianceToBound(StepperState& state, const Surface& surface) {
+  // Jacobian from current free parameters onto the surface
+  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
+  const auto& referenceFrameTranspose = surface.initJacobianToLocal(
+      state.geoContext, jacToLocal, state.pos, state.dir);
+  // Add corrections due to propagation derivatives
+  // TODO 20200319 msmk: why does this change the initial projection and not the
+  //                     final one?
+  applyDerivativeCorrectionBound(state.pos, state.dir, state.derivative,
+                                 surface, referenceFrameTranspose,
+                                 state.geoContext, state.jacToGlobal);
+  // combine Jacobian for bound parameters from:
+  // 1. projection from the initial bound frame to free parameters
+  // 2. free transport Jacobian along trajectory as computed by stepper
+  // 3. Jacobian onto the curvilinear frame at the current position
+  // matrix multiplication uses right-to-left order, i.e. 3 * 2 * 1
+  state.jacobian = jacToLocal * state.jacTransport * state.jacToGlobal;
 
-  const FreeToBoundMatrix jacToLocal = surfaceDerivative(state, surface);
-  const Jacobian jacFull = jacToLocal * state.jacToGlobal;
+  // transport the covariance matrix
+  state.cov = state.jacobian * state.cov * state.jacobian.transpose();
 
-  // Apply the actual covariance transport
-  state.cov = jacFull * state.cov * jacFull.transpose();
-
-  // Reinitialize
-  reinitializeJacobians(state, surface);
-
-  // Store The global and bound jacobian (duplication for the moment)
-  state.jacobian = jacFull;
+  // reset Jacobians for a propagation starting on the surface
+  state.jacToGlobal = boundToFreeJacobian(state, surface);
+  state.jacTransport = FreeMatrix::Identity();
+  state.derivative = FreeVector::Zero();
 }
+
+void transportCovarianceToCurvilinear(StepperState& state) {
+  // Jacobian from current free parameters onto the curvilinear frame
+  const FreeToBoundMatrix jacToLocal = freeToCurvilinearJacobian(state.dir);
+  // Add corrections due to propagation derivatives
+  // TODO 20200319 msmk: why does this change the initial projection and not the
+  //                     final one?
+  applyDerivativeCorrectionCurvilinear(state.dir, state.derivative,
+                                       state.jacToGlobal);
+  // see transportCovarianceToSurface for explanation
+  state.jacobian = jacToLocal * state.jacTransport * state.jacToGlobal;
+
+  // transport the covariance matrix
+  state.cov = state.jacobian * state.cov * state.jacobian.transpose();
+
+  // reset Jacobians for a propagation starting on the curvilinear frame
+  state.jacToGlobal = curvilinearToFreeJacobian(state.dir);
+  state.jacTransport = FreeMatrix::Identity();
+  state.derivative = FreeVector::Zero();
+}
+
 }  // namespace detail
 }  // namespace Acts

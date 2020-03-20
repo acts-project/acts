@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
+
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 namespace Acts {
@@ -44,12 +45,12 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
 }
 
 void StraightLineStepper::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state);
+  detail::transportCovarianceToCurvilinear(state);
 }
 
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface) const {
-  detail::covarianceTransport(state, &surface);
+  detail::transportCovarianceToBound(state, surface);
 }
 
 }  // namespace Acts

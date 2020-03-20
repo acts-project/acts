@@ -51,13 +51,13 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state);
+  detail::transportCovarianceToCurvilinear(state);
 }
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(
     State& state, const Surface& surface) const {
-  detail::covarianceTransport(state, &surface);
+  detail::transportCovarianceToBound(state, surface);
 }
 
 template <typename B, typename E, typename A>

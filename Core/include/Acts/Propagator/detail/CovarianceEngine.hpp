@@ -59,16 +59,26 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(
 std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
     StepperState& state);
 
-/// @brief Method for on-demand transport of the covariance to a new frame at
-/// current position in parameter space
+/// Transport covariance to the bound state on an arbitrary surface.
 ///
 /// @param [in,out] state The stepper state
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
-/// @note No check is done if the position is actually on the surface
 ///
-/// @return Projection jacobian from global to bound parameters
-void covarianceTransport(StepperState& state, const Surface* surface = nullptr);
+/// @note This assumes that the current global parameter state has already been
+///       propagated to be on the surface.
+///
+/// The Jacobians are reset such that they represent the propagation starting at
+/// the surface.
+void transportCovarianceToBound(StepperState& state, const Surface& surface);
+
+/// Transport covariance to the bound state on the current curvilinear frame.
+///
+/// @param [in,out] state The stepper state
+///
+/// The Jacobians are reset such that they represent the propagation starting at
+/// the current curvilinear frame.
+void transportCovarianceToCurvilinear(StepperState& state);
 
 }  // namespace detail
 }  // namespace Acts
