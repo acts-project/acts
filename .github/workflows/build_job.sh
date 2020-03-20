@@ -5,18 +5,23 @@
 lcg_map_96=96
 lcg_map_95=95apython3
 
+os_map_cc7=centos7
+os_map_slc6=slc6
+
 lcg=$1
 os=$2
 
 i="lcg_map_${lcg}"
-lcg_full="${!i}"
+_lcg="${!i}"
+i="os_map_${os}"
+_os="${!i}"
 
-echo "LCG: $lcg -> $lcg_full"
-echo "OS: $os"
+echo "LCG: $lcg -> $_lcg"
+echo "OS: $os -> $_os"
 
 set -e
 
-source /opt/lcg/views/LCG_${lcg_full}/x86_64-centos7-gcc8-opt/setup.sh
+source /opt/lcg/views/LCG_${_lcg}/x86_64-${_os}-gcc8-opt/setup.sh
 
 mkdir build && cd build
 
