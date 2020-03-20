@@ -12,11 +12,6 @@
 
 namespace Acts {
 namespace {
-/// Some type defs
-using Jacobian = BoundMatrix;
-using Covariance = BoundSymMatrix;
-using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters
 ///
@@ -179,7 +174,8 @@ void reinitializeJacobians(StepperState& state,
 
 namespace detail {
 
-BoundState boundState(StepperState& state, const Surface& surface) {
+std::tuple<BoundParameters, BoundMatrix, double> boundState(
+    StepperState& state, const Surface& surface) {
   // Transport the covariance to here
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (state.covTransport) {
@@ -188,16 +184,16 @@ BoundState boundState(StepperState& state, const Surface& surface) {
     cov = state.cov;
   }
   // Create the bound parameters
-  BoundParameters parameters(state.geoContext, cov, state.pos,
+  BoundParameters parameters(state.geoContext, std::move(cov), state.pos,
                              state.p * state.dir, state.q, state.t,
                              surface.getSharedPtr());
   // Create the bound state
-  BoundState result = std::make_tuple(std::move(parameters), state.jacobian,
-                                      state.pathAccumulated);
-  return result;
+  return std::make_tuple(std::move(parameters), state.jacobian,
+                         state.pathAccumulated);
 }
 
-CurvilinearState curvilinearState(StepperState& state) {
+std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
+    StepperState& state) {
   // Transport the covariance to here
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (state.covTransport) {
@@ -205,13 +201,11 @@ CurvilinearState curvilinearState(StepperState& state) {
     cov = state.cov;
   }
   // Create the curvilinear parameters
-  CurvilinearParameters parameters(cov, state.pos, state.p * state.dir, state.q,
-                                   state.t);
+  CurvilinearParameters parameters(std::move(cov), state.pos,
+                                   state.p * state.dir, state.q, state.t);
   // Create the bound state
-  CurvilinearState result = std::make_tuple(
-      std::move(parameters), state.jacobian, state.pathAccumulated);
-
-  return result;
+  return std::make_tuple(std::move(parameters), state.jacobian,
+                         state.pathAccumulated);
 }
 
 void covarianceTransport(StepperState& state, const Surface* surface) {
