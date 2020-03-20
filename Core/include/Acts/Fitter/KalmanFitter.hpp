@@ -290,10 +290,9 @@ class KalmanFitter {
       }
 
       // Update:
-      // - Waiting for a current surface that has material
-      // -> a trackState will be created on surface with material
+      // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
-      if (surface and surface->surfaceMaterial()) {
+      if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -546,7 +545,9 @@ class KalmanFitter {
         }
         // We count the processed state
         ++result.processedStates;
-      } else {
+      } else if (surface->surfaceMaterial() != nullptr) {
+        // We only create track states here if there is already measurement
+        // detected
         if (result.measurementStates > 0) {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
@@ -708,7 +709,7 @@ class KalmanFitter {
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
         }
-      } else {
+      } else if (surface->surfaceMaterial() != nullptr) {
         // Transport covariance
         if (surface->associatedDetectorElement() != nullptr) {
           ACTS_VERBOSE("Detected hole on " << surface->geoID()
@@ -748,27 +749,40 @@ class KalmanFitter {
     void materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
-      // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+      // Indicator if having material
+      bool hasMaterial = false;
 
-      // Evaluate the material properties
-      if (interaction.evaluateMaterialProperties(state, updateStage)) {
-        // Evaluate the material effects
-        interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                         energyLoss);
+      if (surface and surface->surfaceMaterial()) {
+        // Prepare relevant input particle properties
+        detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                         stepper);
+        // Evaluate the material properties
+        if (interaction.evaluateMaterialProperties(state, updateStage)) {
+          // Surface has material at this stage
+          hasMaterial = true;
 
-        ACTS_VERBOSE("Material effects on surface: "
-                     << surface->geoID() << " at update stage: " << updateStage
-                     << " are :");
-        ACTS_VERBOSE("eLoss = "
-                     << interaction.Eloss << ", "
-                     << "variancePhi = " << interaction.variancePhi << ", "
-                     << "varianceTheta = " << interaction.varianceTheta << ", "
-                     << "varianceQoverP = " << interaction.varianceQoverP);
+          // Evaluate the material effects
+          interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
+                                                           energyLoss);
 
-        // Update the state and stepper with material effects
-        interaction.updateState(state, stepper);
-      } else {
+          // Screen out material effects info
+          ACTS_VERBOSE("Material effects on surface: "
+                       << surface->geoID()
+                       << " at update stage: " << updateStage << " are :");
+          ACTS_VERBOSE("eLoss = "
+                       << interaction.Eloss << ", "
+                       << "variancePhi = " << interaction.variancePhi << ", "
+                       << "varianceTheta = " << interaction.varianceTheta
+                       << ", "
+                       << "varianceQoverP = " << interaction.varianceQoverP);
+
+          // Update the state and stepper with material effects
+          interaction.updateState(state, stepper);
+        }
+      }
+
+      if (not hasMaterial) {
+        // Screen out message
         ACTS_VERBOSE("No material effects on surface: " << surface->geoID()
                                                         << " at update stage: "
                                                         << updateStage);
@@ -979,7 +993,6 @@ class KalmanFitter {
 
     /// It could happen that the fit ends in zero processed states.
     /// The result gets meaningless so such case is regarded as fit failure.
-    //@TODO: should we require the number of measurments >0 ?
     if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
       kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
     }

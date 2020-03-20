@@ -40,7 +40,7 @@ class KalmanFitterErrorCategory : public std::error_category {
       case KalmanFitterError::OutputConversionFailed:
         return "Kalman output conversion failed";
       case KalmanFitterError::PropagationInVain:
-        return "No detector observed during the propagation";
+        return "No measurement detected during the propagation";
       default:
         return "unknown";
     }
