@@ -26,7 +26,7 @@ set -e
 
 mkdir build && cd build
 
-cmake ..
+cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CXX_STANDARD=17 \
   -DACTS_BUILD_UNITTESTS=ON \
@@ -41,7 +41,7 @@ cmake ..
   -DACTS_BUILD_LEGACY=on \
   -DACTS_BUILD_DD4HEP_PLUGIN=on \
   -DACTS_BUILD_TGEO_PLUGIN=on \
-  -DACTS_BUILD_INTEGRATIONTESTS=on \
+  -DACTS_BUILD_INTEGRATIONTESTS=on
 
 cmake --build . -- -j$(nproc)
 cmake --build . -- test
