@@ -107,118 +107,50 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& unitDirection) {
   return jacToCurv;
 }
 
-/// @brief This function treats the modifications of the jacobian related to the
-/// projection onto a surface. Since a variation of the start parameters within
-/// a given uncertainty would lead to a variation of the end parameters, these
-/// need to be propagated onto the target surface. This an approximated approach
-/// to treat the (assumed) small change.
+/// Apply Jacobian modifications from projection onto the surface.
 ///
-/// @param [in] state The current state
-/// @param [in] surface The surface onto which the projection should be
-/// performed
-/// @note The parameter @p surface is only required if projected to bound
-/// parameters. In the case of curvilinear parameters the geometry and the
-/// position is known and the calculation can be simplified
+/// This function treats the modifications of the jacobian related to
+/// the projection onto a surface. Since a variation of the start parameters
+/// within a given uncertainty would lead to a variation of the end
+/// parameters, these need to be propagated onto the target surface. This an
+/// approximated approach to treat the (assumed) small change.
 ///
-/// @return The projection jacobian from global end parameters to its local
-/// equivalent
-const FreeToBoundMatrix surfaceDerivative(StepperState& state,
-                                          const Surface* surface = nullptr) {
-  // Set the surface projection contributions
-  // If no surface is specified it is curvilinear
-  if (surface == nullptr) {
-    // Transport the covariance
-    const ActsRowVectorD<3> normVec(state.dir);
-    const BoundRowVector sfactors =
-        normVec * state.jacToGlobal.template topLeftCorner<3, BoundParsDim>();
-    state.jacToGlobal -= state.derivative * sfactors;
-    // Since the jacobian to local needs to calculated for the bound parameters
-    // here, it is convenient to do the same here
-    return freeToCurvilinearJacobian(state);
-  }
-  // Else it is bound
-  else {
-    // Initialize the transport final frame jacobian
-    FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-    // Initalize the jacobian to local, returns the transposed ref frame
-    auto rframeT = surface->initJacobianToLocal(state.geoContext, jacToLocal,
-                                                state.pos, state.dir);
-    // Calculate the form factors for the derivatives
-    const BoundRowVector sVec = surface->derivativeFactors(
-        state.geoContext, state.pos, state.dir, rframeT, state.jacToGlobal);
-    state.jacToGlobal -= state.derivative * sVec;
-    // Return the jacobian to local
-    return jacToLocal;
-  }
+/// @param [in] position Particle position
+/// @param [in] unitDirection Particle direction
+/// @param [in] derivative Stepper propagation derivative
+/// @param [in] surface Local surface to project onto
+/// @param [in] referenceFrameT Transpose local reference frame on surface
+/// @param [in] geoContext Geometry context
+/// @param [in,out] jacToGlobal curvilinear-to-free Jacobian to modify
+void applyDerivativeCorrectionBound(const Vector3D& position,
+                                    const Vector3D& unitDirection,
+                                    const FreeVector& derivative,
+                                    const Surface& surface,
+                                    const RotationMatrix3D& referenceFrameT,
+                                    const GeometryContext& geoContext,
+                                    BoundToFreeMatrix& jacToGlobal) {
+  // Calculate the form factors for the derivatives
+  const BoundRowVector sfactors = surface.derivativeFactors(
+      geoContext, position, unitDirection, referenceFrameT, jacToGlobal);
+  jacToGlobal -= derivative * sfactors;
 }
 
-/// @brief This function reinitialises the @p state member @p jacToGlobal.
+/// Apply Jacobian modifications from projection onto the curvilinear frame.
 ///
-/// @param [in, out] state The state object
-/// @param [in] surface The surface the represents the local parametrisation
-/// @note The surface is only required for bound parameters since it serves to
-/// derive the jacobian from it. In the case of curvilinear parameters this is
-/// not needed and can be evaluated without any surface.
-void reinitializeJacToGlobal(StepperState& state,
-                             const Surface* surface = nullptr) {
-  using VectorHelpers::phi;
-  using VectorHelpers::theta;
-
-  // Reset the jacobian
-  state.jacToGlobal = BoundToFreeMatrix::Zero();
-
-  // Fill the jacobian to global for next transport
-  // If treating curvilinear parameters
-  if (surface == nullptr) {
-    // TODO: This was calculated before - can it be reused?
-    // Optimized trigonometry on the propagation direction
-    const double x = state.dir(0);  // == cos(phi) * sin(theta)
-    const double y = state.dir(1);  // == sin(phi) * sin(theta)
-    const double z = state.dir(2);  // == cos(theta)
-    // can be turned into cosine/sine
-    const double cosTheta = z;
-    const double sinTheta = sqrt(x * x + y * y);
-    const double invSinTheta = 1. / sinTheta;
-    const double cosPhi = x * invSinTheta;
-    const double sinPhi = y * invSinTheta;
-
-    state.jacToGlobal(0, eLOC_0) = -sinPhi;
-    state.jacToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
-    state.jacToGlobal(1, eLOC_0) = cosPhi;
-    state.jacToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
-    state.jacToGlobal(2, eLOC_1) = sinTheta;
-    state.jacToGlobal(3, eT) = 1;
-    state.jacToGlobal(4, ePHI) = -sinTheta * sinPhi;
-    state.jacToGlobal(4, eTHETA) = cosTheta * cosPhi;
-    state.jacToGlobal(5, ePHI) = sinTheta * cosPhi;
-    state.jacToGlobal(5, eTHETA) = cosTheta * sinPhi;
-    state.jacToGlobal(6, eTHETA) = -sinTheta;
-    state.jacToGlobal(7, eQOP) = 1;
-  }
-  // If treating bound parameters
-  else {
-    Vector2D loc{0., 0.};
-    surface->globalToLocal(state.geoContext, state.pos, state.dir, loc);
-    BoundVector pars;
-    pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-        state.q / state.p, state.t;
-    surface->initJacobianToGlobal(state.geoContext, state.jacToGlobal,
-                                  state.pos, state.dir, pars);
-  }
+/// @param [in] unitDirection Particle direction
+/// @param [in] derivative Stepper propagation derivative
+/// @param [in,out] jacToGlobal curvilinear-to-free Jacobian to modify
+void applyDerivativeCorrectionCurvilinear(const Vector3D& unitDirection,
+                                          const FreeVector& derivative,
+                                          BoundToFreeMatrix& jacToGlobal) {
+  // Transport the covariance
+  const BoundRowVector sfactors =
+      unitDirection.transpose() *
+      jacToGlobal.template topLeftCorner<3, eBoundParametersSize>();
+  jacToGlobal -= derivative * sfactors;
 }
 
-/// @brief Reinitializes the jacobians of @p state and its components
-///
-/// @param [in, out] state The state of the stepper
-/// @param [in] surface Representing surface of the stepper state
-void reinitializeJacobians(StepperState& state,
-                           const Surface* surface = nullptr) {
-  state.jacTransport = FreeMatrix::Identity();
-  state.derivative = FreeVector::Zero();
-  reinitializeJacToGlobal(state, surface);
-}
 }  // namespace
-
 namespace detail {
 
 std::tuple<BoundParameters, BoundMatrix, double> boundState(
