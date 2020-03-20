@@ -37,7 +37,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: brew install boost eigen cmake
+        run: >
+          brew install boost eigen cmake
+          && curl -SL https://root.cern/download/root_v6.20.02.macosx64-10.15-clang110.tar.gz | tar -xzC .
+          && source root/bin/thisroot.sh
       - name: Build
         run: >
           mkdir build && cd build
@@ -55,7 +58,7 @@ jobs:
           -DACTS_BUILD_UNITTESTS=on
           -DACTS_BUILD_LEGACY=on
           -DACTS_BUILD_DD4HEP_PLUGIN=off
-          -DACTS_BUILD_TGEO_PLUGIN=off
+          -DACTS_BUILD_TGEO_PLUGIN=on
           -DACTS_BUILD_INTEGRATIONTESTS=on
           && cmake --build . -- -j$(nproc)
           && cmake --build . -- test
