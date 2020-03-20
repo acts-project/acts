@@ -13,50 +13,97 @@
 namespace Acts {
 namespace {
 
-/// @brief Evaluate the projection Jacobian from free to curvilinear parameters
+/// Projection Jacobian from bound parameters on the surface to free parameters.
+BoundToFreeMatrix boundToFreeJacobian(const StepperState& state,
+                                      const Surface& surface) {
+  // convert free to local parameters position
+  Vector2D loc = Vector2D::Zero();
+  surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
+  BoundVector pars;
+  pars[eBoundLoc0] = loc[0];
+  pars[eBoundLoc1] = loc[1];
+  pars[eBoundTime] = state.t;
+  pars[eBoundPhi] = VectorHelpers::phi(state.dir);
+  pars[eBoundTheta] = VectorHelpers::theta(state.dir);
+  pars[eBoundQOverP] = (state.q != 0) ? (state.q / state.p) : (1 / state.p);
+  BoundToFreeMatrix jacToGlobal;
+  surface.initJacobianToGlobal(state.geoContext, jacToGlobal, state.pos,
+                               state.dir, pars);
+  return jacToGlobal;
+}
+
+/// Projection Jacobian from curvilinear parameters to free parameters.
 ///
-/// @param [in] state State that will be projected
-///
-/// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const StepperState& state) {
-  // Optimized trigonometry on the propagation direction
-  const double x = state.dir(0);  // == cos(phi) * sin(theta)
-  const double y = state.dir(1);  // == sin(phi) * sin(theta)
-  const double z = state.dir(2);  // == cos(theta)
-  // can be turned into cosine/sine
-  const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
-  const double invSinTheta = 1. / sinTheta;
-  const double cosPhi = x * invSinTheta;
-  const double sinPhi = y * invSinTheta;
-  // prepare the jacobian to curvilinear
+/// In principle, this should be equivalent to the projection Jacobian for
+/// general bound parameters with an appropriate Curvilinear surface. Use an
+/// explicit implementation for faster computation.
+BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3D& unitDirection) {
+  // normalized direction vector components expressed as phi/theta
+  const double x = unitDirection[0];  // == cos(phi) * sin(theta)
+  const double y = unitDirection[1];  // == sin(phi) * sin(theta)
+  const double z = unitDirection[2];  // == cos(theta)
+  // extract phi/theta expressions
+  const auto cosTheta = z;
+  const auto sinTheta = std::hypot(x, y);
+  const auto invSinTheta = 1 / sinTheta;
+  const auto cosPhi = x * invSinTheta;
+  const auto sinPhi = y * invSinTheta;
+  BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+  jacToGlobal(eFreePos0, eBoundLoc0) = -sinPhi;
+  jacToGlobal(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
+  jacToGlobal(eFreePos1, eBoundLoc0) = cosPhi;
+  jacToGlobal(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
+  jacToGlobal(eFreePos2, eBoundLoc1) = sinTheta;
+  jacToGlobal(eFreeTime, eBoundTime) = 1;
+  jacToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
+  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
+  jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
+  jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+  return jacToGlobal;
+}
+
+/// Projection Jacobian from free to curvilinear parameters.
+FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& unitDirection) {
+  // normalized direction vector components expressed as phi/theta
+  const double x = unitDirection[0];  // == cos(phi) * sin(theta)
+  const double y = unitDirection[1];  // == sin(phi) * sin(theta)
+  const double z = unitDirection[2];  // == cos(theta)
+  // extract phi/theta expressions
+  const auto cosTheta = z;
+  const auto sinTheta = std::hypot(x, y);
+  const auto invSinTheta = 1 / sinTheta;
+  const auto cosPhi = x * invSinTheta;
+  const auto sinPhi = y * invSinTheta;
   FreeToBoundMatrix jacToCurv = FreeToBoundMatrix::Zero();
   if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
-    // We normally operate in curvilinear coordinates defined as follows
-    jacToCurv(0, 0) = -sinPhi;
-    jacToCurv(0, 1) = cosPhi;
-    jacToCurv(1, 0) = -cosPhi * cosTheta;
-    jacToCurv(1, 1) = -sinPhi * cosTheta;
-    jacToCurv(1, 2) = sinTheta;
+    // We normally operate in curvilinear coordinates defined as above
+    jacToCurv(eBoundLoc0, eFreePos0) = -sinPhi;
+    jacToCurv(eBoundLoc0, eFreePos1) = cosPhi;
+    jacToCurv(eBoundLoc1, eFreePos0) = -cosPhi * cosTheta;
+    jacToCurv(eBoundLoc1, eFreePos1) = -sinPhi * cosTheta;
+    jacToCurv(eBoundLoc1, eFreePos2) = sinTheta;
   } else {
     // Under grazing incidence to z, the above coordinate system definition
     // becomes numerically unstable, and we need to switch to another one
-    const double c = sqrt(y * y + z * z);
-    const double invC = 1. / c;
-    jacToCurv(0, 1) = -z * invC;
-    jacToCurv(0, 2) = y * invC;
-    jacToCurv(1, 0) = c;
-    jacToCurv(1, 1) = -x * y * invC;
-    jacToCurv(1, 2) = -x * z * invC;
+    const auto c = std::hypot(y, z);
+    const auto invC = 1 / c;
+    jacToCurv(eBoundLoc0, eFreePos1) = -z * invC;
+    jacToCurv(eBoundLoc0, eFreePos2) = y * invC;
+    jacToCurv(eBoundLoc1, eFreePos0) = c;
+    jacToCurv(eBoundLoc1, eFreePos1) = -x * y * invC;
+    jacToCurv(eBoundLoc1, eFreePos2) = -x * z * invC;
   }
   // Time parameter
-  jacToCurv(5, 3) = 1.;
+  jacToCurv(eT, eFreeTime) = 1;
   // Directional and momentum parameters for curvilinear
-  jacToCurv(2, 4) = -sinPhi * invSinTheta;
-  jacToCurv(2, 5) = cosPhi * invSinTheta;
-  jacToCurv(3, 6) = -invSinTheta;
-  jacToCurv(4, 7) = 1.;
-
+  // TODO this becomes unstable for direction along z
+  //      sin(theta) -> 0 -> 1/sin(theta) -> inf
+  jacToCurv(eBoundPhi, eFreeDir0) = -sinPhi * invSinTheta;
+  jacToCurv(eBoundPhi, eFreeDir1) = cosPhi * invSinTheta;
+  jacToCurv(eBoundTheta, eFreeDir2) = -invSinTheta;
+  jacToCurv(eBoundQOverP, eFreeQOverP) = 1;
   return jacToCurv;
 }
 
