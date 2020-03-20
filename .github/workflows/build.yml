@@ -34,7 +34,7 @@ jobs:
 
   build_lcg:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines${{ matrix.os }}_lcg${{ matrix.lcg }}:latest
+    container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}_lcg${{ matrix.lcg }}:latest
     strategy:
       matrix:
         os:
