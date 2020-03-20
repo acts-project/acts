@@ -40,10 +40,10 @@ jobs:
         run: >
           brew install boost eigen cmake
           && curl -SL https://root.cern/download/root_v6.20.02.macosx64-10.15-clang110.tar.gz | tar -xzC .
-          && source root/bin/thisroot.sh
       - name: Build
         run: >
-          mkdir build && cd build
+          source root/bin/thisroot.sh
+          && mkdir build && cd build
           && cmake ..
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_STANDARD=17
