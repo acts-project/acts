@@ -38,6 +38,7 @@ struct DefaultExtension {
   /// @param [in] stepper Stepper of the propagation
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
+  /// @param [out] kQoP k_i elements of the momenta
   /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}

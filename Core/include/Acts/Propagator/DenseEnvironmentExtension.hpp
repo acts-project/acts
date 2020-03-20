@@ -79,6 +79,7 @@ struct DenseEnvironmentExtension {
   /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
   /// @param [out] knew Next k_i that is evaluated
+  /// @param [out] kQoP k_i elements of the momenta
   /// @param [in] bField B-Field at the evaluation position
   /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
