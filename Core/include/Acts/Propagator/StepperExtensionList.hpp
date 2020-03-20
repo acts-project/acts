@@ -79,8 +79,9 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// the evaluation is valid.
   template <typename propagator_state_t, typename stepper_t>
   bool k1(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3D& knew, const Vector3D& bField) {
-    return impl::k(tuple(), state, stepper, knew, bField, validExtensions);
+          Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP) {
+    return impl::k(tuple(), state, stepper, knew, bField, kQoP,
+                   validExtensions);
   }
 
   /// @brief This functions broadcasts the call for evaluating k2. It collects
@@ -88,10 +89,10 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// returns a boolean as indicator if the evaluation is valid.
   template <typename propagator_state_t, typename stepper_t>
   bool k2(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3D& knew, const Vector3D& bField, const double h,
-          const Vector3D& kprev) {
-    return impl::k(tuple(), state, stepper, knew, bField, validExtensions, 1, h,
-                   kprev);
+          Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP,
+          const double h, const Vector3D& kprev) {
+    return impl::k(tuple(), state, stepper, knew, bField, kQoP, validExtensions,
+                   1, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k3. It collects
@@ -99,10 +100,10 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// returns a boolean as indicator if the evaluation is valid.
   template <typename propagator_state_t, typename stepper_t>
   bool k3(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3D& knew, const Vector3D& bField, const double h,
-          const Vector3D& kprev) {
-    return impl::k(tuple(), state, stepper, knew, bField, validExtensions, 2, h,
-                   kprev);
+          Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP,
+          const double h, const Vector3D& kprev) {
+    return impl::k(tuple(), state, stepper, knew, bField, kQoP, validExtensions,
+                   2, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k4. It collects
@@ -110,10 +111,10 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// returns a boolean as indicator if the evaluation is valid.
   template <typename propagator_state_t, typename stepper_t>
   bool k4(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3D& knew, const Vector3D& bField, const double h,
-          const Vector3D& kprev) {
-    return impl::k(tuple(), state, stepper, knew, bField, validExtensions, 3, h,
-                   kprev);
+          Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP,
+          const double h, const Vector3D& kprev) {
+    return impl::k(tuple(), state, stepper, knew, bField, kQoP, validExtensions,
+                   3, h, kprev);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It

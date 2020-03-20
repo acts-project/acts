@@ -55,22 +55,22 @@ struct stepper_extension_list_impl {
   template <typename propagator_state_t, typename stepper_t, typename... T>
   static bool k(std::tuple<T...>& obs_tuple, const propagator_state_t& state,
                 const stepper_t& stepper, Vector3D& knew,
-                const Vector3D& bField,
+                const Vector3D& bField, std::array<double, 4>& kQoP,
                 const std::array<bool, sizeof...(T)>& validExtensions,
                 const int i = 0, const double h = 0,
                 const Vector3D& kprev = Vector3D()) {
     // If element is invalid: continue
     if (!std::get<N - 1>(validExtensions)) {
       return stepper_extension_list_impl<N - 1>::k(
-          obs_tuple, state, stepper, knew, bField, validExtensions, i, h,
+          obs_tuple, state, stepper, knew, bField, kQoP, validExtensions, i, h,
           kprev);
     }
 
     // Continue as long as evaluations are 'true'
-    if (std::get<N - 1>(obs_tuple).k(state, stepper, knew, bField, i, h,
+    if (std::get<N - 1>(obs_tuple).k(state, stepper, knew, bField, kQoP, i, h,
                                      kprev)) {
       return stepper_extension_list_impl<N - 1>::k(
-          obs_tuple, state, stepper, knew, bField, validExtensions, i, h,
+          obs_tuple, state, stepper, knew, bField, kQoP, validExtensions, i, h,
           kprev);
     } else {
       // Break at false
@@ -142,7 +142,7 @@ struct stepper_extension_list_impl<0u> {
   static bool k(std::tuple<T...>& /*unused*/,
                 const propagator_state_t& /*unused*/,
                 const stepper_t& /*unused*/, Vector3D& /*unused*/,
-                const Vector3D& /*unused*/,
+                const Vector3D& /*unused*/, std::array<double, 4>& /*unused*/,
                 const std::array<bool, sizeof...(T)>& /*unused*/,
                 const int /*unused*/, const double /*unused*/,
                 const Vector3D& /*unused*/) {
