@@ -19,9 +19,10 @@ _os="${!i}"
 echo "LCG: $lcg -> $_lcg"
 echo "OS: $os -> $_os"
 
-set -e
 
 source /opt/lcg/views/LCG_${_lcg}/x86_64-${_os}-gcc8-opt/setup.sh
+
+set -e
 
 mkdir build && cd build
 
