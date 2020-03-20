@@ -44,8 +44,8 @@ jobs:
           - 95
           - 96
         exclude:
-          os: slc6
-          lcg: 96
+          - os: slc6
+            lcg: 96
     steps:
       - uses: actions/checkout@v1
       - name: Build on ${{ matrix.os }}, LCG${{ matrix.lcg }}
