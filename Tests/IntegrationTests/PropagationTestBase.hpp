@@ -48,7 +48,6 @@ auto threeRandom = (rand1 ^ rand2 ^ rand2);
 BOOST_DATA_TEST_CASE(forward_backward_propagation_,
                      ds::trackParameters* ds::propagationLimit, pT, phi, theta,
                      charge, plimit) {
-  std::cout << "Running (first patch) tests : " << itest << std::endl;
   ++itest;
 
   // foward backward check atlas stepper
