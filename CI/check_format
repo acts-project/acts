@@ -7,6 +7,7 @@
 
 set -e # abort on error
 
+
 if [ $# -ne 1 ]; then
     echo "wrong number of arguments"
     echo ""
@@ -14,13 +15,15 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-clang-format --version
+_binary=${CLANG_FORMAT_BINARY:-clang-format}
+
+$_binary --version
 
 cd $1
 find . \( -iname '*.cpp' -or -iname '*.hpp' -or -iname '*.ipp' \) \
        -and -not -path "./*build*/*" \
        -and -not -path "./thirdparty/*" \
-  | xargs clang-format -i -style=file
+  | xargs $_binary -i -style=file
 
 
 if ! [ -z $CI ]; then
