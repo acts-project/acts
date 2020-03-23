@@ -4,6 +4,7 @@ add_library(
   src/Particle.cpp
   src/ParticleData.cpp
   src/ProcessType.cpp
+  src/SimulatorError.cpp
   src/StandardPhysicsLists.cpp)
 target_compile_features(
   ActsFatras

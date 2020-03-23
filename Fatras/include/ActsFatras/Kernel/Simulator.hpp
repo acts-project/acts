@@ -12,6 +12,7 @@
 #include <cassert>
 #include <iterator>
 #include <memory>
+#include <vector>
 
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
@@ -27,6 +28,7 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/Interactor.hpp"
+#include "ActsFatras/Kernel/detail/SimulatorError.hpp"
 
 namespace ActsFatras {
 
@@ -65,17 +67,15 @@ struct ParticleSimulator {
   ///
   /// @tparam generator_t is the type of the random number generator
   template <typename generator_t>
-  Acts::Result<typename Interactor<generator_t, physics_list_t,
-                                   hit_surface_selector_t>::result_type>
-  simulate(const Acts::GeometryContext &geoCtx,
-           const Acts::MagneticFieldContext &magCtx, generator_t &generator,
-           const Particle &particle) const {
+  Acts::Result<InteractorResult> simulate(
+      const Acts::GeometryContext &geoCtx,
+      const Acts::MagneticFieldContext &magCtx, generator_t &generator,
+      const Particle &particle) const {
     assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
     using Interact =
         Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
-    using InteractResult = typename Interact::result_type;
     using Actions = Acts::ActionList<Interact, Acts::detail::DebugOutputActor>;
     using Abort = Acts::AbortList<typename Interact::ParticleNotAlive,
                                   Acts::detail::EndOfWorldReached>;
@@ -103,7 +103,7 @@ struct ParticleSimulator {
           particle.time());
       auto result = propagator.propagate(start, options);
       if (result.ok()) {
-        return result.value().template get<InteractResult>();
+        return result.value().template get<InteractorResult>();
       } else {
         return result.error();
       }
@@ -113,7 +113,7 @@ struct ParticleSimulator {
           particle.absMomentum() * particle.unitDirection(), particle.time());
       auto result = propagator.propagate(start, options);
       if (result.ok()) {
-        return result.value().template get<InteractResult>();
+        return result.value().template get<InteractorResult>();
       } else {
         return result.error();
       }
@@ -130,6 +130,18 @@ struct ParticleSimulator {
 template <typename charged_selector_t, typename charged_simulator_t,
           typename neutral_selector_t, typename neutral_simulator_t>
 struct Simulator {
+  /// A particle that failed to simulate.
+  struct FailedParticle {
+    /// Initial particle state of the failed particle.
+    ///
+    /// This must store the full particle state to be able to handle secondaries
+    /// that are not in the input particle list. Otherwise they could not be
+    /// referenced.
+    Particle particle;
+    /// The associated error code for this particular failure case.
+    std::error_code error;
+  };
+
   charged_selector_t selectCharged;
   neutral_selector_t selectNeutral;
   charged_simulator_t charged;
@@ -147,6 +159,21 @@ struct Simulator {
   /// @param simulatedParticlesInitial contains initial particle states
   /// @param simulatedParticlesFinal contains final particle states
   /// @param hits contains all generated hits
+  /// @retval Acts::Result::Error if there is a fundamental issue
+  /// @retval Acts::Result::Success with all particles that failed to simulate
+  ///
+  /// @warning Particle-hit association is based on particle ids generated
+  ///          during the simulation. This requires that all input particles
+  ///          **must** have generation and sub-particle number set to zero.
+  /// @note Parameter edge-cases can lead to errors in the underlying propagator
+  ///       and thus to particles that fail to simulate. Here, full events are
+  ///       simulated and the failure to simulate one particle should not be
+  ///       considered a general failure of the simulator. Instead, a list of
+  ///       particles that fail to simulate is provided to the user. It is the
+  ///       users responsibility to handle them.
+  /// @note Failed particles are removed from the regular output, i.e. they do
+  ///       not appear in the simulated particles containers nor do they
+  ///       generate hits.
   ///
   /// This takes all input particles and simulates those passing the selection
   /// using the appropriate simulator. All selected particle states including
@@ -155,36 +182,35 @@ struct Simulator {
   /// state after propagation are stored. Hits generated from selected input and
   /// generated particles are stored in the hit container.
   ///
-  /// @warning Particle-hit association is based on particle ids generated
-  ///          during the simulation. This requires that all input particles
-  ///          **must** have generation and sub-particle number set to zero.
-  ///
   /// @tparam generator_t is the type of the random number generator
   /// @tparam input_particles_t is a Container for particles
   /// @tparam output_particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
   template <typename generator_t, typename input_particles_t,
             typename output_particles_t, typename hits_t>
-  Acts::Result<void> simulate(const Acts::GeometryContext &geoCtx,
-                              const Acts::MagneticFieldContext &magCtx,
-                              generator_t &generator,
-                              const input_particles_t &inputParticles,
-                              output_particles_t &simulatedParticlesInitial,
-                              output_particles_t &simulatedParticlesFinal,
-                              hits_t &hits) const {
+  Acts::Result<std::vector<FailedParticle>> simulate(
+      const Acts::GeometryContext &geoCtx,
+      const Acts::MagneticFieldContext &magCtx, generator_t &generator,
+      const input_particles_t &inputParticles,
+      output_particles_t &simulatedParticlesInitial,
+      output_particles_t &simulatedParticlesFinal, hits_t &hits) const {
     assert(
         (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
         "Inconsistent initial sizes of the simulated particle containers");
 
+    using ParticleSimulatorResult = Acts::Result<InteractorResult>;
+
+    std::vector<FailedParticle> failedParticles;
+
     for (const Particle &inputParticle : inputParticles) {
+      // only consider simulatable particles
       if (not selectParticle(inputParticle)) {
         continue;
       }
       // required to allow correct particle id numbering for secondaries later
       if ((inputParticle.particleId().generation() != 0u) or
           (inputParticle.particleId().subParticle() != 0u)) {
-        // TODO add meaningfull error code
-        return std::error_code(-1, std::generic_category());
+        return detail::SimulatorError::eInvalidInputParticleId;
       }
 
       // Do a *depth-first* simulation of the particle and its secondaries,
@@ -192,38 +218,35 @@ struct Simulator {
       // the next primary particle. Use the end of the output container as
       // a queue to store particles that should be simulated.
       //
-      // WARNING the initial particle output container will be modified during
-      //         iteration as new secondaries are added directly to it. to avoid
-      //         issues, access must always occur via indices.
+      // WARNING the initial particle state output container will be modified
+      //         during iteration. New secondaries are added to and failed
+      //         particles might be removed. to avoid issues, access must always
+      //         occur via indices.
       auto iinitial = simulatedParticlesInitial.size();
       simulatedParticlesInitial.push_back(inputParticle);
       for (; iinitial < simulatedParticlesInitial.size(); ++iinitial) {
-        // only simulatable particles are pushed to the container
-        // no additional check is necessary here.
         const auto &initialParticle = simulatedParticlesInitial[iinitial];
 
+        // only simulatable particles are pushed to the container.
+        // they must therefore be either charged or neutral.
+        ParticleSimulatorResult result = ParticleSimulatorResult::success({});
         if (selectCharged(initialParticle)) {
-          auto result =
-              charged.simulate(geoCtx, magCtx, generator, initialParticle);
-          if (not result.ok()) {
-            // do not keep unsimulated/ failed particles in the output
-            simulatedParticlesInitial.resize(iinitial);
-            return result.error();
-          }
-          copyOutputs(result.value(), simulatedParticlesInitial,
-                      simulatedParticlesFinal, hits);
-        } else if (selectNeutral(initialParticle)) {
-          auto result =
-              neutral.simulate(geoCtx, magCtx, generator, initialParticle);
-          if (not result.ok()) {
-            // do not keep unsimulated/ failed particles in the output
-            simulatedParticlesInitial.resize(iinitial);
-            return result.error();
-          }
-          copyOutputs(result.value(), simulatedParticlesInitial,
-                      simulatedParticlesFinal, hits);
+          result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
+        } else {
+          result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
         }
 
+        if (not result.ok()) {
+          // remove particle from output container since it was not simulated.
+          simulatedParticlesInitial.erase(
+              std::next(simulatedParticlesInitial.begin(), iinitial));
+          // record the particle as failed
+          failedParticles.push_back({initialParticle, result.error()});
+          continue;
+        }
+
+        copyOutputs(result.value(), simulatedParticlesInitial,
+                    simulatedParticlesFinal, hits);
         // since physics processes are independent, there can be particle id
         // collisions within the generated secondaries. they can be resolved by
         // renumbering within each sub-particle generation. this must happen
@@ -233,15 +256,19 @@ struct Simulator {
       }
     }
 
-    return Acts::Result<void>::success();
+    // the overall function call succeeded, i.e. no fatal errors occured.
+    // yet, there might have been some particle for which the propagation
+    // failed. thus, the successful result contains a list of failed particles.
+    // sounds a bit weird, but that is the way it is.
+    return failedParticles;
   }
 
  private:
-  // Select if the particle should be simulated at all.
-  //
-  // This also enforces mutual-exclusivity of the two charge selections. If both
-  // charge selections evaluate true, they are probably not setup correctly and
-  // not simulating them at all is a reasonable fall-back.
+  /// Select if the particle should be simulated at all.
+  ///
+  /// This also enforces mutual-exclusivity of the two charge selections. If
+  /// both charge selections evaluate true, they are probably not setup
+  /// correctly and not simulating them at all is a reasonable fall-back.
   bool selectParticle(const Particle &particle) const {
     const bool isValidCharged = selectCharged(particle);
     const bool isValidNeutral = selectNeutral(particle);
@@ -252,11 +279,10 @@ struct Simulator {
 
   /// Copy Interactor results to output containers.
   ///
-  /// @tparam interactor_result_t is an Interactor result struct
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
-  template <typename interactor_result_t, typename particles_t, typename hits_t>
-  void copyOutputs(const interactor_result_t &result,
+  template <typename particles_t, typename hits_t>
+  void copyOutputs(const InteractorResult &result,
                    particles_t &particlesInitial, particles_t &particlesFinal,
                    hits_t &hits) const {
     // initial particle state was already pushed to the container before
