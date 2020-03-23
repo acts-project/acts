@@ -364,7 +364,7 @@ struct MicroBenchmarkIter {
       concept ::exists<call_with_input_t, Callable, Input>;
   static inline void iter(const Callable& iteration, const Input* input) {
     static_assert(is_callable,
-                  "Gave callable that is not callable without input");
+                  "Gave callable that is not callable with input");
     if constexpr (is_callable) {
       using Result = std::invoke_result_t<Callable, const Input&>;
       MicroBenchmarkIterImpl<Callable, Input, Result>::iter(iteration, *input);
@@ -380,7 +380,7 @@ struct MicroBenchmarkIter<Callable, void> {
       concept ::exists<call_without_input_t, Callable>;
 
   static inline void iter(const Callable& iteration, const void* = nullptr) {
-    static_assert(is_callable, "Gave callable that is not callable with input");
+    static_assert(is_callable, "Gave callable that is not callable without input");
     if constexpr (is_callable) {
       using Result = std::invoke_result_t<Callable>;
       MicroBenchmarkIterImpl<Callable, void, Result>::iter(iteration);
