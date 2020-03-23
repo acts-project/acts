@@ -40,17 +40,13 @@ jobs:
           path: src
       - name: Install dependencies
         run: >
-          pwd
-          && cd ..
-          && pwd
+          cd ..
           && brew install boost eigen cmake xerces-c
           && mkdir deps
           && curl -SL https://acts.web.cern.ch/ACTS/ci/macOS_10.15_deps.tar.gz | tar -xzC deps
       - name: Build
         run: >
-          pwd
-          && cd ..
-          && pwd
+          cd ..
           && source deps/bin/thisroot.sh
           && mkdir build && cd build
           && cmake ../src
