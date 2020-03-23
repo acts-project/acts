@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include "Acts/Utilities/TypeTraits.hpp"
+
 namespace Acts {
 namespace Test {
 
@@ -348,45 +350,41 @@ struct MicroBenchmarkIterImpl<Callable, void, void> {
   }
 };
 
-// Trick to have a static_assert fire only when the base case of a template
-// specialization chain is instantiated
+template <typename T, typename I>
+using call_with_input_t = decltype(std::declval<T>()(std::declval<I>()));
+
 template <typename T>
-constexpr bool always_false = false;
-
-// Mechanism to type-check that Callable has the right signature, avoiding
-// crazy compiler errors deep down in the implementation.
-template <typename Callable, typename Input = void, typename Enable = void>
-struct MicroBenchmarkIter {
-  // Hitting the base case is an error
-  static_assert(always_false<Callable>,
-                "Bad benchmark iteration function signature");
-
-  // Still provide a method with expected signature so that the above
-  // static_assert error is the only compiler error that gets emitted.
-  static inline void iter(const Callable&, const Input* = nullptr) {}
-};
+using call_without_input_t = decltype(std::declval<T>()());
 
 // If callable is a callable that takes the expected input argument type, then
 // this specialization will be selected...
-template <typename Callable, typename Input>
-struct MicroBenchmarkIter<
-    Callable, Input, std::enable_if_t<std::is_invocable_v<Callable, Input>>> {
-  // ...so we can safely call invoke_result_t here
+template <typename Callable, typename Input = void>
+struct MicroBenchmarkIter {
+  constexpr static bool is_callable =
+      concept ::exists<call_with_input_t, Callable, Input>;
   static inline void iter(const Callable& iteration, const Input* input) {
-    using Result = std::invoke_result_t<Callable, const Input&>;
-    MicroBenchmarkIterImpl<Callable, Input, Result>::iter(iteration, *input);
+    static_assert(is_callable,
+                  "Gave callable that is not callable without input");
+    if constexpr (is_callable) {
+      using Result = std::invoke_result_t<Callable, const Input&>;
+      MicroBenchmarkIterImpl<Callable, Input, Result>::iter(iteration, *input);
+    }
   }
 };
 
 // If Callable is a callable that takes no argument, this specialization will be
 // picked instead of the one above...
 template <typename Callable>
-struct MicroBenchmarkIter<Callable, void,
-                          std::enable_if_t<std::is_invocable_v<Callable>>> {
-  // ...so we can safely call invoke_result_t here
+struct MicroBenchmarkIter<Callable, void> {
+  constexpr static bool is_callable =
+      concept ::exists<call_without_input_t, Callable>;
+
   static inline void iter(const Callable& iteration, const void* = nullptr) {
-    using Result = std::invoke_result_t<Callable>;
-    MicroBenchmarkIterImpl<Callable, void, Result>::iter(iteration);
+    static_assert(is_callable, "Gave callable that is not callable with input");
+    if constexpr (is_callable) {
+      using Result = std::invoke_result_t<Callable>;
+      MicroBenchmarkIterImpl<Callable, void, Result>::iter(iteration);
+    }
   }
 };
 
@@ -472,6 +470,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 //         (which is a good approximation of the elapsed time).
 //       * Note after how much elapsed time the timings typically become steady.
 //
+
 template <typename Callable>
 MicroBenchmarkResult microBenchmark(
     Callable&& iteration, size_t iters_per_run, size_t num_runs = 20000,
