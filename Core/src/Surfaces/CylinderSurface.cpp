@@ -38,6 +38,14 @@ Acts::CylinderSurface::CylinderSurface(
                                                       avphi)) {}
 
 Acts::CylinderSurface::CylinderSurface(
+    std::shared_ptr<const CylinderBounds> cbounds,
+    const Acts::DetectorElementBase& detelement)
+    : Surface(detelement), m_bounds(std::move(cbounds)) {
+  /// surfaces representing a detector element must have bounds
+  assert(cbounds);
+}
+
+Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const Transform3D> htrans,
     const std::shared_ptr<const CylinderBounds>& cbounds)
     : Surface(std::move(htrans)), m_bounds(cbounds) {
@@ -59,7 +67,7 @@ const Acts::Vector3D Acts::CylinderSurface::binningPosition(
   const Acts::Vector3D& sfCenter = center(gctx);
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
-    double R = bounds().get(CylinderBounds::eRadius);
+    double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
     return Vector3D(sfCenter.x() + R * cos(phi), sfCenter.y() + R * sin(phi),
                     sfCenter.z());
@@ -98,7 +106,7 @@ void Acts::CylinderSurface::localToGlobal(const GeometryContext& gctx,
                                           const Vector3D& /*unused*/,
                                           Vector3D& position) const {
   // create the position in the local 3d frame
-  double r = bounds().get(CylinderBounds::eRadius);
+  double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eLOC_RPHI] / r;
   position = Vector3D(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
   position = transform(gctx) * position;
@@ -113,7 +121,7 @@ bool Acts::CylinderSurface::globalToLocal(const GeometryContext& gctx,
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
   // pointer transform
   double radius = 0.;
-  double inttol = bounds().get(CylinderBounds::eRadius) * 0.0001;
+  double inttol = bounds().get(CylinderBounds::eR) * 0.0001;
   if (inttol < 0.01) {
     inttol = 0.01;
   }
@@ -121,11 +129,11 @@ bool Acts::CylinderSurface::globalToLocal(const GeometryContext& gctx,
   const Transform3D& sfTransform = transform(gctx);
   Transform3D inverseTrans(sfTransform.inverse());
   Vector3D loc3Dframe(inverseTrans * position);
-  lposition = Vector2D(bounds().get(CylinderBounds::eRadius) * phi(loc3Dframe),
+  lposition = Vector2D(bounds().get(CylinderBounds::eR) * phi(loc3Dframe),
                        loc3Dframe.z());
   radius = perp(loc3Dframe);
   // return true or false
-  return ((std::abs(radius - bounds().get(CylinderBounds::eRadius)) > inttol)
+  return ((std::abs(radius - bounds().get(CylinderBounds::eR)) > inttol)
               ? false
               : true);
 }
@@ -146,8 +154,7 @@ Acts::CylinderSurface* Acts::CylinderSurface::clone_impl(
 
 const Acts::Vector3D Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
-  double phi =
-      lposition[Acts::eLOC_RPHI] / m_bounds->get(CylinderBounds::eRadius);
+  double phi = lposition[Acts::eLOC_RPHI] / m_bounds->get(CylinderBounds::eR);
   Vector3D localNormal(cos(phi), sin(phi), 0.);
   return Vector3D(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
 }
@@ -202,8 +209,7 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
       /// Helper method to create the segment
       detail::VerticesHelper::createSegment(
           vertices,
-          {bounds().get(CylinderBounds::eRadius),
-           bounds().get(CylinderBounds::eRadius)},
+          {bounds().get(CylinderBounds::eR), bounds().get(CylinderBounds::eR)},
           phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
           Vector3D(0., 0., side * bounds().get(CylinderBounds::eHalfLengthZ)),
           ctrans);

@@ -7,8 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <vector>
 
 namespace Acts {
 
@@ -19,27 +23,32 @@ namespace Acts {
 
 class LineBounds : public SurfaceBounds {
  public:
-  /// @enum BoundValues for readablility
-  /// nested enumeration object
-  enum BoundValues { bv_radius = 0, bv_halfZ = 1, bv_length = 2 };
+  enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
+
+  LineBounds() = delete;
 
   /// Constructor
   ///
-  /// @param radius is the radius of the cylinder, default = 0.
-  /// @param halez is the half length in z, defualt = 0.
-  LineBounds(double radius = 0., double halez = 0.);
+  /// @param r is the radius of the cylinder, default = 0.
+  /// @param halfZ is the half length in z, defualt = 0.
+  LineBounds(double r, double halfZ)
+      : m_values({std::abs(r), std::abs(halfZ)}) {}
 
-  /// Defaulted destructor
+  /// Constructor - from fixed size array
+  ///
+  /// @param values The parameter values
+  LineBounds(const std::array<double, eSize>& values) : m_values(values) {}
+
   ~LineBounds() override = default;
 
-  /// Virtual constructor
   LineBounds* clone() const final;
 
-  /// Type enumeration
   BoundsType type() const final;
 
-  /// Return the intrinsic values
-  ActsVectorXd values() const final;
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -59,27 +68,23 @@ class LineBounds : public SurfaceBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// This method returns the radius
-  virtual double r() const;
-
-  /// This method returns the halflengthZ
-  double halflengthZ() const;
-
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
   std::ostream& toStream(std::ostream& sl) const final;
 
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
+
  private:
-  double m_radius, m_halfZ;
+  std::array<double, eSize> m_values;
 };
 
-inline double LineBounds::r() const {
-  return m_radius;
-}
-
-inline double LineBounds::halflengthZ() const {
-  return m_halfZ;
+inline std::vector<double> LineBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
 }  // namespace Acts

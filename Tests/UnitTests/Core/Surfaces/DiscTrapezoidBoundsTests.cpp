@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMax(), rMax, 1e-6);
   //
   /// Test averagePhi
-  CHECK_SMALL(DiscTrapezoidBoundsObject.averagePhi(), 1e-9);
+  CHECK_SMALL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eAveragePhi), 1e-9);
   //
   /// Test rCenter (redundant; not configurable)
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rCenter(), 2.524337798, 1e-6);
@@ -98,13 +98,13 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   CHECK_SMALL(DiscTrapezoidBoundsObject.stereo(), 1e-6);
   //
   /// Test minHalflengthX
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.minHalflengthX(), minHalfX, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXminR), minHalfX, 1e-6);
   //
   /// Test maxHalflengthX
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.maxHalflengthX(), maxHalfX, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXminR), maxHalfX, 1e-6);
   //
   /// Test halflengthY
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.halflengthY(), 0.792286991, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.halfLengthY(), 0.792286991, 1e-6);
 }
 /// Unit test for testing DiscTrapezoidBounds assignment
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsAssignment) {

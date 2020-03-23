@@ -169,7 +169,7 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       }
 
       // set envelopes to half radius
-      double cylBoundsR = cylSurface->bounds().get(CylinderBounds::eRadius);
+      double cylBoundsR = cylSurface->bounds().get(CylinderBounds::eR);
       double env = cylBoundsR / 2.;
       envX = {env, env};
       envY = {env, env};
@@ -192,7 +192,7 @@ void ProtoLayer::measure(const GeometryContext& gctx,
           dynamic_cast<const AnnulusBounds*>(&(sf->bounds()));
 
       if (cBounds != nullptr) {
-        double r = cBounds->get(CylinderBounds::eRadius);
+        double r = cBounds->get(CylinderBounds::eR);
         double z = sf->center(gctx).z();
         double hZ = cBounds->get(CylinderBounds::eHalfLengthZ);
         double phi = cBounds->get(CylinderBounds::eAveragePhi);

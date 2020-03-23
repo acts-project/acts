@@ -7,28 +7,28 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 
-#include "Acts/Utilities/detail/periodic.hpp"
-
 Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
                              double avphi)
-    : ConeBounds(alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
-                 std::numeric_limits<double>::infinity(), halfphi, avphi) {}
+    : m_values({alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
+                std::numeric_limits<double>::infinity(), std::abs(halfphi),
+                detail::radian_sym(avphi)}),
+      m_tanAlpha(std::tan(alpha)) {}
 
 Acts::ConeBounds::ConeBounds(double alpha, double minz, double maxz,
                              double halfphi, double avphi)
-    : m_parameters(), m_tanAlpha(std::tan(alpha)) {
-  m_parameters << alpha, minz, maxz, std::abs(halfphi),
-      detail::radian_sym(avphi);
-}
+    : m_values(
+          {alpha, minz, maxz, std::abs(halfphi), detail::radian_sym(avphi)}),
+      m_tanAlpha(std::tan(alpha)) {}
 
-Acts::ConeBounds::ConeBounds(const ActsVectorXd& parameters)
-    : m_parameters(parameters), m_tanAlpha(std::tan(parameters[eAlpha])) {}
+Acts::ConeBounds::ConeBounds(const std::array<double, eSize>& values)
+    : m_values(values), m_tanAlpha(std::tan(values[eAlpha])) {}
 
 Acts::ConeBounds* Acts::ConeBounds::clone() const {
   return new ConeBounds(*this);

@@ -20,7 +20,7 @@ inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
     const Transform3D& transform, const Vector3D& position,
     const Vector3D& direction) const {
   // Solve for radius R
-  double R = bounds().get(CylinderBounds::eRadius);
+  double R = bounds().get(CylinderBounds::eR);
 
   // Get the transformation matrtix
   const auto& tMatrix = transform.matrix();

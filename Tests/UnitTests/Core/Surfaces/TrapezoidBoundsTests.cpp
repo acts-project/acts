@@ -52,13 +52,13 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
   BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::eTrapezoid);
   //
   /// Test minHalflengthX
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.minHalflengthX(), minHalfX);
+  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXnegY), minHalfX);
   //
   /// Test maxHalfLengthX
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.maxHalflengthX(), maxHalfX);
+  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXposY), maxHalfX);
   //
   /// Test halflengthY
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.halflengthY(), halfY);
+  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthY), halfY);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);

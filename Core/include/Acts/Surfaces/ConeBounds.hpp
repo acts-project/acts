@@ -7,10 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cfloat>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <vector>
 
 namespace Acts {
 
@@ -27,7 +29,6 @@ namespace Acts {
 
 class ConeBounds : public SurfaceBounds {
  public:
-  /// @enum BoundValues for readablility
   enum BoundValues : int {
     eAlpha = 0,
     eMinZ = 1,
@@ -61,22 +62,21 @@ class ConeBounds : public SurfaceBounds {
   ConeBounds(double alpha, double minz, double maxz, double halfphi = M_PI,
              double avphi = 0.);
 
-  /// Constructor - from parameters vector
+  /// Constructor - from parameters array
   ///
-  /// @param parameters The parameter vector
-  ConeBounds(const ActsVectorXd& parameters);
+  /// @param values The parameter array
+  ConeBounds(const std::array<double, eSize>& values);
 
   ~ConeBounds() override = default;
 
   ConeBounds* clone() const final;
 
-  /// Return the bounds type
   BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
-  /// @return this returns a copy of the internal parameters
-  ActsVectorXd values() const final;
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// inside method for local position
   ///
@@ -107,11 +107,12 @@ class ConeBounds : public SurfaceBounds {
   /// Return tangent of alpha (pre-computed)
   double tanAlpha() const;
 
-  /// Access to the bound parameters
-  double get(BoundValues bValue) const { return m_parameters[bValue]; }
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  ActsRowVectorD<eSize> m_parameters;
+  std::array<double, eSize> m_values;
   double m_tanAlpha;
 
   /// Private helper functin to shift a local 2D position
@@ -128,8 +129,10 @@ inline double ConeBounds::tanAlpha() const {
   return m_tanAlpha;
 }
 
-inline ActsVectorXd ConeBounds::values() const {
-  return m_parameters;
+inline std::vector<double> ConeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
 }  // namespace Acts

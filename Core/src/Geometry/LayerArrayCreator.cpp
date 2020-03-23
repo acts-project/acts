@@ -213,7 +213,7 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
     // get the bounds
     const CylinderBounds* cBounds =
         dynamic_cast<const CylinderBounds*>(&(layerSurface.bounds()));
-    double navigationR = cBounds->get(CylinderBounds::eRadius) + offset;
+    double navigationR = cBounds->get(CylinderBounds::eR) + offset;
     double halflengthZ = cBounds->get(CylinderBounds::eHalfLengthZ);
     // create the new layer surface
     std::shared_ptr<const Transform3D> navTrasform =

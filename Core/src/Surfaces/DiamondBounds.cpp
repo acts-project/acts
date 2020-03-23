@@ -9,21 +9,8 @@
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
-
-Acts::DiamondBounds::DiamondBounds(double x1, double x2, double x3, double y1,
-                                   double y2)
-    : m_x1(std::abs(x1)),
-      m_x2(std::abs(x2)),
-      m_x3(std::abs(x3)),
-      m_y1(std::abs(y1)),
-      m_y2(std::abs(y2)),
-      m_boundingBox(std::max(std::max(x1, x2), x3), std::max(y1, y2)) {
-  throw_assert((x1 <= x2), "Hexagon must be a convex polygon");
-  throw_assert((x3 <= x2), "Hexagon must be a convex polygon");
-}
 
 Acts::DiamondBounds* Acts::DiamondBounds::clone() const {
   return new DiamondBounds(*this);
@@ -31,12 +18,6 @@ Acts::DiamondBounds* Acts::DiamondBounds::clone() const {
 
 Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
-}
-
-Acts::ActsVectorXd Acts::DiamondBounds::values() const {
-  ActsVectorXd values;
-  values << x1(), x2(), x3(), y1(), y2();
-  return values;
 }
 
 bool Acts::DiamondBounds::inside(const Acts::Vector2D& lposition,
@@ -53,8 +34,13 @@ std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices(
     unsigned int /*lseg*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
-  return {{-x1(), -y1()}, {x1(), -y1()}, {x2(), 0.},
-          {x3(), y2()},   {-x3(), y2()}, {-x2(), 0.}};
+  double x1 = get(DiamondBounds::eHalfLengthXnegY);
+  double y1 = get(DiamondBounds::eHalfLengthYneg);
+  double x2 = get(DiamondBounds::eHalfLengthXzeroY);
+  double y2 = 0.;
+  double x3 = get(DiamondBounds::eHalfLengthXposY);
+  double y3 = get(DiamondBounds::eHalfLengthYpos);
+  return {{-x1, -y1}, {x1, -y1}, {x2, y2}, {x3, y3}, {-x3, y3}, {-x2, y2}};
 }
 
 const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
@@ -65,10 +51,13 @@ const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
 std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::DiamondBounds:  (x1, x2, x3, "
-        "y1, y2 ) = ";
-  sl << "(" << x1() << ", " << x2() << ", " << x3() << ", " << y1() << ", "
-     << y2() << ")";
+  sl << "Acts::DiamondBounds:  (halfXatYneg, halfXatYzero, halfXatYpos, "
+        "halfYneg, halfYpos) = ";
+  sl << "(" << get(DiamondBounds::eHalfLengthXnegY) << ", "
+     << get(DiamondBounds::eHalfLengthXzeroY) << ", "
+     << get(DiamondBounds::eHalfLengthXposY) << ", "
+     << get(DiamondBounds::eHalfLengthYneg) << ", "
+     << get(DiamondBounds::eHalfLengthYpos) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

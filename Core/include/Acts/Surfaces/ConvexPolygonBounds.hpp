@@ -28,9 +28,10 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// @param sl is the ostream to be written into
   std::ostream& toStream(std::ostream& sl) const final;
 
-  /// Return vector containing defining parameters
-  /// @return the parameters
-  ActsVectorXd values() const final;
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
  protected:
   /// Return a rectangle bounds instance that encloses a set of vertices.
@@ -55,14 +56,20 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
 /// @tparam N Number of vertices
 template <int N>
 class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
+ public:
   /// Expose number of vertices given as template parameter.
   ///
   static constexpr size_t num_vertices = N;
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
   using vertex_array = std::array<Vector2D, num_vertices>;
+  /// Expose number of parameters as a template parameter
+  ///
+  static constexpr size_t eSize = 2 * N;
+  /// Type that's used to store the vertices, in this case a fixed size array.
+  ///
+  using value_array = std::array<double, eSize>;
 
- public:
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
   ConvexPolygonBounds() = delete;
@@ -78,14 +85,15 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @param vertices The vertices
   ConvexPolygonBounds(const vertex_array& vertices);
 
+  /// Constructor from a fixed size array of parameters
+  /// This will throw if the vertices do not form a convex polygon.
+  /// @param values The values to build up the vertices
+  ConvexPolygonBounds(const value_array& values);
+
   ~ConvexPolygonBounds() override = default;
 
-  /// Return a copy of this bounds object.
-  /// @return The cloned instance
   ConvexPolygonBounds<N>* clone() const final;
 
-  /// Return the bounds type of this bounds object.
-  /// @return The bounds type
   BoundsType type() const final;
 
   /// Return whether a local 2D point lies inside of the bounds defined by this

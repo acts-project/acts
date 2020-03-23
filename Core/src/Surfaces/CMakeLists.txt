@@ -20,5 +20,4 @@ target_sources_local(
     Surface.cpp
     SurfaceArray.cpp
     TrapezoidBounds.cpp
-    TriangleBounds.cpp
 )

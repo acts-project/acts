@@ -60,20 +60,20 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::eDiamond);
   // //redundant test
   //
-  /// Test minHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.x1(), minHalfX);
+  /// Test the half length at negative y 
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXnegY), minHalfX);
   //
-  /// Test medHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.x2(), midHalfX);
+  /// Test the half length at the x axis
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXzeroY), midHalfX);
   //
-  /// Test maxHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.x3(), maxHalfX);
+  /// Test the half length at positive y
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXposY), maxHalfX);
   //
-  /// Test halflengthY1() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.y1(), halfY1);
+  /// Test half length into the negative side
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYneg), halfY1);
   //
-  /// Test halflengthY2() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.y2(), halfY2);
+  /// Test half length into the positive side
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXposY), halfY2);
   //
   /// Test boundingBox
   BOOST_CHECK_EQUAL(diamondBoundsObject.boundingBox(),

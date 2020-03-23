@@ -37,10 +37,11 @@ Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
   return {vmin, vmax};
 }
 
-Acts::ActsVectorXd Acts::ConvexPolygonBoundsBase::values() const {
-  ActsVectorXd values;
+std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
+  std::vector<double> values;
   for (const auto& vtx : vertices()) {
-    values << vtx.x(), vtx.y();
+    values.push_back(vtx.x());
+    values.push_back(vtx.y());
   }
   return values;
 }
@@ -99,6 +100,17 @@ Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
 template <int N>
 Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(const vertex_array& vertices)
     : m_vertices(vertices), m_boundingBox(makeBoundingBox(vertices)) {
+  throw_assert(convex(), "Given vertices do not form convex hull.");
+}
+
+template <int N>
+Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(const value_array& values)
+    : m_vertices(), m_boundingBox(0., 0.) {
+  for (size_t i = 0; i < N; i++) {
+    m_vertices[i] = Vector2D(values[2 * i], values[2 * i + 1]);
+  }
+  makeBoundingBox(m_vertices);
+
   throw_assert(convex(), "Given vertices do not form convex hull.");
 }
 

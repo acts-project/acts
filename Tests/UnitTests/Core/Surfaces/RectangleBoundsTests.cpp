@@ -75,8 +75,8 @@ BOOST_TEST_DECORATOR(*utf::tolerance(1e-10))
 BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   const double halfX(10.), halfY(5.);
   RectangleBounds rect(halfX, halfY);
-  BOOST_CHECK_EQUAL(rect.halflengthX(), 10.);
-  BOOST_CHECK_EQUAL(rect.halflengthY(), 5.);
+  BOOST_CHECK_EQUAL(rect.halfLengthX(), 10.);
+  BOOST_CHECK_EQUAL(rect.halfLengthY(), 5.);
 
   CHECK_CLOSE_ABS(rect.min(), Vector2D(-halfX, -halfY), 1e-6);
   CHECK_CLOSE_ABS(rect.max(), Vector2D(halfX, halfY), 1e-6);

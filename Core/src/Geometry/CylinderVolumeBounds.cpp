@@ -56,7 +56,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner, double router,
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
                                                  double thickness)
     : VolumeBounds(), m_values(4, 0.) {
-  double cR = cBounds.get(CylinderBounds::eRadius);
+  double cR = cBounds.get(CylinderBounds::eR);
   m_values.at(bv_innerRadius) = cR - 0.5 * thickness;
   m_values.at(bv_outerRadius) = cR + 0.5 * thickness;
   m_values.at(bv_halfPhiSector) = cBounds.get(CylinderBounds::eHalfPhiSector);
@@ -66,9 +66,9 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
                                                  double thickness)
     : VolumeBounds(), m_values(4, 0.) {
-  m_values.at(bv_innerRadius) = rBounds.rMin();
-  m_values.at(bv_outerRadius) = rBounds.rMax();
-  m_values.at(bv_halfPhiSector) = rBounds.halfPhiSector();
+  m_values.at(bv_innerRadius) = rBounds.get(RadialBounds::eMinR);
+  m_values.at(bv_outerRadius) = rBounds.get(RadialBounds::eMaxR);
+  m_values.at(bv_halfPhiSector) = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values.at(bv_halfZ) = 0.5 * thickness;
 }
 

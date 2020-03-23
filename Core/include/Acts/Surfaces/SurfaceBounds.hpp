@@ -62,7 +62,7 @@ class SurfaceBounds {
   /// vector containing the parameters needed to describe these bounds
   ///
   /// @return of the stored values for this SurfaceBounds object
-  virtual ActsVectorXd values() const = 0;
+  virtual std::vector<double> values() const = 0;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

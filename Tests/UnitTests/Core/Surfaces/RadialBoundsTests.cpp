@@ -74,16 +74,16 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   BOOST_CHECK(!radialBoundsObject.inside(outside, BoundaryCheck(true)));
   //
   /// Test rMin
-  BOOST_CHECK_EQUAL(radialBoundsObject.rMin(), minRadius);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eMinR), minRadius);
   //
   /// Test rMax
-  BOOST_CHECK_EQUAL(radialBoundsObject.rMax(), maxRadius);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eMaxR), maxRadius);
   //
   /// Test averagePhi (should be a redundant method, this is not configurable)
-  BOOST_CHECK_EQUAL(radialBoundsObject.averagePhi(), 0.0);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eAveragePhi), 0.0);
   //
   /// Test halfPhiSector
-  BOOST_CHECK_EQUAL(radialBoundsObject.halfPhiSector(), halfPhiSector);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eHalfPhiSector), halfPhiSector);
 }
 /// Unit test for testing RadialBounds assignment
 BOOST_AUTO_TEST_CASE(RadialBoundsAssignment) {

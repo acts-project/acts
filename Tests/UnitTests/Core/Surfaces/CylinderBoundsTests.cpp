@@ -21,22 +21,35 @@ namespace Acts {
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant CylinderBounds object
+
 BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
   /// test default construction
   // CylinderBounds defaultConstructedCylinderBounds;  // deleted
   double radius(0.5), halfz(10.), halfphi(M_PI / 2.0), averagePhi(M_PI / 2.0);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz).type(),
                     SurfaceBounds::eCylinder);
-  BOOST_CHECK_EQUAL(CylinderBounds(radius, halfphi, halfz).type(),
+  BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, halfphi).type(),
                     SurfaceBounds::eCylinder);
-  BOOST_CHECK_EQUAL(CylinderBounds(radius, averagePhi, halfphi, halfz).type(),
+  BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, halfphi, averagePhi).type(),
                     SurfaceBounds::eCylinder);
   //
   /// test copy construction;
   CylinderBounds cylinderBounds(radius, halfz);
   CylinderBounds copyConstructedCylinderBounds(cylinderBounds);
-  BOOST_CHECK_EQUAL(copyConstructedCylinderBounds.type(),
-                    SurfaceBounds::eCylinder);
+  BOOST_CHECK_EQUAL(copyConstructedCylinderBounds, cylinderBounds);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderBoundsRecreation) {
+  /// test default construction
+  // CylinderBounds defaultConstructedCylinderBounds;  // deleted
+  double radius(0.5), halfz(10.);
+  // Test construction with radii and default sector
+  auto original = CylinderBounds(radius, halfz);
+  auto valvector = original.values();
+  std::array<double, CylinderBounds::eSize> values;
+  std::copy_n(valvector.begin(), CylinderBounds::eSize, values.begin());
+  CylinderBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
 }
 
 /// Unit tests for CylinderBounds properties
@@ -45,11 +58,11 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   // CylinderBounds object of radius 0.5 and halfz 20
   double nominalRadius{0.5};
   double nominalHalfLength{20.};
-  double averagePhi(0.0);
   double halfphi(M_PI / 4.0);
+  double averagePhi(0.0);
   CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
-  CylinderBounds cylinderBoundsSegment(nominalRadius, averagePhi, halfphi,
-                                       nominalHalfLength);
+  CylinderBounds cylinderBoundsSegment(nominalRadius, nominalHalfLength, halfphi, averagePhi);
+
   /// test for clone
   auto pCylinderBoundsClone = cylinderBoundsObject.clone();
   BOOST_CHECK_NE(pCylinderBoundsClone, nullptr);
@@ -90,7 +103,7 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
                   1e-6);  // fail
 
   /// test for r()
-  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eRadius),
+  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR),
                   nominalRadius, 1e-6);
 
   /// test for averagePhi
@@ -121,8 +134,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
   CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
   CylinderBounds assignedCylinderBounds(10.5, 6.6);
   assignedCylinderBounds = cylinderBoundsObject;
-  BOOST_CHECK_EQUAL(assignedCylinderBounds.get(CylinderBounds::eRadius),
-                    cylinderBoundsObject.get(CylinderBounds::eRadius));
+  BOOST_CHECK_EQUAL(assignedCylinderBounds.get(CylinderBounds::eR),
+                    cylinderBoundsObject.get(CylinderBounds::eR));
   BOOST_CHECK_EQUAL(assignedCylinderBounds, cylinderBoundsObject);
 }
 

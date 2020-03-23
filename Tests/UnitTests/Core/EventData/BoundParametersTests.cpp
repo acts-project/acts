@@ -279,7 +279,7 @@ BOOST_DATA_TEST_CASE(
   Vector3D mom = p * direction;
 
   // 3D position in local frame
-  double r = bounds->get(CylinderBounds::eRadius);
+  double r = bounds->get(CylinderBounds::eR);
   const double phi_l = pars_array[0] / r;
   Vector3D pos = (r * cos(phi_l)) * rot.col(0) + (r * sin(phi_l)) * rot.col(1) +
                  (pars_array[1]) * rot.col(2) + center;

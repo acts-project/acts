@@ -600,8 +600,7 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
   }
   if (cylinderBounds != nullptr) {
     sjson[m_cfg.surfacetypekey] = "Cylinder";
-    sjson[m_cfg.surfacepositionkey] =
-        cylinderBounds->get(CylinderBounds::eRadius);
+    sjson[m_cfg.surfacepositionkey] = cylinderBounds->get(CylinderBounds::eR);
     sjson[m_cfg.surfacerangekey] = {
         -1 * cylinderBounds->get(CylinderBounds::eHalfLengthZ),
         cylinderBounds->get(CylinderBounds::eHalfLengthZ)};
@@ -667,10 +666,12 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
       dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
 
   if (radialBounds != nullptr) {
-    bUtility += BinUtility(
-        1, radialBounds->averagePhi() - radialBounds->halfPhiSector(),
-        radialBounds->averagePhi() + radialBounds->halfPhiSector(),
-        Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(1,
+                           radialBounds->get(RadialBounds::eAveragePhi) -
+                               radialBounds->get(RadialBounds::eHalfPhiSector),
+                           radialBounds->get(RadialBounds::eAveragePhi) +
+                               radialBounds->get(RadialBounds::eHalfPhiSector),
+                           Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
                            Acts::open, Acts::binR);
   }
@@ -688,7 +689,8 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
                    Acts::open, Acts::binZ);
   }
   if (annulusBounds != nullptr) {
-    bUtility += BinUtility(1, annulusBounds->phiMin(), annulusBounds->phiMax(),
+    bUtility += BinUtility(1, annulusBounds->get(AnnulusBounds::eMinPhiRel),
+                           annulusBounds->get(AnnulusBounds::eMaxPhiRel),
                            Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
                            Acts::open, Acts::binR);

@@ -65,6 +65,7 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
   const Transform3D& ctransform = transform(gctx);
   // Draw the bounds if more than one segment are chosen
   if (lseg > 1) {
+    double r = m_bounds->get(LineBounds::eR);
     auto phiSegs = detail::VerticesHelper::phiSegments();
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
@@ -73,9 +74,9 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
         int addon = (iseg == phiSegs.size() - 2) ? 1 : 0;
         /// Helper method to create the segment
         detail::VerticesHelper::createSegment(
-            vertices, {m_bounds->r(), m_bounds->r()}, phiSegs[iseg],
-            phiSegs[iseg + 1], lseg, addon,
-            Vector3D(0., 0., side * m_bounds->halflengthZ()), ctransform);
+            vertices, {r, r}, phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
+            Vector3D(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
+            ctransform);
       }
     }
     auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
@@ -84,8 +85,8 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
   }
 
   size_t bvertices = vertices.size();
-  Vector3D left(0, 0, -m_bounds->halflengthZ());
-  Vector3D right(0, 0, m_bounds->halflengthZ());
+  Vector3D left(0, 0, -m_bounds->get(LineBounds::eHalfLengthZ));
+  Vector3D right(0, 0, m_bounds->get(LineBounds::eHalfLengthZ));
   // The central wire/straw
   vertices.push_back(ctransform * left);
   vertices.push_back(ctransform * right);

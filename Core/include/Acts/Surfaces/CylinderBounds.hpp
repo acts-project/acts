@@ -7,11 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cmath>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+
+#include <array>
+#include <cmath>
+#include <vector>
 
 namespace Acts {
 
@@ -28,16 +31,10 @@ namespace Acts {
 /// opening angle @f$ 2\cdot\phi_{half}@f$
 /// around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
 ///
-/// @todo update the documentation picture for cylinder segments
-///
-/// @image html CylinderBounds.gif
-
 class CylinderBounds : public SurfaceBounds {
  public:
-  /// @enum BoundValues for readablility
-  /// nested enumeration object
   enum BoundValues : int {
-    eRadius = 0,
+    eR = 0,
     eHalfLengthZ = 1,
     eHalfPhiSector = 2,
     eAveragePhi = 3,
@@ -48,22 +45,34 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Constructor - full cylinder
   ///
-  /// @param radius The radius of the cylinder
-  /// @param halfz The half length in z
-  /// @param halfphi The half opening angle
-  /// @param avphi The phi value from which the opening angle spans (both sides)
-  CylinderBounds(double radius, double halfz, double halfphi = M_PI,
-                 double avphi = 0.);
+  /// @param r The radius of the cylinder
+  /// @param halfZ The half length in z
+  /// @param halfPhi The half opening angle
+  /// @param avgPhi (optional) The phi value from which the opening angle spans
+  CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
+                 double avgPhi = 0.)
+      : m_values({std::abs(r), std::abs(halfZ), std::abs(halfPhi),
+                  detail::radian_sym(avgPhi)}),
+        m_closed(std::abs(halfPhi - M_PI) < s_onSurfaceTolerance) {}
+
+  /// Constructor - from fixed size array
+  ///
+  /// @param values The parameter values
+  CylinderBounds(const std::array<double, eSize>& values)
+      : m_values(values),
+        m_closed(std::abs(values[eHalfPhiSector] - M_PI) <
+                 s_onSurfaceTolerance) {}
 
   ~CylinderBounds() override = default;
 
   CylinderBounds* clone() const final;
 
-  /// Type enumeration
   BoundsType type() const final;
 
-  /// The values of the object as dynamically sized vector
-  ActsVectorXd values() const final;
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -90,8 +99,9 @@ class CylinderBounds : public SurfaceBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// Templated access to the bound parameters
-  double get(BoundValues bValue) const { return m_parameters[bValue]; }
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
@@ -101,16 +111,22 @@ class CylinderBounds : public SurfaceBounds {
 
  private:
   /// The bound radius, half Z, half phi and average phi
-  ActsRowVectorD<eSize> m_parameters;
+  std::array<double, eSize> m_values;
   /// Indicator if the bounds are closed
   bool m_closed;
 
+  /// Helper method to shift into the phi-frame
+  /// @param lposition the polar coordinates in the global frame
   Vector2D shifted(const Vector2D& lposition) const;
+
+  /// Return the jacobian into the polar coordinate
   ActsSymMatrixD<2> jacobian() const;
 };
 
-inline ActsVectorXd CylinderBounds::values() const {
-  return m_parameters;
+inline std::vector<double> CylinderBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
 inline bool CylinderBounds::coversFullAzimuth() const {

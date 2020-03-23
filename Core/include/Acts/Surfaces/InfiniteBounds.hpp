@@ -29,7 +29,7 @@ class InfiniteBounds : public SurfaceBounds {
     return SurfaceBounds::eBoundless;
   }
 
-  ActsVectorXd values() const final { return ActsVectorXd(); }
+  std::vector<double> values() const final { return {}; }
 
   /// Method inside() returns true for any case
   ///

@@ -102,7 +102,7 @@ const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
       dynamic_cast<const Acts::DiscTrapezoidBounds*>(&(bounds()));
   if (dtbo != nullptr) {
     double rMedium = dtbo->rCenter();
-    double phi = dtbo->averagePhi();
+    double phi = dtbo->get(DiscTrapezoidBounds::eAveragePhi);
 
     Vector2D polarCenter(rMedium, phi);
     Vector2D cartCenter = localPolarToCartesian(polarCenter);

@@ -7,22 +7,20 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "Acts/Utilities/detail/periodic.hpp"
-
-Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double minhalfx, double maxhalfx,
-                                               double minR, double maxR,
-                                               double avephi, double stereo)
-    : m_rMin(std::min(std::abs(minR), std::abs(maxR))),
-      m_rMax(std::max(std::abs(minR), std::abs(maxR))),
-      m_minHalfX(std::abs(minhalfx)),
-      m_maxHalfX(std::abs(maxhalfx)),
-      m_avgPhi(detail::radian_sym(avephi)),
-      m_stereo(stereo) {}
+Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
+                                               double halfXmaxR, double minR,
+                                               double maxR, double avgPhi,
+                                               double stereo)
+    : m_values({std::abs(halfXminR), std::abs(halfXmaxR),
+                std::min(std::abs(minR), std::abs(maxR)),
+                std::max(std::abs(minR), std::abs(maxR)),
+                detail::radian_sym(avgPhi), stereo}) {}
 
 Acts::DiscTrapezoidBounds* Acts::DiscTrapezoidBounds::clone() const {
   return new DiscTrapezoidBounds(*this);
@@ -32,24 +30,17 @@ Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
   return SurfaceBounds::eDiscTrapezoid;
 }
 
-Acts::ActsVectorXd Acts::DiscTrapezoidBounds::values() const {
-  ActsVectorXd values;
-  values << rMin(), rMax(), minHalflengthX(), maxHalflengthX(), averagePhi(),
-      m_stereo;
-  return values;
-}
-
 Acts::Vector2D Acts::DiscTrapezoidBounds::toLocalCartesian(
     const Acts::Vector2D& lposition) const {
-  return {lposition[eLOC_R] * std::sin(lposition[eLOC_PHI] - m_avgPhi),
-          lposition[eLOC_R] * std::cos(lposition[eLOC_PHI] - m_avgPhi)};
+  return {lposition[eLOC_R] * std::sin(lposition[eLOC_PHI] - get(eAveragePhi)),
+          lposition[eLOC_R] * std::cos(lposition[eLOC_PHI] - get(eAveragePhi))};
 }
 
 Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
     const Acts::Vector2D& lposition) const {
   ActsMatrixD<2, 2> jacobian;
-  jacobian(0, eLOC_R) = std::sin(lposition[eLOC_PHI] - m_avgPhi);
-  jacobian(1, eLOC_R) = std::cos(lposition[eLOC_PHI] - m_avgPhi);
+  jacobian(0, eLOC_R) = std::sin(lposition[eLOC_PHI] - get(eAveragePhi));
+  jacobian(1, eLOC_R) = std::cos(lposition[eLOC_PHI] - get(eAveragePhi));
   jacobian(0, eLOC_PHI) = lposition[eLOC_R] * std::cos(lposition[eLOC_PHI]);
   jacobian(1, eLOC_PHI) = lposition[eLOC_R] * -std::sin(lposition[eLOC_PHI]);
   return jacobian;
@@ -57,10 +48,10 @@ Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
 
 bool Acts::DiscTrapezoidBounds::inside(
     const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
-  Vector2D vertices[] = {{minHalflengthX(), rMin()},
-                         {maxHalflengthX(), rMax()},
-                         {-maxHalflengthX(), rMax()},
-                         {-minHalflengthX(), rMin()}};
+  Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
+                         {get(eHalfLengthXmaxR), get(eMaxR)},
+                         {-get(eHalfLengthXmaxR), get(eMaxR)},
+                         {-get(eHalfLengthXminR), get(eMinR)}};
   auto jacobian = jacobianToLocalCartesian(lposition);
   return bcheck.transformed(jacobian).isInside(toLocalCartesian(lposition),
                                                vertices);
@@ -68,20 +59,21 @@ bool Acts::DiscTrapezoidBounds::inside(
 
 double Acts::DiscTrapezoidBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
-  Vector2D vertices[] = {{minHalflengthX(), rMin()},
-                         {maxHalflengthX(), rMax()},
-                         {-maxHalflengthX(), rMax()},
-                         {-minHalflengthX(), rMin()}};
+  Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
+                         {get(eHalfLengthXmaxR), get(eMaxR)},
+                         {-get(eHalfLengthXmaxR), get(eMaxR)},
+                         {-get(eHalfLengthXminR), get(eMinR)}};
   return BoundaryCheck(true).distance(toLocalCartesian(lposition), vertices);
 }
 
 std::vector<Acts::Vector2D> Acts::DiscTrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
-  Vector2D cAxis(std::cos(m_avgPhi), std::sin(m_avgPhi));
+  Vector2D cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
   Vector2D nAxis(cAxis.y(), -cAxis.x());
-  return {
-      m_rMin * cAxis - m_minHalfX * nAxis, m_rMin * cAxis + m_minHalfX * nAxis,
-      m_rMax * cAxis + m_maxHalfX * nAxis, m_rMax * cAxis - m_maxHalfX * nAxis};
+  return {get(eMinR) * cAxis - get(eHalfLengthXminR) * nAxis,
+          get(eMinR) * cAxis + get(eHalfLengthXminR) * nAxis,
+          get(eMaxR) * cAxis + get(eHalfLengthXmaxR) * nAxis,
+          get(eMaxR) * cAxis - get(eHalfLengthXmaxR) * nAxis};
 }
 
 // ostream operator overload
@@ -90,9 +82,10 @@ std::ostream& Acts::DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(7);
   sl << "Acts::DiscTrapezoidBounds:  (innerRadius, outerRadius, hMinX, "
         "hMaxX, hlengthY, hPhiSector, averagePhi, rCenter, stereo) = ";
-  sl << "(" << rMin() << ", " << rMax() << ", " << minHalflengthX() << ", "
-     << maxHalflengthX() << ", " << halflengthY() << ", " << halfPhiSector()
-     << ", " << averagePhi() << ", " << rCenter() << ", " << stereo() << ")";
+  sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthXminR)
+     << ", " << get(eHalfLengthXmaxR) << ", " << halfLengthY() << ", "
+     << halfPhiSector() << ", " << get(eAveragePhi) << ", " << rCenter() << ", "
+     << stereo() << ")";
   sl << std::setprecision(-1);
   return sl;
 }

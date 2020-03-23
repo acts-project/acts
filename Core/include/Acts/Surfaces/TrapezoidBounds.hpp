@@ -26,23 +26,33 @@ namespace Acts {
 
 class TrapezoidBounds : public PlanarBounds {
  public:
-  /// @enum BoundValues - for readability
   enum BoundValues {
-    bv_minHalfX = 0,
-    bv_maxHalfX = 1,
-    bv_halfY = 2,
-    bv_length = 3
+    eHalfLengthXnegY = 0,
+    eHalfLengthXposY = 1,
+    eHalfLengthY = 2,
+    eSize = 3
   };
 
-  /// Trapezoid bounds default constructor is forbidden
   TrapezoidBounds() = delete;
 
   /// Constructor for symmetric Trapezoid
   ///
-  /// @param minhalex minimal half length X, definition at negative halflength Y
-  /// @param maxhalex maximal half length X, definition at maximum halflength Y
-  /// @param haley half length Y - defined at x=0
-  TrapezoidBounds(double minhalex, double maxhalex, double haley);
+  /// @param halfXnegY minimal half length X, definition at negative halflength
+  /// Y
+  /// @param halfXposY maximal half length X, definition at maximum halflength Y
+  /// @param halfY half length Y - defined at x=0
+  TrapezoidBounds(double halfXnegY, double halfXposY, double halfY)
+      : m_values({std::abs(halfXnegY), std::abs(halfXposY), std::abs(halfY)}),
+        m_boundingBox(std::max(halfXnegY, halfXposY), std::abs(halfY)) {}
+
+  /// Constructor for symmetric Trapezoid - from fixed size array
+  ///
+  /// @param values the values to be stream in
+  TrapezoidBounds(const std::array<double, eSize>& values)
+      : m_values(values),
+        m_boundingBox(
+            std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
+            values[eHalfLengthY]) {}
 
   ~TrapezoidBounds() override;
 
@@ -50,7 +60,7 @@ class TrapezoidBounds : public PlanarBounds {
 
   BoundsType type() const final;
 
-  ActsVectorXd values() const final;
+  std::vector<double> values() const final;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
@@ -95,6 +105,7 @@ class TrapezoidBounds : public PlanarBounds {
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
+  ///
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck) const final;
@@ -123,35 +134,19 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param sl is the ostream to be dumped into
   std::ostream& toStream(std::ostream& sl) const final;
 
-  ///  This method returns the minimal halflength in X
-  /// (first coordinate of local surface frame)
-  double minHalflengthX() const;
-
-  /// This method returns the maximal halflength in X
-  /// (first coordinate of local surface frame)
-  double maxHalflengthX() const;
-
-  /// This method returns the halflength in Y
-  /// (second coordinate of local surface frame)
-  double halflengthY() const;
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  double m_minHalfX;
-  double m_maxHalfX;
-  double m_halfY;
+  std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;
 };
 
-inline double TrapezoidBounds::minHalflengthX() const {
-  return m_minHalfX;
-}
-
-inline double TrapezoidBounds::maxHalflengthX() const {
-  return m_maxHalfX;
-}
-
-inline double TrapezoidBounds::halflengthY() const {
-  return m_halfY;
+inline std::vector<double> TrapezoidBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
 }  // namespace Acts

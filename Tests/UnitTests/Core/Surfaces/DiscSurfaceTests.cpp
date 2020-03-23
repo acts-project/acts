@@ -136,9 +136,9 @@ BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2)) {
   BOOST_CHECK(discSurfaceObject->globalToLocal(
       tgContext, point3DNotInSector, ignoredMomentum, returnedLocalPosition));
   //
-  Vector3D pointOutsideRadius{0.0, 100., 0};
+  Vector3D pointOutsideR{0.0, 100., 0};
   BOOST_CHECK(discSurfaceObject->globalToLocal(
-      tgContext, pointOutsideRadius, ignoredMomentum, returnedLocalPosition));
+      tgContext, pointOutsideR, ignoredMomentum, returnedLocalPosition));
   //
   /// Test localPolarToCartesian
   Vector2D rPhi1_1{std::sqrt(2.), M_PI / 4.};

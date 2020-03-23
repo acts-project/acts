@@ -25,7 +25,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-BOOST_AUTO_TEST_CASE(convexity_test) {
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
   std::vector<vec2> vertices;
   vertices = {{0, 0}, {1, 0}, {0.2, 0.2}, {0, 1}};
   { BOOST_CHECK_THROW(poly<4> quad(vertices), AssertionFailureException); }
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(convexity_test) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(construction_test) {
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   std::vector<vec2> vertices;
 
   // triangle
@@ -103,7 +103,21 @@ BOOST_AUTO_TEST_CASE(construction_test) {
   CHECK_CLOSE_ABS(quad.distanceToBoundary({0.3, -0.2}), 0.2, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(construction_test_dynamic) {
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexityRecreation) {
+  // rectangular poly
+  std::vector<vec2>  vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
+  poly<4> original(vertices);
+
+  auto valvector = original.values();
+  std::array<double,  poly<4>::eSize> values;
+  std::copy_n(valvector.begin(), poly<4>::eSize, values.begin());
+   poly<4> recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   using poly = ConvexPolygonBounds<PolygonDynamic>;
 
   std::vector<vec2> vertices;

@@ -7,53 +7,68 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cmath>
 
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <vector>
+
 namespace Acts {
 
 /// @class DiamondBounds
 ///
 /// Bounds for a double trapezoidal ("diamond"), planar Surface.
-///
 class DiamondBounds : public PlanarBounds {
  public:
-  /// @enum BoundValues for better readability
   enum BoundValues {
-    bv_x1 = 0,
-    bv_x2 = 1,
-    bv_x3 = 2,
-    bv_y1 = 3,
-    bv_y2 = 4,
-    bv_length = 5
+    eHalfLengthXnegY = 0,
+    eHalfLengthXzeroY = 1,
+    eHalfLengthXposY = 2,
+    eHalfLengthYneg = 3,
+    eHalfLengthYpos = 4,
+    eSize = 5
   };
+
+  DiamondBounds() = delete;
 
   /// Constructor for convex hexagon symmetric about the y axis
   ///
-  /// @param x1 is the halflength in x at minimal y
-  /// @param x2 is the halflength in x at y = 0
-  /// @param x3 is the halflength in x at maximal y
-  /// @param y1 is the halflength into y < 0
-  /// @param y2 is the halflength into y > 0
-  ///
-  /// @image html DiamondBounds.svg
-  DiamondBounds(double x1, double x2, double x3, double y1, double y2);
+  /// @param halfXnegY is the halflength in x at minimal y
+  /// @param halfXzeroY is the halflength in x at y = 0
+  /// @param halfXposY is the halflength in x at maximal y
+  /// @param halfYneg is the halflength into y < 0
+  /// @param halfYpos is the halflength into y > 0
+  DiamondBounds(double halfXnegY, double halfXzerY, double halfXposY,
+                double halfYneg, double halfYpos)
+      : m_values({std::abs(halfXnegY), std::abs(halfXzerY), std::abs(halfXposY),
+                  std::abs(halfYneg), std::abs(halfYpos)}),
+        m_boundingBox(*std::max_element(m_values.begin(), m_values.begin() + 2),
+                      std::max(std::abs(halfYneg), std::abs(halfYpos))) {}
 
-  /// Defaulted desctructor
+  /// Constructor - from fixed size array
+  ///
+  /// @param values The parameter values
+  DiamondBounds(const std::array<double, eSize>& values)
+      : m_values(values),
+        m_boundingBox(
+            *std::max_element(values.begin(), values.begin() + 2),
+            std::max(values[eHalfLengthYneg], values[eHalfLengthYpos])) {}
+
   ~DiamondBounds() override = default;
 
-  /// Virtual constructor
   DiamondBounds* clone() const final;
 
-  /// Enumeration type
   BoundsType type() const final;
 
-  /// The value store for persistency
-  ActsVectorXd values() const final;
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -89,48 +104,19 @@ class DiamondBounds : public PlanarBounds {
   /// @param sl is the ostream in which it is dumped
   std::ostream& toStream(std::ostream& sl) const final;
 
-  /// This method returns the halflength in X at minimal Y
-  /// (first coordinate of local surface frame)
-  double x1() const;
-
-  /// This method returns the (maximal) halflength in X
-  /// (first coordinate of local surface frame)
-  double x2() const;
-
-  /// This method returns the halflength in X at maximal Y
-  /// (first coordinate of local surface frame)
-  double x3() const;
-
-  /// This method returns the halflength in Y of trapezoid at negative Y
-  double y1() const;
-
-  /// This method returns the halflength in Y of trapezoid at positive Y
-  double y2() const;
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  double m_x1, m_x2, m_x3;
-  double m_y1, m_y2;
+  std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
-inline double DiamondBounds::x1() const {
-  return m_x1;
-}
-
-inline double DiamondBounds::x2() const {
-  return m_x2;
-}
-
-inline double DiamondBounds::x3() const {
-  return m_x3;
-}
-
-inline double DiamondBounds::y1() const {
-  return m_y1;
-}
-
-inline double DiamondBounds::y2() const {
-  return m_y2;
+inline std::vector<double> DiamondBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
 }  // namespace Acts

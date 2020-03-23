@@ -252,7 +252,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
 
   const CylinderBounds* bounds = &layer->bounds();
-  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eRadius), (rMax + rMin) / 2.,
+  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), (rMax + rMin) / 2.,
                   1e-3);
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eHalfLengthZ), 14 + envZ, 1e-3);
   BOOST_CHECK(checkBinning(tgContext, *layer->surfaceArray()));
@@ -273,7 +273,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
       p_LC->cylinderLayer(tgContext, srf, 30, 7, pl2));
   CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
   bounds = &layer->bounds();
-  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eRadius), (rMax + rMin) / 2.,
+  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), (rMax + rMin) / 2.,
                   1e-3);
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eHalfLengthZ), 14 + envZ, 1e-3);
   BOOST_CHECK(checkBinning(tgContext, *layer->surfaceArray()));
@@ -289,7 +289,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
       p_LC->cylinderLayer(tgContext, srf, 13, 3, pl2));
   CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
   bounds = &layer->bounds();
-  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eRadius), (rMax + rMin) / 2.,
+  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), (rMax + rMin) / 2.,
                   1e-3);
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eHalfLengthZ), 14 + envZ, 1e-3);
   // this succeeds despite sub-optimal binning
@@ -313,7 +313,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
       p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl3));
   CHECK_CLOSE_REL(layer->thickness(), 19, 1e-3);
   bounds = &layer->bounds();
-  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eRadius), 10.5, 1e-3);
+  CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), 10.5, 1e-3);
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eHalfLengthZ), 25, 1e-3);
 
   // this should fail, b/c it's a completely inconvenient binning

@@ -7,25 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
-
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
-
-Acts::CylinderBounds::CylinderBounds(double radius, double halfz,
-                                     double halfphi, double avphi)
-    : m_parameters(), m_closed(false) {
-  m_parameters << radius, halfz, halfphi, avphi;
-  if (halfphi == M_PI) {
-    m_closed = true;
-  }
-}
 
 Acts::CylinderBounds* Acts::CylinderBounds::clone() const {
   return new CylinderBounds(*this);
@@ -37,14 +26,14 @@ Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
 
 Acts::Vector2D Acts::CylinderBounds::shifted(
     const Acts::Vector2D& lposition) const {
-  return {Acts::detail::radian_sym((lposition[Acts::eLOC_RPHI] / get(eRadius)) -
+  return {Acts::detail::radian_sym((lposition[Acts::eLOC_RPHI] / get(eR)) -
                                    get(eAveragePhi)),
           lposition[Acts::eLOC_Z]};
 }
 
 Acts::ActsSymMatrixD<2> Acts::CylinderBounds::jacobian() const {
   ActsSymMatrixD<2> j;
-  j(0, eLOC_RPHI) = 1 / get(eRadius);
+  j(0, eLOC_RPHI) = 1 / get(eR);
   j(0, eLOC_Z) = 0;
   j(1, eLOC_RPHI) = 0;
   j(1, eLOC_Z) = 1;
@@ -70,7 +59,7 @@ bool Acts::CylinderBounds::inside3D(const Vector3D& position,
   double addToleranceZ = checkAbsolute ? bcheck.m_tolerance[1] : 0.;
   // check if the position compatible with the radius
   if ((s_onSurfaceTolerance + addToleranceR) <=
-      std::abs(perp(position) - get(eRadius))) {
+      std::abs(perp(position) - get(eR))) {
     return false;
   } else if (checkAbsolute && m_closed) {
     return ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ)) >=
@@ -97,7 +86,7 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
         "averagePhi, "
         ") = ";
-  sl << "(" << get(eRadius) << ", " << get(eHalfLengthZ) << ", ";
+  sl << "(" << get(eR) << ", " << get(eHalfLengthZ) << ", ";
   sl << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
   sl << std::setprecision(-1);
   return sl;

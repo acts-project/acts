@@ -443,7 +443,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     if (cylBounds != nullptr) {
       radial = true;
       // get the raw data
-      double currentR = cylBounds->get(CylinderBounds::eRadius);
+      double currentR = cylBounds->get(CylinderBounds::eR);
       double centerZ = (layerIter->surfaceRepresentation()).center(gctx).z();
       // check for min/max in the cylinder bounds case
       currentRmin = currentR - (0.5 * (layerIter)->thickness());

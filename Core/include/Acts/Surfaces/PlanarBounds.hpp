@@ -7,9 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <vector>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <vector>
+
 namespace Acts {
 
 /// Forward declare rectangle bounds as boundary box

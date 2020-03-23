@@ -101,7 +101,8 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
       "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) = "
       "(0.4142136, 3.0000000, 6.0000000, 0.7853982, 0.0000000)"));
 }
-/// Unit test for testing ConeBounds assignment
+
+// Unit test for testing ConeBounds assignment
 BOOST_AUTO_TEST_CASE(ConeBoundsAssignment) {
   double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
       averagePhi(0.);
@@ -110,6 +111,19 @@ BOOST_AUTO_TEST_CASE(ConeBoundsAssignment) {
   ConeBounds assignedConeBounds(0.1, 2.3, 4.5, 1.2, 2.1);
   assignedConeBounds = originalConeBounds;
   BOOST_CHECK_EQUAL(assignedConeBounds, originalConeBounds);
+}
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
+  double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
+      averagePhi(0.);
+  // const bool symmetric(false);
+  ConeBounds originalConeBounds(alpha, zMin, zMax, halfPhi, averagePhi);
+  auto valvector = originalConeBounds.values();
+  std::array<double, ConeBounds::eSize> values;
+  std::copy_n(valvector.begin(), ConeBounds::eSize, values.begin());
+  ConeBounds recreatedConeBounds(values);
+  BOOST_CHECK_EQUAL(recreatedConeBounds, originalConeBounds);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

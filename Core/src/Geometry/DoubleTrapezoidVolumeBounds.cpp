@@ -97,7 +97,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceAlpha1Bounds = faceAlpha1RectangleBounds();
   Vector3D faceAlpha1Position(A + alpha1Rotation.col(0) *
-                                      faceAlpha1Bounds->halflengthX());
+                                      faceAlpha1Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceAlpha1Position) * alpha1Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -112,7 +112,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
                                  AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceBeta1Bounds = faceBeta1RectangleBounds();
   Vector3D faceBeta1Position(B + beta1Rotation.col(0) *
-                                     faceBeta1Bounds->halflengthX());
+                                     faceBeta1Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceBeta1Position) * beta1Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -130,7 +130,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       AngleAxis3D(-0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceAlpha2Bounds = faceAlpha2RectangleBounds();
   Vector3D faceAlpha2Position(AA + alpha2Rotation.col(0) *
-                                       faceAlpha2Bounds->halflengthX());
+                                       faceAlpha2Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceAlpha2Position) * alpha2Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -146,7 +146,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       AngleAxis3D(-0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceBeta2Bounds = faceBeta2RectangleBounds();
   Vector3D faceBeta2Position(BB + beta2Rotation.col(0) *
-                                      faceBeta2Bounds->halflengthX());
+                                      faceBeta2Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceBeta2Position) * beta2Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
