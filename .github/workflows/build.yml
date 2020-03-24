@@ -31,15 +31,15 @@ jobs:
         -DACTS_BUILD_INTEGRATIONTESTS=on
 
     - name: Build
-      working-dir: build
+      working-directory: build
       run: cmake --build . -- -j$(nproc)
 
     - name: Unit tests
-      working-dir: build
+      working-directory: build
       run: cmake --build . -- test
 
     - name: Integration tests
-      working-dir: build
+      working-directory: build
       run: cmake --build . -- integrationtests
 
   build_macos:
@@ -80,15 +80,15 @@ jobs:
           -DACTS_BUILD_INTEGRATIONTESTS=on
 
       - name: Build
-        working-dir: build
+        working-directory: build
         run: cmake --build . -- -j2
 
       - name: Unit tests
-        working-dir: build
+        working-directory: build
         run: cmake --build . -- test
 
       - name: Integration tests
-        working-dir: build
+        working-directory: build
         run: cmake --build . -- integrationtests
 
 
@@ -139,14 +139,14 @@ jobs:
           -DACTS_BUILD_INTEGRATIONTESTS=on
 
       - name: Build
-        working-dir: build
+        working-directory: build
         run: cmake --build . -- -j$(nproc)
 
       - name: Unit tests
-        working-dir: build
+        working-directory: build
         run: cmake --build . -- test
 
       - name: Integration tests
-        working-dir: build
+        working-directory: build
         run: cmake --build . -- integrationtests
 
