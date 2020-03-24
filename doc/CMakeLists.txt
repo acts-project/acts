@@ -1,7 +1,7 @@
 set(doc_sources
   index.rst
   authors.rst
-  ../AUTHORS
+  ../AUTHORS.md
   license.rst
   ../LICENSE
   integration/atlas.md
