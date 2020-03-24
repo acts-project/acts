@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
   // invalid inputs
   BOOST_CHECK_THROW(
       DiamondBounds db(midHalfX, minHalfX, maxHalfX, halfY1, halfY2),
-      AssertionFailureException);
+      std::logic_error);
   BOOST_CHECK_THROW(
       DiamondBounds db(minHalfX, maxHalfX, midHalfX, halfY1, halfY2),
-      AssertionFailureException);
+      std::logic_error);
 }
 /// Unit tests for DiamondBounds properties
 BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYneg), halfY1);
   //
   /// Test half length into the positive side
-  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXposY), halfY2);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYpos), halfY2);
   //
   /// Test boundingBox
   BOOST_CHECK_EQUAL(diamondBoundsObject.boundingBox(),
@@ -98,8 +98,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   diamondBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::DiamondBounds:  (x1, x2, "
-                         "x3, y1, y2 ) = (10.0000000, "
+      dumpOuput.is_equal("Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, halfYneg, halfYpos) = (10.0000000, "
                          "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
   //
   /// Test inside

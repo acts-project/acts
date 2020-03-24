@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <vector>
@@ -48,7 +49,8 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, bool symm, double halfphi = M_PI, double avphi = 0.);
+  ConeBounds(double alpha, bool symm, double halfphi = M_PI,
+             double avphi = 0.) noexcept(false);
 
   /// Constructor - open cone with alpha, minz and maxz, by
   /// default a full cone but can optionally make it a conical section
@@ -60,12 +62,12 @@ class ConeBounds : public SurfaceBounds {
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
   ConeBounds(double alpha, double minz, double maxz, double halfphi = M_PI,
-             double avphi = 0.);
+             double avphi = 0.) noexcept(false);
 
   /// Constructor - from parameters array
   ///
   /// @param values The parameter array
-  ConeBounds(const std::array<double, eSize>& values);
+  ConeBounds(const std::array<double, eSize>& values) noexcept(false);
 
   ~ConeBounds() override = default;
 
@@ -115,6 +117,10 @@ class ConeBounds : public SurfaceBounds {
   std::array<double, eSize> m_values;
   double m_tanAlpha;
 
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
+
   /// Private helper functin to shift a local 2D position
   ///
   /// @param lposition The original local position
@@ -133,6 +139,22 @@ inline std::vector<double> ConeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void ConeBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eAlpha) < 0. or get(eAlpha) >= M_PI) {
+    throw std::invalid_argument("ConeBounds: invalid open angle.");
+  }
+  if (get(eMinZ) > get(eMaxZ) or
+      std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
+    throw std::invalid_argument("ConeBounds: invalid z range setup.");
+  }
+  if (get(eHalfPhiSector) < 0. or abs(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("ConeBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

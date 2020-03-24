@@ -43,17 +43,18 @@ class DiamondBounds : public PlanarBounds {
   /// @param halfXposY is the halflength in x at maximal y
   /// @param halfYneg is the halflength into y < 0
   /// @param halfYpos is the halflength into y > 0
-  DiamondBounds(double halfXnegY, double halfXzerY, double halfXposY,
-                double halfYneg, double halfYpos)
-      : m_values({std::abs(halfXnegY), std::abs(halfXzerY), std::abs(halfXposY),
-                  std::abs(halfYneg), std::abs(halfYpos)}),
+  DiamondBounds(double halfXnegY, double halfXzeroY, double halfXposY,
+                double halfYneg, double halfYpos) noexcept(false)
+      : m_values({halfXnegY, halfXzeroY, halfXposY, halfYneg, halfYpos}),
         m_boundingBox(*std::max_element(m_values.begin(), m_values.begin() + 2),
-                      std::max(std::abs(halfYneg), std::abs(halfYpos))) {}
+                      std::max(halfYneg, halfYpos)) {
+    checkConsistency();
+  }
 
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  DiamondBounds(const std::array<double, eSize>& values)
+  DiamondBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values),
         m_boundingBox(
             *std::max_element(values.begin(), values.begin() + 2),
@@ -111,12 +112,28 @@ class DiamondBounds : public PlanarBounds {
  private:
   std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
 };
 
 inline std::vector<double> DiamondBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void DiamondBounds::checkConsistency() throw(std::logic_error) {
+  if (std::any_of(m_values.begin(), m_values.end(),
+                  [](auto v) { return v < 0.; })) {
+    throw std::invalid_argument(
+        "DiamondBounds: negative half length provided.");
+  }
+  if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) or
+      get(eHalfLengthXposY) > get(eHalfLengthXzeroY)) {
+    throw std::invalid_argument("DiamondBounds: not a diamond shape.");
+  }
 }
 
 }  // namespace Acts

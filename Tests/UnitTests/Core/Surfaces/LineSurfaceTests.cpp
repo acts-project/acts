@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
                   1e-6);
   //
   // bounds()
-  auto pLineBounds = std::make_shared<const LineBounds>(1., 10.0);
+  auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
   LineSurfaceStub boundedLine(pTransform, pLineBounds);
   const LineBounds& bounds =
       dynamic_cast<const LineBounds&>(boundedLine.bounds());

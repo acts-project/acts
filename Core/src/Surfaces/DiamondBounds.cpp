@@ -47,11 +47,10 @@ const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-// ostream operator overload
 std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::DiamondBounds:  (halfXatYneg, halfXatYzero, halfXatYpos, "
+  sl << "Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, "
         "halfYneg, halfYpos) = ";
   sl << "(" << get(DiamondBounds::eHalfLengthXnegY) << ", "
      << get(DiamondBounds::eHalfLengthXzeroY) << ", "

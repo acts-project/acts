@@ -15,8 +15,11 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values)
+Acts::AnnulusBounds::AnnulusBounds(
+    const std::array<double, eSize>& values) noexcept(false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
+  checkConsistency();
+
   m_rotationStripPC =
       Eigen::Translation<double, 2>(Vector2D(0, -get(eAveragePhi)));
   m_translation = Eigen::Translation<double, 2>(m_moduleOrigin);

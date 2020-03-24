@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/ConeBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -15,20 +14,25 @@
 #include <limits>
 
 Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
-                             double avphi)
+                             double avphi) noexcept(false)
     : m_values({alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
-                std::numeric_limits<double>::infinity(), std::abs(halfphi),
-                detail::radian_sym(avphi)}),
-      m_tanAlpha(std::tan(alpha)) {}
+                std::numeric_limits<double>::infinity(), halfphi, avphi}),
+      m_tanAlpha(std::tan(alpha)) {
+  checkConsistency();
+}
 
 Acts::ConeBounds::ConeBounds(double alpha, double minz, double maxz,
-                             double halfphi, double avphi)
-    : m_values(
-          {alpha, minz, maxz, std::abs(halfphi), detail::radian_sym(avphi)}),
-      m_tanAlpha(std::tan(alpha)) {}
+                             double halfphi, double avphi) noexcept(false)
+    : m_values({alpha, minz, maxz, halfphi, avphi}),
+      m_tanAlpha(std::tan(alpha)) {
+  checkConsistency();
+}
 
-Acts::ConeBounds::ConeBounds(const std::array<double, eSize>& values)
-    : m_values(values), m_tanAlpha(std::tan(values[eAlpha])) {}
+Acts::ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(
+    false)
+    : m_values(values), m_tanAlpha(std::tan(values[eAlpha])) {
+  checkConsistency();
+}
 
 Acts::ConeBounds* Acts::ConeBounds::clone() const {
   return new ConeBounds(*this);

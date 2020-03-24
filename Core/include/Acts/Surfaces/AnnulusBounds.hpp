@@ -14,6 +14,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <exception>
 #include <vector>
 
 namespace Acts {
@@ -56,16 +57,15 @@ class AnnulusBounds : public DiscBounds {
   /// @note For @c morigin you need to actually calculate the cartesian
   /// offset
   AnnulusBounds(double minR, double maxR, double minPhiRel, double maxPhiRel,
-                const Vector2D& moduleOrigin = {0, 0}, double avgPhi = 0)
-      : AnnulusBounds(
-            {std::abs(minR), std::abs(maxR), detail::radian_sym(minPhiRel),
-             detail::radian_sym(maxPhiRel), detail::radian_sym(avgPhi),
-             moduleOrigin.x(), moduleOrigin.y()}) {}
+                const Vector2D& moduleOrigin = {0, 0},
+                double avgPhi = 0) noexcept(false)
+      : AnnulusBounds({minR, maxR, minPhiRel, maxPhiRel, avgPhi,
+                       moduleOrigin.x(), moduleOrigin.y()}) {}
 
   /// Constructor - from parameters array
   ///
   /// @param values The parameter array
-  AnnulusBounds(const std::array<double, eSize>& values);
+  AnnulusBounds(const std::array<double, eSize>& values) noexcept(false);
 
   AnnulusBounds(const AnnulusBounds& source) = default;
 
@@ -184,7 +184,10 @@ class AnnulusBounds : public DiscBounds {
   Vector2D m_outRightStripXY;
   Vector2D m_inRightStripXY;
 
-  /// Private helper method:
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
+
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
   /// the bounds  Inside can be called without/with tolerances.
@@ -196,7 +199,11 @@ class AnnulusBounds : public DiscBounds {
   virtual bool inside(const Vector2D& lposition, double tolR,
                       double tolPhi) const final;
 
-  /// Private helper method
+  /// Transform the strip cartesien
+  /// into the module polar system
+  ///
+  /// @param vStripXy the position in the cartesian strip system
+  /// @return the poistion in the module polar coordiante system
   Vector2D stripXYToModulePC(const Vector2D& vStripXY) const;
 
   /// Private helper method
@@ -255,6 +262,21 @@ inline std::vector<double> AnnulusBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void AnnulusBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eMinR) < 0. or get(eMaxR) < 0. or get(eMinR) > get(eMaxR) or
+      std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
+    throw std::invalid_argument("AnnulusBounds: invalid radial setup.");
+  }
+  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) or
+      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) or
+      get(eMinPhiRel) > get(eMaxPhiRel)) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi boundary setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

@@ -20,6 +20,9 @@
 
 namespace Acts {
 
+/// Tolerance for bein numerical equal for geometry building
+static constexpr double s_epsilon = 3 * std::numeric_limits<double>::epsilon();
+
 /// Tolerance for being on Surface
 ///
 /// @note This is intentionally given w/o an explicit unit to avoid having

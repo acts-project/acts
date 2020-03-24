@@ -30,6 +30,7 @@ namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit test for creating compliant/non-compliant ConeBounds object
 BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   // test default construction
@@ -58,6 +59,43 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   BOOST_CHECK_EQUAL(*pClonedConeBounds, fiveParamConstructedConeBounds);
   delete pClonedConeBounds;
 }
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
+  double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
+      averagePhi(0.);
+  // const bool symmetric(false);
+  ConeBounds original(alpha, zMin, zMax, halfPhi, averagePhi);
+  auto valvector = original.values();
+  std::array<double, ConeBounds::eSize> values;
+  std::copy_n(valvector.begin(), ConeBounds::eSize, values.begin());
+  ConeBounds recreated(values);
+  BOOST_CHECK_EQUAL(recreated, original);
+}
+
+// Unit tests for AnnulusBounds exception throwing
+BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
+
+  double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
+      averagePhi(0.);
+
+  // Exception for opening angle smaller 0
+  BOOST_CHECK_THROW( ConeBounds(-alpha, zMin, zMax, halfPhi, averagePhi), 
+    std::logic_error );
+  // Exception for opening angle bigger M_PI
+  BOOST_CHECK_THROW( ConeBounds(M_PI, zMin, zMax, halfPhi, averagePhi), 
+    std::logic_error );  
+  // Exception for swapped zMin and zMax
+  BOOST_CHECK_THROW( ConeBounds(alpha, zMax, zMin, halfPhi, averagePhi), 
+    std::logic_error );
+  // Exception for negative half sector phi
+  BOOST_CHECK_THROW( ConeBounds(alpha, zMin, zMax, -halfPhi, averagePhi), 
+    std::logic_error );
+  // Exception for out of range  phi positioning
+  BOOST_CHECK_THROW( ConeBounds(alpha, zMin, zMax, halfPhi, 2*M_PI), 
+    std::logic_error );
+}
+
 /// Unit tests for properties of ConeBounds object
 BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
@@ -111,19 +149,6 @@ BOOST_AUTO_TEST_CASE(ConeBoundsAssignment) {
   ConeBounds assignedConeBounds(0.1, 2.3, 4.5, 1.2, 2.1);
   assignedConeBounds = originalConeBounds;
   BOOST_CHECK_EQUAL(assignedConeBounds, originalConeBounds);
-}
-
-// Streaning and recreation test
-BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
-  double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
-      averagePhi(0.);
-  // const bool symmetric(false);
-  ConeBounds originalConeBounds(alpha, zMin, zMax, halfPhi, averagePhi);
-  auto valvector = originalConeBounds.values();
-  std::array<double, ConeBounds::eSize> values;
-  std::copy_n(valvector.begin(), ConeBounds::eSize, values.begin());
-  ConeBounds recreatedConeBounds(values);
-  BOOST_CHECK_EQUAL(recreatedConeBounds, originalConeBounds);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

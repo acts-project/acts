@@ -84,8 +84,7 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
-        "averagePhi, "
-        ") = ";
+        "averagePhi) = ";
   sl << "(" << get(eR) << ", " << get(eHalfLengthZ) << ", ";
   sl << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
   sl << std::setprecision(-1);

@@ -29,8 +29,8 @@ class RadialBounds : public DiscBounds {
   enum BoundValues {
     eMinR = 0,
     eMaxR = 1,
-    eAveragePhi = 2,
-    eHalfPhiSector = 3,
+    eHalfPhiSector = 2,
+    eAveragePhi = 3,
     eSize = 4
   };
 

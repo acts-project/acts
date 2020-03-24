@@ -34,7 +34,6 @@ Vector2D offset(-2., 2.);
 
 // Unit tests for AnnulusBounds constrcuctors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
-  
   // Test construction with radii and default sector
   auto original = AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
   AnnulusBounds copied(original);
@@ -50,6 +49,22 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsRecreation) {
   std::copy_n(valvector.begin(), AnnulusBounds::eSize, values.begin());
   AnnulusBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
+}
+
+// Unit tests for AnnulusBounds exception throwing
+BOOST_AUTO_TEST_CASE(AnnulusBoundsExcpetion) {
+  // Exception for negative inenr radius
+  BOOST_CHECK_THROW( AnnulusBounds(-1., maxRadius, minPhi, maxPhi, offset), std::logic_error );
+  // Exception for negative outer radius
+  BOOST_CHECK_THROW( AnnulusBounds(minRadius, -1., minPhi, maxPhi, offset), std::logic_error );
+  // Exception for swapped radii
+  BOOST_CHECK_THROW( AnnulusBounds(maxRadius, minRadius, minPhi, maxPhi, offset), std::logic_error );
+  // Exception for out of range  min phi
+  BOOST_CHECK_THROW( AnnulusBounds(minRadius, maxRadius, -4., maxPhi, offset), std::logic_error );
+  // Exception for out of range  max phi
+  BOOST_CHECK_THROW( AnnulusBounds(minRadius, maxRadius, minPhi, 4., offset), std::logic_error );
+  // Exception for out of range  max phi
+  BOOST_CHECK_THROW( AnnulusBounds(minRadius, maxRadius, maxPhi, minPhi, offset), std::logic_error );
 }
 
 /// Unit tests for AnnulusBounds properties

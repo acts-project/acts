@@ -11,10 +11,12 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <exception>
 #include <vector>
 
 namespace Acts {
@@ -30,11 +32,11 @@ class EllipseBounds : public PlanarBounds {
  public:
   enum BoundValues {
     eMinR0 = 0,
-    eMinR1 = 1,
-    eMaxR0 = 2,
+    eMaxR0 = 1,
+    eMinR1 = 2,
     eMaxR1 = 3,
-    eAveragePhi = 4,
-    eHalfPhiSector = 5,
+    eHalfPhiSector = 4,
+    eAveragePhi = 5,
     eSize = 6
   };
 
@@ -43,19 +45,25 @@ class EllipseBounds : public PlanarBounds {
   /// Constructor for full of an ellipsoid disc
   ///
   /// @param minR0 is the minimum radius along coordinate 0
-  /// @param minR1 is the minimum radius along coorindate 1
   /// @param maxR0 is the minimum radius at coorindate 0
+  /// @param minR1 is the minimum radius along coorindate 1
   /// @param maxR1 is the minimum radius at coorindate 1
-  /// @param averagePhi average phi (is set to 0. as default)
   /// @param halfPhi spanning phi sector (is set to pi as default)
-  EllipseBounds(double minR0, double minR1, double maxR0, double maxR1,
-                double averagePhi = 0., double halfPhi = M_PI);
+  /// @param averagePhi average phi (is set to 0. as default)
+  EllipseBounds(double minR0, double maxR0, double minR1, double maxR1,
+                double halfPhi = M_PI, double averagePhi = 0.) noexcept(false)
+      : m_values({minR0, maxR0, minR1, maxR1, halfPhi, averagePhi}),
+        m_boundingBox(m_values[eMaxR0], m_values[eMaxR1]) {
+    checkConsistency();
+  }
 
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  EllipseBounds(const std::array<double, eSize>& values)
-      : m_values(values), m_boundingBox(values[eMaxR0], values[eMaxR1]) {}
+  EllipseBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values), m_boundingBox(values[eMaxR0], values[eMaxR1]) {
+    checkConsistency();
+  }
 
   ~EllipseBounds() override = default;
 
@@ -108,12 +116,31 @@ class EllipseBounds : public PlanarBounds {
  private:
   std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
 };
 
 inline std::vector<double> EllipseBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void EllipseBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eMinR0) * get(eMaxR0) < 0. or get(eMinR0) > get(eMaxR0)) {
+    throw std::invalid_argument("EllipseBounds: invalid first coorindate.");
+  }
+  if (get(eMinR1) * get(eMaxR1) < 0. or get(eMinR1) > get(eMaxR1)) {
+    throw std::invalid_argument("EllipseBounds: invalid second coorindate.");
+  }
+  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("EllipseBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

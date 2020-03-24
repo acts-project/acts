@@ -8,26 +8,14 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
-
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
-
-Acts::EllipseBounds::EllipseBounds(double minR0, double minR1, double maxR0,
-                                   double maxR1, double averagePhi,
-                                   double halfPhi)
-    : m_values({std::abs(minR0), std::abs(minR1), std::abs(maxR0),
-                std::abs(maxR1), detail::radian_sym(averagePhi),
-                std::abs(halfPhi)}),
-      m_boundingBox(m_values[eMaxR0], m_values[eMaxR1])
-
-{}
 
 Acts::EllipseBounds* Acts::EllipseBounds::clone() const {
   return new EllipseBounds(*this);
@@ -146,11 +134,11 @@ const Acts::RectangleBounds& Acts::EllipseBounds::boundingBox() const {
 std::ostream& Acts::EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::EllipseBounds:  (innerRadiusX, innerRadiusY, outerRadiusX, "
-        "outerRadiusY, hPhiSector) = ";
-  sl << "(" << get(eMinR0) << ", " << get(eMinR1) << ", " << get(eMaxR0) << ", "
+  sl << "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
+        "outerRadius1, hPhiSector, averagePhi) = ";
+  sl << "(" << get(eMinR0) << ", " << get(eMaxR0) << ", " << get(eMinR1) << ", "
      << get(eMaxR1) << ", " << get(eAveragePhi) << ", " << get(eHalfPhiSector)
-     << ")";
+     << ", " << get(eAveragePhi) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

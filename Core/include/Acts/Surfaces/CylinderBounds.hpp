@@ -50,18 +50,20 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
   CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
-                 double avgPhi = 0.)
-      : m_values({std::abs(r), std::abs(halfZ), std::abs(halfPhi),
-                  detail::radian_sym(avgPhi)}),
-        m_closed(std::abs(halfPhi - M_PI) < s_onSurfaceTolerance) {}
+                 double avgPhi = 0.) noexcept(false)
+      : m_values({r, halfZ, halfPhi, avgPhi}),
+        m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {
+    checkConsistency();
+  }
 
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  CylinderBounds(const std::array<double, eSize>& values)
+  CylinderBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values),
-        m_closed(std::abs(values[eHalfPhiSector] - M_PI) <
-                 s_onSurfaceTolerance) {}
+        m_closed(std::abs(values[eHalfPhiSector] - M_PI) < s_epsilon) {
+    checkConsistency();
+  }
 
   ~CylinderBounds() override = default;
 
@@ -113,7 +115,11 @@ class CylinderBounds : public SurfaceBounds {
   /// The bound radius, half Z, half phi and average phi
   std::array<double, eSize> m_values;
   /// Indicator if the bounds are closed
-  bool m_closed;
+  bool m_closed{false};
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
 
   /// Helper method to shift into the phi-frame
   /// @param lposition the polar coordinates in the global frame
@@ -131,6 +137,21 @@ inline std::vector<double> CylinderBounds::values() const {
 
 inline bool CylinderBounds::coversFullAzimuth() const {
   return m_closed;
+}
+
+inline void CylinderBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eR) < 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthZ) < 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid length setup.");
+  }
+  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

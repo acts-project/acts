@@ -9,6 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
+#include <numeric>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -19,14 +20,16 @@ namespace Acts {
 class SurfaceBoundsStub : public SurfaceBounds {
  public:
   /// Implement ctor and pure virtual methods of SurfaceBounds
-  explicit SurfaceBoundsStub(size_t nValues = 0) {
+  explicit SurfaceBoundsStub(size_t nValues = 0) 
+   : m_values(nValues,0) {
+      std::iota(m_values.begin(), m_values.end(), 0);
   }
   
   ~SurfaceBoundsStub() override { /*nop*/
   }
   SurfaceBounds* clone() const final { return nullptr; }
   BoundsType type() const final { return SurfaceBounds::eOther; }
-  std::vector<double> values() const override { return {}; }
+  std::vector<double> values() const override { return m_values; }
   bool inside(const Vector2D& /*lpos*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
@@ -40,6 +43,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
 
  private:
+   std::vector<double> m_values;
 };
 
 namespace Test {

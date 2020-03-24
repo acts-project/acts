@@ -20,6 +20,7 @@ namespace Acts {
 
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit tests for RadialBounds constrcuctors
 BOOST_AUTO_TEST_CASE(RadialBoundsConstruction) {
   double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0);
@@ -37,7 +38,20 @@ BOOST_AUTO_TEST_CASE(RadialBoundsConstruction) {
   /// Copy constructor
   RadialBounds original(minRadius, maxRadius);
   RadialBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDisc);
+  BOOST_CHECK_EQUAL(copied, original);
+}
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(RadialBoundsRecreation) {
+  
+  double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0), avgPhi(0.1);
+  RadialBounds original(minRadius, maxRadius, halfPhiSector, avgPhi);
+  // const bool symmetric(false);
+  auto valvector = original.values();
+  std::array<double, RadialBounds::eSize> values;
+  std::copy_n(valvector.begin(), RadialBounds::eSize, values.begin());
+  RadialBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
 }
 
 /// Unit tests for RadialBounds properties
@@ -65,9 +79,8 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   radialBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::RadialBounds:  (innerRadius, "
-                         "outerRadius, hPhiSector) = (1.0000000, "
-                         "5.0000000, 0.0000000, 0.3926991)"));
+      dumpOuput.is_equal("Acts::RadialBounds:  (innerRadius, outerRadius, hPhiSector, averagePhi) = (1.0000000, "
+                         "5.0000000, 0.3926991, 0.0000000)"));
   //
   /// Test inside
   BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryCheck(true)));

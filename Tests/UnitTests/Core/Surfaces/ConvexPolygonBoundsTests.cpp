@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
   std::vector<vec2> vertices;
   vertices = {{0, 0}, {1, 0}, {0.2, 0.2}, {0, 1}};
-  { BOOST_CHECK_THROW(poly<4> quad(vertices), AssertionFailureException); }
+  { BOOST_CHECK_THROW(poly<4> quad(vertices), std::logic_error); }
 
   vertices = {{0, 0}, {1, 0}, {0.8, 0.8}, {0, 1}};
   {
@@ -37,27 +37,24 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
   }
   {
     poly<4> quad = {vertices};
-    BOOST_CHECK(quad.convex());
   }
 
   // this one is self intersecting
   vertices = {{0, 0}, {1, 0}, {0.5, 1}, {0.9, 1.2}};
-  { BOOST_CHECK_THROW(poly<4> quad{vertices}, AssertionFailureException); }
+  { BOOST_CHECK_THROW(poly<4> quad{vertices}, std::logic_error); }
 
   // this one is not
   vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
   {
     poly<4> quad = {vertices};
-    BOOST_CHECK(quad.convex());
   }
 
   vertices = {{0, 0}, {1, 0}, {0.8, 0.5}, {1, 1}, {0, 1}};
-  { BOOST_CHECK_THROW(poly<5> pent(vertices), AssertionFailureException); }
+  { BOOST_CHECK_THROW(poly<5> pent(vertices), std::logic_error); }
 
   vertices = {{0, 0}, {1, 0}, {1.1, 0.5}, {1, 1}, {0, 1}};
   {
     poly<5> pent{vertices};
-    BOOST_CHECK(pent.convex());
   }
 }
 
@@ -103,7 +100,7 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   CHECK_CLOSE_ABS(quad.distanceToBoundary({0.3, -0.2}), 0.2, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexityRecreation) {
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsRecreation) {
   // rectangular poly
   std::vector<vec2>  vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
   poly<4> original(vertices);
