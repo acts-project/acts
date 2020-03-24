@@ -14,12 +14,17 @@ namespace Acts {
 
 std::tuple<BoundParameters, BoundMatrix, double>
 StraightLineStepper::boundState(State& state, const Surface& surface) const {
-  return detail::boundState(state, surface);
+  return {detail::makeBoundParameters(parameters(state), state.cov,
+                                      state.covTransport, surface,
+                                      state.geoContext),
+          state.jacobian, state.pathAccumulated};
 }
 
 std::tuple<CurvilinearParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state) const {
-  return detail::curvilinearState(state);
+  return {detail::makeCurvilinearParameters(parameters(state), state.cov,
+                                            state.covTransport),
+          state.jacobian, state.pathAccumulated};
 }
 
 void StraightLineStepper::update(State& state,

@@ -16,13 +16,18 @@ template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface) const
     -> BoundState {
-  return detail::boundState(state, surface);
+  return {detail::makeBoundParameters(parameters(state), state.cov,
+                                      state.covTransport, surface,
+                                      state.geoContext),
+          state.jacobian, state.pathAccumulated};
 }
 
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state) const
     -> CurvilinearState {
-  return detail::curvilinearState(state);
+  return {detail::makeCurvilinearParameters(parameters(state), state.cov,
+                                            state.covTransport),
+          state.jacobian, state.pathAccumulated};
 }
 
 template <typename B, typename E, typename A>

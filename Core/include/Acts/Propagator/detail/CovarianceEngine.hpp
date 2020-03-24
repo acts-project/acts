@@ -28,31 +28,33 @@ namespace detail {
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a seperate file.
 
-/// Construct a bound state at the current position.
+/// Construct bound parameters at the current position.
 ///
-/// @param [in] state State that will be presented as @c BoundState
-/// @param [in] surface The surface to which we bind the state
-/// @return A bound state:
-///   - the bound parameters at the surface
-///   - the stepwise jacobian towards it (from last bound)
-///   - and the path length (from start - for ordering)
+/// @param [in] freeParams free parameters vector
+/// @param [in] boundCov bound covariance matrix
+/// @param [in] covIsValid whether the covariance matrix contains valid entries
+/// @param [in] surface surface on which the parameters are bound to
+/// @param [in] geoCtx geometry context
+/// @return bound parameters on the surface
 ///
 /// @note Assumes that the position is already on the surface and covariance
 ///       (optionally) has already been transported.
-std::tuple<BoundParameters, BoundMatrix, double> boundState(
-    const StepperState& state, const Surface& surface);
+BoundParameters makeBoundParameters(const FreeVector& freeParams,
+                                    const BoundSymMatrix& boundCov,
+                                    bool covIsValid, const Surface& surface,
+                                    const GeometryContext& geoCtx);
 
 /// Construct a curvilinear state at the current position
 ///
-/// @param [in] state State that will be presented as @c CurvilinearState
-/// @return A curvilinear state:
-///   - the curvilinear parameters at given position
-///   - the stepwise jacobian towards it (from last bound)
-///   - and the path length (from start - for ordering)
+/// @param [in] freeParams free parameters vector
+/// @param [in] curvilinearCov curvilinear covariance matrix
+/// @param [in] covIsValid whether the covariance matrix contains valid entries
+/// @return curvilinear parameters at the current position
 ///
 /// @note Assumes that the covariance (optionally) has already been transported.
-std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
-    const StepperState& state);
+CurvilinearParameters makeCurvilinearParameters(
+    const FreeVector& freeParams, const BoundSymMatrix& curvilinearCov,
+    bool covIsValid);
 
 /// Transport covariance to the bound state on an arbitrary surface.
 ///

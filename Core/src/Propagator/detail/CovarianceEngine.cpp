@@ -11,6 +11,52 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
+namespace detail {
+
+BoundParameters makeBoundParameters(const FreeVector& freeParams,
+                                    const BoundSymMatrix& boundCov,
+                                    bool covIsValid, const Surface& surface,
+                                    const GeometryContext& geoCtx) {
+  const auto& pos = freeParams.segment<3>(eFreePos0);
+  const auto& dir = freeParams.segment<3>(eFreeDir0);
+
+  // convert free to local position
+  Vector2D loc = Vector2D::Zero();
+  surface.globalToLocal(geoCtx, pos, dir, loc);
+  // convert to bound parameters
+  BoundVector boundParams;
+  boundParams[eBoundLoc0] = loc[0];
+  boundParams[eBoundLoc1] = loc[1];
+  boundParams[eBoundTime] = freeParams[eFreeTime];
+  boundParams[eBoundPhi] = VectorHelpers::phi(dir);
+  boundParams[eBoundTheta] = VectorHelpers::theta(dir);
+  boundParams[eBoundQOverP] = freeParams[eFreeQOverP];
+  // construct the optional covariance
+  auto cov = covIsValid ? std::make_optional(boundCov) : std::nullopt;
+  // create the bound parameters
+  return {geoCtx, std::move(cov), std::move(boundParams),
+          surface.getSharedPtr()};
+}
+
+CurvilinearParameters makeCurvilinearParameters(
+    const FreeVector& freeParams, const BoundSymMatrix& curvilinearCov,
+    bool covIsValid) {
+  const auto& pos = freeParams.segment<3>(eFreePos0);
+  const auto& dir = freeParams.segment<3>(eFreeDir0);
+
+  // extract momentum and charge
+  // TODO use q/p directly without conversion. requires track parameter changes
+  const auto p = std::abs(1 / freeParams[eFreeQOverP]);
+  const auto q = std::copysign(1, freeParams[eFreeQOverP]);
+  // extract time
+  const auto t = freeParams[eFreeTime];
+
+  // construct the optional covariance
+  auto cov = covIsValid ? std::make_optional(curvilinearCov) : std::nullopt;
+  // create the curvilinear parameters
+  return {std::move(cov), pos, p * dir, q, t};
+}
+
 namespace {
 
 /// Projection Jacobian from bound parameters on the surface to free parameters.
@@ -151,30 +197,6 @@ void applyDerivativeCorrectionCurvilinear(const Vector3D& unitDirection,
 }
 
 }  // namespace
-namespace detail {
-
-std::tuple<BoundParameters, BoundMatrix, double> boundState(
-    const StepperState& state, const Surface& surface) {
-  // Construct the optional covariance
-  auto cov = state.covTransport ? std::make_optional(state.cov) : std::nullopt;
-  // Create the bound parameters
-  BoundParameters parameters(state.geoContext, std::move(cov), state.pos,
-                             state.p * state.dir, state.q, state.t,
-                             surface.getSharedPtr());
-  return std::make_tuple(std::move(parameters), state.jacobian,
-                         state.pathAccumulated);
-}
-
-std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
-    const StepperState& state) {
-  // Construct the optional covariance
-  auto cov = state.covTransport ? std::make_optional(state.cov) : std::nullopt;
-  // Create the curvilinear parameters
-  CurvilinearParameters parameters(std::move(cov), state.pos,
-                                   state.p * state.dir, state.q, state.t);
-  return std::make_tuple(std::move(parameters), state.jacobian,
-                         state.pathAccumulated);
-}
 
 void transportCovarianceToBound(StepperState& state, const Surface& surface) {
   // Jacobian from current free parameters onto the surface
