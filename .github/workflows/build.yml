@@ -9,7 +9,8 @@ jobs:
     container: gitlab-registry.cern.ch/acts/machines/ubuntu1910
     steps:
     - uses: actions/checkout@v1
-    - name: Build
+
+    - name: Configure
       run: >
         mkdir build && cd build
         && cmake ..
@@ -28,9 +29,18 @@ jobs:
         -DACTS_BUILD_DD4HEP_PLUGIN=on
         -DACTS_BUILD_TGEO_PLUGIN=on
         -DACTS_BUILD_INTEGRATIONTESTS=on
-        && cmake --build . -- -j$(nproc)
-        && cmake --build . -- test
-        && cmake --build . -- integrationtests
+
+    - name: Build
+      working-dir: build
+      run: cmake --build . -- -j$(nproc)
+
+    - name: Unit tests
+      working-dir: build
+      run: cmake --build . -- test
+
+    - name: Integration tests
+      working-dir: build
+      run: cmake --build . -- integrationtests
 
   build_macos:
     runs-on: macos-10.15
@@ -38,13 +48,15 @@ jobs:
       - uses: actions/checkout@v1
         with:
           path: src
+
       - name: Install dependencies
         run: >
           cd ..
           && brew install boost eigen cmake xerces-c
           && mkdir deps
           && curl -SL https://acts.web.cern.ch/ACTS/ci/macOS_10.15_deps.tar.gz | tar -xzC deps
-      - name: Build
+
+      - name: Configure
         run: >
           cd ..
           && source deps/bin/thisroot.sh
@@ -66,9 +78,18 @@ jobs:
           -DACTS_BUILD_DD4HEP_PLUGIN=on
           -DACTS_BUILD_TGEO_PLUGIN=on
           -DACTS_BUILD_INTEGRATIONTESTS=on
-          && cmake --build . -- -j2
-          && cmake --build . -- test
-          && cmake --build . -- integrationtests
+
+      - name: Build
+        working-dir: build
+        run: cmake --build . -- -j2
+
+      - name: Unit tests
+        working-dir: build
+        run: cmake --build . -- test
+
+      - name: Integration tests
+        working-dir: build
+        run: cmake --build . -- integrationtests
 
 
   build_lcg:
