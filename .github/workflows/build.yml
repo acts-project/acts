@@ -80,15 +80,15 @@ jobs:
           -DACTS_BUILD_INTEGRATIONTESTS=on
 
       - name: Build
-        working-directory: build
+        working-directory: ../build
         run: cmake --build . -- -j2
 
       - name: Unit tests
-        working-directory: build
+        working-directory: ../build
         run: cmake --build . -- test
 
       - name: Integration tests
-        working-directory: build
+        working-directory: ../build
         run: cmake --build . -- integrationtests
 
 
@@ -140,13 +140,19 @@ jobs:
 
       - name: Build
         working-directory: build
-        run: cmake --build . -- -j$(nproc)
+        run: >
+          source /opt/lcg/views/LCG_${lcg_map_${{ matrix.lcg }}}/x86_64-${os_map_${{ matrix.os }}}-gcc8-opt/setup.sh
+          && cmake --build . -- -j$(nproc)
 
       - name: Unit tests
         working-directory: build
-        run: cmake --build . -- test
+        run: >
+          source /opt/lcg/views/LCG_${lcg_map_${{ matrix.lcg }}}/x86_64-${os_map_${{ matrix.os }}}-gcc8-opt/setup.sh
+          && cmake --build . -- test
 
       - name: Integration tests
         working-directory: build
-        run: cmake --build . -- integrationtests
+        run: >
+          source /opt/lcg/views/LCG_${lcg_map_${{ matrix.lcg }}}/x86_64-${os_map_${{ matrix.os }}}-gcc8-opt/setup.sh
+          && cmake --build . -- integrationtests
 
