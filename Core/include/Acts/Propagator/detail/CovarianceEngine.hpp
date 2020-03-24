@@ -28,42 +28,36 @@ namespace detail {
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a seperate file.
 
-/// Create and return the bound state at the current position.
+/// Construct a bound state at the current position.
 ///
 /// @param [in] state State that will be presented as @c BoundState
 /// @param [in] surface The surface to which we bind the state
 /// @return A bound state:
-///   - the parameters at the surface
+///   - the bound parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 ///
-/// @warning Calls the covariance transport internally and modifies the state
-///          accordingly on every call, but only if the covariance transport is
-///          enabled. Multiple calls at the same position can thus lead to
-///          ill-defined outputs.
+/// @note Assumes that the position is already on the surface and covariance
+///       (optionally) has already been transported.
 std::tuple<BoundParameters, BoundMatrix, double> boundState(
-    StepperState& state, const Surface& surface);
+    const StepperState& state, const Surface& surface);
 
-/// Create and return a curvilinear state at the current position
+/// Construct a curvilinear state at the current position
 ///
 /// @param [in] state State that will be presented as @c CurvilinearState
 /// @return A curvilinear state:
 ///   - the curvilinear parameters at given position
-///   - the stepweise jacobian towards it (from last bound)
+///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 ///
-/// @warning Calls the covariance transport internally and modifies the state
-///          accordingly on every call, but only if the covariance transport is
-///          enabled. Multiple calls at the same position can thus lead to
-///          ill-defined outputs.
+/// @note Assumes that the covariance (optionally) has already been transported.
 std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
-    StepperState& state);
+    const StepperState& state);
 
 /// Transport covariance to the bound state on an arbitrary surface.
 ///
 /// @param [in,out] state The stepper state
-/// @param [in] surface is the surface to which the covariance is
-///        forwarded to
+/// @param [in] surface is the surface to which the covariance is forwarded to
 ///
 /// @note This assumes that the current global parameter state has already been
 ///       propagated to be on the surface.

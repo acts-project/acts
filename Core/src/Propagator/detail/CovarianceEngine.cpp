@@ -154,35 +154,24 @@ void applyDerivativeCorrectionCurvilinear(const Vector3D& unitDirection,
 namespace detail {
 
 std::tuple<BoundParameters, BoundMatrix, double> boundState(
-    StepperState& state, const Surface& surface) {
-  // Transport the covariance to here
-  std::optional<BoundSymMatrix> cov = std::nullopt;
-  if (state.covTransport) {
-    // Initialize the transport final frame jacobian
-    transportCovarianceToBound(state, surface);
-    cov = state.cov;
-  }
+    const StepperState& state, const Surface& surface) {
+  // Construct the optional covariance
+  auto cov = state.covTransport ? std::make_optional(state.cov) : std::nullopt;
   // Create the bound parameters
   BoundParameters parameters(state.geoContext, std::move(cov), state.pos,
                              state.p * state.dir, state.q, state.t,
                              surface.getSharedPtr());
-  // Create the bound state
   return std::make_tuple(std::move(parameters), state.jacobian,
                          state.pathAccumulated);
 }
 
 std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
-    StepperState& state) {
-  // Transport the covariance to here
-  std::optional<BoundSymMatrix> cov = std::nullopt;
-  if (state.covTransport) {
-    transportCovarianceToCurvilinear(state);
-    cov = state.cov;
-  }
+    const StepperState& state) {
+  // Construct the optional covariance
+  auto cov = state.covTransport ? std::make_optional(state.cov) : std::nullopt;
   // Create the curvilinear parameters
   CurvilinearParameters parameters(std::move(cov), state.pos,
                                    state.p * state.dir, state.q, state.t);
-  // Create the bound state
   return std::make_tuple(std::move(parameters), state.jacobian,
                          state.pathAccumulated);
 }
