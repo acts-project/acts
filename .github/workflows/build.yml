@@ -117,36 +117,36 @@ jobs:
       # - name: Build on ${{ matrix.os }}, LCG${{ matrix.lcg }}
         # run: .github/workflows/build_job.sh ${{ matrix.lcg }} ${{ matrix.os }}
 
-    - name: Configure
-      run: >
-        source /opt/lcg/views/LCG_${lcg_map_${{ matrix.lcg }}}/x86_64-${os_map_${{ matrix.os }}}-gcc8-opt/setup.sh
-        && mkdir build && cd build
-        && cmake ..
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_STANDARD=17
-        -DACTS_BUILD_UNITTESTS=ON
-        -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
-        -DACTS_BUILD_DIGITIZATION_PLUGIN=on
-        -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
-        -DACTS_BUILD_JSON_PLUGIN=on
-        -DACTS_BUILD_BENCHMARKS=on
-        -DACTS_BUILD_FATRAS=on
-        -DACTS_BUILD_EXAMPLES=on
-        -DACTS_BUILD_UNITTESTS=on
-        -DACTS_BUILD_LEGACY=on
-        -DACTS_BUILD_DD4HEP_PLUGIN=on
-        -DACTS_BUILD_TGEO_PLUGIN=on
-        -DACTS_BUILD_INTEGRATIONTESTS=on
+      - name: Configure
+        run: >
+          source /opt/lcg/views/LCG_${lcg_map_${{ matrix.lcg }}}/x86_64-${os_map_${{ matrix.os }}}-gcc8-opt/setup.sh
+          && mkdir build && cd build
+          && cmake ..
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_STANDARD=17
+          -DACTS_BUILD_UNITTESTS=ON
+          -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
+          -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+          -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+          -DACTS_BUILD_JSON_PLUGIN=on
+          -DACTS_BUILD_BENCHMARKS=on
+          -DACTS_BUILD_FATRAS=on
+          -DACTS_BUILD_EXAMPLES=on
+          -DACTS_BUILD_UNITTESTS=on
+          -DACTS_BUILD_LEGACY=on
+          -DACTS_BUILD_DD4HEP_PLUGIN=on
+          -DACTS_BUILD_TGEO_PLUGIN=on
+          -DACTS_BUILD_INTEGRATIONTESTS=on
 
-    - name: Build
-      working-dir: build
-      run: cmake --build . -- -j$(nproc)
+      - name: Build
+        working-dir: build
+        run: cmake --build . -- -j$(nproc)
 
-    - name: Unit tests
-      working-dir: build
-      run: cmake --build . -- test
+      - name: Unit tests
+        working-dir: build
+        run: cmake --build . -- test
 
-    - name: Integration tests
-      working-dir: build
-      run: cmake --build . -- integrationtests
+      - name: Integration tests
+        working-dir: build
+        run: cmake --build . -- integrationtests
 
