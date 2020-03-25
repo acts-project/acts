@@ -150,8 +150,7 @@ const Acts::RectangleBounds& Acts::ConvexPolygonBounds<N>::boundingBox() const {
 }
 
 template <int N>
-void Acts::ConvexPolygonBounds<N>::checkConsistency() const
-    throw(std::logic_error) {
+void Acts::ConvexPolygonBounds<N>::checkConsistency() const noexcept(false) {
   convex_impl(m_vertices);
 }
 
@@ -190,6 +189,6 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::boundingBox() const {
 }
 
 void Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::checkConsistency() const
-    throw(std::logic_error) {
+    noexcept(false) {
   convex_impl(m_vertices);
 }
