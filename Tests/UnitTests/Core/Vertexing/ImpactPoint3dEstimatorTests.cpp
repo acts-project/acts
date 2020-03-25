@@ -28,8 +28,8 @@ namespace Test {
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Track d0 distribution
 std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
@@ -70,11 +70,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up the ImpactPoint3dEstimator
   ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
-      bField, propagator, pOptions);
+      bField, propagator);
 
   ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
@@ -117,7 +116,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(tgContext, std::move(covMat), paramVec,
+    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
                             perigeeSurface);
 
     // Distance in transverse plane
@@ -125,7 +124,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
 
     // Estimate 3D distance
     auto distanceRes =
-        ipEstimator.calculateDistance(tgContext, myTrack, refPosition);
+        ipEstimator.calculateDistance(geoContext, myTrack, refPosition);
     BOOST_CHECK(distanceRes.ok());
 
     double distance = *distanceRes;
@@ -140,8 +139,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
                 << std::endl;
     }
 
-    auto res =
-        ipEstimator.getParamsAtClosestApproach(tgContext, myTrack, refPosition);
+    auto res = ipEstimator.getParamsAtClosestApproach(
+        geoContext, magFieldContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
 
@@ -190,11 +189,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up the ImpactPoint3dEstimator
   ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
-      bField, propagator, pOptions);
+      bField, propagator);
 
   ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
@@ -240,25 +238,25 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(tgContext, std::move(covMat), paramVec,
+    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
                             perigeeSurface);
 
     // Estimate 3D distance
     auto distanceRes =
-        ipEstimator.calculateDistance(tgContext, myTrack, refPosition);
+        ipEstimator.calculateDistance(geoContext, myTrack, refPosition);
     BOOST_CHECK(distanceRes.ok());
 
     distancesList.push_back(*distanceRes);
 
-    auto res =
-        ipEstimator.getParamsAtClosestApproach(tgContext, myTrack, refPosition);
+    auto res = ipEstimator.getParamsAtClosestApproach(
+        geoContext, magFieldContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
 
     BoundParameters params = std::move(**res);
 
     auto compRes =
-        ipEstimator.getVertexCompatibility(tgContext, &params, refPosition);
+        ipEstimator.getVertexCompatibility(geoContext, &params, refPosition);
 
     BOOST_CHECK(compRes.ok());
 
@@ -310,11 +308,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up the ImpactPoint3dEstimator
   ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
-      bField, propagator, pOptions);
+      bField, propagator);
 
   ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
@@ -329,9 +326,9 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
       Surface::makeShared<PerigeeSurface>(pos1);
 
   // Some fixed track parameter values
-  BoundParameters params1(tgContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
+  BoundParameters params1(geoContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
 
-  auto res1 = ipEstimator.calculateDistance(tgContext, params1, vtxPos);
+  auto res1 = ipEstimator.calculateDistance(geoContext, params1, vtxPos);
   BOOST_CHECK(res1.ok());
   double distance = (*res1);
 
@@ -339,11 +336,11 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
   const double result = 3.10391_mm;
   CHECK_CLOSE_ABS(distance, result, 0.00001_mm);
 
-  auto res2 =
-      ipEstimator.getParamsAtClosestApproach(tgContext, params1, vtxPos);
+  auto res2 = ipEstimator.getParamsAtClosestApproach(
+      geoContext, magFieldContext, params1, vtxPos);
   BOOST_CHECK(res2.ok());
   BoundParameters endParams = std::move(**res2);
-  Vector3D surfaceCenter = endParams.referenceSurface().center(tgContext);
+  Vector3D surfaceCenter = endParams.referenceSurface().center(geoContext);
 
   BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
 }

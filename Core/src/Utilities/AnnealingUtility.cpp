@@ -15,7 +15,7 @@
 ///
 /// @return exp(-1./2. * chi2 / temp)
 static double gaussFunc(double chi2, double temp) {
-  return std::exp(-1. / 2. * chi2 / temp);
+  return std::exp(-chi2 / (2. * temp));
 }
 
 void AnnealingUtility::anneal(State& state) const {
@@ -31,20 +31,20 @@ double AnnealingUtility::getWeight(State& state, double chi2,
   const double currentTemp =
       m_cfg.setOfTemperatures[state.currentTemperatureIndex];
 
-  double allWeights = 0.;
-  for (auto val : allChi2) {
-    allWeights += gaussFunc(val, currentTemp);
+  double base = gaussFunc(1., currentTemp);
+
+  double denom = std::pow(base, m_cfg.cutOff - chi2);
+
+  for (double val : allChi2) {
+    denom += std::pow(base, val - chi2);
   }
 
-  double actualWeight = gaussFunc(chi2, currentTemp);
-
-  return actualWeight / (gaussFunc(m_cfg.cutOff, currentTemp) + allWeights);
+  return 1. / denom;
 }
 
 double AnnealingUtility::getWeight(State& state, double chi2) const {
   const double currentTemp =
       m_cfg.setOfTemperatures[state.currentTemperatureIndex];
 
-  return gaussFunc(chi2, currentTemp) /
-         (gaussFunc(m_cfg.cutOff, currentTemp) + gaussFunc(chi2, currentTemp));
+  return 1. / (1. + gaussFunc(m_cfg.cutOff - chi2, currentTemp));
 }

@@ -32,8 +32,8 @@ using Linearizer =
     HelicalTrackLinearizer<Propagator<EigenStepper<ConstantBField>>>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -79,7 +79,6 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -120,11 +119,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-    tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
+    tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
                                      perigeeSurface));
   }
 
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linFactory(ltConfig);
 
   BoundVector vecBoundZero = BoundVector::Zero();
@@ -136,7 +135,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
-        linFactory.linearizeTrack(parameters, SpacePointVector::Zero()).value();
+        linFactory
+            .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
+                            magFieldContext)
+            .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
@@ -166,7 +168,6 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator<StraightLineStepper>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -207,13 +208,13 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-    tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
+    tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
                                      perigeeSurface));
   }
 
   // Set up helical track linearizer for the case of a non-existing
   // magnetic field, which results in the extreme case of a straight line
-  LinearizerStraightLine::Config ltConfig(propagator, pOptions);
+  LinearizerStraightLine::Config ltConfig(propagator);
   LinearizerStraightLine linFactory(ltConfig);
 
   BoundVector vecBoundZero = BoundVector::Zero();
@@ -225,7 +226,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
-        linFactory.linearizeTrack(parameters, SpacePointVector::Zero()).value();
+        linFactory
+            .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
+                            magFieldContext)
+            .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);

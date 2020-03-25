@@ -36,8 +36,8 @@ using Propagator = Propagator<EigenStepper<ConstantBField>>;
 using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -84,7 +84,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
-    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<BoundParameters, Linearizer_t>
         BilloirFitter;
@@ -131,7 +130,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
+      tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
 
@@ -146,16 +145,17 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     TrackToVertexIPEstimator<BoundParameters, Propagator>::Config ipEstCfg(
-        propagator, pOptions);
+        propagator);
     TrackToVertexIPEstimator<BoundParameters, Propagator> ipEst(ipEstCfg);
 
     VertexFinder::Config cfg(std::move(ipEst));
 
     VertexFinder finder(std::move(cfg));
 
-    VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+    VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                       magFieldContext);
 
-    auto res = finder.find(tracksPtr, vFinderOptions);
+    auto res = finder.find(tracksPtr, vertexingOptions);
 
     BOOST_CHECK(res.ok());
 
@@ -205,7 +205,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
-    PropagatorOptions<> pOptions(tgContext, mfContext);
 
     typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;
 
@@ -251,7 +250,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.push_back(InputTrack(BoundParameters(tgContext, std::move(covMat),
+      tracks.push_back(InputTrack(BoundParameters(geoContext, std::move(covMat),
                                                   paramVec, perigeeSurface)));
     }
 
@@ -266,7 +265,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     TrackToVertexIPEstimator<InputTrack, Propagator>::Config ipEstCfg(
-        propagator, pOptions);
+        propagator);
     TrackToVertexIPEstimator<InputTrack, Propagator> ipEst(ipEstCfg);
 
     VertexFinder::Config cfg(std::move(ipEst));
@@ -278,9 +277,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     VertexFinder finder(std::move(cfg), extractParameters);
 
-    VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
+    VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
 
-    auto res = finder.find(tracksPtr, vFinderOptions);
+    auto res = finder.find(tracksPtr, vertexingOptions);
 
     BOOST_CHECK(res.ok());
 

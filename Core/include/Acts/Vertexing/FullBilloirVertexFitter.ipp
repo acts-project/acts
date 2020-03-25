@@ -65,7 +65,7 @@ Acts::Result<Acts::Vertex<input_track_t>>
 Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     const std::vector<const input_track_t*>& paramVector,
     const linearizer_t& linearizer,
-    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+    const VertexingOptions<input_track_t>& vertexingOptions) const {
   double chi2 = std::numeric_limits<double>::max();
   double newChi2 = 0;
   unsigned int nTracks = paramVector.size();
@@ -84,7 +84,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   // Determine if we do contraint fit or not by checking if an
   // invertible non-zero constraint vertex covariance is given
   bool isConstraintFit = false;
-  if (vFitterOptions.vertexConstraint.covariance().determinant() != 0) {
+  if (vertexingOptions.vertexConstraint.covariance().determinant() != 0) {
     isConstraintFit = true;
     ndf += 3;
   }
@@ -93,7 +93,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
   std::vector<Vector3D> trackMomenta;
 
-  SpacePointVector linPoint(vFitterOptions.vertexConstraint.fullPosition());
+  SpacePointVector linPoint(vertexingOptions.vertexConstraint.fullPosition());
 
   Vertex<input_track_t> fittedVertex;
 
@@ -114,7 +114,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = linearizer.linearizeTrack(trackParams, linPoint);
+      auto result = linearizer.linearizeTrack(trackParams, linPoint,
+                                              vertexingOptions.geoContext,
+                                              vertexingOptions.magFieldContext);
       if (result.ok()) {
         const auto& linTrack = *result;
         const auto& parametersAtPCA = linTrack.parametersAtPCA;
@@ -194,18 +196,13 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         billoirVertex.Amat -
         billoirVertex.BCBmat;  // VwgtMat = Amat-sum{BiMat*Ci^-1*BiMat^T}
     if (isConstraintFit) {
-      SpacePointVector posInBilloirFrame;
       // this will be 0 for first iteration but != 0 from second on
-      posInBilloirFrame[0] =
-          vFitterOptions.vertexConstraint.position()[0] - linPoint[0];
-      posInBilloirFrame[1] =
-          vFitterOptions.vertexConstraint.position()[1] - linPoint[1];
-      posInBilloirFrame[2] =
-          vFitterOptions.vertexConstraint.position()[2] - linPoint[2];
+      SpacePointVector posInBilloirFrame =
+          vertexingOptions.vertexConstraint.fullPosition() - linPoint;
 
-      Vdel += vFitterOptions.vertexConstraint.fullCovariance().inverse() *
+      Vdel += vertexingOptions.vertexConstraint.fullCovariance().inverse() *
               posInBilloirFrame;
-      VwgtMat += vFitterOptions.vertexConstraint.fullCovariance().inverse();
+      VwgtMat += vertexingOptions.vertexConstraint.fullCovariance().inverse();
     }
 
     // cov(deltaV) = VwgtMat^-1
@@ -223,9 +220,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
           (bTrack.CiInv) * (bTrack.UiVec - bTrack.BiMat.transpose() * deltaV);
 
       // update track momenta
-      trackMomenta[iTrack][0] += deltaP[0];
-      trackMomenta[iTrack][1] += deltaP[1];
-      trackMomenta[iTrack][2] += deltaP[2];
+      trackMomenta[iTrack] += deltaP;
 
       // correct for 2PI / PI periodicity
       auto correctedPhiTheta = detail::ensureThetaBounds(
@@ -284,20 +279,19 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     }
 
     if (isConstraintFit) {
-      Vector3D deltaTrk;
       // last term will also be 0 again but only in the first iteration
       // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir
       // frame )
-      deltaTrk[0] = deltaV[0] - (vFitterOptions.vertexConstraint.position()[0] -
-                                 linPoint[0]);
-      deltaTrk[1] = deltaV[1] - (vFitterOptions.vertexConstraint.position()[1] -
-                                 linPoint[1]);
-      deltaTrk[2] = deltaV[2] - (vFitterOptions.vertexConstraint.position()[2] -
-                                 linPoint[2]);
+
+      SpacePointVector deltaTrk =
+          deltaV -
+          (vertexingOptions.vertexConstraint.fullPosition() - linPoint);
+
       newChi2 +=
           (deltaTrk.transpose())
-              .dot(vFitterOptions.vertexConstraint.covariance().inverse() *
-                   deltaTrk);
+              .dot(
+                  vertexingOptions.vertexConstraint.fullCovariance().inverse() *
+                  deltaTrk);
     }
 
     if (!std::isnormal(newChi2)) {
@@ -328,7 +322,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec << 0., 0., trackMomenta[iTrack](0), trackMomenta[iTrack](1),
             trackMomenta[iTrack](2), 0.;
 
-        BoundParameters refittedParams(vFitterOptions.geoContext,
+        BoundParameters refittedParams(vertexingOptions.geoContext,
                                        covDeltaPmat[iTrack], paramVec, perigee);
 
         TrackAtVertex<input_track_t> trackVx(bTrack.chi2, refittedParams,

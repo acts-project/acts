@@ -37,8 +37,8 @@ using Propagator = Propagator<EigenStepper<ConstantBField>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -102,10 +102,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    PropagatorOptions<> pOptions(tgContext, mfContext);
-
     // Linearizer for BoundParameters type test
-    Linearizer::Config ltConfig(bField, propagator, pOptions);
+    Linearizer::Config ltConfig(bField, propagator);
     Linearizer linearizer(ltConfig);
 
     using BilloirFitter = FullBilloirVertexFitter<BoundParameters, Linearizer>;
@@ -117,7 +115,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     // Set up all seed finder related things
     TrackToVertexIPEstimator<BoundParameters, Propagator>::Config ipEstCfg(
-        propagator, pOptions);
+        propagator);
     TrackToVertexIPEstimator<BoundParameters, Propagator> ipEst(ipEstCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
@@ -139,7 +137,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     using ImpactPointEstimator =
         ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
-    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
     ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
     VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
@@ -210,7 +208,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto params = BoundParameters(tgContext, std::move(covMat), paramVec,
+        auto params = BoundParameters(geoContext, std::move(covMat), paramVec,
                                       perigeeSurface);
 
         tracks.push_back(std::make_unique<BoundParameters>(params));
@@ -231,10 +229,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       tracksPtr.push_back(trk.get());
     }
 
-    VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+    VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                       magFieldContext);
 
     // find vertices
-    auto res = finder.find(tracksPtr, vFinderOptions);
+    auto res = finder.find(tracksPtr, vertexingOptions);
 
     BOOST_CHECK(res.ok());
 
@@ -326,10 +325,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    PropagatorOptions<> pOptions(tgContext, mfContext);
-
     // Linearizer for user defined InputTrack type test
-    Linearizer::Config ltConfigUT(bField, propagator, pOptions);
+    Linearizer::Config ltConfigUT(bField, propagator);
     Linearizer linearizer(ltConfigUT);
 
     // Set up vertex fitter for user track type
@@ -347,7 +344,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Set up all seed finder related things
     TrackToVertexIPEstimator<InputTrack, Propagator>::Config ipEstCfg(
-        propagator, pOptions);
+        propagator);
     TrackToVertexIPEstimator<InputTrack, Propagator> ipEst(ipEstCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
@@ -358,7 +355,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // IP 3D Estimator
     using ImpactPointEstimator = ImpactPoint3dEstimator<InputTrack, Propagator>;
 
-    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
+    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
     ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
     // Vertex Finder
@@ -431,8 +428,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
             0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto paramsUT = InputTrack(BoundParameters(tgContext, std::move(covMat),
-                                                   paramVec, perigeeSurface));
+        auto paramsUT = InputTrack(BoundParameters(
+            geoContext, std::move(covMat), paramVec, perigeeSurface));
 
         tracks.push_back(std::make_unique<InputTrack>(paramsUT));
 
@@ -454,10 +451,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       tracksPtr.push_back(trk.get());
     }
 
-    VertexFinderOptions<InputTrack> vFinderOptionsUT(tgContext, mfContext);
+    VertexingOptions<InputTrack> vertexingOptionsUT(geoContext,
+                                                    magFieldContext);
 
     // find vertices
-    auto res = finder.find(tracksPtr, vFinderOptionsUT);
+    auto res = finder.find(tracksPtr, vertexingOptionsUT);
 
     BOOST_CHECK(res.ok());
 

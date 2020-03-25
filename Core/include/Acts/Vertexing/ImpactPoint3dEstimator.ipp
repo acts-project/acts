@@ -38,6 +38,7 @@ Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
 Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
                              propagator_options_t>::
     getParamsAtClosestApproach(const GeometryContext& gctx,
+                               const Acts::MagneticFieldContext& mctx,
                                const BoundParameters& trkParams,
                                const Vector3D& vtxPos) const {
   Vector3D deltaR;
@@ -70,9 +71,12 @@ Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
       Surface::makeShared<PlaneSurface>(
           std::make_shared<Transform3D>(thePlane));
 
+  // Create propagator options
+  propagator_options_t pOptions(gctx, mctx);
+  pOptions.direction = backward;
+
   // Do the propagation to linPointPos
-  auto result =
-      m_cfg.propagator->propagate(trkParams, *planeSurface, m_cfg.pOptions);
+  auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
   if (result.ok()) {
     return std::move((*result).endParameters);
   } else {

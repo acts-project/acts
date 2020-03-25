@@ -15,12 +15,12 @@ Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
     State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
     const linearizer_t& linearizer,
-    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+    const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Set all vertices to fit in the current state
   state.vertexCollection = verticesToFit;
 
   // Perform fit on all vertices simultaneously
-  auto fitRes = fitImpl(state, linearizer, vFitterOptions);
+  auto fitRes = fitImpl(state, linearizer, vertexingOptions);
 
   if (!fitRes.ok()) {
     return fitRes.error();
@@ -33,8 +33,8 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     State& state, const linearizer_t& linearizer,
-    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
-  auto& geoContext = vFitterOptions.geoContext;
+    const VertexingOptions<input_track_t>& vertexingOptions) const {
+  auto& geoContext = vertexingOptions.geoContext;
 
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
@@ -71,7 +71,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         // Relinearization needed, distance too big
         currentVtxInfo.relinearize = true;
         // Prepare for fit with new vertex position
-        prepareVertexForFit(state, currentVtx, vFitterOptions);
+        prepareVertexForFit(state, currentVtx, vertexingOptions);
       }
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
@@ -94,13 +94,13 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
-      setAllVertexCompatibilities(state, geoContext, currentVtx);
+      setAllVertexCompatibilities(state, currentVtx, vertexingOptions);
     }  // End loop over vertex collection
 
     // Now after having estimated all compatibilities of all tracks at
     // all vertices, run again over all vertices to set track weights
     // and update the vertex
-    setWeightsAndUpdate(state, linearizer);
+    setWeightsAndUpdate(state, linearizer, vertexingOptions);
     if (!state.annealingState.equilibriumReached) {
       m_cfg.annealingTool.anneal(state.annealingState);
     }
@@ -123,7 +123,7 @@ Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
     State& state, Vertex<input_track_t>& newVertex,
     const linearizer_t& linearizer,
-    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+    const VertexingOptions<input_track_t>& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -132,7 +132,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
   // Prepares vtx and tracks for fast estimation method of their
   // compatibility with vertex
-  auto res = prepareVertexForFit(state, &newVertex, vFitterOptions);
+  auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
   if (!res.ok()) {
     return res.error();
   }
@@ -178,7 +178,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
   state.vertexCollection = verticesToFit;
 
   // Perform fit on all added vertices
-  auto fitRes = fitImpl(state, linearizer, vFitterOptions);
+  auto fitRes = fitImpl(state, linearizer, vertexingOptions);
   if (!fitRes.ok()) {
     return fitRes.error();
   }
@@ -199,17 +199,17 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void> Acts::
     AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
         State& state, Vertex<input_track_t>* vtx,
-        const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+        const VertexingOptions<input_track_t>& vertexingOptions) const {
   // The current vertex info object
   auto& currentVtxInfo = state.vtxInfoMap[vtx];
   // The seed position
   const Vector3D& seedPos = currentVtxInfo.seedPosition.template head<3>();
-  auto& geoContext = vFitterOptions.geoContext;
 
   // Loop over all tracks at current vertex
   for (const auto& trk : currentVtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.getParamsAtClosestApproach(
-        geoContext, m_extractParameters(*trk), seedPos);
+        vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+        m_extractParameters(*trk), seedPos);
     if (!res.ok()) {
       return res.error();
     }
@@ -222,8 +222,9 @@ Acts::Result<void> Acts::
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    setAllVertexCompatibilities(State& state, const GeometryContext& geoContext,
-                                Vertex<input_track_t>* currentVtx) const {
+    setAllVertexCompatibilities(
+        State& state, Vertex<input_track_t>* currentVtx,
+        const VertexingOptions<input_track_t>& vertexingOptions) const {
   VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
 
   // Loop over tracks at current vertex and
@@ -236,7 +237,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     if (currentVtxInfo.ip3dParams.find(trk) ==
         currentVtxInfo.ip3dParams.end()) {
       auto res = m_cfg.ipEst.getParamsAtClosestApproach(
-          geoContext, m_extractParameters(*trk),
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+          m_extractParameters(*trk),
           VectorHelpers::position(currentVtxInfo.linPoint));
       if (!res.ok()) {
         return res.error();
@@ -246,7 +248,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.getVertexCompatibility(
-        geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
+        vertexingOptions.geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
         VectorHelpers::position(currentVtxInfo.oldPosition));
     if (!compRes.ok()) {
       return compRes.error();
@@ -257,10 +259,10 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
-    input_track_t, linearizer_t>::setWeightsAndUpdate(State& state,
-                                                      const linearizer_t&
-                                                          linearizer) const {
+Acts::Result<void> Acts::
+    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::setWeightsAndUpdate(
+        State& state, const linearizer_t& linearizer,
+        const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[vtx];
 
@@ -279,7 +281,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
                 BoundSymMatrix::Zero() ||
             state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
-              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition);
+              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
+              vertexingOptions.geoContext, vertexingOptions.magFieldContext);
           if (!result.ok()) {
             return result.error();
           }

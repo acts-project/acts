@@ -11,7 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterOptions.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 
 namespace Acts {
 
@@ -36,7 +36,7 @@ class DummyVertexFitter {
   /// @brief Dummy fit method
   Result<Vertex<input_track_t>> fit(
       const std::vector<input_track_t>&, const linearizer_t&,
-      const VertexFitterOptions<input_track_t>&) const;
+      const VertexingOptions<input_track_t>&) const;
 };
 
 }  // namespace Acts

@@ -18,8 +18,8 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFinderOptions.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 
 namespace Acts {
 
@@ -103,13 +103,13 @@ class ZScanVertexFinder {
   /// using a Half Sample Mode algorithm
   ///
   /// @param trackVector Input track collection
-  /// @param vFinderOptions Vertex finder options
+  /// @param vertexingOptions Vertexing options
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<const InputTrack_t*>& trackVector,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
  private:
   Config m_cfg;

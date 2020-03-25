@@ -30,11 +30,11 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t = HelicalTrackLinearizer<Propagator>;
+using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -80,18 +80,17 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(tgContext, mfContext);
 
   // Set up ImpactPoint3dEstimator, used for comparisons later
   ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ip3dEstConfig(
-      bField, propagator, pOptions);
+      bField, propagator);
 
   ImpactPoint3dEstimator<BoundParameters, Propagator> ip3dEst(ip3dEstConfig);
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundParameters type test
-  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-  Linearizer_t linearizer(ltConfig);
+  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer linearizer(ltConfig);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -129,12 +128,15 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundParameters params(tgContext, std::move(covMat), paramVec,
+    BoundParameters params(geoContext, std::move(covMat), paramVec,
                            perigeeSurface);
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer.linearizeTrack(params, SpacePointVector::Zero()).value();
+        linearizer
+            .linearizeTrack(params, SpacePointVector::Zero(), geoContext,
+                            magFieldContext)
+            .value();
 
     // Create TrackAtVertex
     TrackAtVertex<BoundParameters> trkAtVtx(0., params, &params);
@@ -150,15 +152,16 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Vertex<BoundParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexTrackUpdater::update<BoundParameters>(tgContext, trkAtVtx, vtx);
+    KalmanVertexTrackUpdater::update<BoundParameters>(geoContext, trkAtVtx,
+                                                      vtx);
 
     // The old distance
     double oldDistance =
-        ip3dEst.calculateDistance(tgContext, fittedParamsCopy, vtxPos).value();
+        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos).value();
 
     // The new distance after update
     double newDistance =
-        ip3dEst.calculateDistance(tgContext, trkAtVtx.fittedParams, vtxPos)
+        ip3dEst.calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos)
             .value();
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;

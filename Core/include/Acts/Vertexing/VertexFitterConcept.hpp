@@ -12,7 +12,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterOptions.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 
 namespace Acts {
 
@@ -35,7 +35,7 @@ namespace concept {
          fit_t, 
          const std::vector<const typename S::InputTrack_t*>&, 
          const typename S::Linearizer_t&,
-         const VertexFitterOptions<typename S::InputTrack_t>&>;
+         const VertexingOptions<typename S::InputTrack_t>&>;
         static_assert(fit_exists, "fit method not found");
 
         constexpr static bool track_exists = exists<track_t, S>;

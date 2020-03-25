@@ -31,7 +31,9 @@ namespace concept {
 
          constexpr static bool linTrack_exists = has_method<const S, Result<LinearizedTrack>,
          linTrack_t, const BoundParameters&,
-                     const SpacePointVector&>;
+                     const SpacePointVector&,
+                     const Acts::GeometryContext&,
+                     const Acts::MagneticFieldContext&>;
   
         static_assert(linTrack_exists, "linearizeTrack method not found");
 

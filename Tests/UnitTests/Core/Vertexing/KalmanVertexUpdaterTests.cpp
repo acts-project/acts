@@ -29,11 +29,11 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 using Propagator = Propagator<EigenStepper<ConstantBField>>;
-using Linearizer_t = HelicalTrackLinearizer<Propagator>;
+using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -81,12 +81,9 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // Set up LinearizedTrackFactory, needed for linearizing the tracks
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
   // Linearizer for BoundParameters type test
-  Linearizer_t::Config ltConfig(bField, propagator, pOptions);
-  Linearizer_t linearizer(ltConfig);
+  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer linearizer(ltConfig);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -126,12 +123,15 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundParameters params(tgContext, std::move(covMat), paramVec,
+    BoundParameters params(geoContext, std::move(covMat), paramVec,
                            perigeeSurface);
 
     // Linearized state of the track
     LinearizedTrack linTrack =
-        linearizer.linearizeTrack(params, SpacePointVector::Zero()).value();
+        linearizer
+            .linearizeTrack(params, SpacePointVector::Zero(), geoContext,
+                            magFieldContext)
+            .value();
 
     // Create TrackAtVertex
     TrackAtVertex<BoundParameters> trkAtVtx(0., params, &params);

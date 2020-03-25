@@ -9,11 +9,11 @@
 template <typename vfitter_t>
 auto Acts::ZScanVertexFinder<vfitter_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
-    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
+    const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Determine if we use constraint or not
   bool useConstraint = false;
-  if (vFinderOptions.vertexConstraint.fullCovariance().determinant() != 0) {
+  if (vertexingOptions.vertexConstraint.fullCovariance().determinant() != 0) {
     useConstraint = true;
   }
 
@@ -29,9 +29,10 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     std::pair<double, double> z0AndWeight;
     ImpactParametersAndSigma ipas;
     if (useConstraint &&
-        vFinderOptions.vertexConstraint.covariance()(0, 0) != 0) {
-      auto estRes =
-          m_cfg.ipEstimator.estimate(params, vFinderOptions.vertexConstraint);
+        vertexingOptions.vertexConstraint.covariance()(0, 0) != 0) {
+      auto estRes = m_cfg.ipEstimator.estimate(
+          params, vertexingOptions.vertexConstraint,
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext);
       if (estRes.ok()) {
         ipas = *estRes;
       } else {
@@ -42,7 +43,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     if (ipas.sigmad0 > 0) {
       // calculate z0
       z0AndWeight.first =
-          ipas.IPz0 + vFinderOptions.vertexConstraint.position().z();
+          ipas.IPz0 + vertexingOptions.vertexConstraint.position().z();
 
       // calculate chi2 of IP
       double chi2IP = std::pow(ipas.IPd0 / ipas.sigmad0, 2);
@@ -96,9 +97,9 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   }
 
   // constraint x()/y() equals 0 if no constraint
-  SpacePointVector output(vFinderOptions.vertexConstraint.position().x(),
-                          vFinderOptions.vertexConstraint.position().y(),
-                          ZResult, vFinderOptions.vertexConstraint.time());
+  SpacePointVector output(vertexingOptions.vertexConstraint.position().x(),
+                          vertexingOptions.vertexConstraint.position().y(),
+                          ZResult, vertexingOptions.vertexConstraint.time());
   Vertex<InputTrack_t> vtxResult = Vertex<InputTrack_t>(output);
 
   // Vector to be filled with one single vertex

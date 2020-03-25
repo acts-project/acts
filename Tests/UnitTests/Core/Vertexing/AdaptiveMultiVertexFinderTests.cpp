@@ -35,8 +35,8 @@ using Propagator = Propagator<EigenStepper<ConstantBField>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Set debug mode
@@ -50,15 +50,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-  pOptions.direction = backward;
-
-  VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
-  IPEstimator::Config ip3dEstCfg(bField, propagator, pOptions, false);
+  IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
@@ -72,7 +68,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer for BoundParameters type test
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -86,7 +82,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   using IPEstimater = TrackToVertexIPEstimator<BoundParameters, Propagator>;
 
-  IPEstimater::Config ipEstCfg(propagator, pOptions);
+  IPEstimater::Config ipEstCfg(propagator);
 
   // Create TrackToVertexIPEstimator
   IPEstimater ipEst(ipEstCfg);
@@ -122,7 +118,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexFinderOptions<BoundParameters> finderOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
 
   Vector3D constraintPos{0._mm, 0._mm, 0_mm};
   ActsSymMatrixD<3> constraintCov;
@@ -133,9 +130,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   constraintVtx.setPosition(constraintPos);
   constraintVtx.setCovariance(constraintCov);
 
-  finderOptions.vertexConstraint = constraintVtx;
+  vertexingOptions.vertexConstraint = constraintVtx;
 
-  auto findResult = finder.find(tracksPtr, finderOptions);
+  auto findResult = finder.find(tracksPtr, vertexingOptions);
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;

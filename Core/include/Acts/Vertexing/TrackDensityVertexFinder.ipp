@@ -9,7 +9,7 @@
 template <typename vfitter_t, typename track_density_t>
 auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
-    const VertexFinderOptions<InputTrack_t>& vFinderOptions) const
+    const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   typename track_density_t::State densityState;
 
@@ -30,11 +30,11 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
   // Calculate seed position
   // Note: constraint position is (0,0,0) if no constraint provided
   Vector3D seedPos =
-      vFinderOptions.vertexConstraint.position() + Vector3D(0., 0., z);
+      vertexingOptions.vertexConstraint.position() + Vector3D(0., 0., z);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  ActsSymMatrixD<3> seedCov = vFinderOptions.vertexConstraint.covariance();
+  ActsSymMatrixD<3> seedCov = vertexingOptions.vertexConstraint.covariance();
 
   // Check if a constraint is provided and set the new z position constraint
   if (seedCov != ActsSymMatrixD<3>::Zero() && std::isnormal(zAndWidth.second)) {

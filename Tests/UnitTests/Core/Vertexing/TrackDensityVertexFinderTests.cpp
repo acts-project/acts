@@ -29,8 +29,8 @@ namespace Test {
 using Covariance = BoundSymMatrix;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 ///
 /// @brief Unit test for TrackDensityVertexFinder using same configuration
@@ -47,7 +47,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   Vector3D pos1c{1.2_mm, 1.3_mm, -7_mm};
   Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
 
-  VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
 
   TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
 
@@ -57,19 +58,19 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  BoundParameters params1a(tgContext, covMat, pos1a, mom1a, 1, 0,
+  BoundParameters params1a(geoContext, covMat, pos1a, mom1a, 1, 0,
                            perigeeSurface);
-  BoundParameters params1b(tgContext, covMat, pos1b, mom1b, -1, 0,
+  BoundParameters params1b(geoContext, covMat, pos1b, mom1b, -1, 0,
                            perigeeSurface);
-  BoundParameters params1c(tgContext, covMat, pos1c, mom1c, -1, 0,
+  BoundParameters params1c(geoContext, covMat, pos1c, mom1c, -1, 0,
                            perigeeSurface);
 
   // Vectors of track parameters in different orders
   std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
   std::vector<const BoundParameters*> vec2 = {&params1c, &params1a, &params1b};
 
-  auto res1 = finder.find(vec1, vFinderOptions);
-  auto res2 = finder.find(vec2, vFinderOptions);
+  auto res1 = finder.find(vec1, vertexingOptions);
+  auto res2 = finder.find(vec2, vertexingOptions);
 
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
@@ -106,7 +107,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   double const expectedZResult = -13.013;
 
   // Finder options
-  VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
 
   // Create constraint for seed finding
   Vector3D constraintPos{1.7_mm, 1.3_mm, -6_mm};
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   Vertex<BoundParameters> vertexConstraint(constraintPos);
   vertexConstraint.setCovariance(constrCov);
 
-  vFinderOptions.vertexConstraint = vertexConstraint;
+  vertexingOptions.vertexConstraint = vertexConstraint;
 
   TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
 
@@ -125,17 +127,17 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  BoundParameters params1a(tgContext, covMat, pos1a, mom1a, 1, 0,
+  BoundParameters params1a(geoContext, covMat, pos1a, mom1a, 1, 0,
                            perigeeSurface);
-  BoundParameters params1b(tgContext, covMat, pos1b, mom1b, -1, 0,
+  BoundParameters params1b(geoContext, covMat, pos1b, mom1b, -1, 0,
                            perigeeSurface);
-  BoundParameters params1c(tgContext, covMat, pos1c, mom1c, -1, 0,
+  BoundParameters params1c(geoContext, covMat, pos1c, mom1c, -1, 0,
                            perigeeSurface);
 
   // Vector of track parameters
   std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
 
-  auto res = finder.find(vec1, vFinderOptions);
+  auto res = finder.find(vec1, vertexingOptions);
 
   if (!res.ok()) {
     std::cout << res.error().message() << std::endl;
@@ -179,7 +181,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
 
   TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
 
@@ -209,7 +212,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundParameters(tgContext, covMat, pos, mom, charge, 0,
+    trackVec.push_back(BoundParameters(geoContext, covMat, pos, mom, charge, 0,
                                        perigeeSurface));
   }
 
@@ -218,7 +221,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     trackPtrVec.push_back(&trk);
   }
 
-  auto res3 = finder.find(trackPtrVec, vFinderOptions);
+  auto res3 = finder.find(trackPtrVec, vertexingOptions);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -260,7 +263,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   double const expectedZResult = -13.013;
 
   // Finder options
-  VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
+  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
 
   // Create constraint for seed finding
   Vector3D constraintPos{1.7_mm, 1.3_mm, -6_mm};
@@ -269,7 +272,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   Vertex<InputTrack> vertexConstraint(constraintPos);
   vertexConstraint.setCovariance(constrCov);
 
-  vFinderOptions.vertexConstraint = vertexConstraint;
+  vertexingOptions.vertexConstraint = vertexConstraint;
 
   std::function<BoundParameters(InputTrack)> extractParameters =
       [](InputTrack params) { return params.parameters(); };
@@ -284,16 +287,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   // Test finder for some fixed track parameter values
   InputTrack params1a(
-      BoundParameters(tgContext, covMat, pos1a, mom1a, 1, 0, perigeeSurface));
+      BoundParameters(geoContext, covMat, pos1a, mom1a, 1, 0, perigeeSurface));
   InputTrack params1b(
-      BoundParameters(tgContext, covMat, pos1b, mom1b, -1, 0, perigeeSurface));
+      BoundParameters(geoContext, covMat, pos1b, mom1b, -1, 0, perigeeSurface));
   InputTrack params1c(
-      BoundParameters(tgContext, covMat, pos1c, mom1c, -1, 0, perigeeSurface));
+      BoundParameters(geoContext, covMat, pos1c, mom1c, -1, 0, perigeeSurface));
 
   // Vector of track parameters
   std::vector<const InputTrack*> vec1 = {&params1a, &params1b, &params1c};
 
-  auto res = finder.find(vec1, vFinderOptions);
+  auto res = finder.find(vec1, vertexingOptions);
 
   if (!res.ok()) {
     std::cout << res.error().message() << std::endl;

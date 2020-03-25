@@ -30,8 +30,8 @@ using Propagator = Propagator<EigenStepper<ConstantBField>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -75,21 +75,21 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(tgContext, mfContext);
 
-  VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
-  IPEstimator::Config ip3dEstCfg(bField, propagator, pOptions);
+  IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
 
   AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::Config fitterCfg(
       ip3dEst);
 
   // Linearizer for BoundParameters type test
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(vtxPosVec[vtxIdx]);
 
-    allTracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
+    allTracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
                                         perigeeSurface));
   }
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
   auto res1 =
-      fitter.addVtxToFit(state, vtxList.at(0), linearizer, fitterOptions);
+      fitter.addVtxToFit(state, vtxList.at(0), linearizer, vertexingOptions);
   if (debugMode) {
     std::cout << "Tracks linked to each vertex AFTER fit: " << std::endl;
     int c = 0;
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
                   seedListCopy.at(1).fullPosition(), 1_mm);
 
   auto res2 =
-      fitter.addVtxToFit(state, vtxList.at(2), linearizer, fitterOptions);
+      fitter.addVtxToFit(state, vtxList.at(2), linearizer, vertexingOptions);
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
@@ -321,14 +321,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(tgContext, mfContext);
 
-  VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
-  IPEstimator::Config ip3dEstCfg(bField, propagator, pOptions, false);
+  IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
 
   std::vector<double> temperatures(1, 3.);
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer for BoundParameters type test
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -373,22 +373,22 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   std::vector<BoundParameters> params1;
   params1.push_back(
-      BoundParameters(tgContext, covMat1, pos1a, mom1a, 1, 0,
+      BoundParameters(geoContext, covMat1, pos1a, mom1a, 1, 0,
                       Surface::makeShared<PerigeeSurface>(pos1a)));
   params1.push_back(
-      BoundParameters(tgContext, covMat1, pos1b, mom1b, -1, 0,
+      BoundParameters(geoContext, covMat1, pos1b, mom1b, -1, 0,
                       Surface::makeShared<PerigeeSurface>(pos1b)));
   params1.push_back(
-      BoundParameters(tgContext, covMat1, pos1c, mom1c, 1, 0,
+      BoundParameters(geoContext, covMat1, pos1c, mom1c, 1, 0,
                       Surface::makeShared<PerigeeSurface>(pos1c)));
   params1.push_back(
-      BoundParameters(tgContext, covMat1, pos1d, mom1d, -1, 0,
+      BoundParameters(geoContext, covMat1, pos1d, mom1d, -1, 0,
                       Surface::makeShared<PerigeeSurface>(pos1d)));
   params1.push_back(
-      BoundParameters(tgContext, covMat1, pos1e, mom1e, 1, 0,
+      BoundParameters(geoContext, covMat1, pos1e, mom1e, 1, 0,
                       Surface::makeShared<PerigeeSurface>(pos1e)));
   params1.push_back(
-      BoundParameters(tgContext, covMat1, pos1f, mom1f, -1, 0,
+      BoundParameters(geoContext, covMat1, pos1f, mom1f, -1, 0,
                       Surface::makeShared<PerigeeSurface>(pos1f)));
 
   // Create second vector of tracks
@@ -404,13 +404,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   std::vector<BoundParameters> params2;
   params2.push_back(
-      BoundParameters(tgContext, covMat2, pos2a, mom2a, 1, 0,
+      BoundParameters(geoContext, covMat2, pos2a, mom2a, 1, 0,
                       Surface::makeShared<PerigeeSurface>(pos2a)));
   params2.push_back(
-      BoundParameters(tgContext, covMat2, pos2b, mom2b, -1, 0,
+      BoundParameters(geoContext, covMat2, pos2b, mom2b, -1, 0,
                       Surface::makeShared<PerigeeSurface>(pos2b)));
   params2.push_back(
-      BoundParameters(tgContext, covMat2, pos2c, mom2c, -1, 0,
+      BoundParameters(geoContext, covMat2, pos2c, mom2c, -1, 0,
                       Surface::makeShared<PerigeeSurface>(pos2c)));
 
   std::vector<Vertex<BoundParameters>*> vtxList;
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  fitter.fit(state, vtxList, linearizer, fitterOptions);
+  fitter.fit(state, vtxList, linearizer, vertexingOptions);
 
   auto vtx1Pos = state.vertexCollection.at(0)->position();
   auto vtx1Cov = state.vertexCollection.at(0)->covariance();

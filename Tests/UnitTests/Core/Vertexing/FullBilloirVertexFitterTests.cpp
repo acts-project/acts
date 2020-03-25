@@ -33,8 +33,8 @@ using Linearizer =
     HelicalTrackLinearizer<Propagator<EigenStepper<ConstantBField>>>;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 /// @brief Unit test for FullBilloirVertexFitter
 ///
@@ -49,9 +49,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Set up Billoir Vertex Fitter
@@ -72,8 +70,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
 
   const std::vector<const BoundParameters*> emptyVector;
 
-  VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext,
-                                                 myConstraint);
+  VertexingOptions<BoundParameters> vfOptions(geoContext, magFieldContext,
+                                              myConstraint);
 
   Vertex<BoundParameters> fittedVertex =
       billoirFitter.fit(emptyVector, linearizer, vfOptions).value();
@@ -133,9 +131,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Number of events
@@ -159,10 +155,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     myCovMat(3, 3) = 30.;
     myConstraint.setFullCovariance(std::move(myCovMat));
     myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
-    VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
+    VertexingOptions<BoundParameters> vfOptions(geoContext, magFieldContext);
 
-    VertexFitterOptions<BoundParameters> vfOptionsConstr(tgContext, mfContext,
-                                                         myConstraint);
+    VertexingOptions<BoundParameters> vfOptionsConstr(
+        geoContext, magFieldContext, myConstraint);
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
     double y = vXYDist(gen);
@@ -202,7 +198,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-      tracks.push_back(BoundParameters(tgContext, std::move(covMat), paramVec,
+      tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
                                        perigeeSurface));
     }
 
@@ -267,9 +263,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   const int nEvents = 10;
@@ -298,10 +292,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     myConstraint.setFullCovariance(std::move(myCovMat));
     myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
 
-    VertexFitterOptions<InputTrack> vfOptions(tgContext, mfContext);
+    VertexingOptions<InputTrack> vfOptions(geoContext, magFieldContext);
 
-    VertexFitterOptions<InputTrack> vfOptionsConstr(tgContext, mfContext,
-                                                    myConstraint);
+    VertexingOptions<InputTrack> vfOptionsConstr(geoContext, magFieldContext,
+                                                 myConstraint);
 
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
@@ -343,7 +337,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-      tracks.push_back(InputTrack(BoundParameters(tgContext, std::move(covMat),
+      tracks.push_back(InputTrack(BoundParameters(geoContext, std::move(covMat),
                                                   paramVec, perigeeSurface)));
     }
 
