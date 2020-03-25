@@ -53,32 +53,28 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsRecreation) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderBoundsException) {
-
   double radius(0.5), halfz(10.), halfphi(M_PI / 2.0), averagePhi(M_PI / 2.0);
 
   // Negative radius
   BOOST_CHECK_THROW(CylinderBounds(-radius, halfz, halfphi, averagePhi),
-    std::logic_error);
+                    std::logic_error);
 
-  // Negative half length in z 
+  // Negative half length in z
   BOOST_CHECK_THROW(CylinderBounds(radius, -halfz, halfphi, averagePhi),
-    std::logic_error);
+                    std::logic_error);
 
   // Negative half sector in phi
   BOOST_CHECK_THROW(CylinderBounds(radius, halfz, -halfphi, averagePhi),
-    std::logic_error);
+                    std::logic_error);
 
   // Half sector in phi out of bounds
   BOOST_CHECK_THROW(CylinderBounds(radius, halfz, 4., averagePhi),
-    std::logic_error);
-    
+                    std::logic_error);
+
   // Phi position out of bounds
   BOOST_CHECK_THROW(CylinderBounds(radius, halfz, halfphi, 4.),
-    std::logic_error);
-
-
+                    std::logic_error);
 }
-
 
 /// Unit tests for CylinderBounds properties
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 4)
@@ -89,7 +85,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   double halfphi(M_PI / 4.0);
   double averagePhi(0.0);
   CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
-  CylinderBounds cylinderBoundsSegment(nominalRadius, nominalHalfLength, halfphi, averagePhi);
+  CylinderBounds cylinderBoundsSegment(nominalRadius, nominalHalfLength,
+                                       halfphi, averagePhi);
 
   /// test for clone
   auto pCylinderBoundsClone = cylinderBoundsObject.clone();
@@ -131,8 +128,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
                   1e-6);  // fail
 
   /// test for r()
-  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR),
-                  nominalRadius, 1e-6);
+  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,
+                  1e-6);
 
   /// test for averagePhi
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eAveragePhi),
@@ -150,9 +147,9 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;
   cylinderBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(
-      dumpOuput.is_equal("Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
-        "averagePhi) = (0.5000000, 20.0000000, 3.1415927, 0.0000000)"));
+  BOOST_CHECK(dumpOuput.is_equal(
+      "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
+      "averagePhi) = (0.5000000, 20.0000000, 3.1415927, 0.0000000)"));
 }
 /// Unit test for testing CylinderBounds assignment
 BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {

@@ -126,7 +126,7 @@ class RectangleBounds : public PlanarBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 };
 
 inline SurfaceBounds::BoundsType RectangleBounds::type() const {
@@ -165,7 +165,7 @@ inline double RectangleBounds::get(BoundValues bValue) const {
   return m_max.y();
 }
 
-inline void RectangleBounds::checkConsistency() throw(std::logic_error) {
+inline void RectangleBounds::checkConsistency() noexcept(false) {
   if (get(eMinX) > get(eMaxX)) {
     throw std::invalid_argument("RectangleBounds: invalid local x setup");
   }

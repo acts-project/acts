@@ -60,20 +60,25 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::eDiamond);
   // //redundant test
   //
-  /// Test the half length at negative y 
-  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXnegY), minHalfX);
+  /// Test the half length at negative y
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXnegY),
+                    minHalfX);
   //
   /// Test the half length at the x axis
-  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXzeroY), midHalfX);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXzeroY),
+                    midHalfX);
   //
   /// Test the half length at positive y
-  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXposY), maxHalfX);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXposY),
+                    maxHalfX);
   //
   /// Test half length into the negative side
-  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYneg), halfY1);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYneg),
+                    halfY1);
   //
   /// Test half length into the positive side
-  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYpos), halfY2);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYpos),
+                    halfY2);
   //
   /// Test boundingBox
   BOOST_CHECK_EQUAL(diamondBoundsObject.boundingBox(),
@@ -98,7 +103,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   diamondBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, halfYneg, halfYpos) = (10.0000000, "
+      dumpOuput.is_equal("Acts::DiamondBounds: (halfXatYneg, halfXatYzero, "
+                         "halfXatYpos, halfYneg, halfYpos) = (10.0000000, "
                          "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
   //
   /// Test inside

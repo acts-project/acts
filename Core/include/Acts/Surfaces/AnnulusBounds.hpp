@@ -186,7 +186,7 @@ class AnnulusBounds : public DiscBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -264,7 +264,7 @@ inline std::vector<double> AnnulusBounds::values() const {
   return valvector;
 }
 
-inline void AnnulusBounds::checkConsistency() throw(std::logic_error) {
+inline void AnnulusBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) < 0. or get(eMaxR) < 0. or get(eMinR) > get(eMaxR) or
       std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
     throw std::invalid_argument("AnnulusBounds: invalid radial setup.");

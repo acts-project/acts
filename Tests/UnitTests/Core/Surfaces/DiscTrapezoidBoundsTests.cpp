@@ -73,10 +73,11 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   DiscTrapezoidBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(dumpOuput.is_equal(
-    "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, halfLengthXminR, "
-    "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, stereo) = "
-    "(2.0000000, 6.0000000, 1.0000000, 5.0000000, 0.7922870, 0.9851108, "
-    "0.0000000, 2.5243378, 0.0000000)"));
+      "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, halfLengthXminR, "
+      "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, "
+      "stereo) = "
+      "(2.0000000, 6.0000000, 1.0000000, 5.0000000, 0.7922870, 0.9851108, "
+      "0.0000000, 2.5243378, 0.0000000)"));
   //
   /// Test inside
   BOOST_CHECK(DiscTrapezoidBoundsObject.inside(inSurface, BoundaryCheck(true)));
@@ -89,7 +90,8 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMax(), rMax, 1e-6);
   //
   /// Test averagePhi
-  CHECK_SMALL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eAveragePhi), 1e-9);
+  CHECK_SMALL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eAveragePhi),
+              1e-9);
   //
   /// Test rCenter (redundant; not configurable)
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rCenter(), 2.524337798, 1e-6);
@@ -98,10 +100,14 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   CHECK_SMALL(DiscTrapezoidBoundsObject.stereo(), 1e-6);
   //
   /// Test minHalflengthX
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXminR), minHalfX, 1e-6);
+  CHECK_CLOSE_REL(
+      DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXminR),
+      minHalfX, 1e-6);
   //
   /// Test maxHalflengthX
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXmaxR), maxHalfX, 1e-6);
+  CHECK_CLOSE_REL(
+      DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXmaxR),
+      maxHalfX, 1e-6);
   //
   /// Test halflengthY
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.halfLengthY(), 0.792286991, 1e-6);
@@ -115,8 +121,8 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsAssignment) {
   // operator == not implemented in this class
   //
   /// Test assignment
-  DiscTrapezoidBounds assignedDiscTrapezoidBoundsObject(2.1, 6.6, 3.4, 4.2,
-                                                        0.3,0.);
+  DiscTrapezoidBounds assignedDiscTrapezoidBoundsObject(2.1, 6.6, 3.4, 4.2, 0.3,
+                                                        0.);
   assignedDiscTrapezoidBoundsObject = DiscTrapezoidBoundsObject;
   BOOST_CHECK_EQUAL(assignedDiscTrapezoidBoundsObject,
                     DiscTrapezoidBoundsObject);

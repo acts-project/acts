@@ -75,25 +75,24 @@ BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
 
 // Unit tests for AnnulusBounds exception throwing
 BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
-
   double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
       averagePhi(0.);
 
   // Exception for opening angle smaller 0
-  BOOST_CHECK_THROW( ConeBounds(-alpha, zMin, zMax, halfPhi, averagePhi), 
-    std::logic_error );
+  BOOST_CHECK_THROW(ConeBounds(-alpha, zMin, zMax, halfPhi, averagePhi),
+                    std::logic_error);
   // Exception for opening angle bigger M_PI
-  BOOST_CHECK_THROW( ConeBounds(M_PI, zMin, zMax, halfPhi, averagePhi), 
-    std::logic_error );  
+  BOOST_CHECK_THROW(ConeBounds(M_PI, zMin, zMax, halfPhi, averagePhi),
+                    std::logic_error);
   // Exception for swapped zMin and zMax
-  BOOST_CHECK_THROW( ConeBounds(alpha, zMax, zMin, halfPhi, averagePhi), 
-    std::logic_error );
+  BOOST_CHECK_THROW(ConeBounds(alpha, zMax, zMin, halfPhi, averagePhi),
+                    std::logic_error);
   // Exception for negative half sector phi
-  BOOST_CHECK_THROW( ConeBounds(alpha, zMin, zMax, -halfPhi, averagePhi), 
-    std::logic_error );
+  BOOST_CHECK_THROW(ConeBounds(alpha, zMin, zMax, -halfPhi, averagePhi),
+                    std::logic_error);
   // Exception for out of range  phi positioning
-  BOOST_CHECK_THROW( ConeBounds(alpha, zMin, zMax, halfPhi, 2*M_PI), 
-    std::logic_error );
+  BOOST_CHECK_THROW(ConeBounds(alpha, zMin, zMax, halfPhi, 2 * M_PI),
+                    std::logic_error);
 }
 
 /// Unit tests for properties of ConeBounds object

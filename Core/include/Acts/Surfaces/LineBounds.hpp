@@ -84,7 +84,7 @@ class LineBounds : public SurfaceBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 };
 
 inline std::vector<double> LineBounds::values() const {
@@ -93,7 +93,7 @@ inline std::vector<double> LineBounds::values() const {
   return valvector;
 }
 
-inline void LineBounds::checkConsistency() throw(std::logic_error) {
+inline void LineBounds::checkConsistency() noexcept(false) {
   if (get(eR) * get(eHalfLengthZ) <= 0.) {
     throw std::invalid_argument("LineBounds: zero/negative radius/legnth.");
   }

@@ -140,7 +140,7 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 
   /// Private helper method to convert a local postion
   /// into its Cartesian representation
@@ -216,7 +216,7 @@ inline std::vector<double> DiscTrapezoidBounds::values() const {
   return valvector;
 }
 
-inline void DiscTrapezoidBounds::checkConsistency() throw(std::logic_error) {
+inline void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) * get(eMaxR) < 0. or get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
   }

@@ -55,15 +55,18 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
 // Exception tests
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsException) {
   double minHalfX(1.), maxHalfX(6.), halfY(2.);
-  
+
   // Negative x at min y
-  BOOST_CHECK_THROW(TrapezoidBounds(-minHalfX, maxHalfX, halfY), std::logic_error);
+  BOOST_CHECK_THROW(TrapezoidBounds(-minHalfX, maxHalfX, halfY),
+                    std::logic_error);
 
   // Negative x at max y
-  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, -maxHalfX, halfY), std::logic_error);
+  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, -maxHalfX, halfY),
+                    std::logic_error);
 
   // Negative y
-  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, maxHalfX, -halfY), std::logic_error);
+  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, maxHalfX, -halfY),
+                    std::logic_error);
 }
 
 /// Unit tests for TrapezoidBounds properties
@@ -80,13 +83,16 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
   BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::eTrapezoid);
   //
   /// Test minHalflengthX
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXnegY), minHalfX);
+  BOOST_CHECK_EQUAL(
+      trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXnegY), minHalfX);
   //
   /// Test maxHalfLengthX
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXposY), maxHalfX);
+  BOOST_CHECK_EQUAL(
+      trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXposY), maxHalfX);
   //
   /// Test halflengthY
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthY), halfY);
+  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthY),
+                    halfY);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);

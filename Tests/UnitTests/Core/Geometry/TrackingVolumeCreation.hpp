@@ -21,10 +21,10 @@ namespace Acts {
 
 ///  helper function to create a cylinder
 TrackingVolumePtr constructCylinderVolume(
-    const GeometryContext& gctx, double surfaceHalfLengthZ,
-    double surfaceR, double surfaceRstagger, double surfaceZoverlap,
-    double layerEnvelope, double volumeEnvelope, double innerVolumeR,
-    double outerVolumeR, const std::string& name) {
+    const GeometryContext& gctx, double surfaceHalfLengthZ, double surfaceR,
+    double surfaceRstagger, double surfaceZoverlap, double layerEnvelope,
+    double volumeEnvelope, double innerVolumeR, double outerVolumeR,
+    const std::string& name) {
   ///  the surface transforms
   auto sfnPosition =
       Vector3D(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
@@ -69,8 +69,7 @@ TrackingVolumePtr constructCylinderVolume(
   auto bArray = std::make_unique<SurfaceArray>(std::move(sl), surfaces_only);
 
   ///  now create the Layer
-  auto layer0bounds =
-      std::make_shared<const CylinderBounds>(surfaceR, bUmax);
+  auto layer0bounds = std::make_shared<const CylinderBounds>(surfaceR, bUmax);
   auto layer0 = CylinderLayer::create(nullptr, layer0bounds, std::move(bArray),
                                       surfaceRstagger + 2 * layerEnvelope);
   std::unique_ptr<const LayerArray> layerArray =

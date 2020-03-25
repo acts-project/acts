@@ -115,7 +115,7 @@ class DiamondBounds : public PlanarBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 };
 
 inline std::vector<double> DiamondBounds::values() const {
@@ -124,7 +124,7 @@ inline std::vector<double> DiamondBounds::values() const {
   return valvector;
 }
 
-inline void DiamondBounds::checkConsistency() throw(std::logic_error) {
+inline void DiamondBounds::checkConsistency() noexcept(false) {
   if (std::any_of(m_values.begin(), m_values.end(),
                   [](auto v) { return v < 0.; })) {
     throw std::invalid_argument(

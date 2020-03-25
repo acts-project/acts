@@ -116,7 +116,7 @@ class RadialBounds : public DiscBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 
   /// Private helper method to shift a local position
   /// within the bounds
@@ -167,7 +167,7 @@ inline std::vector<double> RadialBounds::values() const {
   return valvector;
 }
 
-inline void RadialBounds::checkConsistency() throw(std::logic_error) {
+inline void RadialBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) * get(eMaxR) < 0. or get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }

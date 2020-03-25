@@ -119,7 +119,7 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 
   /// Helper method to shift into the phi-frame
   /// @param lposition the polar coordinates in the global frame
@@ -139,7 +139,7 @@ inline bool CylinderBounds::coversFullAzimuth() const {
   return m_closed;
 }
 
-inline void CylinderBounds::checkConsistency() throw(std::logic_error) {
+inline void CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eR) < 0.) {
     throw std::invalid_argument("CylinderBounds: invalid radial setup.");
   }

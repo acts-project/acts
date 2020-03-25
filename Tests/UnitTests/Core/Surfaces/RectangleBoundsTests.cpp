@@ -20,7 +20,6 @@
 
 namespace utf = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -60,7 +59,7 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   BOOST_CHECK_EQUAL(infinite.type(), Acts::SurfaceBounds::eRectangle);
 }
 
-/// Recreation 
+/// Recreation
 BOOST_AUTO_TEST_CASE(RectangleBoundsRecreation) {
   const double halfX(10.), halfY(2.);
   RectangleBounds original(halfX, halfY);
@@ -72,11 +71,10 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsRecreation) {
   BOOST_CHECK_EQUAL(original, recreated);
 }
 
-
 // Exception tests
 BOOST_AUTO_TEST_CASE(RadialBoundsException) {
   const double halfX(10.), halfY(2.);
-  
+
   // Negative x half length
   BOOST_CHECK_THROW(RectangleBounds(-halfX, halfY), std::logic_error);
 

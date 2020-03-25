@@ -20,7 +20,6 @@ namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant LineBounds object
 BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
-
   /// test LineBounds(double, double)
   double radius(0.5), halfz(10.);
   LineBounds lineBounds(radius, halfz);
@@ -47,11 +46,11 @@ BOOST_AUTO_TEST_CASE(LineBoundsExceptions) {
   double nominalRadius{0.5};
   double nominalHalfLength{20.};
   // Negative radius
-  BOOST_CHECK_THROW(LineBounds(-nominalRadius, nominalHalfLength), 
-  std::logic_error);
+  BOOST_CHECK_THROW(LineBounds(-nominalRadius, nominalHalfLength),
+                    std::logic_error);
   // Negative half length
-  BOOST_CHECK_THROW(LineBounds(nominalRadius, -nominalHalfLength), 
-  std::logic_error);
+  BOOST_CHECK_THROW(LineBounds(nominalRadius, -nominalHalfLength),
+                    std::logic_error);
 }
 
 /// Unit test for testing LineBounds assignment
@@ -108,7 +107,8 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eR), nominalRadius);
 
   /// test for halflengthZ (NOTE: Naming violation)
-  BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eHalfLengthZ), nominalHalfLength);
+  BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eHalfLengthZ),
+                    nominalHalfLength);
 
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;

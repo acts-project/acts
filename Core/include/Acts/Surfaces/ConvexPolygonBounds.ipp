@@ -47,8 +47,8 @@ std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
 }
 
 template <typename coll_t>
-void Acts::ConvexPolygonBoundsBase::convex_impl(const coll_t& vertices) throw(
-    std::logic_error) {
+void Acts::ConvexPolygonBoundsBase::convex_impl(
+    const coll_t& vertices) noexcept(false) {
   static_assert(std::is_same<typename coll_t::value_type, Vector2D>::value,
                 "Must be collection of Vector2D");
 

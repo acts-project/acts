@@ -119,7 +119,7 @@ class ConeBounds : public SurfaceBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 
   /// Private helper functin to shift a local 2D position
   ///
@@ -141,7 +141,7 @@ inline std::vector<double> ConeBounds::values() const {
   return valvector;
 }
 
-inline void ConeBounds::checkConsistency() throw(std::logic_error) {
+inline void ConeBounds::checkConsistency() noexcept(false) {
   if (get(eAlpha) < 0. or get(eAlpha) >= M_PI) {
     throw std::invalid_argument("ConeBounds: invalid open angle.");
   }

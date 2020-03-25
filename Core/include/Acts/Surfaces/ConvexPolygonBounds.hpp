@@ -47,7 +47,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// @param vertices A collection of vertices.
   /// throws a logic error if this is not the case
   template <typename coll_t>
-  static void convex_impl(const coll_t& vertices) throw(std::logic_error);
+  static void convex_impl(const coll_t& vertices) noexcept(false);
 };
 
 /// This is the actual implementation of the bounds.

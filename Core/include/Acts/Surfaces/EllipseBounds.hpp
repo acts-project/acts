@@ -119,7 +119,7 @@ class EllipseBounds : public PlanarBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 };
 
 inline std::vector<double> EllipseBounds::values() const {
@@ -128,7 +128,7 @@ inline std::vector<double> EllipseBounds::values() const {
   return valvector;
 }
 
-inline void EllipseBounds::checkConsistency() throw(std::logic_error) {
+inline void EllipseBounds::checkConsistency() noexcept(false) {
   if (get(eMinR0) * get(eMaxR0) < 0. or get(eMinR0) > get(eMaxR0)) {
     throw std::invalid_argument("EllipseBounds: invalid first coorindate.");
   }

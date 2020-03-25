@@ -147,7 +147,7 @@ class TrapezoidBounds : public PlanarBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() throw(std::logic_error);
+  void checkConsistency() noexcept(false);
 };
 
 inline std::vector<double> TrapezoidBounds::values() const {
@@ -156,7 +156,7 @@ inline std::vector<double> TrapezoidBounds::values() const {
   return valvector;
 }
 
-inline void TrapezoidBounds::checkConsistency() throw(std::logic_error) {
+inline void TrapezoidBounds::checkConsistency() noexcept(false) {
   if (get(eHalfLengthXnegY) * get(eHalfLengthXposY) <= 0.) {
     throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
   }

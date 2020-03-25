@@ -20,11 +20,10 @@ namespace Acts {
 class SurfaceBoundsStub : public SurfaceBounds {
  public:
   /// Implement ctor and pure virtual methods of SurfaceBounds
-  explicit SurfaceBoundsStub(size_t nValues = 0) 
-   : m_values(nValues,0) {
-      std::iota(m_values.begin(), m_values.end(), 0);
+  explicit SurfaceBoundsStub(size_t nValues = 0) : m_values(nValues, 0) {
+    std::iota(m_values.begin(), m_values.end(), 0);
   }
-  
+
   ~SurfaceBoundsStub() override { /*nop*/
   }
   SurfaceBounds* clone() const final { return nullptr; }
@@ -43,7 +42,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
 
  private:
-   std::vector<double> m_values;
+  std::vector<double> m_values;
 };
 
 namespace Test {
