@@ -153,9 +153,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     VertexFinder finder(std::move(cfg));
 
-    VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+    VertexingOptions<BoundParameters> vertexingOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracksPtr, vFinderOptions);
+    auto res = finder.find(tracksPtr, vertexingOptions);
 
     BOOST_CHECK(res.ok());
 
@@ -278,9 +278,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     VertexFinder finder(std::move(cfg), extractParameters);
 
-    VertexFinderOptions<InputTrack> vFinderOptions(tgContext, mfContext);
+    VertexingOptions<InputTrack> vertexingOptions(tgContext, mfContext);
 
-    auto res = finder.find(tracksPtr, vFinderOptions);
+    auto res = finder.find(tracksPtr, vertexingOptions);
 
     BOOST_CHECK(res.ok());
 

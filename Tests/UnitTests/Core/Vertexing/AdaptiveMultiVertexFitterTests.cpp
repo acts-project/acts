@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
   PropagatorOptions<> pOptions(tgContext, mfContext);
 
-  VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(tgContext, mfContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   std::vector<Vertex<BoundParameters>> seedListCopy = vtxList;
 
   auto res1 =
-      fitter.addVtxToFit(state, vtxList.at(0), linearizer, fitterOptions);
+      fitter.addVtxToFit(state, vtxList.at(0), linearizer, vertexingOptions);
   if (debugMode) {
     std::cout << "Tracks linked to each vertex AFTER fit: " << std::endl;
     int c = 0;
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
                   seedListCopy.at(1).fullPosition(), 1_mm);
 
   auto res2 =
-      fitter.addVtxToFit(state, vtxList.at(2), linearizer, fitterOptions);
+      fitter.addVtxToFit(state, vtxList.at(2), linearizer, vertexingOptions);
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   auto propagator = std::make_shared<Propagator>(stepper);
   PropagatorOptions<> pOptions(tgContext, mfContext);
 
-  VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(tgContext, mfContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  fitter.fit(state, vtxList, linearizer, fitterOptions);
+  fitter.fit(state, vtxList, linearizer, vertexingOptions);
 
   auto vtx1Pos = state.vertexCollection.at(0)->position();
   auto vtx1Cov = state.vertexCollection.at(0)->covariance();

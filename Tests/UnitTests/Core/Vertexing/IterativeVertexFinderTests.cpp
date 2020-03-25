@@ -231,10 +231,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       tracksPtr.push_back(trk.get());
     }
 
-    VertexFinderOptions<BoundParameters> vFinderOptions(tgContext, mfContext);
+    VertexingOptions<BoundParameters> vertexingOptions(tgContext, mfContext);
 
     // find vertices
-    auto res = finder.find(tracksPtr, vFinderOptions);
+    auto res = finder.find(tracksPtr, vertexingOptions);
 
     BOOST_CHECK(res.ok());
 
@@ -454,10 +454,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       tracksPtr.push_back(trk.get());
     }
 
-    VertexFinderOptions<InputTrack> vFinderOptionsUT(tgContext, mfContext);
+    VertexingOptions<InputTrack> vertexingOptionsUT(tgContext, mfContext);
 
     // find vertices
-    auto res = finder.find(tracksPtr, vFinderOptionsUT);
+    auto res = finder.find(tracksPtr, vertexingOptionsUT);
 
     BOOST_CHECK(res.ok());
 

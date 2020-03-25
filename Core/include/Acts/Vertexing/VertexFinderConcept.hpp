@@ -12,7 +12,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFinderOptions.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 
 namespace Acts {
 
@@ -27,7 +27,7 @@ namespace concept {
         
         constexpr static bool find_exists = has_method<const S, Result<std::vector<Vertex<typename S::InputTrack_t>>>,
          find_t, const std::vector<const typename S::InputTrack_t*>&, 
-         const VertexFinderOptions<typename S::InputTrack_t>&>;
+         const VertexingOptions<typename S::InputTrack_t>&>;
         static_assert(find_exists, "find method not found");
 
         constexpr static bool value = require<find_exists>;

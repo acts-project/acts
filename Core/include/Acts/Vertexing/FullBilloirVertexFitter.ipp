@@ -65,7 +65,7 @@ Acts::Result<Acts::Vertex<input_track_t>>
 Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     const std::vector<const input_track_t*>& paramVector,
     const linearizer_t& linearizer,
-    const VertexFitterOptions<input_track_t>& vFitterOptions) const {
+    const VertexingOptions<input_track_t>& vertexingOptions) const {
   double chi2 = std::numeric_limits<double>::max();
   double newChi2 = 0;
   unsigned int nTracks = paramVector.size();
@@ -84,7 +84,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   // Determine if we do contraint fit or not by checking if an
   // invertible non-zero constraint vertex covariance is given
   bool isConstraintFit = false;
-  if (vFitterOptions.vertexConstraint.covariance().determinant() != 0) {
+  if (vertexingOptions.vertexConstraint.covariance().determinant() != 0) {
     isConstraintFit = true;
     ndf += 3;
   }
@@ -93,7 +93,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
   std::vector<Vector3D> trackMomenta;
 
-  SpacePointVector linPoint(vFitterOptions.vertexConstraint.fullPosition());
+  SpacePointVector linPoint(vertexingOptions.vertexConstraint.fullPosition());
 
   Vertex<input_track_t> fittedVertex;
 
@@ -197,15 +197,15 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       SpacePointVector posInBilloirFrame;
       // this will be 0 for first iteration but != 0 from second on
       posInBilloirFrame[0] =
-          vFitterOptions.vertexConstraint.position()[0] - linPoint[0];
+          vertexingOptions.vertexConstraint.position()[0] - linPoint[0];
       posInBilloirFrame[1] =
-          vFitterOptions.vertexConstraint.position()[1] - linPoint[1];
+          vertexingOptions.vertexConstraint.position()[1] - linPoint[1];
       posInBilloirFrame[2] =
-          vFitterOptions.vertexConstraint.position()[2] - linPoint[2];
+          vertexingOptions.vertexConstraint.position()[2] - linPoint[2];
 
-      Vdel += vFitterOptions.vertexConstraint.fullCovariance().inverse() *
+      Vdel += vertexingOptions.vertexConstraint.fullCovariance().inverse() *
               posInBilloirFrame;
-      VwgtMat += vFitterOptions.vertexConstraint.fullCovariance().inverse();
+      VwgtMat += vertexingOptions.vertexConstraint.fullCovariance().inverse();
     }
 
     // cov(deltaV) = VwgtMat^-1
@@ -288,15 +288,18 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // last term will also be 0 again but only in the first iteration
       // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir
       // frame )
-      deltaTrk[0] = deltaV[0] - (vFitterOptions.vertexConstraint.position()[0] -
-                                 linPoint[0]);
-      deltaTrk[1] = deltaV[1] - (vFitterOptions.vertexConstraint.position()[1] -
-                                 linPoint[1]);
-      deltaTrk[2] = deltaV[2] - (vFitterOptions.vertexConstraint.position()[2] -
-                                 linPoint[2]);
+      deltaTrk[0] =
+          deltaV[0] -
+          (vertexingOptions.vertexConstraint.position()[0] - linPoint[0]);
+      deltaTrk[1] =
+          deltaV[1] -
+          (vertexingOptions.vertexConstraint.position()[1] - linPoint[1]);
+      deltaTrk[2] =
+          deltaV[2] -
+          (vertexingOptions.vertexConstraint.position()[2] - linPoint[2]);
       newChi2 +=
           (deltaTrk.transpose())
-              .dot(vFitterOptions.vertexConstraint.covariance().inverse() *
+              .dot(vertexingOptions.vertexConstraint.covariance().inverse() *
                    deltaTrk);
     }
 
@@ -328,7 +331,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec << 0., 0., trackMomenta[iTrack](0), trackMomenta[iTrack](1),
             trackMomenta[iTrack](2), 0.;
 
-        BoundParameters refittedParams(vFitterOptions.geoContext,
+        BoundParameters refittedParams(vertexingOptions.geoContext,
                                        covDeltaPmat[iTrack], paramVec, perigee);
 
         TrackAtVertex<input_track_t> trackVx(bTrack.chi2, refittedParams,

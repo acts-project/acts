@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
 
   const std::vector<const BoundParameters*> emptyVector;
 
-  VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext,
-                                                 myConstraint);
+  VertexingOptions<BoundParameters> vfOptions(tgContext, mfContext,
+                                              myConstraint);
 
   Vertex<BoundParameters> fittedVertex =
       billoirFitter.fit(emptyVector, linearizer, vfOptions).value();
@@ -159,10 +159,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     myCovMat(3, 3) = 30.;
     myConstraint.setFullCovariance(std::move(myCovMat));
     myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
-    VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
+    VertexingOptions<BoundParameters> vfOptions(tgContext, mfContext);
 
-    VertexFitterOptions<BoundParameters> vfOptionsConstr(tgContext, mfContext,
-                                                         myConstraint);
+    VertexingOptions<BoundParameters> vfOptionsConstr(tgContext, mfContext,
+                                                      myConstraint);
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
     double y = vXYDist(gen);
@@ -298,10 +298,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     myConstraint.setFullCovariance(std::move(myCovMat));
     myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
 
-    VertexFitterOptions<InputTrack> vfOptions(tgContext, mfContext);
+    VertexingOptions<InputTrack> vfOptions(tgContext, mfContext);
 
-    VertexFitterOptions<InputTrack> vfOptionsConstr(tgContext, mfContext,
-                                                    myConstraint);
+    VertexingOptions<InputTrack> vfOptionsConstr(tgContext, mfContext,
+                                                 myConstraint);
 
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);

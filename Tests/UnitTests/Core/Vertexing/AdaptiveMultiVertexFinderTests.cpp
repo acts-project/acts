@@ -53,8 +53,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   PropagatorOptions<> pOptions(tgContext, mfContext);
   pOptions.direction = backward;
 
-  VertexFitterOptions<BoundParameters> fitterOptions(tgContext, mfContext);
-
   // IP 3D Estimator
   using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
 
@@ -122,7 +120,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexFinderOptions<BoundParameters> finderOptions(tgContext, mfContext);
+  VertexingOptions<BoundParameters> vertexingOptions(tgContext, mfContext);
 
   Vector3D constraintPos{0._mm, 0._mm, 0_mm};
   ActsSymMatrixD<3> constraintCov;
@@ -133,9 +131,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   constraintVtx.setPosition(constraintPos);
   constraintVtx.setCovariance(constraintCov);
 
-  finderOptions.vertexConstraint = constraintVtx;
+  vertexingOptions.vertexConstraint = constraintVtx;
 
-  auto findResult = finder.find(tracksPtr, finderOptions);
+  auto findResult = finder.find(tracksPtr, vertexingOptions);
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;

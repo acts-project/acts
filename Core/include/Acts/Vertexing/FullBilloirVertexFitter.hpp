@@ -13,7 +13,7 @@
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterOptions.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 namespace Acts {
 
 /// @class FullBilloirVertexFitter
@@ -65,13 +65,13 @@ class FullBilloirVertexFitter {
   ///
   /// @param paramVector Vector of track objects to fit vertex to
   /// @param linearizer The track linearizer
-  /// @param vFitterOptions Vertex fitter options
+  /// @param vertexingOptions Vertexing options
   ///
   /// @return Fitted vertex
   Result<Vertex<input_track_t>> fit(
       const std::vector<const input_track_t*>& paramVector,
       const linearizer_t& linearizer,
-      const VertexFitterOptions<input_track_t>& vFitterOptions) const;
+      const VertexingOptions<input_track_t>& vertexingOptions) const;
 
  private:
   /// Configuration object

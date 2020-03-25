@@ -15,8 +15,7 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
-#include "Acts/Vertexing/VertexFinderOptions.hpp"
-#include "Acts/Vertexing/VertexFitterOptions.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 
 namespace Acts {
 /// @class AdaptiveMultiVertexFinder
@@ -68,7 +67,7 @@ class AdaptiveMultiVertexFinder {
     // Track linearizer
     Linearizer_t linearizer;
 
-    // Use a beam spot constraint, vertexConstraint in VertexFinderOptions
+    // Use a beam spot constraint, vertexConstraint in VertexingOptions
     // has to be set in this case
     bool useBeamSpotConstraint = true;
 
@@ -189,12 +188,12 @@ class AdaptiveMultiVertexFinder {
   /// multi-vertex finding
   ///
   /// @param allTracks Input track collection
-  /// @param vFinderOptions Vertex finder options
+  /// @param vertexingOptions Vertexing options
   ///
   /// @return Vector of all reconstructed vertices
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<const InputTrack_t*>& allTracks,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
  private:
   /// Configuration object
@@ -218,13 +217,13 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @param trackVector All tracks to be used for seeding
   /// @param currentConstraint Vertex constraint
-  /// @param vFinderOptions Vertex finder options
+  /// @param vertexingOptions Vertexing options
   ///
   /// @return The seed vertex
   Result<Vertex<InputTrack_t>> doSeeding(
       const std::vector<const InputTrack_t*>& trackVector,
       Vertex<InputTrack_t>& currentConstraint,
-      const VertexFinderOptions<InputTrack_t>& vFinderOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Estimates delta Z between a track and a vertex position
   ///
@@ -354,13 +353,13 @@ class AdaptiveMultiVertexFinder {
   /// @param allVerticesPtr Vector containing the actual addresses
   /// @param fitterState The current vertex fitter state
   /// @param oldFitterState The old vertex fitter state
-  /// @param vFitterOptions The vertex fitter options
+  /// @param vertexingOptions Vertexing options
   Result<void> deleteLastVertex(
       Vertex<InputTrack_t>& vtx,
       std::vector<std::unique_ptr<Vertex<InputTrack_t>>>& allVertices,
       std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
       FitterState_t& fitterState, FitterState_t& oldFitterState,
-      const VertexFitterOptions<InputTrack_t>& vFitterOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Prepares the output vector of vertices
   ///
