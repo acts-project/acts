@@ -38,6 +38,7 @@ bool approximatelyEqual(const Vector2D& a, const Vector2D& b) {
   return ((dif0 < tol) and (dif1 < tol));
 }
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit test for creating compliant/non-compliant RectangleBounds object
 BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   const double halfX(10.), halfY(5.);
@@ -48,8 +49,6 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   // nonsensical bounds are also permitted, but maybe should not be
   const double zeroHalfX(0.), zeroHalfY(0.);
   const double infHalfX(inf), infHalfY(inf);
-  const double nanHalfX(NaN), nanHalfY(NaN);
-  const double negHalfX(-10.), negHalfY(-5.);
   //
   // BOOST_TEST_MESSAGE("Initialise with zero dimensions");
   RectangleBounds zeroDimensionsRectangle(zeroHalfX, zeroHalfY);
@@ -59,15 +58,30 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
   // BOOST_TEST_MESSAGE("Initialise with infinite dimensions");
   RectangleBounds infinite(infHalfX, infHalfY);
   BOOST_CHECK_EQUAL(infinite.type(), Acts::SurfaceBounds::eRectangle);
-  //
-  // BOOST_TEST_MESSAGE("Initialise with NaN dimensions");
-  RectangleBounds nanRectangle(nanHalfX, nanHalfY);
-  BOOST_CHECK_EQUAL(nanRectangle.type(), Acts::SurfaceBounds::eRectangle);
-  //
-  // BOOST_TEST_MESSAGE("Initialise with negative dimensions");
-  RectangleBounds negativeDimensionedRectangle(negHalfX, negHalfY);
-  BOOST_CHECK_EQUAL(negativeDimensionedRectangle.type(),
-                    Acts::SurfaceBounds::eRectangle);
+}
+
+/// Recreation 
+BOOST_AUTO_TEST_CASE(RectangleBoundsRecreation) {
+  const double halfX(10.), halfY(2.);
+  RectangleBounds original(halfX, halfY);
+  // const bool symmetric(false);
+  auto valvector = original.values();
+  std::array<double, RectangleBounds::eSize> values;
+  std::copy_n(valvector.begin(), RectangleBounds::eSize, values.begin());
+  RectangleBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+
+// Exception tests
+BOOST_AUTO_TEST_CASE(RadialBoundsException) {
+  const double halfX(10.), halfY(2.);
+  
+  // Negative x half length
+  BOOST_CHECK_THROW(RectangleBounds(-halfX, halfY), std::logic_error);
+
+  // Negative y half length
+  BOOST_CHECK_THROW(RectangleBounds(halfX, -halfY), std::logic_error);
 }
 
 /// Unit test for testing RectangleBounds properties

@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <vector>
@@ -47,13 +48,16 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param avgPhi average phi value
   /// @param stereo optional stero angle applied
   DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
-                      double maxR, double avgPhi = M_PI_2, double stereo = 0.);
+                      double maxR, double avgPhi = M_PI_2,
+                      double stereo = 0.) noexcept(false);
 
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  DiscTrapezoidBounds(const std::array<double, eSize>& values)
-      : m_values(values) {}
+  DiscTrapezoidBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values) {
+    checkConsistency();
+  }
 
   ~DiscTrapezoidBounds() override = default;
 
@@ -134,6 +138,10 @@ class DiscTrapezoidBounds : public DiscBounds {
   std::array<double, eSize> m_values;
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
 
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
+
   /// Private helper method to convert a local postion
   /// into its Cartesian representation
   ///
@@ -169,7 +177,7 @@ inline double DiscTrapezoidBounds::rCenter() const {
   double rmin = get(eMinR);
   double rmax = get(eMaxR);
   double hxmin = get(eHalfLengthXminR);
-  double hxmax = get(eHalfLengthXminR);
+  double hxmax = get(eHalfLengthXmaxR);
   auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
   auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
   return 0.5 * (hmin + hmax);
@@ -179,7 +187,7 @@ inline double DiscTrapezoidBounds::halfLengthY() const {
   double rmin = get(eMinR);
   double rmax = get(eMaxR);
   double hxmin = get(eHalfLengthXminR);
-  double hxmax = get(eHalfLengthXminR);
+  double hxmax = get(eHalfLengthXmaxR);
   auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
   auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
   return 0.5 * (hmax - hmin);
@@ -206,6 +214,19 @@ inline std::vector<double> DiscTrapezoidBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void DiscTrapezoidBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eMinR) * get(eMaxR) < 0. or get(eMinR) > get(eMaxR)) {
+    throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthXminR) * get(eHalfLengthXmaxR) < 0.) {
+    throw std::invalid_argument("DiscTrapezoidBounds: negative length given.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument(
+        "DiscTrapezoidBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

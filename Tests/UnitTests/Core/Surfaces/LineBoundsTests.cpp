@@ -30,6 +30,39 @@ BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
   BOOST_CHECK_EQUAL(copyConstructedLineBounds.type(), SurfaceBounds::eLine);
 }
 
+/// Unit test for testing LineBounds recreation from streaming
+BOOST_AUTO_TEST_CASE(LineBoundsRecreation) {
+  double nominalRadius{0.5};
+  double nominalHalfLength{20.};
+  LineBounds original(nominalRadius, nominalHalfLength);
+  LineBounds recreated(original);
+  auto valvector = original.values();
+  std::array<double, LineBounds::eSize> values;
+  std::copy_n(valvector.begin(), LineBounds::eSize, values.begin());
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+/// Unit test for testing LineBounds exceptions
+BOOST_AUTO_TEST_CASE(LineBoundsExceptions) {
+  double nominalRadius{0.5};
+  double nominalHalfLength{20.};
+  // Negative radius
+  BOOST_CHECK_THROW(LineBounds(-nominalRadius, nominalHalfLength), 
+  std::logic_error);
+  // Negative half length
+  BOOST_CHECK_THROW(LineBounds(nominalRadius, -nominalHalfLength), 
+  std::logic_error);
+}
+
+/// Unit test for testing LineBounds assignment
+BOOST_AUTO_TEST_CASE(LineBoundsAssignment) {
+  double nominalRadius{0.5};
+  double nominalHalfLength{20.};
+  LineBounds lineBoundsObject(nominalRadius, nominalHalfLength);
+  LineBounds assignedLineBounds = lineBoundsObject;
+  BOOST_CHECK_EQUAL(assignedLineBounds, lineBoundsObject);
+}
+
 /// Unit tests for LineBounds properties
 BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   // LineBounds object of radius 0.5 and halfz 20
@@ -83,14 +116,7 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   BOOST_CHECK(dumpOuput.is_equal(
       "Acts::LineBounds: (radius, halflengthInZ) = (0.5000000, 20.0000000)"));
 }
-/// Unit test for testing LineBounds assignment
-BOOST_AUTO_TEST_CASE(LineBoundsAssignment) {
-  double nominalRadius{0.5};
-  double nominalHalfLength{20.};
-  LineBounds lineBoundsObject(nominalRadius, nominalHalfLength);
-  LineBounds assignedLineBounds = lineBoundsObject;
-  BOOST_CHECK_EQUAL(assignedLineBounds, lineBoundsObject);
-}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test

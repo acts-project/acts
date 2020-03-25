@@ -22,6 +22,7 @@ namespace Acts {
 
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
   double minHalfX(1.), maxHalfX(6.), halfY(2.);
@@ -35,7 +36,34 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
   /// Copy constructor
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   TrapezoidBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eTrapezoid);
+  BOOST_CHECK_EQUAL(copied, original);
+}
+
+/// Unit test for creating compliant/non-compliant TrapezoidBounds object
+BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
+  double minHalfX(1.), maxHalfX(6.), halfY(2.);
+  /// Copy constructor
+  TrapezoidBounds original(minHalfX, maxHalfX, halfY);
+  // const bool symmetric(false);
+  auto valvector = original.values();
+  std::array<double, TrapezoidBounds::eSize> values;
+  std::copy_n(valvector.begin(), TrapezoidBounds::eSize, values.begin());
+  TrapezoidBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+// Exception tests
+BOOST_AUTO_TEST_CASE(TrapezoidBoundsException) {
+  double minHalfX(1.), maxHalfX(6.), halfY(2.);
+  
+  // Negative x at min y
+  BOOST_CHECK_THROW(TrapezoidBounds(-minHalfX, maxHalfX, halfY), std::logic_error);
+
+  // Negative x at max y
+  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, -maxHalfX, halfY), std::logic_error);
+
+  // Negative y
+  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, maxHalfX, -halfY), std::logic_error);
 }
 
 /// Unit tests for TrapezoidBounds properties

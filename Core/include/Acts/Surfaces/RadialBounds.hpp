@@ -43,14 +43,18 @@ class RadialBounds : public DiscBounds {
   /// @param halfPhi The half opening angle (Pi for full angular coverage)
   /// @param avgPhi The average phi for the disc/ring sector
   RadialBounds(double minR, double maxR, double halfPhi = M_PI,
-               double avgPhi = 0.)
-      : m_values({std::abs(minR), std::abs(maxR), std::abs(halfPhi),
-                  detail::radian_sym(avgPhi)}) {}
+               double avgPhi = 0.) noexcept(false)
+      : m_values({minR, maxR, halfPhi, avgPhi}) {
+    checkConsistency();
+  }
 
   /// Constructor from array values
   ///
   /// @param values The bound values
-  RadialBounds(const std::array<double, eSize>& values) : m_values(values) {}
+  RadialBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values) {
+    checkConsistency();
+  }
 
   ~RadialBounds() override = default;
 
@@ -110,6 +114,10 @@ class RadialBounds : public DiscBounds {
  private:
   std::array<double, eSize> m_values;
 
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
+
   /// Private helper method to shift a local position
   /// within the bounds
   ///
@@ -157,6 +165,18 @@ inline std::vector<double> RadialBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void RadialBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eMinR) * get(eMaxR) < 0. or get(eMinR) > get(eMaxR)) {
+    throw std::invalid_argument("RadialBounds: invalid radial setup");
+  }
+  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

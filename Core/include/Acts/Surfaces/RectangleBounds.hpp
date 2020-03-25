@@ -37,23 +37,28 @@ class RectangleBounds : public PlanarBounds {
   ///
   /// @param halfX halflength in X
   /// @param halfY halflength in Y
-  RectangleBounds(double halfX, double halfY)
-      : m_min({-std::abs(halfX), -std::abs(halfY)}),
-        m_max({std::abs(halfX), std::abs(halfY)}) {}
+  RectangleBounds(double halfX, double halfY) noexcept(false)
+      : m_min({-halfX, -halfY}), m_max({halfX, halfY}) {
+    checkConsistency();
+  }
 
   /// Constructor - from fixed size array - generic
   ///
   /// @param values The parameter values
-  RectangleBounds(const std::array<double, eSize>& values)
+  RectangleBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_min({values[eMinX], values[eMinY]}),
-        m_max({values[eMaxX], values[eMaxY]}) {}
+        m_max({values[eMaxX], values[eMaxY]}) {
+    checkConsistency();
+  }
 
   /// Constructor - from min/max - generic
   ///
   /// @param min The left bottom corner
   /// @param max The right top corning
-  RectangleBounds(const Vector2D& min, const Vector2D& max)
-      : m_min(min), m_max(max) {}
+  RectangleBounds(const Vector2D& min, const Vector2D& max) noexcept(false)
+      : m_min(min), m_max(max) {
+    checkConsistency();
+  }
 
   ~RectangleBounds() override = default;
 
@@ -118,6 +123,10 @@ class RectangleBounds : public PlanarBounds {
  private:
   Vector2D m_min;
   Vector2D m_max;
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
 };
 
 inline SurfaceBounds::BoundsType RectangleBounds::type() const {
@@ -154,6 +163,15 @@ inline double RectangleBounds::get(BoundValues bValue) const {
       return m_max.x();
   }
   return m_max.y();
+}
+
+inline void RectangleBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eMinX) > get(eMaxX)) {
+    throw std::invalid_argument("RectangleBounds: invalid local x setup");
+  }
+  if (get(eMinY) > get(eMaxY)) {
+    throw std::invalid_argument("RectangleBounds: invalid local y setup");
+  }
 }
 
 }  // namespace Acts

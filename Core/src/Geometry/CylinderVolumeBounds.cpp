@@ -147,15 +147,15 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
 std::shared_ptr<const Acts::CylinderBounds>
 Acts::CylinderVolumeBounds::innerCylinderBounds() const {
   return std::make_shared<const CylinderBounds>(m_values.at(bv_innerRadius),
-                                                m_values.at(bv_halfPhiSector),
-                                                m_values.at(bv_halfZ));
+                                                m_values.at(bv_halfZ),
+                                                m_values.at(bv_halfPhiSector));
 }
 
 std::shared_ptr<const Acts::CylinderBounds>
 Acts::CylinderVolumeBounds::outerCylinderBounds() const {
   return std::make_shared<const CylinderBounds>(m_values.at(bv_outerRadius),
-                                                m_values.at(bv_halfPhiSector),
-                                                m_values.at(bv_halfZ));
+                                                m_values.at(bv_halfZ),
+                                                m_values.at(bv_halfPhiSector));
 }
 
 std::shared_ptr<const Acts::DiscBounds> Acts::CylinderVolumeBounds::discBounds()

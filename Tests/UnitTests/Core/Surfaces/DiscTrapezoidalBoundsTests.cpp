@@ -73,10 +73,10 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   discTrapezoidBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(dumpOuput.is_equal(
-      "Acts::DiscTrapezoidBounds:  (innerRadius, outerRadius, hMinX, "
-      "hMaxX, hlengthY, hPhiSector, averagePhi, rCenter, stereo) = "
-      "(2.0000000, 6.0000000, 1.0000000, 5.0000000, 0.7922870, 0.9851108, "
-      "0.0000000, 2.5243378, 0.0000000)"));
+    "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, halfLengthXminR, "
+    "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, stereo) = "
+    "(2.0000000, 6.0000000, 1.0000000, 5.0000000, 0.7922870, 0.9851108, "
+    "0.0000000, 2.5243378, 0.0000000)"));
   //
   /// Test inside
   BOOST_CHECK(discTrapezoidBoundsObject.inside(inSurface, BoundaryCheck(true)));

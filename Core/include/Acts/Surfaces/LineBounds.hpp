@@ -19,8 +19,6 @@ namespace Acts {
 /// @class LineBounds
 ///
 /// Bounds for a LineSurface.
-///
-
 class LineBounds : public SurfaceBounds {
  public:
   enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
@@ -31,13 +29,17 @@ class LineBounds : public SurfaceBounds {
   ///
   /// @param r is the radius of the cylinder, default = 0.
   /// @param halfZ is the half length in z, defualt = 0.
-  LineBounds(double r, double halfZ)
-      : m_values({std::abs(r), std::abs(halfZ)}) {}
+  LineBounds(double r, double halfZ) noexcept(false) : m_values({r, halfZ}) {
+    checkConsistency();
+  }
 
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  LineBounds(const std::array<double, eSize>& values) : m_values(values) {}
+  LineBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values) {
+    checkConsistency();
+  }
 
   ~LineBounds() override = default;
 
@@ -79,12 +81,22 @@ class LineBounds : public SurfaceBounds {
 
  private:
   std::array<double, eSize> m_values;
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
 };
 
 inline std::vector<double> LineBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void LineBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eR) * get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("LineBounds: zero/negative radius/legnth.");
+  }
 }
 
 }  // namespace Acts

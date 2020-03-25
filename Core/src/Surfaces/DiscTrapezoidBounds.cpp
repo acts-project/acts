@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -16,11 +15,10 @@
 Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
                                                double halfXmaxR, double minR,
                                                double maxR, double avgPhi,
-                                               double stereo)
-    : m_values({std::abs(halfXminR), std::abs(halfXmaxR),
-                std::min(std::abs(minR), std::abs(maxR)),
-                std::max(std::abs(minR), std::abs(maxR)),
-                detail::radian_sym(avgPhi), stereo}) {}
+                                               double stereo) noexcept(false)
+    : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
+  checkConsistency();
+}
 
 Acts::DiscTrapezoidBounds* Acts::DiscTrapezoidBounds::clone() const {
   return new DiscTrapezoidBounds(*this);
@@ -80,8 +78,10 @@ std::vector<Acts::Vector2D> Acts::DiscTrapezoidBounds::vertices(
 std::ostream& Acts::DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::DiscTrapezoidBounds:  (innerRadius, outerRadius, hMinX, "
-        "hMaxX, hlengthY, hPhiSector, averagePhi, rCenter, stereo) = ";
+  sl << "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, "
+        "halfLengthXminR, "
+        "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, "
+        "stereo) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthXminR)
      << ", " << get(eHalfLengthXmaxR) << ", " << halfLengthY() << ", "
      << halfPhiSector() << ", " << get(eAveragePhi) << ", " << rCenter() << ", "

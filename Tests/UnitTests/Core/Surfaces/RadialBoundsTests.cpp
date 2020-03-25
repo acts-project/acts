@@ -54,6 +54,34 @@ BOOST_AUTO_TEST_CASE(RadialBoundsRecreation) {
   BOOST_CHECK_EQUAL(original, recreated);
 }
 
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(RadialBoundsException) {
+  
+  double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0), avgPhi(0.1);
+  
+  // Negative inner radius
+  BOOST_CHECK_THROW(RadialBounds(-minRadius, maxRadius, halfPhiSector, avgPhi),
+    std::logic_error);
+
+  // Negative outer radius
+  BOOST_CHECK_THROW(RadialBounds(minRadius, -maxRadius, halfPhiSector, avgPhi),
+    std::logic_error);
+
+  // Swapped radii  
+  BOOST_CHECK_THROW(RadialBounds(maxRadius, minRadius, halfPhiSector, avgPhi),
+    std::logic_error);
+
+  // Out of bound phi sector 
+  BOOST_CHECK_THROW(RadialBounds(minRadius, -maxRadius, -5., avgPhi),
+    std::logic_error);
+
+  // Out of bound phi position 
+  BOOST_CHECK_THROW(RadialBounds(minRadius, -maxRadius, halfPhiSector, 5.),
+    std::logic_error);
+
+}
+
 /// Unit tests for RadialBounds properties
 BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0);

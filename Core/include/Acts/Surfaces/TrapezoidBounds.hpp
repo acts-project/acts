@@ -37,22 +37,26 @@ class TrapezoidBounds : public PlanarBounds {
 
   /// Constructor for symmetric Trapezoid
   ///
-  /// @param halfXnegY minimal half length X, definition at negative halflength
-  /// Y
-  /// @param halfXposY maximal half length X, definition at maximum halflength Y
+  /// @param halfXnegY minimal half length X, definition at negative Y
+  /// @param halfXposY maximal half length X, definition at positive Y
   /// @param halfY half length Y - defined at x=0
-  TrapezoidBounds(double halfXnegY, double halfXposY, double halfY)
-      : m_values({std::abs(halfXnegY), std::abs(halfXposY), std::abs(halfY)}),
-        m_boundingBox(std::max(halfXnegY, halfXposY), std::abs(halfY)) {}
+  TrapezoidBounds(double halfXnegY, double halfXposY,
+                  double halfY) noexcept(false)
+      : m_values({halfXnegY, halfXposY, halfY}),
+        m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
+    checkConsistency();
+  }
 
   /// Constructor for symmetric Trapezoid - from fixed size array
   ///
   /// @param values the values to be stream in
-  TrapezoidBounds(const std::array<double, eSize>& values)
+  TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values),
         m_boundingBox(
             std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
-            values[eHalfLengthY]) {}
+            values[eHalfLengthY]) {
+    checkConsistency();
+  }
 
   ~TrapezoidBounds() override;
 
@@ -80,8 +84,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// (3) the local position is inside @f$ y @f$ bounds AND inside minimum @f$ x
   /// @f$ bounds <br>
   /// (4) the local position is inside @f$ y @f$ bounds AND inside maximum @f$ x
-  /// @f$ bounds, so that
-  /// it depends on the @f$ eta @f$ coordinate
+  /// @f$ bounds, so that it depends on the @f$ eta @f$ coordinate
   /// (5) the local position fails test of (4) <br>
   ///
   /// The inside check is done using single equations of straight lines and one
@@ -141,12 +144,25 @@ class TrapezoidBounds : public PlanarBounds {
  private:
   std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() throw(std::logic_error);
 };
 
 inline std::vector<double> TrapezoidBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline void TrapezoidBounds::checkConsistency() throw(std::logic_error) {
+  if (get(eHalfLengthXnegY) * get(eHalfLengthXposY) <= 0.) {
+    throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
+  }
+  if (get(eHalfLengthY) <= 0.) {
+    throw std::invalid_argument("TrapezoidBounds: invalid local y setup");
+  }
 }
 
 }  // namespace Acts
