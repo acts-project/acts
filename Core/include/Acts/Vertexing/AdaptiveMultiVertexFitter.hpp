@@ -253,11 +253,11 @@ class AdaptiveMultiVertexFitter {
   /// at current vertex
   ///
   /// @param state The state object
-  /// @param geoContext The geometry context
   /// @param currentVtx Current vertex
+  /// @param vertexingOptions Vertexing options
   Result<void> setAllVertexCompatibilities(
-      State& state, const GeometryContext& geoContext,
-      Vertex<InputTrack_t>* currentVtx) const;
+      State& state, Vertex<InputTrack_t>* currentVtx,
+      const VertexingOptions<input_track_t>& vertexingOptions) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater

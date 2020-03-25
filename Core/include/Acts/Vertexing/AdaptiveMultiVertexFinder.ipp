@@ -63,8 +63,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       allVerticesPtr.pop_back();
       break;
     }
-    auto prepResult = canPrepareVertexForFit(
-        allTracks, seedTracks, vtxCandidate, currentConstraint, fitterState);
+    auto prepResult = canPrepareVertexForFit(allTracks, seedTracks,
+                                             vtxCandidate, currentConstraint,
+                                             fitterState, vertexingOptions);
 
     if (!prepResult.ok()) {
       return prepResult.error();
@@ -180,7 +181,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::estimateDeltaZ(
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
-    const InputTrack_t* track, const Vertex<InputTrack_t>& vtx) const
+    const InputTrack_t* track, const Vertex<InputTrack_t>& vtx,
+    const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<double> {
   // TODO: In original implementation the covariance of the given vertex is set
   // to zero. I did the same here now, but consider removing this and just
@@ -192,7 +194,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
     newVtx.setFullCovariance(SpacePointSymMatrix::Zero());
   }
 
-  auto estRes = m_cfg.ipEstimator.estimate(*track, newVtx);
+  auto estRes =
+      m_cfg.ipEstimator.estimate(*track, newVtx, vertexingOptions.geoContext,
+                                 vertexingOptions.magFieldContext);
   if (!estRes.ok()) {
     return estRes.error();
   }
@@ -210,12 +214,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
-    addCompatibleTracksToVertex(const std::vector<const InputTrack_t*>& tracks,
-                                Vertex<InputTrack_t>& vtx,
-                                FitterState_t& fitterState) const
+    addCompatibleTracksToVertex(
+        const std::vector<const InputTrack_t*>& tracks,
+        Vertex<InputTrack_t>& vtx, FitterState_t& fitterState,
+        const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<void> {
   for (const auto& trk : tracks) {
-    auto sigRes = getIPSignificance(trk, vtx);
+    auto sigRes = getIPSignificance(trk, vtx, vertexingOptions);
     if (!sigRes.ok()) {
       return sigRes.error();
     }
@@ -243,7 +248,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         const std::vector<const InputTrack_t*>& seedTracks,
         Vertex<InputTrack_t>& vtx,
         const Vertex<InputTrack_t>& currentConstraint,
-        FitterState_t& fitterState) const -> Result<bool> {
+        FitterState_t& fitterState,
+        const VertexingOptions<InputTrack_t>& vertexingOptions) const
+    -> Result<bool> {
   // Recover from cases where no compatible tracks to vertex
   // candidate were found
   // TODO: This is for now how it's done in athena... this look a bit
@@ -271,7 +278,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
           VertexInfo<InputTrack_t>(currentConstraint, vtx.fullPosition());
 
       // Try to add compatible track with adapted vertex position
-      auto res = addCompatibleTracksToVertex(allTracks, vtx, fitterState);
+      auto res = addCompatibleTracksToVertex(allTracks, vtx, fitterState,
+                                             vertexingOptions);
       if (!res.ok()) {
         return Result<bool>::failure(res.error());
       }
@@ -294,24 +302,29 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
-    canPrepareVertexForFit(const std::vector<const InputTrack_t*>& allTracks,
-                           const std::vector<const InputTrack_t*>& seedTracks,
-                           Vertex<InputTrack_t>& vtx,
-                           const Vertex<InputTrack_t>& currentConstraint,
-                           FitterState_t& fitterState) const -> Result<bool> {
+    canPrepareVertexForFit(
+        const std::vector<const InputTrack_t*>& allTracks,
+        const std::vector<const InputTrack_t*>& seedTracks,
+        Vertex<InputTrack_t>& vtx,
+        const Vertex<InputTrack_t>& currentConstraint,
+        FitterState_t& fitterState,
+        const VertexingOptions<InputTrack_t>& vertexingOptions) const
+    -> Result<bool> {
   // Add vertex info to fitter state
   fitterState.vtxInfoMap[&vtx] =
       VertexInfo<InputTrack_t>(currentConstraint, vtx.fullPosition());
 
   // Add all compatible tracks to vertex
-  auto resComp = addCompatibleTracksToVertex(allTracks, vtx, fitterState);
+  auto resComp = addCompatibleTracksToVertex(allTracks, vtx, fitterState,
+                                             vertexingOptions);
   if (!resComp.ok()) {
     return Result<bool>::failure(resComp.error());
   }
 
   // Try to recover from cases where adding compatible track was not possible
-  auto resRec = canRecoverFromNoCompatibleTracks(
-      allTracks, seedTracks, vtx, currentConstraint, fitterState);
+  auto resRec = canRecoverFromNoCompatibleTracks(allTracks, seedTracks, vtx,
+                                                 currentConstraint, fitterState,
+                                                 vertexingOptions);
   if (!resRec.ok()) {
     return Result<bool>::failure(resRec.error());
   }

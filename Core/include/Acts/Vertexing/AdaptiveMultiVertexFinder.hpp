@@ -238,19 +238,23 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @param track The track
   /// @param vtx The vertex
+  /// @param vertexingOptions Vertexing options
   ///
   /// @return The IP significance
-  Result<double> getIPSignificance(const InputTrack_t* track,
-                                   const Vertex<InputTrack_t>& vtx) const;
+  Result<double> getIPSignificance(
+      const InputTrack_t* track, const Vertex<InputTrack_t>& vtx,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Adds compatible track to vertex candidate
   ///
   /// @param tracks The tracks
   /// @param vtx The vertex candidate
   /// @param[out] fitterState The vertex fitter state
+  /// @param vertexingOptions Vertexing options
   Result<void> addCompatibleTracksToVertex(
       const std::vector<const InputTrack_t*>& tracks, Vertex<InputTrack_t>& vtx,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// were added to the vertex candidate after seeding
@@ -261,13 +265,15 @@ class AdaptiveMultiVertexFinder {
   /// @param[out] vtx The vertex candidate
   /// @param currentConstraint Vertex constraint
   /// @param[out] fitterState The vertex fitter state
+  /// @param vertexingOptions Vertexing options
   ///
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
       const std::vector<const InputTrack_t*>& allTracks,
       const std::vector<const InputTrack_t*>& seedTracks,
       Vertex<InputTrack_t>& vtx, const Vertex<InputTrack_t>& currentConstraint,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
   ///
@@ -277,13 +283,15 @@ class AdaptiveMultiVertexFinder {
   /// @param[out] vtx The vertex candidate
   /// @param currentConstraint Vertex constraint
   /// @param[out] fitterState The vertex fitter state
+  /// @param vertexingOptions Vertexing options
   ///
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
       const std::vector<const InputTrack_t*>& allTracks,
       const std::vector<const InputTrack_t*>& seedTracks,
       Vertex<InputTrack_t>& vtx, const Vertex<InputTrack_t>& currentConstraint,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
   /// compatible tracks are available

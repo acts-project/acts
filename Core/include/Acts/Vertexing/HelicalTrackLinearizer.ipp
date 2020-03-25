@@ -19,6 +19,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
+  // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
   pOptions.direction = backward;
 

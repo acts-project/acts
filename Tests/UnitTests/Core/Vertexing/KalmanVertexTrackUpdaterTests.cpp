@@ -80,11 +80,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions<> pOptions(geoContext, magFieldContext);
 
   // Set up ImpactPoint3dEstimator, used for comparisons later
   ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ip3dEstConfig(
-      bField, propagator, pOptions);
+      bField, propagator);
 
   ImpactPoint3dEstimator<BoundParameters, Propagator> ip3dEst(ip3dEstConfig);
 

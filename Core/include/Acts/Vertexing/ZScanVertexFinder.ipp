@@ -30,8 +30,9 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     ImpactParametersAndSigma ipas;
     if (useConstraint &&
         vertexingOptions.vertexConstraint.covariance()(0, 0) != 0) {
-      auto estRes =
-          m_cfg.ipEstimator.estimate(params, vertexingOptions.vertexConstraint);
+      auto estRes = m_cfg.ipEstimator.estimate(
+          params, vertexingOptions.vertexConstraint,
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext);
       if (estRes.ok()) {
         ipas = *estRes;
       } else {

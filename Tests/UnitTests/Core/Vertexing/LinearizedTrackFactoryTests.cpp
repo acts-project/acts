@@ -33,7 +33,7 @@ using Linearizer =
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
-                            mfContext)
+                            magFieldContext)
             .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
-                            mfContext)
+                            magFieldContext)
             .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);

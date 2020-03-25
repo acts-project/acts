@@ -39,22 +39,11 @@ class TrackToVertexIPEstimator {
  public:
   /// @brief Configuration struct
   ///
-  /// @param p The propagator
-  /// @param propOptions The propagator options
-  /// @param doBackwardPropagation Set the propagation direction to backward
+  /// @param prop The propagator
   struct Config {
-    Config(std::shared_ptr<propagator_t> p,
-           const propagator_options_t& propOptions,
-           bool doBackwardPropagation = true)
-        : propagator(std::move(p)), pOptions(propOptions) {
-      if (doBackwardPropagation) {
-        pOptions.direction = backward;
-      }
-    }
+    Config(std::shared_ptr<propagator_t> prop) : propagator(std::move(prop)) {}
 
     std::shared_ptr<propagator_t> propagator;
-
-    propagator_options_t pOptions;
   };
 
   /// @brief Default constructor
@@ -77,8 +66,12 @@ class TrackToVertexIPEstimator {
   ///
   /// @param track Track to estimate IP from
   /// @param vtx Vertex the track belongs to
+  /// @param gctx The geometry context
+  /// @param mctx The magnetic field context
   Result<ImpactParametersAndSigma> estimate(
-      const BoundParameters& track, const Vertex<input_track_t>& vtx) const;
+      const BoundParameters& track, const Vertex<input_track_t>& vtx,
+      const GeometryContext& gctx,
+      const Acts::MagneticFieldContext& mctx) const;
 
  private:
   /// Config

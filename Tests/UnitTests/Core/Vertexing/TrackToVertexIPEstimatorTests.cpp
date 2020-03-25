@@ -30,8 +30,8 @@ namespace Test {
 using Covariance = BoundSymMatrix;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
-MagneticFieldContext mfContext = MagneticFieldContext();
+GeometryContext geoContext = GeometryContext();
+MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -79,8 +79,6 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -111,7 +109,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
       TrackToVertexIPEstimator<BoundParameters,
                                Propagator<EigenStepper<ConstantBField>>>;
 
-  IPEst_t::Config ipEstCfg(propagator, pOptions);
+  IPEst_t::Config ipEstCfg(propagator);
 
   // Create TrackToVertexIPEstimator
   IPEst_t ipEst(ipEstCfg);
@@ -140,12 +138,13 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-    BoundParameters track =
-        BoundParameters(tgContext, std::move(covMat), paramVec, perigeeSurface);
+    BoundParameters track = BoundParameters(geoContext, std::move(covMat),
+                                            paramVec, perigeeSurface);
 
     // Check if IP are retrieved
     ImpactParametersAndSigma output =
-        ipEst.estimate(track, myConstraint).value();
+        ipEst.estimate(track, myConstraint, geoContext, magFieldContext)
+            .value();
     BOOST_CHECK_NE(output.IPd0, 0.);
     BOOST_CHECK_NE(output.IPz0, 0.);
   }

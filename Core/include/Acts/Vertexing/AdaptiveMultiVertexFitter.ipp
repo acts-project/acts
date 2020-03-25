@@ -94,7 +94,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
-      setAllVertexCompatibilities(state, geoContext, currentVtx);
+      setAllVertexCompatibilities(state, currentVtx, vertexingOptions);
     }  // End loop over vertex collection
 
     // Now after having estimated all compatibilities of all tracks at
@@ -204,12 +204,12 @@ Acts::Result<void> Acts::
   auto& currentVtxInfo = state.vtxInfoMap[vtx];
   // The seed position
   const Vector3D& seedPos = currentVtxInfo.seedPosition.template head<3>();
-  auto& geoContext = vertexingOptions.geoContext;
 
   // Loop over all tracks at current vertex
   for (const auto& trk : currentVtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.getParamsAtClosestApproach(
-        geoContext, m_extractParameters(*trk), seedPos);
+        vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+        m_extractParameters(*trk), seedPos);
     if (!res.ok()) {
       return res.error();
     }
@@ -222,8 +222,9 @@ Acts::Result<void> Acts::
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    setAllVertexCompatibilities(State& state, const GeometryContext& geoContext,
-                                Vertex<input_track_t>* currentVtx) const {
+    setAllVertexCompatibilities(
+        State& state, Vertex<input_track_t>* currentVtx,
+        const VertexingOptions<input_track_t>& vertexingOptions) const {
   VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
 
   // Loop over tracks at current vertex and
@@ -236,7 +237,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     if (currentVtxInfo.ip3dParams.find(trk) ==
         currentVtxInfo.ip3dParams.end()) {
       auto res = m_cfg.ipEst.getParamsAtClosestApproach(
-          geoContext, m_extractParameters(*trk),
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+          m_extractParameters(*trk),
           VectorHelpers::position(currentVtxInfo.linPoint));
       if (!res.ok()) {
         return res.error();
@@ -246,7 +248,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.getVertexCompatibility(
-        geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
+        vertexingOptions.geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
         VectorHelpers::position(currentVtxInfo.oldPosition));
     if (!compRes.ok()) {
       return compRes.error();
