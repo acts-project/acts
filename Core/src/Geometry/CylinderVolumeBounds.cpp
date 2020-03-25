@@ -24,9 +24,6 @@
 
 const double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 
-Acts::CylinderVolumeBounds::CylinderVolumeBounds()
-    : VolumeBounds(), m_values(4, 0.) {}
-
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(double radius, double halez)
     : VolumeBounds(), m_values(4, 0.) {
   m_values.at(bv_innerRadius) = 0.;

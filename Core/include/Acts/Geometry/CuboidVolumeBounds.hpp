@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,11 +8,14 @@
 
 #pragma once
 
-#include <cmath>
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <cmath>
+#include <vector>
 
 namespace Acts {
 
@@ -44,34 +47,51 @@ class Surface;
 
 class CuboidVolumeBounds : public VolumeBounds {
  public:
-  /// @enum BoundValues for readability
-  enum BoundValues { bv_halfX = 0, bv_halfY = 1, bv_halfZ = 2, bv_length = 3 };
+  /// @enum BoundValues for streaming and access
+  enum BoundValues : int {
+    eHalfLengthX = 0,
+    eHalfLengthY = 1,
+    eHalfLengthZ = 2,
+    eSize = 3
+  };
 
-  /// Default Constructor
-  CuboidVolumeBounds();
+  CuboidVolumeBounds() = delete;
 
   /// Constructor - the box boundaries
   ///
   /// @param halex is the half length of the cube in x
   /// @param haley is the half length of the cube in y
   /// @param halez is the half length of the cube in z
-  CuboidVolumeBounds(double halex, double haley, double halez);
+  CuboidVolumeBounds(double halex, double haley, double halez) noexcept(false);
+
+  /// Constructor - from a fixed size array
+  ///
+  /// @param values iw the bound values
+  CuboidVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values) {
+    checkConsistency();
+  }
 
   /// Copy Constructor
   ///
   /// @param bobo is the source volume bounds to be copied
   CuboidVolumeBounds(const CuboidVolumeBounds& bobo);
 
-  /// Destructor
-  ~CuboidVolumeBounds() override;
-
   /// Assignment operator
   ///
   /// @param bobo is the source volume bounds to be assigned
   CuboidVolumeBounds& operator=(const CuboidVolumeBounds& bobo);
 
-  /// Virtual constructor
+  ~CuboidVolumeBounds() override = default;
+
   CuboidVolumeBounds* clone() const override;
+
+  VolumeBounds::BoundsType type() const final { return VolumeBounds::eCuboid; }
+
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
@@ -95,42 +115,30 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3D& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// This method returns the halflength in local x
-  double halflengthX() const;
-
-  /// This method returns the halflength in local y
-  double halflengthY() const;
-
-  /// This method returns the halflength in local z
-  double halflengthZ() const;
-
   /// Output Method for std::ostream
   ///
   /// @param sl is ostream operator to be dumped into
   std::ostream& toStream(std::ostream& sl) const override;
+
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
   /// Templated dumpT method
   template <class T>
   T& dumpT(T& dt) const;
 
-  /// This method returns the associated RecantleBounds of the face PlaneSurface
-  /// parallel to local xy plane
-  std::shared_ptr<const RectangleBounds> faceXYRectangleBounds() const;
+  /// The bound values ordered in a fixed size array
+  std::array<double, eSize> m_values;
 
-  /// This method returns the associated RecantleBounds of the face PlaneSurface
-  /// parallel to local yz plane
-  std::shared_ptr<const RectangleBounds> faceYZRectangleBounds() const;
+  std::shared_ptr<const RectangleBounds> m_xyBounds = nullptr;
+  std::shared_ptr<const RectangleBounds> m_yzBounds = nullptr;
+  std::shared_ptr<const RectangleBounds> m_zxBounds = nullptr;
 
-  /// This method returns the associated RecantleBounds of the face PlaneSurface
-  // parallel to local zx plane
-  std::shared_ptr<const RectangleBounds> faceZXRectangleBounds() const;
-
-  /// The bound values
-  std::vector<double> m_values;
-  std::shared_ptr<const RectangleBounds> m_xyBounds;
-  std::shared_ptr<const RectangleBounds> m_yzBounds;
-  std::shared_ptr<const RectangleBounds> m_zxBounds;
+  /// Check the input values for consistency,
+  /// will throw a logic_exception if consistency is not given
+  void checkConsistency() noexcept(false);
 };
 
 inline CuboidVolumeBounds* CuboidVolumeBounds::clone() const {
@@ -138,30 +146,31 @@ inline CuboidVolumeBounds* CuboidVolumeBounds::clone() const {
 }
 
 inline bool CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const {
-  return (std::abs(pos.x()) <= m_values.at(bv_halfX) + tol &&
-          std::abs(pos.y()) <= m_values.at(bv_halfY) + tol &&
-          std::abs(pos.z()) <= m_values.at(bv_halfZ) + tol);
+  return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
+          std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
+          std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
 }
 
-inline double CuboidVolumeBounds::halflengthX() const {
-  return m_values.at(bv_halfX);
+inline std::vector<double> CuboidVolumeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
-inline double CuboidVolumeBounds::halflengthY() const {
-  return m_values.at(bv_halfY);
-}
-
-inline double CuboidVolumeBounds::halflengthZ() const {
-  return m_values.at(bv_halfZ);
+inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eHalfLengthX) * get(eHalfLengthY) * get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument(
+        "CuboidVolumeBounds: invalid input, zero or negative.");
+  }
 }
 
 template <class T>
 T& CuboidVolumeBounds::dumpT(T& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
-  dt << "Acts::CuboidVolumeBounds: (halfX, halfY, halfZ) = ";
-  dt << "(" << m_values.at(bv_halfX) << ", " << m_values.at(bv_halfY) << ", "
-     << m_values.at(bv_halfZ) << ")";
+  dt << "Acts::CuboidVolumeBounds: (halfLengthX, halfLengthY, halfLengthZ) = ";
+  dt << "(" << get(eHalfLengthX) << ", " << get(eHalfLengthY) << ", "
+     << get(eHalfLengthZ) << ")";
   return dt;
 }
 }  // namespace Acts

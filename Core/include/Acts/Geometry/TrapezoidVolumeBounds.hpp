@@ -86,15 +86,22 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @param trabo The object to be copied
   TrapezoidVolumeBounds(const TrapezoidVolumeBounds& trabo);
 
-  /// Destructor
-  ~TrapezoidVolumeBounds() override;
-
   /// Assignment operator
   /// @param trabo The object to be assigned
   TrapezoidVolumeBounds& operator=(const TrapezoidVolumeBounds& trabo);
 
-  /// Virtual constructor
+  ~TrapezoidVolumeBounds() override;
+
   TrapezoidVolumeBounds* clone() const override;
+
+  VolumeBounds::BoundsType type() const final {
+    return VolumeBounds::eTrapezoid;
+  }
+
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final { return {}; };
 
   /// This method checks if position in the 3D volume frame
   /// is inside the cylinder

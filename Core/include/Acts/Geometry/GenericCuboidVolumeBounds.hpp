@@ -33,9 +33,16 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
 
   ~GenericCuboidVolumeBounds() override = default;
 
-  ///  clone() method to make deep copy in Volume copy constructor and for
-  /// assigment operator  of the Surface class.
   VolumeBounds* clone() const override;
+
+  VolumeBounds::BoundsType type() const final {
+    return VolumeBounds::eGenericCuboid;
+  }
+
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final { return {}; };
 
   /// Checking if position given in volume frame is inside
   ///

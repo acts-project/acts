@@ -79,8 +79,7 @@ class CylinderVolumeBounds : public VolumeBounds {
     bv_length = 4
   };
 
-  /// Default Constructor
-  CylinderVolumeBounds();
+  CylinderVolumeBounds() = delete;
 
   /// Constructor - full cylinder
   ///
@@ -121,14 +120,20 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param cylbo is the source cylinder volume bounds for the copy
   CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
-  /// Destructor
   ~CylinderVolumeBounds() override;
 
-  /// Assignment operator
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo);
 
-  /// Virtual constructor
   CylinderVolumeBounds* clone() const override;
+
+  VolumeBounds::BoundsType type() const final {
+    return VolumeBounds::eCylinder;
+  }
+
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final { return {}; };
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder

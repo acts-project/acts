@@ -26,8 +26,8 @@ namespace Acts {
 class SurfaceBounds {
  public:
   /// @enum BoundsType
-  ///
-  /// This enumerator simplifies the persistency and bounds identification
+  /// This is nested to the SurfaceBounds, as also VolumeBounds will have
+  /// Bounds Type.
   enum BoundsType : int {
     eCone = 0,
     eCylinder = 1,

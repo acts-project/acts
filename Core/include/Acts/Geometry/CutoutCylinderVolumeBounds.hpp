@@ -27,12 +27,23 @@ class IVisualization;
 /// |    |---------|    | rmed
 /// |    |         |    |
 /// ------         ------ rmin
-///       -- dz2 --
-/// -------- dz1 -------
+///       -- hlZc --
+/// --------- hlZ -------
 ///
 ///
 class CutoutCylinderVolumeBounds : public VolumeBounds {
  public:
+  /// @enum BoundValues for streaming and access
+  enum BoundValues : int {
+    eMinR = 0,
+    eMedR = 1,
+    eHalfLengthZcutout = 2,
+    eHalfLengthZ = 3,
+    eSize = 4
+  };
+
+  CutoutCylinderVolumeBounds() = delete;
+
   /// Constructor from defining parameters
   ///
   /// @param rmin Minimum radius at the "choke points"
@@ -44,12 +55,18 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
                              double dz2)
       : m_rmin(rmin), m_rmed(rmed), m_rmax(rmax), m_dz1(dz1), m_dz2(dz2) {}
 
-  /// Virtual default constructor
   ~CutoutCylinderVolumeBounds() override = default;
 
-  /// Clone method.
-  /// @return Pointer to a copy of the shape
   VolumeBounds* clone() const override;
+
+  VolumeBounds::BoundsType type() const final {
+    return VolumeBounds::eCutoutCylinder;
+  }
+
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final { return {}; };
 
   /// Inside method to test whether a point is inside the shape
   ///
