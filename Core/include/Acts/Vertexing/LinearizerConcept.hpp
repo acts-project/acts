@@ -33,7 +33,7 @@ namespace concept {
          linTrack_t, const BoundParameters&,
                      const SpacePointVector&,
                      const Acts::GeometryContext&,
-                      const Acts::MagneticFieldContext&>;
+                     const Acts::MagneticFieldContext&>;
   
         static_assert(linTrack_exists, "linearizeTrack method not found");
 
