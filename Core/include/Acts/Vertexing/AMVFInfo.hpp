@@ -12,6 +12,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
+#include <map>
+
 namespace Acts {
 
 /// @brief Helper struct for storing vertex related information
