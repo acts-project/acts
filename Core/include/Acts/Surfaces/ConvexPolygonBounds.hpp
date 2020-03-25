@@ -131,7 +131,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   /// Return whether this bounds class is in fact convex
   /// throws a log error if not
-  void checkConsistency() const throw(std::logic_error);
+  void checkConsistency() const noexcept(false);
 };
 
 /// Tag to trigger specialization of a dynamic polygon
@@ -198,7 +198,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
 
   /// Return whether this bounds class is in fact convex
   /// thorws a logic error if not
-  void checkConsistency() const throw(std::logic_error);
+  void checkConsistency() const noexcept(false);
 };
 
 }  // namespace Acts
