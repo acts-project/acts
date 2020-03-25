@@ -269,8 +269,8 @@ class ParameterSet {
    */
   template <ParID_t parameter>
   void setParameter(ParValue_t value) {
-    using parameter_type = typename par_type<parameter>::type;
-    m_vValues(getIndex<parameter>()) = parameter_type::getValue(value);
+    m_vValues(getIndex<parameter>()) =
+        BoundParameterType<parameter>::getValue(value);
   }
 
   /**

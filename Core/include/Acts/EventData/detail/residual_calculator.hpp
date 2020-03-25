@@ -47,8 +47,7 @@ template <typename R, ParID_t first, ParID_t... others>
 struct residual_calculator_impl<R, first, others...> {
   static void calculate(R& result, const R& test, const R& ref,
                         unsigned int pos) {
-    using parameter_type = typename par_type<first>::type;
-    result(pos) = parameter_type::getDifference(test(pos), ref(pos));
+    result(pos) = BoundParameterType<first>::getDifference(test(pos), ref(pos));
     residual_calculator_impl<R, others...>::calculate(result, test, ref,
                                                       pos + 1);
   }
@@ -58,8 +57,7 @@ template <typename R, ParID_t last>
 struct residual_calculator_impl<R, last> {
   static void calculate(R& result, const R& test, const R& ref,
                         unsigned int pos) {
-    using parameter_type = typename par_type<last>::type;
-    result(pos) = parameter_type::getDifference(test(pos), ref(pos));
+    result(pos) = BoundParameterType<last>::getDifference(test(pos), ref(pos));
   }
 };
 /// @endcond

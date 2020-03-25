@@ -302,9 +302,5 @@ using FreeToSpacePointMatrix =
 using ParDef = BoundParametersIndices;
 using ParID_t = BoundParametersIndices;
 using ParValue_t = BoundParametersScalar;
-template <BoundParametersIndices kIndex>
-using par_type = detail::BoundParameterTraits<kIndex>;
-template <BoundParametersIndices kIndex>
-using par_type_t = typename detail::BoundParameterTraits<kIndex>::type;
 
 }  // namespace Acts
