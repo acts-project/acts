@@ -42,8 +42,6 @@ namespace Acts {
 template <typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class HelicalTrackLinearizer {
-  using PropagatorOptions_t = propagator_options_t;
-
  public:
   using Propagator_t = propagator_t;
   using BField_t = typename Propagator_t::Stepper::BField;
@@ -54,40 +52,22 @@ class HelicalTrackLinearizer {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    /// @param propOptions The propagator options
-    /// @param doBackwardPropagation Set the propagation direction to backward
-    Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop,
-           PropagatorOptions_t propOptions, bool doBackwardPropagation = true)
-        : bField(bIn),
-          propagator(std::move(prop)),
-          pOptions(std::move(propOptions)) {
-      if (doBackwardPropagation) {
-        pOptions.direction = backward;
-      }
-    }
+    Config(const BField_t& bIn, std::shared_ptr<Propagator_t> prop)
+        : bField(bIn), propagator(std::move(prop)) {}
 
     /// @brief Config constructor if BField_t == NullBField (no B-Field
     /// provided)
     ///
     /// @param prop The propagator
-    /// @param propOptions The propagator options
-    /// @param doBackwardPropagation Set the propagation direction to backward
     template <typename T = BField_t,
               std::enable_if_t<std::is_same<T, NullBField>::value, int> = 0>
-    Config(std::shared_ptr<Propagator_t> prop, PropagatorOptions_t propOptions,
-           bool doBackwardPropagation = true)
-        : propagator(std::move(prop)), pOptions(std::move(propOptions)) {
-      if (doBackwardPropagation) {
-        pOptions.direction = backward;
-      }
-    }
+    Config(std::shared_ptr<Propagator_t> prop) : propagator(std::move(prop)) {}
 
     // The magnetic field
     BField_t bField;
     // The propagator
     std::shared_ptr<Propagator_t> propagator;
-    // The propagator options
-    PropagatorOptions_t pOptions;
+
     // Minimum q/p value
     double minQoP = 1e-15;
     // Maximum curvature value
@@ -104,10 +84,14 @@ class HelicalTrackLinearizer {
   ///
   /// @param params Parameters to linearize
   /// @param linPoint Linearization point
+  /// @param gctx The geometry context
+  /// @param mctx The magnetic field context
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(
-      const BoundParameters& params, const SpacePointVector& linPoint) const;
+      const BoundParameters& params, const SpacePointVector& linPoint,
+      const Acts::GeometryContext& gctx,
+      const Acts::MagneticFieldContext& mctx) const;
 
  private:
   /// Configuration object

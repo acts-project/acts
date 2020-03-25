@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     PropagatorOptions<> pOptions(tgContext, mfContext);
 
     // Linearizer for BoundParameters type test
-    Linearizer::Config ltConfig(bField, propagator, pOptions);
+    Linearizer::Config ltConfig(bField, propagator);
     Linearizer linearizer(ltConfig);
 
     using BilloirFitter = FullBilloirVertexFitter<BoundParameters, Linearizer>;
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     PropagatorOptions<> pOptions(tgContext, mfContext);
 
     // Linearizer for user defined InputTrack type test
-    Linearizer::Config ltConfigUT(bField, propagator, pOptions);
+    Linearizer::Config ltConfigUT(bField, propagator);
     Linearizer linearizer(ltConfigUT);
 
     // Set up vertex fitter for user track type

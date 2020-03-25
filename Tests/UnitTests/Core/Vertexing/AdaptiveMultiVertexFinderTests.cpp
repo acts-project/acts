@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer for BoundParameters type test
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Test smoothing

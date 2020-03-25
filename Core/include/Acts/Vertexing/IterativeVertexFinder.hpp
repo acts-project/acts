@@ -180,9 +180,11 @@ class IterativeVertexFinder {
   /// a given track is to a given vertex
   ///
   /// @param params Track parameters
-  /// @param vertex Vertex
-  Result<double> getCompatibility(const BoundParameters& params,
-                                  const Vertex<InputTrack_t>& vertex) const;
+  /// @param vertex The vertex
+  /// @param vertexingOptions Vertexing options
+  Result<double> getCompatibility(
+      const BoundParameters& params, const Vertex<InputTrack_t>& vertex,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Function that removes used tracks compatible with
   /// current vertex (`myVertex`) from `perigeesToFit` and `seedTracks`
@@ -191,10 +193,12 @@ class IterativeVertexFinder {
   /// @param myVertex Current vertex
   /// @param perigeesToFit Tracks used to fit `myVertex`
   /// @param seedTracks Tracks used for vertex seeding
+  /// @param vertexingOptions Vertexing options
   Result<void> removeUsedCompatibleTracks(
       Vertex<InputTrack_t>& myVertex,
       std::vector<const InputTrack_t*>& perigeesToFit,
-      std::vector<const InputTrack_t*>& seedTracks) const;
+      std::vector<const InputTrack_t*>& seedTracks,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///

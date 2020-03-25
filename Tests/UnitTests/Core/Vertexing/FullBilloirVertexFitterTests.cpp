@@ -49,9 +49,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Set up Billoir Vertex Fitter
@@ -133,9 +131,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Number of events
@@ -267,9 +263,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
   auto propagator =
       std::make_shared<Propagator<EigenStepper<ConstantBField>>>(stepper);
 
-  PropagatorOptions<> pOptions(tgContext, mfContext);
-
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   const int nEvents = 10;

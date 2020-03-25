@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
       ip3dEst);
 
   // Linearizer for BoundParameters type test
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer for BoundParameters type test
-  Linearizer::Config ltConfig(bField, propagator, pOptions);
+  Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
   // Test smoothing

@@ -264,8 +264,10 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param state The state object
   /// @param linearizer The track linearizer
-  Result<void> setWeightsAndUpdate(State& state,
-                                   const Linearizer_t& linearizer) const;
+  /// @param vertexingOptions Vertexing options
+  Result<void> setWeightsAndUpdate(
+      State& state, const Linearizer_t& linearizer,
+      const VertexingOptions<input_track_t>& vertexingOptions) const;
 
   /// @brief Collects all compatibility values of the track `trk`
   /// at all vertices it is currently attached to and outputs

@@ -100,7 +100,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     // Now after having estimated all compatibilities of all tracks at
     // all vertices, run again over all vertices to set track weights
     // and update the vertex
-    setWeightsAndUpdate(state, linearizer);
+    setWeightsAndUpdate(state, linearizer, vertexingOptions);
     if (!state.annealingState.equilibriumReached) {
       m_cfg.annealingTool.anneal(state.annealingState);
     }
@@ -257,10 +257,10 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
-    input_track_t, linearizer_t>::setWeightsAndUpdate(State& state,
-                                                      const linearizer_t&
-                                                          linearizer) const {
+Acts::Result<void> Acts::
+    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::setWeightsAndUpdate(
+        State& state, const linearizer_t& linearizer,
+        const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[vtx];
 
@@ -279,7 +279,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
                 BoundSymMatrix::Zero() ||
             state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
-              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition);
+              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
+              vertexingOptions.geoContext, vertexingOptions.magFieldContext);
           if (!result.ok()) {
             return result.error();
           }
