@@ -328,7 +328,6 @@ auto covariance_curvilinear(const Propagator_type& propagator, start_parameters_
 
   const auto result = propagator.template propagate<end_parameters_t>(start, options).value();
   const auto& tp = result.endParameters;
-std::cout << "cov\n" << *(tp->covariance()) << std::endl;
 
   return *(tp->covariance());
 }

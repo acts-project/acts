@@ -455,76 +455,76 @@ BOOST_DATA_TEST_CASE(propagation_to_line_,
   CHECK_CLOSE_ABS(s_at_line.first, e_free_at_line.first, 1_um);
 }
 
-//~ /// test correct covariance transport for curvilinear parameters
-//~ /// this test only works within the
-//~ /// s_curvilinearProjTolerance (in: Definitions.hpp)
-//~ BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
-                     //~ ds::trackParameters* ds::propagationLimit, pT, phi, theta,
-                     //~ charge, plimit) {
+/// test correct covariance transport for curvilinear parameters
+/// this test only works within the
+/// s_curvilinearProjTolerance (in: Definitions.hpp)
+BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
+                     ds::trackParameters* ds::propagationLimit, pT, phi, theta,
+                     charge, plimit) {
 						 
-  //~ // define start parameters
-  //~ double x = 1.;
-  //~ double y = 0.;
-  //~ double z = 0.;
-  //~ double px = pT * cos(phi);
-  //~ double py = pT * sin(phi);
-  //~ double pz = pT / tan(theta);
-  //~ double q = charge;
-  //~ double time = 0.;
-  //~ Vector3D pos(x, y, z);
-  //~ Vector3D mom(px, py, pz);
+  // define start parameters
+  double x = 1.;
+  double y = 0.;
+  double z = 0.;
+  double px = pT * cos(phi);
+  double py = pT * sin(phi);
+  double pz = pT / tan(theta);
+  double q = charge;
+  double time = 0.;
+  Vector3D pos(x, y, z);
+  Vector3D mom(px, py, pz);
 
-  //~ std::optional<Covariance> covOpt = std::nullopt;
-  //~ if (covtpr) {
-    //~ Covariance cov;
-    //~ // take some major correlations (off-diagonals)
-    //~ // clang-format off
-    //~ cov <<
-     //~ 10_mm, 0, 0.123, 0, 0.5, 0,
-     //~ 0, 10_mm, 0, 0.162, 0, 0,
-     //~ 0.123, 0, 0.1, 0, 0, 0,
-     //~ 0, 0.162, 0, 0.1, 0, 0,
-     //~ 0.5, 0, 0, 0, 1_e / 10_GeV, 0,
-     //~ 0, 0, 0, 0, 0, 1_us;
-    //~ // clang-format on
-    //~ covOpt = cov;
-  //~ }
-  //~ CurvilinearParameters startC(covOpt, pos, mom, q, time);
-  //~ NeutralCurvilinearParameters startN(covOpt, pos, mom, time);
+  std::optional<Covariance> covOpt = std::nullopt;
+  if (covtpr) {
+    Covariance cov;
+    // take some major correlations (off-diagonals)
+    // clang-format off
+    cov <<
+     10_mm, 0, 0.123, 0, 0.5, 0,
+     0, 10_mm, 0, 0.162, 0, 0,
+     0.123, 0, 0.1, 0, 0, 0,
+     0, 0.162, 0, 0.1, 0, 0,
+     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
+     0, 0, 0, 0, 0, 1_us;
+    // clang-format on
+    covOpt = cov;
+  }
+  CurvilinearParameters startC(covOpt, pos, mom, q, time);
+  NeutralCurvilinearParameters startN(covOpt, pos, mom, time);
 
-  //~ Vector3D dir = mom.normalized();
-  //~ FreeVector parsC, parsN;
-  //~ parsC << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
-  //~ parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
-  //~ FreeParameters startCF(std::nullopt, parsC);
-  //~ NeutralFreeParameters startNF(std::nullopt, parsN);
+  Vector3D dir = mom.normalized();
+  FreeVector parsC, parsN;
+  parsC << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
+  parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
+  FreeParameters startCF(std::nullopt, parsC);
+  NeutralFreeParameters startNF(std::nullopt, parsN);
   
-  //~ // covariance check for straight line stepper
-  //~ CHECK_CLOSE_COVARIANCE(
-      //~ covariance_curvilinear<CurvilinearParameters>(rspropagator, startN, plimit),
-      //~ covariance_curvilinear<CurvilinearParameters>(spropagator, startN, plimit),
-      //~ 1e-3);
-  //~ // covariance check for eigen stepper
-  //~ CHECK_CLOSE_COVARIANCE(
-      //~ covariance_curvilinear<CurvilinearParameters>(repropagator, startC, plimit),
-      //~ covariance_curvilinear<CurvilinearParameters>(epropagator, startC, plimit),
-      //~ 1e-3);
+  // covariance check for straight line stepper
+  CHECK_CLOSE_COVARIANCE(
+      covariance_curvilinear<CurvilinearParameters>(rspropagator, startN, plimit),
+      covariance_curvilinear<CurvilinearParameters>(spropagator, startN, plimit),
+      1e-3);
+  // covariance check for eigen stepper
+  CHECK_CLOSE_COVARIANCE(
+      covariance_curvilinear<CurvilinearParameters>(repropagator, startC, plimit),
+      covariance_curvilinear<CurvilinearParameters>(epropagator, startC, plimit),
+      1e-3);
       
-  //~ ///
-  //~ /// Free to Curvilinear Tests
-  //~ ///
+  ///
+  /// Free to Curvilinear Tests
+  ///
   
-  //~ // covariance check for straight line stepper
-  //~ CHECK_CLOSE_COVARIANCE(
-      //~ covariance_curvilinear<FreeParameters>(rspropagator, start, plimit),
-      //~ covariance_curvilinear<FreeParameters>(spropagator, start, plimit),
-      //~ 1e-3);
-  //~ // covariance check for eigen stepper
-  //~ CHECK_CLOSE_COVARIANCE(
-      //~ covariance_curvilinear<FreeParameters>(repropagator, start, plimit),
-      //~ covariance_curvilinear<FreeParameters>(epropagator, start, plimit),
-      //~ 1e-3);
-//~ }
+  // covariance check for straight line stepper
+  CHECK_CLOSE_COVARIANCE(
+      covariance_curvilinear<CurvilinearParameters>(rspropagator, startNF, plimit),
+      covariance_curvilinear<CurvilinearParameters>(spropagator, startNF, plimit),
+      1e-3);
+  // covariance check for eigen stepper
+  CHECK_CLOSE_COVARIANCE(
+      covariance_curvilinear<CurvilinearParameters>(repropagator, startCF, plimit),
+      covariance_curvilinear<CurvilinearParameters>(epropagator, startCF, plimit),
+      1e-3);
+}
 /**
 // test correct covariance transport from disc to disc
 BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
