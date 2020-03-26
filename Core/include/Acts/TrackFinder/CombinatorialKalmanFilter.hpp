@@ -314,11 +314,9 @@ class CombinatorialKalmanFilter {
       }
 
       // Update:
-      // - Waiting for a current surface that has material
-      // -> a trackState will be created on surface with material
+      // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
-      if (surface and surface->surfaceMaterial() and
-          not result.forwardFiltered) {
+      if (surface != nullptr and not result.forwardFiltered) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -517,14 +515,6 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, result_type& result) const {
-      // Retrieve the tip state and remove the current tip from active tips
-      TipState preTipState;
-      auto tip_it = result.activeTips.find(result.currentTip);
-      if (tip_it != result.activeTips.end()) {
-        preTipState = tip_it->second;
-        result.activeTips.erase(tip_it);
-      }
-
       // Initialize the number of branches on current surface
       size_t nBranchesOnSurface = 0;
 
@@ -534,6 +524,14 @@ class CombinatorialKalmanFilter {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geoID()
                                             << " detected.");
+
+        // Retrieve the tip state and remove the current tip from active tips
+        TipState preTipState;
+        auto tip_it = result.activeTips.find(result.currentTip);
+        if (tip_it != result.activeTips.end()) {
+          preTipState = tip_it->second;
+          result.activeTips.erase(tip_it);
+        }
 
         // Get the already created track state tips with source links on this
         // surface
@@ -726,14 +724,21 @@ class CombinatorialKalmanFilter {
             }
           }
         }
-
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, postUpdate);
-      } else {
-        // Create state if there is measurement on this surface
+      } else if (surface->surfaceMaterial() != nullptr) {
+        // Retrieve the tip state and remove the current tip from active tips
+        TipState preTipState;
+        auto tip_it = result.activeTips.find(result.currentTip);
+        if (tip_it != result.activeTips.end()) {
+          preTipState = tip_it->second;
+          result.activeTips.erase(tip_it);
+        }
+
+        // Create state if there is already measurement detected on this branch
         if (preTipState.nMeasurements > 0) {
           // No source links on surface, add either hole or passive material
-          // TrackState entry multi trajectory No storage allocation for
+          // TrackState. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
           result.currentTip = result.fittedStates.addTrackState(
               ~(TrackStatePropMask::Uncalibrated |
@@ -810,15 +815,17 @@ class CombinatorialKalmanFilter {
             // Count the valid branches on current surface
             nBranchesOnSurface++;
           }
-
         } else {
-          // Even no state is created, this branch is still valid. Count the
+          // No state is created, this branch is still valid. Count the
           // branch on current surface
           nBranchesOnSurface++;
         }
-
         // Update state and stepper with material effects
         materialInteractor(surface, state, stepper, fullUpdate);
+      } else {
+        // Neither measurement nor material on surface, this branch is still
+        // valid. Count the branch on current surface
+        nBranchesOnSurface++;
       }
 
       // Reset current tip if there is no branch on current surface
@@ -853,27 +860,40 @@ class CombinatorialKalmanFilter {
     void materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
-      // Prepare relevant input particle properties
-      detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
+      // Indicator if having material
+      bool hasMaterial = false;
 
-      // Evaluate the material properties
-      if (interaction.evaluateMaterialProperties(state, updateStage)) {
-        // Evaluate the material effects
-        interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
-                                                         energyLoss);
+      if (surface and surface->surfaceMaterial()) {
+        // Prepare relevant input particle properties
+        detail::PointwiseMaterialInteraction interaction(surface, state,
+                                                         stepper);
+        // Evaluate the material properties
+        if (interaction.evaluateMaterialProperties(state, updateStage)) {
+          // Surface has material at this stage
+          hasMaterial = true;
 
-        ACTS_VERBOSE("Material effects on surface: "
-                     << surface->geoID() << " at update stage: " << updateStage
-                     << " are :");
-        ACTS_VERBOSE("eLoss = "
-                     << interaction.Eloss << ", "
-                     << "variancePhi = " << interaction.variancePhi << ", "
-                     << "varianceTheta = " << interaction.varianceTheta << ", "
-                     << "varianceQoverP = " << interaction.varianceQoverP);
+          // Evaluate the material effects
+          interaction.evaluatePointwiseMaterialInteraction(multipleScattering,
+                                                           energyLoss);
 
-        // Update the state and stepper with material effects
-        interaction.updateState(state, stepper);
-      } else {
+          // Screen out material effects info
+          ACTS_VERBOSE("Material effects on surface: "
+                       << surface->geoID()
+                       << " at update stage: " << updateStage << " are :");
+          ACTS_VERBOSE("eLoss = "
+                       << interaction.Eloss << ", "
+                       << "variancePhi = " << interaction.variancePhi << ", "
+                       << "varianceTheta = " << interaction.varianceTheta
+                       << ", "
+                       << "varianceQoverP = " << interaction.varianceQoverP);
+
+          // Update the state and stepper with material effects
+          interaction.updateState(state, stepper);
+        }
+      }
+
+      if (not hasMaterial) {
+        // Screen out message
         ACTS_VERBOSE("No material effects on surface: " << surface->geoID()
                                                         << " at update stage: "
                                                         << updateStage);
@@ -1098,9 +1118,6 @@ class CombinatorialKalmanFilter {
 
     /// It could happen that propagation reaches max step size
     /// before the track finding is finished.
-    /// @TODO: tune source link selector or propagation options to suppress this
-    /// It can also due to the fact that the navigation never breaks (as in KF
-    /// fit call?)
     if (combKalmanResult.result.ok() and not combKalmanResult.forwardFiltered) {
       combKalmanResult.result = Result<void>(
           CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
