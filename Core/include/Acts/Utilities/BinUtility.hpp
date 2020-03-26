@@ -142,8 +142,6 @@ class BinUtility {
 
   /// Virtual Destructor
   ~BinUtility() = default;
-  /// Implizit Constructor
-  BinUtility* clone() const { return new BinUtility(*this); }
 
   /// return the binning data vector
   const std::vector<BinningData>& binningData() const { return m_binningData; }

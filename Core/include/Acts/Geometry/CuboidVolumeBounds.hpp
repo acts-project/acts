@@ -85,8 +85,6 @@ class CuboidVolumeBounds : public VolumeBounds {
 
   ~CuboidVolumeBounds() override = default;
 
-  CuboidVolumeBounds* clone() const override;
-
   VolumeBounds::BoundsType type() const final { return VolumeBounds::eCuboid; }
 
   /// Return the bound values as dynamically sized vector
@@ -141,10 +139,6 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline CuboidVolumeBounds* CuboidVolumeBounds::clone() const {
-  return new CuboidVolumeBounds(*this);
-}
 
 inline bool CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&

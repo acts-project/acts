@@ -63,9 +63,6 @@ class Volume : public virtual GeometryObject {
   /// @param vol is the source volume to be copied
   Volume& operator=(const Volume& vol);
 
-  /// Pseudo-constructor
-  virtual Volume* clone() const;
-
   /// Return methods for geometry transform
   const Transform3D& transform() const;
 

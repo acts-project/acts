@@ -118,13 +118,6 @@ class SingleFreeParameters {
         std::forward<const SingleFreeParameters<ChargePolicy>>(copy));
   }
 
-  /// @brief Heap copy constructor
-  ///
-  /// @return Heap allocated copy of `*this`
-  SingleFreeParameters<ChargePolicy>* clone() const {
-    return new SingleFreeParameters<ChargePolicy>(*this);
-  }
-
   /// @brief Access all parameters
   ///
   /// @return Vector containing the store parameters

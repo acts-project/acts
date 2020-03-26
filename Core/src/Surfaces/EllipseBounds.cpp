@@ -17,10 +17,6 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::EllipseBounds* Acts::EllipseBounds::clone() const {
-  return new EllipseBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::EllipseBounds::type() const {
   return SurfaceBounds::eEllipse;
 }

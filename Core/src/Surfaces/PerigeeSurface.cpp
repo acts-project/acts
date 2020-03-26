@@ -38,16 +38,6 @@ Acts::PerigeeSurface& Acts::PerigeeSurface::operator=(
   return *this;
 }
 
-std::shared_ptr<Acts::PerigeeSurface> Acts::PerigeeSurface::clone(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return std::shared_ptr<PerigeeSurface>(this->clone_impl(gctx, shift));
-}
-
-Acts::PerigeeSurface* Acts::PerigeeSurface::clone_impl(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return new PerigeeSurface(gctx, *this, shift);
-}
-
 Acts::Surface::SurfaceType Acts::PerigeeSurface::type() const {
   return Surface::Perigee;
 }

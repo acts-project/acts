@@ -109,9 +109,6 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
   /// Test clone
   EllipseBounds ellipseBoundsObject(minRad0, maxRad0, minRad1, maxRad1,
                                     phiSector, averagePhi);
-  auto pClonedEllipseBoundsObject = ellipseBoundsObject.clone();
-  BOOST_CHECK_NE(pClonedEllipseBoundsObject, nullptr);
-  delete pClonedEllipseBoundsObject;
   //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::eEllipse);

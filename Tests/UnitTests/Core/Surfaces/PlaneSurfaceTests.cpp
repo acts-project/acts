@@ -77,27 +77,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   auto pTransform = std::make_shared<const Transform3D>(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
-  //
-  auto pClonedPlaneSurface =
-      planeSurfaceObject->clone(tgContext, Transform3D::Identity());
-  BOOST_CHECK_EQUAL(pClonedPlaneSurface->type(), Surface::Plane);
-  // Test clone method with translation
-  auto pClonedShiftedPlaneSurface =
-      planeSurfaceObject->clone(tgContext, *pTransform.get());
-  // Does it exist at all in a decent state?
-  BOOST_CHECK_EQUAL(pClonedShiftedPlaneSurface->type(), Surface::Plane);
   // Is it in the right place?
   Translation3D translation2{0., 2., 4.};
   auto pTransform2 = std::make_shared<const Transform3D>(translation2);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
-  // these two surfaces should be equivalent now (prematurely testing equality
-  // also)
-  BOOST_CHECK(*pClonedShiftedPlaneSurface == *planeSurfaceObject2);
-  // and, trivially, the shifted cloned surface should be different from the
-  // original
-  BOOST_CHECK(*pClonedShiftedPlaneSurface != *planeSurfaceObject);
-  //
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(planeSurfaceObject->type(), Surface::Plane);
   //

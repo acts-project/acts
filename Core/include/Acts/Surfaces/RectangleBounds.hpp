@@ -62,8 +62,6 @@ class RectangleBounds : public PlanarBounds {
 
   ~RectangleBounds() override = default;
 
-  RectangleBounds* clone() const final;
-
   BoundsType type() const final;
 
   std::vector<double> values() const final;

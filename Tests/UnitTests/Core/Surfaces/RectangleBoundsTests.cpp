@@ -119,19 +119,6 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
       assignedVertices.cbegin(), assignedVertices.cend());
 }
 
-BOOST_AUTO_TEST_CASE(RectangleBoundsClone) {
-  const double halfX(10.), halfY(5.);
-  RectangleBounds rectA(halfX, halfY);
-  auto rectB = rectA.clone();
-  BOOST_CHECK_NE(rectB, nullptr);
-  const auto& originalVertices = rectA.vertices();
-  const auto& clonedVertices = rectB->vertices();
-  BOOST_CHECK_EQUAL_COLLECTIONS(originalVertices.cbegin(),
-                                originalVertices.cend(),
-                                clonedVertices.cbegin(), clonedVertices.cend());
-  delete rectB;
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 

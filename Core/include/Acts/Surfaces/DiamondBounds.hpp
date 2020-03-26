@@ -62,8 +62,6 @@ class DiamondBounds : public PlanarBounds {
 
   ~DiamondBounds() override = default;
 
-  DiamondBounds* clone() const final;
-
   BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector

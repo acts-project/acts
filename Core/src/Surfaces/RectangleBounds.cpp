@@ -13,10 +13,6 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::RectangleBounds* Acts::RectangleBounds::clone() const {
-  return new RectangleBounds(*this);
-}
-
 bool Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, m_min, m_max);

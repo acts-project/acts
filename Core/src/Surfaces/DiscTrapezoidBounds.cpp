@@ -20,10 +20,6 @@ Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
   checkConsistency();
 }
 
-Acts::DiscTrapezoidBounds* Acts::DiscTrapezoidBounds::clone() const {
-  return new DiscTrapezoidBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
   return SurfaceBounds::eDiscTrapezoid;
 }

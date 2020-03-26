@@ -101,16 +101,6 @@ std::string Acts::PlaneSurface::name() const {
   return "Acts::PlaneSurface";
 }
 
-std::shared_ptr<Acts::PlaneSurface> Acts::PlaneSurface::clone(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return std::shared_ptr<PlaneSurface>(this->clone_impl(gctx, shift));
-}
-
-Acts::PlaneSurface* Acts::PlaneSurface::clone_impl(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return new PlaneSurface(gctx, *this, shift);
-}
-
 const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
   if (m_bounds) {
     return (*m_bounds.get());

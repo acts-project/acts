@@ -71,8 +71,6 @@ class ConeBounds : public SurfaceBounds {
 
   ~ConeBounds() override = default;
 
-  ConeBounds* clone() const final;
-
   BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector

@@ -86,13 +86,6 @@ class CylinderSurface : public Surface {
   /// @param other is the source cylinder for the copy
   CylinderSurface& operator=(const CylinderSurface& other);
 
-  /// Clone method into a concrete type of CylinderSurface with shift
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  std::shared_ptr<CylinderSurface> clone(const GeometryContext& gctx,
-                                         const Transform3D& shift) const;
-
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -230,13 +223,6 @@ class CylinderSurface : public Surface {
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 
  private:
-  /// Clone method implementation
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  CylinderSurface* clone_impl(const GeometryContext& gctx,
-                              const Transform3D& shift) const override;
-
   /// Implementation of the intersection solver
   ///
   ///  <b>mathematical motivation:</b>

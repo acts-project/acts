@@ -55,13 +55,6 @@ class PerigeeSurface : public LineSurface {
   /// Default Constructor - deleted
   PerigeeSurface() = delete;
 
-  /// Clone method into a concrete type of PerigeeSurface with shift
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  std::shared_ptr<PerigeeSurface> clone(const GeometryContext& gctx,
-                                        const Transform3D& shift) const;
-
   /// Assignment operator
   ///
   /// @param other is the source surface to be assigned
@@ -90,14 +83,6 @@ class PerigeeSurface : public LineSurface {
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                       size_t /*ignored*/) const final;
-
- private:
-  /// Clone method implementation
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  PerigeeSurface* clone_impl(const GeometryContext& gctx,
-                             const Transform3D& shift) const override;
 };
 
 }  // namespace Acts

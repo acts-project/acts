@@ -88,11 +88,6 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   CylinderBounds cylinderBoundsSegment(nominalRadius, nominalHalfLength,
                                        halfphi, averagePhi);
 
-  /// test for clone
-  auto pCylinderBoundsClone = cylinderBoundsObject.clone();
-  BOOST_CHECK_NE(pCylinderBoundsClone, nullptr);
-  delete pCylinderBoundsClone;
-
   /// test for type()
   BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::eCylinder);
 

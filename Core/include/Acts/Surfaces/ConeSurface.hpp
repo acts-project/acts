@@ -83,12 +83,6 @@ class ConeSurface : public Surface {
   /// @param other is the source surface for the assignment
   ConeSurface& operator=(const ConeSurface& other);
 
-  /// Clone method into a concrete type of ConeSurface with shift
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  std::shared_ptr<ConeSurface> clone(const GeometryContext& gctx,
-                                     const Transform3D& shift) const;
-
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -260,13 +254,6 @@ class ConeSurface : public Surface {
   detail::RealQuadraticEquation intersectionSolver(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction) const;
-
-  /// Clone method implementation
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  ConeSurface* clone_impl(const GeometryContext& gctx,
-                          const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/ConeSurface.ipp"
