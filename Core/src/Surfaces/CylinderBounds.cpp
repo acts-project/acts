@@ -16,10 +16,6 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::CylinderBounds* Acts::CylinderBounds::clone() const {
-  return new CylinderBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
   return SurfaceBounds::eCylinder;
 }

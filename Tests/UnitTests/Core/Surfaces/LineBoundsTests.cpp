@@ -73,11 +73,6 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   double nominalHalfLength{20.};
   LineBounds lineBoundsObject(nominalRadius, nominalHalfLength);
 
-  /// test for clone
-  auto pLineBoundsClone = lineBoundsObject.clone();
-  BOOST_CHECK_NE(pLineBoundsClone, nullptr);
-  delete pLineBoundsClone;
-
   /// test for type()
   BOOST_CHECK_EQUAL(lineBoundsObject.type(), SurfaceBounds::eLine);
 

@@ -14,10 +14,6 @@
 
 Acts::TrapezoidBounds::~TrapezoidBounds() = default;
 
-Acts::TrapezoidBounds* Acts::TrapezoidBounds::clone() const {
-  return new TrapezoidBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }

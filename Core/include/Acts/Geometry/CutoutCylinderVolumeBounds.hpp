@@ -73,8 +73,6 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
 
   ~CutoutCylinderVolumeBounds() override = default;
 
-  VolumeBounds* clone() const override;
-
   VolumeBounds::BoundsType type() const final {
     return VolumeBounds::eCutoutCylinder;
   }

@@ -14,10 +14,6 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::RadialBounds* Acts::RadialBounds::clone() const {
-  return new RadialBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::RadialBounds::type() const {
   return SurfaceBounds::eDisc;
 }

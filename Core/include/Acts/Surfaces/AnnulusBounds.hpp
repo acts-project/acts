@@ -69,8 +69,6 @@ class AnnulusBounds : public DiscBounds {
 
   AnnulusBounds(const AnnulusBounds& source) = default;
 
-  AnnulusBounds* clone() const final;
-
   SurfaceBounds::BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector
@@ -215,10 +213,6 @@ class AnnulusBounds : public DiscBounds {
   double squaredNorm(const Vector2D& v,
                      const Eigen::Matrix<double, 2, 2>& weight) const;
 };
-
-inline AnnulusBounds* AnnulusBounds::clone() const {
-  return new AnnulusBounds(m_values);
-}
 
 inline SurfaceBounds::BoundsType AnnulusBounds::type() const {
   return SurfaceBounds::eAnnulus;

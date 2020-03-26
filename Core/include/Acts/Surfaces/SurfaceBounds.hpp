@@ -47,12 +47,6 @@ class SurfaceBounds {
 
   virtual ~SurfaceBounds() = default;
 
-  /// clone() method to make deep copy in Surface copy constructor and for
-  /// assigment operator of the Surface class
-  ///
-  /// @return is a newly created object
-  virtual SurfaceBounds* clone() const = 0;
-
   /// Return the bounds type - for persistency optimization
   ///
   /// @return is a BoundsType enum

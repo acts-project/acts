@@ -34,10 +34,6 @@ Acts::ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(
   checkConsistency();
 }
 
-Acts::ConeBounds* Acts::ConeBounds::clone() const {
-  return new ConeBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::ConeBounds::type() const {
   return SurfaceBounds::eCone;
 }

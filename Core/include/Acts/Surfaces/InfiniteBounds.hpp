@@ -23,8 +23,6 @@ class InfiniteBounds : public SurfaceBounds {
 
   ~InfiniteBounds() override = default;
 
-  InfiniteBounds* clone() const final { return new InfiniteBounds(); }
-
   SurfaceBounds::BoundsType type() const final {
     return SurfaceBounds::eBoundless;
   }

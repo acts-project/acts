@@ -78,10 +78,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   /// Test construction with radii and default sector
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
 
-  /// Test clone
-  auto pClonedAnnulusBounds = aBounds.clone();
-  BOOST_CHECK_NE(pClonedAnnulusBounds, nullptr);
-  delete pClonedAnnulusBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::eAnnulus);

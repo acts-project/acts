@@ -60,8 +60,6 @@ class TrapezoidBounds : public PlanarBounds {
 
   ~TrapezoidBounds() override;
 
-  TrapezoidBounds* clone() const final;
-
   BoundsType type() const final;
 
   std::vector<double> values() const final;

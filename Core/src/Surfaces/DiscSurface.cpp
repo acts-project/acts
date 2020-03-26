@@ -135,16 +135,6 @@ std::string Acts::DiscSurface::name() const {
   return "Acts::DiscSurface";
 }
 
-std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::clone(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return std::shared_ptr<DiscSurface>(this->clone_impl(gctx, shift));
-}
-
-Acts::DiscSurface* Acts::DiscSurface::clone_impl(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return new DiscSurface(gctx, *this, shift);
-}
-
 const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
   if (m_bounds) {
     return (*(m_bounds.get()));

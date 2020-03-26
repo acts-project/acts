@@ -7,9 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
-
-#include <memory>
-#include <vector>
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -19,9 +16,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IVisualization.hpp"
 
-Acts::VolumeBounds* Acts::CutoutCylinderVolumeBounds::clone() const {
-  return new CutoutCylinderVolumeBounds(*this);
-}
+#include <memory>
+#include <vector>
 
 bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3D& gpos,
                                               double tol) const {

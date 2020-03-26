@@ -89,10 +89,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
   //
-  auto pClonedCylinderSurface =
-      cylinderSurfaceObject->clone(testContext, Transform3D::Identity());
-  BOOST_CHECK_EQUAL(pClonedCylinderSurface->type(), Surface::Cylinder);
-  //
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->type(), Surface::Cylinder);
   //

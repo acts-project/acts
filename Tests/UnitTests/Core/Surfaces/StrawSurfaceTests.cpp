@@ -83,10 +83,6 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceProperties) {
   auto strawSurfaceObject =
       Surface::makeShared<StrawSurface>(pTransform, radius, halfZ);
   //
-  auto pClonedStrawSurface =
-      strawSurfaceObject->clone(tgContext, Transform3D::Identity());
-  BOOST_CHECK_EQUAL(pClonedStrawSurface->type(), Surface::Straw);
-  //
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(strawSurfaceObject->type(), Surface::Straw);
   //

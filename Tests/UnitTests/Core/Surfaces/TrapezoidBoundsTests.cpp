@@ -78,10 +78,6 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
   double minHalfX(1.), maxHalfX(6.), halfY(2.);
   //
   TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
-  /// Test clone
-  auto pClonedTrapezoidBounds = trapezoidBoundsObject.clone();
-  BOOST_CHECK_NE(pClonedTrapezoidBounds, nullptr);
-  delete pClonedTrapezoidBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::eTrapezoid);

@@ -67,9 +67,6 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceProperties) {
   /// Test clone method
   Vector3D unitXYZ{1., 1., 1.};
   auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
-  auto pClonedPerigeeSurface =
-      perigeeSurfaceObject->clone(tgContext, Transform3D::Identity());
-  BOOST_CHECK_EQUAL(pClonedPerigeeSurface->type(), Surface::Perigee);
   //
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(perigeeSurfaceObject->type(), Surface::Perigee);

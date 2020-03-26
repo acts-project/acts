@@ -81,13 +81,6 @@ class PlaneSurface : public Surface {
   /// @param other The source PlaneSurface for assignment
   PlaneSurface& operator=(const PlaneSurface& other);
 
-  /// Clone method into a concrete type of PlaneSurface with shift
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  std::shared_ptr<PlaneSurface> clone(const GeometryContext& gctx,
-                                      const Transform3D& shift) const;
-
   /// Normal vector return
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -207,12 +200,6 @@ class PlaneSurface : public Surface {
   std::shared_ptr<const PlanarBounds> m_bounds;
 
  private:
-  /// Clone method implementation
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  PlaneSurface* clone_impl(const GeometryContext& gctx,
-                           const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"

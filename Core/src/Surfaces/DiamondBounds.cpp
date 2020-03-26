@@ -12,10 +12,6 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::DiamondBounds* Acts::DiamondBounds::clone() const {
-  return new DiamondBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
 }

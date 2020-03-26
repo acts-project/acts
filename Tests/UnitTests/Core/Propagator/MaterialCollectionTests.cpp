@@ -250,7 +250,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // move forward step by step through the surfaces
   const TrackParameters* sParameters = &start;
-  std::vector<const TrackParameters*> stepParameters;
+  std::vector<std::unique_ptr<const BoundParameters>> stepParameters;
   for (auto& fwdSteps : fwdMaterial.materialInteractions) {
     if (debugModeFwdStep) {
       std::cout << ">>> Forward step : "
@@ -275,9 +275,10 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
     if (fwdStep.endParameters != nullptr) {
-      sParameters = fwdStep.endParameters->clone();
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(sParameters);
+      stepParameters.push_back(
+          std::make_unique<BoundParameters>((*fwdStep.endParameters.get())));
+      sParameters = stepParameters.back().get();
     }
   }
   // final destination surface
@@ -364,9 +365,10 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
     if (bwdStep.endParameters != nullptr) {
-      sParameters = bwdStep.endParameters->clone();
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(sParameters);
+      stepParameters.push_back(
+          std::make_unique<BoundParameters>(*(bwdStep.endParameters.get())));
+      sParameters = stepParameters.back().get();
     }
   }
   // final destination surface

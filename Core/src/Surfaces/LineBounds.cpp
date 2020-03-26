@@ -11,10 +11,6 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::LineBounds* Acts::LineBounds::clone() const {
-  return new LineBounds(*this);
-}
-
 Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
   return SurfaceBounds::eLine;
 }

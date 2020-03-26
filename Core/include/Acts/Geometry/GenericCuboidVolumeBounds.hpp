@@ -46,8 +46,6 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
 
   ~GenericCuboidVolumeBounds() override = default;
 
-  VolumeBounds* clone() const override;
-
   VolumeBounds::BoundsType type() const final {
     return VolumeBounds::eGenericCuboid;
   }

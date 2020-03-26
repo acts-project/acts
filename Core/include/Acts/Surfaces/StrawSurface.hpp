@@ -80,13 +80,6 @@ class StrawSurface : public LineSurface {
   /// @param other is the source surface for copying
   StrawSurface& operator=(const StrawSurface& other);
 
-  /// Clone method into a concrete type of StrawSurface with shift
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  std::shared_ptr<StrawSurface> clone(const GeometryContext& gctx,
-                                      const Transform3D& shift) const;
-
   /// Return the surface type
   SurfaceType type() const final;
 
@@ -103,14 +96,6 @@ class StrawSurface : public LineSurface {
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                       size_t lseg) const final;
-
- private:
-  /// Clone method implementation
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  StrawSurface* clone_impl(const GeometryContext& gctx,
-                           const Transform3D& shift) const override;
 };
 
 inline Surface::SurfaceType StrawSurface::type() const {
