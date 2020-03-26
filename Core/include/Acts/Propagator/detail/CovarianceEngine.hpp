@@ -56,25 +56,43 @@ CurvilinearParameters makeCurvilinearParameters(
     const FreeVector& freeParams, const BoundSymMatrix& curvilinearCov,
     bool covIsValid);
 
-/// Transport covariance to the bound state on an arbitrary surface.
+/// Compute the combined jacobian to bound parameters on a surface.
 ///
-/// @param [in,out] state The stepper state
-/// @param [in] surface is the surface to which the covariance is forwarded to
+/// @param [in] freeParams free parameters vector
+/// @param [in] surface target surface for the bound parameters
+/// @param [in] geoCtx geometry context
+/// @param [in,out] jacToGlobal Jacobian from initial bound to free parameters
+/// @param [in,out] jacTransport Transport Jacobian in free parameters
+/// @param [in,out] derivative Stepper derivative
+/// @param [out] jacobian from initial bound to target bound parameters.
 ///
-/// @note This assumes that the current global parameter state has already been
-///       propagated to be on the surface.
+/// @note This assumes that the current global parameter state has already
+///       been propagated to be on the surface.
 ///
-/// The Jacobians are reset such that they represent the propagation starting at
-/// the surface.
-void transportCovarianceToBound(StepperState& state, const Surface& surface);
+/// The partial Jacobians are reset such that they represent the propagation
+/// starting at the surface.
+void updateJacobiansToBound(const FreeVector& freeParams,
+                            const Surface& surface,
+                            const GeometryContext& geoCtx,
+                            BoundToFreeMatrix& jacToGlobal,
+                            FreeMatrix& jacTransport, FreeVector& derivative,
+                            BoundMatrix& jacobian);
 
-/// Transport covariance to the bound state on the current curvilinear frame.
+/// Compute the combined Jacobian to curvilinear parameters.
 ///
-/// @param [in,out] state The stepper state
+/// @param [in] freeParams free parameters vector
+/// @param [in,out] jacToGlobal Jacobian from initial bound to free parameters
+/// @param [in,out] jacTransport Transport Jacobian in free parameters
+/// @param [in,out] derivative Stepper derivative
+/// @param [out] jacobian from initial bound to target curvilinear parameters.
 ///
-/// The Jacobians are reset such that they represent the propagation starting at
-/// the current curvilinear frame.
-void transportCovarianceToCurvilinear(StepperState& state);
+/// The partial Jacobians are reset such that they represent the propagation
+/// starting at current curvilinear frame.
+void updateJacobiansToCurvilinear(const FreeVector& freeParams,
+                                  BoundToFreeMatrix& jacToGlobal,
+                                  FreeMatrix& jacTransport,
+                                  FreeVector& derivative,
+                                  BoundMatrix& jacobian);
 
 }  // namespace detail
 }  // namespace Acts

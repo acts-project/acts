@@ -50,12 +50,22 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
 }
 
 void StraightLineStepper::covarianceTransport(State& state) const {
-  detail::transportCovarianceToCurvilinear(state);
+  detail::updateJacobiansToCurvilinear(parameters(state), state.jacToGlobal,
+                                       state.jacTransport, state.derivative,
+                                       state.jacobian);
+  if (state.covTransport) {
+    state.cov = state.jacobian * state.cov * state.jacobian.transpose();
+  }
 }
 
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface) const {
-  detail::transportCovarianceToBound(state, surface);
+  detail::updateJacobiansToBound(parameters(state), surface, state.geoContext,
+                                 state.jacToGlobal, state.jacTransport,
+                                 state.derivative, state.jacobian);
+  if (state.covTransport) {
+    state.cov = state.jacobian * state.cov * state.jacobian.transpose();
+  }
 }
 
 }  // namespace Acts
