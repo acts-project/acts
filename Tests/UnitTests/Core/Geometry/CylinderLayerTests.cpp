@@ -45,7 +45,8 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
   auto pTransform = std::make_shared<const Transform3D>(translation);
   double radius(0.5), halfz(10.);
   auto pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
-  auto pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
+  auto pCylinderLayer =
+      CylinderLayer::create(pTransform, pCylinder, nullptr, 1.);
   BOOST_CHECK_EQUAL(pCylinderLayer->layerType(), LayerType::passive);
   // next level: need an array of Surfaces;
   // bounds object, rectangle type
@@ -57,7 +58,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
   const double thickness(1.0);
   auto pCylinderLayerFromSurfaces =
-      CylinderLayer::create(pTransform, pCylinder, nullptr);
+      CylinderLayer::create(pTransform, pCylinder, nullptr, thickness);
   BOOST_CHECK_EQUAL(pCylinderLayerFromSurfaces->layerType(),
                     LayerType::passive);
   // construct with thickness:
@@ -86,7 +87,8 @@ BOOST_AUTO_TEST_CASE(CylinderLayerProperties /*, *utf::expected_failures(1)*/) {
   auto pTransform = std::make_shared<const Transform3D>(translation);
   double radius(0.5), halfz(10.);
   auto pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
-  auto pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
+  auto pCylinderLayer =
+      CylinderLayer::create(pTransform, pCylinder, nullptr, 1.);
   // auto planeSurface = pCylinderLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pCylinderLayer->surfaceRepresentation().name(),
                     std::string("Acts::CylinderSurface"));

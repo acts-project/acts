@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cmath>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -16,12 +16,17 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+
+#include <array>
+#include <cmath>
+#include <exception>
+#include <vector>
 
 namespace Acts {
 
 class Surface;
 class CylinderBounds;
-class DiscBounds;
 class RadialBounds;
 class PlanarBounds;
 class IVisualization;
@@ -70,59 +75,64 @@ class IVisualization;
 
 class CylinderVolumeBounds : public VolumeBounds {
  public:
-  /// @enum BoundValues for readability
+  /// @enum BoundValues for streaming and access
   enum BoundValues {
-    bv_innerRadius = 0,
-    bv_outerRadius = 1,
-    bv_halfPhiSector = 2,
-    bv_halfZ = 3,
-    bv_length = 4
+    eMinR = 0,
+    eMaxR = 1,
+    eHalfLengthZ = 2,
+    eHalfPhiSector = 3,
+    eAveragePhi = 4,
+    eSize = 5
   };
 
   CylinderVolumeBounds() = delete;
 
-  /// Constructor - full cylinder
+  /// Constructor
   ///
-  /// @param radius is the outer radius of the cylinder
-  /// @param halez is the half length in z
-  CylinderVolumeBounds(double radius, double halez);
+  /// @param rmin The inner radius of the cylinder
+  /// @param rmax The outer radius of the cylinder
+  /// @param halfz The half length in z
+  /// @param halfphi The half lopening angle
+  /// @param avgphi The average phi value
+  CylinderVolumeBounds(double rmin, double rmax, double halfz,
+                       double halfphi = M_PI,
+                       double avgphi = 0.) noexcept(false)
+      : m_values({rmin, rmax, halfz, halfphi, avgphi}) {
+    checkConsistency();
+    buildSurfaceBounds();
+  }
 
-  /// Constructor - extruded cylinder
+  /// Constructor - from a fixed size array
   ///
-  /// @param rinner is the inner radius of the cylinder
-  /// @param router is the outer radius of the cylinder
-  /// @param halez is the half length in z
-  CylinderVolumeBounds(double rinner, double router, double halez);
+  /// @param values The bound values
+  CylinderVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values) {
+    checkConsistency();
+    buildSurfaceBounds();
+  }
 
-  /// Constructor - extruded cylinder
-  ///
-  /// @param rinner is the inner radius of the cylinder
-  /// @param router is the outer radius of the cylinder
-  /// @param haphi is the half opening angle
-  /// @param halez is the half length in z
-  CylinderVolumeBounds(double rinner, double router, double haphi,
-                       double halez);
-
-  /// Constructor - from cylinder bounds and thickness
+  /// Constructor - extruded from cylinder bounds and thickness
   ///
   /// @param cbounds the cylinder bounds
-  /// @param thickness
-  CylinderVolumeBounds(const CylinderBounds& cBounds, double thickness);
+  /// @param thickness of the extrusion
+  CylinderVolumeBounds(const CylinderBounds& cBounds,
+                       double thickness) noexcept(false);
 
-  /// Constructor - from radial bounds and thickness
+  /// Constructor - extruded from radial bounds and thickness
   ///
   /// @param rbounds the Radial bounds
   /// @param thickness
-  CylinderVolumeBounds(const RadialBounds& rBounds, double thickness);
+  CylinderVolumeBounds(const RadialBounds& rBounds,
+                       double thickness) noexcept(false);
 
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
-  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
+  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) = default;
 
-  ~CylinderVolumeBounds() override;
+  ~CylinderVolumeBounds() override = default;
 
-  CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo);
+  CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;
 
   CylinderVolumeBounds* clone() const override;
 
@@ -133,7 +143,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final { return {}; };
+  std::vector<double> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
@@ -167,54 +177,35 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param bValue is the type used for the binning
   double binningBorder(BinningValue bValue) const override;
 
-  /// This method returns the inner radius
-  double innerRadius() const;
-
-  /// This method returns the outer radius
-  double outerRadius() const;
-
-  /// This method returns the medium radius
-  double mediumRadius() const;
-
-  /// This method returns the delta radius
-  double deltaRadius() const;
-
-  /// This method returns the halfPhiSector angle
-  double halfPhiSector() const;
-
-  /// This method returns the halflengthZ
-  double halflengthZ() const;
-
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const override;
 
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
+
  private:
+  /// The internal version of the bounds can be float/double
+  std::array<double, eSize> m_values;
+  /// Bounds of the inner CylinderSurfaces
+  std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
+  /// Bounds of the inner CylinderSurfaces
+  std::shared_ptr<const CylinderBounds> m_outerCylinderBounds{nullptr};
+  /// Bounds of the bottom/top DiscSurface
+  std::shared_ptr<const RadialBounds> m_discBounds{nullptr};
+  /// Bounds of the sector planes
+  std::shared_ptr<const PlanarBounds> m_sectorPlaneBounds{nullptr};
+
+  /// Check the input values for consistency,
+  /// will throw a logic_exception if consistency is not given
+  void checkConsistency() noexcept(false);
+
+  /// Helper method to create the surface bounds
+  void buildSurfaceBounds();
+
   /// templated dumpT method
   template <class T>
   T& dumpT(T& tstream) const;
-
-  /// This method returns the associated CylinderBounds
-  /// of the inner CylinderSurfaces.
-  std::shared_ptr<const CylinderBounds> innerCylinderBounds() const;
-
-  /// This method returns the associated CylinderBounds
-  /// of the inner CylinderSurfaces.
-  std::shared_ptr<const CylinderBounds> outerCylinderBounds() const;
-
-  /// This method returns the associated RadialBounds
-  /// for the bottom/top DiscSurface
-  std::shared_ptr<const DiscBounds> discBounds() const;
-
-  /// This method returns the associated PlaneBounds
-  /// limiting a sectoral CylinderVolume
-  std::shared_ptr<const PlanarBounds> sectorPlaneBounds() const;
-
-  /// The internal version of the bounds can be float/double
-  std::vector<double> m_values;
-
-  /// numerical stability
-  /// @todo unify the numerical stability checks
-  static const double s_numericalStable;
 };
 
 inline CylinderVolumeBounds* CylinderVolumeBounds::clone() const {
@@ -226,66 +217,66 @@ inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   double ros = perp(pos);
-  bool insidePhi = cos(phi(pos)) >= cos(m_values[bv_halfPhiSector]) - tol;
-  bool insideR = insidePhi ? ((ros >= m_values[bv_innerRadius] - tol) &&
-                              (ros <= m_values[bv_outerRadius] + tol))
-                           : false;
+  bool insidePhi = cos(phi(pos)) >= cos(get(eHalfPhiSector)) - tol;
+  bool insideR = insidePhi
+                     ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
+                     : false;
   bool insideZ =
-      insideR ? (std::abs(pos.z()) <= m_values[bv_halfZ] + tol) : false;
+      insideR ? (std::abs(pos.z()) <= get(eHalfLengthZ) + tol) : false;
   return (insideZ && insideR && insidePhi);
 }
 
 inline Vector3D CylinderVolumeBounds::binningOffset(BinningValue bValue)
     const {  // the medium radius is taken for r-type binning
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
-    return Vector3D(mediumRadius(), 0., 0.);
+    return Vector3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
   }
   return VolumeBounds::binningOffset(bValue);
 }
 
-inline double CylinderVolumeBounds::binningBorder(BinningValue bValue)
-    const {  // the medium radius is taken for r-type binning
+inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
   if (bValue == Acts::binR) {
-    return 0.5 * deltaRadius();
+    return 0.5 * (get(eMaxR) - get(eMinR));
   }
   if (bValue == Acts::binZ) {
-    return halflengthZ();
+    return get(eHalfLengthZ);
   }
   return VolumeBounds::binningBorder(bValue);
-}
-
-inline double CylinderVolumeBounds::innerRadius() const {
-  return m_values.at(bv_innerRadius);
-}
-
-inline double CylinderVolumeBounds::outerRadius() const {
-  return m_values.at(bv_outerRadius);
-}
-
-inline double CylinderVolumeBounds::mediumRadius() const {
-  return 0.5 * (m_values.at(bv_innerRadius) + m_values.at(bv_outerRadius));
-}
-
-inline double CylinderVolumeBounds::deltaRadius() const {
-  return (m_values.at(bv_outerRadius) - m_values.at(bv_innerRadius));
-}
-
-inline double CylinderVolumeBounds::halfPhiSector() const {
-  return m_values.at(bv_halfPhiSector);
-}
-
-inline double CylinderVolumeBounds::halflengthZ() const {
-  return m_values.at(bv_halfZ);
 }
 
 template <class T>
 T& CylinderVolumeBounds::dumpT(T& tstream) const {
   tstream << std::setiosflags(std::ios::fixed);
   tstream << std::setprecision(5);
-  tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfPhi, halfZ) = ";
-  tstream << m_values.at(bv_innerRadius) << ", " << m_values.at(bv_outerRadius)
-          << ", " << m_values.at(bv_halfPhiSector) << ", "
-          << m_values.at(bv_halfZ);
+  tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
+             "averagePhi) = ";
+  tstream << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ)
+          << ", " << get(eHalfPhiSector) << get(eAveragePhi);
   return tstream;
 }
+
+inline std::vector<double> CylinderVolumeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) >= get(eMaxR)) {
+    throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
+  }
+  if (get(eHalfLengthZ) <= 0) {
+    throw std::invalid_argument(
+        "CylinderVolumeBounds: invalid longitudinal input.");
+  }
+  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument(
+        "CylinderVolumeBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument(
+        "CylinderVolumeBounds: invalid phi positioning.");
+  }
+}
+
 }  // namespace Acts

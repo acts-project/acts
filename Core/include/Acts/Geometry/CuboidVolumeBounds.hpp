@@ -15,6 +15,7 @@
 
 #include <array>
 #include <cmath>
+#include <exception>
 #include <vector>
 
 namespace Acts {

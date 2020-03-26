@@ -11,10 +11,14 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <vector>
 
 namespace Acts {
 
@@ -48,20 +52,18 @@ class TrapezoidBounds;
 
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
-  /// @enum BoundValues for readability
+  /// @enum BoundValues for acces / streaming
   enum BoundValues {
-    bv_minHalfX = 0,  //!< minimal halflength in x
-    bv_maxHalfX = 1,  //!< maximal halflength in x
-    bv_halfY = 2,     //!< halflength in y
-    bv_halfZ = 3,     //!< halflength in z
-    bv_alpha = 4,     //!< opening angle alpha (in point A)
-    bv_beta = 5,      //!< opening angle beta  (in point B)
-    bv_length = 6     // length of the bounds vector
-
+    eHalfLengthXnegY = 0,  //!< halflength in x at negative y
+    eHalfLengthXposY = 1,  //!< halflength in x at positive y
+    eHalfLengthY = 2,      //!< halflength in y
+    eHalfLengthZ = 3,      //!< halflength in z
+    eAlpha = 4,            //!< opening angle alpha (in point A)
+    eBeta = 5,             //!< opening angle beta  (in point B)
+    eSize = 6              //!< length of the bounds vector
   };
 
-  /// Default Constructor
-  TrapezoidVolumeBounds();
+  TrapezoidVolumeBounds() = delete;
 
   /// Constructor - the trapezoid boundaries (symmetric trapezoid)
   ///
@@ -70,7 +72,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @param haley is the half length in y
   /// @param halez is the half length in z
   TrapezoidVolumeBounds(double minhalex, double maxhalex, double haley,
-                        double halez);
+                        double halez) noexcept(false);
 
   /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
   ///
@@ -80,17 +82,23 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @param alpha is the openeing angle at -x,-y
   /// @param beta is the openeing angle at +x,-y
   TrapezoidVolumeBounds(double minhalex, double haley, double halez,
-                        double alpha, double beta);
+                        double alpha, double beta) noexcept(false);
 
-  /// Copy Constructor
-  /// @param trabo The object to be copied
-  TrapezoidVolumeBounds(const TrapezoidVolumeBounds& trabo);
+  /// Constructor - from a fixed size array
+  ///
+  /// @param values The bound values
+  TrapezoidVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values) {
+    checkConsistency();
+    buildSurfaceBounds();
+  }
 
-  /// Assignment operator
-  /// @param trabo The object to be assigned
-  TrapezoidVolumeBounds& operator=(const TrapezoidVolumeBounds& trabo);
+  TrapezoidVolumeBounds(const TrapezoidVolumeBounds& trabo) = default;
 
-  ~TrapezoidVolumeBounds() override;
+  TrapezoidVolumeBounds& operator=(const TrapezoidVolumeBounds& trabo) =
+      default;
+
+  ~TrapezoidVolumeBounds() override = default;
 
   TrapezoidVolumeBounds* clone() const override;
 
@@ -101,7 +109,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final { return {}; };
+  std::vector<double> values() const final;
 
   /// This method checks if position in the 3D volume frame
   /// is inside the cylinder
@@ -130,77 +138,39 @@ class TrapezoidVolumeBounds : public VolumeBounds {
                                   const Vector3D& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// This method returns the minimal halflength in local x
-  double minHalflengthX() const;
-
-  /// This method returns the maximal halflength in local x
-  double maxHalflengthX() const;
-
-  /// This method returns the halflength in local y
-  double halflengthY() const;
-
-  /// This method returns the halflength in local z
-  double halflengthZ() const;
-
-  /// This method returns the opening angle in point A (negative local x)
-  double alpha() const;
-
-  /// This method returns the opening angle in point B (negative local x)
-  double beta() const;
-
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const override;
 
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
+
  private:
+  /// The internal version of the bounds can be float/double
+  std::array<double, eSize> m_values;
+  /// The face PlaneSurface parallel to local xy plane
+  std::shared_ptr<const TrapezoidBounds> m_faceXYTrapezoidBounds = nullptr;
+  /// Thhe face PlaneSurface attached to alpha (negative local x)
+  std::shared_ptr<const RectangleBounds> m_faceAlphaRectangleBounds = nullptr;
+  /// The face PlaneSurface attached to beta (positive local x)
+  std::shared_ptr<const RectangleBounds> m_faceBetaRectangleBounds = nullptr;
+  /// The face PlaneSurface parallel to local zx plane, negative local y
+  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBounds = nullptr;
+
+  /// Check the input values for consistency,
+  /// will throw a logic_exception if consistency is not given
+  void checkConsistency() noexcept(false);
+
+  /// Helper method to create the surface bounds
+  void buildSurfaceBounds();
+
   /// Templated dump methos
   template <class T>
   T& dumpT(T& dt) const;
-
-  /// This method returns the associated TrapezoidBounds
-  /// of the face PlaneSurface parallel to local xy plane
-  TrapezoidBounds* faceXYTrapezoidBounds() const;
-
-  /// This method returns the associated RecangleBounds
-  /// of the face PlaneSurface attached to alpha (negative local x)
-  RectangleBounds* faceAlphaRectangleBounds() const;
-
-  /// This method returns the associated RectangleBounds
-  /// of the face PlaneSurface attached to beta (positive local x)
-  RectangleBounds* faceBetaRectangleBounds() const;
-
-  /// This method returns the associated RectangleBounds
-  /// of the face PlaneSurface parallel to local zx plane, negative local y
-  RectangleBounds* faceZXRectangleBoundsBottom() const;
-
-  /// This method returns the associated RectangleBounds
-  /// of the face PlaneSurface parallel to local zx plane, positive local y
-  RectangleBounds* faceZXRectangleBoundsTop() const;
-
-  /// the bounds values
-  std::vector<double> m_values;
 };
 
 inline TrapezoidVolumeBounds* TrapezoidVolumeBounds::clone() const {
   return new TrapezoidVolumeBounds(*this);
-}
-
-inline double TrapezoidVolumeBounds::minHalflengthX() const {
-  return m_values.at(bv_minHalfX);
-}
-inline double TrapezoidVolumeBounds::maxHalflengthX() const {
-  return m_values.at(bv_maxHalfX);
-}
-inline double TrapezoidVolumeBounds::halflengthY() const {
-  return m_values.at(bv_halfY);
-}
-inline double TrapezoidVolumeBounds::halflengthZ() const {
-  return m_values.at(bv_halfZ);
-}
-inline double TrapezoidVolumeBounds::alpha() const {
-  return m_values.at(bv_alpha);
-}
-inline double TrapezoidVolumeBounds::beta() const {
-  return m_values.at(bv_beta);
 }
 
 template <class T>
@@ -209,9 +179,29 @@ T& TrapezoidVolumeBounds::dumpT(T& dt) const {
   dt << std::setprecision(5);
   dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
         "= ";
-  dt << "(" << m_values.at(bv_minHalfX) << ", " << m_values.at(bv_halfY) << ", "
-     << m_values.at(bv_halfZ);
-  dt << ", " << m_values.at(bv_alpha) << ", " << m_values.at(bv_beta) << ")";
+  dt << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
+     << get(eHalfLengthY) << ", " << get(eHalfLengthZ);
+  dt << ", " << get(eAlpha) << ", " << get(eBeta) << ")";
   return dt;
 }
+
+inline std::vector<double> TrapezoidVolumeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+inline void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eHalfLengthXnegY) < 0. or get(eHalfLengthXposY) < 0.) {
+    throw std::invalid_argument(
+        "TrapezoidVolumeBounds: invalid trapezoid parameters in x.");
+  }
+  if (get(eHalfLengthY) <= 0.) {
+    throw std::invalid_argument("TrapezoidVolumeBounds: invalid y extrusion.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("TrapezoidVolumeBounds: invalid z extrusion.");
+  }
+}
+
 }  // namespace Acts
