@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,12 +8,8 @@
 
 #pragma once
 
-#include <cmath>
-#include <tuple>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/StepperState.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -21,12 +17,6 @@ namespace Acts {
 class Surface;
 
 namespace detail {
-
-/// @brief These functions perform the transport of a covariance matrix using
-/// given Jacobians. The required data is provided by a @p StepperState object
-/// with some additional data. Since this is a purely algebraic problem the
-/// calculations are identical for @c StraightLineStepper and @c EigenStepper.
-/// As a consequence the methods can be located in a seperate file.
 
 /// Construct bound parameters at the current position.
 ///
