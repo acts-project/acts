@@ -57,9 +57,6 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   FreeParameters fpMoveConstr(FreeParameters(covCpy, params));
   BOOST_TEST(fpMoveConstr == fp);
 
-  FreeParameters* fpCopy = fp.clone();
-  BOOST_TEST(*fpCopy == fp);
-
   // Test copy assignment
   FreeParameters fpCopyAssignment = fp;
   BOOST_TEST(fpCopyAssignment == fp);
@@ -87,9 +84,6 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   covCpy = *cov;
   NeutralFreeParameters nfpMoveConstr(NeutralFreeParameters(covCpy, params));
   BOOST_TEST(nfpMoveConstr == nfp);
-
-  NeutralFreeParameters* nfpCopy = nfp.clone();
-  BOOST_TEST(*nfpCopy == nfp);
 
   // Test copy assignment
   NeutralFreeParameters nfpCopyAssignment = nfp;

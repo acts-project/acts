@@ -117,11 +117,6 @@ Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
 }
 
 template <int N>
-Acts::ConvexPolygonBounds<N>* Acts::ConvexPolygonBounds<N>::clone() const {
-  return new ConvexPolygonBounds<N>(*this);
-}
-
-template <int N>
 Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
   return SurfaceBounds::eConvexPolygon;
 }
@@ -158,10 +153,6 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::ConvexPolygonBounds(
     const std::vector<Vector2D>& vertices)
     : m_vertices(vertices.begin(), vertices.end()),
       m_boundingBox(makeBoundingBox(vertices)) {}
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>*
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::clone() const {
-  return new Acts::ConvexPolygonBounds<Acts::PolygonDynamic>(*this);
-}
 
 Acts::SurfaceBounds::BoundsType
 Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {

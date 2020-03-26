@@ -55,9 +55,6 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   BOOST_TEST_CHECKPOINT("Copy constructor");
   ConeBounds copyConstructedConeBounds(fiveParamConstructedConeBounds);
   BOOST_CHECK_EQUAL(copyConstructedConeBounds, fiveParamConstructedConeBounds);
-  auto pClonedConeBounds = fiveParamConstructedConeBounds.clone();
-  BOOST_CHECK_EQUAL(*pClonedConeBounds, fiveParamConstructedConeBounds);
-  delete pClonedConeBounds;
 }
 
 // Streaning and recreation test

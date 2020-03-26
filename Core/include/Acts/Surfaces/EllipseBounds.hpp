@@ -67,8 +67,6 @@ class EllipseBounds : public PlanarBounds {
 
   ~EllipseBounds() override = default;
 
-  EllipseBounds* clone() const final;
-
   BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector

@@ -112,13 +112,6 @@ class DiscSurface : public Surface {
   /// @param other The source sourface for the assignment
   DiscSurface& operator=(const DiscSurface& other);
 
-  /// Clone method into a concrete type of DiscSurface with shift
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  std::shared_ptr<DiscSurface> clone(const GeometryContext& gctx,
-                                     const Transform3D& shift) const;
-
   /// Return the surface type
   SurfaceType type() const override;
 
@@ -319,14 +312,6 @@ class DiscSurface : public Surface {
 
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
-
- private:
-  /// Clone method implementation
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  DiscSurface* clone_impl(const GeometryContext& gctx,
-                          const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/DiscSurface.ipp"

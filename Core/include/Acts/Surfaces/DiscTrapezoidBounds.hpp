@@ -61,8 +61,6 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   ~DiscTrapezoidBounds() override = default;
 
-  DiscTrapezoidBounds* clone() const final;
-
   SurfaceBounds::BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector

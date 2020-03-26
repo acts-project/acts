@@ -142,16 +142,6 @@ std::string Acts::CylinderSurface::name() const {
   return "Acts::CylinderSurface";
 }
 
-std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::clone(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return std::shared_ptr<CylinderSurface>(this->clone_impl(gctx, shift));
-}
-
-Acts::CylinderSurface* Acts::CylinderSurface::clone_impl(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return new CylinderSurface(gctx, *this, shift);
-}
-
 const Acts::Vector3D Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   double phi = lposition[Acts::eLOC_RPHI] / m_bounds->get(CylinderBounds::eR);

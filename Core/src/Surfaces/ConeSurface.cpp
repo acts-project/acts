@@ -155,16 +155,6 @@ std::string Acts::ConeSurface::name() const {
   return "Acts::ConeSurface";
 }
 
-std::shared_ptr<Acts::ConeSurface> Acts::ConeSurface::clone(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return std::shared_ptr<ConeSurface>(this->clone_impl(gctx, shift));
-}
-
-Acts::ConeSurface* Acts::ConeSurface::clone_impl(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return new ConeSurface(gctx, *this, shift);
-}
-
 const Acts::Vector3D Acts::ConeSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)

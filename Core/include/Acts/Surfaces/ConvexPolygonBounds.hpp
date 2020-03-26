@@ -93,8 +93,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   ~ConvexPolygonBounds() override = default;
 
-  ConvexPolygonBounds<N>* clone() const final;
-
   BoundsType type() const final;
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
@@ -153,10 +151,6 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
   ConvexPolygonBounds(const std::vector<Vector2D>& vertices);
-
-  /// Return a copy of this bounds object.
-  /// @return The cloned instance
-  ConvexPolygonBounds<PolygonDynamic>* clone() const final;
 
   /// Return the bounds type of this bounds object.
   /// @return The bounds type

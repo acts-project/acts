@@ -85,13 +85,8 @@ BOOST_AUTO_TEST_CASE(RadialBoundsException) {
 /// Unit tests for RadialBounds properties
 BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0);
-  /// Test clone
-  RadialBounds radialBoundsObject(minRadius, maxRadius, halfPhiSector);
-  auto pClonedRadialBounds = radialBoundsObject.clone();
-  BOOST_CHECK_NE(pClonedRadialBounds, nullptr);
-  delete pClonedRadialBounds;
-  //
   /// Test type() (redundant; already used in constructor confirmation)
+  RadialBounds radialBoundsObject(minRadius, maxRadius, halfPhiSector);
   BOOST_CHECK_EQUAL(radialBoundsObject.type(), SurfaceBounds::eDisc);
   //
   /// Test distanceToBoundary

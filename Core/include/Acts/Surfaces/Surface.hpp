@@ -148,25 +148,6 @@ class Surface : public virtual GeometryObject,
   /// @param sf Source surface for the comparison
   virtual bool operator!=(const Surface& sf) const;
 
-  /// Clone method with shift - cloning without shift is not sensible
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  std::shared_ptr<Surface> clone(const GeometryContext& gctx,
-                                 const Transform3D& shift) const {
-    return std::shared_ptr<Surface>(this->clone_impl(gctx, shift));
-  }
-
- private:
-  /// Implementation method for clone. Returns a bare pointer that is
-  /// wrapped into a shared pointer by ::clone(). This is needed for
-  /// covariant overload of this method.
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param shift applied to the surface
-  virtual Surface* clone_impl(const GeometryContext& gctx,
-                              const Transform3D& shift) const = 0;
-
  public:
   /// Return method for the Surface type to avoid dynamic casts
   virtual SurfaceType type() const = 0;

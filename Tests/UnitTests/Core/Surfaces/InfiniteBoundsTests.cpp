@@ -41,11 +41,6 @@ BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
   BOOST_TEST_MESSAGE("Perhaps the following should be inf?");
   BOOST_CHECK_EQUAL(infiniteBoundsObject.distanceToBoundary(anyVector), 0.);
 
-  /// test for clone
-  auto pInfiniteBoundsClone = infiniteBoundsObject.clone();
-  BOOST_CHECK_NE(pInfiniteBoundsClone, nullptr);
-  delete pInfiniteBoundsClone;
-
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;
   infiniteBoundsObject.toStream(dumpOuput);

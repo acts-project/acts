@@ -93,10 +93,6 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
   //
-  auto pClonedConeSurface =
-      coneSurfaceObject->clone(tgContext, Transform3D::Identity());
-  BOOST_CHECK_EQUAL(pClonedConeSurface->type(), Surface::Cone);
-  //
   /// Test type (redundant)
   BOOST_CHECK_EQUAL(coneSurfaceObject->type(), Surface::Cone);
   //

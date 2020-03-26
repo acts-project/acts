@@ -134,8 +134,6 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;
 
-  CylinderVolumeBounds* clone() const override;
-
   VolumeBounds::BoundsType type() const final {
     return VolumeBounds::eCylinder;
   }
@@ -207,10 +205,6 @@ class CylinderVolumeBounds : public VolumeBounds {
   template <class T>
   T& dumpT(T& tstream) const;
 };
-
-inline CylinderVolumeBounds* CylinderVolumeBounds::clone() const {
-  return new CylinderVolumeBounds(*this);
-}
 
 inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
                                          double tol) const {

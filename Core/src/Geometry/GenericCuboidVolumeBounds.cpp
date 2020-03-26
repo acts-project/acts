@@ -37,10 +37,6 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
   construct();
 }
 
-Acts::VolumeBounds* Acts::GenericCuboidVolumeBounds::clone() const {
-  return new GenericCuboidVolumeBounds(*this);
-}
-
 bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
                                              double tol) const {
   constexpr std::array<size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};

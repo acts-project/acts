@@ -58,8 +58,6 @@ class RadialBounds : public DiscBounds {
 
   ~RadialBounds() override = default;
 
-  RadialBounds* clone() const final;
-
   SurfaceBounds::BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector

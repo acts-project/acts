@@ -85,10 +85,6 @@ Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
   return *this;
 }
 
-Acts::Volume* Acts::Volume::clone() const {
-  return new Acts::Volume(*this);
-}
-
 bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
   if (!m_transform) {
     return (volumeBounds()).inside(gpos, tol);

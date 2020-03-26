@@ -59,10 +59,6 @@ class VolumeBounds {
 
   virtual ~VolumeBounds() = default;
 
-  ///  clone() method to make deep copy in Volume copy constructor and for
-  /// assigment operator  of the Surface class.
-  virtual VolumeBounds* clone() const = 0;
-
   /// Return the bounds type - for persistency optimization
   ///
   /// @return is a BoundsType enum

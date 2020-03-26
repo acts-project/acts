@@ -205,11 +205,18 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
   // navigation surface
   std::shared_ptr<Surface> navigationSurface;
   // for everything else than a cylinder it's a copy with shift
-  if (layerSurface.type() != Surface::Cylinder) {
+  if (layerSurface.type() == Surface::Plane) {
     // create a transform that does the shift
     Transform3D shift = Transform3D(Translation3D(translation));
-    navigationSurface = layerSurface.clone(gctx, shift);
-  } else {
+    const PlaneSurface* plane =
+        dynamic_cast<const PlaneSurface*>(&layerSurface);
+    navigationSurface = Surface::makeShared<PlaneSurface>(gctx, *plane, shift);
+  } else if (layerSurface.type() == Surface::Disc) {
+    // create a transform that does the shift
+    Transform3D shift = Transform3D(Translation3D(translation));
+    const DiscSurface* disc = dynamic_cast<const DiscSurface*>(&layerSurface);
+    navigationSurface = Surface::makeShared<DiscSurface>(gctx, *disc, shift);
+  } else if (layerSurface.type() == Surface::Cylinder) {
     // get the bounds
     const CylinderBounds* cBounds =
         dynamic_cast<const CylinderBounds*>(&(layerSurface.bounds()));
@@ -225,6 +232,8 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
         std::make_shared<CylinderBounds>(navigationR, halflengthZ);
     navigationSurface =
         Surface::makeShared<CylinderSurface>(navTrasform, cylinderBounds);
+  } else {
+    ACTS_WARNING("Not implemented.");
   }
   return navigationSurface;
 }

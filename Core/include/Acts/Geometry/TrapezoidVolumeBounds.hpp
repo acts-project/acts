@@ -100,8 +100,6 @@ class TrapezoidVolumeBounds : public VolumeBounds {
 
   ~TrapezoidVolumeBounds() override = default;
 
-  TrapezoidVolumeBounds* clone() const override;
-
   VolumeBounds::BoundsType type() const final {
     return VolumeBounds::eTrapezoid;
   }
@@ -168,10 +166,6 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   template <class T>
   T& dumpT(T& dt) const;
 };
-
-inline TrapezoidVolumeBounds* TrapezoidVolumeBounds::clone() const {
-  return new TrapezoidVolumeBounds(*this);
-}
 
 template <class T>
 T& TrapezoidVolumeBounds::dumpT(T& dt) const {

@@ -45,16 +45,6 @@ Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
   return *this;
 }
 
-std::shared_ptr<Acts::StrawSurface> Acts::StrawSurface::clone(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return std::shared_ptr<StrawSurface>(this->clone_impl(gctx, shift));
-}
-
-Acts::StrawSurface* Acts::StrawSurface::clone_impl(
-    const GeometryContext& gctx, const Transform3D& shift) const {
-  return new StrawSurface(gctx, *this, shift);
-}
-
 Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
   // Prepare vertices and faces

@@ -29,12 +29,6 @@ class SurfaceStub : public Surface {
   ~SurfaceStub() override { /*nop */
   }
 
-  /// Implicit constructor
-  Surface* clone(const GeometryContext& /*gctx*/,
-                 const Transform3D& /*shift = nullptr*/) const {
-    return nullptr;
-  }
-
   /// Return method for the Surface type to avoid dynamic casts
   SurfaceType type() const final { return Surface::Other; }
 
@@ -113,10 +107,5 @@ class SurfaceStub : public Surface {
  private:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
-
-  SurfaceStub* clone_impl(const GeometryContext& /*gctx*/,
-                          const Transform3D& /* shift */) const override {
-    return nullptr;
-  }
 };
 }  // namespace Acts
