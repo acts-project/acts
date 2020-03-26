@@ -332,12 +332,11 @@ auto covariance_curvilinear(const Propagator_type& propagator, start_parameters_
   return *(tp->covariance());
 }
 
-template <typename Propagator_type, typename StartSurfaceType,
-          typename DestSurfaceType>
-Covariance covariance_bound(const Propagator_type& propagator, double pT,
-                            double phi, double theta, double charge,
+
+template <typename Propagator_type, typename DestSurface_type, typename start_parameters_t>
+Covariance covariance_bound(const Propagator_type& propagator,
                             double plimit, double rand1, double rand2,
-                            double rand3, bool startPlanar = true,
+                            double rand3, start_parameters_t start,
                             bool destPlanar = true, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
@@ -347,39 +346,13 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
   options.pathLimit = plimit;
   options.debug = debug;
 
-  // define start parameters
-  double x = 1.;
-  double y = 0.;
-  double z = 0.;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = charge;
-  double time = 0.;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-  Covariance cov;
-
-  // take some major correlations (off-diagonals)
-  // clang-format off
-  cov <<
-   10_mm, 0, 0.123, 0, 0.5, 0,
-   0, 10_mm, 0, 0.162, 0, 0,
-   0.123, 0, 0.1, 0, 0, 0,
-   0, 0.162, 0, 0.1, 0, 0,
-   0.5, 0, 0, 0, 1_e / 10_GeV, 0,
-   0, 0, 0, 0, 0, 1_us;
-  // clang-format on
 
   // create curvilinear start parameters
-  CurvilinearParameters start_c(std::nullopt, pos, mom, q, time);
+  CurvilinearParameters start_c(std::nullopt, start.position(), start.momentum(), start.charge(), start.time());
   const auto result_c = propagator.propagate(start_c, options).value();
   const auto& tp_c = result_c.endParameters;
 
-  auto ssTransform =
-      startPlanar ? createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
-                                          0.05 * rand2)
-                  : createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
+  // create destination surface
   auto seTransform = destPlanar
                          ? createPlanarTransform(tp_c->position(),
                                                  tp_c->momentum().normalized(),
@@ -387,14 +360,11 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
                          : createCylindricTransform(tp_c->position(),
                                                     0.01 * rand1, 0.01 * rand2);
 
-  auto startSurface =
-      Surface::makeShared<StartSurfaceType>(ssTransform, nullptr);
-  BoundParameters start(tgContext, cov, pos, mom, q, time, startSurface);
-
+  auto endSurface = Surface::makeShared<DestSurface_type>(seTransform, nullptr);
+  
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
 
-  auto endSurface = Surface::makeShared<DestSurfaceType>(seTransform, nullptr);
   const auto result = propagator.propagate(start, *endSurface, options).value();
   const auto& tp = result.endParameters;
 

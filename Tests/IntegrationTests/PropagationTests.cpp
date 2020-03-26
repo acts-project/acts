@@ -41,6 +41,7 @@ namespace Acts {
 namespace IntegrationTest {
 
 using Covariance = BoundSymMatrix;
+using FreeCovariance = FreeSymMatrix;
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<BFieldType>;
 using DenseStepperType =
