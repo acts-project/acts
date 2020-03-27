@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
   auto pTransform = std::make_shared<const Transform3D>(translation);
   const double minRad(5.), maxRad(10.);  // 20 x 10 disc
   auto pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
-  auto pDiscLayer = DiscLayer::create(pTransform, pDisc);
+  auto pDiscLayer = DiscLayer::create(pTransform, pDisc, nullptr, 1.);
   BOOST_CHECK_EQUAL(pDiscLayer->layerType(), LayerType::passive);
   // next level: need an array of Surfaces;
   // bounds object, rectangle type
@@ -57,7 +57,8 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
       Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
   const double thickness(1.0);
-  auto pDiscLayerFromSurfaces = DiscLayer::create(pTransform, pDisc, nullptr);
+  auto pDiscLayerFromSurfaces =
+      DiscLayer::create(pTransform, pDisc, nullptr, 1.);
   BOOST_CHECK_EQUAL(pDiscLayerFromSurfaces->layerType(), LayerType::passive);
   // construct with thickness:
   auto pDiscLayerWithThickness =
@@ -83,7 +84,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerProperties /*, *utf::expected_failures(1)*/) {
   auto pTransform = std::make_shared<const Transform3D>(translation);
   const double minRad(5.), maxRad(10.);  // 20 x 10 disc
   auto pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
-  auto pDiscLayer = DiscLayer::create(pTransform, pDisc);
+  auto pDiscLayer = DiscLayer::create(pTransform, pDisc, nullptr, 1.);
   // auto planeSurface = pDiscLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pDiscLayer->surfaceRepresentation().name(),
                     std::string("Acts::DiscSurface"));

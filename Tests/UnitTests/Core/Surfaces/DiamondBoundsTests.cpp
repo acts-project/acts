@@ -134,7 +134,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment) {
                     similarlyConstructeDiamondBoundsObject);
   //
   /// Test assignment
-  DiamondBounds assignedDiamondBoundsObject(0, 0, 0, 0, 0);  // invalid
+  DiamondBounds assignedDiamondBoundsObject(
+      2 * minHalfX, 2 * midHalfX, 2 * maxHalfX, 2 * halfY1, 2 * halfY2);
   // object, in some sense
   assignedDiamondBoundsObject = diamondBoundsObject;
   BOOST_CHECK_EQUAL(assignedDiamondBoundsObject, diamondBoundsObject);
