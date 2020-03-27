@@ -37,8 +37,8 @@ Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
   return {vmin, vmax};
 }
 
-std::vector<TDD_real_t> Acts::ConvexPolygonBoundsBase::valueStore() const {
-  std::vector<TDD_real_t> values;
+std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
+  std::vector<double> values;
   for (const auto& vtx : vertices()) {
     values.push_back(vtx.x());
     values.push_back(vtx.y());
@@ -47,7 +47,8 @@ std::vector<TDD_real_t> Acts::ConvexPolygonBoundsBase::valueStore() const {
 }
 
 template <typename coll_t>
-bool Acts::ConvexPolygonBoundsBase::convex_impl(const coll_t& vertices) {
+void Acts::ConvexPolygonBoundsBase::convex_impl(
+    const coll_t& vertices) noexcept(false) {
   static_assert(std::is_same<typename coll_t::value_type, Vector2D>::value,
                 "Must be collection of Vector2D");
 
@@ -78,29 +79,41 @@ bool Acts::ConvexPolygonBoundsBase::convex_impl(const coll_t& vertices) {
       }
 
       if (std::signbit(dot) != ref) {
-        return false;
+        throw std::logic_error(
+            "ConvexPolygon: Given vertices do not form convex hull");
       }
     }
   }
-  return true;
 }
 
 template <int N>
 Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
-    const std::vector<Acts::Vector2D>& vertices)
+    const std::vector<Acts::Vector2D>& vertices) noexcept(false)
     : m_vertices(), m_boundingBox(makeBoundingBox(vertices)) {
   throw_assert(vertices.size() == N,
                "Size and number of given vertices do not match.");
   for (size_t i = 0; i < N; i++) {
     m_vertices[i] = vertices[i];
   }
-  throw_assert(convex(), "Given vertices do not form convex hull.");
+  checkConsistency();
 }
 
 template <int N>
-Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(const vertex_array& vertices)
+Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
+    const vertex_array& vertices) noexcept(false)
     : m_vertices(vertices), m_boundingBox(makeBoundingBox(vertices)) {
-  throw_assert(convex(), "Given vertices do not form convex hull.");
+  checkConsistency();
+}
+
+template <int N>
+Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
+    const value_array& values) noexcept(false)
+    : m_vertices(), m_boundingBox(0., 0.) {
+  for (size_t i = 0; i < N; i++) {
+    m_vertices[i] = Vector2D(values[2 * i], values[2 * i + 1]);
+  }
+  makeBoundingBox(m_vertices);
+  checkConsistency();
 }
 
 template <int N>
@@ -110,7 +123,7 @@ Acts::ConvexPolygonBounds<N>* Acts::ConvexPolygonBounds<N>::clone() const {
 
 template <int N>
 Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
-  return SurfaceBounds::ConvexPolygon;
+  return SurfaceBounds::eConvexPolygon;
 }
 
 template <int N>
@@ -137,8 +150,8 @@ const Acts::RectangleBounds& Acts::ConvexPolygonBounds<N>::boundingBox() const {
 }
 
 template <int N>
-bool Acts::ConvexPolygonBounds<N>::convex() const {
-  return convex_impl(m_vertices);
+void Acts::ConvexPolygonBounds<N>::checkConsistency() const noexcept(false) {
+  convex_impl(m_vertices);
 }
 
 Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::ConvexPolygonBounds(
@@ -152,7 +165,7 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::clone() const {
 
 Acts::SurfaceBounds::BoundsType
 Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
-  return SurfaceBounds::ConvexPolygon;
+  return SurfaceBounds::eConvexPolygon;
 }
 
 bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
@@ -175,6 +188,7 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::boundingBox() const {
   return m_boundingBox;
 }
 
-bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::convex() const {
-  return convex_impl(m_vertices);
+void Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::checkConsistency() const
+    noexcept(false) {
+  convex_impl(m_vertices);
 }

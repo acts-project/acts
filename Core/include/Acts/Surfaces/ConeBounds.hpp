@@ -7,10 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cfloat>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+
+#include <array>
+#include <vector>
 
 namespace Acts {
 
@@ -27,17 +30,15 @@ namespace Acts {
 
 class ConeBounds : public SurfaceBounds {
  public:
-  /// @enum BoundValues for readablility
-  enum BoundValues {
-    bv_alpha = 0,
-    bv_minZ = 1,
-    bv_maxZ = 2,
-    bv_averagePhi = 3,
-    bv_halfPhiSector = 4,
-    bv_length = 5
+  enum BoundValues : int {
+    eAlpha = 0,
+    eMinZ = 1,
+    eMaxZ = 2,
+    eHalfPhiSector = 3,
+    eAveragePhi = 4,
+    eSize = 5
   };
 
-  // Deleted default constructor
   ConeBounds() = delete;
 
   /// Constructor - open cone with alpha, by default a full cone
@@ -48,31 +49,36 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, bool symm, double halfphi = M_PI, double avphi = 0.);
+  ConeBounds(double alpha, bool symm, double halfphi = M_PI,
+             double avphi = 0.) noexcept(false);
 
   /// Constructor - open cone with alpha, minz and maxz, by
   /// default a full cone but can optionally make it a conical section
   ///
   /// @param alpha is the opening angle of the cone
-  /// @param zmin cone expanding from minimal z
-  /// @param zmax cone expanding to maximal z
+  /// @param minz cone expanding from minimal z
+  /// @param maxz cone expanding to maximal z
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, double zmin, double zmax, double halfphi = M_PI,
-             double avphi = 0.);
+  ConeBounds(double alpha, double minz, double maxz, double halfphi = M_PI,
+             double avphi = 0.) noexcept(false);
 
-  /// Defaulted destructor
+  /// Constructor - from parameters array
+  ///
+  /// @param values The parameter array
+  ConeBounds(const std::array<double, eSize>& values) noexcept(false);
+
   ~ConeBounds() override = default;
 
-  /// Virtual constructor
   ConeBounds* clone() const final;
 
-  /// The type enumeration
   BoundsType type() const final;
 
-  /// The value store for persistency
-  std::vector<TDD_real_t> valueStore() const final;
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// inside method for local position
   ///
@@ -100,38 +106,20 @@ class ConeBounds : public SurfaceBounds {
   /// @return is the r value associated with z
   double r(double z) const;
 
-  /// Return the average values for the angles
+  /// Return tangent of alpha (pre-computed)
   double tanAlpha() const;
 
-  /// Return the average values for the angles
-  double sinAlpha() const;
-
-  /// Return the average values for the angles
-  double cosAlpha() const;
-
-  /// Return the average values for the angles
-  double alpha() const;
-
-  /// This method returns the minimum z value in the local
-  /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
-  double minZ() const;
-
-  /// This method returns the maximum z value in the local
-  /// frame for an unbound symmetric cone, it returns -MAXBOUNDVALUE*/
-  double maxZ() const;
-
-  /// This method returns the average phi value
-  /// (i.e. the "middle" phi value for the conical sector we  are describing)
-  double averagePhi() const;
-
-  /// This method returns the half-phi width of the sector
-  /// (so that averagePhi +/- halfPhiSector gives the phi bounds of the cone)
-  double halfPhiSector() const;
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  double m_alpha, m_tanAlpha;
-  double m_zMin, m_zMax;
-  double m_avgPhi, m_halfPhi;
+  std::array<double, eSize> m_values;
+  double m_tanAlpha;
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() noexcept(false);
 
   /// Private helper functin to shift a local 2D position
   ///
@@ -147,31 +135,26 @@ inline double ConeBounds::tanAlpha() const {
   return m_tanAlpha;
 }
 
-inline double ConeBounds::sinAlpha() const {
-  return std::sin(m_alpha);
+inline std::vector<double> ConeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
-inline double ConeBounds::cosAlpha() const {
-  return std::cos(m_alpha);
+inline void ConeBounds::checkConsistency() noexcept(false) {
+  if (get(eAlpha) < 0. or get(eAlpha) >= M_PI) {
+    throw std::invalid_argument("ConeBounds: invalid open angle.");
+  }
+  if (get(eMinZ) > get(eMaxZ) or
+      std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
+    throw std::invalid_argument("ConeBounds: invalid z range setup.");
+  }
+  if (get(eHalfPhiSector) < 0. or abs(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("ConeBounds: invalid phi positioning.");
+  }
 }
 
-inline double ConeBounds::alpha() const {
-  return m_alpha;
-}
-
-inline double ConeBounds::minZ() const {
-  return m_zMin;
-}
-
-inline double ConeBounds::maxZ() const {
-  return m_zMax;
-}
-
-inline double ConeBounds::averagePhi() const {
-  return m_avgPhi;
-}
-
-inline double ConeBounds::halfPhiSector() const {
-  return m_halfPhi;
-}
 }  // namespace Acts

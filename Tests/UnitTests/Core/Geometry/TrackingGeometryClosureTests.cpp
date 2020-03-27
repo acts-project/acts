@@ -39,47 +39,46 @@ double layerEnvelope = 0.5_mm;
 double volumeEnvelope = 10_mm;
 
 // inner inner volume definitions
-double iiv_surfaceRadius = 25_mm;
-double iiv_volumeRadius =
-    iiv_surfaceRadius + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
+double iiv_surfaceR = 25_mm;
+double iiv_volumeR =
+    iiv_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
 ///  inner outer volume defininitions
-double iov_surfaceRadius = 100_mm;
-double iov_volumeRadius =
-    iov_surfaceRadius + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
+double iov_surfaceR = 100_mm;
+double iov_volumeR =
+    iov_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
 ///  inner inner volume
 auto iiVolume = constructCylinderVolume(
-    tgContext, surfaceHalfLengthZ, iiv_surfaceRadius, surfaceRstagger,
-    surfaceZoverlap, layerEnvelope, volumeEnvelope, 0., iiv_volumeRadius,
+    tgContext, surfaceHalfLengthZ, iiv_surfaceR, surfaceRstagger,
+    surfaceZoverlap, layerEnvelope, volumeEnvelope, 0., iiv_volumeR,
     "InnerInnerVolume");
 ///  inner outer volume
 auto ioVolume = constructCylinderVolume(
-    tgContext, surfaceHalfLengthZ, iov_surfaceRadius, surfaceRstagger,
-    surfaceZoverlap, layerEnvelope, volumeEnvelope, iiv_volumeRadius,
-    iov_volumeRadius, "InnerOuterVolume");
+    tgContext, surfaceHalfLengthZ, iov_surfaceR, surfaceRstagger,
+    surfaceZoverlap, layerEnvelope, volumeEnvelope, iiv_volumeR, iov_volumeR,
+    "InnerOuterVolume");
 
 // now create the Inner Container volume
 double volumeHalfZ =
     (4 * surfaceHalfLengthZ - surfaceZoverlap) + volumeEnvelope;
 /// the inner volume
-auto iVolume =
-    constructContainerVolume(tgContext, iiVolume, ioVolume, iov_volumeRadius,
-                             volumeHalfZ, "InnerVolume");
+auto iVolume = constructContainerVolume(
+    tgContext, iiVolume, ioVolume, iov_volumeR, volumeHalfZ, "InnerVolume");
 
 // outer volume definitions
-double ov_surfaceRadius = 150_mm;
-double ov_volumeRadius =
-    ov_surfaceRadius + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
+double ov_surfaceR = 150_mm;
+double ov_volumeR =
+    ov_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
 ///  inner outer volume
 auto oVolume = constructCylinderVolume(
-    tgContext, surfaceHalfLengthZ, ov_surfaceRadius, surfaceRstagger,
-    surfaceZoverlap, layerEnvelope, volumeEnvelope, iov_volumeRadius,
-    ov_volumeRadius, "OuterVolume");
+    tgContext, surfaceHalfLengthZ, ov_surfaceR, surfaceRstagger,
+    surfaceZoverlap, layerEnvelope, volumeEnvelope, iov_volumeR, ov_volumeR,
+    "OuterVolume");
 /// the inner volume
-auto volume = constructContainerVolume(
-    tgContext, iVolume, oVolume, ov_volumeRadius, volumeHalfZ, "WorldVolume");
+auto volume = constructContainerVolume(tgContext, iVolume, oVolume, ov_volumeR,
+                                       volumeHalfZ, "WorldVolume");
 
 // creating a TrackingGeometry
 // -> closs the geometry, this should set the GeometryID

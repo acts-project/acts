@@ -12,55 +12,63 @@
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+
+#include <array>
+#include <vector>
 
 namespace Acts {
 
-///
 /// @class DiscTrapezoidBounds
 ///
 /// Class to describe the bounds for a planar DiscSurface.
 /// By providing an argument for hphisec, the bounds can
 /// be restricted to a phi-range around the center position.
-///
 
 class DiscTrapezoidBounds : public DiscBounds {
  public:
-  /// @enum BoundValues
-  /// enumeration for readability
-  enum BoundValues {
-    bv_rMin = 0,
-    bv_rMax = 1,
-    bv_minHalfX = 2,
-    bv_maxHalfX = 3,
-    bv_averagePhi = 4,
-    bv_stereo = 5,
-    bv_length = 6
+  enum BoundValues : int {
+    eHalfLengthXminR = 0,
+    eHalfLengthXmaxR = 1,
+    eMinR = 2,
+    eMaxR = 3,
+    eAveragePhi = 4,
+    eStereo = 5,
+    eSize = 6
   };
 
   DiscTrapezoidBounds() = delete;
 
   /// Constructor for a symmetric Trapezoid giving min X length, max X length,
   /// Rmin and R max
-  /// @param minhalfx half length in X at min radius
-  /// @param maxhalfx half length in X at maximum radius
+  /// @param halfXminR half length in X at min radius
+  /// @param halfXmaxR half length in X at maximum radius
   /// @param minR inner radius
   /// @param maxR outer radius
-  /// @param avephi average phi value
+  /// @param avgPhi average phi value
   /// @param stereo optional stero angle applied
-  DiscTrapezoidBounds(double minhalfx, double maxhalfx, double minR,
-                      double maxR, double avephi = M_PI_2, double stereo = 0.);
+  DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
+                      double maxR, double avgPhi = M_PI_2,
+                      double stereo = 0.) noexcept(false);
 
-  /// Defaulted Destructor
+  /// Constructor - from fixed size array
+  ///
+  /// @param values The parameter values
+  DiscTrapezoidBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values) {
+    checkConsistency();
+  }
+
   ~DiscTrapezoidBounds() override = default;
 
-  /// Overloaded clone method
   DiscTrapezoidBounds* clone() const final;
 
-  /// Type identifier
   SurfaceBounds::BoundsType type() const final;
 
-  /// Value store for persistency
-  std::vector<TDD_real_t> valueStore() const final;
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   ///  This method cheks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
@@ -80,14 +88,15 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
 
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
+
   /// This method returns inner radius
-  double rMin() const;
+  double rMin() const final;
 
   /// This method returns outer radius
-  double rMax() const;
-
-  /// This method returns the average phi
-  double averagePhi() const;
+  double rMax() const final;
 
   /// This method returns the center radius
   double rCenter() const;
@@ -98,14 +107,8 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// This method returns the halfPhiSector which is covered by the disc
   double halfPhiSector() const;
 
-  /// This method returns the minimal halflength in X
-  double minHalflengthX() const;
-
-  /// This method returns the maximal halflength in X
-  double maxHalflengthX() const;
-
-  /// This method returns the halflength in Y (this is Rmax -Rmin)
-  double halflengthY() const;
+  /// This method returns the half length in Y (this is Rmax -Rmin)
+  double halfLengthY() const;
 
   /// Returns true for full phi coverage - obviously false here
   bool coversFullAzimuth() const final;
@@ -132,8 +135,12 @@ class DiscTrapezoidBounds : public DiscBounds {
   std::vector<Vector2D> vertices(unsigned int lseg) const;
 
  private:
-  double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;
+  std::array<double, eSize> m_values;
   double m_stereo;  // TODO 2017-04-09 msmk: what is this good for?
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() noexcept(false);
 
   /// Private helper method to convert a local postion
   /// into its Cartesian representation
@@ -149,23 +156,11 @@ class DiscTrapezoidBounds : public DiscBounds {
 };
 
 inline double DiscTrapezoidBounds::rMin() const {
-  return m_rMin;
+  return get(eMinR);
 }
 
 inline double DiscTrapezoidBounds::rMax() const {
-  return m_rMax;
-}
-
-inline double DiscTrapezoidBounds::minHalflengthX() const {
-  return m_minHalfX;
-}
-
-inline double DiscTrapezoidBounds::maxHalflengthX() const {
-  return m_maxHalfX;
-}
-
-inline double DiscTrapezoidBounds::averagePhi() const {
-  return m_avgPhi;
+  return get(eMaxR);
 }
 
 inline double DiscTrapezoidBounds::stereo() const {
@@ -173,21 +168,29 @@ inline double DiscTrapezoidBounds::stereo() const {
 }
 
 inline double DiscTrapezoidBounds::halfPhiSector() const {
-  auto minHalfPhi = std::asin(m_minHalfX / m_rMin);
-  auto maxHalfPhi = std::asin(m_maxHalfX / m_rMax);
+  auto minHalfPhi = std::asin(get(eHalfLengthXminR) / get(eMinR));
+  auto maxHalfPhi = std::asin(get(eHalfLengthXmaxR) / get(eMaxR));
   return std::max(minHalfPhi, maxHalfPhi);
 }
 
 inline double DiscTrapezoidBounds::rCenter() const {
-  auto hmin = std::sqrt(m_rMin * m_rMin - m_minHalfX * m_minHalfX);
-  auto hmax = std::sqrt(m_rMax * m_rMax - m_maxHalfX * m_maxHalfX);
-  return (hmin + hmax) / 2.0;
+  double rmin = get(eMinR);
+  double rmax = get(eMaxR);
+  double hxmin = get(eHalfLengthXminR);
+  double hxmax = get(eHalfLengthXmaxR);
+  auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
+  auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
+  return 0.5 * (hmin + hmax);
 }
 
-inline double DiscTrapezoidBounds::halflengthY() const {
-  auto hmin = std::sqrt(m_rMin * m_rMin - m_minHalfX * m_minHalfX);
-  auto hmax = std::sqrt(m_rMax * m_rMax - m_maxHalfX * m_maxHalfX);
-  return (hmax - hmin) / 2.0;
+inline double DiscTrapezoidBounds::halfLengthY() const {
+  double rmin = get(eMinR);
+  double rmax = get(eMaxR);
+  double hxmin = get(eHalfLengthXminR);
+  double hxmax = get(eHalfLengthXmaxR);
+  auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
+  auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
+  return 0.5 * (hmax - hmin);
 }
 
 inline bool DiscTrapezoidBounds::coversFullAzimuth() const {
@@ -196,15 +199,34 @@ inline bool DiscTrapezoidBounds::coversFullAzimuth() const {
 
 inline bool DiscTrapezoidBounds::insideRadialBounds(double R,
                                                     double tolerance) const {
-  return (R + tolerance > m_rMin and R - tolerance < m_rMax);
+  return (R + tolerance > get(eMinR) and R - tolerance < get(eMaxR));
 }
 
 inline double DiscTrapezoidBounds::binningValueR() const {
-  return 0.5 * (m_rMin + m_rMax);
+  return 0.5 * (get(eMinR) + get(eMaxR));
 }
 
 inline double DiscTrapezoidBounds::binningValuePhi() const {
-  return m_avgPhi;
+  return get(eAveragePhi);
+}
+
+inline std::vector<double> DiscTrapezoidBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+inline void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
+    throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthXminR) < 0. or get(eHalfLengthXmaxR) <= 0.) {
+    throw std::invalid_argument("DiscTrapezoidBounds: negative length given.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument(
+        "DiscTrapezoidBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

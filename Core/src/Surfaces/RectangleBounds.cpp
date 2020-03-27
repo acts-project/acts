@@ -13,21 +13,8 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::RectangleBounds::RectangleBounds(double halex, double haley)
-    : m_min(-halex, -haley), m_max(halex, haley) {}
-
-Acts::RectangleBounds::RectangleBounds(const Vector2D& vmin,
-                                       const Vector2D& vmax)
-    : m_min(vmin), m_max(vmax) {}
-
 Acts::RectangleBounds* Acts::RectangleBounds::clone() const {
   return new RectangleBounds(*this);
-}
-
-std::vector<TDD_real_t> Acts::RectangleBounds::valueStore() const {
-  std::vector<TDD_real_t> values(RectangleBounds::bv_length);
-  values = {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
-  return values;
 }
 
 bool Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
@@ -37,7 +24,7 @@ bool Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
 
 double Acts::RectangleBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, m_min, m_max);
+  return BoundaryCheck(true).distance(lposition, min(), max());
 }
 
 std::vector<Acts::Vector2D> Acts::RectangleBounds::vertices(
@@ -55,9 +42,10 @@ std::ostream& Acts::RectangleBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::RectangleBounds:  (hlX, hlY) = "
-     << "(" << halflengthX() << ", " << halflengthY() << ")";
+     << "(" << 0.5 * (get(eMaxX) - get(eMinX)) << ", "
+     << 0.5 * (get(eMaxY) - get(eMinY)) << ")";
   sl << "\n(lower left, upper right):\n";
-  sl << m_min.transpose() << "\n" << m_max.transpose();
+  sl << min().transpose() << "\n" << max().transpose();
   sl << std::setprecision(-1);
   return sl;
 }

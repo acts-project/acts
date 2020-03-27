@@ -30,6 +30,7 @@ namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit test for creating compliant/non-compliant ConeBounds object
 BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   // test default construction
@@ -39,17 +40,18 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   const bool symmetric(false);
   BOOST_TEST_CHECKPOINT("Four parameter constructor (last two at default)");
   ConeBounds defaultConeBounds(alpha, symmetric);
-  BOOST_CHECK_EQUAL(defaultConeBounds.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(defaultConeBounds.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Four parameter constructor");
   ConeBounds fourParameterConstructed(alpha, symmetric, halfPhi, averagePhi);
-  BOOST_CHECK_EQUAL(fourParameterConstructed.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(fourParameterConstructed.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Five parameter constructor (last two at default)");
   ConeBounds defaulted5ParamConeBounds(alpha, zMin, zMax);
-  BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Five parameter constructor)");
   ConeBounds fiveParamConstructedConeBounds(alpha, zMin, zMax, halfPhi,
                                             averagePhi);
-  BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(),
+                    SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Copy constructor");
   ConeBounds copyConstructedConeBounds(fiveParamConstructedConeBounds);
   BOOST_CHECK_EQUAL(copyConstructedConeBounds, fiveParamConstructedConeBounds);
@@ -57,6 +59,42 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   BOOST_CHECK_EQUAL(*pClonedConeBounds, fiveParamConstructedConeBounds);
   delete pClonedConeBounds;
 }
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
+  double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
+      averagePhi(0.);
+  // const bool symmetric(false);
+  ConeBounds original(alpha, zMin, zMax, halfPhi, averagePhi);
+  auto valvector = original.values();
+  std::array<double, ConeBounds::eSize> values;
+  std::copy_n(valvector.begin(), ConeBounds::eSize, values.begin());
+  ConeBounds recreated(values);
+  BOOST_CHECK_EQUAL(recreated, original);
+}
+
+// Unit tests for AnnulusBounds exception throwing
+BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
+  double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
+      averagePhi(0.);
+
+  // Exception for opening angle smaller 0
+  BOOST_CHECK_THROW(ConeBounds(-alpha, zMin, zMax, halfPhi, averagePhi),
+                    std::logic_error);
+  // Exception for opening angle bigger M_PI
+  BOOST_CHECK_THROW(ConeBounds(M_PI, zMin, zMax, halfPhi, averagePhi),
+                    std::logic_error);
+  // Exception for swapped zMin and zMax
+  BOOST_CHECK_THROW(ConeBounds(alpha, zMax, zMin, halfPhi, averagePhi),
+                    std::logic_error);
+  // Exception for negative half sector phi
+  BOOST_CHECK_THROW(ConeBounds(alpha, zMin, zMax, -halfPhi, averagePhi),
+                    std::logic_error);
+  // Exception for out of range  phi positioning
+  BOOST_CHECK_THROW(ConeBounds(alpha, zMin, zMax, halfPhi, 2 * M_PI),
+                    std::logic_error);
+}
+
 /// Unit tests for properties of ConeBounds object
 BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
@@ -67,7 +105,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   ConeBounds coneBoundsObject(alpha, zMin, zMax, halfPhi, averagePhi);
   //
   /// test for type (redundant)
-  BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::Cone);
+  BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::eCone);
   //
   /// test for inside
   BOOST_CHECK(!coneBoundsObject.inside(origin));
@@ -81,32 +119,27 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   /// test for tanAlpha
   CHECK_CLOSE_REL(coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
   //
-  /// test for sinAlpha
-  CHECK_CLOSE_REL(coneBoundsObject.sinAlpha(), std::sin(alpha), 1e-6);
-  //
-  /// test for cosAlpha
-  CHECK_CLOSE_REL(coneBoundsObject.cosAlpha(), std::cos(alpha), 1e-6);
-  //
   /// test for alpha
-  CHECK_CLOSE_REL(coneBoundsObject.alpha(), alpha, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eAlpha), alpha, 1e-6);
   //
   /// test for minZ
-  CHECK_CLOSE_REL(coneBoundsObject.minZ(), zMin, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eMinZ), zMin, 1e-6);
   //
   /// test for maxZ
-  CHECK_CLOSE_REL(coneBoundsObject.maxZ(), zMax, 1e-6);
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eMaxZ), zMax, 1e-6);
   //
   /// test for averagePhi
-  CHECK_CLOSE_REL(coneBoundsObject.halfPhiSector(), halfPhi, 1e-6);
-  //
+  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eHalfPhiSector), halfPhi,
+                  1e-6);
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;
   coneBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(dumpOuput.is_equal(
-      "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) = "
-      "(0.4142136, 3.0000000, 6.0000000, 0.0000000, 0.7853982)"));
+      "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) = "
+      "(0.4142136, 3.0000000, 6.0000000, 0.7853982, 0.0000000)"));
 }
-/// Unit test for testing ConeBounds assignment
+
+// Unit test for testing ConeBounds assignment
 BOOST_AUTO_TEST_CASE(ConeBoundsAssignment) {
   double alpha(M_PI / 8.0), zMin(3.), zMax(6.), halfPhi(M_PI / 4.0),
       averagePhi(0.);

@@ -14,7 +14,6 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TriangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -124,7 +123,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   //
   /// Test bounds
   BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
-                    SurfaceBounds::Rectangle);
+                    SurfaceBounds::eRectangle);
 
   /// Test localToGlobal
   Vector2D localPosition{1.5, 1.7};

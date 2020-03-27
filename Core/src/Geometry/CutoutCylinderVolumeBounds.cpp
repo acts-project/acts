@@ -65,11 +65,13 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
   }
 
   // outer cylinder envelope
-  auto outer = Surface::makeShared<CylinderSurface>(trf, m_rmax, m_dz1);
+  auto outerBounds = std::make_shared<CylinderBounds>(m_rmax, m_dz1);
+  auto outer = Surface::makeShared<CylinderSurface>(trf, outerBounds);
   surfaces.at(tubeOuterCover) = outer;
 
   // inner (small) cylinder envelope
-  auto ctr_inner = Surface::makeShared<CylinderSurface>(trf, m_rmed, m_dz2);
+  auto ctr_innerBounds = std::make_shared<CylinderBounds>(m_rmed, m_dz2);
+  auto ctr_inner = Surface::makeShared<CylinderSurface>(trf, ctr_innerBounds);
   surfaces.at(tubeInnerCover) = ctr_inner;
 
   // z position of the pos and neg choke points

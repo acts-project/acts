@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   // ctor with nullptr for LineBounds
   BOOST_CHECK(LineSurfaceStub(pTransform).constructedOk());
   // ctor with LineBounds
-  auto pLineBounds = std::make_shared<const LineBounds>(10.0);
+  auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
   BOOST_CHECK(LineSurfaceStub(pTransform, pLineBounds).constructedOk());
   // ctor with LineBounds, detector element, Identifier
   MaterialProperties properties{1., 1., 1., 20., 10, 5.};
@@ -79,11 +79,11 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
                   1e-6);
   //
   // bounds()
-  auto pLineBounds = std::make_shared<const LineBounds>(10.0);
+  auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
   LineSurfaceStub boundedLine(pTransform, pLineBounds);
   const LineBounds& bounds =
       dynamic_cast<const LineBounds&>(boundedLine.bounds());
-  BOOST_CHECK_EQUAL(bounds, LineBounds(10.0));
+  BOOST_CHECK_EQUAL(bounds, LineBounds(2., 10.0));
   //
   // globalToLocal()
   Vector3D gpos{0., 1., 0.};

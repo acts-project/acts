@@ -115,7 +115,7 @@ class ActsExtension {
   std::map<std::string, std::string> m_flagStore;
 
   /// Unique value store for doubles
-  std::map<std::string, double> m_valueStore;
+  std::map<std::string, double> m_values;
 };
 
 // Templated helper method to get from the value/type store

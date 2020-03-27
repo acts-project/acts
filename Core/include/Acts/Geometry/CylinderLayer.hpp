@@ -11,13 +11,15 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <algorithm>
+
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 
@@ -27,9 +29,7 @@ class ApproachDescriptor;
 /// @class CylinderLayer
 ///
 /// Class to describe a cylindrical detector layer for tracking, it inhertis
-/// from
-/// both,
-/// Layer base class and CylinderSurface class
+/// from both, Layer base class and CylinderSurface class
 ///
 class CylinderLayer : public CylinderSurface, public Layer {
  public:

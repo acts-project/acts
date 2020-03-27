@@ -25,43 +25,34 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-BOOST_AUTO_TEST_CASE(convexity_test) {
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
   std::vector<vec2> vertices;
   vertices = {{0, 0}, {1, 0}, {0.2, 0.2}, {0, 1}};
-  { BOOST_CHECK_THROW(poly<4> quad(vertices), AssertionFailureException); }
+  { BOOST_CHECK_THROW(poly<4> quad(vertices), std::logic_error); }
 
   vertices = {{0, 0}, {1, 0}, {0.8, 0.8}, {0, 1}};
   {
     // wrong number of vertices
     BOOST_CHECK_THROW(poly<3> trip{vertices}, AssertionFailureException);
   }
-  {
-    poly<4> quad = {vertices};
-    BOOST_CHECK(quad.convex());
-  }
+  { poly<4> quad = {vertices}; }
 
   // this one is self intersecting
   vertices = {{0, 0}, {1, 0}, {0.5, 1}, {0.9, 1.2}};
-  { BOOST_CHECK_THROW(poly<4> quad{vertices}, AssertionFailureException); }
+  { BOOST_CHECK_THROW(poly<4> quad{vertices}, std::logic_error); }
 
   // this one is not
   vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
-  {
-    poly<4> quad = {vertices};
-    BOOST_CHECK(quad.convex());
-  }
+  { poly<4> quad = {vertices}; }
 
   vertices = {{0, 0}, {1, 0}, {0.8, 0.5}, {1, 1}, {0, 1}};
-  { BOOST_CHECK_THROW(poly<5> pent(vertices), AssertionFailureException); }
+  { BOOST_CHECK_THROW(poly<5> pent(vertices), std::logic_error); }
 
   vertices = {{0, 0}, {1, 0}, {1.1, 0.5}, {1, 1}, {0, 1}};
-  {
-    poly<5> pent{vertices};
-    BOOST_CHECK(pent.convex());
-  }
+  { poly<5> pent{vertices}; }
 }
 
-BOOST_AUTO_TEST_CASE(construction_test) {
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   std::vector<vec2> vertices;
 
   // triangle
@@ -103,7 +94,19 @@ BOOST_AUTO_TEST_CASE(construction_test) {
   CHECK_CLOSE_ABS(quad.distanceToBoundary({0.3, -0.2}), 0.2, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(construction_test_dynamic) {
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsRecreation) {
+  // rectangular poly
+  std::vector<vec2> vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
+  poly<4> original(vertices);
+
+  auto valvector = original.values();
+  std::array<double, poly<4>::eSize> values;
+  std::copy_n(valvector.begin(), poly<4>::eSize, values.begin());
+  poly<4> recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   using poly = ConvexPolygonBounds<PolygonDynamic>;
 
   std::vector<vec2> vertices;

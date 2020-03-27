@@ -9,6 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
+#include <numeric>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -19,16 +20,15 @@ namespace Acts {
 class SurfaceBoundsStub : public SurfaceBounds {
  public:
   /// Implement ctor and pure virtual methods of SurfaceBounds
-  explicit SurfaceBoundsStub(size_t nValues = 0) : m_values(nValues) {
-    for (size_t i = 0; i < nValues; ++i) {
-      m_values[i] = i;
-    }
+  explicit SurfaceBoundsStub(size_t nValues = 0) : m_values(nValues, 0) {
+    std::iota(m_values.begin(), m_values.end(), 0);
   }
+
   ~SurfaceBoundsStub() override { /*nop*/
   }
   SurfaceBounds* clone() const final { return nullptr; }
-  BoundsType type() const final { return SurfaceBounds::Other; }
-  std::vector<TDD_real_t> valueStore() const override { return m_values; }
+  BoundsType type() const final { return SurfaceBounds::eOther; }
+  std::vector<double> values() const override { return m_values; }
   bool inside(const Vector2D& /*lpos*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
@@ -42,7 +42,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
 
  private:
-  std::vector<TDD_real_t> m_values;
+  std::vector<double> m_values;
 };
 
 namespace Test {
@@ -56,10 +56,10 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
 }
 BOOST_AUTO_TEST_CASE(SurfaceBoundsProperties) {
   SurfaceBoundsStub surface(5);
-  std::vector<TDD_real_t> reference{0, 1, 2, 3, 4};
-  const auto& valueStore = surface.valueStore();
+  std::vector<double> reference{0, 1, 2, 3, 4};
+  const auto& boundValues = surface.values();
   BOOST_CHECK_EQUAL_COLLECTIONS(reference.cbegin(), reference.cend(),
-                                valueStore.cbegin(), valueStore.cend());
+                                boundValues.cbegin(), boundValues.cend());
 }
 /// Unit test for testing SurfaceBounds properties
 BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
   SurfaceBoundsStub assignedSurface;
   assignedSurface = surface;
   BOOST_CHECK_EQUAL(surface, assignedSurface);
-  const auto& surfaceValueStore = surface.valueStore();
-  const auto& assignedValueStore = assignedSurface.valueStore();
+  const auto& surfaceboundValues = surface.values();
+  const auto& assignedboundValues = assignedSurface.values();
   BOOST_CHECK_EQUAL_COLLECTIONS(
-      surfaceValueStore.cbegin(), surfaceValueStore.cend(),
-      assignedValueStore.cbegin(), assignedValueStore.cend());
+      surfaceboundValues.cbegin(), surfaceboundValues.cend(),
+      assignedboundValues.cbegin(), assignedboundValues.cend());
 }
 BOOST_AUTO_TEST_SUITE_END()
 

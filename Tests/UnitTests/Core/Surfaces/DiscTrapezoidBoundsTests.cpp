@@ -20,6 +20,7 @@ namespace Acts {
 
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit tests for DiscTrapezoidBounds constrcuctors
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
   double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
@@ -31,18 +32,73 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
   /// Test construction with dimensions and default stereo
   BOOST_CHECK_EQUAL(
       DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, rMax, averagePhi).type(),
-      SurfaceBounds::DiscTrapezoidal);
+      SurfaceBounds::eDiscTrapezoid);
   //
   /// Test construction with all dimensions
   BOOST_CHECK_EQUAL(
       DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, rMax, averagePhi, stereo)
           .type(),
-      SurfaceBounds::DiscTrapezoidal);
+      SurfaceBounds::eDiscTrapezoid);
   //
   /// Copy constructor
   DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi);
   DiscTrapezoidBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::DiscTrapezoidal);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDiscTrapezoid);
+}
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsRecreation) {
+  double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
+      stereo(0.1);
+
+  DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi,
+                               stereo);
+  auto valvector = original.values();
+  std::array<double, DiscTrapezoidBounds::eSize> values;
+  std::copy_n(valvector.begin(), DiscTrapezoidBounds::eSize, values.begin());
+  DiscTrapezoidBounds recreated(values);
+  BOOST_CHECK_EQUAL(recreated, original);
+}
+
+// Unit tests for AnnulusBounds exception throwing
+BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsExceptions) {
+  double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
+      stereo(0.1);
+
+  // Exception for opening neg min half x < 0
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(-minHalfX, maxHalfX, rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg max half x < 0
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, -maxHalfX, rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg min and max half x < 0
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(-minHalfX, -maxHalfX, rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg r min
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, -rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg r max
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, -rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg r min and r max
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, -rMin, -rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for out of bound average phi
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, rMax, 4., stereo),
+      std::logic_error);
 }
 
 /// Unit tests for DiscTrapezoidBounds properties
@@ -58,7 +114,7 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(DiscTrapezoidBoundsObject.type(),
-                    SurfaceBounds::DiscTrapezoidal);
+                    SurfaceBounds::eDiscTrapezoid);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);
@@ -73,8 +129,9 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   DiscTrapezoidBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(dumpOuput.is_equal(
-      "Acts::DiscTrapezoidBounds:  (innerRadius, outerRadius, hMinX, "
-      "hMaxX, hlengthY, hPhiSector, averagePhi, rCenter, stereo) = "
+      "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, halfLengthXminR, "
+      "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, "
+      "stereo) = "
       "(2.0000000, 6.0000000, 1.0000000, 5.0000000, 0.7922870, 0.9851108, "
       "0.0000000, 2.5243378, 0.0000000)"));
   //
@@ -89,7 +146,8 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMax(), rMax, 1e-6);
   //
   /// Test averagePhi
-  CHECK_SMALL(DiscTrapezoidBoundsObject.averagePhi(), 1e-9);
+  CHECK_SMALL(DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eAveragePhi),
+              1e-9);
   //
   /// Test rCenter (redundant; not configurable)
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rCenter(), 2.524337798, 1e-6);
@@ -98,13 +156,17 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   CHECK_SMALL(DiscTrapezoidBoundsObject.stereo(), 1e-6);
   //
   /// Test minHalflengthX
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.minHalflengthX(), minHalfX, 1e-6);
+  CHECK_CLOSE_REL(
+      DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXminR),
+      minHalfX, 1e-6);
   //
   /// Test maxHalflengthX
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.maxHalflengthX(), maxHalfX, 1e-6);
+  CHECK_CLOSE_REL(
+      DiscTrapezoidBoundsObject.get(DiscTrapezoidBounds::eHalfLengthXmaxR),
+      maxHalfX, 1e-6);
   //
   /// Test halflengthY
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.halflengthY(), 0.792286991, 1e-6);
+  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.halfLengthY(), 0.792286991, 1e-6);
 }
 /// Unit test for testing DiscTrapezoidBounds assignment
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsAssignment) {
@@ -115,8 +177,8 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsAssignment) {
   // operator == not implemented in this class
   //
   /// Test assignment
-  DiscTrapezoidBounds assignedDiscTrapezoidBoundsObject(2.1, 6.6, 3.4, 4.2,
-                                                        33.);
+  DiscTrapezoidBounds assignedDiscTrapezoidBoundsObject(2.1, 6.6, 3.4, 4.2, 0.3,
+                                                        0.);
   assignedDiscTrapezoidBoundsObject = DiscTrapezoidBoundsObject;
   BOOST_CHECK_EQUAL(assignedDiscTrapezoidBoundsObject,
                     DiscTrapezoidBoundsObject);

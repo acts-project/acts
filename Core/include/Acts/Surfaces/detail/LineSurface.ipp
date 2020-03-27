@@ -121,9 +121,11 @@ inline Intersection LineSurface::intersectionEstimate(
       // At closest approach: check inside R or and inside Z
       const Vector3D vecLocal(result - mb);
       double cZ = vecLocal.dot(eb);
-      double hZ = m_bounds->halflengthZ() + s_onSurfaceTolerance;
-      if ((cZ * cZ > hZ * hZ) or ((vecLocal - cZ * eb).norm() >
-                                  m_bounds->r() + s_onSurfaceTolerance)) {
+      double hZ =
+          m_bounds->get(LineBounds::eHalfLengthZ) + s_onSurfaceTolerance;
+      if ((cZ * cZ > hZ * hZ) or
+          ((vecLocal - cZ * eb).norm() >
+           m_bounds->get(LineBounds::eR) + s_onSurfaceTolerance)) {
         status = Intersection::Status::missed;
       }
     }

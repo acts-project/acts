@@ -12,13 +12,6 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::TrapezoidBounds::TrapezoidBounds(double minhalex, double maxhalex,
-                                       double haley)
-    : m_minHalfX(std::abs(minhalex)),
-      m_maxHalfX(std::abs(maxhalex)),
-      m_halfY(std::abs(haley)),
-      m_boundingBox(std::max(minhalex, maxhalex), haley) {}
-
 Acts::TrapezoidBounds::~TrapezoidBounds() = default;
 
 Acts::TrapezoidBounds* Acts::TrapezoidBounds::clone() const {
@@ -26,15 +19,7 @@ Acts::TrapezoidBounds* Acts::TrapezoidBounds::clone() const {
 }
 
 Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
-  return SurfaceBounds::Trapezoid;
-}
-
-std::vector<TDD_real_t> Acts::TrapezoidBounds::valueStore() const {
-  std::vector<TDD_real_t> values(TrapezoidBounds::bv_length);
-  values[TrapezoidBounds::bv_minHalfX] = minHalflengthX();
-  values[TrapezoidBounds::bv_maxHalfX] = maxHalflengthX();
-  values[TrapezoidBounds::bv_halfY] = halflengthY();
-  return values;
+  return SurfaceBounds::eTrapezoid;
 }
 
 bool Acts::TrapezoidBounds::inside(const Acts::Vector2D& lposition,
@@ -49,11 +34,10 @@ double Acts::TrapezoidBounds::distanceToBoundary(
 
 std::vector<Acts::Vector2D> Acts::TrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
-  // counter-clockwise from bottom-right corner
-  return {{minHalflengthX(), -halflengthY()},
-          {maxHalflengthX(), halflengthY()},
-          {-maxHalflengthX(), halflengthY()},
-          {-minHalflengthX(), -halflengthY()}};
+  double minhx = get(TrapezoidBounds::eHalfLengthXnegY);
+  double maxhx = get(TrapezoidBounds::eHalfLengthXposY);
+  double hy = get(TrapezoidBounds::eHalfLengthY);
+  return {{-minhx, -hy}, {minhx, -hy}, {maxhx, hy}, {-maxhx, hy}};
 }
 
 const Acts::RectangleBounds& Acts::TrapezoidBounds::boundingBox() const {
@@ -63,9 +47,9 @@ const Acts::RectangleBounds& Acts::TrapezoidBounds::boundingBox() const {
 std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::TrapezoidBounds:  (minHlengthX, maxHlengthX, hlengthY) = "
-     << "(" << minHalflengthX() << ", " << maxHalflengthX() << ", "
-     << halflengthY() << ")";
+  sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY) = "
+     << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
+     << get(eHalfLengthY) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

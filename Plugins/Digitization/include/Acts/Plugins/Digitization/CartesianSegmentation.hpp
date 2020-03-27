@@ -138,7 +138,7 @@ inline DigitizationCell CartesianSegmentation::cell(
 
 inline std::pair<double, double> CartesianSegmentation::pitch() const {
   auto boundingBox = m_activeBounds->boundingBox();
-  auto values = boundingBox.valueStore();
+  auto values = boundingBox.values();
   double pitchX = 2. * values[0] / m_binUtility->bins(0);
   double pitchY = 2. * values[1] / m_binUtility->bins(1);
   return std::pair<double, double>(pitchX, pitchY);

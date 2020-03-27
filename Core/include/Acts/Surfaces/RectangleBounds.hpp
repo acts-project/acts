@@ -7,39 +7,58 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <vector>
 
 namespace Acts {
 
 /// @class RectangleBounds
 ///
-/// Bounds for a rectangular, planar surface.
-/// The two local coordinates Acts::eLOC_X, Acts::eLOC_Y are for legacy reasons
-/// also called @f$ phi @f$ respectively @f$ eta @f$. The orientation
-/// with respect to the local surface framce can be seen in the attached
-/// illustration.
-///
-/// @image html RectangularBounds.gif
-
+/// Bounds for a rectangular, planar surface - it can be used to for
+/// rectangles that are symetrically centered around (0./0.) and for
+/// generic shifted rectangles
 class RectangleBounds : public PlanarBounds {
  public:
-  /// @enum BoundValues for readability
-  enum BoundValues { bv_halfX = 0, bv_halfY = 1, bv_length = 2 };
+  enum BoundValues : int {
+    eMinX = 0,
+    eMinY = 1,
+    eMaxX = 2,
+    eMaxY = 3,
+    eSize = 4
+  };
 
   RectangleBounds() = delete;
 
-  /// Constructor with halflength in x and y
+  /// Constructor with halflength in x and y - symmetric
   ///
-  /// @param halex halflength in X
-  /// @param haley halflength in Y
-  RectangleBounds(double halex, double haley);
+  /// @param halfX halflength in X
+  /// @param halfY halflength in Y
+  RectangleBounds(double halfX, double halfY) noexcept(false)
+      : m_min({-halfX, -halfY}), m_max({halfX, halfY}) {
+    checkConsistency();
+  }
 
-  /// Constructor with explicit min and max vertex
+  /// Constructor - from fixed size array - generic
   ///
-  /// @param vmin Minimum vertex
-  /// @param vmax Maximum vertex
-  RectangleBounds(const Vector2D& vmin, const Vector2D& vmax);
+  /// @param values The parameter values
+  RectangleBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_min({values[eMinX], values[eMinY]}),
+        m_max({values[eMaxX], values[eMaxY]}) {
+    checkConsistency();
+  }
+
+  /// Constructor - from min/max - generic
+  ///
+  /// @param min The left bottom corner
+  /// @param max The right top corning
+  RectangleBounds(const Vector2D& min, const Vector2D& max) noexcept(false)
+      : m_min(min), m_max(max) {
+    checkConsistency();
+  }
 
   ~RectangleBounds() override = default;
 
@@ -47,7 +66,7 @@ class RectangleBounds : public PlanarBounds {
 
   BoundsType type() const final;
 
-  std::vector<TDD_real_t> valueStore() const final;
+  std::vector<double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -83,11 +102,15 @@ class RectangleBounds : public PlanarBounds {
   /// @param sl is the ostream for the dump
   std::ostream& toStream(std::ostream& sl) const final;
 
-  /// Return method for the half length in X
-  double halflengthX() const;
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const;
 
-  /// Return method for the half length in Y
-  double halflengthY() const;
+  /// Access to the half length in X
+  double halfLengthX() const;
+
+  /// Access to the half length in Y
+  double halfLengthY() const;
 
   /// Get the min vertex defining the bounds
   /// @return The min vertex
@@ -100,18 +123,14 @@ class RectangleBounds : public PlanarBounds {
  private:
   Vector2D m_min;
   Vector2D m_max;
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() noexcept(false);
 };
 
-inline double RectangleBounds::halflengthX() const {
-  return std::abs(m_max.x() - m_min.x()) * 0.5;
-}
-
-inline double RectangleBounds::halflengthY() const {
-  return std::abs(m_max.y() - m_min.y()) * 0.5;
-}
-
 inline SurfaceBounds::BoundsType RectangleBounds::type() const {
-  return SurfaceBounds::Rectangle;
+  return SurfaceBounds::eRectangle;
 }
 
 inline const Vector2D& RectangleBounds::min() const {
@@ -120,6 +139,39 @@ inline const Vector2D& RectangleBounds::min() const {
 
 inline const Vector2D& RectangleBounds::max() const {
   return m_max;
+}
+
+inline double RectangleBounds::halfLengthX() const {
+  return 0.5 * (m_max.x() - m_min.x());
+}
+
+inline double RectangleBounds::halfLengthY() const {
+  return 0.5 * (m_max.y() - m_min.y());
+}
+
+inline std::vector<double> RectangleBounds::values() const {
+  return {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
+}
+
+inline double RectangleBounds::get(BoundValues bValue) const {
+  switch (bValue) {
+    case eMinX:
+      return m_min.x();
+    case eMinY:
+      return m_min.y();
+    case eMaxX:
+      return m_max.x();
+  }
+  return m_max.y();
+}
+
+inline void RectangleBounds::checkConsistency() noexcept(false) {
+  if (get(eMinX) > get(eMaxX)) {
+    throw std::invalid_argument("RectangleBounds: invalid local x setup");
+  }
+  if (get(eMinY) > get(eMaxY)) {
+    throw std::invalid_argument("RectangleBounds: invalid local y setup");
+  }
 }
 
 }  // namespace Acts

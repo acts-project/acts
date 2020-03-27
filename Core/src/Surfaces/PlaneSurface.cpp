@@ -132,15 +132,14 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     for (const auto& v2D : vertices2D) {
       vertices.push_back(transform(gctx) * Vector3D(v2D.x(), v2D.y(), 0.));
     }
-    bool isEllipse = bounds().type() == SurfaceBounds::Ellipse;
+    bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
     bool innerExists = false, coversFull = false;
     if (isEllipse) {
-      auto vStore = bounds().valueStore();
-      innerExists = std::abs(vStore[EllipseBounds::BoundValues::bv_rMinX]) <
-                    s_onSurfaceTolerance;
-      coversFull =
-          std::abs(vStore[EllipseBounds::BoundValues::bv_halfPhiSector]) <
-          M_PI - s_onSurfaceTolerance;
+      auto vStore = bounds().values();
+      innerExists =
+          std::abs(vStore[EllipseBounds::eMaxR0]) < s_onSurfaceTolerance;
+      coversFull = std::abs(vStore[EllipseBounds::eHalfPhiSector]) <
+                   M_PI - s_onSurfaceTolerance;
     }
     // All of those can be described as convex
     // @todo same as for Discs: coversFull is not the right criterium

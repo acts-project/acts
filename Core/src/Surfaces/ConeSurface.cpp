@@ -140,8 +140,9 @@ double Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,
       m_transform ? transform(gctx).inverse() * position : position;
   double phi = VectorHelpers::phi(posLocal);
   double sgn = posLocal.z() > 0. ? -1. : +1.;
-  Vector3D normalC(cos(phi) * bounds().cosAlpha(),
-                   sin(phi) * bounds().cosAlpha(), sgn * bounds().sinAlpha());
+  double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
+  double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
+  Vector3D normalC(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
   if (m_transform) {
     normalC = transform(gctx) * normalC;
   }
@@ -170,9 +171,10 @@ const Acts::Vector3D Acts::ConeSurface::normal(
   double phi =
              lposition[Acts::eLOC_RPHI] / (bounds().r(lposition[Acts::eLOC_Z])),
          sgn = lposition[Acts::eLOC_Z] > 0 ? -1. : +1.;
-  Vector3D localNormal(cos(phi) * bounds().cosAlpha(),
-                       sin(phi) * bounds().cosAlpha(),
-                       sgn * bounds().sinAlpha());
+  double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
+  double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
+  Vector3D localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha,
+                       sgn * sinAlpha);
   return m_transform ? Vector3D(transform(gctx).linear() * localNormal)
                      : localNormal;
 }
@@ -201,25 +203,27 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   std::vector<Polyhedron::Face> faces;
   std::vector<Polyhedron::Face> triangularMesh;
 
-  if (bounds().minZ() == -std::numeric_limits<double>::infinity() or
-      bounds().maxZ() == std::numeric_limits<double>::infinity()) {
+  double minZ = bounds().get(ConeBounds::eMinZ);
+  double maxZ = bounds().get(ConeBounds::eMaxZ);
+
+  if (minZ == -std::numeric_limits<double>::infinity() or
+      maxZ == std::numeric_limits<double>::infinity()) {
     throw std::domain_error(
         "Polyhedron repr of boundless surface not possible");
   }
 
   auto ctransform = transform(gctx);
 
-  // The tip - created only once and only
-  // if the we don't have a cut-off cone
+  // The tip - created only once and only, if the it's not a cut-off cone
   bool tipExists = false;
-  if (bounds().minZ() * bounds().maxZ() <= s_onSurfaceTolerance) {
+  if (minZ * maxZ <= s_onSurfaceTolerance) {
     vertices.push_back(ctransform * Vector3D(0., 0., 0.));
     tipExists = true;
   }
 
   // Cone parameters
-  double hPhiSec = bounds().halfPhiSector();
-  double avgPhi = bounds().averagePhi();
+  double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
+  double avgPhi = bounds().get(ConeBounds::eAveragePhi);
   bool fullCone = (hPhiSec == M_PI);
 
   // Get the phi segments from the helper
@@ -229,11 +233,11 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
 
   // Negative cone if exists
   std::vector<double> coneSides;
-  if (std::abs(bounds().minZ()) > s_onSurfaceTolerance) {
-    coneSides.push_back(bounds().minZ());
+  if (std::abs(minZ) > s_onSurfaceTolerance) {
+    coneSides.push_back(minZ);
   }
-  if (std::abs(bounds().maxZ()) > s_onSurfaceTolerance) {
-    coneSides.push_back(bounds().maxZ());
+  if (std::abs(maxZ) > s_onSurfaceTolerance) {
+    coneSides.push_back(maxZ);
   }
   for (auto& z : coneSides) {
     // Remember the first vertex

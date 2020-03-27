@@ -22,6 +22,7 @@ namespace Acts {
 
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
   double minHalfX(1.), maxHalfX(6.), halfY(2.);
@@ -31,11 +32,45 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
   //
   /// Test construction with defining half lengths
   BOOST_CHECK_EQUAL(TrapezoidBounds(minHalfX, maxHalfX, halfY).type(),
-                    SurfaceBounds::Trapezoid);
+                    SurfaceBounds::eTrapezoid);
   /// Copy constructor
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   TrapezoidBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Trapezoid);
+  BOOST_CHECK_EQUAL(copied, original);
+}
+
+/// Unit test for creating compliant/non-compliant TrapezoidBounds object
+BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
+  double minHalfX(1.), maxHalfX(6.), halfY(2.);
+  /// Copy constructor
+  TrapezoidBounds original(minHalfX, maxHalfX, halfY);
+  // const bool symmetric(false);
+  auto valvector = original.values();
+  std::array<double, TrapezoidBounds::eSize> values;
+  std::copy_n(valvector.begin(), TrapezoidBounds::eSize, values.begin());
+  TrapezoidBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+// Exception tests
+BOOST_AUTO_TEST_CASE(TrapezoidBoundsException) {
+  double minHalfX(1.), maxHalfX(6.), halfY(2.);
+
+  // Negative x at min y
+  BOOST_CHECK_THROW(TrapezoidBounds(-minHalfX, maxHalfX, halfY),
+                    std::logic_error);
+
+  // Negative x at max y
+  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, -maxHalfX, halfY),
+                    std::logic_error);
+
+  // Negative x at miny and max y
+  BOOST_CHECK_THROW(TrapezoidBounds(-minHalfX, -maxHalfX, halfY),
+                    std::logic_error);
+
+  // Negative y
+  BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, maxHalfX, -halfY),
+                    std::logic_error);
 }
 
 /// Unit tests for TrapezoidBounds properties
@@ -49,16 +84,19 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
   delete pClonedTrapezoidBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::Trapezoid);
+  BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::eTrapezoid);
   //
   /// Test minHalflengthX
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.minHalflengthX(), minHalfX);
+  BOOST_CHECK_EQUAL(
+      trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXnegY), minHalfX);
   //
   /// Test maxHalfLengthX
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.maxHalflengthX(), maxHalfX);
+  BOOST_CHECK_EQUAL(
+      trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXposY), maxHalfX);
   //
   /// Test halflengthY
-  BOOST_CHECK_EQUAL(trapezoidBoundsObject.halflengthY(), halfY);
+  BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthY),
+                    halfY);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);

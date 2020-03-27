@@ -15,16 +15,13 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::AnnulusBounds::AnnulusBounds(double minR, double maxR, double minPhi,
-                                   double maxPhi, const Vector2D& moduleOrigin,
-                                   double avgPhi)
-    : m_rMin(std::min(minR, maxR)),
-      m_rMax(std::max(minR, maxR)),
-      m_phiMin(std::min(minPhi, maxPhi)),
-      m_phiMax(std::max(minPhi, maxPhi)),
-      m_moduleOrigin(moduleOrigin),
-      m_phiAvg(detail::radian_sym(avgPhi)) {
-  m_rotationStripPC = Eigen::Translation<double, 2>(Vector2D(0, -m_phiAvg));
+Acts::AnnulusBounds::AnnulusBounds(
+    const std::array<double, eSize>& values) noexcept(false)
+    : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
+  checkConsistency();
+
+  m_rotationStripPC =
+      Eigen::Translation<double, 2>(Vector2D(0, -get(eAveragePhi)));
   m_translation = Eigen::Translation<double, 2>(m_moduleOrigin);
 
   m_shiftXY = m_moduleOrigin * -1;
@@ -65,14 +62,14 @@ Acts::AnnulusBounds::AnnulusBounds(double minR, double maxR, double minPhi,
   };
 
   // calculate corners in STRIP XY, keep them we need them for minDistance()
-  m_outLeftStripXY =
-      circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y], m_rMax, m_phiMax);
-  m_inLeftStripXY =
-      circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y], m_rMin, m_phiMax);
-  m_outRightStripXY =
-      circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y], m_rMax, m_phiMin);
-  m_inRightStripXY =
-      circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y], m_rMin, m_phiMin);
+  m_outLeftStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
+                            get(eMaxR), get(eMaxPhiRel));
+  m_inLeftStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
+                           get(eMinR), get(eMaxPhiRel));
+  m_outRightStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
+                             get(eMaxR), get(eMinPhiRel));
+  m_inRightStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
+                            get(eMinR), get(eMinPhiRel));
 
   m_outLeftStripPC = {m_outLeftStripXY.norm(),
                       VectorHelpers::phi(m_outLeftStripXY)};
@@ -87,18 +84,6 @@ Acts::AnnulusBounds::AnnulusBounds(double minR, double maxR, double minPhi,
   m_inLeftModulePC = stripXYToModulePC(m_inLeftStripXY);
   m_outRightModulePC = stripXYToModulePC(m_outRightStripXY);
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
-}
-
-std::vector<TDD_real_t> Acts::AnnulusBounds::valueStore() const {
-  std::vector<TDD_real_t> values(AnnulusBounds::bv_length);
-  values[AnnulusBounds::bv_minR] = rMin();
-  values[AnnulusBounds::bv_maxR] = rMax();
-  values[AnnulusBounds::bv_phiMin] = phiMin();
-  values[AnnulusBounds::bv_phiMax] = phiMax();
-  values[AnnulusBounds::bv_phiAvg] = 0.5 * (phiMin() + phiMax());
-  values[AnnulusBounds::bv_originX] = m_moduleOrigin.x();
-  values[AnnulusBounds::bv_originY] = m_moduleOrigin.y();
-  return values;
 }
 
 std::vector<Acts::Vector2D> Acts::AnnulusBounds::corners() const {
@@ -127,15 +112,15 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
   for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
     int addon = (iseg == phisInner.size() - 2) ? 1 : 0;
     detail::VerticesHelper::createSegment<Vector2D, Eigen::Affine2d>(
-        rvertices, {rMin(), rMin()}, phisInner[iseg], phisInner[iseg + 1], lseg,
-        addon);
+        rvertices, {get(eMinR), get(eMinR)}, phisInner[iseg],
+        phisInner[iseg + 1], lseg, addon);
   }
   // Upper bow from phi_min -> phi_max
   for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
     int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
     detail::VerticesHelper::createSegment<Vector2D, Eigen::Affine2d>(
-        rvertices, {rMax(), rMax()}, phisOuter[iseg], phisOuter[iseg + 1], lseg,
-        addon);
+        rvertices, {get(eMaxR), get(eMaxR)}, phisOuter[iseg],
+        phisOuter[iseg + 1], lseg, addon);
   }
 
   return rvertices;
@@ -149,7 +134,8 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
   double phiLoc = locpo_rotated[eLOC_PHI];
   double rLoc = locpo_rotated[eLOC_R];
 
-  if (phiLoc < (m_phiMin - tolPhi) || phiLoc > (m_phiMax + tolPhi)) {
+  if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
+      phiLoc > (get(eMaxPhiRel) + tolPhi)) {
     return false;
   }
 
@@ -160,7 +146,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
         m_shiftPC[eLOC_R] * m_shiftPC[eLOC_R] + rLoc * rLoc +
         2 * m_shiftPC[eLOC_R] * rLoc * cos(phiLoc - m_shiftPC[eLOC_PHI]);
 
-    if (r_mod2 < m_rMin * m_rMin || r_mod2 > m_rMax * m_rMax) {
+    if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
       return false;
     }
   } else {
@@ -169,7 +155,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
         sqrt(m_shiftPC[eLOC_R] * m_shiftPC[eLOC_R] + rLoc * rLoc +
              2 * m_shiftPC[eLOC_R] * rLoc * cos(phiLoc - m_shiftPC[eLOC_PHI]));
 
-    if (r_mod < (m_rMin - tolR) || r_mod > (m_rMax + tolR)) {
+    if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
       return false;
     }
   }
@@ -355,7 +341,6 @@ double Acts::AnnulusBounds::distanceToBoundary(
 
   Vector2D closestStripPC;
   double minDist = std::numeric_limits<double>::max();
-  ;
   double curDist;
 
   // for rmin
@@ -363,7 +348,7 @@ double Acts::AnnulusBounds::distanceToBoundary(
       phiMod < m_inLeftModulePC[eLOC_PHI]) {
     // is inside phi bounds, to comparison to rmin and r max
     // r min
-    curDist = std::abs(m_rMin - rMod);
+    curDist = std::abs(get(eMinR) - rMod);
     if (curDist < minDist) {
       minDist = curDist;
     }
@@ -383,9 +368,9 @@ double Acts::AnnulusBounds::distanceToBoundary(
     }
   }
 
-  if (m_phiMin <= phiStrip && phiStrip < m_phiMax) {
+  if (get(eMinPhiRel) <= phiStrip && phiStrip < get(eMaxPhiRel)) {
     // r max
-    curDist = std::abs(m_rMax - rMod);
+    curDist = std::abs(get(eMaxR) - rMod);
     if (curDist < minDist) {
       minDist = curDist;
     }
@@ -457,8 +442,8 @@ std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
-  sl << "(" << rMin() << ", " << rMax() << ", " << phiMin() << ", " << phiMax()
-     << ")" << '\n';
+  sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << phiMin() << ", "
+     << phiMax() << ")" << '\n';
   sl << " - shift xy = " << m_shiftXY.x() << ", " << m_shiftXY.y() << '\n';
   ;
   sl << " - shift pc = " << m_shiftPC.x() << ", " << m_shiftPC.y() << '\n';

@@ -20,7 +20,7 @@ inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
     const Transform3D& transform, const Vector3D& position,
     const Vector3D& direction) const {
   // Solve for radius R
-  double R = bounds().r();
+  double R = bounds().get(CylinderBounds::eR);
 
   // Get the transformation matrtix
   const auto& tMatrix = transform.matrix();
@@ -105,7 +105,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
       const Vector3D vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_Z];
-      double hZ = cBounds.halflengthZ() + tolerance;
+      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
       return (cZ * cZ < hZ * hZ) ? status : Intersection::Status::missed;
     }
     return (isOnSurface(gctx, solution, direction, bcheck)

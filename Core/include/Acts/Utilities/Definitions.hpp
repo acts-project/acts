@@ -18,15 +18,10 @@
 #include <Eigen/Dense>
 #endif
 
-#ifdef TRKDETDESCR_USEFLOATPRECISON
-using TDD_real_t = float;
-#else
-using TDD_real_t = double;
-#endif
-
-#define TDD_max_bound_value 10e10
-
 namespace Acts {
+
+/// Tolerance for bein numerical equal for geometry building
+static constexpr double s_epsilon = 3 * std::numeric_limits<double>::epsilon();
 
 /// Tolerance for being on Surface
 ///

@@ -20,36 +20,36 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 
 Acts::DoubleTrapezoidVolumeBounds::DoubleTrapezoidVolumeBounds()
-    : VolumeBounds(), m_valueStore(bv_length, 0.) {}
+    : VolumeBounds(), m_values(bv_length, 0.) {}
 
 Acts::DoubleTrapezoidVolumeBounds::DoubleTrapezoidVolumeBounds(
     double minhalex, double medhalex, double maxhalex, double haley1,
     double haley2, double halez)
-    : VolumeBounds(), m_valueStore(bv_length, 0.) {
-  m_valueStore.at(bv_minHalfX) = minhalex;
-  m_valueStore.at(bv_medHalfX) = medhalex;
-  m_valueStore.at(bv_maxHalfX) = maxhalex;
-  m_valueStore.at(bv_halfY1) = haley1;
-  m_valueStore.at(bv_halfY2) = haley2;
-  m_valueStore.at(bv_halfZ) = halez;
-  m_valueStore.at(bv_alpha1) =
-      atan2(m_valueStore.at(bv_medHalfX) - m_valueStore.at(bv_minHalfX),
-            2. * m_valueStore.at(bv_halfY1));
-  m_valueStore.at(bv_alpha2) =
-      atan2(m_valueStore.at(bv_medHalfX) - m_valueStore.at(bv_maxHalfX),
-            2. * m_valueStore.at(bv_halfY2));
+    : VolumeBounds(), m_values(bv_length, 0.) {
+  m_values.at(bv_minHalfX) = minhalex;
+  m_values.at(bv_medHalfX) = medhalex;
+  m_values.at(bv_maxHalfX) = maxhalex;
+  m_values.at(bv_halfY1) = haley1;
+  m_values.at(bv_halfY2) = haley2;
+  m_values.at(bv_halfZ) = halez;
+  m_values.at(bv_alpha1) =
+      atan2(m_values.at(bv_medHalfX) - m_values.at(bv_minHalfX),
+            2. * m_values.at(bv_halfY1));
+  m_values.at(bv_alpha2) =
+      atan2(m_values.at(bv_medHalfX) - m_values.at(bv_maxHalfX),
+            2. * m_values.at(bv_halfY2));
 }
 
 Acts::DoubleTrapezoidVolumeBounds::DoubleTrapezoidVolumeBounds(
     const Acts::DoubleTrapezoidVolumeBounds& trabo)
-    : VolumeBounds(), m_valueStore(trabo.m_valueStore) {}
+    : VolumeBounds(), m_values(trabo.m_values) {}
 
 Acts::DoubleTrapezoidVolumeBounds::~DoubleTrapezoidVolumeBounds() = default;
 
 Acts::DoubleTrapezoidVolumeBounds& Acts::DoubleTrapezoidVolumeBounds::operator=(
     const Acts::DoubleTrapezoidVolumeBounds& trabo) {
   if (this != &trabo) {
-    m_valueStore = trabo.m_valueStore;
+    m_values = trabo.m_values;
   }
   return *this;
 }
@@ -97,7 +97,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceAlpha1Bounds = faceAlpha1RectangleBounds();
   Vector3D faceAlpha1Position(A + alpha1Rotation.col(0) *
-                                      faceAlpha1Bounds->halflengthX());
+                                      faceAlpha1Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceAlpha1Position) * alpha1Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -112,7 +112,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
                                  AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceBeta1Bounds = faceBeta1RectangleBounds();
   Vector3D faceBeta1Position(B + beta1Rotation.col(0) *
-                                     faceBeta1Bounds->halflengthX());
+                                     faceBeta1Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceBeta1Position) * beta1Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -130,7 +130,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       AngleAxis3D(-0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceAlpha2Bounds = faceAlpha2RectangleBounds();
   Vector3D faceAlpha2Position(AA + alpha2Rotation.col(0) *
-                                       faceAlpha2Bounds->halflengthX());
+                                       faceAlpha2Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceAlpha2Position) * alpha2Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -146,7 +146,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       AngleAxis3D(-0.5 * M_PI, Vector3D(0., 0., 1.)));
   RectangleBounds* faceBeta2Bounds = faceBeta2RectangleBounds();
   Vector3D faceBeta2Position(BB + beta2Rotation.col(0) *
-                                      faceBeta2Bounds->halflengthX());
+                                      faceBeta2Bounds->halfLengthX());
   tTransform =
       new Transform3D(Translation3D(faceBeta2Position) * beta2Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -177,61 +177,58 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
 // faces in xy
 Acts::DiamondBounds* Acts::DoubleTrapezoidVolumeBounds::faceXYDiamondBounds()
     const {
-  return new DiamondBounds(
-      m_valueStore.at(bv_minHalfX), m_valueStore.at(bv_medHalfX),
-      m_valueStore.at(bv_maxHalfX), 2 * m_valueStore.at(bv_halfY1),
-      2 * m_valueStore.at(bv_halfY2));
+  return new DiamondBounds(m_values.at(bv_minHalfX), m_values.at(bv_medHalfX),
+                           m_values.at(bv_maxHalfX), 2 * m_values.at(bv_halfY1),
+                           2 * m_values.at(bv_halfY2));
 }
 
 Acts::RectangleBounds*
 Acts::DoubleTrapezoidVolumeBounds::faceAlpha1RectangleBounds() const {
   return new RectangleBounds(
-      m_valueStore.at(bv_halfY1) / cos(m_valueStore.at(bv_alpha1)),
-      m_valueStore.at(bv_halfZ));
+      m_values.at(bv_halfY1) / cos(m_values.at(bv_alpha1)),
+      m_values.at(bv_halfZ));
 }
 
 Acts::RectangleBounds*
 Acts::DoubleTrapezoidVolumeBounds::faceAlpha2RectangleBounds() const {
   return new RectangleBounds(
-      m_valueStore.at(bv_halfY2) / cos(m_valueStore.at(bv_alpha2)),
-      m_valueStore.at(bv_halfZ));
+      m_values.at(bv_halfY2) / cos(m_values.at(bv_alpha2)),
+      m_values.at(bv_halfZ));
 }
 
 Acts::RectangleBounds*
 Acts::DoubleTrapezoidVolumeBounds::faceBeta1RectangleBounds() const {
   return new RectangleBounds(
-      m_valueStore.at(bv_halfY1) / cos(m_valueStore.at(bv_alpha1)),
-      m_valueStore.at(bv_halfZ));
+      m_values.at(bv_halfY1) / cos(m_values.at(bv_alpha1)),
+      m_values.at(bv_halfZ));
 }
 
 Acts::RectangleBounds*
 Acts::DoubleTrapezoidVolumeBounds::faceBeta2RectangleBounds() const {
   return new RectangleBounds(
-      m_valueStore.at(bv_halfY2) / cos(m_valueStore.at(bv_alpha2)),
-      m_valueStore.at(bv_halfZ));
+      m_values.at(bv_halfY2) / cos(m_values.at(bv_alpha2)),
+      m_values.at(bv_halfZ));
 }
 
 Acts::RectangleBounds*
 Acts::DoubleTrapezoidVolumeBounds::faceZXRectangleBoundsBottom() const {
-  return new RectangleBounds(m_valueStore.at(bv_halfZ),
-                             m_valueStore.at(bv_minHalfX));
+  return new RectangleBounds(m_values.at(bv_halfZ), m_values.at(bv_minHalfX));
 }
 
 Acts::RectangleBounds*
 Acts::DoubleTrapezoidVolumeBounds::faceZXRectangleBoundsTop() const {
-  return new RectangleBounds(m_valueStore.at(bv_halfZ),
-                             m_valueStore.at(bv_maxHalfX));
+  return new RectangleBounds(m_values.at(bv_halfZ), m_values.at(bv_maxHalfX));
 }
 
 bool Acts::DoubleTrapezoidVolumeBounds::inside(const Vector3D& pos,
                                                double tol) const {
-  if (std::abs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) {
+  if (std::abs(pos.z()) > m_values.at(bv_halfZ) + tol) {
     return false;
   }
-  if (pos.y() < -2 * m_valueStore.at(bv_halfY1) - tol) {
+  if (pos.y() < -2 * m_values.at(bv_halfY1) - tol) {
     return false;
   }
-  if (pos.y() > 2 * m_valueStore.at(bv_halfY2) - tol) {
+  if (pos.y() > 2 * m_values.at(bv_halfY2) - tol) {
     return false;
   }
   DiamondBounds* faceXYBounds = faceXYDiamondBounds();

@@ -282,11 +282,9 @@ BOOST_AUTO_TEST_CASE(Navigator_methods) {
   BOOST_CHECK(state.navigation.navLayerIter ==
               state.navigation.navLayers.begin());
   // Cache the beam pipe radius
-  double beamPipeRadius =
-      perp(state.navigation.navLayerIter->intersection.position);
+  double beamPipeR = perp(state.navigation.navLayerIter->intersection.position);
   // step size has been updated
-  CHECK_CLOSE_ABS(state.stepping.stepSize, beamPipeRadius,
-                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(state.stepping.stepSize, beamPipeR, s_onSurfaceTolerance);
   if (debug) {
     std::cout << "<<< Test 1a >>> initialize at "
               << toString(state.stepping.pos) << std::endl;

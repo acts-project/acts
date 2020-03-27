@@ -7,11 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cmath>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+
+#include <array>
+#include <cmath>
+#include <vector>
 
 namespace Acts {
 
@@ -28,57 +31,50 @@ namespace Acts {
 /// opening angle @f$ 2\cdot\phi_{half}@f$
 /// around an average @f$ \phi @f$ angle @f$ \phi_{ave} @f$.
 ///
-/// @todo update the documentation picture for cylinder segments
-///
-/// @image html CylinderBounds.gif
-
 class CylinderBounds : public SurfaceBounds {
  public:
-  /// @enum BoundValues for readablility
-  /// nested enumeration object
-  enum BoundValues {
-    bv_radius = 0,
-    bv_averagePhi = 1,
-    bv_halfPhiSector = 2,
-    bv_halfZ = 3,
-    bv_length = 4
+  enum BoundValues : int {
+    eR = 0,
+    eHalfLengthZ = 1,
+    eHalfPhiSector = 2,
+    eAveragePhi = 3,
+    eSize = 4
   };
 
   CylinderBounds() = delete;
 
   /// Constructor - full cylinder
   ///
-  /// @param radius is the radius of the cylinder
-  /// @param halez is the half length in z
-  CylinderBounds(double radius, double halfZ);
+  /// @param r The radius of the cylinder
+  /// @param halfZ The half length in z
+  /// @param halfPhi The half opening angle
+  /// @param avgPhi (optional) The phi value from which the opening angle spans
+  CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
+                 double avgPhi = 0.) noexcept(false)
+      : m_values({r, halfZ, halfPhi, avgPhi}),
+        m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {
+    checkConsistency();
+  }
 
-  /// Constructor - open cylinder
+  /// Constructor - from fixed size array
   ///
-  /// @param radius is the radius of the cylinder
-  /// @param halfPhi is the half opening angle
-  /// @param halfZ is the half length in z
-  CylinderBounds(double radius, double halfPhi, double halfZ);
+  /// @param values The parameter values
+  CylinderBounds(const std::array<double, eSize>& values) noexcept(false)
+      : m_values(values),
+        m_closed(std::abs(values[eHalfPhiSector] - M_PI) < s_epsilon) {
+    checkConsistency();
+  }
 
-  /// Constructor - open cylinder
-  ///
-  /// @param radius is the radius of the cylinder
-  /// @param avphi is the middle phi position of the segment
-  /// @param halfphi is the half opening angle
-  /// @param halez is the half length in z
-  CylinderBounds(double radius, double averagePhi, double halfPhi,
-                 double halfZ);
-
-  /// Defaulted destructor
   ~CylinderBounds() override = default;
 
-  /// Virtual constructor
   CylinderBounds* clone() const final;
 
-  /// Type enumeration
   BoundsType type() const final;
 
-  /// The value store
-  std::vector<TDD_real_t> valueStore() const final;
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -105,52 +101,57 @@ class CylinderBounds : public SurfaceBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const final;
-
-  /// This method returns the radius
-  double r() const;
-
-  /// This method returns the average phi
-  double averagePhi() const;
-
-  /// This method returns the halfPhiSector angle
-  double halfPhiSector() const;
-
-  /// This method returns the halflengthZ
-  double halflengthZ() const;
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const;
 
- private:
-  /// the bound radius, average, half phi and half Z
-  double m_radius, m_avgPhi, m_halfPhi, m_halfZ;
-  /// an indicator if the bounds are closed
-  bool m_closed;
+  /// Output Method for std::ostream
+  std::ostream& toStream(std::ostream& sl) const final;
 
+ private:
+  /// The bound radius, half Z, half phi and average phi
+  std::array<double, eSize> m_values;
+  /// Indicator if the bounds are closed
+  bool m_closed{false};
+
+  /// Check the input values for consistency, will throw a logic_exception
+  /// if consistency is not given
+  void checkConsistency() noexcept(false);
+
+  /// Helper method to shift into the phi-frame
+  /// @param lposition the polar coordinates in the global frame
   Vector2D shifted(const Vector2D& lposition) const;
+
+  /// Return the jacobian into the polar coordinate
   ActsSymMatrixD<2> jacobian() const;
 };
 
-inline double CylinderBounds::r() const {
-  return m_radius;
-}
-
-inline double CylinderBounds::averagePhi() const {
-  return m_avgPhi;
-}
-
-inline double CylinderBounds::halfPhiSector() const {
-  return m_halfPhi;
-}
-
-inline double CylinderBounds::halflengthZ() const {
-  return m_halfZ;
+inline std::vector<double> CylinderBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
 }
 
 inline bool CylinderBounds::coversFullAzimuth() const {
-  return (m_halfPhi == M_PI);
+  return m_closed;
+}
+
+inline void CylinderBounds::checkConsistency() noexcept(false) {
+  if (get(eR) <= 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid length setup.");
+  }
+  if (get(eHalfPhiSector) <= 0. or get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+  }
 }
 
 }  // namespace Acts

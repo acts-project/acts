@@ -20,6 +20,7 @@ namespace Acts {
 
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit tests for RadialBounds constrcuctors
 BOOST_AUTO_TEST_CASE(RadialBoundsConstruction) {
   double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0);
@@ -28,16 +29,57 @@ BOOST_AUTO_TEST_CASE(RadialBoundsConstruction) {
   //
   /// Test construction with radii and default sector
   BOOST_CHECK_EQUAL(RadialBounds(minRadius, maxRadius).type(),
-                    SurfaceBounds::Disc);
+                    SurfaceBounds::eDisc);
   //
   /// Test construction with radii and sector half angle
   BOOST_CHECK_EQUAL(RadialBounds(minRadius, maxRadius, halfPhiSector).type(),
-                    SurfaceBounds::Disc);
+                    SurfaceBounds::eDisc);
   //
   /// Copy constructor
   RadialBounds original(minRadius, maxRadius);
   RadialBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Disc);
+  BOOST_CHECK_EQUAL(copied, original);
+}
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(RadialBoundsRecreation) {
+  double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0), avgPhi(0.1);
+  RadialBounds original(minRadius, maxRadius, halfPhiSector, avgPhi);
+  // const bool symmetric(false);
+  auto valvector = original.values();
+  std::array<double, RadialBounds::eSize> values;
+  std::copy_n(valvector.begin(), RadialBounds::eSize, values.begin());
+  RadialBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(RadialBoundsException) {
+  double minRadius(1.0), maxRadius(5.0), halfPhiSector(M_PI / 8.0), avgPhi(0.1);
+
+  // Negative inner radius
+  BOOST_CHECK_THROW(RadialBounds(-minRadius, maxRadius, halfPhiSector, avgPhi),
+                    std::logic_error);
+
+  // Negative outer radius
+  BOOST_CHECK_THROW(RadialBounds(minRadius, -maxRadius, halfPhiSector, avgPhi),
+                    std::logic_error);
+
+  // Negative inner and outer radius
+  BOOST_CHECK_THROW(RadialBounds(-minRadius, -maxRadius, halfPhiSector, avgPhi),
+                    std::logic_error);
+
+  // Swapped radii
+  BOOST_CHECK_THROW(RadialBounds(maxRadius, minRadius, halfPhiSector, avgPhi),
+                    std::logic_error);
+
+  // Out of bound phi sector
+  BOOST_CHECK_THROW(RadialBounds(minRadius, -maxRadius, -5., avgPhi),
+                    std::logic_error);
+
+  // Out of bound phi position
+  BOOST_CHECK_THROW(RadialBounds(minRadius, -maxRadius, halfPhiSector, 5.),
+                    std::logic_error);
 }
 
 /// Unit tests for RadialBounds properties
@@ -50,7 +92,7 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   delete pClonedRadialBounds;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(radialBoundsObject.type(), SurfaceBounds::Disc);
+  BOOST_CHECK_EQUAL(radialBoundsObject.type(), SurfaceBounds::eDisc);
   //
   /// Test distanceToBoundary
   Vector2D origin(0., 0.);
@@ -65,25 +107,26 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   radialBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::RadialBounds:  (innerRadius, "
-                         "outerRadius, hPhiSector) = (1.0000000, "
-                         "5.0000000, 0.0000000, 0.3926991)"));
+      dumpOuput.is_equal("Acts::RadialBounds:  (innerRadius, outerRadius, "
+                         "hPhiSector, averagePhi) = (1.0000000, "
+                         "5.0000000, 0.3926991, 0.0000000)"));
   //
   /// Test inside
   BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryCheck(true)));
   BOOST_CHECK(!radialBoundsObject.inside(outside, BoundaryCheck(true)));
   //
   /// Test rMin
-  BOOST_CHECK_EQUAL(radialBoundsObject.rMin(), minRadius);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eMinR), minRadius);
   //
   /// Test rMax
-  BOOST_CHECK_EQUAL(radialBoundsObject.rMax(), maxRadius);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eMaxR), maxRadius);
   //
   /// Test averagePhi (should be a redundant method, this is not configurable)
-  BOOST_CHECK_EQUAL(radialBoundsObject.averagePhi(), 0.0);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eAveragePhi), 0.0);
   //
   /// Test halfPhiSector
-  BOOST_CHECK_EQUAL(radialBoundsObject.halfPhiSector(), halfPhiSector);
+  BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eHalfPhiSector),
+                    halfPhiSector);
 }
 /// Unit test for testing RadialBounds assignment
 BOOST_AUTO_TEST_CASE(RadialBoundsAssignment) {

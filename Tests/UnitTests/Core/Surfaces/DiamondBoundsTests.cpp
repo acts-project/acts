@@ -31,20 +31,20 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
   // DiamondBounds d(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   BOOST_CHECK_EQUAL(
       DiamondBounds(minHalfX, midHalfX, maxHalfX, halfY1, halfY2).type(),
-      SurfaceBounds::Diamond);
+      SurfaceBounds::eDiamond);
   //
   /// Copy constructor
   DiamondBounds original(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   DiamondBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Diamond);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDiamond);
 
   // invalid inputs
   BOOST_CHECK_THROW(
       DiamondBounds db(midHalfX, minHalfX, maxHalfX, halfY1, halfY2),
-      AssertionFailureException);
+      std::logic_error);
   BOOST_CHECK_THROW(
       DiamondBounds db(minHalfX, maxHalfX, midHalfX, halfY1, halfY2),
-      AssertionFailureException);
+      std::logic_error);
 }
 /// Unit tests for DiamondBounds properties
 BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
@@ -57,23 +57,28 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   delete pClonedDiamondBoundsObject;
   //
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::Diamond);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::eDiamond);
   // //redundant test
   //
-  /// Test minHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.x1(), minHalfX);
+  /// Test the half length at negative y
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXnegY),
+                    minHalfX);
   //
-  /// Test medHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.x2(), midHalfX);
+  /// Test the half length at the x axis
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXzeroY),
+                    midHalfX);
   //
-  /// Test maxHalflengthX() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.x3(), maxHalfX);
+  /// Test the half length at positive y
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXposY),
+                    maxHalfX);
   //
-  /// Test halflengthY1() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.y1(), halfY1);
+  /// Test half length into the negative side
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYneg),
+                    halfY1);
   //
-  /// Test halflengthY2() NOTE: Naming violation
-  BOOST_CHECK_EQUAL(diamondBoundsObject.y2(), halfY2);
+  /// Test half length into the positive side
+  BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthYpos),
+                    halfY2);
   //
   /// Test boundingBox
   BOOST_CHECK_EQUAL(diamondBoundsObject.boundingBox(),
@@ -98,8 +103,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   boost::test_tools::output_test_stream dumpOuput;
   diamondBoundsObject.toStream(dumpOuput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::DiamondBounds:  (x1, x2, "
-                         "x3, y1, y2 ) = (10.0000000, "
+      dumpOuput.is_equal("Acts::DiamondBounds: (halfXatYneg, halfXatYzero, "
+                         "halfXatYpos, halfYneg, halfYpos) = (10.0000000, "
                          "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
   //
   /// Test inside
@@ -129,7 +134,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment) {
                     similarlyConstructeDiamondBoundsObject);
   //
   /// Test assignment
-  DiamondBounds assignedDiamondBoundsObject(0, 0, 0, 0, 0);  // invalid
+  DiamondBounds assignedDiamondBoundsObject(
+      2 * minHalfX, 2 * midHalfX, 2 * maxHalfX, 2 * halfY1, 2 * halfY2);
   // object, in some sense
   assignedDiamondBoundsObject = diamondBoundsObject;
   BOOST_CHECK_EQUAL(assignedDiamondBoundsObject, diamondBoundsObject);
