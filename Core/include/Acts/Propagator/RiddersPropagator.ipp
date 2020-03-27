@@ -397,7 +397,8 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     }
     case 4: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
-		dir.x() += h;
+		dir.x() = dir.x() > 0 ? std::min(1., (double) dir.x() + h) : std::max(-1., (double) dir.x() + h);
+		//~ dir.x() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
       tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
@@ -407,8 +408,8 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     }
     case 5: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
-		//~ dir.y() = std::min(1., (double) dir.y() + h);
-		dir.y() += h;
+		dir.y() = dir.y() > 0 ? std::min(1., (double) dir.y() + h) : std::max(-1., (double) dir.y() + h);
+		//~ dir.y() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
       tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
@@ -418,8 +419,8 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     }
     case 6: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
-		//~ dir.z() = std::min(1., (double) dir.z() + h);
-		dir.z() += h;
+		dir.z() = dir.z() > 0 ? std::min(1., (double) dir.z() + h) : std::max(-1., (double) dir.z() + h);
+		//~ dir.z() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
       tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
