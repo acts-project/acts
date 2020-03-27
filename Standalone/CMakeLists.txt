@@ -1,0 +1,6 @@
+add_subdirectory(Core)
+add_subdirectory(Algorithms)
+add_subdirectory(Detectors)
+add_subdirectory(Io)
+add_subdirectory(Plugins)
+add_subdirectory(Examples)
