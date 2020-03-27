@@ -38,6 +38,12 @@ class LineSurfaceStub : public LineSurface {
   LineSurfaceStub(const LineSurfaceStub& ls)
       : GeometryObject(), LineSurface(ls) { /* nop */
   }
+
+  LineSurfaceStub& operator=(const LineSurfaceStub& ls) {
+    LineSurface::operator=(ls);
+    return *this;
+  }
+
   //
   LineSurfaceStub(const GeometryContext& gctx, const LineSurfaceStub& ls,
                   const Transform3D& t)
