@@ -147,7 +147,7 @@ In addition, the following conventions are used in Acts code:
 1. Merge your local bugfix branch into the feature branch. Continue your feature development.
 1. Eventually, the bugfix will be merged into _master_. Then, you can rebase your feature branch on master which will remove all duplicate commits related to the bugfix.
 
-### <a name="tips-users-gitlab">Tips for users migrating from Gitlab
+### <a name="tips-users-gitlab">Tips for users migrating from Gitlab</a>
 - The most obvious difference first: What is called Merge Request (MR) in Gitlab is called Pull Request (PR) in Github.
 - Once your PR is ready to be merged, request a review by the users in the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers)
 - The access rights model of Github is slightly different from Gitlab. As Acts started enforcing using your own fork with the switch to Github, developers no longer have write access to the upstream repository. Unfortunately, approval of a PR by users without write access does not automatically liberate the merge button for users with write access. Instead, users with write access have to manually check if a review from an authorized person is present before merging.
