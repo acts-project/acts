@@ -49,16 +49,16 @@ double get_cyclic_difference(double a, double b, double min, double max) {
 }
 
 void check_residuals_for_bound_parameters() {
-  const double max = par_type_t<ParID_t::eTHETA>::max;
-  const double min = par_type_t<ParID_t::eTHETA>::min;
+  const double max = BoundParameterType<eBoundTheta>::max;
+  const double min = BoundParameterType<eBoundTheta>::min;
   double theta_1 = 0.7 * M_PI;
   double theta_2 = 0.4 * M_PI;
   ActsVectorD<1> dTheta;
   dTheta << (theta_1 - theta_2);
 
   // both parameters inside bounds, difference is positive
-  ParameterSet<ParID_t::eTHETA> bound1(std::nullopt, theta_1);
-  ParameterSet<ParID_t::eTHETA> bound2(std::nullopt, theta_2);
+  ParameterSet<eBoundTheta> bound1(std::nullopt, theta_1);
+  ParameterSet<eBoundTheta> bound2(std::nullopt, theta_2);
   CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 
   // both parameters inside bound, difference negative
@@ -67,7 +67,7 @@ void check_residuals_for_bound_parameters() {
 
   // one parameter above upper bound, difference positive
   theta_1 = max + 1;
-  bound1.setParameter<ParID_t::eTHETA>(theta_1);
+  bound1.setParameter<eBoundTheta>(theta_1);
   dTheta << max - theta_2;
   CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 
@@ -77,7 +77,7 @@ void check_residuals_for_bound_parameters() {
 
   // one parameter below lower bound, difference positive
   theta_1 = min - 1;
-  bound1.setParameter<ParID_t::eTHETA>(theta_1);
+  bound1.setParameter<eBoundTheta>(theta_1);
   dTheta << theta_2 - min;
   CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
 
@@ -88,22 +88,22 @@ void check_residuals_for_bound_parameters() {
   // both parameters outside bounds, both below
   theta_1 = min - 1;
   theta_2 = min - 2;
-  bound1.setParameter<ParID_t::eTHETA>(theta_1);
-  bound2.setParameter<ParID_t::eTHETA>(theta_2);
+  bound1.setParameter<eBoundTheta>(theta_1);
+  bound2.setParameter<eBoundTheta>(theta_2);
   CHECK_SMALL(bound1.residual(bound2), tol);
 
   // both parameters outside bounds, both above
   theta_1 = max + 1;
   theta_2 = max + 2;
-  bound1.setParameter<ParID_t::eTHETA>(theta_1);
-  bound2.setParameter<ParID_t::eTHETA>(theta_2);
+  bound1.setParameter<eBoundTheta>(theta_1);
+  bound2.setParameter<eBoundTheta>(theta_2);
   CHECK_SMALL(bound1.residual(bound2), tol);
 
   // both parameters outside bounds, one above, one below
   theta_1 = max + 1;
   theta_2 = min - 2;
-  bound1.setParameter<ParID_t::eTHETA>(theta_1);
-  bound2.setParameter<ParID_t::eTHETA>(theta_2);
+  bound1.setParameter<eBoundTheta>(theta_1);
+  bound2.setParameter<eBoundTheta>(theta_2);
   dTheta << max - min;
   CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
   dTheta << min - max;
@@ -111,16 +111,16 @@ void check_residuals_for_bound_parameters() {
 }
 
 void check_residuals_for_cyclic_parameters() {
-  const double max = par_type_t<ParID_t::ePHI>::max;
-  const double min = par_type_t<ParID_t::ePHI>::min;
+  const double max = BoundParameterType<eBoundPhi>::max;
+  const double min = BoundParameterType<eBoundPhi>::min;
 
   double phi_1 = 0.7 * M_PI;
   double phi_2 = 0.4 * M_PI;
   ActsVectorD<1> dPhi;
   dPhi << (phi_1 - phi_2);
 
-  ParameterSet<ParID_t::ePHI> cyclic1(std::nullopt, phi_1);
-  ParameterSet<ParID_t::ePHI> cyclic2(std::nullopt, phi_2);
+  ParameterSet<eBoundPhi> cyclic1(std::nullopt, phi_1);
+  ParameterSet<eBoundPhi> cyclic2(std::nullopt, phi_2);
 
   // no boundary crossing, difference is positive
   CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
@@ -130,7 +130,7 @@ void check_residuals_for_cyclic_parameters() {
 
   // forward boundary crossing
   phi_1 = -0.9 * M_PI;
-  cyclic1.setParameter<ParID_t::ePHI>(phi_1);
+  cyclic1.setParameter<eBoundPhi>(phi_1);
   dPhi << get_cyclic_difference(phi_1, phi_2, min, max);
   CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
   CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
@@ -138,8 +138,8 @@ void check_residuals_for_cyclic_parameters() {
   // backward boundary crossing
   phi_1 = 0.7 * M_PI;
   phi_2 = -0.9 * M_PI;
-  cyclic1.setParameter<ParID_t::ePHI>(phi_1);
-  cyclic2.setParameter<ParID_t::ePHI>(phi_2);
+  cyclic1.setParameter<eBoundPhi>(phi_1);
+  cyclic2.setParameter<eBoundPhi>(phi_2);
   dPhi << get_cyclic_difference(phi_1, phi_2, min, max);
   CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
   CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
@@ -150,10 +150,10 @@ void random_residual_tests() {
   std::default_random_engine e;
   std::uniform_real_distribution<float> uniform_dist(-1000, 300);
 
-  const double theta_max = par_type_t<ParID_t::eTHETA>::max;
-  const double theta_min = par_type_t<ParID_t::eTHETA>::min;
-  const double phi_max = par_type_t<ParID_t::ePHI>::max;
-  const double phi_min = par_type_t<ParID_t::ePHI>::min;
+  const double theta_max = BoundParameterType<eBoundTheta>::max;
+  const double theta_min = BoundParameterType<eBoundTheta>::min;
+  const double phi_max = BoundParameterType<eBoundPhi>::max;
+  const double phi_min = BoundParameterType<eBoundPhi>::min;
 
   BoundVector parValues_1;
   BoundVector parValues_2;
@@ -242,7 +242,7 @@ void random_residual_tests() {
  */
 BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   // check template parameter based information
-  BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1>::size() == 2));
+  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1>::size() == 2));
 
   // covariance matrix
   ActsSymMatrixD<3> cov;
@@ -256,42 +256,39 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   ActsVectorD<3> parValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> parSet_with_cov(
-      cov, loc0, loc1, phi);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> parSet_with_cov(cov, loc0,
+                                                                  loc1, phi);
 
   // check number and type of stored parameters
   BOOST_CHECK(parSet_with_cov.size() == 3);
-  BOOST_CHECK(parSet_with_cov.contains<ParID_t::eLOC_0>());
-  BOOST_CHECK(parSet_with_cov.contains<ParID_t::eLOC_1>());
-  BOOST_CHECK(parSet_with_cov.contains<ParID_t::ePHI>());
-  BOOST_CHECK(not parSet_with_cov.contains<ParID_t::eTHETA>());
-  BOOST_CHECK(not parSet_with_cov.contains<ParID_t::eQOP>());
-  BOOST_CHECK(not parSet_with_cov.contains<ParID_t::eT>());
+  BOOST_CHECK(parSet_with_cov.contains<eBoundLoc0>());
+  BOOST_CHECK(parSet_with_cov.contains<eBoundLoc1>());
+  BOOST_CHECK(parSet_with_cov.contains<eBoundPhi>());
+  BOOST_CHECK(not parSet_with_cov.contains<eBoundTheta>());
+  BOOST_CHECK(not parSet_with_cov.contains<eBoundQOverP>());
+  BOOST_CHECK(not parSet_with_cov.contains<eBoundTime>());
 
   // check stored parameter values
-  BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_0>() == loc0);
-  BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_1>() == loc1);
-  BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::ePHI>() == phi);
+  BOOST_CHECK(parSet_with_cov.getParameter<eBoundLoc0>() == loc0);
+  BOOST_CHECK(parSet_with_cov.getParameter<eBoundLoc1>() == loc1);
+  BOOST_CHECK(parSet_with_cov.getParameter<eBoundPhi>() == phi);
   BOOST_CHECK(parSet_with_cov.getParameters() == parValues);
 
   // check stored covariance
   BOOST_CHECK(parSet_with_cov.getCovariance());
   BOOST_CHECK(*parSet_with_cov.getCovariance() == cov);
-  BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::eLOC_0>() ==
-              sqrt(cov(0, 0)));
-  BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::eLOC_1>() ==
-              sqrt(cov(1, 1)));
-  BOOST_CHECK(parSet_with_cov.getUncertainty<ParID_t::ePHI>() ==
-              sqrt(cov(2, 2)));
+  BOOST_CHECK(parSet_with_cov.getUncertainty<eBoundLoc0>() == sqrt(cov(0, 0)));
+  BOOST_CHECK(parSet_with_cov.getUncertainty<eBoundLoc1>() == sqrt(cov(1, 1)));
+  BOOST_CHECK(parSet_with_cov.getUncertainty<eBoundPhi>() == sqrt(cov(2, 2)));
 
   // same parameter set without covariance matrix
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI>
-      parSet_without_cov(std::nullopt, parValues);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> parSet_without_cov(
+      std::nullopt, parValues);
 
   BOOST_CHECK(!parSet_without_cov.getCovariance());
-  BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::eLOC_0>() < 0);
-  BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::eLOC_1>() < 0);
-  BOOST_CHECK(parSet_without_cov.getUncertainty<ParID_t::ePHI>() < 0);
+  BOOST_CHECK(parSet_without_cov.getUncertainty<eBoundLoc0>() < 0);
+  BOOST_CHECK(parSet_without_cov.getUncertainty<eBoundLoc1>() < 0);
+  BOOST_CHECK(parSet_without_cov.getUncertainty<eBoundPhi>() < 0);
   BOOST_CHECK(parSet_without_cov.getParameters() ==
               parSet_with_cov.getParameters());
 
@@ -306,13 +303,13 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   double newLoc1 = 0.6;
   double newPhi = -0.15 * M_PI;
   parValues << newLoc0, newLoc1, newPhi;
-  parSet_with_cov.setParameter<ParID_t::eLOC_0>(newLoc0);
-  parSet_with_cov.setParameter<ParID_t::eLOC_1>(newLoc1);
-  parSet_with_cov.setParameter<ParID_t::ePHI>(newPhi);
+  parSet_with_cov.setParameter<eBoundLoc0>(newLoc0);
+  parSet_with_cov.setParameter<eBoundLoc1>(newLoc1);
+  parSet_with_cov.setParameter<eBoundPhi>(newPhi);
 
-  BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_0>() == newLoc0);
-  BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::eLOC_1>() == newLoc1);
-  BOOST_CHECK(parSet_with_cov.getParameter<ParID_t::ePHI>() == newPhi);
+  BOOST_CHECK(parSet_with_cov.getParameter<eBoundLoc0>() == newLoc0);
+  BOOST_CHECK(parSet_with_cov.getParameter<eBoundLoc1>() == newLoc1);
+  BOOST_CHECK(parSet_with_cov.getParameter<eBoundPhi>() == newPhi);
   BOOST_CHECK(parSet_with_cov.getParameters() == parValues);
 }
 
@@ -337,42 +334,37 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   ActsVectorD<3> first_parValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> first(
-      cov, loc0, loc1, phi);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
 
   // check copy constructor
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> copy(first);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> copy(first);
   BOOST_CHECK(first == copy);
 
   // check move constructor
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> moved(
-      std::move(copy));
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> moved(std::move(copy));
   BOOST_CHECK(first == moved);
 
   // check assignment operator
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> assigned =
-      moved;
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> assigned = moved;
   BOOST_CHECK(assigned == moved);
 
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> other(
-      std::nullopt, 0, 1.7, -0.15);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> other(std::nullopt, 0, 1.7,
+                                                        -0.15);
   BOOST_CHECK(assigned != other);
   assigned = other;
   BOOST_CHECK(assigned == other);
 
   // check move assignment
   BOOST_CHECK(first != assigned);
-  first =
-      ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI>(assigned);
+  first = ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi>(assigned);
   BOOST_CHECK(first == assigned);
 
   // check swap method
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> lhs(cov, loc0,
-                                                                    loc1, phi);
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> rhs(
-      std::nullopt, 2 * loc0, 2 * loc1, 2 * phi);
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> lhs_copy = lhs;
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> rhs_copy = rhs;
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> lhs(cov, loc0, loc1, phi);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> rhs(std::nullopt, 2 * loc0,
+                                                      2 * loc1, 2 * phi);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> lhs_copy = lhs;
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> rhs_copy = rhs;
 
   BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
   using std::swap;
@@ -397,10 +389,9 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
                             // failed tests due to angle range corrections
 
   // parameter set with covariance matrix
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> first(
-      cov, loc0, loc1, phi);
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI> second(
-      std::nullopt, 2 * loc0, 2 * loc1, 2 * phi);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> second(std::nullopt, 2 * loc0,
+                                                         2 * loc1, 2 * phi);
 
   // check self comparison
   BOOST_CHECK(first == first);
@@ -413,17 +404,17 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
   BOOST_CHECK(first == second);
 
   // check that comparison fails for unequal parameter values
-  second.setParameter<ParID_t::eLOC_0>(3 * loc0);
+  second.setParameter<eBoundLoc0>(3 * loc0);
   BOOST_CHECK(first != second);
   first = second;
   BOOST_CHECK(first == second);
 
-  second.setParameter<ParID_t::eLOC_1>(3 * loc1);
+  second.setParameter<eBoundLoc1>(3 * loc1);
   BOOST_CHECK(first != second);
   first = second;
   BOOST_CHECK(first == second);
 
-  second.setParameter<ParID_t::ePHI>(3 * phi);
+  second.setParameter<eBoundPhi>(3 * phi);
   BOOST_CHECK(first != second);
   first = second;
   BOOST_CHECK(first == second);
@@ -451,47 +442,47 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
  * @sa ParameterSet::projector
  */
 BOOST_AUTO_TEST_CASE(parset_projection_tests) {
-  ActsMatrixD<1, BoundParsDim> phi_proj;
+  ActsMatrixD<1, eBoundParametersSize> phi_proj;
   phi_proj << 0, 0, 1, 0, 0, 0;
 
-  ActsMatrixD<2, BoundParsDim> loc0_qop_proj;
+  ActsMatrixD<2, eBoundParametersSize> loc0_qop_proj;
   loc0_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<2, BoundParsDim> loc1_theta_proj;
+  ActsMatrixD<2, eBoundParametersSize> loc1_theta_proj;
   loc1_theta_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0;
 
-  ActsMatrixD<3, BoundParsDim> loc0_loc1_phi_proj;
+  ActsMatrixD<3, eBoundParametersSize> loc0_loc1_phi_proj;
   loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
 
-  ActsMatrixD<4, BoundParsDim> loc0_phi_theta_qop_proj;
+  ActsMatrixD<4, eBoundParametersSize> loc0_phi_theta_qop_proj;
   loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<5, BoundParsDim> loc0_loc1_phi_theta_qop_proj;
+  ActsMatrixD<5, eBoundParametersSize> loc0_loc1_phi_theta_qop_proj;
   loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<BoundParsDim, BoundParsDim> loc0_loc1_phi_theta_qop_t_proj;
+  ActsMatrixD<eBoundParametersSize, eBoundParametersSize>
+      loc0_loc1_phi_theta_qop_t_proj;
   loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 
-  BOOST_CHECK((ParameterSet<ParID_t::ePHI>::projector() == phi_proj));
-  BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eQOP>::projector() ==
-               loc0_qop_proj));
-  BOOST_CHECK((ParameterSet<ParID_t::eLOC_1, ParID_t::eTHETA>::projector() ==
-               loc1_theta_proj));
-  BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1,
-                            ParID_t::ePHI>::projector() == loc0_loc1_phi_proj));
+  BOOST_CHECK((ParameterSet<eBoundPhi>::projector() == phi_proj));
   BOOST_CHECK(
-      (ParameterSet<ParID_t::eLOC_0, ParID_t::ePHI, ParID_t::eTHETA,
-                    ParID_t::eQOP>::projector() == loc0_phi_theta_qop_proj));
-  BOOST_CHECK((ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI,
-                            ParID_t::eTHETA, ParID_t::eQOP>::projector() ==
+      (ParameterSet<eBoundLoc0, eBoundQOverP>::projector() == loc0_qop_proj));
+  BOOST_CHECK(
+      (ParameterSet<eBoundLoc1, eBoundTheta>::projector() == loc1_theta_proj));
+  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi>::projector() ==
+               loc0_loc1_phi_proj));
+  BOOST_CHECK(
+      (ParameterSet<eBoundLoc0, eBoundPhi, eBoundTheta,
+                    eBoundQOverP>::projector() == loc0_phi_theta_qop_proj));
+  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
+                            eBoundQOverP>::projector() ==
                loc0_loc1_phi_theta_qop_proj));
-  BOOST_CHECK(
-      (ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI,
-                    ParID_t::eTHETA, ParID_t::eQOP, ParID_t::eT>::projector() ==
-       loc0_loc1_phi_theta_qop_t_proj));
+  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
+                            eBoundQOverP, eT>::projector() ==
+               loc0_loc1_phi_theta_qop_t_proj));
 }
 
 /**
@@ -510,47 +501,45 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   const double large_number = 12443534120;
   const double small_number = -924342675;
   const double normal_number = 1.234;
-  ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::eQOP> unbound(
+  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundQOverP> unbound(
       std::nullopt, small_number, large_number, normal_number);
-  BOOST_CHECK(unbound.getParameter<ParID_t::eLOC_0>() == small_number);
-  BOOST_CHECK(unbound.getParameter<ParID_t::eLOC_1>() == large_number);
-  BOOST_CHECK(unbound.getParameter<ParID_t::eQOP>() == normal_number);
+  BOOST_CHECK(unbound.getParameter<eBoundLoc0>() == small_number);
+  BOOST_CHECK(unbound.getParameter<eBoundLoc1>() == large_number);
+  BOOST_CHECK(unbound.getParameter<eBoundQOverP>() == normal_number);
 
   // check bound parameter type
-  ParameterSet<ParID_t::eTHETA> bound(std::nullopt, small_number);
-  BOOST_CHECK((bound.getParameter<ParID_t::eTHETA>() ==
-               par_type_t<ParID_t::eTHETA>::min));
-  bound.setParameter<ParID_t::eTHETA>(large_number);
-  BOOST_CHECK((bound.getParameter<ParID_t::eTHETA>() ==
-               par_type_t<ParID_t::eTHETA>::max));
-  bound.setParameter<ParID_t::eTHETA>(normal_number);
-  BOOST_CHECK((bound.getParameter<ParID_t::eTHETA>() == normal_number));
+  ParameterSet<eBoundTheta> bound(std::nullopt, small_number);
+  BOOST_CHECK((bound.getParameter<eBoundTheta>() ==
+               BoundParameterType<eBoundTheta>::min));
+  bound.setParameter<eBoundTheta>(large_number);
+  BOOST_CHECK((bound.getParameter<eBoundTheta>() ==
+               BoundParameterType<eBoundTheta>::max));
+  bound.setParameter<eBoundTheta>(normal_number);
+  BOOST_CHECK((bound.getParameter<eBoundTheta>() == normal_number));
 
   // check cyclic parameter type
-  ParameterSet<ParID_t::ePHI> cyclic(std::nullopt, small_number);
+  ParameterSet<eBoundPhi> cyclic(std::nullopt, small_number);
   // calculate expected results
-  const double min = par_type_t<ParID_t::ePHI>::min;
-  const double max = par_type_t<ParID_t::ePHI>::max;
+  const double min = BoundParameterType<eBoundPhi>::min;
+  const double max = BoundParameterType<eBoundPhi>::max;
   // check that difference between original phi and stored phi is a multiple
   // of the cyclic period
   double multiple =
-      (cyclic.getParameter<ParID_t::ePHI>() - small_number) / (max - min);
-  BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() >= min);
-  BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() < max);
+      (cyclic.getParameter<eBoundPhi>() - small_number) / (max - min);
+  BOOST_CHECK(cyclic.getParameter<eBoundPhi>() >= min);
+  BOOST_CHECK(cyclic.getParameter<eBoundPhi>() < max);
   BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
 
-  cyclic.setParameter<ParID_t::ePHI>(large_number);
-  multiple =
-      (cyclic.getParameter<ParID_t::ePHI>() - large_number) / (max - min);
-  BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() >= min);
-  BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() < max);
+  cyclic.setParameter<eBoundPhi>(large_number);
+  multiple = (cyclic.getParameter<eBoundPhi>() - large_number) / (max - min);
+  BOOST_CHECK(cyclic.getParameter<eBoundPhi>() >= min);
+  BOOST_CHECK(cyclic.getParameter<eBoundPhi>() < max);
   BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
 
-  cyclic.setParameter<ParID_t::ePHI>(normal_number);
-  multiple =
-      (cyclic.getParameter<ParID_t::ePHI>() - normal_number) / (max - min);
-  BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() >= min);
-  BOOST_CHECK(cyclic.getParameter<ParID_t::ePHI>() < max);
+  cyclic.setParameter<eBoundPhi>(normal_number);
+  multiple = (cyclic.getParameter<eBoundPhi>() - normal_number) / (max - min);
+  BOOST_CHECK(cyclic.getParameter<eBoundPhi>() >= min);
+  BOOST_CHECK(cyclic.getParameter<eBoundPhi>() < max);
   BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
 
   // check residual calculation
@@ -571,9 +560,9 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   const double delta_theta = second_theta - first_theta;
   ActsVectorD<3> residuals(delta_loc0, delta_phi, delta_theta);
 
-  ParameterSet<ParID_t::eLOC_0, ParID_t::ePHI, ParID_t::eTHETA> first(
+  ParameterSet<eBoundLoc0, eBoundPhi, eBoundTheta> first(
       std::nullopt, first_loc0, first_phi, first_theta);
-  ParameterSet<ParID_t::eLOC_0, ParID_t::ePHI, ParID_t::eTHETA> second(
+  ParameterSet<eBoundLoc0, eBoundPhi, eBoundTheta> second(
       std::nullopt, second_loc0, second_phi, second_theta);
   CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
@@ -598,22 +587,28 @@ using ParSet = ParameterSet<params...>;
  */
 BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
   // check logic for type-based access
-  BOOST_CHECK(
-      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eLOC_0>() == 0));
-  BOOST_CHECK(
-      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eLOC_1>() == 1));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<ePHI>() == 2));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eQOP>() == 3));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getIndex<eT>() == 4));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getIndex<eBoundLoc0>() == 0));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getIndex<eBoundLoc1>() == 1));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getIndex<eBoundPhi>() == 2));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getIndex<eBoundQOverP>() == 3));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getIndex<eT>() == 4));
 
   // check logic for index-based access
-  BOOST_CHECK(
-      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<0>() == eLOC_0));
-  BOOST_CHECK(
-      (ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<1>() == eLOC_1));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<2>() == ePHI));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<3>() == eQOP));
-  BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP, eT>::getParID<4>() == eT));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getParID<0>() == eBoundLoc0));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getParID<1>() == eBoundLoc1));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getParID<2>() == eBoundPhi));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getParID<3>() == eBoundQOverP));
+  BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
+                      eT>::getParID<4>() == eT));
 
   // check consistency
   using FullSet = FullParameterSet;
@@ -624,20 +619,24 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
   BOOST_CHECK((FullSet::getIndex<FullSet::getParID<4>()>() == 4));
   BOOST_CHECK((FullSet::getIndex<FullSet::getParID<5>()>() == 5));
 
-  BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eLOC_0>()>() == eLOC_0));
-  BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eLOC_1>()>() == eLOC_1));
-  BOOST_CHECK((FullSet::getParID<FullSet::getIndex<ePHI>()>() == ePHI));
-  BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eTHETA>()>() == eTHETA));
-  BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eQOP>()>() == eQOP));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eBoundLoc0>()>() == eBoundLoc0));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eBoundLoc1>()>() == eBoundLoc1));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eBoundPhi>()>() == eBoundPhi));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eBoundTheta>()>() == eBoundTheta));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eBoundQOverP>()>() == eBoundQOverP));
   BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eT>()>() == eT));
 
   // consistency of types
-  BOOST_CHECK(
-      (std::is_same<
-          std::remove_cv<decltype(at_index<ParID_t, 0, eLOC_0>::value)>::type,
-          decltype(eLOC_0)>::value));
-  BOOST_CHECK((
-      std::is_same<decltype(FullSet::getParID<0>()), decltype(eLOC_0)>::value));
+  BOOST_CHECK((std::is_same<std::remove_cv<decltype(
+                                at_index<ParID_t, 0, eBoundLoc0>::value)>::type,
+                            decltype(eBoundLoc0)>::value));
+  BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
+                            decltype(eBoundLoc0)>::value));
 }
 }  // namespace Test
 }  // namespace Acts

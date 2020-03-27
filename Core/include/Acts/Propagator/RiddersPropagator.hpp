@@ -146,7 +146,8 @@ class RiddersPropagator {
   ///
   /// @return Propagated covariance matrix
   const Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, BoundParsDim>& derivatives,
+      const std::array<std::vector<BoundVector>, eBoundParametersSize>&
+          derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
   /// @brief This function fits a linear function through the final state

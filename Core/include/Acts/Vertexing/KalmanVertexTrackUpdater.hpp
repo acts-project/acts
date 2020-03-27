@@ -41,7 +41,7 @@ namespace detail {
 /// @param newTrkParams New track parameter
 BoundMatrix createFullTrackCovariance(
     const ActsSymMatrixD<3>& sMat,
-    const ActsMatrixD<SpacePointDim, 3>& newTrkCov,
+    const ActsMatrixD<eSpacePointSize, 3>& newTrkCov,
     const SpacePointSymMatrix& vtxWeight, const SpacePointSymMatrix& vtxCov,
     const BoundVector& newTrkParams);
 

@@ -102,7 +102,8 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new ActsSymMatrixD<BoundParsDim>(*pars.covariance());
+        covariance =
+            new ActsSymMatrixD<eBoundParametersSize>(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
@@ -262,11 +263,11 @@ class AtlasStepper {
     /// Cache: P[56] - P[59]
 
     // result
-    double parameters[BoundParsDim] = {0., 0., 0., 0., 0., 0.};
+    double parameters[eBoundParametersSize] = {0., 0., 0., 0., 0., 0.};
     const Covariance* covariance;
     Covariance cov = Covariance::Zero();
     bool covTransport = false;
-    double jacobian[BoundParsDim * BoundParsDim];
+    double jacobian[eBoundParametersSize * eBoundParametersSize];
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -501,7 +502,8 @@ class AtlasStepper {
     // prepare the jacobian if we have a covariance
     if (pars.covariance()) {
       // copy the covariance matrix
-      state.covariance = new ActsSymMatrixD<BoundParsDim>(*pars.covariance());
+      state.covariance =
+          new ActsSymMatrixD<eBoundParametersSize>(*pars.covariance());
       state.covTransport = true;
       state.useJacobian = true;
       const auto transform = pars.referenceFrame(state.geoContext);
@@ -800,8 +802,8 @@ class AtlasStepper {
     state.jacobian[34] = P[43];  // dT/dCM
     state.jacobian[35] = P[51];  // dT/dT
 
-    Eigen::Map<
-        Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
+    Eigen::Map<Eigen::Matrix<double, eBoundParametersSize, eBoundParametersSize,
+                             Eigen::RowMajor>>
         J(state.jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
   }
@@ -1061,8 +1063,8 @@ class AtlasStepper {
     state.jacobian[34] = state.pVector[43];  // dT/dCM
     state.jacobian[35] = state.pVector[51];  // dT/dT
 
-    Eigen::Map<
-        Eigen::Matrix<double, BoundParsDim, BoundParsDim, Eigen::RowMajor>>
+    Eigen::Map<Eigen::Matrix<double, eBoundParametersSize, eBoundParametersSize,
+                             Eigen::RowMajor>>
         J(state.jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
   }

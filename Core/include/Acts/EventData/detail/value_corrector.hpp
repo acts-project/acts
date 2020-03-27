@@ -48,7 +48,7 @@ struct value_corrector {
 template <typename R, ParID_t first, ParID_t... others>
 struct value_corrector_impl<R, first, others...> {
   static void calculate(R& values, unsigned int pos) {
-    using parameter_type = typename par_type<first>::type;
+    using parameter_type = BoundParameterType<first>;
     if (parameter_type::may_modify_value) {
       values(pos) = parameter_type::getValue(values(pos));
     }
@@ -59,7 +59,7 @@ struct value_corrector_impl<R, first, others...> {
 template <typename R, ParID_t last>
 struct value_corrector_impl<R, last> {
   static void calculate(R& values, unsigned int pos) {
-    using parameter_type = typename par_type<last>::type;
+    using parameter_type = BoundParameterType<last>;
     if (parameter_type::may_modify_value) {
       values(pos) = parameter_type::getValue(values(pos));
     }

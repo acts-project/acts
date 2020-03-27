@@ -84,8 +84,8 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
 
   // Not yet 4d ready. This can be removed together will all head<> statements,
   // once time is consistently introduced to vertexing
-  ActsMatrixD<SpacePointDim, 3> newFullTrkCov(
-      ActsMatrixD<SpacePointDim, 3>::Zero());
+  ActsMatrixD<eSpacePointSize, 3> newFullTrkCov(
+      ActsMatrixD<eSpacePointSize, 3>::Zero());
   newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
 
   SpacePointSymMatrix vtxFullWeight(SpacePointSymMatrix::Zero());
@@ -116,7 +116,7 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
 Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
     const ActsSymMatrixD<3>& sMat,
-    const ActsMatrixD<SpacePointDim, 3>& newTrkCov,
+    const ActsMatrixD<eSpacePointSize, 3>& newTrkCov,
     const SpacePointSymMatrix& vtxWeight, const SpacePointSymMatrix& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance

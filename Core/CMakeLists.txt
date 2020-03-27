@@ -8,9 +8,6 @@ add_library(
 target_compile_features(
   ActsCore
   PUBLIC cxx_std_17)
-target_compile_definitions(
-  ActsCore
-  PUBLIC -DACTS_PARAMETER_DEFINITIONS_PLUGIN="${ACTS_PARAMETER_DEFINITIONS_PLUGIN}")
 target_include_directories(
   ActsCore
   SYSTEM PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS}
@@ -22,6 +19,12 @@ target_include_directories(
 target_link_libraries(
   ActsCore
   PUBLIC Boost::boost)
+
+if(ACTS_PARAMETER_DEFINITIONS_HEADER)
+  target_compile_definitions(
+    ActsCore
+    PUBLIC -DACTS_PARAMETER_DEFINITIONS_HEADER="${ACTS_PARAMETER_DEFINITIONS_HEADER}")
+endif()
 
 install(
   TARGETS ActsCore

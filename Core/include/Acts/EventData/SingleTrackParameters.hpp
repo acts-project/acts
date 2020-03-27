@@ -112,8 +112,8 @@ class SingleTrackParameters {
 
   /// @brief access track parameters
   ///
-  /// @return Eigen vector of dimension Acts::BoundParsDim with values of the
-  /// track parameters
+  /// @return Eigen vector of dimension Acts::eBoundParametersSize with values
+  /// of the track parameters
   ///         (in the order as defined by the ParID_t enumeration)
   ParVector_t parameters() const { return getParameterSet().getParameters(); }
 

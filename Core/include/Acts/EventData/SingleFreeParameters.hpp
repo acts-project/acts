@@ -7,11 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// STL include(s)
+
 #include <iomanip>
 #include <ostream>
 
-// Acts includes
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -55,7 +54,7 @@ class SingleFreeParameters {
   SingleFreeParameters(std::optional<CovMatrix_t> cov,
                        const FreeVector& parValues)
       : m_parameters(parValues),
-        m_oChargePolicy((parValues(FreeParsDim - 1) > 0.) ? 1. : -1.),
+        m_oChargePolicy((0 < parValues(eFreeQOverP)) ? 1. : -1.),
         m_covariance(std::move(cov)) {}
 
   /// @brief Standard constructor for track parameters of neutral particles
@@ -137,7 +136,8 @@ class SingleFreeParameters {
   ///
   /// @return Value of the requested parameter
   template <unsigned int par,
-            std::enable_if_t<par<FreeParsDim, int> = 0> ParValue_t get() const {
+            std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t get()
+                const {
     return m_parameters(par);
   }
 
@@ -147,8 +147,9 @@ class SingleFreeParameters {
   /// retrieved
   ///
   /// @return Value of the requested parameter uncertainty
-  template <unsigned int par, std::enable_if_t<par<FreeParsDim, int> = 0>
-                                  ParValue_t uncertainty() const {
+  template <unsigned int par,
+            std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t
+                uncertainty() const {
     return std::sqrt(m_covariance->coeff(par, par));
   }
 
@@ -227,7 +228,7 @@ class SingleFreeParameters {
   /// @note The context is not used here but makes the API consistent with @c
   /// SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
   template <unsigned int par,
-            std::enable_if_t<par<FreeParsDim, int> = 0> void set(
+            std::enable_if_t<par<eFreeParametersSize, int> = 0> void set(
                 const GeometryContext& /*gctx*/, ParValue_t newValue) {
     m_parameters(par) = newValue;
   }

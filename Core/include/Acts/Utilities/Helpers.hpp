@@ -23,8 +23,8 @@
 
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
-#include "Acts/Utilities/detail/DefaultParameterDefinitions.hpp"
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
 

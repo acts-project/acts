@@ -131,7 +131,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   positionJacobian(5, 3) = 1;
 
   // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
-  ActsMatrixD<BoundParsDim, 3> momentumJacobian;
+  ActsMatrixD<eBoundParametersSize, 3> momentumJacobian;
   momentumJacobian.setZero();
 
   double R = X * cosPhiV + Y * sinPhiV;

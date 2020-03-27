@@ -58,7 +58,7 @@ using FullParameterSet = typename detail::full_parset::type;
  * The template parameter pack @c params must be given in a strictly ascending
  * order. The parameter pack must
  * be non-empty and it cannot contain more elements than
- * <tt>Acts::BoundParsDim</tt>.
+ * <tt>Acts::eBoundParametersSize</tt>.
  *
  * @test The behavior of this class is tested in the following unit tests:
  *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_consistency_tests)
@@ -89,20 +89,20 @@ class ParameterSet {
   static_assert(detail::are_sorted<true, true, ParID_t, params...>::value,
                 "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int, 0, BoundParsDim,
+      detail::are_within<unsigned int, 0, eBoundParametersSize,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
   static_assert(NPars > 0, "number of stored parameters can not be zero");
   static_assert(
-      NPars <= BoundParsDim,
+      NPars <= eBoundParametersSize,
       "number of stored parameters can not exceed number of total parameters");
 
  public:
   // public typedefs
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
-  using Projection_t = ActsMatrix<ParValue_t, NPars, BoundParsDim>;
+  using Projection_t = ActsMatrix<ParValue_t, NPars, eBoundParametersSize>;
   /// vector type for stored parameters
   using ParVector_t = ActsVector<ParValue_t, NPars>;
   /// type of covariance matrix
@@ -269,8 +269,8 @@ class ParameterSet {
    */
   template <ParID_t parameter>
   void setParameter(ParValue_t value) {
-    using parameter_type = typename par_type<parameter>::type;
-    m_vValues(getIndex<parameter>()) = parameter_type::getValue(value);
+    m_vValues(getIndex<parameter>()) =
+        BoundParameterType<parameter>::getValue(value);
   }
 
   /**
@@ -502,10 +502,10 @@ class ParameterSet {
    * the sub-space
    * spanned by the parameters defined in this ParameterSet object.
    *
-   * @return constant matrix with @c #NPars rows and @c #Acts::BoundParsDim
-   * columns
+   * @return constant matrix with @c #NPars rows and @c
+   * #Acts::eBoundParametersSize columns
    */
-  static const ActsMatrix<ParValue_t, NPars, BoundParsDim> projector() {
+  static const ActsMatrix<ParValue_t, NPars, eBoundParametersSize> projector() {
     return sProjector;
   }
 
@@ -549,5 +549,5 @@ constexpr unsigned int ParameterSet<params...>::NPars;
 template <ParID_t... params>
 const typename ParameterSet<params...>::Projection_t
     ParameterSet<params...>::sProjector = detail::make_projection_matrix<
-        BoundParsDim, static_cast<unsigned int>(params)...>::init();
+        eBoundParametersSize, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts

@@ -122,7 +122,8 @@ void StraightLineStepper::covarianceTransport(State& state,
   // Transport the covariance
   ActsRowVectorD<3> normVec(state.dir);
   const BoundRowVector sfactors =
-      normVec * state.jacToGlobal.template topLeftCorner<3, BoundParsDim>();
+      normVec *
+      state.jacToGlobal.template topLeftCorner<3, eBoundParametersSize>();
   // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
   const Jacobian jacFull =
       jacToCurv * (state.jacToGlobal - state.derivative * sfactors);
