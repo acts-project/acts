@@ -129,10 +129,10 @@ inline std::vector<double> EllipseBounds::values() const {
 }
 
 inline void EllipseBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR0) * get(eMaxR0) < 0. or get(eMinR0) > get(eMaxR0)) {
+  if (get(eMinR0) <= 0. or get(eMaxR0) <= 0. or get(eMinR0) > get(eMaxR0)) {
     throw std::invalid_argument("EllipseBounds: invalid first coorindate.");
   }
-  if (get(eMinR1) * get(eMaxR1) < 0. or get(eMinR1) > get(eMaxR1)) {
+  if (get(eMinR1) <= 0. or get(eMaxR1) <= 0. or get(eMinR1) > get(eMaxR1)) {
     throw std::invalid_argument("EllipseBounds: invalid second coorindate.");
   }
   if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {

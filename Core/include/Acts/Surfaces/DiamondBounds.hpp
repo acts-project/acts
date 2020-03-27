@@ -126,9 +126,8 @@ inline std::vector<double> DiamondBounds::values() const {
 
 inline void DiamondBounds::checkConsistency() noexcept(false) {
   if (std::any_of(m_values.begin(), m_values.end(),
-                  [](auto v) { return v < 0.; })) {
-    throw std::invalid_argument(
-        "DiamondBounds: negative half length provided.");
+                  [](auto v) { return v <= 0.; })) {
+    throw std::invalid_argument("DiamondBounds: negative half length.");
   }
   if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) or
       get(eHalfLengthXposY) > get(eHalfLengthXzeroY)) {

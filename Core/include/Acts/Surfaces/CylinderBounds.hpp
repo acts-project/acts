@@ -140,13 +140,13 @@ inline bool CylinderBounds::coversFullAzimuth() const {
 }
 
 inline void CylinderBounds::checkConsistency() noexcept(false) {
-  if (get(eR) < 0.) {
+  if (get(eR) <= 0.) {
     throw std::invalid_argument("CylinderBounds: invalid radial setup.");
   }
-  if (get(eHalfLengthZ) < 0.) {
+  if (get(eHalfLengthZ) <= 0.) {
     throw std::invalid_argument("CylinderBounds: invalid length setup.");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) <= 0. or get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

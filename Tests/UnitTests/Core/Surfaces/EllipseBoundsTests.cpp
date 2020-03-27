@@ -67,6 +67,10 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   BOOST_CHECK_THROW(
       EllipseBounds(minRad0, -maxRad0, minRad1, maxRad1, phiSector, averagePhi),
       std::logic_error);
+  // Exception for opening minR0 and maxR0 < 0
+  BOOST_CHECK_THROW(EllipseBounds(-minRad0, -maxRad0, minRad1, maxRad1,
+                                  phiSector, averagePhi),
+                    std::logic_error);
   // Exception for swapped minR0/maxR0
   BOOST_CHECK_THROW(
       EllipseBounds(maxRad0, minRad0, minRad1, maxRad1, phiSector, averagePhi),
@@ -79,6 +83,10 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   BOOST_CHECK_THROW(
       EllipseBounds(minRad0, maxRad0, minRad1, -maxRad1, phiSector, averagePhi),
       std::logic_error);
+  // Exception for opening maxR1 < 0
+  BOOST_CHECK_THROW(EllipseBounds(minRad0, maxRad0, -minRad1, -maxRad1,
+                                  phiSector, averagePhi),
+                    std::logic_error);
   // Exception for swapped minR1/maxR1
   BOOST_CHECK_THROW(
       EllipseBounds(minRad0, maxRad0, maxRad1, minRad1, phiSector, averagePhi),

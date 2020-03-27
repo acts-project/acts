@@ -64,6 +64,10 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsException) {
   BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, -maxHalfX, halfY),
                     std::logic_error);
 
+  // Negative x at miny and max y
+  BOOST_CHECK_THROW(TrapezoidBounds(-minHalfX, -maxHalfX, halfY),
+                    std::logic_error);
+
   // Negative y
   BOOST_CHECK_THROW(TrapezoidBounds(minHalfX, maxHalfX, -halfY),
                     std::logic_error);

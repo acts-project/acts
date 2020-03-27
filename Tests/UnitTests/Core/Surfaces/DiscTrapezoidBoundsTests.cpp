@@ -20,6 +20,7 @@ namespace Acts {
 
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit tests for DiscTrapezoidBounds constrcuctors
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
   double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
@@ -43,6 +44,61 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
   DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi);
   DiscTrapezoidBounds copied(original);
   BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDiscTrapezoid);
+}
+
+// Streaning and recreation test
+BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsRecreation) {
+  double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
+      stereo(0.1);
+
+  DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi,
+                               stereo);
+  auto valvector = original.values();
+  std::array<double, DiscTrapezoidBounds::eSize> values;
+  std::copy_n(valvector.begin(), DiscTrapezoidBounds::eSize, values.begin());
+  DiscTrapezoidBounds recreated(values);
+  BOOST_CHECK_EQUAL(recreated, original);
+}
+
+// Unit tests for AnnulusBounds exception throwing
+BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsExceptions) {
+  double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
+      stereo(0.1);
+
+  // Exception for opening neg min half x < 0
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(-minHalfX, maxHalfX, rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg max half x < 0
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, -maxHalfX, rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg min and max half x < 0
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(-minHalfX, -maxHalfX, rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg r min
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, -rMin, rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg r max
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, -rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for opening neg r min and r max
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, -rMin, -rMax, averagePhi, stereo),
+      std::logic_error);
+
+  // Exception for out of bound average phi
+  BOOST_CHECK_THROW(
+      DiscTrapezoidBounds(minHalfX, maxHalfX, rMin, rMax, 4., stereo),
+      std::logic_error);
 }
 
 /// Unit tests for DiscTrapezoidBounds properties

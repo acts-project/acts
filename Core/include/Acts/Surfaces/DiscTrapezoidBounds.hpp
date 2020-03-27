@@ -217,10 +217,10 @@ inline std::vector<double> DiscTrapezoidBounds::values() const {
 }
 
 inline void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) * get(eMaxR) < 0. or get(eMinR) > get(eMaxR)) {
+  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
   }
-  if (get(eHalfLengthXminR) * get(eHalfLengthXmaxR) < 0.) {
+  if (get(eHalfLengthXminR) < 0. or get(eHalfLengthXmaxR) <= 0.) {
     throw std::invalid_argument("DiscTrapezoidBounds: negative length given.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

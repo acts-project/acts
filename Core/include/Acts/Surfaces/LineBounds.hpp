@@ -94,8 +94,11 @@ inline std::vector<double> LineBounds::values() const {
 }
 
 inline void LineBounds::checkConsistency() noexcept(false) {
-  if (get(eR) * get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("LineBounds: zero/negative radius/legnth.");
+  if (get(eR) < 0.) {
+    throw std::invalid_argument("LineBounds: zero radius.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("LineBounds: zero/negative length.");
   }
 }
 

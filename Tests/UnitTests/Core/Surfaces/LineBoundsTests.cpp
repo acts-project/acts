@@ -51,6 +51,10 @@ BOOST_AUTO_TEST_CASE(LineBoundsExceptions) {
   // Negative half length
   BOOST_CHECK_THROW(LineBounds(nominalRadius, -nominalHalfLength),
                     std::logic_error);
+
+  // Negative radius and half length
+  BOOST_CHECK_THROW(LineBounds(-nominalRadius, -nominalHalfLength),
+                    std::logic_error);
 }
 
 /// Unit test for testing LineBounds assignment

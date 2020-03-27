@@ -157,7 +157,7 @@ inline std::vector<double> TrapezoidBounds::values() const {
 }
 
 inline void TrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) * get(eHalfLengthXposY) <= 0.) {
+  if (get(eHalfLengthXnegY) <= 0. or get(eHalfLengthXposY) <= 0.) {
     throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
   }
   if (get(eHalfLengthY) <= 0.) {

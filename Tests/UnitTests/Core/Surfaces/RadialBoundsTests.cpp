@@ -65,6 +65,10 @@ BOOST_AUTO_TEST_CASE(RadialBoundsException) {
   BOOST_CHECK_THROW(RadialBounds(minRadius, -maxRadius, halfPhiSector, avgPhi),
                     std::logic_error);
 
+  // Negative inner and outer radius
+  BOOST_CHECK_THROW(RadialBounds(-minRadius, -maxRadius, halfPhiSector, avgPhi),
+                    std::logic_error);
+
   // Swapped radii
   BOOST_CHECK_THROW(RadialBounds(maxRadius, minRadius, halfPhiSector, avgPhi),
                     std::logic_error);

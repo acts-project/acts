@@ -168,7 +168,7 @@ inline std::vector<double> RadialBounds::values() const {
 }
 
 inline void RadialBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) * get(eMaxR) < 0. or get(eMinR) > get(eMaxR)) {
+  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }
   if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
