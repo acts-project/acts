@@ -30,6 +30,9 @@ To report an issue and before starting work, please create an issue in the [Gith
 - The title should summarize the issue
 - Describe the issue in as much detail as possible in the comment
 
+Unfortunately, Github does not allow editing labels, assignees or setting milestone to non-members of a project with at least "Triage" permission. These will have to be set by members with Triage permission after an issue/PR is created.
+Guidelines regarding labels, assignees and milestone therefore only concern members of acts-project and can be ignored by others.
+
 - Assign to yourself or leave empty
 - Choose labels as appropriate
     - type of issue
