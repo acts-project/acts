@@ -69,21 +69,24 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
   // just make sure we can reach it
   double r = pfrac * std::abs(pT / Bz);
   r = (r > 2.5_m) ? 2.5_m : r;
-  // check atlas stepper
-  auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, charge, r,
-                                   rand1, rand2, rand3, covtpr, debug);
-  // check eigen stepper
-  auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, charge, r,
-                                   rand1, rand2, rand3, covtpr, debug);
-  CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10_um);
 
-  // check without charge
-  auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1,
-                                   rand2, rand3, covtpr, debug);
-  e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1, rand2,
-                              rand3, covtpr, debug);
+  if (r > 0.) {
+    // check atlas stepper
+    auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, charge, r,
+                                     rand1, rand2, rand3, covtpr, debug);
+    // check eigen stepper
+    auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, charge, r,
+                                     rand1, rand2, rand3, covtpr, debug);
+    CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10_um);
 
-  CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 1_um);
+    // check without charge
+    auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1,
+                                     rand2, rand3, covtpr, debug);
+    e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1,
+                                rand2, rand3, covtpr, debug);
+
+    CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 1_um);
+  }
 }
 
 /// test consistency of propagators to a plane
