@@ -1,0 +1,10 @@
+policy:
+  approval:
+  - One of the reviewers has approved
+
+approval_rules:
+- name: One of the reviewers has approved
+  requires:
+    count: 1
+    teams:
+    - "acts-project/reviewers"
