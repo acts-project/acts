@@ -365,7 +365,6 @@ else
 		jacobian = transportJacobian;
 	}
 }
-
 // Reinitialize jacobian components
 // TODO: Jacobian reset must occur in any case
 if(toLocal)

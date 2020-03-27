@@ -268,6 +268,25 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
           derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
       }
     }
+    else
+    {
+		if(param == 4 || param == 5 || param == 6)
+		{
+			double phi0 = nominal(Acts::ePHI);
+			double phi1 = r.endParameters->parameters()(Acts::ePHI);
+			if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+			  derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
+			else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+			  derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
+			  
+			double theta0 = nominal(Acts::eTHETA);
+			double theta1 = r.endParameters->parameters()(Acts::eTHETA);
+			if (std::abs(theta1 + M_PI - theta0) < std::abs(theta1 - theta0))
+			  derivatives.back()[Acts::eTHETA] = (theta1 + M_PI - theta0) / h;
+			else if (std::abs(theta1 - M_PI - theta0) < std::abs(theta1 - theta0))
+			  derivatives.back()[Acts::eTHETA] = (theta1 - M_PI - theta0) / h;
+   		}
+	}
   }
 
   return derivatives;
@@ -388,6 +407,7 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     }
     case 5: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
+		//~ dir.y() = std::min(1., (double) dir.y() + h);
 		dir.y() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
@@ -398,6 +418,7 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     }
     case 6: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
+		//~ dir.z() = std::min(1., (double) dir.z() + h);
 		dir.z() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
@@ -438,6 +459,7 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
+ std::cout << "Ridders:\n" << jacobian << std::endl; 
   return BoundSymMatrix(jacobian * std::get<Acts::FreeSymMatrix>(startCov) *
                         jacobian.transpose());
 }
