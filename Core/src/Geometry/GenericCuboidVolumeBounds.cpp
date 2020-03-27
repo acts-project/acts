@@ -21,49 +21,20 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
-    const std::array<Acts::Vector3D, 8>& vertices)
+    const std::array<Acts::Vector3D, 8>& vertices) noexcept(false)
     : m_vertices(vertices) {
-  // calculate approximate center of gravity first, so we can make sure
-  // the normals point inwards
-  Vector3D cog(0, 0, 0);
+  construct();
+}
 
-  for (size_t i = 0; i < 8; i++) {
-    cog += m_vertices[i];
+Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
+    const std::array<double, GenericCuboidVolumeBounds::eSize>&
+        values) noexcept(false)
+    : m_vertices() {
+  for (size_t iv = 0; iv < 8; ++iv) {
+    m_vertices[iv] =
+        Vector3D(values[iv * 3], values[iv * 3 + 1], values[iv * 3 + 2]);
   }
-
-  cog *= 0.125;  // 1/8.
-
-  size_t idx = 0;
-
-  auto handle_face = [&](const auto& a, const auto& b, const auto& c,
-                         const auto& d) {
-    // we assume a b c d to be counter clockwise
-    const Vector3D ab = b - a, ac = c - a;
-    Vector3D normal = ab.cross(ac).normalized();
-
-    if ((cog - a).dot(normal) < 0) {
-      // normal points outwards, flip normal
-      normal *= -1.;
-    }
-
-    // get rid of -0 values if present
-    normal += Vector3D::Zero();
-
-    // check if d is on the surface
-    throw_assert((std::abs((a - d).dot(normal)) < 1e-6),
-                 "Four points do not lie on the same plane!");
-
-    m_normals[idx] = normal;
-    idx++;
-  };
-
-  // handle faces
-  handle_face(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
-  handle_face(m_vertices[4], m_vertices[5], m_vertices[6], m_vertices[7]);
-  handle_face(m_vertices[0], m_vertices[3], m_vertices[7], m_vertices[4]);
-  handle_face(m_vertices[1], m_vertices[2], m_vertices[6], m_vertices[5]);
-  handle_face(m_vertices[2], m_vertices[3], m_vertices[7], m_vertices[6]);
-  handle_face(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
+  construct();
 }
 
 Acts::VolumeBounds* Acts::GenericCuboidVolumeBounds::clone() const {
@@ -173,6 +144,63 @@ std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
     sl << "[" << m_vertices[i].transpose() << "]";
   }
   return sl;
+}
+
+void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
+  // calculate approximate center of gravity first, so we can make sure
+  // the normals point inwards
+  Vector3D cog(0, 0, 0);
+
+  for (size_t i = 0; i < 8; i++) {
+    cog += m_vertices[i];
+  }
+
+  cog *= 0.125;  // 1/8.
+
+  size_t idx = 0;
+
+  auto handle_face = [&](const auto& a, const auto& b, const auto& c,
+                         const auto& d) {
+    // we assume a b c d to be counter clockwise
+    const Vector3D ab = b - a, ac = c - a;
+    Vector3D normal = ab.cross(ac).normalized();
+
+    if ((cog - a).dot(normal) < 0) {
+      // normal points outwards, flip normal
+      normal *= -1.;
+    }
+
+    // get rid of -0 values if present
+    normal += Vector3D::Zero();
+
+    // check if d is on the surface
+    if (std::abs((a - d).dot(normal)) > 1e-6) {
+      throw(std::invalid_argument(
+          "GenericCuboidBounds: Four points do not lie on the same plane!"));
+    }
+
+    m_normals[idx] = normal;
+    idx++;
+  };
+
+  // handle faces
+  handle_face(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
+  handle_face(m_vertices[4], m_vertices[5], m_vertices[6], m_vertices[7]);
+  handle_face(m_vertices[0], m_vertices[3], m_vertices[7], m_vertices[4]);
+  handle_face(m_vertices[1], m_vertices[2], m_vertices[6], m_vertices[5]);
+  handle_face(m_vertices[2], m_vertices[3], m_vertices[7], m_vertices[6]);
+  handle_face(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
+}
+
+std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
+  std::vector<double> rvalues;
+  rvalues.reserve(eSize);
+  for (size_t iv = 0; iv < 8; ++iv) {
+    for (size_t ic = 0; ic < 3; ++ic) {
+      rvalues.push_back(m_vertices[iv][ic]);
+    }
+  }
+  return rvalues;
 }
 
 Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(

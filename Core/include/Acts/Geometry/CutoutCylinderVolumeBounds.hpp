@@ -16,6 +16,10 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <array>
+#include <exception>
+#include <vector>
+
 namespace Acts {
 
 class IVisualization;
@@ -27,29 +31,58 @@ class IVisualization;
 /// |    |---------|    | rmed
 /// |    |         |    |
 /// ------         ------ rmin
-///       -- dz2 --
-/// -------- dz1 -------
+///       -- hlZc --
+/// --------- hlZ -------
 ///
 ///
 class CutoutCylinderVolumeBounds : public VolumeBounds {
  public:
+  /// @enum BoundValues for streaming and access
+  enum BoundValues : int {
+    eMinR = 0,
+    eMedR = 1,
+    eMaxR = 2,
+    eHalfLengthZ = 3,
+    eHalfLengthZcutout = 4,
+    eSize = 5
+  };
+
+  CutoutCylinderVolumeBounds() = delete;
+
   /// Constructor from defining parameters
   ///
   /// @param rmin Minimum radius at the "choke points"
   /// @param rmed The medium radius (outer radius of the cutout)
   /// @param rmax The outer radius of the overall shape
-  /// @param dz1 The longer halflength of the shape
-  /// @param dz2 The shorter halflength of the shape
-  CutoutCylinderVolumeBounds(double rmin, double rmed, double rmax, double dz1,
-                             double dz2)
-      : m_rmin(rmin), m_rmed(rmed), m_rmax(rmax), m_dz1(dz1), m_dz2(dz2) {}
+  /// @param hlZ The longer halflength of the shape
+  /// @param hlZc The cutout halflength of the shape
+  CutoutCylinderVolumeBounds(double rmin, double rmed, double rmax, double hlZ,
+                             double hlZc) noexcept(false)
+      : m_values({rmin, rmed, rmax, hlZ, hlZc}) {
+    checkConsistency();
+  }
 
-  /// Virtual default constructor
+  /// Constructor - from a fixed size array
+  ///
+  /// @param values The bound values
+  CutoutCylinderVolumeBounds(const std::array<double, eSize>& values) noexcept(
+      false)
+      : m_values(values) {
+    checkConsistency();
+  }
+
   ~CutoutCylinderVolumeBounds() override = default;
 
-  /// Clone method.
-  /// @return Pointer to a copy of the shape
   VolumeBounds* clone() const override;
+
+  VolumeBounds::BoundsType type() const final {
+    return VolumeBounds::eCutoutCylinder;
+  }
+
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// Inside method to test whether a point is inside the shape
   ///
@@ -83,32 +116,36 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @return The outstream
   std::ostream& toStream(std::ostream& sl) const override;
 
-  /// Return the minimum radius
-  /// @return The minimum radius
-  double rMin() const { return m_rmin; }
-
-  /// Return the medium radius
-  /// @return The medium radius
-  double rMed() const { return m_rmed; }
-
-  /// Return the maximum radius
-  /// @return The maximum radius
-  double rMax() const { return m_rmax; }
-
-  /// Return the longer halflength in z.
-  /// @return The halflength
-  double dZ1() const { return m_dz1; }
-
-  /// Return the shorter halflength in z.
-  /// @return The halflength
-  double dZ2() const { return m_dz2; }
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  double m_rmin;
-  double m_rmed;
-  double m_rmax;
-  double m_dz1;
-  double m_dz2;
+  std::array<double, eSize> m_values;
+
+  /// Check the input values for consistency,
+  /// will throw a logic_exception if consistency is not given
+  void checkConsistency() noexcept(false);
 };
+
+inline std::vector<double> CutoutCylinderVolumeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+inline void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. or get(eMedR) <= 0. or get(eMaxR) <= 0. or
+      get(eMinR) >= get(eMedR) or get(eMinR) >= get(eMaxR) or
+      get(eMedR) >= get(eMaxR)) {
+    throw std::invalid_argument(
+        "CutoutCylinderVolumeBounds: invalid radial input.");
+  }
+  if (get(eHalfLengthZ) <= 0 or get(eHalfLengthZcutout) <= 0. or
+      get(eHalfLengthZcutout) > get(eHalfLengthZ)) {
+    throw std::invalid_argument(
+        "CutoutCylinderVolumeBounds: invalid longitudinal input.");
+  }
+}
 
 }  // namespace Acts

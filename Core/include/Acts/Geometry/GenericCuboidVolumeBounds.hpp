@@ -8,13 +8,14 @@
 
 #pragma once
 
-#include <array>
-#include <ostream>
-
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <ostream>
+#include <vector>
 
 namespace Acts {
 
@@ -22,20 +23,39 @@ class IVisualization;
 
 class GenericCuboidVolumeBounds : public VolumeBounds {
  public:
+  static constexpr size_t eSize = 24;
+
   GenericCuboidVolumeBounds() = delete;
 
   /// Constructor from a set of vertices
+  ///
+  /// @param vertices The set of input vertices
+  ///
   /// The ordering is considered to be:
   /// - the first 4 vertices are the "top" face
   /// - the second 4 vertices are the "bottom" face
   /// - both faces are given in counter clock wise order
-  GenericCuboidVolumeBounds(const std::array<Acts::Vector3D, 8>& vertices);
+  GenericCuboidVolumeBounds(
+      const std::array<Acts::Vector3D, 8>& vertices) noexcept(false);
+
+  /// Constructor from a fixed size array
+  ///
+  /// @param values The input values
+  GenericCuboidVolumeBounds(const std::array<double, eSize>& values) noexcept(
+      false);
 
   ~GenericCuboidVolumeBounds() override = default;
 
-  ///  clone() method to make deep copy in Volume copy constructor and for
-  /// assigment operator  of the Surface class.
   VolumeBounds* clone() const override;
+
+  VolumeBounds::BoundsType type() const final {
+    return VolumeBounds::eGenericCuboid;
+  }
+
+  /// Return the bound values as dynamically sized vector
+  ///
+  /// @return this returns a copy of the internal values
+  std::vector<double> values() const final;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -56,31 +76,32 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transform) const override;
 
-  /**
-   * Construct bounding box for this shape
-   * @param trf Optional transform
-   * @param envelope Optional envelope to add / subtract from min/max
-   * @param entity Entity to associate this bounding box with
-   * @return Constructed bounding box
-   */
+  /// Construct bounding box for this shape
+  /// @param trf Optional transform
+  /// @param envelope Optional envelope to add / subtract from min/max
+  /// @param entity Entity to associate this bounding box with
+  /// @return Constructed bounding box
   Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
                                   const Vector3D& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  ///
   /// @param sl is the output stream to be written into
   std::ostream& toStream(std::ostream& sl) const override;
 
-  /**
-   * Draw this shape using a visualization helper
-   * @param helper The visualizatin helper
-   * @param transform Optional transformation matrix
-   */
+  /// Draw this shape using a visualization helper
+  /// @param helper The visualizatin helper
+  /// @param transform Optional transformation matrix
+  ///
   void draw(IVisualization& helper,
             const Transform3D& transform = Transform3D::Identity()) const;
 
  private:
   std::array<Vector3D, 8> m_vertices;
   std::array<Vector3D, 6> m_normals;
+
+  /// Private helper method to contruct the Volume bounds
+  /// to be called by the constructors, from the ordered input vertices
+  void construct() noexcept(false);
+  ;
 };
 }  // namespace Acts

@@ -13,7 +13,6 @@ target_sources_local(
     CylinderVolumeHelper.cpp
     Extent.cpp
     DiscLayer.cpp
-    DoubleTrapezoidVolumeBounds.cpp
     GenericApproachDescriptor.cpp
     GenericCuboidVolumeBounds.cpp
     GeometryID.cpp

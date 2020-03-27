@@ -103,15 +103,20 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     // get the zMin/Max
     double zMin =
         (transform ? transform->translation().z() : 0.) +
-        (cylinderBounds != nullptr ? -cylinderBounds->halflengthZ() : 0.);
-    double zMax =
-        (transform ? transform->translation().z() : 0.) +
-        (cylinderBounds != nullptr ? cylinderBounds->halflengthZ() : 0.);
+        (cylinderBounds != nullptr
+             ? -cylinderBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+             : 0.);
+    double zMax = (transform ? transform->translation().z() : 0.) +
+                  (cylinderBounds != nullptr
+                       ? cylinderBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+                       : 0.);
     // get the rMin/rmAx
-    double rMin =
-        cylinderBounds != nullptr ? cylinderBounds->innerRadius() : rMinRaw;
-    double rMax =
-        cylinderBounds != nullptr ? cylinderBounds->outerRadius() : rMaxRaw;
+    double rMin = cylinderBounds != nullptr
+                      ? cylinderBounds->get(CylinderVolumeBounds::eMinR)
+                      : rMinRaw;
+    double rMax = cylinderBounds != nullptr
+                      ? cylinderBounds->get(CylinderVolumeBounds::eMaxR)
+                      : rMaxRaw;
 
     ACTS_VERBOSE(
         "Filling the layers into an appropriate layer array - with "
@@ -173,8 +178,8 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   zPosition = std::abs(zPosition) < 0.1 ? 0. : zPosition;
 
   // now create the cylinder volume bounds
-  cBounds = rMin > 0.1 ? new CylinderVolumeBounds(rMin, rMax, halflengthZ)
-                       : new CylinderVolumeBounds(rMax, halflengthZ);
+  cBounds = new CylinderVolumeBounds(rMin, rMax, halflengthZ);
+
   // transform
   std::shared_ptr<const Transform3D> transform =
       (zPosition != 0) ? std::make_shared<const Transform3D>(
@@ -324,8 +329,9 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     return nullptr;
   }
   // Check whether it is a r-binned case or a z-binned case
-  bool rCase = std::abs(firstVolumeBounds->innerRadius() -
-                        lastVolumeBounds->innerRadius()) > 0.1;
+  bool rCase =
+      std::abs(firstVolumeBounds->get(CylinderVolumeBounds::eMinR) -
+               lastVolumeBounds->get(CylinderVolumeBounds::eMinR)) > 0.1;
 
   // Fill these ones depending on the rCase though assignment
   double zMin = 0.;
@@ -336,20 +342,25 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   double zSep1 = 0.;
   double zSep2 = 0.;
   if (rCase) {
-    zMin = (*firstVolume)->center().z() - firstVolumeBounds->halflengthZ();
-    zMax = (*firstVolume)->center().z() + firstVolumeBounds->halflengthZ();
+    zMin = (*firstVolume)->center().z() -
+           firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
+    zMax = (*firstVolume)->center().z() +
+           firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     zSep1 = zMin;
     zSep2 = zMax;
-    rMin = firstVolumeBounds->innerRadius();
-    rGlueMin = firstVolumeBounds->outerRadius();
-    rMax = lastVolumeBounds->outerRadius();
+    rMin = firstVolumeBounds->get(CylinderVolumeBounds::eMinR);
+    rGlueMin = firstVolumeBounds->get(CylinderVolumeBounds::eMaxR);
+    rMax = lastVolumeBounds->get(CylinderVolumeBounds::eMaxR);
   } else {
-    zMin = (*firstVolume)->center().z() - firstVolumeBounds->halflengthZ();
-    zMax = (*lastVolume)->center().z() + lastVolumeBounds->halflengthZ();
-    zSep1 = (*firstVolume)->center().z() + firstVolumeBounds->halflengthZ();
+    zMin = (*firstVolume)->center().z() -
+           firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
+    zMax = (*lastVolume)->center().z() +
+           lastVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
+    zSep1 = (*firstVolume)->center().z() +
+            firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     zSep2 = zSep1;
-    rMin = firstVolumeBounds->innerRadius();
-    rMax = firstVolumeBounds->outerRadius();
+    rMin = firstVolumeBounds->get(CylinderVolumeBounds::eMinR);
+    rMax = firstVolumeBounds->get(CylinderVolumeBounds::eMaxR);
   }
   // Estimate the z - position
   double zPos = 0.5 * (zMin + zMax);
@@ -360,9 +371,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
           : nullptr;
   // Create the bounds from the information gathered so far
   CylinderVolumeBounds* topVolumeBounds =
-      std::abs(rMin) > 0.1
-          ? new CylinderVolumeBounds(rMin, rMax, 0.5 * std::abs(zMax - zMin))
-          : new CylinderVolumeBounds(rMax, 0.5 * std::abs(zMax - zMin));
+      new CylinderVolumeBounds(rMin, rMax, 0.5 * std::abs(zMax - zMin));
 
   // some screen output
   ACTS_VERBOSE("Container volume bounds are " << (*topVolumeBounds));
@@ -413,9 +422,11 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
                               << " layers to gather overall dimensions");
   if (cylinderVolumeBounds != nullptr)
     ACTS_DEBUG("Cylinder volume bounds are given: (rmin/rmax/dz) = "
-               << "(" << cylinderVolumeBounds->innerRadius() << "/"
-               << cylinderVolumeBounds->outerRadius() << "/"
-               << cylinderVolumeBounds->halflengthZ() << ")");
+               << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR)
+               << "/" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR)
+               << "/"
+               << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+               << ")");
 
   // prepare for parsing the layers
   double layerRmin = 10e10;
@@ -509,34 +520,46 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
                << layerZmax);
 
   double zFromTransform = transform ? transform->translation().z() : 0.;
-  ACTS_VERBOSE("    -> while created bounds are (rMin/rMax/zMin/zMax) = "
-               << cylinderVolumeBounds->innerRadius() << " / "
-               << cylinderVolumeBounds->outerRadius() << " / "
-               << zFromTransform - cylinderVolumeBounds->halflengthZ() << " / "
-               << zFromTransform + cylinderVolumeBounds->halflengthZ());
+  ACTS_VERBOSE(
+      "    -> while created bounds are (rMin/rMax/zMin/zMax) = "
+      << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR) << " / "
+      << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR) << " / "
+      << zFromTransform -
+             cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+      << " / "
+      << zFromTransform +
+             cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ));
 
   // both is NOW given --- check it -----------------------------
   if (cylinderVolumeBounds != nullptr) {
     // only check
-    if (zFromTransform - cylinderVolumeBounds->halflengthZ() <= layerZmin &&
-        zFromTransform + cylinderVolumeBounds->halflengthZ() >= layerZmax &&
-        cylinderVolumeBounds->innerRadius() <= layerRmin &&
-        cylinderVolumeBounds->outerRadius() >= layerRmax) {
+    if (zFromTransform -
+                cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ) <=
+            layerZmin &&
+        zFromTransform +
+                cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ) >=
+            layerZmax &&
+        cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR) <= layerRmin &&
+        cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR) >= layerRmax) {
       return true;
     } else {
       ACTS_WARNING(
           "Provided layers are not contained by volume ! Bailing out. ");
       ACTS_WARNING("- zFromTransform: " << zFromTransform);
       ACTS_WARNING("- volumeZmin:"
-                   << zFromTransform - cylinderVolumeBounds->halflengthZ()
+                   << zFromTransform - cylinderVolumeBounds->get(
+                                           CylinderVolumeBounds::eHalfLengthZ)
                    << ", layerZmin: " << layerZmin);
       ACTS_WARNING("- volumeZmax: "
-                   << zFromTransform + cylinderVolumeBounds->halflengthZ()
+                   << zFromTransform + cylinderVolumeBounds->get(
+                                           CylinderVolumeBounds::eHalfLengthZ)
                    << ", layerZmax: " << layerZmax);
-      ACTS_WARNING("- volumeRmin: " << cylinderVolumeBounds->innerRadius()
-                                    << ", layerRmin: " << layerRmin);
-      ACTS_WARNING("- volumeRmax: " << cylinderVolumeBounds->outerRadius()
-                                    << ", layerRmax: " << layerRmax);
+      ACTS_WARNING("- volumeRmin: "
+                   << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR)
+                   << ", layerRmin: " << layerRmin);
+      ACTS_WARNING("- volumeRmax: "
+                   << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR)
+                   << ", layerRmax: " << layerRmax);
       return false;
     }
   }
@@ -809,7 +832,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
       auto cylVolBounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
           &tvolOne->volumeBounds());
       double zPos = tvolOne->center().z();
-      double zHL = cylVolBounds->halflengthZ();
+      double zHL = cylVolBounds->get(CylinderVolumeBounds::eHalfLengthZ);
       transform =
           std::make_shared<const Transform3D>(Translation3D(0, 0, zPos + zHL));
       // this puts the surface on the positive z side of the cyl vol bounds

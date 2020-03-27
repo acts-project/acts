@@ -15,20 +15,6 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#ifndef VOLUMEBOUNDS_boundValues_FILL
-#define VOLUMEBOUNDS_boundValues_FILL(val) m_values[bv_##val] = val
-#endif
-
-#ifndef VOLUMEBOUNDS_boundValues_ACCESS
-#define VOLUMEBOUNDS_boundValues_ACCESS(val) \
-  double val() const { return m_values[bv_##val]; }
-#endif
-
-#ifndef VOLUMEBOUNDS_DERIVED_ACCESS
-#define VOLUMEBOUNDS_DERIVED_ACCESS(derived) \
-  double derived() const { return m_##derived; }
-#endif
-
 namespace Acts {
 
 class Surface;
@@ -39,6 +25,7 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 using SurfacePtr = std::shared_ptr<const Surface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
+
 /// @class VolumeBounds
 ///
 /// Pure Absract Base Class for Volume bounds.
@@ -55,15 +42,37 @@ using SurfacePtrVector = std::vector<SurfacePtr>;
 /// Surfaces into BoundarySurfaces.
 class VolumeBounds {
  public:
-  /// Default Constructor*/
+  // @enum BoundsType
+  /// This is nested to the VolumeBounds, as also SurfaceBounds will have
+  /// Bounds Type.
+  enum BoundsType : int {
+    eCone = 0,
+    eCuboid = 1,
+    eCutoutCylinder = 2,
+    eCylinder = 3,
+    eGenericCuboid = 4,
+    eTrapezoid = 5,
+    eOther = 6
+  };
+
   VolumeBounds() = default;
 
-  /// Destructor
   virtual ~VolumeBounds() = default;
 
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.
   virtual VolumeBounds* clone() const = 0;
+
+  /// Return the bounds type - for persistency optimization
+  ///
+  /// @return is a BoundsType enum
+  virtual BoundsType type() const = 0;
+
+  /// Access method for bound values, this is a dynamically sized
+  /// vector containing the parameters needed to describe these bounds
+  ///
+  /// @return of the stored values for this SurfaceBounds object
+  virtual std::vector<double> values() const = 0;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -124,5 +133,12 @@ inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
 
 /// Overload of << operator for std::ostream for debug output
 std::ostream& operator<<(std::ostream& sl, const VolumeBounds& vb);
+
+inline bool operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
+  if (&lhs == &rhs) {
+    return true;
+  }
+  return (lhs.type() == rhs.type()) && (lhs.values() == rhs.values());
+}
 
 }  // namespace Acts

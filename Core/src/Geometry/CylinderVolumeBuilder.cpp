@@ -91,12 +91,16 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         &existingVolume->volumeBounds());
     // set the inside values
     wConfig.existingVolumeConfig.present = true;
-    wConfig.existingVolumeConfig.rMin = existingBounds->innerRadius();
-    wConfig.existingVolumeConfig.rMax = existingBounds->outerRadius();
+    wConfig.existingVolumeConfig.rMin =
+        existingBounds->get(CylinderVolumeBounds::eMinR);
+    wConfig.existingVolumeConfig.rMax =
+        existingBounds->get(CylinderVolumeBounds::eMaxR);
     wConfig.existingVolumeConfig.zMin =
-        existingVolume->center().z() - existingBounds->halflengthZ();
+        existingVolume->center().z() -
+        existingBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     wConfig.existingVolumeConfig.zMax =
-        existingVolume->center().z() + existingBounds->halflengthZ();
+        existingVolume->center().z() +
+        existingBounds->get(CylinderVolumeBounds::eHalfLengthZ);
   }
   //
   // b) outside config
@@ -109,10 +113,14 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     if (ocvBounds != nullptr) {
       // get values from the out bounds
       wConfig.externalVolumeConfig.present = true;
-      wConfig.externalVolumeConfig.rMin = ocvBounds->innerRadius();
-      wConfig.externalVolumeConfig.rMax = ocvBounds->outerRadius();
-      wConfig.externalVolumeConfig.zMin = -ocvBounds->halflengthZ();
-      wConfig.externalVolumeConfig.zMax = ocvBounds->halflengthZ();
+      wConfig.externalVolumeConfig.rMin =
+          ocvBounds->get(CylinderVolumeBounds::eMinR);
+      wConfig.externalVolumeConfig.rMax =
+          ocvBounds->get(CylinderVolumeBounds::eMaxR);
+      wConfig.externalVolumeConfig.zMin =
+          -ocvBounds->get(CylinderVolumeBounds::eHalfLengthZ);
+      wConfig.externalVolumeConfig.zMax =
+          ocvBounds->get(CylinderVolumeBounds::eHalfLengthZ);
     }
   }
 
@@ -528,10 +536,12 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
       const CylinderVolumeBounds* cvBounds =
           dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
       if (cvBounds != nullptr) {
-        takeSmaller(lConfig.rMin, cvBounds->innerRadius());
-        takeBigger(lConfig.rMax, cvBounds->outerRadius());
-        takeSmaller(lConfig.zMin, -cvBounds->halflengthZ());
-        takeBigger(lConfig.zMax, cvBounds->halflengthZ());
+        takeSmaller(lConfig.rMin, cvBounds->get(CylinderVolumeBounds::eMinR));
+        takeBigger(lConfig.rMax, cvBounds->get(CylinderVolumeBounds::eMaxR));
+        takeSmaller(lConfig.zMin,
+                    -cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
+        takeBigger(lConfig.zMax,
+                   cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
       }
     }
   }

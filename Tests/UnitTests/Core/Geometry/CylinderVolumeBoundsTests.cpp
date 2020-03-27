@@ -11,6 +11,8 @@
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/ObjTestWriter.hpp"
@@ -24,10 +26,122 @@ namespace Acts {
 
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(Volumes)
+BOOST_AUTO_TEST_SUITE(Geometry)
+
+BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
+  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{M_PI / 4}, avgphi{0.};
+
+  // Test different construciton modes: solid
+  CylinderVolumeBounds solidCylinder(0., rmax, halfz);
+  BOOST_CHECK_EQUAL(solidCylinder.decomposeToSurfaces().size(), 3);
+
+  // Test different construciton modes: sectoral solid
+  CylinderVolumeBounds solidCylinderSector(0., rmax, halfz, halfphi);
+  BOOST_CHECK_EQUAL(solidCylinderSector.decomposeToSurfaces().size(), 5);
+
+  // Test different construciton modes: tube
+  CylinderVolumeBounds tubeCylinder(rmin, rmax, halfz);
+  BOOST_CHECK_EQUAL(tubeCylinder.decomposeToSurfaces().size(), 4);
+
+  // Test different construciton modes: sectoral tube
+  CylinderVolumeBounds tubeCylinderSector(rmin, rmax, halfz, halfphi);
+  BOOST_CHECK_EQUAL(tubeCylinderSector.decomposeToSurfaces().size(), 6);
+
+  CylinderVolumeBounds original(rmin, rmax, halfz, halfphi, avgphi);
+
+  // Test construction from CylinderBounds and thickness
+  double rmed = 0.5 * (rmin + rmax);
+  double rthickness = (rmax - rmin);
+  CylinderBounds cBounds(rmed, halfz, halfphi, avgphi);
+  CylinderVolumeBounds fromCylinder(cBounds, rthickness);
+  BOOST_CHECK_EQUAL(original, fromCylinder);
+
+  // Test construction from RadialBounds and thickness
+  RadialBounds rBounds(rmin, rmax, halfphi, avgphi);
+  CylinderVolumeBounds fromDisc(rBounds, 2 * halfz);
+  BOOST_CHECK_EQUAL(original, fromDisc);
+
+  // Test the copy construction
+  CylinderVolumeBounds copied(original);
+  BOOST_CHECK_EQUAL(original, copied);
+
+  // Test the assignment
+  CylinderVolumeBounds assigned = original;
+  BOOST_CHECK_EQUAL(original, assigned);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsRecreation) {
+  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{M_PI / 4}, avgphi{0.};
+
+  CylinderVolumeBounds original(rmin, rmax, halfz, halfphi, avgphi);
+  std::array<double, CylinderVolumeBounds::eSize> values;
+  std::vector<double> valvector = original.values();
+  std::copy_n(valvector.begin(), CylinderVolumeBounds::eSize, values.begin());
+  CylinderVolumeBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsExceptions) {
+  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{M_PI / 4}, avgphi{0.};
+
+  // Negative inner radius
+  BOOST_CHECK_THROW(CylinderVolumeBounds(-rmin, rmax, halfz, halfphi, avgphi),
+                    std::logic_error);
+
+  // Negative outer radius
+  BOOST_CHECK_THROW(CylinderVolumeBounds(rmin, -rmax, halfz, halfphi, avgphi),
+                    std::logic_error);
+
+  // Swapped radii
+  BOOST_CHECK_THROW(CylinderVolumeBounds(rmax, rmin, halfz, halfphi, avgphi),
+                    std::logic_error);
+
+  // Zero half length
+  BOOST_CHECK_THROW(CylinderVolumeBounds(rmax, rmin, 0., halfphi, avgphi),
+                    std::logic_error);
+
+  // Negative half length
+  BOOST_CHECK_THROW(CylinderVolumeBounds(rmax, rmin, -halfz, halfphi, avgphi),
+                    std::logic_error);
+
+  // Out of bounds half phi
+  BOOST_CHECK_THROW(CylinderVolumeBounds(rmax, rmin, halfz, -4., avgphi),
+                    std::logic_error);
+
+  // Wrong positioning phi
+  BOOST_CHECK_THROW(CylinderVolumeBounds(rmax, rmin, halfz, halfphi, 4.),
+                    std::logic_error);
+
+  // Test construction from CylinderBounds and thickness
+  double rmed = 0.5 * (rmin + rmax);
+  CylinderBounds cBounds(rmed, halfz, halfphi, avgphi);
+  RadialBounds rBounds(rmin, rmax, halfphi, avgphi);
+
+  // Negative thickness
+  BOOST_CHECK_THROW(CylinderVolumeBounds(cBounds, -1.), std::logic_error);
+
+  // Wrong thickness
+  BOOST_CHECK_THROW(CylinderVolumeBounds(cBounds, 1000.), std::logic_error);
+
+  // Test construction from RadialBounds and thickness
+  BOOST_CHECK_THROW(CylinderVolumeBounds(rBounds, -1), std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsAccess) {
+  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{M_PI / 4}, avgphi{0.};
+  CylinderVolumeBounds cvBounds(rmin, rmax, halfz, halfphi, avgphi);
+
+  // Test the accessors
+  BOOST_CHECK_EQUAL(cvBounds.get(CylinderVolumeBounds::eMinR), rmin);
+  BOOST_CHECK_EQUAL(cvBounds.get(CylinderVolumeBounds::eMaxR), rmax);
+  BOOST_CHECK_EQUAL(cvBounds.get(CylinderVolumeBounds::eHalfLengthZ), halfz);
+  BOOST_CHECK_EQUAL(cvBounds.get(CylinderVolumeBounds::eHalfPhiSector),
+                    halfphi);
+  BOOST_CHECK_EQUAL(cvBounds.get(CylinderVolumeBounds::eAveragePhi), avgphi);
+}
 
 /// Unit test for testing the decomposeToSurfaces() function
-BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
+BOOST_DATA_TEST_CASE(CylinderVolumeBoundsDecomposeToSurfaces,
                      bdata::random(-M_PI, M_PI) ^ bdata::random(-M_PI, M_PI) ^
                          bdata::random(-M_PI, M_PI) ^ bdata::random(-10., 10.) ^
                          bdata::random(-10., 10.) ^ bdata::random(-10., 10.) ^
@@ -48,7 +162,10 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
   AngleAxis3D rotZ(gamma, Vector3D(0., 0., 1.));
 
   // create the cylinder bounds
-  CylinderVolumeBounds cylBounds(1., 2., 3.);
+  double rmin = 1.;
+  double rmax = 2.;
+  double halfz = 3.;
+  CylinderVolumeBounds cylBounds(rmin, rmax, halfz);
   // create the transformation matrix
   auto mutableTransformPtr = std::make_shared<Transform3D>(Translation3D(pos));
   (*mutableTransformPtr) *= rotZ;
@@ -63,9 +180,9 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
 
   // check if difference is halfZ - sign and direction independent
   CHECK_CLOSE_REL((pos - boundarySurfaces.at(0)->center(tgContext)).norm(),
-                  cylBounds.halflengthZ(), 1e-12);
+                  cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   CHECK_CLOSE_REL((pos - boundarySurfaces.at(1)->center(tgContext)).norm(),
-                  cylBounds.halflengthZ(), 1e-12);
+                  cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   // transform to local
   double posDiscPosZ =
       (transformPtr->inverse() * boundarySurfaces.at(1)->center(tgContext)).z();
@@ -77,8 +194,12 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
   BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
   // check positions of disc boundarysurfaces
   // checks for zero value. double precision value is not exact.
-  CHECK_CLOSE_ABS(negDiscPosZ + cylBounds.halflengthZ(), centerPosZ, 1e-12);
-  CHECK_CLOSE_ABS(posDiscPosZ - cylBounds.halflengthZ(), centerPosZ, 1e-12);
+  CHECK_CLOSE_ABS(
+      negDiscPosZ + cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
+      centerPosZ, 1e-12);
+  CHECK_CLOSE_ABS(
+      posDiscPosZ - cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
+      centerPosZ, 1e-12);
   // orientation of disc surfaces
   // positive disc durface should point in positive direction in the frame of
   // the volume
@@ -97,7 +218,7 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
   CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(tgContext), pos, 1e-12);
 }
 
-BOOST_AUTO_TEST_CASE(bounding_box_creation) {
+BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
   std::vector<IdentifiedPolyderon> tPolyhedrons;
 
@@ -119,7 +240,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 
   float tol = 1e-4;
 
-  CylinderVolumeBounds cvb(5, 10);
+  CylinderVolumeBounds cvb(0., 5, 10);
   auto cvbSurfaces = cvb.decomposeToSurfaces();
   combineAndDecompose(cvbSurfaces, "Solid");
   auto bb = cvb.boundingBox();
@@ -147,7 +268,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   ObjTestWriter::writeObj("CylinderVolumeBounds_Tube_BB", bb);
 
   double angle = M_PI / 8.;
-  cvb = CylinderVolumeBounds(5, 8, angle, 13);
+  cvb = CylinderVolumeBounds(5, 8, 13, angle);
   bb = cvb.boundingBox();
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   CHECK_CLOSE_ABS(bb.max(), Vector3D(8, 8 * std::sin(angle), 13), tol);

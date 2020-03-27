@@ -24,14 +24,80 @@
 namespace Acts {
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(Volumes)
+BOOST_AUTO_TEST_SUITE(Geometry)
 
-BOOST_AUTO_TEST_CASE(construction_test) {
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsConstruction) {
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
   ccvb.toStream(std::cout);
+
+  // Test copy construction
+  CutoutCylinderVolumeBounds copied(ccvb);
+  BOOST_CHECK_EQUAL(ccvb, copied);
+
+  // Test assigned
+  CutoutCylinderVolumeBounds assigned = ccvb;
+  BOOST_CHECK_EQUAL(ccvb, assigned);
 }
 
-BOOST_AUTO_TEST_CASE(inside_test) {
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsRecreation) {
+  CutoutCylinderVolumeBounds original(5, 10, 15, 30, 25);
+  std::array<double, CutoutCylinderVolumeBounds::eSize> values;
+  std::vector<double> valvector = original.values();
+  std::copy_n(valvector.begin(), CutoutCylinderVolumeBounds::eSize,
+              values.begin());
+  CutoutCylinderVolumeBounds recreated(values);
+  BOOST_CHECK_EQUAL(original, recreated);
+}
+
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsExceptions) {
+  double rmin{5}, rmed{10}, rmax{15}, hz{30}, hzc{25};
+
+  // Test negative rmin
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(-rmin, rmed, rmax, hz, hzc),
+                    std::logic_error);
+
+  // Test negative rmed
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(rmin, -rmed, rmax, hz, hzc),
+                    std::logic_error);
+
+  // Test negative rmax
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(rmin, rmed, -rmax, hz, hzc),
+                    std::logic_error);
+
+  // Test swapped rmin / rmed
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(rmed, rmin, rmax, hz, hzc),
+                    std::logic_error);
+
+  // Test swapped rmin / rmax
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(rmax, rmed, rmin, hz, hzc),
+                    std::logic_error);
+
+  // Test swapped rmed / rmax
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(rmin, rmax, rmed, hz, hzc),
+                    std::logic_error);
+
+  // Test negative hz
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(rmin, rmed, rmax, -hz, hzc),
+                    std::logic_error);
+
+  // Test negative hzc
+  BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(rmin, rmed, rmax, hz, -hzc),
+                    std::logic_error);
+}
+
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsAccess) {
+  double rmin{5}, rmed{10}, rmax{15}, hz{30}, hzc{25};
+  CutoutCylinderVolumeBounds ccvb(rmin, rmed, rmax, hz, hzc);
+
+  BOOST_CHECK_EQUAL(ccvb.get(CutoutCylinderVolumeBounds::eMinR), rmin);
+  BOOST_CHECK_EQUAL(ccvb.get(CutoutCylinderVolumeBounds::eMedR), rmed);
+  BOOST_CHECK_EQUAL(ccvb.get(CutoutCylinderVolumeBounds::eMaxR), rmax);
+  BOOST_CHECK_EQUAL(ccvb.get(CutoutCylinderVolumeBounds::eHalfLengthZ), hz);
+  BOOST_CHECK_EQUAL(ccvb.get(CutoutCylinderVolumeBounds::eHalfLengthZcutout),
+                    hzc);
+}
+
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsInside) {
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
 
   BOOST_CHECK(!ccvb.inside({0, 0, 0}));
@@ -101,7 +167,7 @@ BOOST_AUTO_TEST_CASE(inside_test) {
   BOOST_CHECK(!ccvb.inside({17, 0, -23}));
 }
 
-BOOST_AUTO_TEST_CASE(boundingbox_test) {
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
   std::vector<IdentifiedPolyderon> tPolyhedrons;
 
