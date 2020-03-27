@@ -85,7 +85,7 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
       Surface::makeShared<CylinderSurface>(trfShared, m_outerCylinderBounds));
 
   // innermost Cylinder
-  if (get(eMinR) > s_epsilon) {
+  if (m_innerCylinderBounds != nullptr) {
     rSurfaces.push_back(
         Surface::makeShared<CylinderSurface>(trfShared, m_innerCylinderBounds));
   }
@@ -111,8 +111,10 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
 }
 
 void Acts::CylinderVolumeBounds::buildSurfaceBounds() {
-  m_innerCylinderBounds = std::make_shared<const CylinderBounds>(
-      get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+  if (get(eMinR) > s_epsilon) {
+    m_innerCylinderBounds = std::make_shared<const CylinderBounds>(
+        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+  }
   m_outerCylinderBounds = std::make_shared<const CylinderBounds>(
       get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
   m_discBounds = std::make_shared<const RadialBounds>(
