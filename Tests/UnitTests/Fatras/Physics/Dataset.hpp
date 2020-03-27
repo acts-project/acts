@@ -22,7 +22,7 @@ namespace data = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
 // particle identity
-const auto particlePdg = data::make({
+const auto particlePdg = data::make(std::vector<Acts::PdgParticle>{
     Acts::PdgParticle::eElectron,
     Acts::PdgParticle::ePositron,
     Acts::PdgParticle::eMuon,

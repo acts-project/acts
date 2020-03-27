@@ -1,0 +1,39 @@
+name: coverage
+
+on:
+  - pull_request
+
+jobs:
+  build_debug:
+    runs-on: ubuntu-18.04
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu1910
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: >
+        mkdir build && cd build
+        && cmake ..
+        -DCMAKE_BUILD_TYPE=Debug
+        -DCMAKE_CXX_STANDARD=17
+        -DACTS_BUILD_UNITTESTS=ON
+        -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always"
+        -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+        -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+        -DACTS_BUILD_JSON_PLUGIN=on
+        -DACTS_BUILD_BENCHMARKS=on
+        -DACTS_BUILD_FATRAS=on
+        -DACTS_BUILD_EXAMPLES=on
+        -DACTS_BUILD_UNITTESTS=on
+        -DACTS_BUILD_LEGACY=on
+        -DACTS_BUILD_DD4HEP_PLUGIN=on
+        -DACTS_BUILD_TGEO_PLUGIN=on
+        -DACTS_BUILD_INTEGRATIONTESTS=off
+        && cmake --build . -- -j$(nproc)
+        && cmake --build . -- test
+        && pip3 install gcovr
+        && /usr/bin/python3 ../CI/test_coverage
+    - name: Upload coverage
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./build/coverage/cov.xml
+

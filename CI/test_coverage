@@ -81,8 +81,9 @@ call(gcovr
      + ["--gcov-executable", args.gcov]
      + ["-j", str(mp.cpu_count())]
      + excludes +
-     ["--html", "--html-details",
-     "-o", os.path.join(coverage_dir, "index.html")])
+     ["--xml", "-o", "coverage/cov.xml"])
+     #  ["--html", "--html-details",
+     #  "-o", os.path.join(coverage_dir, "index.html")])
 
 call(gcovr
      + ["-r", source_dir]
