@@ -1,0 +1,166 @@
+<detectors>
+    <!--EndcapN-->
+    <detector id="301" name="LongStripEndcapN" type="ODDStripEndcap" readout="LongStripEndcapReadout" vis="invisible">
+        <dimensions name="LongStripEndcapShape" rmin="ls_env_rmin" rmax="ls_env_rmax" dz="ls_e_dz" z="ls_e_nz"/>
+        <ring name="Ring0" r="820.*mm" nphi="44" reflect="true" phi0="0." gap="8.*mm" z_offset="15.*mm"> 
+          <module name="LongStripEndcapModuleR0" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="54.4*mm" x2="66.6*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+             <module_component name="Board" alpha="0." x1="55.2*mm" x2="67.2*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+             <module_component name="Foam" alpha="0." x1="55.2*mm" x2="67.2*mm" length="96.8*mm" thickness="4.*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFoam" sensitive="false">
+               <subtraction name="CoolingLine" rmin="0.*mm" rmax="1.6*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm"/> 
+               <tube name="CoolingPipe" rmin="1.4*mm" rmax="1.5*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Ti" vis="orange"/>
+             </module_component>
+              <module_component name="Board" alpha="0.04" x1="55.2*mm" x2="67.2*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+              <module_component name="Sensor" alpha="0.04" x1="54.4*mm" x2="66.6*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          </module> 
+                   
+          <support name="SupportRing0" rmin="720.*mm" rmax="735.*mm" dz="4.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <support name="SupportRing1" rmin="900.*mm" rmax="920.*mm" dz="4.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="922.*mm" gap="23.0*mm" nphi="64" z_offset="0.*mm" material="Ti" vis="orange"/>
+        </ring>
+    
+        <ring name="Ring1" r="990.*mm" nphi="52" reflect="true" phi0="0." gap="8.*mm" z_offset="-15.*mm"> 
+          <module name="LongStripEndcapModuleR1" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="66.6*mm" x2="78*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+             <module_component name="Board" alpha="0." x1="67.2*mm" x2="78.8*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+             <module_component name="Foam" alpha="0." x1="67.2*mm" x2="78.8*mm" length="110.8*mm" thickness="4.*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFoam" sensitive="false">
+               <subtraction name="CoolingLine" rmin="0.*mm" rmax="1.6*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm"/> 
+               <tube name="CoolingPipe" rmin="1.4*mm" rmax="1.5*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Ti" vis="orange"/>
+             </module_component>
+              <module_component name="Board" alpha="0.04" x1="66.6*mm" x2="78.*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+              <module_component name="Sensor" alpha="0.04" x1="54.4*mm" x2="78.8*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          </module> 
+          <support name="SupportRing1" rmin="1070.*mm" rmax="1090.*mm" dz="4.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="1092.*mm" gap="24.*mm" nphi="72" z_offset="0.*mm" material="Ti" vis="orange"/>
+        </ring>
+        <layer id="0" name="LongStripEndcapN0" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-1280.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="1" name="LongStripEndcapN2" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-1550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="LongStripEndcapN3" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-1850.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="LongStripEndcapN4" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-2200.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="3" name="LongStripEndcapN5" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-2550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="4" name="LongStripEndcapN6" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="-2950.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <services>
+         <cable_routing name="OuterCables" nphi="30" phi0="0." number="10" r="1095*mm" rmin="0.*mm" rmax="0.75*mm" dz="0.1*mm" z_offset="1150.*mm" gap="25.*mm" material="Cu" vis="orange">
+            <box dz="1.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing name="OuterCooling" nphi="30" phi0="0.104" number="6" r="1095*mm" rmin="1.2*mm" rmax="1.4*mm" dz="0.*mm" z_offset="1150.*mm" gap="25.*mm" material="Ti" vis="orange"/>          
+        </services>       
+    </detector>
+    <!--Barrel-->
+    <detector id="300" name="LongStripBarrel" type="ODDStripBarrel" readout="LongStripBarrelReadout" vis="invisible">
+        <dimensions name="LongStripBarrelShape" rmin="ls_env_rmin" rmax="ls_env_rmax" dz="ls_b_dz" z="0.*mm"/>
+        <boundary_material surface="negative" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        <boundary_material surface="positive" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        <module name="LongStripBarrelModule" vis="invisible">
+          <module_component name="SensorS" alpha="0.04" dx="96.*mm" dy="108.*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="-3.2*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="BoardS" alpha="0.04" dx="96.*mm" dy="108*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="-3.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="ConnectorS" alpha="0.04" dx="20.*mm" dy="108.*mm" dz="0.25*mm" x_offset="18.*mm" y_offset="0." z_offset="-2.8*mm" material="Al" vis="red" sensitive="false"/>
+          <module_component name="Rail1" alpha="0.0" dx="16.*mm" dy="108*mm" dz="5*mm" x_offset="-43.*mm" y_offset="0." z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber" sensitive="false"/>         
+          <module_component name="FoamL" alpha="0." dx="30.*mm" dy="108*mm" dz="5*mm" x_offset="-18.*mm" y_offset="0." z_offset="0.*mm" material="CarbonFiber" vis="CarbonFoam" sensitive="false">
+            <subtraction name="CoolingLine" rmin="0.*mm" rmax="2.*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm"/> 
+            <tube name="CoolingPipeL" rmin="1.8*mm" rmax="1.9*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Ti" vis="orange"/>
+          </module_component>
+          <module_component name="Rail2" alpha="0.0" dx="16.*mm" dy="108*mm" dz="5*mm" x_offset="43.*mm" y_offset="0." z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber" sensitive="false"/>          
+          <module_component name="FoamR" alpha="0.0" dx="30.*mm" dy="108*mm" dz="5*mm" x_offset="18.*mm" y_offset="0." z_offset="0.*mm" material="CarbonFiber" vis="CarbonFoam" sensitive="false">
+            <subtraction name="CoolingLine" rmin="0.*mm" rmax="2.*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm"/> 
+            <tube name="CoolingPipeR" rmin="1.8*mm" rmax="1.9*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Ti" vis="orange"/>
+          </module_component>
+          <module_component name="ConnectorA" alpha="0." dx="20.*mm" dy="108.*mm" dz="0.25*mm" x_offset="-18.*mm" y_offset="0." z_offset="2.8*mm" material="Al" vis="red" sensitive="false"/>
+          <module_component name="BoardA" alpha="0." dx="96.*mm" dy="108*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="3.0*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="SensorA" alpha="0." dx="96.*mm" dy="108.*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="3.2*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+        </module>
+        <stave name="LongStripBarrelStave" nmodules="21" gap="1.*mm" vis="invisible">
+          <eltube name="CableBundle" rmin="0.5*mm" rmax="1.5*mm" r="820.*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Cu" vis="orange"/>
+        </stave>
+        <layer id="0" name="LongStripLayer0" rmin="790.*mm" r="820.*mm" rmax="840.*mm" outer_z="20.*mm" nphi="60" phi_tilt="-0.15" phi0="0." vis="invisible">
+          <support name="InnerSupportRings" rmin="795.*mm" rmax="810.*mm" dz="50.*mm" z_offset="300.*mm"  nsides="2" material="CarbonFiber" vis="CarbonFiber"/>
+          <support name="OuterSupportRings" rmin="795.*mm" rmax="810.*mm" dz="50.*mm" z_offset="1000.*mm"  nsides="2" material="CarbonFiber" vis="CarbonFiber"/>
+          <layer_material surface="inner" binning="binPhi,binZ" bins0="mat_lst_barrel_bPhi" bins1="mat_lst_barrel_bZ"/>
+        </layer>
+        <layer id="1" name="LongStripLayer1" rmin="990.*mm" r="1020.*mm" rmax="1040.*mm" outer_z="20.*mm"  nphi="80" phi_tilt="-0.15" phi0="0." vis="invisible">
+          <support name="InnerSupportRings" rmin="995.*mm" rmax="1010.*mm" dz="50.*mm" z_offset="300.*mm" nsides="2" material="CarbonFiber" vis="CarbonFiber"/>
+          <support name="OuterSupportRings" rmin="995.*mm" rmax="1010.*mm" dz="50.*mm" z_offset="1000.*mm" nsides="2" material="CarbonFiber" vis="CarbonFiber"/>
+          <layer_material surface="inner" binning="binPhi,binZ" bins0="mat_lst_barrel_bPhi" bins1="mat_lst_barrel_bZ"/>
+        </layer>
+        <support name="SupportRails" rmin="1075.*mm" rmax="1090.*mm" dz="25.*mm" z_offset="1150.*mm" nsides="2" material="CarbonFiber" vis="CarbonFiber">
+          <connector/>
+        </support>
+        <services>
+          <cable_routing nphi="30" phi0="0." number="10" rmin="0.*mm" rmax="0.75*mm" dz="2.*mm" z_offset="1150.*mm" gap="15.*mm" material="Cu" vis="orange">
+            <box dz="2.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing nphi="30" phi0="0.104" number="6" rmin="1.2*mm" rmax="1.4*mm" dz="0.*mm" z_offset="1150.*mm" gap="15.*mm" material="Ti" vis="orange"/>
+        </services>    
+    </detector>
+    <!--EndcapP-->
+    <detector id="302" name="LongStripEndcapP" type="ODDStripEndcap" readout="LongStripEndcapReadout" vis="invisible">
+        <dimensions name="LongStripEndcapShape" rmin="ls_env_rmin" rmax="ls_env_rmax" dz="ls_e_dz" z="ls_e_pz"/>
+        <ring name="Ring0" r="820.*mm" nphi="44" reflect="true" phi0="0." gap="8.*mm" z_offset="-15.*mm"> 
+          <module name="LongStripEndcapModuleR0" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="54.4*mm" x2="66.6*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+             <module_component name="Board" alpha="0." x1="55.2*mm" x2="67.2*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+             <module_component name="Foam" alpha="0." x1="55.2*mm" x2="67.2*mm" length="96.8*mm" thickness="4.*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFoam" sensitive="false">
+               <subtraction name="CoolingLine" rmin="0.*mm" rmax="1.6*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm"/> 
+               <tube name="CoolingPipe" rmin="1.4*mm" rmax="1.5*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Ti" vis="orange"/>
+             </module_component>
+              <module_component name="Board" alpha="0.04" x1="55.2*mm" x2="67.2*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+              <module_component name="Sensor" alpha="0.04" x1="54.4*mm" x2="66.6*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          </module>                   
+          <support name="SupportRing0" rmin="720.*mm" rmax="735.*mm" dz="4.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <support name="SupportRing1" rmin="900.*mm" rmax="920.*mm" dz="4.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="922.*mm" gap="23.0*mm" nphi="64" z_offset="0.*mm" material="Ti" vis="orange"/>
+        </ring>
+    
+        <ring name="Ring1" r="990.*mm" nphi="52" reflect="true" phi0="0." gap="8.*mm" z_offset="15.*mm"> 
+          <module name="LongStripEndcapModuleR1" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="66.6*mm" x2="78*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+             <module_component name="Board" alpha="0." x1="67.2*mm" x2="78.8*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+             <module_component name="Foam" alpha="0." x1="67.2*mm" x2="78.8*mm" length="110.8*mm" thickness="4.*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFoam" sensitive="false">
+               <subtraction name="CoolingLine" rmin="0.*mm" rmax="1.6*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm"/> 
+               <tube name="CoolingPipe" rmin="1.4*mm" rmax="1.5*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Ti" vis="orange"/>
+             </module_component>
+              <module_component name="Board" alpha="0.04" x1="66.6*mm" x2="78.*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.25*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+              <module_component name="Sensor" alpha="0.04" x1="54.4*mm" x2="78.8*mm" length="80.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-2.5*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          </module> 
+          <support name="SupportRing1" rmin="1070.*mm" rmax="1090.*mm" dz="4.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="1092.*mm" gap="24.*mm" nphi="72" z_offset="0.*mm" material="Ti" vis="orange"/>
+        </ring>
+        <layer id="0" name="LongStripEndcapP0" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="1280.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="1" name="LongStripEndcapP2" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="1550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="LongStripEndcapP3" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="1850.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="LongStripEndcapP4" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="2200.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="3" name="LongStripEndcapP5" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="2550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <layer id="4" name="LongStripEndcapP6" rmin="720.*mm" rmax="1095.*mm" dz="100.*mm" z_offset="2950.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_lst_endcap_bPhi" bins1="mat_lst_endcap_bR"/>
+        </layer>
+        <services>
+         <cable_routing name="OuterCables" nphi="30" phi0="0." number="10" r="1095*mm" rmin="0.*mm" rmax="0.75*mm" dz="0.1*mm" z_offset="1150.*mm" gap="25.*mm" material="Cu" vis="orange">
+            <box dz="1.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing name="OuterCooling" nphi="30" phi0="0.104" number="6" r="1095*mm" rmin="1.2*mm" rmax="1.4*mm" dz="0.*mm" z_offset="1150.*mm" gap="25.*mm" material="Ti" vis="orange"/>          
+        </services>   
+    </detector>
+</detectors>
+

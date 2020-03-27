@@ -1,0 +1,173 @@
+<detectors>
+    <!--EndcapN-->
+    <detector id="201" name="ShortStripEndcapN" type="ODDStripEndcap" readout="ShortStripEndcapReadout" vis="invisible">
+        <dimensions name="ShortStripEndcapShape" rmin="ss_env_rmin" rmax="ss_env_rmax" dz="ss_e_dz" z="ss_e_nz"/>
+        <ring name="Ring0" r="318*mm" nphi="42" reflect="true" phi0="0." gap="2.5*mm" z_offset="5.*mm"> 
+          <module name="ShortStripEndcapModuleR0" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="18.4*mm" x2="30.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="19.2*mm" x2="31.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.5*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Connector" alpha="0." x1="10.2*mm" x2="15.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          </module>
+          <support name="SupportRing0" rmin="220.*mm" rmax="270.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="272.*mm" gap="13.5*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="366.*mm" gap="18.5*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <support name="SupportRing1" rmin="370.*mm" rmax="430.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="432.*mm" gap="21.5*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
+        </ring>
+        <ring name="Ring1" r="470*mm" nphi="50" reflect="true" phi0="0." gap="2.5*mm" z_offset="-5.*mm">
+          <module name="ShortStripEndcapModuleR1" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="25.2*mm" x2="36.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="26.0*mm" x2="37.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.5*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Connector" alpha="0." x1="15.2*mm" x2="22.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          </module>
+        </ring>        
+        <ring name="Ring2" r="622*mm" nphi="60" reflect="true" phi0="0." gap="2.5*mm" z_offset="5.*mm">
+          <module name="ShortStripEndcapModuleR2" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="32.2*mm" x2="38.*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="33.0*mm" x2="38.8*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.5*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Connector" alpha="0." x1="22.2*mm" x2="28.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          </module>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="504.*mm" gap="19.5*mm" nphi="42" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <support name="SupportRing0" rmin="510.*mm" rmax="570.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="572.*mm" gap="19*mm" nphi="48" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="662.*mm" gap="19.5*mm" nphi="56" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <support name="SupportRing1" rmin="670.*mm" rmax="710.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+        </ring> 
+        <layer id="0" name="ShortStripEndcapN0" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-1280.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="1" name="ShortStripEndcapN2" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-1550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="ShortStripEndcapN3" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-1850.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="ShortStripEndcapN4" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-2200.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="3" name="ShortStripEndcapN5" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-2550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="4" name="ShortStripEndcapN6" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="-2950.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <services>
+          <cable_routing name="InnerCables" nphi="12" phi0="0." number="6" r="215.*mm" rmin="0.*mm" rmax="0.75*mm" z_offset="1150.*mm" gap="10.*mm" material="Cu" vis="orange">
+            <box dz="1.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing name="InnerCooling" nphi="12" phi0="0.262" number="4" r="215.*mm" rmin="1.2*mm" rmax="1.4*mm" z_offset="1150.*mm" gap="10.*mm" material="Ti" vis="orange"/>          
+          <cable_routing name="OuterCables" nphi="12" phi0="0.1303" number="6" r="710*mm" rmin="0.*mm" rmax="0.75*mm" z_offset="1150.*mm" gap="10.*mm" material="Cu" vis="orange">
+            <box dz="1.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing name="OuterCooling" nphi="12" phi0="0.3926" number="4" r="710*mm" rmin="1.2*mm" rmax="1.4*mm" z_offset="1150.*mm" gap="10.*mm" material="Ti" vis="orange"/>          
+        </services>       
+    </detector>
+    <!--Barrel-->
+    <detector id="200" name="ShortStripBarrel" type="ODDStripBarrel" readout="ShortStripBarrelReadout" vis="invisible">
+        <dimensions name="ShortStripBarrelShape" rmin="ss_env_rmin" rmax="ss_env_rmax" dz="ss_b_dz" z="0.*mm"/>
+        <boundary_material surface="negative" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        <boundary_material surface="outer" binning="binPhi,binZ" bins0="mat_sst_barrel_bPhi" bins1="mat_sst_barrel_bZ"/>
+        <boundary_material surface="positive" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        <module name="ShortStripBarrelModule" vis="invisible">
+          <module_component name="Foam" alpha="0." dx="45.*mm" dy="108*mm" dz="4*mm" x_offset="0." y_offset="0." z_offset="-2.8*mm" material="CarbonFoam" vis="CarbonFoam" sensitive="false">
+            <subtraction name="CoolingLine" rmin="0.*mm" rmax="1.8*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm"/> 
+            <tube name="CoolingPipe" rmin="1.5*mm" rmax="1.7*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Ti" vis="orange"/>
+          </module_component>
+          <module_component name="Connector" alpha="0." dx="10.*mm" dy="108.*mm" dz="0.25*mm" x_offset="-18.*mm" y_offset="0." z_offset="-0.5*mm" material="Al" vis="red" sensitive="false"/>
+          <module_component name="Board" alpha="0." dx="48.*mm" dy="108*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="-0.25*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Sensor" alpha="0." dx="48.*mm" dy="108.*mm" dz="0.2*mm" x_offset="0." y_offset="0." z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+        </module>
+        <stave name="ShortStripBarrelStave" nmodules="21" gap="0.5*mm" vis="invisible">
+          <eltube name="CableBundle" rmin="0.5*mm" rmax="1.5*mm" r="245.*mm" x_offset="12.*mm" y_offset="0.*mm" z_offset="-9.*mm" material="Cu" vis="orange"/>
+        </stave>
+        <layer id="0" name="ShortStripLayer0" rmin="240.*mm" r="260.*mm" rmax="280.*mm" outer_z="20.*mm" nphi="40" phi_tilt="-0.15" phi0="0." vis="invisible">
+          <support name="SupportCylinder" rmin="248.*mm" rmax="250.*mm" dz="1000.*mm" z_offset="0.*mm" nsides="1" material="CarbonFiber" vis="CarbonFiber"/>
+          <layer_material surface="inner" binning="binPhi,binZ" bins0="mat_sst_barrel_bPhi" bins1="mat_sst_barrel_bZ"/>
+        </layer>
+        <layer id="1" name="ShortStripLayer1" rmin="340.*mm" r="360.*mm" rmax="380.*mm" outer_z="20.*mm"  nphi="56" phi_tilt="-0.15" phi0="0." vis="invisible">
+          <support name="SupportCylinder" rmin="344.*mm" rmax="346.*mm" dz="1000.*mm" z_offset="0.*mm" nsides="1" material="CarbonFiber" vis="CarbonFiber" />   
+          <layer_material surface="inner" binning="binPhi,binZ" bins0="mat_sst_barrel_bPhi" bins1="mat_sst_barrel_bZ"/>                 
+        </layer>
+        <layer id="2" name="ShortStripLayer2" rmin="480.*mm" r="500.*mm" rmax="520.*mm" outer_z="20.*mm" nphi="78" phi_tilt="-0.15" phi0="0." vis="invisible">
+          <support name="SupportCylinder" rmin="484.*mm" rmax="486.*mm" dz="1000.*mm" z_offset="0.*mm" nsides="1" material="CarbonFiber" vis="CarbonFiber" />
+          <layer_material surface="inner" binning="binPhi,binZ" bins0="mat_sst_barrel_bPhi" bins1="mat_sst_barrel_bZ"/>
+        </layer>
+        <layer id="3" name="ShortStripLayer3" rmin="640.*mm" r="660.*mm" rmax="680.*mm" outer_z="20.*mm" nphi="102" phi_tilt="-0.15" phi0="0." vis="invisible">
+          <support name="SupportCylinder" rmin="644.*mm" rmax="646.*mm" dz="1000.*mm" z_offset="0.*mm" nsides="1" material="CarbonFiber" vis="CarbonFiber" />
+          <layer_material surface="inner" binning="binPhi,binZ" bins0="mat_sst_barrel_bPhi" bins1="mat_sst_barrel_bZ"/>
+        </layer> 
+        <support name="SupportRails" rmin="695.*mm" rmax="715.*mm" dz="20.*mm" z_offset="1150.*mm" nsides="2" material="CarbonFiber" vis="CarbonFiber">
+          <connector/>
+        </support>
+        <services>
+          <cable_routing nphi="12" phi0="0.1303" number="6" rmin="0.*mm" rmax="0.5*mm" dz="0.75*mm" z_offset="1150.*mm" gap="10.*mm" material="Cu" vis="orange">
+            <box dz="1.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing nphi="12" phi0="0.3926" number="4" rmin="1.2*mm" rmax="1.4*mm" dz="0.*mm" z_offset="1150.*mm" gap="10.*mm" material="Ti" vis="orange"/>          
+        </services>            
+    </detector>
+    <!--EndcapP-->
+    <detector id="202" name="ShortStripEndcapP" type="ODDStripEndcap" readout="ShortStripEndcapReadout" vis="invisible">
+        <dimensions name="ShortStripEndcapShape" rmin="ss_env_rmin" rmax="ss_env_rmax" dz="ss_e_dz" z="ss_e_pz"/>
+        <ring name="Ring0" r="318*mm" nphi="42" reflect="true" phi0="0." gap="2.5*mm" z_offset="-5.*mm"> 
+          <module name="ShortStripEndcapModuleR0" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="18.4*mm" x2="30.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="19.2*mm" x2="31.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.5*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Connector" alpha="0." x1="10.2*mm" x2="15.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          </module>
+          <support name="SupportRing0" rmin="220.*mm" rmax="270.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="272.*mm" gap="13.5*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="366.*mm" gap="18.5*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <support name="SupportRing1" rmin="370.*mm" rmax="430.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="432.*mm" gap="21.5*mm" nphi="32" z_offset="0.*mm" material="Ti" vis="orange"/>
+        </ring>
+        <ring name="Ring1" r="470*mm" nphi="50" reflect="true" phi0="0." gap="2.5*mm" z_offset="+5.*mm">
+          <module name="ShortStripEndcapModuleR1" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="25.2*mm" x2="36.2*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="26.0*mm" x2="37.*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.5*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Connector" alpha="0." x1="15.2*mm" x2="22.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          </module>
+        </ring>        
+        <ring name="Ring2" r="622*mm" nphi="60" reflect="true" phi0="0." gap="2.5*mm" z_offset="-5.*mm">
+          <module name="ShortStripEndcapModuleR2" vis="invisible">
+            <module_component name="Sensor" alpha="0." x1="32.2*mm" x2="38.*mm" length="78.*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+            <module_component name="Board" alpha="0." x1="33.0*mm" x2="38.8*mm" length="78.8*mm" thickness="0.25*mm" x_offset="0.*mm" y_offset="-0.5*mm" z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+            <module_component name="Connector" alpha="0." x1="22.2*mm" x2="28.*mm" length="44.8*mm" thickness="0.2*mm" x_offset="0.*mm" y_offset="-0.7*mm" z_offset="0.*mm" material="Al" vis="red" sensitive="false"/>
+          </module>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="504.*mm" gap="19.5*mm" nphi="42" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <support name="SupportRing0" rmin="510.*mm" rmax="570.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="572.*mm" gap="19*mm" nphi="48" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="662.*mm" gap="19.5*mm" nphi="56" z_offset="0.*mm" material="Ti" vis="orange"/>
+          <support name="SupportRing1" rmin="670.*mm" rmax="710.*mm" dz="2.*mm" z_offset="0.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+        </ring> 
+        <layer id="0" name="ShortStripEndcapP0" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="1280.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="1" name="ShortStripEndcapP2" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="1550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="ShortStripEndcapP3" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="1850.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="2" name="ShortStripEndcapP4" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="2200.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="3" name="ShortStripEndcapP5" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="2550.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <layer id="4" name="ShortStripEndcapP6" rmin="210.*mm" rmax="715.*mm" dz="50.*mm" z_offset="2950.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_sst_endcap_bPhi" bins1="mat_sst_endcap_bR"/>
+        </layer>
+        <services>
+          <cable_routing name="InnerCables" nphi="12" phi0="0." number="6" r="215.*mm" rmin="0.*mm" rmax="0.75*mm" z_offset="1150.*mm" gap="10.*mm" material="Cu" vis="orange">
+            <box dz="1.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing name="InnerCooling" nphi="12" phi0="0.262" number="4" r="215.*mm" rmin="1.2*mm" rmax="1.4*mm" z_offset="1150.*mm" gap="10.*mm" material="Ti" vis="orange"/>          
+          <cable_routing name="OuterCables" nphi="12" phi0="0.1303" number="6" r="710*mm" rmin="0.*mm" rmax="0.75*mm" z_offset="1150.*mm" gap="10.*mm" material="Cu" vis="orange">
+            <box dz="1.*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>  
+          <cooling_routing name="OuterCooling" nphi="12" phi0="0.3926" number="4" r="710*mm" rmin="1.2*mm" rmax="1.4*mm" z_offset="1150.*mm" gap="10.*mm" material="Ti" vis="orange"/>          
+        </services>     
+    </detector>
+</detectors>
+
