@@ -10,8 +10,9 @@ Contributions to the Acts project are very welcome and feedback on the documenta
     3. [Coding style and guidelines](#coding-style-and-guidelines)
     4. [Tips for users migrating from Gitlab] (#tips-users-gitlab)
 4. [Review other contributions](#review-other-contributions)
-    1. [Approving a pull request](#approving-a-pull-request)
-    2. [Merging a pull request](#merging-a-pull-request)
+    1. [Configuring your own PRs and PRs by people with read rights](#apply-labels)
+    2. [Approving a pull request](#approving-a-pull-request)
+    3. [Merging a pull request](#merging-a-pull-request)
 5. [Administrator's corner](#admin-corner)
     1. [Making a new Acts release](#tag-release)
 
@@ -30,8 +31,8 @@ To report an issue and before starting work, please create an issue in the [Gith
 - The title should summarize the issue
 - Describe the issue in as much detail as possible in the comment
 
-Unfortunately, Github does not allow editing labels, assignees or setting milestone to non-members of a project with at least "Triage" permission. These will have to be set by members with Triage permission after an issue/PR is created.
-Guidelines regarding labels, assignees and milestone therefore only concern members of acts-project and can be ignored by others.
+Github does not allow editing labels, assignees or setting milestone to non-members of a project with at least "Triage" permission. These will have to be set by members with Triage permission after an issue/PR is created.
+Guidelines regarding labels, assignees and milestone therefore only concern members of acts-project with the necessary rights and can be ignored by others.
 
 - Assign to yourself or leave empty
 - Choose labels as appropriate
@@ -51,14 +52,14 @@ Guidelines regarding labels, assignees and milestone therefore only concern memb
 
 Anyone is welcome to contribute to Acts. Below is a short description how to contribute. If you have any questions, feel free to ask [acts-developers@cern](mailto:acts-developers@cern.ch) for help or guidance.
 
-Please always fork the Acts repository you want to work on and create branches only in your own fork. Once you want to share your work, create a Pull Request (PR) (for gitlab users: equivalent to merge request) to the master branch of the upstream acts-project repository. If it is not yet ready to be merged in, please prefix the title of the PR with "WIP: " (without quotation marks) to mark it "work in progress". Once you want your branch to be merged in, request a review from the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers)
+Please always fork the Acts repository you want to work on and create branches only in your own fork. Once you want to share your work, create a Pull Request (PR) (for gitlab users: equivalent to merge request) to the master branch of the upstream acts-project repository. If it is not yet ready to be merged in, please create a draft pull request (by clicking on the small arrow on the green "create pull request" button) to mark it work in progress. Once you want your branch to be merged in, request a review from the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers). Once a draft merge request is reviewed, it can be merged in.
 
 To get started with git, please refer to the [short introduction](http://git-scm.com/docs/gittutorial) as well as the [full git documentation](https://git-scm.com/doc). Tutorials as well as explanations of concepts and workflows with git can also be found on [Atlassian](http://www.atlassian.com/git/).
  
 ### <a name="checklist-pull-requests">Checklist for pull requests</a>
 - Your branch has been rebased on the target branch and can be integrated through a fast-forward merge.
 - A detailed description of the pull request is provided.
-- The issue the PR closes is linked .
+- The issue the PR closes is linked.
 - All CI jobs pass.
 - All newly introduced functions and classes have been documented properly with doxygen.
 - Unit tests are provided for new functionalities.
@@ -69,7 +70,7 @@ To get started with git, please refer to the [short introduction](http://git-scm
 
 In the following a few recommendations are outlined which should help you to get familiar with development process in the Acts project.
 
-1. **Each development its own branch of your private fork!**
+1. **Each development in its own branch of your private fork!**
 Write access for developers has been disabled for developers on acts-project. Therefore, always start by creating your own fork and creating branches there. You should start a new branch for every development and all work which is logically/conceptually linked should happen in one branch. Try to keep your branches short. This helps immensly to understand the git history if you need to look at it in the future and helps reviewers of your code.
 If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch as illustrated in the picture below.
 
@@ -153,11 +154,17 @@ In addition, the following conventions are used in Acts code:
 
 ## <a name="review-other-contributions">Review other contributions</a>
 
+Acts requires that every pull request receives at least one review by a member of the reviewers team before being merged but anyone is welcome to contribute by commenting on code changes. You can help reviewing proposed contributions by going to [the "pull requests" section of the Acts (core) Github repository](https://github.com/acts-project/acts-core/pulls).
+
+As some of the guidelines recommended here require rights granted to the reviewers team, this guide specifically addresses the people in this team. The present contribution guide should serve as a good indication of what we expect from code submissions.
+
+### <a name="apply-labels">Configuring your own PRs and PRs by people with read rights</a>
+
+* Check if the "request review" label is set (equivalent to WIP tag in title of a MR in Gitlab)
+* Check if the "triage" label is set and configure labels, assignees and milestone for those PR
+** Needs at least label "bug", "improvement", "infrastructure" or "new feature"
+
 ### <a name="approving-a-pull-request">Approving a pull request</a>
-
-Writing new code is not the only way one can contribute to the Acts project. Another greatly appreciated contribution is looking at other proposed contributions to the project. The more eyeballs look at a piece of code before it is merged into the Acts repository, the smaller the chances that a bug or other unwanted behaviour is accidentally introduced into the Acts codebase. This is why we require that every Acts pull request receives at least one human review before being merged.
-
-You can help reviewing proposed contributions by going to [the "pull requests" section of the Acts (core) Github repository](https://github.com/acts-project/acts-core/pulls) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the pull request itself:
 
 * Does its title and description reflect its contents?
 * Do the automated continuous integration tests pass without problems?
