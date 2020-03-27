@@ -57,5 +57,7 @@ http://acts.web.cern.ch/ACTS/ATLAS_authors.html .
 
 The Acts project contains copies of the following external packages:
 
+*   [dfelibs](https:://gitlab.cern.ch/msmk/dfelibs) by Moritz Kiehn licensed
+    under the MIT license.
 *   [JSON for Modern C++](https://github.com/nlohmann/json) by Niels Lohmann
     licensed under the MIT License.

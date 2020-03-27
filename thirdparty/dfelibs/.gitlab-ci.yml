@@ -1,0 +1,47 @@
+image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
+
+stages:
+  - build
+
+.build:
+  stage: build
+  tags:
+    - cvmfs
+  script:
+    - mkdir build
+    - cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
+    - cmake --build .
+    - ctest --output-on-failure
+
+.build-lcg94:
+  extends: .build
+  before_script:
+    - yum install -y atlas libgfortran
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_94/x86_64-centos7-gcc7-opt/setup.sh
+
+build-lcg94-debug:
+  extends: .build-lcg94
+  variables:
+    BUILD_TYPE: Debug
+
+build-lcg94-release:
+  extends: .build-lcg94
+  variables:
+    BUILD_TYPE: Release
+
+.build-lcg95:
+  extends: .build
+  before_script:
+    - yum install -y atlas libgfortran
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_95a/x86_64-centos7-gcc8-opt/setup.sh
+
+build-lcg95-debug:
+  extends: .build-lcg95
+  variables:
+    BUILD_TYPE: Debug
+
+build-lcg95-release:
+  extends: .build-lcg95
+  variables:
+    BUILD_TYPE: Release
