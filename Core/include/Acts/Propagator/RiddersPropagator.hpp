@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -84,9 +84,6 @@ class RiddersPropagator {
   ///
   /// @return Result of the propagation
   template <typename return_parameters_t = CurvilinearParameters,
-            //~ typename parameters_t, typename propagator_options_t,
-            // std::enable_if_t<parameters_t::is_local_representation and
-            // return_parameters_t::is_local_representation, int> = 0>
             typename parameters_t, typename propagator_options_t>
   Result<action_list_t_result_t<
       return_parameters_t, typename propagator_options_t::action_list_type>>

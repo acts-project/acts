@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,34 +34,111 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Allow larger distances for the oscillation
   propagator_options_t opts = options;
-  opts.pathLimit *=
-      2.;  // TODO: Should there be the same limit as for the nominal one?
 
-  if constexpr (return_parameters_t::is_local_representation &&
-                parameters_t::is_local_representation) {
-    // Pick the surface of the propagation as target
-    const Surface& surface = nominalResult.endParameters->referenceSurface();
+  // Test whether we want to end up bound
+  if constexpr (return_parameters_t::is_local_representation)
+  {
+	  // Allow larger distances for the oscillation
+	  propagator_options_t opts = options;
+		opts.pathLimit *=
+		  2.;
 
-    // Derivations of each parameter around the nominal parameters
-    std::array<std::vector<BoundVector>, eBoundSize>
-        derivatives;  // TODO: This requires different dimensions
+		// Pick the surface of the propagation as target
+		const Surface& surface = nominalResult.endParameters->referenceSurface();
 
-    // Wiggle each dimension individually
-    for (unsigned int i = 0; i < eBoundSize; i++) {
-      derivatives[i] = wiggleDimension(
-          opts, start, i, nominalParameters,
-          deviations, surface);  // TODO: This only works if start is local
-    }
+	  // Case I: We start and end bound
+	  if constexpr (parameters_t::is_local_representation) {
+		// Derivations of each parameter around the nominal parameters
+		std::array<std::vector<BoundVector>, eBoundSize>
+			derivatives;
 
-    // Exchange the result by Ridders Covariance
-    const FullBoundParameterSet& parSet =
-        nominalResult.endParameters->getParameterSet();
-    FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
-    if (start.covariance()) {
-      mParSet->setCovariance(std::get<BoundSymMatrix>(
-          calculateCovariance(derivatives, *start.covariance(), deviations)));
-    }
-  }
+		// Wiggle each dimension individually
+		for (unsigned int i = 0; i < eBoundSize; i++) {
+		  derivatives[i] = wiggleDimension(
+			  opts, start, i, nominalParameters,
+			  deviations, surface);
+		}
+
+		// Exchange the result by Ridders Covariance
+		const FullBoundParameterSet& parSet =
+			nominalResult.endParameters->getParameterSet();
+		FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
+		if (start.covariance()) {
+		  mParSet->setCovariance(std::get<BoundSymMatrix>(
+			  calculateCovariance(derivatives, *start.covariance(), deviations)));
+		}
+	  }
+	  // Case II: We start free and end bound
+	  else
+	  {
+			// Derivations of each parameter around the nominal parameters
+			std::array<std::vector<BoundVector>, eFreeSize>
+				derivatives;
+				
+			// Wiggle each dimension individually
+			for (unsigned int i = 0; i < eFreeSize; i++) {
+			  derivatives[i] = wiggleDimension(
+				  opts, start, i, nominalParameters,
+				  deviations, surface);
+			}
+
+			// Exchange the result by Ridders Covariance
+			const FullBoundParameterSet& parSet =
+				nominalResult.endParameters->getParameterSet();
+			FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
+			if (start.covariance()) {
+			  mParSet->setCovariance(std::get<BoundSymMatrix>(
+				  calculateCovariance(derivatives, *start.covariance(), deviations)));
+			} 
+	  }
+	}
+	// TODO: Case III and IV need some propagation distance settings, otherwise the result should be uncomparable
+	else
+	{		
+	  // Case III: We start bound and end free
+	  if constexpr (parameters_t::is_local_representation) {
+		// Derivations of each parameter around the nominal parameters
+		std::array<std::vector<FreeVector>, eFreeSize>
+			derivatives;
+
+		// Wiggle each dimension individually
+		for (unsigned int i = 0; i < eBoundSize; i++) {
+		  derivatives[i] = wiggleDimension(
+			  options, start, i, nominalParameters,
+			  deviations);
+		}
+
+		// Exchange the result by Ridders Covariance
+		FreeParameters* parameters = const_cast<FreeParameters*>(nominalResult.endParameters.get());
+		if (start.covariance()) {
+		  parameters->covariance(std::get<FreeSymMatrix>(
+			  calculateCovariance(derivatives, *start.covariance(), deviations)));
+		}
+		nominalResult.endParameters = std::make_unique<const FreeParameters>(*parameters);
+	  }
+	  // Case IV: We start and end free
+	  else
+	  {
+			// Derivations of each parameter around the nominal parameters
+			std::array<std::vector<FreeVector>, eFreeSize>
+				derivatives;
+
+			// Wiggle each dimension individually
+			for (unsigned int i = 0; i < eFreeSize; i++) {
+			  derivatives[i] = wiggleDimension(
+				  options, start, i, nominalParameters,
+				  deviations);
+			}
+
+			// Exchange the result by Ridders Covariance
+			FreeParameters* parameters = const_cast<FreeParameters*>(nominalResult.endParameters.get());
+			if (start.covariance()) {
+			  parameters->covariance(std::get<FreeSymMatrix>(
+				  calculateCovariance(derivatives, *start.covariance(), deviations)));
+			}
+			nominalResult.endParameters = std::make_unique<const FreeParameters>(*parameters);
+	  }
+	}
 
   return ThisResult::success(std::move(nominalResult));
 }
@@ -300,15 +377,33 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
       break;
     }
     case 4: {
-      tp.template set<4>(geoContext, tp.template get<4>() + h);
+		Vector3D dir = tp.parameters().template segment<3>(4);
+		dir.x() += h;
+		const double theta = std::acos(dir.z() / dir.norm());
+		const double phi = std::atan2(dir.y(), dir.x());
+      tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
+      tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
+      tp.template set<6>(geoContext, std::cos(theta));
       break;
     }
     case 5: {
-      tp.template set<5>(geoContext, tp.template get<5>() + h);
+		Vector3D dir = tp.parameters().template segment<3>(4);
+		dir.y() += h;
+		const double theta = std::acos(dir.z() / dir.norm());
+		const double phi = std::atan2(dir.y(), dir.x());
+      tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
+      tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
+      tp.template set<6>(geoContext, std::cos(theta));    
       break;
     }
     case 6: {
-      tp.template set<6>(geoContext, tp.template get<6>() + h);
+		Vector3D dir = tp.parameters().template segment<3>(4);
+		dir.z() += h;
+		const double theta = std::acos(dir.z() / dir.norm());
+		const double phi = std::atan2(dir.y(), dir.x());
+      tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
+      tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
+      tp.template set<6>(geoContext, std::cos(theta));      
       break;
     }
     case 7: {

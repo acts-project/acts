@@ -334,7 +334,7 @@ auto covariance_curvilinear(const Propagator_type& propagator, start_parameters_
 
 
 template <typename Propagator_type, typename DestSurface_type, typename start_parameters_t>
-Covariance covariance_bound(const Propagator_type& propagator,
+auto covariance_bound(const Propagator_type& propagator,
                             double plimit, double rand1, double rand2,
                             double rand3, start_parameters_t start,
                             bool destPlanar = true, bool debug = false) {
@@ -366,10 +366,10 @@ Covariance covariance_bound(const Propagator_type& propagator,
   options.pathLimit *= 2;
 
   const auto result = propagator.propagate(start, *endSurface, options).value();
-  const auto& tp = result.endParameters;
+  //~ const auto& tp = result.endParameters;
 
   // get obtained covariance matrix
-  return *(tp->covariance());
+  //~ return *(tp->covariance());
 }
 }  // namespace IntegrationTest
 }  // namespace Acts
