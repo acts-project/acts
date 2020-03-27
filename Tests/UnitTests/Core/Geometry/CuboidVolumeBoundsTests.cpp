@@ -47,12 +47,18 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeRecreation) {
 BOOST_AUTO_TEST_CASE(CuboidVolumeException) {
   // Test exception negative x
   BOOST_CHECK_THROW(CuboidVolumeBounds(-hx, hy, hz), std::logic_error);
-
   // Test exception negative y
   BOOST_CHECK_THROW(CuboidVolumeBounds(hx, -hy, hz), std::logic_error);
-
   // Test exception negative z
   BOOST_CHECK_THROW(CuboidVolumeBounds(hx, hy, -hz), std::logic_error);
+  // Other iterations 0
+  BOOST_CHECK_THROW(CuboidVolumeBounds(-hx, hy, -hz), std::logic_error);
+  // Other iterations 1
+  BOOST_CHECK_THROW(CuboidVolumeBounds(-hx, -hy, hz), std::logic_error);
+  // Other iterations 2
+  BOOST_CHECK_THROW(CuboidVolumeBounds(hx, -hy, -hz), std::logic_error);
+  // Other iterations : all
+  BOOST_CHECK_THROW(CuboidVolumeBounds(-hx, -hy, -hz), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {

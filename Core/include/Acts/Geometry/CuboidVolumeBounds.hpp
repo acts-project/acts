@@ -159,7 +159,8 @@ inline std::vector<double> CuboidVolumeBounds::values() const {
 }
 
 inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthX) * get(eHalfLengthY) * get(eHalfLengthZ) <= 0.) {
+  if (get(eHalfLengthX) <= 0 or get(eHalfLengthY) <= 0 or
+      get(eHalfLengthZ) <= 0.) {
     throw std::invalid_argument(
         "CuboidVolumeBounds: invalid input, zero or negative.");
   }
