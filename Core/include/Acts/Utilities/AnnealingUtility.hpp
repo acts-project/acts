@@ -11,6 +11,7 @@
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 
+namespace Acts {
 /// @brief Implements a deterministic thermodynamic annealing scheme
 /// Ref. (1): CERN-THESIS-2010-027
 class AnnealingUtility {
@@ -68,3 +69,4 @@ class AnnealingUtility {
   /// Configuration object
   Config m_cfg;
 };
+}  // namespace Acts
