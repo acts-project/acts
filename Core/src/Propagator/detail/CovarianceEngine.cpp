@@ -115,7 +115,7 @@ else
 	return jacToLocal * (state.jacTransport - state.derivative * sVec);
 }
 }
-
+  
 /// @brief This function treats the modifications of the jacobian related to the
 /// projection onto a curvilinear surface. Since a variation of the start
 /// parameters within a given uncertainty would lead to a variation of the end

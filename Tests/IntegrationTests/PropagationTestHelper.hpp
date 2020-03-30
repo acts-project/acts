@@ -366,10 +366,10 @@ auto covariance_bound(const Propagator_type& propagator,
   options.pathLimit *= 2;
 
   const auto result = propagator.propagate(start, *endSurface, options).value();
-  //~ const auto& tp = result.endParameters;
+  const auto& tp = result.endParameters;
 
   // get obtained covariance matrix
-  //~ return *(tp->covariance());
+  return *(tp->covariance());
 }
 }  // namespace IntegrationTest
 }  // namespace Acts
