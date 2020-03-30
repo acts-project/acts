@@ -86,7 +86,7 @@ const FreeToBoundMatrix surfaceDerivative(StepperState& state,
     // Transport the covariance
     const ActsRowVectorD<3> normVec(state.dir);
     const BoundRowVector sfactors =
-        normVec * state.jacToGlobal.template topLeftCorner<3, BoundParsDim>();
+        normVec * state.jacToGlobal.template topLeftCorner<3, eBoundParametersSize>();
     state.jacToGlobal -= state.derivative * sfactors;
     // Since the jacobian to local needs to calculated for the bound parameters
     // here, it is convenient to do the same here
