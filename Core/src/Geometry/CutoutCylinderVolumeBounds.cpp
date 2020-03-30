@@ -14,7 +14,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 #include <memory>
 #include <vector>

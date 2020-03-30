@@ -18,8 +18,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 namespace Acts {
 
@@ -66,9 +66,9 @@ class AxisAlignedBoundingBox {
    * Re-export vertex type based on value type given
    */
 
-  using vertex_type = ActsVector<value_t, DIM>;
+  using VertexType = ActsVector<value_t, DIM>;
   /**
-   * Associated array value to `vertex_type`
+   * Associated array value to `VertexType`
    */
 
   using vertex_array_type = Eigen::Array<value_t, DIM, 1>;
@@ -86,7 +86,7 @@ class AxisAlignedBoundingBox {
   /**
    * Strong type to select the correct constructor
    */
-  using Size = NamedType<vertex_type, struct SizeParameter>;
+  using Size = NamedType<VertexType, struct SizeParameter>;
 
   /**
    * Re-export dimension from template parameter
@@ -105,8 +105,8 @@ class AxisAlignedBoundingBox {
    * @param vmin The minimum vertex.
    * @param vmax The maximum vertex.
    */
-  AxisAlignedBoundingBox(const entity_t* entity, const vertex_type& vmin,
-                         const vertex_type& vmax);
+  AxisAlignedBoundingBox(const entity_t* entity, const VertexType& vmin,
+                         const VertexType& vmax);
 
   /**
    * Constructor from a center position, and a width and height.
@@ -116,7 +116,7 @@ class AxisAlignedBoundingBox {
    * @note The special type @c size is required to disambiguate this constructor
    * from the other one above. It is a wrapper around a simple @c Vector3D.
    */
-  AxisAlignedBoundingBox(const entity_t* entity, const vertex_type& center,
+  AxisAlignedBoundingBox(const entity_t* entity, const VertexType& center,
                          const Size& size);
 
   /**
@@ -135,7 +135,7 @@ class AxisAlignedBoundingBox {
    * @param envelope Optional envelop to add/subtract to dimension.
    * @return Pair of vertixes: min and max.
    */
-  static std::pair<vertex_type, vertex_type> wrap(
+  static std::pair<VertexType, VertexType> wrap(
       const std::vector<const self_t*>& boxes,
       vertex_array_type envelope = vertex_array_type::Zero());
 
@@ -146,7 +146,7 @@ class AxisAlignedBoundingBox {
    * @param envelope Optional envelop to add/subtract to dimension.
    * @return Pair of vertixes: min and max.
    */
-  static std::pair<vertex_type, vertex_type> wrap(
+  static std::pair<VertexType, VertexType> wrap(
       const std::vector<self_t*>& boxes,
       vertex_array_type envelope = vertex_array_type::Zero());
 
@@ -157,7 +157,7 @@ class AxisAlignedBoundingBox {
    * @param envelope Optional envelop to add/subtract to dimension.
    * @return Pair of vertixes: min and max.
    */
-  static std::pair<vertex_type, vertex_type> wrap(
+  static std::pair<VertexType, VertexType> wrap(
       const std::vector<self_t>& boxes,
       vertex_array_type envelope = vertex_array_type::Zero());
 
@@ -166,7 +166,7 @@ class AxisAlignedBoundingBox {
    * @param point The point to test.
    * @return Whether the point is inside or not.
    */
-  bool intersect(const vertex_type& point) const;
+  bool intersect(const VertexType& point) const;
 
   /**
    * @brief Implements the slab method for Ray/AABB intersections.
@@ -242,19 +242,19 @@ class AxisAlignedBoundingBox {
    * Get the center position of this bounding box.
    * @return The center position
    */
-  const vertex_type& center() const;
+  const VertexType& center() const;
 
   /**
    * Get the minimum vertex
    * @return The minimum vertex
    */
-  const vertex_type& min() const;
+  const VertexType& min() const;
 
   /**
    * Get the maximum vertex
    * @return The maximum vertex
    */
-  const vertex_type& max() const;
+  const VertexType& max() const;
 
   /**
    * Write information about this bounding box to a stream.
@@ -310,17 +310,17 @@ class AxisAlignedBoundingBox {
 
  private:
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  std::pair<vertex_type, vertex_type> transformVertices(
+  std::pair<VertexType, VertexType> transformVertices(
       const transform_type& trf) const;
 
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  std::pair<vertex_type, vertex_type> transformVertices(
+  std::pair<VertexType, VertexType> transformVertices(
       const transform_type& trf) const;
 
   const entity_t* m_entity;
-  vertex_type m_vmin;
-  vertex_type m_vmax;
-  vertex_type m_center;
+  VertexType m_vmin;
+  VertexType m_vmax;
+  VertexType m_center;
   vertex_array_type m_width;
   vertex_array_type m_iwidth;
 

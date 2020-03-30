@@ -11,9 +11,9 @@
 
 #include <iostream>
 
-#include "Acts/Utilities/IVisualization.hpp"
-#include "Acts/Utilities/ObjHelper.hpp"
-#include "Acts/Utilities/PlyHelper.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/ObjHelper.hpp"
+#include "Acts/Visualization/PlyHelper.hpp"
 
 using boost::test_tools::output_test_stream;
 

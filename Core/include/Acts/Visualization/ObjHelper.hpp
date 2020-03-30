@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 #include <utility>
 #include <vector>
@@ -26,24 +26,24 @@ class ObjHelper : public IVisualization {
                 "Use either double or float");
 
   /// Stored value type, should be double or float
-  using value_type = T;
+  using ValueType = T;
 
   /// Type of a vertex based on the value type
-  using vertex_type = ActsVector<value_type, 3>;
+  using VertexType = ActsVector<ValueType, 3>;
 
   /// Type of a line
-  using line_type = std::pair<size_t, size_t>;
+  using LineType = std::pair<size_t, size_t>;
 
   /// @copydoc Acts::IVisualization::vertex()
   void vertex(const Vector3D& vtx,
-              IVisualization::color_type color = {0, 0, 0}) override {
+              IVisualization::ColorType color = {0, 0, 0}) override {
     (void)color;  // suppress unused warning
-    m_vertices.push_back(vtx.template cast<value_type>());
+    m_vertices.push_back(vtx.template cast<ValueType>());
   }
 
   /// @copydoc Acts::IVisualization::line()
   void line(const Vector3D& a, const Vector3D& b,
-            IVisualization::color_type color = {0, 0, 0}) override {
+            IVisualization::ColorType color = {0, 0, 0}) override {
     (void)color;  // suppress unused warning
     // not implemented
     vertex(a);
@@ -53,9 +53,9 @@ class ObjHelper : public IVisualization {
 
   /// @copydoc Acts::IVisualization::face()
   void face(const std::vector<Vector3D>& vtxs,
-            IVisualization::color_type color = {0, 0, 0}) override {
+            IVisualization::ColorType color = {0, 0, 0}) override {
     (void)color;  // suppress unused warning
-    face_type idxs;
+    FaceType idxs;
     idxs.reserve(vtxs.size());
     for (const auto& vtx : vtxs) {
       vertex(vtx);
@@ -66,8 +66,8 @@ class ObjHelper : public IVisualization {
 
   /// @copydoc Acts::IVisualization::faces()
   void faces(const std::vector<Vector3D>& vtxs,
-             const std::vector<face_type>& faces,
-             color_type color = {120, 120, 120}) {
+             const std::vector<FaceType>& faces,
+             ColorType color = {120, 120, 120}) {
     // No faces given - call the face() method
     if (faces.empty()) {
       face(vtxs, color);
@@ -78,7 +78,7 @@ class ObjHelper : public IVisualization {
         if (face.size() == 2) {
           m_lines.push_back({face[0] + vtxoffs, face[2] + vtxoffs});
         } else {
-          face_type rawFace = face;
+          FaceType rawFace = face;
           std::transform(rawFace.begin(), rawFace.end(), rawFace.begin(),
                          [&](size_t& iv) { return (iv + vtxoffs); });
           m_faces.push_back(rawFace);
@@ -89,15 +89,15 @@ class ObjHelper : public IVisualization {
 
   /// @copydoc Acts::IVisualization::write()
   void write(std::ostream& os) const override {
-    for (const vertex_type& vtx : m_vertices) {
+    for (const VertexType& vtx : m_vertices) {
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
     }
 
-    for (const line_type& ln : m_lines) {
+    for (const LineType& ln : m_lines) {
       os << "l " << ln.first + 1 << " " << ln.second + 1 << "\n";
     }
 
-    for (const face_type& fc : m_faces) {
+    for (const FaceType& fc : m_faces) {
       os << "f";
       for (size_t i = 0; i < fc.size(); i++) {
         os << " " << fc[i] + 1;
@@ -114,8 +114,8 @@ class ObjHelper : public IVisualization {
   }
 
  private:
-  std::vector<vertex_type> m_vertices;
-  std::vector<face_type> m_faces;
-  std::vector<line_type> m_lines;
+  std::vector<VertexType> m_vertices;
+  std::vector<FaceType> m_faces;
+  std::vector<LineType> m_lines;
 };
 }  // namespace Acts

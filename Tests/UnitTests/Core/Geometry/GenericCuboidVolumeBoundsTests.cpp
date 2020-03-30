@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/PlyHelper.hpp"
+#include "Acts/Visualization/PlyHelper.hpp"
 
 namespace Acts {
 namespace Test {

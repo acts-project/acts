@@ -10,8 +10,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/PlyHelper.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/PlyHelper.hpp"
 
 using boost::test_tools::output_test_stream;
 

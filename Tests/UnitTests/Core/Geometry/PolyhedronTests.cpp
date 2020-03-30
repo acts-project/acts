@@ -17,8 +17,8 @@
 #include <fstream>
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ObjHelper.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Visualization/ObjHelper.hpp"
 
 namespace Acts {
 

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 #include <ostream>
 
@@ -34,7 +34,7 @@ class Frustum {
   /// Re expose the value type
   using value_type = value_t;
   /// Vertex type based on the value type and dimension
-  using vertex_type = ActsVector<value_t, DIM>;
+  using VertexType = ActsVector<value_t, DIM>;
   /// Vertex array type corresponding to the vertex type
   using vertex_array_type = Eigen::Array<value_t, DIM, 1>;
   /// Associated transform type
@@ -52,7 +52,7 @@ class Frustum {
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  Frustum(const vertex_type& origin, const vertex_type& dir,
+  Frustum(const VertexType& origin, const VertexType& dir,
           value_type opening_angle);
 
   /// Constructor for the 3D case.
@@ -62,7 +62,7 @@ class Frustum {
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  Frustum(const vertex_type& origin, const vertex_type& dir,
+  Frustum(const VertexType& origin, const VertexType& dir,
           value_type opening_angle);
 
   /// Draw a representation of this frustum using a visualization helper
@@ -87,19 +87,17 @@ class Frustum {
 
   /// Getter for the oriogin of the frustum
   /// @return The origin of the frustum
-  const vertex_type& origin() const { return m_origin; }
+  const VertexType& origin() const { return m_origin; }
 
   /// Getter for the direction of the frustum
   /// @return The direction of the frustum
-  const vertex_type& dir() const { return m_normals[0]; }
+  const VertexType& dir() const { return m_normals[0]; }
 
   /// Getter for the normal vectors of the planes defining this frustum.
   /// @return Array containing the normal vectors for all planes.
   /// @note The size of the array that is returned is fixed to `number of sides
   /// + 1`
-  const std::array<vertex_type, SIDES + 1>& normals() const {
-    return m_normals;
-  }
+  const std::array<VertexType, SIDES + 1>& normals() const { return m_normals; }
 
   /// Transforms this frustum using a given transform and returns a new instance
   /// @param trf The transform to apply
@@ -108,12 +106,12 @@ class Frustum {
 
  private:
   // private constructor with pre-calculated normals
-  Frustum(const vertex_type& origin, std::array<vertex_type, SIDES + 1> normals)
+  Frustum(const VertexType& origin, std::array<VertexType, SIDES + 1> normals)
       : m_origin(origin), m_normals(std::move(normals)) {}
 
-  vertex_type m_origin;
+  VertexType m_origin;
   // need one more for direction we're facing
-  std::array<vertex_type, SIDES + 1> m_normals;
+  std::array<VertexType, SIDES + 1> m_normals;
 };
 
 }  // namespace Acts

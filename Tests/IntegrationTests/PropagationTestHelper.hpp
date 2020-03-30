@@ -309,7 +309,7 @@ std::pair<Vector3D, double> to_cylinder(
 }
 
 // test propagation to most surfaces
-template <typename Propagator_type, typename Surface_type>
+template <typename Propagator_type, typename SurFaceType>
 std::pair<Vector3D, double> to_surface(
     const Propagator_type& propagator, double pT, double phi, double theta,
     double charge, double plimit, double rand1, double rand2, double rand3,
@@ -364,7 +364,7 @@ std::pair<Vector3D, double> to_surface(
                : createCylindricTransform(tp_s->position(), 0.04 * rand1,
                                           0.04 * rand2);
 
-    auto endSurface = Surface::makeShared<Surface_type>(seTransform, nullptr);
+    auto endSurface = Surface::makeShared<SurFaceType>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
 
@@ -408,7 +408,7 @@ std::pair<Vector3D, double> to_surface(
                : createCylindricTransform(tp_s->position(), 0.04 * rand1,
                                           0.04 * rand2);
 
-    auto endSurface = Surface::makeShared<Surface_type>(seTransform, nullptr);
+    auto endSurface = Surface::makeShared<SurFaceType>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
 
@@ -488,8 +488,8 @@ Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
   return *(tp->covariance());
 }
 
-template <typename Propagator_type, typename StartSurface_type,
-          typename DestSurface_type>
+template <typename Propagator_type, typename StartSurFaceType,
+          typename DestSurFaceType>
 Covariance covariance_bound(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
                             double plimit, double rand1, double rand2,
@@ -544,13 +544,13 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
                                                     0.01 * rand1, 0.01 * rand2);
 
   auto startSurface =
-      Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
+      Surface::makeShared<StartSurFaceType>(ssTransform, nullptr);
   BoundParameters start(tgContext, cov, pos, mom, q, time, startSurface);
 
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
 
-  auto endSurface = Surface::makeShared<DestSurface_type>(seTransform, nullptr);
+  auto endSurface = Surface::makeShared<DestSurFaceType>(seTransform, nullptr);
   const auto result = propagator.propagate(start, *endSurface, options).value();
   const auto& tp = result.endParameters;
 

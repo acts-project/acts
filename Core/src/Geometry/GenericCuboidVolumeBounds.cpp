@@ -11,8 +11,8 @@
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 #include <array>
 #include <ostream>

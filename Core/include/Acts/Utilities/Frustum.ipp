@@ -10,8 +10,8 @@
 
 template <typename value_t, size_t DIM, size_t SIDES>
 template <size_t D, std::enable_if_t<D == 2, int>>
-Acts::Frustum<value_t, DIM, SIDES>::Frustum(const vertex_type& origin,
-                                            const vertex_type& dir,
+Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
+                                            const VertexType& dir,
                                             value_type opening_angle)
     : m_origin(origin) {
   using rotation_t = Eigen::Rotation2D<value_type>;
@@ -24,24 +24,24 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const vertex_type& origin,
   Eigen::Rotation2D<value_type> rot(angle);
 
   value_type normal_angle = 0.5 * M_PI - 0.5 * opening_angle;
-  vertex_type normal1 = rotation_t(normal_angle) * vertex_type::UnitX();
-  vertex_type normal2 = rotation_t(-normal_angle) * vertex_type::UnitX();
+  VertexType normal1 = rotation_t(normal_angle) * VertexType::UnitX();
+  VertexType normal2 = rotation_t(-normal_angle) * VertexType::UnitX();
 
-  m_normals = {rot * vertex_type::UnitX(), rot * normal1, rot * normal2};
+  m_normals = {rot * VertexType::UnitX(), rot * normal1, rot * normal2};
 }
 
 template <typename value_t, size_t DIM, size_t SIDES>
 template <size_t D, std::enable_if_t<D == 3, int>>
-Acts::Frustum<value_t, DIM, SIDES>::Frustum(const vertex_type& origin,
-                                            const vertex_type& dir,
+Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
+                                            const VertexType& dir,
                                             value_type opening_angle)
     : m_origin(origin) {
   static_assert(SIDES > 2, "3D frustum must have 3 or more sides");
   assert(opening_angle < M_PI);
   using angle_axis_t = Eigen::AngleAxis<value_type>;
 
-  const vertex_type ldir = vertex_type::UnitZ();
-  const vertex_type lup = vertex_type::UnitX();
+  const VertexType ldir = VertexType::UnitZ();
+  const VertexType lup = VertexType::UnitX();
 
   transform_type transform;
   transform = (Eigen::Quaternion<value_type>().setFromTwoVectors(ldir, dir));
@@ -54,13 +54,13 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const vertex_type& origin,
 
   value_type half_opening_angle = opening_angle / 2.;
   auto calculate_normal =
-      [&ldir, &half_opening_angle](const vertex_type& out) -> vertex_type {
-    const vertex_type tilt_axis = -1 * out.cross(ldir);
+      [&ldir, &half_opening_angle](const VertexType& out) -> VertexType {
+    const VertexType tilt_axis = -1 * out.cross(ldir);
     return (-1 * (angle_axis_t(half_opening_angle, tilt_axis) * out))
         .normalized();
   };
 
-  vertex_type current_outward = lup;
+  VertexType current_outward = lup;
   m_normals[1] = calculate_normal(current_outward);
 
   for (size_t i = 1; i < sides; i++) {
@@ -83,38 +83,37 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
   // to get intersection lines.
   // Work in local reference frame of the frustum, and only convert to global
   // right before drawing.
-  vertex_type far_normal = m_normals[0];  // far has same normal as pseudo-near
-  vertex_type far_center = m_normals[0] * far_distance;
-  std::array<std::pair<vertex_type, vertex_type>, SIDES> planeFarIXs;
+  VertexType far_normal = m_normals[0];  // far has same normal as pseudo-near
+  VertexType far_center = m_normals[0] * far_distance;
+  std::array<std::pair<VertexType, VertexType>, SIDES> planeFarIXs;
 
-  auto ixPlanePlane =
-      [](const auto& n1, const auto& p1, const auto& n2,
-         const auto& p2) -> std::pair<vertex_type, vertex_type> {
-    const vertex_type m = n1.cross(n2).normalized();
+  auto ixPlanePlane = [](const auto& n1, const auto& p1, const auto& n2,
+                         const auto& p2) -> std::pair<VertexType, VertexType> {
+    const VertexType m = n1.cross(n2).normalized();
     const double j = (n2.dot(p2 - p1)) / (n2.dot(n1.cross(m)));
-    const vertex_type q = p1 + j * n1.cross(m);
+    const VertexType q = p1 + j * n1.cross(m);
     return {m, q};
   };
 
   auto ixLineLine = [](const auto& p1, const auto& d1, const auto& p2,
-                       const auto& d2) -> vertex_type {
+                       const auto& d2) -> VertexType {
     return p1 + (((p2 - p1).cross(d2)).norm() / (d1.cross(d2)).norm()) * d1;
   };
 
   // skip i=0 <=> pseudo-near
   for (size_t i = 1; i < n_normals; i++) {
     const auto ixLine =
-        ixPlanePlane(far_normal, far_center, m_normals[i], vertex_type::Zero());
+        ixPlanePlane(far_normal, far_center, m_normals[i], VertexType::Zero());
     planeFarIXs.at(i - 1) = ixLine;
   }
 
-  std::array<vertex_type, SIDES> points;
+  std::array<VertexType, SIDES> points;
 
   for (size_t i = 0; i < std::size(planeFarIXs); i++) {
     size_t j = (i + 1) % std::size(planeFarIXs);
     const auto& l1 = planeFarIXs.at(i);
     const auto& l2 = planeFarIXs.at(j);
-    const vertex_type ix =
+    const VertexType ix =
         m_origin + ixLineLine(l1.second, l1.first, l2.second, l2.first);
     points.at(i) = ix;
   }
@@ -122,7 +121,7 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
   for (size_t i = 0; i < std::size(points); i++) {
     size_t j = (i + 1) % std::size(points);
     helper.face(
-        std::vector<vertex_type>({m_origin, points.at(i), points.at(j)}));
+        std::vector<VertexType>({m_origin, points.at(i), points.at(j)}));
   }
 }
 
@@ -135,21 +134,21 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
                                                       value_type unit) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
 
-  vertex_type mid(w / 2., h / 2.);
+  VertexType mid(w / 2., h / 2.);
 
   // set up transform for svg. +y is down, normally, and unit is pixels.
   // We flip the y axis, and scale up by `unit`.
   transform_type trf = transform_type::Identity();
   trf.translate(mid);
-  trf = trf * Eigen::Scaling(vertex_type(1, -1));
+  trf = trf * Eigen::Scaling(VertexType(1, -1));
   trf.scale(unit);
 
   std::array<std::string, 3> colors({"orange", "blue", "red"});
 
-  auto draw_line = [&](const vertex_type& left_, const vertex_type& right_,
+  auto draw_line = [&](const VertexType& left_, const VertexType& right_,
                        std::string color, size_t width) {
-    vertex_type left = trf * left_;
-    vertex_type right = trf * right_;
+    VertexType left = trf * left_;
+    VertexType right = trf * right_;
     os << "<line ";
 
     os << "x1=\"" << left.x() << "\" ";
@@ -160,8 +159,8 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
     os << " stroke=\"" << color << "\" stroke-width=\"" << width << "\"/>\n";
   };
 
-  auto draw_point = [&](const vertex_type& p_, std::string color, size_t r) {
-    vertex_type p = trf * p_;
+  auto draw_point = [&](const VertexType& p_, std::string color, size_t r) {
+    VertexType p = trf * p_;
     os << "<circle ";
     os << "cx=\"" << p.x() << "\" cy=\"" << p.y() << "\" r=\"" << r << "\"";
     os << " fill=\"" << color << "\"";
@@ -169,9 +168,9 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
   };
 
   using vec3 = ActsVector<value_type, 3>;
-  auto ixLineLine = [](const vertex_type& p1_2, const vertex_type& d1_2,
-                       const vertex_type& p2_2,
-                       const vertex_type& d2_2) -> vertex_type {
+  auto ixLineLine = [](const VertexType& p1_2, const VertexType& d1_2,
+                       const VertexType& p2_2,
+                       const VertexType& d2_2) -> VertexType {
     const vec3 p1(p1_2.x(), p1_2.y(), 0);
     const vec3 p2(p2_2.x(), p2_2.y(), 0);
     const vec3 d1(d1_2.x(), d1_2.y(), 0);
@@ -191,15 +190,15 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
     return {p.x(), p.y()};
   };
 
-  const vertex_type far_dir = {m_normals[0].y(), -m_normals[0].x()};
-  const vertex_type far_point = m_normals[0] * far_distance;
+  const VertexType far_dir = {m_normals[0].y(), -m_normals[0].x()};
+  const VertexType far_point = m_normals[0] * far_distance;
 
-  std::array<vertex_type, 2> points;
+  std::array<VertexType, 2> points;
 
   for (size_t i = 1; i < n_normals; i++) {
-    vertex_type plane_dir(m_normals[i].y(), -m_normals[i].x());
+    VertexType plane_dir(m_normals[i].y(), -m_normals[i].x());
 
-    const vertex_type ix = ixLineLine(far_point, far_dir, {0, 0}, plane_dir);
+    const VertexType ix = ixLineLine(far_point, far_dir, {0, 0}, plane_dir);
     draw_point(m_origin + ix, "black", 3);
     draw_line(m_origin, m_origin + ix, "black", 2);
     points.at(i - 1) = ix;
@@ -221,7 +220,7 @@ Acts::Frustum<value_t, DIM, SIDES>::transformed(
     const transform_type& trf) const {
   const auto& rot = trf.rotation();
 
-  std::array<vertex_type, n_normals> new_normals;
+  std::array<VertexType, n_normals> new_normals;
   for (size_t i = 0; i < n_normals; i++) {
     new_normals[i] = rot * m_normals[i];
   }

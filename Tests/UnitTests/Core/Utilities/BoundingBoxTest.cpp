@@ -21,8 +21,8 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/PlyHelper.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/PlyHelper.hpp"
 
 namespace Acts {
 namespace Test {
@@ -66,11 +66,11 @@ BOOST_AUTO_TEST_CASE(box_construction) {
 }
 
 BOOST_AUTO_TEST_CASE(intersect_points) {
-  using vertex_type = ObjectBBox::vertex_type;
+  using VertexType = ObjectBBox::VertexType;
 
   Object o;
   ObjectBBox bb(&o, {0, 0, 0}, {1, 1, 1});
-  vertex_type p;
+  VertexType p;
 
   p = {0.5, 0.5, 0.5};
   BOOST_TEST(bb.intersect(p));
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
   }
 
   BOOST_TEST_CONTEXT("3D") {
-    using vertex_type3 = ObjectBBox::vertex_type;
+    using VertexType3 = ObjectBBox::VertexType;
     Object o;
 
     // lets make sure it also works in 3d
@@ -316,42 +316,42 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     BOOST_TEST(bb3.intersect(ray3));
 
     // some off-axis rays
-    ObjectBBox::vertex_type p(0, 0, -2);
+    ObjectBBox::VertexType p(0, 0, -2);
 
-    ray3 = {p, vertex_type3(1, 1, 1) - p};
+    ray3 = {p, VertexType3(1, 1, 1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(-1, 1, 1) - p};
+    ray3 = {p, VertexType3(-1, 1, 1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(-1, -1, 1) - p};
+    ray3 = {p, VertexType3(-1, -1, 1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(1, -1, 1) - p};
+    ray3 = {p, VertexType3(1, -1, 1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(1.1, 0, -1) - p};
+    ray3 = {p, VertexType3(1.1, 0, -1) - p};
     BOOST_TEST(!bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(-1.1, 0, -1) - p};
+    ray3 = {p, VertexType3(-1.1, 0, -1) - p};
     BOOST_TEST(!bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(0, 1.1, -1) - p};
+    ray3 = {p, VertexType3(0, 1.1, -1) - p};
     BOOST_TEST(!bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(0, -1.1, -1) - p};
+    ray3 = {p, VertexType3(0, -1.1, -1) - p};
     BOOST_TEST(!bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(0.9, 0, -1) - p};
+    ray3 = {p, VertexType3(0.9, 0, -1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(-0.9, 0, -1) - p};
+    ray3 = {p, VertexType3(-0.9, 0, -1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(0, 0.9, -1) - p};
+    ray3 = {p, VertexType3(0, 0.9, -1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
-    ray3 = {p, vertex_type3(0, -0.9, -1) - p};
+    ray3 = {p, VertexType3(0, -0.9, -1) - p};
     BOOST_TEST(bb3.intersect(ray3));
 
     ray3 = {{0, 0, 0}, {1, 0, 0}};
