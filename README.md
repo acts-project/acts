@@ -1,6 +1,10 @@
 # A Common Tracking Software (Acts) Project
 
-[![10.5281/zenodo.3606011](https://zenodo.org/badge/DOI/10.5281/zenodo.3606011.svg)](https://github.com/acts-project/acts) [![Chat on Mattermost](https://badgen.net/badge/chat/on%20mattermost/cyan)](https://badgen.net/badge/chat/on%20mattermost/cyan)
+[![coverage](https://badgen.net/codecov/c/github/acts-project/acts/master)](https://codecov.io/gh/acts-project/acts/branch/master) 
+
+[![10.5281/zenodo.3606011](https://badgen.net/badge/DOI/10.5281%2Fzenodo.3606011/blue)](https://doi.org/10.5281/zenodo.3606011) 
+
+[![Chat on Mattermost](https://badgen.net/badge/chat/on%20mattermost/cyan)](https://badgen.net/badge/chat/on%20mattermost/cyan)
 
 1. [Introduction](#intro)
 2. [Mailing list](#mailing-list)
