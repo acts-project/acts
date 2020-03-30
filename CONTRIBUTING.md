@@ -96,7 +96,7 @@ Make sure that the documentation is still valid after your changes. Perform upda
 
 ### <a name="coding-style-and-guidelines">Coding style and guidelines</a>
 
-The Acts project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)). The Acts CI system will automatically apply code reformatting using the provided clang-format configuration once pull requests are opened. However, developers are strongly encouraged to use this code formatter also locally to reduce conflicts due to formatting issues.
+The Acts project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. Developers can use the provided Docker image to format their project or install clang-format locally. Developers should be aware that clang-format will behave differently for different versions, so installing [the same clang version as used in the CI](https://github.com/acts-project/machines/blob/github-actions/check/Dockerfile.llvm8) is recommended. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)). The Acts CI system will automatically apply code reformatting using the provided clang-format configuration once pull requests are opened. However, developers are encouraged to use this code formatter also locally to reduce conflicts due to formatting issues.
 
 In addition, the following conventions are used in Acts code:
 
@@ -148,9 +148,11 @@ In addition, the following conventions are used in Acts code:
 1. Eventually, the bugfix will be merged into _master_. Then, you can rebase your feature branch on master which will remove all duplicate commits related to the bugfix.
 
 ### <a name="tips-users-gitlab">Tips for users migrating from Gitlab</a>
+
 - The most obvious difference first: What is called Merge Request (MR) in Gitlab is called Pull Request (PR) in Github.
 - Once your PR is ready to be merged, request a review by the users in the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers)
-- The access rights model of Github is slightly different from Gitlab. As Acts started enforcing using your own fork with the switch to Github, developers no longer have write access to the upstream repository. Unfortunately, approval of a PR by users without write access does not automatically liberate the merge button for users with write access. Instead, users with write access have to manually check if a review from an authorized person is present before merging.
+- As Acts started enforcing using your own fork with the switch to Github, developers no longer have write access to the upstream repository.
+- The CI will fail if a PR does not yet have the required approvals.
 
 ## <a name="review-other-contributions">Review other contributions</a>
 
@@ -160,9 +162,9 @@ As some of the guidelines recommended here require rights granted to the reviewe
 
 ### <a name="apply-labels">Configuring your own PRs and PRs by people with read rights</a>
 
-* Check if the "request review" label is set (equivalent to WIP tag in title of a MR in Gitlab)
+* Check if the "request review" label is set, if it is a draft PR or if the title starts with WIP. The latter two are equivalent.
 * Check if the "triage" label is set and configure labels, assignees and milestone for those PR
-** Needs at least label "bug", "improvement", "infrastructure" or "new feature"
+**Needs at least label "bug", "improvement", "infrastructure" or "new feature"
 
 ### <a name="approving-a-pull-request">Approving a pull request</a>
 
@@ -177,3 +179,5 @@ If you are confident that a pull request is ready for integration, please make i
 If you have been granted write access on the Acts repository, you can merge a pull request into the Acts master branch after it has been approved.
 
 Github may warn you that a "Fast-forward merge is not possible". This warning means that the pull request has fallen behind the current Acts master branch, and should be updated through a rebase. Please notify the pull request author in order to make sure that the latest master changes do not affect the pull request, and to have it updated as appropriate.
+
+For a PR that is behind master, a button "Update branch" may appear. This should NOT be used as it merges instead of rebasing, which is not our workflow.
