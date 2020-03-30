@@ -1,5 +1,7 @@
 # A Common Tracking Software (Acts) Project
 
+[![10.5281/zenodo.3606011](https://zenodo.org/badge/DOI/10.5281/zenodo.3606011.svg)](https://github.com/acts-project/acts) [![Chat on Mattermost](https://badgen.net/badge/chat/on%20mattermost/cyan)](https://badgen.net/badge/chat/on%20mattermost/cyan)
+
 1. [Introduction](#intro)
 2. [Mailing list](#mailing-list)
 6. [License and authors](#license-authors)
