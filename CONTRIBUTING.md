@@ -8,7 +8,7 @@ Contributions to the Acts project are very welcome and feedback on the documenta
     1. [Checklist for pull requests](#checklist-pull-requests)
     2. [Workflow recommendations](#workflow-recommendations)
     3. [Coding style and guidelines](#coding-style-and-guidelines)
-    4. [Tips for users migrating from Gitlab] (#tips-users-gitlab)
+    4. [Tips for users migrating from Gitlab] (#tips-for-users-migrating-from-gitlab)
 4. [Review other contributions](#review-other-contributions)
     1. [Configuring your own PRs and PRs by people with read rights](#apply-labels)
     2. [Approving a pull request](#approving-a-pull-request)
@@ -72,9 +72,8 @@ In the following a few recommendations are outlined which should help you to get
 
 1. **Each development in its own branch of your private fork!**
 Write access for developers has been disabled for developers on acts-project. Therefore, always start by creating your own fork and creating branches there. You should start a new branch for every development and all work which is logically/conceptually linked should happen in one branch. Try to keep your branches short. This helps immensly to understand the git history if you need to look at it in the future and helps reviewers of your code.
-If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch as illustrated in the picture below.
+If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch.
 
-<img src="doc/figures/sub_dev.png" alt="workflow for large feature">
 1. **Never, ever directly work on any "official" branch!**
 Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the Acts project you should not work directly on branches which are **protected** in the repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
 
@@ -147,7 +146,7 @@ In addition, the following conventions are used in Acts code:
 1. Merge your local bugfix branch into the feature branch. Continue your feature development.
 1. Eventually, the bugfix will be merged into _master_. Then, you can rebase your feature branch on master which will remove all duplicate commits related to the bugfix.
 
-### <a name="tips-users-gitlab">Tips for users migrating from Gitlab</a>
+### <a name="tips-for-users-migrating-from-gitlab">Tips for users migrating from Gitlab</a>
 
 - The most obvious difference first: What is called Merge Request (MR) in Gitlab is called Pull Request (PR) in Github.
 - Once your PR is ready to be merged, request a review by the users in the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers)
