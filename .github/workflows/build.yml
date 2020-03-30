@@ -10,7 +10,11 @@ jobs:
   build_ubuntu:
     runs-on: ubuntu-18.04
     container: gitlab-registry.cern.ch/acts/machines/ubuntu1910
-    if: github.event_name == 'pull_request' && !startsWith(github.event.pull_request.title, 'WIP')
+    if: >
+      github.event_name == 'push' || (
+      github.event_name == 'pull_request' 
+      && !startsWith(github.event.pull_request.title, 'WIP')
+      )
     steps:
     - uses: actions/checkout@v1
 
@@ -48,7 +52,11 @@ jobs:
 
   build_macos:
     runs-on: macos-10.15
-    if: github.event_name == 'pull_request' && !startsWith(github.event.pull_request.title, 'WIP')
+    if: >
+      github.event_name == 'push' || (
+      github.event_name == 'pull_request' 
+      && !startsWith(github.event.pull_request.title, 'WIP')
+      )
     steps:
       - uses: actions/checkout@v1
         with:
@@ -100,7 +108,11 @@ jobs:
   build_lcg:
     runs-on: ubuntu-latest
     container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}_lcg${{ matrix.lcg }}:latest
-    if: github.event_name == 'pull_request' && !startsWith(github.event.pull_request.title, 'WIP')
+    if: >
+      github.event_name == 'push' || (
+      github.event_name == 'pull_request' 
+      && !startsWith(github.event.pull_request.title, 'WIP')
+      )
     strategy:
       matrix:
         os:
