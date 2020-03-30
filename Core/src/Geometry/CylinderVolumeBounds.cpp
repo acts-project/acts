@@ -18,7 +18,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 #include <cmath>
 #include <iostream>

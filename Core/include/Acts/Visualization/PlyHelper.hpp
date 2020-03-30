@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 namespace Acts {
 
@@ -22,21 +22,21 @@ class PlyHelper : public IVisualization {
                 "Use either double or float");
 
   /// Stored value type, should be double or float
-  using value_type = T;
+  using ValueType = T;
 
   /// Type of a vertex based on the value type
-  using vertex_type = ActsVector<value_type, 3>;
+  using VertexType = ActsVector<ValueType, 3>;
 
   /// @copydoc Acts::IVisualization::vertex()
   void vertex(const Vector3D& vtx,
-              IVisualization::color_type color = {120, 120, 120}) override {
-    m_vertices.emplace_back(vtx.template cast<value_type>(), color);
+              IVisualization::ColorType color = {120, 120, 120}) override {
+    m_vertices.emplace_back(vtx.template cast<ValueType>(), color);
   }
 
   /// @copydoc Acts::IVisualization::line()
   void face(const std::vector<Vector3D>& vtxs,
-            IVisualization::color_type color = {120, 120, 120}) override {
-    face_type idxs;
+            IVisualization::ColorType color = {120, 120, 120}) override {
+    FaceType idxs;
     idxs.reserve(vtxs.size());
     for (const auto& vtx : vtxs) {
       vertex(vtx, color);
@@ -46,14 +46,14 @@ class PlyHelper : public IVisualization {
   }
 
   /// @copydoc Acts::IVisualization::faces()
-  void faces(const std::vector<Vector3D>& vtxs, const std::vector<face_type>&,
-             color_type color = {120, 120, 120}) {
+  void faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
+             ColorType color = {120, 120, 120}) {
     face(vtxs, color);
   }
 
   /// @copydoc Acts::IVisualization::face()
   void line(const Vector3D& a, const Vector3D& b,
-            IVisualization::color_type color = {120, 120, 120}) override {
+            IVisualization::ColorType color = {120, 120, 120}) override {
     vertex(a, color);
     size_t idx_a = m_vertices.size() - 1;
     vertex(b, color);
@@ -82,7 +82,7 @@ class PlyHelper : public IVisualization {
     os << "property uchar blue\n";
     os << "end_header\n";
 
-    for (const std::pair<vertex_type, IVisualization::color_type>& vtx :
+    for (const std::pair<VertexType, IVisualization::ColorType>& vtx :
          m_vertices) {
       os << vtx.first.x() << " " << vtx.first.y() << " " << vtx.first.z()
          << " ";
@@ -90,7 +90,7 @@ class PlyHelper : public IVisualization {
          << "\n";
     }
 
-    for (const face_type& fc : m_faces) {
+    for (const FaceType& fc : m_faces) {
       os << fc.size();
       for (size_t i = 0; i < fc.size(); i++) {
         os << " " << fc[i];
@@ -98,7 +98,7 @@ class PlyHelper : public IVisualization {
       os << "\n";
     }
 
-    for (const std::pair<std::pair<size_t, size_t>, IVisualization::color_type>&
+    for (const std::pair<std::pair<size_t, size_t>, IVisualization::ColorType>&
              edge : m_edges) {
       std::pair<size_t, size_t> idxs = edge.first;
       os << idxs.first << " " << idxs.second << " ";
@@ -115,9 +115,9 @@ class PlyHelper : public IVisualization {
   }
 
  private:
-  std::vector<std::pair<vertex_type, IVisualization::color_type>> m_vertices;
-  std::vector<face_type> m_faces;
-  std::vector<std::pair<std::pair<size_t, size_t>, IVisualization::color_type>>
+  std::vector<std::pair<VertexType, IVisualization::ColorType>> m_vertices;
+  std::vector<FaceType> m_faces;
+  std::vector<std::pair<std::pair<size_t, size_t>, IVisualization::ColorType>>
       m_edges;
 };
 }  // namespace Acts

@@ -9,7 +9,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 template <typename value_t, size_t DIM>
-Acts::Ray<value_t, DIM>::Ray(const vertex_type& origin, const vertex_type& dir)
+Acts::Ray<value_t, DIM>::Ray(const VertexType& origin, const VertexType& dir)
     : m_origin(origin), m_dir(dir.normalized()), m_idir(1 / m_dir.array()) {}
 template <typename value_t, size_t DIM>
 std::ostream& Acts::Ray<value_t, DIM>::toStream(std::ostream& os) const {

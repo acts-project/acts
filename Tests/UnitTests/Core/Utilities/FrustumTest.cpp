@@ -11,7 +11,7 @@
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/PlyHelper.hpp"
+#include "Acts/Visualization/PlyHelper.hpp"
 
 using boost::test_tools::output_test_stream;
 

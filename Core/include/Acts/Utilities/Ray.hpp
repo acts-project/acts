@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 namespace Acts {
 
@@ -23,7 +23,7 @@ class Ray {
   /// Re expose the value type
   using value_type = value_t;
   /// Vertex type based on the value type and dimension
-  using vertex_type = ActsVector<value_t, DIM>;
+  using VertexType = ActsVector<value_t, DIM>;
   /// Vertex array type corresponding to the vertex type
   using vertex_array_type = Eigen::Array<value_t, DIM, 1>;
   /// Associated transform type
@@ -32,15 +32,15 @@ class Ray {
   /// Constructor from an origin point and a direction
   /// @param origin The origin of the ray
   /// @param dir The direction of the ray
-  Ray(const vertex_type& origin, const vertex_type& dir);
+  Ray(const VertexType& origin, const VertexType& dir);
 
   /// Getter for the origin
   /// @return The origin
-  const vertex_type& origin() const { return m_origin; }
+  const VertexType& origin() const { return m_origin; }
 
   /// Getter for the direction
   /// @return The direction
-  const vertex_type& dir() const { return m_dir; }
+  const VertexType& dir() const { return m_dir; }
 
   /// Getter for the element wise inverse of the direction.
   /// @return The element wise inverse.
@@ -63,8 +63,8 @@ class Ray {
   void draw(IVisualization& helper, value_type far_distance = 10) const;
 
  private:
-  vertex_type m_origin;
-  vertex_type m_dir;
+  VertexType m_origin;
+  VertexType m_dir;
   vertex_array_type m_idir;
 };
 

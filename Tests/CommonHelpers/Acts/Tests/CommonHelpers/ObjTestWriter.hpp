@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ObjHelper.hpp"
+#include "Acts/Visualization/ObjHelper.hpp"
 
 namespace Acts {
 

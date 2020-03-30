@@ -8,7 +8,7 @@
 
 template <typename entity_t, typename value_t, size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
-    const entity_t* entity, const vertex_type& vmin, const vertex_type& vmax)
+    const entity_t* entity, const VertexType& vmin, const VertexType& vmax)
     : m_entity(entity),
       m_vmin(vmin),
       m_vmax(vmax),
@@ -18,7 +18,7 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
 
 template <typename entity_t, typename value_t, size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
-    const entity_t* entity, const vertex_type& center, const Size& size)
+    const entity_t* entity, const VertexType& center, const Size& size)
     : m_entity(entity),
       m_vmin(center - size.get() * 0.5),
       m_vmax(center + size.get() * 0.5),
@@ -56,8 +56,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
 
 template <typename entity_t, typename value_t, size_t DIM>
 std::pair<
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type,
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type>
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType,
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
     const std::vector<const self_t*>& boxes, vertex_array_type envelope) {
   assert(boxes.size() > 1);
@@ -81,8 +81,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
 
 template <typename entity_t, typename value_t, size_t DIM>
 std::pair<
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type,
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type>
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType,
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
     const std::vector<self_t*>& boxes, vertex_array_type envelope) {
   assert(boxes.size() > 1);
@@ -95,8 +95,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
 
 template <typename entity_t, typename value_t, size_t DIM>
 std::pair<
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type,
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type>
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType,
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
     const std::vector<self_t>& boxes, vertex_array_type envelope) {
   assert(boxes.size() > 1);
@@ -109,7 +109,7 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
 
 template <typename entity_t, typename value_t, size_t DIM>
 bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
-    const vertex_type& point) const {
+    const VertexType& point) const {
   vertex_array_type t = (point - m_vmin).array() * m_iwidth;
   return t.minCoeff() >= 0 && t.maxCoeff() < 1;
 }
@@ -117,7 +117,7 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
 template <typename entity_t, typename value_t, size_t DIM>
 bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
     const Ray<value_type, DIM>& ray) const {
-  const vertex_type& origin = ray.origin();
+  const VertexType& origin = ray.origin();
   const vertex_array_type& idir = ray.idir();
 
   // Calculate the intersect distances with the min and max planes along the ray
@@ -156,12 +156,12 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   // For each plane, find the p-vertex, which is the vertex that is at the
   // furthest distance from the plane *along* it's normal direction.
   // See Fig. 2 in [2].
-  vertex_type p_vtx;
+  VertexType p_vtx;
   // for loop, we could eliminate this, probably,
   // but sides+1 is known at compile time, so the compiler
   // will most likely unroll the loop
   for (size_t i = 0; i < sides + 1; i++) {
-    const vertex_type& normal = normals[i];
+    const VertexType& normal = normals[i];
 
     // for AABBs, take the component from the min vertex, if the normal
     // component is negative, else take the component from the max vertex.
@@ -223,22 +223,19 @@ void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setEntity(
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-const typename Acts::AxisAlignedBoundingBox<entity_t, value_t,
-                                            DIM>::vertex_type&
+const typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType&
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::center() const {
   return m_center;
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-const typename Acts::AxisAlignedBoundingBox<entity_t, value_t,
-                                            DIM>::vertex_type&
+const typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType&
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::min() const {
   return m_vmin;
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-const typename Acts::AxisAlignedBoundingBox<entity_t, value_t,
-                                            DIM>::vertex_type&
+const typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType&
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::max() const {
   return m_vmax;
 }
@@ -280,14 +277,14 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::toStream(
 template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 3, int>>
 std::pair<
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type,
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type>
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType,
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformVertices(
     const transform_type& trf) const {
   // we need to enumerate all the vertices, transform,
   // and then recalculate min and max
 
-  std::array<vertex_type, 8> vertices({{
+  std::array<VertexType, 8> vertices({{
       {m_vmin.x(), m_vmin.y(), m_vmin.z()},
       {m_vmin.x(), m_vmax.y(), m_vmin.z()},
       {m_vmax.x(), m_vmax.y(), m_vmin.z()},
@@ -298,11 +295,11 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformVertices(
       {m_vmax.x(), m_vmin.y(), m_vmax.z()},
   }});
 
-  vertex_type vmin = trf * vertices[0];
-  vertex_type vmax = trf * vertices[0];
+  VertexType vmin = trf * vertices[0];
+  VertexType vmax = trf * vertices[0];
 
   for (size_t i = 1; i < 8; i++) {
-    const vertex_type vtx = trf * vertices[i];
+    const VertexType vtx = trf * vertices[i];
     vmin = vmin.cwiseMin(vtx);
     vmax = vmax.cwiseMax(vtx);
   }
@@ -313,23 +310,23 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformVertices(
 template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 2, int>>
 std::pair<
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type,
-    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::vertex_type>
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType,
+    typename Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::VertexType>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformVertices(
     const transform_type& trf) const {
   // we need to enumerate all the vertices, transform,
   // and then recalculate min and max
 
-  std::array<vertex_type, 4> vertices({{{m_vmin.x(), m_vmin.y()},
-                                        {m_vmin.x(), m_vmax.y()},
-                                        {m_vmax.x(), m_vmax.y()},
-                                        {m_vmax.x(), m_vmin.y()}}});
+  std::array<VertexType, 4> vertices({{{m_vmin.x(), m_vmin.y()},
+                                       {m_vmin.x(), m_vmax.y()},
+                                       {m_vmax.x(), m_vmax.y()},
+                                       {m_vmax.x(), m_vmin.y()}}});
 
-  vertex_type vmin = trf * vertices[0];
-  vertex_type vmax = trf * vertices[0];
+  VertexType vmin = trf * vertices[0];
+  VertexType vmax = trf * vertices[0];
 
   for (size_t i = 1; i < 4; i++) {
-    const vertex_type vtx = trf * vertices[i];
+    const VertexType vtx = trf * vertices[i];
     vmin = vmin.cwiseMin(vtx);
     vmax = vmax.cwiseMax(vtx);
   }
@@ -347,7 +344,7 @@ template <typename entity_t, typename value_t, size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformed(
     const transform_type& trf) const {
-  vertex_type vmin, vmax;
+  VertexType vmin, vmax;
   std::tie(vmin, vmax) = transformVertices(trf);
   return self_t(m_entity, vmin, vmax);
 }
@@ -359,12 +356,12 @@ void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::draw(
     const transform_type& trf) const {
   static_assert(DIM == 3, "PLY output only supported in 3D");
 
-  const vertex_type& vmin = m_vmin;
-  const vertex_type& vmax = m_vmax;
+  const VertexType& vmin = m_vmin;
+  const VertexType& vmax = m_vmax;
 
-  auto write = [&](const vertex_type& a, const vertex_type& b,
-                   const vertex_type& c, const vertex_type& d) {
-    helper.face(std::vector<vertex_type>({trf * a, trf * b, trf * c, trf * d}),
+  auto write = [&](const VertexType& a, const VertexType& b,
+                   const VertexType& c, const VertexType& d) {
+    helper.face(std::vector<VertexType>({trf * a, trf * b, trf * c, trf * d}),
                 color);
   };
 
@@ -394,27 +391,27 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     std::string label, std::string fillcolor) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
 
-  vertex_type mid(w / 2., h / 2.);
+  VertexType mid(w / 2., h / 2.);
 
   using transform_t = Eigen::Transform<value_t, DIM, Eigen::Affine>;
 
   transform_t trf = transform_t::Identity();
   trf.translate(mid);
-  trf = trf * Eigen::Scaling(vertex_type(1, -1));
+  trf = trf * Eigen::Scaling(VertexType(1, -1));
   trf.scale(unit);
 
-  auto draw_point = [&](const vertex_type& p_, std::string color, size_t r) {
-    vertex_type p = trf * p_;
+  auto draw_point = [&](const VertexType& p_, std::string color, size_t r) {
+    VertexType p = trf * p_;
     os << "<circle ";
     os << "cx=\"" << p.x() << "\" cy=\"" << p.y() << "\" r=\"" << r << "\"";
     os << " fill=\"" << color << "\"";
     os << "/>\n";
   };
 
-  auto draw_rect = [&](const vertex_type& center_, const vertex_type& size_,
+  auto draw_rect = [&](const VertexType& center_, const VertexType& size_,
                        std::string color) {
-    vertex_type size = size_ * unit;
-    vertex_type center = trf * center_ - size * 0.5;
+    VertexType size = size_ * unit;
+    VertexType center = trf * center_ - size * 0.5;
 
     os << "<rect ";
     os << "x=\"" << center.x() << "\" y=\"" << center.y() << "\" ";
@@ -423,9 +420,9 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     os << "/>\n";
   };
 
-  auto draw_text = [&](const vertex_type& center_, std::string text,
+  auto draw_text = [&](const VertexType& center_, std::string text,
                        std::string color, size_t size) {
-    vertex_type center = trf * center_;
+    VertexType center = trf * center_;
     os << "<text dominant-baseline=\"middle\" text-anchor=\"middle\" ";
     os << "fill=\"" << color << "\" font-size=\"" << size << "\" ";
     os << "x=\"" << center.x() << "\" y=\"" << center.y() << "\">";
@@ -445,7 +442,7 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
                     size_t max_depth,
                     typename box_t::vertex_array_type envelope,
                     const std::vector<box_t*>& lprims, size_t depth) {
-  using vertex_type = typename box_t::vertex_type;
+  using VertexType = typename box_t::VertexType;
 
   assert(lprims.size() > 0);
   if (lprims.size() == 1) {
@@ -462,12 +459,12 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
 
   std::array<std::vector<box_t*>, 8> octants;
   // calc center of boxes
-  vertex_type vmin, vmax;
+  VertexType vmin, vmax;
   std::tie(vmin, vmax) = box_t::wrap(lprims);
-  vertex_type glob_ctr = (vmin + vmax) / 2.;
+  VertexType glob_ctr = (vmin + vmax) / 2.;
 
   for (auto* box : lprims) {
-    vertex_type ctr = box->center() - glob_ctr;
+    VertexType ctr = box->center() - glob_ctr;
     if (ctr.x() < 0 && ctr.y() < 0 && ctr.z() < 0) {
       octants[0].push_back(box);
       continue;
