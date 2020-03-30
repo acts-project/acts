@@ -163,7 +163,7 @@ As some of the guidelines recommended here require rights granted to the reviewe
 
 * Check if the "request review" label is set, if it is a draft PR or if the title starts with WIP. The latter two are equivalent.
 * Check if the "triage" label is set and configure labels, assignees and milestone for those PR
-    *Needs at least label "Bug", "Improvement", "Infrastructure" or "New Feature"
+    * Needs at least label "Bug", "Improvement", "Infrastructure" or "New Feature"
 
 ### <a name="approving-a-pull-request">Approving a pull request</a>
 
