@@ -8,7 +8,7 @@ Contributions to the Acts project are very welcome and feedback on the documenta
     1. [Checklist for pull requests](#checklist-pull-requests)
     2. [Workflow recommendations](#workflow-recommendations)
     3. [Coding style and guidelines](#coding-style-and-guidelines)
-    4. [Tips for users migrating from Gitlab] (#tips-for-users-migrating-from-gitlab)
+    4. [Tips for users migrating from Gitlab](#tips-for-users-migrating-from-gitlab)
 4. [Review other contributions](#review-other-contributions)
     1. [Configuring your own PRs and PRs by people with read rights](#apply-labels)
     2. [Approving a pull request](#approving-a-pull-request)
@@ -163,7 +163,7 @@ As some of the guidelines recommended here require rights granted to the reviewe
 
 * Check if the "request review" label is set, if it is a draft PR or if the title starts with WIP. The latter two are equivalent.
 * Check if the "triage" label is set and configure labels, assignees and milestone for those PR
-**Needs at least label "Bug", "Improvement", "Infrastructure" or "New Feature"
+    *Needs at least label "Bug", "Improvement", "Infrastructure" or "New Feature"
 
 ### <a name="approving-a-pull-request">Approving a pull request</a>
 
