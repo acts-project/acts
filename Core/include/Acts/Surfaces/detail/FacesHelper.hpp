@@ -21,7 +21,7 @@ namespace detail {
 
 /// @brief Helper for writing out faces for polyhedron representation
 struct FacesHelper {
-  using FaceVector = std::vector<Polyhedron::Face>;
+  using FaceVector = std::vector<Polyhedron::FaceType>;
 
   /// @brief This method words for all convex type surface setups
   /// It includes:

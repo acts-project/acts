@@ -20,7 +20,7 @@ using boost::test_tools::output_test_stream;
 namespace Acts {
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(Visualization)
 
 BOOST_AUTO_TEST_CASE(construction_test) {
   // this doesn't really test anything, other than conformance to the
