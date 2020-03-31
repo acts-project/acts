@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(testtest) {
   GaussianGridTrackDensity<mainGridSize, trkGridSize>::Config cfg(zMinMax);
   GaussianGridTrackDensity<mainGridSize, trkGridSize> grid(cfg);
 
-  // Create 3 test tracks
+  // Create some test tracks
   Covariance covMat1;
   covMat1 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
@@ -53,6 +53,26 @@ BOOST_AUTO_TEST_CASE(testtest) {
   covMat3 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 
+  Covariance covMat3_1;
+  covMat3_1 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  Covariance covMat4;
+  covMat4 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  Covariance covMat5;
+  covMat5 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  Covariance covMat6;
+  covMat6 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  Covariance covMat7;
+  covMat7 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
   BoundVector paramVec1;
   paramVec1 << 0.01, 0.15, 0, 0, 0, 0;
 
@@ -61,6 +81,21 @@ BOOST_AUTO_TEST_CASE(testtest) {
 
   BoundVector paramVec3;
   paramVec3 << trkGridSize * binSize + 0.01, 0.15, 0, 0, 0, 0;
+
+  BoundVector paramVec3_1;
+  paramVec3_1 << -(trkGridSize * binSize + 0.01), 0.15, 0, 0, 0, 0;
+
+  BoundVector paramVec4;
+  paramVec4 << 0.01, 19.95, 0, 0, 0, 0;
+
+  BoundVector paramVec5;
+  paramVec5 << 0.01, -19.95, 0, 0, 0, 0;
+
+  BoundVector paramVec6;
+  paramVec6 << 0.01, -100.0, 0, 0, 0, 0;
+
+  BoundVector paramVec7;
+  paramVec7 << 0.01, +100.0, 0, 0, 0, 0;
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -72,23 +107,35 @@ BOOST_AUTO_TEST_CASE(testtest) {
                           perigeeSurface);
   BoundParameters params3(geoContext, std::move(covMat3), paramVec3,
                           perigeeSurface);
+  BoundParameters params3_1(geoContext, std::move(covMat3_1), paramVec3_1,
+                            perigeeSurface);
+  BoundParameters params4(geoContext, std::move(covMat4), paramVec4,
+                          perigeeSurface);
+  BoundParameters params5(geoContext, std::move(covMat5), paramVec5,
+                          perigeeSurface);
+  BoundParameters params6(geoContext, std::move(covMat6), paramVec6,
+                          perigeeSurface);
+  BoundParameters params7(geoContext, std::move(covMat7), paramVec7,
+                          perigeeSurface);
 
   // The grid to be filled
   ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
 
-  std::cout << "add track 3 ..." << std::endl;
+  // Adds tracks too far away in transverse distance
   grid.addTrack(params3, mainGrid);
+  grid.addTrack(params3_1, mainGrid);
+  // Adds tracks too far away in longitudinal distance
+  grid.addTrack(params6, mainGrid);
+  grid.addTrack(params7, mainGrid);
 
-  // Track 3 is far away from z-axis and should not have contributed to
-  // density grid
+  // Tracks are far away from z-axis (or not in region of interest) and
+  // should not have contributed to density grid
   BOOST_CHECK_EQUAL(mainGrid, ActsVectorF<mainGridSize>::Zero());
 
-  std::cout << "add track 1 ..." << std::endl;
   // Now add track 1 and 2 to grid, seperately.
   grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
-  std::cout << "add track 2 ..." << std::endl;
   mainGrid = ActsVectorF<mainGridSize>::Zero();
   grid.addTrack(params2, mainGrid);
 
@@ -100,6 +147,20 @@ BOOST_AUTO_TEST_CASE(testtest) {
   // only track 1 alone
   grid.addTrack(params1, mainGrid);
   BOOST_CHECK(gridCopy.sum() < mainGrid.sum());
+
+  grid.addTrack(params4, mainGrid);
+
+  // Check upper boundary
+  BOOST_CHECK_EQUAL(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 2),
+                    0.);
+  BOOST_CHECK(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 1) > 0.);
+  BOOST_CHECK(mainGrid(mainGridSize - 1) > 0.);
+
+  grid.addTrack(params5, mainGrid);
+  // Check lower boundary
+  BOOST_CHECK_EQUAL(mainGrid(int((trkGridSize - 1) / 2) + 1), 0.);
+  BOOST_CHECK(mainGrid(int((trkGridSize - 1) / 2)) > 0.);
+  BOOST_CHECK(mainGrid(0) > 0.);
 }
 
 }  // namespace Test

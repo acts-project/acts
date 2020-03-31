@@ -14,16 +14,14 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   double d0 = trk.parameters()[0];
   double z0 = trk.parameters()[1];
 
-  std::cout << "IP: " << d0 << ", " << z0 << std::endl;
-
   // Calculate offset in d direction to central bin at z = 0
   int dOffset = std::floor(d0 / m_cfg.binSize - 0.5) + 1;
-
-  std::cout << "offset: " << dOffset << std::endl;
-
   // Calculate bin in z
   int zBin = int(z0 / m_cfg.binSize + mainGridSize / 2.);
 
+  if (zBin < 0 || zBin >= mainGridSize) {
+    return;
+  }
   // Calculate the positions of the bin centers
   double binCtrD = dOffset * m_cfg.binSize;
   double binCtrZ = (zBin + 0.5) * m_cfg.binSize - m_cfg.zMinMax;
@@ -44,12 +42,8 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   // Create the track grid
   ActsVectorF<trkGridSize> trackGrid =
       createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
-  // TODO: test correct output.. symmetry?
-  std::cout << trackGrid << std::endl;
-
-  std::cout << "mainGrid before: " << mainGrid << std::endl;
+  // Add the track grid to the main grid
   addTrackGridToMainGrid(zBin, trackGrid, mainGrid);
-  std::cout << "mainGrid after: " << mainGrid << std::endl;
 }
 
 template <int mainGridSize, int trkGridSize>
@@ -61,7 +55,7 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
   // Overlap left
   int leftOL = zBin - width;
   // Overlap right
-  int rightOL = zBin + width - mainGridSize;
+  int rightOL = zBin + width - mainGridSize + 1;
   if (leftOL < 0) {
     int totalTrkSize = trkGridSize + leftOL;
     mainGrid.segment(0, totalTrkSize) += trkGrid.segment(-leftOL, totalTrkSize);
@@ -84,7 +78,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
     double distCtrZ) const {
   ActsVectorF<trkGridSize> trackGrid(ActsVectorF<trkGridSize>::Zero());
 
-  int i = (trkGridSize - 1) / 2. - offset;
+  int i = (trkGridSize - 1) / 2. + offset;
   double d = (i - (double)trkGridSize / 2. + 0.5) * m_cfg.binSize;
 
   // Loop over columns
