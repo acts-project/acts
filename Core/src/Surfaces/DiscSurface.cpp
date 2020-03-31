@@ -146,8 +146,8 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
-  std::vector<Polyhedron::Face> faces;
-  std::vector<Polyhedron::Face> triangularMesh;
+  std::vector<Polyhedron::FaceType> faces;
+  std::vector<Polyhedron::FaceType> triangularMesh;
 
   // Understand the disc
   bool fullDisc = m_bounds->coversFullAzimuth();
