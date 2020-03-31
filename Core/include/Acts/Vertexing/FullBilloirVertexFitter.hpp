@@ -10,6 +10,7 @@
 
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/Vertex.hpp"

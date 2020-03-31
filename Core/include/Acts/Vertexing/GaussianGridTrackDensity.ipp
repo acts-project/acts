@@ -5,14 +5,30 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#include "Acts/Vertexing/VertexingError.hpp"
+
+template <int mainGridSize, int trkGridSize>
+Acts::Result<float>
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
+    const Acts::ActsVectorF<mainGridSize>& mainGrid) const {
+  if (mainGrid == ActsVectorF<mainGridSize>::Zero()) {
+    return VertexingError::EmptyInput;
+  }
+
+  // Get bin with maximum content
+  int zbin = -1;
+  mainGrid.maxCoeff(&zbin);
+  // Derive corresponding z value
+  return (zbin - mainGridSize / 2) * m_cfg.binSize;
+}
 
 template <int mainGridSize, int trkGridSize>
 void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundParameters& trk,
     Acts::ActsVectorF<mainGridSize>& mainGrid) const {
   ActsSymMatrixD<2> cov = trk.covariance()->block<2, 2>(0, 0);
-  double d0 = trk.parameters()[0];
-  double z0 = trk.parameters()[1];
+  float d0 = trk.parameters()[0];
+  float z0 = trk.parameters()[1];
 
   // Calculate offset in d direction to central bin at z = 0
   int dOffset = std::floor(d0 / m_cfg.binSize - 0.5) + 1;
@@ -23,13 +39,13 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     return;
   }
   // Calculate the positions of the bin centers
-  double binCtrD = dOffset * m_cfg.binSize;
-  double binCtrZ = (zBin + 0.5) * m_cfg.binSize - m_cfg.zMinMax;
+  float binCtrD = dOffset * m_cfg.binSize;
+  float binCtrZ = (zBin + 0.5) * m_cfg.binSize - m_cfg.zMinMax;
 
   // Calculate the distance between IP values and their
   // corresponding bin centers
-  double distCtrD = d0 - binCtrD;
-  double distCtrZ = z0 - binCtrZ;
+  float distCtrD = d0 - binCtrD;
+  float distCtrZ = z0 - binCtrZ;
 
   // Check if current track does affect grid density
   // in central bins at z = 0
@@ -74,27 +90,27 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 template <int mainGridSize, int trkGridSize>
 Acts::ActsVectorF<trkGridSize>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    int offset, const Acts::ActsSymMatrixD<2>& cov, double distCtrD,
-    double distCtrZ) const {
+    int offset, const Acts::ActsSymMatrixD<2>& cov, float distCtrD,
+    float distCtrZ) const {
   ActsVectorF<trkGridSize> trackGrid(ActsVectorF<trkGridSize>::Zero());
 
   int i = (trkGridSize - 1) / 2. + offset;
-  double d = (i - (double)trkGridSize / 2. + 0.5) * m_cfg.binSize;
+  float d = (i - (float)trkGridSize / 2. + 0.5) * m_cfg.binSize;
 
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
-    double z = (j - (double)trkGridSize / 2. + 0.5) * m_cfg.binSize;
+    float z = (j - (float)trkGridSize / 2. + 0.5) * m_cfg.binSize;
     trackGrid(j) = normal2D(d + distCtrD, z + distCtrZ, cov);
   }
   return trackGrid;
 }
 
 template <int mainGridSize, int trkGridSize>
-double Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
-    double d, double z, const Acts::ActsSymMatrixD<2>& cov) const {
-  double det = cov.determinant();
-  double coef = 1. / (2. * M_PI * std::sqrt(det));
-  double expo =
+float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
+    float d, float z, const Acts::ActsSymMatrixD<2>& cov) const {
+  float det = cov.determinant();
+  float coef = 1. / (2. * M_PI * std::sqrt(det));
+  float expo =
       -1. / (2. * det) *
       (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
   return coef * std::exp(expo);

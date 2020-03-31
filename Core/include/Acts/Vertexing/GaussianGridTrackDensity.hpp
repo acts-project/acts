@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <iostream>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -22,18 +22,21 @@ class GaussianGridTrackDensity {
 
  public:
   struct Config {
-    Config(double zMinMax = 100) : zMinMax(zMinMax) {
+    Config(float zMinMax = 100) : zMinMax(zMinMax) {
       binSize = 2. * zMinMax / mainGridSize;
     }
 
     // Min and max z value of big grid
-    double zMinMax;  // mm
+    float zMinMax;  // mm
 
     // Z size of one single bin in grid
-    double binSize;  // mm
+    float binSize;  // mm
   };
 
   GaussianGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
+
+  Result<float> getMaxZPosition(
+      const Acts::ActsVectorF<mainGridSize>& mainGrid) const;
 
   void addTrack(const Acts::BoundParameters& trk,
                 Acts::ActsVectorF<mainGridSize>& mainGrid) const;
@@ -44,10 +47,10 @@ class GaussianGridTrackDensity {
 
   ActsVectorF<trkGridSize> createTrackGrid(int offset,
                                            const ActsSymMatrixD<2>& cov,
-                                           double distCtrD,
-                                           double distCtrZ) const;
+                                           float distCtrD,
+                                           float distCtrZ) const;
 
-  double normal2D(double d, double z, const ActsSymMatrixD<2>& cov) const;
+  float normal2D(float d, float z, const ActsSymMatrixD<2>& cov) const;
 
   Config m_cfg;
 };

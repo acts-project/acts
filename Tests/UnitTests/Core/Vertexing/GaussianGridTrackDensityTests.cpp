@@ -161,6 +161,16 @@ BOOST_AUTO_TEST_CASE(testtest) {
   BOOST_CHECK_EQUAL(mainGrid(int((trkGridSize - 1) / 2) + 1), 0.);
   BOOST_CHECK(mainGrid(int((trkGridSize - 1) / 2)) > 0.);
   BOOST_CHECK(mainGrid(0) > 0.);
+
+  // Check if position of maximum is correct
+  auto maxRes = grid.getMaxZPosition(mainGrid);
+  int maxBin = (*maxRes / binSize) + mainGridSize / 2;
+  BOOST_CHECK_EQUAL(maxBin, mainGridSize / 2 + 1);
+
+  // Check if error is thrown for empty grid
+  mainGrid = ActsVectorF<mainGridSize>::Zero();
+  auto maxResErr = grid.getMaxZPosition(mainGrid);
+  BOOST_CHECK(!maxResErr.ok());
 }
 
 }  // namespace Test
