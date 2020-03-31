@@ -309,7 +309,7 @@ std::pair<Vector3D, double> to_cylinder(
 }
 
 // test propagation to most surfaces
-template <typename Propagator_type, typename SurFaceType>
+template <typename Propagator_type, typename SurfaceType>
 std::pair<Vector3D, double> to_surface(
     const Propagator_type& propagator, double pT, double phi, double theta,
     double charge, double plimit, double rand1, double rand2, double rand3,
