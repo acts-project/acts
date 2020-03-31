@@ -62,8 +62,8 @@ Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t /*lseg*/) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
-  std::vector<Polyhedron::Face> faces;
-  std::vector<Polyhedron::Face> triangularMesh;
+  std::vector<Polyhedron::FaceType> faces;
+  std::vector<Polyhedron::FaceType> triangularMesh;
 
   const Transform3D& ctransform = transform(gctx);
   Vector3D left(0, 0, -100.);

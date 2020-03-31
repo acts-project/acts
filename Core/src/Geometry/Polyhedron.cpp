@@ -14,10 +14,10 @@ void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   size_t cvert = vertices.size();
   vertices.insert(vertices.end(), other.vertices.begin(), other.vertices.end());
   /// Add the new faces with offsets
-  auto join = [&](std::vector<Face>& existing,
-                  const std::vector<Face>& additional) -> void {
+  auto join = [&](std::vector<FaceType>& existing,
+                  const std::vector<FaceType>& additional) -> void {
     for (const auto& aface : additional) {
-      Face nface = aface;
+      FaceType nface = aface;
       std::transform(nface.begin(), nface.end(), nface.begin(),
                      [&](size_t x) { return (x + cvert); });
       existing.push_back(nface);
@@ -26,6 +26,11 @@ void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   // For faces and triangular mesh
   join(faces, other.faces);
   join(triangularMesh, other.triangularMesh);
+}
+
+void Acts::Polyhedron::move(const Transform3D& transform) {
+  for_each(vertices.begin(), vertices.end(),
+           [&](auto& v) { v = transform * v; });
 }
 
 Acts::Extent Acts::Polyhedron::extent(const Transform3D& transform) const {
