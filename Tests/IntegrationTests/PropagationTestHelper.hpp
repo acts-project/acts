@@ -364,7 +364,7 @@ std::pair<Vector3D, double> to_surface(
                : createCylindricTransform(tp_s->position(), 0.04 * rand1,
                                           0.04 * rand2);
 
-    auto endSurface = Surface::makeShared<SurFaceType>(seTransform, nullptr);
+    auto endSurface = Surface::makeShared<SurfaceType>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
 
@@ -408,7 +408,7 @@ std::pair<Vector3D, double> to_surface(
                : createCylindricTransform(tp_s->position(), 0.04 * rand1,
                                           0.04 * rand2);
 
-    auto endSurface = Surface::makeShared<SurFaceType>(seTransform, nullptr);
+    auto endSurface = Surface::makeShared<SurfaceType>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
 
@@ -489,7 +489,7 @@ Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
 }
 
 template <typename Propagator_type, typename StartSurfaceType,
-          typename DestSurFaceType>
+          typename DestSurfaceType>
 Covariance covariance_bound(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
                             double plimit, double rand1, double rand2,
@@ -544,13 +544,13 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
                                                     0.01 * rand1, 0.01 * rand2);
 
   auto startSurface =
-      Surface::makeShared<StartSurFaceType>(ssTransform, nullptr);
+      Surface::makeShared<StartSurfaceType>(ssTransform, nullptr);
   BoundParameters start(tgContext, cov, pos, mom, q, time, startSurface);
 
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
 
-  auto endSurface = Surface::makeShared<DestSurFaceType>(seTransform, nullptr);
+  auto endSurface = Surface::makeShared<DestSurfaceType>(seTransform, nullptr);
   const auto result = propagator.propagate(start, *endSurface, options).value();
   const auto& tp = result.endParameters;
 
