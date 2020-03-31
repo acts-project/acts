@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
-  fitterCfg.doSmoothing = false;
+  fitterCfg.doSmoothing = true;
 
   Fitter fitter(fitterCfg);
 
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
-  fitterCfg.doSmoothing = false;
+  fitterCfg.doSmoothing = true;
 
   Fitter fitter(fitterCfg, extractParameters);
 
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   auto tracks = getAthenaTracks();
 
-  std::vector<const InputTrack> userTracks;
+  std::vector<InputTrack> userTracks;
   int idCount = 0;
   for (const auto& trk : tracks) {
     userTracks.push_back(InputTrack(trk, idCount));
