@@ -29,24 +29,77 @@ using Covariance = BoundSymMatrix;
 GeometryContext geoContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(testtest) {
-  GaussianGridTrackDensity<>::Config cfg;
-  GaussianGridTrackDensity<> grid(cfg);
+  // Define the size of the grids
+  const int mainGridSize = 400;
+  const int trkGridSize = 15;
 
-  Covariance covMat;
-  covMat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  double binSize = 0.1;  // mm
+  double zMinMax = mainGridSize / 2 * binSize;
 
-  BoundVector paramVec;
-  paramVec << 0.02, 0.31, 0, 0, 0, 0;
+  // Set up grid density with zMinMax
+  GaussianGridTrackDensity<mainGridSize, trkGridSize>::Config cfg(zMinMax);
+  GaussianGridTrackDensity<mainGridSize, trkGridSize> grid(cfg);
+
+  // Create 3 test tracks
+  Covariance covMat1;
+  covMat1 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  Covariance covMat2;
+  covMat2 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  Covariance covMat3;
+  covMat3 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  BoundVector paramVec1;
+  paramVec1 << 0.01, 0.15, 0, 0, 0, 0;
+
+  BoundVector paramVec2;
+  paramVec2 << trkGridSize * binSize - 0.1, 0.15, 0, 0, 0, 0;
+
+  BoundVector paramVec3;
+  paramVec3 << trkGridSize * binSize + 0.01, 0.15, 0, 0, 0, 0;
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  BoundParameters params(geoContext, std::move(covMat), paramVec,
-                         perigeeSurface);
+  BoundParameters params1(geoContext, std::move(covMat1), paramVec1,
+                          perigeeSurface);
+  BoundParameters params2(geoContext, std::move(covMat2), paramVec2,
+                          perigeeSurface);
+  BoundParameters params3(geoContext, std::move(covMat3), paramVec3,
+                          perigeeSurface);
 
-  grid.addTrackToGrid(params);
+  // The grid to be filled
+  ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
+
+  std::cout << "add track 3 ..." << std::endl;
+  grid.addTrack(params3, mainGrid);
+
+  // Track 3 is far away from z-axis and should not have contributed to
+  // density grid
+  BOOST_CHECK_EQUAL(mainGrid, ActsVectorF<mainGridSize>::Zero());
+
+  std::cout << "add track 1 ..." << std::endl;
+  // Now add track 1 and 2 to grid, seperately.
+  grid.addTrack(params1, mainGrid);
+  auto gridCopy = mainGrid;
+
+  std::cout << "add track 2 ..." << std::endl;
+  mainGrid = ActsVectorF<mainGridSize>::Zero();
+  grid.addTrack(params2, mainGrid);
+
+  // Track 1 is closer to z-axis and should thus yield higher
+  // density values
+  BOOST_CHECK(gridCopy.sum() > mainGrid.sum());
+
+  // Track 1 and 2 summed should give higher densities than
+  // only track 1 alone
+  grid.addTrack(params1, mainGrid);
+  BOOST_CHECK(gridCopy.sum() < mainGrid.sum());
 }
 
 }  // namespace Test
