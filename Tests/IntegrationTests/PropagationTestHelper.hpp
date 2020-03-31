@@ -488,7 +488,7 @@ Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
   return *(tp->covariance());
 }
 
-template <typename Propagator_type, typename StartSurFaceType,
+template <typename Propagator_type, typename StartSurfaceType,
           typename DestSurFaceType>
 Covariance covariance_bound(const Propagator_type& propagator, double pT,
                             double phi, double theta, double charge,
