@@ -6,37 +6,33 @@ on:
     branches:
       - master
 
-
 jobs:
   format:
-    runs-on: ubuntu-18.04
-    container: gitlab-registry.cern.ch/acts/machines/check_llvm8:latest
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/format8:master
     steps:
-    - uses: actions/checkout@v1
-    - name: Check
-      run: CI/check_format .
-
-
-    - uses: actions/upload-artifact@v1
-      if: failure()
-      with:
-        name: changed
-        path: changed
-
+      - uses: actions/checkout@v2
+      - name: Check
+        run: CI/check_format .
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: changed
+          path: changed
   license:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     container: python:alpine3.6
     steps:
-    - uses: actions/checkout@v1
-    - name: Check
-      run: >
-        apk add --no-cache git
-        && CI/check_license.py . --exclude "*thirdparty/*"
+      - uses: actions/checkout@v2
+      - name: Check
+        run: >
+          apk add --no-cache git
+          && CI/check_license.py . --exclude "*thirdparty/*"
   include_guards:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     container: python:alpine3.6
     steps:
-    - uses: actions/checkout@v1
-    - name: Check
-      run: >
-        CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
+      - uses: actions/checkout@v2
+      - name: Check
+        run: >
+          CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
