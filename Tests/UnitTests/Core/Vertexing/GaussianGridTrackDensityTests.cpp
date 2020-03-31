@@ -41,37 +41,9 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   GaussianGridTrackDensity<mainGridSize, trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat1;
-  covMat1 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-
-  Covariance covMat2;
-  covMat2 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-
-  Covariance covMat3;
-  covMat3 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-
-  Covariance covMat3_1;
-  covMat3_1 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-
-  Covariance covMat4;
-  covMat4 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-
-  Covariance covMat5;
-  covMat5 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-
-  Covariance covMat6;
-  covMat6 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-
-  Covariance covMat7;
-  covMat7 << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  Covariance covMat;
+  covMat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 
   BoundVector paramVec1;
   paramVec1 << 0.01, 0.15, 0, 0, 0, 0;
@@ -101,22 +73,14 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  BoundParameters params1(geoContext, std::move(covMat1), paramVec1,
-                          perigeeSurface);
-  BoundParameters params2(geoContext, std::move(covMat2), paramVec2,
-                          perigeeSurface);
-  BoundParameters params3(geoContext, std::move(covMat3), paramVec3,
-                          perigeeSurface);
-  BoundParameters params3_1(geoContext, std::move(covMat3_1), paramVec3_1,
-                            perigeeSurface);
-  BoundParameters params4(geoContext, std::move(covMat4), paramVec4,
-                          perigeeSurface);
-  BoundParameters params5(geoContext, std::move(covMat5), paramVec5,
-                          perigeeSurface);
-  BoundParameters params6(geoContext, std::move(covMat6), paramVec6,
-                          perigeeSurface);
-  BoundParameters params7(geoContext, std::move(covMat7), paramVec7,
-                          perigeeSurface);
+  BoundParameters params1(geoContext, covMat, paramVec1, perigeeSurface);
+  BoundParameters params2(geoContext, covMat, paramVec2, perigeeSurface);
+  BoundParameters params3(geoContext, covMat, paramVec3, perigeeSurface);
+  BoundParameters params3_1(geoContext, covMat, paramVec3_1, perigeeSurface);
+  BoundParameters params4(geoContext, covMat, paramVec4, perigeeSurface);
+  BoundParameters params5(geoContext, covMat, paramVec5, perigeeSurface);
+  BoundParameters params6(geoContext, covMat, paramVec6, perigeeSurface);
+  BoundParameters params7(geoContext, covMat, paramVec7, perigeeSurface);
 
   // The grid to be filled
   ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
