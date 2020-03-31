@@ -28,7 +28,7 @@ using Covariance = BoundSymMatrix;
 // Create a test context
 GeometryContext geoContext = GeometryContext();
 
-BOOST_AUTO_TEST_CASE(testtest) {
+BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   // Define the size of the grids
   const int mainGridSize = 400;
   const int trkGridSize = 15;
