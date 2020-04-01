@@ -259,7 +259,8 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
-    return (error_estimate <= state.options.tolerance);
+    return (error_estimate <= state.options.tolerance)
+           && (error_estimate >= state.options.tolerance / 10);
   };
 
   double stepSizeScaling = 1.;
