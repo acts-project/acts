@@ -34,8 +34,33 @@ class GridDensityVertexFinder {
     // Min and max z value of big grid
     float zMinMax;  // mm
 
+    // The grid density object
     GridDensity gridDensity;
+
+    // Cache the main grid and the density contributions (trackGrid and z-bin) 
+    // for every single track.
+    // This option enables the possibility to calculate the entire main grid only
+    // once in the first iteration. If tracks are removed from the track collection,
+    // the individual track density contributions to the main grid can just be removed
+    // without calculating the entire grid from scratch.
+    bool cacheGridStateForTrackRemoval = false;
   };
+
+    /// @brief The State struct
+    /// 
+    /// Only needed if cacheGridStateForTrackRemoval == true
+   struct State
+  {
+    // The main density grid
+    ActsVectorF<mainGridSize> mainGrid = ActsVectorF<mainGridSize>::Zero();
+    // Map to store z-bin and track grid (i.e. the density contribution of
+    // a single track to the main grid) for every single track
+    std::map<const InputTrack_t*, std::pair<int, ActsVectorF<trkGridSize>>> binAndTrackGridMap;
+    // Store tracks that have been removed from track collection. These
+    // track will be removed from the main grid
+    std::vector<const InputTrack_t*> removedTracks;
+  };
+
 
   /// @brief Function that finds single vertex candidate
   ///
@@ -47,6 +72,21 @@ class GridDensityVertexFinder {
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<const InputTrack_t*>& trackVector,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+
+  /// @brief Function that finds single vertex candidate,
+  /// to be used in case cacheGridStateForTrackRemoval == true
+  ///
+  /// @param trackVector Input track collection
+  /// @param vertexingOptions Vertexing options
+  /// @param state The state object to cache the density grid
+  /// and density contributions of each track
+  ///
+  /// @return Vector of vertices, filled with a single
+  ///         vertex (for consistent interfaces)
+  Result<std::vector<Vertex<InputTrack_t>>> find(
+      const std::vector<const InputTrack_t*>& trackVector,
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
   /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
@@ -80,7 +120,7 @@ class GridDensityVertexFinder {
       : m_extractParameters(func) {}
 
  private:
-  Config m_cfg;
+  const Config m_cfg;
 
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundParameters by default, function to be

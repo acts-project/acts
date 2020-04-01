@@ -5,11 +5,25 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 template <int mainGridSize, int trkGridSize, typename vfitter_t>
 auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
+    -> Result<std::vector<Vertex<InputTrack_t>>> {
+      // Use this method only if no caching of density values is desired
+      assert(m_cfg.cacheGridStateForTrackRemoval == false);
+      
+      // Dummy state
+      State dummyState;
+      return find(trackVector, vertexingOptions, dummyState);
+}
+
+
+template <int mainGridSize, int trkGridSize, typename vfitter_t>
+auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
+    const std::vector<const InputTrack_t*>& trackVector,
+    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Construct empty 1-d grid along z-axis to be filled
   ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
