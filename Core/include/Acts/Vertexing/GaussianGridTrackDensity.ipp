@@ -23,7 +23,8 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
 }
 
 template <int mainGridSize, int trkGridSize>
-void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
+std::pair<int, Acts::ActsVectorF<trkGridSize>>
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundParameters& trk,
     Acts::ActsVectorF<mainGridSize>& mainGrid) const {
   ActsSymMatrixD<2> cov = trk.covariance()->block<2, 2>(0, 0);
@@ -36,7 +37,7 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   int zBin = int(z0 / m_cfg.binSize + mainGridSize / 2.);
 
   if (zBin < 0 || zBin >= mainGridSize) {
-    return;
+    return {-1, ActsVectorF<trkGridSize>::Zero()};
   }
   // Calculate the positions of the bin centers
   float binCtrD = dOffset * m_cfg.binSize;
@@ -52,7 +53,7 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   if ((std::abs(dOffset) > trkGridSize - 1) / 2.) {
     // Current track is too far away to contribute
     // to track density at z = 0 bins
-    return;
+    return {-1, ActsVectorF<trkGridSize>::Zero()};
   }
 
   // Create the track grid
@@ -60,6 +61,8 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
       createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
   // Add the track grid to the main grid
   addTrackGridToMainGrid(zBin, trackGrid, mainGrid);
+
+  return {zBin, trackGrid};
 }
 
 template <int mainGridSize, int trkGridSize>

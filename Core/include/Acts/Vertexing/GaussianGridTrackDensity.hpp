@@ -38,8 +38,9 @@ class GaussianGridTrackDensity {
   Result<float> getMaxZPosition(
       const Acts::ActsVectorF<mainGridSize>& mainGrid) const;
 
-  void addTrack(const Acts::BoundParameters& trk,
-                Acts::ActsVectorF<mainGridSize>& mainGrid) const;
+  std::pair<int, Acts::ActsVectorF<trkGridSize>> addTrack(
+      const Acts::BoundParameters& trk,
+      Acts::ActsVectorF<mainGridSize>& mainGrid) const;
 
   void removeTrackGridFromMainGrid(
       int zBin, const Acts::ActsVectorF<trkGridSize>& trkGrid,

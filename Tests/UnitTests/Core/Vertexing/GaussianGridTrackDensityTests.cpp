@@ -85,23 +85,27 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   // The grid to be filled
   ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
 
+  // addTrack method returns the central z bin where the track density
+  // grid was added and the track density grid itself for caching
+  std::pair<int, Acts::ActsVectorF<trkGridSize>> binAndTrackGrid;
+
   // Adds tracks too far away in transverse distance
-  grid.addTrack(params3, mainGrid);
-  grid.addTrack(params3_1, mainGrid);
+  binAndTrackGrid = grid.addTrack(params3, mainGrid);
+  binAndTrackGrid = grid.addTrack(params3_1, mainGrid);
   // Adds tracks too far away in longitudinal distance
-  grid.addTrack(params6, mainGrid);
-  grid.addTrack(params7, mainGrid);
+  binAndTrackGrid = grid.addTrack(params6, mainGrid);
+  binAndTrackGrid = grid.addTrack(params7, mainGrid);
 
   // Tracks are far away from z-axis (or not in region of interest) and
   // should not have contributed to density grid
   BOOST_CHECK_EQUAL(mainGrid, ActsVectorF<mainGridSize>::Zero());
 
   // Now add track 1 and 2 to grid, seperately.
-  grid.addTrack(params1, mainGrid);
+  binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
   mainGrid = ActsVectorF<mainGridSize>::Zero();
-  grid.addTrack(params2, mainGrid);
+  binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Track 1 is closer to z-axis and should thus yield higher
   // density values
@@ -109,10 +113,10 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Track 1 and 2 summed should give higher densities than
   // only track 1 alone
-  grid.addTrack(params1, mainGrid);
+  binAndTrackGrid = grid.addTrack(params1, mainGrid);
   BOOST_CHECK(gridCopy.sum() < mainGrid.sum());
 
-  grid.addTrack(params4, mainGrid);
+  binAndTrackGrid = grid.addTrack(params4, mainGrid);
 
   // Check upper boundary
   BOOST_CHECK_EQUAL(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 2),
@@ -120,7 +124,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BOOST_CHECK(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 1) > 0.);
   BOOST_CHECK(mainGrid(mainGridSize - 1) > 0.);
 
-  grid.addTrack(params5, mainGrid);
+  binAndTrackGrid = grid.addTrack(params5, mainGrid);
   // Check lower boundary
   BOOST_CHECK_EQUAL(mainGrid(int((trkGridSize - 1) / 2) + 1), 0.);
   BOOST_CHECK(mainGrid(int((trkGridSize - 1) / 2)) > 0.);
@@ -135,6 +139,21 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   mainGrid = ActsVectorF<mainGridSize>::Zero();
   auto maxResErr = grid.getMaxZPosition(mainGrid);
   BOOST_CHECK(!maxResErr.ok());
+
+  // Check if removal of tracks works as desired
+  binAndTrackGrid = grid.addTrack(params1, mainGrid);
+  binAndTrackGrid = grid.addTrack(params2, mainGrid);
+  // Copy grid for future reference
+  gridCopy = mainGrid;
+  binAndTrackGrid = grid.addTrack(params4, mainGrid);
+  // Main grid should have changed by adding track4
+  BOOST_CHECK(gridCopy != mainGrid);
+  // Remove track 4 again
+  int zBin = binAndTrackGrid.first;
+  auto trackGrid = binAndTrackGrid.second;
+  grid.removeTrackGridFromMainGrid(zBin, trackGrid, mainGrid);
+  // Check if it works
+  BOOST_CHECK_EQUAL(gridCopy, mainGrid);
 }
 
 }  // namespace Test

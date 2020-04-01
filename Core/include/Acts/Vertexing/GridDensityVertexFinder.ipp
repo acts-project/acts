@@ -16,7 +16,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 
   // Fill with track densities
   for (const auto& trk : trackVector) {
-    m_cfg.gridDensity.addTrack(m_extractParameters(*trk), mainGrid);
+    auto binAndTrackGrid =
+        m_cfg.gridDensity.addTrack(m_extractParameters(*trk), mainGrid);
   }
 
   // Get z value of highest density bin
