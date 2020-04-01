@@ -37,30 +37,31 @@ class GridDensityVertexFinder {
     // The grid density object
     GridDensity gridDensity;
 
-    // Cache the main grid and the density contributions (trackGrid and z-bin) 
+    // Cache the main grid and the density contributions (trackGrid and z-bin)
     // for every single track.
-    // This option enables the possibility to calculate the entire main grid only
-    // once in the first iteration. If tracks are removed from the track collection,
-    // the individual track density contributions to the main grid can just be removed
-    // without calculating the entire grid from scratch.
+    // This option enables the possibility to calculate the entire main grid
+    // only once in the first iteration. If tracks are removed from the track
+    // collection, the individual track density contributions to the main grid
+    // can just be removed without calculating the entire grid from scratch.
     bool cacheGridStateForTrackRemoval = false;
   };
 
-    /// @brief The State struct
-    /// 
-    /// Only needed if cacheGridStateForTrackRemoval == true
-   struct State
-  {
+  /// @brief The State struct
+  ///
+  /// Only needed if cacheGridStateForTrackRemoval == true
+  struct State {
     // The main density grid
     ActsVectorF<mainGridSize> mainGrid = ActsVectorF<mainGridSize>::Zero();
     // Map to store z-bin and track grid (i.e. the density contribution of
     // a single track to the main grid) for every single track
-    std::map<const InputTrack_t*, std::pair<int, ActsVectorF<trkGridSize>>> binAndTrackGridMap;
+    std::map<const InputTrack_t*, std::pair<int, ActsVectorF<trkGridSize>>>
+        binAndTrackGridMap;
     // Store tracks that have been removed from track collection. These
     // track will be removed from the main grid
-    std::vector<const InputTrack_t*> removedTracks;
-  };
+    std::vector<const InputTrack_t*> tracksToRemove;
 
+    bool isInitialized = false;
+  };
 
   /// @brief Function that finds single vertex candidate
   ///
