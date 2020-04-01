@@ -15,8 +15,8 @@ namespace Acts {
 
 template <typename T = double>
 
-/// @brief Helper to write out Ply visualization format
-class PlyHelper : public IVisualization {
+/// @brief Helper to write out PlyVisualization visualization format
+class PlyVisualization : public IVisualization {
  public:
   static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
                 "Use either double or float");
@@ -62,7 +62,7 @@ class PlyHelper : public IVisualization {
   }
 
   /// @copydoc Acts::IVisualization::write()
-  void write(std::ostream& os) const override {
+  void write(std::ostream& os, std::ostream* ignored = nullptr) const final {
     os << "ply\n";
     os << "format ascii 1.0\n";
     os << "element vertex " << m_vertices.size() << "\n";
@@ -81,6 +81,8 @@ class PlyHelper : public IVisualization {
     os << "property uchar green\n";
     os << "property uchar blue\n";
     os << "end_header\n";
+
+    (void)ignored;
 
     for (const std::pair<VertexType, IVisualization::ColorType>& vtx :
          m_vertices) {

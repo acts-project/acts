@@ -13,8 +13,8 @@
 #include <iostream>
 
 #include "Acts/Visualization/IVisualization.hpp"
-#include "Acts/Visualization/ObjHelper.hpp"
-#include "Acts/Visualization/PlyHelper.hpp"
+#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization.hpp"
 #include "SurfaceVisualizationBase.hpp"
 
 namespace Acts {
@@ -23,15 +23,15 @@ namespace Test {
 BOOST_AUTO_TEST_SUITE(Visualization)
 
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
-  ObjHelper obj;
-  SurfaceVisualization::test(obj, false, ".obj");
-  SurfaceVisualization::test(obj, true, "_3Mesh.obj");
+  ObjVisualization obj;
+  SurfaceVisualization::test(obj, false, "", ".obj", ".mtl");
+  SurfaceVisualization::test(obj, true, "_3Mesh", ".obj", ".mtl");
 }
 
-BOOST_AUTO_TEST_CASE(SurfaceVisualizationPly) {
-  PlyHelper ply;
-  SurfaceVisualization::test(ply, false, ".ply");
-  SurfaceVisualization::test(ply, true, "_3Mesh.ply");
+BOOST_AUTO_TEST_CASE(SurfaceVisualizationPlyVisualization) {
+  PlyVisualization ply;
+  SurfaceVisualization::test(ply, false, "", ".ply");
+  SurfaceVisualization::test(ply, true, "_3Mesh", ".ply");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

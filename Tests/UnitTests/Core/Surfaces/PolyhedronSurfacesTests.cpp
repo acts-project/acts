@@ -45,7 +45,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Visualization/ObjHelper.hpp"
+#include "Acts/Visualization/ObjVisualization.hpp"
 
 #include <fstream>
 #include <tuple>

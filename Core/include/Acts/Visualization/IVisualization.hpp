@@ -65,9 +65,11 @@ class IVisualization {
                     ColorType color = {120, 120, 120}) = 0;
 
   /// Write the content of the helper to an outstream.
-  /// @param os The output stream
+  /// @param os The output stream for file
+  /// @param ose The (optional pointer) to an extra stream
+  /// e.g. for material definitions
   ///
-  virtual void write(std::ostream& os) const = 0;
+  virtual void write(std::ostream& os, std::ostream* eos = nullptr) const = 0;
 
   /// Remove all contents of this helper
   ///
@@ -106,11 +108,9 @@ class IVisualization {
   }
 };
 
-/**
- * Overload of the << operator to facilitate writing to streams.
- * @param os The output stream
- * @param hlp The helper instance
- */
+/// Overload of the << operator to facilitate writing to streams.
+/// @param os The output stream
+/// @param hlp The helper instance
 inline std::ostream& operator<<(std::ostream& os, const IVisualization& hlp) {
   hlp.write(os);
   return os;

@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/ObjHelper.hpp"
+#include "Acts/Visualization/ObjVisualization.hpp"
 
 namespace Acts {
 
@@ -33,7 +33,7 @@ struct ObjTestWriter {
                                   const std::pair<Vector3D, Vector3D>& lineB) {
     std::ofstream ostream;
     ostream.open(name + ".obj");
-    ObjHelper objH;
+    ObjVisualization objH;
     objH.line(lineA.first, lineA.second);
     objH.line(lineB.first, lineB.second);
     objH.write(ostream);
@@ -76,7 +76,7 @@ struct ObjTestWriter {
 
     std::ofstream ostream;
     ostream.open(name + ".obj");
-    ObjHelper objH;
+    ObjVisualization objH;
     sectorPlaneM->polyhedronRepresentation(GeometryContext(), 1).draw(objH);
     sectorPlaneP->polyhedronRepresentation(GeometryContext(), 1).draw(objH);
     objH.write(ostream);
@@ -91,7 +91,7 @@ struct ObjTestWriter {
     for (const auto& iph : iphs) {
       std::ofstream ostream;
       ostream.open(std::get<std::string>(iph) + ".obj");
-      ObjHelper objH;
+      ObjVisualization objH;
       std::get<Polyhedron>(iph).draw(objH, std::get<bool>(iph));
       objH.write(ostream);
       ostream.close();
@@ -106,7 +106,7 @@ struct ObjTestWriter {
                        const Volume::BoundingBox& bBox) {
     std::ofstream ostream;
     ostream.open(name + std::string(".obj"));
-    ObjHelper objH;
+    ObjVisualization objH;
     bBox.draw(objH);
     objH.write(ostream);
     ostream.close();

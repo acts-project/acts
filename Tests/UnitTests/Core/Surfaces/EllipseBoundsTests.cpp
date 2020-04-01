@@ -25,6 +25,7 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
   double minRad0(10.), maxRad0(15.), minRad1(25.), maxRad1(30.),
       phiSector(M_PI / 2.), averagePhi(0.);
+
   // test default construction
   // EllipseBounds defaultConstructedEllipseBounds;  //deleted
   //
@@ -125,16 +126,20 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
                   1e-6);  // fails, not clear why
   //
   /// Test rMinX
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMinR0), minRad0);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMinInnerR),
+                    minRad0);
   //
   /// Test rMinY
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMinR1), minRad1);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMinOuterR),
+                    minRad1);
   //
   /// Test rMaxX
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMaxR0), maxRad0);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMaxInnerR),
+                    maxRad0);
   //
   /// Test rMaxY
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMaxR1), maxRad1);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMaxOuterR),
+                    maxRad1);
   //
   /// Test averagePhi
   BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eAveragePhi),
