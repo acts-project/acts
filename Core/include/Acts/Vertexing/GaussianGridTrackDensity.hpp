@@ -41,9 +41,19 @@ class GaussianGridTrackDensity {
   void addTrack(const Acts::BoundParameters& trk,
                 Acts::ActsVectorF<mainGridSize>& mainGrid) const;
 
+  void removeTrackGridFromMainGrid(
+      int zBin, const Acts::ActsVectorF<trkGridSize>& trkGrid,
+      Acts::ActsVectorF<mainGridSize>& mainGrid) const;
+
  private:
-  void addTrackGridToMainGrid(int zBin, const ActsVectorF<trkGridSize>& trkGrid,
+  void addTrackGridToMainGrid(int zBin,
+                              const Acts::ActsVectorF<trkGridSize>& trkGrid,
                               Acts::ActsVectorF<mainGridSize>& mainGrid) const;
+
+  void modifyMainGridWithTrackGrid(int zBin,
+                                   const ActsVectorF<trkGridSize>& trkGrid,
+                                   Acts::ActsVectorF<mainGridSize>& mainGrid,
+                                   int modifyModeSign) const;
 
   ActsVectorF<trkGridSize> createTrackGrid(int offset,
                                            const ActsSymMatrixD<2>& cov,

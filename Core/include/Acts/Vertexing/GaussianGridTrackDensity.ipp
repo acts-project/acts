@@ -67,6 +67,23 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     addTrackGridToMainGrid(int zBin,
                            const Acts::ActsVectorF<trkGridSize>& trkGrid,
                            Acts::ActsVectorF<mainGridSize>& mainGrid) const {
+  modifyMainGridWithTrackGrid(zBin, trkGrid, mainGrid, +1);
+}
+
+template <int mainGridSize, int trkGridSize>
+void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
+    removeTrackGridFromMainGrid(
+        int zBin, const Acts::ActsVectorF<trkGridSize>& trkGrid,
+        Acts::ActsVectorF<mainGridSize>& mainGrid) const {
+  modifyMainGridWithTrackGrid(zBin, trkGrid, mainGrid, -1);
+}
+
+template <int mainGridSize, int trkGridSize>
+void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
+    modifyMainGridWithTrackGrid(int zBin,
+                                const Acts::ActsVectorF<trkGridSize>& trkGrid,
+                                Acts::ActsVectorF<mainGridSize>& mainGrid,
+                                int modifyModeSign) const {
   int width = (trkGridSize - 1) / 2;
   // Overlap left
   int leftOL = zBin - width;
@@ -74,17 +91,18 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
   int rightOL = zBin + width - mainGridSize + 1;
   if (leftOL < 0) {
     int totalTrkSize = trkGridSize + leftOL;
-    mainGrid.segment(0, totalTrkSize) += trkGrid.segment(-leftOL, totalTrkSize);
+    mainGrid.segment(0, totalTrkSize) +=
+        modifyModeSign * trkGrid.segment(-leftOL, totalTrkSize);
     return;
   }
   if (rightOL > 0) {
     int totalTrkSize = trkGridSize - rightOL;
     mainGrid.segment(mainGridSize - totalTrkSize, totalTrkSize) +=
-        trkGrid.segment(0, totalTrkSize);
+        modifyModeSign * trkGrid.segment(0, totalTrkSize);
     return;
   }
 
-  mainGrid.segment(zBin - width, trkGridSize) += trkGrid;
+  mainGrid.segment(zBin - width, trkGridSize) += modifyModeSign * trkGrid;
 }
 
 template <int mainGridSize, int trkGridSize>
