@@ -19,7 +19,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/ObjTestWriter.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/PlyHelper.hpp"
+#include "Acts/Visualization/PlyVisualization.hpp"
 
 namespace Acts {
 namespace Test {

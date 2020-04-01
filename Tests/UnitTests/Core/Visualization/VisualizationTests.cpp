@@ -12,8 +12,8 @@
 #include <iostream>
 
 #include "Acts/Visualization/IVisualization.hpp"
-#include "Acts/Visualization/ObjHelper.hpp"
-#include "Acts/Visualization/PlyHelper.hpp"
+#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization.hpp"
 
 using boost::test_tools::output_test_stream;
 
@@ -25,8 +25,8 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 BOOST_AUTO_TEST_CASE(construction_test) {
   // this doesn't really test anything, other than conformance to the
   // IVisualization interface
-  PlyHelper ply;
-  ObjHelper obj;
+  PlyVisualization ply;
+  ObjVisualization obj;
 
   IVisualization* vis;
   vis = &ply;
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(construction_test) {
 }
 
 BOOST_AUTO_TEST_CASE(ply_output_test) {
-  PlyHelper ply;
+  PlyVisualization ply;
   output_test_stream output;
 
   ply.vertex({0, 0, 0});
@@ -155,7 +155,7 @@ end_header
 }
 
 BOOST_AUTO_TEST_CASE(obj_output_test) {
-  ObjHelper obj;
+  ObjVisualization obj;
 
   output_test_stream output;
 

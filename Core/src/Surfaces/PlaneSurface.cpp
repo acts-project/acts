@@ -127,7 +127,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     if (isEllipse) {
       auto vStore = bounds().values();
       innerExists =
-          std::abs(vStore[EllipseBounds::eMaxR0]) < s_onSurfaceTolerance;
+          std::abs(vStore[EllipseBounds::eMaxInnerR]) < s_onSurfaceTolerance;
       coversFull = std::abs(vStore[EllipseBounds::eHalfPhiSector]) <
                    M_PI - s_onSurfaceTolerance;
     }
