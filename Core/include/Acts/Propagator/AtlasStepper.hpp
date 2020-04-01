@@ -1089,6 +1089,7 @@ class AtlasStepper {
     // if new field is required get it
     if (state.stepping.newfield) {
       const Vector3D pos(R[0], R[1], R[2]);
+      // This is sd.B_first in EigenStepper
       f0 = getField(state.stepping, pos);
     } else {
       f0 = state.stepping.field;
@@ -1098,17 +1099,22 @@ class AtlasStepper {
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
     while (h != 0.) {
+      // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
 
       // First point
       //
+      // H0 is (h/(2*momentum) * sd.B_first) in EigenStepper
       double H0[3] = {f0[0] * PS2, f0[1] * PS2, f0[2] * PS2};
+      // { A0, B0, C0 } is (h/2 * sd.k1) in EigenStepper
       double A0 = A[1] * H0[2] - A[2] * H0[1];
       double B0 = A[2] * H0[0] - A[0] * H0[2];
       double C0 = A[0] * H0[1] - A[1] * H0[0];
+      // { A2, B2, C2 } is (h/2 * sd.k1 + direction) in EigenStepper
       double A2 = A0 + A[0];
       double B2 = B0 + A[1];
       double C2 = C0 + A[2];
+      // { A1, B1, C1 } is (h/2 * sd.k1 + 2*direction) in EigenStepper
       double A1 = A2 + A[0];
       double B1 = B2 + A[1];
       double C1 = C2 + A[2];
@@ -1116,19 +1122,25 @@ class AtlasStepper {
       // Second point
       //
       if (!Helix) {
+        // This is pos1 in EigenStepper
         const Vector3D pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
+        // This is sd.B_middle in EigenStepper
         f = getField(state.stepping, pos);
       } else {
         f = f0;
       }
 
+      // H1 is (h/(2*momentum) * sd.B_middle) in EigenStepper
       double H1[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
+      // { A3, B3, C3 } is (direction + h/2 * sd.k2) in EigenStepper
       double A3 = (A[0] + B2 * H1[2]) - C2 * H1[1];
       double B3 = (A[1] + C2 * H1[0]) - A2 * H1[2];
       double C3 = (A[2] + A2 * H1[1]) - B2 * H1[0];
+      // { A4, B4, C4 } is (direction + h/2 * sd.k3) in EigenStepper
       double A4 = (A[0] + B3 * H1[2]) - C3 * H1[1];
       double B4 = (A[1] + C3 * H1[0]) - A3 * H1[2];
       double C4 = (A[2] + A3 * H1[1]) - B3 * H1[0];
+      // { A5, B5, C5 } is (direction + h * sd.k3) in EigenStepper
       double A5 = 2. * A4 - A[0];
       double B5 = 2. * B4 - A[1];
       double C5 = 2. * C4 - A[2];
@@ -1136,19 +1148,25 @@ class AtlasStepper {
       // Last point
       //
       if (!Helix) {
+        // This is pos2 in EigenStepper
         const Vector3D pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
+        // This is sd.B_last in Eigen stepper
         f = getField(state.stepping, pos);
       } else {
         f = f0;
       }
 
+      // H2 is (h/(2*momentum) * sd.B_last) in EigenStepper
       double H2[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
+      // { A6, B6, C6 } is (h/2 * sd.k4) in EigenStepper
       double A6 = B5 * H2[2] - C5 * H2[1];
       double B6 = C5 * H2[0] - A5 * H2[2];
       double C6 = A5 * H2[1] - B5 * H2[0];
 
       // Test approximation quality on give step and possible step reduction
       //
+      // This is (h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>())
+      // in EigenStepper
       double EST = 2. * h * (std::abs((A1 + A6) - (A3 + A4)) +
                              std::abs((B1 + B6) - (B3 + B4)) +
                              std::abs((C1 + C6) - (C3 + C4)));
