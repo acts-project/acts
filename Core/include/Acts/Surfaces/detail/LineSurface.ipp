@@ -275,13 +275,13 @@ inline const FreeRowVector LineSurface::derivativeFactors(
   ActsRowVectorD<3> norm_vec = direction.transpose() - long_c * locz;
   // calculate the s factors for the dependency on X
   const FreeRowVector s_vec =
-      norm_vec * jacobian.topLeftCorner<3, FreeParsDim>();
+      norm_vec * jacobian.topLeftCorner<3, eFreeParametersSize>();
   // calculate the d factors for the dependency on Tx
-  const FreeRowVector d_vec = locz * jacobian.block<3, FreeParsDim>(4, 0);
+  const FreeRowVector d_vec = locz * jacobian.block<3, eFreeParametersSize>(4, 0);
   // normalisation of normal & longitudinal components
   double norm = 1. / (1. - long_c * long_c);
   // create a matrix representation
-  ActsMatrixD<3, BoundParsDim> long_mat = ActsMatrixD<3, BoundParsDim>::Zero();
+  ActsMatrixD<3, eBoundParametersSize> long_mat = ActsMatrixD<3, eBoundParametersSize>::Zero();
   long_mat.colwise() += locz.transpose();
   // build the combined normal & longitudinal components
   return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -

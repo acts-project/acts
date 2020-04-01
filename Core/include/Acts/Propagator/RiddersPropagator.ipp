@@ -98,7 +98,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 	  // Case III: We start bound and end free
 	  if constexpr (parameters_t::is_local_representation) {
 		// Derivations of each parameter around the nominal parameters
-		std::array<std::vector<FreeVector>, eFreeSize>
+		std::array<std::vector<FreeVector>, eBoundSize>
 			derivatives;
 
 		// Wiggle each dimension individually

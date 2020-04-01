@@ -206,21 +206,21 @@ class RiddersPropagator {
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, FreeParsDim>& derivatives,
+      const std::array<std::vector<BoundVector>, eFreeParametersSize>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<FreeVector>, BoundParsDim>& derivatives,
+      const std::array<std::vector<FreeVector>, eBoundParametersSize>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<FreeVector>, FreeParsDim>& derivatives,
+      const std::array<std::vector<FreeVector>, eFreeParametersSize>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
   /// @brief This function fits a linear function through the final state

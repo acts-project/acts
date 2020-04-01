@@ -60,6 +60,9 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
   jacToCurv(5, 3) = 1.;
   // Directional and momentum parameters for curvilinear
   jacToCurv(2, 4) = -sinPhi * invSinTheta;
+  //~ jacToCurv(2, 5) = cosPhi * invSinTheta;
+  //~ jacToCurv(3, 6) = -invSinTheta;
+  jacToCurv(3, 4) = -z;
   jacToCurv(2, 5) = cosPhi * invSinTheta;
   jacToCurv(3, 4) = cosPhi * cosTheta;
   jacToCurv(3, 5) = sinPhi * cosTheta;
@@ -365,6 +368,7 @@ else
 		jacobian = transportJacobian;
 	}
 }
+
 // Reinitialize jacobian components
 // TODO: Jacobian reset must occur in any case
 if(toLocal)
