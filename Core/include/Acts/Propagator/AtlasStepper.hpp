@@ -1149,11 +1149,11 @@ class AtlasStepper {
 
       // Test approximation quality on give step and possible step reduction
       //
-      double EST = 2. * (std::abs((A1 + A6) - (A3 + A4)) +
-                         std::abs((B1 + B6) - (B3 + B4)) +
-                         std::abs((C1 + C6) - (C3 + C4)));
-      if (EST > 0.0001) {
-        h *= .5;
+      double EST = 2. * h * (std::abs((A1 + A6) - (A3 + A4)) +
+                             std::abs((B1 + B6) - (B3 + B4)) +
+                             std::abs((C1 + C6) - (C3 + C4)));
+      if (EST > state.options.tolerance) {
+        h = h * .5;
         //        dltm = 0.;
         continue;
       }
