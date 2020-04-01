@@ -56,9 +56,10 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  ActsSymMatrixD<3> seedCov = vertexingOptions.vertexConstraint.covariance();
+  ActsSymMatrixD<4> seedCov =
+      vertexingOptions.vertexConstraint.fullCovariance();
 
-  returnVertex.setCovariance(seedCov);
+  returnVertex.setFullCovariance(seedCov);
 
   std::vector<Vertex<InputTrack_t>> seedVec{returnVertex};
 
