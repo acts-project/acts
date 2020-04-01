@@ -225,7 +225,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
   // size, going up to the point where it can return an estimate of the local
   // integration error. The results are stated in the local variables above,
   // allowing integration to continue once the error is deemed satisfactory
-  const auto tryRungeKuttaStep = [&](const double h) -> bool {
+  const auto tryRungeKuttaStep = [&](const ConstrainedStep& h) -> bool {
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
@@ -260,7 +260,8 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
     return (error_estimate <= state.options.tolerance) &&
-           (error_estimate >= state.options.tolerance / 10);
+           ((h.currentType() != ConstrainedStep::accuracy) ||
+            (error_estimate >= state.options.tolerance / 10));
   };
 
   double stepSizeScaling = 1.;
