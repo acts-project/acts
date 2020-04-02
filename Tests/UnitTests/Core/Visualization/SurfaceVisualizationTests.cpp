@@ -24,14 +24,14 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
   ObjVisualization obj;
-  SurfaceVisualization::test(obj, false, "", ".obj", ".mtl");
-  SurfaceVisualization::test(obj, true, "_3Mesh", ".obj", ".mtl");
+  SurfaceVisualization::test(obj, false, "");
+  SurfaceVisualization::test(obj, true, "_3Mesh");
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationPlyVisualization) {
   PlyVisualization ply;
-  SurfaceVisualization::test(ply, false, "", ".ply");
-  SurfaceVisualization::test(ply, true, "_3Mesh", ".ply");
+  SurfaceVisualization::test(ply, false, "");
+  SurfaceVisualization::test(ply, true, "_3Mesh");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
