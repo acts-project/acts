@@ -31,10 +31,10 @@ namespace Acts {
 class EllipseBounds : public PlanarBounds {
  public:
   enum BoundValues {
-    eMinInnerR = 0,
-    eMaxInnerR = 1,
-    eMinOuterR = 2,
-    eMaxOuterR = 3,
+    eInnerRx = 0,
+    eInnerRy = 1,
+    eOuterRx = 2,
+    eOuterRy = 3,
     eHalfPhiSector = 4,
     eAveragePhi = 5,
     eSize = 6
@@ -44,18 +44,16 @@ class EllipseBounds : public PlanarBounds {
 
   /// Constructor for full of an ellipsoid ring
   ///
-  /// @param minRinner The minimum radius of the inner ellipse
-  /// @param maxRinner The maximum radius of the inner ellipse
-  /// @param minRouter The minimum radius of the outer ellipse
-  /// @param maxRouter The maximum radius of the outer ellipse
+  /// @param innerRx The inner ellipse radius in x
+  /// @param innerRy The inner ellipse radius in y
+  /// @param outerRx The outer ellipse radius in x
+  /// @param outerRy The outer ellipse radius in y
   /// @param halfPhi spanning phi sector (is set to pi as default)
   /// @param averagePhi average phi (is set to 0. as default)
-  EllipseBounds(double minRinner, double maxRinner, double minRouter,
-                double maxRouter, double halfPhi = M_PI,
-                double averagePhi = 0.) noexcept(false)
-      : m_values(
-            {minRinner, maxRinner, minRouter, maxRouter, halfPhi, averagePhi}),
-        m_boundingBox(m_values[eMaxInnerR], m_values[eMaxOuterR]) {
+  EllipseBounds(double innerRx, double innerRy, double outerRx, double outerRy,
+                double halfPhi = M_PI, double averagePhi = 0.) noexcept(false)
+      : m_values({innerRx, innerRy, outerRx, outerRy, halfPhi, averagePhi}),
+        m_boundingBox(m_values[eInnerRy], m_values[eOuterRy]) {
     checkConsistency();
   }
 
@@ -63,8 +61,7 @@ class EllipseBounds : public PlanarBounds {
   ///
   /// @param values The parameter values
   EllipseBounds(const std::array<double, eSize>& values) noexcept(false)
-      : m_values(values),
-        m_boundingBox(values[eMaxInnerR], values[eMaxOuterR]) {
+      : m_values(values), m_boundingBox(values[eInnerRy], values[eOuterRy]) {
     checkConsistency();
   }
 
@@ -130,13 +127,13 @@ inline std::vector<double> EllipseBounds::values() const {
 }
 
 inline void EllipseBounds::checkConsistency() noexcept(false) {
-  if (get(eMinInnerR) <= 0. or get(eMaxInnerR) <= 0. or
-      get(eMinInnerR) > get(eMaxInnerR)) {
-    throw std::invalid_argument("EllipseBounds: invalid first coorindate.");
+  if (get(eInnerRx) >= get(eOuterRx) or get(eInnerRx) < 0. or
+      get(eOuterRx) <= 0.) {
+    throw std::invalid_argument("EllipseBounds: invalid along x axis");
   }
-  if (get(eMinOuterR) <= 0. or get(eMaxOuterR) <= 0. or
-      get(eMinOuterR) > get(eMaxOuterR)) {
-    throw std::invalid_argument("EllipseBounds: invalid second coorindate.");
+  if (get(eInnerRy) >= get(eOuterRy) or get(eInnerRy) < 0. or
+      get(eOuterRy) <= 0.) {
+    throw std::invalid_argument("EllipseBounds: invalid along y axis.");
   }
   if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
