@@ -5,18 +5,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-template <int mainGridSize, int trkGridSize, typename vfitter_t>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
-    const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
-    -> Result<std::vector<Vertex<InputTrack_t>>> {
-  // Use this method only if no caching of density values is desired
-  assert(m_cfg.cacheGridStateForTrackRemoval == false);
-
-  // Dummy state
-  State dummyState;
-  return find(trackVector, vertexingOptions, dummyState);
-}
 
 template <int mainGridSize, int trkGridSize, typename vfitter_t>
 auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
@@ -26,12 +14,15 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
+    std::cout << "removing " << state.tracksToRemove.size()
+              << " track from grid..." << std::endl;
     for (const auto& trk : state.tracksToRemove) {
       auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
       m_cfg.gridDensity.removeTrackGridFromMainGrid(
           binAndTrackGrid.first, binAndTrackGrid.second, state.mainGrid);
     }
   } else {
+    std::cout << "fill grid with n tracks: " << trackVector.size() << std::endl;
     // Fill with track densities
     for (const auto& trk : trackVector) {
       auto binAndTrackGrid =
@@ -53,6 +44,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 
   // Construct output vertex
   Vector3D seedPos = Vector3D(0., 0., *maxZres);
+
+  std::cout << "seedPos: " << seedPos << std::endl;
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 

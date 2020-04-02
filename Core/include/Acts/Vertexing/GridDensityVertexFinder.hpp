@@ -43,7 +43,7 @@ class GridDensityVertexFinder {
     // only once in the first iteration. If tracks are removed from the track
     // collection, the individual track density contributions to the main grid
     // can just be removed without calculating the entire grid from scratch.
-    bool cacheGridStateForTrackRemoval = false;
+    bool cacheGridStateForTrackRemoval = true;
   };
 
   /// @brief The State struct
@@ -67,20 +67,9 @@ class GridDensityVertexFinder {
   ///
   /// @param trackVector Input track collection
   /// @param vertexingOptions Vertexing options
-  ///
-  /// @return Vector of vertices, filled with a single
-  ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
-
-  /// @brief Function that finds single vertex candidate,
-  /// to be used in case cacheGridStateForTrackRemoval == true
-  ///
-  /// @param trackVector Input track collection
-  /// @param vertexingOptions Vertexing options
   /// @param state The state object to cache the density grid
-  /// and density contributions of each track
+  /// and density contributions of each track, to be used
+  /// if cacheGridStateForTrackRemoval == true
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)

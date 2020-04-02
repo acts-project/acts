@@ -30,9 +30,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   std::vector<Vertex<InputTrack_t>*> allVerticesPtr;
 
   int iteration = 0;
+  std::vector<const InputTrack_t*> removedSeedTracks;
   while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
           ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
          iteration < m_cfg.maxIterations) {
+    // Cache old fitte state in case new vertex is bad vertex
     FitterState_t oldFitterState = fitterState;
 
     // Tracks that are used for searching compatible tracks
@@ -46,7 +48,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     Vertex<InputTrack_t> currentConstraint = vertexingOptions.vertexConstraint;
     // Retrieve seed vertex from all remaining seedTracks
     auto seedResult = doSeeding(seedTracks, currentConstraint, vertexingOptions,
-                                seedFinderState);
+                                seedFinderState, removedSeedTracks);
     if (!seedResult.ok()) {
       return seedResult.error();
     }
@@ -64,6 +66,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       allVerticesPtr.pop_back();
       break;
     }
+
+    // Clear the seed track collection that has been removed in last iteration
+    // now after seed finding is done
+    removedSeedTracks.clear();
+
     auto prepResult = canPrepareVertexForFit(allTracks, seedTracks,
                                              vtxCandidate, currentConstraint,
                                              fitterState, vertexingOptions);
@@ -95,11 +102,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
     if (nCompatibleTracks > 0) {
       removeCompatibleTracksFromSeedTracks(vtxCandidate, seedTracks,
-                                           fitterState);
+                                           fitterState, removedSeedTracks);
     } else {
       bool removedNonCompatibleTrack =
-          canRemoveNonCompatibleTrackFromSeedTracks(vtxCandidate, seedTracks,
-                                                    fitterState);
+          canRemoveNonCompatibleTrackFromSeedTracks(
+              vtxCandidate, seedTracks, fitterState, removedSeedTracks);
       if (!removedNonCompatibleTrack) {
         ACTS_DEBUG(
             "Could not remove any further track from seed tracks. Break.");
@@ -132,9 +139,16 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     const std::vector<const InputTrack_t*>& trackVector,
     Vertex<InputTrack_t>& currentConstraint,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
-    SeedFinderState_t& seedFinderState) const -> Result<Vertex<InputTrack_t>> {
+    SeedFinderState_t& seedFinderState,
+    const std::vector<const InputTrack_t*>& removedSeedTracks) const
+    -> Result<Vertex<InputTrack_t>> {
   VertexingOptions<InputTrack_t> seedOptions = vertexingOptions;
   seedOptions.vertexConstraint = currentConstraint;
+
+  if constexpr (NeedsRemovedTracks<typename sfinder_t::State>::value) {
+    seedFinderState.tracksToRemove = removedSeedTracks;
+  }
+
   // Run seed finder
   auto seedResult =
       m_cfg.seedFinder.find(trackVector, seedOptions, seedFinderState);
@@ -386,7 +400,8 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     removeCompatibleTracksFromSeedTracks(
         Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
-        FitterState_t& fitterState) const -> void {
+        FitterState_t& fitterState,
+        std::vector<const InputTrack_t*>& removedSeedTracks) const -> void {
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
@@ -401,6 +416,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
                        [&trk, this](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         seedTracks.erase(foundSeedIter);
+        removedSeedTracks.push_back(*foundSeedIter);
       }
     }
   }
@@ -410,7 +426,8 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     canRemoveNonCompatibleTrackFromSeedTracks(
         Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
-        FitterState_t& fitterState) const -> bool {
+        FitterState_t& fitterState,
+        std::vector<const InputTrack_t*>& removedSeedTracks) const -> bool {
   // Try to find the track with highest compatibility
   double maxCompatibility = 0;
 
@@ -433,6 +450,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
   if (maxCompSeedIt != seedTracks.end()) {
     // Remove track with highest compatibility from seed tracks
     seedTracks.erase(maxCompSeedIt);
+    removedSeedTracks.push_back(*maxCompSeedIt);
   } else {
     // Could not find any seed with compatibility > 0, use alternative
     // method to remove a track from seed tracks: Closest track in z to
@@ -450,6 +468,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     }
     if (smallestDzSeedIter != seedTracks.end()) {
       seedTracks.erase(smallestDzSeedIter);
+      removedSeedTracks.push_back(*smallestDzSeedIter);
     } else {
       ACTS_DEBUG("No track found to remove. Stop vertex finding now.");
       return false;

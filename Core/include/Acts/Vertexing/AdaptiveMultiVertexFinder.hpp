@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -38,6 +40,13 @@ class AdaptiveMultiVertexFinder {
   using Linearizer_t = typename vfitter_t::Linearizer_t;
   using FitterState_t = typename vfitter_t::State;
   using SeedFinderState_t = typename sfinder_t::State;
+
+  template <typename T, typename = int>
+  struct NeedsRemovedTracks : std::false_type {};
+
+  template <typename T>
+  struct NeedsRemovedTracks<T, decltype((void)T::tracksToRemove, 0)>
+      : std::true_type {};
 
  public:
   /// @struct Config Configuration struct
@@ -227,13 +236,16 @@ class AdaptiveMultiVertexFinder {
   /// @param currentConstraint Vertex constraint
   /// @param vertexingOptions Vertexing options
   /// @param seedFinderState The seed finder state
+  /// @param removedSeedTracks Seed track that have been removed
+  /// from seed track collection in last iteration
   ///
   /// @return The seed vertex
   Result<Vertex<InputTrack_t>> doSeeding(
       const std::vector<const InputTrack_t*>& trackVector,
       Vertex<InputTrack_t>& currentConstraint,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
-      SeedFinderState_t& seedFinderState) const;
+      SeedFinderState_t& seedFinderState,
+      const std::vector<const InputTrack_t*>& removedSeedTracks) const;
 
   /// @brief Sets constraint vertex after seeding
   ///
@@ -329,9 +341,12 @@ class AdaptiveMultiVertexFinder {
   /// @param vtx The vertex candidate
   /// @param[out] seedTracks The seed tracks
   /// @param fitterState The vertex fitter state
+  /// @param[out] removedSeedTracks Collection of seed track that will be
+  /// removed
   void removeCompatibleTracksFromSeedTracks(
       Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState,
+      std::vector<const InputTrack_t*>& removedSeedTracks) const;
 
   /// @brief Method that tries to remove a non-compatible track
   /// from seed tracks after removing a compatible track failed.
@@ -339,11 +354,14 @@ class AdaptiveMultiVertexFinder {
   /// @param vtx The vertex candidate
   /// @param[out] seedTracks The seed tracks
   /// @param fitterState The vertex fitter state
+  /// @param[out] removedSeedTracks Collection of seed track that will be
+  /// removed
   ///
   /// @return Non-compatible track was removed
   bool canRemoveNonCompatibleTrackFromSeedTracks(
       Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState,
+      std::vector<const InputTrack_t*>& removedSeedTracks) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not

@@ -66,8 +66,12 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
 
-  GridDensityVertexFinder<mainGridSize, trkGridSize>::Config cfg;
-  GridDensityVertexFinder<mainGridSize, trkGridSize> finder(cfg);
+  using Finder = GridDensityVertexFinder<mainGridSize, trkGridSize>;
+  Finder::Config cfg;
+  cfg.cacheGridStateForTrackRemoval = false;
+  Finder finder(cfg);
+
+  Finder::State state;
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -104,7 +108,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     trackPtrVec.push_back(&trk);
   }
 
-  auto res = finder.find(trackPtrVec, vertexingOptions);
+  auto res = finder.find(trackPtrVec, vertexingOptions, state);
   if (!res.ok()) {
     std::cout << res.error().message() << std::endl;
   }
