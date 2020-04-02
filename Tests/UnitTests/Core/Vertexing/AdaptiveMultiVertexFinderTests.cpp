@@ -303,6 +303,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               linearizer);
+  Finder::State state;
 
   Finder finder(finderConfig, extractParameters);
 
@@ -347,7 +348,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   vertexingOptions.vertexConstraint = constraintVtx;
 
-  auto findResult = finder.find(userTracksPtr, vertexingOptions);
+  auto findResult = finder.find(userTracksPtr, vertexingOptions, state);
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
