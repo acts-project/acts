@@ -18,63 +18,20 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
-
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsFatras/Utilities/ParticleData.hpp"
 
 using namespace Acts::UnitLiterals;
-
-/// Return the particle mass given a PDG particle identifier.
-static float findMass(int pdg) {
-  switch (pdg) {
-    case Acts::PdgParticle::eElectron:
-    case Acts::PdgParticle::eAntiElectron:
-      return 511_keV;
-    case Acts::PdgParticle::eMuon:
-    case Acts::PdgParticle::eAntiMuon:
-      return 105.7_MeV;
-    case Acts::PdgParticle::ePionPlus:
-    case Acts::PdgParticle::ePionMinus:
-      return 139.6_MeV;
-    case Acts::PdgParticle::eProton:
-    case Acts::PdgParticle::eAntiProton:
-      return 938.3_MeV;
-    default:
-      std::cerr << "Use zero mass for unknown pdg number " << pdg << '\n';
-      return 0.0f;
-  }
-}
-
-/// Return the particle charge given a PDG particle identifier.
-static float findCharge(int pdg) {
-  switch (pdg) {
-    case Acts::PdgParticle::eElectron:
-    case Acts::PdgParticle::eMuon:
-    case Acts::PdgParticle::eTau:
-    case Acts::PdgParticle::ePionMinus:
-    case Acts::PdgParticle::eAntiProton:
-      return -1_e;
-    case Acts::PdgParticle::eAntiElectron:
-    case Acts::PdgParticle::eAntiMuon:
-    case Acts::PdgParticle::eAntiTau:
-    case Acts::PdgParticle::ePionPlus:
-    case Acts::PdgParticle::eProton:
-      return 1_e;
-    default:
-      std::cerr << "Use 1e charge for unknown pdg number " << pdg << '\n';
-      return 1_e;
-  }
-}
 
 static constexpr int width = 11;
 static constexpr int precision = 3;
 static constexpr char separator = ' ';
 
 static void printHeader(std::ostream& os, const Acts::MaterialProperties& slab,
-                        int pdg, float mass, float charge) {
-  os << "# material " << slab << '\n';
-  os << "# particle pdg number " << pdg << '\n';
-  os << "# particle mass " << mass / 1_MeV << "MeV\n";
-  os << "# particle charge " << charge / 1_e << "e\n";
+                        Acts::PdgParticle pdg, float mass, float charge) {
+  os << "# material: " << slab << '\n';
+  os << "# particle pdg id: " << pdg << '\n';
+  os << "# particle mass: " << mass / 1_MeV << "MeV\n";
+  os << "# particle charge: " << charge / 1_e << "e\n";
   os << "# particle momentum is given in GeV\n";
   os << "# tabulated energy loss is given in MeV\n";
   os << "# delta is the total energy loss\n";
@@ -122,16 +79,16 @@ int main(int argc, char const* argv[]) {
     return EXIT_FAILURE;
   }
   const auto thickness = atof(argv[1]) * 1_mm;
-  const auto pdg = atoi(argv[2]);
-  const auto mass = findMass(pdg);
-  const auto charge = findCharge(pdg);
+  const auto pdg = static_cast<Acts::PdgParticle>(atoi(argv[2]));
+  const auto mass = ActsFatras::findMass(pdg);
+  const auto charge = ActsFatras::findCharge(pdg);
   const auto pmin = atof(argv[3]) * 1_GeV;
   const auto pmax = atof(argv[4]) * 1_GeV;
   const auto deltap = (pmax - pmin) / atoi(argv[5]);
 
-  // use fixed material for now
+  // use fixed material (beryllium) for now
   // TODO make material configurable by command line
-  const auto& material = Acts::Test::makeBeryllium();
+  const Acts::Material material(35.28_cm, 42.10_cm, 9.012, 4, 1.848_g / 1_cm3);
   const Acts::MaterialProperties slab(material, thickness);
 
   printHeader(std::cout, slab, pdg, mass, charge);

@@ -1,8 +1,12 @@
 add_library(
-  ActsCustomLogger SHARED
+  ActsExampleCustomLogger SHARED
   CustomDefaultLogger.cpp)
+target_compile_features(
+  ActsExampleCustomLogger
+  PUBLIC cxx_std_17)
+
 target_include_directories(
-  ActsCustomLogger
+  ActsExampleCustomLogger
   PRIVATE ${PROJECT_SOURCE_DIR}/Core/include)
 
 add_executable(
@@ -10,11 +14,9 @@ add_executable(
   TabulateEnergyLoss.cpp)
 target_link_libraries(
   ActsTabulateEnergyLoss
-  PRIVATE ActsCore ActsTestsCommonHelpers)
+  PRIVATE ActsCore ActsFatras)
 
 install(
-  TARGETS ActsCustomLogger ActsTabulateEnergyLoss
-  EXPORT ActsExamplesTargets
+  TARGETS ActsExampleCustomLogger ActsTabulateEnergyLoss
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  COMPONENT Examples)
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
