@@ -446,6 +446,7 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
+ std::cout << "Ridders:\n" << jacobian << std::endl; 
   return BoundSymMatrix(jacobian * std::get<Acts::BoundSymMatrix>(startCov) *
                         jacobian.transpose());
 }

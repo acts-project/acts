@@ -60,9 +60,6 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
   jacToCurv(5, 3) = 1.;
   // Directional and momentum parameters for curvilinear
   jacToCurv(2, 4) = -sinPhi * invSinTheta;
-  //~ jacToCurv(2, 5) = cosPhi * invSinTheta;
-  //~ jacToCurv(3, 6) = -invSinTheta;
-  jacToCurv(3, 4) = -z;
   jacToCurv(2, 5) = cosPhi * invSinTheta;
   jacToCurv(3, 4) = cosPhi * cosTheta;
   jacToCurv(3, 5) = sinPhi * cosTheta;
@@ -118,7 +115,7 @@ else
 	return jacToLocal * (state.jacTransport - state.derivative * sVec);
 }
 }
-  
+
 /// @brief This function treats the modifications of the jacobian related to the
 /// projection onto a curvilinear surface. Since a variation of the start
 /// parameters within a given uncertainty would lead to a variation of the end
