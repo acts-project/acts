@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   //
   /// Test boundingBox
   BOOST_CHECK_EQUAL(diamondBoundsObject.boundingBox(),
-                    RectangleBounds(50., 20.));
+                    RectangleBounds(Vector2D{-50., -10.}, Vector2D{50., 20.}));
   //
   // clone already tested
   //

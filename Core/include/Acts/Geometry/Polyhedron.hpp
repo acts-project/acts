@@ -83,7 +83,7 @@ struct Polyhedron {
   void draw(helper_t& helper, bool triangulate = false,
             const ColorType& color = {120, 120, 120}) const {
     // vertices and faces are
-    if (triangulate) {
+    if (not triangulate) {
       helper.faces(vertices, faces, color);
     } else {
       helper.faces(vertices, triangularMesh, color);

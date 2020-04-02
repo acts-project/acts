@@ -25,6 +25,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <fstream>
 #include <string>
@@ -308,7 +309,7 @@ static inline void test(IVisualization& helper, bool triangulate,
 
   //----------------------------------------------------
   // Plane Surface section
-  IVisualization::ColorType planeColor = {0, 0, 256};
+  IVisualization::ColorType planeColor = {0, 0, 255};
   std::vector<std::shared_ptr<PlaneSurface>> planarSurfaces;
 
   // Ellipse shaped : Full Ellipse
@@ -318,9 +319,31 @@ static inline void test(IVisualization& helper, bool triangulate,
   double ellipseR1max = 6;
   std::string name = "PlaneSurfaceEllipse";
   prepare(name);
-  auto ellipse = std::make_shared<EllipseBounds>(ellipseR0min, ellipseR0max,
-                                                 ellipseR1min, ellipseR1max);
+  auto ellipse =
+      std::make_shared<EllipseBounds>(0., 0., ellipseR1min, ellipseR1max);
   auto plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
+  planarSurfaces.push_back(plane);
+  Visualization::drawSurface(helper, *plane, gctx, Transform3D::Identity(), 72,
+                             triangulate, planeColor);
+  boundingBox2D(ellipse->boundingBox(), name);
+
+  // Ellipse shaped : Ring Ellipse
+  name = "PlaneSurfaceEllipseRing";
+  prepare(name);
+  ellipse = std::make_shared<EllipseBounds>(ellipseR0min, ellipseR0max,
+                                            ellipseR1min, ellipseR1max);
+  plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
+  planarSurfaces.push_back(plane);
+  Visualization::drawSurface(helper, *plane, gctx, Transform3D::Identity(), 72,
+                             triangulate, planeColor);
+  boundingBox2D(ellipse->boundingBox(), name);
+
+  // Ellipse shaped : Ring Ellipse Sector
+  name = "PlaneSurfaceEllipseRingSector";
+  prepare(name);
+  ellipse = std::make_shared<EllipseBounds>(
+      ellipseR0min, ellipseR0max, ellipseR1min, ellipseR1max, halfPhiSector);
+  plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
   planarSurfaces.push_back(plane);
   Visualization::drawSurface(helper, *plane, gctx, Transform3D::Identity(), 72,
                              triangulate, planeColor);
@@ -373,7 +396,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   // Rectangle plane
   name = "PlaneSurfaceRectangle";
   prepare(name);
-  auto rectangle = std::make_shared<RectangleBounds>(3., 7.);
+  auto rectangle = std::make_shared<RectangleBounds>(2., 3.);
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
   planarSurfaces.push_back(plane);
   Visualization::drawSurface(helper, *plane, gctx, Transform3D::Identity(), 72,
@@ -389,6 +412,44 @@ static inline void test(IVisualization& helper, bool triangulate,
   Visualization::drawSurface(helper, *plane, gctx, Transform3D::Identity(), 72,
                              triangulate, planeColor);
   boundingBox2D(rectangle->boundingBox(), name);
+
+  // Off-centered Rectangle plane:
+  name = "PlaneSurfaceTrapezoid";
+  prepare(name);
+  auto trapezoid = std::make_shared<TrapezoidBounds>(2., 5., 3.);
+  plane = Surface::makeShared<PlaneSurface>(identity, trapezoid);
+  planarSurfaces.push_back(plane);
+  Visualization::drawSurface(helper, *plane, gctx, Transform3D::Identity(), 72,
+                             triangulate, planeColor);
+  boundingBox2D(trapezoid->boundingBox(), name);
+
+  // All planes
+  std::vector<Transform3D> ninePlanes = {
+      Transform3D(Translation3D{-10., -10., 0.}),
+      Transform3D(Translation3D{0., -10., 0.}),
+      Transform3D(Translation3D{10., -10., 0.}),
+      Transform3D(Translation3D{-10., 0., 0.}),
+      Transform3D(Translation3D{0., -6., 0.}),
+      Transform3D(Translation3D{10., -8., 0.}),
+      Transform3D(Translation3D{-10, 10., 0.}),
+      Transform3D(Translation3D{0., 10., 0.}),
+      Transform3D(Translation3D{10., 10., 0.})};
+  prepare("All_PlaneSurfaces");
+  for (size_t ip = 0; ip < planarSurfaces.size(); ++ip) {
+    Visualization::drawSurface(helper, *planarSurfaces[ip], gctx,
+                               ninePlanes[ip], 72, triangulate, planeColor);
+  }
+
+  //----------------------------------------------------
+  // Straw Surface section
+  IVisualization::ColorType strawColor = {255, 0, 0};
+
+  name = "StrawSurface";
+  prepare(name);
+  auto tube = std::make_shared<LineBounds>(2., 20.);
+  auto straw = Surface::makeShared<StrawSurface>(identity, tube);
+  Visualization::drawSurface(helper, *straw, gctx, Transform3D::Identity(), 72,
+                             triangulate, strawColor);
 
   // Last closing of the streams
   helper.write(stream, mstream);

@@ -126,10 +126,10 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     bool innerExists = false, coversFull = false;
     if (isEllipse) {
       auto vStore = bounds().values();
-      innerExists =
-          std::abs(vStore[EllipseBounds::eMaxInnerR]) < s_onSurfaceTolerance;
-      coversFull = std::abs(vStore[EllipseBounds::eHalfPhiSector]) <
-                   M_PI - s_onSurfaceTolerance;
+      innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon and
+                    vStore[EllipseBounds::eInnerRy] > s_epsilon;
+      coversFull =
+          std::abs(vStore[EllipseBounds::eHalfPhiSector] - M_PI) < s_epsilon;
     }
     // All of those can be described as convex
     // @todo same as for Discs: coversFull is not the right criterium
