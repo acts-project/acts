@@ -11,8 +11,8 @@
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<const InputTrack_t*>& allTracks,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
-    -> Result<std::vector<Vertex<InputTrack_t>>> {
+    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
   if (allTracks.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -23,6 +23,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   std::vector<const InputTrack_t*> seedTracks = allTracks;
 
   FitterState_t fitterState;
+  SeedFinderState_t seedFinderState;
 
   std::vector<std::unique_ptr<Vertex<InputTrack_t>>> allVertices;
 
@@ -44,8 +45,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     }
     Vertex<InputTrack_t> currentConstraint = vertexingOptions.vertexConstraint;
     // Retrieve seed vertex from all remaining seedTracks
-    auto seedResult =
-        doSeeding(seedTracks, currentConstraint, vertexingOptions);
+    auto seedResult = doSeeding(seedTracks, currentConstraint, vertexingOptions,
+                                seedFinderState);
     if (!seedResult.ok()) {
       return seedResult.error();
     }
@@ -130,12 +131,13 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     const std::vector<const InputTrack_t*>& trackVector,
     Vertex<InputTrack_t>& currentConstraint,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
-    -> Result<Vertex<InputTrack_t>> {
+    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    SeedFinderState_t& seedFinderState) const -> Result<Vertex<InputTrack_t>> {
   VertexingOptions<InputTrack_t> seedOptions = vertexingOptions;
   seedOptions.vertexConstraint = currentConstraint;
   // Run seed finder
-  auto seedResult = m_cfg.seedFinder.find(trackVector, seedOptions);
+  auto seedResult =
+      m_cfg.seedFinder.find(trackVector, seedOptions, seedFinderState);
 
   if (!seedResult.ok()) {
     return seedResult.error();
@@ -143,6 +145,16 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
 
   Vertex<InputTrack_t> seedVertex = (*seedResult).back();
   // Update constraints according to seed vertex
+  setConstraintAfterSeeding(currentConstraint, seedVertex);
+
+  return seedVertex;
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
+    setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
+                              const Vertex<InputTrack_t>& seedVertex) const
+    -> void {
   if (m_cfg.useBeamSpotConstraint) {
     if (currentConstraint.fullCovariance() == SpacePointSymMatrix::Zero()) {
       ACTS_WARNING(
@@ -158,8 +170,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
                                         m_cfg.looseConstrValue);
     currentConstraint.setFitQuality(m_cfg.defaultConstrFitQuality);
   }
-
-  return seedVertex;
 }
 
 template <typename vfitter_t, typename sfinder_t>

@@ -9,8 +9,8 @@
 template <typename vfitter_t, typename track_density_t>
 auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
-    -> Result<std::vector<Vertex<InputTrack_t>>> {
+    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
   typename track_density_t::State densityState(trackVector.size());
 
   std::vector<BoundParameters> trackList;

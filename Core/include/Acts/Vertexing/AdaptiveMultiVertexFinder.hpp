@@ -37,6 +37,7 @@ class AdaptiveMultiVertexFinder {
   using InputTrack_t = typename vfitter_t::InputTrack_t;
   using Linearizer_t = typename vfitter_t::Linearizer_t;
   using FitterState_t = typename vfitter_t::State;
+  using SeedFinderState_t = typename sfinder_t::State;
 
  public:
   /// @struct Config Configuration struct
@@ -66,6 +67,8 @@ class AdaptiveMultiVertexFinder {
 
     // Track linearizer
     Linearizer_t linearizer;
+
+    // const bool usingGridSeedFinder = false;
 
     // Use a beam spot constraint, vertexConstraint in VertexingOptions
     // has to be set in this case
@@ -156,6 +159,9 @@ class AdaptiveMultiVertexFinder {
 
   };  // Config struct
 
+  /// @struct State State struct for fulfilling interface
+  struct State {};
+
   /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
   /// @param cfg Configuration object
@@ -189,11 +195,13 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @param allTracks Input track collection
   /// @param vertexingOptions Vertexing options
+  /// @param state State for fulfilling interfaces
   ///
   /// @return Vector of all reconstructed vertices
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<const InputTrack_t*>& allTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
  private:
   /// Configuration object
@@ -218,12 +226,21 @@ class AdaptiveMultiVertexFinder {
   /// @param trackVector All tracks to be used for seeding
   /// @param currentConstraint Vertex constraint
   /// @param vertexingOptions Vertexing options
+  /// @param seedFinderState The seed finder state
   ///
   /// @return The seed vertex
   Result<Vertex<InputTrack_t>> doSeeding(
       const std::vector<const InputTrack_t*>& trackVector,
       Vertex<InputTrack_t>& currentConstraint,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      SeedFinderState_t& seedFinderState) const;
+
+  /// @brief Sets constraint vertex after seeding
+  ///
+  /// @param currentConstraint Vertex constraint
+  /// @param seedVertex Seed vertex
+  void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
+                                 const Vertex<InputTrack_t>& seedVertex) const;
 
   /// @brief Estimates delta Z between a track and a vertex position
   ///
