@@ -11,6 +11,12 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
+#include <array>
+#include <filesystem>
+#include <fstream>
+#include <utility>
+#include <vector>
+
 namespace Acts {
 
 template <typename T = double>
@@ -62,7 +68,19 @@ class PlyVisualization : public IVisualization {
   }
 
   /// @copydoc Acts::IVisualization::write()
-  void write(std::ostream& os, std::ostream* ignored = nullptr) const final {
+  void write(const std::filesystem::path& path) const final {
+    std::ofstream os;
+    std::filesystem::path objectpath = path;
+    if (not objectpath.has_extension()) {
+      objectpath += ".ply";
+    }
+    os.open(objectpath);
+    write(os);
+    os.close();
+  }
+
+  /// @copydoc Acts::IVisualization::write()
+  void write(std::ostream& os) const final {
     os << "ply\n";
     os << "format ascii 1.0\n";
     os << "element vertex " << m_vertices.size() << "\n";
@@ -81,8 +99,6 @@ class PlyVisualization : public IVisualization {
     os << "property uchar green\n";
     os << "property uchar blue\n";
     os << "end_header\n";
-
-    (void)ignored;
 
     for (const std::pair<VertexType, IVisualization::ColorType>& vtx :
          m_vertices) {

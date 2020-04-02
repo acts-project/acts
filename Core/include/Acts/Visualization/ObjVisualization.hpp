@@ -11,6 +11,10 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
+#include <array>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -97,7 +101,32 @@ class ObjVisualization : public IVisualization {
   }
 
   /// @copydoc Acts::IVisualization::write()
-  void write(std::ostream& os, std::ostream* eos = nullptr) const final {
+  void write(const std::filesystem::path& path) const final {
+    std::ofstream os;
+    std::filesystem::path objectpath = path;
+    if (not objectpath.has_extension()) {
+      objectpath += ".obj";
+    }
+    os.open(objectpath);
+    std::filesystem::path mtlpath = objectpath;
+    mtlpath.replace_extension(".mtl");
+    std::ofstream mtlos;
+    mtlos.open(mtlpath);
+    write(os, mtlos);
+    os.close();
+    mtlos.close();
+  }
+
+  /// @copydoc Acts::IVisualization::write()
+  void write(std::ostream& os) const final {
+    std::stringstream sterile;
+    write(os, sterile);
+  }
+
+  /// Write the object and the material file
+  /// @param os the output stream for the object
+  /// @param mos the output stream for the auxiliary material file
+  void write(std::ostream& os, std::ostream& mos) const {
     std::map<std::string, bool> materials;
 
     auto mixColor = [&](const IVisualization::ColorType& color) -> std::string {
@@ -106,15 +135,15 @@ class ObjVisualization : public IVisualization {
       materialName += std::to_string(color[0]) + std::string("_");
       materialName += std::to_string(color[1]) + std::string("_");
       materialName += std::to_string(color[2]);
-      if (eos != nullptr and materials.find(materialName) == materials.end()) {
-        (*eos) << "newmtl " << materialName << "\n";
+      if (materials.find(materialName) == materials.end()) {
+        mos << "newmtl " << materialName << "\n";
         std::vector<std::string> shadings = {"Ka", "Kd", "Ks"};
         for (const auto& shd : shadings) {
-          (*eos) << shd << " " << std::to_string(color[0] / 256.) << " ";
-          (*eos) << std::to_string(color[1] / 256.) << " ";
-          (*eos) << std::to_string(color[2] / 256.) << " "
-                 << "\n";
-          (*eos) << "\n";
+          mos << shd << " " << std::to_string(color[0] / 256.) << " ";
+          mos << std::to_string(color[1] / 256.) << " ";
+          mos << std::to_string(color[2] / 256.) << " "
+              << "\n";
+          mos << "\n";
         }
       }
       return std::string("usemtl ") + materialName;

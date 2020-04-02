@@ -8,8 +8,12 @@
 
 #pragma once
 
-#include <algorithm>
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <filesystem>
+#include <fstream>
+#include <vector>
 
 namespace Acts {
 
@@ -66,10 +70,11 @@ class IVisualization {
 
   /// Write the content of the helper to an outstream.
   /// @param os The output stream for file
-  /// @param ose The (optional pointer) to an extra stream
-  /// e.g. for material definitions
-  ///
-  virtual void write(std::ostream& os, std::ostream* eos = nullptr) const = 0;
+  virtual void write(std::ostream& os) const = 0;
+
+  /// Write the content of the helper to an outstream.
+  /// @param path is the file system path for writing the file
+  virtual void write(const std::filesystem::path& path) const = 0;
 
   /// Remove all contents of this helper
   ///
