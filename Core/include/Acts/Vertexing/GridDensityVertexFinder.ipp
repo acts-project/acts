@@ -14,17 +14,15 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
-    std::cout << "removing " << state.tracksToRemove.size()
-              << " track from grid..." << std::endl;
-    for (const auto& trk : state.tracksToRemove) {
+    for (auto trk : state.tracksToRemove) {
       auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
       m_cfg.gridDensity.removeTrackGridFromMainGrid(
           binAndTrackGrid.first, binAndTrackGrid.second, state.mainGrid);
     }
   } else {
-    std::cout << "fill grid with n tracks: " << trackVector.size() << std::endl;
+    state.mainGrid = ActsVectorF<mainGridSize>::Zero();
     // Fill with track densities
-    for (const auto& trk : trackVector) {
+    for (auto trk : trackVector) {
       auto binAndTrackGrid =
           m_cfg.gridDensity.addTrack(m_extractParameters(*trk), state.mainGrid);
       // Cache track density contribution to main grid if enabled
@@ -44,8 +42,6 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 
   // Construct output vertex
   Vector3D seedPos = Vector3D(0., 0., *maxZres);
-
-  std::cout << "seedPos: " << seedPos << std::endl;
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 

@@ -492,13 +492,16 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
-  fitterCfg.doSmoothing = false;
+  fitterCfg.doSmoothing = true;
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = GridDensityVertexFinder<3000, 35>;
+  // using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
+  using SeedFinder = GridDensityVertexFinder<2000, 35>;
+  SeedFinder::Config seedFinderCfg;
+  seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
-  SeedFinder seedFinder;
+  SeedFinder seedFinder(seedFinderCfg);
 
   using IPEstimater = TrackToVertexIPEstimator<BoundParameters, Propagator>;
 
@@ -512,6 +515,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
                               std::move(ipEst), std::move(linearizer));
 
+  // finderConfig.refitAfterBadVertex = false;
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
 

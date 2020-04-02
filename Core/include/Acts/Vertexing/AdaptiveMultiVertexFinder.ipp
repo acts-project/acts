@@ -416,7 +416,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
                        [&trk, this](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         seedTracks.erase(foundSeedIter);
-        removedSeedTracks.push_back(*foundSeedIter);
+        removedSeedTracks.push_back(trk);
       }
     }
   }
@@ -432,6 +432,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
   double maxCompatibility = 0;
 
   auto maxCompSeedIt = seedTracks.end();
+  const InputTrack_t* removedTrack = nullptr;
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
@@ -444,31 +445,33 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       if (foundSeedIter != seedTracks.end()) {
         maxCompatibility = compatibility;
         maxCompSeedIt = foundSeedIter;
+        removedTrack = trk;
       }
     }
   }
   if (maxCompSeedIt != seedTracks.end()) {
     // Remove track with highest compatibility from seed tracks
     seedTracks.erase(maxCompSeedIt);
-    removedSeedTracks.push_back(*maxCompSeedIt);
+    removedSeedTracks.push_back(removedTrack);
   } else {
     // Could not find any seed with compatibility > 0, use alternative
     // method to remove a track from seed tracks: Closest track in z to
     // vtx candidate
     double smallestDeltaZ = std::numeric_limits<double>::max();
     auto smallestDzSeedIter = seedTracks.end();
-    for (auto trkIter = seedTracks.begin(); trkIter != seedTracks.end();
-         trkIter++) {
-      double zDistance = std::abs(
-          m_extractParameters(**trkIter).position()[eZ] - vtx.position()[eZ]);
+    for (unsigned int i = 0; i < seedTracks.size(); i++) {
+      double zDistance =
+          std::abs(m_extractParameters(*seedTracks[i]).position()[eZ] -
+                   vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
-        smallestDzSeedIter = trkIter;
+        smallestDzSeedIter = seedTracks.begin() + i;
+        removedTrack = seedTracks[i];
       }
     }
     if (smallestDzSeedIter != seedTracks.end()) {
       seedTracks.erase(smallestDzSeedIter);
-      removedSeedTracks.push_back(*smallestDzSeedIter);
+      removedSeedTracks.push_back(removedTrack);
     } else {
       ACTS_DEBUG("No track found to remove. Stop vertex finding now.");
       return false;
