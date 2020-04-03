@@ -11,8 +11,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
-#include <filesystem>
 #include <fstream>
+#include <string>
 #include <vector>
 
 namespace Acts {
@@ -74,7 +74,8 @@ class IVisualization {
 
   /// Write the content of the helper to an outstream.
   /// @param path is the file system path for writing the file
-  virtual void write(const std::filesystem::path& path) const = 0;
+  /// @note wil change to std::filesystem::path once gcc9 is standard
+  virtual void write(const std::string& path) const = 0;
 
   /// Remove all contents of this helper
   ///
@@ -110,6 +111,30 @@ class IVisualization {
     Vector3D ad = a.template cast<double>();
     Vector3D bd = b.template cast<double>();
     line(ad, bd, color);
+  }
+
+  /// Helper: check for extension
+  ///
+  /// @note this is a placeholder for std::filesystem::has_extension
+  /// which needs special linking until gcc9
+  /// @param path the path to be checked
+  bool hasExtension(const std::string& path) const {
+    return (path.find(".") != std::string::npos);
+  }
+
+  /// Helper to replace the extension
+  ///
+  /// @note this is a placeholder for std::filesystem::has_extension
+  /// which needs special linking until gcc9
+  /// @param path [in,out] the path to be changed
+  /// @param suffix the extension to be added
+  void replaceExtension(std::string& path, const std::string& suffix) const {
+    auto ppoint = path.find_last_of(".");
+    if (ppoint != std::string::npos) {
+      path.replace(ppoint, path.length(), suffix);
+    } else {
+      path += suffix;
+    }
   }
 };
 
