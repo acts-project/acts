@@ -88,54 +88,34 @@ class IVisualization {
 
   /// @copydoc Acts::IVisualization::vertex(const Vector3D&, ColorType)
   ///
-  void vertex(const Vector3F& vtx, ColorType color = {120, 120, 120}) {
-    Vector3D vtxd = vtx.template cast<double>();
-    vertex(vtxd, color);
-  }
+  void vertex(const Vector3F& vtx, ColorType color = {120, 120, 120});
 
   /// @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, ColorType)
   ///
   void face(const std::vector<Vector3F>& vtxs,
-            ColorType color = {120, 120, 120}) {
-    std::vector<Vector3D> vtxsd;
-    std::transform(vtxs.begin(), vtxs.end(), std::back_inserter(vtxsd),
-                   [](auto& v) { return v.template cast<double>(); });
-    face(vtxsd, color);
-  }
+            ColorType color = {120, 120, 120});
 
   ///  @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
   /// ColorType)
   ///
   void line(const Vector3F& a, const Vector3F& b,
-            ColorType color = {120, 120, 120}) {
-    Vector3D ad = a.template cast<double>();
-    Vector3D bd = b.template cast<double>();
-    line(ad, bd, color);
-  }
+            ColorType color = {120, 120, 120});
 
+ protected:
   /// Helper: check for extension
   ///
   /// @note this is a placeholder for std::filesystem::has_extension
   /// which needs special linking until gcc9
   /// @param path the path to be checked
-  bool hasExtension(const std::string& path) const {
-    return (path.find(".") != std::string::npos);
-  }
+  bool hasExtension(const std::string& path) const;
 
-  /// Helper to replace the extension
+  /// Helper: replace the extension
   ///
-  /// @note this is a placeholder for std::filesystem::has_extension
+  /// @note this is a placeholder for std::filesystem::replace_extension
   /// which needs special linking until gcc9
   /// @param path [in,out] the path to be changed
   /// @param suffix the extension to be added
-  void replaceExtension(std::string& path, const std::string& suffix) const {
-    auto ppoint = path.find_last_of(".");
-    if (ppoint != std::string::npos) {
-      path.replace(ppoint, path.length(), suffix);
-    } else {
-      path += suffix;
-    }
-  }
+  void replaceExtension(std::string& path, const std::string& suffix) const;
 };
 
 /// Overload of the << operator to facilitate writing to streams.
