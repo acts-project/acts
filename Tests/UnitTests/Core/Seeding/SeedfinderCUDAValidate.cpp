@@ -27,6 +27,8 @@
 #include "SpacePoint.hpp"
 
 #include "Acts/Utilities/Platforms/PlatformDef.h"
+#include "Acts/Utilities/Platforms/CUDA/CuUtils.cu"
+#include <cuda_profiler_api.h>
 
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
@@ -69,6 +71,11 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
 }
 
 int main(int argc, char** argv) {
+  auto start_pre = std::chrono::system_clock::now();
+  
+  std::string devName;
+  SetDevice(0,devName);
+  
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
@@ -99,7 +106,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
   }
-
+  
   std::ifstream f(file);
   if (!f.good()) {
     std::cerr << "input file \"" << file << "\" does not exist\n";
@@ -114,6 +121,7 @@ int main(int argc, char** argv) {
   std::cout << "read " << spVec.size() << " SP from file " << file << " in "
             << elapsed_read.count() << "s" << std::endl;
 
+  /// For CPU seed finder
   Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160.;
@@ -141,14 +149,15 @@ int main(int argc, char** argv) {
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-      Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::Seedfinder<SpacePoint, Acts::CPU> a(config);
+      Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));  
+  Acts::Seedfinder<SpacePoint, Acts::CPU> seedfinder_cpu(config);
+  Acts::Seedfinder<SpacePoint, Acts::CUDA> seedfinder_cuda(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {
     return {sp.varianceR, sp.varianceZ};
   };
-
+  
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
   gridConf.bFieldInZ = config.bFieldInZ;
@@ -165,25 +174,141 @@ int main(int argc, char** argv) {
                                                  bottomBinFinder, topBinFinder,
                                                  std::move(grid), config);
 
-  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
-  auto start = std::chrono::system_clock::now();
+  auto end_pre = std::chrono::system_clock::now();
+  
+  std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
+  std::cout << "Preprocess Time: " << elapsec_pre.count() << std::endl;
+  
+  int nGroupToIterate = 500;
+  int group_count;
+  ///////// CPU
+  group_count=0;
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
+  auto start_cpu = std::chrono::system_clock::now();
   auto groupIt = spGroup.begin();
   auto endOfGroups = spGroup.end();
+  
   for (; !(groupIt == endOfGroups); ++groupIt) {
-    seedVector.push_back(a.createSeedsForGroup(
+    seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
+    group_count++;
+    if (group_count >= nGroupToIterate) break;
   }
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
-  std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
-  std::cout << "Number of regions: " << seedVector.size() << std::endl;
-  int numSeeds = 0;
-  for (auto& outVec : seedVector) {
-    numSeeds += outVec.size();
+  
+  auto end_cpu = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
+  std::cout << "CPU Time: " << elapsec_cpu.count() << std::endl;
+  std::cout << "Number of regions: " << seedVector_cpu.size() << std::endl;
+  
+
+  ///////// CUDA
+  //cudaProfilerStart();
+  
+  group_count=0;
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
+  auto start_cuda = std::chrono::system_clock::now();
+  groupIt = spGroup.begin();
+  
+  for (; !(groupIt == endOfGroups); ++groupIt) {
+    seedVector_cuda.push_back(seedfinder_cuda.createSeedsForGroup(
+        groupIt.bottom(), groupIt.middle(), groupIt.top()));
+    group_count++;
+    if (group_count >= nGroupToIterate) break;
   }
-  std::cout << "Number of seeds generated: " << numSeeds << std::endl;
+  
+  auto end_cuda = std::chrono::system_clock::now();  
+  std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
+  std::cout << "CUDA Time: " << elapsec_cuda.count() << std::endl;
+  std::cout << "Number of regions: " << seedVector_cpu.size() << std::endl;
+
+  //cudaProfilerStop();
+ 
+  int nSeed_cpu = 0;
+  for (auto& outVec : seedVector_cpu) {
+    nSeed_cpu += outVec.size();
+  }
+
+  int nSeed_cuda = 0;
+  for (auto& outVec : seedVector_cuda) {
+    nSeed_cuda += outVec.size();
+  }
+  
+  std::cout << "Number of Seeds (CPU | CUDA): " << nSeed_cpu << " | " << nSeed_cuda << std::endl;
+
+  int nMatch = 0;
+  
+  for (size_t i =0; i < seedVector_cpu.size(); i++){    
+    auto regionVec_cpu  = seedVector_cpu[i];
+    auto regionVec_cuda = seedVector_cuda[i];
+
+    std::vector< std::vector< SpacePoint > > seeds_cpu;
+    std::vector< std::vector< SpacePoint > > seeds_cuda;
+              
+    for (size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
+
+      std::vector< SpacePoint > seed_cpu;
+      SpacePoint sp0 = *(regionVec_cpu[i_cpu].sp()[0]);
+      SpacePoint sp1 = *(regionVec_cpu[i_cpu].sp()[1]);
+      SpacePoint sp2 = *(regionVec_cpu[i_cpu].sp()[2]);      
+      
+      seed_cpu.push_back(sp0);
+      seed_cpu.push_back(sp1);
+      seed_cpu.push_back(sp2);
+
+      seeds_cpu.push_back(seed_cpu);
+    }
+
+    for (size_t i_cuda = 0; i_cuda < regionVec_cuda.size(); i_cuda++) {
+
+      std::vector< SpacePoint > seed_cuda;     
+      SpacePoint sp0 = *(regionVec_cuda[i_cuda].sp()[0]);
+      SpacePoint sp1 = *(regionVec_cuda[i_cuda].sp()[1]);
+      SpacePoint sp2 = *(regionVec_cuda[i_cuda].sp()[2]);      
+      
+      seed_cuda.push_back(sp0);
+      seed_cuda.push_back(sp1);
+      seed_cuda.push_back(sp2);
+
+      seeds_cuda.push_back(seed_cuda);
+    }
+    
+    for (auto seed: seeds_cpu){
+      for (auto other: seeds_cuda){
+	if (seed[0] == other[0] &&
+	    seed[1] == other[1] &&
+	    seed[2] == other[2]){
+	  nMatch++;
+	  break;
+	}
+      }
+    }
+  }
+
+  std::cout << nMatch << " seeds are matched" << std::endl;
+    
   if (!quiet) {
-    for (auto& regionVec : seedVector) {
+    std::cout << "CPU Seed result:" << std::endl;
+    
+    for (auto& regionVec : seedVector_cpu) {
+      for (size_t i = 0; i < regionVec.size(); i++) {
+        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+        const SpacePoint* sp = seed->sp()[0];
+        std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
+                  << ") ";
+        sp = seed->sp()[1];
+        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
+        sp = seed->sp()[2];
+        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
+        std::cout << std::endl;
+      }
+    }
+    
+    std::cout << std::endl;
+    std::cout << "CUDA Seed result:" << std::endl;
+
+    for (auto& regionVec : seedVector_cuda) {
       for (size_t i = 0; i < regionVec.size(); i++) {
         const Acts::Seed<SpacePoint>* seed = &regionVec[i];
         const SpacePoint* sp = seed->sp()[0];
@@ -199,5 +324,9 @@ int main(int argc, char** argv) {
       }
     }
   }
+
+ 
   return 0;
 }
+
+
