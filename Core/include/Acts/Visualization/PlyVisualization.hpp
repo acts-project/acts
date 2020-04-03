@@ -12,8 +12,8 @@
 #include "Acts/Visualization/IVisualization.hpp"
 
 #include <array>
-#include <filesystem>
 #include <fstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -68,11 +68,11 @@ class PlyVisualization : public IVisualization {
   }
 
   /// @copydoc Acts::IVisualization::write()
-  void write(const std::filesystem::path& path) const final {
+  void write(const std::string& path) const final {
     std::ofstream os;
-    std::filesystem::path objectpath = path;
-    if (not objectpath.has_extension()) {
-      objectpath += ".ply";
+    std::string objectpath = path;
+    if (not IVisualization::hasExtension(path)) {
+      objectpath += std::string(".ply");
     }
     os.open(objectpath);
     write(os);

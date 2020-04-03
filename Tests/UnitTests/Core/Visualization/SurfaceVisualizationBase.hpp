@@ -52,10 +52,8 @@ static inline void test(IVisualization& helper, bool triangulate,
   /// Helper method to prepare the streams & helpers
   /// @param path is the file path
   /// @param clear ist he indicator to clear the helper
-  auto write = [&](const std::filesystem::path& path,
-                   bool clear = true) -> void {
-    std::filesystem::path wpath = path;
-    wpath += tag;
+  auto write = [&](const std::string& path, bool clear = true) -> void {
+    std::string wpath = path + tag;
     helper.write(wpath);
     if (clear) {
       helper.clear();
@@ -161,12 +159,10 @@ static inline void test(IVisualization& helper, bool triangulate,
   /// ------------- planar bounding box
   /// @param name of the file
   auto writeBoundingBox2D = [&](const RectangleBounds& rBounds,
-                                const std::filesystem::path& path) -> void {
+                                const std::string& path) -> void {
     IVisualization::ColorType bbColor = {126, 126, 126};
 
-    std::filesystem::path bbPath = path;
-    bbPath += tag;
-    bbPath += "_bbox";
+    std::string bbPath = path + tag + "_bbox";
 
     auto bbBounds = std::make_shared<RectangleBounds>(rBounds);
     auto bbSurface = Surface::makeShared<PlaneSurface>(identity, bbBounds);
