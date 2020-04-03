@@ -37,6 +37,32 @@ static inline void drawSurface(
   phedron.draw(helper, triangulate, color);
 }
 
+/// Helper method for volume objects
+///
+/// @tparam volume_t the templated volume class
+///
+/// @param helper [in, out] The visualization helper
+/// @param volume The surface to be drawn
+/// @param gctx The geometry context for which it is drawn
+/// @param transform An option additional transform
+/// @param lseg The number of segments for a full arch (if needed)
+/// @param triangulate The (optional) boolean diretive to triangulate the faces
+/// @param color the (optional) color of the object to be written
+template <typename volume_t>
+inline void drawVolume(IVisualization& helper, const volume_t& volume,
+                       const GeometryContext& gctx,
+                       const Transform3D& transform = Transform3D::Identity(),
+                       size_t lseg = 72, bool triangulate = false,
+                       const IVisualization::ColorType& color = {120, 120,
+                                                                 120}) {
+  // Drawing the polyhedron representation of surfaces
+  auto bSurfaces = volume.boundarySurfaces();
+  for (const auto& bs : bSurfaces) {
+    drawSurface(helper, bs->surfaceRepresentation(), gctx, transform, lseg,
+                triangulate, color);
+  }
+}
+
 }  // namespace Visualization
 
 }  // namespace Acts
