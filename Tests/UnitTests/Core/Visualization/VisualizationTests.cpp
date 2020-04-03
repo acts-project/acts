@@ -22,7 +22,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-BOOST_AUTO_TEST_CASE(construction_test) {
+BOOST_AUTO_TEST_CASE(VisualizationConstruction) {
   // this doesn't really test anything, other than conformance to the
   // IVisualization interface
   PlyVisualization ply;
@@ -154,7 +154,7 @@ end_header
   BOOST_CHECK(output.is_equal(exp));
 }
 
-BOOST_AUTO_TEST_CASE(obj_output_test) {
+BOOST_AUTO_TEST_CASE(VisualizationOutput) {
   ObjVisualization obj;
 
   output_test_stream output;
