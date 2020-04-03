@@ -33,15 +33,20 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     state.isInitialized = true;
   }
 
-  // Get z value of highest density bin
-  auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
+  double z = 0;
+  if (state.mainGrid != ActsVectorF<mainGridSize>::Zero()) {
+    // Get z value of highest density bin
+    auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
 
-  if (!maxZres.ok()) {
-    return maxZres.error();
+    if (!maxZres.ok()) {
+      return maxZres.error();
+    }
+    z = *maxZres;
   }
 
   // Construct output vertex
-  Vector3D seedPos = Vector3D(0., 0., *maxZres);
+  Vector3D seedPos =
+      vertexingOptions.vertexConstraint.position() + Vector3D(0., 0., z);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
