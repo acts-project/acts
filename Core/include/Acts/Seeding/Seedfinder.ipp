@@ -113,7 +113,8 @@ namespace Acts {
   CUDAArray<float> minHelixDiameter2_cuda(1, &m_config.minHelixDiameter2,1);
   CUDAArray<float> pT2perRadius_cuda(1, &m_config.pT2perRadius,1);
   CUDAArray<float> impactMax_cuda(1, &m_config.impactMax,1);
-  CUDAArray<int>   offset_cuda(1);
+  CUDAArray<int>   offsetVec_cuda(100); // length of 100 should be enough...
+  CPUArray<int>    offsetVec_cpu(100);
   
   /*----------------------------------
      Algorithm 0. Matrix Flattening 
@@ -352,24 +353,32 @@ namespace Acts {
     dim3 TS_GridSize(bIndex.size(),1,1);
     dim3 TS_BlockSize;
     nTopPass_cuda.CopyH2D(&zeros[0], nTopPass_cuda.GetSize());
-    
+
     offset = 0;
+    int seq = 0;
+    std::vector< int > blockSizeVec;
     while(offset<tIndex.size()){
-      offset_cuda.CopyH2D(&offset,1);
+      offsetVec_cpu[seq] = offset;
       BlockSize    = fmin(tIndex.size(), MAX_BLOCK_SIZE);
       BlockSize    = fmin(BlockSize,tIndex.size()-offset);
-      TS_BlockSize = dim3(BlockSize,1,1);
-      
+      offset += BlockSize;
+      blockSizeVec.push_back(BlockSize);
+      seq++;
+    }
+    offsetVec_cuda.CopyH2D(offsetVec_cpu.Get(),seq);
+
+    for (int i_s=0; i_s<seq; i_s++){
+      TS_BlockSize = dim3(blockSizeVec[i_s],1,1);
       SeedfinderCUDAKernels::searchTriplet(TS_GridSize, TS_BlockSize,
-					   offset_cuda.Get(),
+					   offsetVec_cuda.Get(i_s),
 					   nSpM_cuda.Get(),
 					   spMmat_cuda.GetEl(mIndex,0),
 					   nBcompMax_cuda.Get(),
 					   spBcompMat_cuda.GetEl(0,0),
 					   nTcompMax_cuda.Get(),				     
-					   spTcompMat_cuda.GetEl(offset,0),
+					   spTcompMat_cuda.GetEl(*offsetVec_cpu.Get(i_s),0),
 					   circBcompMat_cuda.GetEl(0,0),
-					   circTcompMat_cuda.GetEl(offset,0),
+					   circTcompMat_cuda.GetEl(*offsetVec_cpu.Get(i_s),0),
 					   // Seed finder config
 					   maxScatteringAngle2_cuda.Get(),
 					   sigmaScattering_cuda.Get(),
@@ -383,19 +392,18 @@ namespace Acts {
 					   curvatures_cuda.GetEl(0,0),
 					   impactparameters_cuda.GetEl(0,0)
 					   );
-      offset += BlockSize;
     }
 
     /* --------------------------------
        Algorithm 4. Seed Filter (SF)
      --------------------------------*/
-    
+        
+    // SEED Filtering is done ASYNCHRONOUSLY against Triplet search
+    // Need to call it again after last iteration
+
     std::vector<const InternalSpacePoint<external_spacepoint_t> *> tVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
-    
-    // SEED Filtering is done ASYNCHRONOUSLY against Triplet search
-    // Need to call it again after last iteration
     
     if (i_c > 0){
       seedsPerSpM.clear();
@@ -427,7 +435,6 @@ namespace Acts {
 	  curvatures.push_back(*curvatures_cpu.GetEl(tId,bId));
 	  impactParameters.push_back(*impactparameters_cpu.GetEl(tId,bId));
 	}
-
 	
 	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
 	sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(*bottomSPvec[compBottomIdx[i_b]],
@@ -478,7 +485,6 @@ namespace Acts {
 	  curvatures.push_back(*curvatures_cpu.GetEl(tId,bId));
 	  impactParameters.push_back(*impactparameters_cpu.GetEl(tId,bId));
 	}
-
 	
 	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
 	sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(*bottomSPvec[compBottomIdx[i_b]],
