@@ -130,7 +130,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
       m_faceBetaRectangleBounds));
 
   // face surfaces zx
-  //   (5) - at negative local x
+  //   (5) - at negative local y
   tTransform =
       new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.)) *
                       Translation3D(Vector3D(0., get(eHalfLengthY), 0.)) *
@@ -138,15 +138,15 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
                       AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
-      std::shared_ptr<const PlanarBounds>(m_faceZXRectangleBounds)));
-  //   (6) - at positive local x
+      std::shared_ptr<const PlanarBounds>(m_faceZXRectangleBoundsBottom)));
+  //   (6) - at positive local y
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., get(eHalfLengthY), 0.)) *
       AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.)) *
       AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
-      std::shared_ptr<const PlanarBounds>(m_faceZXRectangleBounds)));
+      std::shared_ptr<const PlanarBounds>(m_faceZXRectangleBoundsTop)));
 
   return rSurfaces;
 }
@@ -161,8 +161,11 @@ void Acts::TrapezoidVolumeBounds::buildSurfaceBounds() {
   m_faceBetaRectangleBounds = std::make_shared<const RectangleBounds>(
       get(eHalfLengthY) / cos(get(eBeta) - 0.5 * M_PI), get(eHalfLengthZ));
 
-  m_faceZXRectangleBounds = std::make_shared<const RectangleBounds>(
+  m_faceZXRectangleBoundsBottom = std::make_shared<const RectangleBounds>(
       get(eHalfLengthZ), get(eHalfLengthXnegY));
+
+  m_faceZXRectangleBoundsTop = std::make_shared<const RectangleBounds>(
+      get(eHalfLengthZ), get(eHalfLengthXposY));
 }
 
 bool Acts::TrapezoidVolumeBounds::inside(const Vector3D& pos,
