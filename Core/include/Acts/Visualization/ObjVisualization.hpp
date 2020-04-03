@@ -12,9 +12,9 @@
 #include "Acts/Visualization/IVisualization.hpp"
 
 #include <array>
-#include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -101,15 +101,15 @@ class ObjVisualization : public IVisualization {
   }
 
   /// @copydoc Acts::IVisualization::write()
-  void write(const std::filesystem::path& path) const final {
+  void write(const std::string& path) const final {
     std::ofstream os;
-    std::filesystem::path objectpath = path;
-    if (not objectpath.has_extension()) {
-      objectpath += ".obj";
+    std::string objectpath = path;
+    if (not IVisualization::hasExtension(objectpath)) {
+      objectpath += std::string(".obj");
     }
     os.open(objectpath);
-    std::filesystem::path mtlpath = objectpath;
-    mtlpath.replace_extension(".mtl");
+    std::string mtlpath = objectpath;
+    IVisualization::replaceExtension(mtlpath, ".mtl");
     std::ofstream mtlos;
     mtlos.open(mtlpath);
     write(os, mtlos);
