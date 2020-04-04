@@ -36,7 +36,6 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> very good seed
-    
     std::vector<float> compatibleSeedR;
 
     float invHelixDiameter = invHelixDiameterVec[i];
@@ -83,7 +82,7 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       if (compatibleSeedR.size() >= m_cfg.compatSeedLimit) {
         break;
       }
-    }    
+    }
     if (m_experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
       weight += m_experimentCuts->seedWeight(bottomSP, middleSP, *topSpVec[i]);
@@ -92,11 +91,11 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                                            *topSpVec[i])) {
         continue;
       }
-    }    
+    }
     selectedSeeds.push_back(std::make_pair(
-	weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
-	            bottomSP, middleSP, *topSpVec[i], zOrigin)));            
-  }  
+        weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
+                    bottomSP, middleSP, *topSpVec[i], zOrigin)));
+  }
   return selectedSeeds;
 }
 
@@ -108,7 +107,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
         seedsPerSpM,
     std::vector<Seed<external_spacepoint_t>>& outVec) const {
   // sort by weight and iterate only up to configured max number of seeds per
-  // middle SP  
+  // middle SP
   std::sort((seedsPerSpM.begin()), (seedsPerSpM.end()),
             [](const std::pair<float, std::unique_ptr<const Acts::InternalSeed<
                                           external_spacepoint_t>>>& i1,

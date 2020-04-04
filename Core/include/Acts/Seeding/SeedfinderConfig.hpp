@@ -96,7 +96,7 @@ struct SeedfinderConfig {
   float pT2perRadius = 0;
 
   // cuda-related
-  int nTopPassLimit = 10;
-  int offsetVecSize  = 100;
+  int nTopPassLimit = 50;  // it is may not be enough for 1000k spacepoints events
+  int offsetVecSize = 100; // This should be enough...
 };
 }  // namespace Acts

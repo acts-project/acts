@@ -16,7 +16,6 @@ __global__ void cuSearchDoublet(const unsigned char* isBottom,
 				);
 
 __global__ void cuTransformCoordinates(const unsigned char* isBottom,
-				       const int *  nSpM,
 				       const float* spMmat,				       
 				       const int* nSpB,
 				       const float* spBmat,
@@ -62,13 +61,16 @@ namespace Acts{
   void SeedfinderCUDAKernels::transformCoordinates(
 				   dim3 grid, dim3 block,
 				   const unsigned char* isBottom,
-				   const int *  nSpM,
 				   const float* spMmat,
 				   const int*   nSpB,
 				   const float* spBmat,
 				   float* circBmat){
     
-    cuTransformCoordinates<<< grid, block >>>(isBottom, nSpM, spMmat, nSpB, spBmat, circBmat);
+    cuTransformCoordinates<<< grid, block >>>(isBottom,
+					      spMmat,
+					      nSpB,
+					      spBmat,
+					      circBmat);
     gpuErrChk( cudaGetLastError() );  
   }
 
@@ -173,31 +175,27 @@ __global__ void cuSearchDoublet(const unsigned char* isBottom,
 
 
 __global__ void cuTransformCoordinates(const unsigned char* isBottom,
-				       const int *  nSpM,
 				       const float* spMmat,
 				       const int*   nSpB,
 				       const float* spBmat,
 				       float*       circBmat){
 
-  int globalId = threadIdx.x+blockDim.x*blockIdx.x;
-  if (globalId>=*nSpB) return;
-  
-  float xM = spMmat[(*nSpM)*0];
-  float yM = spMmat[(*nSpM)*1];
-  float zM = spMmat[(*nSpM)*2];
-  float rM = spMmat[(*nSpM)*3];
-  float varianceRM = spMmat[(*nSpM)*4];
-  float varianceZM = spMmat[(*nSpM)*5];
-  
+  float xM = spMmat[blockIdx.x+gridDim.x*0];
+  float yM = spMmat[blockIdx.x+gridDim.x*1];
+  float zM = spMmat[blockIdx.x+gridDim.x*2];
+  float rM = spMmat[blockIdx.x+gridDim.x*3];
+  float varianceRM = spMmat[blockIdx.x+gridDim.x*4];
+  float varianceZM = spMmat[blockIdx.x+gridDim.x*5];
+
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
     
-  float xB = spBmat[globalId+(*nSpB)*0];
-  float yB = spBmat[globalId+(*nSpB)*1];
-  float zB = spBmat[globalId+(*nSpB)*2];
-  //float rB = spBmat[globalId+(*nSpB)*3];
-  float varianceRB = spBmat[globalId+(*nSpB)*4];
-  float varianceZB = spBmat[globalId+(*nSpB)*5];
+  float xB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+0)];
+  float yB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+1)];
+  float zB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+2)];
+  float rB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+3)];
+  float varianceRB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+4)];
+  float varianceZB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+5)];
 
   float deltaX = xB - xM;
   float deltaY = yB - yM;
@@ -233,12 +231,19 @@ __global__ void cuTransformCoordinates(const unsigned char* isBottom,
   float Er = ((varianceZM + varianceZB) +
 	      (cot_theta * cot_theta) * (varianceRM + varianceRB)) * iDeltaR2;  
   
-  circBmat[globalId+(*nSpB)*0] = Zo;
-  circBmat[globalId+(*nSpB)*1] = cot_theta;
-  circBmat[globalId+(*nSpB)*2] = iDeltaR;
-  circBmat[globalId+(*nSpB)*3] = Er;
-  circBmat[globalId+(*nSpB)*4] = U;
-  circBmat[globalId+(*nSpB)*5] = V; 
+  //circBmat[globalId+(*nSpB)*0] = Zo;
+  //circBmat[globalId+(*nSpB)*1] = cot_theta;
+  //circBmat[globalId+(*nSpB)*2] = iDeltaR;
+  //circBmat[globalId+(*nSpB)*3] = Er;
+  //circBmat[globalId+(*nSpB)*4] = U;
+  //circBmat[globalId+(*nSpB)*5] = V;
+
+  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+0)] = Zo;
+  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+1)] = cot_theta;
+  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+2)] = iDeltaR;
+  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+3)] = Er;
+  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+4)] = U;
+  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+5)] = V; 
 }
 
 __global__ void cuSearchTriplet(const int*   offset,

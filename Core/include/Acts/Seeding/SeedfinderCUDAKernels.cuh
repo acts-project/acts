@@ -32,7 +32,6 @@ public:
 
   static void transformCoordinates( dim3 grid, dim3 block,
 				    const unsigned char*  isBottom,
-				    const int *  nSpM,
 				    const float* spMmat,
 				    const int*   nSpB,
 				    const float* spBmat,
