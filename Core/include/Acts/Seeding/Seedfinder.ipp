@@ -369,11 +369,11 @@ namespace Acts {
   CPUMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax_cpu[0]);
   CPUMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax_cpu[0]);
   
-  for (int i_c=0; i_c<mCompIndex.size(); i_c++){
+  for (int i_m=0; i_m<mCompIndex.size(); i_m++){
     nTopPass_cuda.CopyH2D(&zeros[0], nTopPass_cuda.GetSize());    
-    auto mIndex = std::get<0>(mCompIndex[i_c]);
-    auto bIndex = std::get<1>(mCompIndex[i_c]);
-    auto tIndex = std::get<2>(mCompIndex[i_c]);
+    auto mIndex = std::get<0>(mCompIndex[i_m]);
+    auto bIndex = std::get<1>(mCompIndex[i_m]);
+    auto tIndex = std::get<2>(mCompIndex[i_m]);
     
     // Get offset vector
     offset = 0;
@@ -397,13 +397,13 @@ namespace Acts {
       SeedfinderCUDAKernels::searchTriplet(TS_GridSize, TS_BlockSize,
 					   offsetVec_cuda.Get(it),
 					   nMcomp_cuda.Get(),
-					   spMcompMat_cuda.GetEl(i_c,0),
+					   spMcompMat_cuda.GetEl(i_m,0),
 					   nBcompMax_cuda.Get(),
-					   spBcompMat_cuda.GetEl(0,6*i_c),
+					   spBcompMat_cuda.GetEl(0,6*i_m),
 					   nTcompMax_cuda.Get(),
-					   spTcompMat_cuda.GetEl(*offsetVec_cpu.Get(it),6*i_c),
-					   circBcompMat_cuda.GetEl(0,6*i_c),
-					   circTcompMat_cuda.GetEl(*offsetVec_cpu.Get(it),6*i_c),
+					   spTcompMat_cuda.GetEl(*offsetVec_cpu.Get(it),6*i_m),
+					   circBcompMat_cuda.GetEl(0,6*i_m),
+					   circTcompMat_cuda.GetEl(*offsetVec_cpu.Get(it),6*i_m),
 					   // Seed finder config
 					   maxScatteringAngle2_cuda.Get(),
 					   sigmaScattering_cuda.Get(),
@@ -434,11 +434,11 @@ namespace Acts {
     std::vector<float> impactParameters;
     
     // For triplets collected at previous iteration
-    if (i_c > 0){
+    if (i_m > 0){
       seedsPerSpM.clear();
-      auto middleIdx     = std::get<0>(mCompIndex[i_c-1]);
-      auto compBottomIdx = std::get<1>(mCompIndex[i_c-1]);
-      auto compTopIdx    = std::get<2>(mCompIndex[i_c-1]);
+      auto middleIdx     = std::get<0>(mCompIndex[i_m-1]);
+      auto compBottomIdx = std::get<1>(mCompIndex[i_m-1]);
+      auto compTopIdx    = std::get<2>(mCompIndex[i_m-1]);
       
       for (int i_b=0; i_b<compBottomIdx.size(); i_b++){
 	if (nTopPass_cpu[i_b]==0) continue;
@@ -485,11 +485,11 @@ namespace Acts {
     impactparameters_cpu.CopyD2H(impactparameters_cuda.GetEl(0,0), nTopPassLimit*nBcompMax_cpu[0]);
 
     // For the last iteration
-    if (i_c == mCompIndex.size()-1 ){
+    if (i_m == mCompIndex.size()-1 ){
       seedsPerSpM.clear();
-      auto middleIdx     = std::get<0>(mCompIndex[i_c]);
-      auto compBottomIdx = std::get<1>(mCompIndex[i_c]);
-      auto compTopIdx    = std::get<2>(mCompIndex[i_c]);
+      auto middleIdx     = std::get<0>(mCompIndex[i_m]);
+      auto compBottomIdx = std::get<1>(mCompIndex[i_m]);
+      auto compTopIdx    = std::get<2>(mCompIndex[i_m]);
       
       for (int i_b=0; i_b<compBottomIdx.size(); i_b++){
 	if (nTopPass_cpu[i_b]==0) continue;
