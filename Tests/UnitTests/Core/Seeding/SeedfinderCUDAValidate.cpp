@@ -78,12 +78,16 @@ int main(int argc, char** argv) {
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
-
+  int  nGroupToIterate=500;
+  
   int opt;
-  while ((opt = getopt(argc, argv, "hf:q")) != -1) {
+  while ((opt = getopt(argc, argv, "hf:n:q")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;
+        break;
+      case 'n':
+        nGroupToIterate = atoi(optarg);
         break;
       case 'q':
         quiet = true;
@@ -98,6 +102,9 @@ int main(int argc, char** argv) {
           std::cout
               << "      -f FILE : read spacepoints from FILE. Default is \""
               << file << "\"" << std::endl;
+          std::cout
+              << "      -n NUM  : Number of groups to iterate in seed finding. Default is "
+              << nGroupToIterate << std::endl;	  
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
         }
@@ -120,6 +127,8 @@ int main(int argc, char** argv) {
   std::cout << "read " << spVec.size() << " SP from file " << file << " in "
             << elapsed_read.count() << "s" << std::endl;
 
+  std::cout << "Number of groups to iterate: " << nGroupToIterate << std::endl;
+  
   /// For CPU seed finder
   Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
@@ -178,7 +187,6 @@ int main(int argc, char** argv) {
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
   std::cout << "Preprocess Time: " << elapsec_pre.count() << std::endl;
   
-  int nGroupToIterate = 2;
   int group_count;
   ///////// CPU
   group_count=0;
@@ -199,7 +207,6 @@ int main(int argc, char** argv) {
   std::cout << "CPU Time: " << elapsec_cpu.count() << std::endl;
   std::cout << "Number of regions: " << seedVector_cpu.size() << std::endl;
   
-
   ///////// CUDA
   //cudaProfilerStart();
   
@@ -243,30 +250,21 @@ int main(int argc, char** argv) {
     std::vector< std::vector< SpacePoint > > seeds_cpu;
     std::vector< std::vector< SpacePoint > > seeds_cuda;
               
-    for (size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
-
+    //for (size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
+    for (auto sd: regionVec_cpu){
       std::vector< SpacePoint > seed_cpu;
-      SpacePoint sp0 = *(regionVec_cpu[i_cpu].sp()[0]);
-      SpacePoint sp1 = *(regionVec_cpu[i_cpu].sp()[1]);
-      SpacePoint sp2 = *(regionVec_cpu[i_cpu].sp()[2]);      
-      
-      seed_cpu.push_back(sp0);
-      seed_cpu.push_back(sp1);
-      seed_cpu.push_back(sp2);
+      seed_cpu.push_back(*(sd.sp()[0]));
+      seed_cpu.push_back(*(sd.sp()[1]));
+      seed_cpu.push_back(*(sd.sp()[2]));
 
       seeds_cpu.push_back(seed_cpu);
     }
 
-    for (size_t i_cuda = 0; i_cuda < regionVec_cuda.size(); i_cuda++) {
-
-      std::vector< SpacePoint > seed_cuda;     
-      SpacePoint sp0 = *(regionVec_cuda[i_cuda].sp()[0]);
-      SpacePoint sp1 = *(regionVec_cuda[i_cuda].sp()[1]);
-      SpacePoint sp2 = *(regionVec_cuda[i_cuda].sp()[2]);      
-      
-      seed_cuda.push_back(sp0);
-      seed_cuda.push_back(sp1);
-      seed_cuda.push_back(sp2);
+    for (auto sd: regionVec_cuda) {
+      std::vector< SpacePoint > seed_cuda;           
+      seed_cuda.push_back(*(sd.sp()[0]));
+      seed_cuda.push_back(*(sd.sp()[1]));
+      seed_cuda.push_back(*(sd.sp()[2]));
 
       seeds_cuda.push_back(seed_cuda);
     }
