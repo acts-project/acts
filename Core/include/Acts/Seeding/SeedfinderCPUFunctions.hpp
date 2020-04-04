@@ -13,6 +13,15 @@
 
 namespace Acts{
 
+  struct LinCircle {
+    float Zo;
+    float cotTheta;
+    float iDeltaR;
+    float Er;
+    float U;
+    float V;
+  };
+  
   template< typename external_spacepoint_t, typename sp_range_t >
   class SeedfinderCPUFunctions {
 

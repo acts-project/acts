@@ -11,9 +11,6 @@
 #include <type_traits>
 #include <algorithm>
 #include <chrono>
-#include <Acts/Seeding/SeedfinderCPUFunctions.hpp>
-#include <Acts/Seeding/SeedfinderCUDAKernels.cuh>
-#include <Acts/Utilities/Platforms/CUDA/CuUtils.cu>
 
 namespace Acts {
 
@@ -37,6 +34,7 @@ namespace Acts {
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);    
   }
+
   
   template< typename external_spacepoint_t, typename platform_t>
   template< typename T, typename sp_range_t>
@@ -89,6 +87,8 @@ namespace Acts {
   
   return outputVec;
   }
+
+#ifdef  ACTS_HAS_CUDA
   
   // CUDA seed finding
   template< typename external_spacepoint_t, typename platform_t>
@@ -531,5 +531,8 @@ namespace Acts {
   }  
   
   return outputVec;  
-  }  
+  }
+
+#endif
+  
 }// namespace Acts

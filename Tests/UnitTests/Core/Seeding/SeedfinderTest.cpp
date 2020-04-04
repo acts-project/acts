@@ -22,11 +22,10 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Platforms/PlatformDef.h"
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
-
-#include "Acts/Utilities/Platforms/PlatformDef.h"
 
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;

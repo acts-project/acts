@@ -10,13 +10,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # determine project version; sets _acts_version and _acts_commit_hash
 include(ActsRetrieveVersion)
-
-# Beomki: Need to modulize the CUDA activation later....
-project(Acts VERSION ${_acts_version} LANGUAGES CUDA CXX)			  
-set(CMAKE_CUDA_STANDARD 14)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_FLAGS -arch=sm_61)
-
+project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # build options
 
@@ -26,7 +20,7 @@ option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
 option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
 option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
 option(ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
-option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json" OFF)
+option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json" ON)
 option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_LEGACY "Build legacy package" OFF)
@@ -35,6 +29,8 @@ option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" ON)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_DOC "Build documentation" OFF)
+option(ACTS_BUILD_CUDA_FEATURES "Build cuda-related features" OFF)
+
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
@@ -57,7 +53,7 @@ include(TargetSourcesLocal) # needed only until we require CMake 3.13
 
 # required packages
 set(Boost_NO_BOOST_CMAKE ON) # disable new cmake features from Boost 1.70 on
-find_package(Boost 1.69 REQUIRED COMPONENTS program_options unit_test_framework)
+find_package(Boost 1.70 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
 
 # optional packages
@@ -79,6 +75,14 @@ if(ACTS_BUILD_TGEO_PLUGIN)
 endif()
 if(ACTS_BUILD_DOC)
   find_package(Doxygen 1.8.11 REQUIRED)
+endif()
+if(ACTS_BUILD_CUDA_FEATURES)
+  enable_language(CUDA)
+  set(CMAKE_CUDA_STANDARD 14)
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  add_definitions(-DACTS_HAS_CUDA) 
+  find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+  include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 endif()
 
 # core library, core plugins, and other components

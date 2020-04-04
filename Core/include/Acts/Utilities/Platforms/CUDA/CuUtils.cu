@@ -4,9 +4,6 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-#define WARP_SIZE 32
-#define MAX_BLOCK_SIZE 1024
-
 #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {

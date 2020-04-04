@@ -10,10 +10,7 @@
 
 #include <iostream>
 
-
 namespace Acts{
-class CuSeedfinderConfig;
-class CuIExperimentCuts;
   
 class SeedfinderCUDAKernels {
 

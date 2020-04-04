@@ -28,7 +28,6 @@
 
 #include "Acts/Utilities/Platforms/PlatformDef.h"
 #include "Acts/Utilities/Platforms/CUDA/CuUtils.cu"
-#include <cuda_profiler_api.h>
 
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;

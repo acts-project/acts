@@ -11,6 +11,9 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedfinderCPUFunctions.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Utilities/Platforms/PlatformDef.h"
 
 #include <array>
 #include <list>
@@ -20,21 +23,13 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "Acts/Seeding/SeedFilter.hpp"
 
-// --- CUDA headers --- //
-#include "Acts/Utilities/Platforms/PlatformDef.h"
-#include "cuda_runtime_api.h"
+#ifdef  ACTS_HAS_CUDA
+#include <Acts/Seeding/SeedfinderCUDAKernels.cuh>
+#endif
 
-namespace Acts {
-struct LinCircle {
-  float Zo;
-  float cotTheta;
-  float iDeltaR;
-  float Er;
-  float U;
-  float V;
-};
+namespace Acts{
+
   template <typename external_spacepoint_t, typename platform_t>
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
@@ -71,9 +66,13 @@ class Seedfinder {
   typename std::enable_if< std::is_same<T, Acts::CPU>::value, std::vector<Seed<external_spacepoint_t> > >::type
   createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
+#ifdef  ACTS_HAS_CUDA
+    
   template< typename T=Platform_t, typename sp_range_t>
   typename std::enable_if< std::is_same<T, Acts::CUDA>::value, std::vector<Seed<external_spacepoint_t> > >::type
   createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+
+#endif
     
  private:
 
