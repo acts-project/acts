@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
   std::cout << "Preprocess Time: " << elapsec_pre.count() << std::endl;
   
-  int nGroupToIterate = 500;
+  int nGroupToIterate = 2;
   int group_count;
   ///////// CPU
   group_count=0;

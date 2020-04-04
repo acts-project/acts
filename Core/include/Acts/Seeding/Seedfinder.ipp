@@ -113,8 +113,6 @@ namespace Acts {
   CUDAArray<float> minHelixDiameter2_cuda(1, &m_config.minHelixDiameter2,1);
   CUDAArray<float> pT2perRadius_cuda(1, &m_config.pT2perRadius,1);
   CUDAArray<float> impactMax_cuda(1, &m_config.impactMax,1);
-  CUDAArray<int>   offsetVec_cuda(100); // length of 100 should be enough...
-  CPUArray<int>    offsetVec_cpu(100);
   
   /*----------------------------------
      Algorithm 0. Matrix Flattening 
@@ -271,22 +269,23 @@ namespace Acts {
   CUDAMatrix<float> spTcompMat_cuda(nTcompMax_cpu[0],6);   
   CUDAMatrix<float> circBcompMat_cuda(nBcompMax_cpu[0],6); 
   CUDAMatrix<float> circTcompMat_cuda(nTcompMax_cpu[0],6);
-  CPUArray<float>   Zob_cpu(nBcompMax_cpu[0]); 
 
   // For Triplet Search
-  const int         nTopPassLimit = 10;    
-  CUDAArray<int>    nTopPassLimit_cuda(1, &nTopPassLimit, 1);  
+  const int nTopPassLimit = m_config.nTopPassLimit;
+  CUDAArray<int>    nTopPassLimit_cuda(1, &nTopPassLimit, 1);
   std::vector<int>  zeros(nBcompMax_cpu[0],0); // Zero initialization;
+  CUDAArray<int>    offsetVec_cuda(m_config.offsetVecSize); // length of 100 should be enough...
+  CPUArray<int>     offsetVec_cpu(m_config.offsetVecSize);  
   CUDAArray<int>    nTopPass_cuda(nBcompMax_cpu[0]);
   CUDAMatrix<int>   tPassIndex_cuda(nTopPassLimit, nBcompMax_cpu[0]); 
   CUDAMatrix<float> curvatures_cuda(nTopPassLimit, nBcompMax_cpu[0]);       
   CUDAMatrix<float> impactparameters_cuda(nTopPassLimit, nBcompMax_cpu[0]);
 
+  CPUArray<float>   Zob_cpu(nBcompMax_cpu[0]); 
   CPUArray<int>     nTopPass_cpu(nBcompMax_cpu[0]);
   CPUMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax_cpu[0]); 
   CPUMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax_cpu[0]);
   CPUMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax_cpu[0]);
-
   
   for (int i_c=0; i_c<mCompIndex.size(); i_c++){
   
@@ -344,7 +343,6 @@ namespace Acts {
 						nTcompMax_cuda.Get(),
 						spTcompMat_cuda.GetEl(0,0),
 						circTcompMat_cuda.GetEl(0,0));
-
     
     /* -----------------------------------
        Algorithm 3. Triplet Search (TS)
@@ -400,7 +398,6 @@ namespace Acts {
         
     // SEED Filtering is done ASYNCHRONOUSLY against Triplet search
     // Need to call it again after last iteration
-
     std::vector<const InternalSpacePoint<external_spacepoint_t> *> tVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
@@ -497,8 +494,7 @@ namespace Acts {
 			   std::make_move_iterator(sameTrackSeeds.end()));	      
       }
       m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);            
-    }
-    
+    }    
   }  
   return outputVec;  
   }  

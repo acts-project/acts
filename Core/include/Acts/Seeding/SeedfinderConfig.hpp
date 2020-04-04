@@ -94,5 +94,9 @@ struct SeedfinderConfig {
   float pTPerHelixRadius = 0;
   float minHelixDiameter2 = 0;
   float pT2perRadius = 0;
+
+  // cuda-related
+  int nTopPassLimit = 10;
+  int offsetVecSize  = 100;
 };
 }  // namespace Acts
