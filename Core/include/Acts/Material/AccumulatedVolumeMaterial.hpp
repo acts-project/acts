@@ -10,7 +10,7 @@
 
 #include <limits>
 
-#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 
 namespace Acts {
 
@@ -20,7 +20,7 @@ namespace Acts {
 class AccumulatedVolumeMaterial {
  public:
   /// Add one entry with the given material properties.
-  void accumulate(const Material& mat);
+  void accumulate(const MaterialProperties& mat);
 
   /// Compute the average material collected so far.
   ///
@@ -33,6 +33,7 @@ class AccumulatedVolumeMaterial {
   float m_totalAr{0.};
   float m_totalZ{0.};
   float m_totalRho{0.};
+  float m_thickness{1.};
   unsigned int m_materialEntries{0};
   unsigned int m_vacuumEntries{0};
 };
