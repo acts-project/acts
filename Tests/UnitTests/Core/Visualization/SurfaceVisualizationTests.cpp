@@ -20,7 +20,7 @@
 namespace Acts {
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(Visualization)
+BOOST_AUTO_TEST_SUITE(VisualizationTests)
 
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
   ObjVisualization obj;
