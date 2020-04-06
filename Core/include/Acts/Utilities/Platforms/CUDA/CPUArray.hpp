@@ -32,8 +32,15 @@ public:
 
   Var_t* Get(size_t offset=0){ return fHostPtr+offset; }
 
-  void CopyD2H(Var_t* devPtr, size_t len, size_t offset=0){
-    cudaMemcpy(fHostPtr, devPtr+offset, len*sizeof(Var_t), cudaMemcpyDeviceToHost);
+  void CopyD2H(Var_t* devPtr, size_t len, size_t offset=0, cudaStream_t* stream = nullptr){
+    if (stream == nullptr){
+      //cudaMemcpy(fHostPtr, devPtr+offset, len*sizeof(Var_t), cudaMemcpyDeviceToHost);
+      cudaMemcpy(fHostPtr+offset, offset, len*sizeof(Var_t), cudaMemcpyDeviceToHost);
+    }
+    else if (stream != nullptr){
+      //cudaMemcpyAsync(fHostPtr, devPtr+offset, len*sizeof(Var_t), cudaMemcpyDeviceToHost, *stream);
+      cudaMemcpyAsync(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost, *stream);
+    }
   }
 
    	Var_t& operator[](std::size_t idx)       { return fHostPtr[idx]; }
