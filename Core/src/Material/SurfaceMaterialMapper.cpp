@@ -159,7 +159,8 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // Prepare Action list and abort list
   using DebugOutput = detail::DebugOutputActor;
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
-  using ActionList = ActionList<MaterialSurfaceCollector, DebugOutput>;
+  using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
+  using ActionList = ActionList<MaterialSurfaceCollector, MaterialVolumeCollector, DebugOutput>;
   using AbortList = AbortList<detail::EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
@@ -169,6 +170,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
   auto mcResult = result.get<MaterialSurfaceCollector::result_type>();
+  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
   // Massive screen output
   if (m_cfg.mapperDebugOutput) {
     auto debugOutput = result.get<DebugOutput::result_type>();
@@ -177,6 +179,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   }
 
   auto mappingSurfaces = mcResult.collected;
+  auto mappingVolumes = mvcResult.collected;
 
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
@@ -200,8 +203,11 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // onto the mapping surfaces:
   // - material steps and surfaces are assumed to be ordered along the
   // mapping ray
+  //- do not record the material inside a volume with material
   auto rmIter = rMaterial.begin();
   auto sfIter = mappingSurfaces.begin();
+  auto volIter = mappingVolumes.begin();
+  bool encounterVolume = false;
 
   // Use those to minimize the lookup
   GeometryID lastID = GeometryID();
@@ -217,6 +223,16 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // Assign the recorded ones, break if you hit an end
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
+    if(volIter != mappingVolumes.end() && encounterVolume==true && !volIter->volume->inside(rmIter->position)){
+      encounterVolume=false;
+      ++volIter;
+    }
+
+    if(volIter != mappingVolumes.end() && volIter->volume->inside(rmIter->position)){
+      encounterVolume=true;
+      ++rmIter;
+      continue;
+    }
     if (sfIter != mappingSurfaces.end() - 1 &&
         (rmIter->position - sfIter->position).norm() >
             (rmIter->position - (sfIter + 1)->position).norm()) {

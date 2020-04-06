@@ -22,6 +22,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -33,6 +34,13 @@ class TrackingGeometry;
 struct MaterialSurface {
   bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
+  }
+};
+
+/// @brief selector for finding
+struct MaterialVolume {
+  bool operator()(const TrackingVolume& vf) const {
+    return (vf.volumeMaterial() != nullptr);
   }
 };
 
