@@ -71,17 +71,15 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
 
 int main(int argc, char** argv) {
   auto start_pre = std::chrono::system_clock::now();
-  
-  std::string devName;
-  SetDevice(0,devName);
-  
+    
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
   int  nGroupToIterate=500;
+  int  deviceID = 0;
   
   int opt;
-  while ((opt = getopt(argc, argv, "hf:n:q")) != -1) {
+  while ((opt = getopt(argc, argv, "hf:n:d:q")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;
@@ -89,6 +87,9 @@ int main(int argc, char** argv) {
       case 'n':
         nGroupToIterate = atoi(optarg);
         break;
+      case 'd':
+        deviceID = atoi(optarg);
+        break;	
       case 'q':
         quiet = true;
         break;
@@ -100,11 +101,14 @@ int main(int argc, char** argv) {
         if (help) {
           std::cout << "      -h : this help" << std::endl;
           std::cout
-              << "      -f FILE : read spacepoints from FILE. Default is \""
+              << "      -f FILE  : read spacepoints from FILE. Default is \""
               << file << "\"" << std::endl;
           std::cout
-              << "      -n NUM  : Number of groups to iterate in seed finding. Default is "
-              << nGroupToIterate << std::endl;	  
+              << "      -n NUM   : Number of groups to iterate in seed finding. Default is "
+              << nGroupToIterate << std::endl;
+          std::cout
+              << "      -d DEVID : NVIDIA GPU device ID. Default is "
+              << deviceID << std::endl;	  	  
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
         }
@@ -112,6 +116,9 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
   }
+
+  std::string devName;
+  SetDevice(deviceID,devName);
   
   std::ifstream f(file);
   if (!f.good()) {
