@@ -11,9 +11,10 @@
 #include <functional>
 #include <optional>
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
-
 namespace Acts {
 
 /// @brief Struct for mapping global 3D positions to material values
@@ -219,7 +220,7 @@ struct MaterialMapper {
 /// collection of numbers.
 /// @tparam G Type of the grid
 template <typename Mapper_t>
-class InterpolatedMaterialMap final {
+class InterpolatedMaterialMap : public IVolumeMaterial {
  public:
   /// @brief Temporary storage of a certain cell to improve material access
   struct Cache {
@@ -234,12 +235,20 @@ class InterpolatedMaterialMap final {
   /// @param [in] mapper Material map
   InterpolatedMaterialMap(Mapper_t&& mapper) : m_mapper(std::move(mapper)) {}
 
+  /// @brief Create interpolated map
+  ///
+  /// @param [in] mapper Material map
+  /// @param [in] BinUtility
+  InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility&& bu) : m_mapper(std::move(mapper)) {
+    m_binUtility = bu;
+  }
+
   /// @brief Retrieve material
   ///
   /// @param [in] position Global 3D position
   ///
   /// @return Material at given position
-  Material getMaterial(const Vector3D& position) const {
+  const Material& material(const Vector3D& position) const {
     return m_mapper.getMaterial(position);
   }
 
@@ -300,6 +309,9 @@ class InterpolatedMaterialMap final {
     return m_mapper.isInside(position);
   }
 
+  /// Return the BinUtility
+  const BinUtility& binUtility() const { return m_binUtility; }
+
  private:
   /// @brief Retrieve cell for given position
   ///
@@ -319,5 +331,7 @@ class InterpolatedMaterialMap final {
   /// material grid and the interpolation of the material component values on
   /// close-by grid points.
   Mapper_t m_mapper;
+
+  BinUtility m_binUtility;
 };
 }  // namespace Acts
