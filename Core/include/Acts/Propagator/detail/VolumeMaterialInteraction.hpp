@@ -8,17 +8,17 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 
 namespace Acts {
 namespace detail {
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
   /// Data from the propagation state
-  const TrackingVolume*  volume;
+  const TrackingVolume* volume;
 
   const Vector3D pos;
   const double time;
@@ -68,8 +68,7 @@ struct VolumeMaterialInteraction {
         nav(state.stepping.navDir),
         variancePhi(state.stepping.cov(ePHI, ePHI)),
         varianceTheta(state.stepping.cov(eTHETA, eTHETA)),
-        varianceQoverP(state.stepping.cov(eQOP, eQOP)){
-        }
+        varianceQoverP(state.stepping.cov(eQOP, eQOP)) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
@@ -80,14 +79,13 @@ struct VolumeMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialProperties(
-      const propagator_state_t& state) {
-  pathCorrection = 0;
-  slab = MaterialProperties(state.navigation.currentVolume->volumeMaterial()->material(pos),1); //state.stepping.StepSize
-  return slab;
-
+  bool evaluateMaterialProperties(const propagator_state_t& state) {
+    pathCorrection = 0;
+    slab = MaterialProperties(
+        state.navigation.currentVolume->volumeMaterial()->material(pos),
+        1);  // state.stepping.StepSize
+    return slab;
   }
-
 };
 }  // namespace detail
 }  // end of namespace Acts
