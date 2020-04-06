@@ -355,7 +355,6 @@ namespace Acts {
     
   const int nTopPassLimit = m_config.nTopPassLimit;
   CUDAArray<int>    nTopPassLimit_cuda(1, &nTopPassLimit, 1);
-  std::vector<int>  zeros(nBcompMax_cpu[0],0);
   CUDAArray<int>    offsetVec_cuda(m_config.offsetVecSize); 
   CPUArray<int>     offsetVec_cpu(m_config.offsetVecSize);  
   CUDAArray<int>    nTopPass_cuda(nBcompMax_cpu[0]);
@@ -370,7 +369,6 @@ namespace Acts {
   CPUMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax_cpu[0]);
   
   for (int i_m=0; i_m<mCompIndex.size(); i_m++){
-    nTopPass_cuda.CopyH2D(&zeros[0], nTopPass_cuda.GetSize());    
     auto mIndex = std::get<0>(mCompIndex[i_m]);
     auto bIndex = std::get<1>(mCompIndex[i_m]);
     auto tIndex = std::get<2>(mCompIndex[i_m]);

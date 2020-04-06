@@ -263,6 +263,12 @@ __global__ void cuSearchTriplet(const int*   offset,
 				float* impactparameters
 				){
   extern __shared__ float shared[];
+
+  // Zero initialization of nTopPass
+  if (threadIdx.x == 0 && *offset == 0){
+    nTopPass[blockIdx.x] = 0;
+  }
+  __syncthreads();
   
   float* impact   = (float*)shared;
   float* invHelix = (float*)&impact[blockDim.x];
