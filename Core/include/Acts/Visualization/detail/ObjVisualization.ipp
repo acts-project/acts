@@ -111,8 +111,8 @@ void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
         mos << std::to_string(color[1] / 256.) << " ";
         mos << std::to_string(color[2] / 256.) << " "
             << "\n";
-        mos << "\n";
       }
+      mos << "\n";
     }
     return std::string("usemtl ") + materialName;
   };
