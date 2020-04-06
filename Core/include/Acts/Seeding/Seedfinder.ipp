@@ -236,9 +236,10 @@ namespace Acts {
   -------------------------------------------*/
   
   std::vector< std::tuple<int, std::vector< int >, std::vector< int > > > mCompIndex;
+
   CPUArray<int>  nBcompMax_cpu(1); nBcompMax_cpu[0] = 0;
   CPUArray<int>  nTcompMax_cpu(1); nTcompMax_cpu[0] = 0;
-  
+
   for (int i_m=0; i_m<nMiddle; i_m++){
     std::vector< int > bIndex;
     for (int i=0; i<nBottom; i++){
@@ -275,7 +276,7 @@ namespace Acts {
     auto tIndex = std::get<2>(mCompIndex[i_m]);
 
     for (int i=0; i<6; i++){
-      spMcompMat_cpu.SetEl(i_m,i,*spMmat_cpu.GetEl(mIndex,i));
+      spMcompMat_cpu.SetEl(i_m,i,std::move(*spMmat_cpu.GetEl(mIndex,i)));
     }      
     //spMcompMat_cpu.SetEl(i_m,0,*spMmat_cpu.GetEl(mIndex,0));
     //spMcompMat_cpu.SetEl(i_m,1,*spMmat_cpu.GetEl(mIndex,1));
@@ -286,7 +287,7 @@ namespace Acts {
     
     for (int i_b=0; i_b<bIndex.size(); i_b++){
       for (int i=0; i<6; i++){
-	spBcompMat_cpu.SetEl(i_b, i_m*6+i, *spBmat_cpu.GetEl(bIndex[i_b],i));
+	spBcompMat_cpu.SetEl(i_b, i_m*6+i, std::move(*spBmat_cpu.GetEl(bIndex[i_b],i)));
       }            
       //spBcompMat_cpu.SetEl(i_b, i_m*6+0, *spBmat_cpu.GetEl(bIndex[i_b],0));
       //spBcompMat_cpu.SetEl(i_b, i_m*6+1, *spBmat_cpu.GetEl(bIndex[i_b],1));
@@ -298,7 +299,7 @@ namespace Acts {
 
     for (int i_t=0; i_t<tIndex.size(); i_t++){
       for (int i=0; i<6; i++){
-	spTcompMat_cpu.SetEl(i_t, i_m*6+i, *spTmat_cpu.GetEl(tIndex[i_t],i));
+	spTcompMat_cpu.SetEl(i_t, i_m*6+i, std::move(*spTmat_cpu.GetEl(tIndex[i_t],i)));
       }                  
       //spTcompMat_cpu.SetEl(i_t, i_m*6+0, *spTmat_cpu.GetEl(tIndex[i_t],0));
       //spTcompMat_cpu.SetEl(i_t, i_m*6+1, *spTmat_cpu.GetEl(tIndex[i_t],1));
