@@ -14,12 +14,14 @@ public:
   CUDAMatrix(size_t nRows, size_t nCols){
     fNRows = nRows;
     fNCols = nCols;
+    fSize  = fNRows*fNCols;
     cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t));
   }
 
   CUDAMatrix(size_t nRows, size_t nCols, CPUMatrix<Var_t>* mat){
     fNRows = nRows;
     fNCols = nCols;
+    fSize  = fNRows*fNCols;
     cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t));
     CopyH2D(mat->GetEl(0,0),fNRows*fNCols,0);
   }
@@ -30,7 +32,8 @@ public:
 
   size_t GetNCols(){ return fNCols; }
   size_t GetNRows(){ return fNRows; }
-
+  size_t GetSize() { return fSize; }
+  
   Var_t* GetEl(size_t row, size_t col){
     int offset = row+col*fNRows;
     return fDevPtr+offset;
@@ -55,6 +58,7 @@ private:
   Var_t* fDevPtr; 
   size_t fNCols;
   size_t fNRows;
+  size_t fSize;
 };
 
 }

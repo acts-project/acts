@@ -20,12 +20,14 @@ public:
   CPUMatrix(size_t nRows, size_t nCols){
     fNRows = nRows;
     fNCols = nCols;
+    fSize  = fNRows*fNCols;
     cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
   }
 
   CPUMatrix(size_t nRows, size_t nCols, CUDAMatrix<Var_t>* cuMat){
     fNRows = nRows;
     fNCols = nCols;
+    fSize  = fNRows*fNCols;
     fHostPtr = (cuMat->GetCPUArray(fNRows*fNCols,0,0))->Get();
   }
   
@@ -35,6 +37,8 @@ public:
 
   size_t GetNCols(){ return fNCols; }
   size_t GetNRows(){ return fNRows; }
+  size_t GetSize() { return fSize; }
+  
 
   Var_t* GetEl(size_t row=0, size_t col=0){
     int offset=row+col*fNRows;
@@ -73,6 +77,7 @@ private:
   Var_t* fHostPtr;
   size_t fNCols;
   size_t fNRows;
+  size_t fSize;
 };
   
 }
