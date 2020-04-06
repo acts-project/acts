@@ -344,10 +344,6 @@ namespace Acts {
     offsetTC+=TC_BlockSize.x;
   }
   
-  // -----------------------------------
-  //  Algorithm 3. Triplet Search (TS)
-  //------------------------------------
-
   int nMcomp = mCompIndex.size();  
   CUDAArray<int>  nMcomp_cuda(1,&nMcomp,1);
   
@@ -363,60 +359,151 @@ namespace Acts {
   const int         nTopPassLimit = m_config.nTopPassLimit;
   CUDAArray<int>    nTopPassLimit_cuda(1, &nTopPassLimit, 1);
   
-  CUDAArray<int>    nTopPass_cuda(nBcompMax_cpu[0]);
-  CUDAMatrix<int>   tPassIndex_cuda(nTopPassLimit, nBcompMax_cpu[0]); 
-  CUDAMatrix<float> curvatures_cuda(nTopPassLimit, nBcompMax_cpu[0]);       
-  CUDAMatrix<float> impactparameters_cuda(nTopPassLimit, nBcompMax_cpu[0]);
+  CUDAMatrix<int>   nTopPass_cuda(nBcompMax_cpu[0], nMcomp);
+  CUDAMatrix<int>   tPassIndex_cuda(nTopPassLimit, nBcompMax_cpu[0]*nMcomp); 
+  CUDAMatrix<float> curvatures_cuda(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);       
+  CUDAMatrix<float> impactparameters_cuda(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);
 
-  CPUArray<int>     nTopPass_cpu(nBcompMax_cpu[0]);
-  CPUMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax_cpu[0]); 
-  CPUMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax_cpu[0]);
-  CPUMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax_cpu[0]);
-  
-  for (int i_m=0; i_m<mCompIndex.size(); i_m++){
-    auto mIndex = std::get<0>(mCompIndex[i_m]);
-    auto bIndex = std::get<1>(mCompIndex[i_m]);
-    auto tIndex = std::get<2>(mCompIndex[i_m]);
+  CPUMatrix<int>    nTopPass_cpu(nBcompMax_cpu[0], nMcomp);
+  CPUMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax_cpu[0]*nMcomp); 
+  CPUMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);
+  CPUMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);
+
+  cudaStream_t cuStream;
+  cudaStreamCreate(&cuStream);
+   
+  for (int i_m=0; i_m<=mCompIndex.size(); i_m++){
     
-    dim3 TS_GridSize(bIndex.size(),1,1);
-    dim3 TS_BlockSize;
+    //cudaDeviceSynchronize();
+    cudaStreamSynchronize(cuStream);
+
+    // -----------------------------------
+    //  Algorithm 3. Triplet Search (TS)
+    //------------------------------------
     
-    int i_ts = 0;
-    while ( offsetVec[i_ts] < tIndex.size() ){
+    std::vector<std::pair<
+      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> seedsPerSpM;
+    
+    std::vector<const InternalSpacePoint<external_spacepoint_t> *> tVec;
+    std::vector<float> curvatures;
+    std::vector<float> impactParameters;
+    
+    if (i_m < mCompIndex.size()){
+          
+      // SEED Filtering is done ASYNCHRONOUSLY against Triplet search
+      // Need to call it again after last iteration
+            
+      // For triplets collected at previous iteration
       
-      TS_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, tIndex.size()-offsetVec[i_ts] ),
-			  1,1);
+      auto mIndex = std::get<0>(mCompIndex[i_m]);
+      auto bIndex = std::get<1>(mCompIndex[i_m]);
+      auto tIndex = std::get<2>(mCompIndex[i_m]);
+      
+      dim3 TS_GridSize(bIndex.size(),1,1);
+      dim3 TS_BlockSize;
+      
+      int i_ts = 0;    
+      while ( offsetVec[i_ts] < tIndex.size() ){
+	
+	TS_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, tIndex.size()-offsetVec[i_ts] ),
+			    1,1);
       	
-      SeedfinderCUDAKernels::searchTriplet(TS_GridSize, TS_BlockSize,
-					   offsetVec_cuda.Get(i_ts),
-					   nMcomp_cuda.Get(),
-					   spMcompMat_cuda.GetEl(i_m,0),
-					   nBcompMax_cuda.Get(),
-					   spBcompMat_cuda.GetEl(0,6*i_m),
-					   nTcompMax_cuda.Get(),
-					   spTcompMat_cuda.GetEl(offsetVec[i_ts],6*i_m),
-					   circBcompMat_cuda.GetEl(0,6*i_m),
-					   circTcompMat_cuda.GetEl(offsetVec[i_ts],6*i_m),
-					   // Seed finder config
-					   maxScatteringAngle2_cuda.Get(),
-					   sigmaScattering_cuda.Get(),
-					   minHelixDiameter2_cuda.Get(),
-					   pT2perRadius_cuda.Get(),
-					   impactMax_cuda.Get(),
-					   nTopPassLimit_cuda.Get(),
-					   // output
-					   nTopPass_cuda.Get(),
-					   tPassIndex_cuda.GetEl(0,0),
-					   curvatures_cuda.GetEl(0,0),
-					   impactparameters_cuda.GetEl(0,0)
-					   );
-      i_ts++;
+	SeedfinderCUDAKernels::searchTriplet(TS_GridSize, TS_BlockSize,
+					     offsetVec_cuda.Get(i_ts),
+					     nMcomp_cuda.Get(),
+					     spMcompMat_cuda.GetEl(i_m,0),
+					     nBcompMax_cuda.Get(),
+					     spBcompMat_cuda.GetEl(0,6*i_m),
+					     nTcompMax_cuda.Get(),
+					     spTcompMat_cuda.GetEl(offsetVec[i_ts],6*i_m),
+					     circBcompMat_cuda.GetEl(0,6*i_m),
+					     circTcompMat_cuda.GetEl(offsetVec[i_ts],6*i_m),
+					     // Seed finder config
+					     maxScatteringAngle2_cuda.Get(),
+					     sigmaScattering_cuda.Get(),
+					     minHelixDiameter2_cuda.Get(),
+					     pT2perRadius_cuda.Get(),
+					     impactMax_cuda.Get(),
+					     nTopPassLimit_cuda.Get(),
+					     // output
+					     nTopPass_cuda.GetEl(0,i_m),
+					     tPassIndex_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
+					     curvatures_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
+					     impactparameters_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
+					     &cuStream
+					     );
+	i_ts++;
+      }
+      
+      nTopPass_cpu.CopyD2H(nTopPass_cuda.GetEl(0,i_m),
+			   nBcompMax_cpu[0],
+			   nBcompMax_cpu[0]*i_m,
+			   &cuStream);
+      tPassIndex_cpu.CopyD2H(tPassIndex_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
+			     nTopPassLimit*nBcompMax_cpu[0],
+			     nTopPassLimit*nBcompMax_cpu[0]*i_m,
+			     &cuStream);
+      curvatures_cpu.CopyD2H(curvatures_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
+			     nTopPassLimit*nBcompMax_cpu[0],
+			     nTopPassLimit*nBcompMax_cpu[0]*i_m,
+			     &cuStream); 
+      impactparameters_cpu.CopyD2H(impactparameters_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
+				   nTopPassLimit*nBcompMax_cpu[0],
+				   nTopPassLimit*nBcompMax_cpu[0]*i_m,
+				   &cuStream);
     }
 
     // --------------------------------
     //  Algorithm 4. Seed Filter (SF)
     // --------------------------------
+    
+    if (i_m > 0){
+      seedsPerSpM.clear();
+      auto middleIdx     = std::get<0>(mCompIndex[i_m-1]);
+      auto compBottomIdx = std::get<1>(mCompIndex[i_m-1]);
+      auto compTopIdx    = std::get<2>(mCompIndex[i_m-1]);
+      
+      for (int i_b=0; i_b<compBottomIdx.size(); i_b++){
+	int nTpass = *(nTopPass_cpu.GetEl(i_b,i_m-1));
 
+	if (nTpass==0) continue;	
+	
+	tVec.clear();
+	curvatures.clear();
+	impactParameters.clear();      
+	float Zob = *(circBcompMat_cpu.GetEl(i_b,(i_m-1)*6));
+
+	std::vector< std::tuple< int, int, int > > indexVec;
+	for(int i_t=0; i_t<nTpass; i_t++){
+	  int g_tIndex = compTopIdx[*tPassIndex_cpu.GetEl(i_t,i_b+(i_m-1)*nBcompMax_cpu[0])];
+	  indexVec.push_back(std::make_tuple(g_tIndex,i_t,i_b));
+	}
+	sort(indexVec.begin(), indexVec.end()); 
+	
+	for(auto el: indexVec){
+	  auto g_tIndex = std::get<0>(el);
+	  auto tId      = std::get<1>(el);
+	  auto bId      = std::get<2>(el);
+	  
+	  tVec.push_back(topSPvec[g_tIndex]);
+	  curvatures.push_back(*curvatures_cpu.GetEl(tId,bId+(i_m-1)*nBcompMax_cpu[0]));
+	  impactParameters.push_back(*impactparameters_cpu.GetEl(tId,bId+(i_m-1)*nBcompMax_cpu[0]));
+	}
+	
+	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
+	sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(*bottomSPvec[compBottomIdx[i_b]],
+									     *middleSPvec[middleIdx],
+									     tVec,
+									     curvatures,
+									     impactParameters,Zob)); 
+	seedsPerSpM.insert(seedsPerSpM.end(),
+			   std::make_move_iterator(sameTrackSeeds.begin()),
+			   std::make_move_iterator(sameTrackSeeds.end()));	      
+      }
+      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);      
+    }    
+    
+    /*
     std::vector<std::pair<
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> seedsPerSpM;
     
@@ -476,7 +563,7 @@ namespace Acts {
     tPassIndex_cpu.CopyD2H(tPassIndex_cuda.GetEl(0,0),             nTopPassLimit*nBcompMax_cpu[0]);
     curvatures_cpu.CopyD2H(curvatures_cuda.GetEl(0,0),             nTopPassLimit*nBcompMax_cpu[0]);
     impactparameters_cpu.CopyD2H(impactparameters_cuda.GetEl(0,0), nTopPassLimit*nBcompMax_cpu[0]);
-
+        
     // For the last iteration
     if (i_m == mCompIndex.size()-1 ){
       seedsPerSpM.clear();
@@ -521,6 +608,7 @@ namespace Acts {
       }
       m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);            
     }    
+    */
   }  
   
   return outputVec;  

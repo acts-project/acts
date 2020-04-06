@@ -87,10 +87,11 @@ namespace Acts{
 				const float* minHelixDiameter2,   const float* pT2perRadius,
 				const float* impactMax,           const int*   nTopPassLimit,	  
 				int*   nTopPass,   int* tIndex,
-				float* curvatures, float* impactparameters
+				float* curvatures, float* impactparameters,
+				cudaStream_t* stream
 				){
-cuSearchTriplet<<< grid, block,
-      (sizeof(unsigned char)+2*sizeof(float))*block.x >>>(
+cuSearchTriplet<<< grid, block, 
+      (sizeof(unsigned char)+2*sizeof(float))*block.x, *stream >>>(
 			       offset,
 			       nSpM,
 			       spMmat,

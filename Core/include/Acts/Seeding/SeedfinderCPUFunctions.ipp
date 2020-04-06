@@ -276,24 +276,17 @@ namespace Acts{
           impactParameters.push_back(Im);
         }
       }
-      
+
       if (!topSpVec.empty()) {
-	
-	//if (b<5){
-	  //  std::cout << b << "  " << topSpVec.size() << std::endl;
-	  //	}	
-	//std::cout << b << "  " << Zob << "  " << topSpVec.size() << std::endl;
-	
+		
         std::vector<std::pair<
             float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
             sameTrackSeeds;
         sameTrackSeeds = std::move(config.seedFilter->filterSeeds_2SpFixed(*compatBottomSP[b], spM, topSpVec, curvatures, impactParameters,Zob));
 
-	//*compatBottomSP[b], *spM, topSpVec, curvatures, impactParameters,Zob));
         seedsPerSpM.insert(seedsPerSpM.end(),
                            std::make_move_iterator(sameTrackSeeds.begin()),
                            std::make_move_iterator(sameTrackSeeds.end()));
-	//std::cout << "b: " << b << "  SeedsPerSpM: " << seedsPerSpM.size() << std::endl;
       }
     }
     return seedsPerSpM;
