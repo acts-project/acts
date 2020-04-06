@@ -91,11 +91,10 @@ struct MaterialInteractor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
-
     // In case of Volume material update the result of the previous step
-    if(recordInteractions && !result.materialInteractions.empty() &&
-       result.materialInteractions.back().volume != nullptr &&
-       result.materialInteractions.back().updatedVolumeStep == false){
+    if (recordInteractions && !result.materialInteractions.empty() &&
+        result.materialInteractions.back().volume != nullptr &&
+        result.materialInteractions.back().updatedVolumeStep == false) {
       UpdateResult(state, stepper, result);
     }
 
@@ -111,11 +110,12 @@ struct MaterialInteractor {
     const Surface* surface = state.navigation.currentSurface;
     const TrackingVolume* volume = state.navigation.currentVolume;
 
-    if (not(surface and surface->surfaceMaterial()) and not(volume and volume->volumeMaterial()) ) {
+    if (not(surface and surface->surfaceMaterial()) and
+        not(volume and volume->volumeMaterial())) {
       return;
     }
 
-    if(surface and surface->surfaceMaterial()){
+    if (surface and surface->surfaceMaterial()) {
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction d(surface, state, stepper);
 
@@ -151,8 +151,7 @@ struct MaterialInteractor {
       d.updateState(state, stepper);
       // Record the result
       recordResult(d, result);
-    }
-    else if(recordInteractions && volume and volume->volumeMaterial()){
+    } else if (recordInteractions && volume and volume->volumeMaterial()) {
       // Prepare relevant input particle properties
       detail::VolumeMaterialInteraction d(volume, state, stepper);
       // Determine the effective traversed material and its properties
@@ -224,15 +223,19 @@ struct MaterialInteractor {
   template <typename propagator_state_t, typename stepper_t>
   void UpdateResult(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
-
     // Update the previous interaction
-    Vector3D shift = stepper.position(state.stepping)-result.materialInteractions.back().position;
+    Vector3D shift = stepper.position(state.stepping) -
+                     result.materialInteractions.back().position;
     double momentum = stepper.direction(state.stepping).norm();
-    result.materialInteractions.back().deltaP = momentum - result.materialInteractions.back().direction.norm();
-    result.materialInteractions.back().materialProperties.scaleThickness(shift.norm());
+    result.materialInteractions.back().deltaP =
+        momentum - result.materialInteractions.back().direction.norm();
+    result.materialInteractions.back().materialProperties.scaleThickness(
+        shift.norm());
     result.materialInteractions.back().updatedVolumeStep = true;
-    result.materialInX0 += result.materialInteractions.back().materialProperties.thicknessInX0();
-    result.materialInL0 += result.materialInteractions.back().materialProperties.thicknessInL0();
+    result.materialInX0 +=
+        result.materialInteractions.back().materialProperties.thicknessInX0();
+    result.materialInL0 +=
+        result.materialInteractions.back().materialProperties.thicknessInL0();
   }
 
   /// The private propagation debug logging
