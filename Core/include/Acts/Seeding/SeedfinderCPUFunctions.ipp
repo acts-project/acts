@@ -146,8 +146,6 @@ namespace Acts{
     float zM = spM.z();
     float varianceRM = spM.varianceR();
     float varianceZM = spM.varianceZ();
-
-    //std::cout << rM << "  " << varianceRM << "  " << varianceZM << std::endl;
     
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
@@ -194,17 +192,6 @@ namespace Acts{
 	
         auto lt = linCircleTop[t];
 
-	/*
-	if (t==0 && b==0){
-	  printf("%f %f %f %f %f %f  \n", Zob, cotThetaB, iDeltaRB, ErB, Ub, Vb);
-	  printf("%f %f %f %f %f %f  \n", lt.Zo, lt.cotTheta, lt.iDeltaR, lt.Er, lt.U, lt.V);
-	}
-	*/
-	/*	
-	if (t==0 && b==0){
-	  printf("%f %f \n", iSinTheta2, scatteringInRegion2);
-	}	
-	*/
         // add errors of spB-spM and spM-spT pairs and add the correlation term
         // for errors on spM
         float error2 = lt.Er + ErB +

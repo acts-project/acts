@@ -39,6 +39,13 @@ public:
     return fDevPtr+offset;
   }
 
+  Var_t* GetHostArray(size_t len, size_t row, size_t col){
+    int offset = row+col*fNRows;
+    Var_t* hostPtr = new Var_t[len];
+    cudaMemcpy(hostPtr, fDevPtr+offset, len*sizeof(Var_t), cudaMemcpyDeviceToHost);   
+    return hostPtr;
+  }
+  
   CPUArray<Var_t>* GetCPUArray(size_t len, size_t row, size_t col){
     int offset = row+col*fNRows;
     CPUArray<Var_t>* cpuArray = new CPUArray<Var_t>(len);
