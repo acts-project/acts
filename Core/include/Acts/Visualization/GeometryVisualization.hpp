@@ -97,10 +97,13 @@ static inline void drawSegmentBase(
   lrotation.col(2) = direction;
 
   Vector3D lcenter = 0.5 * (start + end);
+  double alength = arrowLength * (2 * hlength);
+
   if (arrows == 2) {
-    hlength *= (1 - arrowLength);
+    hlength -= alength;
   } else if (arrows != 0) {
-    hlength *= (1 - 0.5 * arrowLength);
+    hlength -= 0.5 * alength;
+    lcenter -= Vector3D(arrows * 0.5 * alength * direction);
   }
 
   // Line - draw a line
@@ -118,19 +121,17 @@ static inline void drawSegmentBase(
     helper.line(start, end, color);
   }
 
-
   // Arrowheads - if configured
   if (arrows != 0) {
-    double alength = arrowLength * (2 * hlength);
-    double awith =  thickness * arrowWidth;
+    double awith = thickness * arrowWidth;
     double alpha = atan2(thickness * arrowWidth, alength);
-    auto plateBounds = std::make_shared<RadialBounds>(thickness,awith);
+    auto plateBounds = std::make_shared<RadialBounds>(thickness, awith);
 
     if (arrows > 0) {
       auto aetransform = std::make_shared<Transform3D>(Transform3D::Identity());
       aetransform->prerotate(lrotation);
       aetransform->pretranslate(end);
-      // Arrow cone 
+      // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, -alength, 0.);
       auto cone = Surface::makeShared<ConeSurface>(aetransform, coneBounds);
       drawSurface(helper, *cone, GeometryContext(), Transform3D::Identity(),
@@ -138,13 +139,12 @@ static inline void drawSegmentBase(
       // Arrow end plate
       auto aptransform = std::make_shared<Transform3D>(Transform3D::Identity());
       aptransform->prerotate(lrotation);
-      aptransform->pretranslate(Vector3D(end-alength*direction));
+      aptransform->pretranslate(Vector3D(end - alength * direction));
 
-      auto plate = Surface::makeShared<DiscSurface>(aptransform,plateBounds);
+      auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
       drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
                   lseg, false, color);
-
-    }  
+    }
     if (arrows < 0 or arrows == 2) {
       auto astransform = std::make_shared<Transform3D>(Transform3D::Identity());
       astransform->prerotate(lrotation);
@@ -158,13 +158,11 @@ static inline void drawSegmentBase(
       // Arrow end plate
       auto aptransform = std::make_shared<Transform3D>(Transform3D::Identity());
       aptransform->prerotate(lrotation);
-      aptransform->pretranslate(Vector3D(end-alength*direction));
+      aptransform->pretranslate(Vector3D(start + alength * direction));
 
-      auto plate = Surface::makeShared<DiscSurface>(aptransform,plateBounds);
+      auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
       drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
                   lseg, false, color);
-
-
     }
   }
 }

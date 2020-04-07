@@ -26,6 +26,14 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(VisualizationTests)
 
+// Test on a plane
+auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
+auto rectangle = std::make_shared<RectangleBounds>(10., 10.);
+auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
+
+// Test context
+GeometryContext gctx = GeometryContext();
+
 BOOST_AUTO_TEST_CASE(LineVisualizationTestsObj) {
   ObjVisualization obj;
   IVisualization::ColorType lineColor = {0, 0, 250};
@@ -38,35 +46,26 @@ BOOST_AUTO_TEST_CASE(LineVisualizationTestsObj) {
 BOOST_AUTO_TEST_CASE(ArrowVisualizationTests) {
   ObjVisualization obj;
 
-  IVisualization::ColorType arrowColor = {0, 250, 0};
-
-  Vector3D start = {1., 1., 0.};
-  Vector3D end = {4., 4., 0.};
+  Vector3D start = {1., 0., 0.};
+  Vector3D end = {4., 0., 0.};
   Visualization::drawArrowForward(obj, start, end, 0.1, 0.1, 3., 72,
-                                  arrowColor);
+                                  {0, 75, 0});
 
-  start = {5., 5., 0.};
-  end = {8., 8., 0.};
+  start = {1., 2., 0.};
+  end = {4., 2., 0.};
   Visualization::drawArrowBackward(obj, start, end, 0.1, 0.1, 3., 72,
-                                   arrowColor);
+                                   {0, 150, 0});
 
-  start = {9., 9., 0.};
-  end = {12., 12., 0.};
-  Visualization::drawArrowsBoth(obj, start, end, 0.1, 0.1, 3., 72, arrowColor);
+  start = {1., 4., 0.};
+  end = {4., 4., 0.};
+  Visualization::drawArrowsBoth(obj, start, end, 0.1, 0.1, 3., 72, {0, 250, 0});
   obj.write("Primitives_Arrows");
 }
 
 BOOST_AUTO_TEST_CASE(LocalErrorVisualizationTestsObj) {
-  GeometryContext gctx = GeometryContext();
-
   IVisualization::ColorType surfaceColor = {120, 250, 0};
 
   ObjVisualization obj;
-
-  // Test on a plane
-  auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
-  auto rectangle = std::make_shared<RectangleBounds>(10., 10.);
-  auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
 
   Visualization::drawSurface(obj, *plane, gctx, Transform3D::Identity(), 72,
                              false, surfaceColor);
@@ -76,15 +75,49 @@ BOOST_AUTO_TEST_CASE(LocalErrorVisualizationTestsObj) {
 
   ActsSymMatrixD<2> cov = ActsSymMatrixD<2>::Identity();
   double s0 = 0.45;
-  double s1 = 0.99;
+  double s1 = 1.99;
   double r01 = 0.78;
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
 
-  Visualization::drawLocalCovariance(
-      obj, cov, plane->referenceFrame(gctx, s_origin, s_origin), {3}, 10., 72,
-      errorColor);
+  Vector2D lcentered{0., 0.};
 
-  obj.write("LocalError_corr_78");
+  Visualization::drawCovarianceCartesian(
+      obj, lcentered, cov, plane->transform(gctx), {3}, 10., 72, errorColor);
+
+  obj.write("Primitives_CartesianError");
+}
+
+BOOST_AUTO_TEST_CASE(AngularErrorVisualizationTestsObj) {
+  IVisualization::ColorType surfaceColor = {120, 250, 0};
+
+  ObjVisualization obj;
+
+  Visualization::drawSurface(obj, *plane, gctx, Transform3D::Identity(), 72,
+                             false, surfaceColor);
+
+  // Error visualization
+  IVisualization::ColorType errorColor = {250, 0, 0};
+
+  ActsSymMatrixD<2> cov = ActsSymMatrixD<2>::Identity();
+  double s0 = 0.08;
+  double s1 = 0.01;
+  double r01 = 0.3;
+  cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
+
+  Vector3D origin{0., 0., 0.};
+  Vector3D direction = Vector3D(1., 3., 15.).normalized();
+
+  double directionScale = 5.;
+
+  Visualization::drawCovarianceAngular(obj, origin, direction, cov, {3},
+                                       directionScale, 10., 72, errorColor);
+
+  Visualization::drawArrowForward(obj,
+                                  origin + 0.5 * directionScale * direction,
+                                  origin + 1.2 * directionScale * direction,
+                                  0.02, 0.1, 5., 72, {10, 10, 10});
+
+  obj.write("Primitives_AngularError");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

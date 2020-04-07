@@ -52,11 +52,18 @@ static inline void test(IVisualization& helper) {
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
-  // constructor from parameter vector
-  BoundParameters ataPlane(gctx, std::nullopt, pars, plane);
+  Acts::BoundSymMatrix cov;
+  cov << 0.25, 0.0042, -0.00076, 6.156e-06, -2.11e-07, 0, 0.0042, 0.459,
+      -0.000173, 0.000916, -4.017e-08, 0, -0.00076, -0.000173, 2.36 - 05,
+      -2.76e-07, 1.12e-08, 0, 6.15e-06, 0.000916, -2.76e-07, 1.84e-06,
+      -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
+      0, 0, 0, 0, 0, 1;
 
-  Visualization::drawBoundParameters(helper, ataPlane, gctx, 0.02, 1., 1., true,
-                                     72, pcolor, scolor);
+  // constructor from parameter vector
+  BoundParameters ataPlane(gctx, std::move(cov), pars, plane);
+
+  Visualization::drawBoundParameters(helper, ataPlane, gctx, 0.02, 100., 10.,
+                                     true, 72, pcolor, scolor);
 
   helper.write("BoundAtPlaneParameters");
   helper.clear();
