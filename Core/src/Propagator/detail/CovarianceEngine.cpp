@@ -62,7 +62,6 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
   // Directional and momentum parameters for curvilinear
   jacToCurv(2, 4) = -sinPhi * invSinTheta;
   jacToCurv(2, 5) = cosPhi * invSinTheta;
-  //~ jacToCurv(3, 6) = -invSinTheta;
   jacToCurv(3, 4) = cosPhi * cosTheta;
   jacToCurv(3, 5) = sinPhi * cosTheta;
   jacToCurv(3, 6) = -invSinTheta * (1. - cosTheta * cosTheta);
@@ -178,11 +177,12 @@ if(jacobianLocalToGlobal.has_value())
 else
 {
 	// Calculate the form factors for the derivatives
+	const ActsMatrixD<8,7> transport = transportJacobian * state.jacDirToAngle;
 	const FreeRowVector sVec = surface.derivativeFactors(
 		geoContext, parameters.segment<3>(eFreePos0),
-        parameters.segment<3>(eFreeDir0), rframeT, state.jacTransport);
+        parameters.segment<3>(eFreeDir0), rframeT, transport);
 	// Return the jacobian to local
-	return jacToLocal * (state.jacTransport - state.derivative * sVec);
+	return jacToLocal * (transport - state.derivative * sVec) * jacobian;
 }
 }
 

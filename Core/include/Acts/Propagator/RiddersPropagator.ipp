@@ -235,6 +235,18 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 				nominalResult.endParameters->getParameterSet();
 			FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
 			if (start.covariance()) {
+			// Test if target is disc - this may lead to inconsistent results
+			if (target.type() == Surface::Disc) {
+			  for (const std::vector<BoundVector>& deriv : derivatives) {
+				if (inconsistentDerivativesOnDisc(deriv)) {
+				  // Set covariance to zero and return
+				  // TODO: This should be changed to indicate that something went
+				  // wrong
+				  mParSet->setCovariance(BoundSymMatrix::Zero());
+				  return std::move(nominalResult);
+				}
+			  }
+			}
 			  mParSet->setCovariance(std::get<BoundSymMatrix>(
 				  calculateCovariance(derivatives, *start.covariance(), deviations)));
 			} 
@@ -426,7 +438,6 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     case 4: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
 		dir.x() = dir.x() > 0 ? std::min(1., (double) dir.x() + h) : std::max(-1., (double) dir.x() + h);
-		//~ dir.x() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
       tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
@@ -437,7 +448,6 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     case 5: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
 		dir.y() = dir.y() > 0 ? std::min(1., (double) dir.y() + h) : std::max(-1., (double) dir.y() + h);
-		//~ dir.y() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
       tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
@@ -448,7 +458,6 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     case 6: {
 		Vector3D dir = tp.parameters().template segment<3>(4);
 		dir.z() = dir.z() > 0 ? std::min(1., (double) dir.z() + h) : std::max(-1., (double) dir.z() + h);
-		//~ dir.z() += h;
 		const double theta = std::acos(dir.z() / dir.norm());
 		const double phi = std::atan2(dir.y(), dir.x());
       tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
@@ -474,7 +483,6 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
- std::cout << "Ridders:\n" << jacobian << std::endl; 
   return BoundSymMatrix(jacobian * std::get<Acts::BoundSymMatrix>(startCov) *
                         jacobian.transpose());
 }
@@ -489,16 +497,6 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
-  //~ for(unsigned int i = 4; i <= 6; i++)
-  //~ {
-	  //~ std::cout << "Derivatives: " << i << " " << std::endl;
-	  //~ for(unsigned int j = 0; j < derivatives[i].size(); j++)
-	  //~ {
-		  //~ for(unsigned int k = 0; k < derivatives[i][j].size(); k++)
-				//~ std::cout << derivatives[i][j][k] << " ";
-		  //~ std::cout << std::endl;
-	  //~ }
-  //~ }
  std::cout << "Ridders:\n" << jacobian << std::endl; 
   return BoundSymMatrix(jacobian * std::get<Acts::FreeSymMatrix>(startCov) *
                         jacobian.transpose());

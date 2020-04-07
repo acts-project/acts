@@ -152,12 +152,12 @@ class LineSurface : public Surface {
   /// @param rft is the transposed reference frame (avoids recalculation)
   /// @param jacobian is the transport jacobian
   ///
-  /// @return a 8-dim vector
-  const FreeRowVector derivativeFactors(const GeometryContext& gctx,
+  /// @return a 7-dim vector
+  const ActsVectorD<7> derivativeFactors(const GeometryContext& gctx,
                                         const Vector3D& position,
                                         const Vector3D& direction,
                                         const RotationMatrix3D& rft,
-                                        const FreeMatrix& jacobian) const final;
+                                        const ActsMatrixD<8, 7>& jacobian) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift

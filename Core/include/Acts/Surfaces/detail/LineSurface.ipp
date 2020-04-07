@@ -262,10 +262,10 @@ LineSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-inline const FreeRowVector LineSurface::derivativeFactors(
+inline const ActsVectorD<7> LineSurface::derivativeFactors(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const RotationMatrix3D& rft,
-    const FreeMatrix& jacobian) const {
+    const ActsMatrixD<8, 7>& jacobian) const {
   // the vector between position and center
   ActsRowVectorD<3> pc = (position - center(gctx)).transpose();
   // the longitudinal component vector (alogn local z)
@@ -274,16 +274,16 @@ inline const FreeRowVector LineSurface::derivativeFactors(
   double long_c = locz * direction;
   ActsRowVectorD<3> norm_vec = direction.transpose() - long_c * locz;
   // calculate the s factors for the dependency on X
-  const FreeRowVector s_vec =
-      norm_vec * jacobian.topLeftCorner<3, eFreeParametersSize>();
+  const ActsRowVectorD<7> s_vec =
+      norm_vec * jacobian.topLeftCorner<3, 7>();
   // calculate the d factors for the dependency on Tx
-  const FreeRowVector d_vec = locz * jacobian.block<3, eFreeParametersSize>(4, 0);
+  const ActsRowVectorD<7> d_vec = locz * jacobian.block<3, 7>(4, 0);
   // normalisation of normal & longitudinal components
   double norm = 1. / (1. - long_c * long_c);
   // create a matrix representation
-  ActsMatrixD<3, eBoundParametersSize> long_mat = ActsMatrixD<3, eBoundParametersSize>::Zero();
+  ActsMatrixD<3, 7> long_mat = ActsMatrixD<3, 7>::Zero();
   long_mat.colwise() += locz.transpose();
   // build the combined normal & longitudinal components
   return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -
-                                jacobian.block<3, FreeParsDim>(4, 0))));
+                                jacobian.block<3, 7>(4, 0))));
 }
