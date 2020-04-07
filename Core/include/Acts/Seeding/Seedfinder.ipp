@@ -99,8 +99,6 @@ namespace Acts {
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  CUDAArray<unsigned char> isBottom_cuda(1);
-
   unsigned char true_cpu  = true;
   unsigned char false_cpu = false;
   CUDAArray<unsigned char> true_cuda(1,&true_cpu,1);  
@@ -237,8 +235,8 @@ namespace Acts {
   
   std::vector< std::tuple<int, std::vector< int >, std::vector< int > > > mCompIndex;
 
-  CPUArray<int>  nBcompMax_cpu(1); nBcompMax_cpu[0] = 0;
-  CPUArray<int>  nTcompMax_cpu(1); nTcompMax_cpu[0] = 0;
+  int nBcompMax = 0;
+  int nTcompMax = 0;
 
   for (int i_m=0; i_m<nMiddle; i_m++){
     std::vector< int > bIndex;
@@ -254,21 +252,21 @@ namespace Acts {
     
     auto tup = std::make_tuple(i_m, bIndex, tIndex);
     mCompIndex.push_back(tup);
-    nBcompMax_cpu[0] = fmax(bIndex.size(), nBcompMax_cpu[0]);
-    nTcompMax_cpu[0] = fmax(tIndex.size(), nTcompMax_cpu[0]);
+    nBcompMax = fmax(bIndex.size(), nBcompMax);
+    nTcompMax = fmax(tIndex.size(), nTcompMax);
   }
   
   CPUMatrix<float>  spMcompMat_cpu(mCompIndex.size(), 6);
   CUDAMatrix<float> spMcompMat_cuda(mCompIndex.size(),6);
-  CUDAArray<int>    nBcompMax_cuda(1,nBcompMax_cpu.Get(),1);
-  CUDAArray<int>    nTcompMax_cuda(1,nTcompMax_cpu.Get(),1);
+  CUDAArray<int>    nBcompMax_cuda(1,&nBcompMax,1);
+  CUDAArray<int>    nTcompMax_cuda(1,&nTcompMax,1);
 
-  CPUMatrix<float>  spBcompMat_cpu   (nBcompMax_cpu[0], mCompIndex.size()*6);
-  CUDAMatrix<float> spBcompMat_cuda  (nBcompMax_cpu[0], mCompIndex.size()*6);
-  CUDAMatrix<float> circBcompMat_cuda(nBcompMax_cpu[0], mCompIndex.size()*6);  
-  CPUMatrix<float>  spTcompMat_cpu   (nTcompMax_cpu[0], mCompIndex.size()*6);  
-  CUDAMatrix<float> spTcompMat_cuda  (nTcompMax_cpu[0], mCompIndex.size()*6);   
-  CUDAMatrix<float> circTcompMat_cuda(nTcompMax_cpu[0], mCompIndex.size()*6);
+  CPUMatrix<float>  spBcompMat_cpu   (nBcompMax, mCompIndex.size()*6);
+  CUDAMatrix<float> spBcompMat_cuda  (nBcompMax, mCompIndex.size()*6);
+  CUDAMatrix<float> circBcompMat_cuda(nBcompMax, mCompIndex.size()*6);  
+  CPUMatrix<float>  spTcompMat_cpu   (nTcompMax, mCompIndex.size()*6);  
+  CUDAMatrix<float> spTcompMat_cuda  (nTcompMax, mCompIndex.size()*6);   
+  CUDAMatrix<float> circTcompMat_cuda(nTcompMax, mCompIndex.size()*6);
   
   for (int i_m=0; i_m<spMcompMat_cpu.GetNRows(); i_m++){
     auto mIndex = std::get<0>(mCompIndex[i_m]);
@@ -310,9 +308,9 @@ namespace Acts {
     }    
   }
 
-  spMcompMat_cuda.CopyH2D(spMcompMat_cpu.GetEl(), spMcompMat_cpu.GetSize());
-  spBcompMat_cuda.CopyH2D(spBcompMat_cpu.GetEl(), spBcompMat_cpu.GetSize());
-  spTcompMat_cuda.CopyH2D(spTcompMat_cpu.GetEl(), spTcompMat_cpu.GetSize());
+  spMcompMat_cuda.CopyH2D(spMcompMat_cpu.GetEl(), spMcompMat_cpu.GetSize(), 0);
+  spBcompMat_cuda.CopyH2D(spBcompMat_cpu.GetEl(), spBcompMat_cpu.GetSize(), 0);
+  spTcompMat_cuda.CopyH2D(spTcompMat_cpu.GetEl(), spTcompMat_cpu.GetSize(), 0);
 
   dim3 TC_GridSize(spMcompMat_cpu.GetNRows(),1,1);
   dim3 TC_BlockSize;
@@ -320,8 +318,8 @@ namespace Acts {
   // For bottom-middle
   int offsetTC;
   offsetTC=0;
-  while(offsetTC<nBcompMax_cpu[0]){
-    TC_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nBcompMax_cpu[0]-offsetTC),1,1);    
+  while(offsetTC<nBcompMax){
+    TC_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nBcompMax-offsetTC),1,1);    
     SeedfinderCUDAKernels::transformCoordinates(TC_GridSize, TC_BlockSize,
 						true_cuda.Get(),
 						spMcompMat_cuda.GetEl(0,0),
@@ -333,8 +331,8 @@ namespace Acts {
   
   // For middle-top 
   offsetTC=0;
-  while(offsetTC<nTcompMax_cpu[0]){
-    TC_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nTcompMax_cpu[0]-offsetTC),1,1);
+  while(offsetTC<nTcompMax){
+    TC_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nTcompMax-offsetTC),1,1);
     SeedfinderCUDAKernels::transformCoordinates(TC_GridSize, TC_BlockSize,
 						false_cuda.Get(),
 						spMcompMat_cuda.GetEl(0,0),
@@ -348,8 +346,8 @@ namespace Acts {
   CUDAArray<int>  nMcomp_cuda(1,&nMcomp,1);
   
   // retreive middle-bottom doublet circ information
-  CPUMatrix<float> circBcompMat_cpu(nBcompMax_cpu[0], mCompIndex.size()*6);
-  circBcompMat_cpu.CopyD2H(circBcompMat_cuda.GetEl(0,0), circBcompMat_cuda.GetSize());  
+  CPUMatrix<float> circBcompMat_cpu(nBcompMax, mCompIndex.size()*6);
+  circBcompMat_cpu.CopyD2H(circBcompMat_cuda.GetEl(0,0), circBcompMat_cuda.GetSize(), 0);  
 
   std::vector<int> offsetVec(m_config.offsetVecSize);
   std::iota (std::begin(offsetVec), std::end(offsetVec), 0); // Fill with 0, 1, ..., 99.
@@ -359,15 +357,15 @@ namespace Acts {
   const int         nTopPassLimit = m_config.nTopPassLimit;
   CUDAArray<int>    nTopPassLimit_cuda(1, &nTopPassLimit, 1);
   
-  CUDAMatrix<int>   nTopPass_cuda(nBcompMax_cpu[0], nMcomp);
-  CUDAMatrix<int>   tPassIndex_cuda(nTopPassLimit, nBcompMax_cpu[0]*nMcomp); 
-  CUDAMatrix<float> curvatures_cuda(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);       
-  CUDAMatrix<float> impactparameters_cuda(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);
+  CUDAMatrix<int>   nTopPass_cuda(nBcompMax, nMcomp);
+  CUDAMatrix<int>   tPassIndex_cuda(nTopPassLimit, nBcompMax*nMcomp); 
+  CUDAMatrix<float> curvatures_cuda(nTopPassLimit, nBcompMax*nMcomp);       
+  CUDAMatrix<float> impactparameters_cuda(nTopPassLimit, nBcompMax*nMcomp);
 
-  CPUMatrix<int>    nTopPass_cpu(nBcompMax_cpu[0], nMcomp);
-  CPUMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax_cpu[0]*nMcomp); 
-  CPUMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);
-  CPUMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax_cpu[0]*nMcomp);
+  CPUMatrix<int>    nTopPass_cpu(nBcompMax, nMcomp);
+  CPUMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax*nMcomp); 
+  CPUMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax*nMcomp);
+  CPUMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax*nMcomp);
 
   cudaStream_t cuStream;
   cudaStreamCreate(&cuStream);
@@ -427,29 +425,29 @@ namespace Acts {
 					     nTopPassLimit_cuda.Get(),
 					     // output
 					     nTopPass_cuda.GetEl(0,i_m),
-					     tPassIndex_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
-					     curvatures_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
-					     impactparameters_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
+					     tPassIndex_cuda.GetEl(0,nBcompMax*i_m),
+					     curvatures_cuda.GetEl(0,nBcompMax*i_m),
+					     impactparameters_cuda.GetEl(0,nBcompMax*i_m),
 					     &cuStream
 					     );
 	i_ts++;
       }
       
       nTopPass_cpu.CopyD2H(nTopPass_cuda.GetEl(0,i_m),
-			   nBcompMax_cpu[0],
-			   nBcompMax_cpu[0]*i_m,
+			   nBcompMax,
+			   nBcompMax*i_m,
 			   &cuStream);
-      tPassIndex_cpu.CopyD2H(tPassIndex_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
-			     nTopPassLimit*nBcompMax_cpu[0],
-			     nTopPassLimit*nBcompMax_cpu[0]*i_m,
+      tPassIndex_cpu.CopyD2H(tPassIndex_cuda.GetEl(0,nBcompMax*i_m),
+			     nTopPassLimit*nBcompMax,
+			     nTopPassLimit*nBcompMax*i_m,
 			     &cuStream);
-      curvatures_cpu.CopyD2H(curvatures_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
-			     nTopPassLimit*nBcompMax_cpu[0],
-			     nTopPassLimit*nBcompMax_cpu[0]*i_m,
+      curvatures_cpu.CopyD2H(curvatures_cuda.GetEl(0,nBcompMax*i_m),
+			     nTopPassLimit*nBcompMax,
+			     nTopPassLimit*nBcompMax*i_m,
 			     &cuStream); 
-      impactparameters_cpu.CopyD2H(impactparameters_cuda.GetEl(0,nBcompMax_cpu[0]*i_m),
-				   nTopPassLimit*nBcompMax_cpu[0],
-				   nTopPassLimit*nBcompMax_cpu[0]*i_m,
+      impactparameters_cpu.CopyD2H(impactparameters_cuda.GetEl(0,nBcompMax*i_m),
+				   nTopPassLimit*nBcompMax,
+				   nTopPassLimit*nBcompMax*i_m,
 				   &cuStream);
     }
 
@@ -475,7 +473,7 @@ namespace Acts {
 
 	std::vector< std::tuple< int, int, int > > indexVec;
 	for(int i_t=0; i_t<nTpass; i_t++){
-	  int g_tIndex = compTopIdx[*tPassIndex_cpu.GetEl(i_t,i_b+(i_m-1)*nBcompMax_cpu[0])];
+	  int g_tIndex = compTopIdx[*tPassIndex_cpu.GetEl(i_t,i_b+(i_m-1)*nBcompMax)];
 	  indexVec.push_back(std::make_tuple(g_tIndex,i_t,i_b));
 	}
 	sort(indexVec.begin(), indexVec.end()); 
@@ -486,8 +484,8 @@ namespace Acts {
 	  auto bId      = std::get<2>(el);
 	  
 	  tVec.push_back(topSPvec[g_tIndex]);
-	  curvatures.push_back(*curvatures_cpu.GetEl(tId,bId+(i_m-1)*nBcompMax_cpu[0]));
-	  impactParameters.push_back(*impactparameters_cpu.GetEl(tId,bId+(i_m-1)*nBcompMax_cpu[0]));
+	  curvatures.push_back(*curvatures_cpu.GetEl(tId,bId+(i_m-1)*nBcompMax));
+	  impactParameters.push_back(*impactparameters_cpu.GetEl(tId,bId+(i_m-1)*nBcompMax));
 	}
 	
 	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
@@ -501,114 +499,7 @@ namespace Acts {
 			   std::make_move_iterator(sameTrackSeeds.end()));	      
       }
       m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);      
-    }    
-    
-    /*
-    std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> seedsPerSpM;
-    
-    // SEED Filtering is done ASYNCHRONOUSLY against Triplet search
-    // Need to call it again after last iteration
-    
-    std::vector<const InternalSpacePoint<external_spacepoint_t> *> tVec;
-    std::vector<float> curvatures;
-    std::vector<float> impactParameters;
-    
-    // For triplets collected at previous iteration
-    if (i_m > 0){
-      seedsPerSpM.clear();
-      auto middleIdx     = std::get<0>(mCompIndex[i_m-1]);
-      auto compBottomIdx = std::get<1>(mCompIndex[i_m-1]);
-      auto compTopIdx    = std::get<2>(mCompIndex[i_m-1]);
-      
-      for (int i_b=0; i_b<compBottomIdx.size(); i_b++){
-	if (nTopPass_cpu[i_b]==0) continue;
-	
-	tVec.clear();
-	curvatures.clear();
-	impactParameters.clear();      
-	float Zob = *(circBcompMat_cpu.GetEl(i_b,i_m*6));
-
-	std::vector< std::tuple< int, int, int > > indexVec;
-	for(int i_t=0; i_t<nTopPass_cpu[i_b]; i_t++){
-	  int g_tIndex = compTopIdx[*tPassIndex_cpu.GetEl(i_t,i_b)];
-	  indexVec.push_back(std::make_tuple(g_tIndex,i_t,i_b));
-	}
-	sort(indexVec.begin(), indexVec.end()); 
-	
-	for(auto el: indexVec){
-	  auto g_tIndex = std::get<0>(el);
-	  auto tId      = std::get<1>(el);
-	  auto bId      = std::get<2>(el);
-	  
-	  tVec.push_back(topSPvec[g_tIndex]);
-	  curvatures.push_back(*curvatures_cpu.GetEl(tId,bId));
-	  impactParameters.push_back(*impactparameters_cpu.GetEl(tId,bId));
-	}
-	
-	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
-	sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(*bottomSPvec[compBottomIdx[i_b]],
-									     *middleSPvec[middleIdx],
-									     tVec,
-									     curvatures,
-									     impactParameters,Zob)); 
-	seedsPerSpM.insert(seedsPerSpM.end(),
-			   std::make_move_iterator(sameTrackSeeds.begin()),
-			   std::make_move_iterator(sameTrackSeeds.end()));	      
-      }
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);      
-    }
-    
-    nTopPass_cpu.CopyD2H(nTopPass_cuda.Get(), nBcompMax_cpu[0]);
-    tPassIndex_cpu.CopyD2H(tPassIndex_cuda.GetEl(0,0),             nTopPassLimit*nBcompMax_cpu[0]);
-    curvatures_cpu.CopyD2H(curvatures_cuda.GetEl(0,0),             nTopPassLimit*nBcompMax_cpu[0]);
-    impactparameters_cpu.CopyD2H(impactparameters_cuda.GetEl(0,0), nTopPassLimit*nBcompMax_cpu[0]);
-        
-    // For the last iteration
-    if (i_m == mCompIndex.size()-1 ){
-      seedsPerSpM.clear();
-      auto middleIdx     = std::get<0>(mCompIndex[i_m]);
-      auto compBottomIdx = std::get<1>(mCompIndex[i_m]);
-      auto compTopIdx    = std::get<2>(mCompIndex[i_m]);
-      
-      for (int i_b=0; i_b<compBottomIdx.size(); i_b++){
-	if (nTopPass_cpu[i_b]==0) continue;
-	
-	tVec.clear();
-	curvatures.clear();
-	impactParameters.clear();      
-	float Zob = *(circBcompMat_cpu.GetEl(i_b,i_m*6));
-
-	std::vector< std::tuple< int, int, int > > indexVec;
-	for(int i_t=0; i_t<nTopPass_cpu[i_b]; i_t++){
-	  int g_tIndex = compTopIdx[*tPassIndex_cpu.GetEl(i_t,i_b)];
-	  indexVec.push_back(std::make_tuple(g_tIndex,i_t,i_b));
-	}
-	sort(indexVec.begin(), indexVec.end()); 
-	
-	for(auto el: indexVec){
-	  auto g_tIndex = std::get<0>(el);
-	  auto tId      = std::get<1>(el);
-	  auto bId      = std::get<2>(el);
-	  
-	  tVec.push_back(topSPvec[g_tIndex]);
-	  curvatures.push_back(*curvatures_cpu.GetEl(tId,bId));
-	  impactParameters.push_back(*impactparameters_cpu.GetEl(tId,bId));
-	}
-	
-	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
-	sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(*bottomSPvec[compBottomIdx[i_b]],
-									     *middleSPvec[middleIdx],
-									     tVec,
-									     curvatures,
-									     impactParameters,Zob)); 
-	seedsPerSpM.insert(seedsPerSpM.end(),
-			   std::make_move_iterator(sameTrackSeeds.begin()),
-			   std::make_move_iterator(sameTrackSeeds.end()));	      
-      }
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);            
-    }    
-    */
+    }        
   }  
   
   return outputVec;  

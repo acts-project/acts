@@ -53,24 +53,20 @@ public:
   //Var_t& operator[](std::size_t idx)       { return fDevPtr[idx]; }  // Need to test
   //const Var_t& operator[](std::size_t idx) const { return fDevPtr[idx]; }  // Need to test
 
-  void CopyH2D(Var_t* array, size_t len, size_t offset=0, cudaStream_t* stream = nullptr){
-    if (stream == nullptr){
+  void CopyH2D(Var_t* array, size_t len, size_t offset){
       cudaMemcpy(fDevPtr+offset, array, len*sizeof(Var_t), cudaMemcpyHostToDevice);
-    }
-    else if (stream != nullptr){
-      cudaMemcpyAsync(fDevPtr+offset, array, len*sizeof(Var_t), cudaMemcpyHostToDevice, *stream);
-    }    
+  }
+  void CopyH2D(Var_t* array, size_t len, size_t offset, cudaStream_t* stream){
+    cudaMemcpyAsync(fDevPtr+offset, array, len*sizeof(Var_t), cudaMemcpyHostToDevice, *stream);
   }
 
-  void CopyH2D(const Var_t* array, size_t len, size_t offset=0, cudaStream_t* stream = nullptr){
-    if (stream == nullptr){
+  void CopyH2D(const Var_t* array, size_t len, size_t offset){
       cudaMemcpy(fDevPtr+offset, array, len*sizeof(Var_t), cudaMemcpyHostToDevice);
-    }
-    else if (stream != nullptr){
-      cudaMemcpyAsync(fDevPtr+offset, array, len*sizeof(Var_t), cudaMemcpyHostToDevice, *stream);
-    }    
   }
-    
+  void CopyH2D(const Var_t* array, size_t len, size_t offset, cudaStream_t* stream){
+    cudaMemcpyAsync(fDevPtr+offset, array, len*sizeof(Var_t), cudaMemcpyHostToDevice, *stream);
+  }
+      
 private:
   Var_t* fDevPtr; 
   size_t fSize;

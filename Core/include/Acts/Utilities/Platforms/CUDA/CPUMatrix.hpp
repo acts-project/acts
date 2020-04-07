@@ -22,7 +22,6 @@ public:
     fNCols = nCols;
     fSize  = fNRows*fNCols;
     cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
-    //fHostPtr = new Var_t[fNRows*fNCols];
   }
 
   CPUMatrix(size_t nRows, size_t nCols, CUDAMatrix<Var_t>* cuMat){
@@ -30,7 +29,6 @@ public:
     fNCols = nCols;
     fSize  = fNRows*fNCols;
     fHostPtr = (cuMat->GetCPUArray(fNRows*fNCols,0,0))->Get();
-    //fHostPtr = cuMat->GetHostArray(fNRows*fNCols,0,0);
   }
   
   ~CPUMatrix(){
@@ -71,13 +69,12 @@ public:
     fHostPtr[col*fNRows] = input[0];
   }
 
-  void CopyD2H(Var_t* devPtr, size_t len, size_t offset=0, cudaStream_t* stream = nullptr){
-    if (stream == nullptr){
-      cudaMemcpy(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost);
-    }
-    else if (stream != nullptr){
-      cudaMemcpyAsync(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost, *stream);
-    }
+  void CopyD2H(Var_t* devPtr, size_t len, size_t offset){
+    cudaMemcpy(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost);
+  }
+
+  void CopyD2H(Var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream){
+    cudaMemcpyAsync(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost, *stream);
   }
   
 private:
