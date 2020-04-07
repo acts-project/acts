@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(ArrowVisualizationTests) {
   Visualization::drawArrowBackward(obj, start, end, 0.1, 0.1, 3., 72,
                                    arrowColor);
 
-  start = {9., 59., 0.};
+  start = {9., 9., 0.};
   end = {12., 12., 0.};
   Visualization::drawArrowsBoth(obj, start, end, 0.1, 0.1, 3., 72, arrowColor);
   obj.write("Primitives_Arrows");

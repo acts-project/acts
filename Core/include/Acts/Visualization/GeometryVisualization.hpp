@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -116,30 +118,53 @@ static inline void drawSegmentBase(
     helper.line(start, end, color);
   }
 
+
   // Arrowheads - if configured
   if (arrows != 0) {
     double alength = arrowLength * (2 * hlength);
+    double awith =  thickness * arrowWidth;
     double alpha = atan2(thickness * arrowWidth, alength);
+    auto plateBounds = std::make_shared<RadialBounds>(thickness,awith);
 
     if (arrows > 0) {
       auto aetransform = std::make_shared<Transform3D>(Transform3D::Identity());
       aetransform->prerotate(lrotation);
       aetransform->pretranslate(end);
-
+      // Arrow cone 
       auto coneBounds = std::make_shared<ConeBounds>(alpha, -alength, 0.);
       auto cone = Surface::makeShared<ConeSurface>(aetransform, coneBounds);
       drawSurface(helper, *cone, GeometryContext(), Transform3D::Identity(),
                   lseg, false, color);
+      // Arrow end plate
+      auto aptransform = std::make_shared<Transform3D>(Transform3D::Identity());
+      aptransform->prerotate(lrotation);
+      aptransform->pretranslate(Vector3D(end-alength*direction));
 
-    } else if (arrows < 0) {
+      auto plate = Surface::makeShared<DiscSurface>(aptransform,plateBounds);
+      drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
+                  lseg, false, color);
+
+    }  
+    if (arrows < 0 or arrows == 2) {
       auto astransform = std::make_shared<Transform3D>(Transform3D::Identity());
       astransform->prerotate(lrotation);
       astransform->pretranslate(start);
 
+      // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, 0., alength);
       auto cone = Surface::makeShared<ConeSurface>(astransform, coneBounds);
       drawSurface(helper, *cone, GeometryContext(), Transform3D::Identity(),
                   lseg, false, color);
+      // Arrow end plate
+      auto aptransform = std::make_shared<Transform3D>(Transform3D::Identity());
+      aptransform->prerotate(lrotation);
+      aptransform->pretranslate(Vector3D(end-alength*direction));
+
+      auto plate = Surface::makeShared<DiscSurface>(aptransform,plateBounds);
+      drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
+                  lseg, false, color);
+
+
     }
   }
 }
