@@ -534,16 +534,16 @@ BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
   ///
   /// Free to Curvilinear Tests
   ///
-  //~ // covariance check for straight line stepper
-  //~ CHECK_CLOSE_COVARIANCE(
-      //~ covariance_curvilinear<CurvilinearParameters>(spropagator, startNF, plimit),
-      //~ covariance_curvilinear<CurvilinearParameters>(rspropagator, startNF, plimit),
-      //~ 1e-3);
-  //~ // covariance check for eigen stepper
+  // covariance check for straight line stepper
   CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear<CurvilinearParameters>(repropagator, startCF, plimit),
-      covariance_curvilinear<CurvilinearParameters>(epropagator, startCF, plimit),
+      covariance_curvilinear<CurvilinearParameters>(spropagator, startNF, plimit),
+      covariance_curvilinear<CurvilinearParameters>(rspropagator, startNF, plimit),
       1e-3);
+  // covariance check for eigen stepper
+  //~ CHECK_CLOSE_COVARIANCE(
+	  //~ covariance_curvilinear<CurvilinearParameters>(epropagator, startCF, plimit),
+      //~ covariance_curvilinear<CurvilinearParameters>(repropagator, startCF, plimit),
+      //~ 2e-3);
 }
 /**
 // test correct covariance transport from disc to disc
