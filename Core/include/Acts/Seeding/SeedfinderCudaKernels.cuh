@@ -12,7 +12,7 @@
 
 namespace Acts{
   
-class SeedfinderCUDAKernels {
+class SeedfinderCudaKernels {
 
 public: 
   

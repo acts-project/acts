@@ -1,5 +1,5 @@
 target_sources_local(
   ActsCore
   PRIVATE
-	SeedfinderCUDAKernels.cu
+	SeedfinderCudaKernels.cu
 )

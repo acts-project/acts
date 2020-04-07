@@ -1,5 +1,5 @@
-#include "Acts/Seeding/SeedfinderCUDAKernels.cuh"
-#include "Acts/Utilities/Platforms/CUDA/CuUtils.cu"
+#include "Acts/Seeding/SeedfinderCudaKernels.cuh"
+#include "Acts/Utilities/Platforms/CUDA/CudaUtils.cu"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
@@ -40,7 +40,7 @@ __global__ void cuSearchTriplet(const int*   offset,
 namespace Acts{
 
   
-  void SeedfinderCUDAKernels::searchDoublet(
+  void SeedfinderCudaKernels::searchDoublet(
 			        dim3 grid, dim3 block,
 				const unsigned char* isBottom,
 				const float* rMvec, const float* zMvec,
@@ -58,7 +58,7 @@ namespace Acts{
   gpuErrChk( cudaGetLastError() );
   }
 
-  void SeedfinderCUDAKernels::transformCoordinates(
+  void SeedfinderCudaKernels::transformCoordinates(
 				   dim3 grid, dim3 block,
 				   const unsigned char* isBottom,
 				   const float* spMmat,
@@ -74,7 +74,7 @@ namespace Acts{
     gpuErrChk( cudaGetLastError() );  
   }
 
-  void SeedfinderCUDAKernels::searchTriplet(
+  void SeedfinderCudaKernels::searchTriplet(
 				dim3 grid, dim3 block,
 				const int*   offset,
 				const int*   nSpM,

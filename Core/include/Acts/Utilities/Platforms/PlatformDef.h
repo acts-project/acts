@@ -10,10 +10,10 @@ namespace Acts{
 
 #ifdef ACTS_HAS_CUDA
 
-#include "Acts/Utilities/Platforms/CUDA/CUDAArray.cu"
-#include "Acts/Utilities/Platforms/CUDA/CPUArray.hpp"
-#include "Acts/Utilities/Platforms/CUDA/CUDAMatrix.cu"
-#include "Acts/Utilities/Platforms/CUDA/CPUMatrix.hpp"
+#include "Acts/Utilities/Platforms/CUDA/CudaScalar.cu"
+#include "Acts/Utilities/Platforms/CUDA/CudaVector.cu"
+#include "Acts/Utilities/Platforms/CUDA/CudaMatrix.cu"
+#include "Acts/Utilities/Platforms/CUDA/CpuMatrix.hpp"
 
 #define WARP_SIZE 32
 #define MAX_BLOCK_SIZE 1024
@@ -23,3 +23,6 @@ namespace Acts{
 }
 
 #endif
+
+
+

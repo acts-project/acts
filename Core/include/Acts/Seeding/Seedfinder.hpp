@@ -11,7 +11,7 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Seeding/SeedfinderCPUFunctions.hpp"
+#include "Acts/Seeding/SeedfinderCpuFunctions.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/Platforms/PlatformDef.h"
 
@@ -25,7 +25,7 @@
 #include <vector>
 
 #ifdef  ACTS_HAS_CUDA
-#include <Acts/Seeding/SeedfinderCUDAKernels.cuh>
+#include <Acts/Seeding/SeedfinderCudaKernels.cuh>
 #endif
 
 namespace Acts{

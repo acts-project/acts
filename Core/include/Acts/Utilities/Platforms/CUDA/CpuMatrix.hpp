@@ -1,46 +1,47 @@
 #ifndef CPUMATRIX
 #define CPUMATRIX
 
-#include "Acts/Utilities/Platforms/CUDA/CPUArray.hpp"
-#include "Acts/Utilities/Platforms/CUDA/CUDAMatrix.cu"
+#include "Acts/Utilities/Platforms/CUDA/CudaMatrix.cu"
 
 // column-major style Matrix Definition
 
 namespace Acts{
 
 template<typename Var_t>
-class CUDAMatrix;
+class CudaMatrix;
   
 template<typename Var_t>
-class CPUMatrix{
+class CpuMatrix{
   
 public:
 
-  CPUMatrix() = default;
-  CPUMatrix(size_t nRows, size_t nCols){
-    fNRows = nRows;
-    fNCols = nCols;
-    fSize  = fNRows*fNCols;
+  CpuMatrix() = default;
+  CpuMatrix(size_t nRows, size_t nCols){
+    SetSize(nRows,nCols);
     cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
   }
 
-  CPUMatrix(size_t nRows, size_t nCols, CUDAMatrix<Var_t>* cuMat){
-    fNRows = nRows;
-    fNCols = nCols;
-    fSize  = fNRows*fNCols;
-    fHostPtr = (cuMat->GetCPUArray(fNRows*fNCols,0,0))->Get();
+  CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<Var_t>* cuMat){
+    SetSize(nRows,nCols);
+    cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
+    cudaMemcpy(fHostPtr, cuMat->Get(0,0), fSize*sizeof(Var_t), cudaMemcpyDeviceToHost);   
   }
   
-  ~CPUMatrix(){
+  ~CpuMatrix(){
     cudaFreeHost(fHostPtr);
   }
 
+  void SetSize(size_t row, size_t col){
+    fNRows = row;
+    fNCols = col;
+    fSize  = fNRows*fNCols; 
+  }
+  
   size_t GetNCols(){ return fNCols; }
   size_t GetNRows(){ return fNRows; }
   size_t GetSize() { return fSize; }
   
-
-  Var_t* GetEl(size_t row=0, size_t col=0){
+  Var_t* Get(size_t row=0, size_t col=0){
     int offset=row+col*fNRows;
     return fHostPtr+offset;
   }

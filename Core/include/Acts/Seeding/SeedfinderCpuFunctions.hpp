@@ -23,7 +23,7 @@ namespace Acts{
   };
   
   template< typename external_spacepoint_t, typename sp_range_t >
-  class SeedfinderCPUFunctions {
+  class SeedfinderCpuFunctions {
 
   public: 
     
@@ -52,4 +52,4 @@ namespace Acts{
   
 } // namespace Acts
 
-#include "Acts/Seeding/SeedfinderCPUFunctions.ipp"
+#include "Acts/Seeding/SeedfinderCpuFunctions.ipp"

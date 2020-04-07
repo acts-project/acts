@@ -27,7 +27,7 @@
 #include "SpacePoint.hpp"
 
 #include "Acts/Utilities/Platforms/PlatformDef.h"
-#include "Acts/Utilities/Platforms/CUDA/CuUtils.cu"
+#include "Acts/Utilities/Platforms/CUDA/CudaUtils.cu"
 
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
