@@ -30,7 +30,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   const Surface& surface = nominalResult.endParameters->referenceSurface();
 
   // Steps for estimating derivatives
-  std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
+  std::vector<double> deviations = {-4e-6, -2e-6, 2e-6, 4e-6};
 
   // Allow larger distances for the oscillation
   propagator_options_t opts = options;
@@ -281,6 +281,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
         wiggleStartVector(options.geoContext, h, param, startPars);
 
     const auto& r = m_propagator.propagate(tp, target, options).value();
+    if(param == 4 || param == 5 || param == 6)
+		std::cout << "Pathlength: " << param << "\t" << r.pathLength << std::endl;
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 
@@ -488,6 +490,16 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
+  //~ for(unsigned int i = 4; i <= 6; i++)
+  //~ {
+	  //~ std::cout << "Derivatives: " << i << " " << std::endl;
+	  //~ for(unsigned int j = 0; j < derivatives[i].size(); j++)
+	  //~ {
+		  //~ for(unsigned int k = 0; k < derivatives[i][j].size(); k++)
+				//~ std::cout << derivatives[i][j][k] << " ";
+		  //~ std::cout << std::endl;
+	  //~ }
+  //~ }
  std::cout << "Ridders:\n" << jacobian << std::endl; 
   return BoundSymMatrix(jacobian * std::get<Acts::FreeSymMatrix>(startCov) *
                         jacobian.transpose());
