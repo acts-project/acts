@@ -56,30 +56,27 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
     jacToCurv(1, 1) = -x * y * invC;
     jacToCurv(1, 2) = -x * z * invC;
   }
-  // Time parameter
-  //~ jacToCurv(5, 0) = state.derivative(3) * sqrt(sinPhi * sinPhi + cosPhi * cosPhi * cosTheta * cosTheta + x * x);
-  //~ jacToCurv(5, 1) = state.derivative(3) * sqrt(cosPhi * cosPhi + sinPhi * sinPhi * cosTheta * cosTheta + y * y);
-  //~ jacToCurv(5, 2) = state.derivative(3) * sqrt(sinTheta * sinTheta + z * z); // z = cosTheta!
-  //~ jacToCurv(5, 0) = state.derivative(3) * -sinPhi + state.derivative(3) * -cosPhi * cosTheta; 
-  //~ jacToCurv(5, 1) = state.derivative(3) * cosPhi + state.derivative(3) * -sinPhi * cosTheta;
-  //~ jacToCurv(5, 2) = state.derivative(3) * 0. + state.derivative(3) * sinTheta;
-  
+  // Time parameter  
   jacToCurv(5, 3) = 1.;
-  //~ jacToCurv(5, 0) = -jacToCurv(1, 2);
-  //~ jacToCurv(5, 1) = -0.5 * jacToCurv(1, 1);
-  //~ jacToCurv(5, 2) = jacToCurv(1, 0);
+  
   // Directional and momentum parameters for curvilinear
   jacToCurv(2, 4) = -sinPhi * invSinTheta;
   jacToCurv(2, 5) = cosPhi * invSinTheta;
   //~ jacToCurv(3, 6) = -invSinTheta;
   jacToCurv(3, 4) = cosPhi * cosTheta;
   jacToCurv(3, 5) = sinPhi * cosTheta;
-  jacToCurv(3, 6) = -sinTheta;
+  jacToCurv(3, 6) = -invSinTheta * (1. - cosTheta * cosTheta);
   jacToCurv(4, 7) = 1.;
 
   return jacToCurv;
 }
 
+/// TODO: This needs to be somewhere else
+/// @brief Constructs a jacobian to transform from (x,y,z,t,Tx,Ty,Tz,q/p) to (x,y,z,t,phi,theta,q/p)
+///
+/// @param [in] dir Direction vector
+///
+/// @return The jacobian
   ActsMatrixD<8, 7>
   jacobianDirectionToAngles(const Vector3D dir) const
   {
@@ -109,6 +106,39 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
     return jac;
   }
   
+/// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to (x,y,z,t,Tx,Ty,Tz,q/p)
+///
+/// @param [in] dir Direction vector
+///
+/// @return The jacobian
+ActsMatrixD<7, 8>
+anglesToDirectionsJacobian(const Vector3D dir)
+{
+ActsMatrixD<7, 8> jacobian = ActsMatrixD<7, 8>::Zero();
+  const double x = dir(0);  // == cos(phi) * sin(theta)
+  const double y = dir(1);  // == sin(phi) * sin(theta)
+  const double z = dir(2);  // == cos(theta)
+  // can be turned into cosine/sine
+  const double cosTheta = z;
+  const double sinTheta = sqrt(x * x + y * y);
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
+  jacobian(0, 0) = 1.;
+  jacobian(1, 1) = 1.;
+  jacobian(2, 2) = 1.;
+  jacobian(3, 3) = 1.;
+  jacobian(6, 7) = 1.;
+  
+  jacobian(4, 4) = -sinPhi * invSinTheta;
+  jacobian(4, 5) = cosPhi * invSinTheta;
+  jacobian(5, 4) = cosPhi * cosTheta;
+  jacobian(5, 5) = sinPhi * cosTheta;
+  jacobian(5, 6) = -invSinTheta * (1. - cosTheta * cosTheta);
+
+  return jacobian;
+}
+
 /// @brief This function treats the modifications of the jacobian related to the
 /// projection onto a surface. Since a variation of the start parameters within
 /// a given uncertainty would lead to a variation of the end parameters, these
@@ -188,33 +218,12 @@ if(jacobianLocalToGlobal.has_value())
   return freeToCurvilinearJacobian(direction);
 }
 else
-{
-	ActsMatrixD<7, 8> jacToCurv = ActsMatrixD<7, 8>::Zero();
-  const double x = state.dir(0);  // == cos(phi) * sin(theta)
-  const double y = state.dir(1);  // == sin(phi) * sin(theta)
-  const double z = state.dir(2);  // == cos(theta)
-  // can be turned into cosine/sine
-  const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
-  const double invSinTheta = 1. / sinTheta;
-  const double cosPhi = x * invSinTheta;
-  const double sinPhi = y * invSinTheta;
-  jacToCurv(0, 0) = 1.;
-  jacToCurv(1, 1) = 1.;
-  jacToCurv(2, 2) = 1.;
-  jacToCurv(3, 3) = 1.;
-  jacToCurv(6, 7) = 1.;
-  
-  jacToCurv(4, 4) = -sinPhi * invSinTheta;
-  jacToCurv(4, 5) = cosPhi * invSinTheta;
-  jacToCurv(5, 4) = cosPhi * cosTheta;
-  jacToCurv(5, 5) = sinPhi * cosTheta;
-  jacToCurv(5, 6) = -sinTheta;
-  
+{  
+	const ActsMatrixD<8,7> transport = transportJacobian * state.jacDirToAngle;
 	const FreeRowVector sfactors =
-		normVec * state.jacTransport.template topLeftCorner<3, FreeParsDim>();
+		normVec * transport.template topLeftCorner<3, FreeParsDim>();
 	// Since the jacobian to local needs to calculated for the bound parameters here, it is convenient to do the same here
-	return freeToCurvilinearJacobian(state) * (state.jacTransport - state.derivative * sfactors) * jacToCurv;
+	return freeToCurvilinearJacobian(state) * (transport - state.derivative * sfactors) * anglesToDirectionsJacobian(state.dir);
 }
 }
 

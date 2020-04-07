@@ -118,9 +118,14 @@ class StraightLineStepper {
 		  // Get the covariance
           cov = *par.covariance();
           jacobian.emplace<3>(FreeMatrix::Identity());
+         
+          jacDirToAngle = directionsToAnglesJacobian(dir);
       }
     }
     
+     /// Conversion jacobian to transform from directions to angles
+	ActsMatrixD<8, 7> jacDirToAngle;
+  
     /// Jacobian from local to the global frame
     std::optional<BoundToFreeMatrix> jacToGlobal;
 

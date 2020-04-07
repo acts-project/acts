@@ -281,8 +281,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
         wiggleStartVector(options.geoContext, h, param, startPars);
 
     const auto& r = m_propagator.propagate(tp, target, options).value();
-    if(param == 4 || param == 5 || param == 6)
-		std::cout << "Pathlength: " << param << "\t" << r.pathLength << std::endl;
+    
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 

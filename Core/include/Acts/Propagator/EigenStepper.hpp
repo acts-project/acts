@@ -136,6 +136,8 @@ class EigenStepper {
 		  // Get the covariance
           cov = *par.covariance();
           jacobian.emplace<3>(FreeMatrix::Identity());
+        
+          jacDirToAngle = directionsToAnglesJacobian(dir);
       }
     }
     
@@ -157,6 +159,9 @@ class EigenStepper {
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
+	 /// Conversion jacobian to transform from directions to angles
+	  ActsMatrixD<8, 7> jacDirToAngle;
+  
     /// The full jacobian of the transport entire transport
     std::variant<BoundMatrix, FreeToBoundMatrix, FreeMatrix, BoundToFreeMatrix> jacobian;
 
