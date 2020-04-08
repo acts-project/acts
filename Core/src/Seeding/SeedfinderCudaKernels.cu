@@ -404,6 +404,7 @@ __global__ void cuSearchTriplet(const int*   offset,
   __syncthreads();
   if (threadIdx.x == 0 && nTopPass[blockIdx.x] > *nTopPassLimit){
     nTopPass[blockIdx.x] = *nTopPassLimit;
+    printf("%f exceed limits for the number of passed top spacepoints \n", blockIdx.x);
   }
   
 }

@@ -75,11 +75,12 @@ int main(int argc, char** argv) {
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
-  int  nGroupToIterate=500;
+  int  nGroupToIterate = 500;
+  int  skip = 0;
   int  deviceID = 0;
-  
+    
   int opt;
-  while ((opt = getopt(argc, argv, "hf:n:d:q")) != -1) {
+  while ((opt = getopt(argc, argv, "hf:n:s:d:q")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;
@@ -87,6 +88,9 @@ int main(int argc, char** argv) {
       case 'n':
         nGroupToIterate = atoi(optarg);
         break;
+      case 's':
+        skip = atoi(optarg);
+        break;		
       case 'd':
         deviceID = atoi(optarg);
         break;	
@@ -106,6 +110,9 @@ int main(int argc, char** argv) {
           std::cout
               << "      -n NUM   : Number of groups to iterate in seed finding. Default is "
               << nGroupToIterate << std::endl;
+	  std::cout
+              << "      -s SKIP  : Number of groups to skip in seed finding. Default is "
+              << skip << std::endl;
           std::cout
               << "      -d DEVID : NVIDIA GPU device ID. Default is "
               << deviceID << std::endl;	  	  
@@ -195,14 +202,15 @@ int main(int argc, char** argv) {
   std::cout << "Preprocess Time: " << elapsec_pre.count() << std::endl;
   
   int group_count;
-  ///////// CPU
+  
+  // CPU
   group_count=0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   auto start_cpu = std::chrono::system_clock::now();
   auto groupIt = spGroup.begin();
-  auto endOfGroups = spGroup.end();
-  
-  for (; !(groupIt == endOfGroups); ++groupIt) {
+
+  for (int i_s=0; i_s<skip; i_s++) ++groupIt;
+  for (; !(groupIt == spGroup.end()); ++groupIt) {
     seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
@@ -214,15 +222,15 @@ int main(int argc, char** argv) {
   std::cout << "CPU Time: " << elapsec_cpu.count() << std::endl;
   std::cout << "Number of regions: " << seedVector_cpu.size() << std::endl;
   
-  ///////// CUDA
+  // CUDA
   //cudaProfilerStart();
-  
   group_count=0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
   auto start_cuda = std::chrono::system_clock::now();
   groupIt = spGroup.begin();
-  
-  for (; !(groupIt == endOfGroups); ++groupIt) {
+
+  for (int i_s=0; i_s<skip; i_s++) ++groupIt;
+  for (; !(groupIt == spGroup.end()); ++groupIt) {
     seedVector_cuda.push_back(seedfinder_cuda.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;

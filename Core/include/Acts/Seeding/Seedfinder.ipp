@@ -72,6 +72,8 @@ namespace Acts {
       continue;
     }
 
+    //std::cout << i_m << "  " << compatBottomSP.size() << "  " << compatTopSP.size() << std::endl;
+    
     // contains parameters required to calculate circle with linear equation
     
     // ...for bottom-middle
@@ -84,7 +86,7 @@ namespace Acts {
 
     auto seedsPerSpM = SeedfinderCpuFunctions<external_spacepoint_t,sp_range_t>::searchTriplet(*spM, compatBottomSP, compatTopSP, linCircleBottom, linCircleTop, m_config);
     m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);   
-  }
+  }  
   
   return outputVec;
   }
@@ -273,6 +275,8 @@ namespace Acts {
     auto bIndex = std::get<1>(mCompIndex[i_m]);
     auto tIndex = std::get<2>(mCompIndex[i_m]);
 
+    //std::cout << mIndex << "  " << bIndex.size() << "  " << tIndex.size() << std::endl;
+    
     for (int i=0; i<6; i++){
       spMcompMat_cpu.SetEl(i_m,i,std::move(*spMmat_cpu.Get(mIndex,i)));
     }      

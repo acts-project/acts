@@ -76,8 +76,7 @@ namespace Acts{
 	}
 	compatSPs.push_back(sp);
       }            
-    }
-
+    }    
     return compatSPs;
   }
 
