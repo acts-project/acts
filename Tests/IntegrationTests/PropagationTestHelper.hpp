@@ -321,8 +321,8 @@ auto covariance_curvilinear(const Propagator_type& propagator, start_parameters_
 
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
-  options.maxStepSize = plimit;
-  options.pathLimit = 0.1 * plimit;
+  options.maxStepSize = 0.1 * plimit;
+  options.pathLimit = plimit;
   options.debug = debug;
   options.tolerance = 1e-9;
 
