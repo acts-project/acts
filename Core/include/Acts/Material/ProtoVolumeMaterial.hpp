@@ -31,8 +31,7 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   ///
   /// @param binUtility a BinUtility determining the granularity
   ///        and binning of the material on the volume
-  ProtoVolumeMaterial(const BinUtility& binUtility)
-  : IVolumeMaterial(), m_binUtility(binUtility) {};
+  ProtoVolumeMaterial(const BinUtility& binUtility);
 
   /// Copy constuctor
   ///
@@ -49,9 +48,7 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   ~ProtoVolumeMaterial() override = default;
 
   /// Return the BinUtility
-  const BinUtility& binUtility() const{
-    return m_binUtility;
-  }
+  const BinUtility& binUtility() const;
 
   /// Assignment operator
   ///
@@ -59,12 +56,26 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   ProtoVolumeMaterial& operator=(const ProtoVolumeMaterial& vmproxy) = default;
 
   /// Return the material
-  const Material& material(const Vector3D& /*position*/) const final {
-    return m_material;
-  }
+  const Material& material(const Vector3D& /*position*/) const final;
+
+  /// Output Method for std::ostream
+  ///
+  /// @param sl The outoput stream
+  std::ostream& toStream(std::ostream& sl) const;
 
  private:
   BinUtility m_binUtility;
   Material m_material;
 };
+
+/// Return the material
+inline const Acts::Material& Acts::ProtoVolumeMaterial::material(
+    const Acts::Vector3D& /*position*/) const {
+  return m_material;
+}
+
+inline const Acts::BinUtility& Acts::ProtoVolumeMaterial::binUtility() const {
+  return m_binUtility;
+}
+
 }  // namespace Acts

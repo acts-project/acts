@@ -30,18 +30,55 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// Explicit constructor
   ///
   /// @param material is the material held by this
-  HomogeneousVolumeMaterial(const Material& material) : m_material(material) {}
+  HomogeneousVolumeMaterial(const Material& material);
+
+  /// Copy Constructor
+  ///
+  /// @param hsm is the source material
+  HomogeneousVolumeMaterial(const HomogeneousVolumeMaterial& hsm) = default;
+
+  /// Copy Move Constructor
+  ///
+  /// @param hsm is the source material
+  HomogeneousVolumeMaterial(HomogeneousVolumeMaterial&& hsm) = default;
+
+  /// Destructor
+  ~HomogeneousVolumeMaterial() override = default;
+
+  /// Assignment operator
+  ///
+  /// @param hsm is the source material
+  HomogeneousVolumeMaterial& operator=(const HomogeneousVolumeMaterial& hsm) =
+      default;
+
+  /// Equality operator
+  ///
+  /// @param hsm is the source material
+  bool operator==(const HomogeneousVolumeMaterial& hsm) const;
 
   /// Access to actual material
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  const Material& material(const Vector3D& /*position*/) const final {
-    return m_material;
-  }
+  const Material& material(const Vector3D& /*position*/) const final;
+
+  /// Output Method for std::ostream
+  ///
+  /// @param sl The outoput stream
+  std::ostream& toStream(std::ostream& sl) const;
 
  private:
-  Material m_material;
+  Material m_material = Material();
 };
+
+inline const Material& HomogeneousVolumeMaterial::material(
+    const Vector3D& /*position*/) const {
+  return (m_material);
+}
+
+inline bool HomogeneousVolumeMaterial::operator==(
+    const HomogeneousVolumeMaterial& hvm) const {
+  return (m_material == hvm.m_material);
+}
 
 }  // namespace Acts

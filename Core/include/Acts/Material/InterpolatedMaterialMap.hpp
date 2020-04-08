@@ -10,8 +10,8 @@
 
 #include <functional>
 #include <optional>
-#include "Acts/Material/Material.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
@@ -239,7 +239,8 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   ///
   /// @param [in] mapper Material map
   /// @param [in] BinUtility
-  InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility&& bu) : m_mapper(std::move(mapper)) {
+  InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility&& bu)
+      : m_mapper(std::move(mapper)) {
     m_binUtility = bu;
   }
 
@@ -311,6 +312,16 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
 
   /// Return the BinUtility
   const BinUtility& binUtility() const { return m_binUtility; }
+
+  /// Output Method for std::ostream
+  ///
+  /// @param sl The outoput stream
+  std::ostream& toStream(std::ostream& sl) const {
+    sl << "Acts::InterpolatedMaterialMap : " << std::endl;
+    sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
+       << " / " << m_binUtility.max(1) + 1 << std::endl;
+    sl << "   - Parse full update material    : " << std::endl;  //
+  }
 
  private:
   /// @brief Retrieve cell for given position
