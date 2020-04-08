@@ -9,18 +9,18 @@
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include <iostream>
 
-void Acts::AccumulatedVolumeMaterial::accumulate(const MaterialProperties& mat) {
-
+void Acts::AccumulatedVolumeMaterial::accumulate(
+    const MaterialProperties& mat) {
   // Replace the vacuum by matter or add matter to matter
   if (m_totalX0 == std::numeric_limits<float>::infinity()) {
-    m_totalX0 = mat.thickness()/mat.material().X0();
+    m_totalX0 = mat.thickness() / mat.material().X0();
   } else {
-    m_totalX0 += mat.thickness()/mat.material().X0();
+    m_totalX0 += mat.thickness() / mat.material().X0();
   }
   if (m_totalL0 == std::numeric_limits<float>::infinity()) {
-    m_totalL0 = mat.thickness()/mat.material().L0();
+    m_totalL0 = mat.thickness() / mat.material().L0();
   } else {
-    m_totalL0 += mat.thickness()/mat.material().L0();
+    m_totalL0 += mat.thickness() / mat.material().L0();
   }
   m_totalAr += mat.material().Ar();
   m_totalZ += mat.material().Z();
@@ -40,8 +40,7 @@ Acts::Material Acts::AccumulatedVolumeMaterial::average() {
   }
 
   // Create the material
-  //TO DO : THINK ABOUT VACUM HIT
-  return Material(m_thickness / m_totalX0,
-                  m_thickness / m_totalL0,
-                  m_totalAr / m_materialEntries, m_totalZ / m_materialEntries, m_totalRho / m_materialEntries);
+  return Material(m_thickness / m_totalX0, m_thickness / m_totalL0,
+                  m_totalAr / m_materialEntries, m_totalZ / m_materialEntries,
+                  m_totalRho / m_materialEntries);
 }

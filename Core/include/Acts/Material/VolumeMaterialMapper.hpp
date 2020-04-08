@@ -20,9 +20,9 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 /// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
 /// and to avoid code duplication. Currently implemented for the two most common
@@ -30,18 +30,19 @@
 
 namespace Acts {
 
-using RecordedMaterialPoint = std::vector<std::pair<Acts::MaterialProperties, Acts::Vector3D>>;
+using RecordedMaterialPoint =
+    std::vector<std::pair<Acts::MaterialProperties, Acts::Vector3D>>;
 
 class VolumeMaterialMapper {
  public:
-   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
+  using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-   /// @brief selector for finding
-   struct MaterialVolume {
-     bool operator()(const TrackingVolume& vf) const {
-       return (vf.volumeMaterial() != nullptr);
-     }
-   };
+  /// @brief selector for finding
+  struct MaterialVolume {
+    bool operator()(const TrackingVolume& vf) const {
+      return (vf.volumeMaterial() != nullptr);
+    }
+  };
 
   /// @struct Config
   ///
@@ -71,19 +72,13 @@ class VolumeMaterialMapper {
     std::map<GeometryID, BinUtility> materialBin;
 
     /// The created surface material from it
-    std::map<GeometryID, std::unique_ptr<const IVolumeMaterial>>
-        volumeMaterial;
-
-    /// The created surface material from it
-    std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>
-        surfaceMaterial;
+    std::map<GeometryID, std::unique_ptr<const IVolumeMaterial>> volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
 
     /// Reference to the magnetic field context
     std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-
   };
 
   /// Delete the Default constructor
@@ -95,9 +90,8 @@ class VolumeMaterialMapper {
   /// @param propagator The straight line propagator
   /// @param log The logger
   VolumeMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
-                       std::unique_ptr<const Logger> slogger =
-                            getDefaultLogger("VolumeMaterialMapper",
-                                             Logging::INFO));
+                       std::unique_ptr<const Logger> slogger = getDefaultLogger(
+                           "VolumeMaterialMapper", Logging::INFO));
 
   /// @brief helper method that creates the cache for the mapping
   ///
@@ -134,7 +128,7 @@ class VolumeMaterialMapper {
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume
   void resolveMaterialVolume(State& mState,
-                               const TrackingVolume& tVolume) const;
+                             const TrackingVolume& tVolume) const;
 
   /// @brief check and insert
   ///
@@ -146,7 +140,8 @@ class VolumeMaterialMapper {
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void collectMaterialSurface(State& /*mState*/, const TrackingVolume& tVolume) const;
+  void collectMaterialSurface(State& /*mState*/,
+                              const TrackingVolume& tVolume) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

@@ -160,7 +160,8 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   using DebugOutput = detail::DebugOutputActor;
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList = ActionList<MaterialSurfaceCollector, MaterialVolumeCollector, DebugOutput>;
+  using ActionList = ActionList<MaterialSurfaceCollector,
+                                MaterialVolumeCollector, DebugOutput>;
   using AbortList = AbortList<detail::EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
@@ -223,13 +224,15 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // Assign the recorded ones, break if you hit an end
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
-    if(volIter != mappingVolumes.end() && encounterVolume==true && !volIter->volume->inside(rmIter->position)){
-      encounterVolume=false;
+    if (volIter != mappingVolumes.end() && encounterVolume == true &&
+        !volIter->volume->inside(rmIter->position)) {
+      encounterVolume = false;
       ++volIter;
     }
 
-    if(volIter != mappingVolumes.end() && volIter->volume->inside(rmIter->position)){
-      encounterVolume=true;
+    if (volIter != mappingVolumes.end() &&
+        volIter->volume->inside(rmIter->position)) {
+      encounterVolume = true;
       ++rmIter;
       continue;
     }

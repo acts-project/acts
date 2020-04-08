@@ -17,7 +17,6 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
 
-
 namespace Acts {
 
 /// @brief adjust the BinUtility bu to the dimensions of cylinder volume bounds
