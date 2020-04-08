@@ -71,7 +71,7 @@ inline void DiscSurface::initJacobianToLocal(const GeometryContext& gctx,
                                              const Vector3D& direction) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
-  // Optimized trigonometry on the propagation direction
+    // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
   const double z = direction(2);  // == cos(theta)
