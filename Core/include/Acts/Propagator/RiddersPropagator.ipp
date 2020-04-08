@@ -168,7 +168,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   // Steps for estimating derivatives
   std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
   if (target.type() == Surface::Disc) {
-    deviations = {{-3e-5, -1e-5, 1e-5, 3e-5}};
+    deviations = {{-3e-4, -1e-4, 1e-4, 3e-4}};
   }
 
   // - for planar surfaces the dest surface is a perfect destination
@@ -296,7 +296,6 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-
     if constexpr (start_parameters_t::is_local_representation) {
       // Correct for a possible variation of phi around
       if (param == 2) {
@@ -497,7 +496,6 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
- std::cout << "Ridders:\n" << jacobian << std::endl; 
   return BoundSymMatrix(jacobian * std::get<Acts::FreeSymMatrix>(startCov) *
                         jacobian.transpose());
 }
