@@ -138,7 +138,7 @@ __global__ void cuSearchDoublet(const unsigned char* isBottom,
     }
     
     float cotTheta = (zM - zB)/deltaR;
-    if (fabs(cotTheta) > *cotThetaMax){
+    if (fabsf(cotTheta) > *cotThetaMax){
       isCompatible[globalId] = false;
     }
 
@@ -161,7 +161,7 @@ __global__ void cuSearchDoublet(const unsigned char* isBottom,
     
     if (isCompatible[globalId] == true){
       float cotTheta = (zB - zM)/deltaR;
-      if (fabs(cotTheta) > *cotThetaMax){
+      if (fabsf(cotTheta) > *cotThetaMax){
 	isCompatible[globalId] = false;
       }
       
@@ -210,7 +210,7 @@ __global__ void cuTransformCoordinates(const unsigned char* isBottom,
   float y = deltaY * cosPhiM - deltaX * sinPhiM;
   // 1/(length of M -> SP)
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-  float iDeltaR = sqrt(iDeltaR2);
+  float iDeltaR = sqrtf(iDeltaR2);
 
   int bottomFactor = 1 * (int(!(*isBottom))) - 1 * (int(*isBottom));
   // cot_theta = (deltaZ/deltaR)
@@ -305,9 +305,9 @@ __global__ void cuSearchTriplet(const int*   offset,
   // if the error is larger than the difference in theta, no need to
   // compare with scattering
   if (deltaCotTheta2 - error2 > 0) {
-    deltaCotTheta = fabs(deltaCotTheta);
+    deltaCotTheta = fabsf(deltaCotTheta);
     // if deltaTheta larger than the scattering for the lower pT cut, skip
-    error = sqrt(error2);
+    error = sqrtf(error2);
     dCotThetaMinusError2 =
       deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
     // avoid taking root of scatteringInRegion
@@ -332,13 +332,13 @@ __global__ void cuSearchTriplet(const int*   offset,
   float S2 = 1. + A * A;
   float B = Vb - A * Ub;
   float B2 = B * B;
-  // sqrt(S2)/B = 2 * helixradius
+  // sqrtf(S2)/B = 2 * helixradius
   // calculated radius must not be smaller than minimum radius
   if (S2 < B2 * (*minHelixDiameter2)) {
     isPassed[threadIdx.x] = false;
   }
   
-  // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
+  // 1/helixradius: (B/sqrtf(S2))/2 (we leave everything squared)
   float iHelixDiameter2 = B2 / S2;
   // calculate scattering for p(T) calculated from seed curvature
   float pT2scatter = 4 * iHelixDiameter2 * (*pT2perRadius);
@@ -356,8 +356,8 @@ __global__ void cuSearchTriplet(const int*   offset,
   // function
   // (in contrast to having to solve a quadratic function in x/y plane)
 
-  impact[threadIdx.x] = fabs((A - B * rM) * rM);
-  invHelix[threadIdx.x] = B / sqrt(S2);
+  impact[threadIdx.x] = fabsf((A - B * rM) * rM);
+  invHelix[threadIdx.x] = B / sqrtf(S2);
 
   if (impact[threadIdx.x] > (*impactMax)){
     isPassed[threadIdx.x] = false;
