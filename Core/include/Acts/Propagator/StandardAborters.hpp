@@ -21,13 +21,13 @@ namespace Acts {
 
 /// @brief TargetOptions struct for geometry interface
 struct TargetOptions {
-  /// the navigation direction
+  /// Navigation direction
   NavigationDirection navDir = forward;
 
-  /// the boundary check directive - always false here
+  /// Target Boundary check directive - always false here
   BoundaryCheck boundaryCheck = false;
 
-  /// object to check against - always nullptr here
+  /// Object to check against - always nullptr here
   const Surface* startObject = nullptr;
 
   /// The path limit
@@ -108,7 +108,6 @@ struct PathLimitReached {
 /// This is the condition that the Surface has been reached
 /// it then triggers an propagation abort of the propagation
 struct SurfaceReached {
-  /// Default Constructor
   SurfaceReached() = default;
 
   /// boolean operator for abort condition without using the result
@@ -205,14 +204,13 @@ struct SurfaceReached {
 /// This is the condition that the end of World has been reached
 /// it then triggers an propagation abort
 struct EndOfWorldReached {
-  /// Default Constructor
   EndOfWorldReached() = default;
 
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
   ///
-  /// @param[in,out] state The propagation state object
+  /// @param [in,out] state The propagation state object
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state,
                   const stepper_t& /*unused*/) const {
