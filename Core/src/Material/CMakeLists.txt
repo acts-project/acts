@@ -5,11 +5,14 @@ target_sources_local(
     AccumulatedVolumeMaterial.cpp
     BinnedSurfaceMaterial.cpp
     HomogeneousSurfaceMaterial.cpp
+    HomogeneousVolumeMaterial.cpp
     Interactions.cpp
     Material.cpp
+    MaterialGridHelper.cpp
     MaterialMapUtils.cpp
     MaterialProperties.cpp
     ProtoSurfaceMaterial.cpp
+    ProtoVolumeMaterial.cpp
     SurfaceMaterialMapper.cpp
     VolumeMaterialMapper.cpp
 )
