@@ -210,7 +210,7 @@ __global__ void cuTransformCoordinates(const unsigned char* isBottom,
   float y = deltaY * cosPhiM - deltaX * sinPhiM;
   // 1/(length of M -> SP)
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-  float iDeltaR = std::sqrt(iDeltaR2);
+  float iDeltaR = sqrt(iDeltaR2);
 
   int bottomFactor = 1 * (int(!(*isBottom))) - 1 * (int(*isBottom));
   // cot_theta = (deltaZ/deltaR)
@@ -232,13 +232,6 @@ __global__ void cuTransformCoordinates(const unsigned char* isBottom,
   float Er = ((varianceZM + varianceZB) +
 	      (cot_theta * cot_theta) * (varianceRM + varianceRB)) * iDeltaR2;  
   
-  //circBmat[globalId+(*nSpB)*0] = Zo;
-  //circBmat[globalId+(*nSpB)*1] = cot_theta;
-  //circBmat[globalId+(*nSpB)*2] = iDeltaR;
-  //circBmat[globalId+(*nSpB)*3] = Er;
-  //circBmat[globalId+(*nSpB)*4] = U;
-  //circBmat[globalId+(*nSpB)*5] = V;
-
   circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+0)] = Zo;
   circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+1)] = cot_theta;
   circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+2)] = iDeltaR;
