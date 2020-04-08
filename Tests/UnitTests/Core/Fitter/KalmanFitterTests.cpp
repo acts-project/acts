@@ -26,13 +26,13 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -56,7 +56,7 @@ using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
 
-using DebugOutput = detail::DebugOutputActor;
+using DebugOutput = DebugOutputActor;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Create action list for the measurement creation
   using MeasurementActions = ActionList<MeasurementCreator, DebugOutput>;
-  using MeasurementAborters = AbortList<detail::EndOfWorldReached>;
+  using MeasurementAborters = AbortList<EndOfWorldReached>;
 
   auto pixelResX = Resolution(eLOC_0, 25_um);
   auto pixelResY = Resolution(eLOC_1, 50_um);
