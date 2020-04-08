@@ -20,9 +20,9 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
@@ -76,9 +76,9 @@ struct ParticleSimulator {
     // propagator-related additional types
     using Interact =
         Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
-    using Actions = Acts::ActionList<Interact, Acts::detail::DebugOutputActor>;
+    using Actions = Acts::ActionList<Interact, Acts::DebugOutputActor>;
     using Abort = Acts::AbortList<typename Interact::ParticleNotAlive,
-                                  Acts::detail::EndOfWorldReached>;
+                                  Acts::EndOfWorldReached>;
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
