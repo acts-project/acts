@@ -16,7 +16,7 @@ namespace Acts {
 /// the final output object (result), which leaves the propagation
 
 struct DebugOutputActor {
-  /// mute the thing if you don't want any action
+  /// Mute the thing if you don't want any action
   bool mute = false;
 
   /// Simple result struct to be returned
