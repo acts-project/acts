@@ -19,8 +19,6 @@
 
 namespace Acts {
 
-namespace detail {
-
 /// @brief TargetOptions struct for geometry interface
 struct TargetOptions {
   /// the navigation direction
@@ -226,5 +224,4 @@ struct EndOfWorldReached {
   }
 };
 
-}  // namespace detail
 }  // namespace Acts

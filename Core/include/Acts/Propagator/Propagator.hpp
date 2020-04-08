@@ -23,9 +23,9 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -344,7 +344,7 @@ class Propagator final {
   ///         track parameters, and output of actions (if they produce any)
   ///
   template <typename parameters_t, typename propagator_options_t,
-            typename path_aborter_t = detail::PathLimitReached>
+            typename path_aborter_t = PathLimitReached>
   Result<action_list_t_result_t<
       CurvilinearParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
@@ -370,8 +370,8 @@ class Propagator final {
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   template <typename parameters_t, typename propagator_options_t,
-            typename target_aborter_t = detail::SurfaceReached,
-            typename path_aborter_t = detail::PathLimitReached>
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
   Result<action_list_t_result_t<
       BoundParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
