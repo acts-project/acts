@@ -46,8 +46,12 @@ class DiamondBounds : public PlanarBounds {
   DiamondBounds(double halfXnegY, double halfXzeroY, double halfXposY,
                 double halfYneg, double halfYpos) noexcept(false)
       : m_values({halfXnegY, halfXzeroY, halfXposY, halfYneg, halfYpos}),
-        m_boundingBox(*std::max_element(m_values.begin(), m_values.begin() + 2),
-                      std::max(halfYneg, halfYpos)) {
+        m_boundingBox(
+            Vector2D{
+                -(*std::max_element(m_values.begin(), m_values.begin() + 2)),
+                -halfYneg},
+            Vector2D{*std::max_element(m_values.begin(), m_values.begin() + 2),
+                     halfYpos}) {
     checkConsistency();
   }
 
@@ -57,8 +61,10 @@ class DiamondBounds : public PlanarBounds {
   DiamondBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values),
         m_boundingBox(
-            *std::max_element(values.begin(), values.begin() + 2),
-            std::max(values[eHalfLengthYneg], values[eHalfLengthYpos])) {}
+            Vector2D{-(*std::max_element(values.begin(), values.begin() + 2)),
+                     -values[eHalfLengthYneg]},
+            Vector2D{*std::max_element(values.begin(), values.begin() + 2),
+                     values[eHalfLengthYpos]}) {}
 
   ~DiamondBounds() override = default;
 

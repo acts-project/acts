@@ -23,19 +23,20 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant EllipseBounds object
 BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
-  double minRad0(10.), maxRad0(15.), minRad1(25.), maxRad1(30.),
+  double innerRx(10.), innerRy(15.), outerRx(25.), outerRy(30.),
       phiSector(M_PI / 2.), averagePhi(0.);
+
   // test default construction
   // EllipseBounds defaultConstructedEllipseBounds;  //deleted
   //
   /// Test construction with dimensions
   BOOST_CHECK_EQUAL(
-      EllipseBounds(minRad0, maxRad0, minRad1, maxRad1, phiSector, averagePhi)
+      EllipseBounds(innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi)
           .type(),
       SurfaceBounds::eEllipse);
   //
   /// Copy constructor
-  EllipseBounds original(minRad0, maxRad0, minRad1, maxRad1, phiSector,
+  EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
                          averagePhi);
   EllipseBounds copied(original);
   BOOST_CHECK_EQUAL(copied, original);
@@ -43,10 +44,10 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
 
 // Streaning and recreation test
 BOOST_AUTO_TEST_CASE(EllipseBoundsRecreation) {
-  double minRad0(10.), maxRad0(15.), minRad1(25.), maxRad1(30.),
+  double innerRx(10.), innerRy(15.), outerRx(25.), outerRy(30.),
       phiSector(M_PI / 2.), averagePhi(0.);
   // const bool symmetric(false);
-  EllipseBounds original(minRad0, maxRad0, minRad1, maxRad1, phiSector,
+  EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
                          averagePhi);
   auto valvector = original.values();
   std::array<double, EllipseBounds::eSize> values;
@@ -57,57 +58,57 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsRecreation) {
 
 // Unit tests for AnnulusBounds exception throwing
 BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
-  double minRad0(10.), maxRad0(15.), minRad1(25.), maxRad1(30.),
+  double innerRx(10.), innerRy(15.), outerRx(25.), outerRy(30.),
       phiSector(M_PI / 2.), averagePhi(0.);
-  // Exception for opening minR0 < 0
+  // Exception for innerRx < 0
   BOOST_CHECK_THROW(
-      EllipseBounds(-minRad0, maxRad0, minRad1, maxRad1, phiSector, averagePhi),
+      EllipseBounds(-innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
-  // Exception for opening maxR0 < 0
+  // Exception for innerRy < 0
   BOOST_CHECK_THROW(
-      EllipseBounds(minRad0, -maxRad0, minRad1, maxRad1, phiSector, averagePhi),
+      EllipseBounds(innerRx, -innerRy, outerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
-  // Exception for opening minR0 and maxR0 < 0
-  BOOST_CHECK_THROW(EllipseBounds(-minRad0, -maxRad0, minRad1, maxRad1,
+  // Exception for innerRx < 0 and innerRy < 0
+  BOOST_CHECK_THROW(EllipseBounds(-innerRx, -innerRy, outerRx, outerRy,
                                   phiSector, averagePhi),
                     std::logic_error);
-  // Exception for swapped minR0/maxR0
+  // Exception for opening outerRx <= 0
   BOOST_CHECK_THROW(
-      EllipseBounds(maxRad0, minRad0, minRad1, maxRad1, phiSector, averagePhi),
+      EllipseBounds(innerRx, innerRy, 0., outerRy, phiSector, averagePhi),
       std::logic_error);
-  // Exception for opening minR1 < 0
+  // Exception for opening outerRy <= 0
   BOOST_CHECK_THROW(
-      EllipseBounds(minRad0, maxRad0, -minRad1, maxRad1, phiSector, averagePhi),
+      EllipseBounds(innerRx, innerRy, outerRx, 0., phiSector, averagePhi),
       std::logic_error);
-  // Exception for opening maxR1 < 0
-  BOOST_CHECK_THROW(
-      EllipseBounds(minRad0, maxRad0, minRad1, -maxRad1, phiSector, averagePhi),
-      std::logic_error);
-  // Exception for opening maxR1 < 0
-  BOOST_CHECK_THROW(EllipseBounds(minRad0, maxRad0, -minRad1, -maxRad1,
+  // Exception for iouterRx < 0 and outerRy < 0
+  BOOST_CHECK_THROW(EllipseBounds(innerRx, innerRy, -outerRx, -outerRy,
                                   phiSector, averagePhi),
                     std::logic_error);
-  // Exception for swapped minR1/maxR1
+  // Exception for innerRx > outerRx
   BOOST_CHECK_THROW(
-      EllipseBounds(minRad0, maxRad0, maxRad1, minRad1, phiSector, averagePhi),
+      EllipseBounds(outerRx, innerRy, innerRx, outerRy, phiSector, averagePhi),
+      std::logic_error);
+  // Exception for innerRxy > outerRy
+  BOOST_CHECK_THROW(
+      EllipseBounds(innerRx, outerRy, outerRx, innerRy, phiSector, averagePhi),
       std::logic_error);
   // Exception for negative phiSector
   BOOST_CHECK_THROW(
-      EllipseBounds(minRad0, maxRad0, minRad1, maxRad1, -phiSector, averagePhi),
+      EllipseBounds(innerRx, innerRy, outerRx, outerRy, -phiSector, averagePhi),
       std::logic_error);
   // Exception for average phi out of bound
   BOOST_CHECK_THROW(
-      EllipseBounds(minRad0, maxRad0, minRad1, maxRad1, phiSector, 4.),
+      EllipseBounds(innerRx, innerRy, outerRx, outerRy, phiSector, 4.),
       std::logic_error);
 }
 
 /// Unit tests for EllipseBounds properties
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(CylinderBoundsProperties, 1)
 BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
-  double minRad0(10.), minRad1(15.), maxRad0(15.), maxRad1(20.), averagePhi(0.),
+  double innerRx(10.), outerRx(15.), innerRy(15.), outerRy(20.), averagePhi(0.),
       phiSector(M_PI / 2.);
   /// Test clone
-  EllipseBounds ellipseBoundsObject(minRad0, maxRad0, minRad1, maxRad1,
+  EllipseBounds ellipseBoundsObject(innerRx, innerRy, outerRx, outerRy,
                                     phiSector, averagePhi);
   //
   /// Test type() (redundant; already used in constructor confirmation)
@@ -125,16 +126,16 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
                   1e-6);  // fails, not clear why
   //
   /// Test rMinX
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMinR0), minRad0);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eInnerRx), innerRx);
   //
   /// Test rMinY
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMinR1), minRad1);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eOuterRx), outerRx);
   //
   /// Test rMaxX
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMaxR0), maxRad0);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eInnerRy), innerRy);
   //
   /// Test rMaxY
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eMaxR1), maxRad1);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eOuterRy), outerRy);
   //
   /// Test averagePhi
   BOOST_CHECK_EQUAL(ellipseBoundsObject.get(EllipseBounds::eAveragePhi),
@@ -172,12 +173,12 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
 }
 /// Unit test for testing EllipseBounds assignment
 BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment) {
-  double minRad0(10.), minRad1(15.), maxRad0(15.), maxRad1(20.), averagePhi(0.),
+  double innerRx(10.), outerRx(15.), innerRy(15.), outerRy(20.), averagePhi(0.),
       phiSector(M_PI / 2.);
-  EllipseBounds ellipseBoundsObject(minRad0, minRad1, maxRad0, maxRad1,
+  EllipseBounds ellipseBoundsObject(innerRx, outerRx, innerRy, outerRy,
                                     averagePhi, phiSector);
   EllipseBounds similarlyConstructeEllipseBoundsObject(
-      minRad0, minRad1, maxRad0, maxRad1, averagePhi, phiSector);
+      innerRx, outerRx, innerRy, outerRy, averagePhi, phiSector);
   /// Test operator ==
   BOOST_CHECK_EQUAL(ellipseBoundsObject,
                     similarlyConstructeEllipseBoundsObject);
