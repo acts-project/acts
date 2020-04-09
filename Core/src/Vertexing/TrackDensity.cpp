@@ -12,9 +12,6 @@
 void Acts::TrackDensity::addTrack(State& state, const BoundParameters& trk,
                                   const double d0SignificanceCut,
                                   const double z0SignificanceCut) const {
-  if (state.trackSet.count(trk) != 0) {
-    return;
-  }
   // Get required track parameters
   const double d0 = trk.parameters()[ParID_t::eLOC_D0];
   const double z0 = trk.parameters()[ParID_t::eLOC_Z0];
@@ -52,15 +49,8 @@ void Acts::TrackDensity::addTrack(State& state, const BoundParameters& trk,
   const double zMin = (-linearTerm + discriminant) / (2 * quadraticTerm);
   state.maxZRange = std::max(state.maxZRange, std::max(zMax - z0, z0 - zMin));
   constantTerm -= std::log(2 * M_PI * std::sqrt(covDeterminant));
-  state.trackSet.emplace(trk);
-  state.lowerMap.emplace(std::piecewise_construct,
-                         std::forward_as_tuple(constantTerm, linearTerm,
-                                               quadraticTerm, zMin, zMax),
-                         std::forward_as_tuple(trk));
-  state.upperMap.emplace(std::piecewise_construct,
-                         std::forward_as_tuple(constantTerm, linearTerm,
-                                               quadraticTerm, zMin, zMax),
-                         std::forward_as_tuple(trk));
+  state.trackMap.emplace_back(z0, constantTerm, linearTerm, quadraticTerm, zMin,
+                              zMax);
 }
 
 std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
@@ -69,8 +59,8 @@ std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
   double maximumDensity = 0.;
   double maxCurvature = 0.;
 
-  for (const auto& entry : state.trackSet) {
-    double trialZ = entry.parameters()[ParID_t::eLOC_Z0];
+  for (const auto& track : state.trackMap) {
+    double trialZ = track.z;
     double density = 0.;
     double slope = 0.;
     double curvature = 0.;
@@ -105,101 +95,22 @@ double Acts::TrackDensity::globalMaximum(State& state) const {
 }
 
 double Acts::TrackDensity::trackDensity(State& state, double z) const {
-  double sum = 0.;
-
-  TrackEntry target(z);
-  TrackMap overlaps;
-  LowerMap::const_iterator left = state.lowerMap.lower_bound(
-      target);  // first track whose UPPER bound is not less than z
-  if (left == state.lowerMap.end()) {
-    // z is to the right of every track's range
-    return sum;
-  }
-
-  UpperMap::const_iterator right = state.upperMap.upper_bound(
-      target);  // first track whose LOWER bound is greater than z
-  if (right == state.upperMap.begin()) {
-    // z is to the left of every track's range
-    return sum;
-  }
-
-  for (auto itrk = left; itrk != state.lowerMap.end(); itrk++) {
-    if (itrk->first.upperBound > z + state.maxZRange) {
-      break;
-    }
-    if (z >= itrk->first.lowerBound && z <= itrk->first.upperBound) {
-      overlaps[itrk->second] = itrk->first;
-    }
-  }
-  for (auto itrk = right; itrk-- != state.upperMap.begin();) {
-    if (itrk->first.lowerBound < z - state.maxZRange) {
-      break;
-    }
-    if (z >= itrk->first.lowerBound && z <= itrk->first.upperBound) {
-      overlaps[itrk->second] = itrk->first;
-    }
-  }
-  for (const auto& entry : overlaps) {
-    sum +=
-        std::exp(entry.second.c0 + z * (entry.second.c1 + z * entry.second.c2));
-  }
-  return sum;
+  double firstDerivative = 0;
+  double secondDerivative = 0;
+  return trackDensity(state, z, firstDerivative, secondDerivative);
 }
 
 double Acts::TrackDensity::trackDensity(State& state, double z,
                                         double& firstDerivative,
                                         double& secondDerivative) const {
-  double density = 0.;
-  firstDerivative = 0.;
-  secondDerivative = 0.;
-  TrackEntry target(z);
-  TrackMap overlaps;
-
-  LowerMap::const_iterator left = state.lowerMap.lower_bound(
-      target);  // first track whose UPPER bound is not less than z
-  if (left == state.lowerMap.end()) {
-    // z is to the right of every track's range
-    return density;
+  TrackDensityEval densityResult(z);
+  for (const auto& trackEntry : state.trackMap) {
+    densityResult.addTrack(trackEntry);
   }
+  firstDerivative = densityResult.firstDerivative();
+  secondDerivative = densityResult.secondDerivative();
 
-  UpperMap::const_iterator right = state.upperMap.upper_bound(
-      target);  // first track whose LOWER bound is greater than z
-  if (right == state.upperMap.begin()) {
-    // z is to the left of every track's range
-    return density;
-  }
-
-  for (auto itrk = left; itrk != state.lowerMap.end(); itrk++) {
-    if (itrk->first.upperBound > z + state.maxZRange) {
-      break;
-    }
-    if (z >= itrk->first.lowerBound && z <= itrk->first.upperBound) {
-      overlaps[itrk->second] = itrk->first;
-    }
-  }
-  for (auto itrk = right; itrk-- != state.upperMap.begin();) {
-    if (itrk->first.lowerBound < z - state.maxZRange) {
-      break;
-    }
-    if (z >= itrk->first.lowerBound && z <= itrk->first.upperBound) {
-      overlaps[itrk->second] = itrk->first;
-    }
-  }
-
-  for (const auto& entry : overlaps) {
-    if (entry.second.lowerBound > z || entry.second.upperBound < z) {
-      continue;
-    }
-    double delta =
-        std::exp(entry.second.c0 + z * (entry.second.c1 + z * entry.second.c2));
-    density += delta;
-    double qPrime = entry.second.c1 + 2 * z * entry.second.c2;
-    double deltaPrime = delta * qPrime;
-    firstDerivative += deltaPrime;
-    secondDerivative += 2 * entry.second.c2 * delta + qPrime * deltaPrime;
-  }
-
-  return density;
+  return densityResult.density();
 }
 
 void Acts::TrackDensity::updateMaximum(double newZ, double newValue,
@@ -215,4 +126,15 @@ void Acts::TrackDensity::updateMaximum(double newZ, double newValue,
 
 double Acts::TrackDensity::stepSize(double y, double dy, double ddy) const {
   return (m_cfg.isGaussianShaped ? (y * dy) / (dy * dy - y * ddy) : -dy / ddy);
+}
+
+void Acts::TrackDensity::TrackDensityEval::addTrack(const TrackEntry& entry) {
+  if (entry.lowerBound < m_z && m_z < entry.upperBound) {
+    double delta = std::exp(entry.c0 + m_z * (entry.c1 + m_z * entry.c2));
+    double qPrime = entry.c1 + 2 * m_z * entry.c2;
+    double deltaPrime = delta * qPrime;
+    m_density += delta;
+    m_firstDerivative += deltaPrime;
+    m_secondDerivative += 2 * entry.c2 * delta + qPrime * deltaPrime;
+  }
 }
