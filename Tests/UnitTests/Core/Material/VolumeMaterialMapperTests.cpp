@@ -12,21 +12,60 @@
 #include <random>
 #include <vector>
 
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-
-using Acts::VectorHelpers::perp;
+#include "Acts/Propagator/DebugOutputActor.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
 namespace Acts {
+
+/// @brief Collector of material and position along propagation
+struct MaterialCollector {
+  struct this_result {
+    std::vector<Material> matTrue;
+    std::vector<Vector3D> position;
+  };
+  using result_type = this_result;
+
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  result_type& result) const {
+    if (state.navigation.currentVolume != nullptr) {
+      auto position = stepper.position(state.stepping);
+      result.matTrue.push_back(
+          (state.navigation.currentVolume->volumeMaterial() != nullptr)
+              ? state.navigation.currentVolume->volumeMaterial()->material(
+                    position)
+              : Material());
+
+      result.position.push_back(position);
+    }
+  }
+};
 
 /// @brief create a small tracking geometry to map some dummy material on
 std::shared_ptr<const TrackingGeometry> trackingGeometry() {
@@ -97,6 +136,125 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
 
   /// Test if this is not null
   BOOST_CHECK_EQUAL(mState.volumeMaterial.size(), 1u);
+}
+
+/// @brief Test case for comparison between the mapped material and the
+/// associated material by propagation
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
+  using namespace Acts::UnitLiterals;
+
+  // Build a vacuum volume
+  CuboidVolumeBuilder::VolumeConfig vCfg1;
+  vCfg1.position = Vector3D(0.5_m, 0., 0.);
+  vCfg1.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg1.name = "Vacuum volume";
+  vCfg1.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
+      Material(352.8, 407., 9.012, 4., 1.848e-3));
+
+  // Build a material volume
+  CuboidVolumeBuilder::VolumeConfig vCfg2;
+  vCfg2.position = Vector3D(1.5_m, 0., 0.);
+  vCfg2.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg2.name = "First material volume";
+  vCfg2.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
+      Material(95.7, 465.2, 28.03, 14., 2.32e-3));
+
+  // Build another material volume with different material
+  CuboidVolumeBuilder::VolumeConfig vCfg3;
+  vCfg3.position = Vector3D(2.5_m, 0., 0.);
+  vCfg3.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg3.name = "Second material volume";
+  vCfg3.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
+      Material(352.8, 407., 9.012, 4., 1.848e-3));
+
+  // Configure world
+  CuboidVolumeBuilder::Config cfg;
+  cfg.position = Vector3D(1.5_m, 0., 0.);
+  cfg.length = Vector3D(3_m, 1_m, 1_m);
+  cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
+
+  GeometryContext gc;
+
+  // Build a detector
+  CuboidVolumeBuilder cvb(cfg);
+  TrackingGeometryBuilder::Config tgbCfg;
+  tgbCfg.trackingVolumeBuilders.push_back(
+      [=](const auto& context, const auto& inner, const auto&) {
+        return cvb.trackingVolume(context, inner, nullptr);
+      });
+  TrackingGeometryBuilder tgb(tgbCfg);
+  std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(gc);
+
+  // Set up the grid axes
+  std::array<double, 3> xAxis{0_m, 3_m, 7};
+  std::array<double, 3> yAxis{-0.5_m, 0.5_m, 7};
+  std::array<double, 3> zAxis{-0.5_m, 0.5_m, 7};
+
+  // Set up a random engine for sampling material
+  std::random_device rd;
+  std::mt19937 gen(42);
+  std::uniform_real_distribution<> disX(0., 3_m);
+  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
+
+  // Sample the Material in the detector
+  RecordedMaterialPoint matRecord;
+  for (unsigned int i = 0; i < 1e4; i++) {
+    Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
+    Material tv =
+        (detector->lowestTrackingVolume(gc, pos)->volumeMaterial() != nullptr)
+            ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
+                  ->material(pos)
+            : Material();
+    MaterialProperties matProp(tv, 1);
+    matRecord.push_back(std::make_pair(matProp, pos));
+  }
+
+  // Build the material grid
+  Grid3D Grid = createGrid(xAxis, yAxis, zAxis);
+  MaterialGrid3D matGrid =
+      mapMaterialPoints(Grid, matRecord, Acts::mapMaterialCylinder3D);
+
+  // Construct a simple propagation through the detector
+  StraightLineStepper sls;
+  Navigator nav(std::move(detector));
+  Propagator<StraightLineStepper, Navigator> prop(sls, nav);
+
+  // Set some start parameters
+  Vector3D pos(0., 0., 0.);
+  Vector3D mom(1_GeV, 0., 0.);
+  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(std::nullopt, pos, mom,
+                                                       42_ns);
+
+  MagneticFieldContext mc;
+  // Launch propagation and gather result
+  PropagatorOptions<ActionList<MaterialCollector, DebugOutputActor>,
+                    AbortList<EndOfWorldReached>>
+      po(gc, mc);
+  po.maxStepSize = 1._mm;
+  po.maxSteps = 1e6;
+  po.debug = true;
+
+  const auto& result = prop.propagate(sctp, po).value();
+  const MaterialCollector::this_result& stepResult =
+      result.get<typename MaterialCollector::result_type>();
+
+  if (po.debug) {
+    auto screenOutput = result.get<DebugOutputActor::result_type>();
+    std::cout << screenOutput.debugString << std::endl;
+  }
+
+  // Collect the material as given by the grid and test it
+  std::vector<Material> matvector;
+  double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
+  for (unsigned int i = 0; i < stepResult.position.size(); i++) {
+    matvector.push_back(matGrid.atPosition(stepResult.position[i]));
+    gridX0 += matvector[i].X0();
+    gridL0 += matvector[i].L0();
+    trueX0 += stepResult.matTrue[i].X0();
+    trueL0 += stepResult.matTrue[i].L0();
+  }
+  CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
+  CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }
 
 }  // namespace Test

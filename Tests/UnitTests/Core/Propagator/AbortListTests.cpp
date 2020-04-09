@@ -12,7 +12,7 @@
 
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
@@ -28,10 +28,10 @@ class Surface;
 namespace Test {
 
 // The path limit abort
-using PathLimit = detail::PathLimitReached;
+using PathLimit = PathLimitReached;
 
 // The end of world abort
-using EndOfWorld = detail::EndOfWorldReached;
+using EndOfWorld = EndOfWorldReached;
 
 // the constrained step class
 

@@ -15,23 +15,23 @@
 #include "Acts/Visualization/IVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
-#include "SurfaceVisualizationBase.hpp"
+#include "VolumeVisualizationBase.hpp"
 
 namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
+BOOST_AUTO_TEST_CASE(VolumeVisualizationObj) {
   ObjVisualization obj;
-  SurfaceVisualization::test(obj, false, "");
-  SurfaceVisualization::test(obj, true, "_3Mesh");
+  VolumeVisualization::test(obj, false, "");
+  VolumeVisualization::test(obj, true, "_3Mesh");
 }
 
-BOOST_AUTO_TEST_CASE(SurfaceVisualizationPly) {
+BOOST_AUTO_TEST_CASE(VolumeVisualizationPly) {
   PlyVisualization ply;
-  SurfaceVisualization::test(ply, false, "");
-  SurfaceVisualization::test(ply, true, "_3Mesh");
+  VolumeVisualization::test(ply, false, "");
+  VolumeVisualization::test(ply, true, "_3Mesh");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

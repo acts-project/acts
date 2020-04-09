@@ -15,11 +15,11 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -157,12 +157,12 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
                                      mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
-  using DebugOutput = detail::DebugOutputActor;
+  using DebugOutput = DebugOutputActor;
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
   using ActionList = ActionList<MaterialSurfaceCollector,
                                 MaterialVolumeCollector, DebugOutput>;
-  using AbortList = AbortList<detail::EndOfWorldReached>;
+  using AbortList = AbortList<EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
                                                    mState.magFieldContext);

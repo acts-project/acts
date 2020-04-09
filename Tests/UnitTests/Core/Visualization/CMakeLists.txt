@@ -1,2 +1,3 @@
 add_unittest(VisualizationTests VisualizationTests.cpp)
 add_unittest(SurfaceVisualizationTests SurfaceVisualizationTests.cpp)
+add_unittest(VolumeVisualizationTests VolumeVisualizationTests.cpp)

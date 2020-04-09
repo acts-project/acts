@@ -20,7 +20,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // Create the ActionList and AbortList
   using StepWiseResult = StepWiseActor::result_type;
   using StepWiseActors = ActionList<StepWiseActor>;
-  using Aborters = AbortList<detail::EndOfWorldReached>;
+  using Aborters = AbortList<EndOfWorldReached>;
 
   // Create some options
   using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;

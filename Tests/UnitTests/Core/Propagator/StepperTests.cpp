@@ -20,6 +20,7 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -27,7 +28,6 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   AbortList<EndOfWorld> abortList;
   abortList.get<EndOfWorld>().maxX = 3_m;
 
-  using DebugOutput = Acts::detail::DebugOutputActor;
+  using DebugOutput = Acts::DebugOutputActor;
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, DebugOutput>,

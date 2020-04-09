@@ -14,8 +14,8 @@
 #include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 
 namespace {
@@ -161,10 +161,9 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
                                      mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
-  using DebugOutput = detail::DebugOutputActor;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList = ActionList<MaterialVolumeCollector, DebugOutput>;
-  using AbortList = AbortList<detail::EndOfWorldReached>;
+  using ActionList = ActionList<MaterialVolumeCollector, DebugOutputActor>;
+  using AbortList = AbortList<EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
                                                    mState.magFieldContext);
@@ -175,7 +174,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   auto mcResult = result.get<MaterialVolumeCollector::result_type>();
   // Massive screen output
   if (m_cfg.mapperDebugOutput) {
-    auto debugOutput = result.get<DebugOutput::result_type>();
+    auto debugOutput = result.get<DebugOutputActor::result_type>();
     ACTS_VERBOSE("Debug propagation output.");
     ACTS_VERBOSE(debugOutput.debugString);
   }

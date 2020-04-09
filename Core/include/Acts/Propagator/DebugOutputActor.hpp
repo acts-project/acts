@@ -10,14 +10,13 @@
 
 namespace Acts {
 
-namespace detail {
-
 /// This is an actor that deals with the output string
 /// It is called upon targetReached and navigationBreak
 /// of the state and then copies the debugString into
 /// the final output object (result), which leaves the propagation
+
 struct DebugOutputActor {
-  /// mute the thing if you don't want any action
+  /// Mute the thing if you don't want any action
   bool mute = false;
 
   /// Simple result struct to be returned
@@ -57,5 +56,4 @@ struct DebugOutputActor {
                   const stepper_t& /*unused*/) const {}
 };
 
-}  // namespace detail
 }  // namespace Acts
