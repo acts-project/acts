@@ -30,27 +30,26 @@ void Acts::TrackDensity::addTrack(State& state, const BoundParameters& trk,
 
   // Calculate track density quantities
   double constantTerm =
-      -(d0 * d0 * covZZ + z0 * z0 * covDD + 2 * d0 * z0 * covDZ) /
-      (2 * covDeterminant);
+      -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
+      (2. * covDeterminant);
   const double linearTerm =
       (d0 * covDZ + z0 * covDD) /
       covDeterminant;  // minus signs and factors of 2 cancel...
-  const double quadraticTerm = -covDD / (2 * covDeterminant);
+  const double quadraticTerm = -covDD / (2. * covDeterminant);
   double discriminant =
       linearTerm * linearTerm -
-      4 * quadraticTerm * (constantTerm + 2 * z0SignificanceCut);
+      4. * quadraticTerm * (constantTerm + 2. * z0SignificanceCut);
   if (discriminant < 0) {
     return;
   }
 
   // Add the track to the current maps in the state
   discriminant = std::sqrt(discriminant);
-  const double zMax = (-linearTerm - discriminant) / (2 * quadraticTerm);
-  const double zMin = (-linearTerm + discriminant) / (2 * quadraticTerm);
-  state.maxZRange = std::max(state.maxZRange, std::max(zMax - z0, z0 - zMin));
-  constantTerm -= std::log(2 * M_PI * std::sqrt(covDeterminant));
-  state.trackMap.emplace_back(z0, constantTerm, linearTerm, quadraticTerm, zMin,
-                              zMax);
+  const double zMax = (-linearTerm - discriminant) / (2. * quadraticTerm);
+  const double zMin = (-linearTerm + discriminant) / (2. * quadraticTerm);
+  constantTerm -= std::log(2. * M_PI * std::sqrt(covDeterminant));
+  state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
+                                  zMin, zMax);
 }
 
 std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
@@ -59,7 +58,7 @@ std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
   double maximumDensity = 0.;
   double maxCurvature = 0.;
 
-  for (const auto& track : state.trackMap) {
+  for (const auto& track : state.trackEntries) {
     double trialZ = track.z;
     double density = 0.;
     double slope = 0.;
@@ -104,8 +103,8 @@ double Acts::TrackDensity::trackDensity(State& state, double z,
                                         double& firstDerivative,
                                         double& secondDerivative) const {
   TrackDensityEval densityResult(z);
-  for (const auto& trackEntry : state.trackMap) {
-    densityResult.addTrack(trackEntry);
+  for (const auto& trackEntry : state.trackEntries) {
+    densityResult.addTrackToDensity(trackEntry);
   }
   firstDerivative = densityResult.firstDerivative();
   secondDerivative = densityResult.secondDerivative();
@@ -128,13 +127,15 @@ double Acts::TrackDensity::stepSize(double y, double dy, double ddy) const {
   return (m_cfg.isGaussianShaped ? (y * dy) / (dy * dy - y * ddy) : -dy / ddy);
 }
 
-void Acts::TrackDensity::TrackDensityEval::addTrack(const TrackEntry& entry) {
+void Acts::TrackDensity::TrackDensityEval::addTrackToDensity(
+    const TrackEntry& entry) {
+  // Take track only if it's within bounds
   if (entry.lowerBound < m_z && m_z < entry.upperBound) {
     double delta = std::exp(entry.c0 + m_z * (entry.c1 + m_z * entry.c2));
-    double qPrime = entry.c1 + 2 * m_z * entry.c2;
+    double qPrime = entry.c1 + 2. * m_z * entry.c2;
     double deltaPrime = delta * qPrime;
     m_density += delta;
     m_firstDerivative += deltaPrime;
-    m_secondDerivative += 2 * entry.c2 * delta + qPrime * deltaPrime;
+    m_secondDerivative += 2. * entry.c2 * delta + qPrime * deltaPrime;
   }
 }

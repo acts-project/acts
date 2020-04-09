@@ -23,7 +23,9 @@ class TrackDensity {
  public:
   /// @brief Struct to store information for a single track
   struct TrackEntry {
+    // Default constructor
     TrackEntry() = default;
+    // Constructor initializing all members
     TrackEntry(double z, double c0in, double c1in, double c2in, double zMin,
                double zMax)
         : z(z),
@@ -33,9 +35,6 @@ class TrackDensity {
           lowerBound(zMin),
           upperBound(zMax) {}
 
-    // Dummy constructor for binary search
-    TrackEntry(double z) : z(z), lowerBound(z), upperBound(z) {}
-
     double z = 0;
     // Cached information for a single track
     // z-independent term in exponent
@@ -44,7 +43,9 @@ class TrackDensity {
     double c1 = 0;
     // quadratic coefficient in exponent
     double c2 = 0;
+    // The lower bound
     double lowerBound = 0;
+    // The upper bound
     double upperBound = 0;
   };
 
@@ -57,10 +58,10 @@ class TrackDensity {
 
   /// @brief The State struct
   struct State {
-    double maxZRange = 0;
-
-    // Maps to cache track information
-    std::vector<TrackEntry> trackMap;
+    // Constructor with size track map
+    State(unsigned int nTracks) { trackEntries.reserve(nTracks); }
+    // Vector to cache track information
+    std::vector<TrackEntry> trackEntries;
   };
 
   /// Default constructor
@@ -133,7 +134,7 @@ class TrackDensity {
     // add the contribution for one track to the density.
     // will internally check if the z coordinate is within
     // the bounds of the track
-    void addTrack(const TrackEntry& entry);
+    void addTrackToDensity(const TrackEntry& entry);
     // retrieve the density and its derivatives
     inline double density() const { return m_density; }
     inline double firstDerivative() const { return m_firstDerivative; }
