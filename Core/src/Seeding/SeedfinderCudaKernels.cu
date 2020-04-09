@@ -364,24 +364,6 @@ __global__ void cuSearchTriplet(const int*   offset,
   }    
  
   __syncthreads();
-  // The following is an iteration to avoid atomic operation
-  // But do not use this as it slows down the kernel execution speed
-  /*
-  if (threadIdx.x==0){
-    for (int i_th=0; i_th<blockDim.x; i_th++){
-      if (isPassed[i_th] == true){
-	int pos = nTopPass[blockIdx.x];
-	impactparameters[pos+(*nTopPassLimit)*blockIdx.x] = impact[i_th];
-	curvatures      [pos+(*nTopPassLimit)*blockIdx.x] = invHelix[i_th];
-	tIndex          [pos+(*nTopPassLimit)*blockIdx.x] = i_th + (*offset);
-	nTopPass[blockIdx.x] +=1;
-	if( nTopPass[blockIdx.x] == *nTopPassLimit){
-	  break;
-	}
-      }
-    }
-  }
-  */
   
   // The index will be different (and not deterministic) becuase of atomic operation
   // It will be resorted after kernel call
