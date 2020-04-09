@@ -54,39 +54,39 @@ void Acts::TrackDensity::addTrack(State& state, const BoundParameters& trk,
 
 std::pair<double, double> Acts::TrackDensity::globalMaximumWithWidth(
     State& state) const {
-  double maximumPosition = 0.;
-  double maximumDensity = 0.;
-  double maxCurvature = 0.;
+  double maxPosition = 0.;
+  double maxDensity = 0.;
+  double maxSecondDerivative = 0.;
 
   for (const auto& track : state.trackEntries) {
     double trialZ = track.z;
     double density = 0.;
-    double slope = 0.;
-    double curvature = 0.;
-    density = trackDensity(state, trialZ, slope, curvature);
-    if (curvature >= 0. || density <= 0.) {
+    double firstDerivative = 0.;
+    double secondDerivative = 0.;
+    density = trackDensity(state, trialZ, firstDerivative, secondDerivative);
+    if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    updateMaximum(trialZ, density, curvature, maximumPosition, maximumDensity,
-                  maxCurvature);
-    trialZ += stepSize(density, slope, curvature);
-    density = trackDensity(state, trialZ, slope, curvature);
-    if (curvature >= 0. || density <= 0.) {
+    updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
+                  maxSecondDerivative);
+    trialZ += stepSize(density, firstDerivative, secondDerivative);
+    density = trackDensity(state, trialZ, firstDerivative, secondDerivative);
+    if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    updateMaximum(trialZ, density, curvature, maximumPosition, maximumDensity,
-                  maxCurvature);
-    trialZ += stepSize(density, slope, curvature);
-    density = trackDensity(state, trialZ, slope, curvature);
-    if (curvature >= 0. || density <= 0.) {
+    updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
+                  maxSecondDerivative);
+    trialZ += stepSize(density, firstDerivative, secondDerivative);
+    density = trackDensity(state, trialZ, firstDerivative, secondDerivative);
+    if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    updateMaximum(trialZ, density, curvature, maximumPosition, maximumDensity,
-                  maxCurvature);
+    updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
+                  maxSecondDerivative);
   }
 
-  return std::make_pair(maximumPosition,
-                        std::sqrt(-(maximumDensity / maxCurvature)));
+  return std::make_pair(maxPosition,
+                        std::sqrt(-(maxDensity / maxSecondDerivative)));
 }
 
 double Acts::TrackDensity::globalMaximum(State& state) const {
@@ -102,7 +102,7 @@ double Acts::TrackDensity::trackDensity(State& state, double z) const {
 double Acts::TrackDensity::trackDensity(State& state, double z,
                                         double& firstDerivative,
                                         double& secondDerivative) const {
-  TrackDensityEval densityResult(z);
+  TrackDensityStore densityResult(z);
   for (const auto& trackEntry : state.trackEntries) {
     densityResult.addTrackToDensity(trackEntry);
   }
@@ -127,7 +127,7 @@ double Acts::TrackDensity::stepSize(double y, double dy, double ddy) const {
   return (m_cfg.isGaussianShaped ? (y * dy) / (dy * dy - y * ddy) : -dy / ddy);
 }
 
-void Acts::TrackDensity::TrackDensityEval::addTrackToDensity(
+void Acts::TrackDensity::TrackDensityStore::addTrackToDensity(
     const TrackEntry& entry) {
   // Take track only if it's within bounds
   if (entry.lowerBound < m_z && m_z < entry.upperBound) {
