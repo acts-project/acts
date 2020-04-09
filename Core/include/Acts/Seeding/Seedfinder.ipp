@@ -123,8 +123,8 @@ namespace Acts {
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const{
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  CudaScalar<unsigned char> true_cuda(new unsigned char(true));  
-  CudaScalar<unsigned char> false_cuda(new unsigned char(false));    
+  CudaScalar<bool> true_cuda(new bool(true));  
+  CudaScalar<bool> false_cuda(new bool(false));    
   CudaScalar<float> deltaRMin_cuda(&m_config.deltaRMin);
   CudaScalar<float> deltaRMax_cuda(&m_config.deltaRMax);
   CudaScalar<float> cotThetaMax_cuda(&m_config.cotThetaMax);
@@ -218,7 +218,7 @@ namespace Acts {
   CudaScalar<int>   nTop_cuda(&nTop);
   
   ///// For bottom space points
-  CudaMatrix<unsigned char> isCompatBottomMat_cuda(nBottom, nMiddle);
+  CudaMatrix<bool> isCompatBottomMat_cuda(nBottom, nMiddle);
 
   int  offsetDS;
   offsetDS=0;
@@ -234,10 +234,10 @@ namespace Acts {
 					  isCompatBottomMat_cuda.Get(offsetDS,0));
     offsetDS+=DS_BlockSize.x;
   }
-  CpuMatrix<unsigned char>  isCompatBottomMat_cpu(nBottom, nMiddle, &isCompatBottomMat_cuda);
+  CpuMatrix<bool>  isCompatBottomMat_cpu(nBottom, nMiddle, &isCompatBottomMat_cuda);
   
   ///// For top space points
-  CudaMatrix<unsigned char> isCompatTopMat_cuda(nTop, nMiddle);
+  CudaMatrix<bool> isCompatTopMat_cuda(nTop, nMiddle);
   offsetDS=0;
   while(offsetDS<nTop){
     DS_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nTop-offsetDS), 1,1);    
@@ -251,7 +251,7 @@ namespace Acts {
 					  isCompatTopMat_cuda.Get(offsetDS,0));
     offsetDS+=DS_BlockSize.x;
   }
-  CpuMatrix<unsigned char>  isCompatTopMat_cpu(nTop, nMiddle, &isCompatTopMat_cuda);
+  CpuMatrix<bool>  isCompatTopMat_cpu(nTop, nMiddle, &isCompatTopMat_cuda);
 
   auto end_DS = std::chrono::system_clock::now();
   std::chrono::duration<double> elapse_DS = end_DS-start_DS;

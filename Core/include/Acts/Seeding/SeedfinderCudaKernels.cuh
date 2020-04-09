@@ -17,18 +17,18 @@ class SeedfinderCudaKernels {
 public: 
   
   static void searchDoublet( dim3 grid, dim3 block,
-			     const unsigned char* isBottom, 
+			     const bool* isBottom, 
 			     const float* rMvec, const float* zMvec,
 			     const int* nSpB, const float* rBvec, const float* zBvec, 
 			     const float* deltaRMin, const float* deltaRMax,
 			     const float* cotThetaMax, 
 			     const float* collisionRegionMin, 
 			     const float* collisionRegionMax,
-			     unsigned char* isCompatible 			     
+			     bool* isCompatible 			     
 			     );
 
   static void transformCoordinates( dim3 grid, dim3 block,
-				    const unsigned char*  isBottom,
+				    const bool*  isBottom,
 				    const float* spMmat,
 				    const int*   nSpB,
 				    const float* spBmat,
