@@ -76,14 +76,18 @@ int main(int argc, char** argv) {
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);
+  bool allgroup(false);
   int  nGroupToIterate = 500;
   int  skip = 0;
   int  deviceID = 0;
   int  nTopLimit = 10;
   
   int opt;
-  while ((opt = getopt(argc, argv, "hf:n:s:d:l:q")) != -1) {
+  while ((opt = getopt(argc, argv, "haf:n:s:d:l:q")) != -1) {
     switch (opt) {
+      case 'a':
+        allgroup = true;
+        break;	
       case 'f':
         file = optarg;
         break;
@@ -109,6 +113,9 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: " << argv[0] << " [-hq] [-f FILENAME]\n";
         if (help) {
           std::cout << "      -h : this help" << std::endl;
+	  std::cout
+              << "      -a ALL   : analyze all groups. Default is \""
+              << allgroup << "\"" << std::endl;
           std::cout
               << "      -f FILE  : read spacepoints from FILE. Default is \""
               << file << "\"" << std::endl;
@@ -141,7 +148,6 @@ int main(int argc, char** argv) {
   std::vector<const SpacePoint*> spVec = readFile(file);
 
   std::cout << "read " << spVec.size() << " SP from file " << file  << std::endl;  
-  std::cout << "Number of groups to iterate: " << nGroupToIterate << std::endl;
   
   /// For CPU seed finder
   Acts::SeedfinderConfig<SpacePoint> config;
@@ -222,10 +228,13 @@ int main(int argc, char** argv) {
     seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
-    if (group_count >= nGroupToIterate) break;
+    if (allgroup == false){
+      if (group_count >= nGroupToIterate) break;
+    }
   }  
   auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
-
+  std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
+  
   //----------- CUDA ----------//
   //cudaProfilerStart();
   group_count=0;
@@ -237,36 +246,41 @@ int main(int argc, char** argv) {
     seedVector_cuda.push_back(seedfinder_cuda.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
-    if (group_count >= nGroupToIterate) break;
+    if (allgroup == false){
+      if (group_count >= nGroupToIterate) break;
+    }
   } 
   //cudaProfilerStop();
   auto timeMetric_cuda = seedfinder_cuda.getTimeMetric();
-  
-  std::cout << "------------Time Metric-------------" << std::endl;
-  std::cout << "              CPU       CUDA      Speedup " << std::endl;
-  std::cout << "DS time:   "
-	    << std::setw(10) << std::left << std::get<0>(timeMetric_cpu)  << "  "
-	    << std::setw(10) << std::get<0>(timeMetric_cuda) << "  "
-	    << std::setw(10) << std::get<0>(timeMetric_cpu)/std::get<0>(timeMetric_cuda) << std::endl;  
-  std::cout << "TC time:   "
-	    << std::setw(10) << std::left << std::get<1>(timeMetric_cpu)  << "  "
-	    << std::setw(10) << std::get<1>(timeMetric_cuda) << "  "
-    	    << std::setw(10) << std::get<1>(timeMetric_cpu)/std::get<1>(timeMetric_cuda) << std::endl;
-  std::cout << "TS time:   "
-	    << std::setw(10) << std::left << std::get<2>(timeMetric_cpu)  << "  "
-	    << std::setw(10) << std::get<2>(timeMetric_cuda) << "  "
-	    << std::setw(10) << std::get<2>(timeMetric_cpu)/std::get<2>(timeMetric_cuda) << std::endl;
-  std::cout << "SF time:   "
-	    << std::setw(10) << std::left << std::get<3>(timeMetric_cpu)  << "  "
-	    << std::setw(10) << std::get<3>(timeMetric_cuda) << "  "
-	    << std::setw(10) << std::get<3>(timeMetric_cpu)/std::get<3>(timeMetric_cuda) << std::endl;
+  std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
 
+  std::cout << std::endl;
+  std::cout << "------------------- Time Metric -------------------" << std::endl;
+  std::cout << "                CPU          CUDA        Speedup " << std::endl;
+  std::cout << "DS time:     "
+	    << std::setw(12) << std::left << std::get<0>(timeMetric_cpu)  << "  "
+	    << std::setw(12) << std::get<0>(timeMetric_cuda) << "  "
+	    << std::setw(12) << std::get<0>(timeMetric_cpu)/std::get<0>(timeMetric_cuda) << std::endl;  
+  std::cout << "TC time:     "
+	    << std::setw(12) << std::left << std::get<1>(timeMetric_cpu)  << "  "
+	    << std::setw(12) << std::get<1>(timeMetric_cuda) << "  "
+    	    << std::setw(12) << std::get<1>(timeMetric_cpu)/std::get<1>(timeMetric_cuda) << std::endl;
+  std::cout << "TS time:     "
+	    << std::setw(12) << std::left << std::get<2>(timeMetric_cpu)  << "  "
+	    << std::setw(12) << std::get<2>(timeMetric_cuda) << "  "
+	    << std::setw(12) << std::get<2>(timeMetric_cpu)/std::get<2>(timeMetric_cuda) << std::endl;
+  std::cout << "SF time:     "
+	    << std::setw(12) << std::left << std::get<3>(timeMetric_cpu)  << "  "
+	    << std::setw(12) << std::get<3>(timeMetric_cuda) << "  "
+	    << std::setw(12) << std::get<3>(timeMetric_cpu)/std::get<3>(timeMetric_cuda) << std::endl;
   double wallTime_cpu = std::get<3>(timeMetric_cpu)+preprocessTime;
   double wallTime_cuda = std::get<3>(timeMetric_cuda)+preprocessTime;
-  std::cout << "Wall time: " 
-	    << std::setw(10) << wallTime_cpu  << "  "
-	    << std::setw(10) << wallTime_cuda << "  "
-	    << std::setw(10) << wallTime_cpu/wallTime_cuda << std::endl;
+  std::cout << "Wall time:   " 
+	    << std::setw(12) << wallTime_cpu  << "  "
+	    << std::setw(12) << wallTime_cuda << "  "
+	    << std::setw(12) << wallTime_cpu/wallTime_cuda << std::endl;
+  std::cout << "---------------------------------------------------" << std::endl;
+  std::cout << std::endl;
 							      
   int nSeed_cpu = 0;
   for (auto& outVec : seedVector_cpu) {
@@ -321,6 +335,7 @@ int main(int argc, char** argv) {
   }
 
   std::cout << nMatch << " seeds are matched" << std::endl;
+  std::cout << "Matching rate: " << float(nMatch)/nSeed_cpu*100 << "%" << std::endl;
     
   if (!quiet) {
     std::cout << "CPU Seed result:" << std::endl;
