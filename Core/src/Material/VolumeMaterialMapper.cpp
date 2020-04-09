@@ -136,12 +136,10 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
     } else if (mState.materialBin[recMaterial.first].dimensions() == 3) {
       ACTS_DEBUG("Create the material for volume  " << recMaterial.first);
       std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
-      std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>
-          mapMaterial;
       Grid3D Grid = createGrid(mState.materialBin[recMaterial.first],
-                               transfoGlobalToLocal, mapMaterial);
-      MaterialGrid3D matGrid =
-          mapMaterialPoints(Grid, recMaterial.second, mapMaterial);
+                               transfoGlobalToLocal);
+      MaterialGrid3D matGrid = mapMaterialPoints(
+          Grid, recMaterial.second, transfoGlobalToLocal, Acts::mapMaterial3D);
       MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, matGrid);
       mState.volumeMaterial[recMaterial.first] = std::make_unique<
           InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
