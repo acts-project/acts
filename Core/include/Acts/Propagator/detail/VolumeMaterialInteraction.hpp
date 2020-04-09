@@ -43,7 +43,7 @@ struct VolumeMaterialInteraction {
   double Eloss = 0.;
   double nextP;
 
-  /// @brief Contructor
+  /// @brief Constructor
   ///
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
