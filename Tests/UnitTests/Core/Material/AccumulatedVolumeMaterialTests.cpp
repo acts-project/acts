@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(two_materials) {
   avm.accumulate(matprop1);
   avm.accumulate(matprop2);
   auto result = avm.average();
-  CHECK_CLOSE_REL(result.X0(), 0.5 * (1. + 6.), 1e-4);
-  CHECK_CLOSE_REL(result.L0(), 0.5 * (2. + 7.), 1e-4);
+  CHECK_CLOSE_REL(result.X0(), 2. / (1. / 1. + 1. / 6.), 1e-4);
+  CHECK_CLOSE_REL(result.L0(), 2. / (1. / 2. + 1. / 7.), 1e-4);
   CHECK_CLOSE_REL(result.Ar(), 0.5 * (3. + 8.), 1e-4);
   CHECK_CLOSE_REL(result.Z(), 0.5 * (4. + 9.), 1e-4);
   CHECK_CLOSE_REL(result.massDensity(), 0.5 * (5. + 10.), 1e-4);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(two_materials_different_lengh) {
   avm.accumulate(matprop2);
   auto result = avm.average();
   CHECK_CLOSE_REL(result.X0(), 2.5 / (0.5 / 1. + 2. / 6.), 1e-4);
-  CHECK_CLOSE_REL(result.L0(), 2.5 * (0.5 / 2. + 2. / 7.), 1e-4);
+  CHECK_CLOSE_REL(result.L0(), 2.5 / (0.5 / 2. + 2. / 7.), 1e-4);
   CHECK_CLOSE_REL(result.Ar(), 0.5 * (3. + 8.), 1e-4);
   CHECK_CLOSE_REL(result.Z(), 0.5 * (4. + 9.), 1e-4);
   CHECK_CLOSE_REL(result.massDensity(), 0.5 * (5. + 10.), 1e-4);

@@ -67,56 +67,63 @@ struct MaterialCollector {
   }
 };
 
-/// @brief create a small tracking geometry to map some dummy material on
-std::shared_ptr<const TrackingGeometry> trackingGeometry() {
-  using namespace Acts::UnitLiterals;
-
-  BinUtility bu(5, 100, 1100, open, binR);
-  bu += BinUtility(2, -M_PI, M_PI, closed, binPhi);
-  bu += BinUtility(3, -1000, 1000, open, binZ);
-  auto matProxy = std::make_shared<const ProtoVolumeMaterial>(bu);
-
-  Logging::Level volumeLLevel = Logging::INFO;
-
-  // tracking volume array creator
-  TrackingVolumeArrayCreator::Config tvacConfig;
-  auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(
-      tvacConfig, getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
-  // configure the cylinder volume helper
-  CylinderVolumeHelper::Config cvhConfig;
-  cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
-  auto cylinderVolumeHelper = std::make_shared<const CylinderVolumeHelper>(
-      cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
-
-  // create the volume for the beam pipe
-  CylinderVolumeBuilder::Config cvbConfig;
-  cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
-  cvbConfig.volumeName = "BeamPipe";
-  cvbConfig.layerEnvelopeR = {100_mm, 1000_mm};
-  cvbConfig.layerEnvelopeZ = 1000_mm;
-  cvbConfig.buildToRadiusZero = false;
-  cvbConfig.volumeMaterial = matProxy;
-  cvbConfig.volumeSignature = 0;
-  auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
-      cvbConfig, getDefaultLogger("CentralVolumeBuilder", volumeLLevel));
-
-  // create the bounds and the volume
-  auto centralVolumeBounds =
-      std::make_shared<const CylinderVolumeBounds>(100., 1000., 2000.);
-
-  GeometryContext gCtx;
-  auto centralVolume =
-      centralVolumeBuilder->trackingVolume(gCtx, nullptr, centralVolumeBounds);
-
-  return std::make_shared<const TrackingGeometry>(centralVolume);
-}
-
-std::shared_ptr<const TrackingGeometry> tGeometry = trackingGeometry();
-
 namespace Test {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
+  using namespace Acts::UnitLiterals;
+
+  BinUtility bu1(4, 0_m, 1_m, open, binX);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+
+  BinUtility bu2(4, 1_m, 2_m, open, binX);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+
+  BinUtility bu3(4, 2_m, 3_m, open, binX);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+
+  // Build a vacuum volume
+  CuboidVolumeBuilder::VolumeConfig vCfg1;
+  vCfg1.position = Vector3D(0.5_m, 0., 0.);
+  vCfg1.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg1.name = "Vacuum volume";
+  vCfg1.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu1);
+
+  // Build a material volume
+  CuboidVolumeBuilder::VolumeConfig vCfg2;
+  vCfg2.position = Vector3D(1.5_m, 0., 0.);
+  vCfg2.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg2.name = "First material volume";
+  vCfg2.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu2);
+
+  // Build another material volume with different material
+  CuboidVolumeBuilder::VolumeConfig vCfg3;
+  vCfg3.position = Vector3D(2.5_m, 0., 0.);
+  vCfg3.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg3.name = "Second material volume";
+  vCfg3.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu3);
+
+  // Configure world
+  CuboidVolumeBuilder::Config cfg;
+  cfg.position = Vector3D(1.5_m, 0., 0.);
+  cfg.length = Vector3D(3_m, 1_m, 1_m);
+  cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
+
+  GeometryContext gc;
+
+  // Build a detector
+  CuboidVolumeBuilder cvb(cfg);
+  TrackingGeometryBuilder::Config tgbCfg;
+  tgbCfg.trackingVolumeBuilders.push_back(
+      [=](const auto& context, const auto& inner, const auto&) {
+        return cvb.trackingVolume(context, inner, nullptr);
+      });
+  TrackingGeometryBuilder tgb(tgbCfg);
+  std::shared_ptr<const TrackingGeometry> tGeometry = tgb.trackingGeometry(gc);
+
   /// We need a Navigator, Stepper to build a Propagator
   Navigator navigator(tGeometry);
   StraightLineStepper stepper;
@@ -125,7 +132,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
 
   /// The config object
   Acts::VolumeMaterialMapper::Config vmmConfig;
-  Acts::VolumeMaterialMapper vmMapper(vmmConfig, std::move(propagator));
+  Acts::VolumeMaterialMapper vmMapper(
+      vmmConfig, std::move(propagator),
+      getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
 
   /// Create some contexts
   GeometryContext gCtx;
@@ -135,7 +144,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.volumeMaterial.size(), 1u);
+  BOOST_CHECK_EQUAL(mState.recordedMaterial.size(), 3u);
 }
 
 /// @brief Test case for comparison between the mapped material and the
@@ -148,8 +157,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   vCfg1.position = Vector3D(0.5_m, 0., 0.);
   vCfg1.length = Vector3D(1_m, 1_m, 1_m);
   vCfg1.name = "Vacuum volume";
-  vCfg1.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(352.8, 407., 9.012, 4., 1.848e-3));
+  vCfg1.volumeMaterial =
+      std::make_shared<const HomogeneousVolumeMaterial>(Material());
 
   // Build a material volume
   CuboidVolumeBuilder::VolumeConfig vCfg2;
@@ -164,8 +173,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   vCfg3.position = Vector3D(2.5_m, 0., 0.);
   vCfg3.length = Vector3D(1_m, 1_m, 1_m);
   vCfg3.name = "Second material volume";
-  vCfg3.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(352.8, 407., 9.012, 4., 1.848e-3));
+  vCfg3.volumeMaterial =
+      std::make_shared<const HomogeneousVolumeMaterial>(Material());
 
   // Configure world
   CuboidVolumeBuilder::Config cfg;
@@ -211,8 +220,12 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   // Build the material grid
   Grid3D Grid = createGrid(xAxis, yAxis, zAxis);
-  MaterialGrid3D matGrid =
-      mapMaterialPoints(Grid, matRecord, Acts::mapMaterialCylinder3D);
+  std::function<Vector3D(Vector3D)> transfoGlobalToLocal =
+      [](Vector3D pos) -> Vector3D {
+    return {pos.x(), pos.y(), pos.z()};
+  };
+  MaterialGrid3D matGrid = mapMaterialPoints(
+      Grid, matRecord, transfoGlobalToLocal, Acts::mapMaterial3D);
 
   // Construct a simple propagation through the detector
   StraightLineStepper sls;
@@ -248,10 +261,10 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     matvector.push_back(matGrid.atPosition(stepResult.position[i]));
-    gridX0 += matvector[i].X0();
-    gridL0 += matvector[i].L0();
-    trueX0 += stepResult.matTrue[i].X0();
-    trueL0 += stepResult.matTrue[i].L0();
+    gridX0 += 1 / matvector[i].X0();
+    gridL0 += 1 / matvector[i].L0();
+    trueX0 += 1 / stepResult.matTrue[i].X0();
+    trueL0 += 1 / stepResult.matTrue[i].L0();
   }
   CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
