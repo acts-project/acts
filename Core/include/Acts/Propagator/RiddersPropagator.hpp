@@ -192,36 +192,46 @@ class RiddersPropagator {
       std::reference_wrapper<const GeometryContext> geoContext, double h,
       const unsigned int param, parameters_t& tp) const;
 
+/// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to (x,y,z,t,Tx,Ty,Tz,q/p)
+///
+/// @param [in] dir Direction vector
+///
+/// @return The jacobian
+ActsMatrixD<7, 8>
+anglesToDirectionsJacobian(const Vector3D dir) const;
+
   /// @brief This function propagates the covariance matrix
   ///
   /// @param [in] derivatives Slopes of each modification of the parameters
   /// @param [in] startCov Starting covariance
+  /// @param [in] deviations Per parameter deviations applied
+  /// @param [in[ direction Final nominal direction
   ///
   /// @return Propagated covariance matrix
   const Covariance calculateCovariance(
       const std::array<std::vector<BoundVector>, eBoundSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations) const;
+      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, eFreeParametersSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations) const;
+      const std::array<std::vector<BoundVector>, 7>& derivatives,
+      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
       const std::array<std::vector<FreeVector>, eBoundParametersSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations) const;
+      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<FreeVector>, eFreeParametersSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations) const;
+      const std::array<std::vector<FreeVector>, 7>& derivatives,
+      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
 
   /// @brief This function fits a linear function through the final state
   /// parametrisations

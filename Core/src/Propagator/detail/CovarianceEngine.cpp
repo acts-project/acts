@@ -71,7 +71,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
 }
 
 /// TODO: This needs to be somewhere else
-/// @brief Constructs a jacobian to transform from (x,y,z,t,Tx,Ty,Tz,q/p) to (x,y,z,t,phi,theta,q/p)
+/// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to (x,y,z,t,Tx,Ty,Tz,q/p)
 ///
 /// @param [in] dir Direction vector
 ///
@@ -105,7 +105,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
     return jac;
   }
   
-/// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to (x,y,z,t,Tx,Ty,Tz,q/p)
+/// @brief Constructs a jacobian to transform from (x,y,z,t,Tx,Ty,Tz,q/p) to (x,y,z,t,phi,theta,q/p)
 ///
 /// @param [in] dir Direction vector
 ///
@@ -203,6 +203,7 @@ else
 ///
 /// @return The projection jacobian from global end parameters to its local
 /// equivalent
+<<<<<<< HEAD
 const FreeToBoundMatrix surfaceDerivative(
     const Vector3D& direction, std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const FreeMatrix& transportJacobian,
     const FreeVector& derivatives) {
@@ -225,6 +226,72 @@ else
 	// Since the jacobian to local needs to calculated for the bound parameters here, it is convenient to do the same here
 	return freeToCurvilinearJacobian(state) * (transport - state.derivative * sfactors) * anglesToDirectionsJacobian(state.dir);
 }
+=======
+const FreeToBoundMatrix surfaceDerivative(StepperState& state,
+                                          const Surface* surface = nullptr) {
+  if (state.jacToGlobal.has_value()) {
+    // Set the surface projection contributions
+    // If no surface is specified it is curvilinear
+    if (surface == nullptr) {
+      // Transport the covariance
+      const ActsRowVectorD<3> normVec(state.dir);
+      const BoundRowVector sfactors =
+          normVec *
+          (*state.jacToGlobal).template topLeftCorner<3, eBoundParametersSize>();
+      *state.jacToGlobal -= state.derivative * sfactors;
+      // Since the jacobian to local needs to calculated for the bound
+      // parameters here, it is convenient to do the same here
+      return freeToCurvilinearJacobian(state);
+    }
+    // Else it is bound
+    else {
+      // Initialize the transport final frame jacobian
+      FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
+      // Initalize the jacobian to local, returns the transposed ref frame
+      auto rframeT = surface->initJacobianToLocal(state.geoContext, jacToLocal,
+                                                  state.pos, state.dir);
+      // Calculate the form factors for the derivatives
+      const BoundRowVector sVec =
+          surface->derivativeFactors(state.geoContext, state.pos, state.dir,
+                                     rframeT, (*state.jacToGlobal));
+      *state.jacToGlobal -= state.derivative * sVec;
+      // Return the jacobian to local
+      return jacToLocal;
+    }
+  } else {
+    // Set the surface projection contributions
+    // If no surface is specified it is curvilinear
+    if (surface == nullptr) {
+      // Transport the covariance
+	  const ActsMatrixD<8,7> transport = state.jacTransport * state.jacDirToAngle;
+      const ActsRowVectorD<3> normVec(state.dir);
+      const ActsRowVectorD<7> sfactors =
+          normVec * transport.template topLeftCorner<3, 7>();
+      // Since the jacobian to local needs to calculated for the bound
+      // parameters here, it is convenient to do the same here
+std::cout << "StepperJacobian:\n" << freeToCurvilinearJacobian(state) *
+             (transport - state.derivative * sfactors) << std::endl;
+      return freeToCurvilinearJacobian(state) *
+             (transport - state.derivative * sfactors) * state.jacAngleToDir;
+             //~ (transport - state.derivative * sfactors) * anglesToDirectionsJacobian(state.dir);
+    }
+    // Else it is bound
+    else {
+      // Initialize the transport final frame jacobian
+      FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
+      // Initalize the jacobian to local, returns the transposed ref frame
+      auto rframeT = surface->initJacobianToLocal(state.geoContext, jacToLocal,
+                                                  state.pos, state.dir);
+      // Calculate the form factors for the derivatives
+      const ActsMatrixD<8,7> transport = state.jacTransport * state.jacDirToAngle;
+      const ActsRowVectorD<7> sVec = surface->derivativeFactors(
+          state.geoContext, state.pos, state.dir, rframeT, transport);
+      // Return the jacobian to local
+      return jacToLocal * (transport - state.derivative * sVec) * state.jacAngleToDir;
+      //~ return jacToLocal * (transport - state.derivative * sVec) * anglesToDirectionsJacobian(state.dir);
+    }
+  }
+>>>>>>> Moved to angles in Ridders and fixed jacAngleToDir
 }
 
 /// @brief This function reinitialises the state members required for the
@@ -385,7 +452,7 @@ FreeState freeState(StepperState& state) {
   pars.template head<3>() = state.pos;
   pars(3) = state.t;
   pars.template segment<3>(4) = state.dir;
-  pars(7) = (state.q / state.p);
+  pars(7) = (state.q == 0. ? 1. : state.q) / state.p;
   FreeParameters parameters(std::move(cov), pars);
 
   return std::make_tuple(std::move(parameters), state.jacobian,

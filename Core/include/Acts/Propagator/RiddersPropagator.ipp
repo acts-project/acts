@@ -30,7 +30,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   const Surface& surface = nominalResult.endParameters->referenceSurface();
 
   // Steps for estimating derivatives
-  std::vector<double> deviations = {-4e-6, -2e-6, 2e-6, 4e-6};
+  std::vector<double> deviations = {-8e-4, -4e-4, 4e-4, 8e-4};
 
   // Allow larger distances for the oscillation
   propagator_options_t opts = options;
@@ -65,18 +65,18 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 		FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
 		if (start.covariance()) {
 		  mParSet->setCovariance(std::get<BoundSymMatrix>(
-			  calculateCovariance(derivatives, *start.covariance(), deviations)));
+			  calculateCovariance(derivatives, *start.covariance(), deviations, Vector3D())));
 		}
 	  }
 	  // Case II: We start free and end bound
 	  else
 	  {
 			// Derivations of each parameter around the nominal parameters
-			std::array<std::vector<BoundVector>, eFreeSize>
+			std::array<std::vector<BoundVector>, 7>
 				derivatives;
 				
 			// Wiggle each dimension individually
-			for (unsigned int i = 0; i < eFreeSize; i++) {
+			for (unsigned int i = 0; i < 7; i++) {
 			  derivatives[i] = wiggleDimension(
 				  opts, start, i, nominalParameters,
 				  deviations, surface);
@@ -88,7 +88,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
 			if (start.covariance()) {
 			  mParSet->setCovariance(std::get<BoundSymMatrix>(
-				  calculateCovariance(derivatives, *start.covariance(), deviations)));
+				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
 			} 
 	  }
 	}
@@ -112,7 +112,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 		FreeParameters* parameters = const_cast<FreeParameters*>(nominalResult.endParameters.get());
 		if (start.covariance()) {
 		  parameters->covariance(std::get<FreeSymMatrix>(
-			  calculateCovariance(derivatives, *start.covariance(), deviations)));
+			  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
 		}
 		nominalResult.endParameters = std::make_unique<const FreeParameters>(*parameters);
 	  }
@@ -120,11 +120,11 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 	  else
 	  {
 			// Derivations of each parameter around the nominal parameters
-			std::array<std::vector<FreeVector>, eFreeSize>
+			std::array<std::vector<FreeVector>, 7>
 				derivatives;
 
 			// Wiggle each dimension individually
-			for (unsigned int i = 0; i < eFreeSize; i++) {
+			for (unsigned int i = 0; i < 7; i++) {
 			  derivatives[i] = wiggleDimension(
 				  options, start, i, nominalParameters,
 				  deviations);
@@ -134,7 +134,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			FreeParameters* parameters = const_cast<FreeParameters*>(nominalResult.endParameters.get());
 			if (start.covariance()) {
 			  parameters->covariance(std::get<FreeSymMatrix>(
-				  calculateCovariance(derivatives, *start.covariance(), deviations)));
+				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
 			}
 			nominalResult.endParameters = std::make_unique<const FreeParameters>(*parameters);
 	  }
@@ -213,18 +213,18 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			  }
 			}
 			mParSet->setCovariance(std::get<BoundSymMatrix>(
-				calculateCovariance(derivatives, *start.covariance(), deviations)));
+				calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
 		  }
 		}
-	// Case II: We start free bound
+	// Case II: We start free
 	  else
 	  {
 			// Derivations of each parameter around the nominal parameters
-			std::array<std::vector<BoundVector>, eFreeSize>
+			std::array<std::vector<BoundVector>, 7>
 				derivatives;
 				
 			// Wiggle each dimension individually
-			for (unsigned int i = 0; i < eFreeSize; i++) {
+			for (unsigned int i = 0; i < 7; i++) {
 			  derivatives[i] = wiggleDimension(
 				  opts, start, i, nominalParameters,
 				  deviations, target);
@@ -248,7 +248,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			  }
 			}
 			  mParSet->setCovariance(std::get<BoundSymMatrix>(
-				  calculateCovariance(derivatives, *start.covariance(), deviations)));
+				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
 			} 
 	  }
   return ThisResult::success(std::move(nominalResult));
@@ -293,9 +293,12 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
         wiggleStartVector(options.geoContext, h, param, startPars);
 
     const auto& r = m_propagator.propagate(tp, target, options).value();
-    
+//~ if(param == 0 || param == 2)
+//~ std::cout << param << ": " << r.endParameters->parameters().transpose() << " | " << nominal.transpose() << " | " << ((r.endParameters->parameters() - nominal) / h).transpose() << std::endl;
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+    
+    // Correct angular results 
     if constexpr (start_parameters_t::is_local_representation) {
       // Correct for a possible variation of phi around
       if (param == 2) {
@@ -309,7 +312,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     }
     else
     {
-		if(param == 4 || param == 5 || param == 6)
+		if(param == 4 || param == 5)
+		//~ if(param == 4 || param == 5 || param == 6)
 		{
 			double phi0 = nominal(Acts::ePHI);
 			double phi1 = r.endParameters->parameters()(Acts::ePHI);
@@ -347,6 +351,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
     const auto& r =
         m_propagator.template propagate<FreeParameters>(tp, options).value();
+
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
   }
@@ -383,7 +388,7 @@ void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
     }
   }
 
-  // Modify start parameter and propagate
+  // Modify start parameter
   switch (param) {
     case 0: {
       tp.template set<eLOC_0>(geoContext, tp.template get<eLOC_0>() + h);
@@ -417,6 +422,19 @@ template <typename parameters_t>
 void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     std::reference_wrapper<const GeometryContext> geoContext, double h,
     const unsigned int param, parameters_t& tp) const {
+		
+		  // Treatment for theta
+  if (param == 5) {
+    const double current_theta = std::acos(tp.template get<6>());
+    if (current_theta + h > M_PI) {
+      h = M_PI - current_theta;
+    }
+    if (current_theta + h < 0) {
+      h = -current_theta;
+    }
+  }
+  
+    // Modify start parameter
   switch (param) {
     case 0: {
       tp.template set<0>(geoContext, tp.template get<0>() + h);
@@ -434,41 +452,86 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
       tp.template set<3>(geoContext, tp.template get<3>() + h);
       break;
     }
+    //~ case 4: {
+		//~ Vector3D dir = tp.parameters().template segment<3>(4);
+		//~ dir.x() = dir.x() > 0 ? std::min(1., (double) dir.x() + h) : std::max(-1., (double) dir.x() + h);
+		//~ const double theta = std::acos(dir.z() / dir.norm());
+		//~ const double phi = std::atan2(dir.y(), dir.x());
+      //~ tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
+      //~ tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
+      //~ tp.template set<6>(geoContext, std::cos(theta));
+      //~ break;
+    //~ }
+    //~ case 5: {
+		//~ Vector3D dir = tp.parameters().template segment<3>(4);
+		//~ dir.y() = dir.y() > 0 ? std::min(1., (double) dir.y() + h) : std::max(-1., (double) dir.y() + h);
+		//~ const double theta = std::acos(dir.z() / dir.norm());
+		//~ const double phi = std::atan2(dir.y(), dir.x());
+      //~ tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
+      //~ tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
+      //~ tp.template set<6>(geoContext, std::cos(theta));    
+      //~ break;
+    //~ }
+    //~ case 6: {
+		//~ Vector3D dir = tp.parameters().template segment<3>(4);
+		//~ dir.z() = dir.z() > 0 ? std::min(1., (double) dir.z() + h) : std::max(-1., (double) dir.z() + h);
+		//~ const double theta = std::acos(dir.z() / dir.norm());
+		//~ const double phi = std::atan2(dir.y(), dir.x());
+      //~ tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
+      //~ tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
+      //~ tp.template set<6>(geoContext, std::cos(theta));      
+      //~ break;
+    //~ }
     case 4: {
-		Vector3D dir = tp.parameters().template segment<3>(4);
-		dir.x() = dir.x() > 0 ? std::min(1., (double) dir.x() + h) : std::max(-1., (double) dir.x() + h);
-		const double theta = std::acos(dir.z() / dir.norm());
-		const double phi = std::atan2(dir.y(), dir.x());
-      tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
-      tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
-      tp.template set<6>(geoContext, std::cos(theta));
-      break;
-    }
-    case 5: {
-		Vector3D dir = tp.parameters().template segment<3>(4);
-		dir.y() = dir.y() > 0 ? std::min(1., (double) dir.y() + h) : std::max(-1., (double) dir.y() + h);
-		const double theta = std::acos(dir.z() / dir.norm());
-		const double phi = std::atan2(dir.y(), dir.x());
-      tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
-      tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
-      tp.template set<6>(geoContext, std::cos(theta));    
-      break;
-    }
+		const double phi = std::atan2(tp.template get<5>(), tp.template get<4>());
+		const double theta = std::acos(tp.template get<6>());
+		tp.template set<4>(geoContext, std::cos(phi + h) * std::sin(theta));
+		tp.template set<5>(geoContext, std::sin(phi + h) * std::sin(theta));
+		break;
+	}
+	case 5: {
+		const double phi = std::atan2(tp.template get<5>(), tp.template get<4>());
+		const double theta = std::acos(tp.template get<6>());
+		tp.template set<4>(geoContext, std::cos(phi) * std::sin(theta + h));
+		tp.template set<5>(geoContext, std::sin(phi) * std::sin(theta + h));
+		tp.template set<6>(geoContext, std::cos(theta + h));
+		break;
+	}
+    //~ case 7: {
     case 6: {
-		Vector3D dir = tp.parameters().template segment<3>(4);
-		dir.z() = dir.z() > 0 ? std::min(1., (double) dir.z() + h) : std::max(-1., (double) dir.z() + h);
-		const double theta = std::acos(dir.z() / dir.norm());
-		const double phi = std::atan2(dir.y(), dir.x());
-      tp.template set<4>(geoContext, std::sin(theta) * std::cos(phi));
-      tp.template set<5>(geoContext, std::sin(theta) * std::sin(phi));
-      tp.template set<6>(geoContext, std::cos(theta));      
-      break;
-    }
-    case 7: {
       tp.template set<7>(geoContext, tp.template get<7>() + h);
       break;
     }
   }
+}
+
+template<typename propagator_t>
+Acts::ActsMatrixD<7, 8>
+Acts::RiddersPropagator<propagator_t>::anglesToDirectionsJacobian(const Vector3D dir) const
+{
+ActsMatrixD<7, 8> jacobian = ActsMatrixD<7, 8>::Zero();
+  const double x = dir(0);  // == cos(phi) * sin(theta)
+  const double y = dir(1);  // == sin(phi) * sin(theta)
+  const double z = dir(2);  // == cos(theta)
+  // can be turned into cosine/sine
+  const double cosTheta = z;
+  const double sinTheta = sqrt(x * x + y * y);
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
+  jacobian(0, 0) = 1.;
+  jacobian(1, 1) = 1.;
+  jacobian(2, 2) = 1.;
+  jacobian(3, 3) = 1.;
+  jacobian(6, 7) = 1.;
+  
+  jacobian(4, 4) = -sinPhi * invSinTheta;
+  jacobian(4, 5) = cosPhi * invSinTheta;
+  jacobian(5, 4) = cosPhi * cosTheta;
+  jacobian(5, 5) = sinPhi * cosTheta;
+  jacobian(5, 6) = -invSinTheta * (1. - cosTheta * cosTheta);
+
+  return jacobian;
 }
 
 template <typename propagator_t>
@@ -476,9 +539,9 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
     const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
         derivatives,
     const std::variant<Acts::BoundSymMatrix, Acts::FreeSymMatrix>& startCov,
-    const std::vector<double>& deviations) const -> const Covariance {
+    const std::vector<double>& deviations, const Vector3D /*unused*/) const -> const Covariance {
   BoundMatrix jacobian;
-  jacobian.setIdentity();
+  //~ jacobian.setIdentity();
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
@@ -488,14 +551,18 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
 
 template <typename propagator_t>
 auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
-    const std::array<std::vector<Acts::BoundVector>, Acts::eFreeSize>& derivatives,
+    const std::array<std::vector<Acts::BoundVector>, 7>& derivatives,
     const std::variant<Acts::BoundSymMatrix, Acts::FreeSymMatrix>& startCov,
-    const std::vector<double>& deviations) const -> const Covariance {
-  FreeToBoundMatrix jacobian;
-  jacobian.setIdentity();
+    const std::vector<double>& deviations, const Vector3D direction) const -> const Covariance {
+  ActsMatrixD<eBoundParametersSize, 7> jac;
+  //~ jacobian.setIdentity();
   for (unsigned int i = 0; i < derivatives.size(); i++) {
-    jacobian.col(i) = fitLinear(derivatives[i], deviations);
+    jac.col(i) = fitLinear(derivatives[i], deviations);
   }
+for(unsigned int i = 0; i < derivatives[0].size(); i++)
+std::cout << i << " " <<  derivatives[0][i].transpose() << std::endl;
+  FreeToBoundMatrix jacobian = jac * anglesToDirectionsJacobian(direction);
+std::cout << "RiddersJacobian:\n" << jac << std::endl; 
   return BoundSymMatrix(jacobian * std::get<Acts::FreeSymMatrix>(startCov) *
                         jacobian.transpose());
 }
@@ -504,26 +571,30 @@ template <typename propagator_t>
 auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
     const std::array<std::vector<Acts::FreeVector>, Acts::eBoundSize>& derivatives,
     const std::variant<Acts::BoundSymMatrix, Acts::FreeSymMatrix>& startCov,
-    const std::vector<double>& deviations) const -> const Covariance {
+    const std::vector<double>& deviations, const Vector3D /*unused*/) const -> const Covariance {
   BoundToFreeMatrix jacobian;
-  jacobian.setIdentity();
+  //~ jacobian.setIdentity();
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jacobian.col(i) = fitLinear(derivatives[i], deviations);
   }
+std::cout << "RiddersJacobian:\n" << jacobian << std::endl;
   return FreeSymMatrix(jacobian * std::get<Acts::BoundSymMatrix>(startCov) *
                        jacobian.transpose());
 }
 
 template <typename propagator_t>
 auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
-    const std::array<std::vector<Acts::FreeVector>, Acts::eFreeSize>& derivatives,
+    const std::array<std::vector<Acts::FreeVector>, 7>& derivatives,
     const std::variant<Acts::BoundSymMatrix, Acts::FreeSymMatrix>& startCov,
-    const std::vector<double>& deviations) const -> const Covariance {
-  FreeMatrix jacobian;
-  jacobian.setIdentity();
+    const std::vector<double>& deviations, const Vector3D direction) const -> const Covariance {
+  ActsMatrixD<8, 7> jac;
+  //~ jacobian.setIdentity();
   for (unsigned int i = 0; i < derivatives.size(); i++) {
-    jacobian.col(i) = fitLinear(derivatives[i], deviations);
+    jac.col(i) = fitLinear(derivatives[i], deviations);
   }
+  
+  FreeMatrix jacobian = jac * anglesToDirectionsJacobian(direction);
+std::cout << "RiddersJacobian:\n" << jacobian << std::endl;
   return FreeSymMatrix(jacobian * std::get<Acts::FreeSymMatrix>(startCov) *
                        jacobian.transpose());
 }
