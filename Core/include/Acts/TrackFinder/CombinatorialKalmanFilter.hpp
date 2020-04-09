@@ -23,8 +23,8 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/TrackFinder/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinder/detail/VoidTrackFinderComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -999,7 +999,7 @@ class CombinatorialKalmanFilter {
     calibrator_t m_calibrator;
 
     /// The Surface beeing
-    detail::SurfaceReached targetReached;
+    SurfaceReached targetReached;
   };
 
   template <typename source_link_t, typename parameters_t>
