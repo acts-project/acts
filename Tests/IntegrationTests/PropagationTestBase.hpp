@@ -41,7 +41,7 @@ auto rand2 = bdata::random(
 auto rand3 = bdata::random(
     (bdata::seed = 1717,
      bdata::distribution = std::uniform_real_distribution<>(-1., 1.)));
-auto threeRandom = (rand1 ^ rand2 ^ rand2);
+auto threeRandom = (rand1 ^ rand2 ^ rand3);
 }  // namespace ds
 
 // The constant field test
@@ -174,7 +174,7 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
                          ds::threeRandom,
                      pT, phi, theta, charge, pfrac, rand1, rand2, rand3) {
   // just make sure we can reach it
-  double r = pfrac * std::abs(pT / Bz);
+  double r = (pfrac > 0. ? pfrac : 0.01) * std::abs(pT / Bz);
   r = (r > 2.5_m) ? 2.5_m : r;
 
   // define start parameters

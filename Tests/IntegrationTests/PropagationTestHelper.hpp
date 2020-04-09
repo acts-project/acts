@@ -236,13 +236,14 @@ std::pair<Vector3D, double> to_cylinder(const Propagator_type& propagator,
   options.maxStepSize = plimit * 0.1;
   options.pathLimit = plimit;
   options.debug = debug;
-
+std::cout << "1 " << plimit << std::endl;
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
                                               0.04 * rand1, 0.04 * rand2);
+std::cout << "2" << std::endl << seTransform->matrix() << std::endl;
   auto endSurface = Surface::makeShared<CylinderSurface>(
       seTransform, plimit, std::numeric_limits<double>::max());
-
+std::cout << "3" << std::endl;
   // Increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
 
