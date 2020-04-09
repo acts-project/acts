@@ -35,13 +35,13 @@ using namespace Acts::UnitLiterals;
 template <typename bfield_t>
 class AtlasStepper {
  public:
-  using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
-                                BoundToFreeMatrix, FreeMatrix>;
+  /// Jacobian, Covariance, States and B-field
+  using Jacobian =
+    std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;  using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using FreeState = std::tuple<FreeTrackParameters, Jacobian, double>;
-
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using BField = bfield_t;
 
   /// @brief Nested State struct for the local caching
@@ -274,7 +274,6 @@ class AtlasStepper {
           newfield(true),
           field(0., 0., 0.),
           covariance(nullptr),
-          t0(pars.time()),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(mctx),
@@ -824,7 +823,7 @@ class AtlasStepper {
 
     FreeVector pars;
     pars.template head<3>() = state.pos;
-    pars(3) = state.t0 + state.dt;
+    pars(3) = state.dt;
     pars.template segment<3>(4) = state.dir;
     pars(7) = (state.q / state.p);
     FreeParameters parameters(std::move(covOpt), pars);

@@ -48,13 +48,13 @@ template <typename bfield_t,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
-  /// Jacobian, Covariance and State defintions
-  using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
-                                BoundToFreeMatrix, FreeMatrix>;
+  /// Jacobian, Covariance, States and B-field
+    using Jacobian =
+    std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+  using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+  using FreeState = std::tuple<FreeTrackParameters, Jacobian, double>;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = bfield_t;
 
   /// @brief State for track parameter propagation
@@ -137,7 +137,9 @@ class EigenStepper {
           cov = *par.covariance();
           jacobian.emplace<3>(FreeMatrix::Identity());
         
-          jacDirToAngle = directionsToAnglesJacobian(dir);
+          // Set up transformations between angles and directions in jacobian
+      jacDirToAngle = directionsToAnglesJacobian(dir);
+      jacAngleToDir = anglesToDirectionsJacobian(dir);
       }
     }
     
@@ -159,8 +161,10 @@ class EigenStepper {
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
-	 /// Conversion jacobian to transform from directions to angles
-	  ActsMatrixD<8, 7> jacDirToAngle;
+	   /// Transform from directions to angles in jacobian
+  ActsMatrixD<8, 7> jacDirToAngle;
+  /// Transform from angles to directions in jacobian
+  ActsMatrixD<7, 8> jacAngleToDir;
   
     /// The full jacobian of the transport entire transport
     std::variant<BoundMatrix, FreeToBoundMatrix, FreeMatrix, BoundToFreeMatrix> jacobian;

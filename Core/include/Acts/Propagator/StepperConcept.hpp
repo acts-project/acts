@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <variant>
+#include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
@@ -30,9 +32,11 @@ using jacobian_t = typename T::Jacobian;
 template <typename T>
 using covariance_t = typename T::Covariance;
 template <typename T>
-using bound_state_t = typename T::BoundState;
-template <typename T>
 using curvilinear_state_t = typename T::CurvilinearState;
+template <typename T>
+using free_state_t = typename T::FreeState;
+template <typename T>
+using bound_state_t = typename T::BoundState;
 template <typename T>
 using bfield_t = typename T::BField;
 
@@ -44,15 +48,16 @@ METHOD_TRAIT(momentum_t, momentum);
 METHOD_TRAIT(charge_t, charge);
 METHOD_TRAIT(time_t, time);
 METHOD_TRAIT(overstep_t, overstepLimit);
-METHOD_TRAIT(bound_state_method_t, boundState);
-METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
-METHOD_TRAIT(update_t, update);
-METHOD_TRAIT(covariance_transport_t, covarianceTransport);
-METHOD_TRAIT(step_t, step);
 METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
 METHOD_TRAIT(set_step_size_t, setStepSize);
 METHOD_TRAIT(release_step_size_t, releaseStepSize);
 METHOD_TRAIT(output_step_size_t, outputStepSize);
+METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
+METHOD_TRAIT(free_state_method_t, freeState);
+METHOD_TRAIT(bound_state_method_t, boundState);
+METHOD_TRAIT(update_t, update);
+METHOD_TRAIT(covariance_transport_t, covarianceTransport);
+METHOD_TRAIT(step_t, step);
 
 template <typename T>
 using cov_transport_t = decltype(std::declval<T>().covTransport);
@@ -64,17 +69,23 @@ template <typename T>
 using path_accumulated_t = decltype(std::declval<T>().pathAccumulated);
 template <typename T>
 using step_size_t = decltype(std::declval<T>().stepSize);
+template <typename T>
+using tolerance_t = decltype(std::declval<T>().tolerance);
+template <typename T>
+using geo_context_t = decltype(std::declval<T>().geoContext);
 
 // clang-format off
     template <typename S>
     constexpr bool StepperStateConcept
       = require<has_member<S, cov_transport_t, bool>,
-                has_member<S, cov_t, BoundSymMatrix>,
+                has_member<S, cov_t, std::variant<BoundSymMatrix, FreeSymMatrix>>,
                 has_member<S, nav_dir_t, NavigationDirection>,
                 has_member<S, path_accumulated_t, double>,
-                has_member<S, step_size_t, ConstrainedStep>
+                has_member<S, step_size_t, ConstrainedStep>,
+                has_member<S, tolerance_t, double>,
+                has_member<S, geo_context_t, std::reference_wrapper<const GeometryContext>>
                >;
-// clang-format on
+  // clang-format on
 
 // clang-format off
     template <typename S, typename state = typename S::State>
@@ -107,16 +118,6 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(time_exists, "time method not found");
         constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
         static_assert(overstep_exists, "overstepLimit method not found");
-        constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
-        static_assert(bound_state_method_exists, "boundState method not found");
-        constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
-        static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
-        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
-                                                             has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
-        static_assert(update_method_exists, "update method not found");
-        constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,
-                                                                    has_method<const S, void, covariance_transport_t, state&, const Surface&>>;
-        static_assert(covariance_transport_exists, "covarianceTransport method not found");
         constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
         constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type>;
@@ -125,29 +126,39 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(release_step_size_exists, "releaseStepSize method not found");
         constexpr static bool output_step_size_exists = has_method<const S, std::string, output_step_size_t, const state&>;
         static_assert(output_step_size_exists, "outputStepSize method not found");
+        constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
+        static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
+        constexpr static bool free_state_method_exists = has_method<const S, typename S::FreeState, free_state_method_t, state&>;
+        static_assert(free_state_method_exists, "freeState method not found");        
+        constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
+        static_assert(bound_state_method_exists, "boundState method not found");
+        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
+                                                             has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
+        static_assert(update_method_exists, "update method not found");
+        constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,
+                                                                    has_method<const S, void, covariance_transport_t, state&, const Surface&>>;
+        static_assert(covariance_transport_exists, "covarianceTransport method not found");
 
-        //~ constexpr static bool value = require<state_exists,
-                                              //~ jacobian_exists,
-                                              //~ covariance_exists,
-                                              //~ bound_state_exists,
-                                              //~ curvilinear_state_exists,
-                                              //~ bfield_exists,
-                                              //~ get_field_exists,
-                                              //~ position_exists,
-                                              //~ direction_exists,
-                                              //~ momentum_exists,
-                                              //~ charge_exists,
-                                              //~ time_exists,
-                                              //~ bound_state_method_exists,
-                                              //~ curvilinear_state_method_exists,
-                                              //~ update_method_exists,
-                                              //~ covariance_transport_exists,
-                                              //~ update_surface_exists,
-                                              //~ set_step_size_exists,
-                                              //~ release_step_size_exists,
-                                              //~ output_step_size_exists>;
-
-         constexpr static bool value = require<>;
+        constexpr static bool value = require<state_exists,
+                                              jacobian_exists,
+                                              covariance_exists,
+                                              bound_state_exists,
+                                              curvilinear_state_exists,
+                                              bfield_exists,
+                                              get_field_exists,
+                                              position_exists,
+                                              direction_exists,
+                                              momentum_exists,
+                                              charge_exists,
+                                              time_exists,
+                                              bound_state_method_exists,
+                                              curvilinear_state_method_exists,
+                                              update_method_exists,
+                                              covariance_transport_exists,
+                                              update_surface_exists,
+                                              set_step_size_exists,
+                                              release_step_size_exists,
+                                              output_step_size_exists>;
       };
 // clang-format on
 }  // namespace Stepper
