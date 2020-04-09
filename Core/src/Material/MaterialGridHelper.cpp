@@ -76,110 +76,71 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
       std::make_tuple(std::move(axis1), std::move(axis2), std::move(axis3)));
 }
 
-Grid2D::index_t mapMaterialCartesian2D(const Acts::Vector3D& matPos,
-                                       const Grid3D& grid) {
+Grid2D::index_t mapMaterial2D(const Acts::Vector3D& matPos,
+                              const Grid2D& grid) {
   double dist = std::numeric_limits<double>::max();
-  size_t indexX = 0, indexY = 0;
+  size_t indexX = 1, indexY = 1;
   // Loop through all elements
   for (size_t i = 1; i < grid.numLocalBins()[0] + 1; i++) {
-    for (size_t j = 1; j < grid.numLocalBins()[1] + 1; j++) {
-      // Search the closest distance - elements are ordered
-      double dX = grid.lowerLeftBinEdge({{i, j}})[0] - matPos.x();
-      double dY = grid.lowerLeftBinEdge({{i, j}})[1] - matPos.y();
-      if (std::sqrt(dX * dX + dY * dY) < dist) {
-        // Store distance and index
-        dist = std::sqrt(dX * dX + dY * dY);
-        indexX = i;
-        indexY = j;
-      } else {  // Break if distance becomes larger
-        break;
-      }
+    double dX = grid.lowerLeftBinEdge({{i, indexY}})[0] - matPos.x();
+    if (abs(dX) < dist) {
+      // Store distance and index
+      dist = abs(dX);
+      indexX = i;
+    } else {
+      break;
+    }
+  }
+  dist = std::numeric_limits<double>::max();
+  for (size_t i = 1; i < grid.numLocalBins()[1] + 1; i++) {
+    double dY = grid.lowerLeftBinEdge({{indexX, i}})[1] - matPos.y();
+    if (abs(dY) < dist) {
+      // Store distance and index
+      dist = abs(dY);
+      indexY = i;
+    } else {
+      break;
     }
   }
   return {{indexX, indexY}};
 }
 
-Grid3D::index_t mapMaterialCartesian3D(const Acts::Vector3D& matPos,
-                                       const Grid3D& grid) {
+Grid3D::index_t mapMaterial3D(const Acts::Vector3D& matPos,
+                              const Grid3D& grid) {
   double dist = std::numeric_limits<double>::max();
-  size_t indexX = 0, indexY = 0, indexZ = 0;
+  size_t indexX = 1, indexY = 1, indexZ = 1;
+  double dX = 0, dY = 0, dZ = 0;
   // Loop through all elements
   for (size_t i = 1; i < grid.numLocalBins()[0] + 1; i++) {
-    for (size_t j = 1; j < grid.numLocalBins()[1] + 1; j++) {
-      for (size_t k = 1; k < grid.numLocalBins()[2] + 1; k++) {
-        // Search the closest distance - elements are ordered
-        double dX = grid.lowerLeftBinEdge({{i, j, k}})[0] - matPos.x();
-        double dY = grid.lowerLeftBinEdge({{i, j, k}})[1] - matPos.y();
-        double dZ = grid.lowerLeftBinEdge({{i, j, k}})[2] - matPos.z();
-
-        if (std::sqrt(dX * dX + dY * dY + dZ * dZ) < dist) {
-          // Store distance and index
-          dist = std::sqrt(dX * dX + dY * dY + dZ * dZ);
-          indexX = i;
-          indexY = j;
-          indexZ = k;
-        } else {  // Break if distance becomes larger
-          break;
-        }
-      }
+    dX = grid.lowerLeftBinEdge({{i, indexY, indexZ}})[0] - matPos.x();
+    if (abs(dX) < dist) {
+      // Store distance and index
+      dist = abs(dX);
+      indexX = i;
+    } else {
+      break;
     }
   }
-  return {{indexX, indexY, indexZ}};
-}
-
-Grid2D::index_t mapMaterialCylinderRPhi(const Acts::Vector3D& matPos,
-                                        const Grid3D& grid) {
-  double dist = std::numeric_limits<double>::max();
-  size_t indexX = 0, indexY = 0;
-  // Loop through all elements
-  for (size_t i = 1; i < grid.numLocalBins()[0] + 1; i++) {
-    for (size_t j = 1; j < grid.numLocalBins()[1] + 1; j++) {
-      double X = grid.lowerLeftBinEdge({{i, j}})[0] *
-                 cos(grid.lowerLeftBinEdge({{i, j}})[1]);
-      double Y = grid.lowerLeftBinEdge({{i, j}})[0] *
-                 sin(grid.lowerLeftBinEdge({{i, j}})[1]);
-      // Search the closest distance - elements are ordered
-      double dX = X - matPos.x();
-      double dY = Y - matPos.y();
-      if (std::sqrt(dX * dX + dY * dY) < dist) {
-        // Store distance and index
-        dist = std::sqrt(dX * dX + dY * dY);
-        indexX = i;
-        indexY = j;
-      } else {  // Break if distance becomes larger
-        // break;
-      }
+  dist = std::numeric_limits<double>::max();
+  for (size_t i = 1; i < grid.numLocalBins()[1] + 1; i++) {
+    dY = grid.lowerLeftBinEdge({{indexX, i, indexZ}})[1] - matPos.y();
+    if (abs(dY) < dist) {
+      // Store distance and index
+      dist = abs(dY);
+      indexY = i;
+    } else {
+      break;
     }
   }
-  return {{indexX, indexY}};
-}
-
-Grid3D::index_t mapMaterialCylinder3D(const Acts::Vector3D& matPos,
-                                      const Grid3D& grid) {
-  double dist = std::numeric_limits<double>::max();
-  size_t indexX = 0, indexY = 0, indexZ = 0;
-  // Loop through all elements
-  for (size_t i = 1; i < grid.numLocalBins()[0] + 1; i++) {
-    for (size_t j = 1; j < grid.numLocalBins()[1] + 1; j++) {
-      for (size_t k = 1; k < grid.numLocalBins()[2] + 1; k++) {
-        double X = grid.lowerLeftBinEdge({{i, j, k}})[0] *
-                   cos(grid.lowerLeftBinEdge({{i, j, k}})[1]);
-        double Y = grid.lowerLeftBinEdge({{i, j, k}})[0] *
-                   sin(grid.lowerLeftBinEdge({{i, j, k}})[1]);
-        // Search the closest distance - elements are ordered
-        double dX = X - matPos.x();
-        double dY = Y - matPos.y();
-        double dZ = grid.lowerLeftBinEdge({{i, j, k}})[2] - matPos.z();
-        if (std::sqrt(dX * dX + dY * dY + dZ * dZ) < dist) {
-          // Store distance and index
-          dist = std::sqrt(dX * dX + dY * dY + dZ * dZ);
-          indexX = i;
-          indexY = j;
-          indexZ = k;
-        } else {  // Break if distance becomes larger
-          // break;
-        }
-      }
+  dist = std::numeric_limits<double>::max();
+  for (size_t i = 1; i < grid.numLocalBins()[2] + 1; i++) {
+    dZ = grid.lowerLeftBinEdge({{indexX, indexY, i}})[2] - matPos.z();
+    if (abs(dZ) < dist) {
+      // Store distance and index
+      dist = abs(dZ);
+      indexZ = i;
+    } else {
+      break;
     }
   }
   return {{indexX, indexY, indexZ}};
@@ -187,9 +148,7 @@ Grid3D::index_t mapMaterialCylinder3D(const Acts::Vector3D& matPos,
 
 Grid3D createGrid(
     const BinUtility& bins,
-    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal,
-    std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>&
-        mapMaterial) {
+    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   std::array<double, 3> gridAxis1;
   std::array<double, 3> gridAxis2;
@@ -247,16 +206,13 @@ Grid3D createGrid(
   }
   if (iscylinder) {
     transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector3D {
-      return {sqrt(pos.x() * pos.x() + pos.y() * pos.y()),
-              atan2(pos.y(), pos.x()), pos.z()};
+      return {VectorHelpers::perp(pos), VectorHelpers::phi(pos), pos.z()};
     };
-    mapMaterial = Acts::mapMaterialCylinder3D;
   }
   if (iscube) {
     transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector3D {
       return {pos.x(), pos.y(), pos.z()};
     };
-    mapMaterial = Acts::mapMaterialCartesian3D;
   }
   return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
                            std::move(gridAxis3)));
@@ -264,12 +220,14 @@ Grid3D createGrid(
 
 MaterialGrid2D mapMaterialPoints(
     Grid2D& grid, const RecordedMaterialPoint& mPoints,
+    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal,
     const std::function<Grid2D::index_t(const Acts::Vector3D&, const Grid2D&)>&
         matchToGridPoint) {
   // Walk over each point
   for (const auto& rm : mPoints) {
     // Search for fitting grid point and accumulate
-    Grid2D::index_t index = matchToGridPoint(rm.second, grid);
+    Grid2D::index_t index =
+        matchToGridPoint(transfoGlobalToLocal(rm.second), grid);
     grid.atLocalBins(index).accumulate(rm.first);
   }
 
@@ -293,12 +251,14 @@ MaterialGrid2D mapMaterialPoints(
 
 MaterialGrid3D mapMaterialPoints(
     Grid3D& grid, const RecordedMaterialPoint& mPoints,
+    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal,
     const std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>&
         matchToGridPoint) {
   // Walk over each point
   for (const auto& rm : mPoints) {
     // Search for fitting grid point and accumulate
-    Grid3D::index_t index = matchToGridPoint(rm.second, grid);
+    Grid3D::index_t index =
+        matchToGridPoint(transfoGlobalToLocal(rm.second), grid);
     grid.atLocalBins(index).accumulate(rm.first);
   }
 
