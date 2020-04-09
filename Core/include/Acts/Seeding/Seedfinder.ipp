@@ -101,10 +101,8 @@ namespace Acts {
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  unsigned char true_cpu  = true;
-  unsigned char false_cpu = false;
-  CudaScalar<unsigned char> true_cuda(&true_cpu);  
-  CudaScalar<unsigned char> false_cuda(&false_cpu);    
+  CudaScalar<unsigned char> true_cuda(new unsigned char(true));  
+  CudaScalar<unsigned char> false_cuda(new unsigned char(false));    
   CudaScalar<float> deltaRMin_cuda(&m_config.deltaRMin);
   CudaScalar<float> deltaRMax_cuda(&m_config.deltaRMax);
   CudaScalar<float> cotThetaMax_cuda(&m_config.cotThetaMax);
@@ -406,6 +404,7 @@ namespace Acts {
       int i_ts = 0;    
       while ( offsetVec[i_ts] < tIndex.size() ){
 	
+
 	TS_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, tIndex.size()-offsetVec[i_ts] ),
 			    1,1);
       	
@@ -459,24 +458,25 @@ namespace Acts {
     // --------------------------------
     
     if (i_m > 0){
+      int curID = i_m-1;
       seedsPerSpM.clear();
-      auto middleIdx     = std::get<0>(mCompIndex[i_m-1]);
-      auto compBottomIdx = std::get<1>(mCompIndex[i_m-1]);
-      auto compTopIdx    = std::get<2>(mCompIndex[i_m-1]);
+      auto middleIdx     = std::get<0>(mCompIndex[curID]);
+      auto compBottomIdx = std::get<1>(mCompIndex[curID]);
+      auto compTopIdx    = std::get<2>(mCompIndex[curID]);
       
       for (int i_b=0; i_b<compBottomIdx.size(); i_b++){
-	int nTpass = *(nTopPass_cpu.Get(i_b,i_m-1));
+	int nTpass = *(nTopPass_cpu.Get(i_b,curID));
 
 	if (nTpass==0) continue;	
 	
 	tVec.clear();
 	curvatures.clear();
 	impactParameters.clear();      
-	float Zob = *(circBcompMat_cpu.Get(i_b,(i_m-1)*6));
+	float Zob = *(circBcompMat_cpu.Get(i_b,(curID)*6));
 
 	std::vector< std::tuple< int, int, int > > indexVec;
 	for(int i_t=0; i_t<nTpass; i_t++){
-	  int g_tIndex = compTopIdx[*tPassIndex_cpu.Get(i_t,i_b+(i_m-1)*nBcompMax)];
+	  int g_tIndex = compTopIdx[*tPassIndex_cpu.Get(i_t,i_b+(curID)*nBcompMax)];
 	  indexVec.push_back(std::make_tuple(g_tIndex,i_t,i_b));
 	}
 	sort(indexVec.begin(), indexVec.end()); 
@@ -487,8 +487,8 @@ namespace Acts {
 	  auto bId      = std::get<2>(el);
 	  
 	  tVec.push_back(topSPvec[g_tIndex]);
-	  curvatures.push_back(*curvatures_cpu.Get(tId,bId+(i_m-1)*nBcompMax));
-	  impactParameters.push_back(*impactparameters_cpu.Get(tId,bId+(i_m-1)*nBcompMax));
+	  curvatures.push_back(*curvatures_cpu.Get(tId,bId+(curID)*nBcompMax));
+	  impactParameters.push_back(*impactparameters_cpu.Get(tId,bId+(curID)*nBcompMax));
 	}
 	
 	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
