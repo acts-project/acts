@@ -24,12 +24,19 @@ class TrackDensity {
   /// @brief Struct to store information for a single track
   struct TrackEntry {
     TrackEntry() = default;
-    TrackEntry(double c0in, double c1in, double c2in, double zMin, double zMax)
-        : c0(c0in), c1(c1in), c2(c2in), lowerBound(zMin), upperBound(zMax) {}
+    TrackEntry(double z, double c0in, double c1in, double c2in, double zMin,
+               double zMax)
+        : z(z),
+          c0(c0in),
+          c1(c1in),
+          c2(c2in),
+          lowerBound(zMin),
+          upperBound(zMax) {}
 
     // Dummy constructor for binary search
-    TrackEntry(double z) : lowerBound(z), upperBound(z) {}
+    TrackEntry(double z) : z(z), lowerBound(z), upperBound(z) {}
 
+    double z = 0;
     // Cached information for a single track
     // z-independent term in exponent
     double c0 = 0;
@@ -40,35 +47,6 @@ class TrackDensity {
     double lowerBound = 0;
     double upperBound = 0;
   };
-
-  /// @brief Functor to compare two z0 values
-  struct predPerigee {
-    bool operator()(const BoundParameters& left,
-                    const BoundParameters& right) const {
-      return left.parameters()[ParID_t::eLOC_Z0] <
-             right.parameters()[ParID_t::eLOC_Z0];
-    }
-  };
-
-  /// @brief Functor to compare two TrackEntry values based
-  /// on their lower limits (low to high)
-  struct predEntryByMin {
-    bool operator()(const TrackEntry& left, const TrackEntry& right) const {
-      return left.lowerBound < right.lowerBound;
-    }
-  };
-
-  /// @brief Functor to compare two TrackEntry values based on
-  /// their upper limits (low to high)
-  struct predEntryByMax {
-    bool operator()(const TrackEntry& left, const TrackEntry& right) const {
-      return left.upperBound < right.upperBound;
-    }
-  };
-
-  using TrackMap = std::map<BoundParameters, TrackEntry, predPerigee>;
-  using LowerMap = std::map<TrackEntry, BoundParameters, predEntryByMax>;
-  using UpperMap = std::map<TrackEntry, BoundParameters, predEntryByMin>;
 
   /// @brief The Config struct
   struct Config {
@@ -82,9 +60,7 @@ class TrackDensity {
     double maxZRange = 0;
 
     // Maps to cache track information
-    std::set<BoundParameters, predPerigee> trackSet;
-    LowerMap lowerMap;
-    UpperMap upperMap;
+    std::vector<TrackEntry> trackMap;
   };
 
   /// Default constructor
@@ -149,6 +125,27 @@ class TrackDensity {
                       double& secondDerivative) const;
 
  private:
+  // helper to handle the evaluation of the parametrised track density
+  class TrackDensityEval {
+   public:
+    // initialise with the z coordinate at which the density is to be evaluated
+    TrackDensityEval(double z_coordinate) : m_z(z_coordinate) {}
+    // add the contribution for one track to the density.
+    // will internally check if the z coordinate is within
+    // the bounds of the track
+    void addTrack(const TrackEntry& entry);
+    // retrieve the density and its derivatives
+    inline double density() const { return m_density; }
+    inline double firstDerivative() const { return m_firstDerivative; }
+    inline double secondDerivative() const { return m_secondDerivative; }
+
+   private:
+    double m_z;
+    double m_density{0};
+    double m_firstDerivative{0};
+    double m_secondDerivative{0};
+  };
+
   /// The configuration
   Config m_cfg;
 
