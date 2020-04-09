@@ -25,7 +25,7 @@ void Acts::AccumulatedVolumeMaterial::accumulate(
   m_totalAr += mat.material().Ar();
   m_totalZ += mat.material().Z();
   m_totalRho += mat.material().massDensity();
-  if (m_thickness == 1) {
+  if (m_materialEntries == 0) {
     m_thickness = mat.thickness();
   } else {
     m_thickness += mat.thickness();
