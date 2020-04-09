@@ -21,6 +21,7 @@ class GaussianTrackDensity {
  public:
   /// @brief The State struct
   struct State {
+    State(unsigned int nTracks) : trackDensityState(nTracks) {}
     // The track density
     // Defaulted to Gaussian shaped density function
     TrackDensity trackDensity;
