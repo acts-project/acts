@@ -43,11 +43,12 @@ struct PropagatorState {
   /// This is a simple cache struct to mimic a Stepper
   struct Stepper {
     // comply with concept
-    using Jacobian = BoundMatrix;
-    using Covariance = BoundSymMatrix;
-    using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-    using CurvilinearState =
-        std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+    using Jacobian =
+    std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
+  using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+  using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+  using FreeState = std::tuple<FreeTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
     using BField = int;
 
     template <typename, typename>
@@ -147,7 +148,8 @@ struct PropagatorState {
                           ) const {
       BoundTrackParameters parameters(surface.getSharedPtr(), tgContext,
                                       state.pos4, state.dir, state.p, state.q);
-      BoundState bState{std::move(parameters), Jacobian::Identity(),
+      Jacobian jacobian = BoundMatrix(BoundMatrix::Identity());
+      BoundState bState{std::move(parameters), jacobian,
                         state.pathAccumulated};
       return bState;
     }
@@ -157,9 +159,25 @@ struct PropagatorState {
       CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
                                             state.q);
       // Create the bound state
-      CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
-                                 state.pathAccumulated};
-      return curvState;
+      Jacobian jacobian = BoundMatrix(BoundMatrix::Identity());
+
+      return std::make_tuple(std::move(parameters), jacobian,
+                         state.pathAccumulated);
+    }
+    
+    FreeState freeState(State& state) const {
+  // Create the free parameters
+  FreeVector pars;
+  pars.template head<3>() = state.pos;
+  pars(3) = state.t;
+  pars.template segment<3>(4) = state.dir;
+  pars(7) = (state.q == 0. ? 1. : state.q) / state.p;
+  FreeParameters parameters(std::nullopt, pars);
+
+  Jacobian jacobian = FreeMatrix(FreeMatrix::Identity());
+  
+  return std::make_tuple(std::move(parameters), jacobian,
+                         state.pathAccumulated);
     }
 
     void update(State& /*state*/, const FreeVector& /*pars*/,
