@@ -60,40 +60,22 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
                   std::array<double, 3> gridAxis2,
                   std::array<double, 3> gridAxis3);
 
-/// @brief Searcher for closest point in 2D cartesian coordinate
+//
+/// @brief Searcher for closest point in 2D coordinate
 ///
 /// @param [in] matPos Position of the material
 /// @param [in] grid Grid that is used for the look-up
 ///
 /// @return Local grid point with the closest distance to @p matPos
-Grid2D::index_t mapMaterialCartesian2D(const Acts::Vector3D& matPos,
-                                       const Grid3D& grid);
+Grid2D::index_t mapMaterial2D(const Acts::Vector3D& matPos, const Grid2D& grid);
 
-/// @brief Searcher for closest point in 3D cartesian coordinate
+/// @brief Searcher for closest point in 3D coordinate
 ///
 /// @param [in] matPos Position of the material
 /// @param [in] grid Grid that is used for the look-up
 ///
 /// @return Local grid point with the closest distance to @p matPos
-Grid3D::index_t mapMaterialCartesian3D(const Acts::Vector3D& matPos,
-                                       const Grid3D& grid);
-/// @brief Searcher for closest point in polar coordinate
-///
-/// @param [in] matPos Position of the material
-/// @param [in] grid Grid that is used for the look-up
-///
-/// @return Local grid point with the closest distance to @p matPos
-Grid2D::index_t mapMaterialCylinderRPhi(const Acts::Vector3D& matPos,
-                                        const Grid3D& grid);
-
-/// @brief Searcher for closest point in cylindrical coordinate
-///
-/// @param [in] matPos Position of the material
-/// @param [in] grid Grid that is used for the look-up
-///
-/// @return Local grid point with the closest distance to @p matPos
-Grid3D::index_t mapMaterialCylinder3D(const Acts::Vector3D& matPos,
-                                      const Grid3D& grid);
+Grid3D::index_t mapMaterial3D(const Acts::Vector3D& matPos, const Grid3D& grid);
 
 /// @brief Create a 3DGrid using a BinUtility.
 /// Also determine the coresponding global to local transform and grid mapping
@@ -101,26 +83,26 @@ Grid3D::index_t mapMaterialCylinder3D(const Acts::Vector3D& matPos,
 ///
 /// @param [in] BinUtility of the volume to be mapped
 /// @param [in] Global to local transform to be updated.
-/// @param [in] mapping function to be updated.
 ///
 /// @return the 3D grid
 Grid3D createGrid(
     const BinUtility& bins,
-    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal,
-    std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>&
-        mapMaterial);
+    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal);
 
 /// @brief Concatenate a set of material at arbitrary space points on a set of
 /// grid points and produces a grid containing the averaged material values.
 ///
 /// @param [in] grid The material collecting grid
 /// @param [in] mPoints The set of material at the space points
+/// @param [in] transfoGlobalToLocal tranformation from local to local
+/// coordinate
 /// @param [in] matchToGridPoint Function that assigns the space point
 /// of @p mPoints to the grid points by its local index
 ///
 /// @return The average material grid decomposed into classification numbers
 MaterialGrid2D mapMaterialPoints(
     Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal,
     const std::function<Grid2D::index_t(const Acts::Vector3D&, const Grid2D&)>&
         matchToGridPoint);
 
@@ -129,12 +111,15 @@ MaterialGrid2D mapMaterialPoints(
 ///
 /// @param [in] grid The material collecting grid
 /// @param [in] mPoints The set of material at the space points
+/// @param [in] transfoGlobalToLocal tranformation from local to local
+/// coordinate
 /// @param [in] matchToGridPoint Function that assigns the space point
 /// of @p mPoints to the grid points by its local index
 ///
 /// @return The average material grid decomposed into classification numbers
 MaterialGrid3D mapMaterialPoints(
     Grid3D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal,
     const std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>&
         matchToGridPoint);
 
