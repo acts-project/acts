@@ -33,7 +33,10 @@ namespace Acts {
   m_config.minHelixDiameter2 =
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
-      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);    
+      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+
+  t_metric = std::make_tuple(0,0,0,0);
+  
   }
 
   
@@ -41,18 +44,19 @@ namespace Acts {
   template< typename T, typename sp_range_t>
   typename std::enable_if< std::is_same<T, Acts::CPU>::value, std::vector<Seed<external_spacepoint_t> > >::type
   Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const{
   std::vector<Seed<external_spacepoint_t>> outputVec;
-
-  int i_m=0;
+  auto start_wall = std::chrono::system_clock::now();
+  
   for (auto spM : middleSPs) {    
-    i_m++;
+
+    auto start_DS = std::chrono::system_clock::now();
     
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
     float varianceZM = spM->varianceZ();
-
+    
     // Doublet search    
     auto compatBottomSP =
       SeedfinderCpuFunctions<external_spacepoint_t,
@@ -72,9 +76,13 @@ namespace Acts {
       continue;
     }
 
-    //std::cout << i_m << "  " << compatBottomSP.size() << "  " << compatTopSP.size() << std::endl;
+    auto end_DS = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapse_DS = end_DS-start_DS;
+    std::get<0>(t_metric) += elapse_DS.count();
     
     // contains parameters required to calculate circle with linear equation
+
+    auto start_TC = std::chrono::system_clock::now();
     
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -84,9 +92,23 @@ namespace Acts {
     SeedfinderCpuFunctions<external_spacepoint_t,sp_range_t>::transformCoordinates(compatBottomSP, *spM, true, linCircleBottom);
     SeedfinderCpuFunctions<external_spacepoint_t,sp_range_t>::transformCoordinates(compatTopSP, *spM, false, linCircleTop);
 
+    auto end_TC = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapse_TC = end_TC-start_TC;
+    std::get<1>(t_metric) += elapse_TC.count();
+
+    auto start_TS = std::chrono::system_clock::now();
+    
     auto seedsPerSpM = SeedfinderCpuFunctions<external_spacepoint_t,sp_range_t>::searchTriplet(*spM, compatBottomSP, compatTopSP, linCircleBottom, linCircleTop, m_config);
-    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);   
+    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
+
+    auto end_TS = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapse_TS = end_TS-start_TS;
+    std::get<2>(t_metric) += (elapse_TS).count();
   }  
+
+  auto end_wall = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapse_wall = end_wall-start_wall;
+  std::get<3>(t_metric) += elapse_wall.count();
   
   return outputVec;
   }
@@ -98,7 +120,7 @@ namespace Acts {
   template< typename T, typename sp_range_t>
   typename std::enable_if< std::is_same<T, Acts::CUDA>::value, std::vector<Seed<external_spacepoint_t> > >::type
   Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const{
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   CudaScalar<unsigned char> true_cuda(new unsigned char(true));  
@@ -117,7 +139,9 @@ namespace Acts {
   /*----------------------------------
      Algorithm 0. Matrix Flattening 
   ----------------------------------*/
-
+  auto start_wall = std::chrono::system_clock::now();
+  auto start_DS = std::chrono::system_clock::now();
+  
   // Get Size of spacepoints
   int nMiddle = 0;
   int nBottom = 0;
@@ -229,9 +253,15 @@ namespace Acts {
   }
   CpuMatrix<unsigned char>  isCompatTopMat_cpu(nTop, nMiddle, &isCompatTopMat_cuda);
 
+  auto end_DS = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapse_DS = end_DS-start_DS;
+  std::get<0>(t_metric) += elapse_DS.count();
+  
   /* -----------------------------------------
      Algorithm 2. Transform Coordinates (TC)
   -------------------------------------------*/
+
+  auto start_TC = std::chrono::system_clock::now();
   
   std::vector< std::tuple<int, std::vector< int >, std::vector< int > > > mCompIndex;
 
@@ -351,6 +381,12 @@ namespace Acts {
   CpuMatrix<float> circBcompMat_cpu(nBcompMax, mCompIndex.size()*6);
   circBcompMat_cpu.CopyD2H(circBcompMat_cuda.Get(0,0), circBcompMat_cuda.GetSize(), 0);  
 
+  auto end_TC = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapse_TC = end_TC-start_TC;
+  std::get<1>(t_metric) += elapse_TC.count();
+
+  auto start_TS = std::chrono::system_clock::now();  
+  
   std::vector<int> offsetVec(m_config.offsetVecSize);
   std::iota (std::begin(offsetVec), std::end(offsetVec), 0); // Fill with 0, 1, ..., 99.
   for (auto& el: offsetVec) el = el*MAX_BLOCK_SIZE;
@@ -364,11 +400,11 @@ namespace Acts {
   CudaMatrix<float> curvatures_cuda(nTopPassLimit, nBcompMax*nMcomp);       
   CudaMatrix<float> impactparameters_cuda(nTopPassLimit, nBcompMax*nMcomp);
 
-  CpuMatrix<int>    nTopPass_cpu(nBcompMax, nMcomp);
-  CpuMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax*nMcomp); 
-  CpuMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax*nMcomp);
-  CpuMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax*nMcomp);
-
+  CpuMatrix<int>    nTopPass_cpu(nBcompMax, nMcomp, true);
+  CpuMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax*nMcomp, true); 
+  CpuMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax*nMcomp, true);
+  CpuMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax*nMcomp, true);
+  
   cudaStream_t cuStream;
   cudaStreamCreate(&cuStream);
    
@@ -504,6 +540,14 @@ namespace Acts {
       m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);      
     }        
   }  
+
+  auto end_TS = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapse_TS = end_TS-start_TS;
+  std::get<2>(t_metric) += elapse_TS.count();
+
+  auto end_wall = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapse_wall = end_wall-start_wall;
+  std::get<3>(t_metric) += elapse_wall.count();
   
   return outputVec;  
   }

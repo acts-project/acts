@@ -16,19 +16,36 @@ class CpuMatrix{
 public:
 
   CpuMatrix() = default;
-  CpuMatrix(size_t nRows, size_t nCols){
+  CpuMatrix(size_t nRows, size_t nCols, bool pinned=0){
     SetSize(nRows,nCols);
-    cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
+    fPinned = pinned;
+    if (pinned == 0){
+      fHostPtr = new Var_t[fSize];
+    }
+    else if (pinned == 1){
+      cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
+    }
   }
 
-  CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<Var_t>* cuMat){
+  CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<Var_t>* cuMat, bool pinned=0){
     SetSize(nRows,nCols);
-    cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
+    fPinned = pinned;
+    if (pinned == 0){
+      fHostPtr = new Var_t[fSize];
+    }
+    else if (pinned == 1){
+      cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
+    }
     cudaMemcpy(fHostPtr, cuMat->Get(0,0), fSize*sizeof(Var_t), cudaMemcpyDeviceToHost);   
   }
   
   ~CpuMatrix(){
-    cudaFreeHost(fHostPtr);
+    if (!fPinned){
+      delete fHostPtr;
+    }
+    else if (fPinned){
+      cudaFreeHost(fHostPtr);
+    }
   }
 
   void SetSize(size_t row, size_t col){
@@ -83,6 +100,7 @@ private:
   size_t fNCols;
   size_t fNRows;
   size_t fSize;
+  bool   fPinned;
 };
   
 }

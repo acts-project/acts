@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <iomanip>
 
 #include <boost/type_erasure/any_cast.hpp>
 
@@ -206,7 +207,6 @@ int main(int argc, char** argv) {
   // CPU
   group_count=0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  auto start_cpu = std::chrono::system_clock::now();
   auto groupIt = spGroup.begin();
 
   for (int i_s=0; i_s<skip; i_s++) ++groupIt;
@@ -217,16 +217,12 @@ int main(int argc, char** argv) {
     if (group_count >= nGroupToIterate) break;
   }
   
-  auto end_cpu = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
-  std::cout << "CPU Time: " << elapsec_cpu.count() << std::endl;
-  std::cout << "Number of regions: " << seedVector_cpu.size() << std::endl;
+  auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
   
   // CUDA
   //cudaProfilerStart();
   group_count=0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
-  auto start_cuda = std::chrono::system_clock::now();
   groupIt = spGroup.begin();
 
   for (int i_s=0; i_s<skip; i_s++) ++groupIt;
@@ -235,13 +231,26 @@ int main(int argc, char** argv) {
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
     if (group_count >= nGroupToIterate) break;
-  }
-  
-  auto end_cuda = std::chrono::system_clock::now();  
-  std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
-  std::cout << "CUDA Time: " << elapsec_cuda.count() << std::endl;
-  std::cout << "Number of regions: " << seedVector_cpu.size() << std::endl;
+  } 
 
+  auto timeMetric_cuda = seedfinder_cuda.getTimeMetric();
+
+
+  std::cout << "------------Time Metric-------------" << std::endl;
+  std::cout << "               CPU        CUDA  " << std::endl;
+  std::cout << "DS time:   "
+	    << std::setw(10) << std::get<0>(timeMetric_cpu)  << "  "
+	    << std::setw(10) << std::get<0>(timeMetric_cuda) << std::endl;
+  std::cout << "TC time:   "
+	    << std::setw(10) << std::setw(10) << std::get<1>(timeMetric_cpu) << "  "
+	    << std::setw(10) << std::get<1>(timeMetric_cuda) << std::endl;
+  std::cout << "TS time:   "
+	    << std::setw(10) << std::get<2>(timeMetric_cpu) << "  "
+	    << std::setw(10) << std::get<2>(timeMetric_cuda) << std::endl;
+  std::cout << "Wall time: "
+	    << std::setw(10) << std::get<3>(timeMetric_cpu) << "  "
+	    << std::setw(10) << std::get<3>(timeMetric_cuda) << std::endl;
+  
   //cudaProfilerStop();
  
   int nSeed_cpu = 0;

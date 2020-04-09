@@ -72,11 +72,14 @@ class Seedfinder {
   typename std::enable_if< std::is_same<T, Acts::CUDA>::value, std::vector<Seed<external_spacepoint_t> > >::type
   createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
+  std::tuple< double, double, double, double > getTimeMetric() { return t_metric; }
+
 #endif
     
  private:
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  mutable std::tuple< double, double, double, double > t_metric; // doublet search, transform coordinate, triplet search, wall time
 };
 
 }  // namespace Acts
