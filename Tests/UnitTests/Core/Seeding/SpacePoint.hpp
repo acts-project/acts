@@ -24,9 +24,9 @@ struct SpacePoint {
 
 // Added by Beomki Yeo for CPU/CUDA validation
 bool operator==(SpacePoint a, SpacePoint b){
-  if (fabs(a.m_x/b.m_x-1) < 1e-9 &&
-      fabs(a.m_y/b.m_y-1) < 1e-9 &&
-      fabs(a.m_z/b.m_z-1) < 1e-9 &&
+  if (fabs(a.m_x/b.m_x-1) < 1e-7 &&
+      fabs(a.m_y/b.m_y-1) < 1e-7 &&
+      fabs(a.m_z/b.m_z-1) < 1e-7 &&
       a.surface == b.surface ){
     return true;
   }
