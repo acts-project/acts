@@ -90,7 +90,7 @@ namespace Acts{
 				float* curvatures, float* impactparameters,
 				cudaStream_t* stream
 				){
-cuSearchTriplet<<< grid, block, 
+    cuSearchTriplet<<< grid, block, 
       (sizeof(unsigned char)+2*sizeof(float))*block.x, *stream >>>(
 			       offset,
 			       nSpM,
@@ -397,7 +397,7 @@ __global__ void cuSearchTriplet(const int*   offset,
   __syncthreads();
   if (threadIdx.x == 0 && nTopPass[blockIdx.x] > *nTopPassLimit){
     nTopPass[blockIdx.x] = *nTopPassLimit;
-    printf("%f exceed limits for the number of passed top spacepoints \n", blockIdx.x);
+    printf("%d exceed limits for the number of passed top spacepoints \n", blockIdx.x);
   }
   
 }
