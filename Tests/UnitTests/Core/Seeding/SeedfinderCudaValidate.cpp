@@ -79,9 +79,10 @@ int main(int argc, char** argv) {
   int  nGroupToIterate = 500;
   int  skip = 0;
   int  deviceID = 0;
-    
+  int  nTopLimit = 10;
+  
   int opt;
-  while ((opt = getopt(argc, argv, "hf:n:s:d:q")) != -1) {
+  while ((opt = getopt(argc, argv, "hf:n:s:d:l:q")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;
@@ -94,6 +95,9 @@ int main(int argc, char** argv) {
         break;		
       case 'd':
         deviceID = atoi(optarg);
+        break;	
+      case 'l':
+        nTopLimit = atoi(optarg);
         break;	
       case 'q':
         quiet = true;
@@ -134,14 +138,9 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  auto start_read = std::chrono::system_clock::now();
   std::vector<const SpacePoint*> spVec = readFile(file);
-  auto end_read = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_read = end_read - start_read;
 
-  std::cout << "read " << spVec.size() << " SP from file " << file << " in "
-            << elapsed_read.count() << "s" << std::endl;
-
+  std::cout << "read " << spVec.size() << " SP from file " << file  << std::endl;  
   std::cout << "Number of groups to iterate: " << nGroupToIterate << std::endl;
   
   /// For CPU seed finder
@@ -165,6 +164,8 @@ int main(int argc, char** argv) {
   config.beamPos = {-.5, -.5};
   config.impactMax = 10.;
 
+  config.nTopPassLimit = nTopLimit;
+  
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
@@ -200,14 +201,21 @@ int main(int argc, char** argv) {
   auto end_pre = std::chrono::system_clock::now();
   
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
-  std::cout << "Preprocess Time: " << elapsec_pre.count() << std::endl;
+  double preprocessTime=elapsec_pre.count();
+  std::cout << "Preprocess Time: " << preprocessTime << std::endl;
+
+  
+  //--------------------------------------------------------------------//
+  //                        Begin Seed finding                          //
+  //--------------------------------------------------------------------//
   
   int group_count;
+  auto groupIt = spGroup.begin();
   
-  // CPU
+  //----------- CPU ----------//
   group_count=0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  auto groupIt = spGroup.begin();
+  groupIt = spGroup.begin();
 
   for (int i_s=0; i_s<skip; i_s++) ++groupIt;
   for (; !(groupIt == spGroup.end()); ++groupIt) {
@@ -215,11 +223,10 @@ int main(int argc, char** argv) {
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
     if (group_count >= nGroupToIterate) break;
-  }
-  
+  }  
   auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
-  
-  // CUDA
+
+  //----------- CUDA ----------//
   //cudaProfilerStart();
   group_count=0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
@@ -232,27 +239,35 @@ int main(int argc, char** argv) {
     group_count++;
     if (group_count >= nGroupToIterate) break;
   } 
-
-  auto timeMetric_cuda = seedfinder_cuda.getTimeMetric();
-
-
-  std::cout << "------------Time Metric-------------" << std::endl;
-  std::cout << "               CPU        CUDA  " << std::endl;
-  std::cout << "DS time:   "
-	    << std::setw(10) << std::get<0>(timeMetric_cpu)  << "  "
-	    << std::setw(10) << std::get<0>(timeMetric_cuda) << std::endl;
-  std::cout << "TC time:   "
-	    << std::setw(10) << std::setw(10) << std::get<1>(timeMetric_cpu) << "  "
-	    << std::setw(10) << std::get<1>(timeMetric_cuda) << std::endl;
-  std::cout << "TS time:   "
-	    << std::setw(10) << std::get<2>(timeMetric_cpu) << "  "
-	    << std::setw(10) << std::get<2>(timeMetric_cuda) << std::endl;
-  std::cout << "Wall time: "
-	    << std::setw(10) << std::get<3>(timeMetric_cpu) << "  "
-	    << std::setw(10) << std::get<3>(timeMetric_cuda) << std::endl;
-  
   //cudaProfilerStop();
- 
+  auto timeMetric_cuda = seedfinder_cuda.getTimeMetric();
+  
+  std::cout << "------------Time Metric-------------" << std::endl;
+  std::cout << "              CPU       CUDA      Speedup " << std::endl;
+  std::cout << "DS time:   "
+	    << std::setw(10) << std::left << std::get<0>(timeMetric_cpu)  << "  "
+	    << std::setw(10) << std::get<0>(timeMetric_cuda) << "  "
+	    << std::setw(10) << std::get<0>(timeMetric_cpu)/std::get<0>(timeMetric_cuda) << std::endl;  
+  std::cout << "TC time:   "
+	    << std::setw(10) << std::left << std::get<1>(timeMetric_cpu)  << "  "
+	    << std::setw(10) << std::get<1>(timeMetric_cuda) << "  "
+    	    << std::setw(10) << std::get<1>(timeMetric_cpu)/std::get<1>(timeMetric_cuda) << std::endl;
+  std::cout << "TS time:   "
+	    << std::setw(10) << std::left << std::get<2>(timeMetric_cpu)  << "  "
+	    << std::setw(10) << std::get<2>(timeMetric_cuda) << "  "
+	    << std::setw(10) << std::get<2>(timeMetric_cpu)/std::get<2>(timeMetric_cuda) << std::endl;
+  std::cout << "SF time:   "
+	    << std::setw(10) << std::left << std::get<3>(timeMetric_cpu)  << "  "
+	    << std::setw(10) << std::get<3>(timeMetric_cuda) << "  "
+	    << std::setw(10) << std::get<3>(timeMetric_cpu)/std::get<3>(timeMetric_cuda) << std::endl;
+
+  double wallTime_cpu = std::get<3>(timeMetric_cpu)+preprocessTime;
+  double wallTime_cuda = std::get<3>(timeMetric_cuda)+preprocessTime;
+  std::cout << "Wall time: " 
+	    << std::setw(10) << wallTime_cpu  << "  "
+	    << std::setw(10) << wallTime_cuda << "  "
+	    << std::setw(10) << wallTime_cpu/wallTime_cuda << std::endl;
+							      
   int nSeed_cpu = 0;
   for (auto& outVec : seedVector_cpu) {
     nSeed_cpu += outVec.size();
@@ -345,7 +360,7 @@ int main(int argc, char** argv) {
       }
     }
   }
-
+  
  
   return 0;
 }
