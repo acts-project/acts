@@ -126,21 +126,22 @@ class TrackDensity {
                       double& secondDerivative) const;
 
  private:
-  // helper to handle the evaluation of the parametrised track density
-  class TrackDensityEval {
+  // Helper class to evaluate and store track density at specific position
+  class TrackDensityStore {
    public:
-    // initialise with the z coordinate at which the density is to be evaluated
-    TrackDensityEval(double z_coordinate) : m_z(z_coordinate) {}
-    // add the contribution for one track to the density.
-    // will internally check if the z coordinate is within
-    // the bounds of the track
+    // Initialise at the z coordinate at which the density is to be evaluated
+    TrackDensityStore(double z_coordinate) : m_z(z_coordinate) {}
+
+    // Add the contribution of a single track to the density
     void addTrackToDensity(const TrackEntry& entry);
-    // retrieve the density and its derivatives
+
+    // Retrieve the density and its derivatives
     inline double density() const { return m_density; }
     inline double firstDerivative() const { return m_firstDerivative; }
     inline double secondDerivative() const { return m_secondDerivative; }
 
    private:
+    // Store density and derivatives for z position m_z
     double m_z;
     double m_density{0};
     double m_firstDerivative{0};
