@@ -18,6 +18,7 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${ACTS_CXX
 
 # assign CUDA flags
 if(ACTS_BUILD_CUDA_FEATURES)
+  set(CMAKE_CUDA_FLAGS "")
   string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_60,code=sm_60")
   string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
   string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_70,code=sm_70")
