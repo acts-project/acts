@@ -1,3 +1,5 @@
+### CXX
+
 # Acts compiler flags
 set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wunused-local-typedefs")
 set(ACTS_CXX_FLAGS_DEBUG "--coverage")
@@ -16,18 +18,23 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} ${ACTS_CXX_FLAGS_M
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${ACTS_CXX_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${ACTS_CXX_FLAGS_RELWITHDEBINFO}")
 
-# assign CUDA flags
-if(ACTS_BUILD_CUDA_FEATURES)
-  set(CMAKE_CUDA_FLAGS "")
-  string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_60,code=sm_60")
-  string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
-  string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_70,code=sm_70")
-  string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_75,code=sm_75")
-endif()
-
 # assign to global linker flags
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${ACTS_EXE_LINKER_FLAGS_DEBUG}")
 set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ACTS_SHARED_LINKER_FLAGS_DEBUG}")
 
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
+
+### CUDA
+
+if(ACTS_BUILD_CUDA_FEATURES)
+  # nvcc compiler flags
+  set(ACTS_CUDA_FLAGS "")
+  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_60,code=sm_60")
+  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
+  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_70,code=sm_70")
+  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_75,code=sm_75")
+
+  # assign to global CUDA flags
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${ACTS_CUDA_FLAGS}")
+endif()
