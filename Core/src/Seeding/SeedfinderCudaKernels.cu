@@ -55,7 +55,7 @@ namespace Acts{
 				     deltaRMin, deltaRMax, cotThetaMax, 
 				     collisionRegionMin, collisionRegionMax,
 				     isCompatible );
-  gpuErrChk( cudaGetLastError() );
+  cudaErrChk( cudaGetLastError() );
   }
 
   void SeedfinderCudaKernels::transformCoordinates(
@@ -71,7 +71,7 @@ namespace Acts{
 					      nSpB,
 					      spBmat,
 					      circBmat);
-    gpuErrChk( cudaGetLastError() );  
+    cudaErrChk( cudaGetLastError() );  
   }
 
   void SeedfinderCudaKernels::searchTriplet(
@@ -104,7 +104,7 @@ namespace Acts{
 			       nTopPass, tIndex,
 			       curvatures, impactparameters
 			       );
-  gpuErrChk( cudaGetLastError() );
+  cudaErrChk( cudaGetLastError() );
   }
   
 }

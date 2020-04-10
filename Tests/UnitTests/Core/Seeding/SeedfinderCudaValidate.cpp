@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
   }
 
   std::string devName;
-  SetDevice(deviceID,devName);
+  cudaErrChk (cudaSetDevice(deviceID) );
   
   std::ifstream f(file);
   if (!f.good()) {
@@ -172,7 +172,9 @@ int main(int argc, char** argv) {
 
   // cuda
   cudaDeviceProp prop;
-  cudaGetDeviceProperties(&prop, deviceID);
+  cudaErrChk (cudaGetDeviceProperties(&prop, deviceID) );
+  printf("\n GPU Device %d: \"%s\" with compute capability %d.%d\n\n", deviceID, prop.name, prop.major, prop.minor);
+  
   config.maxBlockSize = prop.maxThreadsPerBlock;
   config.nTopPassLimit = nTopLimit;
   

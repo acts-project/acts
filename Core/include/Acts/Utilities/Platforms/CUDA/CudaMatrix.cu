@@ -13,30 +13,30 @@ public:
   CudaMatrix()=default;
   CudaMatrix(size_t nRows, size_t nCols){
     SetSize(nRows,nCols);
-    cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t));
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t)) );
   }
 
   CudaMatrix(size_t nRows, size_t nCols, Var_t* mat){
     SetSize(nRows,nCols);
-    cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t));
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t)) );
     CopyH2D(mat, fSize, 0);
   }
   
   CudaMatrix(size_t nRows, size_t nCols, CpuMatrix<Var_t>* mat){
     SetSize(nRows,nCols);
-    cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t));
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t)) );
     CopyH2D(mat->Get(0,0), fSize, 0);
   }
 
   CudaMatrix(size_t nRows, size_t nCols, Var_t* mat, size_t len, size_t offset){
     SetSize(nRows,nCols);
-    cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t));
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t)) );
     CopyH2D(mat, len, offset);
   }
   
   CudaMatrix(size_t nRows, size_t nCols, CpuMatrix<Var_t>* mat, size_t len, size_t offset){
     SetSize(nRows,nCols);
-    cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t));
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, fNRows*fNCols*sizeof(Var_t)) );
     CopyH2D(mat->Get(0,0),len,offset);
   }
   
@@ -60,11 +60,11 @@ public:
   }
 
   void CopyH2D(Var_t* matrix, size_t len, size_t offset=0){
-    cudaMemcpy(fDevPtr+offset, matrix, len*sizeof(Var_t), cudaMemcpyHostToDevice);
+    cudaErrChk( cudaMemcpy(fDevPtr+offset, matrix, len*sizeof(Var_t), cudaMemcpyHostToDevice) );
   }
 
   void CopyH2D(const Var_t* matrix, size_t len, size_t offset=0){
-    cudaMemcpy(fDevPtr+offset, matrix, len*sizeof(Var_t), cudaMemcpyHostToDevice);
+    cudaErrChk( cudaMemcpy(fDevPtr+offset, matrix, len*sizeof(Var_t), cudaMemcpyHostToDevice) );
   }
 
 private:

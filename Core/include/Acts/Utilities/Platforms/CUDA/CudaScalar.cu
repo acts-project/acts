@@ -4,6 +4,7 @@
 #include <memory>
 #include "cuda.h"
 #include "cuda_runtime.h"
+#include "CudaUtils.cu"
 
 namespace Acts{
 
@@ -12,21 +13,21 @@ class CudaScalar{
 
 public:
   CudaScalar(){
-    cudaMalloc((Var_t**)&fDevPtr, sizeof(Var_t));  
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, sizeof(Var_t)) );
   }
 
   CudaScalar(Var_t* scalar){
-    cudaMalloc((Var_t**)&fDevPtr, sizeof(Var_t));
-    cudaMemcpy(fDevPtr, scalar, sizeof(Var_t), cudaMemcpyHostToDevice);
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, sizeof(Var_t)) );
+    cudaErrChk( cudaMemcpy(fDevPtr, scalar, sizeof(Var_t), cudaMemcpyHostToDevice) );
   }
 
   CudaScalar(const Var_t* scalar){
-    cudaMalloc((Var_t**)&fDevPtr, sizeof(Var_t));
-    cudaMemcpy(fDevPtr, scalar, sizeof(Var_t), cudaMemcpyHostToDevice);
+    cudaErrChk( cudaMalloc((Var_t**)&fDevPtr, sizeof(Var_t)) );
+    cudaErrChk( cudaMemcpy(fDevPtr, scalar, sizeof(Var_t), cudaMemcpyHostToDevice) );
   }
   
   ~CudaScalar(){ 
-    cudaFree(fDevPtr); 
+    cudaErrChk( cudaFree(fDevPtr) );
   }
 
   Var_t* Get() { return fDevPtr; }
