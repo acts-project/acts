@@ -2,8 +2,7 @@
 // Developer Note (Beomki Yeo):
 // Including PlatformDef.h makes an error...
 
-#include "Acts/Utilities/Platforms/CUDA/CudaVector.cu"
-#include "Acts/Utilities/Platforms/CUDA/CudaUtils.cu"
+#include "Acts/Utilities/Platforms/PlatformDef.h"
 #include "Acts/Utilities/Definitions.hpp"
 #include <assert.h>
 #include <boost/test/unit_test.hpp>
@@ -72,7 +71,7 @@ BOOST_AUTO_TEST_CASE( CUDAOBJ_TEST ){
   CudaVector<Eigen::Matrix<AFloat, vecDim, 1>> oMat_MMA_cuda(bufSize);
  
   MatrixLoadStore_MMA<AFloat, vecDim, 1><<< gridSize, blockSize >>>(iMat_MMA_cuda.Get(),oMat_MMA_cuda.Get());
-  gpuErrChk ( cudaGetLastError() );
+  cudaErrChk ( cudaGetLastError() );
     
   //Eigen::Matrix<AFloat, vecDim, 1> oMat_MMA_cpu = *(oMat_MMA_cuda.GetCPUArray(bufSize));
   Eigen::Matrix<AFloat, vecDim, 1>* oMat_MMA_cpu = oMat_MMA_cuda.GetHost();
@@ -95,7 +94,7 @@ BOOST_AUTO_TEST_CASE( CUDAOBJ_TEST ){
 
   MatrixLoadStore_AMA<AFloat, vecDim, nVec><<< gridSize, blockSize >>>(iMat_AMA_cuda.Get(),oMat_AMA_cuda.Get());
 
-  gpuErrChk ( cudaGetLastError() );
+  cudaErrChk ( cudaGetLastError() );
     
   //CPUArray<Eigen::Matrix<AFloat,vecDim,nVec>> oMat_AMA_cpu = *(oMat_AMA_cuda.GetCPUArray(bufSize));
   Eigen::Matrix<AFloat,vecDim,nVec>* oMat_AMA_cpu = oMat_AMA_cuda.GetHost();
