@@ -30,7 +30,7 @@
 
 namespace Acts{
 
-  template <typename external_spacepoint_t, typename platform_t>
+  template <typename external_spacepoint_t, typename platform_t = Acts::CPU >
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
