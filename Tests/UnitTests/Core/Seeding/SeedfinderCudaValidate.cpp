@@ -148,8 +148,8 @@ int main(int argc, char** argv) {
   std::vector<const SpacePoint*> spVec = readFile(file);
 
   std::cout << "read " << spVec.size() << " SP from file " << file  << std::endl;  
-  
-  /// For CPU seed finder
+
+  //Set seed finder configuration
   Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160.;
@@ -170,6 +170,10 @@ int main(int argc, char** argv) {
   config.beamPos = {-.5, -.5};
   config.impactMax = 10.;
 
+  // cuda
+  cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, deviceID);
+  config.maxBlockSize = prop.maxThreadsPerBlock;
   config.nTopPassLimit = nTopLimit;
   
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
@@ -204,8 +208,7 @@ int main(int argc, char** argv) {
                                                  bottomBinFinder, topBinFinder,
                                                  std::move(grid), config);
 
-  auto end_pre = std::chrono::system_clock::now();
-  
+  auto end_pre = std::chrono::system_clock::now();  
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
   double preprocessTime=elapsec_pre.count();
   std::cout << "Preprocess Time: " << preprocessTime << std::endl;

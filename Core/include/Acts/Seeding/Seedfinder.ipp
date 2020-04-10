@@ -223,7 +223,7 @@ namespace Acts {
   int  offsetDS;
   offsetDS=0;
   while(offsetDS<nBottom){
-    DS_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nBottom-offsetDS), 1,1);
+    DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nBottom-offsetDS), 1,1);
     SeedfinderCudaKernels::searchDoublet( DS_GridSize, DS_BlockSize,
 					  true_cuda.Get(),
 					  rM_cuda.Get(), zM_cuda.Get(),
@@ -240,7 +240,7 @@ namespace Acts {
   CudaMatrix<bool> isCompatTopMat_cuda(nTop, nMiddle);
   offsetDS=0;
   while(offsetDS<nTop){
-    DS_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nTop-offsetDS), 1,1);    
+    DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nTop-offsetDS), 1,1);    
     SeedfinderCudaKernels::searchDoublet( DS_GridSize, DS_BlockSize,
 					  false_cuda.Get(),
 					  rM_cuda.Get(), zM_cuda.Get(),
@@ -351,7 +351,7 @@ namespace Acts {
   int offsetTC;
   offsetTC=0;
   while(offsetTC<nBcompMax){
-    TC_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nBcompMax-offsetTC),1,1);    
+    TC_BlockSize = dim3(fmin(m_config.maxBlockSize, nBcompMax-offsetTC),1,1);    
     SeedfinderCudaKernels::transformCoordinates(TC_GridSize, TC_BlockSize,
 						true_cuda.Get(),
 						spMcompMat_cuda.Get(0,0),
@@ -364,7 +364,7 @@ namespace Acts {
   // For middle-top 
   offsetTC=0;
   while(offsetTC<nTcompMax){
-    TC_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, nTcompMax-offsetTC),1,1);
+    TC_BlockSize = dim3(fmin(m_config.maxBlockSize, nTcompMax-offsetTC),1,1);
     SeedfinderCudaKernels::transformCoordinates(TC_GridSize, TC_BlockSize,
 						false_cuda.Get(),
 						spMcompMat_cuda.Get(0,0),
@@ -389,7 +389,7 @@ namespace Acts {
   
   std::vector<int> offsetVec(m_config.offsetVecSize);
   std::iota (std::begin(offsetVec), std::end(offsetVec), 0); // Fill with 0, 1, ..., 99.
-  for (auto& el: offsetVec) el = el*MAX_BLOCK_SIZE;
+  for (auto& el: offsetVec) el = el*m_config.maxBlockSize;
   CudaVector<int> offsetVec_cuda(offsetVec.size(),&offsetVec[0]);
     
   const int         nTopPassLimit = m_config.nTopPassLimit;
@@ -438,12 +438,8 @@ namespace Acts {
       dim3 TS_BlockSize;
       
       int i_ts = 0;    
-      while ( offsetVec[i_ts] < tIndex.size() ){
-	
-
-	TS_BlockSize = dim3(fmin(MAX_BLOCK_SIZE, tIndex.size()-offsetVec[i_ts] ),
-			    1,1);
-      	
+      while ( offsetVec[i_ts] < tIndex.size() ){	
+	TS_BlockSize = dim3(fmin(m_config.maxBlockSize, tIndex.size()-offsetVec[i_ts] ), 1,1);      	
 	SeedfinderCudaKernels::searchTriplet(TS_GridSize, TS_BlockSize,
 					     offsetVec_cuda.Get(i_ts),
 					     nMcomp_cuda.Get(),
