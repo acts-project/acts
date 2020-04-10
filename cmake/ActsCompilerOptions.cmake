@@ -28,12 +28,13 @@ set(CMAKE_MACOSX_RPATH 1)
 ### CUDA
 
 if(ACTS_BUILD_CUDA_FEATURES)
-  # nvcc compiler flags
+  # nvcc compiler flags that covers pascal/volta/turing
   set(ACTS_CUDA_FLAGS "")
-  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_60,code=sm_60")
-  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
-  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_70,code=sm_70")
-  string(APPEND ACTS_CUDA_FLAGS " -gencode arch=compute_75,code=sm_75")
+  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -arch=sm_60")
+  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_60,code=sm_60")
+  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_61,code=sm_61")
+  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_70,code=sm_70")
+  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_75,code=sm_75")
 
   # assign to global CUDA flags
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${ACTS_CUDA_FLAGS}")
