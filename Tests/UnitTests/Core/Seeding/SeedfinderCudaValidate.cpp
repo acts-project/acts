@@ -257,25 +257,25 @@ int main(int argc, char** argv) {
   std::cout << std::endl;
   std::cout << "------------------- Time Metric -------------------" << std::endl;
   std::cout << "                CPU          CUDA        Speedup " << std::endl;
-  std::cout << "DS time:     "
+  std::cout << "DS time      "
 	    << std::setw(12) << std::left << std::get<0>(timeMetric_cpu)  << "  "
 	    << std::setw(12) << std::get<0>(timeMetric_cuda) << "  "
 	    << std::setw(12) << std::get<0>(timeMetric_cpu)/std::get<0>(timeMetric_cuda) << std::endl;  
-  std::cout << "TC time:     "
+  std::cout << "TC time      "
 	    << std::setw(12) << std::left << std::get<1>(timeMetric_cpu)  << "  "
 	    << std::setw(12) << std::get<1>(timeMetric_cuda) << "  "
     	    << std::setw(12) << std::get<1>(timeMetric_cpu)/std::get<1>(timeMetric_cuda) << std::endl;
-  std::cout << "TS time:     "
+  std::cout << "TS time      "
 	    << std::setw(12) << std::left << std::get<2>(timeMetric_cpu)  << "  "
 	    << std::setw(12) << std::get<2>(timeMetric_cuda) << "  "
 	    << std::setw(12) << std::get<2>(timeMetric_cpu)/std::get<2>(timeMetric_cuda) << std::endl;
-  std::cout << "SF time:     "
+  std::cout << "SF time      "
 	    << std::setw(12) << std::left << std::get<3>(timeMetric_cpu)  << "  "
 	    << std::setw(12) << std::get<3>(timeMetric_cuda) << "  "
 	    << std::setw(12) << std::get<3>(timeMetric_cpu)/std::get<3>(timeMetric_cuda) << std::endl;
   double wallTime_cpu = std::get<3>(timeMetric_cpu)+preprocessTime;
   double wallTime_cuda = std::get<3>(timeMetric_cuda)+preprocessTime;
-  std::cout << "Wall time:   " 
+  std::cout << "Wall time    " 
 	    << std::setw(12) << wallTime_cpu  << "  "
 	    << std::setw(12) << wallTime_cuda << "  "
 	    << std::setw(12) << wallTime_cpu/wallTime_cuda << std::endl;
