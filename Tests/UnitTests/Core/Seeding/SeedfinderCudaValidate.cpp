@@ -173,11 +173,11 @@ int main(int argc, char** argv) {
   // cuda
   cudaDeviceProp prop;
   cudaErrChk (cudaGetDeviceProperties(&prop, deviceID) );
-  printf("\n GPU Device %d: \"%s\" with compute capability %d.%d\n\n", deviceID, prop.name, prop.major, prop.minor);
-  
+  printf("\n GPU Device %d: \"%s\" with compute capability %d.%d\n\n", deviceID, prop.name, prop.major, prop.minor);  
   config.maxBlockSize = prop.maxThreadsPerBlock;
   config.nTopPassLimit = nTopLimit;
-  
+
+  // binfinder
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
