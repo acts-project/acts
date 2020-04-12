@@ -8,6 +8,7 @@
 
 #include <boost/program_options.hpp>
 #include <iostream>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -59,8 +60,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  auto myLogger = getDefaultLogger("Eigen_Stepper", Acts::Logging::Level(lvl));
-  ACTS_LOCAL_LOGGER(std::move(myLogger));
+  ACTS_LOCAL_LOGGER(
+      getDefaultLogger("Eigen_Stepper", Acts::Logging::Level(lvl)));
 
   // print information about profiling setup
   ACTS_INFO("propagating " << toys << " tracks with pT = " << ptInGeV
