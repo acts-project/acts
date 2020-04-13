@@ -10,6 +10,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # determine project version; sets _acts_version and _acts_commit_hash
 include(ActsRetrieveVersion)
+
 project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # build options
@@ -26,7 +27,7 @@ option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_LEGACY "Build legacy package" OFF)
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
-option(ACTS_BUILD_UNITTESTS "Build unit tests" ON)
+option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_DOC "Build documentation" OFF)
 option(ACTS_BUILD_CUDA_FEATURES "Build cuda-related features" OFF)
@@ -53,7 +54,7 @@ include(TargetSourcesLocal) # needed only until we require CMake 3.13
 
 # required packages
 set(Boost_NO_BOOST_CMAKE ON) # disable new cmake features from Boost 1.70 on
-find_package(Boost 1.70 REQUIRED COMPONENTS program_options unit_test_framework)
+find_package(Boost 1.69 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
 
 # optional packages
