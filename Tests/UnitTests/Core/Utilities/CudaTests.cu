@@ -1,7 +1,3 @@
-
-// Developer Note (Beomki Yeo):
-// Including PlatformDef.h makes an error...
-
 #include "Acts/Utilities/Platforms/PlatformDef.h"
 #include "Acts/Utilities/Definitions.hpp"
 #include <assert.h>
