@@ -18,7 +18,7 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Visualization/ObjHelper.hpp"
+#include "Acts/Visualization/ObjVisualization.hpp"
 
 namespace Acts {
 
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
 
   std::ofstream tStream;
   tStream.open("PolyhedronTriangle.obj");
-  ObjHelper objtH;
+  ObjVisualization objtH;
   triangle.draw(objtH);
   objtH.write(tStream);
   tStream.close();
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
 
   std::ofstream rStream;
   rStream.open("PolyhedronRectangle.obj");
-  ObjHelper objrH;
+  ObjVisualization objrH;
   rectangle.draw(objrH);
   objrH.write(rStream);
   rStream.close();
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
 
   std::ofstream trStream;
   trStream.open("PolyhedronTriangleRectangle.obj");
-  ObjHelper objtrH;
+  ObjVisualization objtrH;
   tr.draw(objtrH);
   objtrH.write(trStream);
   trStream.close();

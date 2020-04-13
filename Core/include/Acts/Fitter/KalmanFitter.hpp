@@ -25,8 +25,8 @@
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -888,7 +888,7 @@ class KalmanFitter {
     calibrator_t m_calibrator;
 
     /// The Surface beeing
-    detail::SurfaceReached targetReached;
+    SurfaceReached targetReached;
   };
 
   template <typename source_link_t, typename parameters_t>

@@ -36,12 +36,12 @@ bool Acts::EllipseBounds::inside(const Vector2D& lposition,
 
   bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
   bool insideInner =
-      (get(eMinR0) <= tol0) || (get(eMinR1) <= tol0) ||
-      (1 < (square(lposition[Acts::eLOC_X] / (get(eMinR0) - tol0)) +
-            square(lposition[Acts::eLOC_Y] / (get(eMinR1) - tol0))));
+      (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
+      (1 < (square(lposition[Acts::eLOC_X] / (get(eInnerRx) - tol0)) +
+            square(lposition[Acts::eLOC_Y] / (get(eOuterRx) - tol0))));
   bool insideOuter =
-      ((square(lposition[Acts::eLOC_X] / (get(eMaxR0) + tol0)) +
-        square(lposition[Acts::eLOC_Y] / (get(eMaxR1) + tol0))) < 1);
+      ((square(lposition[Acts::eLOC_X] / (get(eInnerRy) + tol0)) +
+        square(lposition[Acts::eLOC_Y] / (get(eOuterRy) + tol0))) < 1);
   return (insidePhi && insideInner && insideOuter);
 }
 
@@ -55,7 +55,7 @@ double Acts::EllipseBounds::distanceToBoundary(
     const Vector2D& lposition) const {
   double r = perp(lposition);
   if (r == 0) {
-    return std::min(get(eMinR0), get(eMinR1));
+    return std::min(get(eInnerRx), get(eOuterRx));
   }
 
   double sn = lposition[eLOC_X] / r;
@@ -74,14 +74,14 @@ double Acts::EllipseBounds::distanceToBoundary(
   }
 
   if (sf <= 0.) {
-    double a = cs / get(eMaxR0);
-    double b = sn / get(eMaxR1);
+    double a = cs / get(eInnerRy);
+    double b = sn / get(eOuterRy);
     double sr0 = r - 1. / std::hypot(a, b);
     if (sr0 >= 0.) {
       return sr0;
     }
-    a = cs / get(eMinR0);
-    b = sn / get(eMinR1);
+    a = cs / get(eInnerRx);
+    b = sn / get(eOuterRx);
     double sr1 = 1. / std::hypot(a, b) - r;
     if (sr1 >= 0.) {
       return sr1;
@@ -100,14 +100,14 @@ double Acts::EllipseBounds::distanceToBoundary(
                  : (get(eAveragePhi) - get(eHalfPhiSector));
   sn = sin(fb);
   cs = cos(fb);
-  double a = cs / get(eMaxR0);
-  double b = sn / get(eMaxR1);
+  double a = cs / get(eInnerRy);
+  double b = sn / get(eOuterRy);
   double sr0 = r - 1. / std::hypot(a, b);
   if (sr0 >= 0.) {
     return std::hypot(sr0, sf);
   }
-  a = cs / get(eMinR0);
-  b = sn / get(eMinR1);
+  a = cs / get(eInnerRx);
+  b = sn / get(eOuterRx);
   double sr1 = (1. / std::hypot(a, b)) - r;
   if (sr1 >= 0.) {
     return std::hypot(sr1, sf);
@@ -118,8 +118,8 @@ double Acts::EllipseBounds::distanceToBoundary(
 std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices(
     unsigned int lseg) const {
   return detail::VerticesHelper::ellispoidVertices(
-      get(eMinR0), get(eMinR1), get(eMaxR0), get(eMaxR1), get(eAveragePhi),
-      get(eHalfPhiSector), lseg);
+      get(eInnerRx), get(eInnerRy), get(eOuterRx), get(eOuterRy),
+      get(eAveragePhi), get(eHalfPhiSector), lseg);
 }
 
 const Acts::RectangleBounds& Acts::EllipseBounds::boundingBox() const {
@@ -132,9 +132,9 @@ std::ostream& Acts::EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(7);
   sl << "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
         "outerRadius1, hPhiSector, averagePhi) = ";
-  sl << "(" << get(eMinR0) << ", " << get(eMaxR0) << ", " << get(eMinR1) << ", "
-     << get(eMaxR1) << ", " << get(eAveragePhi) << ", " << get(eHalfPhiSector)
-     << ", " << get(eAveragePhi) << ")";
+  sl << "(" << get(eInnerRx) << ", " << get(eInnerRy) << ", " << get(eOuterRx)
+     << ", " << get(eOuterRy) << ", " << get(eAveragePhi) << ", "
+     << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
   sl << std::setprecision(-1);
   return sl;
 }

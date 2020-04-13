@@ -18,12 +18,12 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -43,7 +43,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
 // The path limit abort
-using path_limit = detail::PathLimitReached;
+using path_limit = PathLimitReached;
 
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
@@ -103,7 +103,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   Vector3D mom(px, py, pz);
   CurvilinearParameters start(std::nullopt, pos, mom, q, time);
 
-  using DebugOutput = detail::DebugOutputActor;
+  using DebugOutput = DebugOutputActor;
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor, DebugOutput>;

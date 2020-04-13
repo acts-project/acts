@@ -18,7 +18,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -108,7 +108,7 @@ struct SurfaceObserver {
 
 // Global definitions
 // The path limit abort
-using path_limit = detail::PathLimitReached;
+using path_limit = PathLimitReached;
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<BFieldType>;

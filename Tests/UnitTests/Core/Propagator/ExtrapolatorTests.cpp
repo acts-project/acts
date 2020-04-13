@@ -16,12 +16,12 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -41,7 +41,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
 // The path limit abort
-using path_limit = detail::PathLimitReached;
+using path_limit = PathLimitReached;
 
 std::vector<std::unique_ptr<const Surface>> stepState;
 
@@ -239,7 +239,7 @@ BOOST_DATA_TEST_CASE(
       0, 0;
   CurvilinearParameters start(cov, pos, mom, q, time);
 
-  using DebugOutput = detail::DebugOutputActor;
+  using DebugOutput = DebugOutputActor;
 
   PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
       tgContext, mfContext);
@@ -304,7 +304,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearParameters start(cov, pos, mom, q, time);
 
   // Action list and abort list
-  using DebugOutput = detail::DebugOutputActor;
+  using DebugOutput = DebugOutputActor;
 
   PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
       tgContext, mfContext);

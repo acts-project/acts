@@ -8,8 +8,12 @@
 
 #pragma once
 
-#include <algorithm>
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <fstream>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -65,9 +69,13 @@ class IVisualization {
                     ColorType color = {120, 120, 120}) = 0;
 
   /// Write the content of the helper to an outstream.
-  /// @param os The output stream
-  ///
+  /// @param os The output stream for file
   virtual void write(std::ostream& os) const = 0;
+
+  /// Write the content of the helper to an outstream.
+  /// @param path is the file system path for writing the file
+  /// @note wil change to std::filesystem::path once gcc9 is standard
+  virtual void write(const std::string& path) const = 0;
 
   /// Remove all contents of this helper
   ///
@@ -80,37 +88,39 @@ class IVisualization {
 
   /// @copydoc Acts::IVisualization::vertex(const Vector3D&, ColorType)
   ///
-  void vertex(const Vector3F& vtx, ColorType color = {120, 120, 120}) {
-    Vector3D vtxd = vtx.template cast<double>();
-    vertex(vtxd, color);
-  }
+  void vertex(const Vector3F& vtx, ColorType color = {120, 120, 120});
 
   /// @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, ColorType)
   ///
   void face(const std::vector<Vector3F>& vtxs,
-            ColorType color = {120, 120, 120}) {
-    std::vector<Vector3D> vtxsd;
-    std::transform(vtxs.begin(), vtxs.end(), std::back_inserter(vtxsd),
-                   [](auto& v) { return v.template cast<double>(); });
-    face(vtxsd, color);
-  }
+            ColorType color = {120, 120, 120});
 
   ///  @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
   /// ColorType)
   ///
   void line(const Vector3F& a, const Vector3F& b,
-            ColorType color = {120, 120, 120}) {
-    Vector3D ad = a.template cast<double>();
-    Vector3D bd = b.template cast<double>();
-    line(ad, bd, color);
-  }
+            ColorType color = {120, 120, 120});
+
+ protected:
+  /// Helper: check for extension
+  ///
+  /// @note this is a placeholder for std::filesystem::has_extension
+  /// which needs special linking until gcc9
+  /// @param path the path to be checked
+  bool hasExtension(const std::string& path) const;
+
+  /// Helper: replace the extension
+  ///
+  /// @note this is a placeholder for std::filesystem::replace_extension
+  /// which needs special linking until gcc9
+  /// @param path [in,out] the path to be changed
+  /// @param suffix the extension to be added
+  void replaceExtension(std::string& path, const std::string& suffix) const;
 };
 
-/**
- * Overload of the << operator to facilitate writing to streams.
- * @param os The output stream
- * @param hlp The helper instance
- */
+/// Overload of the << operator to facilitate writing to streams.
+/// @param os The output stream
+/// @param hlp The helper instance
 inline std::ostream& operator<<(std::ostream& os, const IVisualization& hlp) {
   hlp.write(os);
   return os;

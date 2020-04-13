@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <limits>
 #include <vector>
 
@@ -28,7 +29,8 @@ namespace Acts {
 /// that need to be connected to form a face.
 /// This allows the @c objString method to produce a ready-to-go obj output.
 struct Polyhedron {
-  using Face = std::vector<size_t>;
+  using FaceType = std::vector<size_t>;
+  using ColorType = std::array<int, 3>;
 
   /// Default constructor
   Polyhedron() = default;
@@ -40,8 +42,8 @@ struct Polyhedron {
   /// @param radialCheck A dedicated check for radial extent done
   /// @note This creates copies of the input vectors
   Polyhedron(const std::vector<Vector3D>& verticesIn,
-             const std::vector<Face>& facesIn,
-             const std::vector<Face>& triangularMeshIn,
+             const std::vector<FaceType>& facesIn,
+             const std::vector<FaceType>& triangularMeshIn,
              bool radialCheck = false)
       : vertices(verticesIn),
         faces(facesIn),
@@ -53,17 +55,22 @@ struct Polyhedron {
   /// List of faces connecting the vertices.
   /// each face is a list of vertices v
   /// corresponding to the vertex vector above
-  std::vector<Face> faces;
+  std::vector<FaceType> faces;
 
   /// List of faces connecting the vertices.
   /// each face is a list of vertices v
   /// - in this case restricted to a triangular representation
-  std::vector<Face> triangularMesh;
+  std::vector<FaceType> triangularMesh;
 
   /// Merge another Polyhedron into this one
   ///
   /// @param other is the source representation
   void merge(const Polyhedron& other);
+
+  /// Move the polyhedron with a Transfrom3D
+  ///
+  /// @param transform The additional transform applied
+  void move(const Transform3D& transform);
 
   /// Draw method for polyhedrons
   ///
@@ -71,24 +78,15 @@ struct Polyhedron {
   ///
   /// @param helper The draw helper object (visitor pattern)
   /// @param triangulate Force the faces to be a triangular mesh
-  /// @param decompose Boolean that forces a decomposition into
-  /// individual faces with unique vertices.
+  /// @param color The color for drawing this object
   template <typename helper_t>
   void draw(helper_t& helper, bool triangulate = false,
-            bool decompose = false) const {
+            const ColorType& color = {120, 120, 120}) const {
     // vertices and faces are
-    if (not decompose and not triangulate) {
-      helper.faces(vertices, faces);
-    } else if (triangulate) {
-      helper.faces(vertices, triangularMesh);
+    if (not triangulate) {
+      helper.faces(vertices, faces, color);
     } else {
-      for (const auto& face : faces) {
-        std::vector<Vector3D> face_vtx;
-        for (size_t i : face) {
-          face_vtx.push_back(vertices[i]);
-        }
-        helper.face(face_vtx);
-      }
+      helper.faces(vertices, triangularMesh, color);
     }
   }
 

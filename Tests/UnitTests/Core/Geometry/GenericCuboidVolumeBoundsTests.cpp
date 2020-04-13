@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/PlyHelper.hpp"
+#include "Acts/Visualization/PlyVisualization.hpp"
 
 namespace Acts {
 namespace Test {
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ply_test) {
                {2, 1, 1},
                {0, 1, 1}}};
   GenericCuboidVolumeBounds cubo(vertices);
-  PlyHelper<double> ply;
+  PlyVisualization<double> ply;
   cubo.draw(ply);
 
   std::ofstream os("cuboid.ply");
