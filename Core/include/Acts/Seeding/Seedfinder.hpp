@@ -11,6 +11,9 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedfinderCpuFunctions.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Utilities/Platforms/PlatformDef.h"
 
 #include <array>
 #include <list>
@@ -21,32 +24,33 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-struct LinCircle {
-  float Zo;
-  float cotTheta;
-  float iDeltaR;
-  float Er;
-  float U;
-  float V;
-};
-template <typename external_spacepoint_t>
+#ifdef  ACTS_HAS_CUDA
+#include <Acts/Seeding/SeedfinderCudaKernels.cuh>
+#endif
+
+namespace Acts{
+
+  template <typename external_spacepoint_t, typename platform_t = Acts::CPU >
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
 
+ using Platform_t = platform_t;
+    
  public:
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the Seedfinder
+
   Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
+
   ~Seedfinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
   Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t>&) = delete;
-  Seedfinder<external_spacepoint_t>& operator=(
-      const Seedfinder<external_spacepoint_t>&) = delete;
+  Seedfinder(const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
+  Seedfinder<external_spacepoint_t, platform_t >& operator=(
+  const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -57,17 +61,25 @@ class Seedfinder {
   /// Ranges must return pointers.
   /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
-  template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+//template< typename sp_range_t >
+  template< typename T=Platform_t, typename sp_range_t>
+  typename std::enable_if< std::is_same<T, Acts::CPU>::value, std::vector<Seed<external_spacepoint_t> > >::type
+  createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
+#ifdef  ACTS_HAS_CUDA
+    
+  template< typename T=Platform_t, typename sp_range_t>
+  typename std::enable_if< std::is_same<T, Acts::CUDA>::value, std::vector<Seed<external_spacepoint_t> > >::type
+  createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+
+  std::tuple< double, double, double, double > getTimeMetric() { return t_metric; }
+
+#endif
+    
  private:
-  void transformCoordinates(
-      std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-      const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-      std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  mutable std::tuple< double, double, double, double > t_metric; // doublet search, transform coordinate, triplet search, wall time
 };
 
 }  // namespace Acts

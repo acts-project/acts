@@ -22,6 +22,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Platforms/PlatformDef.h"
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"

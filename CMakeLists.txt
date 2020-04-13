@@ -30,6 +30,8 @@ option(ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_DOC "Build documentation" OFF)
+option(ACTS_BUILD_CUDA_FEATURES "Build cuda-related features" OFF)
+
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
@@ -74,6 +76,14 @@ if(ACTS_BUILD_TGEO_PLUGIN)
 endif()
 if(ACTS_BUILD_DOC)
   find_package(Doxygen 1.8.11 REQUIRED)
+endif()
+if(ACTS_BUILD_CUDA_FEATURES)
+  add_definitions(-DACTS_HAS_CUDA) 
+  enable_language(CUDA)
+  set(CMAKE_CUDA_STANDARD 14)
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+  include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 endif()
 
 # core library, core plugins, and other components

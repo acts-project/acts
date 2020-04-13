@@ -94,5 +94,10 @@ struct SeedfinderConfig {
   float pTPerHelixRadius = 0;
   float minHelixDiameter2 = 0;
   float pT2perRadius = 0;
+
+  // cuda-related
+  int maxBlockSize  = 1024;
+  int nTopPassLimit = 30;  // it is may not be enough for 1000k spacepoints events
+  int offsetVecSize = 100; // This should be enough...  
 };
 }  // namespace Acts
