@@ -1,12 +1,8 @@
 #pragma once
-#ifndef PLATFORMDEF
-#define PLATFORMDEF
 
 namespace Acts{
   class CPU;
 }
-
-#endif
 
 #ifdef ACTS_HAS_CUDA
 

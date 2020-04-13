@@ -4,6 +4,7 @@
 #include <memory>
 #include "cuda.h"
 #include "cuda_runtime.h"
+#include "CudaUtils.cu"
 
 namespace Acts{
 
