@@ -18,13 +18,25 @@
 
 namespace Acts {
 
-/// @class ImpactPoint3dEstimator
+struct ImpactParametersAndSigma {
+  double IPd0 = 0.;
+  double IPz0 = 0.;
+  double IPz0SinTheta = 0.;
+  double sigmad0 = 0.;
+  double sigmaz0 = 0.;
+  double sigmaz0SinTheta = 0.;
+  double PVsigmad0 = 0.;
+  double PVsigmaz0 = 0.;
+  double PVsigmaz0SinTheta = 0.;
+};
+
+/// @class ImpactPointEstimator
 ///
 /// @brief Estimates point of closest approach in 3D
 /// together with corresponding track parameters
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
-class ImpactPoint3dEstimator {
+class ImpactPointEstimator {
   using BField_t = typename propagator_t::Stepper::BField;
 
  public:
@@ -62,7 +74,7 @@ class ImpactPoint3dEstimator {
   /// @brief Constructor
   ///
   /// @param cfg Configuration object
-  ImpactPoint3dEstimator(const Config& cfg) : m_cfg(cfg) {}
+  ImpactPointEstimator(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief Calculates 3D distance between a track and a 3D point
   ///
@@ -145,4 +157,4 @@ class ImpactPoint3dEstimator {
 
 }  // namespace Acts
 
-#include "Acts/Vertexing/ImpactPoint3dEstimator.ipp"
+#include "Acts/Vertexing/ImpactPointEstimator.ipp"
