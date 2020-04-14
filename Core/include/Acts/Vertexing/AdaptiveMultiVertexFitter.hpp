@@ -46,8 +46,7 @@ class AdaptiveMultiVertexFitter {
   using Linearizer_t = linearizer_t;
 
  private:
-  using IPEstimator =
-      ImpactPointEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
 
  public:
   /// @brief The fitter state
@@ -95,7 +94,7 @@ class AdaptiveMultiVertexFitter {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
-    Config(IPEstimator est) : ipEst(std::move(est)) {}
+    Config(const IPEstimator& est) : ipEst(est) {}
 
     // ImpactPointEstimator
     IPEstimator ipEst;

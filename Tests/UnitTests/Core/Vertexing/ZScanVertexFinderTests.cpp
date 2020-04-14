@@ -21,7 +21,7 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
@@ -144,13 +144,15 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    TrackToVertexIPEstimator<BoundParameters, Propagator>::Config ipEstCfg(
-        propagator);
-    TrackToVertexIPEstimator<BoundParameters, Propagator> ipEst(ipEstCfg);
+    // Impact point estimator
+    using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
 
-    VertexFinder::Config cfg(std::move(ipEst));
+    IPEstimator::Config ipEstimatorCfg(bField, propagator);
+    IPEstimator ipEstimator(ipEstimatorCfg);
 
-    VertexFinder finder(std::move(cfg));
+    VertexFinder::Config cfg(ipEstimator);
+
+    VertexFinder finder(cfg);
 
     VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                        magFieldContext);
@@ -264,18 +266,20 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    TrackToVertexIPEstimator<InputTrack, Propagator>::Config ipEstCfg(
-        propagator);
-    TrackToVertexIPEstimator<InputTrack, Propagator> ipEst(ipEstCfg);
+    // Impact point estimator
+    using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
 
-    VertexFinder::Config cfg(std::move(ipEst));
+    IPEstimator::Config ipEstimatorCfg(bField, propagator);
+    IPEstimator ipEstimator(ipEstimatorCfg);
+
+    VertexFinder::Config cfg(ipEstimator);
 
     // Create a custom std::function to extract BoundParameters from
     // user-defined InputTrack
     std::function<BoundParameters(InputTrack)> extractParameters =
         [](InputTrack params) { return params.parameters(); };
 
-    VertexFinder finder(std::move(cfg), extractParameters);
+    VertexFinder finder(cfg, extractParameters);
 
     VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
 

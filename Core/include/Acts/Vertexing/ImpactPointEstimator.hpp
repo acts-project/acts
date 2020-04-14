@@ -15,13 +15,25 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
 
+struct ImpactParametersAndSigma {
+  double IPd0 = 0.;
+  double IPz0 = 0.;
+  double IPz0SinTheta = 0.;
+  double sigmad0 = 0.;
+  double sigmaz0 = 0.;
+  double sigmaz0SinTheta = 0.;
+  double PVsigmad0 = 0.;
+  double PVsigmaz0 = 0.;
+  double PVsigmaz0SinTheta = 0.;
+};
+
 /// @class ImpactPointEstimator
 ///
-/// @brief Estimates point of closest approach in 3D
-/// together with corresponding track parameters
+/// @brief Estimator for impact point calculations
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
@@ -72,8 +84,8 @@ class ImpactPointEstimator {
   ///
   /// @return Distance
   Result<double> calculate3dDistance(const GeometryContext& gctx,
-                                   const BoundParameters& trkParams,
-                                   const Vector3D& vtxPos) const;
+                                     const BoundParameters& trkParams,
+                                     const Vector3D& vtxPos) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3d to given
@@ -104,8 +116,20 @@ class ImpactPointEstimator {
   ///
   /// @return The compatibility value
   Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
-                                        const BoundParameters* trkParams,
-                                        const Vector3D& vertexPos) const;
+                                          const BoundParameters* trkParams,
+                                          const Vector3D& vertexPos) const;
+
+  /// @brief Estimates the impact parameters and their errors of a given
+  /// track w.r.t. a vertex by propagating the trajectory state
+  /// towards the vertex position.
+  ///
+  /// @param track Track to estimate IP from
+  /// @param vtx Vertex the track belongs to
+  /// @param gctx The geometry context
+  /// @param mctx The magnetic field context
+  Result<ImpactParametersAndSigma> estimateImpactParameters(
+      const BoundParameters& track, const Vertex<input_track_t>& vtx,
+      const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
 
  private:
   /// Configuration object
