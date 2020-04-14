@@ -1132,15 +1132,10 @@ class AtlasStepper {
     auto& h = state.stepping.stepSize;
     bool Jac = state.stepping.useJacobian;
 
-    double* R;
-    double* A;
-    double* sA;
-    double Pi;
-
-      R = &(state.stepping.pVector[0]);  // Coordinates
-      A = &(state.stepping.pVector[4]);  // Directions
-      sA = &(state.stepping.pVector[56]);
-      Pi = 0.5 * state.stepping.pVector[7];  // Invert mometum/2.
+    double* R = &(state.stepping.pVector[0]);  // Coordinates
+    double* A = &(state.stepping.pVector[4]);  // Directions
+    double* sA = &(state.stepping.pVector[56]);
+    double Pi = 0.5 * state.stepping.pVector[7];  // Invert mometum/2.
 
     //    double dltm = 0.0002 * .03;
     Vector3D f0, f;

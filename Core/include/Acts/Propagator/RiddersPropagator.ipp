@@ -31,10 +31,10 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Steps for estimating derivatives
   std::vector<double> deviations;
-  if constexpr (parameters_t::is_local_representation)
-	deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
-  else	
+  //~ if constexpr (parameters_t::is_local_representation)
 	deviations = {-4e-3, -2e-3, 2e-3, 4e-3};
+  //~ else	
+	//~ deviations = {-4e-3, -2e-3, 2e-3, 4e-3};
 
   // Allow larger distances for the oscillation
   propagator_options_t opts = options;
