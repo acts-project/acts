@@ -28,10 +28,10 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
   ObjVisualization obj;
   size_t objCCount = SurfaceVisualization::test(obj, false, "");
-  BOOST_CHECK(objCCount == 64760);
+  BOOST_CHECK_EQUAL(objCCount, 56360);
 
   size_t objC3MCount = SurfaceVisualization::test(obj, true, "_3Mesh");
-  BOOST_CHECK(objC3MCount == 75287);
+  BOOST_CHECK_EQUAL(objC3MCount, 66878);
 }
 
 /// The tests in this section are regression tests only in order
@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationPly) {
   PlyVisualization ply;
   size_t plyCCount = SurfaceVisualization::test(ply, false, "");
-  BOOST_CHECK(plyCCount == 85321);
+  BOOST_CHECK_EQUAL(plyCCount, 76912);
 
   size_t plyC3MCount = SurfaceVisualization::test(ply, true, "_3Mesh");
-  BOOST_CHECK(plyC3MCount == 85321);
+  BOOST_CHECK_EQUAL(plyC3MCount, 76912);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

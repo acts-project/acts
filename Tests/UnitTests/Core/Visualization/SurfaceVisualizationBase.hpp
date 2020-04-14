@@ -63,6 +63,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
 
     // write again for the caracter count
     std::stringstream cStream;
+    cStream << std::setprecision(4);
     helper.write(cStream);
     cCount += cStream.str().size();
     if (clear) {

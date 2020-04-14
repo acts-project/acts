@@ -39,6 +39,7 @@ namespace EventDataVisualization {
 /// updated if the output is about to change
 static inline size_t test(IVisualization& helper) {
   std::stringstream cStream;
+  cStream << std::setprecision(4);
 
   const IVisualization::ColorType pcolor = {20, 120, 20};
   const IVisualization::ColorType scolor = {235, 198, 52};

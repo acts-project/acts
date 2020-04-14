@@ -26,13 +26,13 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 BOOST_AUTO_TEST_CASE(EventDataVisualizationObj) {
   ObjVisualization obj;
   size_t objCCount = EventDataVisualization::test(obj);
-  BOOST_CHECK(objCCount == 15203);
+  BOOST_CHECK_EQUAL(objCCount, 12716);
 }
 
 BOOST_AUTO_TEST_CASE(EventDataVisualizationPly) {
   PlyVisualization ply;
   size_t plyCCount = EventDataVisualization::test(ply);
-  BOOST_CHECK(plyCCount == 16894);
+  BOOST_CHECK_EQUAL(plyCCount, 14407);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

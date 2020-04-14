@@ -92,11 +92,12 @@ BOOST_AUTO_TEST_CASE(LineVisualizationTestsObj) {
   Acts::Visualization::drawSegment(obj, start, end, 0.1, 72, lineColor);
   obj.write("Primitives_Line");
 
-  std::stringstream cntstream;
-  obj.write(cntstream);
+  std::stringstream cStream;
+  obj.write(cStream);
+  cStream << std::setprecision(4);
 
-  BOOST_TEST(cntstream.good());
-  BOOST_TEST(cntstream.str().size() == 4848);
+  BOOST_TEST(cStream.good());
+  BOOST_CHECK_EQUAL(cStream.str().size(), 4848);
 }
 
 BOOST_AUTO_TEST_CASE(ArrowVisualizationTests) {
@@ -118,10 +119,10 @@ BOOST_AUTO_TEST_CASE(ArrowVisualizationTests) {
                                       {0, 250, 0});
   obj.write("Primitives_Arrows");
 
-  std::stringstream cntstream;
-  obj.write(cntstream);
-  BOOST_TEST(cntstream.good());
-  BOOST_TEST(cntstream.str().size() == 44249);
+  std::stringstream cStream;
+  obj.write(cStream);
+  BOOST_TEST(cStream.good());
+  BOOST_TEST(cStream.str().size() == 44249);
 }
 
 /// The tests in this section are regression tests only in order
@@ -150,10 +151,11 @@ BOOST_AUTO_TEST_CASE(LocalErrorVisualizationTestsObj) {
 
   obj.write("Primitives_CartesianError");
 
-  std::stringstream cntstream;
-  obj.write(cntstream);
-  BOOST_TEST(cntstream.good());
-  BOOST_TEST(cntstream.str().size() == 2123);
+  std::stringstream cStream;
+  cStream << std::setprecision(4);
+  obj.write(cStream);
+  BOOST_TEST(cStream.good());
+  BOOST_CHECK_EQUAL(cStream.str().size(), 1841);
 }
 
 /// The tests in this section are regression tests only in order
@@ -191,10 +193,11 @@ BOOST_AUTO_TEST_CASE(AngularErrorVisualizationTestsObj) {
 
   obj.write("Primitives_AngularError");
 
-  std::stringstream cntstream;
-  obj.write(cntstream);
-  BOOST_TEST(cntstream.good());
-  BOOST_TEST(cntstream.str().size() == 18640);
+  std::stringstream cStream;
+  cStream << std::setprecision(4);
+  obj.write(cStream);
+  BOOST_TEST(cStream.good());
+  BOOST_CHECK_EQUAL(cStream.str().size(), 15574);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

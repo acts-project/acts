@@ -50,6 +50,7 @@ static size_t test(IVisualization& helper, bool triangulate,
 
     // character count
     std::stringstream cStream;
+    cStream << std::setprecision(4);
     helper.write(cStream);
     cCount += cStream.str().size();
 

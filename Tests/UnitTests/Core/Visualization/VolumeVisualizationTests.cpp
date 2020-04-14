@@ -25,19 +25,19 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 BOOST_AUTO_TEST_CASE(VolumeVisualizationObj) {
   ObjVisualization obj;
   auto objCCount = VolumeVisualization::test(obj, false, "");
-  BOOST_TEST(objCCount == 31877);
+  BOOST_CHECK_EQUAL(objCCount, 27884);
 
   auto obj3MCCount = VolumeVisualization::test(obj, true, "_3Mesh");
-  BOOST_TEST(obj3MCCount == obj3MCCount);
+  BOOST_CHECK_EQUAL(obj3MCCount, 33718);
 }
 
 BOOST_AUTO_TEST_CASE(VolumeVisualizationPly) {
   PlyVisualization ply;
   auto plyCCount = VolumeVisualization::test(ply, false, "");
-  BOOST_TEST(plyCCount == 38520);
+  BOOST_CHECK_EQUAL(plyCCount, 34527);
 
   auto ply3MCCount = VolumeVisualization::test(ply, true, "_3Mesh");
-  BOOST_TEST(ply3MCCount == 38520);
+  BOOST_CHECK_EQUAL(ply3MCCount, 34527);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
