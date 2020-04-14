@@ -227,9 +227,10 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     if (volIter != mappingVolumes.end() && encounterVolume == true &&
         !volIter->volume->inside(rmIter->position)) {
       encounterVolume = false;
+      // Switch to next material volume
       ++volIter;
     }
-
+    /// check if we are inside a material volume
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
       encounterVolume = true;

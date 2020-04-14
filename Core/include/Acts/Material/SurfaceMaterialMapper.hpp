@@ -30,14 +30,14 @@ namespace Acts {
 
 class TrackingGeometry;
 
-/// @brief selector for finding
+/// @brief selector for finding surface
 struct MaterialSurface {
   bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
   }
 };
 
-/// @brief selector for finding
+/// @brief selector for finding volume
 struct MaterialVolume {
   bool operator()(const TrackingVolume& vf) const {
     return (vf.volumeMaterial() != nullptr);

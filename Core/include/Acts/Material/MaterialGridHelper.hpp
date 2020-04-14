@@ -63,7 +63,7 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
 //
 /// @brief Searcher for closest point in 2D coordinate
 ///
-/// @param [in] matPos Position of the material
+/// @param [in] matPos Position of the material in local coordinate
 /// @param [in] grid Grid that is used for the look-up
 ///
 /// @return Local grid point with the closest distance to @p matPos
@@ -71,7 +71,7 @@ Grid2D::index_t mapMaterial2D(const Acts::Vector3D& matPos, const Grid2D& grid);
 
 /// @brief Searcher for closest point in 3D coordinate
 ///
-/// @param [in] matPos Position of the material
+/// @param [in] matPos Position of the material in local coordinate
 /// @param [in] grid Grid that is used for the look-up
 ///
 /// @return Local grid point with the closest distance to @p matPos

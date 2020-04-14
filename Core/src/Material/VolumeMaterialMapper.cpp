@@ -11,7 +11,6 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/DebugOutputActor.hpp"
@@ -101,14 +100,11 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
       mState.materialBin[geoID] = buAdjusted;
       return;
     }
-    // TODO!!!
     // Second attempt: binned material
     auto bmp = dynamic_cast<
         const InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>*>(
         volumeMaterial);
-    bu = (bmp != nullptr) ? (&bmp->binUtility()) : nullptr;
-    // Creaete a binned type of material
-    if (bu != nullptr) {
+    if (bmp != nullptr) {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - binning is " << *bu);
       mState.materialBin[geoID] = *bu;
@@ -116,15 +112,20 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
     } else {
       // Create a homogeneous type of material
       ACTS_DEBUG("       - this is homogeneous material.");
+      BinUtility buHomogeneous;
+      mState.materialBin[geoID] = buHomogeneous;
       return;
     }
   }
 }
 
 void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
-  // iterate over the map to call the total average
+  // iterate over the volumes
   for (auto& recMaterial : mState.recordedMaterial) {
+    ACTS_DEBUG("Create the material for volume  " << recMaterial.first);
     if (mState.materialBin[recMaterial.first].dimensions() == 0) {
+      // Accumulate all the recorded material onto a signle point
+      ACTS_DEBUG("Homogeneous material volume");
       Acts::AccumulatedVolumeMaterial homogeneousAccumulation;
       for (const auto& rm : recMaterial.second) {
         homogeneousAccumulation.accumulate(rm.first);
@@ -134,7 +135,8 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
           std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
       return;
     } else if (mState.materialBin[recMaterial.first].dimensions() == 3) {
-      ACTS_DEBUG("Create the material for volume  " << recMaterial.first);
+      // Accumulate all the recorded material onto a grid
+      ACTS_DEBUG("Grid material volume");
       std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
       Grid3D Grid = createGrid(mState.materialBin[recMaterial.first],
                                transfoGlobalToLocal);
@@ -167,7 +169,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
                                                    mState.magFieldContext);
   options.debug = m_cfg.mapperDebugOutput;
 
-  // Now collect the material layers by using the straight line propagator
+  // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
   auto mcResult = result.get<MaterialVolumeCollector::result_type>();
   // Massive screen output
@@ -196,11 +198,18 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
 
     mappingVolumes.push_back(mVolumes);
   }
+  // Run the mapping process, i.e. take the recorded material and map it
+  // onto the mapping volume:
   auto rmIter = rMaterial.begin();
   auto volIter = mappingVolumes.begin();
   bool encounterVolume = false;
-  double mappingStep = 1.;
 
+  // Use those to minimize the lookup
+  GeometryID lastID = GeometryID();
+  GeometryID currentID = GeometryID();
+  auto currentRecMaterial = mState.recordedMaterial.end();
+
+  // Use those to create additional extrapolated step
   int volumeStep = 1;
   Acts::Vector3D extraPosition = {0, 0, 0};
   Acts::Vector3D extraDirection = {0, 0, 0};
@@ -209,27 +218,40 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
     if (volIter != mappingVolumes.end() && encounterVolume == true &&
         !volIter->volume->inside(rmIter->position)) {
       encounterVolume = false;
+      // Switch to next assignment volume
       ++volIter;
     }
-
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
-      volumeStep = floor(rmIter->materialProperties.thickness() / mappingStep);
-      auto properties = rmIter->materialProperties;
-      float remainder =
-          rmIter->materialProperties.thickness() - mappingStep * volumeStep;
-      properties.scaleThickness(mappingStep / properties.thickness());
-      mState.recordedMaterial[volIter->volume->geoID()].push_back(
-          std::pair(properties, rmIter->position));
-      for (int step = 1; step <= volumeStep; step++) {
-        extraDirection = rmIter->direction;
-        extraDirection = extraDirection * (mappingStep / extraDirection.norm());
-        extraPosition = rmIter->position + step * extraDirection;
-        if (step == volumeStep) {
-          properties.scaleThickness(remainder / properties.thickness());
-        }
+      currentID = volIter->volume->geoID();
+      if (not(currentID == lastID)) {
+        // Let's (re-)assess the information
+        lastID = currentID;
+        currentRecMaterial = mState.recordedMaterial.find(currentID);
+      }
+      if (currentRecMaterial != mState.recordedMaterial.end()) {
+        // If the curent volume has a ProtoVolumeMaterial
+        volumeStep =
+            floor(rmIter->materialProperties.thickness() / m_cfg.mappingStep);
+        auto properties = rmIter->materialProperties;
+        float remainder = rmIter->materialProperties.thickness() -
+                          m_cfg.mappingStep * volumeStep;
+        properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
         mState.recordedMaterial[volIter->volume->geoID()].push_back(
-            std::pair(properties, extraPosition));
+            std::pair(properties, rmIter->position));
+        for (int step = 1; step <= volumeStep; step++) {
+          // Create additional extrapolated point for the grid mapping
+          extraDirection = rmIter->direction;
+          extraDirection =
+              extraDirection * (m_cfg.mappingStep / extraDirection.norm());
+          extraPosition = rmIter->position + step * extraDirection;
+          if (step == volumeStep) {
+            // adjust the thickness of the last extrapolated step
+            properties.scaleThickness(remainder / properties.thickness());
+          }
+          mState.recordedMaterial[volIter->volume->geoID()].push_back(
+              std::pair(properties, extraPosition));
+        }
       }
       encounterVolume = true;
     }

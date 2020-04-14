@@ -10,10 +10,9 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Geometry/Volume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -24,14 +23,35 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-/// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
-/// and to avoid code duplication. Currently implemented for the two most common
-/// formats: rz and xyz.
-
 namespace Acts {
 
+/// list of point used in the mapping of a surface
 using RecordedMaterialPoint =
     std::vector<std::pair<Acts::MaterialProperties, Acts::Vector3D>>;
+
+//
+/// @brief VolumeMaterialMapper
+///
+/// This is the main feature tool to map material information
+/// from a 3D geometry onto the TrackingGeometry with its surface
+/// material description.
+///
+/// The process runs as such:
+///
+///  1) TrackingGeometry is parsed and for each Volume with
+///     ProtoVolumeMaterial a local store is initialized
+///     the identification is done hereby through the Volume::GeometryID
+///
+///  2) A number of N material tracks is read in, each track has :
+///       origin, direction, material steps (< position, step length, x0, l0, a,
+///       z, rho >, thichness)
+///
+///       for each track:
+///          volume along the origin/direction path are collected.
+///          the step are then associated to volume inside which they are.
+///          Additional step are created along the track direction.
+///
+///  3) Each 'hit' bin per event is counted and averaged at the end of the run
 
 class VolumeMaterialMapper {
  public:
@@ -48,10 +68,8 @@ class VolumeMaterialMapper {
   ///
   /// Nested Configuration struct for the material mapper
   struct Config {
-    /// Mapping range
-    std::array<double, 2> etaRange = {{-6., 6.}};
-    /// Correct for empty bins (recommended)
-    bool emptyBinCorrection = true;
+    /// Size of the step for the step extrapolation
+    float mappingStep = 1.;
     /// Mapping output to debug stream
     bool mapperDebugOutput = false;
   };
@@ -65,7 +83,7 @@ class VolumeMaterialMapper {
           std::reference_wrapper<const MagneticFieldContext> mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 
-    /// The accumulated material per geometry ID
+    /// The recorded material per geometry ID
     std::map<GeometryID, RecordedMaterialPoint> recordedMaterial;
 
     /// The binning per geometry ID
@@ -107,7 +125,7 @@ class VolumeMaterialMapper {
   /// @brief Method to finalize the maps
   ///
   /// It calls the final run averaging and then transforms
-  /// the AccumulatedSurface material class to a surface material
+  /// the AccumulatedVolume material class to a surface material
   /// class type
   ///
   /// @param mState
@@ -123,7 +141,7 @@ class VolumeMaterialMapper {
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 
  private:
-  /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
+  /// @brief finds all surfaces with ProtoVolumeMaterial of a volume
   ///
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume
@@ -133,13 +151,13 @@ class VolumeMaterialMapper {
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
-  /// @param surface is the surface to be checked for a Proxy
+  /// @param volume is the surface to be checked for a Proxy
   void checkAndInsert(State& /*mState*/, const TrackingVolume& volume) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
-  /// @param surface is the surface to be checked for a Proxy
+  /// @param volume is the surface to be checked for a Proxy
   void collectMaterialSurface(State& /*mState*/,
                               const TrackingVolume& tVolume) const;
 

@@ -73,7 +73,7 @@ inline const Acts::Material& Acts::ProtoVolumeMaterial::material(
     const Acts::Vector3D& /*position*/) const {
   return m_material;
 }
-
+/// Return the bin Utility
 inline const Acts::BinUtility& Acts::ProtoVolumeMaterial::binUtility() const {
   return m_binUtility;
 }

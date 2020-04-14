@@ -80,7 +80,7 @@ Grid2D::index_t mapMaterial2D(const Acts::Vector3D& matPos,
                               const Grid2D& grid) {
   double dist = std::numeric_limits<double>::max();
   size_t indexX = 1, indexY = 1;
-  // Loop through all elements
+  // Loop through the first index
   for (size_t i = 1; i < grid.numLocalBins()[0] + 1; i++) {
     double dX = grid.lowerLeftBinEdge({{i, indexY}})[0] - matPos.x();
     if (abs(dX) < dist) {
@@ -92,6 +92,7 @@ Grid2D::index_t mapMaterial2D(const Acts::Vector3D& matPos,
     }
   }
   dist = std::numeric_limits<double>::max();
+  // Loop through the second index
   for (size_t i = 1; i < grid.numLocalBins()[1] + 1; i++) {
     double dY = grid.lowerLeftBinEdge({{indexX, i}})[1] - matPos.y();
     if (abs(dY) < dist) {
@@ -110,7 +111,7 @@ Grid3D::index_t mapMaterial3D(const Acts::Vector3D& matPos,
   double dist = std::numeric_limits<double>::max();
   size_t indexX = 1, indexY = 1, indexZ = 1;
   double dX = 0, dY = 0, dZ = 0;
-  // Loop through all elements
+  // Loop through the first index
   for (size_t i = 1; i < grid.numLocalBins()[0] + 1; i++) {
     dX = grid.lowerLeftBinEdge({{i, indexY, indexZ}})[0] - matPos.x();
     if (abs(dX) < dist) {
@@ -122,6 +123,7 @@ Grid3D::index_t mapMaterial3D(const Acts::Vector3D& matPos,
     }
   }
   dist = std::numeric_limits<double>::max();
+  // Loop through the second index
   for (size_t i = 1; i < grid.numLocalBins()[1] + 1; i++) {
     dY = grid.lowerLeftBinEdge({{indexX, i, indexZ}})[1] - matPos.y();
     if (abs(dY) < dist) {
@@ -133,6 +135,7 @@ Grid3D::index_t mapMaterial3D(const Acts::Vector3D& matPos,
     }
   }
   dist = std::numeric_limits<double>::max();
+  // Loop through the third index
   for (size_t i = 1; i < grid.numLocalBins()[2] + 1; i++) {
     dZ = grid.lowerLeftBinEdge({{indexX, indexY, i}})[2] - matPos.z();
     if (abs(dZ) < dist) {
@@ -150,11 +153,13 @@ Grid3D createGrid(
     const BinUtility& bins,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
+  // First we nee to create the 3 axis
   std::array<double, 3> gridAxis1;
   std::array<double, 3> gridAxis2;
   std::array<double, 3> gridAxis3;
   bool iscylinder = false;
   bool iscube = false;
+  // loop trought the binned data and create the corresponding axis
   for (size_t b = 0; b < bu.size(); b++) {
     switch (bu[b].binvalue) {
       case binX:
@@ -204,6 +209,7 @@ Grid3D createGrid(
   if (!(iscylinder || iscube) || (iscylinder && iscube)) {
     throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
   }
+  // create the appropriate Global to local transform
   if (iscylinder) {
     transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector3D {
       return {VectorHelpers::perp(pos), VectorHelpers::phi(pos), pos.z()};
@@ -214,6 +220,7 @@ Grid3D createGrid(
       return {pos.x(), pos.y(), pos.z()};
     };
   }
+  // return the grid
   return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
                            std::move(gridAxis3)));
 }
