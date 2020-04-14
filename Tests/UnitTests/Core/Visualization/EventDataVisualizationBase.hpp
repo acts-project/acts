@@ -21,6 +21,7 @@
 #include "Acts/Visualization/IVisualization.hpp"
 
 #include <fstream>
+#include <sstream>
 #include <string>
 
 namespace Acts {
@@ -33,7 +34,12 @@ namespace EventDataVisualization {
 /// @param tag The test tag (mode) identification
 /// @param suffix The file suffix for writing
 /// @param msuffix the (optional) material file suffix
-static inline void test(IVisualization& helper) {
+///
+/// @return the total character count for regression testing, needs to be
+/// updated if the output is about to change
+static inline size_t test(IVisualization& helper) {
+  std::stringstream cStream;
+
   const IVisualization::ColorType pcolor = {20, 120, 20};
   const IVisualization::ColorType scolor = {235, 198, 52};
 
@@ -65,8 +71,12 @@ static inline void test(IVisualization& helper) {
   Visualization::drawBoundParameters(helper, ataPlane, gctx, 0.02, 100., 10.,
                                      true, 72, pcolor, scolor);
 
-  helper.write("BoundAtPlaneParameters");
+  helper.write("EventData_BoundAtPlaneParameters");
+  helper.write(cStream);
+
   helper.clear();
+
+  return cStream.str().size();
 }
 
 }  // namespace EventDataVisualization

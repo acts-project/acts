@@ -22,16 +22,28 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
+/// The tests in this section are regression tests only in order
+/// to catch any unexpected changes in the output format.
+///
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
   ObjVisualization obj;
-  SurfaceVisualization::test(obj, false, "");
-  SurfaceVisualization::test(obj, true, "_3Mesh");
+  size_t objCCount = SurfaceVisualization::test(obj, false, "");
+  BOOST_CHECK(objCCount == 64760);
+
+  size_t objC3MCount = SurfaceVisualization::test(obj, true, "_3Mesh");
+  BOOST_CHECK(objC3MCount == 75287);
 }
 
+/// The tests in this section are regression tests only in order
+/// to catch any unexpected changes in the output format.
+///
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationPly) {
   PlyVisualization ply;
-  SurfaceVisualization::test(ply, false, "");
-  SurfaceVisualization::test(ply, true, "_3Mesh");
+  size_t plyCCount = SurfaceVisualization::test(ply, false, "");
+  BOOST_CHECK(plyCCount == 85321);
+
+  size_t plyC3MCount = SurfaceVisualization::test(ply, true, "_3Mesh");
+  BOOST_CHECK(plyC3MCount == 85321);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

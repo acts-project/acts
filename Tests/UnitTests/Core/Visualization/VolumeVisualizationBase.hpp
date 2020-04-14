@@ -16,6 +16,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
 #include <fstream>
+#include <sstream>
 #include <string>
 
 namespace Acts {
@@ -27,8 +28,13 @@ namespace VolumeVisualization {
 /// @param tag The test tag (mode) identification
 /// @param suffix The file suffix for writing
 /// @param msuffix the (optional) material file suffix
-static inline void test(IVisualization& helper, bool triangulate,
-                        const std::string& tag) {
+///
+///
+/// @return the total number of characters written as a regression test,
+/// reference numbers need to be updated if output is supposed to change
+static size_t test(IVisualization& helper, bool triangulate,
+                   const std::string& tag) {
+  size_t cCount = 0;
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
   std::ofstream stream;
@@ -41,6 +47,12 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto write = [&](const std::string& path, bool clear = true) -> void {
     std::string wpath = path + tag;
     helper.write(wpath);
+
+    // character count
+    std::stringstream cStream;
+    helper.write(cStream);
+    cCount += cStream.str().size();
+
     if (clear) {
       helper.clear();
     }
@@ -54,7 +66,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto cuboid = std::make_shared<AbstractVolume>(identity, box);
   Visualization::drawVolume(helper, *cuboid, gctx, Transform3D::Identity(), 72,
                             triangulate, boxColor);
-  write("CuboidVolume");
+  write("Volumes_CuboidVolume");
 
   //----------------------------------------------------
   // Cylinder volume section
@@ -69,21 +81,21 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto cylinder = std::make_shared<AbstractVolume>(identity, fullCylinder);
   Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
                             72, triangulate, cylinderColor);
-  write("CylinderVolumeFull");
+  write("Volumes_CylinderVolumeFull");
 
   auto tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
   Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
                             72, triangulate, cylinderColor);
-  write("CylinderVolumeTube");
+  write("Volumes_CylinderVolumeTube");
 
   tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ, halfPhiSector);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
   Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
                             72, triangulate, cylinderColor);
-  write("CylinderVolumeTubeSector");
+  write("Volumes_CylinderVolumeTubeSector");
 
   //----------------------------------------------------
   // Trapezoid volume section
@@ -101,7 +113,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto generic = std::make_shared<AbstractVolume>(identity, genericCuboid);
   Visualization::drawVolume(helper, *generic, gctx, Transform3D::Identity(), 72,
                             triangulate, genericColor);
-  write("GenericCuboidVolume");
+  write("Volumes_GenericCuboidVolume");
 
   //----------------------------------------------------
   // Trapezoid volume section
@@ -111,7 +123,9 @@ static inline void test(IVisualization& helper, bool triangulate,
   Visualization::drawVolume(helper, *trapezoidVolume, gctx,
                             Transform3D::Identity(), 72, triangulate,
                             trapezoidColor);
-  write("TrapezoidVolume");
+  write("Volumes_TrapezoidVolume");
+
+  return cCount;
 }
 
 }  // namespace VolumeVisualization
