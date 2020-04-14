@@ -6,6 +6,9 @@ on:
     branches:
       - master
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
 jobs:
   build_ubuntu:
     runs-on: ubuntu-18.04
