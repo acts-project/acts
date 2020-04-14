@@ -79,7 +79,11 @@ public:
   void CopyH2D(const Var_t* matrix, size_t len, size_t offset=0){
     cudaErrChk( cudaMemcpy(fDevPtr+offset, matrix, len*sizeof(Var_t), cudaMemcpyHostToDevice) );
   }
-
+  
+  void Zeros(){
+    cudaErrChk( cudaMemset(fDevPtr, 0, fSize*sizeof(Var_t)) );
+  }
+  
 private:
   Var_t* fDevPtr; 
   size_t fNCols;

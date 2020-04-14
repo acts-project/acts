@@ -58,7 +58,11 @@ public:
   void CopyH2D(Var_t* vector, size_t len, size_t offset, cudaStream_t* stream){
     cudaErrChk( cudaMemcpyAsync(fDevPtr+offset, vector, len*sizeof(Var_t), cudaMemcpyHostToDevice, *stream) );
   }
-      
+
+  void Zeros(){
+    cudaErrChk( cudaMemset(fDevPtr, 0, fSize*sizeof(Var_t)) );
+  }
+  
 private:
   Var_t* fDevPtr; 
   size_t fSize;
