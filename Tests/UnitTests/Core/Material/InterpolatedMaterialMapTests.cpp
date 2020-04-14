@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
     grid.at(i) = mat;
   }
   MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
-  InterpolatedMaterialMap ipolMatMap(std::move(matMap));
+  InterpolatedMaterialMap<MaterialMapper<grid_t>> ipolMatMap(std::move(matMap));
 
   // Test the material getter
   CHECK_CLOSE_REL(ipolMatMap.material({0.5, 0.5, 0.5}), Material(mat), 1e-4);
