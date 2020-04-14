@@ -395,7 +395,9 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
                           .classificationNumbers();
     }
     MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
-    vMaterial = new Acts::InterpolatedMaterialMap(std::move(matMap), bUtility);
+    vMaterial =
+        new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>(
+            std::move(matMap), bUtility);
   }
   // return what you have
   return vMaterial;

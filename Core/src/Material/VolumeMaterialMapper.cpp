@@ -143,7 +143,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, matGrid);
       mState.volumeMaterial[recMaterial.first] = std::make_unique<
           InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
-          std::move(matMap), std::move(mState.materialBin[recMaterial.first]));
+          std::move(matMap), mState.materialBin[recMaterial.first]);
       return;
     } else {
       throw std::invalid_argument(
