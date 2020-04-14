@@ -1229,7 +1229,7 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport,
                      ds::pT* ds::propagationLimit ^ ds::threeRandom, pT, plimit,
                      rand1, rand2, rand3) {
 
-						 						  // define start parameters
+  // define start parameters
   double x = 1.;
   double y = 0.;
   double z = 0.;
@@ -1242,7 +1242,6 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport,
   Vector3D mom(px, py, pz);
 
   std::optional<Covariance> covOpt = std::nullopt;
-    std::optional<FreeCovariance> covOptFree = std::nullopt;
   if (covtpr) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -1256,28 +1255,7 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-    
-    FreeCovariance covFree;
-    // take some major correlations (off-diagonals)
-    // clang-format off
-    covFree <<
-     10_mm, 0, 0.123, 0, 0.1, 0.1, 0.1, 0,
-     0, 10_mm, 0, 0, 0.1, 0.1, 0.1, 0,
-     0.123, 0, 10_mm, 0, 0.1, 0.1, 0.1, 0,
-     0, 0, 0, 1_ns, 0, 0, 0, 0,
-     0.1, 0.1, 0.1, 0, 0.123, 0, 0, 0,
-     0.1, 0.1, 0.1, 0, 0, 0.123, 0, 0,
-     0.1, 0.1, 0.1, 0, 0, 0, 0.123, 0,
-     0, 0, 0, 0, 0, 0, 0, 1_e / 10_GeV;
-    // clang-format on
-    covOptFree = covFree;
   }
-  
-  Vector3D dir = mom.normalized();
-  FreeVector parsC, parsN;
-  parsC << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
-  parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
-  FreeParameters startCF(covOptFree, parsC);
 
   auto ssTransform = createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
                                           0.05 * rand2);
@@ -1287,6 +1265,7 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport,
   RiddersPropagator rdpropagator(dpropagator);
 {
   CurvilinearParameters startCC(covOpt, pos, mom, q, time);
+  
   CHECK_CLOSE_COVARIANCE(
       covariance_curvilinear<CurvilinearParameters>(rdpropagator, startCC,
                              plimit),

@@ -299,7 +299,6 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-    
     // Correct angular results 
     if constexpr (start_parameters_t::is_local_representation) {
       // Correct for a possible variation of phi around

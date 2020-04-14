@@ -216,14 +216,14 @@ anglesToDirectionsJacobian(const Vector3D dir) const;
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, 7>& derivatives,
+const       std::array<std::vector<BoundVector>, 7>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<FreeVector>, eBoundParametersSize>& derivatives,
+     const  std::array<std::vector<FreeVector>, eBoundParametersSize>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
