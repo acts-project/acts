@@ -62,7 +62,7 @@ static size_t test(IVisualization& helper, bool triangulate,
   // ---------------------------------------------------
   // Cuboid surface section
   IVisualization::ColorType boxColor = {0, 0, 255};
-  ;
+
   auto box = std::make_shared<CuboidVolumeBounds>(4., 3., 6.);
   auto cuboid = std::make_shared<AbstractVolume>(identity, box);
   Visualization::drawVolume(helper, *cuboid, gctx, Transform3D::Identity(), 72,

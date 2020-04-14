@@ -28,7 +28,9 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
   ObjVisualization obj;
   size_t objCCount = SurfaceVisualization::test(obj, false, "");
-  BOOST_CHECK_EQUAL(objCCount, 56360);
+  // Due to rounding errors, there can be a -0 or 0 printed
+  // allow small tolerance for the moment
+  BOOST_CHECK_CLOSE(1. * objCCount, 1. * 56360, 0.1);
 
   size_t objC3MCount = SurfaceVisualization::test(obj, true, "_3Mesh");
   BOOST_CHECK_EQUAL(objC3MCount, 66878);

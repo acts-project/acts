@@ -301,7 +301,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   double ellipseR0max = 4;
   double ellipseR1min = 3;
   double ellipseR1max = 6;
-  std::string name = "PlaneSurfaceEllipse";
+  std::string name = "Surfaces_PlaneSurfaceEllipse";
   auto ellipse =
       std::make_shared<EllipseBounds>(0., 0., ellipseR1min, ellipseR1max);
   auto plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
@@ -312,7 +312,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(ellipse->boundingBox(), name);
 
   // Ellipse shaped : Ring Ellipse
-  name = "PlaneSurfaceEllipseRing";
+  name = "Surfaces_PlaneSurfaceEllipseRing";
   ellipse = std::make_shared<EllipseBounds>(ellipseR0min, ellipseR0max,
                                             ellipseR1min, ellipseR1max);
   plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
@@ -323,7 +323,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(ellipse->boundingBox(), name);
 
   // Ellipse shaped : Ring Ellipse Sector
-  name = "PlaneSurfaceEllipseRingSector";
+  name = "Surfaces_PlaneSurfaceEllipseRingSector";
   ellipse = std::make_shared<EllipseBounds>(
       ellipseR0min, ellipseR0max, ellipseR1min, ellipseR1max, halfPhiSector);
   plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
@@ -334,7 +334,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(ellipse->boundingBox(), name);
 
   // ConvexPolygon shaped example: Triangle
-  name = "PlaneSurfaceTriangleRegular";
+  name = "Surfaces_PlaneSurfaceTriangleRegular";
   std::vector<Vector2D> tvertices = {{-3, -1.5}, {3, -1.5}, {0, 4.5}};
   auto triangle = std::make_shared<ConvexPolygonBounds<3>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, triangle);
@@ -345,7 +345,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(triangle->boundingBox(), name);
 
   // ConvexPolygon shaped example: Triangle
-  name = "PlaneSurfaceTriangleGeneral";
+  name = "Surfaces_PlaneSurfaceTriangleGeneral";
   tvertices = {{-1., 4.5}, {4, 6.5}, {3, 8.5}};
   triangle = std::make_shared<ConvexPolygonBounds<3>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, triangle);
@@ -356,7 +356,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(triangle->boundingBox(), name);
 
   // ConvexPolygon shaped example: Triangle
-  name = "PlaneSurfaceConvexPolygonGeneral";
+  name = "Surfaces_PlaneSurfaceConvexPolygonGeneral";
   tvertices = {{-1., 4.5}, {4, 6.5}, {6, 8.5}, {0, 10.5}, {-3, 6.2}};
   auto dynamicpolygon =
       std::make_shared<ConvexPolygonBounds<PolygonDynamic>>(tvertices);
@@ -368,7 +368,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(dynamicpolygon->boundingBox(), name);
 
   // Diamond shaped
-  name = "PlaneSurfaceDiamond";
+  name = "Surfaces_PlaneSurfaceDiamond";
   auto diamond = std::make_shared<DiamondBounds>(3., 6., 2., 2., 4.);
   plane = Surface::makeShared<PlaneSurface>(identity, diamond);
   planarSurfaces.push_back(plane);
@@ -378,7 +378,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(diamond->boundingBox(), name);
 
   // Rectangle plane
-  name = "PlaneSurfaceRectangle";
+  name = "Surfaces_PlaneSurfaceRectangle";
   auto rectangle = std::make_shared<RectangleBounds>(2., 3.);
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
   planarSurfaces.push_back(plane);
@@ -388,7 +388,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(rectangle->boundingBox(), name);
 
   // Off-centered Rectangle plane:
-  name = "PlaneSurfaceRectangleOffcentered";
+  name = "Surfaces_PlaneSurfaceRectangleOffcentered";
   rectangle =
       std::make_shared<RectangleBounds>(Vector2D{1., 2.}, Vector2D{15., 12.});
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
@@ -398,7 +398,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(rectangle->boundingBox(), name);
 
   // Off-centered Rectangle plane:
-  name = "PlaneSurfaceTrapezoid";
+  name = "Surfaces_PlaneSurfaceTrapezoid";
   auto trapezoid = std::make_shared<TrapezoidBounds>(2., 5., 3.);
   plane = Surface::makeShared<PlaneSurface>(identity, trapezoid);
   planarSurfaces.push_back(plane);
@@ -428,7 +428,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
   // Straw Surface section
   IVisualization::ColorType strawColor = {255, 0, 0};
 
-  name = "StrawSurface";
+  name = "Surfaces_StrawSurface";
   auto tube = std::make_shared<LineBounds>(2., 20.);
   auto straw = Surface::makeShared<StrawSurface>(identity, tube);
   Visualization::drawSurface(helper, *straw, gctx, Transform3D::Identity(), 72,
