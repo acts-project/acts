@@ -15,7 +15,7 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -65,8 +65,8 @@ class IterativeVertexFinder {
 
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using ImpactPointEstimator =
-      ImpactPoint3dEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator =
+      ImpactPointEstimator<InputTrack_t, Propagator_t>;
 
   /// @struct Config Configuration struct
   struct Config {
@@ -75,9 +75,9 @@ class IterativeVertexFinder {
     /// @param fitter Vertex fitter
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
-    /// @param est ImpactPoint3dEstimator
+    /// @param est ImpactPointEstimator
     Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
-           ImpactPointEstimator est)
+           IPEstimator est)
         : vertexFitter(std::move(fitter)),
           linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
@@ -92,8 +92,8 @@ class IterativeVertexFinder {
     /// Vertex seed finder
     sfinder_t seedFinder;
 
-    /// ImpactPoint3dEstimator
-    ImpactPointEstimator ipEst;
+    /// ImpactPointEstimator
+    IPEstimator ipEst;
 
     /// Vertex finder configuration variables
     bool useBeamConstraint = false;

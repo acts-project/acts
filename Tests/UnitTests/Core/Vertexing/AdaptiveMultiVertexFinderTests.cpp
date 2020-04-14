@@ -21,6 +21,7 @@
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 #include "AMVFTestData.ipp"
@@ -52,7 +53,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
@@ -269,7 +270,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
       [](InputTrack params) { return params.parameters(); };
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPoint3dEstimator<InputTrack, Propagator>;
+  using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);

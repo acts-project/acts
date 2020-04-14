@@ -17,7 +17,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 using namespace Acts::UnitLiterals;
@@ -50,7 +50,7 @@ std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 // Track charge helper distribution
 std::uniform_real_distribution<> qDist(-1, 1);
 
-/// @brief Unit test for ImpactPoint3dEstimator params and distance
+/// @brief Unit test for ImpactPointEstimator params and distance
 ///
 BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   // Debug mode
@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+  // Set up the ImpactPointEstimator
+  ImpactPointEstimator<BoundParameters, Propagator>::Config ipEstCfg(
       bField, propagator);
 
-  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
+  ImpactPointEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
   }  // end for loop tests
 }
 
-/// @brief Unit test for ImpactPoint3dEstimator
+/// @brief Unit test for ImpactPointEstimator
 ///  compatibility estimator
 BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   // Debug mode
@@ -190,11 +190,11 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+  // Set up the ImpactPointEstimator
+  ImpactPointEstimator<BoundParameters, Propagator>::Config ipEstCfg(
       bField, propagator);
 
-  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
+  ImpactPointEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 
 /// @brief Unit test for ImpactPoint 3d estimator, using same
 /// configuration and test values as in Athena unit test algorithm
-/// Tracking/TrkVertexFitter/TrkVertexFitterUtils/test/ImpactPoint3dEstimator_test
+/// Tracking/TrkVertexFitter/TrkVertexFitterUtils/test/ImpactPointEstimator_test
 BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
   // Set up constant B-Field
   ConstantBField bField(Vector3D(0., 0., 1.9971546939_T));
@@ -309,11 +309,11 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // Set up the ImpactPoint3dEstimator
-  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ipEstCfg(
+  // Set up the ImpactPointEstimator
+  ImpactPointEstimator<BoundParameters, Propagator>::Config ipEstCfg(
       bField, propagator);
 
-  ImpactPoint3dEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
+  ImpactPointEstimator<BoundParameters, Propagator> ipEstimator(ipEstCfg);
 
   // Use same values as in Athena unit test
   Vector3D pos1(2_mm, 1_mm, -10_mm);
