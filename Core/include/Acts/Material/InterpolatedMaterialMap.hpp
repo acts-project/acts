@@ -239,10 +239,8 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   ///
   /// @param [in] mapper Material map
   /// @param [in] BinUtility
-  InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility&& bu)
-      : m_mapper(std::move(mapper)) {
-    m_binUtility = bu;
-  }
+  InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility bu)
+      : m_mapper(std::move(mapper)), m_binUtility(bu) {}
 
   /// @brief Retrieve material
   ///
