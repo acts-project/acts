@@ -882,19 +882,26 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
       dynamic_cast<const CuboidVolumeBounds*>(&(volume.volumeBounds()));
 
   if (cyBounds != nullptr) {
-    bUtility += BinUtility(1, cyBounds->innerRadius(), cyBounds->outerRadius(),
+    bUtility += BinUtility(1, cyBounds->get(CylinderVolumeBounds::eMinR),
+                           cyBounds->get(CylinderVolumeBounds::eMaxR),
                            Acts::open, Acts::binR);
     bUtility +=
-        BinUtility(1, -cyBounds->halfPhiSector(), cyBounds->halfPhiSector(),
+        BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
+                   cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
                    Acts::closed, Acts::binPhi);
-    bUtility += BinUtility(1, -cyBounds->halflengthZ(), cyBounds->halflengthZ(),
-                           Acts::open, Acts::binZ);
+    bUtility +=
+        BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                   cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                   Acts::open, Acts::binZ);
   } else if (cuBounds != nullptr) {
-    bUtility += BinUtility(1, -cuBounds->halflengthX(), cuBounds->halflengthX(),
+    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
+                           cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
                            Acts::open, Acts::binX);
-    bUtility += BinUtility(1, -cuBounds->halflengthX(), cuBounds->halflengthX(),
+    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
+                           cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
                            Acts::closed, Acts::binY);
-    bUtility += BinUtility(1, -cuBounds->halflengthX(), cuBounds->halflengthX(),
+    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
+                           cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
                            Acts::open, Acts::binZ);
   }
   return bUtility;
