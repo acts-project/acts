@@ -30,16 +30,16 @@ namespace Visualization {
 static inline std::array<double, 3> decomposeCovariance(
     const ActsSymMatrixD<2>& covariance) {
   double c00 = covariance(eLOC_0, eLOC_0);
-  double c11 = covariance(eLOC_1, eLOC_1);
   double c01 = covariance(eLOC_0, eLOC_1);
+  double c11 = covariance(eLOC_1, eLOC_1);
 
   double cdsq = std::pow((c00 - c11), 2) / 4.;
   double cosq = c01 * c01;
 
   // Calculate the eigen values w.r.t reference frame
   double lambda0 = (c00 + c11) / 2. + std::sqrt(cdsq + cosq);
-  double lambda1 = (c00 - c11) / 2. + std::sqrt(cdsq + cosq);
-  double theta = std::atan2(lambda0 - c00, c11);
+  double lambda1 = (c00 + c11) / 2. - std::sqrt(cdsq + cosq);
+  double theta = atan2(lambda0 - c00, c01);
 
   return {lambda0, lambda1, theta};
 }

@@ -18,6 +18,7 @@
 #include "EventDataVisualizationBase.hpp"
 
 namespace Acts {
+
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
