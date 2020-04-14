@@ -16,7 +16,7 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
-    propagator_options_t>::calculateDistance(const GeometryContext& gctx,
+    propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
                                              const BoundParameters& trkParams,
                                              const Vector3D& vtxPos) const {
   Vector3D deltaR;
@@ -37,7 +37,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t,
                              propagator_options_t>::
-    getParamsAtClosestApproach(const GeometryContext& gctx,
+    getParamsAt3dClosestApproach(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
                                const BoundParameters& trkParams,
                                const Vector3D& vtxPos) const {
@@ -88,7 +88,7 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double> Acts::ImpactPointEstimator<input_track_t, propagator_t,
                                                   propagator_options_t>::
-    getVertexCompatibility(const GeometryContext& gctx,
+    get3dVertexCompatibility(const GeometryContext& gctx,
                            const BoundParameters* trkParams,
                            const Vector3D& vertexPos) const {
   if (trkParams == nullptr) {
