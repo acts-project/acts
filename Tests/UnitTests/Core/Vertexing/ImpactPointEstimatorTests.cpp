@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
 
     // Estimate 3D distance
     auto distanceRes =
-        ipEstimator.calculateDistance(geoContext, myTrack, refPosition);
+        ipEstimator.calculate3dDistance(geoContext, myTrack, refPosition);
     BOOST_CHECK(distanceRes.ok());
 
     double distance = *distanceRes;
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_params_distance_test) {
                 << std::endl;
     }
 
-    auto res = ipEstimator.getParamsAtClosestApproach(
+    auto res = ipEstimator.getParamsAt3dClosestApproach(
         geoContext, magFieldContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
@@ -243,12 +243,12 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
 
     // Estimate 3D distance
     auto distanceRes =
-        ipEstimator.calculateDistance(geoContext, myTrack, refPosition);
+        ipEstimator.calculate3dDistance(geoContext, myTrack, refPosition);
     BOOST_CHECK(distanceRes.ok());
 
     distancesList.push_back(*distanceRes);
 
-    auto res = ipEstimator.getParamsAtClosestApproach(
+    auto res = ipEstimator.getParamsAt3dClosestApproach(
         geoContext, magFieldContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_compatibility_test) {
     BoundParameters params = std::move(**res);
 
     auto compRes =
-        ipEstimator.getVertexCompatibility(geoContext, &params, refPosition);
+        ipEstimator.get3dVertexCompatibility(geoContext, &params, refPosition);
 
     BOOST_CHECK(compRes.ok());
 
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
   // Some fixed track parameter values
   BoundParameters params1(geoContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
 
-  auto res1 = ipEstimator.calculateDistance(geoContext, params1, vtxPos);
+  auto res1 = ipEstimator.calculate3dDistance(geoContext, params1, vtxPos);
   BOOST_CHECK(res1.ok());
   double distance = (*res1);
 
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_3d_estimator_athena_test) {
   const double result = 3.10391_mm;
   CHECK_CLOSE_ABS(distance, result, 0.00001_mm);
 
-  auto res2 = ipEstimator.getParamsAtClosestApproach(
+  auto res2 = ipEstimator.getParamsAt3dClosestApproach(
       geoContext, magFieldContext, params1, vtxPos);
   BOOST_CHECK(res2.ok());
   BoundParameters endParams = std::move(**res2);

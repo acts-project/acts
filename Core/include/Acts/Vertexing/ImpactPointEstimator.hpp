@@ -18,18 +18,6 @@
 
 namespace Acts {
 
-struct ImpactParametersAndSigma {
-  double IPd0 = 0.;
-  double IPz0 = 0.;
-  double IPz0SinTheta = 0.;
-  double sigmad0 = 0.;
-  double sigmaz0 = 0.;
-  double sigmaz0SinTheta = 0.;
-  double PVsigmad0 = 0.;
-  double PVsigmaz0 = 0.;
-  double PVsigmaz0SinTheta = 0.;
-};
-
 /// @class ImpactPointEstimator
 ///
 /// @brief Estimates point of closest approach in 3D
@@ -83,7 +71,7 @@ class ImpactPointEstimator {
   /// @param vtxPos Position to calculate distance to
   ///
   /// @return Distance
-  Result<double> calculateDistance(const GeometryContext& gctx,
+  Result<double> calculate3dDistance(const GeometryContext& gctx,
                                    const BoundParameters& trkParams,
                                    const Vector3D& vtxPos) const;
 
@@ -101,7 +89,7 @@ class ImpactPointEstimator {
   /// @param vtxPos Reference position (vertex)
   ///
   /// @return New track params
-  Result<std::unique_ptr<const BoundParameters>> getParamsAtClosestApproach(
+  Result<std::unique_ptr<const BoundParameters>> getParamsAt3dClosestApproach(
       const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
       const BoundParameters& trkParams, const Vector3D& vtxPos) const;
 
@@ -111,11 +99,11 @@ class ImpactPointEstimator {
   ///
   /// @param gctx The Geometry context
   /// @param track Track parameters at point of closest
-  /// approach in 3d as retrieved by getParamsAtClosestApproach
+  /// approach in 3d as retrieved by getParamsAt3dClosestApproach
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
-  Result<double> getVertexCompatibility(const GeometryContext& gctx,
+  Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
                                         const BoundParameters* trkParams,
                                         const Vector3D& vertexPos) const;
 

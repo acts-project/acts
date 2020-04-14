@@ -157,11 +157,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // The old distance
     double oldDistance =
-        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos).value();
+        ip3dEst.calculate3dDistance(geoContext, fittedParamsCopy, vtxPos).value();
 
     // The new distance after update
     double newDistance =
-        ip3dEst.calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos)
+        ip3dEst.calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos)
             .value();
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;

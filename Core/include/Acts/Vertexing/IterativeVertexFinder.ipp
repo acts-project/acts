@@ -357,7 +357,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
     else {
       // check first that distance is not too large
       const BoundParameters& sTrackParams = m_extractParameters(*sTrack);
-      auto distanceRes = m_cfg.ipEst.calculateDistance(
+      auto distanceRes = m_cfg.ipEst.calculate3dDistance(
           vertexingOptions.geoContext, sTrackParams, seedVertex.position());
       if (!distanceRes.ok()) {
         return distanceRes.error();
