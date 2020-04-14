@@ -17,8 +17,8 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
     propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
-                                             const BoundParameters& trkParams,
-                                             const Vector3D& vtxPos) const {
+                                               const BoundParameters& trkParams,
+                                               const Vector3D& vtxPos) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -35,12 +35,11 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
-Acts::ImpactPointEstimator<input_track_t, propagator_t,
-                             propagator_options_t>::
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getParamsAt3dClosestApproach(const GeometryContext& gctx,
-                               const Acts::MagneticFieldContext& mctx,
-                               const BoundParameters& trkParams,
-                               const Vector3D& vtxPos) const {
+                                 const Acts::MagneticFieldContext& mctx,
+                                 const BoundParameters& trkParams,
+                                 const Vector3D& vtxPos) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -86,11 +85,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t,
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPointEstimator<input_track_t, propagator_t,
-                                                  propagator_options_t>::
+Acts::Result<double>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     get3dVertexCompatibility(const GeometryContext& gctx,
-                           const BoundParameters* trkParams,
-                           const Vector3D& vertexPos) const {
+                             const BoundParameters* trkParams,
+                             const Vector3D& vertexPos) const {
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -184,8 +183,8 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<void> Acts::ImpactPointEstimator<input_track_t, propagator_t,
-                                                propagator_options_t>::
+Acts::Result<void>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundParameters& trkParams,
                            const Vector3D& vtxPos, Vector3D& deltaR,
@@ -238,4 +237,97 @@ Acts::Result<void> Acts::ImpactPointEstimator<input_track_t, propagator_t,
   deltaR = pointCA3d - vtxPos;
 
   return {};
+}
+
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
+Acts::Result<Acts::ImpactParametersAndSigma>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+    estimateImpactParameters(const BoundParameters& track,
+                             const Vertex<input_track_t>& vtx,
+                             const GeometryContext& gctx,
+                             const Acts::MagneticFieldContext& mctx) const {
+  // estimating the d0 and its significance by propagating the trajectory state
+  // towards
+  // the vertex position. By this time the vertex should NOT contain this
+  // trajectory anymore
+  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(vtx.position());
+
+  // Create propagator options
+  propagator_options_t pOptions(gctx, mctx);
+  pOptions.direction = backward;
+
+  // Do the propagation to linPoint
+  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+
+  if (!result.ok()) {
+    return result.error();
+  }
+
+  const auto& propRes = *result;
+  const auto& params = propRes.endParameters->parameters();
+  const double d0 = params[ParID_t::eLOC_D0];
+  const double z0 = params[ParID_t::eLOC_Z0];
+  const double phi = params[ParID_t::ePHI];
+  const double theta = params[ParID_t::eTHETA];
+
+  ActsSymMatrixD<2> vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
+
+  // Covariance of perigee parameters after propagation to perigee surface
+  const auto& perigeeCov = *(propRes.endParameters->covariance());
+
+  ActsVectorD<2> d0JacXY(-std::sin(phi), std::cos(phi));
+
+  ImpactParametersAndSigma newIPandSigma;
+
+  newIPandSigma.IPd0 = d0;
+  double d0_PVcontrib = d0JacXY.transpose() * (vrtXYCov * d0JacXY);
+  if (d0_PVcontrib >= 0) {
+    newIPandSigma.sigmad0 = std::sqrt(
+        d0_PVcontrib + perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0));
+    newIPandSigma.PVsigmad0 = std::sqrt(d0_PVcontrib);
+  } else {
+    newIPandSigma.sigmad0 =
+        std::sqrt(perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0));
+    newIPandSigma.PVsigmad0 = 0;
+  }
+
+  ActsSymMatrixD<2> covPerigeeZ0Theta;
+  covPerigeeZ0Theta(0, 0) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
+  covPerigeeZ0Theta(0, 1) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eTHETA);
+  covPerigeeZ0Theta(1, 0) = perigeeCov(ParID_t::eTHETA, ParID_t::eLOC_Z0);
+  covPerigeeZ0Theta(1, 1) = perigeeCov(ParID_t::eTHETA, ParID_t::eTHETA);
+
+  double vtxZZCov = vtx.covariance()(eZ, eZ);
+
+  ActsVectorD<2> z0JacZ0Theta(std::sin(theta), z0 * std::cos(theta));
+
+  if (vtxZZCov >= 0) {
+    newIPandSigma.IPz0SinTheta = z0 * std::sin(theta);
+    newIPandSigma.sigmaz0SinTheta = std::sqrt(
+        z0JacZ0Theta.transpose() * (covPerigeeZ0Theta * z0JacZ0Theta) +
+        std::sin(theta) * vtxZZCov * std::sin(theta));
+
+    newIPandSigma.PVsigmaz0SinTheta =
+        std::sqrt(std::sin(theta) * vtxZZCov * std::sin(theta));
+    newIPandSigma.IPz0 = z0;
+    newIPandSigma.sigmaz0 =
+        std::sqrt(vtxZZCov + perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
+    newIPandSigma.PVsigmaz0 = std::sqrt(vtxZZCov);
+  } else {
+    // Remove contribution from PV
+    newIPandSigma.IPz0SinTheta = z0 * std::sin(theta);
+    double sigma2z0sinTheta =
+        (z0JacZ0Theta.transpose() * (covPerigeeZ0Theta * z0JacZ0Theta));
+    newIPandSigma.sigmaz0SinTheta = std::sqrt(sigma2z0sinTheta);
+    newIPandSigma.PVsigmaz0SinTheta = 0;
+
+    newIPandSigma.IPz0 = z0;
+    newIPandSigma.sigmaz0 =
+        std::sqrt(perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
+    newIPandSigma.PVsigmaz0 = 0;
+  }
+
+  return newIPandSigma;
 }

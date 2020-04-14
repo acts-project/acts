@@ -194,9 +194,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
     newVtx.setFullCovariance(SpacePointSymMatrix::Zero());
   }
 
-  auto estRes = m_cfg.ipEstimator.estimate(m_extractParameters(*track), newVtx,
-                                           vertexingOptions.geoContext,
-                                           vertexingOptions.magFieldContext);
+  auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
+      m_extractParameters(*track), newVtx, vertexingOptions.geoContext,
+      vertexingOptions.magFieldContext);
   if (!estRes.ok()) {
     return estRes.error();
   }
