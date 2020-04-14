@@ -14,7 +14,7 @@
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPoint3dEstimator<
+Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
     propagator_options_t>::calculateDistance(const GeometryContext& gctx,
                                              const BoundParameters& trkParams,
@@ -35,7 +35,7 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
-Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
+Acts::ImpactPointEstimator<input_track_t, propagator_t,
                              propagator_options_t>::
     getParamsAtClosestApproach(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
@@ -86,7 +86,7 @@ Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
+Acts::Result<double> Acts::ImpactPointEstimator<input_track_t, propagator_t,
                                                   propagator_options_t>::
     getVertexCompatibility(const GeometryContext& gctx,
                            const BoundParameters* trkParams,
@@ -128,7 +128,7 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPoint3dEstimator<
+Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
     propagator_options_t>::performNewtonApproximation(const Vector3D& trkPos,
                                                       const Vector3D& vtxPos,
@@ -184,7 +184,7 @@ Acts::Result<double> Acts::ImpactPoint3dEstimator<
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<void> Acts::ImpactPoint3dEstimator<input_track_t, propagator_t,
+Acts::Result<void> Acts::ImpactPointEstimator<input_track_t, propagator_t,
                                                 propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundParameters& trkParams,
