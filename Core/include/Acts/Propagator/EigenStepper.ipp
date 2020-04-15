@@ -17,14 +17,18 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface,
                                              bool reinitialize) const
     -> BoundState {
-  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, surface, reinitialize);
+		FreeVector parameters;
+	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
+  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, surface, reinitialize);
 }
 
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
                                                    bool reinitialize) const
     -> CurvilinearState {
-  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, reinitialize);
+		FreeVector parameters;
+	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
+  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, reinitialize);
 }
 
 template <typename B, typename E, typename A>
@@ -61,7 +65,9 @@ template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
                                                       const Surface& surface,
                                                       bool reinitialize) const {
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, reinitialize, surface);
+														  FreeVector parameters;
+	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
+  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, reinitialize, surface);
 }
 
 template <typename B, typename E, typename A>

@@ -42,8 +42,7 @@ namespace detail {
 ///   - and the path length (from start - for ordering)
 std::tuple<BoundParameters, BoundMatrix, double> boundState(std::reference_wrapper<const GeometryContext> geoContext, BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
 							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
-							const Vector3D& position, const Vector3D& direction,
-							double charge, double momentum, double time, bool covTransport, double accumulatedPath,
+							const FreeVector& parameters,bool covTransport, double accumulatedPath,
                          const Surface& surface,  bool reinitialize);
 
 /// Create and return a curvilinear state at the current position
@@ -61,8 +60,7 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(std::reference_wrapp
 ///   - and the path length (from start - for ordering)
 std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
 							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
-							const Vector3D& position, const Vector3D& direction,
-							double charge, double momentum, double time, bool covTransport, double accumulatedPath,
+							const FreeVector& parameters, bool covTransport, double accumulatedPath,
                          bool reinitialize);
 
 void covarianceTransport(BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian, FreeMatrix& transportJacobian,
@@ -83,8 +81,7 @@ void covarianceTransport(BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian
 void covarianceTransport(
 std::reference_wrapper<const GeometryContext> geoContext, BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
 							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
-							const Vector3D& position, const Vector3D& direction,
-							double charge, double momentum, double time,                           
+							const FreeVector& parameters,                         
                            bool reinitialize,
                          const Surface& surface);
 
