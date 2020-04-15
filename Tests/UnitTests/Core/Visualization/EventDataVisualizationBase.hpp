@@ -65,7 +65,7 @@ static inline std::string test(IVisualization& helper) {
       0, 0, 0, 0, 0, 1;
 
   // constructor from parameter vector
-  BoundParameters ataPlane(gctx, std::move(cov), pars, plane);
+  auto ataPlane = BoundParameters(gctx, std::move(cov), pars, plane);
 
   Visualization::drawBoundParameters(helper, ataPlane, gctx, momentumScale,
                                      localErrorScale, directionErrorScale, true,

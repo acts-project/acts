@@ -36,8 +36,8 @@ namespace Test {
 /// @return a vector of failure messages
 inline static std::vector<std::string> testObjString(const std::string& tString,
                                                      bool triMesh = false) {
-  std::vector<std::string> rString;
-  const std::string w = "[ Non valid obj : ";
+  std::vector<std::string> errorStrings;
+  const std::string w = "[ Invalid obj : ";
 
   std::vector<std::string> passes = {"#", "usemtl", "mtllib", "o", "g", "s"};
 
@@ -69,10 +69,10 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
         std::vector<std::string> bodySplit;
         boost::split(bodySplit, body, boost::is_any_of(" "));
         if (bodySplit.size() != 3 and stag != std::string("f")) {
-          rString.push_back(w + line + " ] " + stag +
-                            " must only have three attributes!");
+          errorStrings.push_back(w + line + " ] " + stag +
+                                 " must only have three attributes!");
         } else if (bodySplit.size() != 3) {
-          rString.push_back("[ not a triangular mesh : " + line + " ]");
+          errorStrings.push_back("[ not a triangular mesh : " + line + " ]");
         }
         continue;
       }
@@ -82,22 +82,23 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
         bool onlyDigits =
             (body.find_first_not_of("0123456789/ ") == std::string::npos);
         if (!onlyDigits) {
-          rString.push_back(w + line + " ] " + stag +
-                            " can only have positive digits!");
+          errorStrings.push_back(w + line + " ] " + stag +
+                                 " can only have positive integers!");
         }
         std::vector<std::string> bodySplit;
         boost::split(bodySplit, body, boost::is_any_of(" "));
         for (auto& bs : bodySplit) {
           if (bs == "0") {
-            rString.push_back(w + line + " ] vertex with index 0 detected!");
+            errorStrings.push_back(w + line +
+                                   " ] vertex with index 0 detected!");
           }
         }
         continue;
       }
-      rString.push_back(w + line + " ] invalid syntax!");
+      errorStrings.push_back(w + line + " ] invalid syntax!");
     }
   }
-  return rString;
+  return errorStrings;
 }
 
 /// This is a test function that tests the validity of an obj stream
@@ -110,12 +111,25 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
 /// @param triMesh ist he test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
-inline static std::vector<std::string> testPlyString(
-    const std::string& /*tString*/, bool triMesh = false) {
-  std::vector<std::string> rString;
+inline static std::vector<std::string> testPlyString(const std::string& tString,
+                                                     bool triMesh = false) {
+  std::vector<std::string> errorStrings;
+  const std::string w = "[ Invalid ply : ";
+
+  std::vector<std::string> hPasses = {"format", "element", "property",
+                                      "comment"};
+
+  auto ss = std::stringstream{tString};
+  size_t lnumber = 0;
+  for (std::string line; std::getline(ss, line, '\n');) {
+    if (lnumber == 0 and line != "ply") {
+      errorStrings.push_back(w + line + " ] first line has to be 'ply");
+    }
+  }
+
   (void)triMesh;
 
-  return rString;
+  return errorStrings;
 }
 
 }  // namespace Test

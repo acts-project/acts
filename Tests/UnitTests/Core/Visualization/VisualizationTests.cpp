@@ -54,7 +54,7 @@ l 4 1
     std::cout << objerr << std::endl;
   }
 
-  // Non-valid obj - it has 3 errors
+  // Non-valid obj - it has 4 errors
   std::string invalidObj = R"(# obj test file
 mtllib material.mtl
 usemtl material_a
@@ -62,10 +62,10 @@ x whatever
 g rectangle
 vn 0 0 1
 vt 0 0 1
-v -15 -15 0
+v -15 -15 0 23
 v 15 -15 0
-v 15 15 0
-v -15 15 0
+v 15. 15 0
+v -15 15. 0
 f 1 2 3. 4
 l 0 2
 l 2 3
@@ -74,7 +74,7 @@ l 4 1
 )";
 
   objErrors = testObjString(invalidObj);
-  BOOST_CHECK(objErrors.size() == 3);
+  BOOST_CHECK(objErrors.size() == 4);
   for (auto objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
