@@ -334,7 +334,8 @@ class StraightLineStepper {
       D.block<3, 3>(0, 4) = ActsSymMatrixD<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
-      D(3, 7) = h * state.options.mass * state.options.mass * (state.stepping.q == 0. ? 1. : state.stepping.q) /
+      D(3, 7) = h * state.options.mass * state.options.mass *
+                (state.stepping.q == 0. ? 1. : state.stepping.q) /
                 (state.stepping.p * dtds);
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,18 +14,26 @@ namespace Acts {
 std::tuple<BoundParameters, BoundMatrix, double>
 StraightLineStepper::boundState(State& state, const Surface& surface,
                                 bool reinitialize) const {
-	FreeVector parameters;
-	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
-  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, surface, reinitialize);
+  FreeVector parameters;
+  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
+      state.dir[1], state.dir[2], state.q / state.p;
+  return detail::boundState(state.geoContext, state.cov, state.jacobian,
+                            state.jacTransport, state.derivative,
+                            state.jacToGlobal, parameters, state.covTransport,
+                            state.pathAccumulated, surface, reinitialize);
 }
 
 std::tuple<CurvilinearParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool reinitialize) const {
   FreeVector parameters;
-	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
-  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, reinitialize);
+  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
+      state.dir[1], state.dir[2], state.q / state.p;
+  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport,
+                                  state.derivative, state.jacToGlobal,
+                                  parameters, state.covTransport,
+                                  state.pathAccumulated, reinitialize);
 }
-                         
+
 void StraightLineStepper::update(State& state,
                                  const BoundParameters& pars) const {
   const auto& mom = pars.momentum();
@@ -50,14 +58,19 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
 
 void StraightLineStepper::covarianceTransport(State& state,
                                               bool reinitialize) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.dir, reinitialize);
+  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
+                              state.derivative, state.jacToGlobal, state.dir,
+                              reinitialize);
 }
 
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface,
                                               bool reinitialize) const {
-												  FreeVector parameters;
-	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, reinitialize, surface);
+  FreeVector parameters;
+  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
+      state.dir[1], state.dir[2], state.q / state.p;
+  detail::covarianceTransport(
+      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, parameters, reinitialize, surface);
 }
 }  // namespace Acts
