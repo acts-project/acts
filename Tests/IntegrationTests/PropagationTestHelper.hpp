@@ -344,7 +344,6 @@ auto covariance_bound(const Propagator_type& propagator,
   // setup propagation options
   DenseStepperPropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = 0.1 * plimit;
-  options.maxSteps = 1e5;
   options.pathLimit = plimit;
   options.debug = debug;
 
