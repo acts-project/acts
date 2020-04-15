@@ -66,12 +66,12 @@ public:
   size_t GetSize() { return fSize; }
   
   Var_t* Get(size_t row=0, size_t col=0){
-    int offset=row+col*fNRows;
+    size_t offset=row+col*fNRows;
     return fHostPtr+offset;
   }
   
-  void SetEl(size_t row, size_t col, Var_t val){
-    int offset=row+col*fNRows;
+  void Set(size_t row, size_t col, Var_t val){
+    size_t offset=row+col*fNRows;
     fHostPtr[offset] = val;
   }
   
@@ -80,7 +80,7 @@ public:
   }
   Var_t* GetRow(size_t row){    
     Var_t* ret = new Var_t[fNCols];
-    for(int i_c=0; i_c<fNCols; i_c++) ret[i_c] = fHostPtr[row+fNRows*i_c];
+    for(size_t i_c=0; i_c<fNCols; i_c++) ret[i_c] = fHostPtr[row+fNRows*i_c];
     return ret;    
   }
 
@@ -100,6 +100,10 @@ public:
 
   void CopyD2H(Var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream){
     cudaMemcpyAsync(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost, *stream);
+  }
+
+  void Zeros(){
+    memset(fHostPtr, 0, sizeof(Var_t)*fSize);
   }
   
 private:
