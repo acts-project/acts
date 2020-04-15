@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -616,7 +616,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
     ///
   /// Disc to Disc Tests
   ///					 
-  //~ // covariance check for straight line stepper
+  // covariance check for straight line stepper
   auto covCalculated =
       covariance_bound<RiddersStraightPropagatorType, DiscSurface>(
           rspropagator, plimit, rand1, rand2, rand3,
@@ -637,7 +637,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   covObtained = covariance_bound<EigenPropagatorType, DiscSurface>(
       epropagator, plimit, rand1, rand2, rand3, startC);
   if (covCalculated != Covariance::Zero()) {
-    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
 
   // covariance check for atlas stepper
@@ -648,7 +648,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   covObtained = covariance_bound<AtlasPropagatorType, DiscSurface>(
       apropagator, plimit, rand1, rand2, rand3, startC);
   if (covCalculated != Covariance::Zero()) {
-    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
   
     ///
@@ -676,7 +676,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   covariance_bound<EigenPropagatorType, DiscSurface>(
       epropagator, plimit, rand1, rand2, rand3, startCF);
   if (covCalculated != Covariance::Zero()) {
-    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
+    CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
 }
 
@@ -1150,7 +1150,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free, ds::trackParameters* ds::prop
   CHECK_CLOSE_COVARIANCE(
       covObtained,
       covCalculated,
-      1e-1);
+      5e-1);
       
     // covariance check for eigen stepper  
   covObtained = covariance_curvilinear<FreeParameters>(epropagator, startCB, plimit);
