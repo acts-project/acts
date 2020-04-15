@@ -145,24 +145,27 @@ namespace Acts {
   auto start_DS = std::chrono::system_clock::now();
   
   // Get Size of spacepoints
-  int nMiddle = 0;
-  int nBottom = 0;
-  int nTop    = 0;
+  int nSpM(0);
+  int nSpB(0);
+  int nSpT(0);
 
-  for (auto sp: middleSPs) nMiddle++;
-  for (auto sp: bottomSPs) nBottom++;
-  for (auto sp: topSPs)    nTop++;
+  for (auto sp: middleSPs) nSpM++;
+  for (auto sp: bottomSPs) nSpB++;
+  for (auto sp: topSPs)    nSpT++;
+  if (nSpM == 0 || nSpB == 0 || nSpT == 0) return outputVec;
 
-  if (nMiddle == 0 || nBottom == 0 || nTop == 0) return outputVec;
-
+  CudaScalar<int> nSpM_cuda(&nSpM);
+  CudaScalar<int> nSpB_cuda(&nSpB);
+  CudaScalar<int> nSpT_cuda(&nSpT);
+  
   // Define Matrix and Do flattening
   std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > middleSPvec;
   std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > bottomSPvec;
   std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > topSPvec;
   
-  CpuMatrix<float> spMmat_cpu(nMiddle, 6); // x y z r varR varZ
-  CpuMatrix<float> spBmat_cpu(nBottom, 6);
-  CpuMatrix<float> spTmat_cpu(nTop   , 6);
+  CpuMatrix<float> spMmat_cpu(nSpM, 6); // x y z r varR varZ
+  CpuMatrix<float> spBmat_cpu(nSpB, 6);
+  CpuMatrix<float> spTmat_cpu(nSpT, 6);
   
   size_t mIdx=0;
   for (auto sp: middleSPs){
@@ -200,113 +203,108 @@ namespace Acts {
     tIdx++;    
   }
 
-  CudaMatrix<float> spMmat_cuda(nMiddle, 6, &spMmat_cpu); 
-  CudaMatrix<float> spBmat_cuda(nBottom, 6, &spBmat_cpu);
-  CudaMatrix<float> spTmat_cuda(nTop   , 6, &spTmat_cpu);
-  CudaScalar<int>   nSpM_cuda(&nMiddle);
-  CudaScalar<int>   nSpB_cuda(&nBottom);
-  CudaScalar<int>   nSpT_cuda(&nTop);
+  CudaMatrix<float> spMmat_cuda(nSpM, 6, &spMmat_cpu); 
+  CudaMatrix<float> spBmat_cuda(nSpB, 6, &spBmat_cpu);
+  CudaMatrix<float> spTmat_cuda(nSpT, 6, &spTmat_cpu);
   
   /*------------------------------------
      Algorithm 1. Doublet Search (DS)
   ------------------------------------*/
   
   dim3 DS_BlockSize;
-  dim3 DS_GridSize(nMiddle,1,1);
+  dim3 DS_GridSize(nSpM,1,1);
 
-  CudaVector<float> rM_cuda(nMiddle, spMmat_cpu.Get(0,3));
-  CudaVector<float> zM_cuda(nMiddle, spMmat_cpu.Get(0,2));
-  CudaVector<float> rB_cuda(nBottom, spBmat_cpu.Get(0,3));    
-  CudaVector<float> zB_cuda(nBottom, spBmat_cpu.Get(0,2));
-  CudaScalar<int>   nBottom_cuda(&nBottom);
-  CudaVector<float> rT_cuda(nTop,    spTmat_cpu.Get(0,3));    
-  CudaVector<float> zT_cuda(nTop,    spTmat_cpu.Get(0,2));  
-  CudaScalar<int>   nTop_cuda(&nTop);
+  //!!! replace all of this to matrix !!!
+  CudaVector<float> rM_cuda(nSpM, spMmat_cpu.Get(0,3));
+  CudaVector<float> zM_cuda(nSpM, spMmat_cpu.Get(0,2));
+  CudaVector<float> rB_cuda(nSpB, spBmat_cpu.Get(0,3));    
+  CudaVector<float> zB_cuda(nSpB, spBmat_cpu.Get(0,2));
+  CudaScalar<int>   nBottom_cuda(&nSpB);
+  CudaVector<float> rT_cuda(nSpT, spTmat_cpu.Get(0,3));    
+  CudaVector<float> zT_cuda(nSpT, spTmat_cpu.Get(0,2));  
+  CudaScalar<int>   nTop_cuda(&nSpT);
 
-  CudaVector<int>   nSpBcomp_cuda(nMiddle); nSpBcomp_cuda.Zeros();
-  CudaVector<int>   nSpTcomp_cuda(nMiddle); nSpTcomp_cuda.Zeros();
+  CudaVector<int>   nSpBcompPerSpM_cuda(nSpM); nSpBcompPerSpM_cuda.Zeros();
+  CudaVector<int>   nSpTcompPerSpM_cuda(nSpM); nSpTcompPerSpM_cuda.Zeros();
   
   // For bottom space points
-  CudaMatrix<bool> isCompatBottomMat_cuda(nBottom, nMiddle);
+  CudaMatrix<bool> isCompatBottomMat_cuda(nSpB, nSpM);
 
   int offsetDS;
   offsetDS=0;
-  while(offsetDS<nBottom){
-    DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nBottom-offsetDS), 1,1);
+  while(offsetDS<nSpB){
+    DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpB-offsetDS), 1,1);
     SeedfinderCudaKernels::searchDoublet( DS_GridSize, DS_BlockSize,
 					  true_cuda.Get(),
 					  rM_cuda.Get(), zM_cuda.Get(),
-					  nBottom_cuda.Get(),
+					  nSpB_cuda.Get(),
 					  rB_cuda.Get(offsetDS),
 					  zB_cuda.Get(offsetDS), 
 					  deltaRMin_cuda.Get(), deltaRMax_cuda.Get(), 
 					  cotThetaMax_cuda.Get(),
 					  collisionRegionMin_cuda.Get(),collisionRegionMax_cuda.Get(),
 					  isCompatBottomMat_cuda.Get(offsetDS,0),
-					  nSpBcomp_cuda.Get());
+					  nSpBcompPerSpM_cuda.Get());
     offsetDS+=DS_BlockSize.x;
   }
   
   // For top space points
-  CudaMatrix<bool> isCompatTopMat_cuda(nTop, nMiddle);
+  CudaMatrix<bool> isCompatTopMat_cuda(nSpT, nSpM);
   offsetDS=0;
-  while(offsetDS<nTop){
-    DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nTop-offsetDS), 1,1);    
+  while(offsetDS<nSpT){
+    DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpT-offsetDS), 1,1);    
     SeedfinderCudaKernels::searchDoublet( DS_GridSize, DS_BlockSize,
 					  false_cuda.Get(),
 					  rM_cuda.Get(), zM_cuda.Get(),
-					  nTop_cuda.Get(),
+					  nSpT_cuda.Get(),
 					  rT_cuda.Get(offsetDS),
 					  zT_cuda.Get(offsetDS), 
 					  deltaRMin_cuda.Get(), deltaRMax_cuda.Get(), 
 					  cotThetaMax_cuda.Get(),
 					  collisionRegionMin_cuda.Get(),collisionRegionMax_cuda.Get(),
 					  isCompatTopMat_cuda.Get(offsetDS,0),
-					  nSpTcomp_cuda.Get());
+					  nSpTcompPerSpM_cuda.Get());
     offsetDS+=DS_BlockSize.x;
   }
 
-  CpuMatrix<bool>  isCompatBottomMat_cpu(nBottom, nMiddle, &isCompatBottomMat_cuda);
-  CpuMatrix<bool>  isCompatTopMat_cpu(nTop, nMiddle, &isCompatTopMat_cuda);
-  auto nSpBcomp_cpu = nSpBcomp_cuda.GetHost();
-  auto nSpTcomp_cpu = nSpTcomp_cuda.GetHost();
+  CpuMatrix<bool>  isCompatBottomMat_cpu(nSpB, nSpM, &isCompatBottomMat_cuda);
+  CpuMatrix<bool>  isCompatTopMat_cpu(nSpT, nSpM, &isCompatTopMat_cuda);
+  auto nSpBcompPerSpM_cpu = nSpBcompPerSpM_cuda.GetHost();
+  auto nSpTcompPerSpM_cpu = nSpTcompPerSpM_cuda.GetHost();
   
   auto end_DS = std::chrono::system_clock::now();
   std::chrono::duration<double> elapse_DS = end_DS-start_DS;
   std::get<0>(t_metric) += elapse_DS.count();
  
   // Count number of compatible hits
-  int nMcomp = 0;
-  int nBcompMax = 0;
-  int nTcompMax = 0;
-
-  //int nSpMcomp = 0;
-  //int nSpBcompPerSpM_Max = 0;
-  //int nSpTcompPerSpM_Max = 0;
+  int nSpMcomp(0);
+  int nSpBcompPerSpM_Max(0);
+  int nSpTcompPerSpM_Max(0);
   
-  for (int i_m=0; i_m<nMiddle; i_m++){
-    if ( !nSpBcomp_cpu[i_m] || !nSpTcomp_cpu[i_m] ) continue;
-    nBcompMax = fmax(nSpBcomp_cpu[i_m], nBcompMax);
-    nTcompMax = fmax(nSpTcomp_cpu[i_m], nTcompMax);    
-    nMcomp++;
+  for (int i_m=0; i_m<nSpM; i_m++){
+    if ( !nSpBcompPerSpM_cpu[i_m] || !nSpTcompPerSpM_cpu[i_m] ) continue;
+
+    nSpBcompPerSpM_Max = fmax(nSpBcompPerSpM_cpu[i_m], nSpBcompPerSpM_Max);
+    nSpTcompPerSpM_Max = fmax(nSpTcompPerSpM_cpu[i_m], nSpTcompPerSpM_Max);    
+    nSpMcomp++;
   }
 
-  CudaScalar<int>   nMcomp_cuda(&nMcomp);
-  CudaScalar<int>   nBcompMax_cuda(&nBcompMax);
-  CudaScalar<int>   nTcompMax_cuda(&nTcompMax);
+  CudaScalar<int>  nSpMcomp_cuda(&nSpMcomp);
+  CudaScalar<int>  nSpBcompPerSpM_Max_cuda(&nSpBcompPerSpM_Max);
+  CudaScalar<int>  nSpTcompPerSpM_Max_cuda(&nSpTcompPerSpM_Max);
 
   // Get the index of compatible hits
-  auto mIndex_cpu = new int[nMcomp];  
-  CpuMatrix< int > bIndex_cpu(nBcompMax, nMcomp); bIndex_cpu.Zeros();
-  CpuMatrix< int > tIndex_cpu(nTcompMax, nMcomp); tIndex_cpu.Zeros();
+  auto mIndex_cpu = new int[nSpMcomp];  
+  CpuMatrix< int > bIndex_cpu(nSpBcompPerSpM_Max, nSpMcomp); bIndex_cpu.Zeros();
+  CpuMatrix< int > tIndex_cpu(nSpTcompPerSpM_Max, nSpMcomp); tIndex_cpu.Zeros();
     
-  int mcnt=0;
-  for (int i_m=0; i_m<nMiddle; i_m++){
-    if ( !nSpBcomp_cpu[i_m] || !nSpTcomp_cpu[i_m] ) continue;
+  int mcnt(0);
+  for (int i_m=0; i_m<nSpM; i_m++){
+    if ( !nSpBcompPerSpM_cpu[i_m] || !nSpTcompPerSpM_cpu[i_m] ) continue;
 
     auto BottomCol = isCompatBottomMat_cpu.Get(0,i_m);
-    int bcnt = 0;
-    for (int i=0; i<nBottom; i++){
+    int bcnt(0);
+    for (int i=0; i<nSpB; i++){
       if (BottomCol[i]){
 	bIndex_cpu.Set(bcnt,mcnt,i);
 	bcnt++;
@@ -314,8 +312,8 @@ namespace Acts {
     }
     
     auto TopCol = isCompatTopMat_cpu.Get(0,i_m);    
-    int tcnt = 0;
-    for (int i=0; i<nTop; i++){
+    int tcnt(0);
+    for (int i=0; i<nSpT; i++){
       if (TopCol[i]){
 	tIndex_cpu.Set(tcnt,mcnt,i);
 	tcnt++;
@@ -326,29 +324,29 @@ namespace Acts {
     mcnt++;    
   }
   
-  CudaVector< int > mIndex_cuda(nMcomp,    mIndex_cpu);
-  CudaMatrix< int > bIndex_cuda(nBcompMax, nMcomp, &bIndex_cpu);
-  CudaMatrix< int > tIndex_cuda(nTcompMax, nMcomp, &tIndex_cpu);
+  CudaVector< int > mIndex_cuda(nSpMcomp,    mIndex_cpu);
+  CudaMatrix< int > bIndex_cuda(nSpBcompPerSpM_Max, nSpMcomp, &bIndex_cpu);
+  CudaMatrix< int > tIndex_cuda(nSpTcompPerSpM_Max, nSpMcomp, &tIndex_cpu);
 
   /* -----------------------------------------
      Algorithm 1.B Matrix reduction
   -------------------------------------------*/
   
-  CudaMatrix<float> spBcompMat_cuda(nBcompMax, nMcomp*6);
-  CudaMatrix<float> spTcompMat_cuda(nTcompMax, nMcomp*6);
+  CudaMatrix<float> spBcompMat_cuda(nSpBcompPerSpM_Max, nSpMcomp*6);
+  CudaMatrix<float> spTcompMat_cuda(nSpTcompPerSpM_Max, nSpMcomp*6);
 
-  dim3 RM_GridSize(nMcomp,1,1);
+  dim3 RM_GridSize(nSpMcomp,1,1);
   dim3 RM_BlockSize; 
 
   // For bottom hits
   int offsetRM;
   offsetRM=0;
-  while(offsetRM<nBcompMax){
-    RM_BlockSize = dim3(fmin(m_config.maxBlockSize, nBcompMax-offsetRM),1,1);
+  while(offsetRM<nSpBcompPerSpM_Max){
+    RM_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpBcompPerSpM_Max-offsetRM),1,1);
     SeedfinderCudaKernels::reduceMatrix(RM_GridSize, RM_BlockSize,
 					nSpB_cuda.Get(),
 					spBmat_cuda.Get(0,0),
-					nBcompMax_cuda.Get(),
+					nSpBcompPerSpM_Max_cuda.Get(),
 					bIndex_cuda.Get(offsetRM,0),
 					spBcompMat_cuda.Get(offsetRM,0)
 					);
@@ -357,12 +355,12 @@ namespace Acts {
 
   // For top hits
   offsetRM=0;
-  while(offsetRM<nTcompMax){
-    RM_BlockSize = dim3(fmin(m_config.maxBlockSize, nTcompMax-offsetRM),1,1);
+  while(offsetRM<nSpTcompPerSpM_Max){
+    RM_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpTcompPerSpM_Max-offsetRM),1,1);
     SeedfinderCudaKernels::reduceMatrix(RM_GridSize, RM_BlockSize,
 					nSpT_cuda.Get(),
 					spTmat_cuda.Get(0,0),
-					nTcompMax_cuda.Get(),
+					nSpTcompPerSpM_Max_cuda.Get(),
 					tIndex_cuda.Get(offsetRM,0),
 					spTcompMat_cuda.Get(offsetRM,0)
 					);
@@ -370,9 +368,9 @@ namespace Acts {
   }
 
   // For middle hits
-  CpuMatrix<float>  spMcompMat_cpu (nMcomp, 6);
-  CudaMatrix<float> spMcompMat_cuda(nMcomp, 6);
-  for (int i_m=0; i_m<nMcomp; i_m++){
+  CpuMatrix<float>  spMcompMat_cpu (nSpMcomp, 6);
+  CudaMatrix<float> spMcompMat_cuda(nSpMcomp, 6);
+  for (int i_m=0; i_m<nSpMcomp; i_m++){
     int mIndex = mIndex_cpu[i_m];    
     spMcompMat_cpu.Set(i_m,0,*spMmat_cpu.Get(mIndex,0));
     spMcompMat_cpu.Set(i_m,1,*spMmat_cpu.Get(mIndex,1));
@@ -388,23 +386,23 @@ namespace Acts {
   -------------------------------------------*/
 
   auto start_TC = std::chrono::system_clock::now();  
-  
-  CudaMatrix<float> circBcompMat_cuda(nBcompMax, nMcomp*6);  
-  CudaMatrix<float> circTcompMat_cuda(nTcompMax, nMcomp*6);
+
+  CudaMatrix<float> circBcompMat_cuda(nSpBcompPerSpM_Max, nSpMcomp*6);  
+  CudaMatrix<float> circTcompMat_cuda(nSpTcompPerSpM_Max, nSpMcomp*6);
     
-  dim3 TC_GridSize(nMcomp,1,1);
+  dim3 TC_GridSize(nSpMcomp,1,1);
   dim3 TC_BlockSize;
   
   // For bottom-middle doublets
   int offsetTC;
   offsetTC=0;
-  while(offsetTC<nBcompMax){
-    TC_BlockSize = dim3(fmin(m_config.maxBlockSize, nBcompMax-offsetTC),1,1);    
+  while(offsetTC<nSpBcompPerSpM_Max){
+    TC_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpBcompPerSpM_Max-offsetTC),1,1);    
     SeedfinderCudaKernels::transformCoordinates(TC_GridSize,
 						TC_BlockSize,
 						true_cuda.Get(),
 						spMcompMat_cuda.Get(0,0),
-						nBcompMax_cuda.Get(),
+						nSpBcompPerSpM_Max_cuda.Get(),
 						spBcompMat_cuda.Get(offsetTC,0),
 						circBcompMat_cuda.Get(offsetTC,0));    
     offsetTC+=TC_BlockSize.x;
@@ -412,20 +410,20 @@ namespace Acts {
   
   // For middle-top doublets
   offsetTC=0;
-  while(offsetTC<nTcompMax){
-    TC_BlockSize = dim3(fmin(m_config.maxBlockSize, nTcompMax-offsetTC),1,1);
+  while(offsetTC<nSpTcompPerSpM_Max){
+    TC_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpTcompPerSpM_Max-offsetTC),1,1);
     SeedfinderCudaKernels::transformCoordinates(TC_GridSize,
 						TC_BlockSize,
 						false_cuda.Get(),
 						spMcompMat_cuda.Get(0,0),
-						nTcompMax_cuda.Get(),
+						nSpTcompPerSpM_Max_cuda.Get(),
 						spTcompMat_cuda.Get(offsetTC,0),
 						circTcompMat_cuda.Get(offsetTC,0));    
     offsetTC+=TC_BlockSize.x;
   }
     
   // retreive middle-bottom doublet circ information
-  CpuMatrix<float> circBcompMat_cpu(nBcompMax, nMcomp*6, &circBcompMat_cuda);
+  CpuMatrix<float> circBcompMat_cpu(nSpBcompPerSpM_Max, nSpMcomp*6, &circBcompMat_cuda);
   
   auto end_TC = std::chrono::system_clock::now();
   std::chrono::duration<double> elapse_TC = end_TC-start_TC;
@@ -441,24 +439,25 @@ namespace Acts {
   const int         nTopPassLimit = m_config.nTopPassLimit;
   CudaScalar<int>   nTopPassLimit_cuda(&nTopPassLimit);
 
-  CudaMatrix<int>   nTopPass_cuda(nBcompMax, nMcomp); nTopPass_cuda.Zeros();
-  CudaMatrix<int>   tPassIndex_cuda(nTopPassLimit, nBcompMax*nMcomp); 
-  CudaMatrix<float> curvatures_cuda(nTopPassLimit, nBcompMax*nMcomp);       
-  CudaMatrix<float> impactparameters_cuda(nTopPassLimit, nBcompMax*nMcomp);
+  CudaMatrix<int>   nTopPass_cuda(nSpBcompPerSpM_Max, nSpMcomp); nTopPass_cuda.Zeros();
+  CudaMatrix<int>   tPassIndex_cuda(nTopPassLimit, nSpBcompPerSpM_Max*nSpMcomp); 
+  CudaMatrix<float> curvatures_cuda(nTopPassLimit, nSpBcompPerSpM_Max*nSpMcomp);       
+  CudaMatrix<float> impactparameters_cuda(nTopPassLimit, nSpBcompPerSpM_Max*nSpMcomp);
 
-  CpuMatrix<int>    nTopPass_cpu(nBcompMax, nMcomp, true);
-  CpuMatrix<int>    tPassIndex_cpu(nTopPassLimit, nBcompMax*nMcomp, true);
-  CpuMatrix<float>  curvatures_cpu(nTopPassLimit, nBcompMax*nMcomp, true);
-  CpuMatrix<float>  impactparameters_cpu(nTopPassLimit, nBcompMax*nMcomp, true);
+  CpuMatrix<int>    nTopPass_cpu(nSpBcompPerSpM_Max, nSpMcomp, true);
+  CpuMatrix<int>    tPassIndex_cpu(nTopPassLimit, nSpBcompPerSpM_Max*nSpMcomp, true);
+  CpuMatrix<float>  curvatures_cpu(nTopPassLimit, nSpBcompPerSpM_Max*nSpMcomp, true);
+  CpuMatrix<float>  impactparameters_cpu(nTopPassLimit, nSpBcompPerSpM_Max*nSpMcomp, true);
   
   cudaStream_t cuStream;
   cudaStreamCreate(&cuStream);
    
-  for (int i_m=0; i_m<=nMcomp; i_m++){    
-    cudaStreamSynchronize(cuStream);
+  for (int i_m=0; i_m<=nSpMcomp; i_m++){    
     // -----------------------------------
     //  Algorithm 3. Triplet Search (TS)
     //------------------------------------
+
+    cudaStreamSynchronize(cuStream);
     
     std::vector<std::pair<
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> seedsPerSpM;
@@ -467,23 +466,23 @@ namespace Acts {
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
     
-    if (i_m < nMcomp){
+    if (i_m < nSpMcomp){
           
       // For triplets collected at the previous iteration      
       int mIndex = mIndex_cpu[i_m];      
-      dim3 TS_GridSize(nSpBcomp_cpu[mIndex],1,1);
+      dim3 TS_GridSize(nSpBcompPerSpM_cpu[mIndex],1,1);
       dim3 TS_BlockSize;
       
-      int i_ts = 0;    
-      while ( offsetVec[i_ts] < nSpTcomp_cpu[mIndex] ){	
-	TS_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpTcomp_cpu[mIndex]-offsetVec[i_ts] ), 1,1); 
+      int i_ts(0);    
+      while ( offsetVec[i_ts] < nSpTcompPerSpM_cpu[mIndex] ){	
+	TS_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpTcompPerSpM_cpu[mIndex]-offsetVec[i_ts] ), 1,1); 
 	SeedfinderCudaKernels::searchTriplet(TS_GridSize, TS_BlockSize,
 					     offsetVec_cuda.Get(i_ts),
-					     nMcomp_cuda.Get(),
+					     nSpMcomp_cuda.Get(),
 					     spMcompMat_cuda.Get(i_m,0),
-					     nBcompMax_cuda.Get(),
+					     nSpBcompPerSpM_Max_cuda.Get(),
 					     spBcompMat_cuda.Get(0,6*i_m),
-					     nTcompMax_cuda.Get(),
+					     nSpTcompPerSpM_Max_cuda.Get(),
 					     spTcompMat_cuda.Get(offsetVec[i_ts],6*i_m),
 					     circBcompMat_cuda.Get(0,6*i_m),
 					     circTcompMat_cuda.Get(offsetVec[i_ts],6*i_m),
@@ -496,30 +495,30 @@ namespace Acts {
 					     nTopPassLimit_cuda.Get(),
 					     // output
 					     nTopPass_cuda.Get(0,i_m),
-					     tPassIndex_cuda.Get(0,nBcompMax*i_m),
-					     curvatures_cuda.Get(0,nBcompMax*i_m),
-					     impactparameters_cuda.Get(0,nBcompMax*i_m),
+					     tPassIndex_cuda.Get(0,nSpBcompPerSpM_Max*i_m),
+					     curvatures_cuda.Get(0,nSpBcompPerSpM_Max*i_m),
+					     impactparameters_cuda.Get(0,nSpBcompPerSpM_Max*i_m),
 					     &cuStream
 					     );
 	i_ts++;
       }
       
       nTopPass_cpu.CopyD2H(nTopPass_cuda.Get(0,i_m),
-			   nBcompMax,
-			   nBcompMax*i_m,
+			   nSpBcompPerSpM_Max,
+			   nSpBcompPerSpM_Max*i_m,
 			   &cuStream);
-      tPassIndex_cpu.CopyD2H(tPassIndex_cuda.Get(0,nBcompMax*i_m),
-			     nTopPassLimit*nBcompMax,
-			     nTopPassLimit*nBcompMax*i_m,
+      tPassIndex_cpu.CopyD2H(tPassIndex_cuda.Get(0,nSpBcompPerSpM_Max*i_m),
+			     nTopPassLimit*nSpBcompPerSpM_Max,
+			     nTopPassLimit*nSpBcompPerSpM_Max*i_m,
 			     &cuStream);
       
-      curvatures_cpu.CopyD2H(curvatures_cuda.Get(0,nBcompMax*i_m),
-			     nTopPassLimit*nBcompMax,
-			     nTopPassLimit*nBcompMax*i_m,
+      curvatures_cpu.CopyD2H(curvatures_cuda.Get(0,nSpBcompPerSpM_Max*i_m),
+			     nTopPassLimit*nSpBcompPerSpM_Max,
+			     nTopPassLimit*nSpBcompPerSpM_Max*i_m,
 			     &cuStream); 
-      impactparameters_cpu.CopyD2H(impactparameters_cuda.Get(0,nBcompMax*i_m),
-				   nTopPassLimit*nBcompMax,
-				   nTopPassLimit*nBcompMax*i_m,
+      impactparameters_cpu.CopyD2H(impactparameters_cuda.Get(0,nSpBcompPerSpM_Max*i_m),
+				   nTopPassLimit*nSpBcompPerSpM_Max,
+				   nTopPassLimit*nSpBcompPerSpM_Max*i_m,
 				   &cuStream);
       
     }
@@ -536,7 +535,7 @@ namespace Acts {
       auto bIndexVec = bIndex_cpu.Get(0,curID);
       auto tIndexVec = tIndex_cpu.Get(0,curID);
       
-      for (int i_b=0; i_b<nSpBcomp_cpu[mIndex]; i_b++){
+      for (int i_b=0; i_b<nSpBcompPerSpM_cpu[mIndex]; i_b++){
 	int nTpass = *(nTopPass_cpu.Get(i_b,curID));
 	if (nTpass==0) continue;	
 	
@@ -547,7 +546,7 @@ namespace Acts {
 
 	std::vector< std::tuple< int, int, int > > indexVec;
 	for(int i_t=0; i_t<nTpass; i_t++){
-	  int g_tIndex = tIndexVec[*tPassIndex_cpu.Get(i_t,i_b+(curID)*nBcompMax)];
+	  int g_tIndex = tIndexVec[*tPassIndex_cpu.Get(i_t,i_b+(curID)*nSpBcompPerSpM_Max)];
 	  indexVec.push_back(std::make_tuple(g_tIndex,i_t,i_b));
 	}
 	sort(indexVec.begin(), indexVec.end()); 
@@ -558,8 +557,8 @@ namespace Acts {
 	  auto bId      = std::get<2>(el);
 	  
 	  tVec.push_back(topSPvec[g_tIndex]);
-	  curvatures.push_back(*curvatures_cpu.Get(tId,bId+(curID)*nBcompMax));
-	  impactParameters.push_back(*impactparameters_cpu.Get(tId,bId+(curID)*nBcompMax));
+	  curvatures.push_back(*curvatures_cpu.Get(tId,bId+(curID)*nSpBcompPerSpM_Max));
+	  impactParameters.push_back(*impactparameters_cpu.Get(tId,bId+(curID)*nSpBcompPerSpM_Max));
 	}
 	
 	std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> sameTrackSeeds;
