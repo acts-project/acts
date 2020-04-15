@@ -18,36 +18,42 @@
 __global__ void cuSearchDoublet(const bool* isBottom,
 				const int* nSpM, const float* spMmat,  
 				const int* nSpB, const float* spBmat,
-				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
-				const float* collisionRegionMin, const float* collisionRegionMax,
+				const float* deltaRMin,
+				const float* deltaRMax,
+				const float* cotThetaMax, 
+				const float* collisionRegionMin,
+				const float* collisionRegionMax,
 				bool* isCompatible,
-				int*  nSpBcomp
+				int*  nSpBcompPerSpM
 				);
 
 __global__ void cuReduceMatrix(const int*   nSpB,
 			       const float* spBmat,
-			       const int*   nSpBcompMax,
+			       const int*   nSpBcompPerSpM_Max,
 			       const int*   bIndex,
-			       float* spBcompMat);
+			       float* spBcompMatPerSpM);
 
 __global__ void cuTransformCoordinates(const bool* isBottom,
-				       const float* spMmat,				       
-				       const int* nSpB,
-				       const float* spBmat,
-				       float* circBmat);
+				       const float* spMcompMat,
+				       const int*   nSpBcompPerSpM,
+				       const float* spBcompMatPerSpM,
+				       float* circBcompMatPerSpM);
 
 __global__ void cuSearchTriplet(const int*   offset,
-				const int*   nSpM,
-				const float* spMmat,
-				const int*   nSpB, const float* spBmat,
-				const int*   nSpT, const float* spTmat,
-				const float* circBmat,
-				const float* circTmat,
-				const float* maxScatteringAngle2, const float* sigmaScattering,
-				const float* minHelixDiameter2, const float* pT2perRadius,
+				const int*   nSpMcomp,
+				const float* spMcompMat,
+				const int*   nSpBcompPerSpM,
+				const float* circBcompMatPerSpM,
+				const int*   nSpTcompPerSpM,
+				const float* circTcompMatPerSpM,
+				const float* maxScatteringAngle2,
+				const float* sigmaScattering,
+				const float* minHelixDiameter2,
+				const float* pT2perRadius,
 				const float* impactMax,
 				const int*   nTopPassLimit,
-				int* nTopPass, int* tIndex,
+				int* nTopPass,
+				int* tIndex,
 				float* curvatures,
 				float* impactparameters				
 				);
@@ -56,80 +62,92 @@ namespace Acts{
 
   
   void SeedfinderCudaKernels::searchDoublet(
-			        dim3 grid, dim3 block,
+				const dim3 grid, const dim3 block,
 				const bool* isBottom,
 				const int* nSpM, const float* spMmat,
 				const int* nSpB, const float* spBmat,
-				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
-				const float* collisionRegionMin, const float* collisionRegionMax,
+				const float* deltaRMin,
+				const float* deltaRMax,
+				const float* cotThetaMax, 
+				const float* collisionRegionMin,
+				const float* collisionRegionMax,
 				bool* isCompatible,
-				int*  nSpBcomp){
+				int*  nSpBcompPerSpM){
     
   cuSearchDoublet<<< grid, block >>>(isBottom,
 				     nSpM, spMmat,
 				     nSpB, spBmat,
-				     deltaRMin, deltaRMax, cotThetaMax, 
-				     collisionRegionMin, collisionRegionMax,
+				     deltaRMin,
+				     deltaRMax,
+				     cotThetaMax, 
+				     collisionRegionMin,
+				     collisionRegionMax,
 				     isCompatible,
-				     nSpBcomp);
+				     nSpBcompPerSpM);
   cudaErrChk( cudaGetLastError() );
   }
 
-  void SeedfinderCudaKernels::reduceMatrix( dim3 grid, dim3 block,
+  void SeedfinderCudaKernels::reduceMatrix( const dim3 grid, const dim3 block,
 					    const int*   nSpB,
 					    const float* spBmat,
-					    const int*   nSpBcompMax,
+					    const int*   nSpBcompPerSpM_Max,
 					    const int*   bIndex,
-					    float* spBcompMat){
+					    float* spBcompMatPerSpM){
     cuReduceMatrix<<< grid, block >>>(nSpB,
 				      spBmat,
-				      nSpBcompMax,
+				      nSpBcompPerSpM_Max,
 				      bIndex,
-				      spBcompMat);
+				      spBcompMatPerSpM);
     cudaErrChk ( cudaGetLastError() );
   }
     
   void SeedfinderCudaKernels::transformCoordinates(
-				   dim3 grid, dim3 block,
+				   const dim3 grid, const dim3 block,
 				   const bool* isBottom,
-				   const float* spMmat,
-				   const int*   nSpB,
-				   const float* spBmat,
-				   float* circBmat){
+				   const float* spMcompMat,
+				   const int*   nSpBcompPerSpM,
+				   const float* spBcompMatPerSpM,
+				   float* circBcompMatPerSpM){
     
     cuTransformCoordinates<<< grid, block >>>(isBottom,
-					      spMmat,
-					      nSpB,
-					      spBmat,
-					      circBmat);
+					      spMcompMat,
+					      nSpBcompPerSpM,
+					      spBcompMatPerSpM,
+					      circBcompMatPerSpM);
     cudaErrChk( cudaGetLastError() );  
   }
 
   void SeedfinderCudaKernels::searchTriplet(
-				dim3 grid, dim3 block,
+				const dim3 grid, const dim3 block,
 				const int*   offset,
-				const int*   nSpM,
-				const float* spMmat,
-				const int*   nSpB, const float* spBmat,
-				const int*   nSpT, const float* spTmat,
-				const float* circBmat,
-				const float* circTmat,
-				const float* maxScatteringAngle2, const float* sigmaScattering,
-				const float* minHelixDiameter2,   const float* pT2perRadius,
-				const float* impactMax,           const int*   nTopPassLimit,	  
-				int*   nTopPass,   int* tIndex,
-				float* curvatures, float* impactparameters,
+				const int*   nSpMcomp,
+				const float* spMcompMat,
+				const int*   nSpBcompPerSpM,
+				const float* circBcompMatPerSpM,
+				const int*   nSpTcompPerSpM,
+				const float* circTcompMatPerSpM,
+				const float* maxScatteringAngle2,
+				const float* sigmaScattering,
+				const float* minHelixDiameter2,
+				const float* pT2perRadius,
+				const float* impactMax,
+				const int*   nTopPassLimit,
+				int* nTopPass,
+				int* tIndex,
+				float* curvatures,
+				float* impactparameters,				
 				cudaStream_t* stream
 				){
     cuSearchTriplet<<< grid, block, 
       (sizeof(bool)+2*sizeof(float))*block.x, *stream >>>(
 			       offset,
-			       nSpM,
-			       spMmat,
-			       nSpB, spBmat,
-			       nSpT, spTmat,				     
-			       circBmat,circTmat,
-			       maxScatteringAngle2, sigmaScattering,
+			       nSpMcomp,
+			       spMcompMat,
+			       nSpBcompPerSpM,
+			       circBcompMatPerSpM,
+			       nSpTcompPerSpM,
+			       circTcompMatPerSpM,			       
+			       maxScatteringAngle2,sigmaScattering,
 			       minHelixDiameter2, pT2perRadius,
 			       impactMax, nTopPassLimit,
 			       nTopPass, tIndex,
@@ -143,10 +161,13 @@ namespace Acts{
 __global__ void cuSearchDoublet(const bool* isBottom,
 				const int* nSpM, const float* spMmat,
 				const int* nSpB, const float* spBmat,
-				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
-				const float* collisionRegionMin, const float* collisionRegionMax,
+				const float* deltaRMin,
+				const float* deltaRMax,
+				const float* cotThetaMax, 
+				const float* collisionRegionMin,
+				const float* collisionRegionMax,
 				bool* isCompatible,
-				int*  nSpBcomp
+				int*  nSpBcompPerSpM
 				){
   
   int globalId = threadIdx.x+(*nSpB)*blockIdx.x;
@@ -204,47 +225,47 @@ __global__ void cuSearchDoublet(const bool* isBottom,
     }    
   }
 
-  int nComp = atomicAdd(&nSpBcomp[blockIdx.x],isCompatible[globalId]);
+  int nComp = atomicAdd(&nSpBcompPerSpM[blockIdx.x],isCompatible[globalId]);
 }
 
 __global__ void cuReduceMatrix(const int*   nSpB,
 			       const float* spBmat,
-			       const int*   nSpBcompMax,
+			       const int*   nSpBcompPerSpM_Max,
 			       const int*   bIndex,
-			       float* spBcompMat){
+			       float* spBcompMatPerSpM){
   
-  int g_bIndex = bIndex[threadIdx.x+(*nSpBcompMax)*blockIdx.x];
-  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+0)] = spBmat[g_bIndex+(*nSpB)*0];
-  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+1)] = spBmat[g_bIndex+(*nSpB)*1];
-  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+2)] = spBmat[g_bIndex+(*nSpB)*2];
-  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+3)] = spBmat[g_bIndex+(*nSpB)*3];
-  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+4)] = spBmat[g_bIndex+(*nSpB)*4];
-  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+5)] = spBmat[g_bIndex+(*nSpB)*5];
+  int g_bIndex = bIndex[threadIdx.x+(*nSpBcompPerSpM_Max)*blockIdx.x];
+  spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+0)] = spBmat[g_bIndex+(*nSpB)*0];
+  spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+1)] = spBmat[g_bIndex+(*nSpB)*1];
+  spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+2)] = spBmat[g_bIndex+(*nSpB)*2];
+  spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+3)] = spBmat[g_bIndex+(*nSpB)*3];
+  spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+4)] = spBmat[g_bIndex+(*nSpB)*4];
+  spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+5)] = spBmat[g_bIndex+(*nSpB)*5];
   
 }
 
 __global__ void cuTransformCoordinates(const bool*  isBottom,
-				       const float* spMmat,
-				       const int*   nSpB,
-				       const float* spBmat,
-				       float*       circBmat){
-
-  float xM = spMmat[blockIdx.x+gridDim.x*0];
-  float yM = spMmat[blockIdx.x+gridDim.x*1];
-  float zM = spMmat[blockIdx.x+gridDim.x*2];
-  float rM = spMmat[blockIdx.x+gridDim.x*3];
-  float varianceRM = spMmat[blockIdx.x+gridDim.x*4];
-  float varianceZM = spMmat[blockIdx.x+gridDim.x*5];
+				       const float* spMcompMat,
+				       const int*   nSpBcompPerSpM,
+				       const float* spBcompMatPerSpM,
+				       float* circBcompMatPerSpM){
+  
+  float xM = spMcompMat[blockIdx.x+gridDim.x*0];
+  float yM = spMcompMat[blockIdx.x+gridDim.x*1];
+  float zM = spMcompMat[blockIdx.x+gridDim.x*2];
+  float rM = spMcompMat[blockIdx.x+gridDim.x*3];
+  float varianceRM = spMcompMat[blockIdx.x+gridDim.x*4];
+  float varianceZM = spMcompMat[blockIdx.x+gridDim.x*5];
 
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
     
-  float xB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+0)];
-  float yB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+1)];
-  float zB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+2)];
-  float rB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+3)];
-  float varianceRB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+4)];
-  float varianceZB = spBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+5)];
+  float xB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+0)];
+  float yB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+1)];
+  float zB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+2)];
+  float rB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+3)];
+  float varianceRB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+4)];
+  float varianceZB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+5)];
 
   float deltaX = xB - xM;
   float deltaY = yB - yM;
@@ -280,57 +301,59 @@ __global__ void cuTransformCoordinates(const bool*  isBottom,
   float Er = ((varianceZM + varianceZB) +
 	      (cot_theta * cot_theta) * (varianceRM + varianceRB)) * iDeltaR2;  
   
-  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+0)] = Zo;
-  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+1)] = cot_theta;
-  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+2)] = iDeltaR;
-  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+3)] = Er;
-  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+4)] = U;
-  circBmat[threadIdx.x+(*nSpB)*(6*blockIdx.x+5)] = V; 
+  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+0)] = Zo;
+  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+1)] = cot_theta;
+  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+2)] = iDeltaR;
+  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+3)] = Er;
+  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+4)] = U;
+  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM)*(6*blockIdx.x+5)] = V; 
 }
 
 __global__ void cuSearchTriplet(const int*   offset,
-				const int*   nSpM,
-				const float* spMmat,
-				const int*   nSpB, const float* spBmat,
-				const int*   nSpT, const float* spTmat,
-				const float* circBmat,
-				const float* circTmat,
-				const float* maxScatteringAngle2, const float* sigmaScattering,
-				const float* minHelixDiameter2,    const float* pT2perRadius,
+				const int*   nSpMcomp,
+				const float* spMcompMat,
+				const int*   nSpBcompPerSpM,
+				const float* circBcompMatPerSpM,
+				const int*   nSpTcompPerSpM,
+				const float* circTcompMatPerSpM,
+				const float* maxScatteringAngle2,
+				const float* sigmaScattering,
+				const float* minHelixDiameter2,
+				const float* pT2perRadius,
 				const float* impactMax,
 				const int*   nTopPassLimit,
 				int* nTopPass,
 				int* tIndex,
 				float* curvatures,
-				float* impactparameters
+				float* impactparameters			    				
 				){
   extern __shared__ float shared[];
   
   float* impact   = (float*)shared;
   float* invHelix = (float*)&impact[blockDim.x];
-  bool* isPassed = (bool*)&invHelix[blockDim.x];  
+  bool* isPassed  = (bool*)&invHelix[blockDim.x];  
   
-  float rM         = spMmat[(*nSpM)*3];
-  float varianceRM = spMmat[(*nSpM)*4];
-  float varianceZM = spMmat[(*nSpM)*5];
+  float rM         = spMcompMat[(*nSpMcomp)*3];
+  float varianceRM = spMcompMat[(*nSpMcomp)*4];
+  float varianceZM = spMcompMat[(*nSpMcomp)*5];
 
   // Zob values from CPU and CUDA are slightly different
-  //float Zob        = circBmat[blockId+(*nSpB)*0];
-  float cotThetaB  = circBmat[blockIdx.x+(*nSpB)*1];
-  float iDeltaRB   = circBmat[blockIdx.x+(*nSpB)*2];
-  float ErB        = circBmat[blockIdx.x+(*nSpB)*3];
-  float Ub         = circBmat[blockIdx.x+(*nSpB)*4];
-  float Vb         = circBmat[blockIdx.x+(*nSpB)*5];
+  //float Zob        = circBcompMatPerSpM[blockId+(*nSpBcompPerSpM)*0];
+  float cotThetaB  = circBcompMatPerSpM[blockIdx.x+(*nSpBcompPerSpM)*1];
+  float iDeltaRB   = circBcompMatPerSpM[blockIdx.x+(*nSpBcompPerSpM)*2];
+  float ErB        = circBcompMatPerSpM[blockIdx.x+(*nSpBcompPerSpM)*3];
+  float Ub         = circBcompMatPerSpM[blockIdx.x+(*nSpBcompPerSpM)*4];
+  float Vb         = circBcompMatPerSpM[blockIdx.x+(*nSpBcompPerSpM)*5];
   float iSinTheta2 = (1. + cotThetaB * cotThetaB);
   float scatteringInRegion2 = (*maxScatteringAngle2) * iSinTheta2;
   scatteringInRegion2 *= (*sigmaScattering) * (*sigmaScattering);
 
-  //float Zot        = circTmat[threadId+(*nSpT)*0];
-  float cotThetaT  = circTmat[threadIdx.x+(*nSpT)*1];
-  float iDeltaRT   = circTmat[threadIdx.x+(*nSpT)*2];
-  float ErT        = circTmat[threadIdx.x+(*nSpT)*3];
-  float Ut         = circTmat[threadIdx.x+(*nSpT)*4];
-  float Vt         = circTmat[threadIdx.x+(*nSpT)*5];
+  //float Zot        = circTcompMatPerSpM[threadId+(*nSpTcompPerSpM)*0];
+  float cotThetaT  = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM)*1];
+  float iDeltaRT   = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM)*2];
+  float ErT        = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM)*3];
+  float Ut         = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM)*4];
+  float Vt         = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM)*5];
 
   // add errors of spB-spM and spM-spT pairs and add the correlation term
   // for errors on spM

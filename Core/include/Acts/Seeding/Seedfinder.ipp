@@ -318,8 +318,8 @@ namespace Acts {
      Algorithm 1.B Matrix reduction
   -------------------------------------------*/
   
-  CudaMatrix<float> spBcompMat_cuda(nSpBcompPerSpM_Max, nSpMcomp*6);
-  CudaMatrix<float> spTcompMat_cuda(nSpTcompPerSpM_Max, nSpMcomp*6);
+  CudaMatrix<float> spBcompMatPerSpM_cuda(nSpBcompPerSpM_Max, nSpMcomp*6);
+  CudaMatrix<float> spTcompMatPerSpM_cuda(nSpTcompPerSpM_Max, nSpMcomp*6);
 
   dim3 RM_GridSize(nSpMcomp,1,1);
   dim3 RM_BlockSize; 
@@ -334,7 +334,7 @@ namespace Acts {
 					spBmat_cuda.Get(0,0),
 					nSpBcompPerSpM_Max_cuda.Get(),
 					bIndex_cuda.Get(offsetRM,0),
-					spBcompMat_cuda.Get(offsetRM,0)
+					spBcompMatPerSpM_cuda.Get(offsetRM,0)
 					);
     offsetRM+=RM_BlockSize.x;    
   }
@@ -348,7 +348,7 @@ namespace Acts {
 					spTmat_cuda.Get(0,0),
 					nSpTcompPerSpM_Max_cuda.Get(),
 					tIndex_cuda.Get(offsetRM,0),
-					spTcompMat_cuda.Get(offsetRM,0)
+					spTcompMatPerSpM_cuda.Get(offsetRM,0)
 					);
     offsetRM+=RM_BlockSize.x;    
   }
@@ -373,8 +373,8 @@ namespace Acts {
 
   auto start_TC = std::chrono::system_clock::now();  
 
-  CudaMatrix<float> circBcompMat_cuda(nSpBcompPerSpM_Max, nSpMcomp*6);  
-  CudaMatrix<float> circTcompMat_cuda(nSpTcompPerSpM_Max, nSpMcomp*6);
+  CudaMatrix<float> circBcompMatPerSpM_cuda(nSpBcompPerSpM_Max, nSpMcomp*6);  
+  CudaMatrix<float> circTcompMatPerSpM_cuda(nSpTcompPerSpM_Max, nSpMcomp*6);
     
   dim3 TC_GridSize(nSpMcomp,1,1);
   dim3 TC_BlockSize;
@@ -389,8 +389,8 @@ namespace Acts {
 						true_cuda.Get(),
 						spMcompMat_cuda.Get(0,0),
 						nSpBcompPerSpM_Max_cuda.Get(),
-						spBcompMat_cuda.Get(offsetTC,0),
-						circBcompMat_cuda.Get(offsetTC,0));    
+						spBcompMatPerSpM_cuda.Get(offsetTC,0),
+						circBcompMatPerSpM_cuda.Get(offsetTC,0));    
     offsetTC+=TC_BlockSize.x;
   }
   
@@ -403,13 +403,13 @@ namespace Acts {
 						false_cuda.Get(),
 						spMcompMat_cuda.Get(0,0),
 						nSpTcompPerSpM_Max_cuda.Get(),
-						spTcompMat_cuda.Get(offsetTC,0),
-						circTcompMat_cuda.Get(offsetTC,0));    
+						spTcompMatPerSpM_cuda.Get(offsetTC,0),
+						circTcompMatPerSpM_cuda.Get(offsetTC,0));    
     offsetTC+=TC_BlockSize.x;
   }
     
   // retreive middle-bottom doublet circ information
-  CpuMatrix<float> circBcompMat_cpu(nSpBcompPerSpM_Max, nSpMcomp*6, &circBcompMat_cuda);
+  CpuMatrix<float> circBcompMatPerSpM_cpu(nSpBcompPerSpM_Max, nSpMcomp*6, &circBcompMatPerSpM_cuda);
   
   auto end_TC = std::chrono::system_clock::now();
   std::chrono::duration<double> elapse_TC = end_TC-start_TC;
@@ -467,11 +467,9 @@ namespace Acts {
 					     nSpMcomp_cuda.Get(),
 					     spMcompMat_cuda.Get(i_m,0),
 					     nSpBcompPerSpM_Max_cuda.Get(),
-					     spBcompMat_cuda.Get(0,6*i_m),
+					     circBcompMatPerSpM_cuda.Get(0,6*i_m),
 					     nSpTcompPerSpM_Max_cuda.Get(),
-					     spTcompMat_cuda.Get(offsetVec[i_ts],6*i_m),
-					     circBcompMat_cuda.Get(0,6*i_m),
-					     circTcompMat_cuda.Get(offsetVec[i_ts],6*i_m),
+					     circTcompMatPerSpM_cuda.Get(offsetVec[i_ts],6*i_m),
 					     // Seed finder config
 					     maxScatteringAngle2_cuda.Get(),
 					     sigmaScattering_cuda.Get(),
@@ -528,7 +526,7 @@ namespace Acts {
 	tVec.clear();
 	curvatures.clear();
 	impactParameters.clear();      
-	float Zob = *(circBcompMat_cpu.Get(i_b,(curID)*6));
+	float Zob = *(circBcompMatPerSpM_cpu.Get(i_b,(curID)*6));
 
 	std::vector< std::tuple< int, int, int > > indexVec;
 	for(int i_t=0; i_t<nTpass; i_t++){

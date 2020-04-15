@@ -16,11 +16,12 @@ class SeedfinderCudaKernels {
 
 public: 
   
-  static void searchDoublet( dim3 grid, dim3 block,
+  static void searchDoublet( const dim3 grid, const dim3 block,
 			     const bool* isBottom, 
 			     const int* nSpM, const float* spMmat,
 			     const int* nSpB, const float* spBmat,
-			     const float* deltaRMin, const float* deltaRMax,
+			     const float* deltaRMin,
+			     const float* deltaRMax,
 			     const float* cotThetaMax, 
 			     const float* collisionRegionMin, 
 			     const float* collisionRegionMax,
@@ -28,33 +29,38 @@ public:
 			     int*  nSpBcomp
 			     );
 
-  static void reduceMatrix( dim3 grid, dim3 block,
+  static void reduceMatrix( const dim3 grid, const dim3 block,
 			    const int*   nSpB,
 			    const float* spBmat,
 			    const int*   nSpBcompMax,
 			    const int*   bIndex,
-			    float* spBcompMat);
+			    float* spBcompMatPerSpM);
   
-  static void transformCoordinates( dim3 grid, dim3 block,
+  static void transformCoordinates( const dim3 grid, const dim3 block,
 				    const bool*  isBottom,
-				    const float* spMmat,
-				    const int*   nSpB,
-				    const float* spBmat,
-				    float* circBmat);
+				    const float* spMcompMat,
+				    const int*   nSpBcompPerSpM,
+				    const float* spBcompMatPerSpM,
+				    float* circBcompMatPerSpM);
   
-  static void searchTriplet( dim3 grid, dim3 block,
+  static void searchTriplet( const dim3 grid, const dim3 block,
 			     const int*   offset,
-			     const int*   nSpM,
-			     const float* spMmat,
-			     const int*   nSpB, const float* rBmat,
-			     const int*   nSpT, const float* rTmat,			     
-			     const float* circBmat,
-			     const float* circTmat,
-			     const float* maxScatteringAngle2, const float* sigmaScattering,
-			     const float* minHelixDiameter2,   const float* pT2perRadius,
-			     const float* impactMax,           const int*   nTopPassLimit,
-			     int*   nTopPass,   int* tIndex,
-			     float* curvatures, float* impactparameters,
+			     const int*   nSpMcomp,
+			     const float* spMcompMat,
+			     const int*   nSpBcompPerSpM,
+			     const float* circBcompMatPerSpM,
+			     const int*   nSpTcompPerSpM,
+			     const float* circTcompMatPerSpM,
+			     const float* maxScatteringAngle2,
+			     const float* sigmaScattering,
+			     const float* minHelixDiameter2,
+			     const float* pT2perRadius,
+			     const float* impactMax,
+			     const int*   nTopPassLimit,
+			     int* nTopPass,
+			     int* tIndex,
+			     float* curvatures,
+			     float* impactparameters,
 			     cudaStream_t* stream
 			     );
 
