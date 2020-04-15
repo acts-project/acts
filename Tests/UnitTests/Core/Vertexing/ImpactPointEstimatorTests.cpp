@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
                 << std::endl;
     }
 
-    auto res = ipEstimator.getParamsAt3dClosestApproach(
+    auto res = ipEstimator.estimate3DImpactParameters(
         geoContext, magFieldContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
 
     distancesList.push_back(*distanceRes);
 
-    auto res = ipEstimator.getParamsAt3dClosestApproach(
+    auto res = ipEstimator.estimate3DImpactParameters(
         geoContext, magFieldContext, myTrack, refPosition);
 
     BOOST_CHECK(res.ok());
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
   const double result = 3.10391_mm;
   CHECK_CLOSE_ABS(distance, result, 0.00001_mm);
 
-  auto res2 = ipEstimator.getParamsAt3dClosestApproach(
+  auto res2 = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, params1, vtxPos);
   BOOST_CHECK(res2.ok());
   BoundParameters endParams = std::move(**res2);
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   myConstraint.setFullPosition(vertexPosition);
 
   // Calculate d0 and z0 corresponding to vertex position
-  double d0_v = sqrt(x * x + y * y);
+  double d0_v = std::sqrt(x * x + y * y);
   double z0_v = z;
 
   // Set up the ImpactPointEstimator
