@@ -247,7 +247,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @param [in] position Global 3D position
   ///
   /// @return Material at given position
-  const Material& material(const Vector3D& position) const {
+  const Material material(const Vector3D& position) const {
     return m_mapper.getMaterial(position);
   }
 
@@ -341,6 +341,6 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// close-by grid points.
   Mapper_t m_mapper;
 
-  BinUtility m_binUtility;
+  BinUtility m_binUtility{};
 };
 }  // namespace Acts
