@@ -167,7 +167,7 @@ namespace Acts {
   CpuMatrix<float> spBmat_cpu(nSpB, 6);
   CpuMatrix<float> spTmat_cpu(nSpT, 6);
   
-  size_t mIdx=0;
+  int mIdx(0);
   for (auto sp: middleSPs){
     spMmat_cpu.Set(mIdx,0,sp->x());
     spMmat_cpu.Set(mIdx,1,sp->y());
@@ -179,7 +179,7 @@ namespace Acts {
     mIdx++;
   }
   
-  size_t bIdx=0;
+  int bIdx(0);
   for (auto sp: bottomSPs){
     spBmat_cpu.Set(bIdx,0,sp->x());
     spBmat_cpu.Set(bIdx,1,sp->y());
@@ -191,7 +191,7 @@ namespace Acts {
     bIdx++;
   }
 
-  size_t tIdx=0;
+  int tIdx(0);
   for (auto sp: topSPs){
     spTmat_cpu.Set(tIdx,0,sp->x());
     spTmat_cpu.Set(tIdx,1,sp->y());
@@ -214,16 +214,6 @@ namespace Acts {
   dim3 DS_BlockSize;
   dim3 DS_GridSize(nSpM,1,1);
 
-  //!!! replace all of this to matrix !!!
-  CudaVector<float> rM_cuda(nSpM, spMmat_cpu.Get(0,3));
-  CudaVector<float> zM_cuda(nSpM, spMmat_cpu.Get(0,2));
-  CudaVector<float> rB_cuda(nSpB, spBmat_cpu.Get(0,3));    
-  CudaVector<float> zB_cuda(nSpB, spBmat_cpu.Get(0,2));
-  CudaScalar<int>   nBottom_cuda(&nSpB);
-  CudaVector<float> rT_cuda(nSpT, spTmat_cpu.Get(0,3));    
-  CudaVector<float> zT_cuda(nSpT, spTmat_cpu.Get(0,2));  
-  CudaScalar<int>   nTop_cuda(&nSpT);
-
   CudaVector<int>   nSpBcompPerSpM_cuda(nSpM); nSpBcompPerSpM_cuda.Zeros();
   CudaVector<int>   nSpTcompPerSpM_cuda(nSpM); nSpTcompPerSpM_cuda.Zeros();
   
@@ -236,10 +226,8 @@ namespace Acts {
     DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpB-offsetDS), 1,1);
     SeedfinderCudaKernels::searchDoublet( DS_GridSize, DS_BlockSize,
 					  true_cuda.Get(),
-					  rM_cuda.Get(), zM_cuda.Get(),
-					  nSpB_cuda.Get(),
-					  rB_cuda.Get(offsetDS),
-					  zB_cuda.Get(offsetDS), 
+					  nSpM_cuda.Get(), spMmat_cuda.Get(),
+					  nSpB_cuda.Get(), spBmat_cuda.Get(offsetDS,0),
 					  deltaRMin_cuda.Get(), deltaRMax_cuda.Get(), 
 					  cotThetaMax_cuda.Get(),
 					  collisionRegionMin_cuda.Get(),collisionRegionMax_cuda.Get(),
@@ -255,10 +243,8 @@ namespace Acts {
     DS_BlockSize = dim3(fmin(m_config.maxBlockSize, nSpT-offsetDS), 1,1);    
     SeedfinderCudaKernels::searchDoublet( DS_GridSize, DS_BlockSize,
 					  false_cuda.Get(),
-					  rM_cuda.Get(), zM_cuda.Get(),
-					  nSpT_cuda.Get(),
-					  rT_cuda.Get(offsetDS),
-					  zT_cuda.Get(offsetDS), 
+					  nSpM_cuda.Get(), spMmat_cuda.Get(),
+					  nSpT_cuda.Get(), spTmat_cuda.Get(offsetDS,0),
 					  deltaRMin_cuda.Get(), deltaRMax_cuda.Get(), 
 					  cotThetaMax_cuda.Get(),
 					  collisionRegionMin_cuda.Get(),collisionRegionMax_cuda.Get(),

@@ -16,8 +16,8 @@
 #include <iostream>
 
 __global__ void cuSearchDoublet(const bool* isBottom,
-				const float* rMvec, const float* zMvec,
-				const int* nSpB, const float* rBvec, const float* zBvec, 
+				const int* nSpM, const float* spMmat,  
+				const int* nSpB, const float* spBmat,
 				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
 				const float* collisionRegionMin, const float* collisionRegionMax,
 				bool* isCompatible,
@@ -58,16 +58,16 @@ namespace Acts{
   void SeedfinderCudaKernels::searchDoublet(
 			        dim3 grid, dim3 block,
 				const bool* isBottom,
-				const float* rMvec, const float* zMvec,
-				const int* nSpB, const float* rBvec, const float* zBvec, 
+				const int* nSpM, const float* spMmat,
+				const int* nSpB, const float* spBmat,
 				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
 				const float* collisionRegionMin, const float* collisionRegionMax,
 				bool* isCompatible,
 				int*  nSpBcomp){
     
   cuSearchDoublet<<< grid, block >>>(isBottom,
-				     rMvec, zMvec,
-				     nSpB, rBvec, zBvec, 
+				     nSpM, spMmat,
+				     nSpB, spBmat,
 				     deltaRMin, deltaRMax, cotThetaMax, 
 				     collisionRegionMin, collisionRegionMax,
 				     isCompatible,
@@ -141,8 +141,8 @@ namespace Acts{
 }
 
 __global__ void cuSearchDoublet(const bool* isBottom,
-				const float* rMvec, const float* zMvec,
-				const int* nSpB, const float* rBvec, const float* zBvec, 	   
+				const int* nSpM, const float* spMmat,
+				const int* nSpB, const float* spBmat,
 				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
 				const float* collisionRegionMin, const float* collisionRegionMax,
 				bool* isCompatible,
@@ -151,10 +151,10 @@ __global__ void cuSearchDoublet(const bool* isBottom,
   
   int globalId = threadIdx.x+(*nSpB)*blockIdx.x;
   
-  float rB = rBvec[threadIdx.x];
-  float zB = zBvec[threadIdx.x];
-  float rM = rMvec[blockIdx.x];
-  float zM = zMvec[blockIdx.x];  
+  float rM = spMmat[blockIdx.x +(*nSpM)*3];
+  float zM = spMmat[blockIdx.x +(*nSpM)*2];
+  float rB = spBmat[threadIdx.x+(*nSpB)*3];
+  float zB = spBmat[threadIdx.x+(*nSpB)*2];
   
   // Doublet search for bottom hits
   isCompatible[globalId] = true;

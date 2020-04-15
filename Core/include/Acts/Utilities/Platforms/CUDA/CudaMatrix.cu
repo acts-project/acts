@@ -67,7 +67,7 @@ public:
   size_t GetNRows(){ return fNRows; }
   size_t GetSize() { return fSize; }
   
-  Var_t* Get(size_t row, size_t col){
+  Var_t* Get(size_t row=0, size_t col=0){
     int offset = row+col*fNRows;
     return fDevPtr+offset;
   }

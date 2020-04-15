@@ -18,8 +18,8 @@ public:
   
   static void searchDoublet( dim3 grid, dim3 block,
 			     const bool* isBottom, 
-			     const float* rMvec, const float* zMvec,
-			     const int* nSpB, const float* rBvec, const float* zBvec, 
+			     const int* nSpM, const float* spMmat,
+			     const int* nSpB, const float* spBmat,
 			     const float* deltaRMin, const float* deltaRMax,
 			     const float* cotThetaMax, 
 			     const float* collisionRegionMin, 
@@ -57,8 +57,6 @@ public:
 			     float* curvatures, float* impactparameters,
 			     cudaStream_t* stream
 			     );
-  
-private:
-  
+
 };
 }
