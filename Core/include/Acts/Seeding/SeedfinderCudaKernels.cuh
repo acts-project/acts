@@ -24,9 +24,17 @@ public:
 			     const float* cotThetaMax, 
 			     const float* collisionRegionMin, 
 			     const float* collisionRegionMax,
-			     bool* isCompatible 			     
+			     bool* isCompatible,
+			     int*  nSpBcomp
 			     );
 
+  static void reduceMatrix( dim3 grid, dim3 block,
+			    const int*   nSpB,
+			    const float* spBmat,
+			    const int*   nSpBcompMax,
+			    const int*   bIndex,
+			    float* spBcompMat);
+  
   static void transformCoordinates( dim3 grid, dim3 block,
 				    const bool*  isBottom,
 				    const float* spMmat,

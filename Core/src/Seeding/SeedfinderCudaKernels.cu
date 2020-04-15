@@ -20,8 +20,15 @@ __global__ void cuSearchDoublet(const bool* isBottom,
 				const int* nSpB, const float* rBvec, const float* zBvec, 
 				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
 				const float* collisionRegionMin, const float* collisionRegionMax,
-				bool* isCompatible				
+				bool* isCompatible,
+				int*  nSpBcomp
 				);
+
+__global__ void cuReduceMatrix(const int*   nSpB,
+			       const float* spBmat,
+			       const int*   nSpBcompMax,
+			       const int*   bIndex,
+			       float* spBcompMat);
 
 __global__ void cuTransformCoordinates(const bool* isBottom,
 				       const float* spMmat,				       
@@ -55,17 +62,33 @@ namespace Acts{
 				const int* nSpB, const float* rBvec, const float* zBvec, 
 				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
 				const float* collisionRegionMin, const float* collisionRegionMax,
-				bool* isCompatible  ){
+				bool* isCompatible,
+				int*  nSpBcomp){
     
   cuSearchDoublet<<< grid, block >>>(isBottom,
 				     rMvec, zMvec,
 				     nSpB, rBvec, zBvec, 
 				     deltaRMin, deltaRMax, cotThetaMax, 
 				     collisionRegionMin, collisionRegionMax,
-				     isCompatible );
+				     isCompatible,
+				     nSpBcomp);
   cudaErrChk( cudaGetLastError() );
   }
 
+  void SeedfinderCudaKernels::reduceMatrix( dim3 grid, dim3 block,
+					    const int*   nSpB,
+					    const float* spBmat,
+					    const int*   nSpBcompMax,
+					    const int*   bIndex,
+					    float* spBcompMat){
+    cuReduceMatrix<<< grid, block >>>(nSpB,
+				      spBmat,
+				      nSpBcompMax,
+				      bIndex,
+				      spBcompMat);
+    cudaErrChk ( cudaGetLastError() );
+  }
+    
   void SeedfinderCudaKernels::transformCoordinates(
 				   dim3 grid, dim3 block,
 				   const bool* isBottom,
@@ -122,7 +145,8 @@ __global__ void cuSearchDoublet(const bool* isBottom,
 				const int* nSpB, const float* rBvec, const float* zBvec, 	   
 				const float* deltaRMin,const float*deltaRMax,const float*cotThetaMax, 
 				const float* collisionRegionMin, const float* collisionRegionMax,
-				bool* isCompatible 				
+				bool* isCompatible,
+				int*  nSpBcomp
 				){
   
   int globalId = threadIdx.x+(*nSpB)*blockIdx.x;
@@ -179,11 +203,27 @@ __global__ void cuSearchDoublet(const bool* isBottom,
       }
     }    
   }
+
+  int nComp = atomicAdd(&nSpBcomp[blockIdx.x],isCompatible[globalId]);
+}
+
+__global__ void cuReduceMatrix(const int*   nSpB,
+			       const float* spBmat,
+			       const int*   nSpBcompMax,
+			       const int*   bIndex,
+			       float* spBcompMat){
+  
+  int g_bIndex = bIndex[threadIdx.x+(*nSpBcompMax)*blockIdx.x];
+  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+0)] = spBmat[g_bIndex+(*nSpB)*0];
+  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+1)] = spBmat[g_bIndex+(*nSpB)*1];
+  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+2)] = spBmat[g_bIndex+(*nSpB)*2];
+  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+3)] = spBmat[g_bIndex+(*nSpB)*3];
+  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+4)] = spBmat[g_bIndex+(*nSpB)*4];
+  spBcompMat[threadIdx.x+(*nSpBcompMax)*(6*blockIdx.x+5)] = spBmat[g_bIndex+(*nSpB)*5];
   
 }
 
-
-__global__ void cuTransformCoordinates(const bool* isBottom,
+__global__ void cuTransformCoordinates(const bool*  isBottom,
 				       const float* spMmat,
 				       const int*   nSpB,
 				       const float* spBmat,
@@ -265,12 +305,6 @@ __global__ void cuSearchTriplet(const int*   offset,
 				float* impactparameters
 				){
   extern __shared__ float shared[];
-
-  // Zero initialization of nTopPass
-  if (threadIdx.x == 0 && *offset == 0){
-    nTopPass[blockIdx.x] = 0;
-  }
-  __syncthreads();
   
   float* impact   = (float*)shared;
   float* invHelix = (float*)&impact[blockDim.x];
