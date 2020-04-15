@@ -630,11 +630,11 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   }
 
   // covariance check for eigen stepper
-  auto covCalculated =
+  covCalculated =
       covariance_bound<RiddersEigenPropagatorType, DiscSurface>(
           repropagator, plimit, rand1, rand2, rand3,
           startC);
-  auto covObtained = covariance_bound<EigenPropagatorType, DiscSurface>(
+  covObtained = covariance_bound<EigenPropagatorType, DiscSurface>(
       epropagator, plimit, rand1, rand2, rand3, startC);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
