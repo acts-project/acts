@@ -101,7 +101,7 @@ class ImpactPointEstimator {
   /// @param vtxPos Reference position (vertex)
   ///
   /// @return New track params
-  Result<std::unique_ptr<const BoundParameters>> getParamsAt3dClosestApproach(
+  Result<std::unique_ptr<const BoundParameters>> estimate3DImpactParameters(
       const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
       const BoundParameters& trkParams, const Vector3D& vtxPos) const;
 
@@ -111,7 +111,7 @@ class ImpactPointEstimator {
   ///
   /// @param gctx The Geometry context
   /// @param track Track parameters at point of closest
-  /// approach in 3d as retrieved by getParamsAt3dClosestApproach
+  /// approach in 3d as retrieved by estimate3DImpactParameters
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
