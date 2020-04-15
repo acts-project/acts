@@ -16,6 +16,7 @@
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
 #include "EventDataVisualizationBase.hpp"
+#include "VisualizationTester.hpp"
 
 namespace Acts {
 
@@ -25,14 +26,18 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 
 BOOST_AUTO_TEST_CASE(EventDataVisualizationObj) {
   ObjVisualization obj;
-  size_t objCCount = EventDataVisualization::test(obj);
-  BOOST_CHECK_EQUAL(objCCount, 12716);
+  auto objTest = EventDataVisualization::test(obj);
+  auto objErrors = testObjString(objTest);
+  BOOST_CHECK(objErrors.size() == 0);
+  for (auto objerr : objErrors) {
+    std::cout << objerr << std::endl;
+  }
 }
 
 BOOST_AUTO_TEST_CASE(EventDataVisualizationPly) {
   PlyVisualization ply;
-  size_t plyCCount = EventDataVisualization::test(ply);
-  BOOST_CHECK_EQUAL(plyCCount, 14407);
+  auto plyTest = EventDataVisualization::test(ply);
+  // BOOST_TEST(plyTest);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

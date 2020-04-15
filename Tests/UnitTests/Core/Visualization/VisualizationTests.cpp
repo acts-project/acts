@@ -10,17 +10,75 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <string>
 
 #include "Acts/Visualization/IVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
+#include "VisualizationTester.hpp"
 
 using boost::test_tools::output_test_stream;
 
 namespace Acts {
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(VisualizationTests)
+BOOST_AUTO_TEST_SUITE(Visualization)
+
+BOOST_AUTO_TEST_CASE(VisualizationTester) {
+  // Test the tester
+  std::string validObj = R"(# obj test file
+mtllib material.mtl
+usemtl material_a
+g rectangle
+vn 0 0 1
+vt 0 0 1
+v -15 -15 0
+v 15 -15 0
+v 15 15 0
+v -15 15 0
+f 1 2 3 4
+l 1 2
+l 2 3
+l 3 4
+l 4 1
+)";
+
+  // Valid obj
+  auto objErrors = testObjString(validObj);
+  BOOST_CHECK(objErrors.size() == 0);
+
+  // Valid obj, but triangular mesh is requested
+  objErrors = testObjString(validObj, true);
+  BOOST_CHECK(objErrors.size() == 1);
+  for (auto objerr : objErrors) {
+    std::cout << objerr << std::endl;
+  }
+
+  // Non-valid obj - it has 3 errors
+  std::string invalidObj = R"(# obj test file
+mtllib material.mtl
+usemtl material_a
+x whatever
+g rectangle
+vn 0 0 1
+vt 0 0 1
+v -15 -15 0
+v 15 -15 0
+v 15 15 0
+v -15 15 0
+f 1 2 3. 4
+l 0 2
+l 2 3
+l 3 4
+l 4 1
+)";
+
+  objErrors = testObjString(invalidObj);
+  BOOST_CHECK(objErrors.size() == 3);
+  for (auto objerr : objErrors) {
+    std::cout << objerr << std::endl;
+  }
+}
 
 BOOST_AUTO_TEST_CASE(VisualizationConstruction) {
   // this doesn't really test anything, other than conformance to the
@@ -35,7 +93,7 @@ BOOST_AUTO_TEST_CASE(VisualizationConstruction) {
   std::cout << *vis << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(ply_output_test) {
+BOOST_AUTO_TEST_CASE(PlyOutputTest) {
   PlyVisualization ply;
   output_test_stream output;
 
@@ -154,7 +212,7 @@ end_header
   BOOST_CHECK(output.is_equal(exp));
 }
 
-BOOST_AUTO_TEST_CASE(VisualizationOutput) {
+BOOST_AUTO_TEST_CASE(ObjOutputTest) {
   ObjVisualization obj;
 
   output_test_stream output;

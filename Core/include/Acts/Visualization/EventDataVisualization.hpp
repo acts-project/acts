@@ -189,19 +189,24 @@ static inline void drawBoundParameters(
                           ? 0.25 * p * momentumScale * direction
                           : Vector3D(0., 0., 0.);
 
-  drawArrowForward(helper, position, p * momentumScale * direction, 0.1, 0.1,
-                   4., 72, pcolor);
+  drawArrowForward(helper, position, position + p * momentumScale * direction,
+                   0.025, 0.05, 2., 72, pcolor);
 
   if (parameters.covariance().has_value()) {
-    const auto& covariance = *parameters.covariance();
-    drawCovarianceCartesian(
-        helper,
-        parameters.getParameterSet().getParameters().template block<2, 1>(0, 0),
-        covariance.template block<2, 2>(0, 0),
-        parameters.referenceSurface().transform(gctx), {3}, locErrorScale, 72,
-        pcolor);
+    auto lposition =
+        parameters.getParameterSet().getParameters().template block<2, 1>(0, 0);
 
-    // drawCovarianceAngular(helper, );
+    // Draw the local covariance
+    const auto& covariance = *parameters.covariance();
+    drawCovarianceCartesian(helper, lposition,
+                            covariance.template block<2, 2>(0, 0),
+                            parameters.referenceSurface().transform(gctx), {3},
+                            locErrorScale, 72, pcolor, 0.01);
+
+    drawCovarianceAngular(
+        helper, parameters.position(), parameters.momentum().normalized(),
+        covariance.template block<2, 2>(2, 2), {3}, 0.9 * p * momentumScale,
+        angularErrorScale, 72, pcolor);
   }
 }
 

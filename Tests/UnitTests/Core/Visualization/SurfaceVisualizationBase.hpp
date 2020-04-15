@@ -39,20 +39,16 @@ namespace SurfaceVisualization {
 /// @param helper The visualziation helper
 /// @param triangulate The directive whether to create triangular meshes
 /// @param tag The test tag (mode) identification
-/// @param suffix The file suffix for writing
-/// @param msuffix the (optional) material file suffix
 ///
-/// @return the total number of characters written as a regression test
-static inline size_t test(IVisualization& helper, bool triangulate,
-                          const std::string& tag) {
+/// @return an overall string including all written output
+static inline std::string test(IVisualization& helper, bool triangulate,
+                               const std::string& tag) {
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
-  std::ofstream stream;
+  std::stringstream cStream;
 
   double halfPhiSector = M_PI / 4.;
   double centralPhi = M_PI / 2.;
-
-  size_t cCount = 0;
 
   /// Helper method to prepare the streams & helpers
   /// @param path is the file path
@@ -62,10 +58,8 @@ static inline size_t test(IVisualization& helper, bool triangulate,
     helper.write(wpath);
 
     // write again for the caracter count
-    std::stringstream cStream;
     cStream << std::setprecision(4);
     helper.write(cStream);
-    cCount += cStream.str().size();
     if (clear) {
       helper.clear();
     }
@@ -435,7 +429,7 @@ static inline size_t test(IVisualization& helper, bool triangulate,
                              triangulate, strawColor);
   write(name);
 
-  return cCount;
+  return cStream.str();
 }
 
 }  // namespace SurfaceVisualization

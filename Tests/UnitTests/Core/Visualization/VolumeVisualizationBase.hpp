@@ -26,18 +26,15 @@ namespace VolumeVisualization {
 /// @param helper The visualziation helper
 /// @param triangulate The directive whether to create triangular meshes
 /// @param tag The test tag (mode) identification
-/// @param suffix The file suffix for writing
-/// @param msuffix the (optional) material file suffix
 ///
-///
-/// @return the total number of characters written as a regression test,
-/// reference numbers need to be updated if output is supposed to change
-static size_t test(IVisualization& helper, bool triangulate,
-                   const std::string& tag) {
-  size_t cCount = 0;
+/// @return a string containing all written caracters
+
+static inline std::string test(IVisualization& helper, bool triangulate,
+                               const std::string& tag) {
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
   std::ofstream stream;
+  std::stringstream cStream;
 
   double halfPhiSector = M_PI / 4.;
 
@@ -47,13 +44,7 @@ static size_t test(IVisualization& helper, bool triangulate,
   auto write = [&](const std::string& path, bool clear = true) -> void {
     std::string wpath = path + tag;
     helper.write(wpath);
-
-    // character count
-    std::stringstream cStream;
-    cStream << std::setprecision(4);
     helper.write(cStream);
-    cCount += cStream.str().size();
-
     if (clear) {
       helper.clear();
     }
@@ -126,7 +117,7 @@ static size_t test(IVisualization& helper, bool triangulate,
                             trapezoidColor);
   write("Volumes_TrapezoidVolume");
 
-  return cCount;
+  return cStream.str();
 }
 
 }  // namespace VolumeVisualization
