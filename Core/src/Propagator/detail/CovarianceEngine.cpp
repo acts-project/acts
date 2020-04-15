@@ -21,11 +21,11 @@ using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 /// @param [in] state State that will be projected
 ///
 /// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const StepperState& state) {
+FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
   // Optimized trigonometry on the propagation direction
-  const double x = state.dir(0);  // == cos(phi) * sin(theta)
-  const double y = state.dir(1);  // == sin(phi) * sin(theta)
-  const double z = state.dir(2);  // == cos(theta)
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
+  const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
   const double sinTheta = sqrt(x * x + y * y);
@@ -78,32 +78,34 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const StepperState& state) {
 ///
 /// @return The projection jacobian from global end parameters to its local
 /// equivalent
-const FreeToBoundMatrix surfaceDerivative(StepperState& state,
+const FreeToBoundMatrix surfaceDerivative(std::reference_wrapper<const GeometryContext> geoContext, const Vector3D& position,
+										const Vector3D& direction, BoundToFreeMatrix& jacobianLocalToGlobal, 
+											const FreeVector& derivatives,
                                           const Surface* surface = nullptr) {
   // Set the surface projection contributions
   // If no surface is specified it is curvilinear
   if (surface == nullptr) {
     // Transport the covariance
-    const ActsRowVectorD<3> normVec(state.dir);
+    const ActsRowVectorD<3> normVec(direction);
     const BoundRowVector sfactors =
         normVec *
-        state.jacToGlobal.template topLeftCorner<3, eBoundParametersSize>();
-    state.jacToGlobal -= state.derivative * sfactors;
+        jacobianLocalToGlobal.template topLeftCorner<3, eBoundParametersSize>();
+    jacobianLocalToGlobal -= derivatives * sfactors;
     // Since the jacobian to local needs to calculated for the bound parameters
     // here, it is convenient to do the same here
-    return freeToCurvilinearJacobian(state);
+    return freeToCurvilinearJacobian(direction);
   }
   // Else it is bound
   else {
     // Initialize the transport final frame jacobian
     FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
     // Initalize the jacobian to local, returns the transposed ref frame
-    auto rframeT = surface->initJacobianToLocal(state.geoContext, jacToLocal,
-                                                state.pos, state.dir);
+    auto rframeT = surface->initJacobianToLocal(geoContext, jacToLocal,
+                                                position, direction);
     // Calculate the form factors for the derivatives
     const BoundRowVector sVec = surface->derivativeFactors(
-        state.geoContext, state.pos, state.dir, rframeT, state.jacToGlobal);
-    state.jacToGlobal -= state.derivative * sVec;
+        geoContext, position, direction, rframeT, jacobianLocalToGlobal);
+    jacobianLocalToGlobal -= derivatives * sVec;
     // Return the jacobian to local
     return jacToLocal;
   }
@@ -116,22 +118,23 @@ const FreeToBoundMatrix surfaceDerivative(StepperState& state,
 /// @note The surface is only required for bound parameters since it serves to
 /// derive the jacobian from it. In the case of curvilinear parameters this is
 /// not needed and can be evaluated without any surface.
-void reinitializeJacToGlobal(StepperState& state,
+void reinitializeJacToGlobal(std::reference_wrapper<const GeometryContext> geoContext, BoundToFreeMatrix& jacobianLocalToGlobal, const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time,
                              const Surface* surface = nullptr) {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
 
   // Reset the jacobian
-  state.jacToGlobal = BoundToFreeMatrix::Zero();
+  jacobianLocalToGlobal = BoundToFreeMatrix::Zero();
 
   // Fill the jacobian to global for next transport
   // If treating curvilinear parameters
   if (surface == nullptr) {
     // TODO: This was calculated before - can it be reused?
     // Optimized trigonometry on the propagation direction
-    const double x = state.dir(0);  // == cos(phi) * sin(theta)
-    const double y = state.dir(1);  // == sin(phi) * sin(theta)
-    const double z = state.dir(2);  // == cos(theta)
+    const double x = direction(0);  // == cos(phi) * sin(theta)
+    const double y = direction(1);  // == sin(phi) * sin(theta)
+    const double z = direction(2);  // == cos(theta)
     // can be turned into cosine/sine
     const double cosTheta = z;
     const double sinTheta = sqrt(x * x + y * y);
@@ -139,28 +142,28 @@ void reinitializeJacToGlobal(StepperState& state,
     const double cosPhi = x * invSinTheta;
     const double sinPhi = y * invSinTheta;
 
-    state.jacToGlobal(0, eLOC_0) = -sinPhi;
-    state.jacToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
-    state.jacToGlobal(1, eLOC_0) = cosPhi;
-    state.jacToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
-    state.jacToGlobal(2, eLOC_1) = sinTheta;
-    state.jacToGlobal(3, eT) = 1;
-    state.jacToGlobal(4, ePHI) = -sinTheta * sinPhi;
-    state.jacToGlobal(4, eTHETA) = cosTheta * cosPhi;
-    state.jacToGlobal(5, ePHI) = sinTheta * cosPhi;
-    state.jacToGlobal(5, eTHETA) = cosTheta * sinPhi;
-    state.jacToGlobal(6, eTHETA) = -sinTheta;
-    state.jacToGlobal(7, eQOP) = 1;
+    jacobianLocalToGlobal(0, eLOC_0) = -sinPhi;
+    jacobianLocalToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
+    jacobianLocalToGlobal(1, eLOC_0) = cosPhi;
+    jacobianLocalToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
+    jacobianLocalToGlobal(2, eLOC_1) = sinTheta;
+    jacobianLocalToGlobal(3, eT) = 1;
+    jacobianLocalToGlobal(4, ePHI) = -sinTheta * sinPhi;
+    jacobianLocalToGlobal(4, eTHETA) = cosTheta * cosPhi;
+    jacobianLocalToGlobal(5, ePHI) = sinTheta * cosPhi;
+    jacobianLocalToGlobal(5, eTHETA) = cosTheta * sinPhi;
+    jacobianLocalToGlobal(6, eTHETA) = -sinTheta;
+    jacobianLocalToGlobal(7, eQOP) = 1;
   }
   // If treating bound parameters
   else {
     Vector2D loc{0., 0.};
-    surface->globalToLocal(state.geoContext, state.pos, state.dir, loc);
+    surface->globalToLocal(geoContext, position, direction, loc);
     BoundVector pars;
-    pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-        state.q / state.p, state.t;
-    surface->initJacobianToGlobal(state.geoContext, state.jacToGlobal,
-                                  state.pos, state.dir, pars);
+    pars << loc[eLOC_0], loc[eLOC_1], phi(direction), theta(direction),
+        charge / momentum, time;
+    surface->initJacobianToGlobal(geoContext, jacobianLocalToGlobal,
+                                  position, direction, pars);
   }
 }
 
@@ -168,77 +171,93 @@ void reinitializeJacToGlobal(StepperState& state,
 ///
 /// @param [in, out] state The state of the stepper
 /// @param [in] surface Representing surface of the stepper state
-void reinitializeJacobians(StepperState& state,
+void reinitializeJacobians(std::reference_wrapper<const GeometryContext> geoContext, 
+							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
+							const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time,
                            const Surface* surface = nullptr) {
-  state.jacTransport = FreeMatrix::Identity();
-  state.derivative = FreeVector::Zero();
-  reinitializeJacToGlobal(state, surface);
+  transportJacobian = FreeMatrix::Identity();
+  derivatives = FreeVector::Zero();
+  reinitializeJacToGlobal(geoContext, jacobianLocalToGlobal, position, direction, charge, momentum, time, surface);
 }
 }  // namespace
 
 namespace detail {
 
-BoundState boundState(StepperState& state, const Surface& surface,
-                      bool reinitialize) {
+BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext, Covariance& covarianceMatrix, Jacobian& jacobian,
+							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
+							const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time, bool covTransport, double accumulatedPath,
+                         const Surface& surface,  bool reinitialize
+                         ) {
   // Transport the covariance to here
   std::optional<BoundSymMatrix> cov = std::nullopt;
-  if (state.covTransport) {
+  if (covTransport) {
     // Initialize the transport final frame jacobian
-    covarianceTransport(state, reinitialize, &surface);
-    cov = state.cov;
+    covarianceTransport(geoContext, covarianceMatrix, jacobian, transportJacobian, derivatives, jacobianLocalToGlobal, position, direction, charge, momentum, time, reinitialize, &surface);
+    cov = covarianceMatrix;
   }
   // Create the bound parameters
-  BoundParameters parameters(state.geoContext, cov, state.pos,
-                             state.p * state.dir, state.q, state.t,
+  BoundParameters parameters(geoContext, cov, position,
+                             momentum * direction, charge, time,
                              surface.getSharedPtr());
   // Create the bound state
-  BoundState result = std::make_tuple(std::move(parameters), state.jacobian,
-                                      state.pathAccumulated);
+  BoundState result = std::make_tuple(std::move(parameters), jacobian,
+                                      accumulatedPath);
   // Reinitialize if asked to do so
   // this is useful for interruption calls
   if (reinitialize) {
-    state.jacobian = Jacobian::Identity();
+    jacobian = Jacobian::Identity();
   }
   return result;
 }
 
-CurvilinearState curvilinearState(StepperState& state, bool reinitialize) {
+CurvilinearState curvilinearState(std::reference_wrapper<const GeometryContext> geoContext, Covariance& covarianceMatrix, Jacobian& jacobian,
+							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
+							const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time, bool covTransport, double accumulatedPath,
+                         bool reinitialize) {
   // Transport the covariance to here
   std::optional<BoundSymMatrix> cov = std::nullopt;
-  if (state.covTransport) {
-    covarianceTransport(state, reinitialize);
-    cov = state.cov;
+  if (covTransport) {
+    covarianceTransport(geoContext, covarianceMatrix, jacobian, transportJacobian, derivatives, jacobianLocalToGlobal, position, direction, charge, momentum, time, reinitialize, &surface);
+    cov = covarianceMatrix;
   }
   // Create the curvilinear parameters
-  CurvilinearParameters parameters(cov, state.pos, state.p * state.dir, state.q,
-                                   state.t);
+  CurvilinearParameters parameters(cov, position, momentum * direction, charge,
+                                   time);
   // Create the bound state
   CurvilinearState result = std::make_tuple(
-      std::move(parameters), state.jacobian, state.pathAccumulated);
+      std::move(parameters), jacobian, accumulatedPath);
   // Reinitialize if asked to do so
   // this is useful for interruption calls
   if (reinitialize) {
-    state.jacobian = Jacobian::Identity();
+    jacobian = Jacobian::Identity();
   }
   return result;
 }
 
-void covarianceTransport(StepperState& state, bool reinitialize,
+void covarianceTransport(
+std::reference_wrapper<const GeometryContext> geoContext, Covariance& covarianceMatrix, Jacobian& jacobian,
+							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
+							const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time,                           
+                           bool reinitialize,
                          const Surface* surface) {
-  state.jacToGlobal = state.jacTransport * state.jacToGlobal;
+  jacobianLocalToGlobal = tansportJacobian * jacobianLocalToGlobal;
 
-  const FreeToBoundMatrix jacToLocal = surfaceDerivative(state, surface);
-  const Jacobian jacFull = jacToLocal * state.jacToGlobal;
+  const FreeToBoundMatrix jacToLocal = surfaceDerivative(geoContext, position, direction, jacobianLocalToGlobal, derivatives, surface);
+  const Jacobian jacFull = jacToLocal * jacobianLocalToGlobal;
 
   // Apply the actual covariance transport
-  state.cov = jacFull * state.cov * jacFull.transpose();
+  covarianceMatrix = jacFull * covarianceMatrix * jacFull.transpose();
 
   if (reinitialize) {
-    reinitializeJacobians(state, surface);
+    reinitializeJacobians(geoContext, transportJacobian, derivatives, jacobianLocalToGlobal, position, direction, charge, momentum, time, surface);
   }
 
   // Store The global and bound jacobian (duplication for the moment)
-  state.jacobian = jacFull * state.jacobian;
+  jacobian = jacFull * jacobian;
 }
 }  // namespace detail
 }  // namespace Acts

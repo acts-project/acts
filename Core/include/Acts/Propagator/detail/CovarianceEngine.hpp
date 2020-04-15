@@ -13,7 +13,6 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/StepperState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -41,8 +40,11 @@ namespace detail {
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-std::tuple<BoundParameters, BoundMatrix, double> boundState(
-    StepperState& state, const Surface& surface, bool reinitialize);
+std::tuple<BoundParameters, BoundMatrix, double> boundState(std::reference_wrapper<const GeometryContext> geoContext, Covariance& covarianceMatrix, Jacobian& jacobian,
+							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
+							const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time, bool covTransport, double accumulatedPath,
+                         const Surface& surface,  bool reinitialize);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -57,8 +59,11 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(
 ///   - the curvilinear parameters at given position
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
-    StepperState& state, bool reinitialize);
+std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(std::reference_wrapper<const GeometryContext> geoContext, Covariance& covarianceMatrix, Jacobian& jacobian,
+							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
+							const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time, bool covTransport, double accumulatedPath,
+                         bool reinitialize);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
@@ -70,7 +75,12 @@ std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
 /// @note No check is done if the position is actually on the surface
 ///
 /// @return Projection jacobian from global to bound parameters
-void covarianceTransport(StepperState& state, bool reinitialize,
+void covarianceTransport(
+std::reference_wrapper<const GeometryContext> geoContext, Covariance& covarianceMatrix, Jacobian& jacobian,
+							FreeMatrix& transportJacobian, FreeVector& derivatives, BoundToFreeMatrix& jacobianLocalToGlobal, 
+							const Vector3D& position, const Vector3D& direction,
+							double charge, double momentum, double time,                           
+                           bool reinitialize,
                          const Surface* surface = nullptr);
 
 }  // namespace detail
