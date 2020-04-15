@@ -248,8 +248,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   ///
   /// @return Material at given position
   const Material& material(const Vector3D& position) const {
-    Material mat = m_mapper.getMaterial(position);
-    return mat;
+    return m_mapper.getMaterial(position);
   }
 
   /// @brief Retrieve material

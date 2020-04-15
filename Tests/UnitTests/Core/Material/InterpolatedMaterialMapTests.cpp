@@ -130,9 +130,10 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   }
   MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
   InterpolatedMaterialMap ipolMatMap(std::move(matMap));
+  Material ipolMat = ipolMatMap.material({0.5, 0.5, 0.5});
 
   // Test the material getter
-  CHECK_CLOSE_REL(ipolMatMap.material({0.5, 0.5, 0.5}), Material(mat), 1e-4);
+  CHECK_CLOSE_REL(ipolMat, Material(mat), 1e-4);
 
   // Test the material getter with a cache
   // Build a material cell
