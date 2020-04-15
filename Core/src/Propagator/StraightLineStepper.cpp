@@ -14,12 +14,16 @@ namespace Acts {
 std::tuple<BoundParameters, BoundMatrix, double>
 StraightLineStepper::boundState(State& state, const Surface& surface,
                                 bool reinitialize) const {
-  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, surface, reinitialize);
+	FreeVector parameters;
+	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
+  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, surface, reinitialize);
 }
 
 std::tuple<CurvilinearParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool reinitialize) const {
-  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, reinitialize);
+  FreeVector parameters;
+	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
+  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, reinitialize);
 }
                          
 void StraightLineStepper::update(State& state,
@@ -52,6 +56,8 @@ void StraightLineStepper::covarianceTransport(State& state,
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface,
                                               bool reinitialize) const {
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, reinitialize, surface);
+												  FreeVector parameters;
+	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
+  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, reinitialize, surface);
 }
 }  // namespace Acts
