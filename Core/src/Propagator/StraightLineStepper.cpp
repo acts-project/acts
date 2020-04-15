@@ -14,14 +14,14 @@ namespace Acts {
 std::tuple<BoundParameters, BoundMatrix, double>
 StraightLineStepper::boundState(State& state, const Surface& surface,
                                 bool reinitialize) const {
-  return detail::boundState(state, surface, reinitialize);
+  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, surface, reinitialize);
 }
 
 std::tuple<CurvilinearParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool reinitialize) const {
-  return detail::curvilinearState(state, reinitialize);
+  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, reinitialize);
 }
-
+                         
 void StraightLineStepper::update(State& state,
                                  const BoundParameters& pars) const {
   const auto& mom = pars.momentum();
@@ -46,12 +46,12 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
 
 void StraightLineStepper::covarianceTransport(State& state,
                                               bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize);
+  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.dir, reinitialize);
 }
 
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface,
                                               bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize, &surface);
+  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, reinitialize, surface);
 }
 }  // namespace Acts
