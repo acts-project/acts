@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,18 +17,26 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface,
                                              bool reinitialize) const
     -> BoundState {
-		FreeVector parameters;
-	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
-  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, surface, reinitialize);
+  FreeVector parameters;
+  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
+      state.dir[1], state.dir[2], state.q / state.p;
+  return detail::boundState(state.geoContext, state.cov, state.jacobian,
+                            state.jacTransport, state.derivative,
+                            state.jacToGlobal, parameters, state.covTransport,
+                            state.pathAccumulated, surface, reinitialize);
 }
 
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
                                                    bool reinitialize) const
     -> CurvilinearState {
-		FreeVector parameters;
-	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
-  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated, reinitialize);
+  FreeVector parameters;
+  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
+      state.dir[1], state.dir[2], state.q / state.p;
+  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport,
+                                  state.derivative, state.jacToGlobal,
+                                  parameters, state.covTransport,
+                                  state.pathAccumulated, reinitialize);
 }
 
 template <typename B, typename E, typename A>
@@ -58,16 +66,21 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
                                                       bool reinitialize) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.dir, reinitialize);
+  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
+                              state.derivative, state.jacToGlobal, state.dir,
+                              reinitialize);
 }
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
                                                       const Surface& surface,
                                                       bool reinitialize) const {
-														  FreeVector parameters;
-	parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0], state.dir[1], state.dir[2], state.q / state.p;
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, parameters, reinitialize, surface);
+  FreeVector parameters;
+  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
+      state.dir[1], state.dir[2], state.q / state.p;
+  detail::covarianceTransport(
+      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, parameters, reinitialize, surface);
 }
 
 template <typename B, typename E, typename A>
