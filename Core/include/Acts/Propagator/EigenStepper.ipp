@@ -17,14 +17,14 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface,
                                              bool reinitialize) const
     -> BoundState {
-  return detail::boundState(state, surface, reinitialize);
+  return detail::boundState(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, surface, reinitialize);
 }
 
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
                                                    bool reinitialize) const
     -> CurvilinearState {
-  return detail::curvilinearState(state, reinitialize);
+  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, state.covTransport, state.pathAccumulated, reinitialize);
 }
 
 template <typename B, typename E, typename A>
@@ -54,14 +54,14 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
                                                       bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize);
+  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.dir, reinitialize);
 }
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
                                                       const Surface& surface,
                                                       bool reinitialize) const {
-  detail::covarianceTransport(state, reinitialize, &surface);
+  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.pos, state.dir, state.q, state.p, state.t, reinitialize, surface);
 }
 
 template <typename B, typename E, typename A>
