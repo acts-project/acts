@@ -157,15 +157,15 @@ namespace Acts {
   CudaScalar<int> nSpM_cuda(&nSpM);
   CudaScalar<int> nSpB_cuda(&nSpB);
   CudaScalar<int> nSpT_cuda(&nSpT);
+
+  CpuMatrix<float> spMmat_cpu(nSpM, 6); // x y z r varR varZ
+  CpuMatrix<float> spBmat_cpu(nSpB, 6);
+  CpuMatrix<float> spTmat_cpu(nSpT, 6);
   
   // Define Matrix and Do flattening
   std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > middleSPvec;
   std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > bottomSPvec;
-  std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > topSPvec;
-  
-  CpuMatrix<float> spMmat_cpu(nSpM, 6); // x y z r varR varZ
-  CpuMatrix<float> spBmat_cpu(nSpB, 6);
-  CpuMatrix<float> spTmat_cpu(nSpT, 6);
+  std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > topSPvec;  
   
   int mIdx(0);
   for (auto sp: middleSPs){

@@ -51,9 +51,9 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const float* minHelixDiameter2,
 				const float* pT2perRadius,
 				const float* impactMax,
-				const int*   nTopPassLimit,
+				const int*   nTrplPerSpBLimit,
 				int* nTrplPerSpM,
-				int* nTopPass,
+				int* nTriplPerSpB,
 				int* tIndex,
 				int* bIndex,
 				float* curvatures,
@@ -133,9 +133,9 @@ namespace Acts{
 				const float* minHelixDiameter2,
 				const float* pT2perRadius,
 				const float* impactMax,
-				const int*   nTopPassLimit,
+				const int*   nTrplPerSpBLimit,
 				int* nTrplPerSpM,
-				int* nTopPass,
+				int* nTriplPerSpB,
 				int* tIndex,
 				int* bIndex,
 				float* curvatures,
@@ -153,8 +153,8 @@ namespace Acts{
 			       circTcompMatPerSpM,			       
 			       maxScatteringAngle2,sigmaScattering,
 			       minHelixDiameter2, pT2perRadius,
-			       impactMax, nTopPassLimit,
-			       nTrplPerSpM, nTopPass,
+			       impactMax, nTrplPerSpBLimit,
+			       nTrplPerSpM, nTriplPerSpB,
 			       tIndex, bIndex,
 			       curvatures,
 			       impactparameters
@@ -327,9 +327,8 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const float* minHelixDiameter2,
 				const float* pT2perRadius,
 				const float* impactMax,
-				const int*   nTopPassLimit,
+				const int*   nTrplPerSpBLimit,
 				int* nTrplPerSpM,
-				//int* nTopPass,
 				int* nTrplPerSpB,
 				int* tIndex,
 				int* bIndex,
@@ -337,6 +336,8 @@ __global__ void cuSearchTriplet(const int*   offset,
 				float* impactparameters			    				
 				){
   extern __shared__ float shared[];
+
+  int nTrplPerSpMLimit = (*nTrplPerSpBLimit)*(*nSpBcompPerSpM_Max);
   
   float* impact   = (float*)shared;
   float* invHelix = (float*)&impact[blockDim.x];
@@ -446,7 +447,7 @@ __global__ void cuSearchTriplet(const int*   offset,
     int nTripletsPerSpB  = atomicAdd(&nTrplPerSpB[blockIdx.x],1);
     int pos = atomicAdd(nTrplPerSpM,1);
 
-    if (pos<(*nTopPassLimit)*(*nSpBcompPerSpM_Max)){
+    if (pos<nTrplPerSpMLimit){
     
     impactparameters[pos] = impact[threadIdx.x];
     curvatures      [pos] = invHelix[threadIdx.x];
@@ -458,7 +459,7 @@ __global__ void cuSearchTriplet(const int*   offset,
   
   __syncthreads();
 
-  if (threadIdx.x == 0 && *nTrplPerSpM > (*nTopPassLimit)*(*nSpBcompPerSpM_Max)){
-    *nTrplPerSpM = (*nTopPassLimit)*(*nSpBcompPerSpM_Max);
+  if (threadIdx.x == 0 && *nTrplPerSpM > nTrplPerSpMLimit){
+    *nTrplPerSpM = nTrplPerSpMLimit;
   }
 }
