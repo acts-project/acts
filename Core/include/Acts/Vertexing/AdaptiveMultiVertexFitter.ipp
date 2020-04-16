@@ -207,7 +207,7 @@ Acts::Result<void> Acts::
 
   // Loop over all tracks at current vertex
   for (const auto& trk : currentVtxInfo.trackLinks) {
-    auto res = m_cfg.ipEst.getParamsAtClosestApproach(
+    auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
         m_extractParameters(*trk), seedPos);
     if (!res.ok()) {
@@ -236,7 +236,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     // more tracks were added later on
     if (currentVtxInfo.ip3dParams.find(trk) ==
         currentVtxInfo.ip3dParams.end()) {
-      auto res = m_cfg.ipEst.getParamsAtClosestApproach(
+      auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
           m_extractParameters(*trk),
           VectorHelpers::position(currentVtxInfo.linPoint));
@@ -247,7 +247,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
       currentVtxInfo.ip3dParams.emplace(trk, *(res.value()));
     }
     // Set compatibility with current vertex
-    auto compRes = m_cfg.ipEst.getVertexCompatibility(
+    auto compRes = m_cfg.ipEst.get3dVertexCompatibility(
         vertexingOptions.geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
         VectorHelpers::position(currentVtxInfo.oldPosition));
     if (!compRes.ok()) {

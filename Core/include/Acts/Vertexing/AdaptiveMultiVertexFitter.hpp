@@ -14,7 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
-#include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -46,8 +46,7 @@ class AdaptiveMultiVertexFitter {
   using Linearizer_t = linearizer_t;
 
  private:
-  using ImpactPointEstimator =
-      ImpactPoint3dEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
 
  public:
   /// @brief The fitter state
@@ -94,11 +93,11 @@ class AdaptiveMultiVertexFitter {
   struct Config {
     /// @brief Config constructor
     ///
-    /// @param est ImpactPoint3dEstimator
-    Config(ImpactPointEstimator est) : ipEst(std::move(est)) {}
+    /// @param est ImpactPointEstimator
+    Config(const IPEstimator& est) : ipEst(est) {}
 
-    // ImpactPoint3dEstimator
-    ImpactPointEstimator ipEst;
+    // ImpactPointEstimator
+    IPEstimator ipEst;
 
     /// Annealing tool used for a thermodynamic annealing scheme for the
     /// track weight factors in such a way that with high temperature values
@@ -173,7 +172,7 @@ class AdaptiveMultiVertexFitter {
   /// @brief Adds new vertex to an existing multi-vertex fit
   /// and fits everything together (by invoking the fit_impl method):
   /// 1. The new vertex is added to the fit: all associated tracks get
-  /// initialized, i.e. ParamsAtIP3d are created (from ImpactPoint3dEstimator)
+  /// initialized, i.e. ParamsAtIP3d are created (from ImpactPointEstimator)
   /// to be later able to estimate in a fast way the compatibility of the tracks
   /// to their respective vertices.
   /// 2. All tracks belonging to the new vertex are scanned and all the vertices
@@ -239,7 +238,7 @@ class AdaptiveMultiVertexFitter {
 
   /// @brief Prepares vertex object for the actual fit, i.e.
   /// all TrackAtVertex objects at current vertex will obtain
-  /// `ip3dParams` from ImpactPoint3dEstimator::getParamsAtClosestApproach
+  /// `ip3dParams` from ImpactPointEstimator::estimate3DImpactParameters
   /// in order to later faster estimate compatibilities of track
   /// with different vertices
   ///
