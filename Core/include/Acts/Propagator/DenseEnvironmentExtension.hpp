@@ -29,6 +29,7 @@ struct DenseEnvironmentExtension {
   /// Particles momentum at k1
   double initialMomentum = 0.;
   /// Material that will be passed
+  /// TODO : Might not be needed anymore
   Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
   std::array<double, 4> dLdl;
