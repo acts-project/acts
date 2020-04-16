@@ -717,19 +717,19 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
       }
     } else {
       // Only option remaining: material map
-      auto bvMaterial = dynamic_cast<
+      auto bvMaterial2D = dynamic_cast<
           const Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>*>(
           &vMaterial);
       // Now check if we have a 2D map
-      if (bvMaterial != nullptr) {
+      if (bvMaterial2D != nullptr) {
         // type is binned
         smj[m_cfg.typekey] = "interpolated2D";
         smj[m_cfg.mapkey] = true;
-        bUtility = &(bvMaterial->binUtility());
+        bUtility = &(bvMaterial2D->binUtility());
         // convert the data
         if (m_cfg.writeData) {
           std::vector<std::vector<float>> mmat;
-          MaterialGrid2D grid = bvMaterial->getMapper().getGrid();
+          MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
           for (size_t bin = 0; bin < grid.size(); bin++) {
             auto mat = Material(grid.at(bin));
             if (mat != Material()) {
@@ -743,18 +743,18 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
         }
       } else {
         // Only option remaining: material map
-        auto bvMaterial = dynamic_cast<const Acts::InterpolatedMaterialMap<
+        auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
             MaterialMapper<MaterialGrid3D>>*>(&vMaterial);
         // Now check if we have a 3D map
-        if (bvMaterial != nullptr) {
+        if (bvMaterial3D != nullptr) {
           // type is binned
           smj[m_cfg.typekey] = "interpolated3D";
           smj[m_cfg.mapkey] = true;
-          bUtility = &(bvMaterial->binUtility());
+          bUtility = &(bvMaterial3D->binUtility());
           // convert the data
           if (m_cfg.writeData) {
             std::vector<std::vector<float>> mmat;
-            MaterialGrid3D grid = bvMaterial->getMapper().getGrid();
+            MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
             for (size_t bin = 0; bin < grid.size(); bin++) {
               auto mat = Material(grid.at(bin));
               if (mat != Material()) {
