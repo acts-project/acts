@@ -30,6 +30,82 @@ using MaterialGrid2D = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis>;
 using MaterialGrid3D =
     Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
 
+/// @brief Various test for the Material in the case of a Cuboid volume and 2D
+/// Grid
+BOOST_AUTO_TEST_CASE(Square_Grid_test) {
+  BinUtility bu(7, -3., 3., open, binX);
+  bu += BinUtility(3, -2., 2., open, binY);
+  auto bd = bu.binningData();
+  std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+
+  Grid2D Grid = createGrid2D(bu, transfoGlobalToLocal);
+
+  // Test Global To Local transform
+  Acts::Vector3D pos(1., 2., 3.);
+  Acts::Vector2D pos_2d(1., 2.);
+  BOOST_CHECK_EQUAL(pos_2d, transfoGlobalToLocal(pos));
+
+  // Test Grid
+  BOOST_CHECK_EQUAL(Grid.dimensions(), 2);
+
+  BOOST_CHECK_EQUAL(Grid.numLocalBins()[0], bd[0].bins());
+  BOOST_CHECK_EQUAL(Grid.numLocalBins()[1], bd[1].bins());
+
+  BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
+  BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
+
+  float max1 =
+      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 =
+      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+
+  BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
+  BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
+
+  // Test pos to index
+  Grid2D::index_t index1 = {1, 1};
+  Grid2D::index_t index2 = {7, 2};
+  Grid2D::index_t index3 = {1, 3};
+
+  Acts::Vector3D pos1 = {-2.6, -1.5, -0.7};
+  Acts::Vector3D pos2 = {2.8, 0, 0.2};
+  Acts::Vector3D pos3 = {-2.7, 1.8, 0.8};
+
+  for (int i = 0; i < 2; i++) {
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos1))[i],
+        index1[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos2))[i],
+        index2[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos3))[i],
+        index3[i]);
+  }
+  // Test material mapping
+
+  std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
+  Material mat1(1., 2., 3., 4., 5.);
+  Material mat2(6., 7., 8., 9., 10.);
+  Material vacuum;
+
+  MaterialProperties matprop1(mat1, 1);
+  MaterialProperties matprop2(mat2, 1);
+
+  matRecord.clear();
+  matRecord.push_back(std::make_pair(matprop1, pos1));
+  matRecord.push_back(std::make_pair(matprop2, pos2));
+
+  MaterialGrid2D matMap =
+      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
+
+  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
+                  1e-4);
+  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
+                  1e-4);
+  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
+}
+
 /// @brief Various test for the Material in the case of a Cuboid volume
 BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   BinUtility bu(7, -3., 3., open, binX);
@@ -38,7 +114,7 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   auto bd = bu.binningData();
   std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
 
-  Grid3D Grid = createGrid(bu, transfoGlobalToLocal);
+  Grid3D Grid = createGrid3D(bu, transfoGlobalToLocal);
 
   // Test Global To Local transform
   Acts::Vector3D pos(1., 2., 3.);
@@ -118,7 +194,7 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   auto bd = bu.binningData();
   std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
 
-  Grid3D Grid = createGrid(bu, transfoGlobalToLocal);
+  Grid3D Grid = createGrid3D(bu, transfoGlobalToLocal);
 
   // Test Global To Local transform
   Acts::Vector3D pos(1., 2., 3.);

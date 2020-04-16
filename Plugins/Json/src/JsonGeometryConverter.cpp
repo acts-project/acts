@@ -375,29 +375,54 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     vMaterial = new Acts::HomogeneousVolumeMaterial(Acts::Material(
         mmat[0][0], mmat[0][1], mmat[0][2], mmat[0][3], mmat[0][4]));
   } else {
-    std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
-    Acts::Grid3D grid = createGrid(bUtility, transfoGlobalToLocal);
+    if (bUtility.dimensions() == 2) {
+      std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+      Acts::Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
 
-    Acts::Grid3D::point_t min = grid.minPosition();
-    Acts::Grid3D::point_t max = grid.maxPosition();
-    Acts::Grid3D::index_t nBins = grid.numLocalBins();
+      Acts::Grid2D::point_t min = grid.minPosition();
+      Acts::Grid2D::point_t max = grid.maxPosition();
+      Acts::Grid2D::index_t nBins = grid.numLocalBins();
 
-    Acts::EAxis axis1(min[0], max[0], nBins[0]);
-    Acts::EAxis axis2(min[1], max[1], nBins[1]);
-    Acts::EAxis axis3(min[2], max[2], nBins[2]);
+      Acts::EAxis axis1(min[0], max[0], nBins[0]);
+      Acts::EAxis axis2(min[1], max[1], nBins[1]);
 
-    // Build the grid and fill it with data
-    MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
+      // Build the grid and fill it with data
+      MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
-    for (size_t bin = 0; bin < mmat.size(); bin++) {
-      mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
-                                     mmat[bin][3], mmat[bin][4])
-                          .classificationNumbers();
+      for (size_t bin = 0; bin < mmat.size(); bin++) {
+        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
+                                       mmat[bin][3], mmat[bin][4])
+                            .classificationNumbers();
+      }
+      MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
+      vMaterial =
+          new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>(
+              std::move(matMap), bUtility);
+    } else if (bUtility.dimensions() == 3) {
+      std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+      Acts::Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
+
+      Acts::Grid3D::point_t min = grid.minPosition();
+      Acts::Grid3D::point_t max = grid.maxPosition();
+      Acts::Grid3D::index_t nBins = grid.numLocalBins();
+
+      Acts::EAxis axis1(min[0], max[0], nBins[0]);
+      Acts::EAxis axis2(min[1], max[1], nBins[1]);
+      Acts::EAxis axis3(min[2], max[2], nBins[2]);
+
+      // Build the grid and fill it with data
+      MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
+
+      for (size_t bin = 0; bin < mmat.size(); bin++) {
+        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
+                                       mmat[bin][3], mmat[bin][4])
+                            .classificationNumbers();
+      }
+      MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
+      vMaterial =
+          new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>(
+              std::move(matMap), bUtility);
     }
-    MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
-    vMaterial =
-        new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>(
-            std::move(matMap), bUtility);
   }
   // return what you have
   return vMaterial;
@@ -693,17 +718,18 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
     } else {
       // Only option remaining: material map
       auto bvMaterial = dynamic_cast<
-          const Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>*>(
+          const Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>*>(
           &vMaterial);
+      // Now check if we have a 2D map
       if (bvMaterial != nullptr) {
         // type is binned
-        smj[m_cfg.typekey] = "interpolated";
+        smj[m_cfg.typekey] = "interpolated2D";
         smj[m_cfg.mapkey] = true;
         bUtility = &(bvMaterial->binUtility());
         // convert the data
         if (m_cfg.writeData) {
           std::vector<std::vector<float>> mmat;
-          MaterialGrid3D grid = bvMaterial->getMapper().getGrid();
+          MaterialGrid2D grid = bvMaterial->getMapper().getGrid();
           for (size_t bin = 0; bin < grid.size(); bin++) {
             auto mat = Material(grid.at(bin));
             if (mat != Material()) {
@@ -714,6 +740,32 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
             }
           }
           smj[m_cfg.datakey] = mmat;
+        }
+      } else {
+        // Only option remaining: material map
+        auto bvMaterial = dynamic_cast<const Acts::InterpolatedMaterialMap<
+            MaterialMapper<MaterialGrid3D>>*>(&vMaterial);
+        // Now check if we have a 3D map
+        if (bvMaterial != nullptr) {
+          // type is binned
+          smj[m_cfg.typekey] = "interpolated3D";
+          smj[m_cfg.mapkey] = true;
+          bUtility = &(bvMaterial->binUtility());
+          // convert the data
+          if (m_cfg.writeData) {
+            std::vector<std::vector<float>> mmat;
+            MaterialGrid3D grid = bvMaterial->getMapper().getGrid();
+            for (size_t bin = 0; bin < grid.size(); bin++) {
+              auto mat = Material(grid.at(bin));
+              if (mat != Material()) {
+                mmat.push_back(
+                    {mat.X0(), mat.L0(), mat.Ar(), mat.Z(), mat.massDensity()});
+              } else {
+                mmat.push_back({0, 0, 0, 0, 0});
+              }
+            }
+            smj[m_cfg.datakey] = mmat;
+          }
         }
       }
     }

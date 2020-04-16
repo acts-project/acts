@@ -134,12 +134,25 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       mState.volumeMaterial[recMaterial.first] =
           std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
       return;
+    } else if (mState.materialBin[recMaterial.first].dimensions() == 2) {
+      // Accumulate all the recorded material onto a grid
+      ACTS_DEBUG("Grid material volume");
+      std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+      Grid2D Grid = createGrid2D(mState.materialBin[recMaterial.first],
+                                 transfoGlobalToLocal);
+      MaterialGrid2D matGrid =
+          mapMaterialPoints(Grid, recMaterial.second, transfoGlobalToLocal);
+      MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, matGrid);
+      mState.volumeMaterial[recMaterial.first] = std::make_unique<
+          InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
+          std::move(matMap), mState.materialBin[recMaterial.first]);
+      return;
     } else if (mState.materialBin[recMaterial.first].dimensions() == 3) {
       // Accumulate all the recorded material onto a grid
       ACTS_DEBUG("Grid material volume");
       std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
-      Grid3D Grid = createGrid(mState.materialBin[recMaterial.first],
-                               transfoGlobalToLocal);
+      Grid3D Grid = createGrid3D(mState.materialBin[recMaterial.first],
+                                 transfoGlobalToLocal);
       MaterialGrid3D matGrid =
           mapMaterialPoints(Grid, recMaterial.second, transfoGlobalToLocal);
       MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, matGrid);

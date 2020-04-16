@@ -75,8 +75,164 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
   return Grid3D(
       std::make_tuple(std::move(axis1), std::move(axis2), std::move(axis3)));
 }
+Grid2D createGrid2D(
+    const BinUtility& bins,
+    std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
+  auto bu = bins.binningData();
+  // First we nee to create the 2 axis
+  std::array<double, 3> gridAxis1;
+  std::array<double, 3> gridAxis2;
 
-Grid3D createGrid(
+  std::vector<Acts::BinningValue> bintype;
+
+  // loop trought the binned data and create the determine the bin type
+  for (size_t b = 0; b < bu.size(); b++) {
+    if (bu[b].binvalue == binRPhi || bu[b].binvalue == binEta ||
+        bu[b].binvalue == binH || bu[b].binvalue == binMag ||
+        bu[b].binvalue == binValues) {
+      throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
+      break;
+    }
+    bintype.push_back(bu[b].binvalue);
+  }
+
+  // Create a 2D Grid in XY
+  if (std::find(bintype.begin(), bintype.end(), binX) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binY) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binX) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binY) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector2D {
+      return {pos.x(), pos.y()};
+    };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  }
+
+  // Create a 2D Grid in XZ
+  if (std::find(bintype.begin(), bintype.end(), binX) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binZ) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binX) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binZ) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector2D {
+      return {pos.x(), pos.z()};
+    };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  }
+
+  // Create a 2D Grid in YZ
+  if (std::find(bintype.begin(), bintype.end(), binY) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binZ) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binY) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binZ) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector2D {
+      return {pos.y(), pos.z()};
+    };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  }
+
+  // Create a 2D Grid in RPhi
+  if (std::find(bintype.begin(), bintype.end(), binR) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binPhi) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binR) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binPhi) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector2D {
+      return {VectorHelpers::perp(pos), VectorHelpers::phi(pos)};
+    };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  }
+
+  // Create a 2D Grid in RZ
+  if (std::find(bintype.begin(), bintype.end(), binR) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binZ) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binR) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binZ) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector2D {
+      return {VectorHelpers::perp(pos), pos.z()};
+    };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  }
+
+  // Create a 2D Grid in PhiZ
+  if (std::find(bintype.begin(), bintype.end(), binPhi) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binZ) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binPhi) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binZ) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector2D {
+      return {VectorHelpers::phi(pos), pos.z()};
+    };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  }
+
+  throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
+  return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+}
+
+Grid3D createGrid3D(
     const BinUtility& bins,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
@@ -84,77 +240,87 @@ Grid3D createGrid(
   std::array<double, 3> gridAxis1;
   std::array<double, 3> gridAxis2;
   std::array<double, 3> gridAxis3;
-  bool iscylinder = false;
-  bool iscube = false;
-  // loop trought the binned data and create the corresponding axis
+
+  std::vector<Acts::BinningValue> bintype;
+
+  // loop trought the binned data and create the determine the bin type
   for (size_t b = 0; b < bu.size(); b++) {
-    switch (bu[b].binvalue) {
-      case binX:
-        iscube = true;
-        gridAxis1[0] = bu[b].min;
-        gridAxis1[1] = bu[b].max;
-        gridAxis1[2] = bu[b].bins();
-        break;
-
-      case binY:
-        iscube = true;
-        gridAxis2[0] = bu[b].min;
-        gridAxis2[1] = bu[b].max;
-        gridAxis2[2] = bu[b].bins();
-        break;
-
-      case binR:
-        iscylinder = true;
-        gridAxis1[0] = bu[b].min;
-        gridAxis1[1] = bu[b].max;
-        gridAxis1[2] = bu[b].bins();
-        break;
-
-      case binPhi:
-        iscylinder = true;
-        gridAxis2[0] = bu[b].min;
-        gridAxis2[1] = bu[b].max;
-        gridAxis2[2] = bu[b].bins();
-        break;
-
-      case binZ:
-        gridAxis3[0] = bu[b].min;
-        gridAxis3[1] = bu[b].max;
-        gridAxis3[2] = bu[b].bins();
-        break;
-
-      case binRPhi:
-      case binEta:
-      case binH:
-      case binMag:
-      case binValues:
-        throw std::invalid_argument(
-            "Incorrect bin, should be x,y,z or r,phi,z");
-        break;
+    if (bu[b].binvalue == binRPhi || bu[b].binvalue == binEta ||
+        bu[b].binvalue == binH || bu[b].binvalue == binMag ||
+        bu[b].binvalue == binValues) {
+      throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
+      break;
     }
+    bintype.push_back(bu[b].binvalue);
   }
-  if (!(iscylinder || iscube) || (iscylinder && iscube)) {
-    throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
-  }
-  // create the appropriate Global to local transform
-  if (iscylinder) {
-    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector3D {
-      return {VectorHelpers::perp(pos), VectorHelpers::phi(pos), pos.z()};
-    };
-  }
-  if (iscube) {
+
+  // Create a 3D Grid in XYZ
+  if (std::find(bintype.begin(), bintype.end(), binX) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binY) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binZ) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binX) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binY) - bintype.begin();
+    int index3 =
+        std::find(bintype.begin(), bintype.end(), binZ) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    gridAxis3[0] = bu[index3].min;
+    gridAxis3[1] = bu[index3].max;
+    gridAxis3[2] = bu[index3].bins();
+
     transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector3D {
       return {pos.x(), pos.y(), pos.z()};
     };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
+                             std::move(gridAxis3)));
   }
-  // return the grid
+
+  // Create a 3D Grid in RPhiZ
+  if (std::find(bintype.begin(), bintype.end(), binR) != bintype.end() &&
+      std::find(bintype.begin(), bintype.end(), binPhi) != bintype.end()) {
+    int index1 =
+        std::find(bintype.begin(), bintype.end(), binR) - bintype.begin();
+    int index2 =
+        std::find(bintype.begin(), bintype.end(), binPhi) - bintype.begin();
+    int index3 =
+        std::find(bintype.begin(), bintype.end(), binZ) - bintype.begin();
+
+    gridAxis1[0] = bu[index1].min;
+    gridAxis1[1] = bu[index1].max;
+    gridAxis1[2] = bu[index1].bins();
+
+    gridAxis2[0] = bu[index2].min;
+    gridAxis2[1] = bu[index2].max;
+    gridAxis2[2] = bu[index2].bins();
+
+    gridAxis3[0] = bu[index3].min;
+    gridAxis3[1] = bu[index3].max;
+    gridAxis3[2] = bu[index3].bins();
+
+    transfoGlobalToLocal = [](Acts::Vector3D pos) -> Acts::Vector3D {
+      return {VectorHelpers::perp(pos), VectorHelpers::phi(pos), pos.z()};
+    };
+    return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
+                             std::move(gridAxis3)));
+  }
+
+  throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
   return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
                            std::move(gridAxis3)));
 }
 
 MaterialGrid2D mapMaterialPoints(
     Grid2D& grid, const RecordedMaterialPoint& mPoints,
-    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
+    std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
   // Walk over each point
   for (const auto& rm : mPoints) {
     // Search for fitting grid point and accumulate

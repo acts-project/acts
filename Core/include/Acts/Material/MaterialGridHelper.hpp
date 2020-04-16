@@ -60,6 +60,18 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
                   std::array<double, 3> gridAxis2,
                   std::array<double, 3> gridAxis3);
 
+/// @brief Create a 2DGrid using a BinUtility.
+/// Also determine the coresponding global to local transform and grid mapping
+/// function
+///
+/// @param [in] BinUtility of the volume to be mapped
+/// @param [in] Global to local transform to be updated.
+///
+/// @return the 3D grid
+Grid2D createGrid2D(
+    const BinUtility& bins,
+    std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal);
+
 /// @brief Create a 3DGrid using a BinUtility.
 /// Also determine the coresponding global to local transform and grid mapping
 /// function
@@ -68,7 +80,7 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
 /// @param [in] Global to local transform to be updated.
 ///
 /// @return the 3D grid
-Grid3D createGrid(
+Grid3D createGrid3D(
     const BinUtility& bins,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal);
 
@@ -83,7 +95,7 @@ Grid3D createGrid(
 /// @return The average material grid decomposed into classification numbers
 MaterialGrid2D mapMaterialPoints(
     Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
-    std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal);
+    std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal);
 
 /// @brief Concatenate a set of material at arbitrary space points on a set of
 /// grid points and produces a grid containing the averaged material values.
