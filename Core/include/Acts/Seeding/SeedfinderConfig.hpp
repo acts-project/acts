@@ -97,7 +97,7 @@ struct SeedfinderConfig {
 
   // cuda-related
   int maxBlockSize  = 1024;
-  int nTopPassLimit = 30;  // it is may not be enough for 1000k spacepoints events
+  int nTrplPerSpBLimit = 5;
   int offsetVecSize = 100; // This should be enough...  
 };
 }  // namespace Acts

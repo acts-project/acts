@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
   int  nGroupToIterate = 500;
   int  skip = 0;
   int  deviceID = 0;
-  int  nTopLimit = 10;
+  int  nTrplPerSpBLimit = 10;
   
   int opt;
   while ((opt = getopt(argc, argv, "haf:n:s:d:l:q")) != -1) {
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
         deviceID = atoi(optarg);
         break;	
       case 'l':
-        nTopLimit = atoi(optarg);
+        nTrplPerSpBLimit = atoi(optarg);
         break;	
       case 'q':
         quiet = true;
@@ -175,7 +175,7 @@ int main(int argc, char** argv) {
   cudaErrChk (cudaGetDeviceProperties(&prop, deviceID) );
   printf("\n GPU Device %d: \"%s\" with compute capability %d.%d\n\n", deviceID, prop.name, prop.major, prop.minor);  
   config.maxBlockSize = prop.maxThreadsPerBlock;
-  config.nTopPassLimit = nTopLimit;
+  config.nTrplPerSpBLimit = nTrplPerSpBLimit;
 
   // binfinder
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
