@@ -113,7 +113,19 @@ struct MaterialMapper {
       Grid_t grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid)) {}
 
-  /// @brief Retrieve material at given position
+  /// @brief Retrieve binned material at given position
+  ///
+  /// @param [in] position Global 3D position
+  /// @return Material at the given position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  /// map.
+  Material material(const Vector3D& position) const {
+    return Material(m_grid.atLocalBins(
+        m_grid.localBinsFromLowerLeftEdge(m_transformPos(position))));
+  }
+
+  /// @brief Retrieve interpolated material at given position
   ///
   /// @param [in] position Global 3D position
   /// @return Material at the given position
@@ -242,12 +254,21 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility bu)
       : m_mapper(std::move(mapper)), m_binUtility(bu) {}
 
-  /// @brief Retrieve material
+  /// @brief Retrieve the binned material
   ///
   /// @param [in] position Global 3D position
   ///
   /// @return Material at given position
   const Material material(const Vector3D& position) const {
+    return m_mapper.material(position);
+  }
+
+  /// @brief Retrieve the interpolated material
+  ///
+  /// @param [in] position Global 3D position
+  ///
+  /// @return material at given position
+  Material getMaterial(const Vector3D& position) const {
     return m_mapper.getMaterial(position);
   }
 

@@ -37,8 +37,6 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   bu += BinUtility(2, -1., 1., open, binZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
-  std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>
-      mapMaterial = Acts::mapMaterial3D;
 
   Grid3D Grid = createGrid(bu, transfoGlobalToLocal);
 
@@ -78,12 +76,15 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   Acts::Vector3D pos3 = {-2.7, 1.8, 0.8};
 
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_EQUAL(mapMaterial(transfoGlobalToLocal(pos1), Grid)[i],
-                      index1[i]);
-    BOOST_CHECK_EQUAL(mapMaterial(transfoGlobalToLocal(pos2), Grid)[i],
-                      index2[i]);
-    BOOST_CHECK_EQUAL(mapMaterial(transfoGlobalToLocal(pos3), Grid)[i],
-                      index3[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos1))[i],
+        index1[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos2))[i],
+        index2[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos3))[i],
+        index3[i]);
   }
   // Test material mapping
 
@@ -100,7 +101,7 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   matRecord.push_back(std::make_pair(matprop2, pos2));
 
   MaterialGrid3D matMap =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal, mapMaterial);
+      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
   CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
                   1e-4);
@@ -116,8 +117,6 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   bu += BinUtility(2, -2., 2., open, binZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
-  std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>
-      mapMaterial = Acts::mapMaterial3D;
 
   Grid3D Grid = createGrid(bu, transfoGlobalToLocal);
 
@@ -160,12 +159,15 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   Acts::Vector3D pos3 = {-1, 0.3, 0.8};
 
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_EQUAL(mapMaterial(transfoGlobalToLocal(pos1), Grid)[i],
-                      index1[i]);
-    BOOST_CHECK_EQUAL(mapMaterial(transfoGlobalToLocal(pos2), Grid)[i],
-                      index2[i]);
-    BOOST_CHECK_EQUAL(mapMaterial(transfoGlobalToLocal(pos3), Grid)[i],
-                      index3[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos1))[i],
+        index1[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos2))[i],
+        index2[i]);
+    BOOST_CHECK_EQUAL(
+        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos3))[i],
+        index3[i]);
   }
 
   // Test material mapping
@@ -183,7 +185,7 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   matRecord.push_back(std::make_pair(matprop2, pos2));
 
   MaterialGrid3D matMap =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal, mapMaterial);
+      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
   CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
                   1e-4);

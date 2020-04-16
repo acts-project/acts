@@ -140,8 +140,8 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
       Grid3D Grid = createGrid(mState.materialBin[recMaterial.first],
                                transfoGlobalToLocal);
-      MaterialGrid3D matGrid = mapMaterialPoints(
-          Grid, recMaterial.second, transfoGlobalToLocal, Acts::mapMaterial3D);
+      MaterialGrid3D matGrid =
+          mapMaterialPoints(Grid, recMaterial.second, transfoGlobalToLocal);
       MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, matGrid);
       mState.volumeMaterial[recMaterial.first] = std::make_unique<
           InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(

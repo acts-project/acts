@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
       [](Vector3D pos) -> Vector3D {
     return {pos.x(), pos.y(), pos.z()};
   };
-  MaterialGrid3D matGrid = mapMaterialPoints(
-      Grid, matRecord, transfoGlobalToLocal, Acts::mapMaterial3D);
+  MaterialGrid3D matGrid =
+      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
   // Construct a simple propagation through the detector
   StraightLineStepper sls;
