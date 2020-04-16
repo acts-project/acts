@@ -12,6 +12,7 @@
 #include <memory>
 #include "cuda.h"
 #include "cuda_runtime.h"
+#include "Acts/Utilities/Platforms/CUDA/CpuScalar.hpp"
 #include "CudaUtils.cu"
 
 namespace Acts{
@@ -39,6 +40,12 @@ public:
   }
 
   Var_t* Get() { return fDevPtr; }
+
+  Var_t GetHost() {
+    Var_t* fHostPtr = new Var_t[1];
+    cudaErrChk( cudaMemcpy(fHostPtr, fDevPtr, sizeof(Var_t), cudaMemcpyDeviceToHost) );
+    return fHostPtr;
+  }
 
   void Zeros() { cudaMemset(fDevPtr,0,sizeof(Var_t)); }
   

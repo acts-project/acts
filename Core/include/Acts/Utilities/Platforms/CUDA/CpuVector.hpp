@@ -55,7 +55,7 @@ public:
 
   size_t GetSize() { return fSize; }
   
-  Var_t* Get(size_t offset){
+  Var_t* Get(size_t offset=0){
     return fHostPtr+offset;
   }
   

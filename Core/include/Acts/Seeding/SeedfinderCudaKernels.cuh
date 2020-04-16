@@ -17,24 +17,41 @@ class SeedfinderCudaKernels {
 public: 
   
   static void searchDoublet( const dim3 grid, const dim3 block,
-			     const bool* isBottom, 
+			     const bool* isLast,
 			     const int* nSpM, const float* spMmat,
 			     const int* nSpB, const float* spBmat,
+			     const int* nSpT, const float* spTmat,
 			     const float* deltaRMin,
 			     const float* deltaRMax,
 			     const float* cotThetaMax, 
 			     const float* collisionRegionMin, 
 			     const float* collisionRegionMax,
-			     bool* isCompatible,
-			     int*  nSpBcomp
-			     );
-
+			     int*  nSpMcomp,
+			     int*  nSpBcompPerSpM_Max,
+			     int*  nSpTcompPerSpM_Max,			     
+			     int*  nSpBcompPerSpM,
+			     int*  nSpTcompPerSpM,
+			     int*  McompIndex,			     
+			     int*  BcompIndex,
+			     int*  tmpBcompIndex,
+			     int*  TcompIndex,
+			     int*  tmpTcompIndex);
+  
   static void reduceMatrix( const dim3 grid, const dim3 block,
+			    const float* spMmat,
 			    const int*   nSpB,
 			    const float* spBmat,
 			    const int*   nSpBcompPerSpM_Max,
-			    const int*   bIndex,
-			    float* spBcompMatPerSpM);
+			    const int*   BcompIndex,
+			    const int*   nSpT,
+			    const float* spTmat,
+			    const int*   nSpTcompPerSpM_Max,
+			    const int*   TcompIndex,
+			    float* spMcompMat,			    
+			    float* spBcompMatPerSpM,
+			    float* circBcompMatPerSpM,
+			    float* spTcompMatPerSpM,
+			    float* circTcompMatPerSpM);
   
   static void transformCoordinates( const dim3 grid, const dim3 block,
 				    const bool*  isBottom,
@@ -56,7 +73,7 @@ public:
 			     const float* minHelixDiameter2,
 			     const float* pT2perRadius,
 			     const float* impactMax,
-			     const int*   nTrplPerSpBLimit,
+			     const int*   nTrplPerSpMLimit,
 			     int* nTrplPerSpM,
 			     int* nTrplPerSpB,
 			     int* tIndex,

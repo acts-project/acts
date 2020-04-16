@@ -12,7 +12,6 @@
 #include <memory>
 #include "cuda.h"
 #include "cuda_runtime.h"
-#include "Acts/Utilities/Platforms/CUDA/CudaVector.cu"
 #include "Acts/Utilities/Platforms/CUDA/CpuMatrix.hpp"
 #include "CudaUtils.cu"
 
