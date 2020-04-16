@@ -59,15 +59,16 @@ static inline std::string test(IVisualization& helper) {
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
-  Acts::BoundSymMatrix cov;
+  BoundSymMatrix cov;
   cov << 0.25, 0.0042, -0.00076, 6.156e-06, -2.11e-07, 0, 0.0042, 0.859,
       -0.000173, 0.000916, -4.017e-08, 0, -0.00076, -0.000173, 2.36e-04,
       -2.76e-07, 1.12e-08, 0, 6.15e-06, 0.000916, -2.76e-07, 8.84e-04,
       -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
       0, 0, 0, 0, 0, 1;
 
-  // constructor from parameter vector
-  auto ataPlane = BoundParameters(gctx, std::move(cov), pars, plane);
+  // Constructor from parameter vector
+  BoundParameters ataPlane(gctx, std::make_optional<BoundSymMatrix>(cov), pars,
+                           plane);
 
   Visualization::drawBoundParameters(helper, ataPlane, gctx, momentumScale,
                                      localErrorScale, directionErrorScale, true,
