@@ -59,7 +59,7 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
       if (pass) {
         continue;
       }
-      // Check if vectors are three-dimensional
+
       auto tnbc = line.find_first_not_of(" ", snbc);
       std::string body = line.substr(tnbc, line.size() - tnbc);
 
@@ -101,6 +101,13 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
   return errorStrings;
 }
 
+/// Ply element struct
+struct PlyElement {
+  std::string name = "none";
+  size_t copies = 0;
+  int properties = 0;  // -1 for list
+};
+
 /// This is a test function that tests the validity of an obj stream
 /// It tests for special characters that are not allowed to be contained
 ///
@@ -116,14 +123,97 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
   std::vector<std::string> errorStrings;
   const std::string w = "[ Invalid ply : ";
 
-  std::vector<std::string> hPasses = {"format", "element", "property",
-                                      "comment"};
+  std::vector<std::string> hPasses = {"format", "comment"};
 
   auto ss = std::stringstream{tString};
-  size_t lnumber = 0;
-  for (std::string line; std::getline(ss, line, '\n');) {
-    if (lnumber == 0 and line != "ply") {
+  bool inHeader = false;
+
+  size_t lNumber = 0;
+  size_t cElement = 0;
+  std::vector<PlyElement> elements;
+  PlyElement currentElement;
+
+  for (std::string line; std::getline(ss, line, '\n'); ++lNumber) {
+    // Check the "ply" statement at the beginning of the file
+    if (lNumber == 0 and line != "ply") {
       errorStrings.push_back(w + line + " ] first line has to be 'ply");
+    } else if (line == "ply") {
+      inHeader = true;
+      cElement = 0;
+      elements.clear();
+      continue;
+    }
+    // Process the header
+    if (inHeader) {
+      auto fnbc = line.find_first_not_of(" ", 0);
+      if (fnbc != std::string::npos) {
+        auto snbc = line.find_first_of(" ", fnbc);
+        std::string stag = line.substr(fnbc, snbc - fnbc);
+        if (stag == "comment" or stag == "format") {
+          continue;
+        }
+        if (stag == "end_header") {
+          inHeader = false;
+          elements.push_back(currentElement);
+          currentElement = PlyElement();
+          continue;
+        }
+
+        auto tnbc = line.find_first_not_of(" ", snbc);
+        std::string body = line.substr(tnbc, line.size() - tnbc);
+
+        auto n0nbc = body.find_first_not_of(" ", 0);
+        auto n1nbc = body.find_first_of(" ", n0nbc);
+        std::string name = body.substr(n0nbc, n1nbc);
+
+        if (stag == "element") {
+          // new element write the old one
+          if (currentElement.name != "none" and currentElement.copies > 0) {
+            elements.push_back(currentElement);
+            currentElement = PlyElement();
+          }
+          currentElement.name = name;
+          // get the number of copies
+          auto n2nbc = body.find_first_of(" ", n1nbc);
+          std::string copies = body.substr(n1nbc, n2nbc);
+          currentElement.copies = std::stoi(copies);
+        } else if (stag == "property") {
+          if (name == "list") {
+            currentElement.properties = -1;
+            continue;
+          }
+          if (currentElement.properties >= 0) {
+            ++currentElement.properties;
+          }
+        } else {
+          errorStrings.push_back(w + line + " ] Unkown command.");
+        }
+      }
+    } else {
+      if (elements[cElement].copies == 0) {
+        ++cElement;
+      }
+      if (cElement < elements.size()) {
+        elements[cElement].copies -= 1;
+        std::vector<std::string> lineSplit;
+        boost::split(lineSplit, line, boost::is_any_of(" "));
+        if (elements[cElement].properties == -1) {
+          int nprops = std::stoi(lineSplit[0]);
+          if (nprops != (int(lineSplit.size()) - 1)) {
+            errorStrings.push_back(w + line + std::string(" ] List expected ") +
+                                   std::to_string(nprops) +
+                                   std::string(" properties, while found ") +
+                                   std::to_string(lineSplit.size() - 1) +
+                                   std::string("."));
+          }
+        } else if (lineSplit.size() != size_t(elements[cElement].properties)) {
+          errorStrings.push_back(
+              w + line + std::string(" ] Element expected ") +
+              std::to_string(elements[cElement].properties) +
+              std::string(" propertes, while found ") +
+              std::to_string(lineSplit.size()) + std::string("."));
+        }
+      }
     }
   }
 

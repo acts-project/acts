@@ -46,6 +46,7 @@ static inline std::string test(IVisualization& helper) {
   Acts::Visualization::drawSegment(helper, start, end, 0.1, 72, lineColor);
   helper.write("Primitives_Line");
   helper.write(ss);
+  helper.write(ss);
   helper.clear();
 
   // Arrows visualization ------------------------------------------------

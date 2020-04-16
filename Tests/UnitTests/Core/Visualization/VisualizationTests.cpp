@@ -24,7 +24,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-BOOST_AUTO_TEST_CASE(VisualizationTester) {
+BOOST_AUTO_TEST_CASE(VisualizationTesterObj) {
   // Test the tester
   std::string validObj = R"(# obj test file
 mtllib material.mtl
@@ -77,6 +77,83 @@ l 4 1
   BOOST_CHECK(objErrors.size() == 4);
   for (auto objerr : objErrors) {
     std::cout << objerr << std::endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(VisualizationTesterPly) {
+  // Test the tester
+  std::string validPly = R"(ply
+format ascii 1.0		
+comment made by Greg Turk
+comment this file is a cube
+element vertex 8
+property float x
+property float y
+property float z
+element face 6
+property list uchar int vertex_indices
+end_header
+0 0 0
+0 0 1
+0 1 1
+0 1 0
+1 0 0
+1 0 1
+1 1 1
+1 1 0
+4 0 1 2 3
+4 7 6 5 4
+4 0 4 5 1
+4 1 5 6 2
+4 2 6 7 3
+4 3 7 4 0
+)";
+
+  // Valid ply
+  auto plyErrors = testPlyString(validPly);
+  BOOST_CHECK(plyErrors.size() == 0);
+
+  // Valid ply, but triangular mesh is requested
+  plyErrors = testPlyString(validPly, true);
+  BOOST_CHECK(plyErrors.size() == 0);
+  for (auto plyerr : plyErrors) {
+    std::cout << plyerr << std::endl;
+  }
+
+  // Test the tester - contains 3 errors
+  std::string invalidPly = R"(ply
+format ascii 1.0		
+comment made by Greg Turk
+comment this file is a cube
+element vertex 8
+property float x
+property float y
+property float z
+element face 6
+property list uchar int vertex_indices
+whatever i write here
+end_header
+0 0 0 0
+0 0 1
+0 1 1
+0 1 0
+1 0 0
+1 0 1
+1 1 1
+1 1 0
+4 0 1 2 3
+4 7 6 5 4
+4 0 4 5 1
+4 1 5 6
+4 2 6 7 3
+4 3 7 4 0
+)";
+
+  // Valid ply, but triangular mesh is requested
+  plyErrors = testPlyString(invalidPly);
+  BOOST_CHECK(plyErrors.size() == 3);
+  for (auto plyerr : plyErrors) {
+    std::cout << plyerr << std::endl;
   }
 }
 

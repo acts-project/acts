@@ -37,7 +37,11 @@ BOOST_AUTO_TEST_CASE(EventDataVisualizationObj) {
 BOOST_AUTO_TEST_CASE(EventDataVisualizationPly) {
   PlyVisualization ply;
   auto plyTest = EventDataVisualization::test(ply);
-  // BOOST_TEST(plyTest);
+  auto plyErrors = testPlyString(plyTest);
+  BOOST_CHECK(plyErrors.size() == 0);
+  for (auto plyerr : plyErrors) {
+    std::cout << plyerr << std::endl;
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
