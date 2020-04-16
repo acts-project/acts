@@ -1128,7 +1128,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free, ds::trackParameters* ds::prop
   /// Line to Free Tests
   ///    
   {
-  auto ssTransform = createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
+  auto ssTransform = createCylindricTransform(pos, 0.005 * rand1, 0.005 * rand2);
   auto startSurface =
       Surface::makeShared<StrawSurface>(ssTransform, nullptr);
   BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
