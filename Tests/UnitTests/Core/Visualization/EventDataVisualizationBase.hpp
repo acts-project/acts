@@ -55,11 +55,12 @@ static inline std::string test(IVisualization& helper) {
   // l_x, l_y, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {
       {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
-  BoundParameters::ParVector_t pars;
+
+  BoundParameters::ParVector_t pars = BoundParameters::ParVector_t::Zero();
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
-  BoundSymMatrix cov;
+  BoundSymMatrix cov = BoundSymMatrix::Zero();
   cov << 0.25, 0.0042, -0.00076, 6.156e-06, -2.11e-07, 0, 0.0042, 0.859,
       -0.000173, 0.000916, -4.017e-08, 0, -0.00076, -0.000173, 2.36e-04,
       -2.76e-07, 1.12e-08, 0, 6.15e-06, 0.000916, -2.76e-07, 8.84e-04,
