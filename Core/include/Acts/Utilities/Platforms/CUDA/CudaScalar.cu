@@ -39,6 +39,8 @@ public:
   }
 
   Var_t* Get() { return fDevPtr; }
+
+  void Zeros() { cudaMemset(fDevPtr,0,sizeof(Var_t)); }
   
   private:
   Var_t* fDevPtr;  

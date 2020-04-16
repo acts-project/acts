@@ -12,6 +12,7 @@
 #include <memory>
 #include "cuda.h"
 #include "cuda_runtime.h"
+#include "Acts/Utilities/Platforms/CUDA/CpuVector.hpp"
 #include "CudaUtils.cu"
 
 namespace Acts{
