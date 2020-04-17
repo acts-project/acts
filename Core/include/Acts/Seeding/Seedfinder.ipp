@@ -260,11 +260,11 @@ namespace Acts {
   CpuVector<int> McompIndex_cpu(nSpM, &McompIndex_cuda);
   CpuMatrix<int> BcompIndex_cpu(nSpB, nSpM, &BcompIndex_cuda);
   CpuMatrix<int> TcompIndex_cpu(nSpT, nSpM, &TcompIndex_cuda);
-  
+
   auto end_DS = std::chrono::system_clock::now();
   std::chrono::duration<double> elapse_DS = end_DS-start_DS;
   std::get<0>(t_metric) += elapse_DS.count();
- 
+
   /* -----------------------------------------
      Algorithm 2. Transform coordinate
   -------------------------------------------*/
@@ -453,7 +453,7 @@ namespace Acts {
 	impactParameters.clear();
 
 	int bIndex = el.first;
-	// sort about local top index
+	// sort about top index
 	auto triplets = el.second;
 	sort(triplets.begin(), triplets.end()); 	
 
