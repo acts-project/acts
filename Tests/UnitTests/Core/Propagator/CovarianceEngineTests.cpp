@@ -46,8 +46,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Covariance transport to curvilinear coordinates
   detail::covarianceTransport(covariance, jacobian, transportJacobian,
-                              derivatives, jacobianLocalToGlobal, direction,
-                              true);
+                              derivatives, jacobianLocalToGlobal, direction);
 
   // Tests to see that the right components are (un-)changed
   BOOST_TEST(covariance != Covariance::Identity());
@@ -69,7 +68,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   auto surface = Surface::makeShared<PlaneSurface>(position, direction);
   detail::covarianceTransport(
       tgContext, covariance, jacobian, transportJacobian, derivatives,
-      jacobianLocalToGlobal, parameters, true, *surface);
+      jacobianLocalToGlobal, parameters, *surface);
 
   BOOST_TEST(covariance != Covariance::Identity());
   BOOST_TEST(jacobian != 2. * Jacobian::Identity());

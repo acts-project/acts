@@ -290,7 +290,7 @@ void covarianceTransport(
     Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool reinitialize, const Surface& surface) {
+    const Surface& surface) {
   // Build the full jacobian
   jacobianLocalToGlobal = transportJacobian * jacobianLocalToGlobal;
   const FreeToBoundMatrix jacToLocal = surfaceDerivative(
