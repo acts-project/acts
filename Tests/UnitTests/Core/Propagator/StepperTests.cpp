@@ -10,6 +10,7 @@
 
 #include <fstream>
 
+#include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -23,7 +24,6 @@
 #include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
-#include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -55,8 +55,8 @@ struct PropState {
   struct {
     double mass = 42.;
     double tolerance = 1e-4;
-      double stepSizeCutOff = 0.;
-  unsigned int maxRungeKuttaStepTrials = 10000;
+    double stepSizeCutOff = 0.;
+    unsigned int maxRungeKuttaStepTrials = 10000;
   } options;
 };
 
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 
   // Test charged parameters without covariance matrix
   CurvilinearParameters cp(std::nullopt, pos, mom, charge, time);
-  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir, stepSize,
-                                      tolerance);
+  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
+                                              stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_TEST(esState.jacToGlobal == BoundToFreeMatrix::Zero());
@@ -159,14 +159,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Test without charge and covariance matrix
   NeutralCurvilinearParameters ncp(std::nullopt, pos, mom, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
-                                        stepSize, tolerance);
+                                                stepSize, tolerance);
   BOOST_TEST(esState.q == 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = NeutralCurvilinearParameters(cov, pos, mom, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
-                                        stepSize, tolerance);
+                                                stepSize, tolerance);
   BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
   BOOST_TEST(esState.covTransport);
   BOOST_TEST(esState.cov == cov);
@@ -190,8 +190,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CurvilinearParameters cp(cov, pos, mom, charge, time);
 
   // Build the state and the stepper
-  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir, stepSize,
-                                      tolerance);
+  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
+                                              stepSize, tolerance);
   EigenStepper<ConstantBField> es(bField);
 
   // Test the getters
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
   BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
-                                        stepSize, tolerance);
+                                                stepSize, tolerance);
 
   // Test the intersection in the context of a surface
   auto targetSurface = Surface::makeShared<PlaneSurface>(
