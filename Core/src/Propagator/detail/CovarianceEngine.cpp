@@ -234,15 +234,18 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
   const double time = parameters[eFreeTime];
   BoundParameters boundParameters(geoContext, cov, position, momentum, charge,
                                   time, surface.getSharedPtr());
-  // Create the bound state     
-  return std::make_tuple(std::move(boundParameters), jacobian, accumulatedPath);;
+  // Create the bound state
+  return std::make_tuple(std::move(boundParameters), jacobian, accumulatedPath);
+  ;
 }
 
-CurvilinearState curvilinearState(
-    Covariance& covarianceMatrix, Jacobian& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath) {
+CurvilinearState curvilinearState(Covariance& covarianceMatrix,
+                                  Jacobian& jacobian,
+                                  FreeMatrix& transportJacobian,
+                                  FreeVector& derivatives,
+                                  BoundToFreeMatrix& jacobianLocalToGlobal,
+                                  const FreeVector& parameters,
+                                  bool covTransport, double accumulatedPath) {
   const Vector3D& direction = parameters.segment<3>(eFreeDir0);
 
   // Covariance transport
@@ -260,8 +263,8 @@ CurvilinearState curvilinearState(
   CurvilinearParameters curvilinearParameters(cov, position, momentum, charge,
                                               time);
   // Create the curvilinear state
-  return std::make_tuple(std::move(curvilinearParameters),
-                                            jacobian, accumulatedPath);
+  return std::make_tuple(std::move(curvilinearParameters), jacobian,
+                         accumulatedPath);
 }
 
 void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
@@ -278,8 +281,8 @@ void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
   covarianceMatrix = jacFull * covarianceMatrix * jacFull.transpose();
 
   // Reinitialize jacobian components
-    reinitializeJacobians(transportJacobian, derivatives, jacobianLocalToGlobal,
-                          direction);
+  reinitializeJacobians(transportJacobian, derivatives, jacobianLocalToGlobal,
+                        direction);
 
   // Store The global and bound jacobian (duplication for the moment)
   jacobian = jacFull;
@@ -299,10 +302,10 @@ void covarianceTransport(
 
   // Apply the actual covariance transport
   covarianceMatrix = jacFull * covarianceMatrix * jacFull.transpose();
-  
+
   // Reinitialize jacobian components
-    reinitializeJacobians(geoContext, transportJacobian, derivatives,
-                          jacobianLocalToGlobal, parameters, surface);
+  reinitializeJacobians(geoContext, transportJacobian, derivatives,
+                        jacobianLocalToGlobal, parameters, surface);
 
   // Store The global and bound jacobian (duplication for the moment)
   jacobian = jacFull;

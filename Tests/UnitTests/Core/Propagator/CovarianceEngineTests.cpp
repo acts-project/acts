@@ -66,9 +66,9 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Repeat transport to surface
   auto surface = Surface::makeShared<PlaneSurface>(position, direction);
-  detail::covarianceTransport(
-      tgContext, covariance, jacobian, transportJacobian, derivatives,
-      jacobianLocalToGlobal, parameters, *surface);
+  detail::covarianceTransport(tgContext, covariance, jacobian,
+                              transportJacobian, derivatives,
+                              jacobianLocalToGlobal, parameters, *surface);
 
   BOOST_TEST(covariance != Covariance::Identity());
   BOOST_TEST(jacobian != 2. * Jacobian::Identity());
