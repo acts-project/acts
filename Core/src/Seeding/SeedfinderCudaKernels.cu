@@ -35,27 +35,27 @@ __global__ void cuSearchDoublet(const int* nSpM, const float* spMmat,
 				int*  tmpTcompIndex
 				);
 
-__global__ void cuReduceMatrix(const int*   nSpM,
-			       const float* spMmat,
-			       const int*   McompIndex,
-			       const int*   nSpB,
-			       const float* spBmat,
-			       const int*   nSpBcompPerSpM_Max,
-			       const int*   BcompIndex,
-			       const int*   nSpT,
-			       const float* spTmat,
-			       const int*   nSpTcompPerSpM_Max,
-			       const int*   TcompIndex,
-			       float* spMcompMat,			    
-			       float* spBcompMatPerSpM,
-			       float* circBcompMatPerSpM,			       
-			       float* spTcompMatPerSpM,
-			       float* circTcompMatPerSpM);
+__global__ void cuTransformCoordinate(const int*   nSpM,
+				      const float* spMmat,
+				      const int*   McompIndex,
+				      const int*   nSpB,
+				      const float* spBmat,
+				      const int*   nSpBcompPerSpM_Max,
+				      const int*   BcompIndex,
+				      const int*   nSpT,
+				      const float* spTmat,
+				      const int*   nSpTcompPerSpM_Max,
+				      const int*   TcompIndex,
+				      float* spMcompMat,			    
+				      float* spBcompMatPerSpM,
+				      float* circBcompMatPerSpM,			       
+				      float* spTcompMatPerSpM,
+				      float* circTcompMatPerSpM);
 
-__device__ void transformCoordinate(bool  isBottom,
-				    const float* spM,
-				    const float* spB,
-				    float* circB);
+__device__ void sp2circle(bool  isBottom,
+			  const float* spM,
+			  const float* spB,
+			  float* circB);
 
 __global__ void cuSearchTriplet(const int*   offset,
 				const int*   nSpMcomp,
@@ -126,26 +126,26 @@ namespace Acts{
     cudaErrChk( cudaGetLastError() );
   }
 
-  void SeedfinderCudaKernels::reduceMatrix( const dim3 grid, const dim3 block,
-					    const int*   nSpM,
-					    const float* spMmat,
-					    const int*   McompIndex,
-					    const int*   nSpB,
-					    const float* spBmat,
-					    const int*   nSpBcompPerSpM_Max,
-					    const int*   BcompIndex,
-					    const int*   nSpT,
-					    const float* spTmat,
-					    const int*   nSpTcompPerSpM_Max,
-					    const int*   TcompIndex,
-					    float* spMcompMat,			    
-					    float* spBcompMatPerSpM,
-					    float* circBcompMatPerSpM,
-					    float* spTcompMatPerSpM,
-					    float* circTcompMatPerSpM
-					    ){
+  void SeedfinderCudaKernels::transformCoordinate( const dim3 grid, const dim3 block,
+						   const int*   nSpM,
+						   const float* spMmat,
+						   const int*   McompIndex,
+						   const int*   nSpB,
+						   const float* spBmat,
+						   const int*   nSpBcompPerSpM_Max,
+						   const int*   BcompIndex,
+						   const int*   nSpT,
+						   const float* spTmat,
+						   const int*   nSpTcompPerSpM_Max,
+						   const int*   TcompIndex,
+						   float* spMcompMat,			    
+						   float* spBcompMatPerSpM,
+						   float* circBcompMatPerSpM,
+						   float* spTcompMatPerSpM,
+						   float* circTcompMatPerSpM
+						   ){
     int sharedMemSize = sizeof(float)*6;
-    cuReduceMatrix<<< grid, block, sharedMemSize >>>(
+    cuTransformCoordinate<<< grid, block, sharedMemSize >>>(
 				      nSpM,
 				      spMmat,
 				      McompIndex,
@@ -354,22 +354,22 @@ __global__ void cuSearchDoublet(const int* nSpM, const float* spMmat,
 
 }
 
-__global__ void cuReduceMatrix(const int*   nSpM,
-			       const float* spMmat,			       
-			       const int*   McompIndex,
-			       const int*   nSpB,
-			       const float* spBmat,			       
-			       const int*   nSpBcompPerSpM_Max,
-			       const int*   BcompIndex,
-			       const int*   nSpT,
-			       const float* spTmat,
-			       const int*   nSpTcompPerSpM_Max,
-			       const int*   TcompIndex,
-			       float* spMcompMat,			    
-			       float* spBcompMatPerSpM,
-			       float* circBcompMatPerSpM,			       
-			       float* spTcompMatPerSpM,
-			       float* circTcompMatPerSpM){
+__global__ void cuTransformCoordinate(const int*   nSpM,
+				      const float* spMmat,			       
+				      const int*   McompIndex,
+				      const int*   nSpB,
+				      const float* spBmat,			       
+				      const int*   nSpBcompPerSpM_Max,
+				      const int*   BcompIndex,
+				      const int*   nSpT,
+				      const float* spTmat,
+				      const int*   nSpTcompPerSpM_Max,
+				      const int*   TcompIndex,
+				      float* spMcompMat,			    
+				      float* spBcompMatPerSpM,
+				      float* circBcompMatPerSpM,			       
+				      float* spTcompMatPerSpM,
+				      float* circTcompMatPerSpM){
 
   extern __shared__ float spM[];
   
@@ -398,7 +398,7 @@ __global__ void cuReduceMatrix(const int*   nSpM,
     }
 
     // do transform coordinate (xy->uv)
-    transformCoordinate(true, spM, spB, circB);
+    sp2circle(true, spM, spB, circB);
     for (int i=0; i<6; i++){
       circBcompMatPerSpM[threadIdx.x+offset+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+i)] = circB[i];
     }
@@ -417,7 +417,7 @@ __global__ void cuReduceMatrix(const int*   nSpM,
     }
     
     // do transform coordinate (xy->uv)
-    transformCoordinate(false, spM, spT, circT);    
+    sp2circle(false, spM, spT, circT);    
     for (int i=0; i<6; i++){
       circTcompMatPerSpM[threadIdx.x+offset+(*nSpTcompPerSpM_Max)*(6*blockIdx.x+i)] = circT[i];
     }
@@ -427,11 +427,11 @@ __global__ void cuReduceMatrix(const int*   nSpM,
   }
 }
 
-__device__ void transformCoordinate( bool isBottom,
-				    const float* spM,
-				    const float* spB,
-				    float* circB){
-
+__device__ void sp2circle( bool isBottom,
+			   const float* spM,
+			   const float* spB,
+			   float* circB){
+  
   float xM         = spM[0];
   float yM         = spM[1];
   float zM         = spM[2];
@@ -535,11 +535,11 @@ __global__ void cuSearchTriplet(const int*   offset,
   scatteringInRegion2 *= (*sigmaScattering) * (*sigmaScattering);
 
   //float Zot        = circTcompMatPerSpM[threadId+(*nSpTcompPerSpM)*0];
-  float cotThetaT  = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM_Max)*1];
-  float iDeltaRT   = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM_Max)*2];
-  float ErT        = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM_Max)*3];
-  float Ut         = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM_Max)*4];
-  float Vt         = circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM_Max)*5];
+  float cotThetaT  = circTcompMatPerSpM[threadIdx.x+(*offset)+(*nSpTcompPerSpM_Max)*1];
+  float iDeltaRT   = circTcompMatPerSpM[threadIdx.x+(*offset)+(*nSpTcompPerSpM_Max)*2];
+  float ErT        = circTcompMatPerSpM[threadIdx.x+(*offset)+(*nSpTcompPerSpM_Max)*3];
+  float Ut         = circTcompMatPerSpM[threadIdx.x+(*offset)+(*nSpTcompPerSpM_Max)*4];
+  float Vt         = circTcompMatPerSpM[threadIdx.x+(*offset)+(*nSpTcompPerSpM_Max)*5];
 
   // add errors of spB-spM and spM-spT pairs and add the correlation term
   // for errors on spM
