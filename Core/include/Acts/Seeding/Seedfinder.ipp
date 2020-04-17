@@ -145,7 +145,7 @@ namespace Acts {
   auto start_wall = std::chrono::system_clock::now();
   auto start_DS = std::chrono::system_clock::now();
   
-  // Get Size of spacepoints
+  // Get the size of spacepoints
   int nSpM(0);
   int nSpB(0);
   int nSpT(0);
@@ -162,6 +162,7 @@ namespace Acts {
     return outputVec;
   }
 
+  // Matrix flattening
   CpuMatrix<float> spMmat_cpu(nSpM, 6); // x y z r varR varZ
   CpuMatrix<float> spBmat_cpu(nSpB, 6);
   CpuMatrix<float> spTmat_cpu(nSpT, 6);
@@ -200,9 +201,9 @@ namespace Acts {
   CudaMatrix<float> spBmat_cuda(nSpB, 6, &spBmat_cpu);
   CudaMatrix<float> spTmat_cuda(nSpT, 6, &spTmat_cpu);
   
-  /*------------------------------------
-     Algorithm 1. Doublet Search (DS)
-  ------------------------------------*/
+  //------------------------------------
+  //  Algorithm 1. Doublet Search (DS)
+  //------------------------------------
   
   CudaScalar<int>  nSpMcomp_cuda(new int(0));             
   CudaScalar<int>  nSpBcompPerSpM_Max_cuda(new int(0));   
@@ -252,9 +253,9 @@ namespace Acts {
   std::chrono::duration<double> elapse_DS = end_DS-start_DS;
   std::get<0>(t_metric) += elapse_DS.count();
 
-  /* -----------------------------------------
-     Algorithm 2. Transform coordinate
-  -------------------------------------------*/
+  //--------------------------------------
+  //  Algorithm 2. Transform coordinate
+  //--------------------------------------
   
   auto start_TC = std::chrono::system_clock::now();  
   
@@ -291,9 +292,9 @@ namespace Acts {
   std::chrono::duration<double> elapse_TC = end_TC-start_TC;
   std::get<1>(t_metric) += elapse_TC.count();
   
-  // ----------------------------------------------------
+  //------------------------------------------------------
   //  Algorithm 3. Triplet Search (TS) & Seed filtering 
-  //-----------------------------------------------------
+  //------------------------------------------------------
 
   auto start_TS = std::chrono::system_clock::now();  
   
@@ -302,7 +303,7 @@ namespace Acts {
 					  (*nSpMcomp_cpu.Get())*6,
 					  &circBcompMatPerSpM_cuda);    
 
-  std::vector<int> offsetVec(m_config.offsetVecSize);
+  std::vector<int>  offsetVec(m_config.offsetVecSize);
   std::iota (std::begin(offsetVec), std::end(offsetVec), 0); // Fill with 0, 1, ..., 99.
   for (auto& el: offsetVec) el = el*m_config.maxBlockSize;
   CudaVector<int>   offsetVec_cuda(offsetVec.size(),&offsetVec[0]);
@@ -310,18 +311,13 @@ namespace Acts {
   const int         nTrplPerSpMLimit = m_config.nTrplPerSpBLimit*(*nSpBcompPerSpM_Max_cpu.Get());  
   CudaScalar<int>   nTrplPerSpMLimit_cuda(&nTrplPerSpMLimit);
   
-  CudaVector<int>   nTrplPerSpM_cuda(*nSpMcomp_cpu.Get());
-  nTrplPerSpM_cuda.Zeros();  
-  CudaMatrix<int>   nTrplPerSpB_cuda(*nSpBcompPerSpM_Max_cpu.Get(), *nSpMcomp_cpu.Get());
-  nTrplPerSpB_cuda.Zeros();  
+  CudaVector<int>   nTrplPerSpM_cuda(*nSpMcomp_cpu.Get()); nTrplPerSpM_cuda.Zeros();  
   CudaMatrix<int>   tPassIndex_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get());
   CudaMatrix<int>   bPassIndex_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get()); 
   CudaMatrix<float> curvatures_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get());
   CudaMatrix<float> impactparameters_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get()); 
   
-  CpuVector<int>    nTrplPerSpM_cpu(*nSpMcomp_cpu.Get(),true);
-  nTrplPerSpM_cpu.Zeros();
-  CpuMatrix<int>    nTrplPerSpB_cpu(*nSpBcompPerSpM_Max_cpu.Get(), *nSpMcomp_cpu.Get(), true);
+  CpuVector<int>    nTrplPerSpM_cpu(*nSpMcomp_cpu.Get(),true); nTrplPerSpM_cpu.Zeros();
   CpuMatrix<int>    tPassIndex_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true);
   CpuMatrix<int>    bPassIndex_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true); 
   CpuMatrix<float>  curvatures_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true);
@@ -334,7 +330,7 @@ namespace Acts {
     
     cudaStreamSynchronize(cuStream);
 
-    // triplet search    
+    // Search Triplet
     if (i_m < *nSpMcomp_cpu.Get()){
           
       int mIndex = *McompIndex_cpu.Get(i_m);
@@ -354,7 +350,6 @@ namespace Acts {
 					     nSpBcompPerSpM_Max_cuda.Get(),
 					     circBcompMatPerSpM_cuda.Get(0,6*i_m),
 					     nSpTcompPerSpM_Max_cuda.Get(),
-					     //circTcompMatPerSpM_cuda.Get(offsetVec[i_ts],6*i_m),
 					     circTcompMatPerSpM_cuda.Get(0,6*i_m),
 					     // Seed finder config
 					     maxScatteringAngle2_cuda.Get(),
@@ -365,7 +360,6 @@ namespace Acts {
 					     nTrplPerSpMLimit_cuda.Get(),
 					     // output
 					     nTrplPerSpM_cuda.Get(i_m),
-					     nTrplPerSpB_cuda.Get(0,i_m),
 					     tPassIndex_cuda.Get(0,i_m),
 					     bPassIndex_cuda.Get(0,i_m),
 					     curvatures_cuda.Get(0,i_m),
@@ -377,10 +371,6 @@ namespace Acts {
       
       nTrplPerSpM_cpu.CopyD2H(nTrplPerSpM_cuda.Get(i_m),1,i_m, &cuStream);
       
-      //nTrplPerSpB_cpu.CopyD2H(nTrplPerSpB_cuda.Get(0,i_m),
-      //			      *nSpBcompPerSpM_Max_cpu.Get(),
-      //			      (*nSpBcompPerSpM_Max_cpu.Get())*i_m,
-      //			      &cuStream);
       tPassIndex_cpu.CopyD2H(tPassIndex_cuda.Get(0,i_m),
 			     nTrplPerSpMLimit,
 			     nTrplPerSpMLimit*i_m,
@@ -405,7 +395,7 @@ namespace Acts {
     std::vector<std::pair<
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>> seedsPerSpM;
     
-    // seed filtering
+    // Seed filtering
     if (i_m > 0){
 
       int i_prev = i_m-1;
@@ -431,9 +421,6 @@ namespace Acts {
       for (auto &el: trplMap){
 	sort(el.second.begin(), el.second.end()); 	
       }
-
-      // Define lambda function for asynchronous process      
-      //auto filterTriplets = std::async([&] () {
 			            
       std::vector<const InternalSpacePoint<external_spacepoint_t> *> tVec;
       std::vector<float> curvatures;
@@ -470,12 +457,7 @@ namespace Acts {
 	
       }      
       m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
-
-      //});
-
-    }
-	
-    
+    }	    
   }  
 
   auto end_TS = std::chrono::system_clock::now();

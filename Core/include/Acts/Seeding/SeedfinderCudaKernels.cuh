@@ -71,7 +71,6 @@ public:
 			     const float* impactMax,
 			     const int*   nTrplPerSpMLimit,
 			     int* nTrplPerSpM,
-			     int* nTrplPerSpB,
 			     int* tIndex,
 			     int* bIndex,
 			     float* curvatures,

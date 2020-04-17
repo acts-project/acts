@@ -71,7 +71,6 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const float* impactMax,
 				const int*   nTrplPerSpMLimit,
 				int* nTrplPerSpM,
-				int* nTriplPerSpB,
 				int* tIndex,
 				int* bIndex,
 				float* curvatures,
@@ -181,7 +180,6 @@ namespace Acts{
 				const float* impactMax,
 				const int*   nTrplPerSpMLimit,
 				int* nTrplPerSpM,
-				int* nTriplPerSpB,
 				int* tIndex,
 				int* bIndex,
 				float* curvatures,
@@ -201,7 +199,7 @@ namespace Acts{
 				 maxScatteringAngle2,sigmaScattering,
 				 minHelixDiameter2, pT2perRadius,
 				 impactMax, nTrplPerSpMLimit,
-				 nTrplPerSpM, nTriplPerSpB,
+				 nTrplPerSpM,
 				 tIndex, bIndex,
 				 curvatures,
 				 impactparameters
@@ -506,7 +504,6 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const float* impactMax,
 				const int*   nTrplPerSpMLimit,
 				int* nTrplPerSpM,
-				int* nTrplPerSpB,
 				int* tIndex,
 				int* bIndex,
 				float* curvatures,
@@ -620,7 +617,6 @@ __global__ void cuSearchTriplet(const int*   offset,
   // It will be resorted after kernel call
   if (isPassed[threadIdx.x] == true){
     
-    int nTripletsPerSpB  = atomicAdd(&nTrplPerSpB[blockIdx.x],1);
     int pos = atomicAdd(nTrplPerSpM,1);
 
     if (pos<*nTrplPerSpMLimit){
