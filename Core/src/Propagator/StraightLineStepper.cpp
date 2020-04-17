@@ -27,10 +27,9 @@ StraightLineStepper::curvilinearState(State& state) const {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;
-  return detail::curvilinearState(state.cov, state.jacobian, state.jacTransport,
-                                  state.derivative, state.jacToGlobal,
-                                  parameters, state.covTransport,
-                                  state.pathAccumulated);
+  return detail::curvilinearState(
+      state.cov, state.jacobian, state.jacTransport, state.derivative,
+      state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated);
 }
 
 void StraightLineStepper::update(State& state,
@@ -65,8 +64,8 @@ void StraightLineStepper::covarianceTransport(State& state,
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;
-  detail::covarianceTransport(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, parameters, surface);
+  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
+                              state.jacTransport, state.derivative,
+                              state.jacToGlobal, parameters, surface);
 }
 }  // namespace Acts
