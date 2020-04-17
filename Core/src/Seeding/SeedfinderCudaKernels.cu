@@ -15,8 +15,7 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-__global__ void cuSearchDoublet(const bool* isLast,
-				const int* nSpM, const float* spMmat,  
+__global__ void cuSearchDoublet(const int* nSpM, const float* spMmat,  
 				const int* nSpB, const float* spBmat,
 				const int* nSpT, const float* spTmat,				
 				const float* deltaRMin,
@@ -33,9 +32,12 @@ __global__ void cuSearchDoublet(const bool* isLast,
 				int*  BcompIndex,
 				int*  tmpBcompIndex,				
 				int*  TcompIndex,
-				int*  tmpTcompIndex);
+				int*  tmpTcompIndex
+				);
 
-__global__ void cuReduceMatrix(const float* spMmat,
+__global__ void cuReduceMatrix(const int*   nSpM,
+			       const float* spMmat,
+			       const int*   McompIndex,
 			       const int*   nSpB,
 			       const float* spBmat,
 			       const int*   nSpBcompPerSpM_Max,
@@ -54,12 +56,6 @@ __device__ void transformCoordinate(bool  isBottom,
 				    const float* spM,
 				    const float* spB,
 				    float* circB);
-
-__global__ void cuTransformCoordinates(const bool* isBottom,
-				       const float* spMcompMat,
-				       const int*   nSpBcompPerSpM_Max,
-				       const float* spBcompMatPerSpM,
-				       float* circBcompMatPerSpM);
 
 __global__ void cuSearchTriplet(const int*   offset,
 				const int*   nSpMcomp,
@@ -87,7 +83,6 @@ namespace Acts{
   
   void SeedfinderCudaKernels::searchDoublet(
 				const dim3 grid, const dim3 block,
-				const bool* isLast,
 				const int* nSpM, const float* spMmat,
 				const int* nSpB, const float* spBmat,
 				const int* nSpT, const float* spTmat,
@@ -107,11 +102,9 @@ namespace Acts{
 				int*  TcompIndex,
 				int*  tmpTcompIndex){
     
-    //int sharedMemSize = (2*sizeof(int)+2*sizeof(int))*block.x+sizeof(int)+sizeof(int);
-    int sharedMemSize = (2*sizeof(int))*block.x+sizeof(int)+sizeof(int);
+    int sharedMemSize = (2*sizeof(int))*block.x + 2*sizeof(int);
     
     cuSearchDoublet<<< grid, block, sharedMemSize >>>(
-				  isLast,
 				  nSpM, spMmat,
 				  nSpB, spBmat,
 				  nSpT, spTmat,				     
@@ -134,7 +127,9 @@ namespace Acts{
   }
 
   void SeedfinderCudaKernels::reduceMatrix( const dim3 grid, const dim3 block,
+					    const int*   nSpM,
 					    const float* spMmat,
+					    const int*   McompIndex,
 					    const int*   nSpB,
 					    const float* spBmat,
 					    const int*   nSpBcompPerSpM_Max,
@@ -149,7 +144,11 @@ namespace Acts{
 					    float* spTcompMatPerSpM,
 					    float* circTcompMatPerSpM
 					    ){
-    cuReduceMatrix<<< grid, block >>>(spMmat,
+    int sharedMemSize = sizeof(float)*6;
+    cuReduceMatrix<<< grid, block, sharedMemSize >>>(
+				      nSpM,
+				      spMmat,
+				      McompIndex,
 				      nSpB,
 				      spBmat,
 				      nSpBcompPerSpM_Max,
@@ -166,22 +165,6 @@ namespace Acts{
     cudaErrChk ( cudaGetLastError() );
   }
     
-  void SeedfinderCudaKernels::transformCoordinates(
-				   const dim3 grid, const dim3 block,
-				   const bool* isBottom,
-				   const float* spMcompMat,
-				   const int*   nSpBcompPerSpM_Max,
-				   const float* spBcompMatPerSpM,
-				   float* circBcompMatPerSpM){
-    
-    cuTransformCoordinates<<< grid, block >>>(isBottom,
-					      spMcompMat,
-					      nSpBcompPerSpM_Max,
-					      spBcompMatPerSpM,
-					      circBcompMatPerSpM);
-    cudaErrChk( cudaGetLastError() );  
-  }
-
   void SeedfinderCudaKernels::searchTriplet(
 				const dim3 grid, const dim3 block,
 				const int*   offset,
@@ -205,9 +188,9 @@ namespace Acts{
 				float* impactparameters,				
 				cudaStream_t* stream
 				){
-    int sharedMemSize = (sizeof(bool)+2*sizeof(float))*block.x; // need a check
+  int sharedMemSize = (sizeof(int)+2*sizeof(float))*block.x;    
     
-    cuSearchTriplet<<< grid, block, 
+  cuSearchTriplet<<< grid, block, 
       sharedMemSize, *stream >>>(offset,
 				 nSpMcomp,
 				 spMcompMat,
@@ -228,8 +211,7 @@ namespace Acts{
   
 }
 
-__global__ void cuSearchDoublet(const bool* isLast,
-				const int* nSpM, const float* spMmat,
+__global__ void cuSearchDoublet(const int* nSpM, const float* spMmat,
 				const int* nSpB, const float* spBmat,
 				const int* nSpT, const float* spTmat,
 				const float* deltaRMin,
@@ -252,94 +234,93 @@ __global__ void cuSearchDoublet(const bool* isLast,
   extern __shared__ float shared[];
   int* isBcompat = (int*)shared;
   int* isTcompat = (int*)&isBcompat[blockDim.x];
-  //int* BcompIndexABlock = (int*)&isTcompat[blockDim.x];
-  //int* TcompIndexABlock = (int*)&BcompIndexABlock[blockDim.x];
-  //int* mPos             = (int*)&TcompIndexABlock[blockDim.x];
   int* mPos      = (int*)&isTcompat[blockDim.x];
   int* isMcompat = (int*)&mPos[1];
   
-  isBcompat[threadIdx.x] = true;
-  isTcompat[threadIdx.x] = true;
-
-  //int lastBpos = nSpBcompPerSpM[blockIdx.x];
-  //int lastTpos = nSpTcompPerSpM[blockIdx.x];
-  if (threadIdx.x == 0 ){
+  if (threadIdx.x==0) {
     *isMcompat = false;
   }
-  
   __syncthreads();
+
   
   float rM = spMmat[blockIdx.x +(*nSpM)*3];
   float zM = spMmat[blockIdx.x +(*nSpM)*2];
 
-  // Doublet search for bottom hits
-  if (threadIdx.x < *nSpB){
-
-    float rB = spBmat[threadIdx.x+(*nSpB)*3];
-    float zB = spBmat[threadIdx.x+(*nSpB)*2];
-
-    float deltaR = rM - rB;
-    if (deltaR > *deltaRMax){
-      isBcompat[threadIdx.x] = false;
-    }
+  int offset;
+  offset = 0;
+  while (offset < max(*nSpB, *nSpT) ){
     
-    if (deltaR < *deltaRMin){
-      isBcompat[threadIdx.x] = false;
-    }
+    isBcompat[threadIdx.x] = true;
     
-    float cotTheta = (zM - zB)/deltaR;
-    if (fabsf(cotTheta) > *cotThetaMax){
-      isBcompat[threadIdx.x] = false;
-    }
-  
-    float zOrigin = zM - rM*cotTheta;
-    if (zOrigin < *collisionRegionMin || zOrigin > *collisionRegionMax){
-      isBcompat[threadIdx.x] = false;
-    }
-
-    if ( isBcompat[threadIdx.x] == true ){
-      int bPos = atomicAdd(&nSpBcompPerSpM[blockIdx.x],isBcompat[threadIdx.x]);
-      tmpBcompIndex[bPos+(*nSpB)*blockIdx.x]=threadIdx.x;
-      //BcompIndexABlock[bPos] = threadIdx.x;
-    }
-  }
-  
-  // Doublet search for top hits  
-  if (threadIdx.x < *nSpT){
-    float rT = spTmat[threadIdx.x+(*nSpT)*3];
-    float zT = spTmat[threadIdx.x+(*nSpT)*2];
-    float deltaR = rT - rM;
-    if (deltaR < *deltaRMin){
-      isTcompat[threadIdx.x] = false;
-    }
-
-    if (deltaR > *deltaRMax){
-      isTcompat[threadIdx.x] = false;
-    }
-    
-    if (isTcompat[threadIdx.x] == true){
-      float cotTheta = (zT - zM)/deltaR;
+    // Doublet search for bottom hits
+    if (threadIdx.x+offset < *nSpB ){      
+      
+      float rB = spBmat[threadIdx.x+offset+(*nSpB)*3];
+      float zB = spBmat[threadIdx.x+offset+(*nSpB)*2];
+      
+      float deltaR = rM - rB;
+      if (deltaR > *deltaRMax){
+	isBcompat[threadIdx.x] = false;
+      }
+      
+      if (deltaR < *deltaRMin){
+	isBcompat[threadIdx.x] = false;
+      }
+      
+      float cotTheta = (zM - zB)/deltaR;
       if (fabsf(cotTheta) > *cotThetaMax){
-	isTcompat[threadIdx.x] = false;
+	isBcompat[threadIdx.x] = false;
       }
       
       float zOrigin = zM - rM*cotTheta;
       if (zOrigin < *collisionRegionMin || zOrigin > *collisionRegionMax){
-	isTcompat[threadIdx.x] = false;
+	isBcompat[threadIdx.x] = false;
+      }
+      
+      if ( isBcompat[threadIdx.x] == true ){
+	int bPos = atomicAdd(&nSpBcompPerSpM[blockIdx.x], 1);
+	tmpBcompIndex[bPos+(*nSpB)*blockIdx.x]=threadIdx.x+offset;
       }
     }
-
-    if ( isTcompat[threadIdx.x] == true ){
-      int tPos = atomicAdd(&nSpTcompPerSpM[blockIdx.x],isTcompat[threadIdx.x]);
-      tmpTcompIndex[tPos+(*nSpT)*blockIdx.x]=threadIdx.x;
-      //TcompIndexABlock[tPos] = threadIdx.x;
-    }
-  }
-
-  __syncthreads();
   
-  if (*isLast == true ){
+    isTcompat[threadIdx.x] = true;
     
+    // Doublet search for top hits  
+    if (threadIdx.x+offset < *nSpT){
+      float rT = spTmat[threadIdx.x+offset+(*nSpT)*3];
+      float zT = spTmat[threadIdx.x+offset+(*nSpT)*2];
+      float deltaR = rT - rM;
+      if (deltaR < *deltaRMin){
+	isTcompat[threadIdx.x] = false;
+      }
+      
+      if (deltaR > *deltaRMax){
+	isTcompat[threadIdx.x] = false;
+      }
+      
+      if (isTcompat[threadIdx.x] == true){
+	float cotTheta = (zT - zM)/deltaR;
+	if (fabsf(cotTheta) > *cotThetaMax){
+	  isTcompat[threadIdx.x] = false;
+	}
+	
+	float zOrigin = zM - rM*cotTheta;
+	if (zOrigin < *collisionRegionMin || zOrigin > *collisionRegionMax){
+	  isTcompat[threadIdx.x] = false;
+	}
+      }
+      
+      if ( isTcompat[threadIdx.x] == true ){
+	int tPos = atomicAdd(&nSpTcompPerSpM[blockIdx.x], 1);
+	tmpTcompIndex[tPos+(*nSpT)*blockIdx.x]=threadIdx.x+offset;
+      }
+    }
+    
+    offset += blockDim.x;
+  }
+  
+  __syncthreads();
+      
   if (threadIdx.x == 0){   
     if (nSpBcompPerSpM[blockIdx.x] > 0 && nSpTcompPerSpM[blockIdx.x] > 0 ){
       *mPos = atomicAdd(nSpMcomp,1);
@@ -347,30 +328,35 @@ __global__ void cuSearchDoublet(const bool* isLast,
       McompIndex[*mPos] = blockIdx.x;
       
       int bMax = atomicMax(nSpBcompPerSpM_Max,nSpBcompPerSpM[blockIdx.x]);
-      int tMax = atomicMax(nSpTcompPerSpM_Max,nSpTcompPerSpM[blockIdx.x]);
-
-      //printf("%d %d \n", *nSpBcompPerSpM_Max, *nSpTcompPerSpM_Max);
-      //printf("bMax tMax %d %d \n", bMax, tMax);
-      
+      int tMax = atomicMax(nSpTcompPerSpM_Max,nSpTcompPerSpM[blockIdx.x]);      
     }
   }
   
   __syncthreads();
   
   if (*isMcompat == true){
-    if (threadIdx.x < nSpBcompPerSpM[blockIdx.x]){
-      //BcompIndex[threadIdx.x+lastBpos+(*nSpB)*(*mPos)] = BcompIndexABlock[threadIdx.x];
-      BcompIndex[threadIdx.x+(*nSpB)*(*mPos)] = tmpBcompIndex[threadIdx.x+(*nSpB)*blockIdx.x];
-    }
-    if (threadIdx.x < nSpTcompPerSpM[blockIdx.x]){
-      //TcompIndex[threadIdx.x+lastTpos+(*nSpT)*(*mPos)] = TcompIndexABlock[threadIdx.x];
-      TcompIndex[threadIdx.x+(*nSpT)*(*mPos)] = tmpTcompIndex[threadIdx.x+(*nSpT)*blockIdx.x];
-    }
+
+    offset = 0;
+    while(offset< max(nSpBcompPerSpM[blockIdx.x], nSpTcompPerSpM[blockIdx.x] ) ){
+      
+      if (threadIdx.x+offset < nSpBcompPerSpM[blockIdx.x]){
+	BcompIndex[threadIdx.x+offset+(*nSpB)*(*mPos)]
+	  = tmpBcompIndex[threadIdx.x+offset+(*nSpB)*blockIdx.x];
+      }
+      
+      if (threadIdx.x+offset < nSpTcompPerSpM[blockIdx.x]){
+	TcompIndex[threadIdx.x+offset+(*nSpT)*(*mPos)]
+	  = tmpTcompIndex[threadIdx.x+offset+(*nSpT)*blockIdx.x];
+      }
+      offset += blockDim.x;
+    }    
   }
-  }
+
 }
 
-__global__ void cuReduceMatrix(const float* spMmat,
+__global__ void cuReduceMatrix(const int*   nSpM,
+			       const float* spMmat,			       
+			       const int*   McompIndex,
 			       const int*   nSpB,
 			       const float* spBmat,			       
 			       const int*   nSpBcompPerSpM_Max,
@@ -385,57 +371,60 @@ __global__ void cuReduceMatrix(const float* spMmat,
 			       float* spTcompMatPerSpM,
 			       float* circTcompMatPerSpM){
 
-  float spM[6];
-  for (int i=0; i<6; i++){
-    spM[i] = spMcompMat[blockIdx.x+gridDim.x*i];
+  extern __shared__ float spM[];
+  
+  if (threadIdx.x==0){
+    int mIndex = McompIndex[blockIdx.x];    
+    for (int i=0; i<6; i++){
+      spM[i] = spMcompMat[blockIdx.x+gridDim.x*i] = spMmat[mIndex+(*nSpM)*i];
+    }
   }
   
-  if (threadIdx.x < *nSpBcompPerSpM_Max){
+  __syncthreads();
+
+  int offset = 0;
+  while (offset < max(*nSpBcompPerSpM_Max, *nSpTcompPerSpM_Max) ){
+  
+  if (threadIdx.x+offset < *nSpBcompPerSpM_Max){
     float spB[6];
     float circB[6];
-    int bIndex = BcompIndex[threadIdx.x+(*nSpB)*blockIdx.x];
+    int bIndex = BcompIndex[threadIdx.x+offset+(*nSpB)*blockIdx.x];
 
     // matrix reduction
     for (int i=0; i<6; i++){
       spB[i]
-	= spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+i)]
+	= spBcompMatPerSpM[threadIdx.x+offset+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+i)]
 	= spBmat[bIndex+(*nSpB)*i]; 
     }
 
     // do transform coordinate (xy->uv)
     transformCoordinate(true, spM, spB, circB);
     for (int i=0; i<6; i++){
-      circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+i)] = circB[i];
+      circBcompMatPerSpM[threadIdx.x+offset+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+i)] = circB[i];
     }
-
-    //printf("%d %d %f %f %f %f %f %f \n", threadIdx.x, blockIdx.x, spM[0], spM[1], spM[2], spM[3], spM[4], spM[5]);
-
-    //printf("%d %d %f %f %f %f %f %f \n", threadIdx.x, blockIdx.x, spB[0], spB[1], spB[2], spB[3], spB[4], spB[5]);
-    //printf("%d %d %f %f %f %f %f %f \n", threadIdx.x, blockIdx.x, circB[0], circB[1], circB[2], circB[3], circB[4], circB[5]);
   }
   
-  if (threadIdx.x < *nSpTcompPerSpM_Max){
+  if (threadIdx.x+offset < *nSpTcompPerSpM_Max){
     float spT[6];
     float circT[6];
-    int tIndex = TcompIndex[threadIdx.x+(*nSpT)*blockIdx.x];
+    int tIndex = TcompIndex[threadIdx.x+offset+(*nSpT)*blockIdx.x];
 
     // matrix reduction
     for (int i=0; i<6; i++){
       spT[i]
-	= spTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM_Max)*(6*blockIdx.x+i)]
+	= spTcompMatPerSpM[threadIdx.x+offset+(*nSpTcompPerSpM_Max)*(6*blockIdx.x+i)]
 	= spTmat[tIndex+(*nSpT)*i];      
     }
     
     // do transform coordinate (xy->uv)
     transformCoordinate(false, spM, spT, circT);    
     for (int i=0; i<6; i++){
-      circTcompMatPerSpM[threadIdx.x+(*nSpTcompPerSpM_Max)*(6*blockIdx.x+i)] = circT[i];
+      circTcompMatPerSpM[threadIdx.x+offset+(*nSpTcompPerSpM_Max)*(6*blockIdx.x+i)] = circT[i];
     }
-    
-    //printf("%d %d %f %f %f %f %f %f \n", threadIdx.x, blockIdx.x, spT[0], spT[1], spT[2], spT[3], spT[4], spT[5]);    
-    //printf("%d %d %f %f %f %f %f %f \n", threadIdx.x, blockIdx.x, circT[0], circT[1], circT[2], circT[3], circT[4], circT[5]);
   }
-  
+
+  offset += blockDim.x;
+  }
 }
 
 __device__ void transformCoordinate( bool isBottom,
@@ -503,71 +492,6 @@ __device__ void transformCoordinate( bool isBottom,
   circB[5] = V;   
 }
 
-__global__ void cuTransformCoordinates(const bool*  isBottom,
-				       const float* spMcompMat,
-				       const int*   nSpBcompPerSpM_Max,
-				       const float* spBcompMatPerSpM,
-				       float* circBcompMatPerSpM){
-  
-  float xM = spMcompMat[blockIdx.x+gridDim.x*0];
-  float yM = spMcompMat[blockIdx.x+gridDim.x*1];
-  float zM = spMcompMat[blockIdx.x+gridDim.x*2];
-  float rM = spMcompMat[blockIdx.x+gridDim.x*3];
-  float varianceRM = spMcompMat[blockIdx.x+gridDim.x*4];
-  float varianceZM = spMcompMat[blockIdx.x+gridDim.x*5];
-
-  float cosPhiM = xM / rM;
-  float sinPhiM = yM / rM;
-    
-  float xB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+0)];
-  float yB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+1)];
-  float zB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+2)];
-  //float rB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+3)];
-  float varianceRB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+4)];
-  float varianceZB = spBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+5)];
-
-  float deltaX = xB - xM;
-  float deltaY = yB - yM;
-  float deltaZ = zB - zM;
-  
-  // calculate projection fraction of spM->sp vector pointing in same
-  // direction as
-  // vector origin->spM (x) and projection fraction of spM->sp vector pointing
-  // orthogonal to origin->spM (y)
-  float x = deltaX * cosPhiM + deltaY * sinPhiM;
-  float y = deltaY * cosPhiM - deltaX * sinPhiM;
-  // 1/(length of M -> SP)
-  float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-  float iDeltaR = sqrtf(iDeltaR2);
-
-  int bottomFactor = 1 * (int(!(*isBottom))) - 1 * (int(*isBottom));
-  // cot_theta = (deltaZ/deltaR)
-  float cot_theta = deltaZ * iDeltaR * bottomFactor;
-  // VERY frequent (SP^3) access
-
-  // location on z-axis of this SP-duplet
-  float Zo = zM - rM * cot_theta;
-  
-  // transformation of circle equation (x,y) into linear equation (u,v)
-  // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
-  // is transformed into
-  // 1 - 2x_0*u - 2y_0*v = 0
-  // using the following m_U and m_V
-  // (u = A + B*v); A and B are created later on  
-  float U  = x*iDeltaR2;
-  float V  = y*iDeltaR2;
-  // error term for sp-pair without correlation of middle space point  
-  float Er = ((varianceZM + varianceZB) +
-	      (cot_theta * cot_theta) * (varianceRM + varianceRB)) * iDeltaR2;  
-  
-  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+0)] = Zo;
-  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+1)] = cot_theta;
-  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+2)] = iDeltaR;
-  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+3)] = Er;
-  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+4)] = U;
-  circBcompMatPerSpM[threadIdx.x+(*nSpBcompPerSpM_Max)*(6*blockIdx.x+5)] = V; 
-}
-
 __global__ void cuSearchTriplet(const int*   offset,
 				const int*   nSpMcomp,
 				const float* spMcompMat,
@@ -593,7 +517,7 @@ __global__ void cuSearchTriplet(const int*   offset,
   
   float* impact    = (float*)shared;
   float* invHelix  = (float*)&impact[blockDim.x];
-  bool*  isPassed  = (bool*)&invHelix[blockDim.x];  
+  int*  isPassed   = (int*)&invHelix[blockDim.x];  
   
   float rM         = spMcompMat[(*nSpMcomp)*3];
   float varianceRM = spMcompMat[(*nSpMcomp)*4];

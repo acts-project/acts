@@ -17,7 +17,7 @@ class SeedfinderCudaKernels {
 public: 
   
   static void searchDoublet( const dim3 grid, const dim3 block,
-			     const bool* isLast,
+			     //const bool* isLast, const int* offset,
 			     const int* nSpM, const float* spMmat,
 			     const int* nSpB, const float* spBmat,
 			     const int* nSpT, const float* spTmat,
@@ -35,10 +35,13 @@ public:
 			     int*  BcompIndex,
 			     int*  tmpBcompIndex,
 			     int*  TcompIndex,
-			     int*  tmpTcompIndex);
+			     int*  tmpTcompIndex
+			     );
   
   static void reduceMatrix( const dim3 grid, const dim3 block,
+			    const int*   nSpM,
 			    const float* spMmat,
+			    const int*   McompIndex,
 			    const int*   nSpB,
 			    const float* spBmat,
 			    const int*   nSpBcompPerSpM_Max,
@@ -52,13 +55,6 @@ public:
 			    float* circBcompMatPerSpM,
 			    float* spTcompMatPerSpM,
 			    float* circTcompMatPerSpM);
-  
-  static void transformCoordinates( const dim3 grid, const dim3 block,
-				    const bool*  isBottom,
-				    const float* spMcompMat,
-				    const int*   nSpBcompPerSpM_Max,
-				    const float* spBcompMatPerSpM_Max,
-				    float* circBcompMatPerSpM);
   
   static void searchTriplet( const dim3 grid, const dim3 block,
 			     const int*   offset,
