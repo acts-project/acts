@@ -108,11 +108,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 	BOOST_TEST(sls.charge(slsState) == slsState.q);
 	BOOST_TEST(sls.time(slsState) == slsState.t);
 
-    BOOST_TEST(sls.overstepLimit(slsState) == tolerance);
+    //~ BOOST_TEST(sls.overstepLimit(slsState) == tolerance);
     
-  //~ double overstepLimit(const State& /*state*/) const {
-    //~ return s_onSurfaceTolerance;
-  //~ }
   
 
 	const std::string originalStepSize = slsState.stepSize.toString();
@@ -187,33 +184,51 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 	BOOST_TEST(ps.stepping.jacTransport != FreeMatrix::Identity());
 	
 	
+	auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
+	BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
+	slsState = StraightLineStepper::State(tgContext, mfContext, cp, ndir, stepSize, tolerance);
 	
-  //~ Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
-                                           //~ const BoundaryCheck& bcheck) const {
-    //~ return detail::updateSingleSurfaceStatus<StraightLineStepper>(
-        //~ *this, state, surface, bcheck);
-  //~ }
-  //~ template <typename object_intersection_t>
-  //~ void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      //~ bool release = true) const {
-    //~ detail::updateSingleStepSize<StraightLineStepper>(state, oIntersection,
-                                                      //~ release);
-  //~ }
-  
-  
-  
-  //~ BoundState boundState(State& state, const Surface& surface,
-                        //~ bool reinitialize) const;
-                        
-                        
-                          //~ void update(State& state, const BoundParameters& pars) const;
-                          
-                          
-                          
-  //~ void covarianceTransport(State& state, const Surface& surface,
-                           //~ bool reinitialize = false) const;
+	auto targetSurface = Surface::makeShared<PlaneSurface>(pos + ndir * 2. * mom.normalized(), mom.normalized());
+	sls.updateSurfaceStatus(slsState, *targetSurface, BoundaryCheck(false));
+	BOOST_TEST(slsState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
+	
 
 
+	sls.updateStepSize(slsState, targetSurface->intersect(slsState.geoContext, slsState.pos, slsState.navDir * slsState.dir, false), false);
+	BOOST_TEST(slsState.stepSize == 2.);
+	slsState.stepSize = ndir * stepSize;
+	sls.updateStepSize(slsState, targetSurface->intersect(slsState.geoContext, slsState.pos, slsState.navDir * slsState.dir, false), true);
+	BOOST_TEST(slsState.stepSize == 2.);
+
+
+  
+
+  	auto boundState = sls.boundState(slsState, *plane, true);
+	auto boundPars = std::get<0>(boundState);
+	CHECK_CLOSE_ABS(boundPars.position(), bp.position(), 1e-6);
+	CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
+	CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
+	CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
+	BOOST_TEST(boundPars.covariance().has_value());
+	BOOST_TEST(*boundPars.covariance() != cov);
+	CHECK_CLOSE_COVARIANCE(std::get<1>(boundState), BoundMatrix(BoundMatrix::Identity()), 1e-6);
+	CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
+                        
+     BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom, -1. * charge, 2. * time, targetSurface);
+     sls.update(slsState, bpTarget);
+    BOOST_TEST(slsState.pos == 2. * pos);
+	BOOST_TEST(slsState.dir == mom.normalized());
+	BOOST_TEST(slsState.p == 2. * mom.norm());
+	BOOST_TEST(slsState.q == 1. * charge);
+	BOOST_TEST(slsState.t == 2. * time);
+  	CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
+                      
+                          
+      sls.covarianceTransport(slsState, *plane, true);    
+          BOOST_TEST(slsState.cov != cov);
+	BOOST_TEST(slsState.jacToGlobal != BoundToFreeMatrix::Zero());
+	BOOST_TEST(slsState.jacTransport == FreeMatrix::Identity());
+	BOOST_TEST(slsState.derivative == FreeVector::Zero());
 }
 }  // namespace Test
 }  // namespace Acts
