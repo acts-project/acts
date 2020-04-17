@@ -119,30 +119,30 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   // Test Global To Local transform
   Acts::Vector3D pos(1., 2., 3.);
 
-  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[0], atan2(2, 1), 1e-4);
-  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], 3, 1e-4);
+  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[1], atan2(2, 1), 1e-4);
+  CHECK_CLOSE_REL(transfoGlobalToLocal(pos)[0], 3, 1e-4);
 
   // Test Grid
   BOOST_CHECK_EQUAL(Grid.dimensions(), 2);
 
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[0], bd[1].bins());
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[1], bd[0].bins());
+  BOOST_CHECK_EQUAL(Grid.numLocalBins()[0], bd[0].bins());
+  BOOST_CHECK_EQUAL(Grid.numLocalBins()[1], bd[1].bins());
 
-  BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[1].min);
-  BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[0].min);
+  BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
+  BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
 
   float max1 =
       bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
   float max2 =
       bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max2);
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max1);
+  BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
+  BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
 
   // Test pos to index
   Grid2D::index_t index1 = {1, 1};
-  Grid2D::index_t index2 = {2, 1};
-  Grid2D::index_t index3 = {3, 2};
+  Grid2D::index_t index2 = {1, 2};
+  Grid2D::index_t index3 = {2, 3};
 
   Acts::Vector3D pos1 = {-0.2, -1, -1};
   Acts::Vector3D pos2 = {3.6, 0., -1.5};

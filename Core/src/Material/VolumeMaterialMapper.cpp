@@ -162,7 +162,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       return;
     } else {
       throw std::invalid_argument(
-          "Incorrect bin dimension, only 0 and 3 are accepted");
+          "Incorrect bin dimension, only 0, 2 and 3 are accepted");
     }
   }
 }

@@ -60,6 +60,15 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
                   std::array<double, 3> gridAxis2,
                   std::array<double, 3> gridAxis3);
 
+/// @brief return a function that return the coordinate corresponding to type of
+/// bin
+///
+/// @param [in] Type of bin
+///
+/// @return a coordinate transform function
+std::function<double(Acts::Vector3D)> globalToLocalFromBin(
+    Acts::BinningValue& type);
+
 /// @brief Create a 2DGrid using a BinUtility.
 /// Also determine the coresponding global to local transform and grid mapping
 /// function
