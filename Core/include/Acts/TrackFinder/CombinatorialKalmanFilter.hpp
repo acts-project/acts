@@ -591,24 +591,25 @@ class CombinatorialKalmanFilter {
             // neighboring state
             bool predictedShared = (neighborTip != SIZE_MAX);
 
-            // Determine if source link is already contained in other track
-            // state
-            bool sourcelinkShared = false;
+            // Determine if uncalibrated&calibrated measurement are already
+            // contained in other track state
+            bool measurementShared = false;
             auto index_it = sourcelinkTipsOnSurface.find(index);
             if (index_it != sourcelinkTipsOnSurface.end()) {
-              sourcelinkShared = true;
+              measurementShared = true;
             }
 
             // Add a measurement/outlier track state proxy in multi trajectory
             // No storage allocation for:
-            // -> predicted parameter and uncalibrated measurement if already
-            // stored
+            // -> predicted parameter and uncalibrated/calibrated measurement if
+            // already stored
             // -> filtered parameter for outlier
             auto stateMask =
                 (predictedShared ? ~TrackStatePropMask::Predicted
                                  : TrackStatePropMask::All) &
-                (sourcelinkShared ? ~TrackStatePropMask::Uncalibrated
-                                  : TrackStatePropMask::All) &
+                (measurementShared ? ~(TrackStatePropMask::Uncalibrated &
+                                       TrackStatePropMask::Calibrated)
+                                   : TrackStatePropMask::All) &
                 (isOutlier ? ~TrackStatePropMask::Filtered
                            : TrackStatePropMask::All);
             auto currentTip =
@@ -621,10 +622,10 @@ class CombinatorialKalmanFilter {
             // Fill the track state proxy
             if (predictedShared) {
               // The predicted parameter is already stored, just set the index
-              auto sharedPredicted =
+              auto neighborState =
                   result.fittedStates.getTrackState(neighborTip);
               trackStateProxy.data().ipredicted =
-                  sharedPredicted.data().ipredicted;
+                  neighborState.data().ipredicted;
             } else {
               trackStateProxy.predicted() = boundParams.parameters();
               trackStateProxy.predictedCovariance() = *boundParams.covariance();
@@ -646,21 +647,24 @@ class CombinatorialKalmanFilter {
 
             // Assign the source link and calibrated measurement to the track
             // state
-            if (sourcelinkShared) {
-              // The source link is already stored, just set the index
+            if (measurementShared) {
+              // The uncalibrated&calibrated are already stored, just set the
+              // index
               auto sharedMeasurement =
                   result.fittedStates.getTrackState(index_it->second);
               trackStateProxy.data().iuncalibrated =
                   sharedMeasurement.data().iuncalibrated;
+              trackStateProxy.data().icalibrated =
+                  sharedMeasurement.data().icalibrated;
             } else {
               trackStateProxy.uncalibrated() = sourcelinks.at(index);
+              std::visit(
+                  [&](const auto& calibrated) {
+                    trackStateProxy.setCalibrated(calibrated);
+                  },
+                  m_calibrator(trackStateProxy.uncalibrated(),
+                               trackStateProxy.predicted()));
             }
-            std::visit(
-                [&](const auto& calibrated) {
-                  trackStateProxy.setCalibrated(calibrated);
-                },
-                m_calibrator(trackStateProxy.uncalibrated(),
-                             trackStateProxy.predicted()));
 
             // Set the filtered parameter
             if (isOutlier) {
@@ -715,7 +719,7 @@ class CombinatorialKalmanFilter {
             }
 
             // Remember the track state tip for this stored source link
-            if (not sourcelinkShared) {
+            if (not measurementShared) {
               auto& sourcelinkTips = result.sourcelinkTips[surface];
               sourcelinkTips.emplace(index, currentTip);
             }
