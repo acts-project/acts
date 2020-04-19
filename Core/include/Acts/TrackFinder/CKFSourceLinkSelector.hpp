@@ -38,29 +38,31 @@ struct CKFSourceLinkSelector {
   ///
   struct Config {
     // Criteria type down to detector volume
-    using VolumeChisq = std::map<GeometryID::Value, double>;
-    using VolumeNumMeas = std::map<GeometryID::Value, size_t>;
+    using VolumeChi2 = std::map<GeometryID::Value, double>;
+    using VolumeNumMeasurements = std::map<GeometryID::Value, size_t>;
     // Criteria type down to detector layer
-    using LayerChisq = std::map<GeometryID::Value, VolumeChisq>;
-    using LayerNumMeas = std::map<GeometryID::Value, VolumeNumMeas>;
+    using LayerChi2 = std::map<GeometryID::Value, VolumeChi2>;
+    using LayerNumMeasurements =
+        std::map<GeometryID::Value, VolumeNumMeasurements>;
 
     // Global maximum chi2
     double maxChi2 = std::numeric_limits<double>::max();
 
     // Volume-level maximum chi2
-    VolumeChisq volumeMaxChi2;
+    VolumeChi2 volumeMaxChi2;
 
     // Layer-level maximum chi2
-    LayerChisq layerMaxChi2;
+    LayerChi2 layerMaxChi2;
 
-    // Global maximum number of source links on surface
+    // Global maximum number of source links on surface (value 1 means selecting
+    // only the most compatible source link)
     size_t maxNumSourcelinksOnSurface = 1;
 
     // Volume-level maximum number of source links on surface
-    VolumeNumMeas volumeMaxNumSourcelinksOnSurface;
+    VolumeNumMeasurements volumeMaxNumSourcelinksOnSurface;
 
     // Layer-level maximum number of source links on surface
-    LayerNumMeas layerMaxNumSourcelinksOnSurface;
+    LayerNumMeasurements layerMaxNumSourcelinksOnSurface;
   };
 
   /// @brief Default constructor
@@ -105,54 +107,60 @@ struct CKFSourceLinkSelector {
     // If not, check if the volume-level criteria is configured.
     // Otherwise, use world criteria
     double chi2Cutoff = std::numeric_limits<double>::max();
-    size_t numSlsCutoff = std::numeric_limits<size_t>::max();
+    size_t numSourcelinksCutoff = std::numeric_limits<size_t>::max();
     // Get the allowed maximum chi2 on this surface
     while (true) {
       // layer-level criteria
-      auto lvMaxChi2 = m_config.layerMaxChi2.find(volumeID);
-      if (lvMaxChi2 != m_config.layerMaxChi2.end()) {
-        auto lvlMaxChi2 = lvMaxChi2->second.find(layerID);
-        if (lvlMaxChi2 != lvMaxChi2->second.end()) {
-          chi2Cutoff = lvlMaxChi2->second;
+      auto layerMaxChi2_volume_it = m_config.layerMaxChi2.find(volumeID);
+      if (layerMaxChi2_volume_it != m_config.layerMaxChi2.end()) {
+        auto layerMaxChi2_layer_it =
+            layerMaxChi2_volume_it->second.find(layerID);
+        if (layerMaxChi2_layer_it != layerMaxChi2_volume_it->second.end()) {
+          chi2Cutoff = layerMaxChi2_layer_it->second;
           break;
         }
       }
       // volume-level criteria
-      auto vvMaxChi2 = m_config.volumeMaxChi2.find(volumeID);
-      if (vvMaxChi2 != m_config.volumeMaxChi2.end()) {
-        chi2Cutoff = vvMaxChi2->second;
+      auto volumeMaxChi2_volume_it = m_config.volumeMaxChi2.find(volumeID);
+      if (volumeMaxChi2_volume_it != m_config.volumeMaxChi2.end()) {
+        chi2Cutoff = volumeMaxChi2_volume_it->second;
         break;
       }
       // world-level criteria
       chi2Cutoff = m_config.maxChi2;
       break;
     }
-    ACTS_VERBOSE("Allowed maximum chisq: " << chi2Cutoff);
+    ACTS_VERBOSE("Allowed maximum chi2: " << chi2Cutoff);
 
     // Get the allowed maximum number of source link candidates on this surface
     while (true) {
       // layer-level criteria
-      auto lvMaxNumSls =
+      auto layerMaxNumSourcelinks_volume_it =
           m_config.layerMaxNumSourcelinksOnSurface.find(volumeID);
-      if (lvMaxNumSls != m_config.layerMaxNumSourcelinksOnSurface.end()) {
-        auto lvlMaxNumSls = lvMaxNumSls->second.find(layerID);
-        if (lvlMaxNumSls != lvMaxNumSls->second.end()) {
-          numSlsCutoff = lvlMaxNumSls->second;
+      if (layerMaxNumSourcelinks_volume_it !=
+          m_config.layerMaxNumSourcelinksOnSurface.end()) {
+        auto layerMaxNumSourcelinks_layer_it =
+            layerMaxNumSourcelinks_volume_it->second.find(layerID);
+        if (layerMaxNumSourcelinks_layer_it !=
+            layerMaxNumSourcelinks_volume_it->second.end()) {
+          numSourcelinksCutoff = layerMaxNumSourcelinks_layer_it->second;
           break;
         }
       }
       // volume-level criteria
-      auto vvMaxNumSls =
+      auto volumeMaxNumSourcelinks_volume_it =
           m_config.volumeMaxNumSourcelinksOnSurface.find(volumeID);
-      if (vvMaxNumSls != m_config.volumeMaxNumSourcelinksOnSurface.end()) {
-        numSlsCutoff = vvMaxNumSls->second;
+      if (volumeMaxNumSourcelinks_volume_it !=
+          m_config.volumeMaxNumSourcelinksOnSurface.end()) {
+        numSourcelinksCutoff = volumeMaxNumSourcelinks_volume_it->second;
         break;
       }
       // world-level criteria
-      numSlsCutoff = m_config.maxNumSourcelinksOnSurface;
+      numSourcelinksCutoff = m_config.maxNumSourcelinksOnSurface;
       break;
     }
-    ACTS_VERBOSE("Allowed maximum number of source links: " << numSlsCutoff);
+    ACTS_VERBOSE(
+        "Allowed maximum number of source links: " << numSourcelinksCutoff);
 
     std::vector<std::pair<size_t, double>> candidateChi2;
     double minChi2 = std::numeric_limits<double>::max();
@@ -190,12 +198,11 @@ struct CKFSourceLinkSelector {
                               .eval()(0, 0);
 
             ACTS_VERBOSE("Chi2: " << chi2);
-            // Push the source link and tag it as measurement if satisfying
-            // criteria
+            // Push the source link index and chi2 if satisfying the criteria
             if (chi2 < chi2Cutoff) {
               candidateChi2.push_back({index, chi2});
             }
-            // To search for the source link with the min chisq
+            // Search for the source link with the min chi2
             if (chi2 < minChi2) {
               minChi2 = chi2;
               minIndex = index;
@@ -205,18 +212,18 @@ struct CKFSourceLinkSelector {
       index++;
     }
 
-    // Check the number of source links against provided criteria
-    // Sort the source link candidates based on chi2
+    // Check the number of source links against provided criteria:
+    // -> First sort the source link candidates based on chi2 in ascending order
     sort(candidateChi2.begin(), candidateChi2.end(),
-         [=](const std::pair<size_t, double>& achi2,
-             const std::pair<size_t, double>& bchi2) {
-           return achi2.second < bchi2.second;
+         [](const std::pair<size_t, double>& lchi2,
+            const std::pair<size_t, double>& rchi2) {
+           return lchi2.second < rchi2.second;
          });
-    // Only store the allowed number of source link candidates
+    // -> Then get only allowed number of source link candidates from the front
     std::vector<size_t> candidateIndices;
     size_t nCandidates = 0;
     for (const auto& [id, chi2] : candidateChi2) {
-      if (numSlsCutoff <= nCandidates) {
+      if (numSourcelinksCutoff <= nCandidates) {
         break;
       }
       candidateIndices.push_back(id);
@@ -227,7 +234,7 @@ struct CKFSourceLinkSelector {
         "Number of measurement candidates: " << candidateIndices.size());
 
     // If there is no selected source link, return the source link with the best
-    // chisq and tag it as an outlier
+    // chi2 and tag it as an outlier
     bool isOutlier = false;
     if (index > 0 and candidateIndices.empty()) {
       candidateIndices.push_back(minIndex);

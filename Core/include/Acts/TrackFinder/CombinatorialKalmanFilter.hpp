@@ -555,12 +555,12 @@ class CombinatorialKalmanFilter {
         // measurements or outlier.
         // Calibrator is passed to the selector because
         // selection has to be done based on calibrated measurement
-        auto slSelectionRes =
+        auto sourcelinkSelectionRes =
             m_sourcelinkSelector(m_calibrator, boundParams, sourcelinks);
-        if (!slSelectionRes.ok()) {
-          return slSelectionRes.error();
+        if (!sourcelinkSelectionRes.ok()) {
+          return sourcelinkSelectionRes.error();
         } else {
-          auto [candidateIndices, isOutlier] = slSelectionRes.value();
+          auto [candidateIndices, isOutlier] = sourcelinkSelectionRes.value();
 
           // Remember the tip of the neighbor state on this surface
           size_t neighborTip = SIZE_MAX;

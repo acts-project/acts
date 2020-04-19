@@ -291,20 +291,20 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
                                 SourceLinkSelector>;
 
   using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
-  SourceLinkSelectorConfig slsConfig;
+  SourceLinkSelectorConfig sourcelinkSelectorConfig;
   // Implement different chi2 criteria for different pixel (volumeID: 2)
   // layers:
   //-> layer 2: 8
   //-> layer 4: 7
-  slsConfig.layerMaxChi2 = {{2, {{2, 8}, {4, 7}}}};
+  sourcelinkSelectorConfig.layerMaxChi2 = {{2, {{2, 8}, {4, 7}}}};
   // Implement different chi2 criteria for pixel (volumeID: 2) and strip
   // (volumeID: 3):
   //-> pixel: 7
   //-> strip: 8
-  slsConfig.volumeMaxChi2 = {{2, 7}, {3, 8}};
-  slsConfig.maxChi2 = 8;
+  sourcelinkSelectorConfig.volumeMaxChi2 = {{2, 7}, {3, 8}};
+  sourcelinkSelectorConfig.maxChi2 = 8;
   // Set the allowed maximum number of source links to be large enough
-  slsConfig.maxNumSourcelinksOnSurface = 100;
+  sourcelinkSelectorConfig.maxNumSourcelinksOnSurface = 100;
 
   CombinatorialKalmanFilter cKF(
       rPropagator,
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     const Surface* rSurface = &rStart.referenceSurface();
 
     CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
-        tgContext, mfContext, calContext, slsConfig, rSurface);
+        tgContext, mfContext, calContext, sourcelinkSelectorConfig, rSurface);
 
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);
