@@ -20,14 +20,14 @@
 namespace Acts {
 
 /// @brief This struct selects those source links compatible with the given
-/// track parameter against provided criteria
+/// track parameter against provided criteria.
 ///
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of source links on one surface
 ///
-/// If there is no compatible source link, it will return the source link with
-/// min chi2 and tag it as an outlier.
-
+/// If there is no compatible source link, the source link with the mininum chi2
+/// will be selected and the status will be tagged as an outlier
+///
 struct CKFSourceLinkSelector {
  public:
   /// @brief nested config struct
@@ -87,15 +87,27 @@ struct CKFSourceLinkSelector {
   /// @param calibrator The measurement calibrator
   /// @param predictedParams The predicted track parameter on a surface
   /// @param sourcelinks The pool of source links
+  /// @param sourcelinkChi2 The container for index and chi2 of intermediate
+  /// source link candidates
+  /// @param sourcelinkCandidateIndices The container for index of final source
+  /// link candidates
   ///
-  /// @return the compatible or outlier source link indice(s)
+  /// @return The number of source link candidates and the status of them:
+  /// outlier or measurement
   template <typename calibrator_t, typename source_link_t>
-  Result<std::pair<std::vector<size_t>, bool>> operator()(
+  Result<std::pair<size_t, bool>> operator()(
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
-      const std::vector<source_link_t>& sourcelinks) const {
+      const std::vector<source_link_t>& sourcelinks,
+      std::vector<std::pair<size_t, double>>& sourcelinkChi2,
+      std::vector<size_t>& sourcelinkCandidateIndices) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
+
+    // Return error if no source link
+    if (sourcelinks.empty()) {
+      return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
+    }
 
     auto surface = &predictedParams.referenceSurface();
     // Get volume and layer ID
@@ -162,10 +174,11 @@ struct CKFSourceLinkSelector {
     ACTS_VERBOSE(
         "Allowed maximum number of source links: " << numSourcelinksCutoff);
 
-    std::vector<std::pair<size_t, double>> candidateChi2;
+    sourcelinkChi2.resize(sourcelinks.size());
     double minChi2 = std::numeric_limits<double>::max();
     size_t minIndex = 0;
     size_t index = 0;
+    size_t nInitialCandidates = 0;
     // Loop over all source links to select the compatible source links
     for (const auto& sourcelink : sourcelinks) {
       std::visit(
@@ -200,7 +213,8 @@ struct CKFSourceLinkSelector {
             ACTS_VERBOSE("Chi2: " << chi2);
             // Push the source link index and chi2 if satisfying the criteria
             if (chi2 < chi2Cutoff) {
-              candidateChi2.push_back({index, chi2});
+              sourcelinkChi2.at(nInitialCandidates) = {index, chi2};
+              nInitialCandidates++;
             }
             // Search for the source link with the min chi2
             if (chi2 < minChi2) {
@@ -212,42 +226,51 @@ struct CKFSourceLinkSelector {
       index++;
     }
 
-    // Check the number of source links against provided criteria:
-    // -> First sort the source link candidates based on chi2 in ascending order
-    sort(candidateChi2.begin(), candidateChi2.end(),
-         [](const std::pair<size_t, double>& lchi2,
-            const std::pair<size_t, double>& rchi2) {
-           return lchi2.second < rchi2.second;
-         });
-    // -> Then get only allowed number of source link candidates from the front
-    std::vector<size_t> candidateIndices;
-    size_t nCandidates = 0;
-    for (const auto& [id, chi2] : candidateChi2) {
-      if (numSourcelinksCutoff <= nCandidates) {
-        break;
-      }
-      candidateIndices.push_back(id);
-      nCandidates++;
-    }
+    // Get the number of source link candidates with provided constraint
+    // considered
+    size_t nFinalCandidates =
+        std::min(nInitialCandidates, numSourcelinksCutoff);
 
-    ACTS_VERBOSE(
-        "Number of measurement candidates: " << candidateIndices.size());
+    // Size of sourcelinkCandidates
+    size_t containerSize = sourcelinkCandidateIndices.size();
 
     // If there is no selected source link, return the source link with the best
     // chi2 and tag it as an outlier
-    bool isOutlier = false;
-    if (index > 0 and candidateIndices.empty()) {
-      candidateIndices.push_back(minIndex);
-      isOutlier = true;
+    if (nFinalCandidates == 0) {
+      // Avoid destroying allocation even if the current container size is
+      // larger than needed
+      if (containerSize < 1) {
+        sourcelinkCandidateIndices.resize(1);
+      }
+      sourcelinkCandidateIndices.at(0) = minIndex;
       ACTS_DEBUG("No measurement candidate. Return an outlier source link.");
+      return std::make_pair(1, true);
     }
 
-    // Return error if neither source link candidates nor outlier
-    if (candidateIndices.empty()) {
-      return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
+    ACTS_VERBOSE("Number of measurement candidates: " << nFinalCandidates);
+    // Avoid destroying allocation even if the current container size is larger
+    // than needed
+    if (containerSize < nFinalCandidates) {
+      sourcelinkCandidateIndices.resize(nFinalCandidates);
     }
-
-    return std::make_pair(std::move(candidateIndices), isOutlier);
+    // Sort the initial source link candidates based on chi2 in ascending order
+    std::sort(sourcelinkChi2.begin(),
+              sourcelinkChi2.begin() + nInitialCandidates,
+              [](const std::pair<size_t, double>& lchi2,
+                 const std::pair<size_t, double>& rchi2) {
+                return lchi2.second < rchi2.second;
+              });
+    // Get only allowed number of source link candidates, i.e. nFinalCandidates,
+    // from the front and reset the values in the container
+    size_t nRecorded = 0;
+    for (const auto& [id, chi2] : sourcelinkChi2) {
+      if (nRecorded >= nFinalCandidates) {
+        break;
+      }
+      sourcelinkCandidateIndices.at(nRecorded) = id;
+      nRecorded++;
+    }
+    return std::make_pair(nFinalCandidates, false);
   }
 
   /// The config

@@ -154,6 +154,13 @@ struct CombinatorialKalmanFilterResult {
   // Indicator if initialization has been performed.
   bool initialized = false;
 
+  // Temporary container for index and chi2 of intermediate source link
+  // candidates
+  std::vector<std::pair<size_t, double>> sourcelinkChi2;
+
+  // Temporary container for index of final source link candidates
+  std::vector<size_t> sourcelinkCandidateIndices;
+
   Result<void> result{Result<void>::success()};
 };
 
@@ -555,18 +562,31 @@ class CombinatorialKalmanFilter {
         // measurements or outlier.
         // Calibrator is passed to the selector because
         // selection has to be done based on calibrated measurement
-        auto sourcelinkSelectionRes =
-            m_sourcelinkSelector(m_calibrator, boundParams, sourcelinks);
+        auto sourcelinkSelectionRes = m_sourcelinkSelector(
+            m_calibrator, boundParams, sourcelinks, result.sourcelinkChi2,
+            result.sourcelinkCandidateIndices);
         if (!sourcelinkSelectionRes.ok()) {
           return sourcelinkSelectionRes.error();
         } else {
-          auto [candidateIndices, isOutlier] = sourcelinkSelectionRes.value();
+          // The number of selected source link candidates and their status
+          auto [nSourcelinkCandidates, isOutlier] =
+              sourcelinkSelectionRes.value();
 
           // Remember the tip of the neighbor state on this surface
           size_t neighborTip = SIZE_MAX;
 
           // Loop over the selected source links
-          for (const auto& index : candidateIndices) {
+          // Note that only the first nSourcelinkCandidates elements stored in
+          // sourcelinkCandidateIndices are valid
+          for (auto sourcelinkCandidate_it =
+                   result.sourcelinkCandidateIndices.begin();
+               sourcelinkCandidate_it <
+               result.sourcelinkCandidateIndices.begin() +
+                   nSourcelinkCandidates;
+               ++sourcelinkCandidate_it) {
+            // The index of the source link
+            size_t index = *sourcelinkCandidate_it;
+
             // Determine if predicted parameter is already contained in
             // neighboring state
             bool predictedShared = (neighborTip != SIZE_MAX ? true : false);
