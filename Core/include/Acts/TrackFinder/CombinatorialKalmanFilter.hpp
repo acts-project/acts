@@ -21,7 +21,6 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
@@ -250,13 +249,6 @@ class CombinatorialKalmanFilter {
 
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
-
-  /// The navigator type
-  using KalmanNavigator = typename decltype(m_propagator)::Navigator;
-
-  /// The navigator has DirectNavigator type or not
-  static constexpr bool isDirectNavigator =
-      std::is_same<KalmanNavigator, DirectNavigator>::value;
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
@@ -1126,13 +1118,11 @@ class CombinatorialKalmanFilter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename comb_kalman_filter_options_t,
-            typename parameters_t = BoundParameters,
-            typename result_t =
-                Result<CombinatorialKalmanFilterResult<source_link_t>>>
-  auto findTracks(const std::vector<source_link_t>& sourcelinks,
-                  const start_parameters_t& sParameters,
-                  const comb_kalman_filter_options_t& tfOptions) const
-      -> std::enable_if_t<!isDirectNavigator, result_t> {
+            typename parameters_t = BoundParameters>
+  Result<CombinatorialKalmanFilterResult<source_link_t>> findTracks(
+      const std::vector<source_link_t>& sourcelinks,
+      const start_parameters_t& sParameters,
+      const comb_kalman_filter_options_t& tfOptions) const {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -1216,126 +1206,6 @@ class CombinatorialKalmanFilter {
     return m_outputConverter(std::move(combKalmanResult));
   }
 
-  /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
-  ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam comb_kalman_filter_options_t Type of the CombinatorialKalmanFilter
-  /// options
-  /// @tparam parameters_t Type of parameters used for local parameters
-  ///
-  /// @param sourcelinks The fittable uncalibrated measurements
-  /// @param sParameters The initial track parameters
-  /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
-  /// finding
-  /// @param sSequence surface sequence used to initialize a DirectNavigator
-  /// @note The input measurements are given in the form of @c SourceLinks.
-  /// It's
-  /// @c calibrator_t's job to turn them into calibrated measurements used in
-  /// the track finding.
-  ///
-  /// @return the output as an output track
-  template <typename source_link_t, typename start_parameters_t,
-            typename comb_kalman_filter_options_t,
-            typename parameters_t = BoundParameters,
-            typename result_t =
-                Result<CombinatorialKalmanFilterResult<source_link_t>>>
-  auto findTracks(const std::vector<source_link_t>& sourcelinks,
-                  const start_parameters_t& sParameters,
-                  const comb_kalman_filter_options_t& tfOptions,
-                  const std::vector<const Surface*>& sSequence) const
-      -> std::enable_if_t<isDirectNavigator, result_t> {
-    static_assert(SourceLinkConcept<source_link_t>,
-                  "Source link does not fulfill SourceLinkConcept");
-
-    static_assert(
-        std::is_same<
-            source_link_selector_t,
-            typename comb_kalman_filter_options_t::SourceLinkSelector>::value,
-        "Inconsistent type of source link selector between "
-        "CombinatorialKalmanFilter and "
-        " CombinatorialKalmanFilter options");
-
-    // To be able to find measurements later, we put them into a map
-    // We need to copy input SourceLinks anyways, so the map can own them.
-    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::unordered_map<const Surface*, std::vector<source_link_t>>
-        inputMeasurements;
-    for (const auto& sl : sourcelinks) {
-      const Surface* srf = &sl.referenceSurface();
-      inputMeasurements[srf].push_back(sl);
-    }
-
-    // Create the ActionList and AbortList
-    using CombinatorialKalmanFilterAborter =
-        Aborter<source_link_t, parameters_t>;
-    using CombinatorialKalmanFilterActor = Actor<source_link_t, parameters_t>;
-    using CombinatorialKalmanFilterResult =
-        typename CombinatorialKalmanFilterActor::result_type;
-    using Actors = ActionList<DirectNavigator::Initializer,
-                              CombinatorialKalmanFilterActor>;
-    using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
-
-    // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
-                                                    tfOptions.magFieldContext);
-
-    // Set max steps
-    propOptions.maxSteps = 10000;
-
-    // Catch the actor and set the measurements
-    auto& combKalmanActor =
-        propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
-    combKalmanActor.m_logger = m_logger.get();
-    combKalmanActor.inputMeasurements = std::move(inputMeasurements);
-    combKalmanActor.targetSurface = tfOptions.referenceSurface;
-    combKalmanActor.multipleScattering = tfOptions.multipleScattering;
-    combKalmanActor.energyLoss = tfOptions.energyLoss;
-    combKalmanActor.smoothing = tfOptions.smoothing;
-
-    // Set config and logger for source link selector
-    combKalmanActor.m_sourcelinkSelector.m_config =
-        tfOptions.sourcelinkSelectorConfig;
-    combKalmanActor.m_sourcelinkSelector.m_logger = m_logger;
-
-    // also set logger on updater and smoother
-    combKalmanActor.m_updater.m_logger = m_logger;
-    combKalmanActor.m_smoother.m_logger = m_logger;
-
-    // Set the surface sequence
-    auto& dInitializer =
-        propOptions.actionList.template get<DirectNavigator::Initializer>();
-    dInitializer.surfaceSequence = sSequence;
-
-    // Run the CombinatorialKalmanFilter
-    auto result = m_propagator.template propagate(sParameters, propOptions);
-
-    if (!result.ok()) {
-      return result.error();
-    }
-
-    const auto& propRes = *result;
-
-    /// Get the result of the track finding
-    auto combKalmanResult =
-        propRes.template get<CombinatorialKalmanFilterResult>();
-
-    /// It could happen that propagation reaches max step size
-    /// before the track finding is finished.
-    if (combKalmanResult.result.ok() and not combKalmanResult.forwardFiltered) {
-      combKalmanResult.result = Result<void>(
-          CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
-    }
-
-    if (!combKalmanResult.result.ok()) {
-      return combKalmanResult.result.error();
-    }
-
-    // Return the converted Track
-    return m_outputConverter(std::move(combKalmanResult));
-  }
 };  // namespace Acts
 
 }  // namespace Acts
