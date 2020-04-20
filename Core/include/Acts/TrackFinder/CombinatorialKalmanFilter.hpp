@@ -39,6 +39,23 @@
 
 namespace Acts {
 
+/// @brief struct to keep record of the track quality
+///
+/// This could be used to decide if a track is to be recorded when the forward
+/// filtering is done or to be terminated due to its bad quality
+struct CombinatorialKalmanFilterTipState {
+  // Number of passed sensitive surfaces
+  size_t nSensitiveSurfaces = 0;
+  // Number of track states
+  size_t nStates = 0;
+  // Number of (non-outlier) measurements
+  size_t nMeasurements = 0;
+  // Number of outliers
+  size_t nOutliers = 0;
+  // Number of holes
+  size_t nHoles = 0;
+};
+
 /// @brief Options struct how the CombinatorialKalmanFilter (CKF) is called
 ///
 /// @tparam source_link_selector_t The source link selector type
@@ -112,18 +129,6 @@ struct CombinatorialKalmanFilterOptions {
 
 template <typename source_link_t>
 struct CombinatorialKalmanFilterResult {
-  /// Struct to keep track of track quality
-  struct TipState {
-    // Total number of states
-    size_t nStates = 0;
-    // Number of (non-outlier) measurements
-    size_t nMeasurements = 0;
-    // Number of outliers
-    size_t nOutliers = 0;
-    // Number of holes
-    size_t nHoles = 0;
-  };
-
   // Fitted states that the actor has handled.
   MultiTrajectory<source_link_t> fittedStates;
 
@@ -134,7 +139,7 @@ struct CombinatorialKalmanFilterResult {
   std::unordered_map<size_t, BoundParameters> fittedParameters;
 
   // The indices of the 'tip' of the unfinished tracks
-  std::vector<std::pair<size_t, TipState>> activeTips;
+  std::vector<std::pair<size_t, CombinatorialKalmanFilterTipState>> activeTips;
 
   // The indices of source links in multitrajectory
   std::unordered_map<const Surface*, std::unordered_map<size_t, size_t>>
@@ -263,9 +268,12 @@ class CombinatorialKalmanFilter {
   class Actor {
    public:
     using TrackStateType = TrackState<source_link_t, parameters_t>;
+    using TipState = CombinatorialKalmanFilterTipState;
     using BoundState = std::tuple<BoundParameters, BoundMatrix, double>;
     using CurvilinearState =
         std::tuple<CurvilinearParameters, BoundMatrix, double>;
+    /// Broadcast the result_type
+    using result_type = CombinatorialKalmanFilterResult<source_link_t>;
 
     /// Explicit constructor with updater and calibrator
     Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
@@ -275,12 +283,6 @@ class CombinatorialKalmanFilter {
         : m_updater(std::move(pUpdater)),
           m_smoother(std::move(pSmoother)),
           m_calibrator(std::move(pCalibrator)) {}
-
-    /// Broadcast the result_type
-    using result_type = CombinatorialKalmanFilterResult<source_link_t>;
-
-    /// Broadcast the track tip state type
-    using TipState = typename result_type::TipState;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
@@ -647,10 +649,10 @@ class CombinatorialKalmanFilter {
 
         // Retrieve the tip state and remove the last tip from active tips
         size_t prevTip = SIZE_MAX;
-        TipState prevTipState;
+        TipState tipState;
         if (not result.activeTips.empty()) {
           prevTip = result.activeTips.back().first;
-          prevTipState = result.activeTips.back().second;
+          tipState = result.activeTips.back().second;
           result.activeTips.erase(result.activeTips.end() - 1);
         }
 
@@ -658,10 +660,14 @@ class CombinatorialKalmanFilter {
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
         std::string type = isSensitive ? "sensitive" : "passive";
         ACTS_VERBOSE("Detected " << type << " surface: " << surface->geoID());
+        if (isSensitive) {
+          // Increment of number of passed sensitive surfaces
+          tipState.nSensitiveSurfaces++;
+        }
         // Create state if there is already measurement detected on this branch
         // For in-sensitive surface, only create state when smoothing is
         // required
-        if (prevTipState.nMeasurements > 0 and
+        if (tipState.nMeasurements > 0 and
             (isSensitive or (not isSensitive and smoothing))) {
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for
@@ -670,12 +676,9 @@ class CombinatorialKalmanFilter {
               ~(TrackStatePropMask::Uncalibrated |
                 TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
 
+          // Increment of number of processed states
+          tipState.nStates++;
           size_t currentTip = SIZE_MAX;
-          // Count the number of processedStates, measurements, outliers and
-          // holes
-          auto tipState =
-              TipState{prevTipState.nStates + 1, prevTipState.nMeasurements,
-                       prevTipState.nOutliers, prevTipState.nHoles};
           if (isSensitive) {
             // Transport & bind the state to the current surface
             auto boundState =
@@ -751,10 +754,10 @@ class CombinatorialKalmanFilter {
         size_t sharedMeasurementTip = SIZE_MAX) const {
       // Retrieve the tip state and remove the last tip from active tips
       size_t prevTip = SIZE_MAX;
-      TipState prevTipState;
+      TipState tipState;
       if (not result.activeTips.empty()) {
         prevTip = result.activeTips.back().first;
-        prevTipState = result.activeTips.back().second;
+        tipState = result.activeTips.back().second;
         result.activeTips.erase(result.activeTips.end() - 1);
       }
 
@@ -806,11 +809,9 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::MaterialFlag);
       typeFlags.set(TrackStateFlag::ParameterFlag);
 
-      // Count the number of processedStates, measurements, outliers and
-      // holes
-      auto tipState =
-          TipState{prevTipState.nStates + 1, prevTipState.nMeasurements,
-                   prevTipState.nOutliers, prevTipState.nHoles};
+      // Increment of number of processedState and passed sensitive surfaces
+      tipState.nSensitiveSurfaces++;
+      tipState.nStates++;
 
       if (isOutlier) {
         ACTS_VERBOSE("Creating outlier track state with tip = " << currentTip);
