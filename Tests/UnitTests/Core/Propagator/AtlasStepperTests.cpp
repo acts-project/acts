@@ -9,9 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 
 namespace tt = boost::test_tools;
 
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(atlas_stepper_state_test) {
 
   // Test charged parameters without covariance matrix
   CurvilinearParameters cp(std::nullopt, pos, mom, charge, time);
-  AtlasStepper<ConstantBField>::State asState(tgContext, mfContext, cp, ndir, stepSize,
-                                      tolerance);
+  AtlasStepper<ConstantBField>::State asState(tgContext, mfContext, cp, ndir,
+                                              stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_TEST(!asState.covTransport);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(atlas_stepper_state_test) {
   Covariance cov = 8. * Covariance::Identity();
   cp = CurvilinearParameters(cov, pos, mom, charge, time);
   asState = AtlasStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
-                                        stepSize, tolerance);
+                                                stepSize, tolerance);
   BOOST_TEST(asState.covTransport);
   BOOST_TEST(*asState.covariance == cov);
 }
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(atlas_stepper_test) {
   CurvilinearParameters cp(cov, pos, mom, charge, time);
 
   // Build the state and the stepper
-  AtlasStepper<ConstantBField>::State asState(tgContext, mfContext, cp, ndir, stepSize,
-                                      tolerance);
+  AtlasStepper<ConstantBField>::State asState(tgContext, mfContext, cp, ndir,
+                                              stepSize, tolerance);
   AtlasStepper<ConstantBField> as;
 
   // Test the getters
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(atlas_stepper_test) {
   BOOST_TEST(as.momentum(asState) == mom.norm());
   BOOST_TEST(as.charge(asState) == charge);
   BOOST_TEST(as.time(asState) == time);
-  
-  //BOOST_TEST(as.overstepLimit(asState) == tolerance);
+
+  // BOOST_TEST(as.overstepLimit(asState) == tolerance);
 
   // Step size modifies
   const std::string originalStepSize = asState.stepSize.toString();
@@ -168,7 +168,6 @@ BOOST_AUTO_TEST_CASE(atlas_stepper_test) {
   BOOST_TEST(as.momentum(ps.stepping) == newMom.norm());
   BOOST_TEST(as.charge(ps.stepping) == charge);
   BOOST_TEST(as.time(ps.stepping) < newTime);
-  
 
   ps.stepping.covTransport = true;
   double h2 = as.step(ps).value();
@@ -185,7 +184,7 @@ BOOST_AUTO_TEST_CASE(atlas_stepper_test) {
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
   BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
   asState = AtlasStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
-                                        stepSize, tolerance);
+                                                stepSize, tolerance);
 
   // Test the intersection in the context of a surface
   auto targetSurface = Surface::makeShared<PlaneSurface>(
