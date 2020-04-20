@@ -138,9 +138,9 @@ namespace Acts {
   CudaScalar<float> pT2perRadius_cuda(&m_config.pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
   
-  /*----------------------------------
-     Algorithm 0. Matrix Flattening 
-  ----------------------------------*/
+  //---------------------------------
+  // Algorithm 0. Matrix Flattening 
+  //---------------------------------
   
   auto start_wall = std::chrono::system_clock::now();
   auto start_DS = std::chrono::system_clock::now();
@@ -312,14 +312,14 @@ namespace Acts {
   CudaScalar<int>   nTrplPerSpMLimit_cuda(&nTrplPerSpMLimit);
   
   CudaVector<int>   nTrplPerSpM_cuda(*nSpMcomp_cpu.Get()); nTrplPerSpM_cuda.Zeros();  
-  CudaMatrix<int>   tPassIndex_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get());
-  CudaMatrix<int>   bPassIndex_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get()); 
+  CudaMatrix<int>   TtrplIndex_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get());
+  CudaMatrix<int>   BtrplIndex_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get()); 
   CudaMatrix<float> curvatures_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get());
   CudaMatrix<float> impactparameters_cuda(nTrplPerSpMLimit, *nSpMcomp_cpu.Get()); 
   
   CpuVector<int>    nTrplPerSpM_cpu(*nSpMcomp_cpu.Get(),true); nTrplPerSpM_cpu.Zeros();
-  CpuMatrix<int>    tPassIndex_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true);
-  CpuMatrix<int>    bPassIndex_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true); 
+  CpuMatrix<int>    TtrplIndex_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true);
+  CpuMatrix<int>    BtrplIndex_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true); 
   CpuMatrix<float>  curvatures_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(), true);
   CpuMatrix<float>  impactparameters_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.Get(),true);
   
@@ -360,8 +360,8 @@ namespace Acts {
 					     nTrplPerSpMLimit_cuda.Get(),
 					     // output
 					     nTrplPerSpM_cuda.Get(i_m),
-					     tPassIndex_cuda.Get(0,i_m),
-					     bPassIndex_cuda.Get(0,i_m),
+					     TtrplIndex_cuda.Get(0,i_m),
+					     BtrplIndex_cuda.Get(0,i_m),
 					     curvatures_cuda.Get(0,i_m),
 					     impactparameters_cuda.Get(0,i_m),
 					     &cuStream
@@ -371,12 +371,12 @@ namespace Acts {
       
       nTrplPerSpM_cpu.CopyD2H(nTrplPerSpM_cuda.Get(i_m),1,i_m, &cuStream);
       
-      tPassIndex_cpu.CopyD2H(tPassIndex_cuda.Get(0,i_m),
+      TtrplIndex_cpu.CopyD2H(TtrplIndex_cuda.Get(0,i_m),
 			     nTrplPerSpMLimit,
 			     nTrplPerSpMLimit*i_m,
 			     &cuStream);
 
-      bPassIndex_cpu.CopyD2H(bPassIndex_cuda.Get(0,i_m),
+      BtrplIndex_cpu.CopyD2H(BtrplIndex_cuda.Get(0,i_m),
 			     nTrplPerSpMLimit,
 			     nTrplPerSpMLimit*i_m,
 			     &cuStream);
@@ -407,10 +407,10 @@ namespace Acts {
       std::map<int, std::vector< std::tuple< int, float, float > > > trplMap;
 
       for (int i_trpl=0; i_trpl<*nTrplPerSpM_cpu.Get(i_prev); i_trpl++){
-	int trplBindex = *(bPassIndex_cpu.Get(i_trpl,i_prev));
-	int trplTindex = *(tPassIndex_cpu.Get(i_trpl,i_prev));
-	int bIndex = bIndexVec[trplBindex];
-	int tIndex = tIndexVec[trplTindex];
+	int BtrplIndex = *(BtrplIndex_cpu.Get(i_trpl,i_prev));
+	int TriplIndex = *(TtrplIndex_cpu.Get(i_trpl,i_prev));
+	int bIndex = bIndexVec[BtrplIndex];
+	int tIndex = tIndexVec[TriplIndex];
 	
 	float curv     = *(curvatures_cpu.Get(i_trpl,i_prev));
 	float impact   = *(impactparameters_cpu.Get(i_trpl,i_prev));
