@@ -171,6 +171,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_TEST(ps.stepping.pos.norm() > newPos.norm());
   BOOST_TEST(ps.stepping.dir == newMom.normalized());
+  BOOST_TEST(ps.stepping.p == newMom.norm());
   BOOST_TEST(ps.stepping.q == charge);
   BOOST_TEST(ps.stepping.t < newTime);
   BOOST_TEST(ps.stepping.derivative == FreeVector::Zero());
@@ -183,6 +184,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_TEST(ps.stepping.pos.norm() > newPos.norm());
   BOOST_TEST(ps.stepping.dir == newMom.normalized());
+  BOOST_TEST(ps.stepping.p == newMom.norm());
   BOOST_TEST(ps.stepping.q == charge);
   BOOST_TEST(ps.stepping.t < newTime);
   BOOST_TEST(ps.stepping.derivative != FreeVector::Zero());

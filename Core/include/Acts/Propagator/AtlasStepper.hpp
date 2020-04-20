@@ -19,6 +19,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -66,7 +67,6 @@ class AtlasStepper {
           newfield(true),
           field(0., 0., 0.),
           covariance(nullptr),
-          t0(pars.time()),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(mctx),
@@ -87,7 +87,7 @@ class AtlasStepper {
       pVector[0] = pos(0);
       pVector[1] = pos(1);
       pVector[2] = pos(2);
-      pVector[3] = 0.;
+      pVector[3] = pars.time();
       pVector[4] = Cf * Se;
       pVector[5] = Sf * Se;
       pVector[6] = Ce;
@@ -271,8 +271,6 @@ class AtlasStepper {
 
     // accummulated path length cache
     double pathAccumulated = 0.;
-    // Starting time
-    const double t0;
 
     // Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize = std::numeric_limits<double>::max();
@@ -337,7 +335,7 @@ class AtlasStepper {
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
 
   /// Time access
-  double time(const State& state) const { return state.t0 + state.pVector[3]; }
+  double time(const State& state) const { return state.pVector[3]; }
 
   /// Update surface status
   ///
@@ -423,7 +421,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(covOpt), gp, mom,
-                               charge(state), state.t0 + state.pVector[3],
+                               charge(state), state.pVector[3],
                                surface.getSharedPtr());
 
     return BoundState(std::move(parameters), state.jacobian,
@@ -454,7 +452,7 @@ class AtlasStepper {
     }
 
     CurvilinearParameters parameters(std::move(covOpt), gp, mom, charge(state),
-                                     state.t0 + state.pVector[3]);
+                                     state.pVector[3]);
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);
