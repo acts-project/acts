@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Platforms/CUDA/CudaVector.cu"
+#include "Acts/Plugins/Cuda/Utilities/CudaVector.cu"
 
 namespace Acts{
 

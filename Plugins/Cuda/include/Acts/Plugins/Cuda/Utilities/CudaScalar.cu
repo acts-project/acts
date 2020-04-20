@@ -12,7 +12,7 @@
 #include <memory>
 #include "cuda.h"
 #include "cuda_runtime.h"
-#include "Acts/Utilities/Platforms/CUDA/CpuScalar.hpp"
+#include "Acts/Plugins/Cuda/Utilities/CpuScalar.hpp"
 #include "CudaUtils.cu"
 
 namespace Acts{

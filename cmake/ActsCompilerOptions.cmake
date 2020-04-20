@@ -24,18 +24,3 @@ set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ACTS_S
 
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
-
-### CUDA
-
-if(ACTS_BUILD_CUDA_FEATURES)
-  # nvcc compiler flags that covers pascal/volta/turing
-  set(ACTS_CUDA_FLAGS "")
-  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -arch=sm_60")
-  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_60,code=sm_60")
-  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_61,code=sm_61")
-  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_70,code=sm_70")
-  set(ACTS_CUDA_FLAGS "${ACTS_CUDA_FLAGS} -gencode=arch=compute_75,code=sm_75")
-
-  # assign to global CUDA flags
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${ACTS_CUDA_FLAGS}")
-endif()

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Platforms/CUDA/CudaScalar.cu"
+#include "Acts/Plugins/Cuda/Utilities/CudaScalar.cu"
 
 namespace Acts{
 

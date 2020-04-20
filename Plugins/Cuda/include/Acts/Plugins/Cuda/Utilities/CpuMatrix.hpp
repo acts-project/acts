@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Platforms/CUDA/CudaMatrix.cu"
+#include "Acts/Plugins/Cuda/Utilities/CudaMatrix.cu"
 
 // column-major style Matrix Definition
 
