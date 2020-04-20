@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// ProtoSurfaceMaterial.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 
 Acts::ProtoVolumeMaterial::ProtoVolumeMaterial(const BinUtility& binUtility)
