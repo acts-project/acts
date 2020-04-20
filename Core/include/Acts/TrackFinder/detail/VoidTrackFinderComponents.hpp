@@ -22,15 +22,13 @@ namespace Acts {
 struct VoidBranchStopper {
   /// @brief Public call mimicking an track branch stopper
   ///
-  /// @tparam source_link_t The type of source link
+  /// @tparam track_quality_t The type defining track quality
   ///
-  /// @param trajectory The multitrajectory object
-  /// @param entryIndex The entry index for a track
+  /// @param trackQuality The quality object of a track
   ///
   /// @return The resulting
-  template <typename source_link_t>
-  bool operator()(const MultiTrajectory<source_link_t>& /*trajectory*/,
-                  size_t /*entryIndex*/) const {
+  template <typename track_quality_t>
+  bool operator()(const track_quality_t& /*trackQuality*/) const {
     return false;
   }
 };

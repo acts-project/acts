@@ -43,6 +43,7 @@ namespace Acts {
 ///
 /// This could be used to decide if a track is to be recorded when the forward
 /// filtering is done or to be terminated due to its bad quality
+/// @Todo: add other useful info, e.g. chi2
 struct CombinatorialKalmanFilterTipState {
   // Number of passed sensitive surfaces
   size_t nSensitiveSurfaces = 0;
@@ -613,7 +614,7 @@ class CombinatorialKalmanFilter {
               neighborTip = currentTip;
 
               // Check if need to stop this branch
-              if (not m_branchStopper(result.fittedStates, currentTip)) {
+              if (not m_branchStopper(tipState)) {
                 // Remember the active tip and its state
                 result.activeTips.emplace_back(std::move(currentTip),
                                                std::move(tipState));
@@ -697,7 +698,7 @@ class CombinatorialKalmanFilter {
           }
 
           // Check the branch
-          if (not m_branchStopper(result.fittedStates, currentTip)) {
+          if (not m_branchStopper(tipState)) {
             // Remember the active tip and its state
             result.activeTips.emplace_back(std::move(currentTip),
                                            std::move(tipState));
