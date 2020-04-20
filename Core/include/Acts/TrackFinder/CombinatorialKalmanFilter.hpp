@@ -263,6 +263,9 @@ class CombinatorialKalmanFilter {
   class Actor {
    public:
     using TrackStateType = TrackState<source_link_t, parameters_t>;
+    using BoundState = std::tuple<BoundParameters, BoundMatrix, double>;
+    using CurvilinearState =
+        std::tuple<CurvilinearParameters, BoundMatrix, double>;
 
     /// Explicit constructor with updater and calibrator
     Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
@@ -531,15 +534,6 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("Measurement surface " << surface->geoID()
                                             << " detected.");
 
-        // Retrieve the tip state and remove the last tip from active tips
-        size_t prevTip = SIZE_MAX;
-        TipState prevTipState;
-        if (not result.activeTips.empty()) {
-          prevTip = result.activeTips.back().first;
-          prevTipState = result.activeTips.back().second;
-          result.activeTips.erase(result.activeTips.end() - 1);
-        }
-
         // Get the already created track state tips with source links on this
         // surface
         std::unordered_map<size_t, size_t> sourcelinkTipsOnSurface;
@@ -552,8 +546,8 @@ class CombinatorialKalmanFilter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Transport & bind the state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, true);
+        auto boundState = stepper.boundState(state.stepping, *surface, true);
+        auto boundParams = std::get<BoundParameters>(boundState);
 
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;
@@ -594,9 +588,11 @@ class CombinatorialKalmanFilter {
             // Determine if uncalibrated&calibrated measurement are already
             // contained in other track state
             bool measurementShared = false;
+            size_t sharedMeasurementTip = SIZE_MAX;
             auto index_it = sourcelinkTipsOnSurface.find(index);
             if (index_it != sourcelinkTipsOnSurface.end()) {
               measurementShared = true;
+              sharedMeasurementTip = index_it->second;
             }
 
             // Add a measurement/outlier track state proxy in multi trajectory
@@ -607,151 +603,61 @@ class CombinatorialKalmanFilter {
             auto stateMask =
                 (predictedShared ? ~TrackStatePropMask::Predicted
                                  : TrackStatePropMask::All) &
-                (measurementShared ? ~(TrackStatePropMask::Uncalibrated &
+                (measurementShared ? ~(TrackStatePropMask::Uncalibrated |
                                        TrackStatePropMask::Calibrated)
                                    : TrackStatePropMask::All) &
                 (isOutlier ? ~TrackStatePropMask::Filtered
                            : TrackStatePropMask::All);
-            auto currentTip =
-                result.fittedStates.addTrackState(stateMask, prevTip);
 
-            // Get the track state proxy
-            auto trackStateProxy =
-                result.fittedStates.getTrackState(currentTip);
-
-            // Fill the track state proxy
-            if (predictedShared) {
-              // The predicted parameter is already stored, just set the index
-              auto neighborState =
-                  result.fittedStates.getTrackState(neighborTip);
-              trackStateProxy.data().ipredicted =
-                  neighborState.data().ipredicted;
-            } else {
-              trackStateProxy.predicted() = boundParams.parameters();
-              trackStateProxy.predictedCovariance() = *boundParams.covariance();
-            }
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
-
-            // Get and set the type flags
-            auto& typeFlags = trackStateProxy.typeFlags();
-            typeFlags.set(TrackStateFlag::MaterialFlag);
-            typeFlags.set(TrackStateFlag::ParameterFlag);
-            if (isOutlier) {
-              // Set the outlier type flag
-              typeFlags.set(TrackStateFlag::OutlierFlag);
-            } else {
-              // Set the measurement type flag
-              typeFlags.set(TrackStateFlag::MeasurementFlag);
-            }
-
-            // Assign the source link and calibrated measurement to the track
-            // state
-            if (measurementShared) {
-              // The uncalibrated&calibrated are already stored, just set the
-              // index
-              auto sharedMeasurement =
-                  result.fittedStates.getTrackState(index_it->second);
-              trackStateProxy.data().iuncalibrated =
-                  sharedMeasurement.data().iuncalibrated;
-              trackStateProxy.data().icalibrated =
-                  sharedMeasurement.data().icalibrated;
-            } else {
-              trackStateProxy.uncalibrated() = sourcelinks.at(index);
-              std::visit(
-                  [&](const auto& calibrated) {
-                    trackStateProxy.setCalibrated(calibrated);
-                  },
-                  m_calibrator(trackStateProxy.uncalibrated(),
-                               trackStateProxy.predicted()));
-            }
-
-            // Set the filtered parameter
-            if (isOutlier) {
-              // No Kalman update for outlier
-              // Set the filtered parameter index to be the same with predicted
-              // parameter
-              trackStateProxy.data().ifiltered =
-                  trackStateProxy.data().ipredicted;
-
-              ACTS_VERBOSE(
-                  "Creating outlier track state with tip = " << currentTip);
-
-              // Count the number of processedStates, measurements, outliers and
-              // holes
-              auto tipState =
-                  TipState{prevTipState.nStates + 1, prevTipState.nMeasurements,
-                           prevTipState.nOutliers + 1, prevTipState.nHoles};
+            // Add measurement or outlier track state to the multitrajectory
+            auto addStateRes = addSourcelinkState(
+                stateMask, boundState, sourcelinks.at(index), isOutlier, result,
+                state.geoContext, neighborTip, sharedMeasurementTip);
+            if (addStateRes.ok()) {
+              auto [currentTip, tipState] = addStateRes.value();
+              // Remember the track state tip for this stored source link
+              if (not measurementShared) {
+                auto& sourcelinkTips = result.sourcelinkTips[surface];
+                sourcelinkTips.emplace(index, currentTip);
+              }
+              // Remember the tip of neighbor state on this surface
+              neighborTip = currentTip;
 
               // Check if need to stop this branch
               if (not m_branchStopper(result.fittedStates, currentTip)) {
                 // Remember the active tip and its state
-                result.activeTips.emplace_back(currentTip, std::move(tipState));
-                // Count the valid branches on current surface
+                result.activeTips.emplace_back(std::move(currentTip),
+                                               std::move(tipState));
+                // Record the number of branches on surface
                 nBranchesOnSurface++;
               }
-            } else {
-              // If the update is successful, update the tip state and count the
-              // states on surface
-              auto updateRes = m_updater(state.geoContext, trackStateProxy);
-              if (!updateRes.ok()) {
-                ACTS_ERROR("Update step failed: " << updateRes.error());
-                return updateRes.error();
-              } else {
-                ACTS_VERBOSE("Creating measurement track state with tip = "
-                             << currentTip);
-
-                // Count the number of processedStates, measurements, outliers
-                // and holes
-                auto tipState = TipState{
-                    prevTipState.nStates + 1, prevTipState.nMeasurements + 1,
-                    prevTipState.nOutliers, prevTipState.nHoles};
-
-                // Check if need to stop this branch
-                if (not m_branchStopper(result.fittedStates, currentTip)) {
-                  // Remember the active tip and its state
-                  result.activeTips.emplace_back(currentTip,
-                                                 std::move(tipState));
-                  // Count the valid branches on current surface
-                  nBranchesOnSurface++;
-                }
-              }
             }
-
-            // Remember the track state tip for this stored source link
-            if (not measurementShared) {
-              auto& sourcelinkTips = result.sourcelinkTips[surface];
-              sourcelinkTips.emplace(index, currentTip);
-            }
-
-            // Remember the tip of neighbor state on this surface
-            neighborTip = currentTip;
           }  // end of loop for all selected source links on this surface
 
-          if (nBranchesOnSurface > 0) {
-            if (not isOutlier) {
-              // If there are measurement track states on this surface
-              ACTS_VERBOSE("Filtering step successful with "
-                           << nBranchesOnSurface << " branches");
-
-              // Update stepping state using filtered parameters of last track
-              // state on this surface
-              auto filteredParams =
-                  result.fittedStates
-                      .getTrackState(result.activeTips.back().first)
-                      .filteredParameters(state.options.geoContext);
-              stepper.update(state.stepping, filteredParams);
-              ACTS_VERBOSE(
-                  "Stepping state is updated with filtered parameter: \n"
-                  << filteredParams.parameters().transpose()
-                  << " of track state with tip = "
-                  << result.activeTips.back().first);
-            }
+          if (nBranchesOnSurface > 0 and not isOutlier) {
+            // If there are measurement track states on this surface
+            ACTS_VERBOSE("Filtering step successful with " << nBranchesOnSurface
+                                                           << " branches");
+            // Update stepping state using filtered parameters of last track
+            // state on this surface
+            auto filteredParams =
+                result.fittedStates
+                    .getTrackState(result.activeTips.back().first)
+                    .filteredParameters(state.options.geoContext);
+            stepper.update(state.stepping, filteredParams);
+            ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
+                         << filteredParams.parameters().transpose()
+                         << " of track state with tip = "
+                         << result.activeTips.back().first);
           }
         }
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, postUpdate);
       } else if (surface->surfaceMaterial() != nullptr) {
+        // No splitting on the surface without source links. Set it to one
+        // first, but could be changed later
+        nBranchesOnSurface = 1;
+
         // Retrieve the tip state and remove the last tip from active tips
         size_t prevTip = SIZE_MAX;
         TipState prevTipState;
@@ -761,96 +667,61 @@ class CombinatorialKalmanFilter {
           result.activeTips.erase(result.activeTips.end() - 1);
         }
 
+        // The surface could be either sensitive or passive
+        bool isSensitive = (surface->associatedDetectorElement() != nullptr);
+        std::string type = isSensitive ? "sensitive" : "passive";
+        ACTS_VERBOSE("Detected " << type << " surface: " << surface->geoID());
         // Create state if there is already measurement detected on this branch
-        if (prevTipState.nMeasurements > 0) {
+        // For in-sensitive surface, only create state when smoothing is
+        // required
+        if (prevTipState.nMeasurements > 0 and
+            (isSensitive or (not isSensitive and smoothing))) {
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
-          auto currentTip = result.fittedStates.addTrackState(
+          auto stateMask =
               ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
-              prevTip);
+                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
 
-          ACTS_VERBOSE(
-              "Creating non-sourcelink track state with tip = " << currentTip);
-
+          size_t currentTip = SIZE_MAX;
           // Count the number of processedStates, measurements, outliers and
           // holes
           auto tipState =
               TipState{prevTipState.nStates + 1, prevTipState.nMeasurements,
                        prevTipState.nOutliers, prevTipState.nHoles};
-
-          // now get track state proxy back
-          auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
-
-          // Set the track state flags
-          auto& typeFlags = trackStateProxy.typeFlags();
-          typeFlags.set(TrackStateFlag::MaterialFlag);
-          typeFlags.set(TrackStateFlag::ParameterFlag);
-
-          if (surface->associatedDetectorElement() != nullptr) {
-            ACTS_VERBOSE("Detected hole on " << surface->geoID());
-            // If the surface is sensitive, set the hole type flag
-            typeFlags.set(TrackStateFlag::HoleFlag);
-
-            // Increment of number of holes
-            tipState.nHoles++;
-
+          if (isSensitive) {
             // Transport & bind the state to the current surface
-            auto [boundParams, jacobian, pathLength] =
+            auto boundState =
                 stepper.boundState(state.stepping, *surface, true);
-
-            // Set the surface
-            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-            // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = *boundParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
+            // Add a hole track state to the multitrajectory
+            currentTip = addHoleState(stateMask, boundState, result, prevTip);
+            // Incremet of number of holes
+            tipState.nHoles++;
           } else {
-            ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
-
             // Transport & get curvilinear state instead of bound state
-            auto [curvilinearParams, jacobian, pathLength] =
+            auto curvilinearState =
                 stepper.curvilinearState(state.stepping, true);
-
-            // Set the surface
-            trackStateProxy.setReferenceSurface(
-                Surface::makeShared<PlaneSurface>(
-                    curvilinearParams.position(),
-                    curvilinearParams.momentum()));
-
-            // Fill the track state
-            trackStateProxy.predicted() = curvilinearParams.parameters();
-            trackStateProxy.predictedCovariance() =
-                *curvilinearParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
+            // Add a passive material track state to the multitrajectory
+            currentTip =
+                addPassiveState(stateMask, curvilinearState, result, prevTip);
           }
 
-          // Set the filtered parameter index to be the same with predicted
-          // parameter
-          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
-
-          // Check if need to stop this branch
+          // Check the branch
           if (not m_branchStopper(result.fittedStates, currentTip)) {
             // Remember the active tip and its state
-            result.activeTips.emplace_back(currentTip, std::move(tipState));
-            // Count the valid branches on current surface
-            nBranchesOnSurface++;
+            result.activeTips.emplace_back(std::move(currentTip),
+                                           std::move(tipState));
+          } else {
+            // No branch on this surface
+            nBranchesOnSurface = 0;
           }
-        } else {
-          // No state is created, this branch is still valid. Count the
-          // branch on current surface
-          nBranchesOnSurface++;
         }
         // Update state and stepper with material effects
         materialInteractor(surface, state, stepper, fullUpdate);
       } else {
         // Neither measurement nor material on surface, this branch is still
         // valid. Count the branch on current surface
-        nBranchesOnSurface++;
+        nBranchesOnSurface = 1;
       }
 
       // Reset current tip if there is no branch on current surface
@@ -868,6 +739,201 @@ class CombinatorialKalmanFilter {
       }
 
       return Result<void>::success();
+    }
+
+    /// @brief CombinatorialKalmanFilter actor operation : add track state with
+    /// source link: measurement or outlier
+    ///
+    /// @param stateMask The bitmask that instructs which components to allocate
+    /// and which to leave invalid
+    /// @param boundState The bound state on current surface
+    /// @param sourcelink The source link to be stored
+    /// @param isOutlier Indicator for outlier or not
+    /// @param result is the mutable result state object
+    /// @param geoContext The geometry context (needed for Kalman update)
+    /// @param neighborTip The neighbor state tip on this surface (the predicted
+    /// parameters could be shared between neighbors)
+    /// @param sharedMeasurementTip The shared measurement tip
+    ///
+    Result<std::pair<size_t, TipState>> addSourcelinkState(
+        const TrackStatePropMask::Type& stateMask, const BoundState& boundState,
+        const source_link_t& sourcelink, bool isOutlier, result_type& result,
+        std::reference_wrapper<const GeometryContext> geoContext,
+        size_t neighborTip = SIZE_MAX,
+        size_t sharedMeasurementTip = SIZE_MAX) const {
+      // Retrieve the tip state and remove the last tip from active tips
+      size_t prevTip = SIZE_MAX;
+      TipState prevTipState;
+      if (not result.activeTips.empty()) {
+        prevTip = result.activeTips.back().first;
+        prevTipState = result.activeTips.back().second;
+        result.activeTips.erase(result.activeTips.end() - 1);
+      }
+
+      // Add a track state
+      auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
+
+      // Get the track state proxy
+      auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
+
+      const auto [boundParams, jacobian, pathLength] = boundState;
+
+      // Fill the parametric part of the track state proxy
+      if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Predicted)) and
+          neighborTip != SIZE_MAX) {
+        // The predicted parameter is already stored, just set the index
+        auto neighborState = result.fittedStates.getTrackState(neighborTip);
+        trackStateProxy.data().ipredicted = neighborState.data().ipredicted;
+      } else {
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = *boundParams.covariance();
+      }
+      trackStateProxy.jacobian() = jacobian;
+      trackStateProxy.pathLength() = pathLength;
+
+      // Assign the uncalibrated&calibrated measurement to the track
+      // state (check if they are already stored in other states)
+      if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Uncalibrated)) and
+          sharedMeasurementTip != SIZE_MAX) {
+        // The uncalibrated&calibrated are already stored, just set the
+        // index
+        auto sharedMeasurement =
+            result.fittedStates.getTrackState(sharedMeasurementTip);
+        trackStateProxy.data().iuncalibrated =
+            sharedMeasurement.data().iuncalibrated;
+        trackStateProxy.data().icalibrated =
+            sharedMeasurement.data().icalibrated;
+      } else {
+        trackStateProxy.uncalibrated() = sourcelink;
+        std::visit(
+            [&](const auto& calibrated) {
+              trackStateProxy.setCalibrated(calibrated);
+            },
+            m_calibrator(trackStateProxy.uncalibrated(),
+                         trackStateProxy.predicted()));
+      }
+
+      // Get and set the type flags
+      auto& typeFlags = trackStateProxy.typeFlags();
+      typeFlags.set(TrackStateFlag::MaterialFlag);
+      typeFlags.set(TrackStateFlag::ParameterFlag);
+
+      // Count the number of processedStates, measurements, outliers and
+      // holes
+      auto tipState =
+          TipState{prevTipState.nStates + 1, prevTipState.nMeasurements,
+                   prevTipState.nOutliers, prevTipState.nHoles};
+
+      if (isOutlier) {
+        ACTS_VERBOSE("Creating outlier track state with tip = " << currentTip);
+        // Set the outlier flag
+        typeFlags.set(TrackStateFlag::OutlierFlag);
+        // Increment number of outliers
+        tipState.nOutliers++;
+        // No Kalman update for outlier
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
+        trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+      } else {
+        // Kalman update
+        auto updateRes = m_updater(geoContext, trackStateProxy);
+        if (!updateRes.ok()) {
+          ACTS_ERROR("Update step failed: " << updateRes.error());
+          return updateRes.error();
+        } else {
+          ACTS_VERBOSE(
+              "Creating measurement track state with tip = " << currentTip);
+          // Set the measurement flag
+          typeFlags.set(TrackStateFlag::MeasurementFlag);
+          // Increment number of measurements
+          tipState.nMeasurements++;
+        }
+      }
+      return std::make_pair(currentTip, tipState);
+    }
+
+    /// @brief CombinatorialKalmanFilter actor operation : add hole track state
+    ///
+    /// @param stateMask The bitmask that instructs which components to allocate
+    /// @param boundState The bound state on current surface
+    /// @param result is the mutable result state object
+    /// and which to leave invalid
+    /// @param prevTip The index of the previous state
+    ///
+    size_t addHoleState(const TrackStatePropMask::Type& stateMask,
+                        const BoundState& boundState, result_type& result,
+                        size_t prevTip = SIZE_MAX) const {
+      // Add a track state
+      auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
+      ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
+
+      // now get track state proxy back
+      auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
+
+      // Set the track state flags
+      auto& typeFlags = trackStateProxy.typeFlags();
+      typeFlags.set(TrackStateFlag::MaterialFlag);
+      typeFlags.set(TrackStateFlag::ParameterFlag);
+      typeFlags.set(TrackStateFlag::HoleFlag);
+
+      const auto [boundParams, jacobian, pathLength] = boundState;
+      // Fill the track state
+      trackStateProxy.predicted() = boundParams.parameters();
+      trackStateProxy.predictedCovariance() = *boundParams.covariance();
+      trackStateProxy.jacobian() = jacobian;
+      trackStateProxy.pathLength() = pathLength;
+      // Set the surface
+      trackStateProxy.setReferenceSurface(
+          boundParams.referenceSurface().getSharedPtr());
+      // Set the filtered parameter index to be the same with predicted
+      // parameter
+      trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+
+      return currentTip;
+    }
+
+    /// @brief CombinatorialKalmanFilter actor operation : add passive track
+    /// state
+    ///
+    /// @param stateMask The bitmask that instructs which components to allocate
+    /// @param curvilinearState The curvilinear state on in-sensive material
+    /// surface
+    /// @param result is the mutable result state object
+    /// and which to leave invalid
+    /// @param prevTip The index of the previous state
+    ///
+    size_t addPassiveState(const TrackStatePropMask::Type& stateMask,
+                           const CurvilinearState& curvilinearState,
+                           result_type& result,
+                           size_t prevTip = SIZE_MAX) const {
+      // Add a track state
+      auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
+      ACTS_VERBOSE(
+          "Creating track state on in-sensitive material surface with tip = "
+          << currentTip);
+
+      // now get track state proxy back
+      auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
+
+      // Set the track state flags
+      auto& typeFlags = trackStateProxy.typeFlags();
+      typeFlags.set(TrackStateFlag::MaterialFlag);
+      typeFlags.set(TrackStateFlag::ParameterFlag);
+
+      const auto [curvilinearParams, jacobian, pathLength] = curvilinearState;
+      // Fill the track state
+      trackStateProxy.predicted() = curvilinearParams.parameters();
+      trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
+      trackStateProxy.jacobian() = jacobian;
+      trackStateProxy.pathLength() = pathLength;
+      // Set the surface
+      trackStateProxy.setReferenceSurface(Surface::makeShared<PlaneSurface>(
+          curvilinearParams.position(), curvilinearParams.momentum()));
+      // Set the filtered parameter index to be the same with predicted
+      // parameter
+      trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+
+      return currentTip;
     }
 
     /// @brief CombinatorialKalmanFilter actor operation : material interaction
