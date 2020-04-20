@@ -556,31 +556,18 @@ class CombinatorialKalmanFilter {
         // measurements or outlier.
         // Calibrator is passed to the selector because
         // selection has to be done based on calibrated measurement
+        bool isOutlier = false;
         auto sourcelinkSelectionRes = m_sourcelinkSelector(
             m_calibrator, boundParams, sourcelinks, result.sourcelinkChi2,
-            result.sourcelinkCandidateIndices);
+            result.sourcelinkCandidateIndices, isOutlier);
         if (!sourcelinkSelectionRes.ok()) {
           return sourcelinkSelectionRes.error();
         } else {
-          // The number of selected source link candidates and their status
-          auto [nSourcelinkCandidates, isOutlier] =
-              sourcelinkSelectionRes.value();
-
           // Remember the tip of the neighbor state on this surface
           size_t neighborTip = SIZE_MAX;
 
           // Loop over the selected source links
-          // Note that only the first nSourcelinkCandidates elements stored in
-          // sourcelinkCandidateIndices are valid
-          for (auto sourcelinkCandidate_it =
-                   result.sourcelinkCandidateIndices.begin();
-               sourcelinkCandidate_it <
-               result.sourcelinkCandidateIndices.begin() +
-                   nSourcelinkCandidates;
-               ++sourcelinkCandidate_it) {
-            // The index of the source link
-            size_t index = *sourcelinkCandidate_it;
-
+          for (const auto& index : result.sourcelinkCandidateIndices) {
             // Determine if predicted parameter is already contained in
             // neighboring state
             bool predictedShared = (neighborTip != SIZE_MAX);
@@ -755,6 +742,7 @@ class CombinatorialKalmanFilter {
     /// parameters could be shared between neighbors)
     /// @param sharedMeasurementTip The shared measurement tip
     ///
+    /// @return The tip of added state and its state
     Result<std::pair<size_t, TipState>> addSourcelinkState(
         const TrackStatePropMask::Type& stateMask, const BoundState& boundState,
         const source_link_t& sourcelink, bool isOutlier, result_type& result,
@@ -860,6 +848,7 @@ class CombinatorialKalmanFilter {
     /// and which to leave invalid
     /// @param prevTip The index of the previous state
     ///
+    /// @return The tip of added state
     size_t addHoleState(const TrackStatePropMask::Type& stateMask,
                         const BoundState& boundState, result_type& result,
                         size_t prevTip = SIZE_MAX) const {
@@ -902,6 +891,7 @@ class CombinatorialKalmanFilter {
     /// and which to leave invalid
     /// @param prevTip The index of the previous state
     ///
+    /// @return The tip of added state
     size_t addPassiveState(const TrackStatePropMask::Type& stateMask,
                            const CurvilinearState& curvilinearState,
                            result_type& result,

@@ -91,15 +91,14 @@ struct CKFSourceLinkSelector {
   /// source link candidates
   /// @param sourcelinkCandidateIndices The container for index of final source
   /// link candidates
+  /// @param isOutlier The indicator for outlier or not
   ///
-  /// @return The number of source link candidates and the status of them:
-  /// outlier or measurement
   template <typename calibrator_t, typename source_link_t>
-  Result<std::pair<size_t, bool>> operator()(
+  Result<void> operator()(
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks,
       std::vector<std::pair<size_t, double>>& sourcelinkChi2,
-      std::vector<size_t>& sourcelinkCandidateIndices) const {
+      std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
@@ -237,22 +236,15 @@ struct CKFSourceLinkSelector {
     // If there is no selected source link, return the source link with the best
     // chi2 and tag it as an outlier
     if (nFinalCandidates == 0) {
-      // Avoid destroying allocation even if the current container size is
-      // larger than needed
-      if (containerSize < 1) {
-        sourcelinkCandidateIndices.resize(1);
-      }
+      sourcelinkCandidateIndices.resize(1);
       sourcelinkCandidateIndices.at(0) = minIndex;
       ACTS_DEBUG("No measurement candidate. Return an outlier source link.");
-      return std::make_pair(1, true);
+      isOutlier = true;
+      return Result<void>::success();
     }
 
     ACTS_VERBOSE("Number of measurement candidates: " << nFinalCandidates);
-    // Avoid destroying allocation even if the current container size is larger
-    // than needed
-    if (containerSize < nFinalCandidates) {
-      sourcelinkCandidateIndices.resize(nFinalCandidates);
-    }
+    sourcelinkCandidateIndices.resize(nFinalCandidates);
     // Sort the initial source link candidates based on chi2 in ascending order
     std::sort(sourcelinkChi2.begin(),
               sourcelinkChi2.begin() + nInitialCandidates,
@@ -270,7 +262,8 @@ struct CKFSourceLinkSelector {
       sourcelinkCandidateIndices.at(nRecorded) = id;
       nRecorded++;
     }
-    return std::make_pair(nFinalCandidates, false);
+    isOutlier = false;
+    return Result<void>::success();
   }
 
   /// The config
