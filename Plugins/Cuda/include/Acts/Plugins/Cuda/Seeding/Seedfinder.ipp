@@ -34,9 +34,6 @@ namespace Acts {
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
-
-  t_metric = std::make_tuple(0,0,0,0);
-  
   }
     
   // CUDA seed finding
@@ -64,9 +61,6 @@ namespace Acts {
   //---------------------------------
   // Algorithm 0. Matrix Flattening 
   //---------------------------------
-  
-  auto start_wall = std::chrono::system_clock::now();
-  auto start_DS = std::chrono::system_clock::now();
 
   std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > middleSPvec;
   std::vector< const Acts::InternalSpacePoint<external_spacepoint_t>* > bottomSPvec;
@@ -179,15 +173,9 @@ namespace Acts {
   CpuMatrix<int> BcompIndex_cpu(nSpB, nSpM, &BcompIndex_cuda);
   CpuMatrix<int> TcompIndex_cpu(nSpT, nSpM, &TcompIndex_cuda);
 
-  auto end_DS = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapse_DS = end_DS-start_DS;
-  std::get<0>(t_metric) += elapse_DS.count();
-
   //--------------------------------------
   //  Algorithm 2. Transform coordinate
   //--------------------------------------
-  
-  auto start_TC = std::chrono::system_clock::now();  
   
   CudaMatrix<float> spMcompMat_cuda(*nSpMcomp_cpu.Get(), 6);
   
@@ -218,15 +206,9 @@ namespace Acts {
 		      circTcompMatPerSpM_cuda.Get()
 		      );
   
-  auto end_TC = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapse_TC = end_TC-start_TC;
-  std::get<1>(t_metric) += elapse_TC.count();
-  
   //------------------------------------------------------
   //  Algorithm 3. Triplet Search (TS) & Seed filtering 
   //------------------------------------------------------
-
-  auto start_TS = std::chrono::system_clock::now();  
   
   // retreive middle-bottom doublet circ information
   CpuMatrix<float> circBcompMatPerSpM_cpu(*nSpBcompPerSpM_Max_cpu.Get(),
@@ -389,20 +371,6 @@ namespace Acts {
       m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
     }	    
   }  
-
-  auto end_TS = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapse_TS = end_TS-start_TS;
-  std::get<2>(t_metric) += elapse_TS.count();
-
-  auto end_wall = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapse_wall = end_wall-start_wall;
-  std::get<3>(t_metric) += elapse_wall.count();
-  
   return outputVec;  
   }
-
-  template< typename external_spacepoint_t >
-  std::tuple< double, double, double, double >
-  Seedfinder<external_spacepoint_t, Acts::Cuda>::getTimeMetric() { return t_metric; }
-  
 }// namespace Acts

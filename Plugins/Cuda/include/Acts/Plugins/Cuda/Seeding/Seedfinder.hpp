@@ -55,13 +55,9 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda > {
   /// @return vector in which all found seeds for this group are stored.
   template< typename sp_range_t >
   std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
-
-  std::tuple< double, double, double, double > getTimeMetric();
     
  private:
-  Acts::SeedfinderConfig<external_spacepoint_t> m_config;
-  mutable std::tuple< double, double, double, double > t_metric; // doublet search, transform coordinate, triplet search, wall time
-  
+  Acts::SeedfinderConfig<external_spacepoint_t> m_config;  
 };
 
 }  // namespace Acts

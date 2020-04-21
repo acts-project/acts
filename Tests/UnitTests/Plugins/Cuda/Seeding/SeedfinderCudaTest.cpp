@@ -219,6 +219,8 @@ int main(int argc, char** argv) {
   //--------------------------------------------------------------------//
   //                        Begin Seed finding                          //
   //--------------------------------------------------------------------//
+
+  auto start_cpu = std::chrono::system_clock::now();
   
   int group_count;
   auto groupIt = spGroup.begin();
@@ -237,11 +239,18 @@ int main(int argc, char** argv) {
       if (group_count >= nGroupToIterate) break;
     }
   }  
-  auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
+  //auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
   std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
+
+  auto end_cpu = std::chrono::system_clock::now();  
+  std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
+  double cpuTime=elapsec_cpu.count();
   
   //----------- CUDA ----------//
+
   //cudaProfilerStart();
+  auto start_cuda = std::chrono::system_clock::now();
+  
   group_count=0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
   groupIt = spGroup.begin();
@@ -254,36 +263,27 @@ int main(int argc, char** argv) {
     if (allgroup == false){
       if (group_count >= nGroupToIterate) break;
     }
-  } 
+  }  
+  auto end_cuda = std::chrono::system_clock::now();  
+  std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
+  double cudaTime=elapsec_cuda.count();
+  
   //cudaProfilerStop();
-  auto timeMetric_cuda = seedfinder_cuda.getTimeMetric();
   std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
 
   std::cout << std::endl;
   std::cout << "------------------- Time Metric -------------------" << std::endl;
   std::cout << "                CPU          CUDA        Speedup " << std::endl;
-  std::cout << "DS time      "
-	    << std::setw(12) << std::left << std::get<0>(timeMetric_cpu)  << "  "
-	    << std::setw(12) << std::get<0>(timeMetric_cuda) << "  "
-	    << std::setw(12) << std::get<0>(timeMetric_cpu)/std::get<0>(timeMetric_cuda) << std::endl;  
-  std::cout << "TC time      "
-	    << std::setw(12) << std::left << std::get<1>(timeMetric_cpu)  << "  "
-	    << std::setw(12) << std::get<1>(timeMetric_cuda) << "  "
-    	    << std::setw(12) << std::get<1>(timeMetric_cpu)/std::get<1>(timeMetric_cuda) << std::endl;
-  std::cout << "TS time      "
-	    << std::setw(12) << std::left << std::get<2>(timeMetric_cpu)  << "  "
-	    << std::setw(12) << std::get<2>(timeMetric_cuda) << "  "
-	    << std::setw(12) << std::get<2>(timeMetric_cpu)/std::get<2>(timeMetric_cuda) << std::endl;
-  std::cout << "SF time      "
-	    << std::setw(12) << std::left << std::get<3>(timeMetric_cpu)  << "  "
-	    << std::setw(12) << std::get<3>(timeMetric_cuda) << "  "
-	    << std::setw(12) << std::get<3>(timeMetric_cpu)/std::get<3>(timeMetric_cuda) << std::endl;
-  double wallTime_cpu = std::get<3>(timeMetric_cpu)+preprocessTime;
-  double wallTime_cuda = std::get<3>(timeMetric_cuda)+preprocessTime;
-  std::cout << "Wall time    " 
-	    << std::setw(12) << wallTime_cpu  << "  "
-	    << std::setw(12) << wallTime_cuda << "  "
-	    << std::setw(12) << wallTime_cpu/wallTime_cuda << std::endl;
+  std::cout << "SF time    "
+	    << std::setw(11) << cpuTime  << "  "
+	    << std::setw(11) << cudaTime << "  "
+	    << std::setw(11) << cpuTime/cudaTime << std::endl;
+  double wallTime_cpu = cpuTime+preprocessTime;
+  double wallTime_cuda = cudaTime+preprocessTime;
+  std::cout << "Wall time  " 
+	    << std::setw(11) << wallTime_cpu  << "  "
+	    << std::setw(11) << wallTime_cuda << "  "
+	    << std::setw(11) << wallTime_cpu/wallTime_cuda << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
   std::cout << std::endl;
 							      

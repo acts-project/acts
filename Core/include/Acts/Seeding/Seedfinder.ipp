@@ -44,12 +44,8 @@ std::vector<Seed<external_spacepoint_t> >
 Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const{
   std::vector<Seed<external_spacepoint_t>> outputVec;
-
-  auto start_wall = std::chrono::system_clock::now();
   
   for (auto spM : middleSPs) {
-
-    auto start_DS = std::chrono::system_clock::now();
     
     float rM = spM->radius();
     float zM = spM->z();
@@ -117,12 +113,6 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
-    auto end_DS = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapse_DS = end_DS-start_DS;
-    std::get<0>(t_metric) += elapse_DS.count();
-
-    auto start_TC = std::chrono::system_clock::now();
-    
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -130,12 +120,6 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::vector<LinCircle> linCircleTop;
     transformCoordinates(compatBottomSP, *spM, true, linCircleBottom);
     transformCoordinates(compatTopSP, *spM, false, linCircleTop);
-
-    auto end_TC = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapse_TC = end_TC-start_TC;
-    std::get<1>(t_metric) += elapse_TC.count();
-
-    auto start_TS = std::chrono::system_clock::now();
     
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
@@ -265,16 +249,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
     m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
 
-    auto end_TS = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapse_TS = end_TS-start_TS;
-    std::get<2>(t_metric) += (elapse_TS).count();
-
   }
-
-  auto end_wall = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapse_wall = end_wall-start_wall;
-  std::get<3>(t_metric) += elapse_wall.count();
-  
   return outputVec;
 }
 

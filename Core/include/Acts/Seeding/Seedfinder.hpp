@@ -59,8 +59,6 @@ class Seedfinder {
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
-
-  std::tuple< double, double, double, double > getTimeMetric();
     
  private:
   void transformCoordinates(
@@ -69,7 +67,6 @@ class Seedfinder {
       std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
-  mutable std::tuple< double, double, double, double > t_metric; // doublet search, transform coordinate, triplet search, wall time
 };
 
 }  // namespace Acts
