@@ -11,8 +11,6 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Seeding/SeedfinderCpuFunctions.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
 
 #include <array>
 #include <list>
@@ -24,14 +22,19 @@
 #include <vector>
 
 namespace Acts{
-
+struct LinCircle {
+  float Zo;
+  float cotTheta;
+  float iDeltaR;
+  float Er;
+  float U;
+  float V;
+};
   template <typename external_spacepoint_t, typename platform_t = void * >
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
-
- using Platform_t = platform_t;
     
  public:
   /// The only constructor. Requires a config object.
@@ -62,7 +65,11 @@ class Seedfinder {
   std::tuple< double, double, double, double > getTimeMetric();
     
  private:
-
+  void transformCoordinates(
+      std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
+      const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+      std::vector<LinCircle>& linCircleVec) const;
+    
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
   mutable std::tuple< double, double, double, double > t_metric; // doublet search, transform coordinate, triplet search, wall time
 };
@@ -70,3 +77,6 @@ class Seedfinder {
 }  // namespace Acts
 
 #include "Acts/Seeding/Seedfinder.ipp"
+
+
+
