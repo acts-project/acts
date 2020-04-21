@@ -100,7 +100,7 @@ inline const RotationMatrix3D Surface::initJacobianToLocal(
   // Time component
   jacobian(eT, 3) = 1;
   // Directional and momentum elements for reference frame surface
-jacobian(ePHI, 4) = -sinPhi * invSinTheta;
+  jacobian(ePHI, 4) = -sinPhi * invSinTheta;
   jacobian(ePHI, 5) = cosPhi * invSinTheta;
   jacobian(eTHETA, 4) = cosPhi * cosTheta;
   jacobian(eTHETA, 5) = sinPhi * cosTheta;
