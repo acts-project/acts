@@ -57,7 +57,9 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
   // Directional and momentum parameters for curvilinear
   jacToCurv(2, 4) = -sinPhi * invSinTheta;
   jacToCurv(2, 5) = cosPhi * invSinTheta;
-  jacToCurv(3, 6) = -invSinTheta;
+  jacToCurv(3, 4) = cosPhi * cosTheta;
+  jacToCurv(3, 5) = sinPhi * cosTheta;
+  jacToCurv(3, 6) = -sinTheta;
   jacToCurv(4, 7) = 1.;
 
   return jacToCurv;
@@ -217,14 +219,13 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
                       FreeMatrix& transportJacobian, FreeVector& derivatives,
                       BoundToFreeMatrix& jacobianLocalToGlobal,
                       const FreeVector& parameters, bool covTransport,
-                      double accumulatedPath, const Surface& surface,
-                      bool reinitialize) {
+                      double accumulatedPath, const Surface& surface) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
     covarianceTransport(geoContext, covarianceMatrix, jacobian,
                         transportJacobian, derivatives, jacobianLocalToGlobal,
-                        parameters, reinitialize, surface);
+                        parameters, surface);
     cov = covarianceMatrix;
   }
   // Create the bound parameters
@@ -236,29 +237,24 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
   BoundParameters boundParameters(geoContext, cov, position, momentum, charge,
                                   time, surface.getSharedPtr());
   // Create the bound state
-  BoundState result =
-      std::make_tuple(std::move(boundParameters), jacobian, accumulatedPath);
-  // Reinitialize if asked to do so
-  // this is useful for interruption calls
-  if (reinitialize) {
-    jacobian = Jacobian::Identity();
-  }
-  return result;
+  return std::make_tuple(std::move(boundParameters), jacobian, accumulatedPath);
+  ;
 }
 
-CurvilinearState curvilinearState(
-    Covariance& covarianceMatrix, Jacobian& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath, bool reinitialize) {
+CurvilinearState curvilinearState(Covariance& covarianceMatrix,
+                                  Jacobian& jacobian,
+                                  FreeMatrix& transportJacobian,
+                                  FreeVector& derivatives,
+                                  BoundToFreeMatrix& jacobianLocalToGlobal,
+                                  const FreeVector& parameters,
+                                  bool covTransport, double accumulatedPath) {
   const Vector3D& direction = parameters.segment<3>(eFreeDir0);
 
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
     covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
-                        derivatives, jacobianLocalToGlobal, direction,
-                        reinitialize);
+                        derivatives, jacobianLocalToGlobal, direction);
     cov = covarianceMatrix;
   }
   // Create the curvilinear parameters
@@ -269,20 +265,14 @@ CurvilinearState curvilinearState(
   CurvilinearParameters curvilinearParameters(cov, position, momentum, charge,
                                               time);
   // Create the curvilinear state
-  CurvilinearState result = std::make_tuple(std::move(curvilinearParameters),
-                                            jacobian, accumulatedPath);
-  // Reinitialize if asked to do so
-  // this is useful for interruption calls
-  if (reinitialize) {
-    jacobian = Jacobian::Identity();
-  }
-  return result;
+  return std::make_tuple(std::move(curvilinearParameters), jacobian,
+                         accumulatedPath);
 }
 
 void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
                          FreeMatrix& transportJacobian, FreeVector& derivatives,
                          BoundToFreeMatrix& jacobianLocalToGlobal,
-                         const Vector3D& direction, bool reinitialize) {
+                         const Vector3D& direction) {
   // Build the full jacobian
   jacobianLocalToGlobal = transportJacobian * jacobianLocalToGlobal;
   const FreeToBoundMatrix jacToLocal =
@@ -293,13 +283,11 @@ void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
   covarianceMatrix = jacFull * covarianceMatrix * jacFull.transpose();
 
   // Reinitialize jacobian components
-  if (reinitialize) {
-    reinitializeJacobians(transportJacobian, derivatives, jacobianLocalToGlobal,
-                          direction);
-  }
+  reinitializeJacobians(transportJacobian, derivatives, jacobianLocalToGlobal,
+                        direction);
 
   // Store The global and bound jacobian (duplication for the moment)
-  jacobian = jacFull * jacobian;
+  jacobian = jacFull;
 }
 
 void covarianceTransport(
@@ -307,7 +295,7 @@ void covarianceTransport(
     Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool reinitialize, const Surface& surface) {
+    const Surface& surface) {
   // Build the full jacobian
   jacobianLocalToGlobal = transportJacobian * jacobianLocalToGlobal;
   const FreeToBoundMatrix jacToLocal = surfaceDerivative(
@@ -318,13 +306,11 @@ void covarianceTransport(
   covarianceMatrix = jacFull * covarianceMatrix * jacFull.transpose();
 
   // Reinitialize jacobian components
-  if (reinitialize) {
-    reinitializeJacobians(geoContext, transportJacobian, derivatives,
-                          jacobianLocalToGlobal, parameters, surface);
-  }
+  reinitializeJacobians(geoContext, transportJacobian, derivatives,
+                        jacobianLocalToGlobal, parameters, surface);
 
   // Store The global and bound jacobian (duplication for the moment)
-  jacobian = jacFull * jacobian;
+  jacobian = jacFull;
 }
 }  // namespace detail
 }  // namespace Acts

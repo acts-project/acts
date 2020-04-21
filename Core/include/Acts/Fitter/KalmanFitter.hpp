@@ -354,8 +354,7 @@ class KalmanFitter {
           targetReached(state, stepper, *targetSurface)) {
         ACTS_VERBOSE("Completing");
         // Transport & bind the parameter to the final surface
-        auto fittedState =
-            stepper.boundState(state.stepping, *targetSurface, true);
+        auto fittedState = stepper.boundState(state.stepping, *targetSurface);
         // Assign the fitted parameters
         result.fittedParameters = std::get<BoundParameters>(fittedState);
         // Break the navigation for stopping the Propagation
@@ -478,7 +477,7 @@ class KalmanFitter {
 
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, true);
+            stepper.boundState(state.stepping, *surface);
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -579,7 +578,7 @@ class KalmanFitter {
 
             // Transport & bind the state to the current surface
             auto [boundParams, jacobian, pathLength] =
-                stepper.boundState(state.stepping, *surface, true);
+                stepper.boundState(state.stepping, *surface);
 
             // Fill the track state
             trackStateProxy.predicted() = boundParams.parameters();
@@ -591,7 +590,7 @@ class KalmanFitter {
 
             // Transport & get curvilinear state instead of bound state
             auto [curvilinearParams, jacobian, pathLength] =
-                stepper.curvilinearState(state.stepping, true);
+                stepper.curvilinearState(state.stepping);
 
             // Fill the track state
             trackStateProxy.predicted() = curvilinearParams.parameters();
@@ -650,7 +649,7 @@ class KalmanFitter {
 
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface, true);
+            stepper.boundState(state.stepping, *surface);
 
         // Create a detached track state proxy
         auto tempTrackTip =
@@ -715,13 +714,13 @@ class KalmanFitter {
           ACTS_VERBOSE("Detected hole on " << surface->geoID()
                                            << " in backward filtering");
           if (state.stepping.covTransport) {
-            stepper.covarianceTransport(state.stepping, *surface, true);
+            stepper.covarianceTransport(state.stepping, *surface);
           }
         } else {
           ACTS_VERBOSE("Detected in-sensitive surface "
                        << surface->geoID() << " in backward filtering");
           if (state.stepping.covTransport) {
-            stepper.covarianceTransport(state.stepping, true);
+            stepper.covarianceTransport(state.stepping);
           }
         }
 

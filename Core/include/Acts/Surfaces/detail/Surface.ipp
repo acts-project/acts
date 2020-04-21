@@ -85,11 +85,13 @@ inline const RotationMatrix3D Surface::initJacobianToLocal(
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
-  // component expressions
-  const double inv_sin_theta_2 = 1. / (x * x + y * y);
-  const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
-  const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
-  const double inv_sin_theta = sqrt(inv_sin_theta_2);
+  const double z = direction(2);  // == cos(theta)
+  // can be turned into cosine/sine
+  const double cosTheta = z;
+  const double sinTheta = sqrt(x * x + y * y);
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
   // The measurement frame of the surface
   RotationMatrix3D rframeT =
       referenceFrame(gctx, position, direction).transpose();
@@ -98,9 +100,11 @@ inline const RotationMatrix3D Surface::initJacobianToLocal(
   // Time component
   jacobian(eT, 3) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 4) = -sin_phi_over_sin_theta;
-  jacobian(ePHI, 5) = cos_phi_over_sin_theta;
-  jacobian(eTHETA, 6) = -inv_sin_theta;
+  jacobian(ePHI, 4) = -sinPhi * invSinTheta;
+  jacobian(ePHI, 5) = cosPhi * invSinTheta;
+  jacobian(eTHETA, 4) = cosPhi * cosTheta;
+  jacobian(eTHETA, 5) = sinPhi * cosTheta;
+  jacobian(eTHETA, 6) = -sinTheta;
   jacobian(eQOP, 7) = 1;
   // return the frame where this happened
   return rframeT;
