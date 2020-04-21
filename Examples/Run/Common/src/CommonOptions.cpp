@@ -7,8 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTFW/Options/CommonOptions.hpp"
-
 #include "ACTFW/Utilities/Options.hpp"
+
+#include <boost/tokenizer.hpp>
+#include <exception>
+#include <fstream>
+#include <system_error>
 
 using namespace boost::program_options;
 
@@ -21,6 +25,10 @@ boost::program_options::options_description FW::Options::makeDefaultOptions(
       "loglevel,l", value<size_t>()->default_value(2),
       "The output log level. Please set the wished number (0 = VERBOSE, 1 = "
       "DEBUG, 2 = INFO, 3 = WARNING, 4 = ERROR, 5 = FATAL).");
+
+  opt.add_options()(
+      "response-file", value<std::string>()->default_value(""),
+      "Configuration file (response file), can be specified with '@name'.");
 
   return opt;
 }
@@ -117,10 +125,36 @@ void FW::Options::addInputOptions(
 
 boost::program_options::variables_map FW::Options::parse(
     const boost::program_options::options_description& opt, int argc,
-    char* argv[]) {
+    char* argv[]) noexcept(false) {
   variables_map vm;
-  store(parse_command_line(argc, argv, opt), vm);
+  store(command_line_parser(argc, argv)
+            .options(opt)
+            .extra_parser(rf_option_parser)
+            .run(),
+        vm);
   notify(vm);
+
+  if (vm.count("response-file") and
+      not vm["response-file"].template as<std::string>().empty()) {
+    // Load the file and tokenize it
+    std::ifstream ifs(vm["response-file"].as<std::string>().c_str());
+    if (!ifs) {
+      throw(std::filesystem::filesystem_error("Could not open response file.",
+                                              std::error_code()));
+    }
+    // Read the whole file into a string
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+    // Split the file content
+    boost::char_separator<char> sep(" \n\r");
+    std::string rfileContents(ss.str());
+    boost::tokenizer<boost::char_separator<char> > tok(rfileContents, sep);
+    std::vector<std::string> args;
+    copy(tok.begin(), tok.end(), back_inserter(args));
+    // Parse the file and store the options
+    store(command_line_parser(args).options(opt).run(), vm);
+  }
+
   // automatically handle help
   if (vm.count("help")) {
     std::cout << opt << std::endl;
