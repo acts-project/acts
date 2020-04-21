@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Platforms/CUDA/CudaVector.cu"
+#include "Acts/Plugins/Cuda/Cuda.h"
 #include <Eigen/Dense>
 #include <boost/test/unit_test.hpp>
 #include <cuda_profiler_api.h>
@@ -34,21 +34,21 @@ BOOST_AUTO_TEST_CASE( CUDAOBJ_TEST ){
   int  bufSize;
 
   bufSize   = gridSize.x * blockSize.x;
-  Eigen::Matrix<float, vecDim, nVec>  iMat_cpu[bufSize];
+  Eigen::Matrix<float, vecDim, nVec>  inMat_cpu[bufSize];
   for (int i=0; i< bufSize; i++){
-    iMat_cpu[i] = Eigen::Matrix<float,vecDim,nVec>::Random();
+    inMat_cpu[i] = Eigen::Matrix<float,vecDim,nVec>::Random();
   }
 
   cudaProfilerStart();
   
-  CudaVector<Eigen::Matrix<float,vecDim,nVec>> iMat_cuda(bufSize, iMat_cpu, bufSize, 0);
-  CudaVector<Eigen::Matrix<float,vecDim,nVec>> oMat_cuda(bufSize);
-  MatrixLoadStore<float, vecDim, nVec><<< gridSize, blockSize >>>(iMat_cuda.Get(),oMat_cuda.Get());
-  Eigen::Matrix<float,vecDim,nVec>* oMat_cpu = oMat_cuda.GetHost();
+  CudaVector<Eigen::Matrix<float,vecDim,nVec>> inMat_cuda(bufSize, inMat_cpu, bufSize, 0);
+  CudaVector<Eigen::Matrix<float,vecDim,nVec>> outMat_cuda(bufSize);
+  MatrixLoadStore<float, vecDim, nVec><<< gridSize, blockSize >>>(inMat_cuda.Get(),outMat_cuda.Get());
+  Eigen::Matrix<float,vecDim,nVec>* outMat_cpu = outMat_cuda.GetHost();
 
   cudaProfilerStop();
   
-  BOOST_REQUIRE( iMat_cpu[0] == oMat_cpu[0] ); 
+  BOOST_REQUIRE( inMat_cpu[0] == outMat_cpu[0] ); 
 }
 BOOST_AUTO_TEST_SUITE_END()
 
