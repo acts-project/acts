@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts{
+namespace Acts {
 struct LinCircle {
   float Zo;
   float cotTheta;
@@ -30,18 +30,16 @@ struct LinCircle {
   float U;
   float V;
 };
-  template <typename external_spacepoint_t, typename platform_t = void * >
+template <typename external_spacepoint_t, typename platform_t = void * >
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
-    
+
  public:
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the Seedfinder
-
   Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
-
   ~Seedfinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
@@ -60,7 +58,7 @@ class Seedfinder {
   /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
   std::tuple< double, double, double, double > getTimeMetric();
     
@@ -69,7 +67,7 @@ class Seedfinder {
       std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
       const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
       std::vector<LinCircle>& linCircleVec) const;
-    
+
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
   mutable std::tuple< double, double, double, double > t_metric; // doublet search, transform coordinate, triplet search, wall time
 };
@@ -77,6 +75,3 @@ class Seedfinder {
 }  // namespace Acts
 
 #include "Acts/Seeding/Seedfinder.ipp"
-
-
-

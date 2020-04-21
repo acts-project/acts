@@ -15,8 +15,8 @@
 
 namespace Acts {
 
-  template <typename external_spacepoint_t, typename platform_t>
-  Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
+template <typename external_spacepoint_t, typename platform_t>
+Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config)
     : m_config(std::move(config)) {
   // calculation of scattering using the highland formula
@@ -25,7 +25,6 @@ namespace Acts {
                       (1 + 0.038 * std::log(m_config.radLengthPerSeed));
   float maxScatteringAngle = m_config.highland / m_config.minPt;
   m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
@@ -35,15 +34,14 @@ namespace Acts {
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
 
-  t_metric = std::make_tuple(0,0,0,0);
-  
-  }
+  t_metric = std::make_tuple(0,0,0,0);  
+}
   
 
-  template <typename external_spacepoint_t, typename platform_t>
-  template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t> >  
-  Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+template <typename external_spacepoint_t, typename platform_t>
+template <typename sp_range_t>
+std::vector<Seed<external_spacepoint_t> >  
+Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const{
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
