@@ -43,7 +43,7 @@ GeometryContext tgContext = GeometryContext();
     CHECK_CLOSE_ABS(VectorHelpers::phi(v), (a), tolerance); \
   }
 
-using SrfVec = std::vector<std::shared_ptr<const Surface>>;
+using SrfVec = SurfacePtrVector;
 
 void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   std::ofstream os;
@@ -80,7 +80,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 struct LayerCreatorFixture {
   std::shared_ptr<const SurfaceArrayCreator> p_SAC;
   std::shared_ptr<LayerCreator> p_LC;
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  SurfacePtrVector m_surfaces;
 
   LayerCreatorFixture() {
     p_SAC = std::make_shared<const SurfaceArrayCreator>(
@@ -234,7 +234,7 @@ struct LayerCreatorFixture {
 BOOST_AUTO_TEST_SUITE(Tools)
 
 BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
-  std::vector<std::shared_ptr<const Surface>> srf;
+  SurfacePtrVector srf;
 
   srf = makeBarrel(30, 7, 2, 1.5);
   draw_surfaces(srf, "LayerCreator_createCylinderLayer_BRL_1.obj");
@@ -242,8 +242,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   // CASE I
   double envR = 0.1, envZ = 0.5;
   ProtoLayer pl(tgContext, srf);
-  pl.envR = {envR, envR};
-  pl.envZ = {envZ, envZ};
+  pl.envelope[Acts::binR] = {envR, envR};
+  pl.envelope[Acts::binZ] = {envR, envR};
   std::shared_ptr<CylinderLayer> layer =
       std::dynamic_pointer_cast<CylinderLayer>(
           p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl));
@@ -266,8 +266,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   // CASE II
 
   ProtoLayer pl2(tgContext, srf);
-  pl2.envR = {envR, envR};
-  pl2.envZ = {envZ, envZ};
+  pl2.envelope[Acts::binR] = {envR, envR};
+  pl2.envelope[Acts::binZ] = {envZ, envZ};
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, 30, 7, pl2));
   CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
@@ -302,10 +302,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 
   // CASE III
   ProtoLayer pl3;
-  pl3.minR = 1;
-  pl3.maxR = 20;
-  pl3.minZ = -25;
-  pl3.maxZ = 25;
+  pl3.extent.ranges[Acts::binR] = {1, 20};
+  pl3.extent.ranges[Acts::binZ] = {-25, 25};
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl3));
   CHECK_CLOSE_REL(layer->thickness(), 19, 1e-3);
@@ -328,7 +326,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
-  std::vector<std::shared_ptr<const Surface>> surfaces;
+  SurfacePtrVector surfaces;
   auto ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
   surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
   auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);
@@ -338,10 +336,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   draw_surfaces(surfaces, "LayerCreator_createDiscLayer_EC_1.obj");
 
   ProtoLayer pl(tgContext, surfaces);
-  pl.minZ = -10;
-  pl.maxZ = 10;
-  pl.minR = 5;
-  pl.maxR = 25;
+  pl.extent.ranges[binZ] = {-10, 10};
+  pl.extent.ranges[binR] = {5., 25.};
   std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, equidistant, equidistant, pl));
   CHECK_CLOSE_REL(layer->thickness(), 20, 1e-3);
@@ -368,8 +364,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   double envMinR = 1, envMaxR = 1, envZ = 5;
   size_t nBinsR = 3, nBinsPhi = 30;
   ProtoLayer pl2(tgContext, surfaces);
-  pl2.envR = {envMinR, envMaxR};
-  pl2.envZ = {envZ, envZ};
+  pl2.envelope[binR] = {envMinR, envMaxR};
+  pl2.envelope[binZ] = {envZ, envZ};
   layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, nBinsR, nBinsPhi, pl2));
 
@@ -422,10 +418,10 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
   auto brl = barrel.first;
   draw_surfaces(brl, "LayerCreator_barrelStagger.obj");
 
-  double envR = 0, envZ = 0;
+  double envR, envZ = 0;
   ProtoLayer pl(tgContext, brl);
-  pl.envR = {envR, envR};
-  pl.envZ = {envZ, envZ};
+  pl.envelope[binR] = {envR, envR};
+  pl.envelope[binZ] = {envZ, envZ};
   std::shared_ptr<CylinderLayer> layer =
       std::dynamic_pointer_cast<CylinderLayer>(
           p_LC->cylinderLayer(tgContext, brl, equidistant, equidistant, pl));
