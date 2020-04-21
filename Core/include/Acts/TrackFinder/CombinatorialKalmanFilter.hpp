@@ -332,7 +332,8 @@ class CombinatorialKalmanFilter {
       }
 
       // Reset propagation state:
-      // - When navigation breaks and there is stil active tip present after recording&removing track tips on current surface 
+      // - When navigation breaks and there is stil active tip present after
+      // recording&removing track tips on current surface
       if (state.navigation.navigationBreak and not result.forwardFiltered) {
         // Record the tips on current surface as trajectory entry indices
         // (taking advantage of fact that those tips are consecutive in list of
@@ -459,9 +460,9 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
       state.navigation.startSurface = &currentState.referenceSurface();
-      if(state.navigation.startSurface->associatedLayer() != nullptr){
-      state.navigation.startLayer =
-          state.navigation.startSurface->associatedLayer();
+      if (state.navigation.startSurface->associatedLayer() != nullptr) {
+        state.navigation.startLayer =
+            state.navigation.startSurface->associatedLayer();
       }
       state.navigation.startVolume =
           state.navigation.startLayer->trackingVolume();
@@ -542,6 +543,8 @@ class CombinatorialKalmanFilter {
             m_calibrator, boundParams, sourcelinks, result.sourcelinkChi2,
             result.sourcelinkCandidateIndices, isOutlier);
         if (!sourcelinkSelectionRes.ok()) {
+          ACTS_ERROR("Selection of source links failed: "
+                     << sourcelinkSelectionRes.error());
           return sourcelinkSelectionRes.error();
         } else {
           // Remember the tip of the neighbor state on this surface
@@ -572,7 +575,7 @@ class CombinatorialKalmanFilter {
                 (predictedShared ? ~TrackStatePropMask::Predicted
                                  : TrackStatePropMask::All) &
                 (sourcelinkShared ? ~TrackStatePropMask::Uncalibrated
-                                   : TrackStatePropMask::All) &
+                                  : TrackStatePropMask::All) &
                 (isOutlier ? ~TrackStatePropMask::Filtered
                            : TrackStatePropMask::All);
 
@@ -728,8 +731,7 @@ class CombinatorialKalmanFilter {
         const TrackStatePropMask::Type& stateMask, const BoundState& boundState,
         const source_link_t& sourcelink, bool isOutlier, result_type& result,
         std::reference_wrapper<const GeometryContext> geoContext,
-        size_t neighborTip = SIZE_MAX,
-        size_t sharedTip = SIZE_MAX) const {
+        size_t neighborTip = SIZE_MAX, size_t sharedTip = SIZE_MAX) const {
       // Retrieve the tip state and remove the last tip from active tips
       size_t prevTip = SIZE_MAX;
       TipState tipState;
@@ -745,7 +747,7 @@ class CombinatorialKalmanFilter {
       // Get the track state proxy
       auto trackStateProxy = result.fittedStates.getTrackState(currentTip);
 
-      const auto [boundParams, jacobian, pathLength] = boundState;
+      auto [boundParams, jacobian, pathLength] = boundState;
 
       // Fill the parametric part of the track state proxy
       if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Predicted)) and
@@ -766,19 +768,17 @@ class CombinatorialKalmanFilter {
           sharedTip != SIZE_MAX) {
         // The uncalibrated are already stored, just set the
         // index
-        auto shared =
-            result.fittedStates.getTrackState(sharedTip);
-        trackStateProxy.data().iuncalibrated =
-            shared.data().iuncalibrated;
+        auto shared = result.fittedStates.getTrackState(sharedTip);
+        trackStateProxy.data().iuncalibrated = shared.data().iuncalibrated;
       } else {
         trackStateProxy.uncalibrated() = sourcelink;
       }
-        std::visit(
-            [&](const auto& calibrated) {
-              trackStateProxy.setCalibrated(calibrated);
-            },
-            m_calibrator(trackStateProxy.uncalibrated(),
-                         trackStateProxy.predicted()));
+      std::visit(
+          [&](const auto& calibrated) {
+            trackStateProxy.setCalibrated(calibrated);
+          },
+          m_calibrator(trackStateProxy.uncalibrated(),
+                       trackStateProxy.predicted()));
 
       // Get and set the type flags
       auto& typeFlags = trackStateProxy.typeFlags();
@@ -805,14 +805,13 @@ class CombinatorialKalmanFilter {
         if (!updateRes.ok()) {
           ACTS_ERROR("Update step failed: " << updateRes.error());
           return updateRes.error();
-        } else {
-          ACTS_VERBOSE(
-              "Creating measurement track state with tip = " << currentTip);
-          // Set the measurement flag
-          typeFlags.set(TrackStateFlag::MeasurementFlag);
-          // Increment number of measurements
-          tipState.nMeasurements++;
         }
+        ACTS_VERBOSE(
+            "Creating measurement track state with tip = " << currentTip);
+        // Set the measurement flag
+        typeFlags.set(TrackStateFlag::MeasurementFlag);
+        // Increment number of measurements
+        tipState.nMeasurements++;
       }
       return std::make_pair(currentTip, tipState);
     }
@@ -842,7 +841,7 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::ParameterFlag);
       typeFlags.set(TrackStateFlag::HoleFlag);
 
-      const auto [boundParams, jacobian, pathLength] = boundState;
+      auto [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
       trackStateProxy.predictedCovariance() = *boundParams.covariance();
@@ -887,7 +886,7 @@ class CombinatorialKalmanFilter {
       typeFlags.set(TrackStateFlag::MaterialFlag);
       typeFlags.set(TrackStateFlag::ParameterFlag);
 
-      const auto [curvilinearParams, jacobian, pathLength] = curvilinearState;
+      auto [curvilinearParams, jacobian, pathLength] = curvilinearState;
       // Fill the track state
       trackStateProxy.predicted() = curvilinearParams.parameters();
       trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
@@ -972,39 +971,32 @@ class CombinatorialKalmanFilter {
       const auto& currentTip = result.trackTips.at(result.iSmoothed);
       // Get the index of measurement states;
       std::vector<size_t> measurementIndices;
-      auto lastState = result.fittedStates.getTrackState(currentTip);
-      if (lastState.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-        measurementIndices.push_back(currentTip);
-      }
       // Count track states to be smoothed
       size_t nStates = 0;
       result.fittedStates.applyBackwards(currentTip, [&](auto st) {
-        // Smoothing will start from the last measurement state
-        if (measurementIndices.empty()) {
-          // No smoothed parameter for the last few non-measurment states
+        bool isMeasurement =
+            st.typeFlags().test(TrackStateFlag::MeasurementFlag);
+        if (isMeasurement) {
+          measurementIndices.push_back(st.index());
+        } else if (measurementIndices.empty()) {
+          // No smoothed parameter if the last measurment state has not been
+          // found yet
           st.data().ismoothed = detail_lt::IndexData::kInvalid;
-        } else {
-          nStates++;
         }
-        size_t iprevious = st.previous();
-        if (iprevious != detail_lt::IndexData::kInvalid) {
-          auto previousState = result.fittedStates.getTrackState(iprevious);
-          if (previousState.typeFlags().test(
-                  TrackStateFlag::MeasurementFlag)) {
-            measurementIndices.push_back(iprevious);
-          }
+        // Start count when the last measurement state is found
+        if (not measurementIndices.empty()) {
+          nStates++;
         }
       });
       // Return error if the track has no measurement states (but this should
       // not happen)
       if (measurementIndices.empty()) {
+        ACTS_ERROR("Smoothing for a track without measurements.");
         return CombinatorialKalmanFilterError::SmoothFailed;
       }
       // Screen output for debugging
-      if (logger().doPrint(Logging::VERBOSE)) {
-        ACTS_VERBOSE("Apply smoothing on " << nStates
-                                           << " filtered track states.");
-      }
+      ACTS_VERBOSE("Apply smoothing on " << nStates
+                                         << " filtered track states.");
       // Smooth the track states
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
                                   measurementIndices.front());
@@ -1165,6 +1157,7 @@ class CombinatorialKalmanFilter {
     auto result = m_propagator.template propagate(sParameters, propOptions);
 
     if (!result.ok()) {
+      ACTS_ERROR("Propapation failed: " << result.error());
       return result.error();
     }
 
@@ -1182,6 +1175,8 @@ class CombinatorialKalmanFilter {
     }
 
     if (!combKalmanResult.result.ok()) {
+      ACTS_ERROR("CombinatorialKalmanFilter failed: "
+                 << combKalmanResult.result.error());
       return combKalmanResult.result.error();
     }
 
