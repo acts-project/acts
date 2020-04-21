@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <chrono>
 #include <numeric>
-#include <future>
 
 namespace Acts {
 

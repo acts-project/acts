@@ -61,6 +61,7 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda > {
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
   mutable std::tuple< double, double, double, double > t_metric; // doublet search, transform coordinate, triplet search, wall time
+  
 };
 
 }  // namespace Acts
