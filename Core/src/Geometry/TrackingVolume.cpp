@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -374,6 +375,15 @@ void Acts::TrackingVolume::closeGeometry(
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*thisVolume);
   }
+  if (thisVolume->volumeMaterial() == nullptr && thisVolume->motherVolume() &&
+      thisVolume->motherVolume()->volumeMaterial() != nullptr) {
+    auto protoMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(
+        thisVolume->motherVolume()->volumeMaterial());
+    if (protoMaterial == nullptr) {
+      thisVolume->assignVolumeMaterial(
+          thisVolume->motherVolume()->volumeMaterialSharedPtr());
+    }
+  }
 
   this->assignGeoID(volumeID);
   // loop over the boundary surfaces
@@ -429,8 +439,8 @@ void Acts::TrackingVolume::closeGeometry(
     for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
       mutableVolumesIter->setMotherVolume(this);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
 
@@ -438,8 +448,8 @@ void Acts::TrackingVolume::closeGeometry(
     for (auto& volumesIter : m_confinedDenseVolumes) {
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
       mutableVolumesIter->setMotherVolume(this);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
 }

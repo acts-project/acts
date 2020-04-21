@@ -79,6 +79,11 @@ class JsonMaterialDecorator : public IMaterialDecorator {
     if (m_clearVolumeMaterial) {
       volume.assignVolumeMaterial(nullptr);
     }
+    // Try to find the volume in the map
+    auto vMaterial = m_volumeMaterialMap.find(volume.geoID());
+    if (vMaterial != m_volumeMaterialMap.end()) {
+      volume.assignVolumeMaterial(vMaterial->second);
+    }
   }
 
  private:

@@ -1,25 +1,23 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-#include <iostream>
-#include <limits>
-#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
-
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Utilities/BinAdjustmentVolume.hpp"
 
 namespace {
-using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3D>>;
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
@@ -29,179 +27,247 @@ using MaterialGrid2D = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis>;
 using MaterialGrid3D =
     Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
 
-/// @brief Helper method that creates the cache grid for the mapping. This
-/// grid allows the collection of material at a the anchor points.
-///
-/// @param [in] gridAxis1 Axis data
-/// @param [in] gridAxis2 Axis data
-/// @note The data of the axes is given in the std::array as {minimum value,
-/// maximum value, number of bins}
-///
-/// @return The grid
-Grid2D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2) {
-  // get the number of bins
-  size_t nBinsAxis1 = gridAxis1[2];
-  size_t nBinsAxis2 = gridAxis2[2];
-
-  // get the minimum and maximum
-  double minAxis1 = gridAxis1[0];
-  double minAxis2 = gridAxis2[0];
-  double maxAxis1 = gridAxis1[1];
-  double maxAxis2 = gridAxis2[1];
-  // calculate maxima (add one last bin, because bin value always corresponds
-  // to
-  // left boundary)
-  double stepAxis1 = std::fabs(maxAxis1 - minAxis1) / (nBinsAxis1 - 1);
-  double stepAxis2 = std::fabs(maxAxis2 - minAxis2) / (nBinsAxis2 - 1);
-  maxAxis1 += stepAxis1;
-  maxAxis2 += stepAxis2;
-
-  // Create the axis for the grid
-  EAxis axis1(minAxis1, maxAxis1, nBinsAxis1);
-  EAxis axis2(minAxis2, maxAxis2, nBinsAxis2);
-
-  // The material mapping grid
-  return Grid2D(std::make_tuple(std::move(axis1), std::move(axis2)));
-}
-
-/// @brief Helper method that creates the cache grid for the mapping. This
-/// grid allows the collection of material at a the anchor points.
-///
-/// @param [in] gridAxis1 Axis data
-/// @param [in] gridAxis2 Axis data
-/// @param [in] gridAxis3 Axis data
-/// @note The data of the axes is given in the std::array as {minimum value,
-/// maximum value, number of bins}
-///
-/// @return The grid
-Grid3D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2,
-                  std::array<double, 3> gridAxis3) {
-  // get the number of bins
-  size_t nBinsAxis1 = gridAxis1[2];
-  size_t nBinsAxis2 = gridAxis2[2];
-  size_t nBinsAxis3 = gridAxis3[2];
-
-  // get the minimum and maximum
-  double minAxis1 = gridAxis1[0];
-  double minAxis2 = gridAxis2[0];
-  double minAxis3 = gridAxis3[0];
-  double maxAxis1 = gridAxis1[1];
-  double maxAxis2 = gridAxis2[1];
-  double maxAxis3 = gridAxis3[1];
-  // calculate maxima (add one last bin, because bin value always corresponds
-  // to
-  // left boundary)
-  double stepAxis1 = std::fabs(maxAxis1 - minAxis1) / (nBinsAxis1 - 1);
-  double stepAxis2 = std::fabs(maxAxis2 - minAxis2) / (nBinsAxis2 - 1);
-  double stepAxis3 = std::fabs(maxAxis3 - minAxis3) / (nBinsAxis3 - 1);
-  maxAxis1 += stepAxis1;
-  maxAxis2 += stepAxis2;
-  maxAxis3 += stepAxis3;
-
-  // Create the axis for the grid
-  EAxis axis1(minAxis1, maxAxis1, nBinsAxis1);
-  EAxis axis2(minAxis2, maxAxis2, nBinsAxis2);
-  EAxis axis3(minAxis3, maxAxis3, nBinsAxis3);
-
-  // The material mapping grid
-  return Grid3D(
-      std::make_tuple(std::move(axis1), std::move(axis2), std::move(axis3)));
-}
-
-/// @brief Concatenate a set of material at arbitrary space points on a set of
-/// grid points and produces a grid containing the averaged material values.
-///
-/// @param [in] grid The material collecting grid
-/// @param [in] mPoints The set of material at the space points
-/// @param [in] matchToGridPoint Function that assigns the space point
-/// of @p mPoints to the grid points by its local index
-///
-/// @return The average material grid decomposed into classification numbers
-MaterialGrid2D mapMaterialPoints(
-    Grid2D& grid, const RecordedMaterial& mPoints,
-    const std::function<Grid2D::index_t(const Acts::Vector3D&, const Grid2D&)>&
-        matchToGridPoint) {
-  // Walk over each point
-  for (const auto& rm : mPoints) {
-    // Search for fitting grid point and accumulate
-    Grid2D::index_t index = matchToGridPoint(rm.second, grid);
-    grid.atLocalBins(index).accumulate(rm.first);
-  }
-
-  // Build material grid
-  // Re-build the axes
-  Grid2D::point_t min = grid.minPosition();
-  Grid2D::point_t max = grid.maxPosition();
-  Grid2D::index_t nBins = grid.numLocalBins();
-
-  EAxis axis1(min[0], max[0], nBins[0]);
-  EAxis axis2(min[1], max[1], nBins[1]);
-
-  // Build the grid and fill it with data
-  MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
-  for (size_t index = 0; index < grid.size(); index++) {
-    mGrid.at(index) = grid.at(index).average().classificationNumbers();
-  }
-
-  return mGrid;
-}
-
-/// @brief Concatenate a set of material at arbitrary space points on a set of
-/// grid points and produces a grid containing the averaged material values.
-///
-/// @param [in] grid The material collecting grid
-/// @param [in] mPoints The set of material at the space points
-/// @param [in] matchToGridPoint Function that assigns the space point
-/// of @p mPoints to the grid points by its local index
-///
-/// @return The average material grid decomposed into classification numbers
-MaterialGrid3D mapMaterialPoints(
-    Grid3D& grid, const RecordedMaterial& mPoints,
-    const std::function<Grid3D::index_t(const Acts::Vector3D&, const Grid3D&)>&
-        matchToGridPoint) {
-  // Walk over each point
-  for (const auto& rm : mPoints) {
-    // Search for fitting grid point and accumulate
-    Grid3D::index_t index = matchToGridPoint(rm.second, grid);
-    grid.atLocalBins(index).accumulate(rm.first);
-  }
-
-  // Build material grid
-  // Re-build the axes
-  Grid3D::point_t min = grid.minPosition();
-  Grid3D::point_t max = grid.maxPosition();
-  Grid3D::index_t nBins = grid.numLocalBins();
-
-  EAxis axis1(min[0], max[0], nBins[0]);
-  EAxis axis2(min[1], max[1], nBins[1]);
-  EAxis axis3(min[2], max[2], nBins[2]);
-
-  // Build the grid and fill it with data
-  MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
-  for (size_t index = 0; index < grid.size(); index++) {
-    mGrid.at(index) = grid.at(index).average().classificationNumbers();
-  }
-  return mGrid;
-}
 }  // namespace
 
-MaterialGrid2D Acts::createMaterialGrid(
-    std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2,
-    const RecordedMaterial& mPoints,
-    const std::function<Grid2D::index_t(const Vector3D&, const Grid2D&)>&
-        matchToGridPoint) {
-  Grid2D grid = createGrid(std::move(gridAxis1), std::move(gridAxis2));
-  return mapMaterialPoints(grid, mPoints, matchToGridPoint);
+Acts::VolumeMaterialMapper::VolumeMaterialMapper(
+    const Config& cfg, StraightLinePropagator propagator,
+    std::unique_ptr<const Logger> slogger)
+    : m_cfg(cfg),
+      m_propagator(std::move(propagator)),
+      m_logger(std::move(slogger)) {}
+
+Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const TrackingGeometry& tGeometry) const {
+  // Parse the geometry and find all surfaces with material proxies
+  auto world = tGeometry.highestTrackingVolume();
+
+  // The Surface material mapping state
+  State mState(gctx, mctx);
+  resolveMaterialVolume(mState, *world);
+  return mState;
 }
 
-MaterialGrid3D Acts::createMaterialGrid(
-    std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2,
-    std::array<double, 3> gridAxis3, const RecordedMaterial& mPoints,
-    const std::function<Grid3D::index_t(const Vector3D&, const Grid3D&)>&
-        matchToGridPoint) {
-  Grid3D grid = createGrid(std::move(gridAxis1), std::move(gridAxis2),
-                           std::move(gridAxis3));
-  return mapMaterialPoints(grid, mPoints, matchToGridPoint);
+void Acts::VolumeMaterialMapper::resolveMaterialVolume(
+    State& mState, const TrackingVolume& tVolume) const {
+  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
+                                   << "' for material surfaces.")
+
+  ACTS_VERBOSE("- Insert Volume ...");
+  checkAndInsert(mState, tVolume);
+
+  // Step down into the sub volume
+  if (tVolume.confinedVolumes()) {
+    ACTS_VERBOSE("- Check children volume ...");
+    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
+      // Recursive call
+      resolveMaterialVolume(mState, *sVolume);
+    }
+  }
+  if (!tVolume.denseVolumes().empty()) {
+    for (auto& sVolume : tVolume.denseVolumes()) {
+      // Recursive call
+      resolveMaterialVolume(mState, *sVolume);
+    }
+  }
+}
+
+void Acts::VolumeMaterialMapper::checkAndInsert(
+    State& mState, const TrackingVolume& volume) const {
+  auto volumeMaterial = volume.volumeMaterial();
+  // Check if the volume has a proxy
+  if (volumeMaterial != nullptr) {
+    auto geoID = volume.geoID();
+    size_t volumeID = geoID.volume();
+    ACTS_DEBUG("Material volume found with volumeID " << volumeID);
+    ACTS_DEBUG("       - ID is " << geoID);
+
+    RecordedMaterialPoint mat;
+    mState.recordedMaterial[geoID] = mat;
+
+    // We need a dynamic_cast to either a volume material proxy or
+    // proper surface material
+    auto psm = dynamic_cast<const ProtoVolumeMaterial*>(volumeMaterial);
+    // Get the bin utility: try proxy material first
+    const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
+    if (bu != nullptr) {
+      // Screen output for Binned Surface material
+      ACTS_DEBUG("       - (proto) binning is " << *bu);
+      // Now update
+      BinUtility buAdjusted = adjustBinUtility(*bu, volume);
+      // Screen output for Binned Surface material
+      ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
+      mState.materialBin[geoID] = buAdjusted;
+      return;
+    }
+    // Second attempt: binned material
+    auto bmp = dynamic_cast<
+        const InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>*>(
+        volumeMaterial);
+    if (bmp != nullptr) {
+      // Screen output for Binned Surface material
+      ACTS_DEBUG("       - binning is " << *bu);
+      mState.materialBin[geoID] = *bu;
+      return;
+    } else {
+      // Create a homogeneous type of material
+      ACTS_DEBUG("       - this is homogeneous material.");
+      BinUtility buHomogeneous;
+      mState.materialBin[geoID] = buHomogeneous;
+      return;
+    }
+  }
+}
+
+void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
+  // iterate over the volumes
+  for (auto& recMaterial : mState.recordedMaterial) {
+    ACTS_DEBUG("Create the material for volume  " << recMaterial.first);
+    if (mState.materialBin[recMaterial.first].dimensions() == 0) {
+      // Accumulate all the recorded material onto a signle point
+      ACTS_DEBUG("Homogeneous material volume");
+      Acts::AccumulatedVolumeMaterial homogeneousAccumulation;
+      for (const auto& rm : recMaterial.second) {
+        homogeneousAccumulation.accumulate(rm.first);
+      }
+      Acts::Material mat = homogeneousAccumulation.average();
+      mState.volumeMaterial[recMaterial.first] =
+          std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
+      return;
+    } else if (mState.materialBin[recMaterial.first].dimensions() == 2) {
+      // Accumulate all the recorded material onto a grid
+      ACTS_DEBUG("Grid material volume");
+      std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+      Grid2D Grid = createGrid2D(mState.materialBin[recMaterial.first],
+                                 transfoGlobalToLocal);
+      MaterialGrid2D matGrid =
+          mapMaterialPoints(Grid, recMaterial.second, transfoGlobalToLocal);
+      MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, matGrid);
+      mState.volumeMaterial[recMaterial.first] = std::make_unique<
+          InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
+          std::move(matMap), mState.materialBin[recMaterial.first]);
+      return;
+    } else if (mState.materialBin[recMaterial.first].dimensions() == 3) {
+      // Accumulate all the recorded material onto a grid
+      ACTS_DEBUG("Grid material volume");
+      std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+      Grid3D Grid = createGrid3D(mState.materialBin[recMaterial.first],
+                                 transfoGlobalToLocal);
+      MaterialGrid3D matGrid =
+          mapMaterialPoints(Grid, recMaterial.second, transfoGlobalToLocal);
+      MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, matGrid);
+      mState.volumeMaterial[recMaterial.first] = std::make_unique<
+          InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
+          std::move(matMap), mState.materialBin[recMaterial.first]);
+      return;
+    } else {
+      throw std::invalid_argument(
+          "Incorrect bin dimension, only 0, 2 and 3 are accepted");
+    }
+  }
+}
+
+void Acts::VolumeMaterialMapper::mapMaterialTrack(
+    State& mState, RecordedMaterialTrack& mTrack) const {
+  // Neutral curvilinear parameters
+  NeutralCurvilinearParameters start(std::nullopt, mTrack.first.first,
+                                     mTrack.first.second, 0.);
+
+  // Prepare Action list and abort list
+  using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
+  using ActionList = ActionList<MaterialVolumeCollector, DebugOutputActor>;
+  using AbortList = AbortList<EndOfWorldReached>;
+
+  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
+                                                   mState.magFieldContext);
+  options.debug = m_cfg.mapperDebugOutput;
+
+  // Now collect the material volume by using the straight line propagator
+  const auto& result = m_propagator.propagate(start, options).value();
+  auto mcResult = result.get<MaterialVolumeCollector::result_type>();
+  // Massive screen output
+  if (m_cfg.mapperDebugOutput) {
+    auto debugOutput = result.get<DebugOutputActor::result_type>();
+    ACTS_VERBOSE("Debug propagation output.");
+    ACTS_VERBOSE(debugOutput.debugString);
+  }
+
+  auto mappingVolumes = mcResult.collected;
+
+  // Retrieve the recorded material from the recorded material track
+  auto& rMaterial = mTrack.second.materialInteractions;
+  ACTS_VERBOSE("Retrieved " << rMaterial.size()
+                            << " recorded material steps to map.")
+
+  // These should be mapped onto the mapping surfaces found
+  ACTS_VERBOSE("Found     " << mappingVolumes.size()
+                            << " mapping volumes for this track.");
+  ACTS_VERBOSE("Mapping volumes are :")
+  for (auto& mVolumes : mappingVolumes) {
+    ACTS_VERBOSE(" - Volume : " << mVolumes.volume->geoID()
+                                << " at position = (" << mVolumes.position.x()
+                                << ", " << mVolumes.position.y() << ", "
+                                << mVolumes.position.z() << ")");
+
+    mappingVolumes.push_back(mVolumes);
+  }
+  // Run the mapping process, i.e. take the recorded material and map it
+  // onto the mapping volume:
+  auto rmIter = rMaterial.begin();
+  auto volIter = mappingVolumes.begin();
+  bool encounterVolume = false;
+
+  // Use those to minimize the lookup
+  GeometryID lastID = GeometryID();
+  GeometryID currentID = GeometryID();
+  auto currentRecMaterial = mState.recordedMaterial.end();
+
+  // Use those to create additional extrapolated step
+  int volumeStep = 1;
+  Acts::Vector3D extraPosition = {0, 0, 0};
+  Acts::Vector3D extraDirection = {0, 0, 0};
+
+  while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
+    if (volIter != mappingVolumes.end() && encounterVolume == true &&
+        !volIter->volume->inside(rmIter->position)) {
+      encounterVolume = false;
+      // Switch to next assignment volume
+      ++volIter;
+    }
+    if (volIter != mappingVolumes.end() &&
+        volIter->volume->inside(rmIter->position)) {
+      currentID = volIter->volume->geoID();
+      if (not(currentID == lastID)) {
+        // Let's (re-)assess the information
+        lastID = currentID;
+        currentRecMaterial = mState.recordedMaterial.find(currentID);
+      }
+      if (currentRecMaterial != mState.recordedMaterial.end()) {
+        // If the curent volume has a ProtoVolumeMaterial
+        volumeStep =
+            floor(rmIter->materialProperties.thickness() / m_cfg.mappingStep);
+        auto properties = rmIter->materialProperties;
+        float remainder = rmIter->materialProperties.thickness() -
+                          m_cfg.mappingStep * volumeStep;
+        properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
+        mState.recordedMaterial[volIter->volume->geoID()].push_back(
+            std::pair(properties, rmIter->position));
+        for (int step = 1; step <= volumeStep; step++) {
+          // Create additional extrapolated point for the grid mapping
+          extraDirection = rmIter->direction;
+          extraDirection =
+              extraDirection * (m_cfg.mappingStep / extraDirection.norm());
+          extraPosition = rmIter->position + step * extraDirection;
+          if (step == volumeStep) {
+            // adjust the thickness of the last extrapolated step
+            properties.scaleThickness(remainder / properties.thickness());
+          }
+          mState.recordedMaterial[volIter->volume->geoID()].push_back(
+              std::pair(properties, extraPosition));
+        }
+      }
+      encounterVolume = true;
+    }
+    ++rmIter;
+  }
 }
