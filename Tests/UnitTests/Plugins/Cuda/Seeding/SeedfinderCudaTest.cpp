@@ -272,19 +272,19 @@ int main(int argc, char** argv) {
   std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
 
   std::cout << std::endl;
-  std::cout << "------------------- Time Metric -------------------" << std::endl;
-  std::cout << "                CPU          CUDA        Speedup " << std::endl;
-  std::cout << "SF time    "
+  std::cout << "----------------------- Time Metric -----------------------" << std::endl;
+  std::cout << "                       CPU          CUDA        Speedup " << std::endl;
+  std::cout << "Seedfinding Time  "
 	    << std::setw(11) << cpuTime  << "  "
 	    << std::setw(11) << cudaTime << "  "
 	    << std::setw(11) << cpuTime/cudaTime << std::endl;
   double wallTime_cpu = cpuTime+preprocessTime;
   double wallTime_cuda = cudaTime+preprocessTime;
-  std::cout << "Wall time  " 
+  std::cout << "Wall time         "
 	    << std::setw(11) << wallTime_cpu  << "  "
 	    << std::setw(11) << wallTime_cuda << "  "
 	    << std::setw(11) << wallTime_cpu/wallTime_cuda << std::endl;
-  std::cout << "---------------------------------------------------" << std::endl;
+  std::cout << "-----------------------------------------------------------" << std::endl;
   std::cout << std::endl;
 							      
   int nSeed_cpu = 0;
