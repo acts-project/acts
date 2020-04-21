@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// SurfaceMaterialMapper.hpp, Acts project MaterialPlugins
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -22,6 +18,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -29,10 +26,17 @@ namespace Acts {
 
 class TrackingGeometry;
 
-/// @brief selector for finding
+/// @brief selector for finding surface
 struct MaterialSurface {
   bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
+  }
+};
+
+/// @brief selector for finding volume
+struct MaterialVolume {
+  bool operator()(const TrackingVolume& vf) const {
+    return (vf.volumeMaterial() != nullptr);
   }
 };
 

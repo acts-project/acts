@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   InterpolatedMaterialMap ipolMatMap(std::move(matMap));
 
   // Test the material getter
-  CHECK_CLOSE_REL(ipolMatMap.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
+  CHECK_CLOSE_REL(ipolMatMap.material({0.5, 0.5, 0.5}), Material(mat), 1e-4);
 
   // Test the material getter with a cache
   // Build a material cell

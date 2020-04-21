@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// HomogeneousVolumeMaterial.hpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -30,18 +26,55 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// Explicit constructor
   ///
   /// @param material is the material held by this
-  HomogeneousVolumeMaterial(const Material& material) : m_material(material) {}
+  HomogeneousVolumeMaterial(const Material& material);
+
+  /// Copy Constructor
+  ///
+  /// @param hvm is the source material
+  HomogeneousVolumeMaterial(const HomogeneousVolumeMaterial& hvm) = default;
+
+  /// Copy Move Constructor
+  ///
+  /// @param hvm is the source material
+  HomogeneousVolumeMaterial(HomogeneousVolumeMaterial&& hvm) = default;
+
+  /// Destructor
+  ~HomogeneousVolumeMaterial() override = default;
+
+  /// Assignment operator
+  ///
+  /// @param hvm is the source material
+  HomogeneousVolumeMaterial& operator=(const HomogeneousVolumeMaterial& hvm) =
+      default;
+
+  /// Equality operator
+  ///
+  /// @param hvm is the source material
+  bool operator==(const HomogeneousVolumeMaterial& hvm) const;
 
   /// Access to actual material
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  const Material& material(const Vector3D& /*position*/) const final {
-    return m_material;
-  }
+  const Material material(const Vector3D& /*position*/) const final;
+
+  /// Output Method for std::ostream
+  ///
+  /// @param sl The outoput stream
+  std::ostream& toStream(std::ostream& sl) const;
 
  private:
-  Material m_material;
+  Material m_material = Material();
 };
+
+inline const Material HomogeneousVolumeMaterial::material(
+    const Vector3D& /*position*/) const {
+  return (m_material);
+}
+
+inline bool HomogeneousVolumeMaterial::operator==(
+    const HomogeneousVolumeMaterial& hvm) const {
+  return (m_material == hvm.m_material);
+}
 
 }  // namespace Acts

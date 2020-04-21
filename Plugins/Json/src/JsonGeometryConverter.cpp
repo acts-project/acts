@@ -24,11 +24,17 @@
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/SurfaceBounds.hpp>
 #include "Acts/Geometry/ApproachDescriptor.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -137,6 +143,11 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
 
           } else if (vckey == m_cfg.matkey and not vcvalue.empty()) {
             ACTS_VERBOSE("--> VolumeMaterial to be parsed");
+            auto intermat = jsonToVolumeMaterial(vcvalue);
+            if (vcvalue[m_cfg.mapkey] == true) {
+              maps.second[volumeID] =
+                  std::shared_ptr<const Acts::IVolumeMaterial>(intermat);
+            }
           }
         }
       }
@@ -219,6 +230,9 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
     std::ostringstream svolumeID;
     svolumeID << value.volumeID;
     volj[m_cfg.geoidkey] = svolumeID.str();
+    if (value.material) {
+      volj[m_cfg.matkey] = volumeMaterialToJson(*value.material);
+    }
     // Write the layers
     if (not value.layers.empty()) {
       ACTS_VERBOSE("a2j: ---> Found " << value.layers.size() << " layer(s) ");
@@ -328,6 +342,92 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
   return sMaterial;
 }
 
+/// Create the Volume Material
+const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
+    const json& material) {
+  Acts::IVolumeMaterial* vMaterial = nullptr;
+  // The bin utility for deescribing the data
+  Acts::BinUtility bUtility;
+  // Convert the material
+  std::vector<std::vector<float>> mmat;
+  // Structured binding
+  for (auto& [key, value] : material.items()) {
+    // Check json keys
+    if (key == m_cfg.bin0key and not value.empty()) {
+      bUtility += jsonToBinUtility(value);
+    } else if (key == m_cfg.bin1key and not value.empty()) {
+      bUtility += jsonToBinUtility(value);
+    } else if (key == m_cfg.bin2key and not value.empty()) {
+      bUtility += jsonToBinUtility(value);
+    }
+    if (key == m_cfg.datakey and not value.empty()) {
+      for (auto& bin : value) {
+        std::vector<float> mpVector{bin[0], bin[1], bin[2], bin[3], bin[4]};
+        mmat.push_back(mpVector);
+      }
+    }
+  }
+
+  // We have protoMaterial
+  if (mmat.empty()) {
+    vMaterial = new Acts::ProtoVolumeMaterial(bUtility);
+  } else if (mmat.size() == 1) {
+    vMaterial = new Acts::HomogeneousVolumeMaterial(Acts::Material(
+        mmat[0][0], mmat[0][1], mmat[0][2], mmat[0][3], mmat[0][4]));
+  } else {
+    if (bUtility.dimensions() == 2) {
+      std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
+      Acts::Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
+
+      Acts::Grid2D::point_t min = grid.minPosition();
+      Acts::Grid2D::point_t max = grid.maxPosition();
+      Acts::Grid2D::index_t nBins = grid.numLocalBins();
+
+      Acts::EAxis axis1(min[0], max[0], nBins[0]);
+      Acts::EAxis axis2(min[1], max[1], nBins[1]);
+
+      // Build the grid and fill it with data
+      MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
+
+      for (size_t bin = 0; bin < mmat.size(); bin++) {
+        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
+                                       mmat[bin][3], mmat[bin][4])
+                            .classificationNumbers();
+      }
+      MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
+      vMaterial =
+          new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>(
+              std::move(matMap), bUtility);
+    } else if (bUtility.dimensions() == 3) {
+      std::function<Acts::Vector3D(Acts::Vector3D)> transfoGlobalToLocal;
+      Acts::Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
+
+      Acts::Grid3D::point_t min = grid.minPosition();
+      Acts::Grid3D::point_t max = grid.maxPosition();
+      Acts::Grid3D::index_t nBins = grid.numLocalBins();
+
+      Acts::EAxis axis1(min[0], max[0], nBins[0]);
+      Acts::EAxis axis2(min[1], max[1], nBins[1]);
+      Acts::EAxis axis3(min[2], max[2], nBins[2]);
+
+      // Build the grid and fill it with data
+      MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
+
+      for (size_t bin = 0; bin < mmat.size(); bin++) {
+        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
+                                       mmat[bin][3], mmat[bin][4])
+                            .classificationNumbers();
+      }
+      MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
+      vMaterial =
+          new Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>(
+              std::move(matMap), bUtility);
+    }
+  }
+  // return what you have
+  return vMaterial;
+}
+
 json Acts::JsonGeometryConverter::trackingGeometryToJson(
     const Acts::TrackingGeometry& tGeometry) {
   DetectorRep detRep;
@@ -350,6 +450,14 @@ void Acts::JsonGeometryConverter::convertToRep(
       convertToRep(detRep, *vol);
     }
   }
+  // there are dense volumes
+  if (!tVolume.denseVolumes().empty()) {
+    // loop over the volumes
+    for (auto& vol : tVolume.denseVolumes()) {
+      // recursive call
+      convertToRep(detRep, *vol);
+    }
+  }
   // Get the volume Id
   Acts::GeometryID volumeID = tVolume.geoID();
   geo_id_value vid = volumeID.volume();
@@ -357,6 +465,10 @@ void Acts::JsonGeometryConverter::convertToRep(
   // Write the material if there's one
   if (tVolume.volumeMaterial() != nullptr) {
     volRep.material = tVolume.volumeMaterial();
+  } else if (m_cfg.processnonmaterial == true) {
+    Acts::BinUtility bUtility = DefaultBin(tVolume);
+    Acts::IVolumeMaterial* bMaterial = new Acts::ProtoVolumeMaterial(bUtility);
+    volRep.material = bMaterial;
   }
   // there are confied layers
   if (tVolume.confinedLayers() != nullptr) {
@@ -571,7 +683,122 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       smj[binkeys[ibin]] = binj;
     }
   }
+  return smj;
+}
 
+json Acts::JsonGeometryConverter::volumeMaterialToJson(
+    const Acts::IVolumeMaterial& vMaterial) {
+  json smj;
+  // A bin utility needs to be written
+  const Acts::BinUtility* bUtility = nullptr;
+  // Check if we have a proto material
+  auto pvMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(&vMaterial);
+  if (pvMaterial != nullptr) {
+    // Type is proto material
+    smj[m_cfg.typekey] = "proto";
+    // by default the protoMaterial is not used for mapping
+    smj[m_cfg.mapkey] = false;
+    bUtility = &(pvMaterial->binUtility());
+  } else {
+    // Now check if we have a homogeneous material
+    auto hvMaterial =
+        dynamic_cast<const Acts::HomogeneousVolumeMaterial*>(&vMaterial);
+    if (hvMaterial != nullptr) {
+      // type is homogeneous
+      smj[m_cfg.typekey] = "homogeneous";
+      smj[m_cfg.mapkey] = true;
+      if (m_cfg.writeData) {
+        // write out the data, it's a [[[X0,L0,Z,A,rho,thickness]]]
+        auto mat = hvMaterial->material({0, 0, 0});
+        std::vector<std::vector<float>> mmat;
+        mmat.push_back(
+            {mat.X0(), mat.L0(), mat.Ar(), mat.Z(), mat.massDensity()});
+        smj[m_cfg.datakey] = mmat;
+      }
+    } else {
+      // Only option remaining: material map
+      auto bvMaterial2D = dynamic_cast<
+          const Acts::InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>*>(
+          &vMaterial);
+      // Now check if we have a 2D map
+      if (bvMaterial2D != nullptr) {
+        // type is binned
+        smj[m_cfg.typekey] = "interpolated2D";
+        smj[m_cfg.mapkey] = true;
+        bUtility = &(bvMaterial2D->binUtility());
+        // convert the data
+        if (m_cfg.writeData) {
+          std::vector<std::vector<float>> mmat;
+          MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
+          for (size_t bin = 0; bin < grid.size(); bin++) {
+            auto mat = Material(grid.at(bin));
+            if (mat != Material()) {
+              mmat.push_back(
+                  {mat.X0(), mat.L0(), mat.Ar(), mat.Z(), mat.massDensity()});
+            } else {
+              mmat.push_back({0, 0, 0, 0, 0});
+            }
+          }
+          smj[m_cfg.datakey] = mmat;
+        }
+      } else {
+        // Only option remaining: material map
+        auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
+            MaterialMapper<MaterialGrid3D>>*>(&vMaterial);
+        // Now check if we have a 3D map
+        if (bvMaterial3D != nullptr) {
+          // type is binned
+          smj[m_cfg.typekey] = "interpolated3D";
+          smj[m_cfg.mapkey] = true;
+          bUtility = &(bvMaterial3D->binUtility());
+          // convert the data
+          if (m_cfg.writeData) {
+            std::vector<std::vector<float>> mmat;
+            MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
+            for (size_t bin = 0; bin < grid.size(); bin++) {
+              auto mat = Material(grid.at(bin));
+              if (mat != Material()) {
+                mmat.push_back(
+                    {mat.X0(), mat.L0(), mat.Ar(), mat.Z(), mat.massDensity()});
+              } else {
+                mmat.push_back({0, 0, 0, 0, 0});
+              }
+            }
+            smj[m_cfg.datakey] = mmat;
+          }
+        }
+      }
+    }
+  }
+  // add the bin utility
+  if (bUtility != nullptr) {
+    std::vector<std::string> binkeys = {m_cfg.bin0key, m_cfg.bin1key,
+                                        m_cfg.bin2key};
+    // loop over dimensions and write
+    auto& binningData = bUtility->binningData();
+    // loop over the dimensions
+    for (size_t ibin = 0; ibin < binningData.size(); ++ibin) {
+      json binj;
+      auto cbData = binningData[ibin];
+      binj.push_back(Acts::binningValueNames[cbData.binvalue]);
+      if (cbData.option == Acts::closed) {
+        binj.push_back("closed");
+      } else {
+        binj.push_back("open");
+      }
+      binj.push_back(cbData.bins());
+      // If protoMaterial has a non uniform binning (non default) then it is
+      // used by default in the mapping
+      if (smj[m_cfg.typekey] == "proto" && cbData.bins() > 1)
+        smj[m_cfg.mapkey] = true;
+      // If it's not a proto map, write min / max
+      if (smj[m_cfg.typekey] != "proto") {
+        std::pair<double, double> minMax = {cbData.min, cbData.max};
+        binj.push_back(minMax);
+      }
+      smj[binkeys[ibin]] = binj;
+    }
+  }
   return smj;
 }
 
@@ -694,6 +921,41 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
                            Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
                            Acts::open, Acts::binR);
+  }
+  return bUtility;
+}
+
+Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
+    const Acts::TrackingVolume& volume) {
+  Acts::BinUtility bUtility;
+
+  auto cyBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&(volume.volumeBounds()));
+  auto cuBounds =
+      dynamic_cast<const CuboidVolumeBounds*>(&(volume.volumeBounds()));
+
+  if (cyBounds != nullptr) {
+    bUtility += BinUtility(1, cyBounds->get(CylinderVolumeBounds::eMinR),
+                           cyBounds->get(CylinderVolumeBounds::eMaxR),
+                           Acts::open, Acts::binR);
+    bUtility +=
+        BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
+                   cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
+                   Acts::closed, Acts::binPhi);
+    bUtility +=
+        BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                   cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                   Acts::open, Acts::binZ);
+  } else if (cuBounds != nullptr) {
+    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
+                           cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
+                           Acts::open, Acts::binX);
+    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
+                           cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
+                           Acts::closed, Acts::binY);
+    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
+                           cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
+                           Acts::open, Acts::binZ);
   }
   return bUtility;
 }

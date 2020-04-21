@@ -1,16 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// IVolumeMaterial.hpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
+
+#include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -30,7 +29,22 @@ class IVolumeMaterial {
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  virtual const Material& material(const Vector3D& position) const = 0;
+  virtual const Material material(const Vector3D& position) const = 0;
+
+  /// @brief output stream operator
+  ///
+  /// Prints information about this object to the output stream using the
+  /// virtual IVolumeeMaterial::toStream method
+  ///
+  /// @return modified output stream object
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const IVolumeMaterial& vm) {
+    vm.toStream(out);
+    return out;
+  }
+
+  /// Output Method for std::ostream, to be overloaded by child classes
+  virtual std::ostream& toStream(std::ostream& sl) const = 0;
 };
 
 }  // namespace Acts

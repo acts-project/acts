@@ -29,7 +29,8 @@ struct DenseEnvironmentExtension {
   /// Particles momentum at k1
   double initialMomentum = 0.;
   /// Material that will be passed
-  Material const* material = nullptr;
+  /// TODO : Might not be needed anymore
+  Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
   std::array<double, 4> dLdl;
   /// q/p at each sub-step
@@ -95,7 +96,7 @@ struct DenseEnvironmentExtension {
       // Set up container for energy loss
       auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
       Vector3D position = stepper.position(state.stepping);
-      material = &(volumeMaterial->material(position));
+      material = (volumeMaterial->material(position));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = stepper.charge(state.stepping) / initialMomentum;
@@ -348,7 +349,7 @@ struct DenseEnvironmentExtension {
   void initializeEnergyLoss(const propagator_state_t& state) {
     energy[0] = std::hypot(initialMomentum, state.options.mass);
     // use unit length as thickness to compute the energy loss per unit length
-    Acts::MaterialProperties slab(*material, 1);
+    Acts::MaterialProperties slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, state.options.absPdgCode,
