@@ -309,11 +309,7 @@ class CombinatorialKalmanFilter {
       // Initialization:
       // - Only when track states are not set
       if (!result.initialized) {
-        // -> Move the TrackState vector
-        // -> Feed the KalmanSequencer with the measurements to peform track
-        // finding
         ACTS_VERBOSE("Initializing");
-        initialize(state, stepper, result);
         result.initialized = true;
       }
 
@@ -335,8 +331,8 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      // Stopping forward filtering:
-      // - When navigation breaks and no active tip is present
+      // Reset propagation state:
+      // - When navigation breaks and there is stil active tip present after recording&removing track tips on current surface 
       if (state.navigation.navigationBreak and not result.forwardFiltered) {
         // Record the tips on current surface as trajectory entry indices
         // (taking advantage of fact that those tips are consecutive in list of
@@ -447,18 +443,6 @@ class CombinatorialKalmanFilter {
       }      // if forward filtering is done
     }
 
-    /// @brief CombinatorialKalmanFilter actor operation : initialize
-    ///
-    /// @tparam propagator_state_t is the type of Propagagor state
-    /// @tparam stepper_t Type of the stepper
-    ///
-    /// @param state is the mutable propagator state object
-    /// @param stepper The stepper in use
-    /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
-    void initialize(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    result_type& /*result*/) const {}
-
     /// @brief Kalman actor operation : reset propagation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -475,8 +459,10 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
       state.navigation.startSurface = &currentState.referenceSurface();
+      if(state.navigation.startSurface->associatedLayer() != nullptr){
       state.navigation.startLayer =
           state.navigation.startSurface->associatedLayer();
+      }
       state.navigation.startVolume =
           state.navigation.startLayer->trackingVolume();
       state.navigation.targetSurface = targetSurface;
@@ -567,26 +553,25 @@ class CombinatorialKalmanFilter {
             // neighboring state
             bool predictedShared = (neighborTip != SIZE_MAX);
 
-            // Determine if uncalibrated&calibrated measurement are already
+            // Determine if uncalibrated measurement are already
             // contained in other track state
-            bool measurementShared = false;
-            size_t sharedMeasurementTip = SIZE_MAX;
+            bool sourcelinkShared = false;
+            size_t sharedTip = SIZE_MAX;
             auto index_it = sourcelinkTipsOnSurface.find(index);
             if (index_it != sourcelinkTipsOnSurface.end()) {
-              measurementShared = true;
-              sharedMeasurementTip = index_it->second;
+              sourcelinkShared = true;
+              sharedTip = index_it->second;
             }
 
             // Add a measurement/outlier track state proxy in multi trajectory
             // No storage allocation for:
-            // -> predicted parameter and uncalibrated/calibrated measurement if
+            // -> predicted parameter and uncalibrated measurement if
             // already stored
             // -> filtered parameter for outlier
             auto stateMask =
                 (predictedShared ? ~TrackStatePropMask::Predicted
                                  : TrackStatePropMask::All) &
-                (measurementShared ? ~(TrackStatePropMask::Uncalibrated |
-                                       TrackStatePropMask::Calibrated)
+                (sourcelinkShared ? ~TrackStatePropMask::Uncalibrated
                                    : TrackStatePropMask::All) &
                 (isOutlier ? ~TrackStatePropMask::Filtered
                            : TrackStatePropMask::All);
@@ -594,11 +579,11 @@ class CombinatorialKalmanFilter {
             // Add measurement or outlier track state to the multitrajectory
             auto addStateRes = addSourcelinkState(
                 stateMask, boundState, sourcelinks.at(index), isOutlier, result,
-                state.geoContext, neighborTip, sharedMeasurementTip);
+                state.geoContext, neighborTip, sharedTip);
             if (addStateRes.ok()) {
-              auto [currentTip, tipState] = addStateRes.value();
+              const auto& [currentTip, tipState] = addStateRes.value();
               // Remember the track state tip for this stored source link
-              if (not measurementShared) {
+              if (not sourcelinkShared) {
                 auto& sourcelinkTips = result.sourcelinkTips[surface];
                 sourcelinkTips.emplace(index, currentTip);
               }
@@ -736,7 +721,7 @@ class CombinatorialKalmanFilter {
     /// @param geoContext The geometry context (needed for Kalman update)
     /// @param neighborTip The neighbor state tip on this surface (the predicted
     /// parameters could be shared between neighbors)
-    /// @param sharedMeasurementTip The shared measurement tip
+    /// @param sharedTip The tip of state with shared source link
     ///
     /// @return The tip of added state and its state
     Result<std::pair<size_t, TipState>> addSourcelinkState(
@@ -744,7 +729,7 @@ class CombinatorialKalmanFilter {
         const source_link_t& sourcelink, bool isOutlier, result_type& result,
         std::reference_wrapper<const GeometryContext> geoContext,
         size_t neighborTip = SIZE_MAX,
-        size_t sharedMeasurementTip = SIZE_MAX) const {
+        size_t sharedTip = SIZE_MAX) const {
       // Retrieve the tip state and remove the last tip from active tips
       size_t prevTip = SIZE_MAX;
       TipState tipState;
@@ -776,26 +761,24 @@ class CombinatorialKalmanFilter {
       trackStateProxy.pathLength() = pathLength;
 
       // Assign the uncalibrated&calibrated measurement to the track
-      // state (check if they are already stored in other states)
+      // state (the uncalibrated could be already stored in other states)
       if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Uncalibrated)) and
-          sharedMeasurementTip != SIZE_MAX) {
-        // The uncalibrated&calibrated are already stored, just set the
+          sharedTip != SIZE_MAX) {
+        // The uncalibrated are already stored, just set the
         // index
-        auto sharedMeasurement =
-            result.fittedStates.getTrackState(sharedMeasurementTip);
+        auto shared =
+            result.fittedStates.getTrackState(sharedTip);
         trackStateProxy.data().iuncalibrated =
-            sharedMeasurement.data().iuncalibrated;
-        trackStateProxy.data().icalibrated =
-            sharedMeasurement.data().icalibrated;
+            shared.data().iuncalibrated;
       } else {
         trackStateProxy.uncalibrated() = sourcelink;
+      }
         std::visit(
             [&](const auto& calibrated) {
               trackStateProxy.setCalibrated(calibrated);
             },
             m_calibrator(trackStateProxy.uncalibrated(),
                          trackStateProxy.predicted()));
-      }
 
       // Get and set the type flags
       auto& typeFlags = trackStateProxy.typeFlags();
@@ -990,7 +973,7 @@ class CombinatorialKalmanFilter {
       // Get the index of measurement states;
       std::vector<size_t> measurementIndices;
       auto lastState = result.fittedStates.getTrackState(currentTip);
-      if (lastState.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (lastState.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
         measurementIndices.push_back(currentTip);
       }
       // Count track states to be smoothed
@@ -1004,10 +987,10 @@ class CombinatorialKalmanFilter {
           nStates++;
         }
         size_t iprevious = st.previous();
-        if (iprevious != Acts::detail_lt::IndexData::kInvalid) {
+        if (iprevious != detail_lt::IndexData::kInvalid) {
           auto previousState = result.fittedStates.getTrackState(iprevious);
           if (previousState.typeFlags().test(
-                  Acts::TrackStateFlag::MeasurementFlag)) {
+                  TrackStateFlag::MeasurementFlag)) {
             measurementIndices.push_back(iprevious);
           }
         }
