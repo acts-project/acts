@@ -9,7 +9,6 @@
 #include <cmath>
 #include <numeric>
 #include <type_traits>
-#include <chrono>
 
 #include "Acts/Seeding/SeedFilter.hpp"
 
@@ -40,10 +39,8 @@ template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t> >  
 Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const{
-  std::vector<Seed<external_spacepoint_t>> outputVec;
-  
-  for (auto spM : middleSPs) {
-    
+  std::vector<Seed<external_spacepoint_t>> outputVec;  
+  for (auto spM : middleSPs) {    
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
@@ -109,7 +106,6 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     if (compatTopSP.empty()) {
       continue;
     }
-
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -245,7 +241,6 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
     m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
-
   }
   return outputVec;
 }
@@ -300,5 +295,5 @@ void Seedfinder<external_spacepoint_t, platform_t>::transformCoordinates(
            iDeltaR2;
     linCircleVec.push_back(l);
   }
-} 
-}// namespace Acts
+}
+}  // namespace Acts

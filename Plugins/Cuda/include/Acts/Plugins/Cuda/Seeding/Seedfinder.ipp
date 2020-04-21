@@ -10,7 +10,6 @@
 #include <numeric>
 #include <type_traits>
 #include <algorithm>
-#include <chrono>
 #include <numeric>
 
 namespace Acts {
