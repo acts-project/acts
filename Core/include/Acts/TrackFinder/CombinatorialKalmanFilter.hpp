@@ -554,15 +554,15 @@ class CombinatorialKalmanFilter {
           for (const auto& index : result.sourcelinkCandidateIndices) {
             // Determine if predicted parameter is already contained in
             // neighboring state
-            bool predictedShared = (neighborTip != SIZE_MAX);
+            bool isPredictedShared = (neighborTip != SIZE_MAX);
 
             // Determine if uncalibrated measurement are already
             // contained in other track state
-            bool sourcelinkShared = false;
+            bool isSourcelinkShared = false;
             size_t sharedTip = SIZE_MAX;
             auto index_it = sourcelinkTipsOnSurface.find(index);
             if (index_it != sourcelinkTipsOnSurface.end()) {
-              sourcelinkShared = true;
+              isSourcelinkShared = true;
               sharedTip = index_it->second;
             }
 
@@ -572,10 +572,10 @@ class CombinatorialKalmanFilter {
             // already stored
             // -> filtered parameter for outlier
             auto stateMask =
-                (predictedShared ? ~TrackStatePropMask::Predicted
-                                 : TrackStatePropMask::All) &
-                (sourcelinkShared ? ~TrackStatePropMask::Uncalibrated
-                                  : TrackStatePropMask::All) &
+                (isPredictedShared ? ~TrackStatePropMask::Predicted
+                                   : TrackStatePropMask::All) &
+                (isSourcelinkShared ? ~TrackStatePropMask::Uncalibrated
+                                    : TrackStatePropMask::All) &
                 (isOutlier ? ~TrackStatePropMask::Filtered
                            : TrackStatePropMask::All);
 
@@ -586,7 +586,7 @@ class CombinatorialKalmanFilter {
             if (addStateRes.ok()) {
               const auto& [currentTip, tipState] = addStateRes.value();
               // Remember the track state tip for this stored source link
-              if (not sourcelinkShared) {
+              if (not isSourcelinkShared) {
                 auto& sourcelinkTips = result.sourcelinkTips[surface];
                 sourcelinkTips.emplace(index, currentTip);
               }
