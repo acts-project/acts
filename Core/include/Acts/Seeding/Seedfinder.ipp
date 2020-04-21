@@ -33,11 +33,8 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
-
-  t_metric = std::make_tuple(0,0,0,0);  
 }
   
-
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t> >  
@@ -252,11 +249,6 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   }
   return outputVec;
 }
-
-template< typename external_spacepoint_t, typename platform_t >
-std::tuple< double, double, double, double >
-Seedfinder<external_spacepoint_t, platform_t>::getTimeMetric() { return t_metric; }
-
   
 template <typename external_spacepoint_t, typename platform_t>
 void Seedfinder<external_spacepoint_t, platform_t>::transformCoordinates(
