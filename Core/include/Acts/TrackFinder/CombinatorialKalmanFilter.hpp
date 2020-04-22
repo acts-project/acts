@@ -540,9 +540,9 @@ class CombinatorialKalmanFilter {
                      << sourcelinkSelectionRes.error());
           return sourcelinkSelectionRes.error();
         }
+
         // Remember the tip of the neighbor state on this surface
         size_t neighborTip = SIZE_MAX;
-
         // Loop over the selected source links
         for (const auto& index : result.sourcelinkCandidateIndices) {
           // Determine if predicted parameter is already contained in
@@ -645,8 +645,8 @@ class CombinatorialKalmanFilter {
         if (tipState.nMeasurements > 0 and
             (isSensitive or (not isSensitive and smoothing))) {
           // No source links on surface, add either hole or passive material
-          // TrackState. No storage allocation for
-          // uncalibrated/calibrated measurement and filtered parameter
+          // TrackState. No storage allocation for uncalibrated/calibrated
+          // measurement and filtered parameter
           auto stateMask =
               ~(TrackStatePropMask::Uncalibrated |
                 TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
