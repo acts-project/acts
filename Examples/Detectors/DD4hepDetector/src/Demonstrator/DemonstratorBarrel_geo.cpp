@@ -172,7 +172,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
       }
 
       // Place the modules
-      for (int iphi = 0; iphi < nphi; ++iphi) {
+      for (unsigned int iphi = 0; iphi < nphi; ++iphi) {
         double phi = phi0 + iphi * deltaPhi;
         std::string moduleName = layerName + _toString((int)iphi, "module%d");
         Position trans(r * cos(phi), r * sin(phi), 0.);

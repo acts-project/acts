@@ -39,7 +39,7 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
                       oddd.material(x_sub.materialStr()));
     foamVolume.setVisAttributes(oddd, x_sub.visStr());
     // Place the volume in the stave
-    PlacedVolume placedFoam = staveAssembly.placeVolume(
+    staveAssembly.placeVolume(
         foamVolume,
         Position(x_sub.x_offset(), x_sub.y_offset(), x_sub.z_offset()));
 
@@ -50,7 +50,7 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
     pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
 
     // Place the pipe in the stave
-    PlacedVolume placedPipe = staveAssembly.placeVolume(
+    staveAssembly.placeVolume(
         pipeVolume, Transform3D(RotationX(0.5 * M_PI),
                                 Position(x_pipe.x_offset(), x_pipe.y_offset(),
                                          x_pipe.z_offset())));
@@ -68,7 +68,7 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
         cableVolume.setVisAttributes(oddd, x_cable.visStr());
 
         // Place the pipe in the stave
-        PlacedVolume placedCable = staveAssembly.placeVolume(
+        staveAssembly.placeVolume(
             cableVolume,
             Transform3D(
                 RotationX(0.5 * M_PI),
@@ -119,7 +119,8 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   // Create the module components
   xml_comp_t x_module = x_det.child(_U(module));
   double ylength = 0.;
-  auto module = assembleRectangularModule(oddd, sens, x_module, ylength);
+  auto module =
+      ODDModuleHelper::assembleRectangularModule(oddd, sens, x_module, ylength);
 
   // Place the modules into the stave
   double gap = x_stave.gap();
