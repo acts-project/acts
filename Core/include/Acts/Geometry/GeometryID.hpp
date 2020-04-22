@@ -14,15 +14,16 @@
 
 namespace Acts {
 
-/// Identifier for geometry nodes.
+/// Identifier for geometry nodes within the geometry hierarchy.
 ///
-/// Each identifier can be split info the following components:
+/// An identifier can be split into the following components. They define
+/// a hierarchy of objects starting from the high-level volumes:
 ///
-/// - Volumes                 - uses counting given by TrackingGeometry
-/// - (Boundary)  Surfaces    - counts through boundary surfaces
-/// - (Layer)     Surfaces    - counts confined layers
-/// - (Approach)  Surfaces    - counts approach surfaces
-/// - (Sensitive) Surfaces    - counts through sensitive surfaces
+/// - Volume
+/// - Boundary surfaces (for a volume)
+/// - Layers (confined within a volume)
+/// - Approach surfaces (for a layer)
+/// - Sensitive surfaces (confined to a layer, also called modules)
 ///
 class GeometryID {
  public:
