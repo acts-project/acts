@@ -23,9 +23,9 @@ struct SpacePoint {
 };
 
 bool operator==(SpacePoint a, SpacePoint b){
-  if (fabs(a.m_x/b.m_x-1) < 1e-7 &&
-      fabs(a.m_y/b.m_y-1) < 1e-7 &&
-      fabs(a.m_z/b.m_z-1) < 1e-7 &&
+  if (a.m_x==b.m_x &&
+      a.m_y==b.m_y &&
+      a.m_z==b.m_z &&
       a.surface == b.surface ){
     return true;
   }
