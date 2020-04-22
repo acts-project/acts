@@ -339,8 +339,8 @@ int main(int argc, char** argv) {
   }
 
   std::cout << nMatch << " seeds are matched" << std::endl;
-  std::cout << "Matching rate: " << float(nMatch)/nSeed_cpu*100 << "%" << std::endl;
-    
+  std::cout << "Matching rate: " << float(nMatch)/nSeed_cpu*100 << "%" << std::endl;  
+  
   if (!quiet) {
     std::cout << "CPU Seed result:" << std::endl;
     
@@ -380,7 +380,9 @@ int main(int argc, char** argv) {
     }
   }
   
- 
+  std::cout << std::endl;
+  std::cout << std::endl;
+  
   return 0;
 }
 
