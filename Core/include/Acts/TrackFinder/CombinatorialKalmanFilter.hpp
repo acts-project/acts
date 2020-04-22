@@ -417,7 +417,7 @@ class CombinatorialKalmanFilter {
                            << result.trackTips.at(result.iSmoothed));
               // Transport & bind the parameter to the final surface
               auto fittedState =
-                  stepper.boundState(state.stepping, *targetSurface, true);
+                  stepper.boundState(state.stepping, *targetSurface);
               // Assign the fitted parameters
               result.fittedParameters.emplace(
                   result.trackTips.at(result.iSmoothed),
@@ -521,7 +521,7 @@ class CombinatorialKalmanFilter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Transport & bind the state to the current surface
-        auto boundState = stepper.boundState(state.stepping, *surface, true);
+        auto boundState = stepper.boundState(state.stepping, *surface);
         auto boundParams = std::get<BoundParameters>(boundState);
 
         // Get all source links on surface
@@ -656,16 +656,14 @@ class CombinatorialKalmanFilter {
           size_t currentTip = SIZE_MAX;
           if (isSensitive) {
             // Transport & bind the state to the current surface
-            auto boundState =
-                stepper.boundState(state.stepping, *surface, true);
+            auto boundState = stepper.boundState(state.stepping, *surface);
             // Add a hole track state to the multitrajectory
             currentTip = addHoleState(stateMask, boundState, result, prevTip);
             // Incremet of number of holes
             tipState.nHoles++;
           } else {
             // Transport & get curvilinear state instead of bound state
-            auto curvilinearState =
-                stepper.curvilinearState(state.stepping, true);
+            auto curvilinearState = stepper.curvilinearState(state.stepping);
             // Add a passive material track state to the multitrajectory
             currentTip =
                 addPassiveState(stateMask, curvilinearState, result, prevTip);
