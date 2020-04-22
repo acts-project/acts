@@ -71,11 +71,12 @@ static inline std::string test(IVisualization& helper) {
   */
 
   // Constructor from parameter vector
-  BoundParameters ataPlane(gctx, std::nullopt, pars, plane);
+  // BoundParameters(gctx, std::nullopt, pars, plane);
 
-  Visualization::drawBoundParameters(helper, ataPlane, gctx, momentumScale,
-                                     localErrorScale, directionErrorScale, true,
-                                     72, pcolor, scolor);
+  Visualization::drawBoundParameters(
+      helper, BoundParameters(gctx, std::nullopt, pars, plane), gctx,
+      momentumScale, localErrorScale, directionErrorScale, true, 72, pcolor,
+      scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);
