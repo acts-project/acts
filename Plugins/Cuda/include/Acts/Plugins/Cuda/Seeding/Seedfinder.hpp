@@ -13,7 +13,7 @@
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
-#include "Acts/Plugins/Cuda/Cuda.h"
+#include "Acts/Plugins/Cuda/Cuda.hpp"
 
 #include <array>
 #include <list>

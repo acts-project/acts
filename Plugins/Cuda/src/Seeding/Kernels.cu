@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
-#include "Acts/Plugins/Cuda/Cuda.h"
+#include "Acts/Plugins/Cuda/Cuda.hpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <iostream>

@@ -28,7 +28,6 @@
 #include "SpacePoint.hpp"
 
 #include "Acts/Plugins/Cuda/Seeding/Seedfinder.hpp"
-#include "Acts/Plugins/Cuda/Cuda.h"
 
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
