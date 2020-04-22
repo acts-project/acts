@@ -58,7 +58,7 @@ void buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
                            oddd.material(x_routing.materialStr()));
           boxVolume.setVisAttributes(oddd, x_box.visStr());
 
-          PlacedVolume pacedBox = cableboxAssembly.placeVolume(
+          cableboxAssembly.placeVolume(
               boxVolume, Position(side * (rmax + x_box.dz()), 0., 0.));
         }
 
@@ -69,11 +69,11 @@ void buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
 
         for (unsigned int icable = 0; icable < n * ib; ++icable) {
           // Place the pipe in the stave
-          PlacedVolume placedCable = cableboxAssembly.placeVolume(
+          cableboxAssembly.placeVolume(
               cableVolume, Position(0., (-n * ib + 1 + 2 * icable) * rmax, 0.));
         }
         // Place the pipe in the stave
-        PlacedVolume placedCableBox = barrelVolume.placeVolume(
+        barrelVolume.placeVolume(
             cableboxAssembly,
             Transform3D(RotationZ(phi) * RotationY(0.5 * M_PI),
                         Position(xpos, ypos, zpos)));
@@ -126,8 +126,8 @@ void buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
                          oddd.material(x_routing.materialStr()));
         boxVolume.setVisAttributes(oddd, x_box.visStr());
 
-        PlacedVolume pacedBox = cableboxAssembly.placeVolume(
-            boxVolume, Position(rmax + x_box.dz(), 0., 0.));
+        cableboxAssembly.placeVolume(boxVolume,
+                                     Position(rmax + x_box.dz(), 0., 0.));
       }
 
       Tube cable(rmin, rmax, 0.5 * clength);
@@ -137,11 +137,11 @@ void buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
 
       for (unsigned int icable = 0; icable < n * iec; ++icable) {
         // Place the pipe in the stave
-        PlacedVolume placedCable = cableboxAssembly.placeVolume(
+        cableboxAssembly.placeVolume(
             cableVolume, Position(0., (-n * iec + 1 + 2 * icable) * rmax, 0.));
       }
       // Place the pipe in the stave
-      PlacedVolume placedCableBox = endcapVolume.placeVolume(
+      endcapVolume.placeVolume(
           cableboxAssembly,
           Transform3D(RotationZ(+phi), Position(xpos, ypos, zpos)));
     }
@@ -178,8 +178,8 @@ void buildSupportCylinder(Detector& oddd, volume_t& motherVolume,
           oddd.material(x_support.materialStr()));
       supportVolume.setVisAttributes(oddd, x_support.visStr());
       // Place the support structure
-      PlacedVolume placedSupport = motherVolume.placeVolume(
-          supportVolume, Position(0., 0., side * x_support.z_offset()));
+      motherVolume.placeVolume(supportVolume,
+                               Position(0., 0., side * x_support.z_offset()));
     }
   }
 }
@@ -204,8 +204,6 @@ void buildCoolingRings(Detector& oddd, volume_t& motherVolume,
     double nPhi = x_cooling_ring.nphi();
     double phiStep = 2. * M_PI / nPhi;
     double zpos = x_cooling_ring.z_offset();
-    double rmin = x_cooling_ring.rmin();
-    double rmax = x_cooling_ring.rmax();
     double dz = 2 * (r * M_PI / nPhi - x_cooling_ring.gap());
 
     // Create the segments around the ring
@@ -220,7 +218,7 @@ void buildCoolingRings(Detector& oddd, volume_t& motherVolume,
       double phi = iphi * phiStep;
       Position segementPos(r * cos(phi), r * sin(phi), zpos);
       // Place the support structure
-      PlacedVolume placedSegment = motherVolume.placeVolume(
+      motherVolume.placeVolume(
           coolingSegement,
           Transform3D(RotationY(0.5 * M_PI) * RotationX(0.5 * M_PI - phi),
                       segementPos));
