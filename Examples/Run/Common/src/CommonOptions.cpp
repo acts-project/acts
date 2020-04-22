@@ -11,7 +11,6 @@
 
 #include <boost/tokenizer.hpp>
 #include <exception>
-#include <sstream>
 #include <fstream>
 #include <system_error>
 
