@@ -82,6 +82,7 @@ class StraightLineStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
+        jacToGlobal = BoundToFreeMatrix::Zero();
         surface.initJacobianToGlobal(gctx, *jacToGlobal, pos, dir,
                                      par.parameters());
         jacobian.emplace<0>(BoundMatrix::Identity());
@@ -132,7 +133,7 @@ class StraightLineStepper {
   ActsMatrixD<7, 8> jacAngleToDir;
   
     /// Jacobian from local to the global frame
-    std::optional<BoundToFreeMatrix> jacToGlobal;
+    std::optional<BoundToFreeMatrix> jacToGlobal = std::nullopt;
 
     /// Pure transport jacobian part from runge kutta integration
     FreeMatrix jacTransport = FreeMatrix::Identity();

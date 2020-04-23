@@ -252,6 +252,19 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
   jacobianLocalToGlobal(6, eBoundTheta) = -sinTheta;
   jacobianLocalToGlobal(7, eBoundQOverP) = 1;
 }
+
+void reinitializeJacobians(FreeMatrix& transportJacobian,
+                           FreeVector& derivatives,
+                           std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,
+                           ActsMatrixD<8, 7>& jacobianDirToAngle, ActsMatrixD<7, 8>& jacobianAngleToDir,
+                           const Vector3D& direction) {
+	  // Reset the jacobians
+  transportJacobian = FreeMatrix::Identity();
+  derivatives = FreeVector::Zero();
+  jacobianLocalToGlobal = std::nullopt;
+  jacobianDirToAngle = detail::jacobianDirectionsToAngles(direction);
+  jacobianAngleToDir = detail::jacobianAnglesToDirections(direction);
+						}
 }  // namespace
 
 namespace detail {
@@ -345,7 +358,7 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
                                   FreeMatrix& transportJacobian,
                                   FreeVector& derivatives,
                                   std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,
-                                  const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir,
+                                  ActsMatrixD<8, 7>& jacobianDirToAngle, ActsMatrixD<7, 8>& jacobianAngleToDir,
                                   const FreeVector& parameters,
                                   bool covTransport, double accumulatedPath) {
   const Vector3D& direction = parameters.segment<3>(eFreeDir0);
@@ -375,7 +388,7 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
 
 FreeState freeState(Covariance& covarianceMatrix, Jacobian& jacobian, FreeMatrix& transportJacobian,
                                   FreeVector& derivatives,
-                                  std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters, bool covTransport, double accumulatedPath) {
+                                  std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, ActsMatrixD<8, 7>& jacobianDirToAngle, ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters, bool covTransport, double accumulatedPath) {
   // Transport the covariance to here
   std::optional<FreeSymMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -392,7 +405,7 @@ FreeState freeState(Covariance& covarianceMatrix, Jacobian& jacobian, FreeMatrix
 void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
                          FreeMatrix& transportJacobian, FreeVector& derivatives,
                          std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,
-                         const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir,
+                         ActsMatrixD<8, 7>& jacobianDirToAngle, ActsMatrixD<7, 8>& jacobianAngleToDir,
                          const Vector3D& direction, bool toLocal) {
   // Test if we started on a surface
 if(jacobianLocalToGlobal.has_value())
@@ -436,12 +449,12 @@ else
 }
 
 // Reinitialize jacobian components
-// TODO: Jacobian reset must occur in any case
 if(toLocal)
   reinitializeJacobians(transportJacobian, derivatives, *jacobianLocalToGlobal,
                         direction);
 	else
-		jacobianLocalToGlobal = std::nullopt;
+	reinitializeJacobians(transportJacobian, derivatives, jacobianLocalToGlobal, jacobianDirToAngle, jacobianAngleToDir,
+                        direction);
 }
 
 void covarianceTransport(

@@ -101,7 +101,7 @@ std::tuple<BoundTrackParameters, JacobianToBoundPars, double> boundState(
 std::tuple<CurvilinearTrackParameters, Jacobian, double> curvilinearState(
     Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters,
+    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, ActsMatrixD<8, 7>& jacobianDirToAngle, ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters,
     bool covTransport, double accumulatedPath);
 
 /// Create and return a free state at the current position
@@ -118,7 +118,7 @@ std::tuple<CurvilinearTrackParameters, Jacobian, double> curvilinearState(
 ///   - the stepweise jacobian towards it (from last location)
 ///   - and the path length (from start - for ordering)
 std::tuple<FreeParameters, Jacobian, double> freeState(Covariance& covarianceMatrix, Jacobian& jacobian, FreeMatrix& transportJacobian,
-                                  FreeVector& derivatives, std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters, bool covTransport, double accumulatedPath);
+                                  FreeVector& derivatives, std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, ActsMatrixD<8, 7>& jacobianDirToAngle, ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters, bool covTransport, double accumulatedPath);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space. It treats different scenarios:
@@ -161,7 +161,7 @@ void covarianceTransport(
 void covarianceTransport(Covariance& covarianceMatrix,
                          Jacobian& jacobian, FreeMatrix& transportJacobian,
                          FreeVector& derivatives,
-                         std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,  const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir,
+                         std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,  ActsMatrixD<8, 7>& jacobianDirToAngle, ActsMatrixD<7, 8>& jacobianAngleToDir,
                          const Vector3D& direction, bool toLocal = true);
 }  // namespace detail
 }  // namespace Acts

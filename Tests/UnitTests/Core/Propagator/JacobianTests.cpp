@@ -23,6 +23,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include "Acts/Propagator/StraightLineStepper.hpp"
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
