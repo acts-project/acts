@@ -110,7 +110,7 @@ class StraightLineStepper {
         : pos(par.position()),
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
-          q((par.charge() != 0.) ? par.charge() : 1.),
+          q(par.charge()),
           t(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
