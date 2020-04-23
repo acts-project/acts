@@ -20,11 +20,11 @@ struct PointwiseMaterialInteraction {
   const Surface* surface;
 
   /// The particle position at the interaction.
-  const Vector3D position = Vector3D(0., 0., 0);
+  const Vector3D pos = Vector3D(0., 0., 0);
   /// The particle time at the interaction.
   const double time = 0.0;
   /// The particle direction at the interaction.
-  const Vector3D direction = Vector3D(0., 0., 0);
+  const Vector3D dir = Vector3D(0., 0., 0);
   /// The particle momentum at the interaction
   const double momentum;
   /// The particle charge
@@ -41,7 +41,7 @@ struct PointwiseMaterialInteraction {
   const NavigationDirection nav;
 
   /// The effective, passed material properties including the path correction.
-  MaterialProperties materialProperties;
+  MaterialProperties slab;
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection;
   /// Expected phi variance due to the interactions.
