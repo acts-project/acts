@@ -1,0 +1,6 @@
+add_subdirectory(Csv)
+add_subdirectory_if(HepMC3 ACTS_BUILD_EXAMPLES_HEPMC3)
+add_subdirectory(Json)
+add_subdirectory(Obj)
+add_subdirectory(Performance)
+add_subdirectory(Root)

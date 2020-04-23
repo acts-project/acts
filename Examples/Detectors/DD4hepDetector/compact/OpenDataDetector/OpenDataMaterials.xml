@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<materials>
+
+
+  <material name="Air">
+    <D type="density" unit="g/cm3" value="0.0012"/>
+    <fraction n="0.754" ref="N"/>
+    <fraction n="0.234" ref="O"/>
+    <fraction n="0.012" ref="Ar"/>
+  </material>
+
+  <material name="Vacuum">
+    <D type="density" unit="g/cm3" value="0.00000001" />
+    <fraction n="1" ref="H" />
+  </material>
+
+  <material Z="4" name="Beryllium" state="solid">
+        <MEE unit="eV" value="63.7"/>
+        <D unit="g/cm3" value="1.848"/>
+        <atom unit="g/mole" value="9.01218"/>
+        <fraction n="1" ref="Be"/>
+    </material>
+
+  <material name="Epoxy">
+    <D type="density" value="1.3" unit="g/cm3"/>
+    <composite n="44" ref="H"/>
+    <composite n="15" ref="C"/>
+    <composite n="7" ref="O"/>
+  </material>
+
+  <material name="Polystyrene">
+    <D value="1.032" unit="g/cm3"/>
+    <composite n="19" ref="C"/>
+    <composite n="21" ref="H"/>
+  </material>
+
+  <material name="Steel235">
+    <D value="7.85" unit="g/cm3"/>
+    <fraction n="0.998" ref="Fe"/>
+    <fraction n=".002" ref="C"/>
+  </material>
+
+  <material name="SiliconOxide">
+    <D type="density" value="2.65" unit="g/cm3"/>
+    <composite n="1" ref="Si"/>
+    <composite n="2" ref="O"/>
+  </material>
+
+  <material name="AluminumOxide">
+    <D type="density" value="3.89" unit="g/cm3"/>
+    <composite n="2" ref="Al"/>
+    <composite n="3" ref="O"/>
+  </material>
+
+  <material name="CarbonFoam">
+    <D type="density" value="0.245" unit="g/cm3"/>
+    <fraction n="0.65" ref="C"/>
+    <fraction n="0.35" ref="Epoxy"/>
+</material>
+
+  <material name="CarbonFiber">
+    <D type="density" value="1.5" unit="g/cm3"/>
+    <fraction n="0.65" ref="C"/>
+    <fraction n="0.35" ref="Epoxy"/>
+  </material>
+  
+  <material name="CarbonFiber_50D">
+    <D type="density" value="0.75" unit="g/cm3"/>
+    <fraction n="0.65" ref="C"/>
+    <fraction n="0.35" ref="Epoxy"/>
+  </material>  
+
+  <material name="PolystyreneFoam">
+    <D type="density" value="0.0056" unit="g/cm3"/>
+    <fraction n="1.0" ref="Polystyrene"/>
+  </material>
+
+  <material name="PE">
+    <D type="density" value="0.95" unit="g/cm3"/>
+    <fraction n="4" ref="H"/>
+    <fraction n="2" ref="C"/>
+  </material>
+
+  <material name="Kapton">
+    <D value="1.43" unit="g/cm3" />
+    <composite n="22" ref="C"/>
+    <composite n="10" ref="H" />
+    <composite n="2" ref="N" />
+    <composite n="5" ref="O" />
+  </material>
+
+
+  <material name="LAr">
+    <D value="1.396" unit="g/cm3" />
+    <composite n="1" ref="Ar"/>
+  </material>
+
+</materials>

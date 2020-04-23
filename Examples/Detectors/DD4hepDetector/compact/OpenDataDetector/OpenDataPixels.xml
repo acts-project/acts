@@ -1,0 +1,149 @@
+<detectors>
+    <!--EndcapN-->
+    <detector id="101" name="PixelEndcapN" type="ODDPixelEndcap" readout="PixelEndcapReadout" vis="invisible">
+        <dimensions name="PixelEndcapShape" rmin="pix_env_rmin" rmax="pix_env_rmax" dz="pix_e_dz" z="pix_e_nz"/>
+        <module name="PixelEndcapModule" vis="invisible">
+          <module_component name="Sensor" alpha="0." dx="16.8*mm" dy="72.*mm" dz="0.125*mm" x_offset="0." y_offset="0." z_offset="-0.3*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="Board"  alpha="0." dx="16*mm" dy="70*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="0.*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Connector" alpha="0." dx="3*mm" dy="60*mm" dz="0.15*mm" x_offset="0.*mm" y_offset="8.*mm" z_offset="0.3*mm" material="Al" vis="red" sensitive="false"/>
+        </module>
+        <ring id="0" r="76.*mm" nphi="40" z_offset="3.5*mm" phi0="0." gap="0.6*mm" vis="invisible"/>
+        <ring id="1" r="144.*mm" nphi="68" z_offset="-3.5*mm" phi0="0." gap="0.6*mm" vis="invisible"/>
+        <ring_support rmin="36.*mm" rmax="176.*mm" dz="2*mm" material="CarbonFiber" vis="CarbonFiber"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="50.*mm" gap="2.6*mm" nphi="32" z_offset="-4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="70.*mm" gap="3.6*mm" nphi="32" z_offset="-4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="90.*mm" gap="4.6*mm" nphi="32" z_offset="-4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="120.*mm" gap="6.1*mm" nphi="32" z_offset="+4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="145.*mm" gap="7.4*mm" nphi="32" z_offset="+4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="170.*mm" gap="8.5*mm" nphi="32" z_offset="+4.*mm" material="Ti" vis="orange"/>
+        <layer id="0" name="PixelEndcapN0" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-620.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="1" name="PixelEndcapN1" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-720.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="2" name="PixelEndcapN2" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-840.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="3" name="PixelEndcapN3" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-980.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="4" name="PixelEndcapN4" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-1120.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="5" name="PixelEndcapN5" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-1320.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="6" name="PixelEndcapN6" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="-1520.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <disk name="PixelEndplate" z_offset="-1950.*mm" rmin="40.*mm" rmax="189.*mm" dz="5*mm" material="CarbonFiber" vis="CarbonFiber">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </disk>
+        <support name="InnerSupportRail" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="000.*mm" nsides="1" vis="CarbonFiber"/>
+        <support name="OuterSupportRails" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="490.*mm" nsides="2" vis="CarbonFiber"/>                        
+        <services>
+          <cable_routing nphi="8" phi0="0." number="8" r="188.*mm" rmin="0.*mm" rmax="0.2*mm" z_offset="550.*mm" gap="5.*mm" material="Cu" vis="orange">
+            <box dz="0.25*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>
+          <cooling_routing nphi="8" phi0="0.3926" number="1" r="188.*mm" rmin="1.0*mm" rmax="1.1*mm" z_offset="550.*mm" gap="5.*mm" material="Ti" vis="orange"/>          
+        </services>  
+    </detector>
+    <!--Barrel-->
+    <detector id="100" name="PixelBarrel" type="ODDPixelBarrel" readout="PixelBarrelReadout" vis="invisible">
+        <dimensions name="PixelBarrelShape" rmin="pix_env_rmin" rmax="pix_env_rmax" dz="pix_b_dz" z="0.*mm"/>
+        <boundary_material surface="negative" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        <boundary_material surface="outer" binning="binPhi,binZ" bins0="mat_pix_barrel_bPhi" bins1="mat_pix_barrel_bZ"/>
+        <boundary_material surface="positive" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        <module name="PixelBarrelModule" vis="invisible">
+          <module_component name="Sensor" alpha="0." dx="16.8*mm" dy="72.*mm" dz="0.125*mm" x_offset="0." y_offset="0." z_offset="-1.8*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="Board" alpha="0." dx="16*mm" dy="70*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="-1.6*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Connector" alpha="0." dx="3*mm" dy="60*mm" dz="0.15*mm" x_offset="-8.*mm" y_offset="0." z_offset="-1.35*mm" material="Al" vis="red" sensitive="false"/>
+        </module>
+        <stave name="PixelBarrelStave" nmodules="14" gap="0.5*mm" vis="invisible">
+          <subtraction name="PixelBarrelStaveFoam" material="CarbonFoam" x_offset="0.*mm" y_offset="0.*mm" z_offset="0.5*mm" vis="CarbonFoam">
+             <trd name="FoamStructure" x1="6.*mm" x2="1.*mm" thickness="2.*mm" dz="15.*mm"/>
+             <tubs name="FoamCutout" rmin="0." rmax="1.2*mm"  z_offset="0.*mm" dz="20.*mm"/>
+         </subtraction>
+         <tube name="CoolingPipe" rmin="1.0*mm" rmax="1.1*mm" dz="20.*mm"  x_offset="0.*mm" y_offset="0.*mm" z_offset="0.5*mm" material="Ti" vis="orange" />
+         <eltube name="CableBundle" rmin="0.0*mm" rmax="0.25*mm" dz="50.*mm"  x_offset="-10.*mm" y_offset="0.*mm" z_offset="1.*mm" material="Cu" vis="orange" />
+        </stave>           
+        <layer id="0" name="PixelLayer0" rmin="28.*mm" r="34.*mm" rmax="44.*mm" outer_z="20.*mm" nphi="16" phi_tilt="0.12" phi0="0." vis="invisible">
+          <layer_material surface="outer" binning="binPhi,binZ" bins0="mat_pix_barrel_bPhi" bins1="mat_pix_barrel_bZ"/>
+          <support name="SupportCylinder" rmin="38.*mm" rmax="40.*mm" dz="500.*mm" material="CarbonFiber" z_offset="0.*mm" nsides="1" vis="CarbonFiber"/>
+        </layer>
+        <layer id="1" name="PixelLayer1" rmin="56.*mm" r="72.*mm" rmax="82.*mm" outer_z="20.*mm"  nphi="32" phi_tilt="0.12" phi0="0." vis="invisible">
+          <layer_material surface="outer" binning="binPhi,binZ" bins0="mat_pix_barrel_bPhi" bins1="mat_pix_barrel_bZ"/>
+          <support name="SupportCylinder" rmin="76.*mm" rmax="78.*mm" dz="500.*mm" material="CarbonFiber" z_offset="0.*mm" nsides="1" vis="CarbonFiber" />          
+        </layer>
+        <layer id="2" name="PixelLayer2" rmin="100.*mm" r="116.*mm" rmax="126.*mm" outer_z="20.*mm" nphi="52" phi_tilt="0.12" phi0="0." vis="invisible">
+          <layer_material surface="outer" binning="binPhi,binZ" bins0="mat_pix_barrel_bPhi" bins1="mat_pix_barrel_bZ"/>
+          <support name="SupportCylinder" rmin="120.*mm" rmax="122.*mm" dz="500.*mm" material="CarbonFiber" z_offset="0.*mm"  nsides="1" vis="CarbonFiber" />
+        </layer>
+        <layer id="3" name="PixelLayer3" rmin="160.*mm" r="172.*mm" rmax="182.*mm" outer_z="20.*mm" nphi="78" phi_tilt="0.12" phi0="0." vis="invisible">
+          <layer_material surface="outer" binning="binPhi,binZ" bins0="mat_pix_barrel_bPhi" bins1="mat_pix_barrel_bZ"/>
+          <support name="SupportCylinder" rmin="176.*mm" rmax="178.*mm" dz="500.*mm" material="CarbonFiber" z_offset="0.*mm"  nsides="1" vis="CarbonFiber"/>
+        </layer>
+        <support name="OuterSupportRails" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="550.*mm" nsides="2" vis="CarbonFiber">
+          <connector/>
+        </support>  
+        <support name="InnerSupportRails" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="200.*mm" nsides="2" vis="CarbonFiber"/>
+        <services>
+          <cable_routing nphi="8" phi0="0." number="8" rmin="0.*mm" rmax="0.25*mm" z_offset="550.*mm" gap="5.*mm" material="Cu" vis="orange">
+            <box dz="0.25*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>
+          <cooling_routing nphi="8" phi0="0.3926" number="1" rmin="1.0*mm" rmax="1.1*mm" z_offset="550.*mm" gap="5.*mm" material="Ti" vis="orange"/>          
+        </services>          
+    </detector>
+    <!--EndcapP-->
+    <detector id="102" name="PixelEndcapP" type="ODDPixelEndcap" readout="PixelEndcapReadout" vis="invisible">
+        <dimensions name="PixelEndcapShape" rmin="pix_env_rmin" rmax="pix_env_rmax" dz="pix_e_dz" z="pix_e_pz"/>
+        <module name="PixelEndcapModule" vis="invisible">
+          <module_component name="Sensor" alpha="0." dx="16.8*mm" dy="72.*mm" dz="0.125*mm" x_offset="0." y_offset="0." z_offset="-0.3*mm" material="Silicon" vis="Silicon" sensitive="true"/>
+          <module_component name="Board" alpha="0." dx="16*mm" dy="70*mm" dz="0.25*mm" x_offset="0." y_offset="0." z_offset="0*mm" material="Kapton" vis="Kapton" sensitive="false"/>
+          <module_component name="Connector" alpha="0." dx="3*mm" dy="60*mm" dz="0.15*mm" x_offset="0.*mm" y_offset="8.*mm" z_offset="0.3*mm" material="Al" vis="red" sensitive="false"/>
+        </module>
+        <ring id="0" r="76.*mm" nphi="40" z_offset="-3.5*mm" phi0="0." gap="0.6*mm"/>
+        <ring id="1" r="144.*mm" nphi="68" z_offset="3.5*mm" phi0="0." gap="0.6*mm"/>
+        <ring_support rmin="36.*mm" rmax="176.*mm" dz="2*mm" material="CarbonFiber" vis="CarbonFiber"/> 
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="50.*mm" gap="2.6*mm" nphi="32" z_offset="4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="70.*mm" gap="3.6*mm" nphi="32" z_offset="4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="90.*mm" gap="4.6*mm" nphi="32" z_offset="4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="120.*mm" gap="6.1*mm" nphi="32" z_offset="-4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="145.*mm" gap="7.4*mm" nphi="32" z_offset="-4.*mm" material="Ti" vis="orange"/>
+        <cooling_ring rmin="1.4*mm" rmax="1.6*mm" r="170.*mm" gap="8.5*mm" nphi="32" z_offset="-4.*mm" material="Ti" vis="orange"/>
+        <layer id="0" name="PixelEndcapP0" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="620.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="1" name="PixelEndcapP1" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="720.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="2" name="PixelEndcapP2" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="840.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="3" name="PixelEndcapP3" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="980.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="4" name="PixelEndcapP4" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="1120.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="5" name="PixelEndcapP5" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="1320.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <layer id="6" name="PixelEndcapP6" rmin="28.*mm" rmax="186.*mm" dz="20.*mm" z_offset="1520.*mm" vis="invisible">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </layer>
+        <disk name="PixelEndplate" z_offset="1950.*mm" rmin="40.*mm" rmax="189.*mm" dz="5*mm" material="CarbonFiber" vis="CarbonFiber">
+          <layer_material surface="representing" binning="binPhi,binR" bins0="mat_pix_endcap_bPhi" bins1="mat_pix_endcap_bR"/>
+        </disk>
+        <support name="InnerSupportRail" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="000.*mm" nsides="1" vis="CarbonFiber"/>
+        <support name="OuterSupportRails" rmin="190.*mm" rmax="200.*mm" dz="10.*mm" material="CarbonFiber" z_offset="490.*mm" nsides="2" vis="CarbonFiber"/>                        
+        <services>
+          <cable_routing nphi="8" phi0="0." number="8" r="188.*mm" rmin="0.*mm" rmax="0.2*mm" z_offset="550.*mm" gap="2.*mm" material="Cu" vis="orange">
+            <box dz="0.25*mm" material="CarbonFiber" vis="CarbonFiber"/>
+          </cable_routing>
+          <cooling_routing nphi="8" phi0="0.3926" number="1" r="188.*mm" rmin="1.0*mm" rmax="1.1*mm" z_offset="550.*mm" gap="2.*mm" material="Ti" vis="orange"/>          
+        </services>  
+  </detector>
+</detectors>
+
