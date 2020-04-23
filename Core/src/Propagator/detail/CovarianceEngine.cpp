@@ -64,7 +64,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
   jacToCurv(2, 5) = cosPhi * invSinTheta;
   jacToCurv(3, 4) = cosPhi * cosTheta;
   jacToCurv(3, 5) = sinPhi * cosTheta;
-  jacToCurv(3, 6) = -invSinTheta * (1. - cosTheta * cosTheta);
+  jacToCurv(3, 6) = -sinTheta;
   jacToCurv(4, 7) = 1.;
 
   return jacToCurv;
