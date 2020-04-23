@@ -19,27 +19,40 @@ struct PointwiseMaterialInteraction {
   /// Data from the propagation state
   const Surface* surface;
 
-  const Vector3D pos;
-  const double time;
-  const Vector3D dir;
+  /// The particle position at the interaction.
+  const Vector3D position = Vector3D(0., 0., 0);
+  /// The particle time at the interaction.
+  const double time = 0.0;
+  /// The particle direction at the interaction.
+  const Vector3D direction = Vector3D(0., 0., 0);
+  /// The particle momentum at the interaction
   const double momentum;
+  /// The particle charge
   const double q;
+  /// The particle q/p at the interaction
   const double qOverP;
-
+  /// The particle mass
   const double mass;
+  /// The particle pdg
   const int pdg;
+  /// The covariance transport decision at the interaction
   const bool performCovarianceTransport;
+  /// The navigation direction
   const NavigationDirection nav;
 
-  /// Data evaluated within this struct
-  MaterialProperties slab;
+  /// The effective, passed material properties including the path correction.
+  MaterialProperties materialProperties;
+  /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection;
-
+  /// Expected phi variance due to the interactions.
   double variancePhi = 0.;
+  /// Expected theta variance due to the interactions.
   double varianceTheta = 0.;
+  /// Expected q/p variance due to the interactions.
   double varianceQoverP = 0.;
-
+  /// The energy change due to the interaction.
   double Eloss = 0.;
+  /// The momentum after the interaction
   double nextP;
 
   /// @brief Contructor
