@@ -112,6 +112,7 @@ int main(int argc, char* argv[]) {
         return r;
       },
       1, toys);
+
   ACTS_INFO("Execution stats: " << propagation_bench_result);
   ACTS_INFO("average path length = " << totalPathLength / num_iters / 1_mm
                                      << "mm");
