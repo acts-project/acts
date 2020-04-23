@@ -366,7 +366,7 @@ ActsMatrixD<7, 8> jacobian = ActsMatrixD<7, 8>::Zero();
   jacobian(4, 5) = cosPhi * invSinTheta;
   jacobian(5, 4) = cosPhi * cosTheta;
   jacobian(5, 5) = sinPhi * cosTheta;
-  jacobian(5, 6) = -invSinTheta * (1. - cosTheta * cosTheta);
+  jacobian(5, 6) = -sinTheta;
 
   return jacobian;
 }
