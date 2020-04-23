@@ -230,7 +230,7 @@ class Propagator final {
   using FreeState = std::tuple<FreeTrackParameters, JacobianToFreePars, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
-  "Stepper does not fulfill stepper concept.");
+                "Stepper does not fulfill stepper concept.");
   static_assert(StepperConcept<stepper_t>,
                 "Stepper does not fulfill stepper concept.");
 

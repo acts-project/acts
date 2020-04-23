@@ -49,8 +49,8 @@ template <typename bfield_t,
 class EigenStepper {
  public:
   /// Jacobian, Covariance, States and B-field
-    using Jacobian =
-    std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
+  using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
+                                BoundToFreeMatrix, FreeMatrix>;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
   using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using FreeState = std::tuple<FreeTrackParameters, Jacobian, double>;
@@ -75,8 +75,9 @@ class EigenStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename parameters_t, std::enable_if_t<parameters_t::is_local_representation, int> = 0>
-	explicit State(std::reference_wrapper<const GeometryContext> gctx,
+    template <typename parameters_t,
+              std::enable_if_t<parameters_t::is_local_representation, int> = 0>
+    explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -105,7 +106,7 @@ class EigenStepper {
       }
     }
 
-	/// Constructor from the initial track parameters
+    /// Constructor from the initial track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
@@ -115,7 +116,9 @@ class EigenStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename parameters_t, std::enable_if_t<not parameters_t::is_local_representation, int> = 0>
+    template <
+        typename parameters_t,
+        std::enable_if_t<not parameters_t::is_local_representation, int> = 0>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
                    const parameters_t& par, NavigationDirection ndir = forward,
@@ -132,18 +135,18 @@ class EigenStepper {
           fieldCache(mctx),
           geoContext(gctx) {
       if (par.covariance()) {
-		  // Set the covariance transport flag to true
-		  covTransport = true;
-		  // Get the covariance
-          cov = *par.covariance();
-          jacobian.emplace<3>(FreeMatrix::Identity());
-        
-          // Set up transformations between angles and directions in jacobian
-      jacDirToAngle = detail::jacobianDirectionsToAngles(dir);
-      jacAngleToDir = detail::jacobianAnglesToDirections(dir);
+        // Set the covariance transport flag to true
+        covTransport = true;
+        // Get the covariance
+        cov = *par.covariance();
+        jacobian.emplace<3>(FreeMatrix::Identity());
+
+        // Set up transformations between angles and directions in jacobian
+        jacDirToAngle = detail::jacobianDirectionsToAngles(dir);
+        jacAngleToDir = detail::jacobianAnglesToDirections(dir);
       }
     }
-    
+
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
 
@@ -162,11 +165,11 @@ class EigenStepper {
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
-	   /// Transform from directions to angles in jacobian
-  ActsMatrixD<8, 7> jacDirToAngle;
-  /// Transform from angles to directions in jacobian
-  ActsMatrixD<7, 8> jacAngleToDir;
-  
+    /// Transform from directions to angles in jacobian
+    ActsMatrixD<8, 7> jacDirToAngle;
+    /// Transform from angles to directions in jacobian
+    ActsMatrixD<7, 8> jacAngleToDir;
+
     /// The full jacobian of the transport entire transport
     Jacobian jacobian;
 

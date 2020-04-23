@@ -16,7 +16,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -37,13 +36,13 @@ namespace Acts {
 class StraightLineStepper {
  public:
   /// Jacobian, Covariance, States and B-field
-  using Jacobian =
-    std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
+  using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
+                                BoundToFreeMatrix, FreeMatrix>;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
   using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using FreeState = std::tuple<FreeTrackParameters, Jacobian, double>;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using BField = NullBField;  
+  using BField = NullBField;
 
   /// State for track parameter propagation
   ///
@@ -61,7 +60,8 @@ class StraightLineStepper {
     /// @param [in] ndir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     /// @param [in] stolerance is the stepping tolerance
-    template <typename parameters_t, std::enable_if_t<parameters_t::is_local_representation, int> = 0>
+    template <typename parameters_t,
+              std::enable_if_t<parameters_t::is_local_representation, int> = 0>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
                    const parameters_t& par, NavigationDirection ndir = forward,
@@ -99,39 +99,41 @@ class StraightLineStepper {
     /// @param [in] ndir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     /// @param [in] stolerance is the stepping tolerance
-    template <typename parameters_t, std::enable_if_t<not parameters_t::is_local_representation, int> = 0>
+    template <
+        typename parameters_t,
+        std::enable_if_t<not parameters_t::is_local_representation, int> = 0>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-      : pos(par.position()),
-        dir(par.momentum().normalized()),
-        p(par.momentum().norm()),
-        q((par.charge() != 0.) ? par.charge() : 1.),
-        t(par.time()),
-        navDir(ndir),
-        stepSize(ndir * std::abs(ssize)),
-        tolerance(stolerance),
-        geoContext(gctx) {
+        : pos(par.position()),
+          dir(par.momentum().normalized()),
+          p(par.momentum().norm()),
+          q((par.charge() != 0.) ? par.charge() : 1.),
+          t(par.time()),
+          navDir(ndir),
+          stepSize(ndir * std::abs(ssize)),
+          tolerance(stolerance),
+          geoContext(gctx) {
       if (par.covariance()) {
-		  // Set the covariance transport flag to true
-		  covTransport = true;
-		  // Get the covariance
-          cov = *par.covariance();
-          jacobian.emplace<3>(FreeMatrix::Identity());
-         
-          // Set up transformations between angles and directions in jacobian
-      jacDirToAngle = detail::jacobianDirectionsToAngles(dir);
-      jacAngleToDir = detail::jacobianAnglesToDirections(dir);
+        // Set the covariance transport flag to true
+        covTransport = true;
+        // Get the covariance
+        cov = *par.covariance();
+        jacobian.emplace<3>(FreeMatrix::Identity());
+
+        // Set up transformations between angles and directions in jacobian
+        jacDirToAngle = detail::jacobianDirectionsToAngles(dir);
+        jacAngleToDir = detail::jacobianAnglesToDirections(dir);
       }
     }
-    
-       /// Transform from directions to angles in jacobian
-  ActsMatrixD<8, 7> jacDirToAngle = ActsMatrixD<8, 7>::Zero();
-  /// Transform from angles to directions in jacobian
-  ActsMatrixD<7, 8> jacAngleToDir = ActsMatrixD<7, 8>::Zero();
-  
+
+    /// Transform from directions to angles in jacobian
+    ActsMatrixD<8, 7> jacDirToAngle = ActsMatrixD<8, 7>::Zero();
+    /// Transform from angles to directions in jacobian
+    ActsMatrixD<7, 8> jacAngleToDir = ActsMatrixD<7, 8>::Zero();
+
     /// Jacobian from local to the global frame
     std::optional<BoundToFreeMatrix> jacToGlobal = std::nullopt;
 
@@ -368,8 +370,10 @@ class StraightLineStepper {
   ///        position
   template <typename end_parameters_t = CurvilinearParameters>
   void covarianceTransport(State& state) const {
-    detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, state.dir, end_parameters_t::is_local_representation);
+    detail::covarianceTransport(
+        state.cov, state.jacobian, state.jacTransport, state.derivative,
+        state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, state.dir,
+        end_parameters_t::is_local_representation);
   }
 
   /// Method for on-demand transport of the covariance

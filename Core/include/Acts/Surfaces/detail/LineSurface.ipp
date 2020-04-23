@@ -274,8 +274,7 @@ inline const ActsVectorD<7> LineSurface::derivativeFactors(
   double long_c = locz * direction;
   ActsRowVectorD<3> norm_vec = direction.transpose() - long_c * locz;
   // calculate the s factors for the dependency on X
-  const ActsRowVectorD<7> s_vec =
-      norm_vec * jacobian.topLeftCorner<3, 7>();
+  const ActsRowVectorD<7> s_vec = norm_vec * jacobian.topLeftCorner<3, 7>();
   // calculate the d factors for the dependency on Tx
   const ActsRowVectorD<7> d_vec = locz * jacobian.block<3, 7>(4, 0);
   // normalisation of normal & longitudinal components

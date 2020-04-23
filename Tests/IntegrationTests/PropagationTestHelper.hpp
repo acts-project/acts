@@ -236,7 +236,7 @@ std::pair<Vector3D, double> to_cylinder(const Propagator_type& propagator,
   options.maxStepSize = plimit * 0.1;
   options.pathLimit = plimit;
   options.debug = debug;
-  
+
   // The transform at the destination
   auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
                                               0.04 * rand1, 0.04 * rand2);
@@ -314,9 +314,11 @@ std::pair<Vector3D, double> to_surface(const Propagator_type& propagator,
   return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
 }
 
-template <typename end_parameters_t, typename Propagator_type, typename start_parameters_t>
-auto covariance_curvilinear(const Propagator_type& propagator, start_parameters_t start,
-                                  double plimit, bool debug = false) {
+template <typename end_parameters_t, typename Propagator_type,
+          typename start_parameters_t>
+auto covariance_curvilinear(const Propagator_type& propagator,
+                            start_parameters_t start, double plimit,
+                            bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -327,18 +329,19 @@ auto covariance_curvilinear(const Propagator_type& propagator, start_parameters_
   options.debug = debug;
   options.tolerance = 1e-9;
 
-  const auto result = propagator.template propagate<end_parameters_t>(start, options).value();
+  const auto result =
+      propagator.template propagate<end_parameters_t>(start, options).value();
   const auto& tp = result.endParameters;
 
   return *(tp->covariance());
 }
 
-
-template <typename Propagator_type, typename DestSurface_type, typename start_parameters_t>
-auto covariance_bound(const Propagator_type& propagator,
-                            double plimit, double rand1, double rand2,
-                            double rand3, start_parameters_t start,
-                            bool destPlanar = true, bool debug = false) {
+template <typename Propagator_type, typename DestSurface_type,
+          typename start_parameters_t>
+auto covariance_bound(const Propagator_type& propagator, double plimit,
+                      double rand1, double rand2, double rand3,
+                      start_parameters_t start, bool destPlanar = true,
+                      bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -347,9 +350,9 @@ auto covariance_bound(const Propagator_type& propagator,
   options.pathLimit = plimit;
   options.debug = debug;
 
-
   // create curvilinear start parameters
-  CurvilinearParameters start_c(std::nullopt, start.position(), start.momentum(), start.charge(), start.time());
+  CurvilinearParameters start_c(std::nullopt, start.position(),
+                                start.momentum(), start.charge(), start.time());
   const auto result_c = propagator.propagate(start_c, options).value();
   const auto& tp_c = result_c.endParameters;
 
@@ -362,7 +365,7 @@ auto covariance_bound(const Propagator_type& propagator,
                                                     0.01 * rand1, 0.01 * rand2);
 
   auto endSurface = Surface::makeShared<DestSurface_type>(seTransform, nullptr);
-  
+
   // increase the path limit - to be safe hitting the surface
   options.pathLimit *= 2;
 

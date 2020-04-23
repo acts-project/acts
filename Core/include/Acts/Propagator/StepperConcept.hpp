@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <variant>
 #include <functional>
+#include <variant>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"

@@ -36,8 +36,8 @@ template <typename bfield_t>
 class AtlasStepper {
  public:
   /// Jacobian, Covariance, States and B-field
-  using Jacobian =
-    std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
+  using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
+                                BoundToFreeMatrix, FreeMatrix>;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
   using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using FreeState = std::tuple<FreeTrackParameters, Jacobian, double>;
@@ -250,15 +250,17 @@ class AtlasStepper {
     /// @tparam Type of TrackParameters
     ///
     /// @warning The functionality is not implemented
-    /// @throw 
+    /// @throw
     template <
         typename Parameters,
         std::enable_if_t<not Parameters::is_local_representation, int> = 0>
-    [[noreturn]] State(std::reference_wrapper<const GeometryContext> /*unused*/,
-          std::reference_wrapper<const MagneticFieldContext> /*unused*/,
-          const Parameters& /*unused*/, NavigationDirection /*unused*/,
-          double /*unused*/,
-          double /*unused*/) { throw "AtlasStepper::State is not applicable with FreeParameters"; }
+    [[noreturn]] State(
+        std::reference_wrapper<const GeometryContext> /*unused*/,
+        std::reference_wrapper<const MagneticFieldContext> /*unused*/,
+        const Parameters& /*unused*/, NavigationDirection /*unused*/,
+        double /*unused*/, double /*unused*/) {
+      throw "AtlasStepper::State is not applicable with FreeParameters";
+    }
 
     // optimisation that init is not called twice
     bool state_ready = false;
@@ -611,8 +613,7 @@ class AtlasStepper {
     BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext,
                                     pos4, dir, qOverP, std::move(covOpt));
 
-    return BoundState(std::move(parameters),
-                      BoundMatrix(state.jacobian),
+    return BoundState(std::move(parameters), BoundMatrix(state.jacobian),
                       state.pathAccumulated);
   }
 
@@ -652,14 +653,12 @@ class AtlasStepper {
 
     CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
 
-    return CurvilinearState(
-        std::move(parameters),
-        BoundMatrix(state.jacobian),
-        state.pathAccumulated);
+    return CurvilinearState(std::move(parameters), BoundMatrix(state.jacobian),
+                            state.pathAccumulated);
   }
 
   [[noreturn]] FreeState freeState(State& state) const {
-	  throw "AtlasStepper::freeState is not implemented";
+    throw "AtlasStepper::freeState is not implemented";
   }
 
   /// The state update method
@@ -702,14 +701,14 @@ class AtlasStepper {
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const {
     // update the vector
-      state.pVector[0] = uposition[0];
-      state.pVector[1] = uposition[1];
-      state.pVector[2] = uposition[2];
-      state.pVector[3] = time;
-      state.pVector[4] = udirection[0];
-      state.pVector[5] = udirection[1];
-      state.pVector[6] = udirection[2];
-      state.pVector[7] = charge(state) / up;
+    state.pVector[0] = uposition[0];
+    state.pVector[1] = uposition[1];
+    state.pVector[2] = uposition[2];
+    state.pVector[3] = time;
+    state.pVector[4] = udirection[0];
+    state.pVector[5] = udirection[1];
+    state.pVector[6] = udirection[2];
+    state.pVector[7] = charge(state) / up;
   }
 
   /// Method for on-demand transport of the covariance
@@ -870,8 +869,7 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  void covarianceTransport(State& state,
-                           const Surface& surface) const {
+  void covarianceTransport(State& state, const Surface& surface) const {
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);

@@ -132,15 +132,16 @@ class RiddersPropagator {
   /// @param [in] startPart Start parameters that are modified
   /// @param [in] param Index to get the parameter that will be modified
   /// @param [in] nominal Nominal end parameters
-  /// @param [in] deviations Deviations from the start parameters that will be performed
+  /// @param [in] deviations Deviations from the start parameters that will be
+  /// performed
   /// @param [in] target Target surface
   ///
   /// @return Vector containing each slope
   template <typename options_t, typename parameters_t>
   std::vector<BoundVector> wiggleDimension(
       const options_t& options, const parameters_t& startPars,
-      const unsigned int param,
-      const BoundVector& nominal, const std::vector<double>& deviations, const Surface& target) const;
+      const unsigned int param, const BoundVector& nominal,
+      const std::vector<double>& deviations, const Surface& target) const;
 
   /// @brief This function wiggles one dimension of the starting parameters,
   /// performs the propagation to a surface and collects for each change of the
@@ -192,13 +193,13 @@ class RiddersPropagator {
       std::reference_wrapper<const GeometryContext> geoContext, double h,
       const unsigned int param, parameters_t& tp) const;
 
-/// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to (x,y,z,t,Tx,Ty,Tz,q/p)
-///
-/// @param [in] dir Direction vector
-///
-/// @return The jacobian
-ActsMatrixD<7, 8>
-anglesToDirectionsJacobian(const Vector3D dir) const;
+  /// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to
+  /// (x,y,z,t,Tx,Ty,Tz,q/p)
+  ///
+  /// @param [in] dir Direction vector
+  ///
+  /// @return The jacobian
+  ActsMatrixD<7, 8> anglesToDirectionsJacobian(const Vector3D dir) const;
 
   /// @brief This function propagates the covariance matrix
   ///
@@ -210,28 +211,33 @@ anglesToDirectionsJacobian(const Vector3D dir) const;
   /// @return Propagated covariance matrix
   const Covariance calculateCovariance(
       const std::array<std::vector<BoundVector>, eBoundSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
+      const Covariance& startCov, const std::vector<double>& deviations,
+      const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-const       std::array<std::vector<BoundVector>, 7>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
+      const std::array<std::vector<BoundVector>, 7>& derivatives,
+      const Covariance& startCov, const std::vector<double>& deviations,
+      const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-     const  std::array<std::vector<FreeVector>, eBoundParametersSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
+      const std::array<std::vector<FreeVector>, eBoundParametersSize>&
+          derivatives,
+      const Covariance& startCov, const std::vector<double>& deviations,
+      const Vector3D direction) const;
 
   /// @copydoc RiddersPropagator<propagator_t>::calculateCovariance(const
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
       const std::array<std::vector<FreeVector>, 7>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations, const Vector3D direction) const;
+      const Covariance& startCov, const std::vector<double>& deviations,
+      const Vector3D direction) const;
 
   /// @brief This function fits a linear function through the final state
   /// parametrisations

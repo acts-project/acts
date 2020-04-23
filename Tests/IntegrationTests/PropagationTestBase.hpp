@@ -461,7 +461,6 @@ BOOST_DATA_TEST_CASE(propagation_to_line_,
 BOOST_DATA_TEST_CASE(covariance_transport_to_curvilinear,
                      ds::trackParameters* ds::propagationLimit, pT, phi, theta,
                      charge, plimit) {
-						 
   // define start parameters
   double x = 1.;
   double y = 0.;
@@ -475,7 +474,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_curvilinear,
   Vector3D mom(px, py, pz);
 
   std::optional<Covariance> covOpt = std::nullopt;
-    std::optional<FreeCovariance> covOptFree = std::nullopt;
+  std::optional<FreeCovariance> covOptFree = std::nullopt;
   if (covtpr) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -489,7 +488,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_curvilinear,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-    
+
     FreeCovariance covFree;
     // take some major correlations (off-diagonals)
     // clang-format off
@@ -514,39 +513,44 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_curvilinear,
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(covOptFree, parsC);
   NeutralFreeParameters startNF(covOptFree, parsN);
-  
+
   ///
   /// Curvilinear to Curvilinear Tests
   ///
   // covariance check for straight line stepper
-  CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear<CurvilinearParameters>(rspropagator, startN, plimit),
-      covariance_curvilinear<CurvilinearParameters>(spropagator, startN, plimit),
-      1e-3);
+  CHECK_CLOSE_COVARIANCE(covariance_curvilinear<CurvilinearParameters>(
+                             rspropagator, startN, plimit),
+                         covariance_curvilinear<CurvilinearParameters>(
+                             spropagator, startN, plimit),
+                         1e-3);
   // covariance check for eigen stepper
-  CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear<CurvilinearParameters>(repropagator, startC, plimit),
-      covariance_curvilinear<CurvilinearParameters>(epropagator, startC, plimit),
-      1e-3);
+  CHECK_CLOSE_COVARIANCE(covariance_curvilinear<CurvilinearParameters>(
+                             repropagator, startC, plimit),
+                         covariance_curvilinear<CurvilinearParameters>(
+                             epropagator, startC, plimit),
+                         1e-3);
   // covariance check fo atlas stepper
-  CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear<CurvilinearParameters>(rapropagator, startC, plimit),
-      covariance_curvilinear<CurvilinearParameters>(apropagator, startC, plimit),
-      1e-3);
-     
+  CHECK_CLOSE_COVARIANCE(covariance_curvilinear<CurvilinearParameters>(
+                             rapropagator, startC, plimit),
+                         covariance_curvilinear<CurvilinearParameters>(
+                             apropagator, startC, plimit),
+                         1e-3);
+
   ///
   /// Free to Curvilinear Tests
   ///
   // covariance check for straight line stepper
-  CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear<CurvilinearParameters>(spropagator, startNF, plimit),
-      covariance_curvilinear<CurvilinearParameters>(rspropagator, startNF, plimit),
-      1e-3);
+  CHECK_CLOSE_COVARIANCE(covariance_curvilinear<CurvilinearParameters>(
+                             spropagator, startNF, plimit),
+                         covariance_curvilinear<CurvilinearParameters>(
+                             rspropagator, startNF, plimit),
+                         1e-3);
   // covariance check for eigen stepper
-  CHECK_CLOSE_COVARIANCE(
-	  covariance_curvilinear<CurvilinearParameters>(epropagator, startCF, plimit),
-      covariance_curvilinear<CurvilinearParameters>(repropagator, startCF, plimit),
-      2e-3);
+  CHECK_CLOSE_COVARIANCE(covariance_curvilinear<CurvilinearParameters>(
+                             epropagator, startCF, plimit),
+                         covariance_curvilinear<CurvilinearParameters>(
+                             repropagator, startCF, plimit),
+                         2e-3);
 }
 
 // test correct covariance transport from disc to disc
@@ -554,7 +558,6 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
                      pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
-						 
   // define start parameters
   double x = 1.;
   double y = 0.;
@@ -568,7 +571,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   Vector3D mom(px, py, pz);
 
   std::optional<Covariance> covOpt = std::nullopt;
-    std::optional<FreeCovariance> covOptFree = std::nullopt;
+  std::optional<FreeCovariance> covOptFree = std::nullopt;
   if (covtpr) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -582,7 +585,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-    
+
     FreeCovariance covFree;
     // take some major correlations (off-diagonals)
     // clang-format off
@@ -605,35 +608,30 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(covOptFree, parsC);
   NeutralFreeParameters startNF(covOptFree, parsN);
-  
-  auto ssTransform = createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
-                                          0.05 * rand2);
-  auto startSurface =
-      Surface::makeShared<DiscSurface>(ssTransform, nullptr);
+
+  auto ssTransform =
+      createPlanarTransform(pos, mom.normalized(), 0.05 * rand1, 0.05 * rand2);
+  auto startSurface = Surface::makeShared<DiscSurface>(ssTransform, nullptr);
   BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
-  NeutralBoundParameters startN(tgContext, covOpt, pos, mom, time, startSurface);
-  
-    ///
+  NeutralBoundParameters startN(tgContext, covOpt, pos, mom, time,
+                                startSurface);
+
+  ///
   /// Disc to Disc Tests
-  ///					 
+  ///
   // covariance check for straight line stepper
   auto covCalculated =
       covariance_bound<RiddersStraightPropagatorType, DiscSurface>(
-          rspropagator, plimit, rand1, rand2, rand3,
-          startN);
-  auto covObtained =
-      covariance_bound<StraightPropagatorType, DiscSurface>(
-          spropagator, plimit, rand1, rand2, rand3,
-          startN);
+          rspropagator, plimit, rand1, rand2, rand3, startN);
+  auto covObtained = covariance_bound<StraightPropagatorType, DiscSurface>(
+      spropagator, plimit, rand1, rand2, rand3, startN);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
 
   // covariance check for eigen stepper
-  covCalculated =
-      covariance_bound<RiddersEigenPropagatorType, DiscSurface>(
-          repropagator, plimit, rand1, rand2, rand3,
-          startC);
+  covCalculated = covariance_bound<RiddersEigenPropagatorType, DiscSurface>(
+      repropagator, plimit, rand1, rand2, rand3, startC);
   covObtained = covariance_bound<EigenPropagatorType, DiscSurface>(
       epropagator, plimit, rand1, rand2, rand3, startC);
   if (covCalculated != Covariance::Zero()) {
@@ -641,39 +639,30 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   }
 
   // covariance check for atlas stepper
-  covCalculated =
-      covariance_bound<RiddersAtlasPropagatorType, DiscSurface>(
-          rapropagator, plimit, rand1, rand2, rand3,
-          startC);
+  covCalculated = covariance_bound<RiddersAtlasPropagatorType, DiscSurface>(
+      rapropagator, plimit, rand1, rand2, rand3, startC);
   covObtained = covariance_bound<AtlasPropagatorType, DiscSurface>(
       apropagator, plimit, rand1, rand2, rand3, startC);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
-  
-    ///
+
+  ///
   /// Free to Disc Tests
   ///
-    // covariance check for straight line stepper
-  covCalculated =
-      covariance_bound<RiddersStraightPropagatorType, DiscSurface>(
-          rspropagator, plimit, rand1, rand2, rand3,
-          startNF);
-  covObtained =
-      covariance_bound<StraightPropagatorType, DiscSurface>(
-          spropagator, plimit, rand1, rand2, rand3,
-          startNF);
+  // covariance check for straight line stepper
+  covCalculated = covariance_bound<RiddersStraightPropagatorType, DiscSurface>(
+      rspropagator, plimit, rand1, rand2, rand3, startNF);
+  covObtained = covariance_bound<StraightPropagatorType, DiscSurface>(
+      spropagator, plimit, rand1, rand2, rand3, startNF);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
 
   // covariance check for eigen stepper
-  covCalculated =
-      covariance_bound<RiddersEigenPropagatorType, DiscSurface>(
-          repropagator, plimit, rand1, rand2, rand3,
-          startCF);
-  covObtained = 
-  covariance_bound<EigenPropagatorType, DiscSurface>(
+  covCalculated = covariance_bound<RiddersEigenPropagatorType, DiscSurface>(
+      repropagator, plimit, rand1, rand2, rand3, startCF);
+  covObtained = covariance_bound<EigenPropagatorType, DiscSurface>(
       epropagator, plimit, rand1, rand2, rand3, startCF);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
@@ -685,8 +674,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_plane,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
                      pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
-						 
-						  // define start parameters
+  // define start parameters
   double x = 1.;
   double y = 0.;
   double z = 0.;
@@ -697,9 +685,9 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_plane,
   double time = 0.;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  
+
   std::optional<Covariance> covOpt = std::nullopt;
-    std::optional<FreeCovariance> covOptFree = std::nullopt;
+  std::optional<FreeCovariance> covOptFree = std::nullopt;
   if (covtpr) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -713,7 +701,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_plane,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-    
+
     FreeCovariance covFree;
     // take some major correlations (off-diagonals)
     // clang-format off
@@ -736,72 +724,60 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_plane,
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(covOptFree, parsC);
   NeutralFreeParameters startNF(covOptFree, parsN);
-  
-  auto ssTransform = createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
-                                          0.05 * rand2);
 
-  auto startSurface =
-      Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
+  auto ssTransform =
+      createPlanarTransform(pos, mom.normalized(), 0.05 * rand1, 0.05 * rand2);
+
+  auto startSurface = Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
   BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
-  NeutralBoundParameters startN(tgContext, covOpt, pos, mom, time, startSurface);
-  
-    ///
+  NeutralBoundParameters startN(tgContext, covOpt, pos, mom, time,
+                                startSurface);
+
+  ///
   /// Plane to Plane Tests
   ///
   // covariance check for straight line stepper
-  auto covCalculated = covariance_bound<RiddersStraightPropagatorType,
-                                        PlaneSurface>(
-      rspropagator, plimit, rand1, rand2, rand3, startN);
-  auto covObtained =
-      covariance_bound<StraightPropagatorType, PlaneSurface>(
-          spropagator, plimit, rand1, rand2, rand3, startN);
+  auto covCalculated =
+      covariance_bound<RiddersStraightPropagatorType, PlaneSurface>(
+          rspropagator, plimit, rand1, rand2, rand3, startN);
+  auto covObtained = covariance_bound<StraightPropagatorType, PlaneSurface>(
+      spropagator, plimit, rand1, rand2, rand3, startN);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-3);
 
   // covariance check for eigen stepper
-  covCalculated =
-      covariance_bound<RiddersEigenPropagatorType, PlaneSurface>(
-          repropagator, plimit, rand1, rand2, rand3, startC);
-  covObtained =
-      covariance_bound<EigenPropagatorType, PlaneSurface>(
-          epropagator, plimit, rand1, rand2, rand3, startC);
+  covCalculated = covariance_bound<RiddersEigenPropagatorType, PlaneSurface>(
+      repropagator, plimit, rand1, rand2, rand3, startC);
+  covObtained = covariance_bound<EigenPropagatorType, PlaneSurface>(
+      epropagator, plimit, rand1, rand2, rand3, startC);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-2);
 
   // covariance check for atlas stepper
-  covCalculated =
-      covariance_bound<RiddersAtlasPropagatorType, PlaneSurface>(
-          rapropagator, plimit, rand1, rand2, rand3, startC);
-  covObtained =
-      covariance_bound<AtlasPropagatorType, PlaneSurface>(
-          apropagator, plimit, rand1, rand2, rand3, startC);
+  covCalculated = covariance_bound<RiddersAtlasPropagatorType, PlaneSurface>(
+      rapropagator, plimit, rand1, rand2, rand3, startC);
+  covObtained = covariance_bound<AtlasPropagatorType, PlaneSurface>(
+      apropagator, plimit, rand1, rand2, rand3, startC);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-2);
-  
-      ///
+
+  ///
   /// Free to Plane Tests
   ///
-    // covariance check for straight line stepper
-  covCalculated =
-      covariance_bound<RiddersStraightPropagatorType, PlaneSurface>(
-          rspropagator, plimit, rand1, rand2, rand3,
-          startNF);
-  covObtained =
-      covariance_bound<StraightPropagatorType, PlaneSurface>(
-          spropagator, plimit, rand1, rand2, rand3,
-          startNF);
+  // covariance check for straight line stepper
+  covCalculated = covariance_bound<RiddersStraightPropagatorType, PlaneSurface>(
+      rspropagator, plimit, rand1, rand2, rand3, startNF);
+  covObtained = covariance_bound<StraightPropagatorType, PlaneSurface>(
+      spropagator, plimit, rand1, rand2, rand3, startNF);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 2e-2);
   }
   // covariance check for eigen stepper
-  covCalculated =
-      covariance_bound<RiddersEigenPropagatorType, PlaneSurface>(
-          repropagator, plimit, rand1, rand2, rand3,
-          startCF);
+  covCalculated = covariance_bound<RiddersEigenPropagatorType, PlaneSurface>(
+      repropagator, plimit, rand1, rand2, rand3, startCF);
   covObtained = covariance_bound<EigenPropagatorType, PlaneSurface>(
       epropagator, plimit, rand1, rand2, rand3, startCF);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
   }
 }
-
 
 // test correct covariance transport from straw to straw
 // for straw surfaces the numerical fixture is actually more difficult
@@ -810,8 +786,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_line,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
                      pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
-						 
-						 						  // define start parameters
+  // define start parameters
   double x = 1.;
   double y = 0.;
   double z = 0.;
@@ -824,7 +799,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_line,
   Vector3D mom(px, py, pz);
 
   std::optional<Covariance> covOpt = std::nullopt;
-    std::optional<FreeCovariance> covOptFree = std::nullopt;
+  std::optional<FreeCovariance> covOptFree = std::nullopt;
   if (covtpr) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -838,7 +813,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_line,
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-    
+
     FreeCovariance covFree;
     // take some major correlations (off-diagonals)
     // clang-format off
@@ -861,71 +836,54 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_line,
   parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
   FreeParameters startCF(covOptFree, parsC);
   NeutralFreeParameters startNF(covOptFree, parsN);
-  
+
   auto ssTransform = createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
 
-  auto startSurface =
-      Surface::makeShared<StrawSurface>(ssTransform, nullptr);
+  auto startSurface = Surface::makeShared<StrawSurface>(ssTransform, nullptr);
   BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
-  NeutralBoundParameters startN(tgContext, covOpt, pos, mom, time, startSurface);
-  
+  NeutralBoundParameters startN(tgContext, covOpt, pos, mom, time,
+                                startSurface);
+
   ///
   /// Line to Line Tests
   ///
   // covariance check for straight line stepper
   auto covCalculated =
-      covariance_bound<RiddersStraightPropagatorType,
-                       StrawSurface>(rspropagator, 
-                                     plimit, rand1, rand2, rand3, startN, false);
-  auto covObtained =
-      covariance_bound<StraightPropagatorType, StrawSurface>(
-          spropagator, plimit, rand1, rand2, rand3,
-          startN, false);
+      covariance_bound<RiddersStraightPropagatorType, StrawSurface>(
+          rspropagator, plimit, rand1, rand2, rand3, startN, false);
+  auto covObtained = covariance_bound<StraightPropagatorType, StrawSurface>(
+      spropagator, plimit, rand1, rand2, rand3, startN, false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
   // covariance check for eigen stepper
-  covCalculated =
-      covariance_bound<RiddersEigenPropagatorType, StrawSurface>(
-          repropagator, plimit, rand1, rand2, rand3,
-          startC, false);
-  covObtained =
-      covariance_bound<EigenPropagatorType, StrawSurface>(
-          epropagator, plimit, rand1, rand2, rand3,
-          startC, false);
+  covCalculated = covariance_bound<RiddersEigenPropagatorType, StrawSurface>(
+      repropagator, plimit, rand1, rand2, rand3, startC, false);
+  covObtained = covariance_bound<EigenPropagatorType, StrawSurface>(
+      epropagator, plimit, rand1, rand2, rand3, startC, false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
   // covariance check for atlas stepper
-  covCalculated =
-      covariance_bound<RiddersAtlasPropagatorType, StrawSurface>(
-          rapropagator, plimit, rand1, rand2, rand3,
-          startC, false);
-  covObtained =
-      covariance_bound<AtlasPropagatorType, StrawSurface>(
-          apropagator, plimit, rand1, rand2, rand3,
-          startC, false);
+  covCalculated = covariance_bound<RiddersAtlasPropagatorType, StrawSurface>(
+      rapropagator, plimit, rand1, rand2, rand3, startC, false);
+  covObtained = covariance_bound<AtlasPropagatorType, StrawSurface>(
+      apropagator, plimit, rand1, rand2, rand3, startC, false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
-  
-        ///
+
+  ///
   /// Free to Line Tests
   ///
-    // covariance check for straight line stepper
-  covCalculated =
-      covariance_bound<RiddersStraightPropagatorType, StrawSurface>(
-          rspropagator, plimit, rand1, rand2, rand3,
-          startNF, false);
-  covObtained =
-      covariance_bound<StraightPropagatorType, StrawSurface>(
-          spropagator, plimit, rand1, rand2, rand3,
-          startNF, false);
+  // covariance check for straight line stepper
+  covCalculated = covariance_bound<RiddersStraightPropagatorType, StrawSurface>(
+      rspropagator, plimit, rand1, rand2, rand3, startNF, false);
+  covObtained = covariance_bound<StraightPropagatorType, StrawSurface>(
+      spropagator, plimit, rand1, rand2, rand3, startNF, false);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
 
   // covariance check for eigen stepper
-  covCalculated =
-      covariance_bound<RiddersEigenPropagatorType, StrawSurface>(
-          repropagator, plimit, rand1, rand2, rand3,
-          startCF, false);         
+  covCalculated = covariance_bound<RiddersEigenPropagatorType, StrawSurface>(
+      repropagator, plimit, rand1, rand2, rand3, startCF, false);
   covObtained = covariance_bound<EigenPropagatorType, StrawSurface>(
       epropagator, plimit, rand1, rand2, rand3, startCF, false);
   if (covCalculated != Covariance::Zero()) {
@@ -933,11 +891,12 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_line,
   }
 }
 
-BOOST_DATA_TEST_CASE(covariance_transport_to_free, ds::trackParameters* ds::propagationLimit ^
+BOOST_DATA_TEST_CASE(covariance_transport_to_free,
+                     ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
                      pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
   (void)rand3;
-							 						  // define start parameters
+  // define start parameters
   double x = 1.;
   double y = 0.;
   double z = 0.;
@@ -950,7 +909,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free, ds::trackParameters* ds::prop
   Vector3D mom(px, py, pz);
 
   std::optional<Covariance> covOpt = std::nullopt;
-    std::optional<FreeCovariance> covOptFree = std::nullopt;
+  std::optional<FreeCovariance> covOptFree = std::nullopt;
   if (covtpr) {
     Covariance cov;
     // take some major correlations (off-diagonals)
@@ -964,7 +923,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free, ds::trackParameters* ds::prop
      0, 0, 0, 0, 0, 1_us;
     // clang-format on
     covOpt = cov;
-    
+
     FreeCovariance covFree;
     // take some major correlations (off-diagonals)
     // clang-format off
@@ -980,245 +939,266 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free, ds::trackParameters* ds::prop
     // clang-format on
     covOptFree = covFree;
   }
-  
+
   ///
   /// Curvilinear to Free Tests
   ///
-  {    	
-  CurvilinearParameters startCC(covOpt, pos, mom, q, time);
-  NeutralCurvilinearParameters startNC(covOpt, pos, mom, time);
-  
+  {
+    CurvilinearParameters startCC(covOpt, pos, mom, q, time);
+    NeutralCurvilinearParameters startNC(covOpt, pos, mom, time);
+
     // covariance check for straight line stepper
-  auto covObtained = covariance_curvilinear<FreeParameters>(spropagator, startNC, plimit);
-  auto covCalculated = covariance_curvilinear<FreeParameters>(rspropagator, startNC, plimit);
-  // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-      covCalculated,
-      1e-3);
-   
-  // covariance check for eigen stepper
-  covObtained = covariance_curvilinear<FreeParameters>(epropagator, startCC, plimit);
-  covCalculated = covariance_curvilinear<FreeParameters>(repropagator, startCC, plimit);
-  
-    // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-            covCalculated,
-      1e-3);
-   }
-     
+    auto covObtained =
+        covariance_curvilinear<FreeParameters>(spropagator, startNC, plimit);
+    auto covCalculated =
+        covariance_curvilinear<FreeParameters>(rspropagator, startNC, plimit);
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
+
+    // covariance check for eigen stepper
+    covObtained =
+        covariance_curvilinear<FreeParameters>(epropagator, startCC, plimit);
+    covCalculated =
+        covariance_curvilinear<FreeParameters>(repropagator, startCC, plimit);
+
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
+  }
+
   ///
   /// Disc to Free Tests
   ///
   {
-       auto ssTransform = createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
-                                          0.05 * rand2);
-  auto startSurface =
-      Surface::makeShared<DiscSurface>(ssTransform, nullptr);
-  BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
-  NeutralBoundParameters startNB(tgContext, covOpt, pos, mom, time, startSurface);
-  
-      // covariance check for straight line stepper
-  auto covObtained = covariance_curvilinear<FreeParameters>(spropagator, startNB, plimit);
-  auto covCalculated = covariance_curvilinear<FreeParameters>(rspropagator, startNB, plimit);
-  // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-      covCalculated,
-      1e-3);
-      
+    auto ssTransform = createPlanarTransform(pos, mom.normalized(),
+                                             0.05 * rand1, 0.05 * rand2);
+    auto startSurface = Surface::makeShared<DiscSurface>(ssTransform, nullptr);
+    BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
+    NeutralBoundParameters startNB(tgContext, covOpt, pos, mom, time,
+                                   startSurface);
+
+    // covariance check for straight line stepper
+    auto covObtained =
+        covariance_curvilinear<FreeParameters>(spropagator, startNB, plimit);
+    auto covCalculated =
+        covariance_curvilinear<FreeParameters>(rspropagator, startNB, plimit);
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
+
     // covariance check for eigen stepper
-  covObtained = covariance_curvilinear<FreeParameters>(epropagator, startCB, plimit);
-  covCalculated = covariance_curvilinear<FreeParameters>(repropagator, startCB, plimit);
-  
-    // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-            covCalculated,
-      1e-3);
+    covObtained =
+        covariance_curvilinear<FreeParameters>(epropagator, startCB, plimit);
+    covCalculated =
+        covariance_curvilinear<FreeParameters>(repropagator, startCB, plimit);
+
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
   }
-  
+
   ///
   /// Plane to Free Tests
   ///
   {
-    auto ssTransform = createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
-                                          0.05 * rand2);
-  auto startSurface =
-      Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
-  BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
-  NeutralBoundParameters startNB(tgContext, covOpt, pos, mom, time, startSurface);
-  
-      // covariance check for straight line stepper
-  auto covObtained = covariance_curvilinear<FreeParameters>(spropagator, startNB, plimit);
-  auto covCalculated = covariance_curvilinear<FreeParameters>(rspropagator, startNB, plimit);
-  // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-      covCalculated,
-      1e-3);
-  
+    auto ssTransform = createPlanarTransform(pos, mom.normalized(),
+                                             0.05 * rand1, 0.05 * rand2);
+    auto startSurface = Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
+    BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
+    NeutralBoundParameters startNB(tgContext, covOpt, pos, mom, time,
+                                   startSurface);
+
+    // covariance check for straight line stepper
+    auto covObtained =
+        covariance_curvilinear<FreeParameters>(spropagator, startNB, plimit);
+    auto covCalculated =
+        covariance_curvilinear<FreeParameters>(rspropagator, startNB, plimit);
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
+
     // covariance check for eigen stepper
-  covObtained = covariance_curvilinear<FreeParameters>(epropagator, startCB, plimit);
-  covCalculated = covariance_curvilinear<FreeParameters>(repropagator, startCB, plimit);
-  
-    // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-            covCalculated,
-      1e-3);
-   }
-   
+    covObtained =
+        covariance_curvilinear<FreeParameters>(epropagator, startCB, plimit);
+    covCalculated =
+        covariance_curvilinear<FreeParameters>(repropagator, startCB, plimit);
+
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
+  }
+
   ///
   /// Line to Free Tests
-  ///    
+  ///
   {
-  auto ssTransform = createCylindricTransform(pos, 0.005 * rand1, 0.005 * rand2);
-  auto startSurface =
-      Surface::makeShared<StrawSurface>(ssTransform, nullptr);
-  BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
-  NeutralBoundParameters startNB(tgContext, covOpt, pos, mom, time, startSurface);
-    
-        // covariance check for straight line stepper
-  auto covObtained = covariance_curvilinear<FreeParameters>(spropagator, startNB, plimit);
-  auto covCalculated = covariance_curvilinear<FreeParameters>(rspropagator, startNB, plimit);
-  // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-      covCalculated,
-      5e-1);
-      
-    // covariance check for eigen stepper  
-  covObtained = covariance_curvilinear<FreeParameters>(epropagator, startCB, plimit);
-  covCalculated = covariance_curvilinear<FreeParameters>(repropagator, startCB, plimit);
-  
-    // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-            covCalculated,
-      1e-1);
-   }
-   
+    auto ssTransform =
+        createCylindricTransform(pos, 0.005 * rand1, 0.005 * rand2);
+    auto startSurface = Surface::makeShared<StrawSurface>(ssTransform, nullptr);
+    BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
+    NeutralBoundParameters startNB(tgContext, covOpt, pos, mom, time,
+                                   startSurface);
+
+    // covariance check for straight line stepper
+    auto covObtained =
+        covariance_curvilinear<FreeParameters>(spropagator, startNB, plimit);
+    auto covCalculated =
+        covariance_curvilinear<FreeParameters>(rspropagator, startNB, plimit);
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 5e-1);
+
+    // covariance check for eigen stepper
+    covObtained =
+        covariance_curvilinear<FreeParameters>(epropagator, startCB, plimit);
+    covCalculated =
+        covariance_curvilinear<FreeParameters>(repropagator, startCB, plimit);
+
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-1);
+  }
+
   ///
   /// Free to Free Tests
   ///
   {
     Vector3D dir = mom.normalized();
-  FreeVector parsC, parsN;
-  parsC << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
-  parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
-  FreeParameters startCF(covOptFree, parsC);
-  NeutralFreeParameters startNF(covOptFree, parsN);
-  
-  // covariance check for straight line stepper
-  auto covObtained = covariance_curvilinear<FreeParameters>(spropagator, startNF, plimit);
-  auto covCalculated = covariance_curvilinear<FreeParameters>(rspropagator, startNF, plimit);
-  // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-      covCalculated,
-      1e-3);
-      
-  // covariance check for eigen stepper
-  covObtained = covariance_curvilinear<FreeParameters>(epropagator, startCF, plimit);
-  covCalculated = covariance_curvilinear<FreeParameters>(repropagator, startCF, plimit);
-  // Numerical fluctuations in the covariances cause errors in relative comparison. This needs to be tested and avoided by setting both entries to 1
-  for(unsigned int i = 0; i < covObtained.rows(); i++)
-	for(unsigned int j = 0; j < covObtained.cols(); j++)
-	  { 
-		 if(std::abs(covObtained(i, j)) < std::numeric_limits<double>::epsilon() || std::abs(covCalculated(i, j)) < std::numeric_limits<double>::epsilon())
-			{
-				covObtained(i, j) = 1.;
-				covCalculated(i, j) = 1.;
-			}
-	  }
-  CHECK_CLOSE_COVARIANCE(
-      covObtained,
-      covCalculated,
-      1e-3);
-  }    			 
+    FreeVector parsC, parsN;
+    parsC << x, y, z, time, dir.x(), dir.y(), dir.z(), q / mom.norm();
+    parsN << x, y, z, time, dir.x(), dir.y(), dir.z(), 1. / mom.norm();
+    FreeParameters startCF(covOptFree, parsC);
+    NeutralFreeParameters startNF(covOptFree, parsN);
+
+    // covariance check for straight line stepper
+    auto covObtained =
+        covariance_curvilinear<FreeParameters>(spropagator, startNF, plimit);
+    auto covCalculated =
+        covariance_curvilinear<FreeParameters>(rspropagator, startNF, plimit);
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
+
+    // covariance check for eigen stepper
+    covObtained =
+        covariance_curvilinear<FreeParameters>(epropagator, startCF, plimit);
+    covCalculated =
+        covariance_curvilinear<FreeParameters>(repropagator, startCF, plimit);
+    // Numerical fluctuations in the covariances cause errors in relative
+    // comparison. This needs to be tested and avoided by setting both entries
+    // to 1
+    for (unsigned int i = 0; i < covObtained.rows(); i++)
+      for (unsigned int j = 0; j < covObtained.cols(); j++) {
+        if (std::abs(covObtained(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(covCalculated(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          covObtained(i, j) = 1.;
+          covCalculated(i, j) = 1.;
+        }
+      }
+    CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
+  }
 }
 
 /// test correct covariance transport for curvilinear parameters in dense
@@ -1228,7 +1208,6 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free, ds::trackParameters* ds::prop
 BOOST_DATA_TEST_CASE(dense_covariance_transport,
                      ds::pT* ds::propagationLimit ^ ds::threeRandom, pT, plimit,
                      rand1, rand2, rand3) {
-
   // define start parameters
   double x = 1.;
   double y = 0.;
@@ -1257,47 +1236,41 @@ BOOST_DATA_TEST_CASE(dense_covariance_transport,
     covOpt = cov;
   }
 
-  auto ssTransform = createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
-                                          0.05 * rand2);
+  auto ssTransform =
+      createPlanarTransform(pos, mom.normalized(), 0.05 * rand1, 0.05 * rand2);
 
   // covariance check for eigen stepper in dense environment
   DensePropagatorType dpropagator = setupDensePropagator();
   RiddersPropagator rdpropagator(dpropagator);
-{
-  CurvilinearParameters startCC(covOpt, pos, mom, q, time);
-  
-  CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear<CurvilinearParameters>(rdpropagator, startCC,
-                             plimit),
-      covariance_curvilinear<CurvilinearParameters>(dpropagator, startCC, plimit),
-      3e-1);
-}
-{
-	 auto startSurface =
-      Surface::makeShared<DiscSurface>(ssTransform, nullptr);
-  BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
-  auto covCalculated =
-      covariance_bound<RiddersPropagator<DensePropagatorType>,
-                       DiscSurface>(rdpropagator,
-                                    plimit, rand1, rand2, rand3, startC);
-  auto covObtained =
-      covariance_bound<DensePropagatorType, DiscSurface>(
-          dpropagator, plimit, rand1, rand2,
-          rand3, startC);
-  if (covCalculated != Covariance::Zero()) {
+  {
+    CurvilinearParameters startCC(covOpt, pos, mom, q, time);
+
+    CHECK_CLOSE_COVARIANCE(covariance_curvilinear<CurvilinearParameters>(
+                               rdpropagator, startCC, plimit),
+                           covariance_curvilinear<CurvilinearParameters>(
+                               dpropagator, startCC, plimit),
+                           3e-1);
+  }
+  {
+    auto startSurface = Surface::makeShared<DiscSurface>(ssTransform, nullptr);
+    BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
+    auto covCalculated =
+        covariance_bound<RiddersPropagator<DensePropagatorType>, DiscSurface>(
+            rdpropagator, plimit, rand1, rand2, rand3, startC);
+    auto covObtained = covariance_bound<DensePropagatorType, DiscSurface>(
+        dpropagator, plimit, rand1, rand2, rand3, startC);
+    if (covCalculated != Covariance::Zero()) {
+      CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 8e-1);
+    }
+  }
+  {
+    auto startSurface = Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
+    BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
+    auto covCalculated =
+        covariance_bound<RiddersPropagator<DensePropagatorType>, PlaneSurface>(
+            rdpropagator, plimit, rand1, rand2, rand3, startC);
+    auto covObtained = covariance_bound<DensePropagatorType, PlaneSurface>(
+        dpropagator, plimit, rand1, rand2, rand3, startC);
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 8e-1);
   }
-}
-{
-	 auto startSurface =
-      Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
-  BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
-  auto covCalculated = covariance_bound<RiddersPropagator<DensePropagatorType>,
-                                    PlaneSurface>(
-      rdpropagator, plimit, rand1, rand2, rand3, startC);
-  auto covObtained =
-      covariance_bound<DensePropagatorType, PlaneSurface>(
-          dpropagator, plimit, rand1, rand2, rand3, startC);
-  CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 8e-1);
-}
 }
