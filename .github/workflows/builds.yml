@@ -1,0 +1,92 @@
+name: Builds
+
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
+jobs:
+  ubuntu2004:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_BUILD_EVERYTHING=on
+      - name: Build
+        run: cmake --build build --
+      - name: Unit tests
+        run: cmake --build build -- test
+      - name: Integration tests
+        run: cmake --build build -- integrationtests
+  macos:
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Install dependencies
+        run: >
+          brew install boost cmake eigen ninja tbb xerces-c
+          && mkdir deps
+          && curl -SL https://acts.web.cern.ch/ACTS/ci/macOS_10.15_deps.tar.gz | tar -xzC deps
+      - name: Configure
+        run: >
+          source deps/bin/thisroot.sh
+          && cmake -B build -S src
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_PREFIX_PATH=../deps
+          -DACTS_BUILD_EVERYTHING=on
+          -DACTS_BUILD_DD4HEP_PLUGIN=on
+      - name: Build
+        run: cmake --build build  --
+      - name: Unit tests
+        run: cmake --build build -- test
+      - name: Integration tests
+        run: cmake --build build -- integrationtests
+  lcg:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}-lcg${{ matrix.lcg }}:master
+    strategy:
+      matrix:
+        os:
+          - centos7
+          - slc6
+        lcg:
+          - 95apython3
+          - 96
+        exclude:
+          - os: slc6
+            lcg: 96
+    env:
+      SETUP: /opt/lcg_view/setup.sh
+    steps:
+      - uses: actions/checkout@v1
+      - name: Configure
+        run: >
+          source ${SETUP}
+          && mkdir build
+          && cd build
+          && cmake ..
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DACTS_BUILD_EVERYTHING=on
+      - name: Build
+        run: source ${SETUP} && cmake --build build --
+      - name: Unit tests
+        run: source ${SETUP} && cmake --build build -- test
+      - name: Integration tests
+        run: source ${SETUP} && cmake --build build -- integrationtests
+

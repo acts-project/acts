@@ -9,7 +9,6 @@
 /// @file Logger_tests.cpp
 
 #include <boost/test/unit_test.hpp>
-
 #include <fstream>
 #include <string>
 
@@ -48,7 +47,7 @@ BOOST_AUTO_TEST_CASE(FATAL_test) {
   std::ofstream logfile("fatal_log.txt");
 
   auto log = detail::create_logger("TestLogger", &logfile, FATAL);
-  ACTS_LOCAL_LOGGER(log);
+  ACTS_LOCAL_LOGGER(std::move(log));
   ACTS_FATAL("fatal level");
   ACTS_ERROR("error level");
   ACTS_WARNING("warning level");
@@ -77,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ERROR_test) {
   std::ofstream logfile("error_log.txt");
 
   auto log = detail::create_logger("TestLogger", &logfile, ERROR);
-  ACTS_LOCAL_LOGGER(log);
+  ACTS_LOCAL_LOGGER(std::move(log));
   ACTS_FATAL("fatal level");
   ACTS_ERROR("error level");
   ACTS_WARNING("warning level");
@@ -107,7 +106,7 @@ BOOST_AUTO_TEST_CASE(WARNING_test) {
   std::ofstream logfile("warning_log.txt");
 
   auto log = detail::create_logger("TestLogger", &logfile, WARNING);
-  ACTS_LOCAL_LOGGER(log);
+  ACTS_LOCAL_LOGGER(std::move(log));
   ACTS_FATAL("fatal level");
   ACTS_ERROR("error level");
   ACTS_WARNING("warning level");
@@ -138,7 +137,7 @@ BOOST_AUTO_TEST_CASE(INFO_test) {
   std::ofstream logfile("info_log.txt");
 
   auto log = detail::create_logger("TestLogger", &logfile, INFO);
-  ACTS_LOCAL_LOGGER(log);
+  ACTS_LOCAL_LOGGER(std::move(log));
   ACTS_FATAL("fatal level");
   ACTS_ERROR("error level");
   ACTS_WARNING("warning level");
@@ -170,7 +169,7 @@ BOOST_AUTO_TEST_CASE(DEBUG_test) {
   std::ofstream logfile("debug_log.txt");
 
   auto log = detail::create_logger("TestLogger", &logfile, DEBUG);
-  ACTS_LOCAL_LOGGER(log);
+  ACTS_LOCAL_LOGGER(std::move(log));
   ACTS_FATAL("fatal level");
   ACTS_ERROR("error level");
   ACTS_WARNING("warning level");
@@ -203,7 +202,7 @@ BOOST_AUTO_TEST_CASE(VERBOSE_test) {
   std::ofstream logfile("verbose_log.txt");
 
   auto log = detail::create_logger("TestLogger", &logfile, VERBOSE);
-  ACTS_LOCAL_LOGGER(log);
+  ACTS_LOCAL_LOGGER(std::move(log));
   ACTS_FATAL("fatal level");
   ACTS_ERROR("error level");
   ACTS_WARNING("warning level");
