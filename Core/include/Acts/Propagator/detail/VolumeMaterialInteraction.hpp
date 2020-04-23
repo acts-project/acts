@@ -37,7 +37,7 @@ struct VolumeMaterialInteraction {
   const int pdg;
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport;
-  /// The navigation direction 
+  /// The navigation direction
   const NavigationDirection nav;
 
   /// Data evaluated within this struct
