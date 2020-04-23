@@ -82,7 +82,7 @@ class StraightLineStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
-        surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
+        surface.initJacobianToGlobal(gctx, *jacToGlobal, pos, dir,
                                      par.parameters());
         jacobian.emplace<0>(BoundMatrix::Identity());
       }
@@ -99,7 +99,7 @@ class StraightLineStepper {
     /// @param [in] ssize is the (absolute) maximum step size
     /// @param [in] stolerance is the stepping tolerance
     template <typename parameters_t, std::enable_if_t<not parameters_t::is_local_representation, int> = 0>
-    explicit StepperState(std::reference_wrapper<const GeometryContext> gctx,
+    explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
@@ -108,7 +108,7 @@ class StraightLineStepper {
         dir(par.momentum().normalized()),
         p(par.momentum().norm()),
         q((par.charge() != 0.) ? par.charge() : 1.),
-        t0(par.time()),
+        t(par.time()),
         navDir(ndir),
         stepSize(ndir * std::abs(ssize)),
         tolerance(stolerance),
@@ -121,8 +121,8 @@ class StraightLineStepper {
           jacobian.emplace<3>(FreeMatrix::Identity());
          
           // Set up transformations between angles and directions in jacobian
-      jacDirToAngle = directionsToAnglesJacobian(dir);
-      jacAngleToDir = anglesToDirectionsJacobian(dir);
+      jacDirToAngle = detail::jacobianDirectionsToAngles(dir);
+      jacAngleToDir = detail::jacobianAnglesToDirections(dir);
       }
     }
     
@@ -138,14 +138,14 @@ class StraightLineStepper {
     FreeMatrix jacTransport = FreeMatrix::Identity();
 
     /// The full jacobian of the transport entire transport
-    std::variant<BoundMatrix, FreeToBoundMatrix, FreeMatrix, BoundToFreeMatrix> jacobian;
+    Jacobian jacobian;
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
     /// Boolean to indiciate if you need covariance transport
     bool covTransport = false;
-    Covariance cov = Covariance::Zero();
+    Covariance cov;
 
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
@@ -299,13 +299,27 @@ class StraightLineStepper {
     return state.stepSize.toString();
   }
 
+  /// Create and return a curvilinear state at the current position
+  ///
+  /// @brief This creates a curvilinear state.
+  ///
+  /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] transportCov Flag steering covariance transport
+  ///
+  /// @return A curvilinear state:
+  ///   - the curvilinear parameters at given position
+  ///   - the stepweise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  CurvilinearState curvilinearState(State& state,
+                                    bool transportCov = true) const;
+
   /// @brief Final state builder without a target surface
   ///
   /// @param [in, out] state State of the propagation
   ///
   /// @return std::tuple conatining the final state parameters, the jacobian &
   /// the accumulated path
-  auto freeState(State& state) const { return detail::freeState(state); }
+  FreeState freeState(State& state) const;
 
   /// Create and return the bound state at the current position
   ///
@@ -322,20 +336,6 @@ class StraightLineStepper {
   ///   - and the path length (from start - for ordering)
   BoundState boundState(State& state, const Surface& surface,
                         bool transportCov = true) const;
-
-  /// Create and return a curvilinear state at the current position
-  ///
-  /// @brief This creates a curvilinear state.
-  ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCov Flag steering covariance transport
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state,
-                                    bool transportCov = true) const;
 
   /// Method to update a stepper state to the some parameters
   ///
@@ -368,7 +368,7 @@ class StraightLineStepper {
   template <typename end_parameters_t = CurvilinearParameters>
   void covarianceTransport(State& state) const {
     detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal, state.dir, end_parameters_t::is_local_representation);
+                              state.derivative, state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, state.dir, end_parameters_t::is_local_representation);
   }
 
   /// Method for on-demand transport of the covariance

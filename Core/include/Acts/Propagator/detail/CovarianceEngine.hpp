@@ -28,9 +28,25 @@ namespace Acts {
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a seperate file.
 namespace detail {
-
+using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
 using Jacobian =
     std::variant<BoundMatrix, FreeToBoundMatrix, BoundToFreeMatrix, FreeMatrix>;
+
+/// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to (x,y,z,t,Tx,Ty,Tz,q/p)
+///
+/// @param [in] dir Direction vector
+///
+/// @return The jacobian
+  ActsMatrixD<8, 7>
+  jacobianDirectionsToAngles(const Vector3D& dir);
+  
+/// @brief Constructs a jacobian to transform from (x,y,z,t,Tx,Ty,Tz,q/p) to (x,y,z,t,phi,theta,q/p)
+///
+/// @param [in] dir Direction vector
+///
+/// @return The jacobian
+ActsMatrixD<7, 8>
+jacobianAnglesToDirections(const Vector3D& dir);
 
 /// Create and return the bound state at the current position
 ///
@@ -57,9 +73,9 @@ using Jacobian =
 ///   - and the path length (from start - for ordering)
 std::tuple<BoundTrackParameters, JacobianToBoundPars, double> boundState(
     std::reference_wrapper<const GeometryContext> geoContext,
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+    Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const FreeVector& parameters,
+    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters,
     bool covTransport, double accumulatedPath, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
@@ -82,10 +98,10 @@ std::tuple<BoundTrackParameters, JacobianToBoundPars, double> boundState(
 ///   - the curvilinear parameters at given position
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double> curvilinearState(
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+std::tuple<CurvilinearTrackParameters, Jacobian, double> curvilinearState(
+    Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const FreeVector& parameters,
+    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters,
     bool covTransport, double accumulatedPath);
 
 /// Create and return a free state at the current position
@@ -101,7 +117,8 @@ std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double> curvilinearS
 ///   - the free parameters at given position
 ///   - the stepweise jacobian towards it (from last location)
 ///   - and the path length (from start - for ordering)
-std::tuple<FreeParameters, Jacobian, double> freeState(StepperState& state);
+std::tuple<FreeParameters, Jacobian, double> freeState(Covariance& covarianceMatrix, Jacobian& jacobian, FreeMatrix& transportJacobian,
+                                  FreeVector& derivatives, std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters, bool covTransport, double accumulatedPath);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space. It treats different scenarios:
@@ -124,9 +141,9 @@ std::tuple<FreeParameters, Jacobian, double> freeState(StepperState& state);
 /// @note No check is done if the position is actually on the surface
 void covarianceTransport(
     std::reference_wrapper<const GeometryContext> geoContext,
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+    Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,  const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeVector& parameters,
     const Surface& surface);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
@@ -141,10 +158,10 @@ void covarianceTransport(
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
 /// @param [in] toLocal Specifies whether the target is bound or free
-void covarianceTransport(BoundSymMatrix& covarianceMatrix,
-                         BoundMatrix& jacobian, FreeMatrix& transportJacobian,
+void covarianceTransport(Covariance& covarianceMatrix,
+                         Jacobian& jacobian, FreeMatrix& transportJacobian,
                          FreeVector& derivatives,
-                         BoundToFreeMatrix& jacobianLocalToGlobal,
+                         std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,  const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir,
                          const Vector3D& direction, bool toLocal = true);
 }  // namespace detail
 }  // namespace Acts

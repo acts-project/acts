@@ -13,26 +13,8 @@
 
 namespace Acts {
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
-StraightLineStepper::boundState(State& state, const Surface& surface,
-                                bool transportCov) const {
-  FreeVector parameters;
-  parameters[eFreePos0] = state.pos[ePos0];
-  parameters[eFreePos1] = state.pos[ePos1];
-  parameters[eFreePos2] = state.pos[ePos2];
-  parameters[eFreeTime] = state.t;
-  parameters[eFreeDir0] = state.dir[eMom0];
-  parameters[eFreeDir1] = state.dir[eMom1];
-  parameters[eFreeDir2] = state.dir[eMom2];
-  parameters[eFreeQOverP] = state.q / state.p;
-  return detail::boundState(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, parameters,
-      state.covTransport && transportCov, state.pathAccumulated, surface);
-}
-
-std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
-StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
+auto
+StraightLineStepper::curvilinearState(State& state, bool transportCov) const -> CurvilinearState {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
   parameters[eFreePos1] = state.pos[ePos1];
@@ -44,8 +26,38 @@ StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   parameters[eFreeQOverP] = state.q / state.p;
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, parameters, state.covTransport && transportCov,
-      state.pathAccumulated);
+      state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, parameters, state.covTransport && transportCov, state.pathAccumulated);
+}
+      
+auto
+StraightLineStepper::boundState(State& state, const Surface& surface,
+                                bool transportCov) const -> BoundState {
+  FreeVector parameters;
+  parameters[eFreePos0] = state.pos[ePos0];
+  parameters[eFreePos1] = state.pos[ePos1];
+  parameters[eFreePos2] = state.pos[ePos2];
+  parameters[eFreeTime] = state.t;
+  parameters[eFreeDir0] = state.dir[eMom0];
+  parameters[eFreeDir1] = state.dir[eMom1];
+  parameters[eFreeDir2] = state.dir[eMom2];
+  parameters[eFreeQOverP] = state.q / state.p;
+  return detail::boundState(state.geoContext, state.cov, state.jacobian,
+                            state.jacTransport, state.derivative,
+                            state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, parameters, state.covTransport && transportCov,
+                            state.pathAccumulated, surface);
+}
+
+auto StraightLineStepper::freeState(State& state) const -> FreeState {
+	  FreeVector parameters;
+  parameters[eFreePos0] = state.pos[ePos0];
+  parameters[eFreePos1] = state.pos[ePos1];
+  parameters[eFreePos2] = state.pos[ePos2];
+  parameters[eFreeTime] = state.t;
+  parameters[eFreeDir0] = state.dir[eMom0];
+  parameters[eFreeDir1] = state.dir[eMom1];
+  parameters[eFreeDir2] = state.dir[eMom2];
+  parameters[eFreeQOverP] = state.q / state.p;
+      return detail::freeState(state.cov, state.jacobian, state.jacTransport, state.derivative, state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, parameters, state.covTransport, state.pathAccumulated);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& parameters,
@@ -66,11 +78,6 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
   state.t = time;
 }
 
-void StraightLineStepper::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal, state.dir);
-}
-
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface) const {
   FreeVector parameters;
@@ -84,7 +91,7 @@ void StraightLineStepper::covarianceTransport(State& state,
   parameters[eFreeQOverP] = state.q / state.p;
   detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
-                              state.jacToGlobal, parameters, surface);
+                              state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, parameters, surface);
 }
 
 void StraightLineStepper::resetState(State& state,

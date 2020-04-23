@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
                                       tolerance);
 
   // Test the result & compare with the input/test for reasonable members
-  BOOST_CHECK_EQUAL(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK(!slsState.jacToGlobal.has_value());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
   BOOST_CHECK(!slsState.covTransport);
-  BOOST_CHECK_EQUAL(slsState.cov, Covariance::Zero());
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(slsState.cov), Covariance::Zero());
   CHECK_CLOSE_OR_SMALL(slsState.pos, pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(slsState.dir, dir.normalized(), eps, eps);
   CHECK_CLOSE_REL(slsState.p, absMom, eps);
@@ -90,9 +90,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
                                           1 / absMom, cov);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, ndir,
                                         stepSize, tolerance);
-  BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK(slsState.jacToGlobal.has_value());
   BOOST_CHECK(slsState.covTransport);
-  BOOST_CHECK_EQUAL(slsState.cov, cov);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(slsState.cov), cov);
 }
 
 /// These tests are aiming to test the functions of the StraightLineStepper
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
   BOOST_CHECK(curvPars.covariance().has_value());
   BOOST_CHECK_NE(*curvPars.covariance(), cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(std::get<1>(curvState)),
                          BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double h = sls.step(ps).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize, ndir * stepSize);
   BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(ps.stepping.cov), cov, 1e-6);
   BOOST_CHECK_GT(ps.stepping.pos.norm(), newPos.norm());
   BOOST_CHECK_EQUAL(ps.stepping.dir, newMom.normalized());
   BOOST_CHECK_EQUAL(ps.stepping.p, newMom.norm());
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double h2 = sls.step(ps).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize, ndir * stepSize);
   BOOST_CHECK_EQUAL(h2, h);
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(ps.stepping.cov), cov, 1e-6);
   BOOST_CHECK_GT(ps.stepping.pos.norm(), newPos.norm());
   BOOST_CHECK_EQUAL(ps.stepping.dir, newMom.normalized());
   BOOST_CHECK_EQUAL(ps.stepping.p, newMom.norm());
@@ -331,14 +331,14 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
   BOOST_CHECK(boundPars.covariance().has_value());
   BOOST_CHECK_NE(*boundPars.covariance(), cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(boundState),
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(std::get<1>(boundState)),
                          BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
   // Transport the covariance in the context of a surface
   sls.covarianceTransport(slsState, *plane);
   BOOST_CHECK_NE(slsState.cov, cov);
-  BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK(slsState.jacToGlobal.has_value());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
 
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_REL(slsState.p, 2. * absMom, eps);
   BOOST_CHECK_EQUAL(slsState.q, 1. * charge);
   CHECK_CLOSE_OR_SMALL(slsState.t, 2. * time, eps, eps);
-  CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
+  CHECK_CLOSE_COVARIANCE(std::get<BoundSymMatrix>(slsState.cov), Covariance(2. * cov), 1e-6);
 }
 }  // namespace Test
 }  // namespace Acts
