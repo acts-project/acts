@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
                                               stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
-  BOOST_CHECK_EQUAL(!esState.jacToGlobal.has_value());
+  BOOST_CHECK(!esState.jacToGlobal.has_value());
   BOOST_CHECK_EQUAL(esState.jacTransport,FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative , FreeVector::Zero());
   BOOST_CHECK(!esState.covTransport);
