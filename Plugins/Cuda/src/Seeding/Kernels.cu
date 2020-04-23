@@ -117,7 +117,7 @@ namespace Acts{
 				  tmpBcompIndex,
 				  TcompIndex,
 				  tmpTcompIndex);
-    cudaErrChk( cudaGetLastError() );
+    ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
   }
 
   void transformCoordinate( const dim3 grid, const dim3 block,
@@ -156,7 +156,7 @@ namespace Acts{
 				      circBcompMatPerSpM,
 				      spTcompMatPerSpM,
 				      circTcompMatPerSpM);
-    cudaErrChk ( cudaGetLastError() );
+    ACTS_CUDA_ERROR_CHECK ( cudaGetLastError() );
   }
     
   void searchTriplet(const dim3 grid, const dim3 block,
@@ -198,7 +198,7 @@ namespace Acts{
 				 curvatures,
 				 impactparameters
 				 );
-  cudaErrChk( cudaGetLastError() );
+  ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
   }
   
 }

@@ -10,60 +10,50 @@
 
 #include "Acts/Plugins/Cuda/Utilities/CudaScalar.cu"
 
-namespace Acts{
+namespace Acts {
 
-template<typename Var_t>
+template <typename var_t>
 class CudaScalar;
-  
-template<typename Var_t>
-class CpuScalar{
-  
-public:
 
-  CpuScalar() = default;
-  CpuScalar(bool pinned=0){
-    fPinned = pinned;
-    if (pinned == 0){
-      fHostPtr = new Var_t[1];
-    }
-    else if (pinned == 1){
-      cudaMallocHost(&fHostPtr, sizeof(Var_t));
+template <typename var_t>
+class CpuScalar {
+ public:
+  CpuScalar(bool pinned = 0) {
+    m_pinned = pinned;
+    if (pinned == 0) {
+      m_hostPtr = new var_t[1];
+    } else if (pinned == 1) {
+      cudaMallocHost(&m_hostPtr, sizeof(var_t));
     }
   }
 
-  CpuScalar(CudaScalar<Var_t>* cuScalar, bool pinned=0){
-    fPinned = pinned;
-    if (pinned == 0){
-      fHostPtr = new Var_t[1];
+  CpuScalar(CudaScalar<var_t>* cuScalar, bool pinned = 0) {
+    m_pinned = pinned;
+    if (pinned == 0) {
+      m_hostPtr = new var_t[1];
+    } else if (pinned == 1) {
+      cudaMallocHost(&m_hostPtr, sizeof(var_t));
     }
-    else if (pinned == 1){
-      cudaMallocHost(&fHostPtr, sizeof(Var_t));
-    }
-    cudaMemcpy(fHostPtr, cuScalar->Get(), sizeof(Var_t), cudaMemcpyDeviceToHost);   
+    cudaMemcpy(m_hostPtr, cuScalar->get(), sizeof(var_t),
+               cudaMemcpyDeviceToHost);
   }
-  
-  ~CpuScalar(){
-    if (!fPinned){
-      delete fHostPtr;
-    }
-    else if (fPinned){
-      cudaFreeHost(fHostPtr);
+
+  ~CpuScalar() {
+    if (!m_pinned) {
+      delete m_hostPtr;
+    } else if (m_pinned) {
+      cudaFreeHost(m_hostPtr);
     }
   }
-  
-  Var_t* Get(){
-    return fHostPtr;
-  }
-  
-  void Set(Var_t val){
-    fHostPtr[0] = val;
-  }
-    
-private:
-  Var_t* fHostPtr;
-  size_t fSize;
-  bool   fPinned;
+
+  var_t* get() { return m_hostPtr; }
+
+  void Set(var_t val) { m_hostPtr[0] = val; }
+
+ private:
+  var_t* m_hostPtr;
+  size_t m_size;
+  bool m_pinned;
 };
-  
-}
 
+}  // namespace Acts

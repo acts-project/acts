@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Plugins/Cuda/Cuda.hpp"
+#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
-#include "Acts/Plugins/Cuda/Cuda.hpp"
+#include "Acts/Seeding/SeedfinderConfig.hpp"
 
 #include <array>
 #include <list>
@@ -24,16 +24,15 @@
 #include <utility>
 #include <vector>
 
-namespace Acts{
-  
-template <typename external_spacepoint_t >
-class Seedfinder<external_spacepoint_t, Acts::Cuda > {
+namespace Acts {
+
+template <typename external_spacepoint_t>
+class Seedfinder<external_spacepoint_t, Acts::Cuda> {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
-    
- public:
 
+ public:
   Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
 
   ~Seedfinder() = default;
@@ -42,7 +41,7 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda > {
   Seedfinder() = delete;
   Seedfinder(const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
   Seedfinder<external_spacepoint_t, Acts::Cuda>& operator=(
-  const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
+      const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -53,11 +52,12 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda > {
   /// Ranges must return pointers.
   /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
-  template< typename sp_range_t >
-  std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
-    
+  template <typename sp_range_t>
+  std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(
+      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+
  private:
-  Acts::SeedfinderConfig<external_spacepoint_t> m_config;  
+  Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 };
 
 }  // namespace Acts

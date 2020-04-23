@@ -12,7 +12,7 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
-#define cudaErrChk(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+#define ACTS_CUDA_ERROR_CHECK(ans) { cudaAssert((ans), __FILE__, __LINE__); }
 inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
   if (code != cudaSuccess)

@@ -58,10 +58,10 @@ BOOST_AUTO_TEST_CASE( CUDAOBJ_TEST ){
   CudaVector<Eigen::Matrix<AFloat, vecDim, 1>> inMat1_cuda(bufSize, inMat1_cpu, bufSize, 0);
   CudaVector<Eigen::Matrix<AFloat, vecDim, 1>> outMat1_cuda(bufSize);
  
-  MatrixLoadStore1<AFloat, vecDim, 1><<< gridSize, blockSize >>>(inMat1_cuda.Get(),outMat1_cuda.Get());
-  cudaErrChk ( cudaGetLastError() );
+  MatrixLoadStore1<AFloat, vecDim, 1><<< gridSize, blockSize >>>(inMat1_cuda.get(),outMat1_cuda.get());
+  ACTS_CUDA_ERROR_CHECK ( cudaGetLastError() );
     
-  Eigen::Matrix<AFloat, vecDim, 1>* outMat1_cpu = outMat1_cuda.GetHost();
+  CpuVector<Eigen::Matrix<AFloat, vecDim, 1>> outMat1_cpu(bufSize, &outMat1_cuda);
 
   // Case 2) For aligned memory access
   // global memory load/store efficiency ~ 100%
@@ -77,18 +77,18 @@ BOOST_AUTO_TEST_CASE( CUDAOBJ_TEST ){
   CudaVector<Eigen::Matrix<AFloat,vecDim,nVec>> inMat2_cuda(bufSize, inMat2_cpu, bufSize, 0);
   CudaVector<Eigen::Matrix<AFloat,vecDim,nVec>> outMat2_cuda(bufSize);
 
-  MatrixLoadStore2<AFloat, vecDim, nVec><<< gridSize, blockSize >>>(inMat2_cuda.Get(),outMat2_cuda.Get());
+  MatrixLoadStore2<AFloat, vecDim, nVec><<< gridSize, blockSize >>>(inMat2_cuda.get(),outMat2_cuda.get());
 
-  cudaErrChk ( cudaGetLastError() );
+  ACTS_CUDA_ERROR_CHECK ( cudaGetLastError() );
     
-  Eigen::Matrix<AFloat,vecDim,nVec>* outMat2_cpu = outMat2_cuda.GetHost();
+  CpuVector<Eigen::Matrix<AFloat,vecDim,nVec>> outMat2_cpu(bufSize, &outMat2_cuda);
   
   cudaProfilerStop();
 
   for (int i=0; i<nVec; i++){
-    BOOST_REQUIRE( inMat1_cpu[i] == outMat1_cpu[i] );
+    BOOST_REQUIRE( inMat1_cpu[i] == *outMat1_cpu.get(i) );
   }
-  BOOST_REQUIRE( inMat2_cpu[0] == outMat2_cpu[0] ); 
+  BOOST_REQUIRE( inMat2_cpu[0] == *outMat2_cpu.get(0) ); 
 }
 BOOST_AUTO_TEST_SUITE_END()
 

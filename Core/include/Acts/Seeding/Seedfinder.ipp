@@ -33,14 +33,14 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
 }
-  
+
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
-std::vector<Seed<external_spacepoint_t> >  
+std::vector<Seed<external_spacepoint_t>>
 Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const{
-  std::vector<Seed<external_spacepoint_t>> outputVec;  
-  for (auto spM : middleSPs) {    
+    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+  std::vector<Seed<external_spacepoint_t>> outputVec;
+  for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
@@ -113,7 +113,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::vector<LinCircle> linCircleTop;
     transformCoordinates(compatBottomSP, *spM, true, linCircleBottom);
     transformCoordinates(compatTopSP, *spM, false, linCircleTop);
-    
+
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;
@@ -244,7 +244,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   }
   return outputVec;
 }
-  
+
 template <typename external_spacepoint_t, typename platform_t>
 void Seedfinder<external_spacepoint_t, platform_t>::transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,

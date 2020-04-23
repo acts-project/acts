@@ -43,12 +43,12 @@ BOOST_AUTO_TEST_CASE( CUDAOBJ_TEST ){
   
   CudaVector<Eigen::Matrix<float,vecDim,nVec>> inMat_cuda(bufSize, inMat_cpu, bufSize, 0);
   CudaVector<Eigen::Matrix<float,vecDim,nVec>> outMat_cuda(bufSize);
-  MatrixLoadStore<float, vecDim, nVec><<< gridSize, blockSize >>>(inMat_cuda.Get(),outMat_cuda.Get());
-  Eigen::Matrix<float,vecDim,nVec>* outMat_cpu = outMat_cuda.GetHost();
+  MatrixLoadStore<float, vecDim, nVec><<< gridSize, blockSize >>>(inMat_cuda.get(),outMat_cuda.get());
+  CpuVector<Eigen::Matrix<float,vecDim,nVec>> outMat_cpu(bufSize, &outMat_cuda);
 
   cudaProfilerStop();
   
-  BOOST_REQUIRE( inMat_cpu[0] == outMat_cpu[0] ); 
+  BOOST_REQUIRE( inMat_cpu[0] == *outMat_cpu.get(0) ); 
 }
 BOOST_AUTO_TEST_SUITE_END()
 

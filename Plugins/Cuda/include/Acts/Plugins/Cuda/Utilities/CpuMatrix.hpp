@@ -12,106 +12,80 @@
 
 // column-major style Matrix Definition
 
-namespace Acts{
+namespace Acts {
 
-template<typename Var_t>
+template <typename var_t>
 class CudaMatrix;
-  
-template<typename Var_t>
-class CpuMatrix{
-  
-public:
 
-  CpuMatrix() = default;
-  CpuMatrix(size_t nRows, size_t nCols, bool pinned=0){
-    SetSize(nRows,nCols);
-    fPinned = pinned;
-    if (pinned == 0){
-      fHostPtr = new Var_t[fSize];
-    }
-    else if (pinned == 1){
-      cudaMallocHost(&fHostPtr, fSize*sizeof(Var_t));
+template <typename var_t>
+class CpuMatrix {
+ public:
+  CpuMatrix() = delete;
+  CpuMatrix(size_t nRows, size_t nCols, bool pinned = 0) {
+    m_setSize(nRows, nCols);
+    m_pinned = pinned;
+    if (pinned == 0) {
+      m_hostPtr = new var_t[m_size];
+    } else if (pinned == 1) {
+      cudaMallocHost(&m_hostPtr, m_size * sizeof(var_t));
     }
   }
 
-  CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<Var_t>* cuMat, bool pinned=0){
-    SetSize(nRows,nCols);
-    fPinned = pinned;
-    if (pinned == 0){
-      fHostPtr = new Var_t[fSize];
+  CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<var_t>* cuMat,
+            bool pinned = 0) {
+    m_setSize(nRows, nCols);
+    m_pinned = pinned;
+    if (pinned == 0) {
+      m_hostPtr = new var_t[m_size];
+    } else if (pinned == 1) {
+      cudaMallocHost(&m_hostPtr, m_nRows * m_nCols * sizeof(var_t));
     }
-    else if (pinned == 1){
-      cudaMallocHost(&fHostPtr, fNRows*fNCols*sizeof(Var_t));
-    }
-    cudaMemcpy(fHostPtr, cuMat->Get(0,0), fSize*sizeof(Var_t), cudaMemcpyDeviceToHost);   
-  }
-  
-  ~CpuMatrix(){
-    if (!fPinned){
-      delete fHostPtr;
-    }
-    else if (fPinned){
-      cudaFreeHost(fHostPtr);
-    }
+    cudaMemcpy(m_hostPtr, cuMat->get(0, 0), m_size * sizeof(var_t),
+               cudaMemcpyDeviceToHost);
   }
 
-  void SetSize(size_t row, size_t col){
-    fNRows = row;
-    fNCols = col;
-    fSize  = fNRows*fNCols; 
-  }
-  
-  size_t GetNCols(){ return fNCols; }
-  size_t GetNRows(){ return fNRows; }
-  size_t GetSize() { return fSize; }
-  
-  Var_t* Get(size_t row=0, size_t col=0){
-    size_t offset=row+col*fNRows;
-    return fHostPtr+offset;
-  }
-  
-  void Set(size_t row, size_t col, Var_t val){
-    size_t offset=row+col*fNRows;
-    fHostPtr[offset] = val;
-  }
-  
-  Var_t* GetColumn(size_t col){
-    return fHostPtr+col*fNRows;
-  }
-  Var_t* GetRow(size_t row){    
-    Var_t* ret = new Var_t[fNCols];
-    for(size_t i_c=0; i_c<fNCols; i_c++) ret[i_c] = fHostPtr[row+fNRows*i_c];
-    return ret;    
-  }
-
-  void SetRow(size_t row, Var_t* input){
-    for(size_t i_c=0; i_c<fNCols; i_c++){
-      fHostPtr[row+fNRows*i_c]=input[i_c];
+  ~CpuMatrix() {
+    if (!m_pinned) {
+      delete m_hostPtr;
+    } else if (m_pinned) {
+      cudaFreeHost(m_hostPtr);
     }
   }
 
-  void SetColumn(size_t col, Var_t* input){
-    fHostPtr[col*fNRows] = input[0];
+  var_t* get(size_t row = 0, size_t col = 0) {
+    size_t offset = row + col * m_nRows;
+    return m_hostPtr + offset;
   }
 
-  void CopyD2H(Var_t* devPtr, size_t len, size_t offset){
-    cudaMemcpy(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost);
+  void set(size_t row, size_t col, var_t val) {
+    size_t offset = row + col * m_nRows;
+    m_hostPtr[offset] = val;
   }
 
-  void CopyD2H(Var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream){
-    cudaMemcpyAsync(fHostPtr+offset, devPtr, len*sizeof(Var_t), cudaMemcpyDeviceToHost, *stream);
+  void copyD2H(var_t* devPtr, size_t len, size_t offset) {
+    cudaMemcpy(m_hostPtr + offset, devPtr, len * sizeof(var_t),
+               cudaMemcpyDeviceToHost);
   }
 
-  void Zeros(){
-    memset(fHostPtr, 0, fSize*sizeof(Var_t));
+  void copyD2H(var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream) {
+    cudaMemcpyAsync(m_hostPtr + offset, devPtr, len * sizeof(var_t),
+                    cudaMemcpyDeviceToHost, *stream);
   }
-  
-private:
-  Var_t* fHostPtr;
-  size_t fNCols;
-  size_t fNRows;
-  size_t fSize;
-  bool   fPinned;
+
+  void zeros() { memset(m_hostPtr, 0, m_size * sizeof(var_t)); }
+
+ private:
+  var_t* m_hostPtr;
+  size_t m_nCols;
+  size_t m_nRows;
+  size_t m_size;
+  bool m_pinned;
+
+  void m_setSize(size_t row, size_t col) {
+    m_nRows = row;
+    m_nCols = col;
+    m_size = m_nRows * m_nCols;
+  }
 };
-  
-}
+
+}  // namespace Acts

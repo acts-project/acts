@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "Acts/Plugins/Cuda/Utilities/CudaScalar.cu"
-#include "Acts/Plugins/Cuda/Utilities/CudaVector.cu"
-#include "Acts/Plugins/Cuda/Utilities/CudaMatrix.cu"
+#include "Acts/Plugins/Cuda/Utilities/CpuMatrix.hpp"
 #include "Acts/Plugins/Cuda/Utilities/CpuScalar.hpp"
 #include "Acts/Plugins/Cuda/Utilities/CpuVector.hpp"
-#include "Acts/Plugins/Cuda/Utilities/CpuMatrix.hpp"
+#include "Acts/Plugins/Cuda/Utilities/CudaMatrix.cu"
+#include "Acts/Plugins/Cuda/Utilities/CudaScalar.cu"
 #include "Acts/Plugins/Cuda/Utilities/CudaUtils.cu"
+#include "Acts/Plugins/Cuda/Utilities/CudaVector.cu"
 
-namespace Acts{
-  class Cuda;
+namespace Acts {
+class Cuda;
 }
