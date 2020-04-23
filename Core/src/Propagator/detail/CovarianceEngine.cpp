@@ -107,6 +107,24 @@ if(jacobianLocalToGlobal.has_value())
   return jacToLocal;
 }
 
+/// @brief This function treats the modifications of the jacobian related to the
+/// projection onto a surface. Since a variation of the start parameters within
+/// a given uncertainty would lead to a variation of the end parameters, these
+/// need to be propagated onto the target surface. This an approximated approach
+/// to treat the (assumed) small change.
+///
+/// @param [in] geoContext The geometry Context
+/// @param [in] parameters Free, nominal parametrisation
+/// @param [in] jacobianDirToAngle Projection from direction dependent parametrisation to angular
+/// @param [in] jacobianAngleToDir Projection from angular dependent parametrisation to direction 
+/// @param [in] transportJacobian The transport jacobian 
+/// @param [in, out] derivatives Path length derivatives of the free, nominal
+/// parameters
+/// @param [in] surface The surface onto which the projection should be
+/// performed
+///
+/// @return The projection jacobian from global end parameters to its local
+/// equivalent
 FreeToBoundMatrix surfaceDerivative(
     std::reference_wrapper<const GeometryContext> geoContext,
     const FreeVector& parameters, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeMatrix& transportJacobian,
@@ -157,6 +175,24 @@ const FreeToBoundMatrix surfaceDerivative(
   return freeToCurvilinearJacobian(direction);
 }
 
+/// @brief This function treats the modifications of the jacobian related to the
+/// projection onto a curvilinear surface. Since a variation of the start
+/// parameters within a given uncertainty would lead to a variation of the end
+/// parameters, these need to be propagated onto the target surface. This an
+/// approximated approach to treat the (assumed) small change.
+///
+/// @param [in] direction Normalised direction vector
+/// @param [in] jacobianDirToAngle Projection from direction dependent parametrisation to angular
+/// @param [in] jacobianAngleToDir Projection from angular dependent parametrisation to direction 
+/// @param [in] transportJacobian The transport jacobian 
+/// @param [in, out] derivatives Path length derivatives of the free, nominal
+/// parameters
+/// @note The parameter @p surface is only required if projected to bound
+/// parameters. In the case of curvilinear parameters the geometry and the
+/// position is known and the calculation can be simplified
+///
+/// @return The projection jacobian from global end parameters to its local
+/// equivalent
 const FreeToBoundMatrix surfaceDerivative(
     const Vector3D& direction, const ActsMatrixD<8, 7>& jacobianDirToAngle, const ActsMatrixD<7, 8>& jacobianAngleToDir, const FreeMatrix& transportJacobian,
     const FreeVector& derivatives) {
@@ -169,7 +205,7 @@ const FreeToBoundMatrix surfaceDerivative(
 } 
   
 /// @brief This function reinitialises the state members required for the
-/// covariance transport
+/// covariance transport in case of a bound target
 ///
 /// @param [in] geoContext The geometry context
 /// @param [in, out] jacobian Full jacobian since the last reset
@@ -211,7 +247,7 @@ void reinitializeJacobians(
 }
 
 /// @brief This function reinitialises the state members required for the
-/// covariance transport
+/// covariance transport in case of a curvilinear target
 ///
 /// @param [in, out] jacobian Full jacobian since the last reset
 /// @param [in, out] derivatives Path length derivatives of the free, nominal
@@ -253,6 +289,15 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
   jacobianLocalToGlobal(7, eBoundQOverP) = 1;
 }
 
+/// @brief This function reinitialises the state members required for the
+/// covariance transport in case of a free target
+///
+/// @param [in, out] jacobian Full jacobian since the last reset
+/// @param [in, out] derivatives Path length derivatives of the free, nominal
+/// parameters
+/// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
+/// parametrisation to free parameters
+/// @param [in] direction Normalised direction vector
 void reinitializeJacobians(FreeMatrix& transportJacobian,
                            FreeVector& derivatives,
                            std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,
