@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace dd4hep;
+
 static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
                                    Assembly& staveAssembly, double staveHlength,
                                    double ylength) {
