@@ -399,9 +399,10 @@ class CombinatorialKalmanFilter {
               ACTS_VERBOSE(
                   "Finalize/run smoothing for track with entry index = "
                   << result.trackTips.at(result.iSmoothed));
-              // -> Sort the track states (as now the path length is set)
-              // -> Call the smoothing
-              // -> Set a stop condition when all track states have been handled
+              // --> Search the starting state to run the smoothing
+              // --> Call the smoothing
+              // --> Set a stop condition when all track states have been
+              // handled
               auto res = finalize(state, stepper, result);
               if (!res.ok()) {
                 ACTS_ERROR("Error in finalize: " << res.error());
@@ -562,7 +563,8 @@ class CombinatorialKalmanFilter {
               sharedTip = index_it->second;
             }
           }
-          // Add a measurement/outlier track state proxy in multi trajectory
+
+          // The mask for adding a state in the multitrajectory
           // No storage allocation for:
           // -> predicted parameter and uncalibrated measurement if
           // already stored
@@ -575,7 +577,7 @@ class CombinatorialKalmanFilter {
               (isOutlier ? ~TrackStatePropMask::Filtered
                          : TrackStatePropMask::All);
 
-          // Add measurement or outlier track state to the multitrajectory
+          // Add measurement/outlier track state to the multitrajectory
           auto addStateRes = addSourcelinkState(
               stateMask, boundState, sourcelinks.at(index), isOutlier, result,
               state.geoContext, neighborTip, sharedTip);
@@ -961,7 +963,8 @@ class CombinatorialKalmanFilter {
                           result_type& result) const {
       // The tip of the track being smoothed
       const auto& currentTip = result.trackTips.at(result.iSmoothed);
-      // Get the index of measurement states;
+
+      // Get the indices of measurement states;
       std::vector<size_t> measurementIndices;
       // Count track states to be smoothed
       size_t nStates = 0;
