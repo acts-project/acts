@@ -158,8 +158,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   // Add the builders
   for (auto& vb : volumeBuilders) {
     tgConfig.trackingVolumeBuilders.push_back(
-        [=](const auto& context, const auto& inner, const auto&) {
-          return vb->trackingVolume(context, inner);
+        [=](const auto& gcontext, const auto& inner, const auto&) {
+          return vb->trackingVolume(gcontext, inner);
         });
   }
   // Add the helper
