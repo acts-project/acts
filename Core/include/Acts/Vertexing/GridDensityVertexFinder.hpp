@@ -18,10 +18,25 @@
 
 namespace Acts {
 
-/// @class TODO
+/// @class GridDensityVertexFinder
+/// @brief Vertex finder that makes use of a track density grid.
+/// Each single track is modelled as a 2(!)-dim Gaussian distribution grid
+/// in the d0-z0 plane, but only the overlap with the z-axis (i.e. a 1-dim
+/// density vector) needs to be calculated. All track contributions along the
+/// beam axis (main density grid) a superimposed and the z-value of the bin
+/// with the highest track density is returned as a vertex candidate.
+/// @tparam mainGridSize The size of the z-axis 1-dim main density grid
+/// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
+/// a single track is modelled as a (trkGridSize x trkGridSize) grid
+/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
 template <int mainGridSize = 2000, int trkGridSize = 15,
           typename vfitter_t = DummyVertexFitter<>>
 class GridDensityVertexFinder {
+  // Assert odd trkGridSize
+  static_assert(trkGridSize % 2);
+  // Assert bigger main grid than track grid
+  static_assert(mainGridSize > trkGridSize);
+
   using InputTrack_t = typename vfitter_t::InputTrack_t;
   using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
@@ -44,6 +59,16 @@ class GridDensityVertexFinder {
     // collection, the individual track density contributions to the main grid
     // can just be removed without calculating the entire grid from scratch.
     bool cacheGridStateForTrackRemoval = true;
+
+    // Maximum d0 impact parameter significance to use a track
+    double maxD0TrackSignificance = 3.5;
+    // Maximum z0 impact parameter significance to use a track
+    double maxZ0TrackSignificance = 12.;
+    // The actual corresponding cut values in the algorithm
+    const double d0SignificanceCut =
+        maxD0TrackSignificance * maxD0TrackSignificance;
+    const double z0SignificanceCut =
+        maxZ0TrackSignificance * maxZ0TrackSignificance;
   };
 
   /// @brief The State struct
@@ -56,6 +81,10 @@ class GridDensityVertexFinder {
     // a single track to the main grid) for every single track
     std::map<const InputTrack_t*, std::pair<int, ActsVectorF<trkGridSize>>>
         binAndTrackGridMap;
+
+    // Map to store bool if track has passed track selection or not
+    std::map<const InputTrack_t*, bool> trackSelectionMap;
+
     // Store tracks that have been removed from track collection. These
     // track will be removed from the main grid
     std::vector<const InputTrack_t*> tracksToRemove;
@@ -110,6 +139,14 @@ class GridDensityVertexFinder {
       : m_extractParameters(func) {}
 
  private:
+  /// @brief Checks if a track passes the selection criteria for seeding
+  ///
+  /// @param trk The track
+  ///
+  /// @return Bool track passes selection
+  bool doesPassTrackSelection(const BoundParameters& trk) const;
+
+  // The configuration object
   const Config m_cfg;
 
   /// @brief Function to extract track parameters,

@@ -5,21 +5,29 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#include <algorithm>
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <int mainGridSize, int trkGridSize>
 Acts::Result<float>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
-    const Acts::ActsVectorF<mainGridSize>& mainGrid) const {
+    Acts::ActsVectorF<mainGridSize>& mainGrid) const {
   if (mainGrid == ActsVectorF<mainGridSize>::Zero()) {
     return VertexingError::EmptyInput;
   }
 
-  // Get bin with maximum content
   int zbin = -1;
-  mainGrid.maxCoeff(&zbin);
+  if (!m_cfg.useHighestSumZPosition) {
+    // Get bin with maximum content
+    mainGrid.maxCoeff(&zbin);
+  } else {
+    // Get z position with highest density sum
+    // of surrounding bins
+    zbin = getHighestSumZPosition(mainGrid);
+  }
+
   // Derive corresponding z value
-  return (zbin - mainGridSize / 2) * m_cfg.binSize;
+  return (zbin - mainGridSize / 2 + 0.5) * m_cfg.binSize;
 }
 
 template <int mainGridSize, int trkGridSize>
@@ -135,4 +143,68 @@ float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
       -1. / (2. * det) *
       (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
   return coef * std::exp(expo);
+}
+
+template <int mainGridSize, int trkGridSize>
+int Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
+    getHighestSumZPosition(Acts::ActsVectorF<mainGridSize>& mainGrid) const {
+  // Checks the first (up to) 3 density maxima, if they are close, checks which
+  // one has the highest surrounding density sum (the two neighboring bins)
+
+  // The global maximum
+  int zbin = -1;
+  mainGrid.maxCoeff(&zbin);
+  int zFirstMax = zbin;
+  double firstDensity = mainGrid(zFirstMax);
+  double firstSum = getDensitySum(mainGrid, zFirstMax);
+
+  // Get the second highest maximum
+  mainGrid[zFirstMax] = 0;
+  mainGrid.maxCoeff(&zbin);
+  int zSecondMax = zbin;
+  double secondDensity = mainGrid(zSecondMax);
+  double secondSum = 0;
+  if (firstDensity - secondDensity <
+      firstDensity * m_cfg.maxRelativeDensityDev) {
+    secondSum = getDensitySum(mainGrid, zSecondMax);
+  }
+
+  // Get the third highest maximum
+  mainGrid[zSecondMax] = 0;
+  mainGrid.maxCoeff(&zbin);
+  int zThirdMax = zbin;
+  double thirdDensity = mainGrid(zThirdMax);
+  double thirdSum = 0;
+  if (firstDensity - thirdDensity <
+      firstDensity * m_cfg.maxRelativeDensityDev) {
+    thirdSum = getDensitySum(mainGrid, zThirdMax);
+  }
+
+  // Revert back to original values
+  mainGrid[zFirstMax] = firstDensity;
+  mainGrid[zSecondMax] = secondDensity;
+
+  // Return the z-bin position of the highest density sum
+  if (secondSum > firstSum || secondSum > thirdSum) {
+    return zSecondMax;
+  }
+  if (thirdSum > secondSum || thirdSum > firstSum) {
+    return zThirdMax;
+  }
+  return zFirstMax;
+}
+
+template <int mainGridSize, int trkGridSize>
+double Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getDensitySum(
+    const Acts::ActsVectorF<mainGridSize>& mainGrid, int pos) const {
+  double sum = mainGrid(pos);
+  // Sum up only the density contributions from the
+  // neighboring bins if they are still within bounds
+  if (pos - 1 >= 0) {
+    sum += mainGrid(pos - 1);
+  }
+  if (pos + 1 <= mainGrid.size() - 1) {
+    sum += mainGrid(pos + 1);
+  }
+  return sum;
 }

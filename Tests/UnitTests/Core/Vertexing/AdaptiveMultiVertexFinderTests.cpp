@@ -230,7 +230,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
         trkCount++;
       }
     }
-
     count++;
   }
 }
@@ -472,11 +471,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // IP 3D Estimator
-  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
+  // IP Estimator
+  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
 
-  IPEstimator::Config ip3dEstCfg(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstCfg);
+  IPEstimator::Config ipEstCfg(bField, propagator);
+  IPEstimator ipEst(ipEstCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   AnnealingUtility::Config annealingConfig(temperatures);
@@ -484,7 +483,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Fitter = AdaptiveMultiVertexFitter<BoundParameters, Linearizer>;
 
-  Fitter::Config fitterCfg(ip3dEst);
+  Fitter::Config fitterCfg(ipEst);
 
   fitterCfg.annealingTool = annealingUtility;
 
@@ -504,19 +503,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   SeedFinder seedFinder(seedFinderCfg);
 
-  using IPEstimater = TrackToVertexIPEstimator<BoundParameters, Propagator>;
-
-  IPEstimater::Config ipEstCfg(propagator);
-
-  // Create TrackToVertexIPEstimator
-  IPEstimater ipEst(ipEstCfg);
-
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                              std::move(ipEst), std::move(linearizer));
+  Finder::Config finderConfig(std::move(fitter), seedFinder,
+                              ipEst, linearizer);
 
-  // finderConfig.refitAfterBadVertex = false;
+  finderConfig.refitAfterBadVertex = false;
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
 

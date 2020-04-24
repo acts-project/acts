@@ -150,18 +150,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
   }
 
   // Run seed finder
-  auto now11 = std::chrono::system_clock::now();
   auto seedResult =
       m_cfg.seedFinder.find(trackVector, seedOptions, seedFinderState);
-  auto now12 = std::chrono::system_clock::now();
-  double msgrid =
-        std::chrono::duration_cast<std::chrono::microseconds>(now12 - now11).count();
-
 
   if (!seedResult.ok()) {
     return seedResult.error();
   }
-
+  
   Vertex<InputTrack_t> seedVertex = (*seedResult).back();
   // Update constraints according to seed vertex
   setConstraintAfterSeeding(currentConstraint, seedVertex);
