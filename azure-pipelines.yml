@@ -9,12 +9,27 @@ pr:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+steps:
+  - script: >
+      cmake -B build -S .
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Debug
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DACTS_BUILD_DD4HEP_PLUGIN=off
+      -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+      -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+      -DACTS_BUILD_JSON_PLUGIN=on
+      -DACTS_BUILD_TGEO_PLUGIN=on
+      -DACTS_BUILD_LEGACY=on
+      -DACTS_BUILD_FATRAS=on
+      -DACTS_BUILD_BENCHMARKS=on
+      -DACTS_BUILD_UNITTESTS=on
+  - script: cmake --build build --
+  - script: cmake --build build -- test
+  - script: >
+      pip3 install gcovr
+      && cd build
+      && /usr/bin/python3 ../CI/test_coverage
 
