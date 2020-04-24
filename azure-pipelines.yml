@@ -12,7 +12,8 @@ pool:
 container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
 
 steps:
-  - script: >
+  - displayName: Configure
+    script: >
       cmake -B build -S .
       -GNinja
       -DCMAKE_BUILD_TYPE=Debug
@@ -26,10 +27,19 @@ steps:
       -DACTS_BUILD_FATRAS=on
       -DACTS_BUILD_BENCHMARKS=on
       -DACTS_BUILD_UNITTESTS=on
-  - script: cmake --build build --
-  - script: cmake --build build -- test
-  - script: >
+
+  - displayName: Build
+    script: cmake --build build --
+
+  - displayName: Unit tests
+    script: cmake --build build -- test
+
+  - displayName: Coverage
+    script: >
       pip3 install gcovr
       && cd build
       && /usr/bin/python3 ../CI/test_coverage
+
+  - displayName: 'Upload to codecov.io'
+    script: bash <(curl -s https://codecov.io/bash)
 
