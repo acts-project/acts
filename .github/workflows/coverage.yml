@@ -39,7 +39,7 @@ jobs:
       - name: Remove .o files
         run: >
           du -sh build
-          && rm -rf build/**/*.o
+          && find build -name *.o -delete
           && du -sh build
       - name: Coverage
         run: >
