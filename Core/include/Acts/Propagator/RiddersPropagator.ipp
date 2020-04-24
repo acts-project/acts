@@ -17,7 +17,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       return_parameters_t, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
-  auto nominalRet = m_propagator.propagate(start, options);
+  auto nominalRet = m_propagator.template propagate<return_parameters_t>(start, options);
   if (not nominalRet.ok()) {
     return ThisResult::failure(nominalRet.error());
   }
@@ -320,7 +320,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-std::cout << r.endParameters->parameters().transpose() << std::endl;
+
     // Correct angular results
     if constexpr (start_parameters_t::is_local_representation) {
       // Correct for a possible variation of phi around

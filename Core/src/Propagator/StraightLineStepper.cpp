@@ -23,7 +23,7 @@ auto StraightLineStepper::curvilinearState(State& state, bool transportCov) cons
   parameters[eFreeDir0] = state.dir[eMom0];
   parameters[eFreeDir1] = state.dir[eMom1];
   parameters[eFreeDir2] = state.dir[eMom2];
-  parameters[eFreeQOverP] = state.q / state.p;
+  parameters[eFreeQOverP] = (state.q != 0. ? state.q : 1.) / state.p;
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, parameters,
@@ -39,7 +39,7 @@ auto StraightLineStepper::freeState(State& state) const -> FreeState {
   parameters[eFreeDir0] = state.dir[eMom0];
   parameters[eFreeDir1] = state.dir[eMom1];
   parameters[eFreeDir2] = state.dir[eMom2];
-  parameters[eFreeQOverP] = state.q / state.p;
+  parameters[eFreeQOverP] = (state.q != 0. ? state.q : 1.) / state.p;
   return detail::freeState(state.cov, state.jacobian, state.jacTransport,
                            state.derivative, state.jacToGlobal,
                            state.jacDirToAngle, state.jacAngleToDir, parameters,
@@ -57,7 +57,7 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
   parameters[eFreeDir0] = state.dir[eMom0];
   parameters[eFreeDir1] = state.dir[eMom1];
   parameters[eFreeDir2] = state.dir[eMom2];
-  parameters[eFreeQOverP] = state.q / state.p;
+  parameters[eFreeQOverP] = (state.q != 0. ? state.q : 1.) / state.p;
   return detail::boundState(state.geoContext, state.cov, state.jacobian,
                             state.jacTransport, state.derivative,
                             state.jacToGlobal, state.jacDirToAngle,
