@@ -190,7 +190,7 @@ class KalmanFitter {
   /// Shorthand definition
   using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
   /// The navigator type
-  using KalmanNavigator = typename decltype(m_propagator)::Navigator;
+  using KalmanNavigator = typename propagator_t::Navigator;
 
   /// The navigator has DirectNavigator type or not
   static constexpr bool isDirectNavigator =
