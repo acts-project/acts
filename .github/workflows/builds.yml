@@ -35,20 +35,20 @@ jobs:
         with:
           path: src
       - name: Install dependencies
-        run: >
-          brew install boost cmake eigen ninja tbb xerces-c
-          && mkdir deps
-          && curl -SL https://acts.web.cern.ch/ACTS/ci/macOS_10.15_deps.tar.gz | tar -xzC deps
+        run: brew install boost cmake eigen ninja tbb
       - name: Configure
         run: >
-          source deps/bin/thisroot.sh
-          && cmake -B build -S src
+          cmake -B build -S src
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_PREFIX_PATH=../deps
-          -DACTS_BUILD_EVERYTHING=on
-          -DACTS_BUILD_DD4HEP_PLUGIN=on
+          -DACTS_BUILD_DIGITIZATION_PLUGIN=on
+          -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
+          -DACTS_BUILD_JSON_PLUGIN=on
+          -DACTS_BUILD_FATRAS=on
+          -DACTS_BUILD_BENCHMARKS=on
+          -DACTS_BUILD_INTEGRATIONTESTS=on
+          -DACTS_BUILD_UNITTESTS=on
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
