@@ -37,7 +37,10 @@ jobs:
       - name: Unit tests
         run: cmake --build build -- test
       - name: Remove .o files
-        run: rm -rf build/**/*.o
+        run: >
+          du -sh build
+          && rm -rf build/**/*.o
+          && du -sh build
       - name: Coverage
         run: >
           pip3 install gcovr
