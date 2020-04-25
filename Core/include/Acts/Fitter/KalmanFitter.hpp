@@ -296,8 +296,9 @@ class KalmanFitter {
         // -> Get the measurement / calibrate
         // -> Create the predicted state
         // -> Perform the kalman update
-        // -> Check outlier behavior (@todo)
-        // -> Fill strack state information & update stepper information
+        // -> Check outlier behavior
+        // -> Fill strack state information & update stepper information if
+        // non-outlier
         if (state.stepping.navDir == forward and not result.smoothed and
             not result.forwardFiltered) {
           ACTS_VERBOSE("Perform forward filter step");
