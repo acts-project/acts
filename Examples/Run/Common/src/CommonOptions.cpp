@@ -139,7 +139,8 @@ boost::program_options::variables_map FW::Options::parse(
     // Load the file and tokenize it
     std::ifstream ifs(vm["response-file"].as<std::string>().c_str());
     if (!ifs) {
-      throw(std::system_error(std::error_code(),"Could not open response file."));
+      throw(std::system_error(std::error_code(),
+                              "Could not open response file."));
     }
     // Read the whole file into a string
     std::stringstream ss;
