@@ -112,7 +112,7 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(
     State& state, const Surface& surface) const {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
-      state.dir[1], state.dir[2], state.q / state.p;
+      state.dir[1], state.dir[2], (state.q != 0. ? state.q : 1.) / state.p;
   detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
                               state.jacToGlobal, state.jacDirToAngle,

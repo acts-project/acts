@@ -90,7 +90,6 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 				  opts, start, i, nominalParameters,
 				  deviations, surface);
 			}
-
 			// Exchange the result by Ridders Covariance
 			const FullBoundParameterSet& parSet =
 				nominalResult.endParameters->getParameterSet();

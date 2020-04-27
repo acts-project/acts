@@ -93,7 +93,7 @@ void StraightLineStepper::covarianceTransport(State& state,
   parameters[eFreeDir0] = state.dir[eMom0];
   parameters[eFreeDir1] = state.dir[eMom1];
   parameters[eFreeDir2] = state.dir[eMom2];
-  parameters[eFreeQOverP] = state.q / state.p;
+  parameters[eFreeQOverP] = (state.q != 0. ? state.q : 1.) / state.p;
   detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
                               state.jacToGlobal, state.jacDirToAngle,
