@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK(ts1.predicted() != ts2.predicted());
   BOOST_CHECK(ts1.predictedCovariance() != ts2.predictedCovariance());
 
-  // ts2 -> ts2 is ok
+  // ts2 -> ts1 is ok
   ts1.copyFrom(ts2);
   BOOST_CHECK(ts1.predicted() == ts2.predicted());
   BOOST_CHECK(ts1.predictedCovariance() == ts2.predictedCovariance());
