@@ -813,7 +813,7 @@ class KalmanFitter {
         if (isMeasurement) {
           measurementIndices.emplace_back(st.index());
         } else if (measurementIndices.empty()) {
-          // No smoothed parameter if the last measurment state has not been
+          // No smoothed parameters if the last measurement state has not been
           // found yet
           st.data().ismoothed = detail_lt::IndexData::kInvalid;
         }
