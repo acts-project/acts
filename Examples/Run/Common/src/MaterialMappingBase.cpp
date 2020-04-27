@@ -75,7 +75,10 @@ int materialMappingExample(int argc, char* argv[],
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   auto matCollection = vm["mat-mapping-collection"].template as<std::string>();
-
+  auto mappingtype = vm["mat-mapping-type"].template as<std::string>();
+  if (mappingtype != "surface" && mappingtype != "volume") {
+    return EXIT_FAILURE;
+  }
   // ---------------------------------------------------------------------------------
   // Input directory & input file handling
   std::string intputDir = vm["input-dir"].template as<std::string>();
@@ -93,15 +96,23 @@ int materialMappingExample(int argc, char* argv[],
     sequencer.addReader(matTrackReaderRoot);
   }
 
-  /// The material mapper
-  Acts::SurfaceMaterialMapper::Config smmConfig;
-  auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
-      smmConfig, std::move(propagator),
-      Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
-
   /// The material mapping algorithm
   FW::MaterialMapping::Config mmAlgConfig(geoContext, mfContext);
-  mmAlgConfig.materialMapper = smm;
+  if (mappingtype == "surface") {
+    /// The material mapper
+    Acts::SurfaceMaterialMapper::Config smmConfig;
+    auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
+        smmConfig, std::move(propagator),
+        Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
+    mmAlgConfig.materialSurfaceMapper = smm;
+  } else if (mappingtype == "volume") {
+    /// The material mapper
+    Acts::VolumeMaterialMapper::Config vmmConfig;
+    auto vmm = std::make_shared<Acts::VolumeMaterialMapper>(
+        vmmConfig, std::move(propagator),
+        Acts::getDefaultLogger("VolumeMaterialMapper", logLevel));
+    mmAlgConfig.materialVolumeMapper = vmm;
+  }
   mmAlgConfig.trackingGeometry = tGeometry;
 
   // Get the file name from the options
@@ -117,15 +128,17 @@ int materialMappingExample(int argc, char* argv[],
     mmAlgConfig.materialWriters.push_back(
         std::make_shared<RootWriter>(std::move(rmwImpl)));
 
-    // Write the propagation steps as ROOT TTree
-    FW::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
-    matTrackWriterRootConfig.filePath = materialFileName + "_tracks.root";
-    matTrackWriterRootConfig.collection = mmAlgConfig.mappingMaterialCollection;
-    matTrackWriterRootConfig.storesurface = true;
-    auto matTrackWriterRoot = std::make_shared<FW::RootMaterialTrackWriter>(
-        matTrackWriterRootConfig, logLevel);
-
-    sequencer.addWriter(matTrackWriterRoot);
+    if (mappingtype == "surface") {
+      // Write the propagation steps as ROOT TTree
+      FW::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
+      matTrackWriterRootConfig.filePath = materialFileName + "_tracks.root";
+      matTrackWriterRootConfig.collection =
+          mmAlgConfig.mappingMaterialCollection;
+      matTrackWriterRootConfig.storesurface = true;
+      auto matTrackWriterRoot = std::make_shared<FW::RootMaterialTrackWriter>(
+          matTrackWriterRootConfig, logLevel);
+      sequencer.addWriter(matTrackWriterRoot);
+    }
   }
 
   if (!materialFileName.empty() and vm["output-json"].template as<bool>()) {
