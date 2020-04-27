@@ -505,8 +505,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder,
-                              ipEst, linearizer);
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer);
 
   finderConfig.refitAfterBadVertex = false;
   // TODO: test this as well!

@@ -156,7 +156,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
   if (!seedResult.ok()) {
     return seedResult.error();
   }
-  
+
   Vertex<InputTrack_t> seedVertex = (*seedResult).back();
   // Update constraints according to seed vertex
   setConstraintAfterSeeding(currentConstraint, seedVertex);
