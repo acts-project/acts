@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(Json_conversion) {
   ifj << "                                ]";
   ifj << "                            ]";
   ifj << "                        ],";
-  ifj << "                        \"matSurface\": true,";
+  ifj << "                        \"mapMaterial\": true,";
   ifj << "                        \"type\": \"binned\"";
   ifj << "                    }";
   ifj << "                },";
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(Json_conversion) {
   ifj << "                                ]";
   ifj << "                            ]";
   ifj << "                        ],";
-  ifj << "                        \"matSurface\": true,";
+  ifj << "                        \"mapMaterial\": true,";
   ifj << "                        \"type\": \"binned\"";
   ifj << "                    }";
   ifj << "                }";
