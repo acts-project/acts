@@ -220,6 +220,7 @@ class TrackStateProxy {
 
     chi2() = other.chi2();
     pathLength() = other.pathLength();
+    typeFlags() = other.typeFlags();
 
     // can be nullptr, but we just take that
     setReferenceSurface(other.referenceSurfacePointer());
