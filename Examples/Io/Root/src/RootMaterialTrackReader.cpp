@@ -33,6 +33,9 @@ FW::RootMaterialTrackReader::RootMaterialTrackReader(
   m_inputChain->SetBranchAddress("mat_x", &m_step_x);
   m_inputChain->SetBranchAddress("mat_y", &m_step_y);
   m_inputChain->SetBranchAddress("mat_z", &m_step_z);
+  m_inputChain->SetBranchAddress("mat_px", &m_step_px);
+  m_inputChain->SetBranchAddress("mat_py", &m_step_py);
+  m_inputChain->SetBranchAddress("mat_pz", &m_step_pz);
   m_inputChain->SetBranchAddress("mat_step_length", &m_step_length);
   m_inputChain->SetBranchAddress("mat_X0", &m_step_X0);
   m_inputChain->SetBranchAddress("mat_L0", &m_step_L0);
@@ -114,6 +117,8 @@ FW::ProcessCode FW::RootMaterialTrackReader::read(
         Acts::MaterialInteraction mInteraction;
         mInteraction.position =
             Acts::Vector3D((*m_step_x)[is], (*m_step_y)[is], (*m_step_z)[is]);
+        mInteraction.direction = Acts::Vector3D(
+            (*m_step_px)[is], (*m_step_py)[is], (*m_step_pz)[is]);
         mInteraction.materialProperties = Acts::MaterialProperties(
             mX0, mL0, (*m_step_A)[is], (*m_step_Z)[is], (*m_step_rho)[is], s);
         rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
