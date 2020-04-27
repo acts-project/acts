@@ -6,6 +6,7 @@ add_library(
   src/FCChh/FCChhTrackerTkLayout_Beampipe.cpp
   src/FCChh/FCChhTrackerTkLayout_Endcap.cpp
   src/IBL/IBLSimpleBarrel_geo.cpp
+  src/OpenDataDetector/ODDModuleHelper.cpp
   src/OpenDataDetector/ODDCylinder_geo.cpp
   src/OpenDataDetector/ODDPixelBarrel_geo.cpp
   src/OpenDataDetector/ODDPixelEndcap_geo.cpp
@@ -20,6 +21,7 @@ add_library(
   src/TKLayout/TKLayoutBarrel_geo.cpp
   src/TKLayout/TKLayoutEndcap_geo.cpp
   src/DD4hepDetector.cpp
+  src/DD4hepDetectorHelper.cpp
   src/DD4hepGeometryService.cpp
   src/DetUtils.cpp)
 target_include_directories(

@@ -52,7 +52,8 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   // Build a template module for the Barrel
   xml_comp_t x_module = x_det.child(_U(module));
   double length = 0.;
-  auto module = assembleRectangularModule(oddd, sens, x_module, length);
+  auto module =
+      ODDModuleHelper::assembleRectangularModule(oddd, sens, x_module, length);
 
   // Place the modules into the stave
   double gap = x_stave.gap();
@@ -83,7 +84,7 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
       cableVolume.setVisAttributes(oddd, x_cable.visStr());
 
       // Place the pipe in the stave
-      PlacedVolume placedCable = staveAssembly.placeVolume(
+      staveAssembly.placeVolume(
           cableVolume, Transform3D(RotationX(0.5 * M_PI),
                                    Position(x_cable.x_offset(), positionY,
                                             x_cable.z_offset())));

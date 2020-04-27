@@ -66,7 +66,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
 
       // create the Acts::DigitizationModule (needed to do geometric
       // digitization) for all modules which have the same segmentation
-      auto digiModule = FW::DD4hep::rectangleDigiModule(
+      auto digiModule = FW::DD4hep::DD4hepDetectorHelper::rectangleDigiModule(
           x_module.length(), x_module.width(), x_module.thickness(),
           sens.readout().segmentation());
 

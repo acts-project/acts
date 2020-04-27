@@ -148,11 +148,11 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
           if (x_module.isSensitive()) {
             mod_vol.setSensitiveDetector(sens);
           }
-          int comp_num = 0;
+          int sens_comp_num = 0;
           for (auto& sensComp : sensComponents) {
-            DetElement component_det(mod_det, "component", comp_num);
+            DetElement component_det(mod_det, "component", sens_comp_num);
             component_det.setPlacement(sensComp);
-            comp_num++;
+            sens_comp_num++;
           }
           // Place Module Box Volumes in layer
           PlacedVolume placedmodule = layer_vol.placeVolume(
@@ -178,7 +178,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
       support_vol.setVisAttributes(lcdd, x_support.visStr());
       // place the support structure
       PlacedVolume placedSupport = layer_vol.placeVolume(support_vol);
-      //   placedSupport.addPhysVolID("support", 1);
+      placedSupport.addPhysVolID("support", 1);
     }
 
     // set granularity of layer material mapping and where material should be
