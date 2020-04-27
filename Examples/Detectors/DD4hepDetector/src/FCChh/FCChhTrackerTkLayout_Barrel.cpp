@@ -77,7 +77,6 @@ static dd4hep::Ref_t createTkLayoutTrackerBarrel(
         xModulePropertiesOdd.child("components");
     integratedModuleComponentThickness = 0;
     int moduleCounter = 0;
-    Volume moduleVolume;
 
     // collect tracker material
     std::vector<std::pair<dd4hep::Material, double>> compMaterials;

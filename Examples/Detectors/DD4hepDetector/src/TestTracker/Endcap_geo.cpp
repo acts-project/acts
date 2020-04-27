@@ -36,7 +36,6 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // go trough possible layers
   size_t layer_num = 0;
   // if it is the positive or negative endcap
-  int sign = 1;
   for (xml_coll_t j(xml, _U(layer)); j; ++j) {
     xml_comp_t x_layer = j;
     double l_rmin = x_layer.inner_r();
@@ -71,9 +70,10 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
 
         // create the Acts::DigitizationModule (needed to do geometric
         // digitization) for all modules which have digitization module
-        auto digiModule = FW::DD4hep::trapezoidalDigiModule(
-            x_module.x1(), x_module.x2(), x_module.length(),
-            x_module.thickness(), sens.readout().segmentation());
+        auto digiModule =
+            FW::DD4hep::DD4hepDetectorHelper::trapezoidalDigiModule(
+                x_module.x1(), x_module.x2(), x_module.length(),
+                x_module.thickness(), sens.readout().segmentation());
 
         // the sensitive placed components to be used later to create the
         // DetElements
@@ -97,9 +97,10 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
           // create the Acts::DigitizationModule (needed to do geometric
           // digitization) for all modules which have the sdigitization
           // compoenent
-          digiComponent = FW::DD4hep::trapezoidalDigiModule(
-              x_comp.x1(), x_comp.x2(), x_comp.length(), x_comp.thickness(),
-              sens.readout().segmentation());
+          digiComponent =
+              FW::DD4hep::DD4hepDetectorHelper::trapezoidalDigiModule(
+                  x_comp.x1(), x_comp.x2(), x_comp.length(), x_comp.thickness(),
+                  sens.readout().segmentation());
 
           // Set Sensitive Volumes sensitive
           if (x_comp.isSensitive())
@@ -134,15 +135,15 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
             mod_det.addExtension<Acts::ActsExtension>(moduleExtension);
           }
 
-          int comp_num = 0;
+          int scomp_num = 0;
           for (auto& sensComp : sensComponents) {
             // Create DetElement
-            DetElement comp_det(mod_det, "component", comp_num);
+            DetElement comp_det(mod_det, "component", scomp_num);
             // Create and attach the extension
             Acts::ActsExtension* moduleExtension = new Acts::ActsExtension();
             comp_det.addExtension<Acts::ActsExtension>(moduleExtension);
             comp_det.setPlacement(sensComp);
-            comp_num++;
+            scomp_num++;
           }
           Rotation3D rotation1(1., 0., 0., 0., 1., 0., 0., 0., 1.);
           // Place Module Box Volumes in layer
