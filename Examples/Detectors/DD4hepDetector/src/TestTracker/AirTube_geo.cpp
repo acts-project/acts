@@ -44,7 +44,6 @@ static Ref_t create_element(Detector& lcdd, xml_h e,
   double inner_r = dim.rmin();
   double outer_r = dim.rmax();
   double z_half = dim.zhalf();
-  double tube_thick = outer_r - inner_r;
 
   //--------------------------------------
 

@@ -59,7 +59,8 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
 
     if (x_ring.hasChild(_U(module))) {
       xml_comp_t x_module = x_ring.child(_U(module));
-      auto module = assembleTrapezoidalModule(oddd, sens, x_module);
+      auto module =
+          ODDModuleHelper::assembleTrapezoidalModule(oddd, sens, x_module);
 
       // place the modules
       unsigned int nPhi = x_ring.nphi();
@@ -67,7 +68,6 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
       double phi0 = x_ring.phi0();
       double r = x_ring.r();
       double zgap = x_ring.gap();
-      bool reflect = x_ring.reflect();
 
       for (unsigned int modNum = 0; modNum < nPhi; ++modNum) {
         // The module name
@@ -115,8 +115,8 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
             oddd.material(x_support.materialStr()));
         supportVolume.setVisAttributes(oddd, x_support.visStr());
         // Place the support structure
-        PlacedVolume placedSupport = ringAssembly.placeVolume(
-            supportVolume, Position(0., 0., x_support.z_offset()));
+        ringAssembly.placeVolume(supportVolume,
+                                 Position(0., 0., x_support.z_offset()));
       }
 
       // Cooling rings

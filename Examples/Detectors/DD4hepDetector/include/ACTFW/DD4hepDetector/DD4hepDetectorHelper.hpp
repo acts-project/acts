@@ -8,12 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/Units.hpp"
-#include "DD4hep/CartesianGridXY.h"
 #include "DD4hep/Segmentations.h"
 
 /// In case several sensitive modules have the same segmentation it can and
@@ -106,92 +101,36 @@
 namespace FW {
 namespace DD4hep {
 
-/// Global method to build an Acts::DigitizationModule with rectangular
-/// segmentation.
-/// @note This function should be used in order to create the input
-/// needed for construction with
-/// Acts::ActsExtension(std::shared_ptr<const DigitizationModule>)
-/// @param halflengthX The half length in x of the detector module
-/// @param halflengthY The half length in y of the detector module
-/// @param thickness The thickness of the detector module
-/// @param segmentation the DD4hep segmentation
-static std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModule(
-    double halflengthX, double halflengthY, double thickness,
-    const dd4hep::Segmentation& segmentation) {
-  // convert to Acts units
-  double scalor = Acts::units::_cm;
-  halflengthX *= scalor;
-  halflengthY *= scalor;
-  thickness *= scalor;
+struct DD4hepDetectorHelper {
+  /// Global method to build an Acts::DigitizationModule with rectangular
+  /// segmentation.
+  /// @note This function should be used in order to create the input
+  /// needed for construction with
+  /// Acts::ActsExtension(std::shared_ptr<const DigitizationModule>)
+  /// @param halflengthX The half length in x of the detector module
+  /// @param halflengthY The half length in y of the detector module
+  /// @param thickness The thickness of the detector module
+  /// @param segmentation the DD4hep segmentation
+  static std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModule(
+      double halflengthX, double halflengthY, double thickness,
+      const dd4hep::Segmentation& segmentation);
 
-  auto bounds =
-      std::make_shared<const Acts::RectangleBounds>(halflengthX, halflengthY);
-  dd4hep::CartesianGridXY cartesianGrid = segmentation;
-  if (cartesianGrid.isValid()) {
-    // the Acts segmentation of the DigitizationModule
-    double gridSizeX = cartesianGrid.gridSizeX() * scalor;
-    double gridSizeY = cartesianGrid.gridSizeY() * scalor;
-    size_t bins0 =
-        (cartesianGrid.gridSizeX() != 0) ? (2 * halflengthX) / gridSizeX : 0;
-    size_t bins1 =
-        (cartesianGrid.gridSizeY() != 0) ? (2 * halflengthY) / gridSizeY : 0;
-
-    std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
-        std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
-                                                            bins1);
-    // finally create the digitization module
-    // @todo set lorentz angle
-    return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                             thickness, 1, 0));
-  }
-  return nullptr;
-}
-
-/// Global method to build an Acts::DigitizationModule with trapezoidal
-/// segmentation.
-/// @note This function should be used in order to create the input
-/// needed for construction with
-/// Acts::ActsExtension(std::shared_ptr<const DigitizationModule>)
-/// @param minHalflengthX The half length in x of the detector module on the
-/// negative side of y
-/// @param maxHalflengthX The half length in x of the detector module on the
-/// positive side of y
-/// @param halflengthY The half length in y of the detector module
-/// @param thickness The thickness of the detector module
-/// @param segmentation the DD4hep segmentation
-static std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModule(
-    double minHalflengthX, double maxHalflengthX, double halflengthY,
-    double thickness, const dd4hep::Segmentation& segmentation) {
-  // convert to Acts units
-  double scalor = Acts::units::_cm;
-  minHalflengthX *= scalor;
-  maxHalflengthX *= scalor;
-  halflengthY *= scalor;
-  thickness *= scalor;
-
-  auto bounds = std::make_shared<const Acts::TrapezoidBounds>(
-      minHalflengthX, maxHalflengthX, halflengthY);
-  ;
-  dd4hep::CartesianGridXY cartesianGrid = segmentation;
-  if (cartesianGrid.isValid()) {
-    // the Acts segmentation of the DigitizationModule
-    double gridSizeX = cartesianGrid.gridSizeX() * scalor;
-    double gridSizeY = cartesianGrid.gridSizeY() * scalor;
-    size_t bins0 =
-        (cartesianGrid.gridSizeX() != 0) ? (2 * maxHalflengthX) / gridSizeX : 0;
-    size_t bins1 =
-        (cartesianGrid.gridSizeY() != 0) ? (2 * halflengthY) / gridSizeY : 0;
-
-    std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
-        std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
-                                                            bins1);
-    // finally create the digitization module
-    // @todo set lorentz angle
-    return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                             thickness, 1, 0));
-  }
-  return nullptr;
-}
+  /// Global method to build an Acts::DigitizationModule with trapezoidal
+  /// segmentation.
+  /// @note This function should be used in order to create the input
+  /// needed for construction with
+  /// Acts::ActsExtension(std::shared_ptr<const DigitizationModule>)
+  /// @param minHalflengthX The half length in x of the detector module on the
+  /// negative side of y
+  /// @param maxHalflengthX The half length in x of the detector module on the
+  /// positive side of y
+  /// @param halflengthY The half length in y of the detector module
+  /// @param thickness The thickness of the detector module
+  /// @param segmentation the DD4hep segmentation
+  static std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModule(
+      double minHalflengthX, double maxHalflengthX, double halflengthY,
+      double thickness, const dd4hep::Segmentation& segmentation);
+};
 
 }  // end of namespace DD4hep
 }  // end of namespace FW

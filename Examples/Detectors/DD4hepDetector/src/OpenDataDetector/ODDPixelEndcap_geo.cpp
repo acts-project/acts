@@ -49,7 +49,8 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   // Create the module components
   xml_comp_t x_module = x_det.child(_U(module));
   double ylength = 0.;
-  auto module = assembleRectangularModule(oddd, sens, x_module, ylength);
+  auto module =
+      ODDModuleHelper::assembleRectangularModule(oddd, sens, x_module, ylength);
 
   Assembly diskAssembly("disk");
 
