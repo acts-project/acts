@@ -90,6 +90,10 @@ class VolumeMaterialMapper {
     std::map<GeometryID, BinUtility> materialBin;
 
     /// The created surface material from it
+    std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>
+        surfaceMaterial;
+
+    /// The created surface material from it
     std::map<GeometryID, std::unique_ptr<const IVolumeMaterial>> volumeMaterial;
 
     /// Reference to the geometry context for the mapping
