@@ -418,7 +418,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
   auto brl = barrel.first;
   draw_surfaces(brl, "LayerCreator_barrelStagger.obj");
 
-  double envR, envZ = 0;
+  double envR = 0, envZ = 0;
   ProtoLayer pl(tgContext, brl);
   pl.envelope[binR] = {envR, envR};
   pl.envelope[binZ] = {envZ, envZ};
