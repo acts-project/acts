@@ -30,10 +30,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   const Surface& surface = nominalResult.endParameters->referenceSurface();
 
   // Steps for estimating derivatives
-  std::vector<double> deviations = {-4e-3, -2e-3, 2e-3, 4e-3};
-
-  // Allow larger distances for the oscillation
-  propagator_options_t opts = options;
+  std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
 
   // Test whether we want to end up bound
   if constexpr (return_parameters_t::is_local_representation) {
@@ -504,7 +501,7 @@ Acts::RiddersPropagator<propagator_t>::anglesToDirectionsJacobian(
   jacobian(4, 5) = cosPhi * invSinTheta;
   jacobian(5, 4) = cosPhi * cosTheta;
   jacobian(5, 5) = sinPhi * cosTheta;
-  jacobian(5, 6) = -invSinTheta * (1. - cosTheta * cosTheta);
+  jacobian(5, 6) = -sinTheta;
 
   return jacobian;
 }
