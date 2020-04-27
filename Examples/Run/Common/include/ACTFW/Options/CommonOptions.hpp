@@ -18,19 +18,6 @@
 namespace FW {
 namespace Options {
 
-/// Option parser to read response file with @
-///
-/// @param s the string to be parsed
-///
-/// @return a new response file entry
-static inline std::pair<std::string, std::string> rf_option_parser(
-    std::string const& s) {
-  if ('@' == s[0])
-    return std::make_pair(std::string("response-file"), s.substr(1));
-  else
-    return std::pair<std::string, std::string>();
-}
-
 /// Construct the options description with minimal default options.
 ///
 /// @param caption Optional help text caption

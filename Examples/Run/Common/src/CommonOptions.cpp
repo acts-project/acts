@@ -7,12 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Utilities/Options.hpp"
-
-#include <boost/tokenizer.hpp>
 #include <exception>
 #include <fstream>
+#include <regex>
 #include <system_error>
+#include "ACTFW/Utilities/Options.hpp"
 
 using namespace boost::program_options;
 
@@ -25,10 +24,9 @@ boost::program_options::options_description FW::Options::makeDefaultOptions(
       "loglevel,l", value<size_t>()->default_value(2),
       "The output log level. Please set the wished number (0 = VERBOSE, 1 = "
       "DEBUG, 2 = INFO, 3 = WARNING, 4 = ERROR, 5 = FATAL).");
-
   opt.add_options()(
       "response-file", value<std::string>()->default_value(""),
-      "Configuration file (response file), can be specified with '@name'.");
+      "Configuration file (response file) replacing command line options.");
 
   return opt;
 }
@@ -127,11 +125,7 @@ boost::program_options::variables_map FW::Options::parse(
     const boost::program_options::options_description& opt, int argc,
     char* argv[]) noexcept(false) {
   variables_map vm;
-  store(command_line_parser(argc, argv)
-            .options(opt)
-            .extra_parser(rf_option_parser)
-            .run(),
-        vm);
+  store(command_line_parser(argc, argv).options(opt).run(), vm);
   notify(vm);
 
   if (vm.count("response-file") and
@@ -145,17 +139,22 @@ boost::program_options::variables_map FW::Options::parse(
     // Read the whole file into a string
     std::stringstream ss;
     ss << ifs.rdbuf();
-    // Split the file content
-    boost::char_separator<char> sep(" \n\r");
-    std::string rfileContents(ss.str());
-    boost::tokenizer<boost::char_separator<char> > tok(rfileContents, sep);
+    std::string rString = ss.str();
     std::vector<std::string> args;
-    copy(tok.begin(), tok.end(), back_inserter(args));
+    const std::regex rgx("[ \t\r\n\f]");
+    std::sregex_token_iterator iter(rString.begin(), rString.end(), rgx, -1);
+    std::sregex_token_iterator end;
+    for (; iter != end; ++iter) {
+      if (std::string(*iter).empty()) {
+        continue;
+      }
+      args.push_back(*iter);
+    }
     // Parse the file and store the options
     store(command_line_parser(args).options(opt).run(), vm);
   }
 
-  // automatically handle help
+  // Automatically handle help
   if (vm.count("help")) {
     std::cout << opt << std::endl;
     vm.clear();
