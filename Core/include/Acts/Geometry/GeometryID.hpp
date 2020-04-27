@@ -14,15 +14,16 @@
 
 namespace Acts {
 
-/// Identifier for geometry nodes.
+/// Identifier for geometry nodes within the geometry hierarchy.
 ///
-/// Each identifier can be split info the following components:
+/// An identifier can be split into the following components. They define
+/// a hierarchy of objects starting from the high-level volumes:
 ///
-/// - Volumes                 - uses counting given by TrackingGeometry
-/// - (Boundary)  Surfaces    - counts through boundary surfaces
-/// - (Layer)     Surfaces    - counts confined layers
-/// - (Approach)  Surfaces    - counts approach surfaces
-/// - (Sensitive) Surfaces    - counts through sensitive surfaces
+/// - Volume
+/// - Boundary surfaces (for a volume)
+/// - Layers (confined within a volume)
+/// - Approach surfaces (for a layer)
+/// - Sensitive surfaces (confined to a layer, also called modules)
 ///
 class GeometryID {
  public:
@@ -42,45 +43,48 @@ class GeometryID {
   constexpr Value value() const { return m_value; }
 
   /// Return the volume identifier.
-  constexpr Value volume() const { return getBits(volume_mask); }
+  constexpr Value volume() const { return getBits(kVolumeMask); }
   /// Return the boundary identifier.
-  constexpr Value boundary() const { return getBits(boundary_mask); }
+  constexpr Value boundary() const { return getBits(kBoundaryMask); }
   /// Return the layer identifier.
-  constexpr Value layer() const { return getBits(layer_mask); }
+  constexpr Value layer() const { return getBits(kLayerMask); }
   /// Return the approach identifier.
-  constexpr Value approach() const { return getBits(approach_mask); }
+  constexpr Value approach() const { return getBits(kApproachMask); }
   /// Return the sensitive identifier.
-  constexpr Value sensitive() const { return getBits(sensitive_mask); }
+  constexpr Value sensitive() const { return getBits(kSensitiveMask); }
 
   /// Set the volume identifier.
   constexpr GeometryID& setVolume(Value volume) {
-    return setBits(volume_mask, volume);
+    return setBits(kVolumeMask, volume);
   }
   /// Set the boundary identifier.
   constexpr GeometryID& setBoundary(Value boundary) {
-    return setBits(boundary_mask, boundary);
+    return setBits(kBoundaryMask, boundary);
   }
   /// Set the layer identifier.
   constexpr GeometryID& setLayer(Value layer) {
-    return setBits(layer_mask, layer);
+    return setBits(kLayerMask, layer);
   }
   /// Set the approach identifier.
   constexpr GeometryID& setApproach(Value approach) {
-    return setBits(approach_mask, approach);
+    return setBits(kApproachMask, approach);
   }
   /// Set the sensitive identifier.
   constexpr GeometryID& setSensitive(Value sensitive) {
-    return setBits(sensitive_mask, sensitive);
+    return setBits(kSensitiveMask, sensitive);
   }
 
  private:
-  // clang-format off
-  static constexpr Value volume_mask    = 0xff00000000000000; // 255 volumes
-  static constexpr Value boundary_mask  = 0x00ff000000000000; // 255 boundaries
-  static constexpr Value layer_mask     = 0x0000fff000000000; // 4095 layers
-  static constexpr Value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
-  static constexpr Value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
-  // clang-format on
+  // (2^8)-1 = 255 volumes
+  static constexpr Value kVolumeMask = 0xff00000000000000;
+  // (2^8)-1 = 255 boundaries
+  static constexpr Value kBoundaryMask = 0x00ff000000000000;
+  // (2^12)-1 = 4096 layers
+  static constexpr Value kLayerMask = 0x0000fff000000000;
+  // (2^8)-1 = 255 approach surfaces
+  static constexpr Value kApproachMask = 0x0000000ff0000000;
+  // (2^28)-1 sensitive surfaces
+  static constexpr Value kSensitiveMask = 0x000000000fffffff;
 
   Value m_value = 0;
 
