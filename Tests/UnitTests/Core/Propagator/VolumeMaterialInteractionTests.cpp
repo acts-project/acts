@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.navigation.currentVolume = nullptr;
   result = volMatInt.evaluateMaterialProperties(state);
   BOOST_TEST(!result);
-  BOOST_TEST(volMatInt.slab.pathCorrection == 0.);
+  BOOST_TEST(volMatInt.pathCorrection == 0.);
 }
 }  // namespace Test
 }  // namespace Acts
