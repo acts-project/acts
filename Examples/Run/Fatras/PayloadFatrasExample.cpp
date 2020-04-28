@@ -10,5 +10,5 @@
 #include "FatrasMain.hpp"
 
 int main(int argc, char* argv[]) {
-  return FW::fatrasMain(argc, argv, std::shared_ptr<PayloadDetector>());
+  return FW::fatrasMain(argc, argv, std::make_shared<PayloadDetector>());
 }
