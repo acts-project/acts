@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -80,16 +80,14 @@ struct VolumeMaterialInteraction {
   template <typename propagator_state_t>
   bool evaluateMaterialProperties(const propagator_state_t& state) {
     pathCorrection = 0;
-    if(state.navigation.currentVolume != nullptr 
-    && state.navigation.currentVolume->volumeMaterial() != nullptr)
-    {
-    slab = MaterialProperties(
-        state.navigation.currentVolume->volumeMaterial()->material(pos),
-        1);  // state.stepping.StepSize
-	}
-	else
-		slab = MaterialProperties();
-	return slab;
+    if (state.navigation.currentVolume != nullptr &&
+        state.navigation.currentVolume->volumeMaterial() != nullptr) {
+      slab = MaterialProperties(
+          state.navigation.currentVolume->volumeMaterial()->material(pos),
+          1);  // state.stepping.StepSize
+    } else
+      slab = MaterialProperties();
+    return slab;
   }
 };
 }  // namespace detail
