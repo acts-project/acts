@@ -238,11 +238,11 @@ class CombinatorialKalmanFilter {
   class Actor {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
-     using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
-                                BoundToFreeMatrix, FreeMatrix>;
-  using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-
+    using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
+                                  BoundToFreeMatrix, FreeMatrix>;
+    using CurvilinearState =
+        std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+    using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<source_link_t>;
 

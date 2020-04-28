@@ -511,7 +511,8 @@ void covarianceTransport(
       jacobian = jacToLocal;
     } else {
       // Apply the actual covariance transport
-      transportJacobian = transportJacobian * jacobianDirToAngle * jacobianAngleToDir;
+      transportJacobian =
+          transportJacobian * jacobianDirToAngle * jacobianAngleToDir;
       covarianceMatrix = FreeSymMatrix(
           transportJacobian * std::get<FreeSymMatrix>(covarianceMatrix) *
           transportJacobian.transpose());

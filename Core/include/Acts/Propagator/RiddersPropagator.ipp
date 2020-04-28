@@ -41,17 +41,6 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     // Pick the surface of the propagation as target
     const Surface& surface = nominalResult.endParameters->referenceSurface();
 
-    // Case I: We start and end bound
-    if constexpr (parameters_t::is_local_representation) {
-      // Derivations of each parameter around the nominal parameters
-      std::array<std::vector<BoundVector>, eBoundParametersSize> derivatives;
-
-      // Wiggle each dimension individually
-      for (unsigned int i = 0; i < eBoundParametersSize; i++) {
-        derivatives[i] = wiggleDimension(opts, start, i, nominalParameters,
-                                         deviations, surface);
-      }
-
 	  // Case I: We start and end bound
 	  if constexpr (parameters_t::is_local_representation) {
 		// Derivations of each parameter around the nominal parameters
@@ -93,7 +82,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
 			if (start.covariance()) {
 			  mParSet->setCovariance(std::get<BoundSymMatrix>(
-				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
+				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(eFreeDir0))));
 			} 
 	  }
 	}
@@ -113,31 +102,15 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			  deviations);
 		}
 
-		// Exchange the result by Ridders Covariance
-		FreeParameters* parameters = const_cast<FreeParameters*>(nominalResult.endParameters.get());
-		if (start.covariance()) {
-		  parameters->covariance(std::get<FreeSymMatrix>(
-			  calculateCovariance(derivatives, *start.covariance(), deviations, Vector3D())));
-		}
-		nominalResult.endParameters = std::make_unique<const FreeParameters>(*parameters);
-	  }
-	  // Case IV: We start and end free
-	  else
-	  {
-			// Derivations of each parameter around the nominal parameters
-			std::array<std::vector<FreeVector>, 7>
-				derivatives;
-
       // Exchange the result by Ridders Covariance
-      FreeParameters* parameters =
-          const_cast<FreeParameters*>(nominalResult.endParameters.get());
+      const FullFreeParameterSet& parSet =
+          nominalResult.endParameters->getParameterSet();
+      FullFreeParameterSet* mParSet =
+          const_cast<FullFreeParameterSet*>(&parSet);
       if (start.covariance()) {
-        parameters->covariance(std::get<FreeSymMatrix>(calculateCovariance(
+        mParSet->setCovariance(std::get<FreeSymMatrix>(calculateCovariance(
             derivatives, *start.covariance(), deviations, Vector3D())));
       }
-      nominalResult.endParameters =
-          std::make_unique<const FreeParameters>(*parameters);
-    }
     // Case IV: We start and end free
     else {
       // Derivations of each parameter around the nominal parameters
@@ -150,15 +123,15 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       }
 
       // Exchange the result by Ridders Covariance
-      FreeParameters* parameters =
-          const_cast<FreeParameters*>(nominalResult.endParameters.get());
+      const FullFreeParameterSet& parSet =
+          nominalResult.endParameters->getParameterSet();
+      FullFreeParameterSet* mParSet =
+          const_cast<FullFreeParameterSet*>(&parSet);
       if (start.covariance()) {
-        parameters->covariance(std::get<FreeSymMatrix>(
-            calculateCovariance(derivatives, *start.covariance(), deviations,
-                                start.parameters().template segment<3>(4))));
+        mParSet->setCovariance(std::get<FreeSymMatrix>(calculateCovariance(
+            derivatives, *start.covariance(), deviations,
+            start.parameters().template segment<3>(eFreeDir0))));
       }
-      nominalResult.endParameters =
-          std::make_unique<const FreeParameters>(*parameters);
     }
   }
 
