@@ -80,10 +80,16 @@ struct VolumeMaterialInteraction {
   template <typename propagator_state_t>
   bool evaluateMaterialProperties(const propagator_state_t& state) {
     pathCorrection = 0;
+    if(state.navigation.currentVolume != nullptr 
+    && state.navigation.currentVolume->volumeMaterial() != nullptr)
+    {
     slab = MaterialProperties(
         state.navigation.currentVolume->volumeMaterial()->material(pos),
         1);  // state.stepping.StepSize
-    return slab;
+	}
+	else
+		slab = MaterialProperties();
+	return slab;
   }
 };
 }  // namespace detail
