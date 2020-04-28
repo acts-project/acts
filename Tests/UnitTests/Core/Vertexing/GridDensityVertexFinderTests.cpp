@@ -15,6 +15,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -140,7 +141,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
                                                      magFieldContext);
 
   using Finder = GridDensityVertexFinder<mainGridSize, trkGridSize>;
-  Finder::Config cfg;
+  using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
+
+  // Use custom grid density here
+  GridDensity::Config densityConfig(100_mm);
+  densityConfig.useHighestSumZPosition = true;
+  GridDensity density(densityConfig);
+
+  Finder::Config cfg(density);
   cfg.cacheGridStateForTrackRemoval = true;
   Finder finder(cfg);
 

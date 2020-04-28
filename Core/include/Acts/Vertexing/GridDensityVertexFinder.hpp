@@ -43,11 +43,11 @@ class GridDensityVertexFinder {
  public:
   /// @brief The Config struct
   struct Config {
+    ///@param zMinMax min and max z value of big z-axis grid
     Config(float zMinMax = 100)
-        : zMinMax(zMinMax),
-          gridDensity(typename GridDensity::Config(zMinMax)) {}
-    // Min and max z value of big grid
-    float zMinMax;  // mm
+        : gridDensity(typename GridDensity::Config(zMinMax)) {}
+    ///@param gDensity The grid density
+    Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 
     // The grid density object
     GridDensity gridDensity;
