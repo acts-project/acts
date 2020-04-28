@@ -30,7 +30,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   const Surface& surface = nominalResult.endParameters->referenceSurface();
 
   // Steps for estimating derivatives
-  std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
+  std::vector<double> deviations = {-4e-3, -2e-3, 2e-3, 4e-3};
 
   // Test whether we want to end up bound
   if constexpr (return_parameters_t::is_local_representation) {
