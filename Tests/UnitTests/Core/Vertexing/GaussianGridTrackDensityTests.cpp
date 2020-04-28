@@ -156,5 +156,64 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BOOST_CHECK_EQUAL(gridCopy, mainGrid);
 }
 
+/// @brief Tests the functionality of the `useHighestSumZPosition` option
+BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
+  // Define the size of the grids
+  const int mainGridSize = 50;
+  const int trkGridSize = 11;
+
+  double binSize = 0.1;  // mm
+  double zMinMax = mainGridSize / 2 * binSize;
+
+  // Set up grid density with zMinMax
+  GaussianGridTrackDensity<mainGridSize, trkGridSize>::Config cfg(zMinMax);
+  cfg.useHighestSumZPosition = true;
+  GaussianGridTrackDensity<mainGridSize, trkGridSize> grid(cfg);
+
+  // Create some test tracks
+  Covariance covMat;
+  covMat << 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0,
+      0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2;
+
+  const double posZ1 = -1.75;
+  const double posZ2 = 1.75;
+
+  // Take two tracks, track 1 is closer in d0 and will thus have a slightly
+  // higher density
+  BoundVector paramVec1;
+  paramVec1 << 0.01, posZ1, 0, 0, 0, 0;
+  BoundVector paramVec2;
+  paramVec2 << 0.015, posZ2, 0, 0, 0, 0;
+
+  // Create perigee surface
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+
+  BoundParameters params1(geoContext, covMat, paramVec1, perigeeSurface);
+  BoundParameters params2(geoContext, covMat, paramVec2, perigeeSurface);
+
+  // The grid to be filled
+  ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
+
+  // addTrack method returns the central z bin where the track density
+  // grid was added and the track density grid itself for caching
+  std::pair<int, Acts::ActsVectorF<trkGridSize>> binAndTrackGrid;
+
+  binAndTrackGrid = grid.addTrack(params1, mainGrid);
+  binAndTrackGrid = grid.addTrack(params2, mainGrid);
+
+  // Artifically add some more density around the peak of track 2
+  int maxZbin = (posZ2 / binSize + mainGridSize / 2.);
+  mainGrid(maxZbin - 1) += 1;
+  mainGrid(maxZbin + 1) += 1;
+
+  // Even though peak density of track 1 is slighly higher, track 2
+  // has a higher sum of track densities including the peak and the two
+  // surrounding bins and will be the output z position.
+  auto maxRes = grid.getMaxZPosition(mainGrid);
+  BOOST_CHECK(maxRes.ok());
+  BOOST_CHECK_EQUAL(*maxRes, posZ2);
+}
+
 }  // namespace Test
 }  // namespace Acts
