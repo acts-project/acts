@@ -313,13 +313,13 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       // This following is added due to the fact that the navigation
-      // re-initialize in reset call cannot guarantee the navigator to target
+      // reinitialization in reset call cannot guarantee the navigator to target
       // for extra layers in the reset volume.
-      // Currently, manually set navigation stage to allow for target layers
+      // Currently, manually set navigation stage to allow for targeting layers
       // after all the surfaces on the reset layer has been processed.
       // Otherwise, the navigation stage will be Stage::boundaryTarget after
-      // navigator status call thus the extra layers on the reset volume won't
-      // be targeted.
+      // navigator status call which means the extra layers on the reset volume
+      // won't be targeted.
       // @Todo: Let the navigator do all the re-initialization
       if (result.reset and state.navigation.navSurfaceIter ==
                                state.navigation.navSurfaces.end()) {
