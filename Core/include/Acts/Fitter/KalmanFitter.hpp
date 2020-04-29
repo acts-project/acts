@@ -129,7 +129,7 @@ struct KalmanFitterResult {
   bool initialized = false;
 
   // Indicator if the propagation state has been reset
-  bool reversed = false;
+  bool reset = false;
 
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
@@ -290,13 +290,13 @@ class KalmanFitter {
       // Stage::boundaryTarget after navigator status call which means the extra
       // layers on the backward-propagation starting volume won't be targeted.
       // @Todo: Let the navigator do all the re-initialization
-      if (result.reversed and state.navigation.navSurfaceIter ==
-                                  state.navigation.navSurfaces.end()) {
+      if (result.reset and state.navigation.navSurfaceIter ==
+                               state.navigation.navSurfaces.end()) {
         // So the navigator target call will target layers
         state.navigation.navigationStage = KalmanNavigator::Stage::layerTarget;
         // We only do this after the backward-propagation starting layer has
         // been processed
-        result.reversed = false;
+        result.reset = false;
       }
 
       // Initialization:
@@ -424,7 +424,7 @@ class KalmanFitter {
     void reverse(propagator_state_t& state, stepper_t& stepper,
                  result_type& result) const {
       // Remember the navigation direciton has been reserved
-      result.reversed = true;
+      result.reset = true;
 
       // Reset propagator options
       state.options.direction = backward;
