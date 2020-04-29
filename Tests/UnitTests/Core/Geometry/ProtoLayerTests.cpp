@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   };
 
   // Test 0 - check constructor with surfaces and shared surfaces
-  auto pLayerSf  = createProtoLayer(Transform3D::Identity());
+  auto pLayerSf = createProtoLayer(Transform3D::Identity());
   auto pLayerSfShared = createProtoLayer(Transform3D::Identity());
 
   BOOST_CHECK(pLayerSf.extent.ranges == pLayerSfShared.extent.ranges);
@@ -95,14 +95,12 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   CHECK_CLOSE_ABS(protoLayer.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
   CHECK_CLOSE_ABS(protoLayer.min(binR), 3., 1e-8);
 
-
   // Test 1a
 
-  // Test 2 - rotate around Z-Axis, should leave R, Z untouched, 
+  // Test 2 - rotate around Z-Axis, should leave R, Z untouched,
   // only preserves medium values
-  auto protoLayerRot 
-    = createProtoLayer(AngleAxis3D(-0.345, 
-        Vector3D::UnitZ())*Transform3D::Identity());
+  auto protoLayerRot = createProtoLayer(AngleAxis3D(-0.345, Vector3D::UnitZ()) *
+                                        Transform3D::Identity());
 
   BOOST_CHECK_NE(protoLayer.min(binX), -6.);
   CHECK_CLOSE_ABS(protoLayerRot.medium(binX), 0., 1e-8);
@@ -113,9 +111,6 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   CHECK_CLOSE_ABS(protoLayerRot.max(binZ), 6., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.min(binR), 3., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
-   
-
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

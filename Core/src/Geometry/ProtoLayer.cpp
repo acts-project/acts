@@ -7,13 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include <algorithm>
-#include <cmath>
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <algorithm>
+#include <cmath>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

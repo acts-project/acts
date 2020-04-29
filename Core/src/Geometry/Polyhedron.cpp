@@ -10,6 +10,8 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
+
 void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   size_t cvert = vertices.size();
   vertices.insert(vertices.end(), other.vertices.begin(), other.vertices.end());
@@ -35,18 +37,23 @@ void Acts::Polyhedron::move(const Transform3D& transform) {
 
 Acts::Extent Acts::Polyhedron::extent(const Transform3D& transform) const {
   Extent extent;
-  for (const auto& vtx : vertices) {
-    extent.check(transform * vtx);
-  }
-  // Special checks for binR:
-  if (std::abs(extent.range(binZ)) < s_onSurfaceTolerance) {
+
+  auto vtxs = vertices;
+  std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(),
+    [&](auto& v) { auto vt = (transform * v);
+                      extent.check(vt); return (vt); });
+
+  // Special checks for planar surfaces & bin R
+  if (std::abs(extent.range(binX)) < s_onSurfaceTolerance or
+      std::abs(extent.range(binY)) < s_onSurfaceTolerance or
+      std::abs(extent.range(binZ)) < s_onSurfaceTolerance) {
     // Check inclusion of origin (i.e. convex around origin)
     Vector3D origin = transform * Vector3D(0., 0., extent.medium(binZ));
     for (const auto& face : faces) {
       std::vector<Vector3D> tface;
       tface.reserve(face.size());
       for (auto f : face) {
-        tface.push_back(transform * vertices[f]);
+        tface.push_back(vtxs[f]);
       }
       if (detail::VerticesHelper::isInsidePolygon(origin, tface)) {
         extent.ranges[binR].first = 0.;
@@ -79,10 +86,9 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3D& transform) const {
       return dist;
     };
 
-    for (size_t iv = 1; iv < vertices.size() + 1; ++iv) {
-      size_t fpoint = iv < vertices.size() ? iv : 0;
-      double testR = radialDistance(transform * vertices[fpoint],
-                                    transform * vertices[iv - 1]);
+    for (size_t iv = 1; iv < vtxs.size() + 1; ++iv) {
+      size_t fpoint = iv < vtxs.size() ? iv : 0;
+      double testR = radialDistance(vtxs[fpoint], vtxs[iv - 1]);
       extent.ranges[binR].first = std::min(extent.ranges[binR].first, testR);
     }
   }

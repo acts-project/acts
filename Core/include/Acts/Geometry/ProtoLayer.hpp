@@ -29,8 +29,7 @@ struct ProtoLayer {
 
   /// The envelope parameters
   using Range = std::pair<double, double>;
-  std::vector<Range> envelope =
-      std::vector<Range>((int)binValues, {0., 0.});
+  std::vector<Range> envelope = std::vector<Range>((int)binValues, {0., 0.});
 
   /// Constructor
   ///
