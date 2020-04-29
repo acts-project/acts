@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Visualization/GeometryVisualization.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
@@ -16,6 +18,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
 #include <fstream>
+#include <sstream>
 #include <string>
 
 namespace Acts {
@@ -25,13 +28,15 @@ namespace VolumeVisualization {
 /// @param helper The visualziation helper
 /// @param triangulate The directive whether to create triangular meshes
 /// @param tag The test tag (mode) identification
-/// @param suffix The file suffix for writing
-/// @param msuffix the (optional) material file suffix
-static inline void test(IVisualization& helper, bool triangulate,
-                        const std::string& tag) {
+///
+/// @return a string containing all written caracters
+
+static inline std::string test(IVisualization& helper, bool triangulate,
+                               const std::string& tag) {
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
   std::ofstream stream;
+  std::stringstream cStream;
 
   double halfPhiSector = M_PI / 4.;
 
@@ -41,6 +46,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto write = [&](const std::string& path, bool clear = true) -> void {
     std::string wpath = path + tag;
     helper.write(wpath);
+    helper.write(cStream);
     if (clear) {
       helper.clear();
     }
@@ -49,12 +55,12 @@ static inline void test(IVisualization& helper, bool triangulate,
   // ---------------------------------------------------
   // Cuboid surface section
   IVisualization::ColorType boxColor = {0, 0, 255};
-  ;
+
   auto box = std::make_shared<CuboidVolumeBounds>(4., 3., 6.);
   auto cuboid = std::make_shared<AbstractVolume>(identity, box);
   Visualization::drawVolume(helper, *cuboid, gctx, Transform3D::Identity(), 72,
                             triangulate, boxColor);
-  write("CuboidVolume");
+  write("Volumes_CuboidVolume");
 
   //----------------------------------------------------
   // Cylinder volume section
@@ -69,21 +75,21 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto cylinder = std::make_shared<AbstractVolume>(identity, fullCylinder);
   Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
                             72, triangulate, cylinderColor);
-  write("CylinderVolumeFull");
+  write("Volumes_CylinderVolumeFull");
 
   auto tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
   Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
                             72, triangulate, cylinderColor);
-  write("CylinderVolumeTube");
+  write("Volumes_CylinderVolumeTube");
 
   tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ, halfPhiSector);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
   Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
                             72, triangulate, cylinderColor);
-  write("CylinderVolumeTubeSector");
+  write("Volumes_CylinderVolumeTubeSector");
 
   //----------------------------------------------------
   // Trapezoid volume section
@@ -101,7 +107,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto generic = std::make_shared<AbstractVolume>(identity, genericCuboid);
   Visualization::drawVolume(helper, *generic, gctx, Transform3D::Identity(), 72,
                             triangulate, genericColor);
-  write("GenericCuboidVolume");
+  write("Volumes_GenericCuboidVolume");
 
   //----------------------------------------------------
   // Trapezoid volume section
@@ -111,7 +117,9 @@ static inline void test(IVisualization& helper, bool triangulate,
   Visualization::drawVolume(helper, *trapezoidVolume, gctx,
                             Transform3D::Identity(), 72, triangulate,
                             trapezoidColor);
-  write("TrapezoidVolume");
+  write("Volumes_TrapezoidVolume");
+
+  return cStream.str();
 }
 
 }  // namespace VolumeVisualization
