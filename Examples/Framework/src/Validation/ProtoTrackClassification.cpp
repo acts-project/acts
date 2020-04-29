@@ -40,7 +40,7 @@ void FW::identifyContributingParticles(
   // sort by hit count, i.e. majority particle first
   auto compareHitCount = [](const ParticleHitCount& lhs,
                             const ParticleHitCount& rhs) {
-    return lhs.hitCount < rhs.hitCount;
+    return lhs.hitCount > rhs.hitCount;
   };
   std::sort(particleHitCount.begin(), particleHitCount.end(), compareHitCount);
 }
