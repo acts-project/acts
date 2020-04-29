@@ -158,6 +158,9 @@ struct CombinatorialKalmanFilterResult {
   // Indicator if initialization has been performed.
   bool initialized = false;
 
+  // Indicator if the propagation state has been reset
+  bool reset = false;
+
   // Temporary container for index and chi2 of intermediate source link
   // candidates
   std::vector<std::pair<size_t, double>> sourcelinkChi2;
@@ -219,6 +222,8 @@ class CombinatorialKalmanFilter {
  public:
   /// Shorthand definition
   using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
+  /// The navigator type
+  using KalmanNavigator = typename propagator_t::Navigator;
 
   /// Default constructor is deleted
   CombinatorialKalmanFilter() = delete;
@@ -306,6 +311,23 @@ class CombinatorialKalmanFilter {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
+    
+      // This following is added due to the fact that the navigation
+      // re-initialize in reset call cannot guarantee the navigator to target
+      // for extra layers in the reset volume.
+      // Currently, manually set navigation stage to allow for target layers
+      // after all the surfaces on the reset layer has been processed.
+      // Otherwise, the navigation stage will be Stage::boundaryTarget after
+      // navigator status call thus the extra layers on the reset volume won't
+      // be targeted.
+      // @Todo: Let the navigator do all the re-initialization
+      if (result.reset and state.navigation.navSurfaceIter ==
+                               state.navigation.navSurfaces.end()) {
+        // So the navigator target call will target layers
+        state.navigation.navigationStage = KalmanNavigator::Stage::layerTarget;
+        // We only do this after the reset layer has been processed
+        result.reset = false;
+      }
 
       // Initialization:
       // - Only when track states are not set
@@ -464,6 +486,9 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     void reset(propagator_state_t& state, stepper_t& stepper,
                result_type& result) const {
+      // Remember the propagation state has been reset
+      result.reset = true;
+
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
       // Reset the navigation state
