@@ -17,5 +17,5 @@ docker run --rm -ti \
        -v ${WD}:/work_dir:rw \
        --user "${USER_ID}:${GROUP_ID}" \
        -w "/work_dir" \
-       gitlab-registry.cern.ch/acts/machines/check_llvm8:latest \
+       gitlab-registry.cern.ch/acts/machines/format8:master \
        CI/check_format .

@@ -16,13 +16,13 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
@@ -98,8 +98,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   Vector3D mom(px, py, pz);
   CurvilinearParameters start(std::nullopt, pos, mom, q, time);
 
-  using DebugOutput = detail::DebugOutputActor;
-  using EndOfWorld = detail::EndOfWorldReached;
+  using DebugOutput = DebugOutputActor;
+  using EndOfWorld = EndOfWorldReached;
 
   // Action list and abort list
   using RefereceActionList =

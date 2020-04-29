@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
 
 #include <fstream>
 
+#include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -20,6 +21,7 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -27,7 +29,6 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -43,6 +44,21 @@ using Covariance = BoundSymMatrix;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
+
+/// @brief Simplified propagator state
+struct PropState {
+  /// @brief Constructor
+  PropState(EigenStepper<ConstantBField>::State sState) : stepping(sState) {}
+  /// State of the eigen stepper
+  EigenStepper<ConstantBField>::State stepping;
+  /// Propagator options which only carry the relevant components
+  struct {
+    double mass = 42.;
+    double tolerance = 1e-4;
+    double stepSizeCutOff = 0.;
+    unsigned int maxRungeKuttaStepTrials = 10000;
+  } options;
+};
 
 /// @brief Aborter for the case that a particle leaves the detector or reaches
 /// a custom made threshold.
@@ -104,6 +120,216 @@ struct StepCollector {
                               stepper.direction(state.stepping));
   }
 };
+
+/// These tests are aiming to test whether the state setup is working properly
+BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
+  // Set up some variables
+  NavigationDirection ndir = backward;
+  double stepSize = 123.;
+  double tolerance = 234.;
+  ConstantBField bField(Vector3D(1., 2.5, 33.33));
+
+  Vector3D pos(1., 2., 3.);
+  Vector3D mom(4., 5., 6.);
+  double time = 7.;
+  double charge = -1.;
+
+  // Test charged parameters without covariance matrix
+  CurvilinearParameters cp(std::nullopt, pos, mom, charge, time);
+  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
+                                              stepSize, tolerance);
+
+  // Test the result & compare with the input/test for reasonable members
+  BOOST_TEST(esState.jacToGlobal == BoundToFreeMatrix::Zero());
+  BOOST_TEST(esState.jacTransport == FreeMatrix::Identity());
+  BOOST_TEST(esState.derivative == FreeVector::Zero());
+  BOOST_TEST(!esState.covTransport);
+  BOOST_TEST(esState.cov == Covariance::Zero());
+  BOOST_TEST(esState.pos == pos);
+  BOOST_TEST(esState.dir == mom.normalized());
+  BOOST_TEST(esState.p == mom.norm());
+  BOOST_TEST(esState.q == charge);
+  BOOST_TEST(esState.t == time);
+  BOOST_TEST(esState.navDir == ndir);
+  BOOST_TEST(esState.pathAccumulated == 0.);
+  BOOST_TEST(esState.stepSize == ndir * stepSize);
+  BOOST_TEST(esState.previousStepSize == 0.);
+  BOOST_TEST(esState.tolerance == tolerance);
+
+  // Test without charge and covariance matrix
+  NeutralCurvilinearParameters ncp(std::nullopt, pos, mom, time);
+  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
+                                                stepSize, tolerance);
+  BOOST_TEST(esState.q == 0.);
+
+  // Test with covariance matrix
+  Covariance cov = 8. * Covariance::Identity();
+  ncp = NeutralCurvilinearParameters(cov, pos, mom, time);
+  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
+                                                stepSize, tolerance);
+  BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
+  BOOST_TEST(esState.covTransport);
+  BOOST_TEST(esState.cov == cov);
+}
+
+/// These tests are aiming to test the functions of the EigenStepper
+/// The numerical correctness of the stepper is tested in the integration tests
+BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
+  // Set up some variables for the state
+  NavigationDirection ndir = backward;
+  double stepSize = 123.;
+  double tolerance = 234.;
+  ConstantBField bField(Vector3D(1., 2.5, 33.33));
+
+  // Construct the parameters
+  Vector3D pos(1., 2., 3.);
+  Vector3D mom(4., 5., 6.);
+  double time = 7.;
+  double charge = -1.;
+  Covariance cov = 8. * Covariance::Identity();
+  CurvilinearParameters cp(cov, pos, mom, charge, time);
+
+  // Build the state and the stepper
+  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
+                                              stepSize, tolerance);
+  EigenStepper<ConstantBField> es(bField);
+
+  // Test the getters
+  BOOST_TEST(es.position(esState) == esState.pos);
+  BOOST_TEST(es.direction(esState) == esState.dir);
+  BOOST_TEST(es.momentum(esState) == esState.p);
+  BOOST_TEST(es.charge(esState) == esState.q);
+  BOOST_TEST(es.time(esState) == esState.t);
+  //~ BOOST_TEST(es.overstepLimit(esState) == tolerance);
+  BOOST_TEST(es.getField(esState, pos) == bField.getField(pos));
+
+  // Step size modifies
+  const std::string originalStepSize = esState.stepSize.toString();
+
+  es.setStepSize(esState, 1337.);
+  BOOST_TEST(esState.previousStepSize == ndir * stepSize);
+  BOOST_TEST(esState.stepSize == 1337.);
+
+  es.releaseStepSize(esState);
+  BOOST_TEST(esState.stepSize == -123.);
+  BOOST_TEST(es.outputStepSize(esState) == originalStepSize);
+
+  // Test the curvilinear state construction
+  auto curvState = es.curvilinearState(esState);
+  auto curvPars = std::get<0>(curvState);
+  CHECK_CLOSE_ABS(curvPars.position(), cp.position(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
+  BOOST_TEST(curvPars.covariance().has_value());
+  BOOST_TEST(*curvPars.covariance() != cov);
+  CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
+                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
+  CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
+
+  // Test the update method
+  Vector3D newPos(2., 4., 8.);
+  Vector3D newMom(3., 9., 27.);
+  double newTime(321.);
+  es.update(esState, newPos, newMom.normalized(), newMom.norm(), newTime);
+  BOOST_TEST(esState.pos == newPos);
+  BOOST_TEST(esState.dir == newMom.normalized());
+  BOOST_TEST(esState.p == newMom.norm());
+  BOOST_TEST(esState.q == charge);
+  BOOST_TEST(esState.t == newTime);
+
+  // The covariance transport
+  esState.cov = cov;
+  es.covarianceTransport(esState);
+  BOOST_TEST(esState.cov != cov);
+  BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
+  BOOST_TEST(esState.jacTransport == FreeMatrix::Identity());
+  BOOST_TEST(esState.derivative == FreeVector::Zero());
+
+  // Perform a step without and with covariance transport
+  esState.cov = cov;
+  PropState ps(esState);
+
+  ps.stepping.covTransport = false;
+  double h = es.step(ps).value();
+  BOOST_TEST(ps.stepping.stepSize == h);
+  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
+  BOOST_TEST(ps.stepping.pos.norm() != newPos.norm());
+  BOOST_TEST(ps.stepping.dir != newMom.normalized());
+  BOOST_TEST(ps.stepping.q == charge);
+  BOOST_TEST(ps.stepping.t < newTime);
+  BOOST_TEST(ps.stepping.derivative == FreeVector::Zero());
+  BOOST_TEST(ps.stepping.jacTransport == FreeMatrix::Identity());
+
+  ps.stepping.covTransport = true;
+  double h2 = es.step(ps).value();
+  BOOST_TEST(h2 == h);
+  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
+  BOOST_TEST(ps.stepping.pos.norm() != newPos.norm());
+  BOOST_TEST(ps.stepping.dir != newMom.normalized());
+  BOOST_TEST(ps.stepping.q == charge);
+  BOOST_TEST(ps.stepping.t < newTime);
+  BOOST_TEST(ps.stepping.derivative != FreeVector::Zero());
+  BOOST_TEST(ps.stepping.jacTransport != FreeMatrix::Identity());
+
+  /// Repeat with surface related methods
+  auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
+  BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
+  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
+                                                stepSize, tolerance);
+
+  // Test the intersection in the context of a surface
+  auto targetSurface = Surface::makeShared<PlaneSurface>(
+      pos + ndir * 2. * mom.normalized(), mom.normalized());
+  es.updateSurfaceStatus(esState, *targetSurface, BoundaryCheck(false));
+  BOOST_TEST(esState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
+
+  // Test the step size modification in the context of a surface
+  es.updateStepSize(
+      esState,
+      targetSurface->intersect(esState.geoContext, esState.pos,
+                               esState.navDir * esState.dir, false),
+      false);
+  BOOST_TEST(esState.stepSize == 2.);
+  esState.stepSize = ndir * stepSize;
+  es.updateStepSize(
+      esState,
+      targetSurface->intersect(esState.geoContext, esState.pos,
+                               esState.navDir * esState.dir, false),
+      true);
+  BOOST_TEST(esState.stepSize == 2.);
+
+  // Test the bound state construction
+  auto boundState = es.boundState(esState, *plane);
+  auto boundPars = std::get<0>(boundState);
+  CHECK_CLOSE_ABS(boundPars.position(), bp.position(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
+  BOOST_TEST(boundPars.covariance().has_value());
+  BOOST_TEST(*boundPars.covariance() != cov);
+  CHECK_CLOSE_COVARIANCE(std::get<1>(boundState),
+                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
+  CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
+
+  // Update in context of a surface
+  BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
+                           -1. * charge, 2. * time, targetSurface);
+  es.update(esState, bpTarget);
+  BOOST_TEST(esState.pos == 2. * pos);
+  BOOST_TEST(esState.dir == mom.normalized());
+  BOOST_TEST(esState.p == 2. * mom.norm());
+  BOOST_TEST(esState.q == 1. * charge);
+  BOOST_TEST(esState.t == 2. * time);
+  CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), 1e-6);
+
+  // Transport the covariance in the context of a surface
+  es.covarianceTransport(esState, *plane);
+  BOOST_TEST(esState.cov != cov);
+  BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
+  BOOST_TEST(esState.jacTransport == FreeMatrix::Identity());
+  BOOST_TEST(esState.derivative == FreeVector::Zero());
+}
 
 /// @brief This function tests the EigenStepper with the DefaultExtension and
 /// the DenseEnvironmentExtension. The focus of this tests lies in the
@@ -438,7 +664,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   AbortList<EndOfWorld> abortList;
   abortList.get<EndOfWorld>().maxX = 3_m;
 
-  using DebugOutput = Acts::detail::DebugOutputActor;
+  using DebugOutput = Acts::DebugOutputActor;
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, DebugOutput>,

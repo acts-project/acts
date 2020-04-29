@@ -224,7 +224,7 @@ class EigenStepper {
 
   /// Update step size
   ///
-  /// This method intersect the provided surface and update the navigation
+  /// This method intersects the provided surface and update the navigation
   /// step estimation accordingly (hence it changes the state). It also
   /// returns the status of the intersection to trigger onSurface in case
   /// the surface is reached.
@@ -280,15 +280,12 @@ class EigenStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
-                        bool reinitialize = true) const;
+  BoundState boundState(State& state, const Surface& surface) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -296,15 +293,12 @@ class EigenStepper {
   /// to the current position and creates a curvilinear state.
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed
-  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state,
-                                    bool reinitialize = true) const;
+  CurvilinearState curvilinearState(State& state) const;
 
   /// Method to update a stepper state to the some parameters
   ///
@@ -326,11 +320,9 @@ class EigenStepper {
   /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] reinitialize is a flag to steer whether the state should be
-  /// reinitialized at the new position
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state, bool reinitialize = false) const;
+  void covarianceTransport(State& state) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
@@ -340,11 +332,8 @@ class EigenStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  /// @param [in] reinitialize is a flag to steer whether the state should be
-  /// reinitialized at the new position
   /// @note no check is done if the position is actually on the surface
-  void covarianceTransport(State& state, const Surface& surface,
-                           bool reinitialize = true) const;
+  void covarianceTransport(State& state, const Surface& surface) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///

@@ -13,7 +13,7 @@
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -173,7 +173,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
 
   // setup propagation options
   // Action list and abort list
-  using DebugOutput = Acts::detail::DebugOutputActor;
+  using DebugOutput = Acts::DebugOutputActor;
   using ActionList = Acts::ActionList<DebugOutput>;
 
   PropagatorOptions<ActionList> fwdOptions(tgContext, mfContext);
@@ -315,7 +315,7 @@ std::pair<Vector3D, double> to_surface(
     double charge, double plimit, double rand1, double rand2, double rand3,
     bool planar = true, bool covtransport = false, bool debug = false) {
   using namespace Acts::UnitLiterals;
-  using DebugOutput = detail::DebugOutputActor;
+  using DebugOutput = DebugOutputActor;
 
   // setup propagation options
   PropagatorOptions<ActionList<DebugOutput>> options(tgContext, mfContext);

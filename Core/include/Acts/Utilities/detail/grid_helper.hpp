@@ -247,6 +247,13 @@ struct grid_helper_impl {
     grid_helper_impl<N - 1>::getMax(axes, maxArray);
   }
 
+  template <class... Axes>
+  static void getWidth(const std::tuple<Axes...>& axes,
+                       std::array<double, sizeof...(Axes)>& widthArray) {
+    widthArray[N] = std::get<N>(axes).getBinWidth();
+    grid_helper_impl<N - 1>::getWidth(axes, widthArray);
+  }
+
   template <class Point, class... Axes>
   static bool isInside(const Point& position, const std::tuple<Axes...>& axes) {
     bool insideThisAxis = std::get<N>(axes).isInside(position[N]);
@@ -372,6 +379,12 @@ struct grid_helper_impl<0u> {
   static void getMax(const std::tuple<Axes...>& axes,
                      std::array<double, sizeof...(Axes)>& maxArray) {
     maxArray[0u] = std::get<0u>(axes).getMax();
+  }
+
+  template <class... Axes>
+  static void getWidth(const std::tuple<Axes...>& axes,
+                       std::array<double, sizeof...(Axes)>& widthArray) {
+    widthArray[0u] = std::get<0u>(axes).getBinWidth();
   }
 
   template <class Point, class... Axes>
@@ -681,6 +694,19 @@ struct grid_helper {
     std::array<double, sizeof...(Axes)> maxArray;
     grid_helper_impl<sizeof...(Axes) - 1>::getMax(axes, maxArray);
     return maxArray;
+  }
+
+  /// @brief get the bin width of all axes of one grid
+  ///
+  /// @tparam Axes parameter pack of axis types defining the grid
+  /// @param  [in] axes actual axis objects spanning the grid
+  /// @return array returning the maxima of all given axes
+  template <class... Axes>
+  static std::array<double, sizeof...(Axes)> getWidth(
+      const std::tuple<Axes...>& axes) {
+    std::array<double, sizeof...(Axes)> widthArray;
+    grid_helper_impl<sizeof...(Axes) - 1>::getWidth(axes, widthArray);
+    return widthArray;
   }
 
   /// @brief get global bin indices for bins in specified neighborhood

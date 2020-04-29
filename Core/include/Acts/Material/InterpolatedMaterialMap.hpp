@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,10 +10,11 @@
 
 #include <functional>
 #include <optional>
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
-
 namespace Acts {
 
 /// @brief Struct for mapping global 3D positions to material values
@@ -112,7 +113,19 @@ struct MaterialMapper {
       Grid_t grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid)) {}
 
-  /// @brief Retrieve material at given position
+  /// @brief Retrieve binned material at given position
+  ///
+  /// @param [in] position Global 3D position
+  /// @return Material at the given position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  /// map.
+  Material material(const Vector3D& position) const {
+    return Material(m_grid.atLocalBins(
+        m_grid.localBinsFromLowerLeftEdge(m_transformPos(position))));
+  }
+
+  /// @brief Retrieve interpolated material at given position
   ///
   /// @param [in] position Global 3D position
   /// @return Material at the given position
@@ -219,7 +232,7 @@ struct MaterialMapper {
 /// collection of numbers.
 /// @tparam G Type of the grid
 template <typename Mapper_t>
-class InterpolatedMaterialMap final {
+class InterpolatedMaterialMap : public IVolumeMaterial {
  public:
   /// @brief Temporary storage of a certain cell to improve material access
   struct Cache {
@@ -234,11 +247,27 @@ class InterpolatedMaterialMap final {
   /// @param [in] mapper Material map
   InterpolatedMaterialMap(Mapper_t&& mapper) : m_mapper(std::move(mapper)) {}
 
-  /// @brief Retrieve material
+  /// @brief Create interpolated map
+  ///
+  /// @param [in] mapper Material map
+  /// @param [in] BinUtility
+  InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility bu)
+      : m_mapper(std::move(mapper)), m_binUtility(bu) {}
+
+  /// @brief Retrieve the binned material
   ///
   /// @param [in] position Global 3D position
   ///
   /// @return Material at given position
+  const Material material(const Vector3D& position) const {
+    return m_mapper.material(position);
+  }
+
+  /// @brief Retrieve the interpolated material
+  ///
+  /// @param [in] position Global 3D position
+  ///
+  /// @return material at given position
   Material getMaterial(const Vector3D& position) const {
     return m_mapper.getMaterial(position);
   }
@@ -300,6 +329,19 @@ class InterpolatedMaterialMap final {
     return m_mapper.isInside(position);
   }
 
+  /// Return the BinUtility
+  const BinUtility& binUtility() const { return m_binUtility; }
+
+  /// Output Method for std::ostream
+  ///
+  /// @param sl The outoput stream
+  std::ostream& toStream(std::ostream& sl) const {
+    sl << "Acts::InterpolatedMaterialMap : " << std::endl;
+    sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
+       << " / " << m_binUtility.max(1) + 1 << std::endl;
+    sl << "   - Parse full update material    : " << std::endl;  //
+  }
+
  private:
   /// @brief Retrieve cell for given position
   ///
@@ -319,5 +361,7 @@ class InterpolatedMaterialMap final {
   /// material grid and the interpolation of the material component values on
   /// close-by grid points.
   Mapper_t m_mapper;
+
+  BinUtility m_binUtility{};
 };
 }  // namespace Acts

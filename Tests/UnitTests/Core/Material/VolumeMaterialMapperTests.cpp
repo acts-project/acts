@@ -14,124 +14,34 @@
 
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-using Acts::VectorHelpers::perp;
-
 namespace Acts {
-
-using namespace detail;
-
-namespace Test {
-
-using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3D>>;
-using EAxis = Acts::detail::EquidistantAxis;
-using Grid2D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
-using Grid3D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
-using MaterialGrid2D = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis>;
-using MaterialGrid3D =
-    Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
-
-/// @brief This function assigns material to the 2D bin number that represents
-/// the local index of the first axis to the material point.
-///
-/// @param [in] matPos Position of the material
-/// @param [in] grid Grid that is used for the look-up
-///
-/// @return Local grid point with the closest distance to @p matPos along the
-/// first axis
-Grid2D::index_t mapToBin2D(const Vector3D& matPos, const Grid2D& grid) {
-  double dist = std::numeric_limits<double>::max();
-  size_t index = 0;
-  // Loop through all elements in the first axis
-  for (size_t i = 0; i < grid.numLocalBins()[0]; i++) {
-    // Search the closest distance - elements are ordered
-    if (std::abs(grid.upperRightBinEdge({{i, 0}})[0] - matPos.x()) < dist) {
-      // Store distance and index
-      dist = std::abs(grid.upperRightBinEdge({{i, 0}})[0] - matPos.x());
-      index = i;
-    } else {  // Break if distance becomes larger
-      break;
-    }
-  }
-  return {{index, 0}};
-}
-
-/// @brief This function assigns material to the 3D bin number that represents
-/// the local index of the first axis to the material point.
-///
-/// @param [in] matPos Position of the material
-/// @param [in] grid Grid that is used for the look-up
-///
-/// @return Local grid point with the closest distance to @p matPos along the
-/// first axis
-Grid3D::index_t mapToBin3D(const Vector3D& matPos, const Grid3D& grid) {
-  double dist = std::numeric_limits<double>::max();
-  size_t index = 0;
-  // Loop through all elements in the first axis
-  for (size_t i = 0; i < grid.numLocalBins()[0]; i++) {
-    // Search the closest distance - elements are ordered
-    if (std::abs(grid.upperRightBinEdge({{i, 0, 0}})[0] - matPos.x()) < dist) {
-      // Store distance and index
-      dist = std::abs(grid.upperRightBinEdge({{i, 0, 0}})[0] - matPos.x());
-      index = i;
-    } else {  // Break if distance becomes larger
-      break;
-    }
-  }
-  return {{index, 0, 0}};
-}
-
-/// @brief Rough searcher for closest point
-///
-/// @param [in] matPos Position of the material
-/// @param [in] grid Grid that is used for the look-up
-///
-/// @return Local grid point with the closest distance to @p matPos
-Grid3D::index_t mapMaterial3D(const Vector3D& matPos, const Grid3D& grid) {
-  double dist = std::numeric_limits<double>::max();
-  size_t indexX = 0, indexY = 0, indexZ = 0;
-  // Loop through all elements
-  for (size_t i = 0; i < grid.numLocalBins()[0]; i++) {
-    for (size_t j = 0; j < grid.numLocalBins()[1]; j++) {
-      for (size_t k = 0; k < grid.numLocalBins()[2]; k++) {
-        // Search the closest distance - elements are ordered
-        double dX = grid.upperRightBinEdge({{i, j, k}})[0] - matPos.x();
-        double dY = grid.upperRightBinEdge({{i, j, k}})[1] - matPos.y();
-        double dZ = grid.upperRightBinEdge({{i, j, k}})[2] - matPos.z();
-
-        if (std::sqrt(dX * dX + dY * dY + dZ * dZ) < dist) {
-          // Store distance and index
-          dist = std::sqrt(dX * dX + dY * dY + dZ * dZ);
-          indexX = i;
-          indexY = j;
-          indexZ = k;
-        } else {  // Break if distance becomes larger
-          break;
-        }
-      }
-    }
-  }
-  return {{indexX, indexY, indexZ}};
-}
 
 /// @brief Collector of material and position along propagation
 struct MaterialCollector {
@@ -157,69 +67,84 @@ struct MaterialCollector {
   }
 };
 
-/// @brief Various test cases of the VolumeMaterialMapper functions
-BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
-  // Define some axes and grid points
-  std::array<double, 3> axis1 = {0., 1., 2.};
-  std::array<double, 3> axis2 = {2., 4., 3.};
-  std::array<double, 3> axis3 = {5., 6., 3.};
+namespace Test {
 
-  // Make some materials
-  std::vector<std::pair<Material, Vector3D>> matRecord;
-  Material mat1(1., 2., 3., 4., 5.);
-  Material mat2(6., 7., 8., 9., 10.);
+/// Test the filling and conversion
+BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
+  using namespace Acts::UnitLiterals;
 
-  Material vacuum;
-  ActsVectorF<5> matMix;
-  matMix << 3.5, 4.5, 5.5, 6.5, 7.5;
+  BinUtility bu1(4, 0_m, 1_m, open, binX);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
 
-  //
-  // Test the production chain in 2D
-  //
-  matRecord.clear();
-  matRecord.push_back(std::make_pair(mat1, Vector3D(0., 0., 0.)));
-  matRecord.push_back(std::make_pair(mat2, Vector3D(0.4, 0., 0.)));
-  matRecord.push_back(std::make_pair(mat2, Vector3D(0.6, 0., 0.)));
+  BinUtility bu2(4, 1_m, 2_m, open, binX);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
 
-  MaterialGrid2D mgrid2d =
-      createMaterialGrid(axis1, axis2, matRecord, mapToBin2D);
+  BinUtility bu3(4, 2_m, 3_m, open, binX);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
 
-  // Test sizes
-  BOOST_CHECK_EQUAL(mgrid2d.size(), (axis1[2] + 2) * (axis2[2] + 2));
-  for (size_t index = 0; index < mgrid2d.size(); index++) {
-    // Check the contained data
-    if (index == 0) {
-      BOOST_CHECK_EQUAL(mgrid2d.at(index), matMix);
-      continue;
-    }
-    if (index == 5) {
-      BOOST_CHECK_EQUAL(mgrid2d.at(index), mat2.classificationNumbers());
-      continue;
-    }
-    BOOST_CHECK_EQUAL(mgrid2d.at(index), vacuum.classificationNumbers());
-  }
+  // Build a vacuum volume
+  CuboidVolumeBuilder::VolumeConfig vCfg1;
+  vCfg1.position = Vector3D(0.5_m, 0., 0.);
+  vCfg1.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg1.name = "Vacuum volume";
+  vCfg1.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu1);
 
-  //
-  // Test the production chain in 3D
-  //
-  MaterialGrid3D mgrid3d =
-      createMaterialGrid(axis1, axis2, axis3, matRecord, mapToBin3D);
+  // Build a material volume
+  CuboidVolumeBuilder::VolumeConfig vCfg2;
+  vCfg2.position = Vector3D(1.5_m, 0., 0.);
+  vCfg2.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg2.name = "First material volume";
+  vCfg2.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu2);
 
-  // Test sizes
-  BOOST_CHECK_EQUAL(mgrid3d.size(),
-                    (axis1[2] + 2) * (axis2[2] + 2) * (axis3[2] + 2));
-  for (size_t index = 0; index < mgrid3d.size(); index++) {
-    // Check the contained data
-    if (index == 0) {
-      BOOST_CHECK_EQUAL(mgrid3d.at(index), matMix);
-      continue;
-    }
-    if (index == 25) {
-      BOOST_CHECK_EQUAL(mgrid3d.at(index), mat2.classificationNumbers());
-      continue;
-    }
-    BOOST_CHECK_EQUAL(mgrid3d.at(index), vacuum.classificationNumbers());
-  }
+  // Build another material volume with different material
+  CuboidVolumeBuilder::VolumeConfig vCfg3;
+  vCfg3.position = Vector3D(2.5_m, 0., 0.);
+  vCfg3.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg3.name = "Second material volume";
+  vCfg3.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu3);
+
+  // Configure world
+  CuboidVolumeBuilder::Config cfg;
+  cfg.position = Vector3D(1.5_m, 0., 0.);
+  cfg.length = Vector3D(3_m, 1_m, 1_m);
+  cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
+
+  GeometryContext gc;
+
+  // Build a detector
+  CuboidVolumeBuilder cvb(cfg);
+  TrackingGeometryBuilder::Config tgbCfg;
+  tgbCfg.trackingVolumeBuilders.push_back(
+      [=](const auto& context, const auto& inner, const auto&) {
+        return cvb.trackingVolume(context, inner, nullptr);
+      });
+  TrackingGeometryBuilder tgb(tgbCfg);
+  std::shared_ptr<const TrackingGeometry> tGeometry = tgb.trackingGeometry(gc);
+
+  /// We need a Navigator, Stepper to build a Propagator
+  Navigator navigator(tGeometry);
+  StraightLineStepper stepper;
+  VolumeMaterialMapper::StraightLinePropagator propagator(std::move(stepper),
+                                                          std::move(navigator));
+
+  /// The config object
+  Acts::VolumeMaterialMapper::Config vmmConfig;
+  Acts::VolumeMaterialMapper vmMapper(
+      vmmConfig, std::move(propagator),
+      getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
+
+  /// Create some contexts
+  GeometryContext gCtx;
+  MagneticFieldContext mfCtx;
+
+  /// Now create the mapper state
+  auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
+
+  /// Test if this is not null
+  BOOST_CHECK_EQUAL(mState.recordedMaterial.size(), 3u);
 }
 
 /// @brief Test case for comparison between the mapped material and the
@@ -232,8 +157,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   vCfg1.position = Vector3D(0.5_m, 0., 0.);
   vCfg1.length = Vector3D(1_m, 1_m, 1_m);
   vCfg1.name = "Vacuum volume";
-  vCfg1.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(352.8, 407., 9.012, 4., 1.848e-3));
+  vCfg1.volumeMaterial =
+      std::make_shared<const HomogeneousVolumeMaterial>(Material());
 
   // Build a material volume
   CuboidVolumeBuilder::VolumeConfig vCfg2;
@@ -248,8 +173,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   vCfg3.position = Vector3D(2.5_m, 0., 0.);
   vCfg3.length = Vector3D(1_m, 1_m, 1_m);
   vCfg3.name = "Second material volume";
-  vCfg3.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(352.8, 407., 9.012, 4., 1.848e-3));
+  vCfg3.volumeMaterial =
+      std::make_shared<const HomogeneousVolumeMaterial>(Material());
 
   // Configure world
   CuboidVolumeBuilder::Config cfg;
@@ -281,7 +206,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
-  RecordedMaterial matRecord;
+  RecordedMaterialPoint matRecord;
   for (unsigned int i = 0; i < 1e4; i++) {
     Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
     Material tv =
@@ -289,12 +214,18 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
             ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
                   ->material(pos)
             : Material();
-    matRecord.push_back(std::make_pair(tv, pos));
+    MaterialProperties matProp(tv, 1);
+    matRecord.push_back(std::make_pair(matProp, pos));
   }
 
   // Build the material grid
-  MaterialGrid3D grid =
-      createMaterialGrid(xAxis, yAxis, zAxis, matRecord, mapMaterial3D);
+  Grid3D Grid = createGrid(xAxis, yAxis, zAxis);
+  std::function<Vector3D(Vector3D)> transfoGlobalToLocal =
+      [](Vector3D pos) -> Vector3D {
+    return {pos.x(), pos.y(), pos.z()};
+  };
+  MaterialGrid3D matGrid =
+      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
   // Construct a simple propagation through the detector
   StraightLineStepper sls;
@@ -308,12 +239,9 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
                                                        42_ns);
 
   MagneticFieldContext mc;
-
-  using DebugOutput = Acts::detail::DebugOutputActor;
-
   // Launch propagation and gather result
-  PropagatorOptions<ActionList<MaterialCollector, DebugOutput>,
-                    AbortList<detail::EndOfWorldReached>>
+  PropagatorOptions<ActionList<MaterialCollector, DebugOutputActor>,
+                    AbortList<EndOfWorldReached>>
       po(gc, mc);
   po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
@@ -324,22 +252,23 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
       result.get<typename MaterialCollector::result_type>();
 
   if (po.debug) {
-    auto screenOutput = result.get<DebugOutput::result_type>();
+    auto screenOutput = result.get<DebugOutputActor::result_type>();
     std::cout << screenOutput.debugString << std::endl;
   }
 
   // Collect the material as given by the grid and test it
-  std::vector<Material> matGrid;
+  std::vector<Material> matvector;
   double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    matGrid.push_back(grid.atPosition(stepResult.position[i]));
-    gridX0 += matGrid[i].X0();
-    gridL0 += matGrid[i].L0();
-    trueX0 += stepResult.matTrue[i].X0();
-    trueL0 += stepResult.matTrue[i].L0();
+    matvector.push_back(matGrid.atPosition(stepResult.position[i]));
+    gridX0 += 1 / matvector[i].X0();
+    gridL0 += 1 / matvector[i].L0();
+    trueX0 += 1 / stepResult.matTrue[i].X0();
+    trueL0 += 1 / stepResult.matTrue[i].L0();
   }
   CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }
+
 }  // namespace Test
 }  // namespace Acts

@@ -18,12 +18,12 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -43,7 +43,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
 // The path limit abort
-using path_limit = detail::PathLimitReached;
+using path_limit = PathLimitReached;
 
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
@@ -101,9 +101,22 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
 
-  using DebugOutput = detail::DebugOutputActor;
+  BoundSymMatrix cov;
+  // take some major correlations (off-diagonals)
+  // clang-format off
+    cov <<
+     10_mm, 0, 0.123, 0, 0.5, 0,
+     0, 10_mm, 0, 0.162, 0, 0,
+     0.123, 0, 0.1, 0, 0, 0,
+     0, 0.162, 0, 0.1, 0, 0,
+     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
+     0, 0, 0, 0, 0, 1_us;
+  // clang-format on
+  std::cout << cov.determinant() << std::endl;
+  CurvilinearParameters start(cov, pos, mom, q, time);
+
+  using DebugOutput = DebugOutputActor;
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor, DebugOutput>;
@@ -400,6 +413,20 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
               << std::endl;
     std::cout << bwdStepOutput.debugString << std::endl;
   }
+
+  // Test the material affects the covariance into the right direction
+  // get the material collector and configure it
+  auto& covfwdMaterialInteractor =
+      fwdOptions.actionList.template get<MaterialInteractor>();
+  covfwdMaterialInteractor.recordInteractions = false;
+  covfwdMaterialInteractor.energyLoss = true;
+  covfwdMaterialInteractor.multipleScattering = true;
+
+  // forward material test
+  const auto& covfwdResult = prop.propagate(start, fwdOptions).value();
+
+  BOOST_TEST(cov.determinant() <=
+             covfwdResult.endParameters->covariance().value().determinant());
 }
 
 // This test case checks that no segmentation fault appears

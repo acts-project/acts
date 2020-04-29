@@ -11,7 +11,7 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
-  typename track_density_t::State densityState;
+  typename track_density_t::State densityState(trackVector.size());
 
   std::vector<BoundParameters> trackList;
   trackList.reserve(trackVector.size());

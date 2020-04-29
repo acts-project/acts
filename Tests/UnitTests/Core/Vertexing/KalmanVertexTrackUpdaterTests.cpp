@@ -18,7 +18,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/ImpactPoint3dEstimator.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexTrackUpdater.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
@@ -81,11 +81,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // Set up ImpactPoint3dEstimator, used for comparisons later
-  ImpactPoint3dEstimator<BoundParameters, Propagator>::Config ip3dEstConfig(
+  // Set up ImpactPointEstimator, used for comparisons later
+  ImpactPointEstimator<BoundParameters, Propagator>::Config ip3dEstConfig(
       bField, propagator);
 
-  ImpactPoint3dEstimator<BoundParameters, Propagator> ip3dEst(ip3dEstConfig);
+  ImpactPointEstimator<BoundParameters, Propagator> ip3dEst(ip3dEstConfig);
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundParameters type test
@@ -157,11 +157,12 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // The old distance
     double oldDistance =
-        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos).value();
+        ip3dEst.calculate3dDistance(geoContext, fittedParamsCopy, vtxPos)
+            .value();
 
     // The new distance after update
     double newDistance =
-        ip3dEst.calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos)
+        ip3dEst.calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos)
             .value();
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;

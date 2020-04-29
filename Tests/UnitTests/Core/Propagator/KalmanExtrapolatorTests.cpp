@@ -20,7 +20,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -68,7 +68,7 @@ struct StepWiseActor {
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
       // Create a bound state and log the jacobian
-      auto boundState = stepper.boundState(state.stepping, *surface, true);
+      auto boundState = stepper.boundState(state.stepping, *surface);
       result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
       result.paths.push_back(std::get<double>(boundState));
     }
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   // Create the ActionList and AbortList
   using StepWiseResult = StepWiseActor::result_type;
   using StepWiseActors = ActionList<StepWiseActor>;
-  using Aborters = AbortList<detail::EndOfWorldReached>;
+  using Aborters = AbortList<EndOfWorldReached>;
 
   // Create some options
   using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;

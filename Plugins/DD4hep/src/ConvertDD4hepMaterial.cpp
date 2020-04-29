@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
+
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
+
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
@@ -84,10 +86,7 @@ void Acts::addLayerProtoMaterial(
 void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
                                          Layer& cylinderLayer,
                                          Logging::Level loggingLevel) {
-  auto DD4hepConverterlogger =
-      Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
-  ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
-
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_VERBOSE(
       "Translating DD4hep material into Acts material for CylinderLayer : "
       << detElement.name());
@@ -127,10 +126,7 @@ void Acts::xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
 void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
                                      Layer& discLayer,
                                      Logging::Level loggingLevel) {
-  auto DD4hepConverterlogger =
-      Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
-  ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
-
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_VERBOSE("Translating DD4hep material into Acts material for DiscLayer : "
                << detElement.name());
 

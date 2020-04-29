@@ -14,11 +14,11 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -187,7 +187,7 @@ BOOST_DATA_TEST_CASE(
   Vector3D mom(px, py, pz);
   CurvilinearParameters start(std::nullopt, pos, mom, q, 42.);
 
-  using DebugOutput = Acts::detail::DebugOutputActor;
+  using DebugOutput = Acts::DebugOutputActor;
   using ProopagatorOptions =
       PropagatorOptions<ActionList<DebugOutput>, AbortList<>>;
   ProopagatorOptions options(tgContext, mfContext);

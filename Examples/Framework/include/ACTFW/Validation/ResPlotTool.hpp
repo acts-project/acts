@@ -1,0 +1,119 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2019 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include <map>
+#include <memory>
+#include <string>
+
+#include "ACTFW/Utilities/Helpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+namespace FW {
+
+// Tools to make hists to show residual, i.e. smoothed_parameter -
+// truth_parameter, and pull, i.e. (smoothed_parameter -
+// truth_parameter)/smoothed_paramter_error, of track parameters at perigee
+// surface
+class ResPlotTool {
+  using ParVector_t = typename Acts::BoundParameters::ParVector_t;
+
+ public:
+  /// @brief Nested configuration struct
+  struct Config {
+    /// parameter sets to do plots
+    std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
+                                           "theta", "qop", "t"};
+
+    /// Binning info for variables
+    std::map<std::string, PlotHelpers::Binning> varBinning = {
+        {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
+        {"Pt", PlotHelpers::Binning("pT [GeV/c]", 20, 0, 100)},
+        {"Pull", PlotHelpers::Binning("pull", 100, -5, 5)},
+        {"Residual_d0", PlotHelpers::Binning("r_{d0} [mm]", 100, -0.5, 0.5)},
+        {"Residual_z0", PlotHelpers::Binning("r_{z0} [mm]", 100, -0.5, 0.5)},
+        {"Residual_phi",
+         PlotHelpers::Binning("r_{#phi} [rad]", 100, -0.005, 0.005)},
+        {"Residual_theta",
+         PlotHelpers::Binning("r_{#theta} [rad]", 100, -0.005, 0.005)},
+        {"Residual_qop",
+         PlotHelpers::Binning("r_{q/p} [c/GeV]", 100, -0.005, 0.005)},
+        {"Residual_t", PlotHelpers::Binning("r_{t} [s]", 100, -1000, 1000)}};
+  };
+
+  /// @brief Nested Cache struct
+  struct ResPlotCache {
+    std::map<std::string, TH1F*> res;         ///< Residual distribution
+    std::map<std::string, TH2F*> res_vs_eta;  ///< Residual vs eta scatter plot
+    std::map<std::string, TH1F*>
+        resmean_vs_eta;  ///< Residual mean vs eta distribution
+    std::map<std::string, TH1F*>
+        reswidth_vs_eta;  ///< Residual width vs eta distribution
+    std::map<std::string, TH2F*> res_vs_pT;  ///< Residual vs pT scatter plot
+    std::map<std::string, TH1F*>
+        resmean_vs_pT;  ///< Residual mean vs pT distribution
+    std::map<std::string, TH1F*>
+        reswidth_vs_pT;  ///< Residual width vs pT distribution
+
+    std::map<std::string, TH1F*> pull;         ///< Pull distribution
+    std::map<std::string, TH2F*> pull_vs_eta;  ///< Pull vs eta scatter plot
+    std::map<std::string, TH1F*>
+        pullmean_vs_eta;  ///< Pull mean vs eta distribution
+    std::map<std::string, TH1F*>
+        pullwidth_vs_eta;  ///< Pull width vs eta distribution
+    std::map<std::string, TH2F*> pull_vs_pT;  ///< Pull vs pT scatter plot
+    std::map<std::string, TH1F*>
+        pullmean_vs_pT;  ///< Pull mean vs pT distribution
+    std::map<std::string, TH1F*>
+        pullwidth_vs_pT;  ///< Pull width vs pT distribution
+  };
+
+  /// Constructor
+  ///
+  /// @param cfg Configuration struct
+  /// @param level Message level declaration
+  ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
+
+  /// @brief book the histograms
+  /// @param resPlotCache the cache for residual/pull histograms
+  void book(ResPlotCache& resPlotCache) const;
+
+  /// @brief fill the histograms
+  /// @param resPlotCache the cache for residual/pull histograms
+  /// @param gctx the geometry context
+  /// @param truthParticle the truth particle
+  /// @param fittedParamters the fitted parameters at perigee surface
+  void fill(ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
+            const ActsFatras::Particle& truthParticle,
+            const Acts::BoundParameters& fittedParamters) const;
+
+  /// @brief extract the details of the residual/pull plots and fill details
+  /// into separate histograms
+  /// @param resPlotCache the cache object for residual/pull histograms
+  void refinement(ResPlotCache& resPlotCache) const;
+
+  /// @brief write the histograms to output file
+  /// @param resPlotCache the cache object for residual/pull histograms
+  void write(const ResPlotCache& resPlotCache) const;
+
+  /// @brief delele the histograms
+  /// @param resPlotCache the cache object for residual/pull histograms
+  void clear(ResPlotCache& resPlotCache) const;
+
+ private:
+  Config m_cfg;                                  ///< The config class
+  std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
+
+  /// The logger
+  const Acts::Logger& logger() const { return *m_logger; }
+};
+
+}  // namespace FW

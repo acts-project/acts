@@ -14,7 +14,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
-#include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 namespace Acts {
@@ -45,15 +45,15 @@ class AdaptiveMultiVertexFinder {
     ///
     /// @param fitter The vertex fitter
     /// @param sfinder The seed finder
-    /// @param ipEst TrackToVertexIPEstimator
+    /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
-    Config(vfitter_t fitter, sfinder_t sfinder,
-           TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEst,
-           Linearizer_t lin)
+    Config(vfitter_t fitter, const sfinder_t& sfinder,
+           const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
+           const Linearizer_t& lin)
         : vertexFitter(std::move(fitter)),
-          seedFinder(std::move(sfinder)),
-          ipEstimator(std::move(ipEst)),
-          linearizer(std::move(lin)) {}
+          seedFinder(sfinder),
+          ipEstimator(ipEst),
+          linearizer(lin) {}
 
     // Vertex fitter
     vfitter_t vertexFitter;
@@ -61,8 +61,8 @@ class AdaptiveMultiVertexFinder {
     // Vertex seed finder
     sfinder_t seedFinder;
 
-    // TrackToVertexIPEstimator
-    TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEstimator;
+    // ImpactPointEstimator
+    ImpactPointEstimator<InputTrack_t, Propagator_t> ipEstimator;
 
     // Track linearizer
     Linearizer_t linearizer;

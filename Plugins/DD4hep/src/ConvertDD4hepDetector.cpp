@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
+
 #include <list>
 #include <stdexcept>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -38,10 +40,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     const Acts::GeometryContext& gctx,
     std::shared_ptr<const IMaterialDecorator> matDecorator) {
   // create local logger for conversion
-  auto DD4hepConverterlogger =
-      Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
-  ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
-
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
   // strip detector
@@ -121,10 +120,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep(loggingLevel);
   // create local logger for conversion
-  auto DD4hepConverterlogger =
-      Acts::getDefaultLogger("D2A_Logger", loggingLevel);
-  ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
-
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("D2A_Logger", loggingLevel));
   ACTS_VERBOSE("Processing detector element:  " << subDetector.name());
 
   Acts::ActsExtension* subDetExtension = nullptr;
