@@ -51,17 +51,14 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   ///
   /// Coordinate transformations
   ///
-  auto zeroMat1 = ActsMatrixD<8, 7>::Zero();
   auto jacDirToAngle = detail::jacobianDirectionsToAngles(direction);
-  BOOST_TEST(jacDirToAngle != zeroMat1);
+  BOOST_TEST(jacDirToAngle != decltype(jacDirToAngle)::Zero());
   
-  auto zeroMat2 = ActsMatrixD<7, 8>::Zero();
   auto jacAngleToDir = detail::jacobianAnglesToDirections(direction);
-  BOOST_TEST(jacAngleToDir != zeroMat2);
+  BOOST_TEST(jacAngleToDir != decltype(jacAngleToDir)::Zero());
   
-  auto idMat = ActsMatrixD<7, 7>::Identity();
   auto product = jacAngleToDir * jacDirToAngle;
-  CHECK_CLOSE_ABS(product, idMat, std::numeric_limits<double>::epsilon()); 
+  CHECK_CLOSE_ABS(product, decltype(product)::Identity(), std::numeric_limits<double>::epsilon()); 
 
   ///
   /// Covariance transport tests
