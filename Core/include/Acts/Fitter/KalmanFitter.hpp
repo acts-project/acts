@@ -40,9 +40,9 @@ namespace Acts {
 
 /// @brief Options struct how the Fitter is called
 ///
-/// It contains the context of the fitter call, the outlier finder, the optional
-/// surface where to express the fit result and configurations for material
-/// effects and smoothing options
+/// It contains the context of the fitter call, the outlier finder, the
+/// optional surface where to express the fit result and configurations for
+/// material effects and smoothing options
 ///
 ///
 /// @note the context objects must be provided
@@ -336,7 +336,8 @@ class KalmanFitter {
           } else if (not result.smoothed) {
             // --> Search the starting state to run the smoothing
             // --> Call the smoothing
-            // --> Set a stop condition when all track states have been handled
+            // --> Set a stop condition when all track states have been
+            // handled
             ACTS_VERBOSE("Finalize/run smoothing");
             auto res = finalize(state, stepper, result);
             if (!res.ok()) {
@@ -369,8 +370,8 @@ class KalmanFitter {
                 result.passedAgainSurfaces.end(),
                 [=](const Surface* surface) { return surface == fSurface; });
             if (surface_it == result.passedAgainSurfaces.end()) {
-              // If backward filtering missed this surface, then there is no
-              // smoothed parameter
+              // If backward filtering missed this surface, then there is
+              // no smoothed parameter
               state.data().ismoothed = detail_lt::IndexData::kInvalid;
             }
           });
@@ -411,11 +412,13 @@ class KalmanFitter {
       // sensitive surface
       state.navigation = typename propagator_t::NavigatorState();
       result.fittedStates.applyBackwards(result.trackTip, [&](auto st) {
-        if (st.hasUncalibrated()) {
+        if (st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
           // Set the navigation state
           state.navigation.startSurface = &st.referenceSurface();
-          state.navigation.startLayer =
-              state.navigation.startSurface->associatedLayer();
+          if (state.navigation.startSurface->associatedLayer() != nullptr) {
+            state.navigation.startLayer =
+                state.navigation.startSurface->associatedLayer();
+          }
           state.navigation.startVolume =
               state.navigation.startLayer->trackingVolume();
           state.navigation.targetSurface = targetSurface;
@@ -525,15 +528,16 @@ class KalmanFitter {
                 "Filtering step successful, updated parameters are : \n"
                 << trackStateProxy.filtered().transpose());
             // update stepping state using filtered parameters after kalman
-            // update We need to (re-)construct a BoundParameters instance here,
-            // which is a bit awkward.
+            // update We need to (re-)construct a BoundParameters instance
+            // here, which is a bit awkward.
             stepper.update(state.stepping, trackStateProxy.filteredParameters(
                                                state.options.geoContext));
             // We count the state with measurement
             ++result.measurementStates;
           } else {
             ACTS_VERBOSE(
-                "Filtering step successful. But measurement is deterimined to "
+                "Filtering step successful. But measurement is deterimined "
+                "to "
                 "be an outlier. Stepping state is not updated.")
             // Set the outlier type flag
             typeFlags.set(TrackStateFlag::OutlierFlag);
@@ -684,7 +688,8 @@ class KalmanFitter {
         } else {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE(
-              "Backward Filtering step successful, updated parameters are : \n"
+              "Backward Filtering step successful, updated parameters are : "
+              "\n"
               << trackStateProxy.filtered().transpose());
 
           // Fill the smoothed parameter for the existing track state
@@ -699,9 +704,9 @@ class KalmanFitter {
             return true;
           });
 
-          // update stepping state using filtered parameters after kalman update
-          // We need to (re-)construct a BoundParameters instance here, which is
-          // a bit awkward.
+          // update stepping state using filtered parameters after kalman
+          // update We need to (re-)construct a BoundParameters instance here,
+          // which is a bit awkward.
           stepper.update(state.stepping, trackStateProxy.filteredParameters(
                                              state.options.geoContext));
 
@@ -724,7 +729,8 @@ class KalmanFitter {
           }
         }
 
-        // Not creating bound state here, so need manually reinitialize jacobian
+        // Not creating bound state here, so need manually reinitialize
+        // jacobian
         state.stepping.jacobian = BoundMatrix::Identity();
 
         // Update state and stepper with material effects
@@ -916,7 +922,8 @@ class KalmanFitter {
   /// @param sourcelinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param kfOptions KalmanOptions steering the fit
-  /// @note The input measurements are given in the form of @c SourceLinks. It's
+  /// @note The input measurements are given in the form of @c SourceLinks.
+  /// It's
   /// @c calibrator_t's job to turn them into calibrated measurements used in
   /// the fit.
   ///
@@ -1015,7 +1022,8 @@ class KalmanFitter {
   /// @param sParameters The initial track parameters
   /// @param kfOptions KalmanOptions steering the fit
   /// @param sSequence surface sequence used to initialize a DirectNavigator
-  /// @note The input measurements are given in the form of @c SourceLinks. It's
+  /// @note The input measurements are given in the form of @c SourceLinks.
+  /// It's
   /// @c calibrator_t's job to turn them into calibrated measurements used in
   /// the fit.
   ///
