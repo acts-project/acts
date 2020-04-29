@@ -191,10 +191,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   ///
   // Test charged parameters without covariance matrix
   FreeVector pars;
-  pars << pos.x(), pos.y(), pos.z(), time, dir.x(), dir.y(), dir.z(), charge / mom.norm();
+  pars << pos.x(), pos.y(), pos.z(), time, dir.x(), dir.y(), dir.z(),
+      charge / mom.norm();
   FreeParameters fp(std::nullopt, pars);
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, fp, ndir, stepSize,
-                                      tolerance);
+  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, fp, ndir,
+                                                stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK(!esState.jacToGlobal.has_value());
@@ -223,8 +224,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   nfp = NeutralFreeParameters(freeCov, pars);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, nfp, ndir,
                                         stepSize, tolerance);
-  BOOST_CHECK_NE(esState.jacDirToAngle != decltype(esState.jacDirToAngle)::Zero());
-  BOOST_CHECK_NE(esState.jacAngleToDir != decltype(esState.jacAngleToDir)::Zero());
+  BOOST_CHECK_NE(esState.jacDirToAngle, decltype(esState.jacDirToAngle)::Zero());
+  BOOST_CHECK_NE(esState.jacAngleToDir, decltype(esState.jacAngleToDir)::Zero());
   BOOST_CHECK(!esState.jacToGlobal.has_value());
   BOOST_CHECK(esState.covTransport);
   BOOST_REQUIRE_NO_THROW(std::get<FreeSymMatrix>(esState.cov));

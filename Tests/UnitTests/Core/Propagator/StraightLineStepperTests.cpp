@@ -105,10 +105,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   ///
   // Test charged parameters without covariance matrix
   FreeVector pars;
-  pars << pos.x(), pos.y(), pos.z(), time, dir.x(), dir.y(), dir.z(), charge / mom.norm();
+  pars << pos.x(), pos.y(), pos.z(), time, dir.x(), dir.y(), dir.z(),
+      charge / mom.norm();
   FreeParameters fp(std::nullopt, pars);
-  slsState = StraightLineStepper::State(tgContext, mfContext, fp, ndir, stepSize,
-                                      tolerance);
+  slsState = StraightLineStepper::State(tgContext, mfContext, fp, ndir,
+                                        stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK(!slsState.jacToGlobal.has_value());
@@ -383,7 +384,6 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
-<<<<<<< HEAD
   BOOST_CHECK(boundPars.covariance().has_value());
   BOOST_CHECK_NE(*boundPars.covariance(), cov);
   BOOST_REQUIRE_NO_THROW(std::get<BoundMatrix>(std::get<1>(boundState)));
