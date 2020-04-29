@@ -1,0 +1,94 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2020 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include <boost/test/tools/output_test_stream.hpp>
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/Utilities/Definitions.hpp"
+#include "PrimitivesVisualizationBase.hpp"
+#include "VisualizationTester.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
+namespace Acts {
+
+namespace Test {
+
+BOOST_AUTO_TEST_SUITE(Visualization)
+
+/// The tests in this section are regression tests only in order
+/// to catch any unexpected changes in the output format.
+///
+BOOST_AUTO_TEST_CASE(VisualizationHelpers) {
+  // No correlation, fully summetric
+  ActsSymMatrixD<2> covariance;
+  covariance << 4., 0., 0., 4.;
+  auto decops = Acts::Visualization::decomposeCovariance(covariance);
+  BOOST_CHECK(decops[0] == 4.);
+  BOOST_CHECK(decops[1] == 4.);
+  BOOST_CHECK(decops[2] == 0.);
+
+  // Fully positively correlated
+  covariance.setZero();
+  covariance << 4., 4., 4., 4.;
+  decops = Acts::Visualization::decomposeCovariance(covariance);
+  BOOST_CHECK(decops[0] == 8.);
+  BOOST_CHECK(decops[1] == 0.);
+  CHECK_CLOSE_ABS(decops[2], M_PI / 4, 0.0001);
+
+  // Fully negatively correlated
+  covariance.setZero();
+  covariance << 4., -4., -4., 4.;
+  decops = Acts::Visualization::decomposeCovariance(covariance);
+  BOOST_CHECK(decops[0] == 8.);
+  BOOST_CHECK(decops[1] == 0.);
+  CHECK_CLOSE_ABS(decops[2], 3 * M_PI / 4, 0.0001);
+
+  // Correlation coefficient 0.5 (off-diagonal: 3*2*0.5)
+  covariance.setZero();
+  covariance << 4., 2., 2., 4.;
+  decops = Acts::Visualization::decomposeCovariance(covariance);
+  BOOST_CHECK(decops[0] == 6.);
+  BOOST_CHECK(decops[1] == 2.);
+  CHECK_CLOSE_ABS(decops[2], M_PI / 4, 0.0001);
+
+  // Correlation coefficient -0.5 & different diagonal (off-diagonal: 3*2*0.5)
+  covariance.setZero();
+  covariance << 9., -3., -3, 4.;
+  decops = Acts::Visualization::decomposeCovariance(covariance);
+  CHECK_CLOSE_ABS(decops[0], 10.4051, 0.0001);
+  CHECK_CLOSE_ABS(decops[1], 2.59488, 0.0001);
+  CHECK_CLOSE_ABS(decops[2], 2.70356, 0.0001);
+}
+
+BOOST_AUTO_TEST_CASE(PrimitivesVisualizationObj) {
+  ObjVisualization obj;
+  auto objTest = PrimitivesVisualization::test(obj);
+  auto objErrors = testObjString(objTest);
+  BOOST_CHECK(objErrors.size() == 0);
+  for (auto objerr : objErrors) {
+    std::cout << objerr << std::endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PrimitivesVisualizationPly) {
+  PlyVisualization ply;
+  auto plyTest = PrimitivesVisualization::test(ply);
+  auto plyErrors = testPlyString(plyTest);
+  BOOST_CHECK(plyErrors.size() == 0);
+  for (auto plyerr : plyErrors) {
+    std::cout << plyerr << std::endl;
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace Test
+}  // namespace Acts

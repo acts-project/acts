@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Visualization/GeometryVisualization.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
@@ -28,6 +30,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <fstream>
+#include <sstream>
 #include <string>
 
 namespace Acts {
@@ -38,13 +41,13 @@ namespace SurfaceVisualization {
 /// @param helper The visualziation helper
 /// @param triangulate The directive whether to create triangular meshes
 /// @param tag The test tag (mode) identification
-/// @param suffix The file suffix for writing
-/// @param msuffix the (optional) material file suffix
-static inline void test(IVisualization& helper, bool triangulate,
-                        const std::string& tag) {
+///
+/// @return an overall string including all written output
+static inline std::string test(IVisualization& helper, bool triangulate,
+                               const std::string& tag) {
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
-  std::ofstream stream;
+  std::stringstream cStream;
 
   double halfPhiSector = M_PI / 4.;
   double centralPhi = M_PI / 2.;
@@ -55,6 +58,10 @@ static inline void test(IVisualization& helper, bool triangulate,
   auto write = [&](const std::string& path, bool clear = true) -> void {
     std::string wpath = path + tag;
     helper.write(wpath);
+
+    // write again for the caracter count
+    cStream << std::setprecision(4);
+    helper.write(cStream);
     if (clear) {
       helper.clear();
     }
@@ -76,7 +83,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   Visualization::drawSurface(helper, *cone, gctx, Transform3D::Identity(), 72,
                              triangulate, coneColor);
-  write("ConeSurface");
+  write("Surfaces_ConeSurface");
 
   // Sectoral Cone
   coneBounds = std::make_shared<ConeBounds>(coneAlpha, coneMinZ, coneMaxZ,
@@ -85,7 +92,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   Visualization::drawSurface(helper, *cone, gctx, Transform3D::Identity(), 72,
                              triangulate, coneColor);
-  write("ConeSurfaceSector");
+  write("Surfaces_ConeSurfaceSector");
 
   // Sectoral Cone Shifted
   coneBounds = std::make_shared<ConeBounds>(coneAlpha, coneCutZ, coneMaxZ,
@@ -94,7 +101,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   Visualization::drawSurface(helper, *cone, gctx, Transform3D::Identity(), 72,
                              triangulate, coneColor);
-  write("ConeSurfaceSectorShifted");
+  write("Surfaces_ConeSurfaceSectorShifted");
 
   // All in one for radial bounds
   std::vector<Transform3D> threeCones = {
@@ -106,7 +113,7 @@ static inline void test(IVisualization& helper, bool triangulate,
     Visualization::drawSurface(helper, *coneSurfaces[ic], gctx, threeCones[ic],
                                72, triangulate, coneColor);
   }
-  write("All_ConeSurfaces");
+  write("Surfaces_All_ConeSurfaces");
 
   //----------------------------------------------------
   // Cylinder surface section
@@ -124,7 +131,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   cylinderSurfaces.push_back(cylinder);
   Visualization::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
                              72, triangulate, cylinderColor);
-  write("CylinderSurface");
+  write("Surfaces_CylinderSurface");
   // Sectoral Cone
   cylinderBounds = std::make_shared<CylinderBounds>(
       cylinderRadius, cylinderHalfZ, halfPhiSector);
@@ -132,7 +139,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   cylinderSurfaces.push_back(cylinder);
   Visualization::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
                              72, triangulate, cylinderColor);
-  write("CylinderSurfaceSector");
+  write("Surfaces_CylinderSurfaceSector");
 
   // Sectoral Cone Shifted
   cylinderBounds = std::make_shared<CylinderBounds>(
@@ -141,7 +148,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   cylinderSurfaces.push_back(cylinder);
   Visualization::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
                              72, triangulate, cylinderColor);
-  write("CylinderSurfaceSectorShifted");
+  write("Surfaces_CylinderSurfaceSectorShifted");
 
   // All in one for radial bounds
   std::vector<Transform3D> threeCylinders = {
@@ -154,7 +161,7 @@ static inline void test(IVisualization& helper, bool triangulate,
                                threeCylinders[ic], 72, triangulate,
                                cylinderColor);
   }
-  write("All_CylinderSurfaces");
+  write("Surfaces_All_CylinderSurfaces");
 
   /// ------------- planar bounding box
   /// @param name of the file
@@ -187,7 +194,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   radialSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discColor);
-  write("DiscSurfaceFull");
+  write("Surfaces_DiscSurfaceFull");
 
   // Full Sectoral Disc
   radialBounds = std::make_shared<RadialBounds>(0., discRmax, halfPhiSector);
@@ -195,7 +202,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   radialSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discColor);
-  write("DiscSurfaceFullSector");
+  write("Surfaces_DiscSurfaceFullSector");
 
   // Full Sectoral Shifted Disc
   radialBounds =
@@ -204,7 +211,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   radialSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discColor);
-  write("DiscSurfaceFullSectorShifted");
+  write("Surfaces_DiscSurfaceFullSectorShifted");
 
   // Full Ring
   radialBounds = std::make_shared<RadialBounds>(discRmin, discRmax);
@@ -212,7 +219,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   radialSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discColor);
-  write("DiscSurfaceRing");
+  write("Surfaces_DiscSurfaceRing");
 
   // Full Sectoral Rin g
   radialBounds =
@@ -221,7 +228,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   radialSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discColor);
-  write("DiscSurfaceRingSector");
+  write("Surfaces_DiscSurfaceRingSector");
 
   // Full Sectoral Shifted Ring
   radialBounds = std::make_shared<RadialBounds>(discRmin, discRmax,
@@ -230,7 +237,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   radialSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discColor);
-  write("DiscSurfaceRingSectorShifted");
+  write("Surfaces_DiscSurfaceRingSectorShifted");
 
   // All in one for radial bounds
   std::vector<Transform3D> sixDiscs = {
@@ -244,7 +251,7 @@ static inline void test(IVisualization& helper, bool triangulate,
     Visualization::drawSurface(helper, *radialSurfaces[ir], gctx, sixDiscs[ir],
                                72, triangulate, discColor);
   }
-  write("All_DiscSurfaces_RadialBounds");
+  write("Surfaces_All_DiscSurfaces_RadialBounds");
 
   std::vector<std::shared_ptr<DiscSurface>> anomalDiscSurfaces;
   IVisualization::ColorType discAnomalColor = {94, 186, 2};
@@ -258,7 +265,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   anomalDiscSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discAnomalColor);
-  write("DiscAnulusBounds");
+  write("Surfaces_DiscAnulusBounds");
 
   double discTrapezoidHxRmin = 3.;
   double discTrapezoidHxRmax = 6.;
@@ -268,7 +275,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   anomalDiscSurfaces.push_back(disc);
   Visualization::drawSurface(helper, *disc, gctx, Transform3D::Identity(), 72,
                              triangulate, discAnomalColor);
-  write("DiscTrapezoidBounds");
+  write("Surfaces_DiscTrapezoidBounds");
 
   // All in one for radial bounds
   std::vector<Transform3D> twoAnomalDiscs = {
@@ -278,7 +285,7 @@ static inline void test(IVisualization& helper, bool triangulate,
     Visualization::drawSurface(helper, *anomalDiscSurfaces[id], gctx,
                                sixDiscs[id], 72, triangulate, discAnomalColor);
   }
-  write("All_DiscSurfaces_AnomalBounds");
+  write("Surfaces_All_DiscSurfaces_AnomalBounds");
 
   //----------------------------------------------------
   // Plane Surface section
@@ -290,7 +297,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   double ellipseR0max = 4;
   double ellipseR1min = 3;
   double ellipseR1max = 6;
-  std::string name = "PlaneSurfaceEllipse";
+  std::string name = "Surfaces_PlaneSurfaceEllipse";
   auto ellipse =
       std::make_shared<EllipseBounds>(0., 0., ellipseR1min, ellipseR1max);
   auto plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
@@ -301,7 +308,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(ellipse->boundingBox(), name);
 
   // Ellipse shaped : Ring Ellipse
-  name = "PlaneSurfaceEllipseRing";
+  name = "Surfaces_PlaneSurfaceEllipseRing";
   ellipse = std::make_shared<EllipseBounds>(ellipseR0min, ellipseR0max,
                                             ellipseR1min, ellipseR1max);
   plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
@@ -312,7 +319,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(ellipse->boundingBox(), name);
 
   // Ellipse shaped : Ring Ellipse Sector
-  name = "PlaneSurfaceEllipseRingSector";
+  name = "Surfaces_PlaneSurfaceEllipseRingSector";
   ellipse = std::make_shared<EllipseBounds>(
       ellipseR0min, ellipseR0max, ellipseR1min, ellipseR1max, halfPhiSector);
   plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
@@ -323,7 +330,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(ellipse->boundingBox(), name);
 
   // ConvexPolygon shaped example: Triangle
-  name = "PlaneSurfaceTriangleRegular";
+  name = "Surfaces_PlaneSurfaceTriangleRegular";
   std::vector<Vector2D> tvertices = {{-3, -1.5}, {3, -1.5}, {0, 4.5}};
   auto triangle = std::make_shared<ConvexPolygonBounds<3>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, triangle);
@@ -334,7 +341,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(triangle->boundingBox(), name);
 
   // ConvexPolygon shaped example: Triangle
-  name = "PlaneSurfaceTriangleGeneral";
+  name = "Surfaces_PlaneSurfaceTriangleGeneral";
   tvertices = {{-1., 4.5}, {4, 6.5}, {3, 8.5}};
   triangle = std::make_shared<ConvexPolygonBounds<3>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, triangle);
@@ -345,7 +352,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(triangle->boundingBox(), name);
 
   // ConvexPolygon shaped example: Triangle
-  name = "PlaneSurfaceConvexPolygonGeneral";
+  name = "Surfaces_PlaneSurfaceConvexPolygonGeneral";
   tvertices = {{-1., 4.5}, {4, 6.5}, {6, 8.5}, {0, 10.5}, {-3, 6.2}};
   auto dynamicpolygon =
       std::make_shared<ConvexPolygonBounds<PolygonDynamic>>(tvertices);
@@ -357,7 +364,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(dynamicpolygon->boundingBox(), name);
 
   // Diamond shaped
-  name = "PlaneSurfaceDiamond";
+  name = "Surfaces_PlaneSurfaceDiamond";
   auto diamond = std::make_shared<DiamondBounds>(3., 6., 2., 2., 4.);
   plane = Surface::makeShared<PlaneSurface>(identity, diamond);
   planarSurfaces.push_back(plane);
@@ -367,7 +374,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(diamond->boundingBox(), name);
 
   // Rectangle plane
-  name = "PlaneSurfaceRectangle";
+  name = "Surfaces_PlaneSurfaceRectangle";
   auto rectangle = std::make_shared<RectangleBounds>(2., 3.);
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
   planarSurfaces.push_back(plane);
@@ -377,7 +384,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(rectangle->boundingBox(), name);
 
   // Off-centered Rectangle plane:
-  name = "PlaneSurfaceRectangleOffcentered";
+  name = "Surfaces_PlaneSurfaceRectangleOffcentered";
   rectangle =
       std::make_shared<RectangleBounds>(Vector2D{1., 2.}, Vector2D{15., 12.});
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
@@ -387,7 +394,7 @@ static inline void test(IVisualization& helper, bool triangulate,
   writeBoundingBox2D(rectangle->boundingBox(), name);
 
   // Off-centered Rectangle plane:
-  name = "PlaneSurfaceTrapezoid";
+  name = "Surfaces_PlaneSurfaceTrapezoid";
   auto trapezoid = std::make_shared<TrapezoidBounds>(2., 5., 3.);
   plane = Surface::makeShared<PlaneSurface>(identity, trapezoid);
   planarSurfaces.push_back(plane);
@@ -411,18 +418,20 @@ static inline void test(IVisualization& helper, bool triangulate,
     Visualization::drawSurface(helper, *planarSurfaces[ip], gctx,
                                ninePlanes[ip], 72, triangulate, planeColor);
   }
-  write("All_PlaneSurfaces");
+  write("Surfaces_All_PlaneSurfaces");
 
   //----------------------------------------------------
   // Straw Surface section
   IVisualization::ColorType strawColor = {255, 0, 0};
 
-  name = "StrawSurface";
+  name = "Surfaces_StrawSurface";
   auto tube = std::make_shared<LineBounds>(2., 20.);
   auto straw = Surface::makeShared<StrawSurface>(identity, tube);
   Visualization::drawSurface(helper, *straw, gctx, Transform3D::Identity(), 72,
                              triangulate, strawColor);
   write(name);
+
+  return cStream.str();
 }
 
 }  // namespace SurfaceVisualization
