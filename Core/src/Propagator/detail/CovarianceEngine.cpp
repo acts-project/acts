@@ -227,7 +227,7 @@ const FreeToBoundMatrix surfaceDerivative(
 void reinitializeJacobians(
     std::reference_wrapper<const GeometryContext> geoContext,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal, const FreeVector& parameters,
     const Surface& surface) {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
@@ -251,7 +251,7 @@ void reinitializeJacobians(
   BoundVector pars;
   pars << loc[eBoundLoc0], loc[eBoundLoc1], phi(direction), theta(direction),
       parameters[eFreeQOverP], parameters[eFreeTime];
-  surface.initJacobianToGlobal(geoContext, jacobianLocalToGlobal, position,
+  surface.initJacobianToGlobal(geoContext, *jacobianLocalToGlobal, position,
                                direction, pars);
 }
 
@@ -266,7 +266,7 @@ void reinitializeJacobians(
 /// @param [in] direction Normalised direction vector
 void reinitializeJacobians(FreeMatrix& transportJacobian,
                            FreeVector& derivatives,
-                           BoundToFreeMatrix& jacobianLocalToGlobal,
+                           std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,
                            const Vector3D& direction) {
   // Reset the jacobians
   transportJacobian = FreeMatrix::Identity();
@@ -284,18 +284,18 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
 
-  jacobianLocalToGlobal(0, eBoundLoc0) = -sinPhi;
-  jacobianLocalToGlobal(0, eBoundLoc1) = -cosPhi * cosTheta;
-  jacobianLocalToGlobal(1, eBoundLoc0) = cosPhi;
-  jacobianLocalToGlobal(1, eBoundLoc1) = -sinPhi * cosTheta;
-  jacobianLocalToGlobal(2, eBoundLoc1) = sinTheta;
-  jacobianLocalToGlobal(3, eBoundTime) = 1;
-  jacobianLocalToGlobal(4, eBoundPhi) = -sinTheta * sinPhi;
-  jacobianLocalToGlobal(4, eBoundTheta) = cosTheta * cosPhi;
-  jacobianLocalToGlobal(5, eBoundPhi) = sinTheta * cosPhi;
-  jacobianLocalToGlobal(5, eBoundTheta) = cosTheta * sinPhi;
-  jacobianLocalToGlobal(6, eBoundTheta) = -sinTheta;
-  jacobianLocalToGlobal(7, eBoundQOverP) = 1;
+  (*jacobianLocalToGlobal)(0, eBoundLoc0) = -sinPhi;
+  (*jacobianLocalToGlobal)(0, eBoundLoc1) = -cosPhi * cosTheta;
+  (*jacobianLocalToGlobal)(1, eBoundLoc0) = cosPhi;
+  (*jacobianLocalToGlobal)(1, eBoundLoc1) = -sinPhi * cosTheta;
+  (*jacobianLocalToGlobal)(2, eBoundLoc1) = sinTheta;
+  (*jacobianLocalToGlobal)(3, eBoundTime) = 1;
+  (*jacobianLocalToGlobal)(4, eBoundPhi) = -sinTheta * sinPhi;
+  (*jacobianLocalToGlobal)(4, eBoundTheta) = cosTheta * cosPhi;
+  (*jacobianLocalToGlobal)(5, eBoundPhi) = sinTheta * cosPhi;
+  (*jacobianLocalToGlobal)(5, eBoundTheta) = cosTheta * sinPhi;
+  (*jacobianLocalToGlobal)(6, eBoundTheta) = -sinTheta;
+  (*jacobianLocalToGlobal)(7, eBoundQOverP) = 1;
 }
 
 /// @brief This function reinitialises the state members required for the
@@ -523,7 +523,7 @@ void covarianceTransport(
   // Reinitialize jacobian components
   if (toLocal)
     reinitializeJacobians(transportJacobian, derivatives,
-                          *jacobianLocalToGlobal, direction);
+                          jacobianLocalToGlobal, direction);
   else
     reinitializeJacobians(transportJacobian, derivatives, jacobianLocalToGlobal,
                           jacobianDirToAngle, jacobianAngleToDir, direction);
@@ -565,7 +565,7 @@ void covarianceTransport(
 
   // Reinitialize jacobian components
   reinitializeJacobians(geoContext, transportJacobian, derivatives,
-                        *jacobianLocalToGlobal, parameters, surface);
+                        jacobianLocalToGlobal, parameters, surface);
 }
 }  // namespace detail
 }  // namespace Acts
