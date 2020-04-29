@@ -255,11 +255,11 @@ class AtlasStepper {
         typename Parameters,
         std::enable_if_t<not Parameters::is_local_representation, int> = 0>
     [[noreturn]] State(
-        std::reference_wrapper<const GeometryContext> /*unused*/,
-        std::reference_wrapper<const MagneticFieldContext> /*unused*/,
+        std::reference_wrapper<const GeometryContext> gctx,
+        std::reference_wrapper<const MagneticFieldContext> mctx,
         const Parameters& /*unused*/, NavigationDirection /*unused*/,
-        double /*unused*/, double /*unused*/) {
-      throw "AtlasStepper::State is not applicable with FreeParameters";
+        double /*unused*/, double /*unused*/) : geoContext(gctx), fieldCache(mctx){
+      throw std::runtime_error("AtlasStepper::State with FreeParameters is not implemented");
     }
 
     // optimisation that init is not called twice
@@ -657,8 +657,12 @@ class AtlasStepper {
                             state.pathAccumulated);
   }
 
-  [[noreturn]] FreeState freeState(State& state) const {
-    throw "AtlasStepper::freeState is not implemented";
+    /// Create and return a free state at the current position
+    ///
+    /// @warning The functionality is not implemented
+    /// @throw
+  [[noreturn]] FreeState freeState(State& /*unused*/) const {
+     throw std::runtime_error("AtlasStepper::freeState is not implemented");
   }
 
   /// The state update method
