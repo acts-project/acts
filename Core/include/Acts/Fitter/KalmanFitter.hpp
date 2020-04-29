@@ -128,6 +128,9 @@ struct KalmanFitterResult {
   // Indicator if initialization has been performed.
   bool initialized = false;
 
+  // Indicator if the propagation state has been reset
+  bool reversed = false;
+
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
@@ -278,6 +281,24 @@ class KalmanFitter {
                     result_type& result) const {
       ACTS_VERBOSE("KalmanFitter step");
 
+      // This following is added due to the fact that the navigation
+      // re-initialize in reverse call cannot guarantee the navigator to target
+      // for extra layers in the backward-propagation starting volume.
+      // Currently, manually set navigation stage to allow for target layers
+      // after all the surfaces on the backward-propagation starting layer has
+      // been processed. Otherwise, the navigation stage will be
+      // Stage::boundaryTarget after navigator status call thus the extra layers
+      // on the backward-propagation starting volume won't be targeted.
+      // @Todo: Let the navigator do all the re-initialization
+      if (result.reversed and state.navigation.navSurfaceIter ==
+                                  state.navigation.navSurfaces.end()) {
+        // So the navigator target call will target layers
+        state.navigation.navigationStage = KalmanNavigator::Stage::layerTarget;
+        // We only do this after the backward-propagation starting layer has
+        // been processed
+        result.reversed = false;
+      }
+
       // Initialization:
       // - Only when track states are not set
       if (!result.initialized) {
@@ -402,6 +423,9 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void reverse(propagator_state_t& state, stepper_t& stepper,
                  result_type& result) const {
+      // Remember the navigation direciton has been reserved
+      result.reversed = true;
+
       // Reset propagator options
       state.options.direction = backward;
       state.options.maxStepSize = -1.0 * state.options.maxStepSize;

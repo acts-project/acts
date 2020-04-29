@@ -311,7 +311,7 @@ class CombinatorialKalmanFilter {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
-    
+
       // This following is added due to the fact that the navigation
       // re-initialize in reset call cannot guarantee the navigator to target
       // for extra layers in the reset volume.
