@@ -47,21 +47,11 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
-  // remaining layer parameters
-  double layerR =
-      0.5 * (protoLayer.min(binR) - protoLayer.envelope[binR].first +
-             protoLayer.max(binR) + protoLayer.envelope[binR].second);
-  double binPosZ = 0.5 * (protoLayer.min(binZ) + protoLayer.max(binZ));
-
-  double envZShift = 0.5 * (-protoLayer.envelope[binZ].first +
-                            protoLayer.envelope[binZ].second);
-  double layerZ = binPosZ + envZShift;
-  double layerHalfZ =
-      0.5 * std::abs(protoLayer.max(binZ) + protoLayer.envelope[binZ].second -
-                     (protoLayer.min(binZ) - protoLayer.envelope[binZ].first));
-  double layerThickness = (protoLayer.max(binR) - protoLayer.min(binR)) +
-                          protoLayer.envelope[binR].first +
-                          protoLayer.envelope[binR].second;
+  // Remaining layer parameters - they include the envelopes
+  double layerR = protoLayer.medium(binR);
+  double layerZ = protoLayer.medium(binZ);
+  double layerHalfZ = 0.5 * protoLayer.range(binZ);
+  double layerThickness = protoLayer.range(binR);
 
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R     = " << layerR);
@@ -130,21 +120,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   // remaining layer parameters
-  double layerR =
-      0.5 * (protoLayer.min(binR) - protoLayer.envelope[binR].first +
-             protoLayer.max(binR) + protoLayer.envelope[binR].second);
-  double binPosZ = 0.5 * (protoLayer.min(binZ) + protoLayer.max(binZ));
-  double envZShift = 0.5 * (-protoLayer.envelope[binZ].first +
-                            protoLayer.envelope[binZ].second);
-  double layerZ = binPosZ + envZShift;
-
-  double layerHalfZ =
-      0.5 * std::abs(protoLayer.max(binZ) + protoLayer.envelope[binZ].second -
-                     (protoLayer.min(binZ) - protoLayer.envelope[binZ].first));
-
-  double layerThickness = (protoLayer.max(binR) - protoLayer.min(binR)) +
-                          protoLayer.envelope[binR].first +
-                          protoLayer.envelope[binR].second;
+  double layerR = protoLayer.medium(binR);
+  double layerZ = protoLayer.medium(binZ);
+  double layerHalfZ = 0.5 * protoLayer.range(binZ);
+  double layerThickness = protoLayer.range(binR);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
@@ -211,12 +190,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
-  double layerZ =
-      0.5 * (protoLayer.min(binZ) - protoLayer.envelope[binZ].first +
-             protoLayer.max(binZ) + protoLayer.envelope[binZ].second);
-  double layerThickness = (protoLayer.max(binZ) - protoLayer.min(binZ)) +
-                          protoLayer.envelope[binZ].first +
-                          protoLayer.envelope[binZ].second;
+  double layerZ = protoLayer.medium(binZ);
+  double layerThickness = protoLayer.range(binZ);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -252,9 +227,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   }
 
   // create the share disc bounds
-  auto dBounds = std::make_shared<const RadialBounds>(
-      protoLayer.min(binR) - protoLayer.envelope[binR].first,
-      protoLayer.max(binR) + protoLayer.envelope[binR].second);
+  auto dBounds = std::make_shared<const RadialBounds>(protoLayer.min(binR),
+                                                      protoLayer.max(binR));
 
   // create the layers
   // we use the same transform here as for the layer itself
@@ -279,12 +253,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
-  double layerZ =
-      0.5 * (protoLayer.min(binZ) - protoLayer.envelope[binZ].first +
-             protoLayer.max(binZ) + protoLayer.envelope[binZ].second);
-  double layerThickness =
-      std::abs(protoLayer.max(binZ) - protoLayer.min(binZ)) +
-      protoLayer.envelope[binZ].first + protoLayer.envelope[binZ].second;
+  double layerZ = protoLayer.medium(binZ);
+  double layerThickness = protoLayer.range(binZ);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -320,9 +290,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   }
 
   // create the shared disc bounds
-  auto dBounds = std::make_shared<const RadialBounds>(
-      protoLayer.min(binR) - protoLayer.envelope[binR].first,
-      protoLayer.max(binR) + protoLayer.envelope[binR].second);
+  auto dBounds = std::make_shared<const RadialBounds>(protoLayer.min(binR),
+                                                      protoLayer.max(binR));
 
   // create the layers
   MutableLayerPtr dLayer =

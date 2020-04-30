@@ -30,10 +30,10 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto recBounds = std::make_shared<RectangleBounds>(3., 6.);
 
   // Planar definitions to help construct the boundary surfaces
-  static const Transform3D s_planeYZ =
+  static const Transform3D planeYZ =
       AngleAxis3D(0.5 * M_PI, Vector3D::UnitY()) *
       AngleAxis3D(0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
-  static const Transform3D s_planeZX =
+  static const Transform3D planeZX =
       AngleAxis3D(-0.5 * M_PI, Vector3D::UnitX()) *
       AngleAxis3D(-0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
 
@@ -41,22 +41,22 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
                               bool shared = false) -> ProtoLayer {
     auto atNegX = Surface::makeShared<PlaneSurface>(
         std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(-3., 0., 0.)) * s_planeYZ),
+            trf * Translation3D(Vector3D(-3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atPosX = Surface::makeShared<PlaneSurface>(
         std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(3., 0., 0.)) * s_planeYZ),
+            trf * Translation3D(Vector3D(3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atNegY = Surface::makeShared<PlaneSurface>(
         std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(0., -3, 0.)) * s_planeZX),
+            trf * Translation3D(Vector3D(0., -3, 0.)) * planeZX),
         recBounds);
 
     auto atPosY = Surface::makeShared<PlaneSurface>(
         std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(0., 3., 0.)) * s_planeZX),
+            trf * Translation3D(Vector3D(0., 3., 0.)) * planeZX),
         recBounds);
 
     if (not shared) {

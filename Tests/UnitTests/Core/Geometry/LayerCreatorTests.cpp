@@ -243,13 +243,14 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   double envR = 0.1, envZ = 0.5;
   ProtoLayer pl(tgContext, srf);
   pl.envelope[Acts::binR] = {envR, envR};
-  pl.envelope[Acts::binZ] = {envR, envR};
+  pl.envelope[Acts::binZ] = {envZ, envZ};
   std::shared_ptr<CylinderLayer> layer =
       std::dynamic_pointer_cast<CylinderLayer>(
           p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl));
 
-  double rMax = 10.6071, rMin = 9.59111;  // empirical
-  CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
+  //
+  double rMax = 10.6071, rMin = 9.59111;  // empirical - w/o envelopes
+  CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2. * envR, 1e-3);
 
   const CylinderBounds* bounds = &layer->bounds();
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), (rMax + rMin) / 2., 1e-3);

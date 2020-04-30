@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
 
   // All on a hyper plane
   BOOST_CHECK(VerticesHelper::onHyperPlane(xyplane));
-  // One outside the s_onSurfaceTolerance 
+  // One outside the s_onSurfaceTolerance
   xyplane.push_back(transform * Vector3D(3., -4., 0.05));
   BOOST_CHECK(!VerticesHelper::onHyperPlane(xyplane));
   // But inside extended tolerance
