@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,29 +19,31 @@ namespace detail {
 struct VolumeMaterialInteraction {
   /// Data from the propagation state
   const TrackingVolume* volume;
-
+  /// The particle current position
   const Vector3D pos;
+  /// The particle current time
   const double time;
+  /// The particle current direction
   const Vector3D dir;
+  /// The particle current momentum
   const double momentum;
+  /// The particle current charge
   const double q;
+  /// The particle current q/p
   const double qOverP;
-
+  /// The particle mass
   const double mass;
+  /// The particle pdg
   const int pdg;
+  /// The covariance transport decision at the interaction
   const bool performCovarianceTransport;
+  /// The navigation direction
   const NavigationDirection nav;
 
   /// Data evaluated within this struct
   MaterialProperties slab;
+  /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection;
-
-  double variancePhi = 0.;
-  double varianceTheta = 0.;
-  double varianceQoverP = 0.;
-
-  double Eloss = 0.;
-  double nextP;
 
   /// @brief Constructor
   ///
@@ -65,10 +67,7 @@ struct VolumeMaterialInteraction {
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
-        nav(state.stepping.navDir),
-        variancePhi(state.stepping.cov(ePHI, ePHI)),
-        varianceTheta(state.stepping.cov(eTHETA, eTHETA)),
-        varianceQoverP(state.stepping.cov(eQOP, eQOP)) {}
+        nav(state.stepping.navDir) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
@@ -81,9 +80,13 @@ struct VolumeMaterialInteraction {
   template <typename propagator_state_t>
   bool evaluateMaterialProperties(const propagator_state_t& state) {
     pathCorrection = 0;
-    slab = MaterialProperties(
-        state.navigation.currentVolume->volumeMaterial()->material(pos),
-        1);  // state.stepping.StepSize
+    if (state.navigation.currentVolume != nullptr &&
+        state.navigation.currentVolume->volumeMaterial() != nullptr) {
+      slab = MaterialProperties(
+          state.navigation.currentVolume->volumeMaterial()->material(pos),
+          1);  // state.stepping.StepSize
+    } else
+      slab = MaterialProperties();
     return slab;
   }
 };

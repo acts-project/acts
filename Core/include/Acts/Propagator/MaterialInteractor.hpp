@@ -44,7 +44,6 @@ struct MaterialInteraction {
   /// Update the volume step to implment the proper step size
   bool updatedVolumeStep = false;
   /// The path correction factor due to non-zero incidence on the surface.
-  /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
   MaterialProperties materialProperties;
@@ -205,9 +204,6 @@ struct MaterialInteractor {
     mi.position = d.pos;
     mi.time = d.time;
     mi.direction = d.dir;
-    mi.sigmaPhi2 = d.variancePhi;
-    mi.sigmaTheta2 = d.varianceTheta;
-    mi.sigmaQoP2 = d.varianceQoverP;
     mi.surface = nullptr;
     mi.volume = d.volume;
     mi.pathCorrection = d.pathCorrection;
