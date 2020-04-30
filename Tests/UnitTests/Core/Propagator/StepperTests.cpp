@@ -17,6 +17,7 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -46,11 +47,12 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// @brief Simplified propagator state
+template <typename stepper_state_t>
 struct PropState {
   /// @brief Constructor
-  PropState(EigenStepper<ConstantBField>::State sState) : stepping(sState) {}
+  PropState(stepper_state_t sState) : stepping(sState) {}
   /// State of the eigen stepper
-  EigenStepper<ConstantBField>::State stepping;
+  stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
     double mass = 42.;
@@ -329,6 +331,32 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
   BOOST_TEST(esState.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(esState.derivative == FreeVector::Zero());
+
+  // Test a case where no step size adjustment is required
+  ps.options.tolerance = 2. * 4.4258e+09;
+  double h0 = esState.stepSize;
+  es.step(ps);
+  CHECK_CLOSE_ABS(h0, esState.stepSize, 1e-6);
+
+  // Produce some errors
+  NullBField nBfield;
+  EigenStepper<NullBField> nes(nBfield);
+  EigenStepper<NullBField>::State nesState(tgContext, mfContext, cp, ndir,
+                                           stepSize, tolerance);
+  PropState nps(nesState);
+  // Test that we can reach the minimum step size
+  nps.options.tolerance = 1e-21;
+  nps.options.stepSizeCutOff = 1e20;
+  auto res = nes.step(nps);
+  BOOST_TEST(!res.ok());
+  BOOST_TEST(res.error() == EigenStepperError::StepSizeStalled);
+
+  // Test that the number of trials exceeds
+  nps.options.stepSizeCutOff = 0.;
+  nps.options.maxRungeKuttaStepTrials = 0.;
+  res = nes.step(nps);
+  BOOST_TEST(!res.ok());
+  BOOST_TEST(res.error() == EigenStepperError::StepSizeAdjustmentFailed);
 }
 
 /// @brief This function tests the EigenStepper with the DefaultExtension and

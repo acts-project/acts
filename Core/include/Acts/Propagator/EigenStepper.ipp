@@ -146,9 +146,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
                                           std::abs(2. * error_estimate)),
                                          0.25)),
                  4.);
-    if (stepSizeScaling == 1.) {
-      break;
-    }
+
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
