@@ -161,6 +161,9 @@ struct CombinatorialKalmanFilterResult {
   // Indicator if the propagation state has been reset
   bool reset = false;
 
+  // Indicator if track finding has been done
+  bool finished = false;
+
   // Temporary container for index and chi2 of intermediate source link
   // candidates
   std::vector<std::pair<size_t, double>> sourcelinkChi2;
@@ -442,7 +445,8 @@ class CombinatorialKalmanFilter {
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
             if (result.smoothed and
-                targetReached(state, stepper, *targetSurface)) {
+                targetReached(state, stepper, *targetSurface) and
+                not result.finished) {
               ACTS_VERBOSE("Completing the track with entry index = "
                            << result.trackTips.at(result.iSmoothed));
               // Transport & bind the parameter to the final surface
@@ -468,6 +472,8 @@ class CombinatorialKalmanFilter {
               } else {
                 ACTS_VERBOSE(
                     "Finish forward Kalman filtering and backward smoothing");
+                // Remember that track finding is done
+                result.finished = true;
               }
             }
           }  // if run smoothing

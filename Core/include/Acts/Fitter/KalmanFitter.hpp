@@ -131,6 +131,9 @@ struct KalmanFitterResult {
   // Indicator if the propagation state has been reset
   bool reset = false;
 
+  // Indicator if track fitting has been done
+  bool finished = false;
+
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
@@ -373,7 +376,8 @@ class KalmanFitter {
       // - Progress to target/reference surface and built the final track
       // parameters
       if ((result.smoothed or state.stepping.navDir == backward) and
-          targetReached(state, stepper, *targetSurface)) {
+          targetReached(state, stepper, *targetSurface) and
+          not result.finished) {
         ACTS_VERBOSE("Completing");
         // Transport & bind the parameter to the final surface
         auto fittedState = stepper.boundState(state.stepping, *targetSurface);
@@ -396,6 +400,9 @@ class KalmanFitter {
               state.data().ismoothed = detail_lt::IndexData::kInvalid;
             }
           });
+
+          // Remember the track fitting is done
+          result.finished = true;
         }
       }
     }
