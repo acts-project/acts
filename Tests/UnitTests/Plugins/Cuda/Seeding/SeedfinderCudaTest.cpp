@@ -29,6 +29,8 @@
 
 #include "Acts/Plugins/Cuda/Seeding/Seedfinder.hpp"
 
+#include <cuda_profiler_api.h>
+
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
   int layer;
@@ -247,7 +249,7 @@ int main(int argc, char** argv) {
 
   //----------- CUDA ----------//
 
-  // cudaProfilerStart();
+  cudaProfilerStart();
   auto start_cuda = std::chrono::system_clock::now();
 
   group_count = 0;
@@ -269,7 +271,7 @@ int main(int argc, char** argv) {
   std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
   double cudaTime = elapsec_cuda.count();
 
-  // cudaProfilerStop();
+  cudaProfilerStop();
   std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
 
   std::cout << std::endl;
