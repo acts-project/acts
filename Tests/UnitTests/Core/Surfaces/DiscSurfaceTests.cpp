@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
 
 /// Unit test for testing DiscSurface assignment and equality
 BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
-  double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
+  double rMin(1.0), rMax(5.0);
 
   auto pDisc = Surface::makeShared<DiscSurface>(nullptr, 0., rMax);
   auto pDiscExtent = pDisc->polyhedronRepresentation(tgContext, 1).extent();
