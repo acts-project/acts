@@ -12,15 +12,34 @@
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/HierarchicalGeometryContainer.hpp"
 #include "Acts/TrackFinder/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
+/// @brief Geometry element struct in the hierarchical geometry container
+///
+/// It take a geometry identifier and a value
+///
+template <typename value_t>
+struct GeometryElement {
+  // The geometry identifier
+  GeometryID id;
 
-/// @brief This struct selects those source links compatible with the given
-/// track parameter against provided criteria.
+  // The value associated with the geometry identifier
+  value_t value;
+
+  // The constructor
+  GeometryElement(GeometryID i, value_t v) : id(i), value(v) {}
+
+  // The geometry identifier getter
+  constexpr auto geometryId() const { return id; }
+};
+
+/// @brief Source link selection struct selecting those source links compatible
+/// with the given track parameter against provided criteria on one surface
 ///
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of source links on one surface
@@ -32,37 +51,32 @@ struct CKFSourceLinkSelector {
  public:
   /// @brief nested config struct
   ///
-  /// Criteria at different detector level.
-  /// The layer-level criteria has the highest priority, then volume-level
-  /// criteria, and the global criteria has the lowest priority
+  /// Configuration of source link selection criteria at different detector
+  /// level:
+  /// -> The hierarchical criteria at sensitive/layer/volume level
+  /// -> The global criteria for all sensitive surfaces
+  /// If a geometry identifier is not found in the hierarchical geometry
+  /// container, the global criteria will be used
   ///
   struct Config {
-    // Criteria type down to detector volume
-    using VolumeChi2 = std::map<GeometryID::Value, double>;
-    using VolumeNumMeasurements = std::map<GeometryID::Value, size_t>;
-    // Criteria type down to detector layer
-    using LayerChi2 = std::map<GeometryID::Value, VolumeChi2>;
-    using LayerNumMeasurements =
-        std::map<GeometryID::Value, VolumeNumMeasurements>;
+    using Chi2Container =
+        Acts::HierarchicalGeometryContainer<GeometryElement<double>>;
+    using SourceLinkNumContainer =
+        Acts::HierarchicalGeometryContainer<GeometryElement<size_t>>;
 
-    // Global maximum chi2
-    double maxChi2 = std::numeric_limits<double>::max();
+    // Hierarchical geometry container of cutoff value for chi2
+    Chi2Container chi2CutOffContainer;
 
-    // Volume-level maximum chi2
-    VolumeChi2 volumeMaxChi2;
+    // Hierarchical geometry container of cutoff value for number of source
+    // links on surface
+    SourceLinkNumContainer numSourcelinksCutOffContainer;
 
-    // Layer-level maximum chi2
-    LayerChi2 layerMaxChi2;
+    // Global cutoff value for chi2
+    double globalChi2CutOff = std::numeric_limits<double>::max();
 
-    // Global maximum number of source links on surface (value 1 means selecting
-    // only the most compatible source link)
-    size_t maxNumSourcelinksOnSurface = 1;
-
-    // Volume-level maximum number of source links on surface
-    VolumeNumMeasurements volumeMaxNumSourcelinksOnSurface;
-
-    // Layer-level maximum number of source links on surface
-    LayerNumMeasurements layerMaxNumSourcelinksOnSurface;
+    // Global cutoff value for number of source links on surface, e.g. value 1
+    // means selecting only the most compatible source link
+    size_t globalNumSourcelinksCutOff = 1;
   };
 
   /// @brief Default constructor
@@ -108,70 +122,32 @@ struct CKFSourceLinkSelector {
       return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
     }
 
+    // Get geoID of this surface
     auto surface = &predictedParams.referenceSurface();
-    // Get volume and layer ID
     auto geoID = surface->geoID();
-    auto volumeID = geoID.volume();
-    auto layerID = geoID.layer();
 
-    // First check if the layer-level criteria is configured.
-    // If not, check if the volume-level criteria is configured.
-    // Otherwise, use world criteria
-    double chi2Cutoff = std::numeric_limits<double>::max();
-    size_t numSourcelinksCutoff = std::numeric_limits<size_t>::max();
-    // Get the allowed maximum chi2 on this surface
-    while (true) {
-      // layer-level criteria
-      auto layerMaxChi2_volume_it = m_config.layerMaxChi2.find(volumeID);
-      if (layerMaxChi2_volume_it != m_config.layerMaxChi2.end()) {
-        auto layerMaxChi2_layer_it =
-            layerMaxChi2_volume_it->second.find(layerID);
-        if (layerMaxChi2_layer_it != layerMaxChi2_volume_it->second.end()) {
-          chi2Cutoff = layerMaxChi2_layer_it->second;
-          break;
-        }
-      }
-      // volume-level criteria
-      auto volumeMaxChi2_volume_it = m_config.volumeMaxChi2.find(volumeID);
-      if (volumeMaxChi2_volume_it != m_config.volumeMaxChi2.end()) {
-        chi2Cutoff = volumeMaxChi2_volume_it->second;
-        break;
-      }
-      // world-level criteria
-      chi2Cutoff = m_config.maxChi2;
-      break;
+    // Find the cutoff value for the surface in the hierarchical geometry
+    // container. If not found, use global cutoff value
+    double chi2CutOff = std::numeric_limits<double>::max();
+    size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
+    // -> Get the allowed maximum chi2 on this surface
+    auto chi2_it = m_config.chi2CutOffContainer.find(geoID);
+    if (chi2_it != m_config.chi2CutOffContainer.end()) {
+      chi2CutOff = chi2_it->value;
+    } else {
+      chi2CutOff = m_config.globalChi2CutOff;
     }
-    ACTS_VERBOSE("Allowed maximum chi2: " << chi2Cutoff);
-
-    // Get the allowed maximum number of source link candidates on this surface
-    while (true) {
-      // layer-level criteria
-      auto layerMaxNumSourcelinks_volume_it =
-          m_config.layerMaxNumSourcelinksOnSurface.find(volumeID);
-      if (layerMaxNumSourcelinks_volume_it !=
-          m_config.layerMaxNumSourcelinksOnSurface.end()) {
-        auto layerMaxNumSourcelinks_layer_it =
-            layerMaxNumSourcelinks_volume_it->second.find(layerID);
-        if (layerMaxNumSourcelinks_layer_it !=
-            layerMaxNumSourcelinks_volume_it->second.end()) {
-          numSourcelinksCutoff = layerMaxNumSourcelinks_layer_it->second;
-          break;
-        }
-      }
-      // volume-level criteria
-      auto volumeMaxNumSourcelinks_volume_it =
-          m_config.volumeMaxNumSourcelinksOnSurface.find(volumeID);
-      if (volumeMaxNumSourcelinks_volume_it !=
-          m_config.volumeMaxNumSourcelinksOnSurface.end()) {
-        numSourcelinksCutoff = volumeMaxNumSourcelinks_volume_it->second;
-        break;
-      }
-      // world-level criteria
-      numSourcelinksCutoff = m_config.maxNumSourcelinksOnSurface;
-      break;
+    ACTS_VERBOSE("Allowed maximum chi2: " << chi2CutOff);
+    // -> Get the allowed maximum number of source link candidates on this
+    // surface
+    auto numSourcelinks_it = m_config.numSourcelinksCutOffContainer.find(geoID);
+    if (numSourcelinks_it != m_config.numSourcelinksCutOffContainer.end()) {
+      numSourcelinksCutOff = numSourcelinks_it->value;
+    } else {
+      numSourcelinksCutOff = m_config.globalNumSourcelinksCutOff;
     }
     ACTS_VERBOSE(
-        "Allowed maximum number of source links: " << numSourcelinksCutoff);
+        "Allowed maximum number of source links: " << numSourcelinksCutOff);
 
     sourcelinkChi2.resize(sourcelinks.size());
     double minChi2 = std::numeric_limits<double>::max();
@@ -211,7 +187,7 @@ struct CKFSourceLinkSelector {
 
             ACTS_VERBOSE("Chi2: " << chi2);
             // Push the source link index and chi2 if satisfying the criteria
-            if (chi2 < chi2Cutoff) {
+            if (chi2 < chi2CutOff) {
               sourcelinkChi2.at(nInitialCandidates) = {index, chi2};
               nInitialCandidates++;
             }
@@ -228,7 +204,7 @@ struct CKFSourceLinkSelector {
     // Get the number of source link candidates with provided constraint
     // considered
     size_t nFinalCandidates =
-        std::min(nInitialCandidates, numSourcelinksCutoff);
+        std::min(nInitialCandidates, numSourcelinksCutOff);
 
     // Size of sourcelinkCandidates
     size_t containerSize = sourcelinkCandidateIndices.size();
