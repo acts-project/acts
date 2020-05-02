@@ -32,12 +32,19 @@ class FakeRatePlotTool {
 
   /// @brief Nested Cache struct
   struct FakeRatePlotCache {
-    TH1F* nRecoTracks;             ///< number of reco tracks
-    TH1F* nTruthMatchedTracks;     ///< number of truth-matched reco tracks
-    TH1F* nFakeTracks;             ///< number of fake tracks
+    TH2F* nReco_vs_eta;          ///< Number of reco tracks vs eta scatter plot
+    TH2F* nTruthMatched_vs_eta;  ///< Number of truth-matched reco tracks vs eta
+                                 ///< scatter plot
+    TH2F* nFake_vs_eta;  ///< Number of fake (truth-unmatched) tracks vs eta
+                         ///< scatter plot
+    TH2F* nReco_vs_pT;   ///< Number of reco tracks vs pT scatter plot
+    TH2F* nTruthMatched_vs_pT;  ///< Number of truth-matched reco tracks vs pT
+                                ///< scatter plot
+    TH2F* nFake_vs_pT;  ///< Number of fake (truth-unmatched) tracks vs pT
+                        ///< scatter plot
     TEfficiency* fakeRate_vs_eta;  ///< Tracking fake rate vs eta
-    TEfficiency* fakeRate_vs_phi;  ///< Tracking fake rate vs phi
     TEfficiency* fakeRate_vs_pT;   ///< Tracking fake rate vs pT
+    TEfficiency* fakeRate_vs_phi;  ///< Tracking fake rate vs phi
   };
 
   /// Constructor
