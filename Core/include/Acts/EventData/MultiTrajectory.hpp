@@ -16,6 +16,7 @@
 #include <Eigen/Core>
 
 #include "Acts/EventData/TrackState.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -156,6 +157,73 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexData& data() {
     return m_traj->m_index[m_istate];
+  }
+
+  /// Build a mask that represents all the allocated components of this track
+  /// state proxy
+  /// @return The generated mask
+  TrackStatePropMask getMask() const;
+
+  /// Copy the contents of another track state proxy into this one
+  /// @param other The other track state to copy from
+  /// @param mask An optional mask to determine what to copy from
+  /// @note If the this track state proxy does not have compatible allocations
+  ///       with the source track state proxy, an exception is thrown.
+  /// @note The mask parameter will not cause a copy of components that are
+  ///       not allocated in the source track state proxy.
+  template <bool RO = ReadOnly, bool ReadOnlyOther,
+            typename = std::enable_if<!RO>>
+  void copyFrom(
+      const TrackStateProxy<source_link_t, N, M, ReadOnlyOther>& other,
+      TrackStatePropMask mask = TrackStatePropMask::All) {
+    using PM = TrackStatePropMask;
+    auto dest = getMask();
+    auto src = other.getMask() &
+               mask;  // combine what we have with what we want to copy
+    if (static_cast<std::underlying_type_t<TrackStatePropMask>>((src ^ dest) &
+                                                                src) != 0) {
+      throw std::runtime_error(
+          "Attempt track state copy with incompatible allocations");
+    }
+
+    // we're sure now this has correct allocations, so just copy
+    if (ACTS_CHECK_BIT(src, PM::Predicted)) {
+      predicted() = other.predicted();
+      predictedCovariance() = other.predictedCovariance();
+    }
+
+    if (ACTS_CHECK_BIT(src, PM::Filtered)) {
+      filtered() = other.filtered();
+      filteredCovariance() = other.filteredCovariance();
+    }
+
+    if (ACTS_CHECK_BIT(src, PM::Smoothed)) {
+      smoothed() = other.smoothed();
+      smoothedCovariance() = other.smoothedCovariance();
+    }
+
+    if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
+      uncalibrated() = other.uncalibrated();
+    }
+
+    if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
+      jacobian() = other.jacobian();
+    }
+
+    if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
+      calibratedSourceLink() = other.calibratedSourceLink();
+      calibrated() = other.calibrated();
+      calibratedCovariance() = other.calibratedCovariance();
+      data().measdim = other.data().measdim;
+      setProjectorBitset(other.projectorBitset());
+    }
+
+    chi2() = other.chi2();
+    pathLength() = other.pathLength();
+    typeFlags() = other.typeFlags();
+
+    // can be nullptr, but we just take that
+    setReferenceSurface(other.referenceSurfacePointer());
   }
 
   /// Return the index tuple that makes up this track state
@@ -484,6 +552,24 @@ class TrackStateProxy {
   TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
                   size_t istate);
 
+  const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
+    assert(data().irefsurface != IndexData::kInvalid);
+    return m_traj->m_referenceSurfaces[data().irefsurface];
+  }
+
+  typename MultiTrajectory<SourceLink>::ProjectorBitset projectorBitset()
+      const {
+    assert(data().iprojector != IndexData::kInvalid);
+    return m_traj->m_projectors[data().iprojector];
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setProjectorBitset(
+      typename MultiTrajectory<SourceLink>::ProjectorBitset proj) {
+    assert(data().iprojector != IndexData::kInvalid);
+    m_traj->m_projectors[data().iprojector] = proj;
+  }
+
   ConstIf<MultiTrajectory<SourceLink>, ReadOnly>* m_traj;
   size_t m_istate;
 
@@ -500,29 +586,6 @@ constexpr bool VisitorConcept = concept ::require<
                      concept ::identical_to<void, call_operator_t, T, TS>>>;
 
 }  // namespace detail_lt
-
-/// Collection of bit masks to enable steering which components of a track state
-/// should be initialized, and which should be left invalid.
-/// These mask values can be combined using binary operators, so
-/// (TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian) will instruct
-/// allocating storage for both predicted parameters (including covariance) and
-/// a jacobian.
-namespace TrackStatePropMask {
-/// Type of the bitmasks
-using Type = std::bitset<8>;
-
-constexpr Type Predicted{1 << 0};
-constexpr Type Filtered{1 << 1};
-constexpr Type Smoothed{1 << 2};
-constexpr Type Jacobian{1 << 3};
-
-constexpr Type Uncalibrated{1 << 4};
-constexpr Type Calibrated{1 << 5};
-
-// Initialize to all 1s. This only works as long as number of bits <= 64
-constexpr Type All{static_cast<unsigned long long>(-1)};
-constexpr Type None{0};
-}  // namespace TrackStatePropMask
 
 /// Store a trajectory of track states with multiple components.
 ///
@@ -556,12 +619,15 @@ class MultiTrajectory {
   ///
   /// @tparam parameters_t The parameter type used for the trackstate
   /// @param trackParameters  at the local point
+  /// @param mask The bitmask that instructs which components to allocate and
+  /// which to leave invalid
   /// @param iprevious        index of the previous state, SIZE_MAX if first
   /// @note The parameter type from @p parameters_t is not currently stored in
   /// MultiTrajectory.
   /// @return Index of the newly added track state
   template <typename parameters_t>
   size_t addTrackState(const TrackState<SourceLink, parameters_t>& ts,
+                       TrackStatePropMask mask = TrackStatePropMask::All,
                        size_t iprevious = SIZE_MAX);
 
   /// Add a track state without providing explicit information. Which components
@@ -570,9 +636,8 @@ class MultiTrajectory {
   /// which to leave invalid
   /// @param iprevious index of the previous state, SIZE_MAX if first
   /// @return Index of the newly added track state
-  size_t addTrackState(
-      const TrackStatePropMask::Type& mask = TrackStatePropMask::All,
-      size_t iprevious = SIZE_MAX);
+  size_t addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
+                       size_t iprevious = SIZE_MAX);
 
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access

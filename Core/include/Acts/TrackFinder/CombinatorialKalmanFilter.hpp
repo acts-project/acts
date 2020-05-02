@@ -13,6 +13,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateSorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -773,7 +774,7 @@ class CombinatorialKalmanFilter {
     ///
     /// @return The tip of added state and its state
     Result<std::pair<size_t, TipState>> addSourcelinkState(
-        const TrackStatePropMask::Type& stateMask, const BoundState& boundState,
+        const TrackStatePropMask& stateMask, const BoundState& boundState,
         const source_link_t& sourcelink, bool isOutlier, result_type& result,
         std::reference_wrapper<const GeometryContext> geoContext,
         const size_t& prevTip, const TipState& prevTipState,
@@ -865,7 +866,7 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    size_t addHoleState(const TrackStatePropMask::Type& stateMask,
+    size_t addHoleState(const TrackStatePropMask& stateMask,
                         const BoundState& boundState, result_type& result,
                         size_t prevTip = SIZE_MAX) const {
       // Add a track state
@@ -908,7 +909,7 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    size_t addPassiveState(const TrackStatePropMask::Type& stateMask,
+    size_t addPassiveState(const TrackStatePropMask& stateMask,
                            const CurvilinearState& curvilinearState,
                            result_type& result,
                            size_t prevTip = SIZE_MAX) const {
