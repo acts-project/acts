@@ -46,16 +46,6 @@ void FW::FakeRatePlotTool::book(
   // fake rate vs phi
   fakeRatePlotCache.fakerate_vs_phi = PlotHelpers::bookEff(
       "fakerate_vs_phi", "Tracking fake rate;#phi;Fake rate", bPhi);
-
-  // duplication number vs pT
-  fakeRatePlotCache.duplicationNum_vs_pT = PlotHelpers::bookProf(
-      "duplicationNum_vs_pT", "Duplication number vs. pT", bPt, bNum);
-  // duplication number vs eta
-  fakeRatePlotCache.duplicationNum_vs_eta = PlotHelpers::bookProf(
-      "duplicationNum_vs_eta", "Duplication number vs. #eta", bEta, bNum);
-  // duplication number vs phi
-  fakeRatePlotCache.duplicationNum_vs_phi = PlotHelpers::bookProf(
-      "duplicationNum_vs_phi", "Duplication number vs. #phi", bPhi, bNum);
 }
 
 void FW::FakeRatePlotTool::clear(FakeRatePlotCache& fakeRatePlotCache) const {
@@ -65,9 +55,6 @@ void FW::FakeRatePlotTool::clear(FakeRatePlotCache& fakeRatePlotCache) const {
   delete fakeRatePlotCache.fakerate_vs_pT;
   delete fakeRatePlotCache.fakerate_vs_eta;
   delete fakeRatePlotCache.fakerate_vs_phi;
-  delete fakeRatePlotCache.duplicationNum_vs_pT;
-  delete fakeRatePlotCache.duplicationNum_vs_eta;
-  delete fakeRatePlotCache.duplicationNum_vs_phi;
 }
 
 void FW::FakeRatePlotTool::write(
@@ -79,9 +66,6 @@ void FW::FakeRatePlotTool::write(
   fakeRatePlotCache.nRecoTracks->Write();
   fakeRatePlotCache.nTruthMatchedTracks->Write();
   fakeRatePlotCache.nFakeTracks->Write();
-  fakeRatePlotCache.duplicationNum_vs_pT->Write();
-  fakeRatePlotCache.duplicationNum_vs_eta->Write();
-  fakeRatePlotCache.duplicationNum_vs_phi->Write();
 }
 
 void FW::FakeRatePlotTool::fill(
@@ -100,20 +84,9 @@ void FW::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const ActsFatras::Particle& truthParticle, size_t nTruthMatchedTracks,
     size_t nFakeTracks) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
-  const auto t_pT = truthParticle.transverseMomentum();
-
   PlotHelpers::fillHisto(fakeRatePlotCache.nRecoTracks,
                          nTruthMatchedTracks + nFakeTracks);
   PlotHelpers::fillHisto(fakeRatePlotCache.nTruthMatchedTracks,
                          nTruthMatchedTracks);
   PlotHelpers::fillHisto(fakeRatePlotCache.nFakeTracks, nFakeTracks);
-
-  PlotHelpers::fillProf(fakeRatePlotCache.duplicationNum_vs_pT, t_pT,
-                        nTruthMatchedTracks);
-  PlotHelpers::fillProf(fakeRatePlotCache.duplicationNum_vs_eta, t_eta,
-                        nTruthMatchedTracks);
-  PlotHelpers::fillProf(fakeRatePlotCache.duplicationNum_vs_phi, t_phi,
-                        nTruthMatchedTracks);
 }

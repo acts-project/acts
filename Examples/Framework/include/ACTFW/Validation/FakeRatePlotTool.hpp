@@ -38,10 +38,6 @@ class FakeRatePlotTool {
     TEfficiency* fakerate_vs_eta;  ///< Tracking fake rate vs eta
     TEfficiency* fakerate_vs_phi;  ///< Tracking fake rate vs phi
     TEfficiency* fakerate_vs_pT;   ///< Tracking fake rate vs pT
-    //@Todo: make duplication number plots with duplication plot tool
-    TProfile* duplicationNum_vs_eta;  ///< Tracking duplication number vs eta
-    TProfile* duplicationNum_vs_phi;  ///< Tracking duplication number vs phi
-    TProfile* duplicationNum_vs_pT;   ///< Tracking duplication number vs pT
   };
 
   /// Constructor
