@@ -24,6 +24,33 @@ inline TrackStateProxy<SL, N, M, ReadOnly>::TrackStateProxy(
     : m_traj(&trajectory), m_istate(istate) {}
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
+TrackStatePropMask TrackStateProxy<SL, N, M, ReadOnly>::getMask() const {
+  using PM = TrackStatePropMask;
+  PM mask = PM::None;
+  if (hasPredicted()) {
+    mask |= PM::Predicted;
+  }
+
+  if (hasFiltered()) {
+    mask |= PM::Filtered;
+  }
+  if (hasSmoothed()) {
+    mask |= PM::Smoothed;
+  }
+  if (hasJacobian()) {
+    mask |= PM::Jacobian;
+  }
+  if (hasUncalibrated()) {
+    mask |= PM::Uncalibrated;
+  }
+  if (hasCalibrated()) {
+    mask |= PM::Calibrated;
+  }
+
+  return mask;
+}
+
+template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::parameters() const
     -> Parameters {
   IndexData::IndexType idx;
@@ -163,60 +190,78 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
 template <typename SL>
 template <typename parameters_t>
 inline size_t MultiTrajectory<SL>::addTrackState(
-    const TrackState<SL, parameters_t>& ts, size_t iprevious) {
+    const TrackState<SL, parameters_t>& ts, TrackStatePropMask mask,
+    size_t iprevious) {
   using CovMap =
       typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
+  using PropMask = TrackStatePropMask;
+
+  // build a mask to allocate for the components in the trackstate
+  PropMask required = PropMask::None;
+  if (ts.parameter.predicted) {
+    required |= PropMask::Predicted;
+  }
+
+  if (ts.parameter.filtered) {
+    required |= PropMask::Filtered;
+  }
+
+  if (ts.parameter.smoothed) {
+    required |= PropMask::Smoothed;
+  }
+
+  if (ts.parameter.jacobian) {
+    required |= PropMask::Jacobian;
+  }
+
+  if (ts.measurement.uncalibrated) {
+    required |= PropMask::Uncalibrated;
+  }
+
+  if (ts.measurement.calibrated) {
+    required |= PropMask::Calibrated;
+  }
 
   // use a TrackStateProxy to do the assignments
-  m_index.emplace_back();
-  detail_lt::IndexData& p = m_index.back();
-  size_t index = m_index.size() - 1;
-
+  size_t index = addTrackState(mask | required, iprevious);
   TrackStateProxy nts = getTrackState(index);
 
   // make shared ownership held by this multi trajectory
-  m_referenceSurfaces.push_back(ts.referenceSurface().getSharedPtr());
-  p.irefsurface = m_referenceSurfaces.size() - 1;
+  nts.setReferenceSurface(ts.referenceSurface().getSharedPtr());
 
-  if (iprevious != SIZE_MAX) {
-    p.iprevious = static_cast<uint16_t>(iprevious);
-  }
+  // we don't need to check allocation, because we ORed with required components
+  // above
 
   if (ts.parameter.predicted) {
     const auto& predicted = *ts.parameter.predicted;
-    m_params.addCol() = predicted.parameters();
-    CovMap(m_cov.addCol().data()) = *predicted.covariance();
-    p.ipredicted = m_params.size() - 1;
+    nts.predicted() = predicted.parameters();
+    nts.predictedCovariance() = *predicted.covariance();
   }
 
   if (ts.parameter.filtered) {
     const auto& filtered = *ts.parameter.filtered;
-    m_params.addCol() = filtered.parameters();
-    CovMap(m_cov.addCol().data()) = *filtered.covariance();
-    p.ifiltered = m_params.size() - 1;
+    nts.filtered() = filtered.parameters();
+    nts.filteredCovariance() = *filtered.covariance();
   }
 
   if (ts.parameter.smoothed) {
     const auto& smoothed = *ts.parameter.smoothed;
-    m_params.addCol() = smoothed.parameters();
-    CovMap(m_cov.addCol().data()) = *smoothed.covariance();
-    p.ismoothed = m_params.size() - 1;
+    nts.smoothed() = smoothed.parameters();
+    nts.smoothedCovariance() = *smoothed.covariance();
   }
 
   // store jacobian
   if (ts.parameter.jacobian) {
-    CovMap(m_jac.addCol().data()) = *ts.parameter.jacobian;
-    p.ijacobian = m_jac.size() - 1;
+    nts.jacobian() = *ts.parameter.jacobian;
   }
 
   // handle measurements
   if (ts.measurement.uncalibrated) {
-    m_sourceLinks.push_back(*ts.measurement.uncalibrated);
-    p.iuncalibrated = m_sourceLinks.size() - 1;
+    nts.uncalibrated() = *ts.measurement.uncalibrated;
   }
 
   if (ts.measurement.calibrated) {
-    std::visit([&](const auto& m) { nts.resetCalibrated(m); },
+    std::visit([&](const auto& m) { nts.setCalibrated(m); },
                *ts.measurement.calibrated);
   }
 
@@ -224,13 +269,13 @@ inline size_t MultiTrajectory<SL>::addTrackState(
   nts.pathLength() = ts.parameter.pathLength;
   nts.typeFlags() = ts.type();
 
-  return index;
-}
+  return nts.index();
+}  // namespace Acts
 
 template <typename SL>
-inline size_t MultiTrajectory<SL>::addTrackState(
-    const TrackStatePropMask::Type& mask, size_t iprevious) {
-  namespace PropMask = TrackStatePropMask;
+inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
+                                                 size_t iprevious) {
+  using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
   detail_lt::IndexData& p = m_index.back();
