@@ -32,6 +32,7 @@ struct TrajectoryState {
 };
 
 /// @brief Getter for trajectory info
+/// @Todo: add method to get trajectory info for sub-detectors
 ///
 /// @tparam source_link_t Type of source link
 ///
@@ -39,9 +40,8 @@ struct TrajectoryState {
 /// @param entryIndex The entry index of trajectory to investigate
 ///
 /// @return The trajectory summary information
-/// @Todo: add method to get trajectory info for sub-detectors
 template <typename source_link_t>
-static TrajectoryState trajectoryState(
+TrajectoryState trajectoryState(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
     const size_t& entryIndex) {
   TrajectoryState trajState;
@@ -57,7 +57,7 @@ static TrajectoryState trajectoryState(
       trajState.nHoles++;
     }
   });
-  return std::move(trajState);
+  return trajState;
 }
 
 }  // namespace MultiTrajectoryHelpers
@@ -212,7 +212,7 @@ struct SimMultiTrajectory {
                 });
     }
 
-    return std::move(particleHitCount);
+    return particleHitCount;
   }
 
  private:
