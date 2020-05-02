@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
 #include <optional>
 #include <utility>
 
@@ -20,23 +18,24 @@
 
 namespace FW {
 
-/// @brief struct for truth fitting result
+/// @brief Struct for truth fitting/finding result
 ///
-/// @Todo Use a track proxy or helper to retrieve the detailed info, such as
-/// number of measurments, holes, truth info etc.
-struct TruthFitTrack {
+/// It contains a MultiTrajectory with a list of entry indices for different
+/// tracks and fitted parameters for those tracks
+struct SimMultiTrajectory {
  public:
   // Default constructor
-  TruthFitTrack() = default;
+  SimMultiTrajectory() = default;
 
   /// Constructor from fitted trajectory and fitted track parameter
   ///
   /// @param parameters The fitted track parameter
   /// @param trajectory The fitted multiTrajectory
   /// @param tTip The fitted multiTrajectory entry point
-  TruthFitTrack(std::optional<Acts::BoundParameters> parameters,
-                std::optional<Acts::MultiTrajectory<SimSourceLink>> trajectory,
-                size_t tTip = SIZE_MAX)
+  SimMultiTrajectory(
+      std::optional<Acts::BoundParameters> parameters,
+      std::optional<Acts::MultiTrajectory<SimSourceLink>> trajectory,
+      size_t tTip = SIZE_MAX)
       : m_trackTip(tTip) {
     if (parameters) {
       m_trackParameters = std::move(*parameters);
@@ -48,28 +47,28 @@ struct TruthFitTrack {
 
   /// @brief Copy constructor
   ///
-  /// @param rhs is the source TruthFitTrack
-  TruthFitTrack(const TruthFitTrack& rhs)
+  /// @param rhs is the source SimMultiTrajectory
+  SimMultiTrajectory(const SimMultiTrajectory& rhs)
       : m_trackParameters(rhs.m_trackParameters),
         m_trajectory(rhs.m_trajectory),
         m_trackTip(rhs.m_trackTip) {}
 
   /// Copy move constructor
   ///
-  /// @param rhs is the source TruthFitTrack
-  TruthFitTrack(TruthFitTrack&& rhs)
+  /// @param rhs is the source SimMultiTrajectory
+  SimMultiTrajectory(SimMultiTrajectory&& rhs)
       : m_trackParameters(std::move(rhs.m_trackParameters)),
         m_trajectory(std::move(rhs.m_trajectory)),
         m_trackTip(std::move(rhs.m_trackTip)) {}
 
   /// @brief Default destructor
   ///
-  ~TruthFitTrack() = default;
+  ~SimMultiTrajectory() = default;
 
   /// @brief assignment operator
   ///
-  /// @param rhs is the source TruthFitTrack
-  TruthFitTrack& operator=(const TruthFitTrack& rhs) {
+  /// @param rhs is the source SimMultiTrajectory
+  SimMultiTrajectory& operator=(const SimMultiTrajectory& rhs) {
     m_trackParameters = rhs.m_trackParameters;
     m_trajectory = rhs.m_trajectory;
     m_trackTip = rhs.m_trackTip;
@@ -78,8 +77,8 @@ struct TruthFitTrack {
 
   /// @brief assignment move operator
   ///
-  /// @param rhs is the source TruthFitTrack
-  TruthFitTrack& operator=(TruthFitTrack&& rhs) {
+  /// @param rhs is the source SimMultiTrajectory
+  SimMultiTrajectory& operator=(SimMultiTrajectory&& rhs) {
     m_trackParameters = std::move(rhs.m_trackParameters);
     m_trajectory = std::move(rhs.m_trajectory);
     m_trackTip = std::move(rhs.m_trackTip);
@@ -131,10 +130,10 @@ struct TruthFitTrack {
   }
 
   /// Indicator for having fitted track parameter or not
-  bool hasTrackParameters() const { return m_trackParameters!=std::nullopt; }
+  bool hasTrackParameters() const { return m_trackParameters != std::nullopt; }
 
   /// Indicator for having fitted trajectory or not
-  bool hasTrajectory() const { return m_trajectory!=std::nullopt; }
+  bool hasTrajectory() const { return m_trajectory != std::nullopt; }
 
   /// Get the truth particle counts to help identify majority particle
   std::vector<ParticleHitCount> identifyMajorityParticle() const {

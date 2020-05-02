@@ -65,7 +65,7 @@ FW::ProcessCode FW::FittingAlgorithm::execute(
 
     // We can have empty tracks which must give empty fit results
     if (protoTrack.empty()) {
-      trajectories.push_back(TruthFitTrack());
+      trajectories.push_back(SimMultiTrajectory());
       ACTS_WARNING("Empty track " << itrack << " found.");
       continue;
     }
@@ -116,7 +116,7 @@ FW::ProcessCode FW::FittingAlgorithm::execute(
       ACTS_WARNING("Fit failed for track " << itrack << " with error"
                                            << result.error());
       // Fit failed, but still create a empty truth fit track
-      trajectories.push_back(TruthFitTrack());
+      trajectories.push_back(SimMultiTrajectory());
     }
   }
 

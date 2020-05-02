@@ -88,7 +88,7 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // All reconstructed trajectories with truth info
-  std::map<ActsFatras::Barcode, TruthFitTrack> reconTrajectories;
+  std::map<ActsFatras::Barcode, SimMultiTrajectory> reconTrajectories;
 
   // Loop over all trajectories
   for (const auto& traj : trajectories) {
