@@ -267,7 +267,6 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
   for (const auto& traj : trajectories) {
     m_trajNr = iTraj;
     if (not traj.hasTrajectory()) {
-      ACTS_WARNING("No multiTrajectory available.");
       continue;
     }
 
@@ -323,7 +322,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
     // Get the fitted track parameter
     m_hasFittedParams = false;
-    if (traj.hasTrackParameters()) {
+    if (traj.hasTrackParameters(trackTip)) {
       m_hasFittedParams = true;
       const auto& boundParam = traj.trackParameters(trackTip);
       const auto& parameter = boundParam.parameters();

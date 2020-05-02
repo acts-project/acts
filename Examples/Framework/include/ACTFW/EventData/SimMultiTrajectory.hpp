@@ -135,10 +135,14 @@ struct SimMultiTrajectory {
   /// @return Whether having multiTrajectory or not
   bool hasTrajectory() const { return m_multiTrajectory != std::nullopt; }
 
-  /// @brief Indicator of fitted track parameters
+  /// @brief Indicator of fitted track parameters for one trajectory
+  ///
+  /// @param entryIndex The trajectory entry index
   ///
   /// @return Whether having fitted track parameters or not
-  bool hasTrackParameters() const { return !m_trackParameters.empty(); }
+  bool hasTrackParameters(const size_t& entryIndex) const {
+    return m_trackParameters.count(entryIndex) > 0;
+  }
 
   /// @brief Getter for multiTrajectory
   ///
@@ -158,17 +162,13 @@ struct SimMultiTrajectory {
   ///
   /// @return The fitted track parameters of the trajectory
   const Acts::BoundParameters& trackParameters(const size_t& entryIndex) const {
-    if (not m_trackParameters.empty()) {
-      auto it = m_trackParameters.find(entryIndex);
-      if (it != m_trackParameters.end()) {
-        return it->second;
-      } else {
-        throw std::runtime_error(
-            "No fitted track parameters for trajectory with entry index = " +
-            std::to_string(entryIndex));
-      }
+    auto it = m_trackParameters.find(entryIndex);
+    if (it != m_trackParameters.end()) {
+      return it->second;
     } else {
-      throw std::runtime_error("No fitted track parameters available!");
+      throw std::runtime_error(
+          "No fitted track parameters for trajectory with entry index = " +
+          std::to_string(entryIndex));
     }
   }
 

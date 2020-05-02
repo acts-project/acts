@@ -93,6 +93,7 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
   // Loop over all trajectories
   for (const auto& traj : trajectories) {
     if (not traj.hasTrajectory()) {
+      ACTS_WARNING("No multiTrajectory available.");
       continue;
     }
     // The trajectory entry indices and the multiTrajectory
@@ -113,11 +114,13 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
     // Get the majority truth particle for this trajectory
     const auto particleHitCount = traj.identifyMajorityParticle(trackTip);
     if (particleHitCount.empty()) {
+      ACTS_WARNING("No truth particle associated with this trajectory.");
       continue;
     }
     // Find the truth particle for the majority barcode
     const auto ip = particles.find(particleHitCount.front().particleId);
     if (ip == particles.end()) {
+      ACTS_WARNING("Majority particle not found in the particles collection.");
       continue;
     }
 
@@ -132,7 +135,7 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
                                 trajState.nHoles);
 
     // Fill the residual plots if the track has fitted parameter
-    if (traj.hasTrackParameters()) {
+    if (traj.hasTrackParameters(trackTip)) {
       m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
                          traj.trackParameters(trackTip));
     }
@@ -145,9 +148,11 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
   for (const auto& particle : particles) {
     const auto it = reconTrajectories.find(particle.particleId());
     if (it != reconTrajectories.end()) {
+      // The trajectory entry indices
+      const auto& trackTips = it->second.trajectory().first;
       // when the trajectory is reconstructed
       m_effPlotTool.fill(m_effPlotCache, particle,
-                         it->second.hasTrackParameters());
+                         it->second.hasTrackParameters(trackTips.front()));
     } else {
       // when the trajectory is NOT reconstructed
       m_effPlotTool.fill(m_effPlotCache, particle, false);
