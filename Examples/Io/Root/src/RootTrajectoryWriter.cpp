@@ -265,22 +265,34 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
   // Loop over the trajectories
   int iTraj = 0;
   for (const auto& traj : trajectories) {
-    /// Collect the information
     m_trajNr = iTraj;
-
-    // Collect number of trackstates with measurements
-    m_nMeasurements = traj.numMeasurements();
-
-    // No entry for the track without measurements in the tree
-    if (m_nMeasurements == 0) {
+    if (not traj.hasTrajectory()) {
+      ACTS_WARNING("No multiTrajectory available.");
       continue;
     }
 
-    // Collect number of all trackstates
-    m_nStates = traj.numStates();
+    // The trajectory entry indices and the multiTrajectory
+    const auto& [trackTips, mj] = traj.trajectory();
+    // Check the size of the trajectory entry indices. For track fitting, there
+    // should be at most one trajectory
+    if (trackTips.size() > 1) {
+      ACTS_ERROR("Track fitting should not result in multiple trajectories.");
+      return ProcessCode::ABORT;
+    }
+    if (trackTips.empty()) {
+      ACTS_WARNING("No trajectory entry index found.");
+      continue;
+    }
+    // Get the entry index for the single trajectory
+    auto& trackTip = trackTips.front();
+
+    // Collect the trajectory summary info
+    auto trajState = MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    m_nMeasurements = trajState.nMeasurements;
+    m_nStates = trajState.nStates;
 
     // Get the majority truth particle to this track
-    const auto particleHitCount = traj.identifyMajorityParticle();
+    const auto particleHitCount = traj.identifyMajorityParticle(trackTip);
     if (not particleHitCount.empty()) {
       // Get the barcode of the majority truth particle
       m_t_barcode = particleHitCount.front().particleId.value();
@@ -313,7 +325,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
     m_hasFittedParams = false;
     if (traj.hasTrackParameters()) {
       m_hasFittedParams = true;
-      const auto& boundParam = traj.trackParameters();
+      const auto& boundParam = traj.trackParameters(trackTip);
       const auto& parameter = boundParam.parameters();
       const auto& covariance = *boundParam.covariance();
       m_eLOC0_fit = parameter[Acts::ParDef::eLOC_0];
@@ -332,9 +344,6 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       m_err_eQOP_fit = sqrt(covariance(Acts::ParDef::eQOP, Acts::ParDef::eQOP));
       m_err_eT_fit = sqrt(covariance(Acts::ParDef::eT, Acts::ParDef::eT));
     }
-
-    // Get the fitted trajectory
-    const auto& [trackTip, mj] = traj.trajectory();
 
     // Get the trackStates on the trajectory
     m_nPredicted = 0;

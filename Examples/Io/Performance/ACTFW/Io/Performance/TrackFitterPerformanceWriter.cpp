@@ -95,46 +95,46 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
     if (not traj.hasTrajectory()) {
       continue;
     }
-    const auto& [trackTip, track] = traj.trajectory();
+    // The trajectory entry indices and the multiTrajectory
+    const auto& [trackTips, mj] = traj.trajectory();
+    // Check the size of the trajectory entry indices. For track fitting, there
+    // should be at most one trajectory
+    if (trackTips.size() > 1) {
+      ACTS_ERROR("Track fitting should not result in multiple trajectories.");
+      return ProcessCode::ABORT;
+    }
+    if (trackTips.empty()) {
+      ACTS_WARNING("No trajectory entry index found.");
+      continue;
+    }
+    // Get the entry index for the single trajectory
+    auto& trackTip = trackTips.front();
 
-    // get the majority truth particle to this track
-    const auto particleHitCount = traj.identifyMajorityParticle();
+    // Get the majority truth particle for this trajectory
+    const auto particleHitCount = traj.identifyMajorityParticle(trackTip);
     if (particleHitCount.empty()) {
       continue;
     }
-
-    // find the truth particle for the majority barcode
+    // Find the truth particle for the majority barcode
     const auto ip = particles.find(particleHitCount.front().particleId);
     if (ip == particles.end()) {
       continue;
     }
 
-    // record this trajectory with its truth info
+    // Record this trajectory with its truth info
     reconTrajectories.emplace(ip->particleId(), traj);
 
-    // count the total number of hits and hits from the majority truth
-    // particle
-    size_t nTotalStates = 0, nHits = 0, nOutliers = 0, nHoles = 0;
-    track.visitBackwards(trackTip, [&](const auto& state) {
-      nTotalStates++;
-      auto typeFlags = state.typeFlags();
-      if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-        nHits++;
-      } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-        nOutliers++;
-      } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-        nHoles++;
-      }
-    });
+    // Collect the trajectory summary info
+    auto trajState = MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    // Fill the trajectory summary info
+    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip, trajState.nStates,
+                                trajState.nMeasurements, trajState.nOutliers,
+                                trajState.nHoles);
 
-    // fill the track detailed info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip, nTotalStates,
-                                nHits, nOutliers, nHoles);
-
-    // fill the residual plots it the track has fitted parameter
+    // Fill the residual plots if the track has fitted parameter
     if (traj.hasTrackParameters()) {
       m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
-                         traj.trackParameters());
+                         traj.trackParameters(trackTip));
     }
   }
 

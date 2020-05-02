@@ -95,27 +95,29 @@ FW::ProcessCode FW::FittingAlgorithm::execute(
     if (result.ok()) {
       // Get the fit output object
       const auto& fitOutput = result.value();
+      // The track entry indices container. One element here.
+      std::vector<size_t> trackTips;
+      trackTips.reserve(1);
+      trackTips.emplace_back(fitOutput.trackTip);
+      // The fitted parameters container. One element (at most) here.
+      IndexedParams indexedParams;
       if (fitOutput.fittedParameters) {
         const auto& params = fitOutput.fittedParameters.value();
         ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
         ACTS_VERBOSE("  position: " << params.position().transpose());
         ACTS_VERBOSE("  momentum: " << params.momentum().transpose());
-        // Construct a truth fit track using trajectory and
-        // track parameter
-        trajectories.emplace_back(std::move(params),
-                                  std::move(fitOutput.fittedStates),
-                                  fitOutput.trackTip);
+        // Push the fitted parameters to the container
+        indexedParams.emplace(fitOutput.trackTip, std::move(params));
       } else {
         ACTS_DEBUG("No fitted paramemeters for track " << itrack);
-        // Construct a truth fit track using trajectory
-        trajectories.emplace_back(std::nullopt,
-                                  std::move(fitOutput.fittedStates),
-                                  fitOutput.trackTip);
       }
+      // Create a SimMultiTrajectory
+      trajectories.emplace_back(std::move(fitOutput.fittedStates),
+                                std::move(trackTips), std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track " << itrack << " with error"
                                            << result.error());
-      // Fit failed, but still create a empty truth fit track
+      // Fit failed, but still create an empty SimMultiTrajectory
       trajectories.push_back(SimMultiTrajectory());
     }
   }
