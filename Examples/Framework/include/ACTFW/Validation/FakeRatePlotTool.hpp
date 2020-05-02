@@ -35,9 +35,9 @@ class FakeRatePlotTool {
     TH1F* nRecoTracks;             ///< number of reco tracks
     TH1F* nTruthMatchedTracks;     ///< number of truth-matched reco tracks
     TH1F* nFakeTracks;             ///< number of fake tracks
-    TEfficiency* fakerate_vs_eta;  ///< Tracking fake rate vs eta
-    TEfficiency* fakerate_vs_phi;  ///< Tracking fake rate vs phi
-    TEfficiency* fakerate_vs_pT;   ///< Tracking fake rate vs pT
+    TEfficiency* fakeRate_vs_eta;  ///< Tracking fake rate vs eta
+    TEfficiency* fakeRate_vs_phi;  ///< Tracking fake rate vs phi
+    TEfficiency* fakeRate_vs_pT;   ///< Tracking fake rate vs pT
   };
 
   /// Constructor

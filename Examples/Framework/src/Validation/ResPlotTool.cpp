@@ -37,11 +37,11 @@ void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
         Form("res_%s_vs_eta", parName.c_str()),
         Form("Residual of %s vs eta", parName.c_str()), bEta, bResidual);
     // residual mean in each eta bin
-    resPlotCache.resmean_vs_eta[parName] = PlotHelpers::bookHisto(
+    resPlotCache.resMean_vs_eta[parName] = PlotHelpers::bookHisto(
         Form("resmean_%s_vs_eta", parName.c_str()),
         Form("Residual mean of %s", parName.c_str()), bEta);
     // residual width in each eta bin
-    resPlotCache.reswidth_vs_eta[parName] = PlotHelpers::bookHisto(
+    resPlotCache.resWidth_vs_eta[parName] = PlotHelpers::bookHisto(
         Form("reswidth_%s_vs_eta", parName.c_str()),
         Form("Residual width of %s", parName.c_str()), bEta);
     // residual vs pT scatter plots
@@ -49,11 +49,11 @@ void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
         Form("res_%s_vs_pT", parName.c_str()),
         Form("Residual of %s vs pT", parName.c_str()), bPt, bResidual);
     // residual mean in each pT bin
-    resPlotCache.resmean_vs_pT[parName] = PlotHelpers::bookHisto(
+    resPlotCache.resMean_vs_pT[parName] = PlotHelpers::bookHisto(
         Form("resmean_%s_vs_pT", parName.c_str()),
         Form("Residual mean of %s", parName.c_str()), bPt);
     // residual width in each pT bin
-    resPlotCache.reswidth_vs_pT[parName] = PlotHelpers::bookHisto(
+    resPlotCache.resWidth_vs_pT[parName] = PlotHelpers::bookHisto(
         Form("reswidth_%s_vs_pT", parName.c_str()),
         Form("Residual width of %s", parName.c_str()), bPt);
 
@@ -66,11 +66,11 @@ void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
         Form("pull_%s_vs_eta", parName.c_str()),
         Form("Pull of %s vs eta", parName.c_str()), bEta, bPull);
     // pull mean in each eta bin
-    resPlotCache.pullmean_vs_eta[parName] =
+    resPlotCache.pullMean_vs_eta[parName] =
         PlotHelpers::bookHisto(Form("pullmean_%s_vs_eta", parName.c_str()),
                                Form("Pull mean of %s", parName.c_str()), bEta);
     // pull width in each eta bin
-    resPlotCache.pullwidth_vs_eta[parName] =
+    resPlotCache.pullWidth_vs_eta[parName] =
         PlotHelpers::bookHisto(Form("pullwidth_%s_vs_eta", parName.c_str()),
                                Form("Pull width of %s", parName.c_str()), bEta);
     // pull vs pT scatter plots
@@ -78,11 +78,11 @@ void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
         Form("pull_%s_vs_pT", parName.c_str()),
         Form("Pull of %s vs pT", parName.c_str()), bPt, bPull);
     // pull mean in each pT bin
-    resPlotCache.pullmean_vs_pT[parName] =
+    resPlotCache.pullMean_vs_pT[parName] =
         PlotHelpers::bookHisto(Form("pullmean_%s_vs_pT", parName.c_str()),
                                Form("Pull mean of %s", parName.c_str()), bPt);
     // pull width in each pT bin
-    resPlotCache.pullwidth_vs_pT[parName] =
+    resPlotCache.pullWidth_vs_pT[parName] =
         PlotHelpers::bookHisto(Form("pullwidth_%s_vs_pT", parName.c_str()),
                                Form("Pull width of %s", parName.c_str()), bPt);
   }
@@ -94,18 +94,18 @@ void FW::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
     std::string parName = m_cfg.paramNames.at(parID);
     delete resPlotCache.res.at(parName);
     delete resPlotCache.res_vs_eta.at(parName);
-    delete resPlotCache.resmean_vs_eta.at(parName);
-    delete resPlotCache.reswidth_vs_eta.at(parName);
+    delete resPlotCache.resMean_vs_eta.at(parName);
+    delete resPlotCache.resWidth_vs_eta.at(parName);
     delete resPlotCache.res_vs_pT.at(parName);
-    delete resPlotCache.resmean_vs_pT.at(parName);
-    delete resPlotCache.reswidth_vs_pT.at(parName);
+    delete resPlotCache.resMean_vs_pT.at(parName);
+    delete resPlotCache.resWidth_vs_pT.at(parName);
     delete resPlotCache.pull.at(parName);
     delete resPlotCache.pull_vs_eta.at(parName);
-    delete resPlotCache.pullmean_vs_eta.at(parName);
-    delete resPlotCache.pullwidth_vs_eta.at(parName);
+    delete resPlotCache.pullMean_vs_eta.at(parName);
+    delete resPlotCache.pullWidth_vs_eta.at(parName);
     delete resPlotCache.pull_vs_pT.at(parName);
-    delete resPlotCache.pullmean_vs_pT.at(parName);
-    delete resPlotCache.pullwidth_vs_pT.at(parName);
+    delete resPlotCache.pullMean_vs_pT.at(parName);
+    delete resPlotCache.pullWidth_vs_pT.at(parName);
   }
 }
 
@@ -116,18 +116,18 @@ void FW::ResPlotTool::write(
     std::string parName = m_cfg.paramNames.at(parID);
     resPlotCache.res.at(parName)->Write();
     resPlotCache.res_vs_eta.at(parName)->Write();
-    resPlotCache.resmean_vs_eta.at(parName)->Write();
-    resPlotCache.reswidth_vs_eta.at(parName)->Write();
+    resPlotCache.resMean_vs_eta.at(parName)->Write();
+    resPlotCache.resWidth_vs_eta.at(parName)->Write();
     resPlotCache.res_vs_pT.at(parName)->Write();
-    resPlotCache.resmean_vs_pT.at(parName)->Write();
-    resPlotCache.reswidth_vs_pT.at(parName)->Write();
+    resPlotCache.resMean_vs_pT.at(parName)->Write();
+    resPlotCache.resWidth_vs_pT.at(parName)->Write();
     resPlotCache.pull.at(parName)->Write();
     resPlotCache.pull_vs_eta.at(parName)->Write();
-    resPlotCache.pullmean_vs_eta.at(parName)->Write();
-    resPlotCache.pullwidth_vs_eta.at(parName)->Write();
+    resPlotCache.pullMean_vs_eta.at(parName)->Write();
+    resPlotCache.pullWidth_vs_eta.at(parName)->Write();
     resPlotCache.pull_vs_pT.at(parName)->Write();
-    resPlotCache.pullmean_vs_pT.at(parName)->Write();
-    resPlotCache.pullwidth_vs_pT.at(parName)->Write();
+    resPlotCache.pullMean_vs_pT.at(parName)->Write();
+    resPlotCache.pullWidth_vs_pT.at(parName)->Write();
   }
 }
 
@@ -203,28 +203,28 @@ void FW::ResPlotTool::refinement(
       TH1D* temp_res = resPlotCache.res_vs_eta.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Residual_vs_eta_Histo", j), j, j);
       PlotHelpers::anaHisto(temp_res, j,
-                            resPlotCache.resmean_vs_eta.at(parName),
-                            resPlotCache.reswidth_vs_eta.at(parName));
+                            resPlotCache.resMean_vs_eta.at(parName),
+                            resPlotCache.resWidth_vs_eta.at(parName));
 
       TH1D* temp_pull = resPlotCache.pull_vs_eta.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Pull_vs_eta_Histo", j), j, j);
       PlotHelpers::anaHisto(temp_pull, j,
-                            resPlotCache.pullmean_vs_eta.at(parName),
-                            resPlotCache.pullwidth_vs_eta.at(parName));
+                            resPlotCache.pullMean_vs_eta.at(parName),
+                            resPlotCache.pullWidth_vs_eta.at(parName));
     }
 
     // refine the plots vs pT
     for (int j = 1; j <= bPt.nBins; j++) {
       TH1D* temp_res = resPlotCache.res_vs_pT.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Residual_vs_pT_Histo", j), j, j);
-      PlotHelpers::anaHisto(temp_res, j, resPlotCache.resmean_vs_pT.at(parName),
-                            resPlotCache.reswidth_vs_pT.at(parName));
+      PlotHelpers::anaHisto(temp_res, j, resPlotCache.resMean_vs_pT.at(parName),
+                            resPlotCache.resWidth_vs_pT.at(parName));
 
       TH1D* temp_pull = resPlotCache.pull_vs_pT.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Pull_vs_pT_Histo", j), j, j);
       PlotHelpers::anaHisto(temp_pull, j,
-                            resPlotCache.pullmean_vs_pT.at(parName),
-                            resPlotCache.pullwidth_vs_pT.at(parName));
+                            resPlotCache.pullMean_vs_pT.at(parName),
+                            resPlotCache.pullWidth_vs_pT.at(parName));
     }
   }
 }

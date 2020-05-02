@@ -38,13 +38,13 @@ void FW::FakeRatePlotTool::book(
       "nFakeTracks", "Number of fake track candidates", bNum);
 
   // fake rate vs pT
-  fakeRatePlotCache.fakerate_vs_pT = PlotHelpers::bookEff(
+  fakeRatePlotCache.fakeRate_vs_pT = PlotHelpers::bookEff(
       "fakerate_vs_pT", "Tracking fake rate;pT [GeV/c];Fake rate", bPt);
   // fake rate vs eta
-  fakeRatePlotCache.fakerate_vs_eta = PlotHelpers::bookEff(
+  fakeRatePlotCache.fakeRate_vs_eta = PlotHelpers::bookEff(
       "fakerate_vs_eta", "Tracking fake rate;#eta;Fake rate", bEta);
   // fake rate vs phi
-  fakeRatePlotCache.fakerate_vs_phi = PlotHelpers::bookEff(
+  fakeRatePlotCache.fakeRate_vs_phi = PlotHelpers::bookEff(
       "fakerate_vs_phi", "Tracking fake rate;#phi;Fake rate", bPhi);
 }
 
@@ -52,17 +52,17 @@ void FW::FakeRatePlotTool::clear(FakeRatePlotCache& fakeRatePlotCache) const {
   delete fakeRatePlotCache.nRecoTracks;
   delete fakeRatePlotCache.nTruthMatchedTracks;
   delete fakeRatePlotCache.nFakeTracks;
-  delete fakeRatePlotCache.fakerate_vs_pT;
-  delete fakeRatePlotCache.fakerate_vs_eta;
-  delete fakeRatePlotCache.fakerate_vs_phi;
+  delete fakeRatePlotCache.fakeRate_vs_pT;
+  delete fakeRatePlotCache.fakeRate_vs_eta;
+  delete fakeRatePlotCache.fakeRate_vs_phi;
 }
 
 void FW::FakeRatePlotTool::write(
     const FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
-  fakeRatePlotCache.fakerate_vs_pT->Write();
-  fakeRatePlotCache.fakerate_vs_eta->Write();
-  fakeRatePlotCache.fakerate_vs_phi->Write();
+  fakeRatePlotCache.fakeRate_vs_pT->Write();
+  fakeRatePlotCache.fakeRate_vs_eta->Write();
+  fakeRatePlotCache.fakeRate_vs_phi->Write();
   fakeRatePlotCache.nRecoTracks->Write();
   fakeRatePlotCache.nTruthMatchedTracks->Write();
   fakeRatePlotCache.nFakeTracks->Write();
@@ -75,9 +75,9 @@ void FW::FakeRatePlotTool::fill(
   const auto t_eta = eta(truthParticle.unitDirection());
   const auto t_pT = truthParticle.transverseMomentum();
 
-  PlotHelpers::fillEff(fakeRatePlotCache.fakerate_vs_pT, t_pT, status);
-  PlotHelpers::fillEff(fakeRatePlotCache.fakerate_vs_eta, t_eta, status);
-  PlotHelpers::fillEff(fakeRatePlotCache.fakerate_vs_phi, t_phi, status);
+  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_pT, t_pT, status);
+  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_eta, t_eta, status);
+  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_phi, t_phi, status);
 }
 
 void FW::FakeRatePlotTool::fill(

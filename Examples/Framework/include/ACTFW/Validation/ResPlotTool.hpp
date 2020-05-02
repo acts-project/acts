@@ -54,26 +54,26 @@ class ResPlotTool {
     std::map<std::string, TH1F*> res;         ///< Residual distribution
     std::map<std::string, TH2F*> res_vs_eta;  ///< Residual vs eta scatter plot
     std::map<std::string, TH1F*>
-        resmean_vs_eta;  ///< Residual mean vs eta distribution
+        resMean_vs_eta;  ///< Residual mean vs eta distribution
     std::map<std::string, TH1F*>
-        reswidth_vs_eta;  ///< Residual width vs eta distribution
+        resWidth_vs_eta;  ///< Residual width vs eta distribution
     std::map<std::string, TH2F*> res_vs_pT;  ///< Residual vs pT scatter plot
     std::map<std::string, TH1F*>
-        resmean_vs_pT;  ///< Residual mean vs pT distribution
+        resMean_vs_pT;  ///< Residual mean vs pT distribution
     std::map<std::string, TH1F*>
-        reswidth_vs_pT;  ///< Residual width vs pT distribution
+        resWidth_vs_pT;  ///< Residual width vs pT distribution
 
     std::map<std::string, TH1F*> pull;         ///< Pull distribution
     std::map<std::string, TH2F*> pull_vs_eta;  ///< Pull vs eta scatter plot
     std::map<std::string, TH1F*>
-        pullmean_vs_eta;  ///< Pull mean vs eta distribution
+        pullMean_vs_eta;  ///< Pull mean vs eta distribution
     std::map<std::string, TH1F*>
-        pullwidth_vs_eta;  ///< Pull width vs eta distribution
+        pullWidth_vs_eta;  ///< Pull width vs eta distribution
     std::map<std::string, TH2F*> pull_vs_pT;  ///< Pull vs pT scatter plot
     std::map<std::string, TH1F*>
-        pullmean_vs_pT;  ///< Pull mean vs pT distribution
+        pullMean_vs_pT;  ///< Pull mean vs pT distribution
     std::map<std::string, TH1F*>
-        pullwidth_vs_pT;  ///< Pull width vs pT distribution
+        pullWidth_vs_pT;  ///< Pull width vs pT distribution
   };
 
   /// Constructor
