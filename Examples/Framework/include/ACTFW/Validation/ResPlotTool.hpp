@@ -83,10 +83,12 @@ class ResPlotTool {
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
   /// @brief book the histograms
+  ///
   /// @param resPlotCache the cache for residual/pull histograms
   void book(ResPlotCache& resPlotCache) const;
 
   /// @brief fill the histograms
+  ///
   /// @param resPlotCache the cache for residual/pull histograms
   /// @param gctx the geometry context
   /// @param truthParticle the truth particle
@@ -96,15 +98,18 @@ class ResPlotTool {
             const Acts::BoundParameters& fittedParamters) const;
 
   /// @brief extract the details of the residual/pull plots and fill details
+  ///
   /// into separate histograms
   /// @param resPlotCache the cache object for residual/pull histograms
   void refinement(ResPlotCache& resPlotCache) const;
 
   /// @brief write the histograms to output file
+  ///
   /// @param resPlotCache the cache object for residual/pull histograms
   void write(const ResPlotCache& resPlotCache) const;
 
   /// @brief delele the histograms
+  ///
   /// @param resPlotCache the cache object for residual/pull histograms
   void clear(ResPlotCache& resPlotCache) const;
 

@@ -22,9 +22,9 @@ FW::DuplicationPlotTool::DuplicationPlotTool(
 
 void FW::DuplicationPlotTool::book(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache) const {
-  PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
-  PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
+  PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
+  PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
   ACTS_DEBUG("Initialize the histograms for duplication rate plots");
 
@@ -40,14 +40,16 @@ void FW::DuplicationPlotTool::book(
       "duplicationRate_vs_phi", "Duplication rate;#phi;Duplication rate", bPhi);
 
   // duplication number vs pT
-  duplicationPlotCache.duplicationNum_vs_pT = PlotHelpers::bookProf(
-      "duplicationNum_vs_pT", "Duplication number vs. pT", bPt, bNum);
+  duplicationPlotCache.nDuplicated_vs_pT = PlotHelpers::bookProf(
+      "nDuplicated_vs_pT", "Number of duplicated track candidates", bPt, bNum);
   // duplication number vs eta
-  duplicationPlotCache.duplicationNum_vs_eta = PlotHelpers::bookProf(
-      "duplicationNum_vs_eta", "Duplication number vs. #eta", bEta, bNum);
+  duplicationPlotCache.nDuplicated_vs_eta = PlotHelpers::bookProf(
+      "nDuplicated_vs_eta", "Number of duplicated track candidates", bEta,
+      bNum);
   // duplication number vs phi
-  duplicationPlotCache.duplicationNum_vs_phi = PlotHelpers::bookProf(
-      "duplicationNum_vs_phi", "Duplication number vs. #phi", bPhi, bNum);
+  duplicationPlotCache.nDuplicated_vs_phi = PlotHelpers::bookProf(
+      "nDuplicated_vs_phi", "Number of duplicated track candidates", bPhi,
+      bNum);
 }
 
 void FW::DuplicationPlotTool::clear(
@@ -55,9 +57,9 @@ void FW::DuplicationPlotTool::clear(
   delete duplicationPlotCache.duplicationRate_vs_pT;
   delete duplicationPlotCache.duplicationRate_vs_eta;
   delete duplicationPlotCache.duplicationRate_vs_phi;
-  delete duplicationPlotCache.duplicationNum_vs_pT;
-  delete duplicationPlotCache.duplicationNum_vs_eta;
-  delete duplicationPlotCache.duplicationNum_vs_phi;
+  delete duplicationPlotCache.nDuplicated_vs_pT;
+  delete duplicationPlotCache.nDuplicated_vs_eta;
+  delete duplicationPlotCache.nDuplicated_vs_phi;
 }
 
 void FW::DuplicationPlotTool::write(
@@ -67,9 +69,9 @@ void FW::DuplicationPlotTool::write(
   duplicationPlotCache.duplicationRate_vs_pT->Write();
   duplicationPlotCache.duplicationRate_vs_eta->Write();
   duplicationPlotCache.duplicationRate_vs_phi->Write();
-  duplicationPlotCache.duplicationNum_vs_pT->Write();
-  duplicationPlotCache.duplicationNum_vs_eta->Write();
-  duplicationPlotCache.duplicationNum_vs_phi->Write();
+  duplicationPlotCache.nDuplicated_vs_pT->Write();
+  duplicationPlotCache.nDuplicated_vs_eta->Write();
+  duplicationPlotCache.nDuplicated_vs_phi->Write();
 }
 
 void FW::DuplicationPlotTool::fill(
@@ -85,4 +87,19 @@ void FW::DuplicationPlotTool::fill(
                        status);
   PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_phi, t_phi,
                        status);
+}
+
+void FW::DuplicationPlotTool::fill(
+    DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
+    const ActsFatras::Particle& truthParticle, size_t nDuplicatedTracks) const {
+  const auto t_phi = phi(truthParticle.unitDirection());
+  const auto t_eta = eta(truthParticle.unitDirection());
+  const auto t_pT = truthParticle.transverseMomentum();
+
+  PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_pT, t_pT,
+                        nDuplicatedTracks);
+  PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_eta, t_eta,
+                        nDuplicatedTracks);
+  PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_phi, t_phi,
+                        nDuplicatedTracks);
 }

@@ -32,12 +32,12 @@ class DuplicationPlotTool {
 
   /// @brief Nested Cache struct
   struct DuplicationPlotCache {
-    TProfile* duplicationNum_vs_eta;  ///< Tracking duplication number vs eta
-    TProfile* duplicationNum_vs_phi;  ///< Tracking duplication number vs phi
-    TProfile* duplicationNum_vs_pT;   ///< Tracking duplication number vs pT
+    TProfile* nDuplicated_vs_pT;         ///< Number of duplicated tracks vs pT
+    TProfile* nDuplicated_vs_eta;        ///< Number of duplicated tracks vs eta
+    TProfile* nDuplicated_vs_phi;        ///< Number of duplicated tracks vs phi
+    TEfficiency* duplicationRate_vs_pT;  ///< Tracking duplication rate vs pT
     TEfficiency* duplicationRate_vs_eta;  ///< Tracking duplication rate vs eta
     TEfficiency* duplicationRate_vs_phi;  ///< Tracking duplication rate vs phi
-    TEfficiency* duplicationRate_vs_pT;   ///< Tracking duplication rate vs pT
   };
 
   /// Constructor
@@ -47,6 +47,7 @@ class DuplicationPlotTool {
   DuplicationPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
   /// @brief book the duplication plots
+  ///
   /// @param duplicationPlotCache the cache for duplication plots
   void book(DuplicationPlotCache& duplicationPlotCache) const;
 
@@ -58,11 +59,23 @@ class DuplicationPlotTool {
   void fill(DuplicationPlotCache& duplicationPlotCache,
             const ActsFatras::Particle& truthParticle, bool status) const;
 
+  /// @brief fill number of duplicated tracks for a single
+  /// Multi-trajectory
+  ///
+  /// @param duplicationPlotCache cache object for duplication plots
+  /// @param truthParticle the truth Particle
+  /// @param nDuplicatedTracks the number of duplicated tracks
+  void fill(DuplicationPlotCache& duplicationPlotCache,
+            const ActsFatras::Particle& truthParticle,
+            size_t nDuplicatedTracks) const;
+
   /// @brief write the duplication plots to file
+  ///
   /// @param duplicationPlotCache cache object for duplication plots
   void write(const DuplicationPlotCache& duplicationPlotCache) const;
 
   /// @brief delete the duplication plots
+  ///
   /// @param duplicationPlotCache cache object for duplication plots
   void clear(DuplicationPlotCache& duplicationPlotCache) const;
 
