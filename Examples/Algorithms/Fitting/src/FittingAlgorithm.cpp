@@ -102,14 +102,15 @@ FW::ProcessCode FW::FittingAlgorithm::execute(
         ACTS_VERBOSE("  momentum: " << params.momentum().transpose());
         // Construct a truth fit track using trajectory and
         // track parameter
-        trajectories.emplace_back(fitOutput.trackTip,
+        trajectories.emplace_back(std::move(params),
                                   std::move(fitOutput.fittedStates),
-                                  std::move(params));
+                                  fitOutput.trackTip);
       } else {
         ACTS_DEBUG("No fitted paramemeters for track " << itrack);
         // Construct a truth fit track using trajectory
-        trajectories.emplace_back(fitOutput.trackTip,
-                                  std::move(fitOutput.fittedStates));
+        trajectories.emplace_back(std::nullopt,
+                                  std::move(fitOutput.fittedStates),
+                                  fitOutput.trackTip);
       }
     } else {
       ACTS_WARNING("Fit failed for track " << itrack << " with error"

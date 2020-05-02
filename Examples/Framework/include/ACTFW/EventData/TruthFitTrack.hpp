@@ -29,40 +29,61 @@ struct TruthFitTrack {
   // Default constructor
   TruthFitTrack() = default;
 
-  /// Constructor from fitted trajectory
-  ///
-  /// @param tTip The fitted multiTrajectory entry point
-  /// @param trajectory The fitted multiTrajectory
-  TruthFitTrack(size_t tTip,
-                const Acts::MultiTrajectory<SimSourceLink>& trajectory)
-      : m_trajectory(trajectory), m_trackTip(tTip) {}
-
-  /// Constructor from fitted track parameter
-  ///
-  /// @param parameter The fitted track parameter
-  TruthFitTrack(const Acts::BoundParameters& parameter)
-      : m_trackParameters(parameter) {}
-
   /// Constructor from fitted trajectory and fitted track parameter
   ///
-  /// @param tTip The fitted multiTrajectory entry point
+  /// @param parameters The fitted track parameter
   /// @param trajectory The fitted multiTrajectory
-  /// @param parameter The fitted track parameter
-  TruthFitTrack(size_t tTip,
-                const Acts::MultiTrajectory<SimSourceLink>& trajectory,
-                const Acts::BoundParameters& parameter)
-      : m_trajectory(trajectory),
-        m_trackTip(tTip),
-        m_trackParameters(parameter) {}
+  /// @param tTip The fitted multiTrajectory entry point
+  TruthFitTrack(std::optional<Acts::BoundParameters> parameters,
+                std::optional<Acts::MultiTrajectory<SimSourceLink>> trajectory,
+                size_t tTip = SIZE_MAX)
+      : m_trackTip(tTip) {
+    if (parameters) {
+      m_trackParameters = std::move(*parameters);
+    }
+    if (trajectory) {
+      m_trajectory = std::move(*trajectory);
+    }
+  }
 
-  /// Get trajectory along with the entry point
-  const std::pair<size_t, Acts::MultiTrajectory<SimSourceLink>> trajectory()
-      const {
-    if (m_trajectory) {
-      return std::make_pair(m_trackTip, *m_trajectory);
-    } else {
-      throw std::runtime_error("No fitted states on this trajectory!");
-    };
+  /// @brief Copy constructor
+  ///
+  /// @param rhs is the source TruthFitTrack
+  TruthFitTrack(const TruthFitTrack& rhs)
+      : m_trackParameters(rhs.m_trackParameters),
+        m_trajectory(rhs.m_trajectory),
+        m_trackTip(rhs.m_trackTip) {}
+
+  /// Copy move constructor
+  ///
+  /// @param rhs is the source TruthFitTrack
+  TruthFitTrack(TruthFitTrack&& rhs)
+      : m_trackParameters(std::move(rhs.m_trackParameters)),
+        m_trajectory(std::move(rhs.m_trajectory)),
+        m_trackTip(std::move(rhs.m_trackTip)) {}
+
+  /// @brief Default destructor
+  ///
+  ~TruthFitTrack() = default;
+
+  /// @brief assignment operator
+  ///
+  /// @param rhs is the source TruthFitTrack
+  TruthFitTrack& operator=(const TruthFitTrack& rhs) {
+    m_trackParameters = rhs.m_trackParameters;
+    m_trajectory = rhs.m_trajectory;
+    m_trackTip = rhs.m_trackTip;
+    return *this;
+  }
+
+  /// @brief assignment move operator
+  ///
+  /// @param rhs is the source TruthFitTrack
+  TruthFitTrack& operator=(TruthFitTrack&& rhs) {
+    m_trackParameters = std::move(rhs.m_trackParameters);
+    m_trajectory = std::move(rhs.m_trajectory);
+    m_trackTip = std::move(rhs.m_trackTip);
+    return *this;
   }
 
   /// Get fitted track parameter
@@ -73,6 +94,16 @@ struct TruthFitTrack {
       throw std::runtime_error(
           "No fitted track parameter for this trajectory!");
     }
+  }
+
+  /// Get trajectory along with the entry point
+  const std::pair<size_t, Acts::MultiTrajectory<SimSourceLink>> trajectory()
+      const {
+    if (m_trajectory) {
+      return std::make_pair(m_trackTip, *m_trajectory);
+    } else {
+      throw std::runtime_error("No fitted states on this trajectory!");
+    };
   }
 
   /// Get number of track states
@@ -99,11 +130,11 @@ struct TruthFitTrack {
     return nMeasurements;
   }
 
-  /// Indicator for having fitted trajectory or not
-  bool hasTrajectory() const { return m_trajectory ? true : false; }
-
   /// Indicator for having fitted track parameter or not
-  bool hasTrackParameters() const { return m_trackParameters ? true : false; }
+  bool hasTrackParameters() const { return m_trackParameters!=std::nullopt; }
+
+  /// Indicator for having fitted trajectory or not
+  bool hasTrajectory() const { return m_trajectory!=std::nullopt; }
 
   /// Get the truth particle counts to help identify majority particle
   std::vector<ParticleHitCount> identifyMajorityParticle() const {
@@ -145,14 +176,15 @@ struct TruthFitTrack {
   }
 
  private:
+  // The optional Parameters at the provided surface
+  std::optional<Acts::BoundParameters> m_trackParameters{std::nullopt};
+
   // The optional fitted multitrajectory
-  std::optional<Acts::MultiTrajectory<SimSourceLink>> m_trajectory;
+  std::optional<Acts::MultiTrajectory<SimSourceLink>> m_trajectory{
+      std::nullopt};
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   size_t m_trackTip = SIZE_MAX;
-
-  // The optional Parameters at the provided surface
-  std::optional<Acts::BoundParameters> m_trackParameters;
 };
 
 }  // namespace FW
