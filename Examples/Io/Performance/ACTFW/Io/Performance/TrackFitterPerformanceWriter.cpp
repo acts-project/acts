@@ -8,13 +8,14 @@
 
 #include "ACTFW/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
-#include <Acts/Utilities/Helpers.hpp>
 #include <TFile.h>
 #include <TTree.h>
 #include <stdexcept>
 
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 using Acts::VectorHelpers::eta;
 
@@ -128,7 +129,8 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
     reconTrajectories.emplace(ip->particleId(), traj);
 
     // Collect the trajectory summary info
-    auto trajState = MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    auto trajState =
+        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip, trajState.nStates,
                                 trajState.nMeasurements, trajState.nOutliers,

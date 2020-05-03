@@ -17,6 +17,7 @@
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -286,7 +287,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
     auto& trackTip = trackTips.front();
 
     // Collect the trajectory summary info
-    auto trajState = MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    auto trajState =
+        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
     m_nMeasurements = trajState.nMeasurements;
     m_nStates = trajState.nStates;
 
