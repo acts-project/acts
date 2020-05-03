@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
 
   // Write CKF performance data
   CKFPerformanceWriter::Config perfWriterCfg;
-  perfWriterCfg.inputParticles = particleReader.outputParticles;
+  perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputHitParticlesMap = clusterReaderCfg.outputHitParticlesMap;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.outputDir = outputDir;
