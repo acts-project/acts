@@ -19,49 +19,6 @@
 namespace FW {
 using IndexedParams = std::unordered_map<size_t, Acts::BoundParameters>;
 
-namespace MultiTrajectoryHelpers {
-
-/// @brief Struct for brief trajectory summary info
-///
-struct TrajectoryState {
-  size_t nStates = 0;
-  size_t nMeasurements = 0;
-  size_t nOutliers = 0;
-  size_t nHoles = 0;
-  double chi2Sum = 0;
-};
-
-/// @brief Getter for trajectory info
-/// @Todo: add method to get trajectory info for sub-detectors
-///
-/// @tparam source_link_t Type of source link
-///
-/// @param multiTraj The MultiTrajectory object
-/// @param entryIndex The entry index of trajectory to investigate
-///
-/// @return The trajectory summary information
-template <typename source_link_t>
-TrajectoryState trajectoryState(
-    const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex) {
-  TrajectoryState trajState;
-  multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
-    trajState.nStates++;
-    trajState.chi2Sum += state.chi2();
-    auto typeFlags = state.typeFlags();
-    if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-      trajState.nMeasurements++;
-    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-      trajState.nOutliers++;
-    } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-      trajState.nHoles++;
-    }
-  });
-  return trajState;
-}
-
-}  // namespace MultiTrajectoryHelpers
-
 /// @brief Struct for truth track fitting/finding result with
 /// Acts::KalmanFitter/Acts::CombinatorialKalmanFilter
 ///
