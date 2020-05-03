@@ -88,8 +88,9 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  // All reconstructed trajectories with truth info
-  std::map<ActsFatras::Barcode, SimMultiTrajectory> reconTrajectories;
+  // Truth particles with corresponding reconstructed tracks
+  std::vector<ActsFatras::Barcode> reconParticleIds;
+  reconParticleIds.reserve(particles.size());
 
   // Loop over all trajectories
   for (const auto& traj : trajectories) {
@@ -125,9 +126,6 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
       continue;
     }
 
-    // Record this trajectory with its truth info
-    reconTrajectories.emplace(ip->particleId(), traj);
-
     // Collect the trajectory summary info
     auto trajState =
         Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
@@ -136,29 +134,28 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
                                 trajState.nMeasurements, trajState.nOutliers,
                                 trajState.nHoles);
 
-    // Fill the residual plots if the track has fitted parameter
+    // If the trajectory has fitted parameter
     if (traj.hasTrackParameters(trackTip)) {
+      // -> Record this majority particle ID of this trajectory
+      reconParticleIds.push_back(ip->particleId());
+      // -> Fill the residual plots
       m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
                          traj.trackParameters(trackTip));
     }
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
-  // fitted parameter and total truth tracks (assumes one truth partilce means
+  // fitted parameter and total truth tracks (assumes one truth partilce has
   // one truth track)
-  // @Todo: add fake rate plots
   for (const auto& particle : particles) {
-    const auto it = reconTrajectories.find(particle.particleId());
-    if (it != reconTrajectories.end()) {
-      // The trajectory entry indices
-      const auto& trackTips = it->second.trajectory().first;
-      // when the trajectory is reconstructed
-      m_effPlotTool.fill(m_effPlotCache, particle,
-                         it->second.hasTrackParameters(trackTips.front()));
-    } else {
-      // when the trajectory is NOT reconstructed
-      m_effPlotTool.fill(m_effPlotCache, particle, false);
+    bool isReconstructed = false;
+    // Find if the particle has been reconstructed
+    auto it = std::find(reconParticleIds.begin(), reconParticleIds.end(),
+                        particle.particleId());
+    if (it != reconParticleIds.end()) {
+      isReconstructed = true;
     }
+    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
   }
 
   return ProcessCode::SUCCESS;
