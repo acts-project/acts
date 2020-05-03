@@ -37,8 +37,6 @@ class CKFPerformanceWriter final : public WriterT<TrajectoryContainer> {
   struct Config {
     /// Input truth particles collection.
     std::string inputParticles;
-    /// True hit-particles mapping.
-    std::string inputHitParticlesMap;
     /// Input (found) trajectories collection.
     std::string inputTrajectories;
     /// Output directory.
@@ -49,12 +47,12 @@ class CKFPerformanceWriter final : public WriterT<TrajectoryContainer> {
     EffPlotTool::Config effPlotToolConfig;
     FakeRatePlotTool::Config fakeRatePlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
-    /// Reco-truth matching probability cutoff
-    double truthMatchProbCutOff = 0.5;
-    /// Number of measurements cutoff
-    size_t nMeasurementsCutOff = 9;
-    // Transverse momentum cutoff
-    double pTCutOff = 1_GeV;
+    /// Min reco-truth matching probability
+    double truthMatchProbMin = 0.5;
+    /// Min number of measurements
+    size_t nMeasurementsMin = 9;
+    // Min transverse momentum
+    double ptMin = 1_GeV;
   };
 
   /// Construct from configuration and log level.

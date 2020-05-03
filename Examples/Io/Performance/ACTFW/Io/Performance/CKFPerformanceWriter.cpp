@@ -32,9 +32,6 @@ FW::CKFPerformanceWriter::CKFPerformanceWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }
-  if (m_cfg.inputHitParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
-  }
   if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
@@ -76,16 +73,9 @@ FW::ProcessCode FW::CKFPerformanceWriter::endRun() {
 
 FW::ProcessCode FW::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // Read truth particles from input collection
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  // Read hit-particle map from input collection
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
-  // Compute the inverse mapping on-the-fly
-  const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -141,16 +131,17 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
       // Check if the trajectory is matched with truth
       bool isFake = false;
       size_t nMajorityHits = particleHitCount.front().hitCount;
-      if (trajState.nMeasurements >= m_cfg.nMeasurementsCutOff) {
+      //@TODO: add interface for applying others cuts on reco tracks:
+      // -> pT, d0, z0, detector-specific hits/holes number cut
+      if (trajState.nMeasurements >= m_cfg.nMeasurementsMin) {
         // Selection of the tracks
         if (nMajorityHits * 1. / trajState.nMeasurements >=
-            m_cfg.truthMatchProbCutOff) {
+            m_cfg.truthMatchProbMin) {
           matched[majorityParticleId]++;
         } else {
           isFake = true;
           unmatched[majorityParticleId]++;
         }
-
         // Fill fake rate plots
         m_fakeRatePlotTool.fill(m_fakeRatePlotCache, *ip, isFake);
       }
@@ -161,19 +152,8 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
   // Loop over all truth particles for efficiency plots and reco details
   // @TODO: add duplication plots
   for (const auto& particle : particles) {
-    // Check particle against pT
-    if (particle.transverseMomentum() < m_cfg.pTCutOff) {
-      continue;
-    }
-    // Check particle against number of hits
     auto particleId = particle.particleId();
-    // Count total number of truth hits for this particle
-    auto trueParticleHits = makeRange(particleHitsMap.equal_range(particleId));
-    if (trueParticleHits.size() < m_cfg.nMeasurementsCutOff) {
-      continue;
-    }
-
-    // Investigate the truth-matched tracks and fill the efficiency
+    // Investigate the truth-matched tracks
     size_t nMatchedTracks = 0;
     bool isReconstructed = false;
     auto imatched = matched.find(particleId);
@@ -181,9 +161,10 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
       nMatchedTracks = imatched->second;
       isReconstructed = true;
     }
+    // Fill efficiency plots
     m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
 
-    // Investigate the fake tracks
+    // Investigate the fake (i.e. truth-unmatched) tracks
     size_t nFakeTracks = 0;
     auto ifake = unmatched.find(particleId);
     if (ifake != unmatched.end()) {
