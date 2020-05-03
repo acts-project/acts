@@ -29,10 +29,11 @@ using IndexedParams = std::unordered_map<size_t, Acts::BoundParameters>;
 /// trajectories in the MultiTrajectory.
 struct SimMultiTrajectory {
  public:
-  // Default constructor
+  /// @brief Default constructor
+  ///
   SimMultiTrajectory() = default;
 
-  /// Constructor from multiTrajectory and fitted track parameters
+  /// @brief Constructor from multiTrajectory and fitted track parameters
   ///
   /// @param multiTraj The multiTrajectory
   /// @param tTips The entry indices for trajectories in multiTrajectory
@@ -55,7 +56,7 @@ struct SimMultiTrajectory {
         m_trackTips(rhs.m_trackTips),
         m_trackParameters(rhs.m_trackParameters) {}
 
-  /// Copy move constructor
+  /// @brief Copy move constructor
   ///
   /// @param rhs The source SimMultiTrajectory
   SimMultiTrajectory(SimMultiTrajectory&& rhs)

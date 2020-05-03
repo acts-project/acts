@@ -28,7 +28,7 @@ using TrackParametersContainer = std::vector<TrackParameters>;
 /// MultiTrajectory definition
 using Trajectory = Acts::MultiTrajectory<SimSourceLink>;
 
-/// Container for the truth fitting track
+/// Container for the truth fitting/finding track(s)
 using TrajectoryContainer = std::vector<SimMultiTrajectory>;
 
 }  // namespace FW
