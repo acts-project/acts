@@ -3,7 +3,9 @@ add_library(
   ACTFW/TruthTracking/ParticleSmearing.cpp
   ACTFW/TruthTracking/TrackSelector.cpp
   ACTFW/TruthTracking/TruthTrackFinder.cpp
-  ACTFW/TruthTracking/TruthVerticesToTracks.cpp)
+  ACTFW/TruthTracking/TruthVerticesToTracks.cpp
+  ACTFW/TruthTracking/TruthSeedSelector.cpp
+  )
 target_include_directories(
   ActsExamplesTruthTracking
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
