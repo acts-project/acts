@@ -45,8 +45,8 @@ FW::ProcessCode FW::TrackFindingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3D{0., 0., 0.});
 
-  // Prepare input measurements for the CKF which takes all measurements in one
-  // event NB: The conversion from boost::flat_multiset to std::vector is
+  // Prepare input measurements for CKF which takes all measurements in one
+  // event. NB: The conversion from boost::flat_multiset to std::vector is
   // performed below
   std::vector<SimSourceLink> trackSourceLinks;
   trackSourceLinks.reserve(sourceLinks.size());
