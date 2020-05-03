@@ -135,42 +135,7 @@ struct SimMultiTrajectory {
   ///
   /// @return The truth particle counts in ascending order
   std::vector<ParticleHitCount> identifyMajorityParticle(
-      const size_t& entryIndex) const {
-    std::vector<ParticleHitCount> particleHitCount;
-    particleHitCount.reserve(10);
-    if (m_multiTrajectory) {
-      (*m_multiTrajectory).visitBackwards(entryIndex, [&](const auto& state) {
-        // No truth info with non-measurement state
-        if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          return true;
-        }
-        // Find the truth particle associated with this state
-        const auto particleId = state.uncalibrated().truthHit().particleId();
-        // Find if the particle already exists
-        auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
-                               [=](const ParticleHitCount& phc) {
-                                 return phc.particleId == particleId;
-                               });
-
-        // Either increase count if we saw the particle before or add it
-        if (it != particleHitCount.end()) {
-          it->hitCount += 1;
-        } else {
-          particleHitCount.push_back({particleId, 1u});
-        }
-        return true;
-      });
-    }
-    if (not particleHitCount.empty()) {
-      // sort by hit count, i.e. majority particle first
-      std::sort(particleHitCount.begin(), particleHitCount.end(),
-                [](const ParticleHitCount& lhs, const ParticleHitCount& rhs) {
-                  return lhs.hitCount > rhs.hitCount;
-                });
-    }
-
-    return particleHitCount;
-  }
+      const size_t& entryIndex) const;
 
  private:
   // The optional fitted multiTrajectory
