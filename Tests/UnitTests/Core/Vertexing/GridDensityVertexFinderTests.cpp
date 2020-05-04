@@ -229,5 +229,79 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   }
 }
 
+///
+/// @brief Unit test for GridDensityVertexFinder with seed with estimation
+///
+BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
+  bool debugMode = true;
+
+  const int mainGridSize = 3000;
+  const int trkGridSize = 35;
+
+  Covariance covMat = Covariance::Identity();
+
+  // Perigee surface for track parameters
+  Vector3D pos0{0, 0, 0};
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(pos0);
+
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
+  Vertex<BoundParameters> constraintVtx;
+  constraintVtx.setCovariance(ActsSymMatrixD<3>::Identity());
+  vertexingOptions.vertexConstraint = constraintVtx;
+
+  using Finder = GridDensityVertexFinder<mainGridSize, trkGridSize>;
+  Finder::Config cfg;
+  cfg.cacheGridStateForTrackRemoval = false;
+  cfg.estimateSeedWidth = true;
+  Finder finder(cfg);
+
+  Finder::State state;
+
+  int mySeed = 31415;
+  std::mt19937 gen(mySeed);
+  unsigned int nTracks = 20;
+
+  std::vector<BoundParameters> trackVec;
+  trackVec.reserve(nTracks);
+
+  // Create nTracks tracks for test case
+  for (unsigned int i = 0; i < nTracks; i++) {
+    // The position of the particle
+    Vector3D pos(xdist(gen), ydist(gen), z1dist(gen));
+
+    // Create momentum and charge of track
+    double pt = pTDist(gen);
+    double phi = phiDist(gen);
+    double eta = etaDist(gen);
+    Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
+    double charge = etaDist(gen) > 0 ? 1 : -1;
+
+    trackVec.push_back(BoundParameters(geoContext, covMat, pos, mom, charge, 0,
+                                       perigeeSurface));
+  }
+
+  std::vector<const BoundParameters*> trackPtrVec;
+  for (const auto& trk : trackVec) {
+    trackPtrVec.push_back(&trk);
+  }
+
+  auto res = finder.find(trackPtrVec, vertexingOptions, state);
+  if (!res.ok()) {
+    std::cout << res.error().message() << std::endl;
+  }
+
+  if (res.ok()) {
+    BOOST_CHECK(!(*res).empty());
+    ActsSymMatrixD<3> cov = (*res).back().covariance();
+    BOOST_CHECK(constraintVtx.covariance() != cov);
+    BOOST_CHECK(cov(eZ, eZ) != 0.);
+    if (debugMode) {
+      std::cout << "Estimated z-seed width: " << cov(eZ, eZ) << std::endl;
+    }
+  }
+}
+
 }  // namespace Test
 }  // namespace Acts

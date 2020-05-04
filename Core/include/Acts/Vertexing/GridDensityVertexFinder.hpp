@@ -69,7 +69,7 @@ class GridDensityVertexFinder {
         maxD0TrackSignificance * maxD0TrackSignificance;
     const double z0SignificanceCut =
         maxZ0TrackSignificance * maxZ0TrackSignificance;
-    bool estimateSeedWidth = true;
+    bool estimateSeedWidth = false;
   };
 
   /// @brief The State struct

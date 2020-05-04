@@ -49,8 +49,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   double z = 0;
   double width = 0;
   if (state.mainGrid != ActsVectorF<mainGridSize>::Zero()) {
-
-    if(not m_cfg.estimateSeedWidth){
+    if (not m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
       auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
 
@@ -58,9 +57,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
         return maxZres.error();
       }
       z = *maxZres;
-    }
-    else{
-        // Get z value of highest density bin and width
+    } else {
+      // Get z value of highest density bin and width
       auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainGrid);
 
       if (!maxZres.ok()) {
@@ -80,9 +78,9 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   ActsSymMatrixD<4> seedCov =
       vertexingOptions.vertexConstraint.fullCovariance();
 
-  if(width != 0){
+  if (width != 0) {
     // Use z-constraint from seed width
-    seedCov(2,2) = width * width;
+    seedCov(2, 2) = width * width;
   }
 
   returnVertex.setFullCovariance(seedCov);
