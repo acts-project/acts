@@ -31,6 +31,28 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
 }
 
 template <int mainGridSize, int trkGridSize>
+Acts::Result<std::pair<float, float>>
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPositionAndWidth(
+    Acts::ActsVectorF<mainGridSize>& mainGrid) const {
+
+  // Get z maximum value
+  auto maxZRes = getMaxZPosition(mainGrid);
+  if(not maxZRes.ok()){
+    return maxZRes.error();
+  }
+  float maxZ = *maxZRes;
+
+  // Get seed width estimate
+  auto widthRes = estimateSeedWidth(mainGrid, maxZ);
+  if(not widthRes.ok()){
+    return widthRes.error();
+  }
+  float width = *widthRes;
+  std::pair<float, float> returnPair{maxZ, width};
+  return returnPair;
+}
+
+template <int mainGridSize, int trkGridSize>
 std::pair<int, Acts::ActsVectorF<trkGridSize>>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundParameters& trk,
@@ -132,6 +154,50 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
     trackGrid(j) = normal2D(d + distCtrD, z + distCtrZ, cov);
   }
   return trackGrid;
+}
+
+template <int mainGridSize, int trkGridSize>
+Acts::Result<float>
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
+    Acts::ActsVectorF<mainGridSize>& mainGrid, float maxZ) const {
+  if (mainGrid == ActsVectorF<mainGridSize>::Zero()) {
+    return VertexingError::EmptyInput;
+  }
+  // Get z bin of max density z value
+  int zBin = int(maxZ / m_cfg.binSize + mainGridSize / 2.);
+
+  const float maxValue = mainGrid(zBin);
+  float gridValue = mainGrid(zBin);
+
+  // Find right half-maximum bin
+  int rhmBin = zBin;
+  while(gridValue > maxValue/2){
+    rhmBin += 1;
+    gridValue = mainGrid(rhmBin);
+  }
+
+  // Use linear approximation to find better z value for FWHM between bins
+  float deltaZ1 = (maxValue/2 - mainGrid(rhmBin-1))*(m_cfg.binSize/(mainGrid(rhmBin-1)-mainGrid(rhmBin)));
+
+  // Find left half-maximum bin
+  int lhmBin = zBin;
+  gridValue = mainGrid(zBin);
+  while(gridValue > maxValue/2){
+    lhmBin -= 1;
+    gridValue = mainGrid(lhmBin);
+  }
+
+  // Use linear approximation to find better z value for FWHM between bins
+  float deltaZ2 = (maxValue/2 - mainGrid(lhmBin+1))*(m_cfg.binSize/(mainGrid(rhmBin+1)-mainGrid(rhmBin)));
+
+  // Approximate FWHM
+  float fwhm = rhmBin * m_cfg.binSize - deltaZ1 - lhmBin * m_cfg.binSize - deltaZ2;
+
+  // FWHM = 2.355 * sigma
+  float width = fwhm/2.355;
+
+  return std::isnormal(width) ? width : 1.;
+
 }
 
 template <int mainGridSize, int trkGridSize>
