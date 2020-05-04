@@ -18,7 +18,13 @@
 
 namespace FW {
 
-// Tools to make duplication number&rate plots to show tracking duplication.
+// Tools to make duplication rate and duplication number plots to show tracking
+// duplication.
+//
+// The duplication is investigated for those truth-matched reco tracks. If there
+// are a few reco tracks matched to the same truth particle, the reco track with
+// the highest matching probability is tagges as 'real' and the others are
+// 'duplicated'.
 class DuplicationPlotTool {
  public:
   /// @brief The nested configuration struct
@@ -55,7 +61,7 @@ class DuplicationPlotTool {
   ///
   /// @param duplicationPlotCache cache object for duplication plots
   /// @param truthParticle the truth Particle
-  /// @param status the reconstruction status
+  /// @param status the (truth-matched) reconstructed track is duplicated or not
   void fill(DuplicationPlotCache& duplicationPlotCache,
             const ActsFatras::Particle& truthParticle, bool status) const;
 

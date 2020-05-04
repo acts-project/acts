@@ -19,6 +19,9 @@
 namespace FW {
 
 // Tools to make fake rate plots to show tracking fake rate.
+//
+// The fake rate is investigated for all reco tracks. A track is 'fake' if it's
+// not matched with truth.
 class FakeRatePlotTool {
  public:
   /// @brief The nested configuration struct
@@ -62,7 +65,7 @@ class FakeRatePlotTool {
   ///
   /// @param fakeRatePlotCache cache object for fake rate plots
   /// @param truthParticle the truth Particle
-  /// @param status the reconstruction status
+  /// @param status the reconstructed track is fake or not
   void fill(FakeRatePlotCache& fakeRatePlotCache,
             const ActsFatras::Particle& truthParticle, bool status) const;
 
