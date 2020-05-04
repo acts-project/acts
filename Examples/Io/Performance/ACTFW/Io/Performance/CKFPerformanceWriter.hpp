@@ -51,7 +51,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoryContainer> {
     double truthMatchProbMin = 0.5;
     /// Min number of measurements
     size_t nMeasurementsMin = 9;
-    // Min transverse momentum
+    /// Min transverse momentum
     double ptMin = 1_GeV;
   };
 

@@ -16,7 +16,6 @@
 #include "ACTFW/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-//#include "Acts/Utilities/Helpers.hpp"
 
 FW::CKFPerformanceWriter::CKFPerformanceWriter(
     FW::CKFPerformanceWriter::Config cfg, Acts::Logging::Level lvl)

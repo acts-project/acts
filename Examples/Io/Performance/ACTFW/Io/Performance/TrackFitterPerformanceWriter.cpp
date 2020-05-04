@@ -110,6 +110,12 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
     // Get the entry index for the single trajectory
     auto& trackTip = trackTips.front();
 
+    // Select reco track with fitted parameters
+    if (not traj.hasTrackParameters(trackTip)) {
+      ACTS_WARNING("No fitted track parameters.");
+      continue;
+    }
+
     // Get the majority truth particle for this trajectory
     const auto particleHitCount = traj.identifyMajorityParticle(trackTip);
     if (particleHitCount.empty()) {
@@ -123,6 +129,11 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
       continue;
     }
 
+    // Record this majority particle ID of this trajectory
+    reconParticleIds.push_back(ip->particleId());
+    // Fill the residual plots
+    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
+                       traj.trackParameters(trackTip));
     // Collect the trajectory summary info
     auto trajState =
         Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
@@ -130,15 +141,6 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip, trajState.nStates,
                                 trajState.nMeasurements, trajState.nOutliers,
                                 trajState.nHoles);
-
-    // If the trajectory has fitted parameter
-    if (traj.hasTrackParameters(trackTip)) {
-      // -> Record this majority particle ID of this trajectory
-      reconParticleIds.push_back(ip->particleId());
-      // -> Fill the residual plots
-      m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
-                         traj.trackParameters(trackTip));
-    }
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
