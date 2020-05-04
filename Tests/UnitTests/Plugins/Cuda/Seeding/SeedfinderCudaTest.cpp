@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   int nGroupToIterate = 500;
   int skip = 0;
   int deviceID = 0;
-  int nTrplPerSpBLimit = 10;
+  int nTrplPerSpBLimit = 2;
 
   int opt;
   while ((opt = getopt(argc, argv, "haf:n:s:d:l:q")) != -1) {
@@ -127,6 +127,8 @@ int main(int argc, char** argv) {
                     << skip << std::endl;
           std::cout << "      -d DEVID : NVIDIA GPU device ID. Default is "
                     << deviceID << std::endl;
+	  std::cout << "      -l : A limit on the average number of triplets per bottom spacepoint"
+                    << nTrplPerSpBLimit << std::endl;
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
         }
