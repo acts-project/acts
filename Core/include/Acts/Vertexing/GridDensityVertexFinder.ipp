@@ -78,7 +78,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   ActsSymMatrixD<4> seedCov =
       vertexingOptions.vertexConstraint.fullCovariance();
 
-  if (width != 0) {
+  if (width != 0.) {
     // Use z-constraint from seed width
     seedCov(2, 2) = width * width;
   }

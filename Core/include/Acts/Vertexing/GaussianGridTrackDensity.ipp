@@ -198,7 +198,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
   // FWHM = 2.355 * sigma
   float width = fwhm / 2.355;
 
-  return std::isnormal(width) ? width : 1.;
+  return std::isnormal(width) ? width : 0.;
 }
 
 template <int mainGridSize, int trkGridSize>
