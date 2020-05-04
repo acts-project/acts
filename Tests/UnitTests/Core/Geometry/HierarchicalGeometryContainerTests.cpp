@@ -35,6 +35,7 @@ GeometryID makeId(int volume, int layer = 0, int sensitive = 0) {
 }  // namespace
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Container::Iterator)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(Thing)
 
 BOOST_AUTO_TEST_SUITE(HierarchicalGeometryContainer)
 
@@ -54,6 +55,27 @@ BOOST_AUTO_TEST_CASE(ConstructNonUnique) {
       {makeId(2, 4, 6), 2.0},
   };
   BOOST_CHECK_THROW(Container(std::move(elements)), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
+  Container c({
+      {makeId(1, 2, 3), 1.0},
+      {makeId(3, 4, 5), 2.0},
+      {makeId(3, 5), 3.0},
+      {makeId(4, 5, 7), 4.0},
+  });
+
+  BOOST_TEST(not c.empty());
+  BOOST_TEST(c.size() == 4u);
+  // this test both that the index-based access works and that the identifier
+  // stored in the container matches the one from the stored element
+  // NOTE order is undefined and should not be tested
+  for (auto i = c.size(); 0 < i--;) {
+    BOOST_TEST(c.idAt(i) == c.valueAt(i).id);
+  }
+  // test that invalid inputs actually fail
+  BOOST_CHECK_THROW(c.idAt(c.size()), std::out_of_range);
+  BOOST_CHECK_THROW(c.valueAt(c.size()), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(Find) {
