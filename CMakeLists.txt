@@ -166,7 +166,7 @@ endif()
 # core library, core plugins, and other components
 add_component(Core Core)
 add_subdirectory(Plugins)
-add_component(Fatras Fatras)
+add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 
 # manual examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
