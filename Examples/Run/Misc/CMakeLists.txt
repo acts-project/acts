@@ -9,6 +9,10 @@ target_include_directories(
   ActsExampleCustomLogger
   PRIVATE ${PROJECT_SOURCE_DIR}/Core/include)
 
+target_compile_features(
+  ActsCustomLogger
+  PUBLIC cxx_std_17)
+
 add_executable(
   ActsTabulateEnergyLoss
   TabulateEnergyLoss.cpp)
