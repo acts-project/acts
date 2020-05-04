@@ -100,6 +100,17 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
 
     // Loop over all trajectories in a multiTrajectory
     for (const size_t& trackTip : trackTips) {
+      // Collect the trajectory summary info
+      auto trajState =
+          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+
+      // Reco track selection
+      //@TODO: add interface for applying others cuts on reco tracks:
+      // -> pT, d0, z0, detector-specific hits/holes number cut
+      if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
+        continue;
+      }
+
       // Get the majority truth particle to this track
       std::vector<ParticleHitCount> particleHitCount =
           traj.identifyMajorityParticle(trackTip);
@@ -109,7 +120,9 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
             "index = "
             << trackTip);
       }
-      // Find the truth particle for the majority barcode
+      // Find the truth particle with the majority barcode
+      // @TODO: pass reconstructed track parameters instead of truth particle to
+      // plotting tools.
       ActsFatras::Barcode majorityParticleId =
           particleHitCount.front().particleId;
       auto ip = particles.find(majorityParticleId);
@@ -117,12 +130,12 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
         ACTS_WARNING("Majority particle with particleId = "
                      << majorityParticleId
                      << " not found in the particles collection.");
+        // Currently, we could only skip those trajectory with
+        // majority particle not found (it happens since there is a
+        // pre-selection of the truth particles). But this should be fixed.
         continue;
       }
 
-      // Collect the trajectory summary info
-      auto trajState =
-          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
       // Fill the trajectory summary info
       m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip,
                                   trajState.nStates, trajState.nMeasurements,
@@ -131,21 +144,16 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
       // Check if the trajectory is matched with truth
       bool isFake = false;
       size_t nMajorityHits = particleHitCount.front().hitCount;
-      //@TODO: add interface for applying others cuts on reco tracks:
-      // -> pT, d0, z0, detector-specific hits/holes number cut
-      if (trajState.nMeasurements >= m_cfg.nMeasurementsMin) {
-        // Selection of the tracks
-        if (nMajorityHits * 1. / trajState.nMeasurements >=
-            m_cfg.truthMatchProbMin) {
-          matched[majorityParticleId]++;
-        } else {
-          isFake = true;
-          unmatched[majorityParticleId]++;
-        }
-        // Fill fake rate plots
-        m_fakeRatePlotTool.fill(m_fakeRatePlotCache, *ip, isFake);
+      // Selection of the tracks
+      if (nMajorityHits * 1. / trajState.nMeasurements >=
+          m_cfg.truthMatchProbMin) {
+        matched[majorityParticleId]++;
+      } else {
+        isFake = true;
+        unmatched[majorityParticleId]++;
       }
-
+      // Fill fake rate plots
+      m_fakeRatePlotTool.fill(m_fakeRatePlotCache, *ip, isFake);
     }  // end all trajectories in a multiTrajectory
   }    // end all multiTrajectories
 
