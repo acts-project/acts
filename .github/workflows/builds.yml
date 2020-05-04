@@ -37,8 +37,9 @@ jobs:
       - name: Install dependencies
         run: >
           brew install cmake eigen ninja
-          && mkdir deps
-          && curl -SL https://acts.web.cern.ch/ACTS/ci/macOS/deps.10c99bb.tar.gz | tar -xzC deps
+          && sudo mkdir /usr/local/acts
+          && sudo chown $USER /usr/local/acts
+          && curl -SL https://acts.web.cern.ch/ACTS/ci/macOS/deps.10c99bb.tar.gz | tar -xzC /usr/local/acts
       - name: Configure
         run: >
           cmake -B build -S src
