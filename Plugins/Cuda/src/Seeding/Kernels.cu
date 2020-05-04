@@ -60,6 +60,7 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const int*   nSpBcompPerSpM_Max,
 				const float* circBcompMatPerSpM,
 				const int*   nSpTcompPerSpM_Max,
+				const float* spTcompMatPerSpM,
 				const float* circTcompMatPerSpM,
 				const float* maxScatteringAngle2,
 				const float* sigmaScattering,
@@ -67,6 +68,8 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const float* pT2perRadius,
 				const float* impactMax,
 				const int*   nTrplPerSpMLimit,
+				const float* deltaInvHelixDiameter,
+				const float* impactWeightFactor,				
 				int* nTrplPerSpM,
 				int* tIndex,
 				int* bIndex,
@@ -166,6 +169,7 @@ namespace Acts{
 		     const int*   nSpBcompPerSpM_Max,
 		     const float* circBcompMatPerSpM,
 		     const int*   nSpTcompPerSpM_Max,
+		     const float* spTcompMatPerSpM,
 		     const float* circTcompMatPerSpM,
 		     const float* maxScatteringAngle2,
 		     const float* sigmaScattering,
@@ -173,6 +177,8 @@ namespace Acts{
 		     const float* pT2perRadius,
 		     const float* impactMax,
 		     const int*   nTrplPerSpMLimit,
+		     const float* deltaInvHelixDiameter,
+		     const float* impactWeightFactor,		     
 		     int* nTrplPerSpM,
 		     int* tIndex,
 		     int* bIndex,
@@ -180,7 +186,7 @@ namespace Acts{
 		     float* impactparameters,				
 		     cudaStream_t* stream
 		     ){
-  int sharedMemSize = (sizeof(int)+2*sizeof(float))*block.x;    
+  int sharedMemSize = (sizeof(int)+3*sizeof(float))*block.x;    
     
   cuSearchTriplet<<< grid, block, 
       sharedMemSize, *stream >>>(offset,
@@ -189,10 +195,13 @@ namespace Acts{
 				 nSpBcompPerSpM_Max,
 				 circBcompMatPerSpM,
 				 nSpTcompPerSpM_Max,
+				 spTcompMatPerSpM,
 				 circTcompMatPerSpM,			       
 				 maxScatteringAngle2,sigmaScattering,
 				 minHelixDiameter2, pT2perRadius,
 				 impactMax, nTrplPerSpMLimit,
+				 deltaInvHelixDiameter,
+				 impactWeightFactor,				 
 				 nTrplPerSpM,
 				 tIndex, bIndex,
 				 curvatures,
@@ -490,6 +499,7 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const int*   nSpBcompPerSpM_Max,
 				const float* circBcompMatPerSpM,
 				const int*   nSpTcompPerSpM_Max,
+				const float* spTcompMatPerSpM,
 				const float* circTcompMatPerSpM,
 				const float* maxScatteringAngle2,
 				const float* sigmaScattering,
@@ -497,6 +507,8 @@ __global__ void cuSearchTriplet(const int*   offset,
 				const float* pT2perRadius,
 				const float* impactMax,
 				const int*   nTrplPerSpMLimit,
+				const float* deltaInvHelixDiameter,
+				const float* impactWeightFactor,				
 				int* nTrplPerSpM,
 				int* tIndex,
 				int* bIndex,
@@ -508,12 +520,12 @@ __global__ void cuSearchTriplet(const int*   offset,
   
   float* impact    = (float*)shared;
   float* invHelix  = (float*)&impact[blockDim.x];
-  int*  isPassed   = (int*)&invHelix[blockDim.x];  
+  float* topRadius = (float*)&invHelix[blockDim.x];
+  int*  isPassed   = (int*)&topRadius[blockDim.x];  
   
   float rM         = spMcompMat[(*nSpMcomp)*3];
   float varianceRM = spMcompMat[(*nSpMcomp)*4];
   float varianceZM = spMcompMat[(*nSpMcomp)*5];
-
   // Zob values from CPU and CUDA are slightly different
   //float Zob        = circBcompMatPerSpM[blockId+(*nSpBcompPerSpM_Max)*0];
   float cotThetaB  = circBcompMatPerSpM[blockIdx.x+(*nSpBcompPerSpM_Max)*1];
@@ -596,8 +608,7 @@ __global__ void cuSearchTriplet(const int*   offset,
   }
   // A and B allow calculation of impact params in U/V plane with linear
   // function
-  // (in contrast to having to solve a quadratic function in x/y plane)
-
+  // (in contrast to having to solve a quadratic function in x/y plane)  
   impact[threadIdx.x] = fabsf((A - B * rM) * rM);
   invHelix[threadIdx.x] = B / sqrtf(S2);
 
@@ -628,4 +639,28 @@ __global__ void cuSearchTriplet(const int*   offset,
   if (threadIdx.x == 0 && *nTrplPerSpM > *nTrplPerSpMLimit){
     *nTrplPerSpM = *nTrplPerSpMLimit;
   }
+  /*
+  __syncthreads();
+
+  topRadius[threadIdx.x] = spTcompMatPerSpM[threadIdx.x+(*offset)+(*nSpTcompPerSpM_Max)*3];
+  
+  // if two compatible seeds with high distance in r are found, compatible                             
+  // seeds span 5 layers                                                                               
+  // -> very good seed  
+  float lowerLimitCurv = invHelix[threadIdx.x] - (*deltaInvHelixDiameter);
+  float upperLimitCurv = invHelix[threadIdx.x] + (*deltaInvHelixDiameter);
+  float weight = -(impact[threadIdx.x] * (*impactWeightFactor));
+
+  for (int j=0; j<blockDim.x; j++){
+
+  }    
+  
+  //float ErT        = circTcompMatPerSpM[threadIdx.x+(*offset)+(*nSpTcompPerSpM_Max)*3];  
+  //float invHelixDiameter = invHelixDiameterVec[i];
+  //float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
+  //float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
+  //float currentTop_r = topSpVec[i]->radius();
+  //float impact = impactParametersVec[i];
+  */
+
 }

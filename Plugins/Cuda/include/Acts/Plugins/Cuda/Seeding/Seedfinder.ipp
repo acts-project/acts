@@ -43,8 +43,6 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // Get SeedfinderConfig values
-  CudaScalar<bool> true_cuda(new bool(true));
-  CudaScalar<bool> false_cuda(new bool(false));
   CudaScalar<float> deltaRMin_cuda(&m_config.deltaRMin);
   CudaScalar<float> deltaRMax_cuda(&m_config.deltaRMax);
   CudaScalar<float> cotThetaMax_cuda(&m_config.cotThetaMax);
@@ -55,7 +53,10 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CudaScalar<float> minHelixDiameter2_cuda(&m_config.minHelixDiameter2);
   CudaScalar<float> pT2perRadius_cuda(&m_config.pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
-
+  auto seedFilterConfig = m_config.seedFilter->m_cfg;  
+  CudaScalar<float> deltaInvHelixDiameter_cuda(&seedFilterConfig.deltaInvHelixDiameter);
+  CudaScalar<float> impactWeightFactor_cuda(&seedFilterConfig.impactWeightFactor);
+  
   //---------------------------------
   // Algorithm 0. Matrix Flattening
   //---------------------------------
@@ -254,12 +255,15 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                       nSpBcompPerSpM_Max_cuda.get(),
                       circBcompMatPerSpM_cuda.get(0, 6 * i_m),
                       nSpTcompPerSpM_Max_cuda.get(),
+		      spTcompMatPerSpM_cuda.get(0, 6 * i_m),
                       circTcompMatPerSpM_cuda.get(0, 6 * i_m),
                       // Seed finder config
                       maxScatteringAngle2_cuda.get(),
                       sigmaScattering_cuda.get(), minHelixDiameter2_cuda.get(),
                       pT2perRadius_cuda.get(), impactMax_cuda.get(),
                       nTrplPerSpMLimit_cuda.get(),
+		      deltaInvHelixDiameter_cuda.get(),
+		      impactWeightFactor_cuda.get(),		      
                       // output
                       nTrplPerSpM_cuda.get(i_m), TtrplIndex_cuda.get(0, i_m),
                       BtrplIndex_cuda.get(0, i_m), curvatures_cuda.get(0, i_m),
