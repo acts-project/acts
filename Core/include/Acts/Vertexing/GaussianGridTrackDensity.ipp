@@ -60,7 +60,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
-  // Calculate offset in d direction to central bin at z = 0
+  // Calculate offset in d direction to central bin at z-axis
   int dOffset = std::floor(d0 / m_cfg.binSize - 0.5) + 1;
   // Calculate bin in z
   int zBin = int(z0 / m_cfg.binSize + mainGridSize / 2.);
@@ -78,10 +78,10 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   float distCtrZ = z0 - binCtrZ;
 
   // Check if current track does affect grid density
-  // in central bins at z = 0
+  // in central bins at z-axis
   if ((std::abs(dOffset) > trkGridSize - 1) / 2.) {
     // Current track is too far away to contribute
-    // to track density at z = 0 bins
+    // to track density at z-axis bins
     return {-1, ActsVectorF<trkGridSize>::Zero()};
   }
 
