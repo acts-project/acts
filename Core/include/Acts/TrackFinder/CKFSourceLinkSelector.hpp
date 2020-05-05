@@ -126,11 +126,10 @@ struct CKFSourceLinkSelector {
     auto surface = &predictedParams.referenceSurface();
     auto geoID = surface->geoID();
 
-    // Find the cutoff value for the surface in the hierarchical geometry
-    // container. If not found, use global cutoff value
+    // Find the cutoff values for the surface in the hierarchical geometry
+    // container. If not found, use global cutoff values
     double chi2CutOff = std::numeric_limits<double>::max();
     size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
-    // -> Get the allowed maximum chi2 on this surface
     auto criteria_it = m_config.criteriaContainer.find(geoID);
     if (criteria_it != m_config.criteriaContainer.end()) {
       chi2CutOff = criteria_it->chi2CutOff;
