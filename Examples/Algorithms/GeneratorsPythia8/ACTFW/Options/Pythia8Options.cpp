@@ -72,7 +72,7 @@ FW::EventGenerator::Config FW::Options::readPythia8Options(
        Pythia8Generator::makeFunction(hard, lvl)},
       {PoissonMultiplicityGenerator{mu},
        GaussianVertexGenerator{{vtxStdXY, vtxStdXY, vtxStdZ, vtxStdT}},
-       Pythia8Generator::makeFunction(hard, lvl)},
+       Pythia8Generator::makeFunction(pileup, lvl)},
   };
   cfg.shuffle = vm["evg-shuffle"].as<bool>();
 

@@ -99,10 +99,11 @@ void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
 
   auto mixColor = [&](const IVisualization::ColorType& color) -> std::string {
     std::string materialName;
-    materialName = " material_";
+    materialName = "material_";
     materialName += std::to_string(color[0]) + std::string("_");
     materialName += std::to_string(color[1]) + std::string("_");
     materialName += std::to_string(color[2]);
+
     if (materials.find(materialName) == materials.end()) {
       mos << "newmtl " << materialName << "\n";
       std::vector<std::string> shadings = {"Ka", "Kd", "Ks"};
@@ -116,6 +117,7 @@ void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
     }
     return std::string("usemtl ") + materialName;
   };
+
   size_t iv = 0;
   IVisualization::ColorType lastVertexColor = {0, 0, 0};
   for (const VertexType& vtx : m_vertices) {

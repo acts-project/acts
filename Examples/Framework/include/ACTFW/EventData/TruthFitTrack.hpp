@@ -137,7 +137,7 @@ struct TruthFitTrack {
       // sort by hit count, i.e. majority particle first
       std::sort(particleHitCount.begin(), particleHitCount.end(),
                 [](const ParticleHitCount& lhs, const ParticleHitCount& rhs) {
-                  return lhs.hitCount < rhs.hitCount;
+                  return lhs.hitCount > rhs.hitCount;
                 });
     }
 

@@ -133,9 +133,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
-    return (error_estimate <= state.options.tolerance) &&
-           ((h.currentType() != ConstrainedStep::accuracy) ||
-            (error_estimate >= state.options.tolerance / 10));
+    return (error_estimate <= state.options.tolerance);
   };
 
   double stepSizeScaling = 1.;
@@ -148,9 +146,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
                                           std::abs(2. * error_estimate)),
                                          0.25)),
                  4.);
-    if (stepSizeScaling == 1.) {
-      break;
-    }
+
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
