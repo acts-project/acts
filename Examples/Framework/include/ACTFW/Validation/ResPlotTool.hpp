@@ -36,7 +36,7 @@ class ResPlotTool {
     /// Binning info for variables
     std::map<std::string, PlotHelpers::Binning> varBinning = {
         {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
-        {"Pt", PlotHelpers::Binning("pT [GeV/c]", 20, 0, 100)},
+        {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
         {"Pull", PlotHelpers::Binning("pull", 100, -5, 5)},
         {"Residual_d0", PlotHelpers::Binning("r_{d0} [mm]", 100, -0.5, 0.5)},
         {"Residual_z0", PlotHelpers::Binning("r_{z0} [mm]", 100, -0.5, 0.5)},
@@ -54,26 +54,26 @@ class ResPlotTool {
     std::map<std::string, TH1F*> res;         ///< Residual distribution
     std::map<std::string, TH2F*> res_vs_eta;  ///< Residual vs eta scatter plot
     std::map<std::string, TH1F*>
-        resmean_vs_eta;  ///< Residual mean vs eta distribution
+        resMean_vs_eta;  ///< Residual mean vs eta distribution
     std::map<std::string, TH1F*>
-        reswidth_vs_eta;  ///< Residual width vs eta distribution
+        resWidth_vs_eta;  ///< Residual width vs eta distribution
     std::map<std::string, TH2F*> res_vs_pT;  ///< Residual vs pT scatter plot
     std::map<std::string, TH1F*>
-        resmean_vs_pT;  ///< Residual mean vs pT distribution
+        resMean_vs_pT;  ///< Residual mean vs pT distribution
     std::map<std::string, TH1F*>
-        reswidth_vs_pT;  ///< Residual width vs pT distribution
+        resWidth_vs_pT;  ///< Residual width vs pT distribution
 
     std::map<std::string, TH1F*> pull;         ///< Pull distribution
     std::map<std::string, TH2F*> pull_vs_eta;  ///< Pull vs eta scatter plot
     std::map<std::string, TH1F*>
-        pullmean_vs_eta;  ///< Pull mean vs eta distribution
+        pullMean_vs_eta;  ///< Pull mean vs eta distribution
     std::map<std::string, TH1F*>
-        pullwidth_vs_eta;  ///< Pull width vs eta distribution
+        pullWidth_vs_eta;  ///< Pull width vs eta distribution
     std::map<std::string, TH2F*> pull_vs_pT;  ///< Pull vs pT scatter plot
     std::map<std::string, TH1F*>
-        pullmean_vs_pT;  ///< Pull mean vs pT distribution
+        pullMean_vs_pT;  ///< Pull mean vs pT distribution
     std::map<std::string, TH1F*>
-        pullwidth_vs_pT;  ///< Pull width vs pT distribution
+        pullWidth_vs_pT;  ///< Pull width vs pT distribution
   };
 
   /// Constructor
@@ -83,10 +83,12 @@ class ResPlotTool {
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
   /// @brief book the histograms
+  ///
   /// @param resPlotCache the cache for residual/pull histograms
   void book(ResPlotCache& resPlotCache) const;
 
   /// @brief fill the histograms
+  ///
   /// @param resPlotCache the cache for residual/pull histograms
   /// @param gctx the geometry context
   /// @param truthParticle the truth particle
@@ -96,15 +98,18 @@ class ResPlotTool {
             const Acts::BoundParameters& fittedParamters) const;
 
   /// @brief extract the details of the residual/pull plots and fill details
+  ///
   /// into separate histograms
   /// @param resPlotCache the cache object for residual/pull histograms
   void refinement(ResPlotCache& resPlotCache) const;
 
   /// @brief write the histograms to output file
+  ///
   /// @param resPlotCache the cache object for residual/pull histograms
   void write(const ResPlotCache& resPlotCache) const;
 
   /// @brief delele the histograms
+  ///
   /// @param resPlotCache the cache object for residual/pull histograms
   void clear(ResPlotCache& resPlotCache) const;
 
