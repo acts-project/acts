@@ -12,6 +12,7 @@
 
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
+#include "ACTFW/Validation/DuplicationPlotTool.hpp"
 #include "ACTFW/Validation/EffPlotTool.hpp"
 #include "ACTFW/Validation/FakeRatePlotTool.hpp"
 #include "ACTFW/Validation/TrackSummaryPlotTool.hpp"
@@ -46,6 +47,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoryContainer> {
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     FakeRatePlotTool::Config fakeRatePlotToolConfig;
+    DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
@@ -76,6 +78,9 @@ class CKFPerformanceWriter final : public WriterT<TrajectoryContainer> {
   /// Plot tool for fake rate
   FakeRatePlotTool m_fakeRatePlotTool;
   FakeRatePlotTool::FakeRatePlotCache m_fakeRatePlotCache{};
+  /// Plot tool for duplication rate
+  DuplicationPlotTool m_duplicationPlotTool;
+  DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;

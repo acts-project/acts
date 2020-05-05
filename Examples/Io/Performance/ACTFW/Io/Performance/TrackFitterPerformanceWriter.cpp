@@ -115,6 +115,7 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
       ACTS_WARNING("No fitted track parameters.");
       continue;
     }
+    const auto& fittedParameters = traj.trackParameters(trackTip);
 
     // Get the majority truth particle for this trajectory
     const auto particleHitCount = traj.identifyMajorityParticle(trackTip);
@@ -138,9 +139,9 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
     auto trajState =
         Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
     // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip, trajState.nStates,
-                                trajState.nMeasurements, trajState.nOutliers,
-                                trajState.nHoles);
+    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                trajState.nStates, trajState.nMeasurements,
+                                trajState.nOutliers, trajState.nHoles);
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
