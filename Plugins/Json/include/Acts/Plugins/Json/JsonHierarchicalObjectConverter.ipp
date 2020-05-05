@@ -120,8 +120,7 @@ template <typename object_t>
 void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
     DetectorRep& detRep, const Acts::TrackingVolume& tVolume,
     std::function<object_t(const GeometryID&)> initialise) const {
-  // default object_t
-  // The writer reader volume representation
+  // Create a volume representation
   VolumeRep volRep;
   volRep.volumeName = tVolume.volumeName();
   // there are confined volumes
@@ -145,7 +144,6 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
   // Get the volume Id
   Acts::GeometryID volumeID = tVolume.geoID();
   geo_id_value vid = volumeID.volume();
-
   volRep.volume = initialise(volumeID);
 
   // there are confied layers
@@ -217,10 +215,11 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
   size_t index = 0;
   geo_id_value volume = 0;
   geo_id_value layer = 0;
-
+  // Loop through the sorted geometry elements
   for (auto it = hObject.begin(); it != hObject.end(); ++it) {
     index = it - hObject.begin();
     Acts::GeometryID geoId = hObject.idAt(index);
+    // The Volumes
     if (geoId.volume() != volume && geoId.boundary() == 0 &&
         geoId.layer() == 0 && geoId.approach() == 0 && geoId.sensitive() == 0) {
       volume = geoId.volume();
@@ -230,6 +229,7 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
       volRep.volume = *it;
       detRep.volumes.insert({volume, std::move(volRep)});
     }
+    // The Layers
     if (geoId.layer() != layer && geoId.boundary() == 0 &&
         geoId.approach() == 0 && geoId.sensitive() == 0) {
       layer = geoId.layer();
@@ -238,14 +238,17 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
       layRep.representing = *it;
       detRep.volumes[volume].layers.insert({layer, std::move(layRep)});
     }
+    // The approach
     if (geoId.approach() != 0) {
       detRep.volumes[volume].layers[layer].approaches.insert(
           {geoId.approach(), *it});
     }
+    // The sensitive element
     if (geoId.sensitive() != 0) {
       detRep.volumes[volume].layers[layer].sensitives.insert(
           {geoId.sensitive(), *it});
     }
+    // The approach boundary
     if (geoId.boundary() != 0) {
       detRep.volumes[volume].boundaries.insert({geoId.boundary(), *it});
     }

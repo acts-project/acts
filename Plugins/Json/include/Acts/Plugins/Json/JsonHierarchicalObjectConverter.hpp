@@ -21,18 +21,16 @@
 
 namespace Acts {
 
-/// @class JsonGeometryConverter
+/// @class JsonHierarchicalObjectConverter
 ///
-/// @brief read the material from Json
+/// @brief Convert Hierarchical Object Container to Json file and vice-versa
 template <typename object_t>
 class JsonHierarchicalObjectConverter {
  public:
   /// @class Config
-  /// Configuration of the Reader
+  /// Configuration of the Reader/Writer
   class Config {
    public:
-    /// The geometry version
-    std::string geoversion = "undefined";
     /// The detector tag
     std::string detkey = "detector";
     /// The volume identification string
@@ -84,7 +82,6 @@ class JsonHierarchicalObjectConverter {
   struct LayerRep {
     // the layer id
     GeometryID layerID;
-
     Representation sensitives;
     Representation approaches;
     object_t representing;
@@ -94,7 +91,6 @@ class JsonHierarchicalObjectConverter {
   struct VolumeRep {
     // The geometry id
     GeometryID volumeID;
-
     /// The namne
     std::string volumeName;
 
@@ -116,21 +112,23 @@ class JsonHierarchicalObjectConverter {
   /// Destructor
   ~JsonHierarchicalObjectConverter() = default;
 
-  /// Convert method
+  /// Convert json map to Hierarchical Object Container
   ///
-  /// @param surfaceMaterialMap The indexed material map collection
+  /// @param map The indexed Hierarchical Object in json format
+  /// @param fromJson Function that return Hierarchical Object from json
   HierarchicalGeometryContainer<object_t> jsonToHierarchicalContainer(
       const nlohmann::json& map,
       std::function<object_t(const nlohmann::json&)> fromJson) const;
 
-  /// Convert method
+  /// Convert json map to Hierarchical Object Container
   ///
-  /// @param surfaceMaterialMap The indexed material map collection
+  /// @param hObject The Hierarchical Object Container
+  /// @param toJson Function that convert Hierarchical Object to json
   nlohmann::json hierarchicalObjectToJson(
       const HierarchicalGeometryContainer<object_t>& hObject,
       std::function<nlohmann::json(const object_t&)> toJson) const;
 
-  /// Write method
+  /// Write json map from Tracking Geometry
   ///
   /// @param tGeometry is the tracking geometry which contains the material
   nlohmann::json trackingGeometryToJson(
@@ -141,26 +139,35 @@ class JsonHierarchicalObjectConverter {
  private:
   /// Convert to internal representation method, recursive call
   ///
-  /// @param tGeometry is the tracking geometry which contains the material
+  /// @param detRep is the representation of the detector
+  /// @param tVolume is the tracking volume
+  /// @param initialise is a function that return an initialised Hierarchical
+  /// Object
   void convertToRep(
       DetectorRep& detRep, const TrackingVolume& tVolume,
       std::function<object_t(const GeometryID&)> initialise) const;
 
   /// Convert to internal representation method
   ///
-  /// @param tGeometry is the tracking geometry which contains the material
+  /// @param tLayer is a layer
+  /// @param initialise is a function that return an initialised Hierarchical
+  /// Object
   LayerRep convertToRep(
       const Layer& tLayer,
       std::function<object_t(const GeometryID&)> initialise) const;
 
   /// Convert to internal representation method
   ///
-  /// @param tGeometry is the tracking geometry which contains the material
+  /// @param detRep is the representation of the detector
+  /// @param hObject is the Hierarchical Object Container
   void convertToRep(
       DetectorRep& detRep,
       const Acts::HierarchicalGeometryContainer<object_t>& hObject) const;
 
   /// Create Json from a detector represenation
+  ///
+  /// @param detRep is the representation of the detector
+  /// @param toJson Function that convert Hierarchical Object to json
   nlohmann::json detectorRepToJson(
       const DetectorRep& detRep,
       std::function<nlohmann::json(const object_t&)> toJson) const;
