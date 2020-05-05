@@ -97,7 +97,7 @@ class SurfaceMaterialMapper {
     std::map<GeometryID, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
 
-    /// The created surface material from it
+    /// The volume material of the input tracking geometry
     std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>> volumeMaterial;
 
     /// Reference to the geometry context for the mapping
@@ -167,8 +167,8 @@ class SurfaceMaterialMapper {
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void collectMaterialVolume(State& /*mState*/,
-                             const TrackingVolume& tVolume) const;
+  void collectMaterialVolumes(State& /*mState*/,
+                              const TrackingVolume& tVolume) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

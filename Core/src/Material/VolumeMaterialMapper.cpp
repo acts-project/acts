@@ -45,7 +45,7 @@ Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
   // The Surface material mapping state
   State mState(gctx, mctx);
   resolveMaterialVolume(mState, *world);
-  collectMaterialSurface(mState, *world);
+  collectMaterialSurfaces(mState, *world);
   return mState;
 }
 
@@ -120,7 +120,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
   }
 }
 
-void Acts::VolumeMaterialMapper::collectMaterialSurface(
+void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
@@ -176,7 +176,7 @@ void Acts::VolumeMaterialMapper::collectMaterialSurface(
   if (tVolume.confinedVolumes()) {
     for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
       // Recursive call
-      collectMaterialSurface(mState, *sVolume);
+      collectMaterialSurfaces(mState, *sVolume);
     }
   }
 }

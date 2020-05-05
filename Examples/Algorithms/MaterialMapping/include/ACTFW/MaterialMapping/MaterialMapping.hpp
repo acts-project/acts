@@ -70,7 +70,7 @@ class MaterialMapping : public FW::BareAlgorithm {
     std::shared_ptr<Acts::SurfaceMaterialMapper> materialSurfaceMapper =
         nullptr;
 
-    /// The ACTS surface material mapper
+    /// The ACTS volume material mapper
     std::shared_ptr<Acts::VolumeMaterialMapper> materialVolumeMapper = nullptr;
 
     /// The writer of the material
