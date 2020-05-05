@@ -1,5 +1,3 @@
-include(${Geant4_USE_FILE})
-
 add_library(
   ActsExamplesGeant4 SHARED
   src/MMDetectorConstruction.cpp

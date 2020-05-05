@@ -1,5 +1,3 @@
-include(${Geant4_USE_FILE})
-
 add_executable(
   ActsExampleGeantinoRecording
   GeantinoRecordingExample.cpp)

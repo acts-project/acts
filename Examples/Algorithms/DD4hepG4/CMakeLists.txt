@@ -1,5 +1,3 @@
-include(${Geant4_USE_FILE})
-
 add_library(
   ActsExamplesDD4hepG4 SHARED
   src/DD4hepToG4Svc.cpp
