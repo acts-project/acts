@@ -24,28 +24,28 @@ void FW::EffPlotTool::book(EffPlotTool::EffPlotCache& effPlotCache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
   // efficiency vs pT
-  effPlotCache.trackeff_vs_pT = PlotHelpers::bookEff(
+  effPlotCache.trackEff_vs_pT = PlotHelpers::bookEff(
       "trackeff_vs_pT", "Tracking efficiency;pT [GeV/c];Efficiency", bPt);
   // efficiency vs eta
-  effPlotCache.trackeff_vs_eta = PlotHelpers::bookEff(
+  effPlotCache.trackEff_vs_eta = PlotHelpers::bookEff(
       "trackeff_vs_eta", "Tracking efficiency;#eta;Efficiency", bEta);
   // efficiency vs phi
-  effPlotCache.trackeff_vs_phi = PlotHelpers::bookEff(
+  effPlotCache.trackEff_vs_phi = PlotHelpers::bookEff(
       "trackeff_vs_phi", "Tracking efficiency;#phi;Efficiency", bPhi);
 }
 
 void FW::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
-  delete effPlotCache.trackeff_vs_pT;
-  delete effPlotCache.trackeff_vs_eta;
-  delete effPlotCache.trackeff_vs_phi;
+  delete effPlotCache.trackEff_vs_pT;
+  delete effPlotCache.trackEff_vs_eta;
+  delete effPlotCache.trackEff_vs_phi;
 }
 
 void FW::EffPlotTool::write(
     const EffPlotTool::EffPlotCache& effPlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
-  effPlotCache.trackeff_vs_pT->Write();
-  effPlotCache.trackeff_vs_eta->Write();
-  effPlotCache.trackeff_vs_phi->Write();
+  effPlotCache.trackEff_vs_pT->Write();
+  effPlotCache.trackEff_vs_eta->Write();
+  effPlotCache.trackEff_vs_phi->Write();
 }
 
 void FW::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
@@ -55,7 +55,7 @@ void FW::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
   const auto t_eta = eta(truthParticle.unitDirection());
   const auto t_pT = truthParticle.transverseMomentum();
 
-  PlotHelpers::fillEff(effPlotCache.trackeff_vs_pT, t_pT, status);
-  PlotHelpers::fillEff(effPlotCache.trackeff_vs_eta, t_eta, status);
-  PlotHelpers::fillEff(effPlotCache.trackeff_vs_phi, t_phi, status);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_pT, t_pT, status);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_eta, t_eta, status);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_phi, t_phi, status);
 }
