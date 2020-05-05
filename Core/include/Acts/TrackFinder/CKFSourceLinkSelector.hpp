@@ -36,7 +36,7 @@ struct GeometryCKFCriteria {
   size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
 
   // The constructor
-  GeometryCKFCriteria(GeometryID id, double chi2, double num)
+  GeometryCKFCriteria(GeometryID id, double chi2, size_t num)
       : id(id), chi2CutOff(chi2), numSourcelinksCutOff(num) {}
 
   // The geometry identifier getter
