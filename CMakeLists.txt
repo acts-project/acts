@@ -103,7 +103,7 @@ find_package(Eigen 3.2.9 REQUIRED)
 # trees to sort of when a particular package is actually needed.
 #
 # version variables for external dependencies that are required more than once
-set(acts_dd4hep_version 1.2)
+set(acts_dd4hep_version 1.10)
 set(acts_root_version 6.10)
 if(ACTS_BUILD_DD4HEP_PLUGIN)
   find_package(DD4hep ${acts_dd4hep_version} REQUIRED COMPONENTS DDCore)
