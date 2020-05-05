@@ -413,7 +413,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Post-processing after forward filtering
-      if (result.forwardFiltered) {
+      if (result.forwardFiltered and not result.finished) {
         // Return error if forward filtering finds no tracks
         if (result.trackTips.empty()) {
           result.result =
@@ -422,6 +422,8 @@ class CombinatorialKalmanFilter {
           if (not smoothing) {
             // Manually set the targetReached to abort the propagation
             ACTS_VERBOSE("Finish forward Kalman filtering");
+            // Remember that track finding is done
+            result.finished = true;
             state.navigation.targetReached = true;
           } else {
             // Iterate over the found tracks for smoothing and getting the
@@ -446,8 +448,7 @@ class CombinatorialKalmanFilter {
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
             if (result.smoothed and
-                targetReached(state, stepper, *targetSurface) and
-                not result.finished) {
+                targetReached(state, stepper, *targetSurface)) {
               ACTS_VERBOSE("Completing the track with entry index = "
                            << result.trackTips.at(result.iSmoothed));
               // Transport & bind the parameter to the final surface
@@ -1209,9 +1210,12 @@ class CombinatorialKalmanFilter {
     auto combKalmanResult =
         propRes.template get<CombinatorialKalmanFilterResult>();
 
-    /// It could happen that propagation reaches max step size
-    /// before the track finding is finished.
-    if (combKalmanResult.result.ok() and not combKalmanResult.forwardFiltered) {
+    /// The propagation could already reach max step size
+    /// before the track finding is finished during two phases:
+    // -> forward filtering for track finding
+    // -> surface targeting to get fitted parameters at target surface
+    // @TODO: Implement distinguishment between the above two cases if necessary
+    if (combKalmanResult.result.ok() and not combKalmanResult.finished) {
       combKalmanResult.result = Result<void>(
           CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
     }
