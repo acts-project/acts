@@ -37,7 +37,7 @@ json thingToJson(Thing thing) {
   jThing["id"] = sID.str();
   jThing["value"] = thing.value;
   return jThing;
-};
+}
 
 Thing jsonToThing(json map) {
   Thing thing;
@@ -52,14 +52,14 @@ Thing jsonToThing(json map) {
   thing.id = geoID;
   thing.value = map["value"];
   return thing;
-};
+}
 
 Thing initThing(GeometryID id) {
   Thing thing;
   thing.id = id;
   thing.value = 2.0;
   return thing;
-};
+}
 
 using Container = Acts::HierarchicalGeometryContainer<Thing>;
 
