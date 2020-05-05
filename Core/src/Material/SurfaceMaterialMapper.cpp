@@ -158,7 +158,7 @@ void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
   if (!tVolume.denseVolumes().empty()) {
     for (auto& sVolume : tVolume.denseVolumes()) {
       // Recursive call
-      collectMaterialVolume(mState, *sVolume);
+      collectMaterialVolumes(mState, *sVolume);
     }
   }
 }
