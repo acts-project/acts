@@ -19,20 +19,25 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
-/// @brief Geometry element struct in the hierarchical geometry container
+/// @brief Geometry CKF criteria struct in the hierarchical geometry container
 ///
-/// It take a geometry identifier and a value
+/// It take a geometry identifier and cutoff values for chi2 and number of
+/// source links on surface
 ///
-template <typename value_t>
-struct GeometryElement {
+struct GeometryCKFCriteria {
   // The geometry identifier
   GeometryID id;
 
-  // The value associated with the geometry identifier
-  value_t value;
+  // The cutoff value for chi2 associated with the geometry identifier
+  double chi2CutOff = std::numeric_limits<double>::max();
+
+  // The cutoff value for number of source links on surface associated with the
+  // geometry identifier
+  size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
 
   // The constructor
-  GeometryElement(GeometryID i, value_t v) : id(i), value(v) {}
+  GeometryCKFCriteria(GeometryID id, double chi2, double num)
+      : id(id), chi2CutOff(chi2), numSourcelinksCutOff(num) {}
 
   // The geometry identifier getter
   constexpr auto geometryId() const { return id; }
@@ -59,17 +64,12 @@ struct CKFSourceLinkSelector {
   /// container, the global criteria will be used
   ///
   struct Config {
-    using Chi2Container =
-        Acts::HierarchicalGeometryContainer<GeometryElement<double>>;
-    using SourceLinkNumContainer =
-        Acts::HierarchicalGeometryContainer<GeometryElement<size_t>>;
+    using CKFCriteriaContainer =
+        Acts::HierarchicalGeometryContainer<GeometryCKFCriteria>;
 
-    // Hierarchical geometry container of cutoff value for chi2
-    Chi2Container chi2CutOffContainer;
-
-    // Hierarchical geometry container of cutoff value for number of source
-    // links on surface
-    SourceLinkNumContainer numSourcelinksCutOffContainer;
+    // Hierarchical geometry container of cutoff value for chi2 and number of
+    // source links on surface
+    CKFCriteriaContainer criteriaContainer;
 
     // Global cutoff value for chi2
     double globalChi2CutOff = std::numeric_limits<double>::max();
@@ -131,21 +131,15 @@ struct CKFSourceLinkSelector {
     double chi2CutOff = std::numeric_limits<double>::max();
     size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
     // -> Get the allowed maximum chi2 on this surface
-    auto chi2_it = m_config.chi2CutOffContainer.find(geoID);
-    if (chi2_it != m_config.chi2CutOffContainer.end()) {
-      chi2CutOff = chi2_it->value;
+    auto criteria_it = m_config.criteriaContainer.find(geoID);
+    if (criteria_it != m_config.criteriaContainer.end()) {
+      chi2CutOff = criteria_it->chi2CutOff;
+      numSourcelinksCutOff = criteria_it->numSourcelinksCutOff;
     } else {
       chi2CutOff = m_config.globalChi2CutOff;
-    }
-    ACTS_VERBOSE("Allowed maximum chi2: " << chi2CutOff);
-    // -> Get the allowed maximum number of source link candidates on this
-    // surface
-    auto numSourcelinks_it = m_config.numSourcelinksCutOffContainer.find(geoID);
-    if (numSourcelinks_it != m_config.numSourcelinksCutOffContainer.end()) {
-      numSourcelinksCutOff = numSourcelinks_it->value;
-    } else {
       numSourcelinksCutOff = m_config.globalNumSourcelinksCutOff;
     }
+    ACTS_VERBOSE("Allowed maximum chi2: " << chi2CutOff);
     ACTS_VERBOSE(
         "Allowed maximum number of source links: " << numSourcelinksCutOff);
 

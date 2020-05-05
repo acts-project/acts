@@ -294,21 +294,21 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
                                 SourceLinkSelector>;
 
   using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
-  using Chi2Container =
-      Acts::HierarchicalGeometryContainer<GeometryElement<double>>;
-  // Implement different chi2 cutoff at different detector level
+  using CKFCriteriaContainer =
+      Acts::HierarchicalGeometryContainer<GeometryCKFCriteria>;
+  // Implement different chi2/nSourceLinks cutoff at different detector level
   // NB: pixel volumeID = 2, strip volumeID= 3
-  std::vector<GeometryElement<double>> elements = {
-      {makeId(2, 2), 8.0},  // pixel layer 2 chi2 cutoff: 8.0
-      {makeId(2, 4), 7.0},  // pixel layer 4 chi2 cutoff: 7.0
-      {makeId(2), 7.0},     // pixel volume chi2 cutoff: 7.0
-      {makeId(3), 8.0},     // strip volume chi2 cutoff: 8.0
+  std::vector<GeometryCKFCriteria> elements = {
+      {makeId(2, 2), 8.0, 5},  // pixel layer 2 chi2/nSourceLinks cutoff: 8.0/5
+      {makeId(2, 4), 7.0, 5},  // pixel layer 4 chi2/nSourceLinks cutoff: 7.0/5
+      {makeId(2), 7.0, 5},     // pixel volume chi2/nSourceLinks cutoff: 7.0/5
+      {makeId(3), 8.0, 5},     // strip volume chi2/nSourceLinks cutoff: 8.0/5
   };
   SourceLinkSelectorConfig sourcelinkSelectorConfig;
-  // Chi2 cutoff at detector sensitive/layer/volume level implemented via
-  // hierarchical geometry container
-  sourcelinkSelectorConfig.chi2CutOffContainer =
-      Chi2Container(std::move(elements));
+  // CKF source link selection criteria at detector sensitive/layer/volume level
+  // implemented via hierarchical geometry container
+  sourcelinkSelectorConfig.criteriaContainer =
+      CKFCriteriaContainer(std::move(elements));
   // Chi2 cutoff at global level
   sourcelinkSelectorConfig.globalChi2CutOff = 8;
   // Cutoff for number of source links at global level
