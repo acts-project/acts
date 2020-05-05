@@ -1,6 +1,9 @@
 add_executable(
   ActsExampleGeantinoRecording
   GeantinoRecordingExample.cpp)
+target_include_directories(
+  ActsExampleGeantinoRecording
+  SYSTEM PRIVATE ${Geant4_INCLUDE_DIRS})
 target_link_libraries(
   ActsExampleGeantinoRecording
   PRIVATE

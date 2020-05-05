@@ -7,9 +7,10 @@ add_library(
   src/MMSteppingAction.cpp)
 target_include_directories(
   ActsExamplesGeant4
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    ${Geant4_INCLUDE_DIRS})
+  SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
+target_include_directories(
+  ActsExamplesGeant4
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesGeant4
   PUBLIC ActsCore ActsExamplesFramework ${Geant4_LIBRARIES}

@@ -3,9 +3,11 @@ add_library(
   src/DD4hepToG4Svc.cpp
   src/GeoConstruction.cpp)
 target_include_directories(
+  ActsExamplesDD4hepG4 
+  SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
+target_include_directories(
   ActsExamplesDD4hepG4
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesDD4hepG4
   PUBLIC
