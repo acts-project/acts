@@ -172,5 +172,10 @@
     <D value="1.396" unit="g/cm3" />
     <composite n="1" ref="Ar"/>
   </material>
-
+  
+  <material name="Lead">
+    <D type="density" unit="g/cm3" value="11.35"/>
+    <composite n="1" ref="Pb"/>
+  </material>
+  
 </materials>
