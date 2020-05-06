@@ -62,6 +62,11 @@ struct ExtendedMinimalSourceLink {
   }
 };
 
+// helper function to create geometry ids
+GeometryID makeId(int volume, int layer = 0, int sensitive = 0) {
+  return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
+}
+
 // A few initialisations and definitionas
 using SourceLink = ExtendedMinimalSourceLink;
 using Jacobian = BoundParameters::CovMatrix_t;
@@ -289,20 +294,25 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
                                 SourceLinkSelector>;
 
   using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
+  using CKFCriteriaContainer =
+      Acts::HierarchicalGeometryContainer<GeometryCKFCriteria>;
+  // Implement different chi2/nSourceLinks cutoff at different detector level
+  // NB: pixel volumeID = 2, strip volumeID= 3
+  std::vector<GeometryCKFCriteria> elements = {
+      {makeId(2, 2), 8.0, 5},  // pixel layer 2 chi2/nSourceLinks cutoff: 8.0/5
+      {makeId(2, 4), 7.0, 5},  // pixel layer 4 chi2/nSourceLinks cutoff: 7.0/5
+      {makeId(2), 7.0, 5},     // pixel volume chi2/nSourceLinks cutoff: 7.0/5
+      {makeId(3), 8.0, 5},     // strip volume chi2/nSourceLinks cutoff: 8.0/5
+  };
   SourceLinkSelectorConfig sourcelinkSelectorConfig;
-  // Implement different chi2 criteria for different pixel (volumeID: 2)
-  // layers:
-  //-> layer 2: 8
-  //-> layer 4: 7
-  sourcelinkSelectorConfig.layerMaxChi2 = {{2, {{2, 8}, {4, 7}}}};
-  // Implement different chi2 criteria for pixel (volumeID: 2) and strip
-  // (volumeID: 3):
-  //-> pixel: 7
-  //-> strip: 8
-  sourcelinkSelectorConfig.volumeMaxChi2 = {{2, 7}, {3, 8}};
-  sourcelinkSelectorConfig.maxChi2 = 8;
-  // Set the allowed maximum number of source links to be large enough
-  sourcelinkSelectorConfig.maxNumSourcelinksOnSurface = 100;
+  // CKF source link selection criteria at detector sensitive/layer/volume level
+  // implemented via hierarchical geometry container
+  sourcelinkSelectorConfig.criteriaContainer =
+      CKFCriteriaContainer(std::move(elements));
+  // Chi2 cutoff at global level
+  sourcelinkSelectorConfig.globalChi2CutOff = 8;
+  // Cutoff for number of source links at global level
+  sourcelinkSelectorConfig.globalNumSourcelinksCutOff = 10;
 
   CombinatorialKalmanFilter cKF(
       rPropagator,
