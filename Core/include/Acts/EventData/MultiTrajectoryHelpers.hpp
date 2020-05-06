@@ -11,6 +11,9 @@
 #include <unordered_map>
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
@@ -27,9 +30,6 @@ struct TrajectoryState {
   double chi2Sum = 0;
 };
 
-using SubDetectorClassifier = std::function<bool(const Acts::GeometryID&)>;
-using SubDetectorClassifierContainer =
-    std::unordered_map<std::string, SubDetectorClassifier>;
 using TrajectoryStateContainer =
     std::unordered_map<std::string, TrajectoryState>;
 
@@ -67,37 +67,47 @@ TrajectoryState trajectoryState(
 ///
 /// @param multiTraj The MultiTrajectory object
 /// @param entryIndex The entry index of trajectory to investigate
-/// @param subDetClassifierContainer The container for classifiers to classfify
+/// @param subDetName The container for sub-detector names
 /// track states at different sub-detectors.
 ///
 /// @return The trajectory summary info at different sub-detectors
 template <typename source_link_t>
 TrajectoryStateContainer trajectoryState(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex,
-    const SubDetectorClassifierContainer& subDetClassifierContainer) {
+    const size_t& entryIndex, const std::vector<std::string>& subDetName) {
   TrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
-    // Get the geometry identifier of the reference surface
-    auto geoID = state.referenceSurface().geoID();
-    // Loop over all the classifiers
-    for (const auto& [detName, detClassifier] : subDetClassifierContainer) {
-      if (not detClassifier(geoID)) {
-        continue;
+    // Get the tracking volume name this surface is associated with
+    const Surface* surface = &state.referenceSurface();
+    std::string volumeName;
+    if (surface->associatedLayer() != nullptr) {
+      const Layer* layer = surface->associatedLayer();
+      if (layer->trackingVolume() != nullptr) {
+        volumeName = layer->trackingVolume()->volumeName();
       }
-      // The trajectory state corresponding to this classifier
-      auto& trajState = trajStateContainer[detName];
-      trajState.nStates++;
-      trajState.chi2Sum += state.chi2();
-      auto typeFlags = state.typeFlags();
-      if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-        trajState.nMeasurements++;
-      } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-        trajState.nOutliers++;
-      } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-        trajState.nHoles++;
-      }
-    }  // end of loop for the classifiers
+    }
+    if (volumeName.empty()) {
+      // Skip if the volume name is not found
+      return false;
+    }
+    auto it = std::find(subDetName.begin(), subDetName.end(), volumeName);
+    if (it == subDetName.end()) {
+      // Skip if track info for this sub-detector is not requested
+      return false;
+    }
+    // The trajectory state corresponding to this classifier
+    auto& trajState = trajStateContainer[volumeName];
+    trajState.nStates++;
+    trajState.chi2Sum += state.chi2();
+    auto typeFlags = state.typeFlags();
+    if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+      trajState.nMeasurements++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+      trajState.nOutliers++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+      trajState.nHoles++;
+    }
+    return true;
   });
   return trajStateContainer;
 }
