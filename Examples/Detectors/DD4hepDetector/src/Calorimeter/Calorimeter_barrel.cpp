@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,7 +20,7 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   // Make DetElement
   DetElement CaloBarrel(detName, x_det.id());
 
-  // add Extension to Detlement for the RecoGeometry
+  // add Extension to DetElement for the RecoGeometry
   Acts::ActsExtension* barrelExtension = new Acts::ActsExtension();
   barrelExtension->addType("barrel", "detector");
   CaloBarrel.addExtension<Acts::ActsExtension>(barrelExtension);
