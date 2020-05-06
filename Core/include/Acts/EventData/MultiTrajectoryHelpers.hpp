@@ -87,13 +87,13 @@ TrajectoryStateContainer trajectoryState(
       }
     }
     if (volumeName.empty()) {
-      // Skip if the volume name is not found
-      return false;
+      // Skip the state if the volume name is not found
+      return true;
     }
     auto it = std::find(subDetName.begin(), subDetName.end(), volumeName);
     if (it == subDetName.end()) {
-      // Skip if track info for this sub-detector is not requested
-      return false;
+      // Skip the state if track info for this sub-detector is not requested
+      return true;
     }
     // The trajectory state corresponding to this classifier
     auto& trajState = trajStateContainer[volumeName];
