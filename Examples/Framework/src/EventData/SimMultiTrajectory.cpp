@@ -13,8 +13,11 @@ FW::SimMultiTrajectory::identifyMajorityParticle(
     const size_t& entryIndex) const {
   std::vector<FW::ParticleHitCount> particleHitCount;
   particleHitCount.reserve(10);
-  if (m_multiTrajectory) {
-    (*m_multiTrajectory).visitBackwards(entryIndex, [&](const auto& state) {
+  if (not m_trackTips.empty()) {
+    if (not hasTrajectory(entryIndex)) {
+      return particleHitCount;
+    }
+    m_multiTrajectory.visitBackwards(entryIndex, [&](const auto& state) {
       // No truth info with non-measurement state
       if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         return true;

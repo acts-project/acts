@@ -267,21 +267,18 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
   int iTraj = 0;
   for (const auto& traj : trajectories) {
     m_trajNr = iTraj;
-    if (not traj.hasTrajectory()) {
-      continue;
-    }
 
     // The trajectory entry indices and the multiTrajectory
     const auto& [trackTips, mj] = traj.trajectory();
+    if (trackTips.empty()) {
+      ACTS_WARNING("Empty multiTrajectory.");
+      continue;
+    }
     // Check the size of the trajectory entry indices. For track fitting, there
     // should be at most one trajectory
     if (trackTips.size() > 1) {
       ACTS_ERROR("Track fitting should not result in multiple trajectories.");
       return ProcessCode::ABORT;
-    }
-    if (trackTips.empty()) {
-      ACTS_WARNING("No trajectory entry index found.");
-      continue;
     }
     // Get the entry index for the single trajectory
     auto& trackTip = trackTips.front();
