@@ -1,5 +1,8 @@
 add_library(
   ActsExamplesGeant4 SHARED
+  src/DD4hepToG4Svc.cpp
+  src/GeantinoRecording.cpp
+  src/GeoConstruction.cpp
   src/MMDetectorConstruction.cpp
   src/MMEventAction.cpp
   src/MMPrimaryGeneratorAction.cpp
@@ -16,8 +19,22 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesGeant4
-  PUBLIC ActsCore ActsExamplesFramework ${Geant4_LIBRARIES}
-  PRIVATE ROOT::Geom)
+  PUBLIC
+    ActsCore ActsExamplesDetectorDD4hep ActsExamplesFramework
+    ${Geant4_LIBRARIES})
+
+if(${DD4hep_VERSION} VERSION_LESS 1.11)
+  target_include_directories(
+    ActsExamplesGeant4
+    PUBLIC ${DD4hep_INCLUDE_DIRS})
+  target_link_libraries(
+    ActsExamplesGeant4
+    PUBLIC ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY})
+else()
+  target_link_libraries(
+    ActsExamplesGeant4
+    PUBLIC DD4hep::DDCore DD4hep::DDG4)
+endif()
 
 install(
   TARGETS ActsExamplesGeant4

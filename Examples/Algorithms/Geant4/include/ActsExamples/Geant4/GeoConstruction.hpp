@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "DDG4/Geant4GeometryInfo.h"
-#include "G4VUserDetectorConstruction.hh"
+#include <DDG4/Geant4GeometryInfo.h>
+#include <G4VUserDetectorConstruction.hh>
 
 namespace dd4hep {
 class Detector;

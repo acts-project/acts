@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/Geant4/MMEventAction.hpp"
+#include "MMEventAction.hpp"
 
+#include <G4Event.hh>
+#include <G4RunManager.hh>
 #include <stdexcept>
 
-#include "ACTFW/Plugins/Geant4/MMPrimaryGeneratorAction.hpp"
-#include "ACTFW/Plugins/Geant4/MMSteppingAction.hpp"
-#include "G4Event.hh"
-#include "G4RunManager.hh"
+#include "MMPrimaryGeneratorAction.hpp"
+#include "MMSteppingAction.hpp"
 
 FW::Geant4::MMEventAction* FW::Geant4::MMEventAction::fgInstance = nullptr;
 

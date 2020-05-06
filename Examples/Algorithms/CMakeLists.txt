@@ -1,7 +1,6 @@
-add_subdirectory_if(DD4hepG4 ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory(Digitization)
 add_subdirectory(Fatras)
-add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_GEANT4)
+add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory(Generators)
 add_subdirectory_if(GeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8)
 add_subdirectory(MaterialMapping)

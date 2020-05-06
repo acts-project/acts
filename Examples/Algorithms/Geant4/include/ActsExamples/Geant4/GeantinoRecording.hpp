@@ -8,14 +8,15 @@
 
 #pragma once
 
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Definitions.hpp>
-#include <Acts/Utilities/Logger.hpp>
-#include <G4RunManager.hh>
 #include <memory>
 
 #include "ACTFW/Framework/BareAlgorithm.hpp"
-#include "ACTFW/Plugins/DD4hepG4/DD4hepToG4Svc.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/DD4hepToG4Svc.hpp"
+
+class G4RunManager;
 
 namespace Acts {
 // Using some short hands for Recorded Material
@@ -60,16 +61,14 @@ class GeantinoRecording : public FW::BareAlgorithm {
     int seed2 = 45678;
   };
 
-  /// Constructor
-  GeantinoRecording(const Config& cnf,
-                    Acts::Logging::Level level = Acts::Logging::INFO);
+  GeantinoRecording(const Config& cfg, Acts::Logging::Level lvl);
+  ~GeantinoRecording();
 
   FW::ProcessCode execute(const AlgorithmContext& context) const final override;
 
  private:
-  /// The config object
   Config m_cfg;
-  /// G4 run manager
   std::unique_ptr<G4RunManager> m_runManager;
 };
+
 }  // namespace FW

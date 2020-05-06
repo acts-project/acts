@@ -6,23 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/MaterialMapping/GeantinoRecording.hpp"
+#include "ActsExamples/Geant4/GeantinoRecording.hpp"
 
 #include <FTFP_BERT.hh>
+#include <G4RunManager.hh>
 #include <iostream>
 #include <stdexcept>
 
 #include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Plugins/Geant4/MMDetectorConstruction.hpp"
-#include "ACTFW/Plugins/Geant4/MMEventAction.hpp"
-#include "ACTFW/Plugins/Geant4/MMPrimaryGeneratorAction.hpp"
-#include "ACTFW/Plugins/Geant4/MMRunAction.hpp"
-#include "ACTFW/Plugins/Geant4/MMSteppingAction.hpp"
+#include "MMDetectorConstruction.hpp"
+#include "MMEventAction.hpp"
+#include "MMPrimaryGeneratorAction.hpp"
+#include "MMRunAction.hpp"
+#include "MMSteppingAction.hpp"
 
 FW::GeantinoRecording::GeantinoRecording(
-    const FW::GeantinoRecording::Config& cnf, Acts::Logging::Level level)
-    : FW::BareAlgorithm("GeantinoRecording", level),
-      m_cfg(cnf),
+    const FW::GeantinoRecording::Config& cfg, Acts::Logging::Level lvl)
+    : FW::BareAlgorithm("GeantinoRecording", lvl),
+      m_cfg(cfg),
       m_runManager(std::make_unique<G4RunManager>()) {
   /// Check if the geometry should be accessed over the geant4 service
   if (m_cfg.geant4Service) {
@@ -51,6 +52,9 @@ FW::GeantinoRecording::GeantinoRecording(
   m_runManager->SetUserAction(new FW::Geant4::MMSteppingAction());
   m_runManager->Initialize();
 }
+
+// needed to allow std::unique_ptr<G4RunManager> with forward-declared class.
+FW::GeantinoRecording::~GeantinoRecording() {}
 
 FW::ProcessCode FW::GeantinoRecording::execute(
     const FW::AlgorithmContext& context) const {

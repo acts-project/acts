@@ -12,10 +12,9 @@
 
 #pragma once
 
+#include <G4UserRunAction.hh>
+#include <globals.hh>
 #include <memory>
-
-#include "G4UserRunAction.hh"
-#include "globals.hh"
 
 class G4Run;
 

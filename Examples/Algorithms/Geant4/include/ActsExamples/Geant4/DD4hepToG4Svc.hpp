@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <Acts/Utilities/Logger.hpp>
 #include <G4RunManager.hh>
 #include <G4VUserDetectorConstruction.hh>
 #include <memory>
 
 #include "ACTFW/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace FW {
 namespace DD4hepG4 {

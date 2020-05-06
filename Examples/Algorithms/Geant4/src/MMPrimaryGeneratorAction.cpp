@@ -6,17 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/Geant4/MMPrimaryGeneratorAction.hpp"
+#include "MMPrimaryGeneratorAction.hpp"
 
+#include <G4Event.hh>
+#include <G4ParticleDefinition.hh>
+#include <G4ParticleGun.hh>
+#include <G4ParticleTable.hh>
+#include <G4RandomDirection.hh>
+#include <G4UnitsTable.hh>
+#include <Randomize.hh>
 #include <stdexcept>
-
-#include "G4Event.hh"
-#include "G4ParticleDefinition.hh"
-#include "G4ParticleGun.hh"
-#include "G4ParticleTable.hh"
-#include "G4RandomDirection.hh"
-#include "G4UnitsTable.hh"
-#include "Randomize.hh"
 
 FW::Geant4::MMPrimaryGeneratorAction*
     FW::Geant4::MMPrimaryGeneratorAction::fgInstance = nullptr;

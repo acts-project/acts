@@ -16,10 +16,10 @@
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ACTFW/Io/Root/RootSimHitWriter.hpp"
-#include "ACTFW/MaterialMapping/GeantinoRecording.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/DD4hepG4/DD4hepToG4Svc.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Geant4/DD4hepToG4Svc.hpp"
+#include "ActsExamples/Geant4/GeantinoRecording.hpp"
 
 namespace po = boost::program_options;
 

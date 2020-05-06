@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/Geant4/MMDetectorConstruction.hpp"
+#include "MMDetectorConstruction.hpp"
 
-#include "G4GDMLParser.hh"
-#include "TGeoManager.h"
+#include <G4GDMLParser.hh>
+#include <TGeoManager.h>
 
 FW::Geant4::MMDetectorConstruction::MMDetectorConstruction()
     : G4VUserDetectorConstruction(), m_tgeoNode(nullptr), m_gdmlFile(nullptr) {}

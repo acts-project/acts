@@ -5,8 +5,8 @@ target_link_libraries(
   ActsExampleGeantinoRecording
   PRIVATE
     ${_common_libraries}
-    ActsExamplesMaterialMapping ActsExamplesDD4hepG4
-    ActsExamplesDetectorDD4hep ActsExamplesIoRoot)
+    ActsExamplesDetectorDD4hep
+    ActsExamplesGeant4 ActsExamplesIoRoot ActsExamplesMaterialMapping)
 
 install(
   TARGETS ActsExampleGeantinoRecording

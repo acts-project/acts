@@ -12,12 +12,12 @@
 
 #pragma once
 
+#include <G4UserEventAction.hh>
+#include <globals.hh>
 #include <memory>
 
 #include "ACTFW/EventData/SimHit.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
-#include "G4UserEventAction.hh"
-#include "globals.hh"
 
 /// @namespace FW::Geant4:: Namespace for geant4 material mapping
 namespace FW {

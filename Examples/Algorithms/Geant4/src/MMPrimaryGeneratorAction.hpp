@@ -12,12 +12,11 @@
 
 #pragma once
 
+#include <G4SystemOfUnits.hh>
+#include <G4ThreeVector.hh>
+#include <G4VUserPrimaryGeneratorAction.hh>
+#include <globals.hh>
 #include <memory>
-
-#include "G4SystemOfUnits.hh"
-#include "G4ThreeVector.hh"
-#include "G4VUserPrimaryGeneratorAction.hh"
-#include "globals.hh"
 
 class G4ParticleGun;
 class G4Event;
