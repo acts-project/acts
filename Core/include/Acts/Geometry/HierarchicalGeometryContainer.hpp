@@ -23,30 +23,40 @@ namespace Acts {
 ///
 /// @tparam value_t stored element type
 ///
-/// Trailing zero components of stored geometry identifiers are used as
-/// broadcast values to refer to higher-level objects within the geometry, e.g.
-/// a geometry identifier with vanishing approach and sensitive index refers
-/// to a the full layer. All stored geometry identifiers must set at least
-/// the highest hierarchy level.
-///
-/// The container supports range-based iteration over all stored elements
-///
-///     for (const auto& element : container) {
-///         ...
-///     }
-///
-/// and finding an equivalent element for a given identifier
+/// The core functionality is to find an equivalent element for a given
+/// identifier via
 ///
 ///     auto it = container.find(GeometryID(...));
 ///     if (it != container.end()) {
 ///         ...
 ///     }
 ///
-/// Adding elements is potentially expensive as the internal ordering must
-/// be reestablished every time an element is added. In addition, modifying
-/// an element in-place can potentially change its identifier which would
-/// also break the interal ordering. Thus, the container can not be modified
-/// after construction to prevent misuse.
+/// Trailing zero components of stored geometry identifiers are used as
+/// broadcast values to refer to higher-level objects within the geometry, e.g.
+/// a geometry identifier with vanishing approach and sensitive index refers
+/// to the full layer. All stored geometry identifiers must set at least
+/// the highest hierarchy level.
+///
+/// The container also supports range-based iteration over all stored elements
+///
+///     for (const auto& element : container) {
+///         ...
+///     }
+///
+/// and index-based access to stored elements and associated geometry
+/// identifiers
+///
+///     GeometryID id3 = container.idAt(3);
+///     const auto& element4 = container.valueAt(4);
+///
+/// @note No guarantees are given for the element order when using range-based
+///   or index-based access. Any apparent ordering must be considered an
+///   implementation detail and might change.
+///
+/// Adding elements is potentially expensive as the internal lookup structure
+/// must be updated. In addition, modifying an element in-place can
+/// potentially change its identifier which would also break the lookup. Thus,
+/// the container can not be modified after construction to prevent misuse.
 ///
 template <typename value_t>
 class HierarchicalGeometryContainer {
@@ -83,6 +93,15 @@ class HierarchicalGeometryContainer {
   bool empty() const { return m_elements.empty(); }
   /// Return the number of stored elements.
   Size size() const { return m_elements.size(); }
+
+  /// Access the geometry identifier for the i-th element with bounds check.
+  ///
+  /// @throws std::out_of_range for invalid indices
+  GeometryID idAt(Size index) const { return m_ids.at(index); }
+  /// Access the i-th element in the container with bounds check.
+  ///
+  /// @throws std::out_of_range for invalid indices
+  const Value& valueAt(Size index) const { return m_elements.at(index); }
 
   /// Find the most specific element for a given geometry identifier.
   ///
