@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
         break;
       case 'm':
         nTrplPerSpBLimit = atoi(optarg);
-        break;	
+        break;
       case 'q':
         quiet = true;
         break;
@@ -131,10 +131,14 @@ int main(int argc, char** argv) {
                     << skip << std::endl;
           std::cout << "      -d DEVID : NVIDIA GPU device ID. Default is "
                     << deviceID << std::endl;
-	  std::cout << "      -l : A limit on the average number of triplets per bottom spacepoint: this is used for determining matrix size for triplets per middle space point"
+          std::cout << "      -l : A limit on the average number of triplets "
+                       "per bottom spacepoint: this is used for determining "
+                       "matrix size for triplets per middle space point"
                     << nAvgTrplPerSpBLimit << std::endl;
-	  std::cout << "      -m : A limit on the number of triplets per bottom spacepoint: users do not have to touch this for # spacepoints < ~200k"
-                    << nTrplPerSpBLimit << std::endl;	  	  	  
+          std::cout << "      -m : A limit on the number of triplets per "
+                       "bottom spacepoint: users do not have to touch this for "
+                       "# spacepoints < ~200k"
+                    << nTrplPerSpBLimit << std::endl;
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
         }

@@ -98,6 +98,6 @@ struct SeedfinderConfig {
   // only for Cuda plugin
   int maxBlockSize = 1024;
   int nTrplPerSpBLimit = 100;
-  int nAvgTrplPerSpBLimit = 2;  
+  int nAvgTrplPerSpBLimit = 2;
 };
 }  // namespace Acts

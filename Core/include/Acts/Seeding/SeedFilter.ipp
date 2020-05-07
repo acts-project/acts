@@ -87,7 +87,7 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         break;
       }
     }
-    
+
     if (m_experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
       weight += m_experimentCuts->seedWeight(bottomSP, middleSP, *topSpVec[i]);
@@ -118,20 +118,25 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
                                           external_spacepoint_t>>>& i1,
                const std::pair<float, std::unique_ptr<const Acts::InternalSeed<
                                           external_spacepoint_t>>>& i2) {
-	      if (i1.first > i2.first) return true;
-	      // This is for the case when the weights from different seeds are same
-	      // It is added to make cpu & cuda results same
-	      else if (i1.first == i2.first){
-		float seed1_sum=0;
-		float seed2_sum=0;
-		for (int i=0; i<3; i++){
-		  seed1_sum += sqrt(pow(i1.second->sp[i]->sp().x(),2) + pow(i1.second->sp[i]->sp().y(),2) + pow(i1.second->sp[i]->sp().z(),2));
-		  seed2_sum += sqrt(pow(i2.second->sp[i]->sp().x(),2) + pow(i2.second->sp[i]->sp().y(),2) + pow(i2.second->sp[i]->sp().z(),2));		  
-		}
-		return seed1_sum > seed2_sum;
-	      }
-	      else return false;
-            }); 
+              if (i1.first > i2.first)
+                return true;
+              // This is for the case when the weights from different seeds are
+              // same It is added to make cpu & cuda results same
+              else if (i1.first == i2.first) {
+                float seed1_sum = 0;
+                float seed2_sum = 0;
+                for (int i = 0; i < 3; i++) {
+                  seed1_sum += sqrt(pow(i1.second->sp[i]->sp().x(), 2) +
+                                    pow(i1.second->sp[i]->sp().y(), 2) +
+                                    pow(i1.second->sp[i]->sp().z(), 2));
+                  seed2_sum += sqrt(pow(i2.second->sp[i]->sp().x(), 2) +
+                                    pow(i2.second->sp[i]->sp().y(), 2) +
+                                    pow(i2.second->sp[i]->sp().z(), 2));
+                }
+                return seed1_sum > seed2_sum;
+              } else
+                return false;
+            });
   if (m_experimentCuts != nullptr) {
     seedsPerSpM = m_experimentCuts->cutPerMiddleSP(std::move(seedsPerSpM));
   }
