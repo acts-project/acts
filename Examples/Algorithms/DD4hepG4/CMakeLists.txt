@@ -2,6 +2,9 @@ add_library(
   ActsExamplesDD4hepG4 SHARED
   src/DD4hepToG4Svc.cpp
   src/GeoConstruction.cpp)
+target_compile_definitions(
+  ActsExamplesDD4hepG4
+  PUBLIC ${Geant4_DEFINITIONS})
 target_include_directories(
   ActsExamplesDD4hepG4 
   SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})

@@ -12,6 +12,9 @@ if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
   target_sources(
     ActsExamplesMaterialMapping
     PRIVATE src/GeantinoRecording.cpp)
+  target_compile_definitions(
+    ActsExamplesMaterialMapping
+    PUBLIC ${Geant4_DEFINITIONS})
   target_include_directories(
     ActsExamplesMaterialMapping
     SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})

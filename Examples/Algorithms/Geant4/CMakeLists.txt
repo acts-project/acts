@@ -5,6 +5,9 @@ add_library(
   src/MMPrimaryGeneratorAction.cpp
   src/MMRunAction.cpp
   src/MMSteppingAction.cpp)
+target_compile_definitions(
+  ActsExamplesGeant4
+  PUBLIC ${Geant4_DEFINITIONS})
 target_include_directories(
   ActsExamplesGeant4
   SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
