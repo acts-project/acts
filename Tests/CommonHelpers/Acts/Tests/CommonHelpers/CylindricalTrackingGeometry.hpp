@@ -212,7 +212,7 @@ struct CylindricalTrackingGeometry {
       }
       // create the layer and store it
       ProtoLayer protoLayer(geoContext, layerModules);
-      protoLayer.envR = {0.5, 0.5};
+      protoLayer.envelope[binR] = {0.5, 0.5};
       auto pLayer = layerCreator->cylinderLayer(
           geoContext, std::move(layerModules), pLayerBinning[ilp].first,
           pLayerBinning[ilp].second, protoLayer);

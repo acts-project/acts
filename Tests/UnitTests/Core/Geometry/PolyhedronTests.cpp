@@ -82,6 +82,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
 
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
+  // Test a rectangle in x-y plane (at z == 0)
   std::vector<Vector3D> rvertices = {Vector3D(-1, -2, 0.), Vector3D(1., -2, 0.),
                                      Vector3D(1., -1., 0.),
                                      Vector3D(-1., -1., 0.)};
@@ -113,6 +114,21 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
   CHECK_CLOSE_ABS(rExtent.max(binY), -1., 1e-6);
   CHECK_CLOSE_ABS(rExtent.min(binZ), 1., 1e-6);
   CHECK_CLOSE_ABS(rExtent.max(binZ), 1., 1e-6);
+
+  // Test a rectangle in yz - pane (at x == 3)
+  rvertices = {Vector3D(3_mm, -5_mm, -10_mm), Vector3D(3_mm, 5_mm, -10_mm),
+               Vector3D(3_mm, 5_mm, 10_mm), Vector3D(3_mm, -5_mm, 10_mm)};
+
+  rectangle = Polyhedron(rvertices, rfaces, rmesh);
+  rExtent = rectangle.extent();
+  CHECK_CLOSE_ABS(rExtent.min(binX), 3., 1e-6);
+  CHECK_CLOSE_ABS(rExtent.max(binX), 3., 1e-6);
+  CHECK_CLOSE_ABS(rExtent.min(binY), -5., 1e-6);
+  CHECK_CLOSE_ABS(rExtent.max(binY), 5., 1e-6);
+  CHECK_CLOSE_ABS(rExtent.min(binZ), -10., 1e-6);
+  CHECK_CLOSE_ABS(rExtent.max(binZ), 10., 1e-6);
+  CHECK_CLOSE_ABS(rExtent.min(binR), 3., 1e-6);
+  CHECK_CLOSE_ABS(rExtent.max(binR), std::sqrt(9. + 25.), 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -109,14 +109,16 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         // Create the layer  - either way as cylinder or disk
         if (type == 0) {
           ProtoLayer pl(gctx, lSurfaces);
-          pl.envR = {lCfg.envelope.first, lCfg.envelope.second};
-          pl.envZ = {lCfg.envelope.second, lCfg.envelope.second};
+          pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
+          pl.envelope[Acts::binZ] = {lCfg.envelope.second,
+                                     lCfg.envelope.second};
           layers.push_back(m_cfg.layerCreator->cylinderLayer(
               gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
         } else {
           ProtoLayer pl(gctx, lSurfaces);
-          pl.envR = {lCfg.envelope.first, lCfg.envelope.second};
-          pl.envZ = {lCfg.envelope.second, lCfg.envelope.second};
+          pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
+          pl.envelope[Acts::binZ] = {lCfg.envelope.second,
+                                     lCfg.envelope.second};
           layers.push_back(m_cfg.layerCreator->discLayer(
               gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
         }
@@ -245,23 +247,28 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
   if (tgVolume != nullptr) {
     std::string volumeName = tgVolume->GetName();
     /// Some screen output indicating that the volume was found
-    ACTS_VERBOSE(offset << "[o] Volume : " << volumeName
-                        << " - checking for volume name "
-                        << layerConfig.layerName);
-
+    if (m_cfg.nodeSearchDebug) {
+      ACTS_VERBOSE(offset << "[o] Volume : " << volumeName
+                          << " - checking for volume name "
+                          << layerConfig.layerName);
+    }
     // Once in the current branch stepping down means staying inside the branch
     bool correctVolume = correctBranch;
     if (!correctVolume &&
         (volumeName.find(layerConfig.layerName) != std::string::npos ||
          match(layerConfig.layerName.c_str(), volumeName.c_str()))) {
       correctVolume = true;
-      ACTS_VERBOSE(offset << "    triggered current branch!");
+      if (m_cfg.nodeSearchDebug) {
+        ACTS_VERBOSE(offset << "    triggered current branch!");
+      }
     }
     // Loop over the daughters and collect them
     auto daugthers = tgVolume->GetNodes();
     // Screen output
-    ACTS_VERBOSE(offset << "has " << tgVolume->GetNdaughters()
-                        << " daughters.");
+    if (m_cfg.nodeSearchDebug) {
+      ACTS_VERBOSE(offset << "has " << tgVolume->GetNdaughters()
+                          << " daughters.");
+    }
     // A daughter iterator
     TIter iObj(daugthers);
     // While loop over the objects for the recursive parsing
@@ -273,7 +280,7 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
                          layerConfig, type, correctVolume, offset + "  ");
       }
     }
-  } else {
+  } else if (m_cfg.nodeSearchDebug) {
     ACTS_VERBOSE("No volume present.");
   }
 
@@ -296,18 +303,22 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
 
     // The name of the nodefor cross checking
     std::string tNodeName = tgNode->GetName();
-    ACTS_VERBOSE(offset << "[>] Node : " << tNodeName
-                        << " - checking for sensor name "
-                        << layerConfig.sensorName);
+    if (m_cfg.nodeSearchDebug) {
+      ACTS_VERBOSE(offset << "[>] Node : " << tNodeName
+                          << " - checking for sensor name "
+                          << layerConfig.sensorName);
+    }
     // Find out the branch hit, ingle layer depth supported by sensor==layer
     bool branchHit =
         correctBranch || (layerConfig.sensorName == layerConfig.layerName);
     if (branchHit &&
         (tNodeName.find(layerConfig.sensorName) != std::string::npos ||
          match(layerConfig.sensorName.c_str(), tNodeName.c_str()))) {
-      ACTS_VERBOSE(offset << "Sensor name '" << layerConfig.sensorName
-                          << "' found in branch '" << layerConfig.layerName
-                          << "'.");
+      if (m_cfg.nodeSearchDebug) {
+        ACTS_VERBOSE(offset << "Sensor name '" << layerConfig.sensorName
+                            << "' found in branch '" << layerConfig.layerName
+                            << "'.");
+      }
 
       // Create the detector element
       // - check on the type for the side
@@ -317,7 +328,9 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
 
       if (insideParseRange and ((type == 0) || type * z > 0.)) {
         //  Senstive volume found, collect it
-        ACTS_VERBOSE(offset << "[>>] accepted.");
+        if (m_cfg.nodeSearchDebug) {
+          ACTS_VERBOSE(offset << "[>>] accepted.");
+        }
         // Create the element
         auto identifier =
             m_cfg.identifierProvider != nullptr
@@ -347,9 +360,9 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
                         m_cfg.layerSplitToleranceZ[type + 1],
                         layerConfig.splitRangeZ);
         }
-      } else if (type * z < 0) {
+      } else if (type * z < 0 and m_cfg.nodeSearchDebug) {
         ACTS_VERBOSE("[xx] cancelled by side check.");
-      } else if (not insideParseRange) {
+      } else if (not insideParseRange and m_cfg.nodeSearchDebug) {
         ACTS_VERBOSE("[xx] cancelled by parse range on side " << type);
         ACTS_VERBOSE("     r = " << r << " in ("
                                  << layerConfig.parseRangeR.first << ", "
@@ -357,7 +370,9 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
       }
     } else {
       // This is not yet the senstive one
-      ACTS_VERBOSE(offset << "[<<] not accepted, stepping down.");
+      if (m_cfg.nodeSearchDebug) {
+        ACTS_VERBOSE(offset << "[<<] not accepted, stepping down.");
+      }
       // Build the matrix
       TGeoHMatrix nTransform =
           TGeoCombiTrans(tgTransform) * TGeoCombiTrans(*tgMatrix);
@@ -369,7 +384,7 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
       resolveSensitive(gctx, layerSurfaces, nodeVolume, nullptr, nTransform,
                        layerConfig, type, correctBranch, offset + "  ");
     }
-  } else {
+  } else if (m_cfg.nodeSearchDebug) {
     ACTS_VERBOSE("No node present.");
   }
 }
