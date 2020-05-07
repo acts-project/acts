@@ -49,7 +49,7 @@ include(ActsOptionHelpers)
 set_option_if(ACTS_BUILD_BENCHMARKS ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_UNITTESTS ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_INTEGRATIONTESTS ACTS_BUILD_EVERYTHING)
-#set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
 # set_option_if(ACTS_BUILD_EXAMPLES_HEPMC3 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
@@ -103,7 +103,7 @@ find_package(Eigen 3.2.9 REQUIRED)
 # trees to sort of when a particular package is actually needed.
 #
 # version variables for external dependencies that are required more than once
-set(acts_dd4hep_version 1.2)
+set(acts_dd4hep_version 1.10)
 set(acts_root_version 6.10)
 if(ACTS_BUILD_DD4HEP_PLUGIN)
   find_package(DD4hep ${acts_dd4hep_version} REQUIRED COMPONENTS DDCore)
@@ -166,7 +166,7 @@ endif()
 # core library, core plugins, and other components
 add_component(Core Core)
 add_subdirectory(Plugins)
-add_component(Fatras Fatras)
+add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 
 # manual examples
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)

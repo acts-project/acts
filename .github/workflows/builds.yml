@@ -48,7 +48,6 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=on
-          -DACTS_BUILD_DD4HEP_PLUGIN=on
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
@@ -89,4 +88,3 @@ jobs:
         run: source ${SETUP} && cmake --build build -- test
       - name: Integration tests
         run: source ${SETUP} && cmake --build build -- integrationtests
-
