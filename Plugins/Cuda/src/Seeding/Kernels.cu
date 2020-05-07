@@ -54,8 +54,7 @@ __device__ void sp2circle(bool  isBottom,
 			  const float* spB,
 			  float* circB);
 
-__global__ void cuSearchTriplet(//const int*   offset,
-				const int*   nSpTcompPerSpM,
+__global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
 				const int*   nSpMcomp,
 				const float* spMcompMat,
 				const int*   nSpBcompPerSpM_Max,
@@ -168,8 +167,7 @@ namespace Acts{
   }
     
   void searchTriplet(const dim3 grid, const dim3 block,
-		     //const int*   offset,
-		     const int*   nSpTcompPerSpM_cpu, // need to use USM
+		     const int*   nSpTcompPerSpM_cpu, 
 		     const int*   nSpTcompPerSpM_cuda,		     
 		     const int*   nSpMcomp,
 		     const float* spMcompMat,
@@ -192,7 +190,7 @@ namespace Acts{
 		     const float* impactWeightFactor,
 		     const float* deltaRMin,
 		     const float* compatSeedWeight,
-		     const size_t* compatSeedLimit_cpu,	 // need to use USM
+		     const size_t* compatSeedLimit_cpu,
 		     const size_t* compatSeedLimit_cuda,		    
 		     int* nTrplPerSpM,
 		     Triplet* TripletsPerSpM,
@@ -203,8 +201,7 @@ namespace Acts{
     sharedMemSize += sizeof(int);
 
     cuSearchTriplet<<< grid, block, 
-      sharedMemSize, *stream >>>(//offset,
-				 nSpTcompPerSpM_cuda,
+      sharedMemSize, *stream >>>(nSpTcompPerSpM_cuda,
 				 nSpMcomp,
 				 spMcompMat,
 				 nSpBcompPerSpM_Max,
@@ -511,8 +508,7 @@ __device__ void sp2circle( bool isBottom,
   circB[5] = V;   
 }
 
-__global__ void cuSearchTriplet(//const int*   offset,
-				const int*   nSpTcompPerSpM,
+__global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
 				const int*   nSpMcomp,
 				const float* spMcompMat,
 				const int*   nSpBcompPerSpM_Max,
@@ -522,7 +518,6 @@ __global__ void cuSearchTriplet(//const int*   offset,
 				const int*   TcompIndex,
 				const float* spTcompMatPerSpM,
 				const float* circTcompMatPerSpM,
-				// config
 				const float* maxScatteringAngle2,
 				const float* sigmaScattering,
 				const float* minHelixDiameter2,
@@ -535,7 +530,6 @@ __global__ void cuSearchTriplet(//const int*   offset,
 				const float* deltaRMin,
 				const float* compatSeedWeight,
 				const size_t* compatSeedLimit,
-				// triplet output
 				int* nTrplPerSpM,
 				Triplet* TripletsPerSpM
 				){

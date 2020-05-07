@@ -62,7 +62,6 @@ void transformCoordinate( const dim3 grid, const dim3 block,
 			  float* circTcompMatPerSpM);
   
 void searchTriplet( const dim3 grid, const dim3 block,
-		    //const int*   offset,
 		    const int*   nSpTcompPerSpM_cpu,
 		    const int*   nSpTcompPerSpM_cuda,
 		    const int*   nSpMcomp,
