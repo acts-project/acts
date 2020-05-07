@@ -81,10 +81,11 @@ int main(int argc, char** argv) {
   int nGroupToIterate = 500;
   int skip = 0;
   int deviceID = 0;
-  int nTrplPerSpBLimit = 2;
+  int nTrplPerSpBLimit = 100;
+  int nAvgTrplPerSpBLimit = 2;
 
   int opt;
-  while ((opt = getopt(argc, argv, "haf:n:s:d:l:q")) != -1) {
+  while ((opt = getopt(argc, argv, "haf:n:s:d:l:m:q")) != -1) {
     switch (opt) {
       case 'a':
         allgroup = true;
@@ -102,8 +103,11 @@ int main(int argc, char** argv) {
         deviceID = atoi(optarg);
         break;
       case 'l':
-        nTrplPerSpBLimit = atoi(optarg);
+        nAvgTrplPerSpBLimit = atoi(optarg);
         break;
+      case 'm':
+        nTrplPerSpBLimit = atoi(optarg);
+        break;	
       case 'q':
         quiet = true;
         break;
@@ -127,8 +131,10 @@ int main(int argc, char** argv) {
                     << skip << std::endl;
           std::cout << "      -d DEVID : NVIDIA GPU device ID. Default is "
                     << deviceID << std::endl;
-	  std::cout << "      -l : A limit on the average number of triplets per bottom spacepoint"
-                    << nTrplPerSpBLimit << std::endl;
+	  std::cout << "      -l : A limit on the average number of triplets per bottom spacepoint: this is used for determining matrix size for triplets per middle space point"
+                    << nAvgTrplPerSpBLimit << std::endl;
+	  std::cout << "      -m : A limit on the number of triplets per bottom spacepoint: users do not have to touch this for # spacepoints < ~200k"
+                    << nTrplPerSpBLimit << std::endl;	  	  	  
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
         }
@@ -178,6 +184,7 @@ int main(int argc, char** argv) {
          prop.name, prop.major, prop.minor);
   config.maxBlockSize = prop.maxThreadsPerBlock;
   config.nTrplPerSpBLimit = nTrplPerSpBLimit;
+  config.nAvgTrplPerSpBLimit = nAvgTrplPerSpBLimit;
 
   // binfinder
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
