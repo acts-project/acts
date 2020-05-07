@@ -63,7 +63,7 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
         continue;
-      }      
+      }
       bool newCompSeed = true;
       for (float previousDiameter : compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
