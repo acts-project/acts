@@ -21,13 +21,10 @@
 
 namespace Acts {
 
-/// @class JsonHierarchicalObjectConverter
-///
-/// @brief Convert Hierarchical Object Container to Json file and vice-versa
+/// Convert Hierarchical Object Container to Json file and vice-versa
 template <typename object_t>
 class JsonHierarchicalObjectConverter {
  public:
-  /// @class Config
   /// Configuration of the Reader/Writer
   class Config {
    public:
@@ -75,8 +72,7 @@ class JsonHierarchicalObjectConverter {
         : logger(getDefaultLogger(lname, lvl)), name(lname) {}
   };
 
-  using geo_id_value = uint64_t;
-  using Representation = std::map<geo_id_value, object_t>;
+  using Representation = std::map<GeometryID::Value, object_t>;
 
   /// @brief Layer representation for Json writing
   struct LayerRep {
@@ -94,14 +90,14 @@ class JsonHierarchicalObjectConverter {
     /// The namne
     std::string volumeName;
 
-    std::map<geo_id_value, LayerRep> layers;
+    std::map<GeometryID::Value, LayerRep> layers;
     Representation boundaries;
     object_t volume;
   };
 
   /// @brief Detector representation for Json writing
   struct DetectorRep {
-    std::map<geo_id_value, VolumeRep> volumes;
+    std::map<GeometryID::Value, VolumeRep> volumes;
   };
 
   /// Constructor
@@ -130,7 +126,7 @@ class JsonHierarchicalObjectConverter {
 
   /// Write json map from Tracking Geometry
   ///
-  /// @param tGeometry is the tracking geometry which contains the material
+  /// @param tGeometry is the tracking geometry
   nlohmann::json trackingGeometryToJson(
       const TrackingGeometry& tGeometry,
       std::function<nlohmann::json(const object_t&)> toJson,

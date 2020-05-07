@@ -30,7 +30,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
   auto& j = map;
   std::vector<object_t> elements;
   // The return maps
-  ACTS_VERBOSE("j2a: Reading material maps from json file.");
+  ACTS_VERBOSE("j2a: Reading maps from json file.");
   ACTS_VERBOSE("j2a: Found entries for " << j.count(m_cfg.volkey)
                                          << " volume(s).");
   // Structured binding
@@ -143,7 +143,7 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
   }
   // Get the volume Id
   Acts::GeometryID volumeID = tVolume.geoID();
-  geo_id_value vid = volumeID.volume();
+  Acts::GeometryID::Value vid = volumeID.volume();
   volRep.volume = initialise(volumeID);
 
   // there are confied layers
@@ -155,7 +155,7 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
       auto layRep = convertToRep(*lay, initialise);
       // it's a valid representation so let's go with it
       Acts::GeometryID layerID = lay->geoID();
-      geo_id_value lid = layerID.layer();
+      Acts::GeometryID::Value lid = layerID.layer();
       volRep.layers.insert({lid, std::move(layRep)});
     }
   }
@@ -164,7 +164,7 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
     // the surface representation
     auto& bssfRep = bsurf->surfaceRepresentation();
     Acts::GeometryID boundaryID = bssfRep.geoID();
-    geo_id_value bid = boundaryID.boundary();
+    Acts::GeometryID::Value bid = boundaryID.boundary();
     volRep.boundaries[bid] = initialise(boundaryID);
   }
   volRep.volumeName = tVolume.volumeName();
@@ -186,7 +186,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
     for (auto& ssf : tLayer.surfaceArray()->surfaces()) {
       if (ssf != nullptr) {
         Acts::GeometryID sensitiveID = ssf->geoID();
-        geo_id_value sid = sensitiveID.sensitive();
+        Acts::GeometryID::Value sid = sensitiveID.sensitive();
         layRep.sensitives.insert({sid, initialise(sensitiveID)});
       }
     }
@@ -200,7 +200,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
     for (auto& asf : tLayer.approachDescriptor()->containedSurfaces()) {
       // get the surface
       Acts::GeometryID approachID = asf->geoID();
-      geo_id_value aid = approachID.approach();
+      Acts::GeometryID::Value aid = approachID.approach();
       layRep.approaches.insert({aid, initialise(approachID)});
     }
   }
@@ -213,8 +213,8 @@ void Acts::JsonHierarchicalObjectConverter<object_t>::convertToRep(
     DetectorRep& detRep,
     const Acts::HierarchicalGeometryContainer<object_t>& hObject) const {
   size_t index = 0;
-  geo_id_value volume = 0;
-  geo_id_value layer = 0;
+  Acts::GeometryID::Value volume = 0;
+  Acts::GeometryID::Value layer = 0;
   // Loop through the sorted geometry elements
   for (auto it = hObject.begin(); it != hObject.end(); ++it) {
     index = it - hObject.begin();
