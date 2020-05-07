@@ -9,39 +9,108 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
-
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <cmath>
 
 namespace Acts {
 
 namespace Test {
 namespace Layers {
-BOOST_AUTO_TEST_SUITE(Layers)
+BOOST_AUTO_TEST_SUITE(Geometry)
 
-BOOST_AUTO_TEST_CASE(ProtoLayer_radialDistance) {
-  ProtoLayer pl;
+BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
+  GeometryContext tgContext = GeometryContext();
 
-  Vector3D p1(10, 0, 0);
-  Vector3D p2(0, 10, 0);
-  CHECK_CLOSE_REL(pl.radialDistance(p1, p2), sqrt(50), 1e-6);
+  // Create a proto layer with 4 surfaces on the x/y grid
+  auto recBounds = std::make_shared<RectangleBounds>(3., 6.);
 
-  Vector3D p3(-5, 5, 0);
-  Vector3D p4(5, 5, 0);
-  CHECK_CLOSE_REL(pl.radialDistance(p3, p4), 5, 1e-6);
+  // Planar definitions to help construct the boundary surfaces
+  static const Transform3D planeYZ =
+      AngleAxis3D(0.5 * M_PI, Vector3D::UnitY()) *
+      AngleAxis3D(0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
+  static const Transform3D planeZX =
+      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitX()) *
+      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
 
-  Vector3D p5(6, 6, 0);
-  Vector3D p6(8, 9, 0);
-  CHECK_CLOSE_REL(pl.radialDistance(p5, p6), sqrt(6 * 6 + 6 * 6), 1e-6);
+  auto createProtoLayer = [&](const Transform3D& trf,
+                              bool shared = false) -> ProtoLayer {
+    auto atNegX = Surface::makeShared<PlaneSurface>(
+        std::make_shared<Transform3D>(
+            trf * Translation3D(Vector3D(-3., 0., 0.)) * planeYZ),
+        recBounds);
 
-  Vector3D p7(0, 10, 0);
-  Vector3D p8(5, 5, 0);
-  CHECK_CLOSE_REL(pl.radialDistance(p7, p8), sqrt(50), 1e-6);
+    auto atPosX = Surface::makeShared<PlaneSurface>(
+        std::make_shared<Transform3D>(
+            trf * Translation3D(Vector3D(3., 0., 0.)) * planeYZ),
+        recBounds);
 
-  Vector3D p9(13, 2, 0);
-  Vector3D p10(13, -2, 0);
-  CHECK_CLOSE_REL(pl.radialDistance(p9, p10), 13, 1e-6);
+    auto atNegY = Surface::makeShared<PlaneSurface>(
+        std::make_shared<Transform3D>(
+            trf * Translation3D(Vector3D(0., -3, 0.)) * planeZX),
+        recBounds);
+
+    auto atPosY = Surface::makeShared<PlaneSurface>(
+        std::make_shared<Transform3D>(
+            trf * Translation3D(Vector3D(0., 3., 0.)) * planeZX),
+        recBounds);
+
+    if (not shared) {
+      std::vector<const Surface*> surfaces = {atNegX.get(), atNegY.get(),
+                                              atPosX.get(), atPosY.get()};
+
+      return ProtoLayer(tgContext, surfaces);
+    }
+    std::vector<std::shared_ptr<const Surface>> sharedSurfaces = {
+        atNegX, atNegY, atPosX, atPosY};
+    return ProtoLayer(tgContext, sharedSurfaces);
+  };
+
+  // Test 0 - check constructor with surfaces and shared surfaces
+  auto pLayerSf = createProtoLayer(Transform3D::Identity());
+  auto pLayerSfShared = createProtoLayer(Transform3D::Identity());
+
+  BOOST_CHECK(pLayerSf.extent.ranges == pLayerSfShared.extent.ranges);
+  BOOST_CHECK(pLayerSf.envelope == pLayerSfShared.envelope);
+
+  // Test 1 - identity transform
+  auto protoLayer = createProtoLayer(Transform3D::Identity());
+
+  CHECK_CLOSE_ABS(protoLayer.range(binX), 12., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.medium(binX), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(binX), -6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(binX), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.range(binY), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.medium(binY), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(binY), -3., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(binY), 3., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.range(binZ), 12., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.medium(binZ), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(binZ), -6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(binZ), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.min(binR), 3., 1e-8);
+
+  // Test 1a
+
+  // Test 2 - rotate around Z-Axis, should leave R, Z untouched,
+  // only preserves medium values
+  auto protoLayerRot = createProtoLayer(AngleAxis3D(-0.345, Vector3D::UnitZ()) *
+                                        Transform3D::Identity());
+
+  BOOST_CHECK_NE(protoLayer.min(binX), -6.);
+  CHECK_CLOSE_ABS(protoLayerRot.medium(binX), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.medium(binY), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.range(binZ), 12., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.medium(binZ), 0., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.min(binZ), -6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.max(binZ), 6., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.min(binR), 3., 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/////////////////////////////////////////////////////////////////
-// DiscSurface.ipp, Acts project
-///////////////////////////////////////////////////////////////////
-
 inline const Vector2D DiscSurface::localPolarToCartesian(
     const Vector2D& lpolar) const {
   return Vector2D(lpolar[eLOC_R] * cos(lpolar[eLOC_PHI]),

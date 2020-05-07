@@ -32,7 +32,7 @@ GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit tests for creating DiscSurface object
-BOOST_AUTO_TEST_CASE(DiscSurface_constructors_test) {
+BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   // default constructor is deleted
   // scaffolding...
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(DiscSurface_constructors_test) {
 }
 
 /// Unit tests of all named methods
-BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2)) {
+BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   Vector3D origin3D{0, 0, 0};
   std::shared_ptr<const Transform3D> pTransform;  // nullptr
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(DiscSurface_properties_test, *utf::expected_failures(2)) {
 }
 //
 /// Unit test for testing DiscSurface assignment and equality
-BOOST_AUTO_TEST_CASE(DiscSurface_assignment_test) {
+BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
   Vector3D origin3D{0, 0, 0};
   std::shared_ptr<const Transform3D> pTransform;  // nullptr
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
@@ -205,6 +205,37 @@ BOOST_AUTO_TEST_CASE(DiscSurface_assignment_test) {
   //
   BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
   BOOST_CHECK((*assignedDisc) == (*discSurfaceObject));
+}
+
+/// Unit test for testing DiscSurface assignment and equality
+BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
+  double rMin(1.0), rMax(5.0);
+
+  auto pDisc = Surface::makeShared<DiscSurface>(nullptr, 0., rMax);
+  auto pDiscExtent = pDisc->polyhedronRepresentation(tgContext, 1).extent();
+
+  CHECK_CLOSE_ABS(0., pDiscExtent.min(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(0., pDiscExtent.max(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(0., pDiscExtent.min(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pDiscExtent.max(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pDiscExtent.min(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pDiscExtent.max(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pDiscExtent.min(binY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pDiscExtent.max(binY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-M_PI, pDiscExtent.min(binPhi), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(M_PI, pDiscExtent.max(binPhi), s_onSurfaceTolerance);
+
+  auto pRing = Surface::makeShared<DiscSurface>(nullptr, rMin, rMax);
+  auto pRingExtent = pRing->polyhedronRepresentation(tgContext, 1).extent();
+
+  CHECK_CLOSE_ABS(0., pRingExtent.min(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(0., pRingExtent.max(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMin, pRingExtent.min(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pRingExtent.max(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pRingExtent.min(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pRingExtent.max(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pRingExtent.min(binY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pRingExtent.max(binY), s_onSurfaceTolerance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

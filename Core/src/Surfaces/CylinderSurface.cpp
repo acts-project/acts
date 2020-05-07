@@ -207,5 +207,5 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
   }
   auto facesMesh =
       detail::FacesHelper::cylindricalFaceMesh(vertices, fullCylinder);
-  return Polyhedron(vertices, facesMesh.first, facesMesh.second);
+  return Polyhedron(vertices, facesMesh.first, facesMesh.second, false);
 }

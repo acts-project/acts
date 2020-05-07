@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   //      3.1415927)"));
 }
 
-BOOST_AUTO_TEST_CASE(EqualityOperators) {
+BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
   // rectangle bounds
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   Translation3D translation{0., 1., 2.};
@@ -190,6 +190,59 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   *assignedPlaneSurface = *planeSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
+}
+
+/// Unit test for testing PlaneSurface extent via Polyhedron representation
+BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
+  // First test - non-rotated
+  static const Transform3D planeZX =
+      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitX()) *
+      AngleAxis3D(-0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
+
+  double rHx = 2.;
+  double rHy = 4.;
+  double yPs = 3.;
+  auto rBounds = std::make_shared<RectangleBounds>(rHx, rHy);
+
+  auto plane = Surface::makeShared<PlaneSurface>(
+      std::make_shared<Transform3D>(Translation3D(Vector3D(0., yPs, 0.)) *
+                                    planeZX),
+      rBounds);
+
+  auto planeExtent = plane->polyhedronRepresentation(tgContext, 1).extent();
+
+  CHECK_CLOSE_ABS(planeExtent.min(binZ), -rHx, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(binZ), rHx, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(binX), -rHy, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(binX), rHy, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(binY), yPs, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(binY), yPs, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(binR), yPs, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(binR), std::sqrt(yPs * yPs + rHy * rHy),
+                  s_onSurfaceTolerance);
+
+  // Now rotate
+  double alpha = 0.123;
+  auto planeRot = Surface::makeShared<PlaneSurface>(
+      std::make_shared<Transform3D>(Translation3D(Vector3D(0., yPs, 0.)) *
+                                    AngleAxis3D(alpha, Vector3D(0., 0., 1.)) *
+                                    planeZX),
+      rBounds);
+
+  auto planeExtentRot =
+      planeRot->polyhedronRepresentation(tgContext, 1).extent();
+  CHECK_CLOSE_ABS(planeExtentRot.min(binZ), -rHx, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.max(binZ), rHx, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.min(binX), -rHy * std::cos(alpha),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.max(binX), rHy * std::cos(alpha),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.min(binY), yPs - rHy * std::sin(alpha),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.max(binY), yPs + rHy * std::sin(alpha),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.min(binR), yPs * std::cos(alpha),
+                  s_onSurfaceTolerance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

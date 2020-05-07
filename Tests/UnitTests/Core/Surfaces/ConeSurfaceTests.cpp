@@ -29,6 +29,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_SUITE(ConeSurfaces)
+
 /// Unit test for creating compliant/non-compliant ConeSurface object
 BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   // ConeSurface default constructor is deleted
@@ -53,7 +54,6 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
                                                      zMax, halfPhiSector)
                         ->type(),
                     Surface::Cone);
-  //
 
   /// Constructor with transform and ConeBounds pointer
   // ConeBounds (double alpha, double zmin, double zmax, double halfphi=M_PI,
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   //      3.1415927)"));
 }
 
-BOOST_AUTO_TEST_CASE(EqualityOperators) {
+BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
   double alpha{M_PI / 8.} /*, halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
   Translation3D translation{0., 1., 2.};
@@ -202,6 +202,40 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   *assignedConeSurface = *coneSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedConeSurface == *coneSurfaceObject);
+}
+
+BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
+  double alpha{M_PI / 8.}, zMin{0.}, zMax{10.};
+
+  Translation3D translation{0., 0., 0.};
+
+  // Testing a Full cone
+  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pConeBounds = std::make_shared<const ConeBounds>(alpha, zMin, zMax);
+  auto pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
+  auto pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
+
+  double rMax = zMax * std::tan(alpha);
+  CHECK_CLOSE_ABS(zMin, pConeExtent.min(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(zMax, pConeExtent.max(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(0., pConeExtent.min(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(binY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binY), s_onSurfaceTolerance);
+
+  // Now a sector
+  double halfPhiSector = M_PI / 8.;
+  pConeBounds =
+      std::make_shared<const ConeBounds>(alpha, zMin, zMax, halfPhiSector, 0.);
+  pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
+  pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
+
+  CHECK_CLOSE_ABS(zMin, pConeExtent.min(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(zMax, pConeExtent.max(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(0., pConeExtent.min(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binR), s_onSurfaceTolerance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

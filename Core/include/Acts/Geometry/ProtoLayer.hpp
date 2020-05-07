@@ -8,9 +8,10 @@
 
 #pragma once
 #include <iostream>
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -23,26 +24,12 @@ namespace Acts {
 
 struct ProtoLayer {
  public:
-  double maxX;
-  double minX;
+  /// The extent of the ProtoLayer
+  Extent extent;
 
-  double maxY;
-  double minY;
-
-  double maxZ;
-  double minZ;
-
-  double maxR;
-  double minR;
-
-  double maxPhi;
-  double minPhi;
-
-  std::pair<double, double> envX = {0, 0};
-  std::pair<double, double> envY = {0, 0};
-  std::pair<double, double> envZ = {0, 0};
-  std::pair<double, double> envR = {0, 0};
-  std::pair<double, double> envPhi = {0, 0};
+  /// The envelope parameters
+  using Range = std::pair<double, double>;
+  std::vector<Range> envelope = std::vector<Range>((int)binValues, {0., 0.});
 
   /// Constructor
   ///
@@ -66,18 +53,32 @@ struct ProtoLayer {
   ProtoLayer(const GeometryContext& gctx,
              const std::vector<std::shared_ptr<const Surface>>& surfaces);
 
-  // normal empty constructor
+  // Defaulated empty constructor
   ProtoLayer() = default;
 
-  std::ostream& toStream(std::ostream& sl) const;
+  /// Get the parameters : min
+  /// @param bval The accessed binning value
+  /// @param addenv The steering if enevlope is added or not
+  double min(BinningValue bval, bool addenv = true);
 
-  /// Calculates the closest radial distance of a line
-  ///
-  /// @param pos1 is the first position on the line
-  /// @param pos2 is the second position on the line
-  ///
-  /// @return is the closest distance
-  double radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
+  // Get the  parameters : max
+  /// @param bval The accessed binning value
+  /// @param addenv The steering if enevlope is added or not
+  double max(BinningValue bval, bool addenv = true);
+
+  // Get the  parameters : max
+  /// @param bval The accessed binning value
+  /// @param addenv The steering if enevlope is added or not
+  double medium(BinningValue bval, bool addenv = true);
+
+  // Get the  parameters : max
+  /// @param bval The accessed binning value
+  /// @param addenv The steering if enevlope is added or not
+  double range(BinningValue bval, bool addenv = true);
+
+  /// Output to ostream
+  /// @param sl the input ostream
+  std::ostream& toStream(std::ostream& sl) const;
 
  private:
   /// Helper method which performs the actual min/max calculation

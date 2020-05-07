@@ -108,6 +108,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
     bool checkRingLayout = false;
     /// Tolerance for ring detection and association
     double ringTolerance = 0_mm;
+    /// Special debug output, is very verbose and hence needs
+    /// an additional switch to log level
+    bool nodeSearchDebug = false;
   };
 
   /// Constructor
