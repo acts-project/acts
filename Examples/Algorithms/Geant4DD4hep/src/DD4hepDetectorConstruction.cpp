@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Geant4/DD4hepDetectorConstruction.hpp"
+#include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
 
 #include <DD4hep/Detector.h>
 #include <DD4hep/Plugins.h>

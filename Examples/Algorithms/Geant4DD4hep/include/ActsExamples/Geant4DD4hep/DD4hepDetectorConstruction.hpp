@@ -16,7 +16,7 @@ class Detector;
 namespace ActsExamples {
 
 /// Construct the Geant4 detector from a DD4hep description.
-class DD4hepDetectorConstruction : public G4VUserDetectorConstruction {
+class DD4hepDetectorConstruction final : public G4VUserDetectorConstruction {
  public:
   DD4hepDetectorConstruction(dd4hep::Detector& detector);
 

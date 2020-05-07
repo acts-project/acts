@@ -1,7 +1,5 @@
 add_library(
   ActsExamplesGeant4 SHARED
-  src/DD4hepDetectorConstruction.cpp
-  src/DD4hepToG4Svc.cpp
   src/GdmlDetectorConstruction.cpp
   src/GeantinoRecording.cpp
   src/MMEventAction.cpp
@@ -22,19 +20,6 @@ target_link_libraries(
   PUBLIC
     ActsCore ActsExamplesDetectorDD4hep ActsExamplesFramework
     ${Geant4_LIBRARIES})
-
-if(${DD4hep_VERSION} VERSION_LESS 1.11)
-  target_include_directories(
-    ActsExamplesGeant4
-    PUBLIC ${DD4hep_INCLUDE_DIRS})
-  target_link_libraries(
-    ActsExamplesGeant4
-    PUBLIC ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY})
-else()
-  target_link_libraries(
-    ActsExamplesGeant4
-    PUBLIC DD4hep::DDCore DD4hep::DDG4)
-endif()
 
 install(
   TARGETS ActsExamplesGeant4
