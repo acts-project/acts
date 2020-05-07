@@ -28,6 +28,8 @@
 #include "ACTFW/Propagation/PropagationAlgorithm.hpp"
 #include "ACTFW/Propagation/PropagationOptions.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
+#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 
 namespace po = boost::program_options;
 
@@ -53,9 +55,16 @@ FW::ProcessCode setupPropagation(
 
   // Get a Navigator
   Acts::Navigator navigator(tGeometry);
+  navigator.resolvePassive = true;
+  navigator.resolveMaterial = true;
+  navigator.resolveSensitive = true;
 
   // Resolve the bfield map template and create the propgator
-  using Stepper = Acts::EigenStepper<bfield_t>;
+  using Stepper = Acts::EigenStepper<
+      bfield_t,
+      Acts::StepperExtensionList<Acts::DefaultExtension,
+                                 Acts::DenseEnvironmentExtension>,
+      Acts::detail::HighestValidAuctioneer>;
   using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
   Stepper stepper(std::move(bfield));
   Propagator propagator(std::move(stepper), std::move(navigator));
@@ -63,6 +72,7 @@ FW::ProcessCode setupPropagation(
   // Read the propagation config and create the algorithms
   auto pAlgConfig = FW::Options::readPropagationConfig(vm, propagator);
   pAlgConfig.randomNumberSvc = randomNumberSvc;
+  pAlgConfig.recordMaterialInteractions = true;
   auto propagationAlg = std::make_shared<FW::PropagationAlgorithm<Propagator>>(
       pAlgConfig, logLevel);
 

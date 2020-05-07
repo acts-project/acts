@@ -89,7 +89,11 @@ class VolumeMaterialMapper {
     /// The binning per geometry ID
     std::map<GeometryID, BinUtility> materialBin;
 
-    /// The created surface material from it
+    /// The surface material of the input tracking geometry
+    std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>
+        surfaceMaterial;
+
+    /// The created volume material from it
     std::map<GeometryID, std::unique_ptr<const IVolumeMaterial>> volumeMaterial;
 
     /// Reference to the geometry context for the mapping
@@ -158,8 +162,8 @@ class VolumeMaterialMapper {
   ///
   /// @param mState is the map to be filled
   /// @param volume is the surface to be checked for a Proxy
-  void collectMaterialSurface(State& /*mState*/,
-                              const TrackingVolume& tVolume) const;
+  void collectMaterialSurfaces(State& /*mState*/,
+                               const TrackingVolume& tVolume) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

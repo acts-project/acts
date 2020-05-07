@@ -46,7 +46,7 @@ with open(inFileName,'r+') as json_file:
                     data['volumes'][kvol]['boundaries'][kbound]['bin0'] = config[Name]['boundaries'][dbound['stype']][0]
                     data['volumes'][kvol]['boundaries'][kbound]['bin1'] = config[Name]['boundaries'][dbound['stype']][1]
                     if (config[Name]['boundaries'][dbound['stype']][0][2] != 1) or (config[Name]['boundaries'][dbound['stype']][1][2] != 1) :
-                        data['volumes'][kvol]['boundaries'][kbound]['matSurface'] = True
+                        data['volumes'][kvol]['boundaries'][kbound]['mapMaterial'] = True
 
             if 'layers' in data['volumes'][kvol] :
                 for klay in data['volumes'][kvol]['layers'] :
@@ -56,7 +56,7 @@ with open(inFileName,'r+') as json_file:
                         data['volumes'][kvol]['layers'][klay]['representing']['bin0'] = config[Name]['representing'][drep['stype']][0]
                         data['volumes'][kvol]['layers'][klay]['representing']['bin1'] = config[Name]['representing'][drep['stype']][1]
                         if (config[Name]['representing'][drep['stype']][0][2] != 1) or (config[Name]['representing'][drep['stype']][1][2] != 1) :
-                             data['volumes'][kvol]['layers'][klay]['representing']['matSurface'] = True
+                             data['volumes'][kvol]['layers'][klay]['representing']['mapMaterial'] = True
 
                     if 'approach' in data['volumes'][kvol]['layers'][klay] :
                         for kapp  in data['volumes'][kvol]['layers'][klay]['approach'] :
@@ -64,7 +64,7 @@ with open(inFileName,'r+') as json_file:
                             data['volumes'][kvol]['layers'][klay]['approach'][kapp]['bin0'] = config[Name]['approach'][dapp['stype']][kapp][0]
                             data['volumes'][kvol]['layers'][klay]['approach'][kapp]['bin1'] = config[Name]['approach'][dapp['stype']][kapp][1]
                             if (config[Name]['approach'][dapp['stype']][kapp][0][2] != 1) or (config[Name]['approach'][dapp['stype']][kapp][1][2] != 1) :
-                                data['volumes'][kvol]['layers'][klay]['approach'][kapp]['matSurface'] = True
+                                data['volumes'][kvol]['layers'][klay]['approach'][kapp]['mapMaterial'] = True
 
 
                     if 'sensitive' in data['volumes'][kvol]['layers'][klay] :

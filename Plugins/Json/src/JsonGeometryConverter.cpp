@@ -141,7 +141,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
               }
             }
 
-          } else if (vckey == m_cfg.matkey and not vcvalue.empty()) {
+          } else if (m_cfg.processVolumes and vckey == m_cfg.matkey and
+                     not vcvalue.empty()) {
             ACTS_VERBOSE("--> VolumeMaterial to be parsed");
             auto intermat = jsonToVolumeMaterial(vcvalue);
             if (vcvalue[m_cfg.mapkey] == true) {
@@ -230,7 +231,7 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
     std::ostringstream svolumeID;
     svolumeID << value.volumeID;
     volj[m_cfg.geoidkey] = svolumeID.str();
-    if (value.material) {
+    if (m_cfg.processVolumes && value.material) {
       volj[m_cfg.matkey] = volumeMaterialToJson(*value.material);
     }
     // Write the layers
@@ -451,7 +452,7 @@ void Acts::JsonGeometryConverter::convertToRep(
     }
   }
   // there are dense volumes
-  if (!tVolume.denseVolumes().empty()) {
+  if (m_cfg.processDenseVolumes && !tVolume.denseVolumes().empty()) {
     // loop over the volumes
     for (auto& vol : tVolume.denseVolumes()) {
       // recursive call

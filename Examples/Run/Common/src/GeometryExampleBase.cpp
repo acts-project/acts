@@ -176,9 +176,11 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
           vm["mat-output-boundaries"].template as<bool>();
       jmConverterCfg.processVolumes =
           vm["mat-output-volumes"].template as<bool>();
+      jmConverterCfg.processDenseVolumes =
+          vm["mat-output-dense-volumes"].template as<bool>();
       jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
       jmConverterCfg.processnonmaterial =
-          vm["mat-output-allsurfaces"].template as<bool>();
+          vm["mat-output-allmaterial"].template as<bool>();
       // The writer
       FW::Json::JsonMaterialWriter jmwImpl(std::move(jmConverterCfg),
                                            materialFileName + ".json");
