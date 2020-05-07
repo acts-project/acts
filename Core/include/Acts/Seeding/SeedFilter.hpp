@@ -77,9 +77,10 @@ class SeedFilter {
           seedsPerSpM,
       std::vector<Seed<external_spacepoint_t>>& outVec) const;
   const SeedFilterConfig m_cfg;
+  const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
   
  private:
-  const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
+
 };
 }  // namespace Acts
 #include "Acts/Seeding/SeedFilter.ipp"
