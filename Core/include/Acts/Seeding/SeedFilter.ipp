@@ -31,14 +31,13 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   std::vector<std::pair<
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       selectedSeeds;
-  std::vector<float> compatibleSeedR;
 
   for (size_t i = 0; i < topSpVec.size(); i++) {
-    compatibleSeedR.clear();
-
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> very good seed
+    std::vector<float> compatibleSeedR;
+
     float invHelixDiameter = invHelixDiameterVec[i];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
@@ -50,7 +49,12 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       if (i == j) {
         continue;
       }
-
+      // compared top SP should have at least deltaRMin distance
+      float otherTop_r = topSpVec[j]->radius();
+      float deltaR = currentTop_r - otherTop_r;
+      if (std::abs(deltaR) < m_cfg.deltaRMin) {
+        continue;
+      }
       // curvature difference within limits?
       // TODO: how much slower than sorting all vectors by curvature
       // and breaking out of loop? i.e. is vector size large (e.g. in jets?)
@@ -59,15 +63,7 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
         continue;
-      }
-
-      // compared top SP should have at least deltaRMin distance
-      float otherTop_r = topSpVec[j]->radius();
-      float deltaR = currentTop_r - otherTop_r;
-      if (std::abs(deltaR) < m_cfg.deltaRMin) {
-        continue;
-      }
-
+      }      
       bool newCompSeed = true;
       for (float previousDiameter : compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible

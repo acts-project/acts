@@ -714,9 +714,14 @@ __global__ void cuSearchTriplet(//const int*   offset,
       float& weight = triplets[i].weight;
       weight = -(triplets[i].impactParameter * (*impactWeightFactor));
 
-      for (int j=0; j< *nTrplPerSpB; j++){
-	
+      for (int j=0; j< *nTrplPerSpB; j++){	
 	if (i==j){
+	  continue;
+	}
+	float& otherTop_r = triplets[j].topRadius;
+	deltaR = currentTop_r - otherTop_r;
+	
+	if (fabsf(deltaR) < *deltaRMin) {
 	  continue;
 	}	
 	// curvature difference within limits?
@@ -727,15 +732,7 @@ __global__ void cuSearchTriplet(//const int*   offset,
 	}
 	if (triplets[j].invHelixDiameter > upperLimitCurv) {
 	  continue;
-	}
-			
-	float& otherTop_r = triplets[j].topRadius;
-	deltaR = currentTop_r - otherTop_r;
-	
-	if (fabsf(deltaR) < *deltaRMin) {
-	  continue;
-	}
-	
+	}				
 	newCompSeed = true;
 	
 	for (int k=0; k<nCompatibleSeedR; k++) {
