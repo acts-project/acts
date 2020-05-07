@@ -12,6 +12,7 @@ add_library(
   src/OpenDataDetector/ODDPixelEndcap_geo.cpp
   src/OpenDataDetector/ODDStripBarrel_geo.cpp
   src/OpenDataDetector/ODDStripEndcap_geo.cpp
+  src/Calorimeter/Calorimeter_barrel.cpp
   src/TestTracker/AirTube_geo.cpp
   src/TestTracker/Barrel_geo.cpp
   src/TestTracker/BeamPipe_geo.cpp
