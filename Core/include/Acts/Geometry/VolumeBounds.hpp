@@ -26,6 +26,15 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 using SurfacePtr = std::shared_ptr<const Surface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 
+// Planar definitions to help construct the boundary surfaces
+static const Transform3D s_planeXY = Transform3D::Identity();
+static const Transform3D s_planeYZ =
+    AngleAxis3D(0.5 * M_PI, Vector3D::UnitY()) *
+    AngleAxis3D(0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
+static const Transform3D s_planeZX =
+    AngleAxis3D(-0.5 * M_PI, Vector3D::UnitX()) *
+    AngleAxis3D(-0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
+
 /// @class VolumeBounds
 ///
 /// Pure Absract Base Class for Volume bounds.
@@ -35,11 +44,9 @@ using SurfacePtrVector = std::vector<SurfacePtr>;
 /// Each type of Acts::VolumeBounds has to implement a decomposeToSurfaces() and
 /// a inside() method.
 ///
-/// The orientation of the Surfaces are in a way that the normal vector points
-/// to the outside world.
-///
 /// The Volume, retrieving a set of Surfaces from the VolumeBounds, can turn the
 /// Surfaces into BoundarySurfaces.
+
 class VolumeBounds {
  public:
   // @enum BoundsType
