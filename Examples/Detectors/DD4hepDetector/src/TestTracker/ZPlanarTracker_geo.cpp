@@ -55,13 +55,6 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
   double minRadius = 1e99;
   double minZhalf = 1e99;
 
-  bool isStripDetector = false;
-  try {
-    isStripDetector = x_det.attr<bool>(_Unicode(isStripDetector));
-
-  } catch (std::runtime_error) {
-  }
-
   //=========  loop over layer elements in xml
   //======================================
 

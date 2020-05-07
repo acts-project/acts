@@ -5,8 +5,7 @@ target_link_libraries(
   ActsExampleMaterialValidationDD4hep
   PRIVATE
     ${_common_libraries}
-    ActsExamplesPropagation ActsExamplesDetectorDD4hep
-    ${DD4hep_LIBRARIES})
+    ActsExamplesPropagation ActsExamplesDetectorDD4hep)
 
 add_executable(
   ActsExampleMaterialMappingDD4hep
@@ -15,8 +14,7 @@ target_link_libraries(
   ActsExampleMaterialMappingDD4hep
   PRIVATE
     ${_common_libraries}
-    ActsExamplesMaterialMapping ActsExamplesDetectorDD4hep
-    ${DD4hep_LIBRARIES})
+    ActsExamplesMaterialMapping ActsExamplesDetectorDD4hep)
 
 install(
   TARGETS

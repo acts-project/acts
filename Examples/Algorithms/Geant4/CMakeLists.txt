@@ -1,5 +1,3 @@
-include(${Geant4_USE_FILE})
-
 add_library(
   ActsExamplesGeant4 SHARED
   src/MMDetectorConstruction.cpp
@@ -7,11 +5,15 @@ add_library(
   src/MMPrimaryGeneratorAction.cpp
   src/MMRunAction.cpp
   src/MMSteppingAction.cpp)
+target_compile_definitions(
+  ActsExamplesGeant4
+  PUBLIC ${Geant4_DEFINITIONS})
 target_include_directories(
   ActsExamplesGeant4
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    ${Geant4_INCLUDE_DIRS})
+  SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
+target_include_directories(
+  ActsExamplesGeant4
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesGeant4
   PUBLIC ActsCore ActsExamplesFramework ${Geant4_LIBRARIES}
