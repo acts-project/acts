@@ -98,9 +98,12 @@ class RootMaterialTrackReader : public IReader {
   float m_tX0;    ///< thickness in X0/L0
   float m_tL0;    ///< thickness in X0/L0
 
-  std::vector<float>* m_step_x = new std::vector<float>;  ///< step x position
-  std::vector<float>* m_step_y = new std::vector<float>;  ///< step y position
-  std::vector<float>* m_step_z = new std::vector<float>;  ///< step z position
+  std::vector<float>* m_step_x = new std::vector<float>;   ///< step x position
+  std::vector<float>* m_step_y = new std::vector<float>;   ///< step y position
+  std::vector<float>* m_step_z = new std::vector<float>;   ///< step z position
+  std::vector<float>* m_step_dx = new std::vector<float>;  ///< step x direction
+  std::vector<float>* m_step_dy = new std::vector<float>;  ///< step y direction
+  std::vector<float>* m_step_dz = new std::vector<float>;  ///< step z direction
   std::vector<float>* m_step_length = new std::vector<float>;  ///< step length
   std::vector<float>* m_step_X0 = new std::vector<float>;  ///< step material x0
   std::vector<float>* m_step_L0 = new std::vector<float>;  ///< step material l0

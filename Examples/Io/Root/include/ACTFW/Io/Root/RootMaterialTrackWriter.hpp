@@ -109,6 +109,9 @@ class RootMaterialTrackWriter
   std::vector<float> m_step_ex;      ///< step x (end) position (optional)
   std::vector<float> m_step_ey;      ///< step y (end) position (optional)
   std::vector<float> m_step_ez;      ///< step z (end) position (optional)
+  std::vector<float> m_step_dx;      ///< step x direction
+  std::vector<float> m_step_dy;      ///< step y direction
+  std::vector<float> m_step_dz;      ///< step z direction
   std::vector<float> m_step_length;  ///< step length
   std::vector<float> m_step_X0;      ///< step material x0
   std::vector<float> m_step_L0;      ///< step material l0

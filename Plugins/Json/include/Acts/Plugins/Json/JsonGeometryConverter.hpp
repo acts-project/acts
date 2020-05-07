@@ -125,7 +125,7 @@ class JsonGeometryConverter {
     /// The surface geoid key
     std::string surfacegeoidkey = "SGeoid";
     /// The mapping key, add surface to map if true
-    std::string mapkey = "matSurface";
+    std::string mapkey = "mapMaterial";
     /// The surface type key
     std::string surfacetypekey = "stype";
     /// The surface position key
@@ -147,6 +147,8 @@ class JsonGeometryConverter {
     bool processBoundaries = true;
     /// Steering to handle volume data
     bool processVolumes = true;
+    /// Steering to handle volume data
+    bool processDenseVolumes = false;
     /// Add proto material to all surfaces
     bool processnonmaterial = false;
     /// Write out data

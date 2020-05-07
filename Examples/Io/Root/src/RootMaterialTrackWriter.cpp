@@ -61,6 +61,9 @@ FW::RootMaterialTrackWriter::RootMaterialTrackWriter(
   m_outputTree->Branch("mat_x", &m_step_x);
   m_outputTree->Branch("mat_y", &m_step_y);
   m_outputTree->Branch("mat_z", &m_step_z);
+  m_outputTree->Branch("mat_dx", &m_step_dx);
+  m_outputTree->Branch("mat_dy", &m_step_dy);
+  m_outputTree->Branch("mat_dz", &m_step_dz);
   m_outputTree->Branch("mat_step_length", &m_step_length);
   m_outputTree->Branch("mat_X0", &m_step_X0);
   m_outputTree->Branch("mat_L0", &m_step_L0);
@@ -117,6 +120,9 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
     m_step_ex.clear();
     m_step_ey.clear();
     m_step_ez.clear();
+    m_step_dx.clear();
+    m_step_dy.clear();
+    m_step_dz.clear();
     m_step_length.clear();
     m_step_X0.clear();
     m_step_L0.clear();
@@ -139,10 +145,13 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
     m_step_sz.reserve(mints);
     m_step_x.reserve(mints);
     m_step_y.reserve(mints);
-    m_step_ez.reserve(mints);
+    m_step_z.reserve(mints);
     m_step_ex.reserve(mints);
     m_step_ey.reserve(mints);
     m_step_ez.reserve(mints);
+    m_step_dx.reserve(mints);
+    m_step_dy.reserve(mints);
+    m_step_dz.reserve(mints);
     m_step_length.reserve(mints);
     m_step_X0.reserve(mints);
     m_step_L0.reserve(mints);
@@ -183,6 +192,9 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
       m_step_x.push_back(mint.position.x());
       m_step_y.push_back(mint.position.y());
       m_step_z.push_back(mint.position.z());
+      m_step_dx.push_back(mint.direction.x());
+      m_step_dy.push_back(mint.direction.y());
+      m_step_dz.push_back(mint.direction.z());
 
       if (m_cfg.prePostStep) {
         Acts::Vector3D prePos =
