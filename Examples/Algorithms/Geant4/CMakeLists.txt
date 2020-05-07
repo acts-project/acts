@@ -2,8 +2,8 @@ add_library(
   ActsExamplesGeant4 SHARED
   src/DD4hepDetectorConstruction.cpp
   src/DD4hepToG4Svc.cpp
+  src/GdmlDetectorConstruction.cpp
   src/GeantinoRecording.cpp
-  src/MMDetectorConstruction.cpp
   src/MMEventAction.cpp
   src/MMPrimaryGeneratorAction.cpp
   src/MMRunAction.cpp
