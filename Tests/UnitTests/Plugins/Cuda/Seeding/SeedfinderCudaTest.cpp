@@ -288,12 +288,12 @@ int main(int argc, char** argv) {
             << std::endl;
   std::cout << "                       CPU          CUDA        Speedup "
             << std::endl;
-  std::cout << "Seedfinding Time  " << std::setw(11) << cpuTime << "  "
+  std::cout << "Seedfinding_Time  " << std::setw(11) << cpuTime << "  "
             << std::setw(11) << cudaTime << "  " << std::setw(11)
             << cpuTime / cudaTime << std::endl;
   double wallTime_cpu = cpuTime + preprocessTime;
   double wallTime_cuda = cudaTime + preprocessTime;
-  std::cout << "Wall time         " << std::setw(11) << wallTime_cpu << "  "
+  std::cout << "Wall_time         " << std::setw(11) << wallTime_cpu << "  "
             << std::setw(11) << wallTime_cuda << "  " << std::setw(11)
             << wallTime_cpu / wallTime_cuda << std::endl;
   std::cout << "-----------------------------------------------------------"
