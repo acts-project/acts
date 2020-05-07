@@ -53,7 +53,7 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CudaScalar<float> minHelixDiameter2_cuda(&m_config.minHelixDiameter2);
   CudaScalar<float> pT2perRadius_cuda(&m_config.pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
-  auto seedFilterConfig = m_config.seedFilter->m_cfg;  
+  const auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();  
   CudaScalar<float> deltaInvHelixDiameter_cuda(&seedFilterConfig.deltaInvHelixDiameter);
   CudaScalar<float> impactWeightFactor_cuda(&seedFilterConfig.impactWeightFactor);
   CudaScalar<float> filterDeltaRMin_cuda(&seedFilterConfig.deltaRMin);
@@ -131,8 +131,8 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   //------------------------------------
 
   CudaScalar<int> nSpMcomp_cuda(new int(0));
-  CudaScalar<int> nSpBcompPerSpM_Max_cuda(new int(0));
-  CudaScalar<int> nSpTcompPerSpM_Max_cuda(new int(0));
+  CudaScalar<int> nSpBcompPerSpMMax_cuda(new int(0));
+  CudaScalar<int> nSpTcompPerSpMMax_cuda(new int(0));
   CudaVector<int> nSpBcompPerSpM_cuda(nSpM);
   nSpBcompPerSpM_cuda.zeros();
   CudaVector<int> nSpTcompPerSpM_cuda(nSpM);
@@ -151,15 +151,15 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                 spTmat_cuda.get(), deltaRMin_cuda.get(), deltaRMax_cuda.get(),
                 cotThetaMax_cuda.get(), collisionRegionMin_cuda.get(),
                 collisionRegionMax_cuda.get(), nSpMcomp_cuda.get(),
-                nSpBcompPerSpM_Max_cuda.get(), nSpTcompPerSpM_Max_cuda.get(),
+                nSpBcompPerSpMMax_cuda.get(), nSpTcompPerSpMMax_cuda.get(),
                 nSpBcompPerSpM_cuda.get(), nSpTcompPerSpM_cuda.get(),
                 McompIndex_cuda.get(), BcompIndex_cuda.get(),
                 tmpBcompIndex_cuda.get(), TcompIndex_cuda.get(),
                 tmpTcompIndex_cuda.get());
   
   CpuScalar<int> nSpMcomp_cpu(&nSpMcomp_cuda);
-  CpuScalar<int> nSpBcompPerSpM_Max_cpu(&nSpBcompPerSpM_Max_cuda);
-  CpuScalar<int> nSpTcompPerSpM_Max_cpu(&nSpTcompPerSpM_Max_cuda);
+  CpuScalar<int> nSpBcompPerSpMMax_cpu(&nSpBcompPerSpMMax_cuda);
+  CpuScalar<int> nSpTcompPerSpMMax_cpu(&nSpTcompPerSpMMax_cuda);
   CpuVector<int> nSpBcompPerSpM_cpu(nSpM, &nSpBcompPerSpM_cuda);
   CpuVector<int> nSpTcompPerSpM_cpu(nSpM, &nSpTcompPerSpM_cuda);
   CpuVector<int> McompIndex_cpu(nSpM, &McompIndex_cuda);
@@ -169,13 +169,13 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   //--------------------------------------
 
   CudaMatrix<float> spMcompMat_cuda(*nSpMcomp_cpu.get(), 6);
-  CudaMatrix<float> spBcompMatPerSpM_cuda(*nSpBcompPerSpM_Max_cpu.get(),
+  CudaMatrix<float> spBcompMatPerSpM_cuda(*nSpBcompPerSpMMax_cpu.get(),
                                           (*nSpMcomp_cpu.get()) * 6);
-  CudaMatrix<float> spTcompMatPerSpM_cuda(*nSpTcompPerSpM_Max_cpu.get(),
+  CudaMatrix<float> spTcompMatPerSpM_cuda(*nSpTcompPerSpMMax_cpu.get(),
                                           (*nSpMcomp_cpu.get()) * 6);
-  CudaMatrix<float> circBcompMatPerSpM_cuda(*nSpBcompPerSpM_Max_cpu.get(),
+  CudaMatrix<float> circBcompMatPerSpM_cuda(*nSpBcompPerSpMMax_cpu.get(),
                                             (*nSpMcomp_cpu.get()) * 6);
-  CudaMatrix<float> circTcompMatPerSpM_cuda(*nSpTcompPerSpM_Max_cpu.get(),
+  CudaMatrix<float> circTcompMatPerSpM_cuda(*nSpTcompPerSpMMax_cpu.get(),
                                             (*nSpMcomp_cpu.get()) * 6);
 
   dim3 TC_GridSize(*nSpMcomp_cpu.get(), 1, 1);
@@ -183,8 +183,8 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
 
   transformCoordinate(TC_GridSize, TC_BlockSize, nSpM_cuda.get(), spMmat_cuda.get(),
 		      McompIndex_cuda.get(), nSpB_cuda.get(), spBmat_cuda.get(),
-		      nSpBcompPerSpM_Max_cuda.get(), BcompIndex_cuda.get(), nSpT_cuda.get(),
-		      spTmat_cuda.get(), nSpTcompPerSpM_Max_cuda.get(), TcompIndex_cuda.get(),
+		      nSpBcompPerSpMMax_cuda.get(), BcompIndex_cuda.get(), nSpT_cuda.get(),
+		      spTmat_cuda.get(), nSpTcompPerSpMMax_cuda.get(), TcompIndex_cuda.get(),
 		      spMcompMat_cuda.get(), spBcompMatPerSpM_cuda.get(),
 		      circBcompMatPerSpM_cuda.get(), spTcompMatPerSpM_cuda.get(),
 		      circTcompMatPerSpM_cuda.get());
@@ -194,7 +194,7 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   //------------------------------------------------------
 
   const int nTrplPerSpMLimit =
-    m_config.nAvgTrplPerSpBLimit * (*nSpBcompPerSpM_Max_cpu.get());
+    m_config.nAvgTrplPerSpBLimit * (*nSpBcompPerSpMMax_cpu.get());
   CudaScalar<int> nTrplPerSpMLimit_cuda(&nTrplPerSpMLimit);
 
   CudaScalar<int> nTrplPerSpBLimit_cuda(&m_config.nTrplPerSpBLimit);
@@ -226,10 +226,10 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
 		    nSpTcompPerSpM_cpu.get(mIndex),
 		    nSpTcompPerSpM_cuda.get(mIndex),
 		    nSpMcomp_cuda.get(), spMcompMat_cuda.get(i_m, 0),
-		    nSpBcompPerSpM_Max_cuda.get(),
+		    nSpBcompPerSpMMax_cuda.get(),
 		    BcompIndex_cuda.get(0,i_m),
 		    circBcompMatPerSpM_cuda.get(0, 6 * i_m),
-		    nSpTcompPerSpM_Max_cuda.get(),
+		    nSpTcompPerSpMMax_cuda.get(),
 		    TcompIndex_cuda.get(0,i_m),
 		    spTcompMatPerSpM_cuda.get(0, 6 * i_m),
 		    circTcompMatPerSpM_cuda.get(0, 6 * i_m),
@@ -258,7 +258,7 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
     }
     
     if (i_m > 0) {    
-      auto& m_experimentCuts = m_config.seedFilter->m_experimentCuts;  
+      const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();  
       std::vector<std::pair<
 	float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
 	seedsPerSpM;    
