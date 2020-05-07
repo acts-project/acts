@@ -31,7 +31,7 @@ struct TrajectoryState {
 };
 
 using TrajectoryStateContainer =
-    std::unordered_map<std::string, TrajectoryState>;
+    std::unordered_map<GeometryID::Value, TrajectoryState>;
 
 /// @brief Getter for global trajectory info
 ///
@@ -67,36 +67,26 @@ TrajectoryState trajectoryState(
 ///
 /// @param multiTraj The MultiTrajectory object
 /// @param entryIndex The entry index of trajectory to investigate
-/// @param subDetName The container for sub-detector names
 /// track states at different sub-detectors.
+/// @param volumeIds The container for sub-detector Ids
 ///
 /// @return The trajectory summary info at different sub-detectors
 template <typename source_link_t>
 TrajectoryStateContainer trajectoryState(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex, const std::vector<std::string>& subDetName) {
+    const size_t& entryIndex, const std::vector<GeometryID::Value>& volumeIds) {
   TrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
-    // Get the tracking volume name this surface is associated with
-    const Surface* surface = &state.referenceSurface();
-    std::string volumeName;
-    if (surface->associatedLayer() != nullptr) {
-      const Layer* layer = surface->associatedLayer();
-      if (layer->trackingVolume() != nullptr) {
-        volumeName = layer->trackingVolume()->volumeName();
-      }
-    }
-    if (volumeName.empty()) {
-      // Skip the state if the volume name is not found
+    // Get the volume Id of this surface
+    const auto& geoID = state.referenceSurface().geoID();
+    const auto& volume = geoID.volume();
+    // Check if the track info for this sub-detector is requested
+    auto it = std::find(volumeIds.begin(), volumeIds.end(), volume);
+    if (it == volumeIds.end()) {
       return true;
     }
-    auto it = std::find(subDetName.begin(), subDetName.end(), volumeName);
-    if (it == subDetName.end()) {
-      // Skip the state if track info for this sub-detector is not requested
-      return true;
-    }
-    // The trajectory state corresponding to this classifier
-    auto& trajState = trajStateContainer[volumeName];
+    // The trajectory state for this volume
+    auto& trajState = trajStateContainer[volume];
     trajState.nStates++;
     trajState.chi2Sum += state.chi2();
     auto typeFlags = state.typeFlags();
