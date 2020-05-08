@@ -30,6 +30,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <functional>
@@ -142,6 +143,12 @@ struct KalmanFitterResult {
 
   // Measurement surfaces handled in both forward and backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
+
+  // Global track parameters covariance matrix
+  // @Todo: add option for calculating the global track parameters
+  // covariance
+  std::optional<GlobalBoundSymMatrix> globalTrackParamsCovariance =
+      std::nullopt;
 
   Result<void> result{Result<void>::success()};
 };
@@ -871,8 +878,11 @@ class KalmanFitter {
                                            << " filtered track states.");
       }
       // Smooth the track states
+      size_t globalCovSize = nStates * eBoundParametersSize;
+      result.globalTrackParamsCovariance->resize(globalCovSize, globalCovSize);
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  measurementIndices.front());
+                                  measurementIndices.front(),
+                                  *result.globalTrackParamsCovariance);
 
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());

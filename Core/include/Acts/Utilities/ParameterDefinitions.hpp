@@ -256,6 +256,8 @@ using BoundMatrix = ActsMatrix<BoundParametersScalar, eBoundParametersSize,
 using BoundSymMatrix =
     ActsSymMatrix<BoundParametersScalar, eBoundParametersSize>;
 
+using GlobalBoundSymMatrix = ActsMatrixX<BoundParametersScalar>;
+
 // Matrix and vector types related to free track parameters.
 
 using FreeVector = ActsVector<FreeParametersScalar, eFreeParametersSize>;

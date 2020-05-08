@@ -1041,8 +1041,10 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("Apply smoothing on " << nStates
                                          << " filtered track states.");
       // Smooth the track states
-      auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  measurementIndices.front());
+      GlobalBoundSymMatrix globalTrackParamsCov;
+      auto smoothRes =
+          m_smoother(state.geoContext, result.fittedStates,
+                     measurementIndices.front(), globalTrackParamsCov);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
