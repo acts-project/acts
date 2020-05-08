@@ -1,12 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "MMSteppingAction.hpp"
+#include "SteppingAction.hpp"
 
 #include <G4Material.hh>
 #include <G4Step.hh>
@@ -14,15 +14,16 @@
 
 #include "Acts/Utilities/Units.hpp"
 
-FW::Geant4::MMSteppingAction* FW::Geant4::MMSteppingAction::fgInstance =
-    nullptr;
+using namespace ActsExamples;
 
-FW::Geant4::MMSteppingAction* FW::Geant4::MMSteppingAction::Instance() {
+SteppingAction* SteppingAction::fgInstance = nullptr;
+
+SteppingAction* SteppingAction::Instance() {
   // Static acces function via G4RunManager
   return fgInstance;
 }
 
-FW::Geant4::MMSteppingAction::MMSteppingAction()
+SteppingAction::SteppingAction()
     : G4UserSteppingAction(),
       m_steps(),
       m_tracksteps()
@@ -35,11 +36,11 @@ FW::Geant4::MMSteppingAction::MMSteppingAction()
   }
 }
 
-FW::Geant4::MMSteppingAction::~MMSteppingAction() {
+SteppingAction::~SteppingAction() {
   fgInstance = nullptr;
 }
 
-void FW::Geant4::MMSteppingAction::UserSteppingAction(const G4Step* step) {
+void SteppingAction::UserSteppingAction(const G4Step* step) {
   // get the material
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
 
@@ -127,7 +128,7 @@ void FW::Geant4::MMSteppingAction::UserSteppingAction(const G4Step* step) {
   }
 }
 
-void FW::Geant4::MMSteppingAction::Reset() {
+void SteppingAction::Reset() {
   m_steps.clear();
   m_tracksteps.clear();
 }

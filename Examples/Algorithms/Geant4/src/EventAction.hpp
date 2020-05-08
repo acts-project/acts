@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// MMEventAction.hpp
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -19,31 +15,28 @@
 #include "ACTFW/EventData/SimHit.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 
-/// @namespace FW::Geant4:: Namespace for geant4 material mapping
-namespace FW {
+namespace ActsExamples {
 
-namespace Geant4 {
+class SteppingAction;
 
-class MMSteppingAction;
-
-/// @class MMEventAction
+/// @class EventAction
 ///
 /// @brief Writes out material track records
 ///
-/// The MMEventAction class is the realization of the Geant4 class
+/// The EventAction class is the realization of the Geant4 class
 /// G4UserEventAction and is writing out the collected RecordedMaterialTrack
 /// entities needed for material mapping once per event.
 ///
-class MMEventAction : public G4UserEventAction {
+class EventAction : public G4UserEventAction {
  public:
   /// Constructor
-  MMEventAction();
+  EventAction();
 
   /// Virtual destructor
-  ~MMEventAction() override;
+  ~EventAction() override;
 
   /// Static access method
-  static MMEventAction* Instance();
+  static EventAction* Instance();
 
   /// Interface method for begin of the event
   /// @param event is the G4Event to be processed
@@ -60,30 +53,22 @@ class MMEventAction : public G4UserEventAction {
   void Reset();
 
   // Access the material track records
-  std::vector<Acts::RecordedMaterialTrack> const MaterialTracks();
+  std::vector<Acts::RecordedMaterialTrack> const MaterialTracks() {
+    auto rrecords = m_records;
+    m_records.clear();
+    return rrecords;
+  }
 
   //  Access the step sim hit info
-  FW::SimHitContainer const TrackSteps();
+  const FW::SimHitContainer& TrackSteps() const { return m_tracksteps; };
 
  private:
   /// Instance of the EventAction
-  static MMEventAction* fgInstance;
+  static EventAction* fgInstance;
 
   /// The materialTrackWriter
   std::vector<Acts::RecordedMaterialTrack> m_records;
   FW::SimHitContainer m_tracksteps;
 };
 
-inline std::vector<Acts::RecordedMaterialTrack> const
-MMEventAction::MaterialTracks() {
-  auto rrecords = m_records;
-  m_records.clear();
-  return rrecords;
-}
-
-inline FW::SimHitContainer const MMEventAction::TrackSteps() {
-  return m_tracksteps;
-}
-
-}  // namespace Geant4
-}  // namespace FW
+}  // namespace ActsExamples

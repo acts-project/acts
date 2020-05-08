@@ -1,11 +1,11 @@
 add_library(
   ActsExamplesGeant4 SHARED
+  src/EventAction.cpp
   src/GdmlDetectorConstruction.cpp
   src/GeantinoRecording.cpp
-  src/MMEventAction.cpp
-  src/MMPrimaryGeneratorAction.cpp
-  src/MMRunAction.cpp
-  src/MMSteppingAction.cpp)
+  src/PrimaryGeneratorAction.cpp
+  src/RunAction.cpp
+  src/SteppingAction.cpp)
 target_compile_definitions(
   ActsExamplesGeant4
   PUBLIC ${Geant4_DEFINITIONS})

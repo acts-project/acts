@@ -1,28 +1,30 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "MMEventAction.hpp"
+#include "EventAction.hpp"
 
 #include <G4Event.hh>
 #include <G4RunManager.hh>
 #include <stdexcept>
 
-#include "MMPrimaryGeneratorAction.hpp"
-#include "MMSteppingAction.hpp"
+#include "PrimaryGeneratorAction.hpp"
+#include "SteppingAction.hpp"
 
-FW::Geant4::MMEventAction* FW::Geant4::MMEventAction::fgInstance = nullptr;
+using namespace ActsExamples;
 
-FW::Geant4::MMEventAction* FW::Geant4::MMEventAction::Instance() {
+EventAction* EventAction::fgInstance = nullptr;
+
+EventAction* EventAction::Instance() {
   // Static acces function via G4RunManager
   return fgInstance;
 }
 
-FW::Geant4::MMEventAction::MMEventAction() : G4UserEventAction() {
+EventAction::EventAction() : G4UserEventAction() {
   if (fgInstance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
@@ -30,32 +32,32 @@ FW::Geant4::MMEventAction::MMEventAction() : G4UserEventAction() {
   }
 }
 
-FW::Geant4::MMEventAction::~MMEventAction() {
+EventAction::~EventAction() {
   fgInstance = nullptr;
 }
 
-void FW::Geant4::MMEventAction::BeginOfEventAction(const G4Event*) {
+void EventAction::BeginOfEventAction(const G4Event*) {
   // reset the collection of material steps
-  MMSteppingAction::Instance()->Reset();
+  SteppingAction::Instance()->Reset();
 }
 
-void FW::Geant4::MMEventAction::EndOfEventAction(const G4Event* event) {
+void EventAction::EndOfEventAction(const G4Event* event) {
   const auto* rawPos = event->GetPrimaryVertex();
   // access the initial direction of the track
-  G4ThreeVector rawDir = MMPrimaryGeneratorAction::Instance()->direction();
+  G4ThreeVector rawDir = PrimaryGeneratorAction::Instance()->direction();
   // create the RecordedMaterialTrack
   Acts::RecordedMaterialTrack mtrecord;
   mtrecord.first.first =
       Acts::Vector3D(rawPos->GetX0(), rawPos->GetY0(), rawPos->GetZ0());
   mtrecord.first.second = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
   mtrecord.second.materialInteractions =
-      MMSteppingAction::Instance()->materialSteps();
+      SteppingAction::Instance()->materialSteps();
 
   // write out the RecordedMaterialTrack of one event
   m_records.push_back(mtrecord);
 
   // write out the steps of one track in an event
-  m_tracksteps.adopt_sequence(MMSteppingAction::Instance()->trackSteps());
+  m_tracksteps.adopt_sequence(SteppingAction::Instance()->trackSteps());
 }
 
-void FW::Geant4::MMEventAction::Reset() {}
+void EventAction::Reset() {}

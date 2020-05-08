@@ -1,12 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "MMPrimaryGeneratorAction.hpp"
+#include "PrimaryGeneratorAction.hpp"
 
 #include <G4Event.hh>
 #include <G4ParticleDefinition.hh>
@@ -17,12 +17,14 @@
 #include <Randomize.hh>
 #include <stdexcept>
 
-FW::Geant4::MMPrimaryGeneratorAction*
-    FW::Geant4::MMPrimaryGeneratorAction::fgInstance = nullptr;
+using namespace ActsExamples;
 
-FW::Geant4::MMPrimaryGeneratorAction::MMPrimaryGeneratorAction(
-    const G4String& particleName, G4double energy, G4int randomSeed1,
-    G4int randomSeed2)
+PrimaryGeneratorAction* PrimaryGeneratorAction::fgInstance = nullptr;
+
+PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& particleName,
+                                               G4double energy,
+                                               G4int randomSeed1,
+                                               G4int randomSeed2)
     : G4VUserPrimaryGeneratorAction(), fParticleGun(nullptr) {
   // configure the run
   if (fgInstance) {
@@ -44,17 +46,16 @@ FW::Geant4::MMPrimaryGeneratorAction::MMPrimaryGeneratorAction(
   CLHEP::HepRandom::getTheEngine()->setSeed(randomSeed1, randomSeed2);
 }
 
-FW::Geant4::MMPrimaryGeneratorAction::~MMPrimaryGeneratorAction() {
+PrimaryGeneratorAction::~PrimaryGeneratorAction() {
   fgInstance = nullptr;
 }
 
-FW::Geant4::MMPrimaryGeneratorAction*
-FW::Geant4::MMPrimaryGeneratorAction::Instance() {
+PrimaryGeneratorAction* PrimaryGeneratorAction::Instance() {
   // Static acces function via G4RunManager
   return fgInstance;
 }
 
-void FW::Geant4::MMPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
+void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   // this function is called at the begining of event
   G4double phi = -M_PI + G4UniformRand() * 2. * M_PI;
   G4double theta = G4UniformRand() * M_PI;

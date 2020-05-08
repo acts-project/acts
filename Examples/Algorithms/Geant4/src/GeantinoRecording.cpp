@@ -15,10 +15,10 @@
 #include <stdexcept>
 
 #include "ACTFW/Framework/WhiteBoard.hpp"
-#include "MMEventAction.hpp"
-#include "MMPrimaryGeneratorAction.hpp"
-#include "MMRunAction.hpp"
-#include "MMSteppingAction.hpp"
+#include "EventAction.hpp"
+#include "PrimaryGeneratorAction.hpp"
+#include "RunAction.hpp"
+#include "SteppingAction.hpp"
 
 using namespace ActsExamples;
 
@@ -36,11 +36,11 @@ GeantinoRecording::GeantinoRecording(const GeantinoRecording::Config& cfg,
 
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.get());
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  m_runManager->SetUserAction(new FW::Geant4::MMPrimaryGeneratorAction(
-      "geantino", 1000., m_cfg.seed1, m_cfg.seed2));
-  m_runManager->SetUserAction(new FW::Geant4::MMRunAction());
-  m_runManager->SetUserAction(new FW::Geant4::MMEventAction());
-  m_runManager->SetUserAction(new FW::Geant4::MMSteppingAction());
+  m_runManager->SetUserAction(new RunAction());
+  m_runManager->SetUserAction(
+      new PrimaryGeneratorAction("geantino", 1000., m_cfg.seed1, m_cfg.seed2));
+  m_runManager->SetUserAction(new EventAction());
+  m_runManager->SetUserAction(new SteppingAction());
   m_runManager->Initialize();
 }
 
@@ -55,8 +55,7 @@ FW::ProcessCode GeantinoRecording::execute(
   // Begin with the simulation
   m_runManager->BeamOn(m_cfg.tracksPerEvent);
   // Retrieve the track material tracks from Geant4
-  auto recordedMaterial =
-      FW::Geant4::MMEventAction::Instance()->MaterialTracks();
+  auto recordedMaterial = EventAction::Instance()->MaterialTracks();
   ACTS_INFO("Received " << recordedMaterial.size()
                         << " MaterialTracks. Writing them now onto file...");
 
@@ -64,7 +63,7 @@ FW::ProcessCode GeantinoRecording::execute(
   ctx.eventStore.add(m_cfg.outputMaterialTracks, std::move(recordedMaterial));
 
   // // Retrieve the sim hit track steps from Geant4
-  // auto trackSteps = Geant4::MMEventAction::Instance()->TrackSteps();
+  // auto trackSteps = Geant4::EventAction::Instance()->TrackSteps();
   // ACTS_INFO("Received " << trackSteps.size()
   //                       << " steps per track. Writing them now into
   //                       file...");
