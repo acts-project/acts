@@ -49,7 +49,9 @@ GeantinoRecording::~GeantinoRecording() {}
 
 FW::ProcessCode GeantinoRecording::execute(
     const FW::AlgorithmContext& ctx) const {
-  // TODO is this thread-safe or does this need a mutx around the run manager
+  // ensure exclusive access to the geant run manager
+  std::lock_guard<std::mutex> guard(m_runManagerLock);
+
   // TODO use framework random numbers directly or at least context seed
   // TODO take particles collection as input instead of generating them
   // Begin with the simulation

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
@@ -52,6 +53,8 @@ class GeantinoRecording final : public FW::BareAlgorithm {
  private:
   Config m_cfg;
   std::unique_ptr<G4RunManager> m_runManager;
+  // has to be mutable; algorithm interface enforces object constness
+  mutable std::mutex m_runManagerLock;
 };
 
 }  // namespace ActsExamples
