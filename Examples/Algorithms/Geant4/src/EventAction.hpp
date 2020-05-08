@@ -27,7 +27,7 @@ class SteppingAction;
 /// G4UserEventAction and is writing out the collected RecordedMaterialTrack
 /// entities needed for material mapping once per event.
 ///
-class EventAction : public G4UserEventAction {
+class EventAction final : public G4UserEventAction {
  public:
   /// Constructor
   EventAction();

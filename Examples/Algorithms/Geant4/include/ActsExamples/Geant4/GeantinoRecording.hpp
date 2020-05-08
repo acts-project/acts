@@ -29,7 +29,7 @@ using RecordedMaterialTrack =
 ///
 /// This initiates the Geant4 simulation, and creates and writes out
 /// the MaterialTrack entities which are needed for material mapping.
-class GeantinoRecording : public FW::BareAlgorithm {
+class GeantinoRecording final : public FW::BareAlgorithm {
  public:
   struct Config {
     /// Output collection for the generated material tracks.

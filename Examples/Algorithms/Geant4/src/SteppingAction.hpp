@@ -24,7 +24,7 @@ namespace ActsExamples {
 /// The SteppingAction class is the implementation of the
 /// Geant4 class SteppingAction. It extracts the weighted material
 /// of every step and collects all material steps.
-class SteppingAction : public G4UserSteppingAction {
+class SteppingAction final : public G4UserSteppingAction {
  public:
   /// Constructor
   SteppingAction();

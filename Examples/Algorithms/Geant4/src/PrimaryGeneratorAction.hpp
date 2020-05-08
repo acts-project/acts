@@ -28,7 +28,7 @@ namespace ActsExamples {
 /// and shoots a geantino.
 ///
 /// @todo tempate with RandomService
-class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
+class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
  public:
   /// Constructor
   PrimaryGeneratorAction(const G4String& particleName = "geantino",

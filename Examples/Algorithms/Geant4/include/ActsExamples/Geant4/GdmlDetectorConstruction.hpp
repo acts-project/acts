@@ -14,7 +14,7 @@
 namespace ActsExamples {
 
 /// Construct the Geant4 detector from a Gdml file.
-class GdmlDetectorConstruction : public G4VUserDetectorConstruction {
+class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
  public:
   /// @param path is the path to the Gdml file
   GdmlDetectorConstruction(std::string path);
