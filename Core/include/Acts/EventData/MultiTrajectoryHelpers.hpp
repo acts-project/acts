@@ -31,7 +31,8 @@ struct TrajectoryState {
   size_t NDF = 0;
 };
 
-using TrajectoryStateContainer =
+// Container for trajectory summary info at a specific volume
+using VolumeTrajectoryStateContainer =
     std::unordered_map<GeometryID::Value, TrajectoryState>;
 
 /// @brief Getter for global trajectory info
@@ -72,12 +73,13 @@ TrajectoryState trajectoryState(
 /// track states at different sub-detectors.
 /// @param volumeIds The container for sub-detector Ids
 ///
-/// @return The trajectory summary info at different sub-detectors
+/// @return The trajectory summary info at different sub-detectors (i.e.
+/// different volumes)
 template <typename source_link_t>
-TrajectoryStateContainer trajectoryState(
+VolumeTrajectoryStateContainer trajectoryState(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
     const size_t& entryIndex, const std::vector<GeometryID::Value>& volumeIds) {
-  TrajectoryStateContainer trajStateContainer;
+  VolumeTrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface
     const auto& geoID = state.referenceSurface().geoID();
