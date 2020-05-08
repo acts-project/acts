@@ -166,14 +166,22 @@ class GainMatrixSmoother {
             size_t iCol = iRow + parametersSize * iSmoothed;
             CovMatrix_t prev_correlation =
                 optGlobalCov.block<parametersSize, parametersSize>(
-                    iRow - parametersSize, iCol);
+                    iRow + parametersSize, iCol);
             CovMatrix_t correlation = G * prev_correlation;
+            ACTS_VERBOSE("Fill block of size ("
+                         << parametersSize << ", " << parametersSize
+                         << "), starting at (" << iRow << ", " << iCol
+                         << ") for track parameters correlation:\n"
+                         << correlation);
             optGlobalCov.block<parametersSize, parametersSize>(iRow, iCol) =
                 correlation;
-            ACTS_VERBOSE("Correlation between state "
-                         << nStates - nSmoothed << " and state "
-                         << nStates - nSmoothed + iSmoothed << " :\n"
-                         << correlation);
+            ACTS_VERBOSE("Fill block of size ("
+                         << parametersSize << ", " << parametersSize
+                         << "), starting at (" << iCol << ", " << iRow
+                         << ") for track parameters correlation:\n"
+                         << correlation.transpose());
+            optGlobalCov.block<parametersSize, parametersSize>(iCol, iRow) =
+                correlation.transpose();
           }
         }
 
