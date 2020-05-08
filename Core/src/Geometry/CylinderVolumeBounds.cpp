@@ -60,49 +60,45 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   std::vector<std::shared_ptr<const Surface>> rSurfaces;
   rSurfaces.reserve(6);
 
-  // set the transform
+  // Set the transform
   Transform3D transform =
       (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
   auto trfShared = std::make_shared<Transform3D>(transform);
 
-  const Transform3D* tTransform = nullptr;
-  Vector3D cylCenter(transform.translation());
-
-  // bottom Disc (negative z)
-  tTransform =
-      new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.)) *
-                      Translation3D(Vector3D(0., 0., get(eHalfLengthZ))));
+  // [0] Bottom Disc (negative z)
   rSurfaces.push_back(Surface::makeShared<DiscSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_discBounds));
-  // top Disc (positive z)
-  tTransform = new Transform3D(
-      transform * Translation3D(Vector3D(0., 0., get(eHalfLengthZ))));
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(0., 0., -get(eHalfLengthZ))),
+      m_discBounds));
+  // [1] Top Disc (positive z)
   rSurfaces.push_back(Surface::makeShared<DiscSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_discBounds));
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(0., 0., get(eHalfLengthZ))),
+      m_discBounds));
 
-  // outer Cylinder - shares the transform
+  // [2] Outer Cylinder
   rSurfaces.push_back(
       Surface::makeShared<CylinderSurface>(trfShared, m_outerCylinderBounds));
 
-  // innermost Cylinder
+  // [3] Inner Cylinder (optional)
   if (m_innerCylinderBounds != nullptr) {
     rSurfaces.push_back(
         Surface::makeShared<CylinderSurface>(trfShared, m_innerCylinderBounds));
   }
 
-  // the cylinder is sectoral
+  // [4] & [5] - Sectoral planes (optional)
   if (m_sectorPlaneBounds != nullptr) {
     // sectorPlane 1 (negative phi)
     const Transform3D* sp1Transform = new Transform3D(
         transform * AngleAxis3D(-get(eHalfPhiSector), Vector3D(0., 0., 1.)) *
-        Translation3D(Vector3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.)) *
+        Translation3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3D(M_PI / 2, Vector3D(1., 0., 0.)));
     rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
         std::shared_ptr<const Transform3D>(sp1Transform), m_sectorPlaneBounds));
     // sectorPlane 2 (positive phi)
     const Transform3D* sp2Transform = new Transform3D(
         transform * AngleAxis3D(get(eHalfPhiSector), Vector3D(0., 0., 1.)) *
-        Translation3D(Vector3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.)) *
+        Translation3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3D(-M_PI / 2, Vector3D(1., 0., 0.)));
     rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
         std::shared_ptr<const Transform3D>(sp2Transform), m_sectorPlaneBounds));

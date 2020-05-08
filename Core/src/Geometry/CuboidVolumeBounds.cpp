@@ -48,7 +48,6 @@ Acts::SurfacePtrVector Acts::CuboidVolumeBounds::decomposeToSurfaces(
   // The transform - apply when given
   Transform3D transform =
       (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
-  const Transform3D* tTransform = nullptr;
 
   SurfacePtrVector rSurfaces;
   rSurfaces.reserve(6);
@@ -86,7 +85,7 @@ Acts::SurfacePtrVector Acts::CuboidVolumeBounds::decomposeToSurfaces(
       std::make_shared<const Transform3D>(
           transform * Translation3D(0., get(eHalfLengthY), 0.) * s_planeZX),
       m_zxBounds));
-  // return the surfaces
+
   return rSurfaces;
 }
 
