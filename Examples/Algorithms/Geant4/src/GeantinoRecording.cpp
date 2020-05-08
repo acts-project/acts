@@ -37,9 +37,9 @@ GeantinoRecording::GeantinoRecording(const GeantinoRecording::Config& cfg,
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.get());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new RunAction());
+  m_runManager->SetUserAction(new EventAction());
   m_runManager->SetUserAction(
       new PrimaryGeneratorAction("geantino", 1000., m_cfg.seed1, m_cfg.seed2));
-  m_runManager->SetUserAction(new EventAction());
   m_runManager->SetUserAction(new SteppingAction());
   m_runManager->Initialize();
 }
@@ -55,12 +55,11 @@ FW::ProcessCode GeantinoRecording::execute(
   // Begin with the simulation
   m_runManager->BeamOn(m_cfg.tracksPerEvent);
   // Retrieve the track material tracks from Geant4
-  auto recordedMaterial = EventAction::Instance()->MaterialTracks();
-  ACTS_INFO("Received " << recordedMaterial.size()
-                        << " MaterialTracks. Writing them now onto file...");
+  auto materialTracks = EventAction::instance()->materialTracks();
+  ACTS_INFO("Received " << materialTracks.size() << " material tracks");
 
   // Write the recorded material to the event store
-  ctx.eventStore.add(m_cfg.outputMaterialTracks, std::move(recordedMaterial));
+  ctx.eventStore.add(m_cfg.outputMaterialTracks, std::move(materialTracks));
 
   // // Retrieve the sim hit track steps from Geant4
   // auto trackSteps = Geant4::EventAction::Instance()->TrackSteps();

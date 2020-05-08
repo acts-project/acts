@@ -17,9 +17,13 @@ using namespace ActsExamples;
 
 RunAction* RunAction::s_instance = nullptr;
 
+RunAction* RunAction::instance() {
+  return s_instance;
+}
+
 RunAction::RunAction() : G4UserRunAction() {
   if (s_instance) {
-    throw std::logic_error("Attempted to duplicate a singleton");
+    throw std::logic_error("Attempted to duplicate the RunAction singleton");
   } else {
     s_instance = this;
   }
@@ -29,14 +33,10 @@ RunAction::~RunAction() {
   s_instance = nullptr;
 }
 
-RunAction* RunAction::Instance() {
-  return s_instance;
-}
-
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   // initialize event cumulative quantities
-  EventAction::Instance()->Reset();
+  EventAction::instance()->clear();
 }
 
 void RunAction::EndOfRunAction(const G4Run* aRun) {

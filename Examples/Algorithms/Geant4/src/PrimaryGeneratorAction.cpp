@@ -21,25 +21,28 @@ using namespace ActsExamples;
 
 PrimaryGeneratorAction* PrimaryGeneratorAction::s_instance = nullptr;
 
+PrimaryGeneratorAction* PrimaryGeneratorAction::instance() {
+  return s_instance;
+}
+
 PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& particleName,
                                                G4double energy,
                                                G4int randomSeed1,
                                                G4int randomSeed2)
-    : G4VUserPrimaryGeneratorAction(), fParticleGun(nullptr) {
-  // configure the run
+    : G4VUserPrimaryGeneratorAction(),
+      m_particleGun(std::make_unique<G4ParticleGun>(1)) {
   if (s_instance) {
-    throw std::logic_error("Attempted to duplicate a singleton");
+    throw std::logic_error(
+        "Attempted to duplicate the PrimaryGeneratorAction singleton");
   } else {
     s_instance = this;
   }
-  G4int nofParticles = 1;
-  fParticleGun = std::make_unique<G4ParticleGun>(nofParticles);
 
   // default particle kinematic
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
   G4ParticleDefinition* particle = particleTable->FindParticle(particleName);
-  fParticleGun->SetParticleDefinition(particle);
-  fParticleGun->SetParticleEnergy(energy);
+  m_particleGun->SetParticleDefinition(particle);
+  m_particleGun->SetParticleEnergy(energy);
   G4UnitDefinition::PrintUnitsTable();
 
   // set the random seeds
@@ -50,11 +53,6 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction() {
   s_instance = nullptr;
 }
 
-PrimaryGeneratorAction* PrimaryGeneratorAction::Instance() {
-  // Static acces function via G4RunManager
-  return s_instance;
-}
-
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   // this function is called at the begining of event
   G4double phi = -M_PI + G4UniformRand() * 2. * M_PI;
@@ -62,11 +60,9 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   // build a direction
   m_direction =
       G4ThreeVector(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
-  m_position = G4ThreeVector(
-      0., 0., 0.);  /// @todo make configurable G4RandGauss::shoot(0., 150.));
+  m_position = G4ThreeVector(0., 0., 0.);
   // set to the particle gun and
-  fParticleGun->SetParticleMomentumDirection(m_direction);
-  fParticleGun->SetParticlePosition(m_position);
-
-  fParticleGun->GeneratePrimaryVertex(anEvent);
+  m_particleGun->SetParticleMomentumDirection(m_direction);
+  m_particleGun->SetParticlePosition(m_position);
+  m_particleGun->GeneratePrimaryVertex(anEvent);
 }

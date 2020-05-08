@@ -25,14 +25,12 @@ namespace ActsExamples {
 /// an resets the EventAction
 class RunAction final : public G4UserRunAction {
  public:
-  /// Constructor
-  RunAction();
-
-  /// Destructor
-  ~RunAction() final override;
-
   /// Static access method
-  static RunAction* Instance();
+  static RunAction* instance();
+
+  /// Construct the action and ensure singleton usage.
+  RunAction();
+  ~RunAction() final override;
 
   /// Interface method at the begin of the run
   /// @note resets the event action

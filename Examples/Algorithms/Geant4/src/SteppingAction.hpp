@@ -26,38 +26,39 @@ namespace ActsExamples {
 /// of every step and collects all material steps.
 class SteppingAction final : public G4UserSteppingAction {
  public:
-  /// Constructor
-  SteppingAction();
-
-  /// Destructor
-  ~SteppingAction() final override;
-
   /// Static access method to the instance
-  static SteppingAction* Instance();
+  static SteppingAction* instance();
+
+  /// Construct the action and ensure singleton usage.
+  SteppingAction();
+  ~SteppingAction() final override;
 
   /// @brief Interface Method doing the step
   /// @note it creates and collects the MaterialInteraction entities
   /// @param step is the Geant4 step of the particle
   void UserSteppingAction(const G4Step* step) final override;
 
-  /// Interface reset method
-  /// @note it clears the collected step vector
-  void Reset();
+  /// Clear the recorded steps.
+  void clear();
 
-  /// Access to the collected Acts::MaterialInteraction entities
-  std::vector<Acts::MaterialInteraction> materialSteps() { return m_steps; }
+  /// Access the recorded material steps.
+  const std::vector<Acts::MaterialInteraction>& materialSteps() const {
+    return m_materialSteps;
+  }
 
-  /// Access to the collected FW::SimHitContainer entities
-  FW::SimHitContainer::sequence_type trackSteps() { return m_tracksteps; }
+  /// Access the recorded tracking steps.
+  const FW::SimHitContainer::sequence_type& trackSteps() const {
+    return m_trackSteps;
+  }
 
  private:
   /// Instance of the SteppingAction
   static SteppingAction* s_instance;
 
   /// The collected Acts::MaterialInteraction entities
-  std::vector<Acts::MaterialInteraction> m_steps = {};
+  std::vector<Acts::MaterialInteraction> m_materialSteps;
   /// The collected FW::SimHit entities
-  FW::SimHitContainer::sequence_type m_tracksteps;
+  FW::SimHitContainer::sequence_type m_trackSteps;
 };
 
 }  // namespace ActsExamples

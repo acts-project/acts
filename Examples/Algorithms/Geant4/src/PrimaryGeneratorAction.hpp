@@ -30,32 +30,30 @@ namespace ActsExamples {
 /// @todo tempate with RandomService
 class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
  public:
-  /// Constructor
+  /// Static access method
+  static PrimaryGeneratorAction* instance();
+
+  /// Construct the action and ensure singleton usage.
   PrimaryGeneratorAction(const G4String& particleName = "geantino",
                          G4double energy = 1000. * MeV,
                          G4int randomSeed1 = 12345, G4int randomSeed2 = 23456);
-  /// Destructor
   ~PrimaryGeneratorAction() final override;
-
-  /// Static access method
-  static PrimaryGeneratorAction* Instance();
 
   /// Interface method to generate the primary
   void GeneratePrimaries(G4Event*) final override;
 
   /// Access method to get the initial direction
-  G4ThreeVector direction() { return m_direction; }
+  const G4ThreeVector& direction() const { return m_direction; }
 
-  /// Access method to get the start position
-  G4ThreeVector startPosition() { return m_position; }
+  /// Access method to get the initial position
+  const G4ThreeVector& position() const { return m_position; }
 
  private:
   /// Instance of the PrimaryGeneratorAction
   static PrimaryGeneratorAction* s_instance;
 
   /// Pointer to the G4 particle gun
-  std::unique_ptr<G4ParticleGun> fParticleGun;
-
+  std::unique_ptr<G4ParticleGun> m_particleGun;
   /// position to be returned
   G4ThreeVector m_position;
   /// direction to be returned

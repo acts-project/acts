@@ -29,14 +29,12 @@ class SteppingAction;
 ///
 class EventAction final : public G4UserEventAction {
  public:
-  /// Constructor
-  EventAction();
-
-  /// Virtual destructor
-  ~EventAction() final override;
-
   /// Static access method
-  static EventAction* Instance();
+  static EventAction* instance();
+
+  /// Construct the action and ensure singleton usage.
+  EventAction();
+  ~EventAction() final override;
 
   /// Interface method for begin of the event
   /// @param event is the G4Event to be processed
@@ -48,27 +46,21 @@ class EventAction final : public G4UserEventAction {
   /// @note this method is writing out the material track records
   void EndOfEventAction(const G4Event* event) final override;
 
-  /// Interface method
-  /// @note does nothing
-  void Reset();
+  /// Clear the recorded data.
+  void clear();
 
-  // Access the material track records
-  std::vector<Acts::RecordedMaterialTrack> const MaterialTracks() {
-    auto rrecords = m_records;
-    m_records.clear();
-    return rrecords;
-  }
-
-  //  Access the step sim hit info
-  const FW::SimHitContainer& TrackSteps() const { return m_tracksteps; };
+  /// Access the recorded material tracks.
+  ///
+  /// This only contains valid data after the end-of-event action has been
+  /// executed.
+  const std::vector<Acts::RecordedMaterialTrack>& materialTracks() const;
 
  private:
   /// Instance of the EventAction
   static EventAction* s_instance;
 
   /// The materialTrackWriter
-  std::vector<Acts::RecordedMaterialTrack> m_records;
-  FW::SimHitContainer m_tracksteps;
+  std::vector<Acts::RecordedMaterialTrack> m_materialTracks;
 };
 
 }  // namespace ActsExamples

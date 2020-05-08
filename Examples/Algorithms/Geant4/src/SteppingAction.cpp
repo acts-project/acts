@@ -18,19 +18,14 @@ using namespace ActsExamples;
 
 SteppingAction* SteppingAction::s_instance = nullptr;
 
-SteppingAction* SteppingAction::Instance() {
-  // Static acces function via G4RunManager
+SteppingAction* SteppingAction::instance() {
   return s_instance;
 }
 
-SteppingAction::SteppingAction()
-    : G4UserSteppingAction(),
-      m_steps(),
-      m_tracksteps()
-// m_volMgr(MaterialRunAction::Instance()->getGeant4VolumeManager())
-{
+SteppingAction::SteppingAction() : G4UserSteppingAction() {
   if (s_instance) {
-    throw std::logic_error("Attempted to duplicate a singleton");
+    throw std::logic_error(
+        "Attempted to duplicate the SteppingAction singleton");
   } else {
     s_instance = this;
   }
@@ -86,7 +81,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     mInteraction.direction.normalized();
     mInteraction.materialProperties =
         Acts::MaterialProperties(X0, L0, A, Z, rho, steplength);
-    m_steps.push_back(mInteraction);
+    m_materialSteps.push_back(mInteraction);
 
     //   // Get the track associated to the step
     //   G4Track* track = step->GetTrack();
@@ -128,7 +123,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   }
 }
 
-void SteppingAction::Reset() {
-  m_steps.clear();
-  m_tracksteps.clear();
+void SteppingAction::clear() {
+  m_materialSteps.clear();
+  m_trackSteps.clear();
 }
