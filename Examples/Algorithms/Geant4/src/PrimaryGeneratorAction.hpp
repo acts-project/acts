@@ -35,7 +35,7 @@ class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
                          G4double energy = 1000. * MeV,
                          G4int randomSeed1 = 12345, G4int randomSeed2 = 23456);
   /// Destructor
-  ~PrimaryGeneratorAction() override;
+  ~PrimaryGeneratorAction() final override;
 
   /// Static access method
   static PrimaryGeneratorAction* Instance();
@@ -51,7 +51,7 @@ class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
 
  private:
   /// Instance of the PrimaryGeneratorAction
-  static PrimaryGeneratorAction* fgInstance;
+  static PrimaryGeneratorAction* s_instance;
 
   /// Pointer to the G4 particle gun
   std::unique_ptr<G4ParticleGun> fParticleGun;

@@ -29,7 +29,7 @@ class RunAction final : public G4UserRunAction {
   RunAction();
 
   /// Destructor
-  ~RunAction() override;
+  ~RunAction() final override;
 
   /// Static access method
   static RunAction* Instance();
@@ -43,7 +43,7 @@ class RunAction final : public G4UserRunAction {
 
  private:
   /// Instance of the EventAction
-  static RunAction* fgInstance;
+  static RunAction* s_instance;
 };
 
 }  // namespace ActsExamples

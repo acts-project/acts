@@ -30,7 +30,7 @@ class SteppingAction final : public G4UserSteppingAction {
   SteppingAction();
 
   /// Destructor
-  ~SteppingAction() override;
+  ~SteppingAction() final override;
 
   /// Static access method to the instance
   static SteppingAction* Instance();
@@ -52,7 +52,7 @@ class SteppingAction final : public G4UserSteppingAction {
 
  private:
   /// Instance of the SteppingAction
-  static SteppingAction* fgInstance;
+  static SteppingAction* s_instance;
 
   /// The collected Acts::MaterialInteraction entities
   std::vector<Acts::MaterialInteraction> m_steps = {};

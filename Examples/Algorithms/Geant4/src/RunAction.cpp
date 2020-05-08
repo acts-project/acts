@@ -15,22 +15,22 @@
 
 using namespace ActsExamples;
 
-RunAction* RunAction::fgInstance = nullptr;
+RunAction* RunAction::s_instance = nullptr;
 
 RunAction::RunAction() : G4UserRunAction() {
-  if (fgInstance) {
+  if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
-    fgInstance = this;
+    s_instance = this;
   }
 }
 
 RunAction::~RunAction() {
-  fgInstance = nullptr;
+  s_instance = nullptr;
 }
 
 RunAction* RunAction::Instance() {
-  return fgInstance;
+  return s_instance;
 }
 
 void RunAction::BeginOfRunAction(const G4Run* aRun) {

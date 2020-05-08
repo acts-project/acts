@@ -17,23 +17,23 @@
 
 using namespace ActsExamples;
 
-EventAction* EventAction::fgInstance = nullptr;
+EventAction* EventAction::s_instance = nullptr;
 
 EventAction* EventAction::Instance() {
   // Static acces function via G4RunManager
-  return fgInstance;
+  return s_instance;
 }
 
 EventAction::EventAction() : G4UserEventAction() {
-  if (fgInstance) {
+  if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
-    fgInstance = this;
+    s_instance = this;
   }
 }
 
 EventAction::~EventAction() {
-  fgInstance = nullptr;
+  s_instance = nullptr;
 }
 
 void EventAction::BeginOfEventAction(const G4Event*) {

@@ -16,11 +16,11 @@
 
 using namespace ActsExamples;
 
-SteppingAction* SteppingAction::fgInstance = nullptr;
+SteppingAction* SteppingAction::s_instance = nullptr;
 
 SteppingAction* SteppingAction::Instance() {
   // Static acces function via G4RunManager
-  return fgInstance;
+  return s_instance;
 }
 
 SteppingAction::SteppingAction()
@@ -29,15 +29,15 @@ SteppingAction::SteppingAction()
       m_tracksteps()
 // m_volMgr(MaterialRunAction::Instance()->getGeant4VolumeManager())
 {
-  if (fgInstance) {
+  if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
-    fgInstance = this;
+    s_instance = this;
   }
 }
 
 SteppingAction::~SteppingAction() {
-  fgInstance = nullptr;
+  s_instance = nullptr;
 }
 
 void SteppingAction::UserSteppingAction(const G4Step* step) {

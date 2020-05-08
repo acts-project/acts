@@ -19,7 +19,7 @@
 
 using namespace ActsExamples;
 
-PrimaryGeneratorAction* PrimaryGeneratorAction::fgInstance = nullptr;
+PrimaryGeneratorAction* PrimaryGeneratorAction::s_instance = nullptr;
 
 PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& particleName,
                                                G4double energy,
@@ -27,10 +27,10 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& particleName,
                                                G4int randomSeed2)
     : G4VUserPrimaryGeneratorAction(), fParticleGun(nullptr) {
   // configure the run
-  if (fgInstance) {
+  if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
-    fgInstance = this;
+    s_instance = this;
   }
   G4int nofParticles = 1;
   fParticleGun = std::make_unique<G4ParticleGun>(nofParticles);
@@ -47,12 +47,12 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& particleName,
 }
 
 PrimaryGeneratorAction::~PrimaryGeneratorAction() {
-  fgInstance = nullptr;
+  s_instance = nullptr;
 }
 
 PrimaryGeneratorAction* PrimaryGeneratorAction::Instance() {
   // Static acces function via G4RunManager
-  return fgInstance;
+  return s_instance;
 }
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {

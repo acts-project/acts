@@ -33,7 +33,7 @@ class EventAction final : public G4UserEventAction {
   EventAction();
 
   /// Virtual destructor
-  ~EventAction() override;
+  ~EventAction() final override;
 
   /// Static access method
   static EventAction* Instance();
@@ -64,7 +64,7 @@ class EventAction final : public G4UserEventAction {
 
  private:
   /// Instance of the EventAction
-  static EventAction* fgInstance;
+  static EventAction* s_instance;
 
   /// The materialTrackWriter
   std::vector<Acts::RecordedMaterialTrack> m_records;
