@@ -28,6 +28,7 @@ struct TrajectoryState {
   size_t nOutliers = 0;
   size_t nHoles = 0;
   double chi2Sum = 0;
+  size_t NDF = 0;
 };
 
 using TrajectoryStateContainer =
@@ -49,6 +50,7 @@ TrajectoryState trajectoryState(
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     trajState.nStates++;
     trajState.chi2Sum += state.chi2();
+    trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       trajState.nMeasurements++;
@@ -89,6 +91,7 @@ TrajectoryStateContainer trajectoryState(
     auto& trajState = trajStateContainer[volume];
     trajState.nStates++;
     trajState.chi2Sum += state.chi2();
+    trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       trajState.nMeasurements++;
