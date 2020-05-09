@@ -79,20 +79,20 @@ BOOST_AUTO_TEST_CASE(micro_benchmark_result) {
   CHECK_CLOSE_REL(thirdq.count() / 1000., (420. + 4000.) / 2., 1e-6);
 
   const auto robustRTStddev = res.runTimeRobustStddev();
-  CHECK_CLOSE_REL(robustRTStddev.count(),
-                  (thirdq - firstq).count() / 1.349, 1e-3);
+  CHECK_CLOSE_REL(robustRTStddev.count(), (thirdq - firstq).count() / 1.349,
+                  1e-3);
 
   const auto runTimeError = res.runTimeError();
   CHECK_CLOSE_REL(
-    runTimeError.count(),
-    1.2533 * robustRTStddev.count() / std::sqrt(res.run_timings.size()), 1e-3);
+      runTimeError.count(),
+      1.2533 * robustRTStddev.count() / std::sqrt(res.run_timings.size()),
+      1e-3);
 
   CHECK_CLOSE_REL(res.iterTimeAverage().count(),
                   res.runTimeMedian().count() / res.iters_per_run, 1e-6);
 
-  CHECK_CLOSE_REL(
-      res.iterTimeError().count(),
-      runTimeError.count() / std::sqrt(res.iters_per_run), 1e-6);
+  CHECK_CLOSE_REL(res.iterTimeError().count(),
+                  runTimeError.count() / std::sqrt(res.iters_per_run), 1e-6);
 
   std::ostringstream os;
   os << res;
