@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(micro_benchmark_result) {
 
   CHECK_CLOSE_REL(res.totalTime().count() / 1'000'000., 47.323, 1e-6);
 
-  auto sorted = res.sortedRunTimes();
+  const auto sorted = res.sortedRunTimes();
   BOOST_CHECK_EQUAL(sorted.size(), res.run_timings.size());
   BOOST_CHECK_EQUAL(sorted[0].count(), 21'000.);
   BOOST_CHECK_EQUAL(sorted[1].count(), 84'000.);
@@ -74,26 +74,32 @@ BOOST_AUTO_TEST_CASE(micro_benchmark_result) {
   CHECK_CLOSE_REL(res.runTimeMedian().count() / 1000., (294. + 378.) / 2.,
                   1e-6);
 
-  auto [firstq, thirdq] = res.runTimeQuartiles();
+  const auto [firstq, thirdq] = res.runTimeQuartiles();
   CHECK_CLOSE_REL(firstq.count() / 1000., (84. + 126.) / 2., 1e-6);
   CHECK_CLOSE_REL(thirdq.count() / 1000., (420. + 4000.) / 2., 1e-6);
 
-  CHECK_CLOSE_REL(res.runTimeRobustStddev().count(),
+  const auto robustRTStddev = res.runTimeRobustStddev();
+  CHECK_CLOSE_REL(robustRTStddev.count(),
                   (thirdq - firstq).count() / 1.349, 1e-3);
+
+  const auto runTimeError = res.runTimeError();
+  CHECK_CLOSE_REL(
+    runTimeError.count(),
+    1.2533 * robustRTStddev.count() / std::sqrt(res.run_timings.size()), 1e-3);
 
   CHECK_CLOSE_REL(res.iterTimeAverage().count(),
                   res.runTimeMedian().count() / res.iters_per_run, 1e-6);
 
   CHECK_CLOSE_REL(
       res.iterTimeError().count(),
-      res.runTimeRobustStddev().count() / std::sqrt(res.iters_per_run), 1e-6);
+      runTimeError.count() / std::sqrt(res.iters_per_run), 1e-6);
 
   std::ostringstream os;
   os << res;
   BOOST_CHECK_EQUAL(os.str(),
                     "8 runs of 42 iteration(s), 47.3ms total, "
-                    "336.0000+/-1560.4388µs per run, "
-                    "8000.000+/-240780.940ns per iteration");
+                    "336.0000+/-1355.2296µs per run, "
+                    "8000.000+/-209116.462ns per iteration");
 }
 
 BOOST_AUTO_TEST_CASE(micro_benchmark) {
