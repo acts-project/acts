@@ -174,9 +174,10 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
   // For example, here, the microbenchmark loop isn't optimized out even though
   // each iteration does literally nothing. If it were optimized out, the time
   // per iteration would change, since we wouldn't get linear scaling anymore.
-  const auto nop_x10 = microBenchmark([] {}, 10 * bench_iters);
+  auto nop = [] {};
+  const auto nop_x10 = microBenchmark(nop, 10 * bench_iters);
   std::cout << "nop (10x iters): " << nop_x10 << std::endl;
-  const auto nop_x100 = microBenchmark([] {}, 100 * bench_iters);
+  const auto nop_x100 = microBenchmark(nop, 100 * bench_iters);
   std::cout << "nop (100x iters): " << nop_x100 << std::endl;
   const double nop_x10_iter_ns = nop_x10.iterTimeAverage().count();
   const double nop_x100_iter_ns = nop_x100.iterTimeAverage().count();
