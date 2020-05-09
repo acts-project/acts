@@ -65,13 +65,14 @@ struct KalmanFitterOptions {
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   /// @param bwdFiltering Whether to run backward filtering as smoothing
+  /// @param gCovariance Whether to calculate global track parameters covariance
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
                       const OutlierFinder& outlierFinder,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool bwdFiltering = false)
+                      bool bwdFiltering = false, bool gCovariance = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -79,7 +80,8 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        backwardFiltering(bwdFiltering) {}
+        backwardFiltering(bwdFiltering),
+        globalCovariance(gCovariance) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -100,8 +102,11 @@ struct KalmanFitterOptions {
   /// Whether to consider energy loss
   bool energyLoss = true;
 
-  /// Whether to run backward filtering.
+  /// Whether to run backward filtering
   bool backwardFiltering = false;
+
+  /// Whether to calculate global track parameters covariance
+  bool globalCovariance = false;
 };
 
 template <typename source_link_t>
@@ -277,6 +282,9 @@ class KalmanFitter {
 
     /// Whether run smoothing as backward filtering
     bool backwardFiltering = false;
+
+    /// Whether to calculate global track parameters covariance
+    bool globalCovariance = false;
 
     /// @brief Kalman actor operation
     ///
@@ -878,8 +886,12 @@ class KalmanFitter {
                                            << " filtered track states.");
       }
       // Smooth the track states
-      size_t globalCovSize = nStates * eBoundParametersSize;
-      result.globalTrackParamsCovariance->resize(globalCovSize, globalCovSize);
+      if (globalCovariance) {
+        // Set size of global track parameters covariance
+        size_t globalCovSize = nStates * eBoundParametersSize;
+        result.globalTrackParamsCovariance->resize(globalCovSize,
+                                                   globalCovSize);
+      }
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
                                   measurementIndices.front(),
                                   *result.globalTrackParamsCovariance);
@@ -1014,6 +1026,7 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
+    kalmanActor.globalCovariance = kfOptions.globalCovariance;
 
     // Set config for outlier finder
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
@@ -1115,6 +1128,7 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
+    kalmanActor.globalCovariance = kfOptions.globalCovariance;
 
     // Set config for outlier finder
     kalmanActor.m_outlierFinder.m_config = kfOptions.outlierFinderConfig;
