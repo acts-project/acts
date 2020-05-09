@@ -261,8 +261,7 @@ BOOST_AUTO_TEST_CASE(assume_read) {
   std::cout << "assumeRead: " << assumeread << std::endl;
   const double tuple_return_iter_ns = tuple_return.iterTimeAverage().count();
   const double assumeRead_iter_ns = assumeread.iterTimeAverage().count();
-  BOOST_CHECK_LT(std::abs(tuple_return_iter_ns - assumeRead_iter_ns),
-                 5. * tuple_return.iterTimeError().count());
+  CHECK_CLOSE_REL(tuple_return_iter_ns, assumeRead_iter_ns, 1e-2);
 }
 #endif
 
@@ -291,8 +290,7 @@ BOOST_AUTO_TEST_CASE(assume_written) {
   std::cout << "2x(sqrt sum): " << sqrt_2sums << std::endl;
   const double sqrt_sum_iter_ns = sqrt_sum.iterTimeAverage().count();
   const double sqrt_2sums_iter_ns = sqrt_2sums.iterTimeAverage().count();
-  BOOST_CHECK_LT(std::abs(2. * sqrt_sum_iter_ns - sqrt_2sums_iter_ns),
-                 5. * sqrt_sum.iterTimeError().count());
+  CHECK_CLOSE_REL(2. * sqrt_sum_iter_ns, sqrt_2sums_iter_ns, 1e-2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
