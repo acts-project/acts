@@ -7,18 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
-
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
 #include <array>
 #include <ostream>
-
-#include "Acts/Geometry/Volume.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<Acts::Vector3D, 8>& vertices) noexcept(false)

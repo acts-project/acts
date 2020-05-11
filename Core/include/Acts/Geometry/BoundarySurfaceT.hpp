@@ -129,16 +129,16 @@ class BoundarySurfaceT {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to be attached
-  /// @param inout The boundary orientation @todo update to along/opposite
-  void attachVolume(const volume_t* volume, BoundaryOrientation inout);
+  /// @param navDir The navigation direction for attaching
+  void attachVolume(const volume_t* volume, NavigationDirection navDir);
 
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.
   ///
   /// @param volumes The volume array to be attached
-  /// @param inout The boundary orientation @todo update to along/opposite
+  /// @param navDir The navigation direction for attaching
   void attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
-                         BoundaryOrientation inout);
+                         NavigationDirection navDir);
 
  protected:
   /// the represented surface by this
@@ -161,8 +161,8 @@ inline const Surface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
 
 template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
-                                              BoundaryOrientation inout) {
-  if (inout == insideVolume) {
+                                              NavigationDirection navDir) {
+  if (navDir == backward) {
     m_oppositeVolume = volume;
   } else {
     m_alongVolume = volume;
@@ -172,8 +172,8 @@ void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
 template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes,
-    BoundaryOrientation inout) {
-  if (inout == insideVolume) {
+    NavigationDirection navDir) {
+  if (navDir == backward) {
     m_oppositeVolumeArray = volumes;
   } else {
     m_alongVolumeArray = volumes;
@@ -183,10 +183,10 @@ void BoundarySurfaceT<volume_t>::attachVolumeArray(
 template <class volume_t>
 const volume_t* BoundarySurfaceT<volume_t>::attachedVolume(
     const GeometryContext& gctx, const Vector3D& pos, const Vector3D& mom,
-    NavigationDirection pdir) const {
+    NavigationDirection navDir) const {
   const volume_t* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(gctx, pos)).dot(pdir * mom) > 0.) {
+  if ((surfaceRepresentation().normal(gctx, pos)).dot(navDir * mom) > 0.) {
     attVolume = m_alongVolumeArray ? m_alongVolumeArray->object(pos).get()
                                    : m_alongVolume;
   } else {

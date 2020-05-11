@@ -48,7 +48,7 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
     const Transform3D* transform) const {
   std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
 
-  // transform copy
+  // Transform copy
   std::shared_ptr<const Transform3D> trf;
   if (transform != nullptr) {
     trf = std::make_shared<const Transform3D>(*transform);
