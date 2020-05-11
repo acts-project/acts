@@ -130,13 +130,13 @@ void Acts::TrackingVolume::connectDenseBoundarySurfaces(
         auto mutableBs =
             std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
                 boundSur.at(i));
-        if (mutableBs->m_insideVolume != nullptr &&
-            mutableBs->m_outsideVolume == nullptr) {
+        if (mutableBs->m_oppositeVolume != nullptr &&
+            mutableBs->m_alongVolume == nullptr) {
           bo = BoundaryOrientation::outsideVolume;
           mutableBs->attachVolume(this, bo);
         } else {
-          if (mutableBs->m_insideVolume == nullptr &&
-              mutableBs->m_outsideVolume != nullptr) {
+          if (mutableBs->m_oppositeVolume == nullptr &&
+              mutableBs->m_alongVolume != nullptr) {
             bo = BoundaryOrientation::insideVolume;
             mutableBs->attachVolume(this, bo);
           }

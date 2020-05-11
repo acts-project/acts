@@ -11,8 +11,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -23,6 +21,9 @@
 namespace Acts {
 
 class IVisualization;
+
+class CylinderBounds;
+class DiscBounds;
 
 /// Class which implements a cutout cylinder. This shape is bascially a
 /// cylinder, with another, smaller cylinder subtracted from the center.
@@ -35,6 +36,7 @@ class IVisualization;
 /// --------- hlZ -------
 ///
 ///
+/// @todo add sectoral cutouts
 class CutoutCylinderVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
@@ -60,6 +62,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
                              double hlZc) noexcept(false)
       : m_values({rmin, rmed, rmax, hlZ, hlZc}) {
     checkConsistency();
+    buildSurfaceBounds();
   }
 
   /// Constructor - from a fixed size array
@@ -69,6 +72,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
       false)
       : m_values(values) {
     checkConsistency();
+    buildSurfaceBounds();
   }
 
   ~CutoutCylinderVolumeBounds() override = default;
@@ -120,6 +124,16 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
 
  private:
   std::array<double, eSize> m_values;
+
+  // The surface bound objects
+  std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
+  std::shared_ptr<const CylinderBounds> m_cutoutCylinderBounds{nullptr};
+  std::shared_ptr<const CylinderBounds> m_outerCylinderBounds{nullptr};
+  std::shared_ptr<const DiscBounds> m_outerDiscBounds{nullptr};
+  std::shared_ptr<const DiscBounds> m_innerDiscBounds{nullptr};
+
+  /// Create the surface bound objects
+  void buildSurfaceBounds();
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given

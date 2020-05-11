@@ -10,8 +10,10 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
@@ -60,62 +62,58 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
     surfaces.resize(8);  // exactly eight surfaces
   }
 
-  // outer cylinder envelope
-  auto outerBounds =
-      std::make_shared<CylinderBounds>(get(eMaxR), get(eHalfLengthZ));
-  auto outer = Surface::makeShared<CylinderSurface>(trf, outerBounds);
+  // Outer cylinder envelope
+  auto outer = Surface::makeShared<CylinderSurface>(trf, m_outerCylinderBounds);
   surfaces.at(tubeOuterCover) = outer;
 
-  // inner (small) cylinder envelope
-  auto ctr_innerBounds =
-      std::make_shared<CylinderBounds>(get(eMedR), get(eHalfLengthZcutout));
-  auto ctr_inner = Surface::makeShared<CylinderSurface>(trf, ctr_innerBounds);
-  surfaces.at(tubeInnerCover) = ctr_inner;
+  // Inner (cutout) cylinder envelope
+  auto cutoutInner =
+      Surface::makeShared<CylinderSurface>(trf, m_cutoutCylinderBounds);
+  surfaces.at(tubeInnerCover) = cutoutInner;
 
   // z position of the pos and neg choke points
   double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
   double zChoke = get(eHalfLengthZcutout) + hlChoke;
 
-  if (get(eMinR) > 0.) {
+  if (m_innerCylinderBounds != nullptr) {
     auto posChokeTrf = std::make_shared<const Transform3D>(
         *trf * Translation3D(Vector3D(0, 0, zChoke)));
-    auto posInner =
-        Surface::makeShared<CylinderSurface>(posChokeTrf, get(eMinR), hlChoke);
+    auto posInner = Surface::makeShared<CylinderSurface>(posChokeTrf,
+                                                         m_innerCylinderBounds);
     surfaces.at(index7) = posInner;
 
     auto negChokeTrf = std::make_shared<const Transform3D>(
         *trf * Translation3D(Vector3D(0, 0, -zChoke)));
-    auto negInner =
-        Surface::makeShared<CylinderSurface>(negChokeTrf, get(eMinR), hlChoke);
+    auto negInner = Surface::makeShared<CylinderSurface>(negChokeTrf,
+                                                         m_innerCylinderBounds);
     surfaces.at(index6) = negInner;
   }
 
-  // outer disks
+  // Two Outer disks
   auto posOutDiscTrf = std::make_shared<const Transform3D>(
       *trf * Translation3D(Vector3D(0, 0, get(eHalfLengthZ))));
   auto posOutDisc =
-      Surface::makeShared<DiscSurface>(posOutDiscTrf, get(eMinR), get(eMaxR));
+      Surface::makeShared<DiscSurface>(posOutDiscTrf, m_outerDiscBounds);
   surfaces.at(positiveFaceXY) = posOutDisc;
 
   auto negOutDiscTrf = std::make_shared<const Transform3D>(
-      *trf * Translation3D(Vector3D(0, 0, -get(eHalfLengthZ))) *
-      AngleAxis3D(M_PI, Vector3D::UnitX()));
+      *trf * Translation3D(Vector3D(0, 0, -get(eHalfLengthZ))));
+
   auto negOutDisc =
-      Surface::makeShared<DiscSurface>(negOutDiscTrf, get(eMinR), get(eMaxR));
+      Surface::makeShared<DiscSurface>(negOutDiscTrf, m_outerDiscBounds);
   surfaces.at(negativeFaceXY) = negOutDisc;
 
-  // inner disks
+  // Two Inner disks
   auto posInDiscTrf = std::make_shared<const Transform3D>(
       *trf * Translation3D(Vector3D(0, 0, get(eHalfLengthZcutout))));
   auto posInDisc =
-      Surface::makeShared<DiscSurface>(posInDiscTrf, get(eMinR), get(eMedR));
+      Surface::makeShared<DiscSurface>(posInDiscTrf, m_innerDiscBounds);
   surfaces.at(index5) = posInDisc;
 
   auto negInDiscTrf = std::make_shared<const Transform3D>(
-      *trf * Translation3D(Vector3D(0, 0, -get(eHalfLengthZcutout))) *
-      AngleAxis3D(M_PI, Vector3D::UnitX()));
+      *trf * Translation3D(Vector3D(0, 0, -get(eHalfLengthZcutout))));
   auto negInDisc =
-      Surface::makeShared<DiscSurface>(negInDiscTrf, get(eMinR), get(eMedR));
+      Surface::makeShared<DiscSurface>(negInDiscTrf, m_innerDiscBounds);
   surfaces.at(index4) = negInDisc;
 
   return surfaces;
@@ -144,4 +142,22 @@ std::ostream& Acts::CutoutCylinderVolumeBounds::toStream(
      << " rmax = " << get(eMaxR) << "\n";
   sl << "dz1 = " << get(eHalfLengthZ) << " dz2 = " << get(eHalfLengthZcutout);
   return sl;
+}
+
+void Acts::CutoutCylinderVolumeBounds::buildSurfaceBounds() {
+  if (get(eMinR) > s_epsilon) {
+    double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
+    m_innerCylinderBounds =
+        std::make_shared<CylinderBounds>(get(eMinR), hlChoke);
+  }
+
+  m_cutoutCylinderBounds =
+      std::make_shared<CylinderBounds>(get(eMedR), get(eHalfLengthZcutout));
+
+  m_outerCylinderBounds =
+      std::make_shared<CylinderBounds>(get(eMaxR), get(eHalfLengthZ));
+
+  m_innerDiscBounds = std::make_shared<RadialBounds>(get(eMinR), get(eMaxR));
+
+  m_outerDiscBounds = std::make_shared<RadialBounds>(get(eMedR), get(eMaxR));
 }
