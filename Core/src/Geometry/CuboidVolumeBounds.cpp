@@ -17,12 +17,9 @@
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
                                              double halez)
-    : VolumeBounds(),
-      m_values({halex, haley, halez}),
-      m_xyBounds(std::make_shared<const RectangleBounds>(halex, haley)),
-      m_yzBounds(std::make_shared<const RectangleBounds>(haley, halez)),
-      m_zxBounds(std::make_shared<const RectangleBounds>(halez, halex)) {
+    : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
+  buildSurfaceBounds();
 }
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
@@ -101,4 +98,13 @@ Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
 
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   return trf == nullptr ? box : box.transformed(*trf);
+}
+
+void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
+  m_xyBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthX),
+                                                       get(eHalfLengthY));
+  m_yzBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthY),
+                                                       get(eHalfLengthZ));
+  m_zxBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthZ),
+                                                       get(eHalfLengthX));
 }

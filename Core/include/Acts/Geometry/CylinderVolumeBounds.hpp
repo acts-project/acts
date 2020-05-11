@@ -11,8 +11,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -185,11 +183,11 @@ class CylinderVolumeBounds : public VolumeBounds {
  private:
   /// The internal version of the bounds can be float/double
   std::array<double, eSize> m_values;
-  /// Bounds of the inner CylinderSurfaces
+  /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
-  /// Bounds of the inner CylinderSurfaces
+  /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_outerCylinderBounds{nullptr};
-  /// Bounds of the bottom/top DiscSurface
+  /// Bounds of the bottom/top Radial
   std::shared_ptr<const RadialBounds> m_discBounds{nullptr};
   /// Bounds of the sector planes
   std::shared_ptr<const PlanarBounds> m_sectorPlaneBounds{nullptr};

@@ -147,16 +147,15 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// The internal version of the bounds can be float/double
   std::array<double, eSize> m_values;
   /// The face PlaneSurface parallel to local xy plane
-  std::shared_ptr<const TrapezoidBounds> m_faceXYTrapezoidBounds = nullptr;
+  std::shared_ptr<const TrapezoidBounds> m_faceXYTrapezoidBounds{nullptr};
   /// Thhe face PlaneSurface attached to alpha (negative local x)
-  std::shared_ptr<const RectangleBounds> m_faceAlphaRectangleBounds = nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceAlphaRectangleBounds{nullptr};
   /// The face PlaneSurface attached to beta (positive local x)
-  std::shared_ptr<const RectangleBounds> m_faceBetaRectangleBounds = nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceBetaRectangleBounds{nullptr};
   /// The face PlaneSurface parallel to local zx plane, negative local y
-  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsBottom =
-      nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsBottom{nullptr};
   /// The face PlaneSurface parallel to local zx plane, positive local y
-  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsTop = nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsTop{nullptr};
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given

@@ -71,6 +71,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   CuboidVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
+    buildSurfaceBounds();
   }
 
   /// Copy Constructor
@@ -125,15 +126,20 @@ class CuboidVolumeBounds : public VolumeBounds {
 
  private:
   /// Templated dumpT method
-  template <class T>
-  T& dumpT(T& dt) const;
+  /// @tparam stream_t The type fo the dump stream
+  /// @param dt The dump stream object
+  template <class stream_t>
+  stream_t& dumpT(stream_t& dt) const;
 
   /// The bound values ordered in a fixed size array
   std::array<double, eSize> m_values;
 
-  std::shared_ptr<const RectangleBounds> m_xyBounds = nullptr;
-  std::shared_ptr<const RectangleBounds> m_yzBounds = nullptr;
-  std::shared_ptr<const RectangleBounds> m_zxBounds = nullptr;
+  std::shared_ptr<const RectangleBounds> m_xyBounds{nullptr};
+  std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};
+  std::shared_ptr<const RectangleBounds> m_zxBounds{nullptr};
+
+  /// Create the surface bounds
+  void buildSurfaceBounds();
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
@@ -160,8 +166,8 @@ inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-template <class T>
-T& CuboidVolumeBounds::dumpT(T& dt) const {
+template <class stream_t>
+stream_t& CuboidVolumeBounds::dumpT(stream_t& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::CuboidVolumeBounds: (halfLengthX, halfLengthY, halfLengthZ) = ";
