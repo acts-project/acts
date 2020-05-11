@@ -25,6 +25,8 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 using SurfacePtr = std::shared_ptr<const Surface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
+using OrientedSurface = std::pair<SurfacePtr, NavigationDirection>;
+using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces
 static const Transform3D s_planeXY = Transform3D::Identity();
@@ -94,6 +96,24 @@ class VolumeBounds {
   /// @return a vector of surfaces bounding this volume
   virtual SurfacePtrVector decomposeToSurfaces(
       const Transform3D* transform) const = 0;
+
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
+  ///
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
+  ///
+  /// It will throw an exception if the orientation prescription is not adequate
+  ///
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(const Transform3D* transform) const
+      noexcept(false);
+
+  /// The decopmosed boundary surface oprientation, i.e.
+  /// a vector of navigation directions into the volume
+  /// given the normal vector on the surface
+  virtual std::vector<NavigationDirection> boundaryOrientations() const = 0;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

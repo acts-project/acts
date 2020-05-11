@@ -6,12 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TrapezoidVolumeBounds.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"

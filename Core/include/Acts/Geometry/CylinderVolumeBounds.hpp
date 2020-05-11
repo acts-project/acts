@@ -154,6 +154,11 @@ class CylinderVolumeBounds : public VolumeBounds {
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transformPtr = nullptr) const override;
 
+  /// The decopmosed boundary surface oprientation, i.e.
+  /// a vector of navigation directions into the volume
+  /// given the normal vector on the surface
+  std::vector<NavigationDirection> boundaryOrientations() const override;
+
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -191,6 +196,10 @@ class CylinderVolumeBounds : public VolumeBounds {
   std::shared_ptr<const RadialBounds> m_discBounds{nullptr};
   /// Bounds of the sector planes
   std::shared_ptr<const PlanarBounds> m_sectorPlaneBounds{nullptr};
+
+  /// The orientation of the bounding surfaces
+  std::vector<NavigationDirection> m_boundaryOrientations = {
+      forward, backward, backward, forward, forward, backward};
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
@@ -251,6 +260,11 @@ inline std::vector<double> CylinderVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline std::vector<NavigationDirection>
+CylinderVolumeBounds::boundaryOrientations() const {
+  return m_boundaryOrientations;
 }
 
 inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {

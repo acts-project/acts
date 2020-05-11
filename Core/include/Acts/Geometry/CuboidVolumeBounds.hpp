@@ -106,6 +106,11 @@ class CuboidVolumeBounds : public VolumeBounds {
   SurfacePtrVector decomposeToSurfaces(
       const Transform3D* transformPtr) const override;
 
+  /// The decopmosed boundary surface oprientation, i.e.
+  /// a vector of navigation directions into the volume
+  /// given the normal vector on the surface
+  std::vector<NavigationDirection> boundaryOrientations() const override;
+
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -138,6 +143,10 @@ class CuboidVolumeBounds : public VolumeBounds {
   std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};
   std::shared_ptr<const RectangleBounds> m_zxBounds{nullptr};
 
+  /// The orientation of the bounding surfaces
+  std::vector<NavigationDirection> m_boundaryOrientations = {
+      forward, backward, forward, backward, forward, backward};
+
   /// Create the surface bounds
   void buildSurfaceBounds();
 
@@ -156,6 +165,11 @@ inline std::vector<double> CuboidVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline std::vector<NavigationDirection>
+CuboidVolumeBounds::boundaryOrientations() const {
+  return m_boundaryOrientations;
 }
 
 inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {

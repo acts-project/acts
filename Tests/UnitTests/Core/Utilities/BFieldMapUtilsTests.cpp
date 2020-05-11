@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   CHECK_CLOSE_REL(value0_xyz, value4_xyz, 1e-10);
 }
 
-/// Unit test for testing the decomposeToSurfaces() function
+/// Unit test for symmetric data
 BOOST_DATA_TEST_CASE(
     bfield_symmetry_random,
     bdata::random(

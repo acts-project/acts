@@ -47,12 +47,12 @@ class ITrackingVolumeBuilder {
   /// ITrackingVolumeBuilder interface method
   ///
   /// @param gctx is the geometry context for witch the volume is built
-  /// @param insideVolume is an (optional) volume to be wrapped
+  /// @param oppositeVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   ///
   /// @return shared pointer to a newly created TrackingVolume
   virtual MutableTrackingVolumePtr trackingVolume(
-      const GeometryContext& gctx, TrackingVolumePtr insideVolume = nullptr,
+      const GeometryContext& gctx, TrackingVolumePtr oppositeVolume = nullptr,
       VolumeBoundsPtr outsideBounds = nullptr) const = 0;
 };
 

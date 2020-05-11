@@ -102,6 +102,11 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transform = nullptr) const override;
 
+  /// The decopmosed boundary surface oprientation, i.e.
+  /// a vector of navigation directions into the volume
+  /// given the normal vector on the surface
+  std::vector<NavigationDirection> boundaryOrientations() const override;
+
   /// Construct bounding box for this shape
   ///
   /// @param trf Optional transform
@@ -132,6 +137,11 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   std::shared_ptr<const DiscBounds> m_outerDiscBounds{nullptr};
   std::shared_ptr<const DiscBounds> m_innerDiscBounds{nullptr};
 
+  /// The orientation of the bounding surfaces
+  std::vector<NavigationDirection> m_boundaryOrientations = {
+      forward, backward, backward, forward,
+      forward, backward, forward,  forward};
+
   /// Create the surface bound objects
   void buildSurfaceBounds();
 
@@ -144,6 +154,11 @@ inline std::vector<double> CutoutCylinderVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline std::vector<NavigationDirection>
+CutoutCylinderVolumeBounds::boundaryOrientations() const {
+  return m_boundaryOrientations;
 }
 
 inline void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {

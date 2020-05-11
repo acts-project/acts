@@ -127,6 +127,11 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transformPtr) const override;
 
+  /// The decopmosed boundary surface oprientation, i.e.
+  /// a vector of navigation directions into the volume
+  /// given the normal vector on the surface
+  std::vector<NavigationDirection> boundaryOrientations() const override;
+
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -157,6 +162,10 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// The face PlaneSurface parallel to local zx plane, positive local y
   std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsTop{nullptr};
 
+  /// The orientation of the bounding surfaces
+  std::vector<NavigationDirection> m_boundaryOrientations = {
+      forward, backward, forward, backward, forward, backward};
+
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
@@ -165,12 +174,14 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   void buildSurfaceBounds();
 
   /// Templated dump methos
-  template <class T>
-  T& dumpT(T& dt) const;
+  /// @tparam stream_t The type of the stream for dumping
+  /// @param dt The stream object
+  template <class stream_t>
+  stream_t& dumpT(stream_t& dt) const;
 };
 
-template <class T>
-T& TrapezoidVolumeBounds::dumpT(T& dt) const {
+template <class stream_t>
+stream_t& TrapezoidVolumeBounds::dumpT(stream_t& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
@@ -185,6 +196,11 @@ inline std::vector<double> TrapezoidVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
+}
+
+inline std::vector<NavigationDirection>
+TrapezoidVolumeBounds::boundaryOrientations() const {
+  return m_boundaryOrientations;
 }
 
 inline void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {
