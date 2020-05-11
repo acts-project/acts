@@ -3,6 +3,7 @@ add_subdirectory(Common)
 
 # tools
 add_subdirectory(EventGenerator)
+add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory_if(Fatras ACTS_BUILD_EXAMPLES_PYTHIA8)
 add_subdirectory(Geometry)
 add_subdirectory(HelloWorld)

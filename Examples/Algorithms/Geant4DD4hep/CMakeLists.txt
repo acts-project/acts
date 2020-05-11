@@ -1,35 +1,32 @@
 add_library(
-  ActsExamplesDD4hepG4 SHARED
-  src/DD4hepToG4Svc.cpp
-  src/GeoConstruction.cpp)
+  ActsExamplesGeant4DD4hep SHARED
+  src/DD4hepDetectorConstruction.cpp)
 target_compile_definitions(
-  ActsExamplesDD4hepG4
+  ActsExamplesGeant4DD4hep
   PUBLIC ${Geant4_DEFINITIONS})
 target_include_directories(
-  ActsExamplesDD4hepG4 
+  ActsExamplesGeant4DD4hep
   SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
 target_include_directories(
-  ActsExamplesDD4hepG4
+  ActsExamplesGeant4DD4hep
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
-  ActsExamplesDD4hepG4
-  PUBLIC
-    ActsExamplesFramework ActsExamplesDetectorDD4hep
-    ${Geant4_LIBRARIES})
+  ActsExamplesGeant4DD4hep
+  PUBLIC ${Geant4_LIBRARIES})
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
   target_include_directories(
-    ActsExamplesDD4hepG4
-    PUBLIC ${DD4hep_INCLUDE_DIRS})
+    ActsExamplesGeant4DD4hep
+    PRIVATE ${DD4hep_INCLUDE_DIRS})
   target_link_libraries(
-    ActsExamplesDD4hepG4
-    PUBLIC ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY})
+    ActsExamplesGeant4DD4hep
+    PRIVATE ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDG4_LIBRARY})
 else()
   target_link_libraries(
-    ActsExamplesDD4hepG4
+    ActsExamplesGeant4DD4hep
     PUBLIC DD4hep::DDCore DD4hep::DDG4)
 endif()
 
 install(
-  TARGETS ActsExamplesDD4hepG4
+  TARGETS ActsExamplesGeant4DD4hep
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
