@@ -28,7 +28,7 @@ GeantinoRecording::GeantinoRecording(const GeantinoRecording::Config& cfg,
       m_cfg(cfg),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.outputMaterialTracks.empty()) {
-    throw std::invalid_argument("Missing output material track collection");
+    throw std::invalid_argument("Missing output material tracks collection");
   }
   if (not m_cfg.detectorConstruction) {
     throw std::invalid_argument("Missing detector construction object");
@@ -54,24 +54,13 @@ FW::ProcessCode GeantinoRecording::execute(
 
   // TODO use framework random numbers directly or at least context seed
   // TODO take particles collection as input instead of generating them
-  // Begin with the simulation
+
+  // start simulation. each track is simulated as a separate Geant4 event.
   m_runManager->BeamOn(m_cfg.tracksPerEvent);
-  // Retrieve the track material tracks from Geant4
-  auto materialTracks = EventAction::instance()->materialTracks();
-  ACTS_INFO("Received " << materialTracks.size() << " material tracks");
 
   // Write the recorded material to the event store
-  ctx.eventStore.add(m_cfg.outputMaterialTracks, std::move(materialTracks));
-
-  // // Retrieve the sim hit track steps from Geant4
-  // auto trackSteps = Geant4::EventAction::Instance()->TrackSteps();
-  // ACTS_INFO("Received " << trackSteps.size()
-  //                       << " steps per track. Writing them now into
-  //                       file...");
-  //
-  // // Write the sim hit track steps info to the event store
-  // context.eventStore.add(m_cfg.geantTrackStepCollection,
-  // std::move(trackSteps));
+  ctx.eventStore.add(m_cfg.outputMaterialTracks,
+                     EventAction::instance()->materialTracks());
 
   return FW::ProcessCode::SUCCESS;
 }
