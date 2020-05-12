@@ -129,12 +129,32 @@ enum SpacePointIndices : unsigned int {
   eSpaceEnergy = eSpaceTime,
 };
 
+/// Components of alignment parameters vector.
+///
+/// To be used to access components by named indices instead of just numbers.
+/// This must be a regular `enum` and not a scoped `enum class` to allow
+/// implicit conversion to an integer. The enum value are thus visible directly
+/// in `namespace Acts` and are prefixed to avoid naming collisions.
+enum AlignmentParametersIndices : unsigned int {
+  // Position of geometry object center
+  ePos_X = 0u,
+  ePos_Y = ePos_X + 1u,
+  ePos_Z = ePos_X + 2u,
+  // Rotation angle around global x/y/z axis of geometry object
+  eRot_X = 3u,
+  eRot_Y = eRot_X + 1u,
+  eRot_Z = eRot_X + 2u,
+  eAlignmentParametersSize,
+};
+
 /// Underlying fundamental scalar type for bound track parameters.
 using BoundParametersScalar = double;
 /// Underlying fundamental scalar type for free track parameters.
 using FreeParametersScalar = double;
 /// Underlying fundamental scalar type for space points.
 using SpacePointScalar = double;
+/// Underlying fundamental scalar type for alignment parameters.
+using AlignmentParametersScalar = double;
 
 }  // namespace Acts
 #endif
@@ -257,6 +277,10 @@ using BoundSymMatrix =
     ActsSymMatrix<BoundParametersScalar, eBoundParametersSize>;
 
 using GlobalBoundSymMatrix = ActsMatrixX<BoundParametersScalar>;
+
+using AlignmentToBoundMatrix =
+    ActsMatrix<BoundParametersScalar, eBoundParametersSize,
+               eAlignmentParametersSize>;
 
 // Matrix and vector types related to free track parameters.
 
