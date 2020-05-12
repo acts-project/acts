@@ -47,6 +47,33 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   CHECK_CLOSE_ABS(bb.min(), Vector3D(-9.77021, -8.65268, -9.23688), tol);
 }
 
+BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
+  TrapezoidVolumeBounds tvb(5, 10, 8, 4);
+
+  auto tvbSurfaces = tvb.decomposeToSurfaces(nullptr);
+  BOOST_TEST(tvbSurfaces.size(), 6);
+
+  auto tvbOrientations = tvb.boundaryOrientations();
+
+  std::vector<NavigationDirection> refOrientations = {
+      forward, backward, forward, backward, forward, backward};
+
+  BOOST_CHECK(tvbOrientations == refOrientations);
+
+  auto tvbOrientedSurfaces = tvb.orientedSurfaces(nullptr);
+  for (auto& os : tvbOrientedSurfaces) {
+    auto geoCtx = GeometryContext();
+    auto osCenter = os.first->center(geoCtx);
+    auto osNormal = os.first->normal(geoCtx, osCenter);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideTvb = osCenter + nDir * osNormal;
+    auto outsideTvb = osCenter - nDir * osNormal;
+    BOOST_CHECK(tvb.inside(insideTvb));
+    BOOST_CHECK(!tvb.inside(outsideTvb));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test

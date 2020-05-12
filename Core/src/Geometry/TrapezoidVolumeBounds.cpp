@@ -79,21 +79,21 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   double topShift = poshOffset + neghOffset;
 
   // Face surfaces yz
-  //   (3) - At point A, attached to alpha opening angle
-  Vector3D faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
-  auto faTransform = std::make_shared<Transform3D>(
-      transform * Translation3D(faPosition) *
-      AngleAxis3D(-0.5 * M_PI + get(eAlpha), Vector3D(0., 0., 1.)) * s_planeYZ);
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      faTransform, m_faceAlphaRectangleBounds));
-
-  //   (4) - At point B, attached to beta opening angle
+  // (3) - At point B, attached to beta opening angle
   Vector3D fbPosition(-get(eHalfLengthXnegY) + neghOffset, 0., 0.);
   auto fbTransform = std::make_shared<Transform3D>(
       transform * Translation3D(fbPosition) *
       AngleAxis3D(-0.5 * M_PI + get(eBeta), Vector3D(0., 0., 1.)) * s_planeYZ);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       fbTransform, m_faceBetaRectangleBounds));
+
+  // (4) - At point A, attached to alpha opening angle
+  Vector3D faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
+  auto faTransform = std::make_shared<Transform3D>(
+      transform * Translation3D(faPosition) *
+      AngleAxis3D(-0.5 * M_PI + get(eAlpha), Vector3D(0., 0., 1.)) * s_planeYZ);
+  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
+      faTransform, m_faceAlphaRectangleBounds));
 
   // Face surfaces zx
   //   (5) - At negative local y

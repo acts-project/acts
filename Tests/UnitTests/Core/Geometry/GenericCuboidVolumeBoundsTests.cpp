@@ -183,6 +183,43 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   CHECK_CLOSE_ABS(bb.min(), Vector3D(-0.871397, 0, -0.0867708), tol);
 }
 
+BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
+  std::array<Vector3D, 8> vertices;
+  vertices = {{{0, 0, 0},
+               {4, 0, 0},
+               {4, 2, 0},
+               {0, 2, 0},
+               {0, 0, 2},
+               {4, 0, 2},
+               {4, 2, 2},
+               {0, 2, 2}}};
+
+  GenericCuboidVolumeBounds cubo(vertices);
+  auto gcvbSurfaces = cubo.decomposeToSurfaces(nullptr);
+  BOOST_TEST(gcvbSurfaces.size(), 6);
+
+  auto gcvbOrientations = cubo.boundaryOrientations();
+
+  std::vector<NavigationDirection> refOrientations = {
+      backward, backward, backward, backward, backward, backward};
+
+  BOOST_CHECK(gcvbOrientations == refOrientations);
+
+  auto gcvbOrientedSurfaces = cubo.orientedSurfaces(nullptr);
+
+  for (auto& os : gcvbOrientedSurfaces) {
+    auto geoCtx = GeometryContext();
+    auto osCenter = os.first->center(geoCtx);
+    auto osNormal = os.first->normal(geoCtx);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideGcvb = osCenter + nDir * osNormal;
+    auto outsideGcvb = osCenter - nDir * osNormal;
+    BOOST_CHECK(cubo.inside(insideGcvb));
+    BOOST_CHECK(!cubo.inside(outsideGcvb));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

@@ -139,8 +139,8 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
 
   /// The orientation of the bounding surfaces
   std::vector<NavigationDirection> m_boundaryOrientations = {
-      forward, backward, backward, forward,
-      forward, backward, forward,  forward};
+      forward,  backward, backward, forward,
+      backward, forward,  forward,  forward};
 
   /// Create the surface bound objects
   void buildSurfaceBounds();

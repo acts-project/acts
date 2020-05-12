@@ -198,6 +198,36 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   ObjTestWriter::writeObj(tPolyhedrons);
 }
 
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
+  GeometryContext tgContext = GeometryContext();
+
+  CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
+
+  std::vector<NavigationDirection> refOrientations = {
+      forward,  backward, backward, forward,
+      backward, forward,  forward,  forward};
+
+  auto ccvbOrientations = ccvb.boundaryOrientations();
+
+  BOOST_CHECK(refOrientations == ccvbOrientations);
+
+  auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(nullptr);
+  BOOST_TEST(ccvbOrientedSurfaces.size(), 8);
+
+  for (auto& os : ccvbOrientedSurfaces) {
+    auto geoCtx = GeometryContext();
+    auto onSurface = os.first->binningPosition(geoCtx, binR);
+    auto osNormal = os.first->normal(geoCtx, onSurface);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideCcvb = onSurface + nDir * osNormal;
+    auto outsideCCvb = onSurface - nDir * osNormal;
+
+    BOOST_CHECK(ccvb.inside(insideCcvb));
+    BOOST_CHECK(!ccvb.inside(outsideCCvb));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

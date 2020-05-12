@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -87,6 +88,34 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   // Outside position
   for (const auto& outside : outsides) {
     BOOST_TEST(!box.inside(outside, s_onSurfaceTolerance));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
+  CuboidVolumeBounds box(5, 8, 7);
+
+  auto cvbSurfaces = box.decomposeToSurfaces(nullptr);
+  BOOST_TEST(cvbSurfaces.size(), 6);
+
+  auto cvbOrientations = box.boundaryOrientations();
+
+  std::vector<NavigationDirection> refOrientations = {
+      forward, backward, forward, backward, forward, backward};
+
+  BOOST_CHECK(cvbOrientations == refOrientations);
+
+  auto cvbOrientedSurfaces = box.orientedSurfaces(nullptr);
+
+  for (auto& os : cvbOrientedSurfaces) {
+    auto geoCtx = GeometryContext();
+    auto osCenter = os.first->center(geoCtx);
+    auto osNormal = os.first->normal(geoCtx);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideBox = osCenter + nDir * osNormal;
+    auto outsideBox = osCenter - nDir * osNormal;
+    BOOST_CHECK(box.inside(insideBox));
+    BOOST_CHECK(!box.inside(outsideBox));
   }
 }
 
