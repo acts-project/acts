@@ -11,7 +11,6 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
-#include "ActsExamples/Generators/FlattenEvent.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -27,17 +26,18 @@ void ActsExamples::setupEvgenInput(
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Add requested event generator
+  std::string particlesCollection = "particles_generated";
   auto evgenInput = vm["evg-input-type"].template as<std::string>();
   if (evgenInput == "gun") {
     auto evgCfg = ActsExamples::Options::readParticleGunOptions(vm);
-    evgCfg.output = "event_generated";
+    evgCfg.outputParticles = particlesCollection;
     evgCfg.randomNumbers = randomNumberSvc;
     sequencer.addReader(
         std::make_shared<ActsExamples::EventGenerator>(evgCfg, logLevel));
 
   } else if (evgenInput == "pythia8") {
     auto evgCfg = ActsExamples::Options::readPythia8Options(vm, logLevel);
-    evgCfg.output = "event_generated";
+    evgCfg.outputParticles = particlesCollection;
     evgCfg.randomNumbers = randomNumberSvc;
     sequencer.addReader(
         std::make_shared<ActsExamples::EventGenerator>(evgCfg, logLevel));
@@ -46,20 +46,13 @@ void ActsExamples::setupEvgenInput(
     throw std::runtime_error("unknown event generator input: " + evgenInput);
   }
 
-  // Convert to particles for the writers and subsequent algorithms
-  ActsExamples::FlattenEvent::Config flatten;
-  flatten.inputEvent = "event_generated";
-  flatten.outputParticles = "particles_generated";
-  sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::FlattenEvent>(flatten, logLevel));
-
   // Output directory
   std::string outputDir = vm["output-dir"].template as<std::string>();
 
   // Write generated particles as CSV files
   if (vm["output-csv"].template as<bool>()) {
     ActsExamples::CsvParticleWriter::Config pWriterCsvConfig;
-    pWriterCsvConfig.inputParticles = flatten.outputParticles;
+    pWriterCsvConfig.inputParticles = particlesCollection;
     pWriterCsvConfig.outputDir = outputDir;
     pWriterCsvConfig.outputStem = "particles_generated";
     sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
@@ -70,10 +63,9 @@ void ActsExamples::setupEvgenInput(
   if (vm["output-root"].template as<bool>()) {
     // Write particles as ROOT TTree
     ActsExamples::RootParticleWriter::Config pWriterRootConfig;
-    pWriterRootConfig.inputParticles = flatten.outputParticles;
-    pWriterRootConfig.filePath =
-        ActsExamples::joinPaths(outputDir, "particles.root");
-    sequencer.addWriter(std::make_shared<ActsExamples::RootParticleWriter>(
-        pWriterRootConfig, logLevel));
+    pWriterRootConfig.inputParticles = particlesCollection;
+    pWriterRootConfig.filePath = FW::joinPaths(outputDir, "particles.root");
+    sequencer.addWriter(
+        std::make_shared<FW::RootParticleWriter>(pWriterRootConfig, logLevel));
   }
 }
