@@ -4,9 +4,8 @@ add_executable(
 target_link_libraries(
   ActsExampleGenParticleGun
   PRIVATE
-    ActsExamplesFramework ActsExamplesCommon
-    ActsExamplesGenerators ActsExamplesIoRoot ActsExamplesIoCsv
-    ActsExamplesPrinters
+    ActsExamplesFramework ActsExamplesGenerators ActsExamplesCommon
+    ActsExamplesIoCsv ActsExamplesIoRoot ActsExamplesPrinters
     Boost::program_options)
 
 install(
