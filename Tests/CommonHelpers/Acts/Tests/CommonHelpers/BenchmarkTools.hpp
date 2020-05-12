@@ -198,7 +198,7 @@ struct MicroBenchmarkResult {
                            Duration());
   }
 
-  // Robust estimator of the benchmark iteration time
+  // Robust estimator of the mean benchmark iteration time
   //
   // Computed as the average iteration time of the median benchmark run, this
   // estimator provides a tunable compromise between the mean and median
@@ -213,15 +213,24 @@ struct MicroBenchmarkResult {
   //   bursts of background system load. The more benchmark runs you measure,
   //   the higher the robustness.
   //
+  // This analysis assumes that the run timing distribution is roughly
+  // symmetric (and therefore the median can be used as an estimator of the
+  // mean), but makes no assumption about iteration time distributions.
+  //
   Duration iterTimeAverage() const {
     assert(iters_per_run > 0);
     return runTimeMedian() / iters_per_run;
   }
 
-  // Robust estimator of the standard error on the benchmark iteration time
+  // Standard error on the estimator of the mean benchmark iteration time
+  //
+  // This analysis assumes that the run timing distribution is normal because
+  // the underlying `runTimeError` analysis does. It also assumes that
+  // per-iteration times are independent and identically distributed.
+  //
   Duration iterTimeError() const {
     assert(iters_per_run > 0);
-    return runTimeRobustStddev() / std::sqrt(iters_per_run);
+    return runTimeError() / std::sqrt(iters_per_run);
   }
 
   // Sorted benchmark run times, used for computing outlier-robust statistics
@@ -232,6 +241,10 @@ struct MicroBenchmarkResult {
   }
 
   // Median time per benchmark run
+  //
+  // This is an outlier-robust estimator of the mean benchmark run time if the
+  // run time distribution is roughly symmetric.
+  //
   Duration runTimeMedian() const {
     assert(run_timings.size() >= 1);
     const std::vector<Duration> sorted_timings = sortedRunTimes();
@@ -284,12 +297,32 @@ struct MicroBenchmarkResult {
   // its standard deviation can be built from the interquartile range via
   // the formula estimated_stddev = IQR / (2 * sqrt(2) * erf-1(1/2)).
   //
+  // This analysis assumes that the run timing distribution is roughly normal,
+  // outlier measurements aside.
+  //
   Duration runTimeRobustStddev() const {
     auto [firstq, thirdq] = runTimeQuartiles();
     return (thirdq - firstq) / (2. * std::sqrt(2.) * 0.4769362762044698733814);
   }
 
+  // Standard error on the median benchmark run time
+  //
+  // This analysis assumes that the run timing distribution is approximately
+  // normal, a few outliers aside.
+  //
+  Duration runTimeError() const {
+    return 1.2533 * runTimeRobustStddev() / std::sqrt(run_timings.size());
+  }
+
   // Standardized display for benchmark statistics
+  //
+  // The underlying data analysis assumes the full mathematical contract stated
+  // in the documentations of `runTimeError`, `iterTimeAverage` and
+  // `iterTimeError`. It also assumes that _both_ the run and iteration timings
+  // follow an approximately normal distribution, so that the standard 95%
+  // confidence interval formulation can be applied and that the median run
+  // time can be used as an estimator of the mean run time.
+  //
   friend std::ostream& operator<<(std::ostream& os,
                                   const MicroBenchmarkResult& res) {
     auto old_precision = os.precision();
@@ -298,9 +331,9 @@ struct MicroBenchmarkResult {
        << res.iters_per_run << " iteration(s), " << std::setprecision(1)
        << res.totalTime().count() / 1'000'000 << "ms total, "
        << std::setprecision(4) << res.runTimeMedian().count() / 1'000 << "+/-"
-       << res.runTimeRobustStddev().count() / 1'000 << "µs per run, "
+       << 1.96 * res.runTimeError().count() / 1'000 << "µs per run, "
        << std::setprecision(3) << res.iterTimeAverage().count() << "+/-"
-       << res.iterTimeError().count() << "ns per iteration";
+       << 1.96 * res.iterTimeError().count() << "ns per iteration";
     os.precision(old_precision);
     os.flags(old_flags);
     return os;
@@ -449,6 +482,17 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 //   scheduler disturbs the program every few miliseconds. With run timings of
 //   ~10µs, this disturbance affects less than 1% of data points, and is thus
 //   perfectly eliminated by our outlier-robust statistics.
+//
+// As an extra, and unfortunately sometimes conflicting suggestion, it is
+// advised to keep `iters_per_run` above 30, which is the classic rule of thumb
+// for the validity of the central limit theorem. This allows you to safely
+// assume that the random run timing distribution follows a roughly normal
+// distribution, no matter what the actual underlying iteration timing
+// probability law is, and the statistical analysis methods of
+// `MicroBenchmarkResult` pervasively rely on this normality hypothesis. At
+// lower `iters_per_run`, please cross-check yourself that your run timings
+// follow a normal distribution, and use a statistical analysis methodology that
+// is appropriate for the run timings distribution otherwise.
 //
 // You shouldn't usually need to adjust the number of runs and warmup time, but
 // here are some guidelines for those times where you need to:
