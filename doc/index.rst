@@ -24,10 +24,10 @@ Key features of this project include:
 .. toctree::
     :maxdepth: 2
 
+    codeguide
     modules/modules
     plugins/plugins
     utilities/utilities
     integration/integration
-    api/api
     authors
     license
