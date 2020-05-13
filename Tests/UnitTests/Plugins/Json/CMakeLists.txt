@@ -2,4 +2,4 @@ set(unittest_extra_libraries ActsJsonPlugin)
 
 add_unittest(JsonConversion JsonConversionTest.cpp)
 add_unittest(JsonHierarchicalObjectConverter JsonHierarchicalObjectConverterTests.cpp)
-add_unittest(JsonGeometryicalHierarchyConverter JsonGeometryicalHierarchyConverterTest.cpp)
+add_unittest(JsonGeometricalHierarchyConverter JsonGeometricalHierarchyConverterTest.cpp)
