@@ -4,8 +4,9 @@ add_library(
   ActsExamples/TruthTracking/TrackSelector.cpp
   ActsExamples/TruthTracking/TruthTrackFinder.cpp
   ActsExamples/TruthTracking/TruthVerticesToTracks.cpp
+  ActsExamples/TruthTracking/TruthVertexFinder.cpp
   ActsExamples/TruthTracking/TruthSeedSelector.cpp
-  )
+)
 target_include_directories(
   ActsExamplesTruthTracking
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
