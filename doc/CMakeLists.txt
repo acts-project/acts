@@ -1,9 +1,9 @@
-set(doc_sources
-  index.rst
-  authors.rst
-  ../AUTHORS.md
-  license.rst
-  ../LICENSE
+file(GLOB_RECURSE doxygen_sources
+  ${PROJECT_SOURCE_DIR}/Core/include/*.hpp
+  ${PROJECT_SOURCE_DIR}/Fatras/include/*.hpp
+  ${PROJECT_SOURCE_DIR}/Plugins/*/include/*.hpp
+)
+set(sphinx_sources
   integration/atlas.md
   integration/fcc.md
   integration/integration.rst
@@ -22,23 +22,46 @@ set(doc_sources
   utilities/logging.rst
   utilities/units.rst
   utilities/utilities.rst
+  authors.rst
+  codeguide.md
+  index.rst
+  license.rst
+  ../AUTHORS.md
+  ../LICENSE
 )
 
-configure_file(conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
-configure_file(doxygen.config.in ${CMAKE_CURRENT_BINARY_DIR}/doxygen.config @ONLY)
+set(output_dir ${CMAKE_CURRENT_SOURCE_DIR}/_build)
+set(output_html_dir ${output_dir}/html)
+set(output_html_index ${output_dir}/html/index.html)
+
+# default target builds the full documentation
 add_custom_target(
   doc
-  COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxygen.config
-  COMMAND ${Sphinx_EXECUTABLE} -b html -d ${CMAKE_CURRENT_BINARY_DIR}/doctrees -j auto -c ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/html
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Generate html documentation with Doxygen and Sphinx"
-  VERBATIM
-  SOURCES
-    doxygen_layout.xml
-    ${CMAKE_CURRENT_BINARY_DIR}/doxygen.config
-    ${CMAKE_CURRENT_BINARY_DIR}/conf.py
-    ${doc_sources})
+  COMMAND
+    ${Sphinx_EXECUTABLE}
+      -b html
+      -d ${output_dir}/doctrees
+      -j auto
+      -t use_doxygen
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${output_html_dir}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS conf.py Doxyfile ${doxygen_sources} ${sphinx_sources}
+  COMMENT "Build documentation")
+# helper target for faster iterations without the doxygen API docs
+add_custom_target(
+  doc-without-doxygen
+  COMMAND
+    ${Sphinx_EXECUTABLE}
+      -b html
+      -d ${output_dir}/doctrees
+      -j auto
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${output_html_dir}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS conf.py Doxyfile ${doxygen_sources} ${sphinx_sources}
+  COMMENT "Build documentation (without Doxygen)")
 
 install(
-  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
-  DESTINATION ${CMAKE_INSTALL_DOCDIR} OPTIONAL)
+  DIRECTORY ${output_html_dir}/
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}/Acts OPTIONAL)
