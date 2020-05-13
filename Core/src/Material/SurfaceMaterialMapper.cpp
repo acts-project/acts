@@ -35,6 +35,7 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
   // The Surface material mapping state
   State mState(gctx, mctx);
   resolveMaterialSurfaces(mState, *world);
+  collectMaterialVolumes(mState, *world);
 
   ACTS_DEBUG(mState.accumulatedMaterial.size()
              << " Surfaces with PROXIES collected ... ");
@@ -133,6 +134,31 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
       // Create a homogeneous type of material
       ACTS_DEBUG("       - this is homogeneous material.");
       mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial();
+    }
+  }
+}
+
+void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
+    State& mState, const TrackingVolume& tVolume) const {
+  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
+                                   << "' for material surfaces.")
+  ACTS_VERBOSE("- Insert Volume ...");
+  if (tVolume.volumeMaterial() != nullptr) {
+    mState.volumeMaterial[tVolume.geoID()] = tVolume.volumeMaterialSharedPtr();
+  }
+
+  // Step down into the sub volume
+  if (tVolume.confinedVolumes()) {
+    ACTS_VERBOSE("- Check children volume ...");
+    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
+      // Recursive call
+      collectMaterialVolumes(mState, *sVolume);
+    }
+  }
+  if (!tVolume.denseVolumes().empty()) {
+    for (auto& sVolume : tVolume.denseVolumes()) {
+      // Recursive call
+      collectMaterialVolumes(mState, *sVolume);
     }
   }
 }

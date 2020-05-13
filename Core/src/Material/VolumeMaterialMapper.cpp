@@ -45,6 +45,7 @@ Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
   // The Surface material mapping state
   State mState(gctx, mctx);
   resolveMaterialVolume(mState, *world);
+  collectMaterialSurfaces(mState, *world);
   return mState;
 }
 
@@ -115,6 +116,67 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
       BinUtility buHomogeneous;
       mState.materialBin[geoID] = buHomogeneous;
       return;
+    }
+  }
+}
+
+void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
+    State& mState, const TrackingVolume& tVolume) const {
+  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
+                                   << "' for material surfaces.")
+
+  ACTS_VERBOSE("- boundary surfaces ...");
+  // Check the boundary surfaces
+  for (auto& bSurface : tVolume.boundarySurfaces()) {
+    if (bSurface->surfaceRepresentation().surfaceMaterial() != nullptr) {
+      mState.surfaceMaterial[bSurface->surfaceRepresentation().geoID()] =
+          bSurface->surfaceRepresentation().surfaceMaterialSharedPtr();
+    }
+  }
+
+  ACTS_VERBOSE("- confined layers ...");
+  // Check the confined layers
+  if (tVolume.confinedLayers() != nullptr) {
+    for (auto& cLayer : tVolume.confinedLayers()->arrayObjects()) {
+      // Take only layers that are not navigation layers
+      if (cLayer->layerType() != navigation) {
+        // Check the representing surface
+        if (cLayer->surfaceRepresentation().surfaceMaterial() != nullptr) {
+          mState.surfaceMaterial[cLayer->surfaceRepresentation().geoID()] =
+              cLayer->surfaceRepresentation().surfaceMaterialSharedPtr();
+        }
+        // Get the approach surfaces if present
+        if (cLayer->approachDescriptor() != nullptr) {
+          for (auto& aSurface :
+               cLayer->approachDescriptor()->containedSurfaces()) {
+            if (aSurface != nullptr) {
+              if (aSurface->surfaceMaterial() != nullptr) {
+                mState.surfaceMaterial[aSurface->geoID()] =
+                    aSurface->surfaceMaterialSharedPtr();
+              }
+            }
+          }
+        }
+        // Get the sensitive surface is present
+        if (cLayer->surfaceArray() != nullptr) {
+          // Sensitive surface loop
+          for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
+            if (sSurface != nullptr) {
+              if (sSurface->surfaceMaterial() != nullptr) {
+                mState.surfaceMaterial[sSurface->geoID()] =
+                    sSurface->surfaceMaterialSharedPtr();
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  // Step down into the sub volume
+  if (tVolume.confinedVolumes()) {
+    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
+      // Recursive call
+      collectMaterialSurfaces(mState, *sVolume);
     }
   }
 }

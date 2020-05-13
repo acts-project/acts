@@ -39,15 +39,15 @@ struct Polyhedron {
   /// @param verticesIn The 3D global vertices that make up the object
   /// @param facesIn List of lists of indices for faces.
   /// @param triangularMeshIn List of lists of indices for a triangular mesh
-  /// @param radialCheck A dedicated check for radial extent done
+  /// @param isExact A dedicated flag if this is exact or not
   /// @note This creates copies of the input vectors
   Polyhedron(const std::vector<Vector3D>& verticesIn,
              const std::vector<FaceType>& facesIn,
-             const std::vector<FaceType>& triangularMeshIn,
-             bool radialCheck = false)
+             const std::vector<FaceType>& triangularMeshIn, bool isExact = true)
       : vertices(verticesIn),
         faces(facesIn),
-        triangularMesh(triangularMeshIn) {}
+        triangularMesh(triangularMeshIn),
+        exact(isExact) {}
 
   /// List of 3D vertices as vectors
   std::vector<Vector3D> vertices;
@@ -61,6 +61,9 @@ struct Polyhedron {
   /// each face is a list of vertices v
   /// - in this case restricted to a triangular representation
   std::vector<FaceType> triangularMesh;
+
+  /// Is this an exact representation (approximating curved spaces)
+  bool exact = true;
 
   /// Merge another Polyhedron into this one
   ///

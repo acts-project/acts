@@ -1,45 +1,41 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/Geant4/MMSteppingAction.hpp"
+#include "SteppingAction.hpp"
 
+#include <G4Material.hh>
+#include <G4Step.hh>
 #include <stdexcept>
 
 #include "Acts/Utilities/Units.hpp"
-#include "G4Material.hh"
-#include "G4Step.hh"
 
-FW::Geant4::MMSteppingAction* FW::Geant4::MMSteppingAction::fgInstance =
-    nullptr;
+using namespace ActsExamples;
 
-FW::Geant4::MMSteppingAction* FW::Geant4::MMSteppingAction::Instance() {
-  // Static acces function via G4RunManager
-  return fgInstance;
+SteppingAction* SteppingAction::s_instance = nullptr;
+
+SteppingAction* SteppingAction::instance() {
+  return s_instance;
 }
 
-FW::Geant4::MMSteppingAction::MMSteppingAction()
-    : G4UserSteppingAction(),
-      m_steps(),
-      m_tracksteps()
-// m_volMgr(MaterialRunAction::Instance()->getGeant4VolumeManager())
-{
-  if (fgInstance) {
-    throw std::logic_error("Attempted to duplicate a singleton");
+SteppingAction::SteppingAction() : G4UserSteppingAction() {
+  if (s_instance) {
+    throw std::logic_error(
+        "Attempted to duplicate the SteppingAction singleton");
   } else {
-    fgInstance = this;
+    s_instance = this;
   }
 }
 
-FW::Geant4::MMSteppingAction::~MMSteppingAction() {
-  fgInstance = nullptr;
+SteppingAction::~SteppingAction() {
+  s_instance = nullptr;
 }
 
-void FW::Geant4::MMSteppingAction::UserSteppingAction(const G4Step* step) {
+void SteppingAction::UserSteppingAction(const G4Step* step) {
   // get the material
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
 
@@ -78,11 +74,14 @@ void FW::Geant4::MMSteppingAction::UserSteppingAction(const G4Step* step) {
 
     // create the RecordedMaterialProperties
     const auto& rawPos = step->GetPreStepPoint()->GetPosition();
+    const auto& rawDir = step->GetPreStepPoint()->GetMomentum();
     Acts::MaterialInteraction mInteraction;
     mInteraction.position = Acts::Vector3D(rawPos.x(), rawPos.y(), rawPos.z());
+    mInteraction.direction = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
+    mInteraction.direction.normalized();
     mInteraction.materialProperties =
         Acts::MaterialProperties(X0, L0, A, Z, rho, steplength);
-    m_steps.push_back(mInteraction);
+    m_materialSteps.push_back(mInteraction);
 
     //   // Get the track associated to the step
     //   G4Track* track = step->GetTrack();
@@ -124,7 +123,7 @@ void FW::Geant4::MMSteppingAction::UserSteppingAction(const G4Step* step) {
   }
 }
 
-void FW::Geant4::MMSteppingAction::Reset() {
-  m_steps.clear();
-  m_tracksteps.clear();
+void SteppingAction::clear() {
+  m_materialSteps.clear();
+  m_trackSteps.clear();
 }

@@ -85,7 +85,9 @@ class GainMatrixSmoother {
                      << prev_ts.predictedCovariance().inverse());
 
         // Gain smoothing matrix
-        G = ts.filteredCovariance() * ts.jacobian().transpose() *
+        // NB: The jacobian stored in a state is the jacobian from previous
+        // state to this state in forward propagation
+        G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
             prev_ts.predictedCovariance().inverse();
 
         if (G.hasNaN()) {

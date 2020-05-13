@@ -6,38 +6,40 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/Geant4/MMRunAction.hpp"
+#include "RunAction.hpp"
 
+#include <G4Run.hh>
 #include <stdexcept>
 
-#include "ACTFW/Plugins/Geant4/MMEventAction.hpp"
-#include "G4Run.hh"
+#include "EventAction.hpp"
 
-FW::Geant4::MMRunAction* FW::Geant4::MMRunAction::fgInstance = nullptr;
+using namespace ActsExamples;
 
-FW::Geant4::MMRunAction::MMRunAction() : G4UserRunAction() {
-  if (fgInstance) {
-    throw std::logic_error("Attempted to duplicate a singleton");
+RunAction* RunAction::s_instance = nullptr;
+
+RunAction* RunAction::instance() {
+  return s_instance;
+}
+
+RunAction::RunAction() : G4UserRunAction() {
+  if (s_instance) {
+    throw std::logic_error("Attempted to duplicate the RunAction singleton");
   } else {
-    fgInstance = this;
+    s_instance = this;
   }
 }
 
-FW::Geant4::MMRunAction::~MMRunAction() {
-  fgInstance = nullptr;
+RunAction::~RunAction() {
+  s_instance = nullptr;
 }
 
-FW::Geant4::MMRunAction* FW::Geant4::MMRunAction::Instance() {
-  return fgInstance;
-}
-
-void FW::Geant4::MMRunAction::BeginOfRunAction(const G4Run* aRun) {
+void RunAction::BeginOfRunAction(const G4Run* aRun) {
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   // initialize event cumulative quantities
-  MMEventAction::Instance()->Reset();
+  EventAction::instance()->clear();
 }
 
-void FW::Geant4::MMRunAction::EndOfRunAction(const G4Run* aRun) {
+void RunAction::EndOfRunAction(const G4Run* aRun) {
   G4int nofEvents = aRun->GetNumberOfEvent();
   if (nofEvents == 0)
     return;

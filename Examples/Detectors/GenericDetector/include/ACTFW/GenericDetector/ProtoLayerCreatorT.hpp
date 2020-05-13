@@ -363,8 +363,9 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
       // create the surface array - it will also fill the accesible binmember
       // chache if avalable
       Acts::ProtoLayer pl(gctx, sVector);
-      pl.envR = {m_cfg.approachSurfaceEnvelope, m_cfg.approachSurfaceEnvelope};
-      pl.envZ = {layerEnvelopeCoverZ, layerEnvelopeCoverZ};
+      pl.envelope[Acts::binR] = {m_cfg.approachSurfaceEnvelope,
+                                 m_cfg.approachSurfaceEnvelope};
+      pl.envelope[Acts::binZ] = {layerEnvelopeCoverZ, layerEnvelopeCoverZ};
 
       // Record the proto layer anb dthe surfaces for the later layer building
       ProtoLayerSurfaces pls{std::move(pl), sVector, phiBins, zBins};
@@ -561,8 +562,9 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
       }
       // create the layers with the surface arrays
       Acts::ProtoLayer ple(gctx, esVector);
-      ple.envR = {layerEnvelopeR, layerEnvelopeR};
-      ple.envZ = {m_cfg.approachSurfaceEnvelope, m_cfg.approachSurfaceEnvelope};
+      ple.envelope[Acts::binR] = {layerEnvelopeR, layerEnvelopeR};
+      ple.envelope[Acts::binZ] = {m_cfg.approachSurfaceEnvelope,
+                                  m_cfg.approachSurfaceEnvelope};
 
       // push it into the layer vector
       ProtoLayerSurfaces ples{std::move(ple), esVector, layerBinsR,

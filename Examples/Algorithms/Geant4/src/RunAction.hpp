@@ -1,45 +1,36 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// MMRunAction.hpp
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
+#include <G4UserRunAction.hh>
+#include <globals.hh>
 #include <memory>
-
-#include "G4UserRunAction.hh"
-#include "globals.hh"
 
 class G4Run;
 
-namespace FW {
-namespace Geant4 {
+namespace ActsExamples {
 
-/// @class MMRunAction
+/// @class RunAction
 ///
 /// @brief The material mapping run action
 ///
-/// The MMRunAction class is the implementation of the
+/// The RunAction class is the implementation of the
 /// Geant4 class G4UserRunAction. It initiates the run
 /// an resets the EventAction
-
-class MMRunAction : public G4UserRunAction {
+class RunAction final : public G4UserRunAction {
  public:
-  /// Constructor
-  MMRunAction();
-
-  /// Destructor
-  ~MMRunAction() override;
-
   /// Static access method
-  static MMRunAction* Instance();
+  static RunAction* instance();
+
+  /// Construct the action and ensure singleton usage.
+  RunAction();
+  ~RunAction() final override;
 
   /// Interface method at the begin of the run
   /// @note resets the event action
@@ -50,7 +41,7 @@ class MMRunAction : public G4UserRunAction {
 
  private:
   /// Instance of the EventAction
-  static MMRunAction* fgInstance;
+  static RunAction* s_instance;
 };
-}  // namespace Geant4
-}  // namespace FW
+
+}  // namespace ActsExamples

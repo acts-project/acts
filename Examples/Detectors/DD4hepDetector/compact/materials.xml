@@ -2,14 +2,14 @@
 <materials>
 
   <material name="PbWO4">
-    <D type="density" unit="g/cm3" value="8.280"/>
+    <D type="density" value="8.280" unit="g/cm3"/>
     <composite n="1" ref="Pb"/>
     <composite n="1" ref="W"/>
     <composite n="4" ref="O"/>
   </material>
 
   <material name="FR4">
-    <D type="density" unit="g/cm3" value="1.7"/>
+    <D type="density" value="1.7" unit="g/cm3"/>
     <fraction n="0.1808" ref="Si"/>
     <fraction n="0.4056" ref="O"/>
     <fraction n="0.2780" ref="C"/>
@@ -24,14 +24,14 @@
   -->
 
   <material name="Air">
-    <D type="density" unit="g/cm3" value="0.0012"/>
+    <D type="density" value="0.0012" unit="g/cm3"/>
     <fraction n="0.754" ref="N"/>
     <fraction n="0.234" ref="O"/>
     <fraction n="0.012" ref="Ar"/>
   </material>
 
   <material name="Vacuum">
-    <D type="density" unit="g/cm3" value="0.00000001" />
+    <D type="density" value="0.00000001" unit="g/cm3"/>
     <fraction n="1" ref="H" />
   </material>
 
@@ -112,12 +112,12 @@
     <fraction n="0.65" ref="C"/>
     <fraction n="0.35" ref="Epoxy"/>
   </material>
-  
+
   <material name="CarbonFiber_50D">
     <D type="density" value="0.75" unit="g/cm3"/>
     <fraction n="0.65" ref="C"/>
     <fraction n="0.35" ref="Epoxy"/>
-  </material>  
+  </material>
 
   <material name="Rohacell31">
     <D type="density" value="0.032" unit="g/cm3"/>
@@ -126,14 +126,14 @@
     <composite n="2" ref="O"/>
     <composite n="1" ref="N"/>
   </material>
-  
+
   <material name="Rohacell31_50D">
     <D type="density" value="0.016" unit="g/cm3"/>
     <composite n="9" ref="C"/>
     <composite n="13" ref="H"/>
     <composite n="2" ref="O"/>
     <composite n="1" ref="N"/>
-  </material>  
+  </material>
 
   <material name="RPCGasDefault" state="gas">
     <D type="density" value="0.0037" unit="g/cm3"/>
@@ -171,6 +171,11 @@
   <material name="LAr">
     <D value="1.396" unit="g/cm3" />
     <composite n="1" ref="Ar"/>
+  </material>
+
+  <material name="Lead">
+    <D type="density" value="11.35" unit="g/cm3"/>
+    <composite n="1" ref="Pb"/>
   </material>
 
 </materials>

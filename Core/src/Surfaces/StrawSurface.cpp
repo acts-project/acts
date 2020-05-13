@@ -84,5 +84,5 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
   vertices.push_back(ctransform * Vector3D(0., 0., 0.));
   triangularMesh.push_back({bvertices, bvertices + 2, bvertices + 1});
 
-  return Polyhedron(vertices, faces, triangularMesh);
+  return Polyhedron(vertices, faces, triangularMesh, false);
 }

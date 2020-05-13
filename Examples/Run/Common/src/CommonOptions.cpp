@@ -80,11 +80,13 @@ void FW::Options::addMaterialOptions(
       "mat-output-boundaries", value<bool>()->default_value(true),
       "Write material information of boundary surfaces.")(
       "mat-output-volumes", value<bool>()->default_value(true),
+      "Write material information of volumes.")(
+      "mat-output-dense-volumes", value<bool>()->default_value(false),
       "Write material information of dense volumes.")(
       "mat-output-data", value<bool>()->default_value(true),
       "Output the data field(s).")(
-      "mat-output-allsurfaces", value<bool>()->default_value(false),
-      "Output all the selected surfaces to create a surface map.");
+      "mat-output-allmaterial", value<bool>()->default_value(false),
+      "Add protoMaterial to all surfaces and volume for the mapping.");
 }
 
 void FW::Options::addOutputOptions(

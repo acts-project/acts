@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <Acts/Utilities/Units.hpp>
 #include <iostream>
 
 #include "ACTFW/Utilities/Options.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace po = boost::program_options;
 
@@ -32,7 +32,10 @@ void addMaterialMappingOptions(aopt_t& opt) {
                     "Collection name of the material tracks for reading.")(
       "mat-mapping-emptybins", po::value<bool>()->default_value(true),
       "Empty bin correction (recommended). Corrects for vaccuum/emtpy "
-      "assigments.");
+      "assigments.")("mat-mapping-type",
+                     po::value<std::string>()->default_value("surface"),
+                     "Either surface (default) or volume, element on which the "
+                     "material is mapped.");
 }
 
 }  // namespace Options

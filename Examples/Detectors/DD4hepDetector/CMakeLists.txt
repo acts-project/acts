@@ -12,6 +12,7 @@ add_library(
   src/OpenDataDetector/ODDPixelEndcap_geo.cpp
   src/OpenDataDetector/ODDStripBarrel_geo.cpp
   src/OpenDataDetector/ODDStripEndcap_geo.cpp
+  src/Calorimeter/Calorimeter_barrel.cpp
   src/TestTracker/AirTube_geo.cpp
   src/TestTracker/Barrel_geo.cpp
   src/TestTracker/BeamPipe_geo.cpp
@@ -26,13 +27,20 @@ add_library(
   src/DetUtils.cpp)
 target_include_directories(
   ActsExamplesDetectorDD4hep
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${DD4hep_INCLUDE_DIRS})
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesDetectorDD4hep
   PUBLIC
     ActsCore ActsDigitizationPlugin ActsDD4hepPlugin
     ActsExamplesFramework ActsExamplesDetectorsCommon
-    ROOT::Geom ROOT::GenVector ${DD4hep_LIBRARIES})
+    ROOT::Geom ROOT::GenVector)
+
+if(${DD4hep_VERSION} VERSION_LESS 1.11)
+  target_include_directories(ActsExamplesDetectorDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})
+  target_link_libraries(ActsExamplesDetectorDD4hep PUBLIC ${DD4hep_DDCORE_LIBRARY})
+else()
+  target_link_libraries(ActsExamplesDetectorDD4hep PUBLIC DD4hep::DDCore)
+endif()
 
 # not sure why this needs to be set, but dd4hep fails to compile otherwise
 set(LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR})

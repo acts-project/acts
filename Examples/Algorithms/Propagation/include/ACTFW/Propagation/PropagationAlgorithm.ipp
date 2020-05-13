@@ -65,7 +65,8 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     using ActionList =
         Acts::ActionList<SteppingLogger, MaterialInteractor, DebugOutput>;
     using AbortList = Acts::AbortList<EndOfWorld>;
-    using PropagatorOptions = Acts::PropagatorOptions<ActionList, AbortList>;
+    using PropagatorOptions =
+        Acts::DenseStepperPropagatorOptions<ActionList, AbortList>;
 
     PropagatorOptions options(context.geoContext, context.magFieldContext);
     options.pathLimit = pathLength;

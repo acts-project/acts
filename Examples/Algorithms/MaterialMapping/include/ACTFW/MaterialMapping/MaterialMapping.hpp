@@ -8,14 +8,15 @@
 
 #pragma once
 
-#include <Acts/Material/SurfaceMaterialMapper.hpp>
-#include <Acts/Utilities/Logger.hpp>
 #include <climits>
 #include <memory>
 #include <mutex>
 
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/MaterialMapping/IMaterialWriter.hpp"
+#include "Acts/Material/SurfaceMaterialMapper.hpp"
+#include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -66,7 +67,11 @@ class MaterialMapping : public FW::BareAlgorithm {
     std::string mappingMaterialCollection = "MappedMaterialTracks";
 
     /// The ACTS surface material mapper
-    std::shared_ptr<Acts::SurfaceMaterialMapper> materialMapper = nullptr;
+    std::shared_ptr<Acts::SurfaceMaterialMapper> materialSurfaceMapper =
+        nullptr;
+
+    /// The ACTS volume material mapper
+    std::shared_ptr<Acts::VolumeMaterialMapper> materialVolumeMapper = nullptr;
 
     /// The writer of the material
     std::vector<std::shared_ptr<IMaterialWriter>> materialWriters;
@@ -101,6 +106,8 @@ class MaterialMapping : public FW::BareAlgorithm {
   Config m_cfg;  //!< internal config object
   Acts::SurfaceMaterialMapper::State
       m_mappingState;  //!< Material mapping state
+  Acts::VolumeMaterialMapper::State
+      m_mappingStateVol;  //!< Material mapping state
 };
 
 }  // namespace FW

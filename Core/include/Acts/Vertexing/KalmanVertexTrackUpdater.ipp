@@ -113,7 +113,7 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
   return;
 }
 
-Acts::BoundMatrix
+inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
     const ActsSymMatrixD<3>& sMat,
     const ActsMatrixD<eSpacePointSize, 3>& newTrkCov,
