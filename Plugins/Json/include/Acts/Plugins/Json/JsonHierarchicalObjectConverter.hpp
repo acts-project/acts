@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Surfaces/Surface.hpp>
+#include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/HierarchicalGeometryContainer.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -23,90 +21,13 @@ namespace Acts {
 
 /// Convert Hierarchical Object Container to Json file and vice-versa
 template <typename object_t>
-class JsonHierarchicalObjectConverter {
+struct JsonHierarchicalObjectConverter {
  public:
-  /// Configuration of the Reader/Writer
-  class Config {
-   public:
-    /// The detector tag
-    std::string detkey = "detector";
-    /// The volume identification string
-    std::string volkey = "volumes";
-    /// The boundary surface string
-    std::string boukey = "boundaries";
-    /// The layer identification string
-    std::string laykey = "layers";
-    /// The approach identification string
-    std::string appkey = "approach";
-    /// The sensitive identification string
-    std::string senkey = "sensitive";
-    /// The representing idntification string
-    std::string repkey = "representing";
-    /// The name identification
-    std::string namekey = "Name";
-    /// The object key
-    std::string datakey = "Object";
+  /// The object key
+  std::string datakey = "Object";
 
-    /// The default logger
-    std::shared_ptr<const Logger> logger;
-    /// The name of the writer
-    std::string name = "";
-
-    /// Steering to handle sensitive data
-    bool processSensitives = true;
-    /// Steering to handle approach data
-    bool processApproaches = true;
-    /// Steering to handle representing data
-    bool processRepresenting = true;
-    /// Steering to handle boundary data
-    bool processBoundaries = true;
-    /// Steering to handle volume data
-    bool processVolumes = true;
-
-    /// Constructor
-    ///
-    /// @param lname Name of the writer tool
-    /// @param lvl The output logging level
-    Config(const std::string& lname = "JsonHierarchicalObjectConverter",
-           Logging::Level lvl = Logging::INFO)
-        : logger(getDefaultLogger(lname, lvl)), name(lname) {}
-  };
-
-  using Representation = std::map<GeometryID::Value, object_t>;
-
-  /// @brief Layer representation for Json writing
-  struct LayerRep {
-    // the layer id
-    GeometryID layerID;
-    Representation sensitives;
-    Representation approaches;
-    object_t representing;
-  };
-
-  /// @brief Volume representation for Json writing
-  struct VolumeRep {
-    // The geometry id
-    GeometryID volumeID;
-    /// The namne
-    std::string volumeName;
-
-    std::map<GeometryID::Value, LayerRep> layers;
-    Representation boundaries;
-    object_t volume;
-  };
-
-  /// @brief Detector representation for Json writing
-  struct DetectorRep {
-    std::map<GeometryID::Value, VolumeRep> volumes;
-  };
-
-  /// Constructor
-  ///
-  /// @param cfg configuration struct for the reader
-  JsonHierarchicalObjectConverter(const Config& cfg);
-
-  /// Destructor
-  ~JsonHierarchicalObjectConverter() = default;
+  /// The loglevel
+  Acts::Logging::Level logLevel = Acts::Logging::Level::INFO;
 
   /// Convert json map to Hierarchical Object Container
   ///
@@ -114,7 +35,8 @@ class JsonHierarchicalObjectConverter {
   /// @param fromJson Function that return Hierarchical Object from json
   HierarchicalGeometryContainer<object_t> jsonToHierarchicalContainer(
       const nlohmann::json& map,
-      std::function<object_t(const nlohmann::json&)> fromJson) const;
+      std::function<object_t(const nlohmann::json&, const Acts::GeometryID&)>
+          fromJson) const;
 
   /// Convert json map to Hierarchical Object Container
   ///
@@ -124,55 +46,35 @@ class JsonHierarchicalObjectConverter {
       const HierarchicalGeometryContainer<object_t>& hObject,
       std::function<nlohmann::json(const object_t&)> toJson) const;
 
-  /// Write json map from Tracking Geometry
-  ///
-  /// @param tGeometry is the tracking geometry
-  nlohmann::json trackingGeometryToJson(
-      const TrackingGeometry& tGeometry,
-      std::function<nlohmann::json(const object_t&)> toJson,
-      std::function<object_t(const GeometryID&)> initialise) const;
-
  private:
-  /// Convert to internal representation method, recursive call
-  ///
-  /// @param detRep is the representation of the detector
-  /// @param tVolume is the tracking volume
-  /// @param initialise is a function that return an initialised Hierarchical
-  /// Object
-  void convertToRep(
-      DetectorRep& detRep, const TrackingVolume& tVolume,
-      std::function<object_t(const GeometryID&)> initialise) const;
+  /// The detector tag
+  std::string m_detkey = "detector";
+  /// The volume identification string
+  std::string m_volkey = "volumes";
+  /// The boundary surface string
+  std::string m_boukey = "boundaries";
+  /// The layer identification string
+  std::string m_laykey = "layers";
+  /// The approach identification string
+  std::string m_appkey = "approach";
+  /// The sensitive identification string
+  std::string m_senkey = "sensitive";
+  /// The representing idntification string
+  std::string m_repkey = "representing";
+  /// The name identification
+  std::string m_namekey = "Name";
 
-  /// Convert to internal representation method
-  ///
-  /// @param tLayer is a layer
-  /// @param initialise is a function that return an initialised Hierarchical
-  /// Object
-  LayerRep convertToRep(
-      const Layer& tLayer,
-      std::function<object_t(const GeometryID&)> initialise) const;
-
-  /// Convert to internal representation method
-  ///
-  /// @param detRep is the representation of the detector
-  /// @param hObject is the Hierarchical Object Container
-  void convertToRep(
-      DetectorRep& detRep,
-      const Acts::HierarchicalGeometryContainer<object_t>& hObject) const;
-
-  /// Create Json from a detector represenation
-  ///
-  /// @param detRep is the representation of the detector
-  /// @param toJson Function that convert Hierarchical Object to json
-  nlohmann::json detectorRepToJson(
-      const DetectorRep& detRep,
-      std::function<nlohmann::json(const object_t&)> toJson) const;
-
-  /// The config class
-  Config m_cfg;
-
-  /// Private access to the logging instance
-  const Logger& logger() const { return *m_cfg.logger; }
+  // helper function to create geometry id from json keys
+  Acts::GeometryID makeId(std::string volume, std::string boundary,
+                          std::string layer, std::string approach,
+                          std::string sensitive) const {
+    return GeometryID()
+        .setVolume(std::stoi(volume))
+        .setBoundary(std::stoi(boundary))
+        .setLayer(std::stoi(layer))
+        .setApproach(std::stoi(approach))
+        .setSensitive(std::stoi(sensitive));
+  }
 };
 
 }  // namespace Acts

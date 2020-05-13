@@ -12,8 +12,6 @@
 
 #include "Acts/Plugins/Json/JsonHierarchicalObjectConverter.hpp"
 
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-
 namespace {
 
 using Acts::GeometryID;
@@ -39,26 +37,15 @@ json thingToJson(Thing thing) {
   return jThing;
 }
 
-Thing jsonToThing(json map) {
+Thing jsonToThing(json map, GeometryID id) {
   Thing thing;
-  std::stringstream sID;
-  sID << map["id"];
-  int v, b, l, a, s;
-  std::string tstr;
-  sID >> tstr >> v >> tstr >> b >> tstr >> l >> tstr >> a >> tstr >> s >> tstr;
-  GeometryID geoID = GeometryID();
-  geoID.setVolume(v).setBoundary(b).setLayer(l).setApproach(a).setSensitive(s);
-
-  thing.id = geoID;
+  thing.id = id;
   thing.value = map["value"];
   return thing;
 }
 
-Thing initThing(GeometryID id) {
-  Thing thing;
-  thing.id = id;
-  thing.value = 2.0;
-  return thing;
+double jsonTovalue(json map) {
+  return map["value"];
 }
 
 using Container = Acts::HierarchicalGeometryContainer<Thing>;
@@ -97,41 +84,46 @@ BOOST_AUTO_TEST_CASE(Convert_HierarchicalObject) {
       {makeId(2, 0, 2, 3, 0), 14.0},
       {makeId(2, 0, 2, 0, 2), 15.0},
   });
-  Acts::JsonHierarchicalObjectConverter<Thing>::Config cfg;
-  Acts::JsonHierarchicalObjectConverter<Thing> converter(cfg);
+  Acts::JsonHierarchicalObjectConverter<Thing> converter;
+  converter.datakey = "Thing";
   json map = converter.hierarchicalObjectToJson(c, thingToJson);
 
-  BOOST_CHECK_EQUAL(jsonToThing(map[cfg.volkey]["1"][cfg.datakey]).value, 1.0);
+  BOOST_CHECK_EQUAL(jsonTovalue(map["volumes"]["1"]["Thing"]), 1.0);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["1"][cfg.laykey]["2"][cfg.repkey]).value,
+      jsonTovalue(map["volumes"]["1"]["layers"]["2"]["representing"]["Thing"]),
       1.2);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["1"][cfg.laykey]["3"][cfg.repkey]).value,
+      jsonTovalue(map["volumes"]["1"]["layers"]["3"]["representing"]["Thing"]),
       1.5);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["1"][cfg.laykey]["3"][cfg.senkey]["1"]).value,
+      jsonTovalue(
+          map["volumes"]["1"]["layers"]["3"]["sensitive"]["1"]["Thing"]),
       2.0);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["1"][cfg.laykey]["3"][cfg.senkey]["2"]).value,
+      jsonTovalue(
+          map["volumes"]["1"]["layers"]["3"]["sensitive"]["2"]["Thing"]),
       2.2);
 
-  BOOST_CHECK_EQUAL(jsonToThing(map[cfg.volkey]["2"][cfg.datakey]).value, 3.0);
+  BOOST_CHECK_EQUAL(jsonTovalue(map["volumes"]["2"]["Thing"]), 3.0);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["2"][cfg.laykey]["1"][cfg.repkey]).value,
+      jsonTovalue(map["volumes"]["2"]["layers"]["1"]["representing"]["Thing"]),
       4.0);
+
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["2"][cfg.laykey]["1"][cfg.senkey]["2"]).value,
+      jsonTovalue(
+          map["volumes"]["2"]["layers"]["1"]["sensitive"]["2"]["Thing"]),
       5.0);
-  BOOST_CHECK_EQUAL(jsonToThing(map[cfg.volkey]["2"][cfg.boukey]["1"]).value,
-                    10.0);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["2"][cfg.laykey]["2"][cfg.appkey]["1"]).value,
+      jsonTovalue(map["volumes"]["2"]["boundaries"]["1"]["Thing"]), 10.0);
+  BOOST_CHECK_EQUAL(
+      jsonTovalue(map["volumes"]["2"]["layers"]["2"]["approach"]["1"]["Thing"]),
       13.0);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["2"][cfg.laykey]["2"][cfg.appkey]["3"]).value,
+      jsonTovalue(map["volumes"]["2"]["layers"]["2"]["approach"]["3"]["Thing"]),
       14.0);
   BOOST_CHECK_EQUAL(
-      jsonToThing(map[cfg.volkey]["2"][cfg.laykey]["2"][cfg.senkey]["2"]).value,
+      jsonTovalue(
+          map["volumes"]["2"]["layers"]["2"]["sensitive"]["2"]["Thing"]),
       15.0);
 
   Container c2 = converter.jsonToHierarchicalContainer(map, jsonToThing);
@@ -148,21 +140,4 @@ BOOST_AUTO_TEST_CASE(Convert_HierarchicalObject) {
   BOOST_CHECK_EQUAL(c2.find(makeId(2, 1, 0, 0, 0))->value, 10.0);
   BOOST_CHECK_EQUAL(c2.find(makeId(2, 0, 2, 1, 0))->value, 13.0);
   BOOST_CHECK_EQUAL(c2.find(makeId(2, 0, 2, 3, 0))->value, 14.0);
-}
-
-BOOST_AUTO_TEST_CASE(Initialise_With_Geometry) {
-  Acts::GeometryContext tgContext = Acts::GeometryContext();
-  Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext);
-  auto tGeometry = cGeometry();
-
-  Acts::JsonHierarchicalObjectConverter<Thing>::Config cfg;
-  Acts::JsonHierarchicalObjectConverter<Thing> converter(cfg);
-
-  json map =
-      converter.trackingGeometryToJson(*tGeometry, thingToJson, initThing);
-
-  BOOST_CHECK_EQUAL(map[cfg.volkey].size(), 3);
-  BOOST_CHECK_EQUAL(map[cfg.volkey]["3"][cfg.laykey]["8"][cfg.senkey].size(),
-                    1092);
-  BOOST_CHECK_EQUAL(map[cfg.volkey]["2"][cfg.boukey].size(), 3);
 }
