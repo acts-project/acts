@@ -13,8 +13,8 @@
 
 #include <vector>
 
+#include "ACTFW/EventData/SimMultiTrajectory.hpp"
 #include "ACTFW/EventData/SimSourceLink.hpp"
-#include "ACTFW/EventData/TruthFitTrack.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 
@@ -28,7 +28,7 @@ using TrackParametersContainer = std::vector<TrackParameters>;
 /// MultiTrajectory definition
 using Trajectory = Acts::MultiTrajectory<SimSourceLink>;
 
-/// Container for the truth fitting track
-using TrajectoryContainer = std::vector<TruthFitTrack>;
+/// Container for the truth fitting/finding track(s)
+using TrajectoryContainer = std::vector<SimMultiTrajectory>;
 
 }  // namespace FW

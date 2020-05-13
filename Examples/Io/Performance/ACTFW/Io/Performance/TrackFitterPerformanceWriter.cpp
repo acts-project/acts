@@ -8,13 +8,14 @@
 
 #include "ACTFW/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
-#include <Acts/Utilities/Helpers.hpp>
 #include <TFile.h>
 #include <TTree.h>
 #include <stdexcept>
 
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 using Acts::VectorHelpers::eta;
 
@@ -87,71 +88,71 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  // All reconstructed trajectories with truth info
-  std::map<ActsFatras::Barcode, TruthFitTrack> reconTrajectories;
+  // Truth particles with corresponding reconstructed tracks
+  std::vector<ActsFatras::Barcode> reconParticleIds;
+  reconParticleIds.reserve(particles.size());
 
   // Loop over all trajectories
   for (const auto& traj : trajectories) {
-    if (not traj.hasTrajectory()) {
+    // The trajectory entry indices and the multiTrajectory
+    const auto& [trackTips, mj] = traj.trajectory();
+    if (trackTips.empty()) {
+      ACTS_WARNING("Empty multiTrajectory.");
       continue;
     }
-    const auto& [trackTip, track] = traj.trajectory();
 
-    // get the majority truth particle to this track
-    const auto particleHitCount = traj.identifyMajorityParticle();
+    // Check the size of the trajectory entry indices. For track fitting, there
+    // should be at most one trajectory
+    if (trackTips.size() > 1) {
+      ACTS_ERROR("Track fitting should not result in multiple trajectories.");
+      return ProcessCode::ABORT;
+    }
+    // Get the entry index for the single trajectory
+    auto& trackTip = trackTips.front();
+
+    // Get the majority truth particle for this trajectory
+    const auto particleHitCount = traj.identifyMajorityParticle(trackTip);
     if (particleHitCount.empty()) {
+      ACTS_WARNING("No truth particle associated with this trajectory.");
       continue;
     }
-
-    // find the truth particle for the majority barcode
+    // Find the truth particle for the majority barcode
     const auto ip = particles.find(particleHitCount.front().particleId);
     if (ip == particles.end()) {
+      ACTS_WARNING("Majority particle not found in the particles collection.");
       continue;
     }
 
-    // record this trajectory with its truth info
-    reconTrajectories.emplace(ip->particleId(), traj);
+    // Collect the trajectory summary info
+    auto trajState =
+        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    // Fill the trajectory summary info
+    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip, trajState.nStates,
+                                trajState.nMeasurements, trajState.nOutliers,
+                                trajState.nHoles);
 
-    // count the total number of hits and hits from the majority truth
-    // particle
-    size_t nTotalStates = 0, nHits = 0, nOutliers = 0, nHoles = 0;
-    track.visitBackwards(trackTip, [&](const auto& state) {
-      nTotalStates++;
-      auto typeFlags = state.typeFlags();
-      if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-        nHits++;
-      } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-        nOutliers++;
-      } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-        nHoles++;
-      }
-    });
-
-    // fill the track detailed info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, *ip, nTotalStates,
-                                nHits, nOutliers, nHoles);
-
-    // fill the residual plots it the track has fitted parameter
-    if (traj.hasTrackParameters()) {
+    // If the trajectory has fitted parameter
+    if (traj.hasTrackParameters(trackTip)) {
+      // -> Record this majority particle ID of this trajectory
+      reconParticleIds.push_back(ip->particleId());
+      // -> Fill the residual plots
       m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
-                         traj.trackParameters());
+                         traj.trackParameters(trackTip));
     }
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
-  // fitted parameter and total truth tracks (assumes one truth partilce means
+  // fitted parameter and total truth tracks (assumes one truth partilce has
   // one truth track)
-  // @Todo: add fake rate plots
   for (const auto& particle : particles) {
-    const auto it = reconTrajectories.find(particle.particleId());
-    if (it != reconTrajectories.end()) {
-      // when the trajectory is reconstructed
-      m_effPlotTool.fill(m_effPlotCache, particle,
-                         it->second.hasTrackParameters());
-    } else {
-      // when the trajectory is NOT reconstructed
-      m_effPlotTool.fill(m_effPlotCache, particle, false);
+    bool isReconstructed = false;
+    // Find if the particle has been reconstructed
+    auto it = std::find(reconParticleIds.begin(), reconParticleIds.end(),
+                        particle.particleId());
+    if (it != reconParticleIds.end()) {
+      isReconstructed = true;
     }
+    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
   }
 
   return ProcessCode::SUCCESS;
