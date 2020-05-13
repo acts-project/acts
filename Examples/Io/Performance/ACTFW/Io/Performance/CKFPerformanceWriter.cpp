@@ -77,6 +77,7 @@ FW::ProcessCode FW::CKFPerformanceWriter::endRun() {
 
 FW::ProcessCode FW::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
+  // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<size_t, Acts::BoundParameters>;
 
   // Read truth particles from input collection
@@ -88,19 +89,15 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
 
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
+  // Counter of truth-unmatched reco tracks
   std::map<ActsFatras::Barcode, size_t> unmatched;
 
   // Loop over all trajectories
   for (const auto& traj : trajectories) {
-    if (not traj.hasTrajectory()) {
-      ACTS_WARNING("No multiTrajectory available.");
-      continue;
-    }
-
     // The trajectory entry indices and the multiTrajectory
     const auto& [trackTips, mj] = traj.trajectory();
     if (trackTips.empty()) {
-      ACTS_WARNING("No trajectory entry index found.");
+      ACTS_WARNING("Empty multiTrajectory.");
       continue;
     }
 
@@ -109,7 +106,6 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
       // Collect the trajectory summary info
       auto trajState =
           Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
-
       // Reco track selection
       //@TODO: add interface for applying others cuts on reco tracks:
       // -> pT, d0, z0, detector-specific hits/holes number cut
@@ -124,7 +120,6 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
         continue;
       }
       const auto& fittedParameters = traj.trackParameters(trackTip);
-
       // Fill the trajectory summary info
       m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                   trajState.nStates, trajState.nMeasurements,
@@ -138,14 +133,18 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
             "No truth particle associated with this trajectory with entry "
             "index = "
             << trackTip);
+        continue;
       }
-      // Find the truth particle with the majority barcode
+      // Get the majority particleId and majority particle counts
+      // Note that the majority particle might be not in the truth seeds
+      // collection
       ActsFatras::Barcode majorityParticleId =
           particleHitCount.front().particleId;
-      // Check if the trajectory is matched with truth
-      bool isFake = false;
       size_t nMajorityHits = particleHitCount.front().hitCount;
-      // Selection of the tracks
+
+      // Check if the trajectory is matched with truth.
+      // If not, it will be classified as 'fake'
+      bool isFake = false;
       if (nMajorityHits * 1. / trajState.nMeasurements >=
           m_cfg.truthMatchProbMin) {
         matched[majorityParticleId].push_back(
@@ -159,16 +158,18 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
     }  // end all trajectories in a multiTrajectory
   }    // end all multiTrajectories
 
-  // Loop over al truth-matched reco tracks for duplication rate plots
+  // Loop over all truth-matched reco tracks for duplication rate plots
   for (auto& [particleId, matchedTracks] : matched) {
-    // Sort the reco tracks by the number of majority hits
+    // Sort the reco tracks matched to this particle by the number of majority
+    // hits
     std::sort(matchedTracks.begin(), matchedTracks.end(),
               [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                 return lhs.first > rhs.first;
               });
     for (size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
       const auto& [nMajorityHits, fittedParameters] = matchedTracks.at(itrack);
-      // Only one 'real' track; others are regardes as 'duplicated'
+      // The tracks with maximum number of majority hits is taken as the 'real'
+      // track; others are as 'duplicated'
       bool isDuplicated = (itrack != 0);
       // Fill the duplication rate
       m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
@@ -176,8 +177,8 @@ FW::ProcessCode FW::CKFPerformanceWriter::writeT(
     }
   }
 
-  // Loop over all truth particles for efficiency plots and reco details
-  // @TODO: add duplication plots
+  // Loop over all truth particle seeds for efficiency plots and reco details.
+  // These are filled w.r.t. truth particle seed info
   for (const auto& particle : particles) {
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks

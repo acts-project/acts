@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <optional>
+#include <unordered_map>
 #include <utility>
 
 #include "ACTFW/EventData/SimSourceLink.hpp"
@@ -27,6 +27,8 @@ using IndexedParams = std::unordered_map<size_t, Acts::BoundParameters>;
 /// In case of track fitting, there is at most one trajectory in the
 /// MultiTrajectory; In case of track finding, there could be multiple
 /// trajectories in the MultiTrajectory.
+///
+/// @note The MultiTrajectory is thought to be empty if there is no entry index
 struct SimMultiTrajectory {
  public:
   /// @brief Default constructor
@@ -39,14 +41,12 @@ struct SimMultiTrajectory {
   /// @param tTips The entry indices for trajectories in multiTrajectory
   /// @param parameters The fitted track parameters indexed by trajectory entry
   /// index
-  SimMultiTrajectory(
-      std::optional<Acts::MultiTrajectory<SimSourceLink>> multiTraj,
-      const std::vector<size_t>& tTips, const IndexedParams& parameters)
-      : m_trackTips(tTips), m_trackParameters(parameters) {
-    if (multiTraj) {
-      m_multiTrajectory = std::move(*multiTraj);
-    }
-  }
+  SimMultiTrajectory(const Acts::MultiTrajectory<SimSourceLink>& multiTraj,
+                     const std::vector<size_t>& tTips,
+                     const IndexedParams& parameters)
+      : m_multiTrajectory(multiTraj),
+        m_trackTips(tTips),
+        m_trackParameters(parameters) {}
 
   /// @brief Copy constructor
   ///
@@ -88,12 +88,16 @@ struct SimMultiTrajectory {
     return *this;
   }
 
-  /// @brief Indicator of multiTrajectory
+  /// @brief Indicator if a trajectory exists
   ///
-  /// @return Whether having multiTrajectory or not
-  bool hasTrajectory() const { return m_multiTrajectory != std::nullopt; }
+  /// @param entryIndex The trajectory entry index
+  ///
+  /// @return Whether there is trajectory with provided entry index
+  bool hasTrajectory(const size_t& entryIndex) const {
+    return std::count(m_trackTips.begin(), m_trackTips.end(), entryIndex) > 0;
+  }
 
-  /// @brief Indicator of fitted track parameters for one trajectory
+  /// @brief Indicator if there is fitted track parameters for one trajectory
   ///
   /// @param entryIndex The trajectory entry index
   ///
@@ -105,13 +109,11 @@ struct SimMultiTrajectory {
   /// @brief Getter for multiTrajectory
   ///
   /// @return The multiTrajectory with trajectory entry indices
+  ///
+  /// @note It could return an empty multiTrajectory
   std::pair<std::vector<size_t>, Acts::MultiTrajectory<SimSourceLink>>
   trajectory() const {
-    if (m_multiTrajectory and not m_trackTips.empty()) {
-      return std::make_pair(m_trackTips, *m_multiTrajectory);
-    } else {
-      throw std::runtime_error("No multiTrajectory available!");
-    };
+    return std::make_pair(m_trackTips, m_multiTrajectory);
   }
 
   /// @brief Getter of fitted track parameters for one trajectory
@@ -139,14 +141,13 @@ struct SimMultiTrajectory {
       const size_t& entryIndex) const;
 
  private:
-  // The optional fitted multiTrajectory
-  std::optional<Acts::MultiTrajectory<SimSourceLink>> m_multiTrajectory{
-      std::nullopt};
+  // The multiTrajectory
+  Acts::MultiTrajectory<SimSourceLink> m_multiTrajectory;
 
   // The entry indices of trajectories stored in multiTrajectory
   std::vector<size_t> m_trackTips = {};
 
-  // The optional Parameters at the provided surface
+  // The fitted parameters at the provided surface for individual trajectories
   IndexedParams m_trackParameters = {};
 };
 

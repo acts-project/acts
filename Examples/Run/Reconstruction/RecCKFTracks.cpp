@@ -134,8 +134,8 @@ int main(int argc, char* argv[]) {
   // truth particle smearing and source link selection config
   // @TODO: add options for source link selection criteria
   Acts::CKFSourceLinkSelector::Config slSelectorCfg;
-  slSelectorCfg.maxChi2 = 15;
-  slSelectorCfg.maxNumSourcelinksOnSurface = 10;
+  slSelectorCfg.globalChi2CutOff = 15;
+  slSelectorCfg.globalNumSourcelinksCutOff = 10;
   TrackFindingAlgorithm::Config trackFindingCfg;
   trackFindingCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters =

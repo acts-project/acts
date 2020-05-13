@@ -71,6 +71,7 @@ class FakeRatePlotTool {
             const Acts::BoundParameters& fittedParameters, bool status) const;
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
+  /// seed
   ///
   /// @param fakeRatePlotCache cache object for fake rate plots
   /// @param truthParticle the truth Particle

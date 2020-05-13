@@ -58,7 +58,7 @@ class DuplicationPlotTool {
   /// @param duplicationPlotCache the cache for duplication plots
   void book(DuplicationPlotCache& duplicationPlotCache) const;
 
-  /// @brief fill duplication w.r.t. fitted track parameters
+  /// @brief fill duplication rate w.r.t. fitted track parameters
   ///
   /// @param duplicationPlotCache cache object for duplication plots
   /// @param fittedParameters fitted track parameters of this track
@@ -66,7 +66,7 @@ class DuplicationPlotTool {
   void fill(DuplicationPlotCache& duplicationPlotCache,
             const Acts::BoundParameters& fittedParameters, bool status) const;
 
-  /// @brief fill number of duplicated tracks for a truth particle
+  /// @brief fill number of duplicated tracks for a truth particle seed
   ///
   /// @param duplicationPlotCache cache object for duplication plots
   /// @param truthParticle the truth Particle

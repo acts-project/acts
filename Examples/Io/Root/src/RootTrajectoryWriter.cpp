@@ -267,10 +267,6 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
   int iTraj = 0;
   for (const auto& traj : trajectories) {
     m_trajNr = iTraj;
-    if (not traj.hasTrajectory()) {
-      ACTS_WARNING("No multiTrajectory available.");
-      continue;
-    }
 
     // The trajectory entry indices and the multiTrajectory
     const auto& [trackTips, mj] = traj.trajectory();
