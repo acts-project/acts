@@ -171,14 +171,15 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
   std::vector<IdentifiedPolyderon> tPolyhedrons;
 
-  auto combineAndDecompose = [&](const SurfacePtrVector& surfaces,
+  auto combineAndDecompose = [&](const OrientedSurfaces& surfaces,
                                  const std::string& name) -> void {
     std::string writeBase = std::string("CutoutCylinderVolumeBounds") + name;
 
     Polyhedron phCombined;
     size_t is = 0;
     for (const auto& sf : surfaces) {
-      Polyhedron phComponent = sf->polyhedronRepresentation(tgContext, 72);
+      Polyhedron phComponent =
+          sf.first->polyhedronRepresentation(tgContext, 72);
       phCombined.merge(phComponent);
       tPolyhedrons.push_back(
           {writeBase + std::string("_comp_") + std::to_string(is++), false,
@@ -192,7 +193,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   CHECK_CLOSE_ABS(box.min(), Vector3D(-15, -15, -30), 1e-6);
   CHECK_CLOSE_ABS(box.max(), Vector3D(15, 15, 30), 1e-6);
 
-  auto ccvbSurfaces = ccvb.decomposeToSurfaces();
+  auto ccvbSurfaces = ccvb.orientedSurfaces(nullptr);
   combineAndDecompose(ccvbSurfaces, "");
   ObjTestWriter::writeObj("CutoutCylinderVolumeBounds_BB", box);
   ObjTestWriter::writeObj(tPolyhedrons);
@@ -202,14 +203,6 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
   GeometryContext tgContext = GeometryContext();
 
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
-
-  std::vector<NavigationDirection> refOrientations = {
-      forward,  backward, backward, forward,
-      backward, forward,  forward,  forward};
-
-  auto ccvbOrientations = ccvb.boundaryOrientations();
-
-  BOOST_CHECK(refOrientations == ccvbOrientations);
 
   auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(nullptr);
   BOOST_TEST(ccvbOrientedSurfaces.size(), 8);

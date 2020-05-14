@@ -26,7 +26,7 @@ class Surface;
 
 /// @class CuboidVolumeBounds
 ///
-/// Bounds for a cubical Volume, the decomposeToSurfaces method creates a
+/// Bounds for a cubical Volume, the orientedSurfaces(...) method creates a
 /// vector of 6 surfaces:
 ///
 ///  BoundarySurfaceFace [index]:
@@ -44,8 +44,6 @@ class Surface;
 ///    - positiveFaceXY [5] : Rectangular Acts::PlaneSurface, parallel to \f$ zx
 /// \f$ plane at positive \f$ y \f$
 ///
-///  @image html CuboidVolumeBounds_decomp.gif
-
 class CuboidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
@@ -100,16 +98,18 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param tol is the absolute tolerance to be applied
   bool inside(const Vector3D& pos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into boundarySurfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
-  /// @param transformPtr is the transfrom of the volume
-  SurfacePtrVector decomposeToSurfaces(
-      const Transform3D* transformPtr) const override;
-
-  /// The decopmosed boundary surface oprientation, i.e.
-  /// a vector of navigation directions into the volume
-  /// given the normal vector on the surface
-  std::vector<NavigationDirection> boundaryOrientations() const override;
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
+  ///
+  /// It will throw an exception if the orientation prescription is not adequate
+  ///
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -143,10 +143,6 @@ class CuboidVolumeBounds : public VolumeBounds {
   std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};
   std::shared_ptr<const RectangleBounds> m_zxBounds{nullptr};
 
-  /// The orientation of the bounding surfaces
-  std::vector<NavigationDirection> m_boundaryOrientations = {
-      forward, backward, forward, backward, forward, backward};
-
   /// Create the surface bounds
   void buildSurfaceBounds();
 
@@ -165,11 +161,6 @@ inline std::vector<double> CuboidVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
-}
-
-inline std::vector<NavigationDirection>
-CuboidVolumeBounds::boundaryOrientations() const {
-  return m_boundaryOrientations;
 }
 
 inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {

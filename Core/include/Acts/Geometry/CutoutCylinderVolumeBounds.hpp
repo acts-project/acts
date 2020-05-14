@@ -93,19 +93,18 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @return Whether the point is inside or not.
   bool inside(const Vector3D& gpos, double tol = 0) const override;
 
-  /// Method to decompose the Bounds into Surfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
-  /// @param transform is the transform to position the surfaces in 3D space
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
   ///
-  /// @return vector of surfaces from the decopmosition
+  /// It will throw an exception if the orientation prescription is not adequate
   ///
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(
       const Transform3D* transform = nullptr) const override;
-
-  /// The decopmosed boundary surface oprientation, i.e.
-  /// a vector of navigation directions into the volume
-  /// given the normal vector on the surface
-  std::vector<NavigationDirection> boundaryOrientations() const override;
 
   /// Construct bounding box for this shape
   ///
@@ -137,11 +136,6 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   std::shared_ptr<const DiscBounds> m_outerDiscBounds{nullptr};
   std::shared_ptr<const DiscBounds> m_innerDiscBounds{nullptr};
 
-  /// The orientation of the bounding surfaces
-  std::vector<NavigationDirection> m_boundaryOrientations = {
-      forward,  backward, backward, forward,
-      backward, forward,  forward,  forward};
-
   /// Create the surface bound objects
   void buildSurfaceBounds();
 
@@ -154,11 +148,6 @@ inline std::vector<double> CutoutCylinderVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
-}
-
-inline std::vector<NavigationDirection>
-CutoutCylinderVolumeBounds::boundaryOrientations() const {
-  return m_boundaryOrientations;
 }
 
 inline void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {

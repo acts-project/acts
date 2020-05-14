@@ -43,10 +43,9 @@ bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3D& gpos,
   return !insideRInner || !insideZInner;  // we are not, inside bounds
 }
 
-std::vector<std::shared_ptr<const Acts::Surface>>
-Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
+Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
     const Transform3D* transform) const {
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
+  OrientedSurfaces oSurfaces;
 
   // Transform copy
   std::shared_ptr<const Transform3D> trf;
@@ -57,19 +56,20 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
   }
 
   if (get(eMinR) == 0.) {
-    surfaces.resize(6);  // exactly six surfaces (no choke inner cover)
+    oSurfaces.resize(6);  // exactly six surfaces (no choke inner cover)
   } else {
-    surfaces.resize(8);  // exactly eight surfaces
+    oSurfaces.resize(8);  // exactly eight surfaces
   }
 
   // Outer cylinder envelope
   auto outer = Surface::makeShared<CylinderSurface>(trf, m_outerCylinderBounds);
-  surfaces.at(tubeOuterCover) = outer;
+  oSurfaces.at(tubeOuterCover) = OrientedSurface(std::move(outer), backward);
 
   // Inner (cutout) cylinder envelope
   auto cutoutInner =
       Surface::makeShared<CylinderSurface>(trf, m_cutoutCylinderBounds);
-  surfaces.at(tubeInnerCover) = cutoutInner;
+  oSurfaces.at(tubeInnerCover) =
+      OrientedSurface(std::move(cutoutInner), forward);
 
   // z position of the pos and neg choke points
   double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
@@ -80,13 +80,13 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
         *trf * Translation3D(Vector3D(0, 0, zChoke)));
     auto posInner = Surface::makeShared<CylinderSurface>(posChokeTrf,
                                                          m_innerCylinderBounds);
-    surfaces.at(index7) = posInner;
+    oSurfaces.at(index7) = OrientedSurface(std::move(posInner), forward);
 
     auto negChokeTrf = std::make_shared<const Transform3D>(
         *trf * Translation3D(Vector3D(0, 0, -zChoke)));
     auto negInner = Surface::makeShared<CylinderSurface>(negChokeTrf,
                                                          m_innerCylinderBounds);
-    surfaces.at(index6) = negInner;
+    oSurfaces.at(index6) = OrientedSurface(std::move(negInner), forward);
   }
 
   // Two Outer disks
@@ -94,29 +94,31 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
       *trf * Translation3D(Vector3D(0, 0, get(eHalfLengthZ))));
   auto posOutDisc =
       Surface::makeShared<DiscSurface>(posOutDiscTrf, m_outerDiscBounds);
-  surfaces.at(positiveFaceXY) = posOutDisc;
+  oSurfaces.at(positiveFaceXY) =
+      OrientedSurface(std::move(posOutDisc), backward);
 
   auto negOutDiscTrf = std::make_shared<const Transform3D>(
       *trf * Translation3D(Vector3D(0, 0, -get(eHalfLengthZ))));
 
   auto negOutDisc =
       Surface::makeShared<DiscSurface>(negOutDiscTrf, m_outerDiscBounds);
-  surfaces.at(negativeFaceXY) = negOutDisc;
+  oSurfaces.at(negativeFaceXY) =
+      OrientedSurface(std::move(negOutDisc), forward);
 
   // Two Inner disks
   auto posInDiscTrf = std::make_shared<const Transform3D>(
       *trf * Translation3D(Vector3D(0, 0, get(eHalfLengthZcutout))));
   auto posInDisc =
       Surface::makeShared<DiscSurface>(posInDiscTrf, m_innerDiscBounds);
-  surfaces.at(index5) = posInDisc;
+  oSurfaces.at(index5) = OrientedSurface(std::move(posInDisc), forward);
 
   auto negInDiscTrf = std::make_shared<const Transform3D>(
       *trf * Translation3D(Vector3D(0, 0, -get(eHalfLengthZcutout))));
   auto negInDisc =
       Surface::makeShared<DiscSurface>(negInDiscTrf, m_innerDiscBounds);
-  surfaces.at(index4) = negInDisc;
+  oSurfaces.at(index4) = OrientedSurface(std::move(negInDisc), backward);
 
-  return surfaces;
+  return oSurfaces;
 }
 
 Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
