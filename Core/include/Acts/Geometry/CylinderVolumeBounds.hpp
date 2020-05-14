@@ -31,7 +31,7 @@ class IVisualization;
 
 /// @class CylinderVolumeBounds
 ///
-/// Bounds for a cylindrical Volume, the decomposeToSurfaces method creates a
+/// Bounds for a cylindrical Volume, the orientedSurfaces(..) method creates a
 /// vector of up to 6 surfaces:
 ///
 /// case A) 3 Surfaces (full cylindrical tube):
@@ -69,7 +69,6 @@ class IVisualization;
 //                          Rectangular Acts::PlaneSurface attached to
 ///                 [0] and [1] at positive \f$ \phi \f$
 ///
-///  @image html CylinderVolumeBounds_decomp.gif
 
 class CylinderVolumeBounds : public VolumeBounds {
  public:
@@ -148,16 +147,18 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param tol is the tolerance for the check
   bool inside(const Vector3D& pos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into boundarySurfaces
-  /// @param transformPtr is the transform where the boundary surfaces are
-  /// situated
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
-      const Transform3D* transformPtr = nullptr) const override;
-
-  /// The decopmosed boundary surface oprientation, i.e.
-  /// a vector of navigation directions into the volume
-  /// given the normal vector on the surface
-  std::vector<NavigationDirection> boundaryOrientations() const override;
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
+  ///
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
+  ///
+  /// It will throw an exception if the orientation prescription is not adequate
+  ///
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -197,10 +198,6 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Bounds of the sector planes
   std::shared_ptr<const PlanarBounds> m_sectorPlaneBounds{nullptr};
 
-  /// The orientation of the bounding surfaces
-  std::vector<NavigationDirection> m_boundaryOrientations = {
-      forward, backward, backward, forward, forward, backward};
-
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
@@ -208,9 +205,11 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Helper method to create the surface bounds
   void buildSurfaceBounds();
 
-  /// templated dumpT method
-  template <class T>
-  T& dumpT(T& tstream) const;
+  /// Templated dumpT method
+  /// @tparam stream_t The type fo the dump stream
+  /// @param dt The dump stream object
+  template <class stream_t>
+  stream_t& dumpT(stream_t& dt) const;
 };
 
 inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
@@ -245,8 +244,8 @@ inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
   return VolumeBounds::binningBorder(bValue);
 }
 
-template <class T>
-T& CylinderVolumeBounds::dumpT(T& tstream) const {
+template <class stream_t>
+stream_t& CylinderVolumeBounds::dumpT(stream_t& tstream) const {
   tstream << std::setiosflags(std::ios::fixed);
   tstream << std::setprecision(5);
   tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
@@ -260,11 +259,6 @@ inline std::vector<double> CylinderVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
-}
-
-inline std::vector<NavigationDirection>
-CylinderVolumeBounds::boundaryOrientations() const {
-  return m_boundaryOrientations;
 }
 
 inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {

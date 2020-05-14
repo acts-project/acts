@@ -50,17 +50,9 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
   TrapezoidVolumeBounds tvb(5, 10, 8, 4);
 
-  auto tvbSurfaces = tvb.decomposeToSurfaces(nullptr);
-  BOOST_TEST(tvbSurfaces.size(), 6);
-
-  auto tvbOrientations = tvb.boundaryOrientations();
-
-  std::vector<NavigationDirection> refOrientations = {
-      forward, backward, forward, backward, forward, backward};
-
-  BOOST_CHECK(tvbOrientations == refOrientations);
-
   auto tvbOrientedSurfaces = tvb.orientedSurfaces(nullptr);
+  BOOST_TEST(tvbOrientedSurfaces.size(), 6);
+
   for (auto& os : tvbOrientedSurfaces) {
     auto geoCtx = GeometryContext();
     auto osCenter = os.first->center(geoCtx);

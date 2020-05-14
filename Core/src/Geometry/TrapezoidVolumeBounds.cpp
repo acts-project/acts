@@ -48,13 +48,13 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   buildSurfaceBounds();
 }
 
-std::vector<std::shared_ptr<const Acts::Surface>>
-Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
+Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
     const Transform3D* transformPtr) const {
-  std::vector<std::shared_ptr<const Surface>> rSurfaces;
-
   Transform3D transform =
       (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
+
+  OrientedSurfaces oSurfaces;
+  oSurfaces.reserve(6);
 
   // Face surfaces xy
   RotationMatrix3D trapezoidRotation(transform.rotation());
@@ -65,14 +65,15 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
 
   //   (1) - At negative local z
   auto nzTransform = std::make_shared<Transform3D>(
-      transform * Translation3D(Vector3D(0., 0., -get(eHalfLengthZ))));
-  rSurfaces.push_back(
-      Surface::makeShared<PlaneSurface>(nzTransform, m_faceXYTrapezoidBounds));
+      transform * Translation3D(0., 0., -get(eHalfLengthZ)));
+  auto sf =
+      Surface::makeShared<PlaneSurface>(nzTransform, m_faceXYTrapezoidBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (2) - At positive local z
   auto pzTransform = std::make_shared<Transform3D>(
-      transform * Translation3D(Vector3D(0., 0., get(eHalfLengthZ))));
-  rSurfaces.push_back(
-      Surface::makeShared<PlaneSurface>(pzTransform, m_faceXYTrapezoidBounds));
+      transform * Translation3D(0., 0., get(eHalfLengthZ)));
+  sf = Surface::makeShared<PlaneSurface>(pzTransform, m_faceXYTrapezoidBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
 
   double poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
   double neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
@@ -84,32 +85,34 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   auto fbTransform = std::make_shared<Transform3D>(
       transform * Translation3D(fbPosition) *
       AngleAxis3D(-0.5 * M_PI + get(eBeta), Vector3D(0., 0., 1.)) * s_planeYZ);
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      fbTransform, m_faceBetaRectangleBounds));
+  sf =
+      Surface::makeShared<PlaneSurface>(fbTransform, m_faceBetaRectangleBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
 
   // (4) - At point A, attached to alpha opening angle
   Vector3D faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
   auto faTransform = std::make_shared<Transform3D>(
       transform * Translation3D(faPosition) *
       AngleAxis3D(-0.5 * M_PI + get(eAlpha), Vector3D(0., 0., 1.)) * s_planeYZ);
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      faTransform, m_faceAlphaRectangleBounds));
+  sf = Surface::makeShared<PlaneSurface>(faTransform,
+                                         m_faceAlphaRectangleBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
 
   // Face surfaces zx
   //   (5) - At negative local y
   auto nxTransform = std::make_shared<Transform3D>(
-      transform * Translation3D(Vector3D(0., -get(eHalfLengthY), 0.)) *
-      s_planeZX);
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      nxTransform, m_faceZXRectangleBoundsBottom));
+      transform * Translation3D(0., -get(eHalfLengthY), 0.) * s_planeZX);
+  sf = Surface::makeShared<PlaneSurface>(nxTransform,
+                                         m_faceZXRectangleBoundsBottom);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (6) - At positive local y
   auto pxTransform = std::make_shared<Transform3D>(
-      transform * Translation3D(Vector3D(topShift, get(eHalfLengthY), 0.)) *
-      s_planeZX);
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      pxTransform, m_faceZXRectangleBoundsTop));
+      transform * Translation3D(topShift, get(eHalfLengthY), 0.) * s_planeZX);
+  sf = Surface::makeShared<PlaneSurface>(pxTransform,
+                                         m_faceZXRectangleBoundsTop);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
 
-  return rSurfaces;
+  return oSurfaces;
 }
 
 void Acts::TrapezoidVolumeBounds::buildSurfaceBounds() {

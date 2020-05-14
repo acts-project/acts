@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TrapezoidVolumeBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include "Acts/Geometry/Volume.hpp"
@@ -28,7 +24,7 @@ class TrapezoidBounds;
 
 /// @class TrapezoidVolumeBounds
 ///
-/// Bounds for a trapezoidal shaped Volume, the decomposeToSurfaces method
+/// Bounds for a trapezoidal shaped Volume, the orientedSurface(...) method
 /// creates a vector of 6 surfaces:
 ///
 ///  BoundarySurfaceFace [index]:
@@ -47,8 +43,6 @@ class TrapezoidBounds;
 ///                             parallel to \f$ zx \f$ plane at negative \f$y\f$
 ///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
-///
-///  @image html TrapezoidVolumeBounds_decomp.gif
 
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
@@ -118,19 +112,18 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @return boolean indicator if position is inside
   bool inside(const Vector3D& pos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into Surfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
-  /// @param transformPtr is the transform to position the surfaces in 3D space
-  /// @note this is a factory method
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
   ///
-  /// @return vector of surfaces from the decopmosition
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
-      const Transform3D* transformPtr) const override;
-
-  /// The decopmosed boundary surface oprientation, i.e.
-  /// a vector of navigation directions into the volume
-  /// given the normal vector on the surface
-  std::vector<NavigationDirection> boundaryOrientations() const override;
+  /// It will throw an exception if the orientation prescription is not adequate
+  ///
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -162,10 +155,6 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// The face PlaneSurface parallel to local zx plane, positive local y
   std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsTop{nullptr};
 
-  /// The orientation of the bounding surfaces
-  std::vector<NavigationDirection> m_boundaryOrientations = {
-      forward, backward, forward, backward, forward, backward};
-
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
@@ -196,11 +185,6 @@ inline std::vector<double> TrapezoidVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
-}
-
-inline std::vector<NavigationDirection>
-TrapezoidVolumeBounds::boundaryOrientations() const {
-  return m_boundaryOrientations;
 }
 
 inline void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {

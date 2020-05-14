@@ -93,18 +93,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   CuboidVolumeBounds box(5, 8, 7);
-
-  auto cvbSurfaces = box.decomposeToSurfaces(nullptr);
-  BOOST_TEST(cvbSurfaces.size(), 6);
-
-  auto cvbOrientations = box.boundaryOrientations();
-
-  std::vector<NavigationDirection> refOrientations = {
-      forward, backward, forward, backward, forward, backward};
-
-  BOOST_CHECK(cvbOrientations == refOrientations);
-
   auto cvbOrientedSurfaces = box.orientedSurfaces(nullptr);
+
+  BOOST_TEST(cvbOrientedSurfaces.size(), (size_t)6);
 
   for (auto& os : cvbOrientedSurfaces) {
     auto geoCtx = GeometryContext();

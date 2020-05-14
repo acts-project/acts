@@ -63,23 +63,18 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @return boolean indicating if the position is inside
   bool inside(const Vector3D& gpos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into Surfaces
-  /// the Volume can turn them into BoundarySurfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
   /// @param transform is the 3D transform to be applied to the boundary
   /// surfaces to position them in 3D space
-  /// @note this is factory method
+  ///
+  /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
-      const Transform3D* transform) const override;
-
-  /// The decopmosed boundary surface oprientation, i.e.
-  /// a vector of navigation directions into the volume
-  /// given the normal vector on the surface
-  ///
-  /// At creation all normal vectors are pointing outside
-  std::vector<NavigationDirection> boundaryOrientations() const override;
+  OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -104,18 +99,9 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   std::array<Vector3D, 8> m_vertices;
   std::array<Vector3D, 6> m_normals;
 
-  /// The orientation of the bounding surfaces
-  std::vector<NavigationDirection> m_boundaryOrientations = {
-      backward, backward, backward, backward, backward, backward};
-
   /// Private helper method to contruct the Volume bounds
   /// to be called by the constructors, from the ordered input vertices
   void construct() noexcept(false);
 };
-
-inline std::vector<NavigationDirection>
-GenericCuboidVolumeBounds::boundaryOrientations() const {
-  return m_boundaryOrientations;
-}
 
 }  // namespace Acts
