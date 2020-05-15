@@ -36,6 +36,7 @@ build*
 
 # dont ignore hidden configs
 !.clang-format
+!.github/
 !.gitignore
 !.gitlab-ci.yml
 !.clang-tidy
