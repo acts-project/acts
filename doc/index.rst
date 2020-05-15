@@ -20,14 +20,14 @@ Key features of this project include:
 *   performant and highly flexible algorithms for track propagation and fitting,
 *   basic seed finding algorithms.
 
-
 .. toctree::
     :maxdepth: 2
 
-    codeguide
-    modules/modules
+    getting_started
+    core/core
     plugins/plugins
-    utilities/utilities
     integration/integration
+    api/api
+    codeguide
     authors
     license

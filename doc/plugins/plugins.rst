@@ -1,9 +1,9 @@
-Plugins
-=======
+Core plugins
+============
 
-Plugins are optional modules that provide additional functionality or
-compatibility with external packages. Plugins are disabled by default and
-can be selectively enabled during compilation.
+Plugins are optional modules that extend the core functionality or provide
+compatibility with other packages. They usually require additional external
+dependencies and are thus disabled by default.
 
 .. toctree::
     :maxdepth: 1
