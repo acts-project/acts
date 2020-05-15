@@ -7,6 +7,14 @@
 set(output_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
 set(output_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
 
+# this is a debug target that is not part of the regular documentation build
+# only intended to diagnose issues with the Doxygen configuration
+add_custom_target(
+  run-doxygen
+  COMMAND ${DOXYGEN_EXECUTABLE}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Run Doxygen")
+
 # standard documentation target to build the full documentation
 # this can take quite a long time due to the auto-generation of the
 add_custom_target(
