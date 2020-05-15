@@ -27,6 +27,7 @@ Key features of this project include:
     core/core
     plugins/plugins
     integration/integration
+    howto/howto
     api/api
     codeguide
     authors
