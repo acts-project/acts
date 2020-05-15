@@ -10,7 +10,7 @@ set(output_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
 # standard documentation target to build the full documentation
 # this can take quite a long time due to the auto-generation of the
 add_custom_target(
-  doc
+  docs
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
@@ -23,7 +23,7 @@ add_custom_target(
   COMMENT "Build documentation")
 # helper target for faster iterations without the doxygen API docs
 add_custom_target(
-  doc-without-doxygen
+  docs-without-doxygen
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
