@@ -10,7 +10,7 @@
 
 namespace Acts {
 namespace detail {
-AlignmentToBoundMatrix alignmentToBoundDerivative(
+AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
     const GeometryContext& gctx, const BoundParameters& boundParams,
     const FreeVector& derivatives, const Vector3D& rframeOrigin,
     CartesianToBoundLocalMatrix& locCartesianToLocBound) {
@@ -88,41 +88,66 @@ AlignmentToBoundMatrix alignmentToBoundDerivative(
   return alignToBound;
 }
 
+AlignmentToBoundMatrix layerAlignmentToBoundDerivative(
+    const GeometryContext& gctx, const BoundParameters& boundParams,
+    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const AlignmentMatrix& layerAlignToSurfaceAlign,
+    const CartesianToBoundLocalMatrix& locCartesianToLocBound =
+        CartesianToBoundLocalMatrix::Identity(2,
+                                              eCartesianCoordinatesDimension)) {
+  const auto surfaceAlignToBound = surfaceAlignmentToBoundDerivative(
+      gctx, boundParams, derivatives, rframeOrigin, locCartesianToLocBound);
+  return surfaceAlignToBound * layerAlignToSurfaceAlign;
+}
+
+AlignmentToBoundMatrix volumeAlignmentToBoundDerivative(
+    const GeometryContext& gctx, const BoundParameters& boundParams,
+    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const AlignmentMatrix& volumeAlignToSurfaceAlign,
+    const CartesianToBoundLocalMatrix& locCartesianToLocBound =
+        CartesianToBoundLocalMatrix::Identity(2,
+                                              eCartesianCoordinatesDimension)) {
+  const auto surfaceAlignToBound = surfaceAlignmentToBoundDerivative(
+      gctx, boundParams, derivatives, rframeOrigin, locCartesianToLocBound);
+  return surfaceAlignToBound * volumeAlignToSurfaceAlign;
+}
+
 std::tuple<RotationMatrix3D, RotationMatrix3D, RotationMatrix3D>
 rotationToLocalAxesDerivative(const RotationMatrix3D& rframe) {
-  // Get Euler angles for rotation representated by Z1 * Y2 * X3, i.e.
-  // first rotation around z axis, then y axis, last x axis
+  // Get Euler angles for rotation representated by rotZ * rotY * rotX, i.e.
+  // first rotation around x axis, then y axis, last z axis
+  // The elements stored in rotAngles is (rotZ, rotY, rotX)
   const Vector3D rotAngles = rframe.eulerAngles(2, 1, 0);
-  double s1 = std::sin(rotAngles(0));
-  double c1 = std::cos(rotAngles(0));
-  double s2 = std::sin(rotAngles(1));
-  double c2 = std::cos(rotAngles(1));
-  double s3 = std::sin(rotAngles(2));
-  double c3 = std::cos(rotAngles(2));
-  // Z1 * Y2 * X3 =
-  // [ c1c2  c1s2s3-c3s1  s1s3+c1c3s2 ]
-  // [ c2s1  c1c3+s1s2s3  c3s1s2-c1s3 ]
-  // [ -s2   c2s3         c2c3        ]
+  double sx = std::sin(rotAngles(2));
+  double cx = std::cos(rotAngles(2));
+  double sy = std::sin(rotAngles(1));
+  double cy = std::cos(rotAngles(1));
+  double sz = std::sin(rotAngles(0));
+  double cz = std::cos(rotAngles(0));
+  // rotZ * rotY * rotX =
+  // [ cz*cy  cz*sy*sx-cx*sz  sz*sx+cz*cx*sy ]
+  // [ cy*sz  cz*cx+sz*sy*sx  cx*sz*sy-cz*sx ]
+  // [ -sy   cy*sx         cy*cx        ]
 
-  // Derivative of local x axis w.r.t. rotation around global x/y/z
+  // Derivative of local x axis w.r.t. (rotX, rotY, rotZ)
   RotationMatrix3D rotToLocalXAxis = RotationMatrix3D::Zero();
-  rotToLocalXAxis.col(0) = Vector3D(-s1 * c2, c1 * c2, 0);
-  rotToLocalXAxis.col(1) = Vector3D(-c1 * s2, -s1 * s2, -c2);
-  rotToLocalXAxis.col(2) = Vector3D(0, 0, 0);
-  // Derivative of local y axis w.r.t. rotation around global x/y/z
+  rotToLocalXAxis.col(0) = Vector3D(0, 0, 0);
+  rotToLocalXAxis.col(1) = Vector3D(-cz * sy, -sz * sy, -cy);
+  rotToLocalXAxis.col(2) = Vector3D(-sz * cy, cz * cy, 0);
+  // Derivative of local y axis w.r.t. (rotX, rotY, rotZ)
   RotationMatrix3D rotToLocalYAxis = RotationMatrix3D::Zero();
   rotToLocalYAxis.col(0) =
-      Vector3D(-s1 * s2 * s3 - c1 * c3, c1 * s2 * s3 - s1 * c3, 0);
-  rotToLocalYAxis.col(1) = Vector3D(c1 * c2 * s3, s1 * c2 * s3, -s2 * s3);
+      Vector3D(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
+  rotToLocalYAxis.col(1) = Vector3D(cz * cy * sx, sz * cy * sx, -sy * sx);
   rotToLocalYAxis.col(2) =
-      Vector3D(c1 * s2 * c3 + s1 * s3, s1 * s2 * c3 - c1 * s3, c2 * c3);
-  // Derivative of local z axis w.r.t. rotation around global x/y/z
+      Vector3D(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
+  // Derivative of local z axis w.r.t. (rotX, rotY, rotZ)
   RotationMatrix3D rotToLocalZAxis = RotationMatrix3D::Zero();
   rotToLocalZAxis.col(0) =
-      Vector3D(c1 * s3 - s1 * s2 * c3, c1 * s2 * c3 + s1 * s3, 0);
-  rotToLocalZAxis.col(1) = Vector3D(c1 * c2 * c3, s1 * c2 * c3, -s2 * c3);
+      Vector3D(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
+  rotToLocalZAxis.col(1) = Vector3D(cz * cy * cx, sz * cy * cx, -sy * cx);
   rotToLocalZAxis.col(2) =
-      Vector3D(s1 * c3 - c1 * s2 * s3, -s1 * s2 * s3 - c1 * c3, -c2 * s3);
+      Vector3D(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
 
   return std::make_tuple(std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
                          std::move(rotToLocalZAxis));
