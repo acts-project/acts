@@ -47,7 +47,7 @@ class TrapezoidBounds;
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for acces / streaming
-  enum BoundValues {
+  enum BoundValues : unsigned int {
     eHalfLengthXnegY = 0,  //!< halflength in x at negative y
     eHalfLengthXposY = 1,  //!< halflength in x at positive y
     eHalfLengthY = 2,      //!< halflength in y

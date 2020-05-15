@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsInside) {
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
-  std::vector<IdentifiedPolyderon> tPolyhedrons;
+  std::vector<IdentifiedPolyhedron> tPolyhedrons;
 
   auto combineAndDecompose = [&](const OrientedSurfaces& surfaces,
                                  const std::string& name) -> void {

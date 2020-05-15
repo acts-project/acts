@@ -8,44 +8,6 @@
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 
-std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
-  std::vector<Vector2D> vtxs = vertices();
-  sl << "Acts::ConvexPolygonBounds<" << vtxs.size() << ">: vertices: [x, y]\n";
-  for (size_t i = 0; i < vtxs.size(); i++) {
-    const auto& vtx = vtxs[i];
-    if (i > 0) {
-      sl << ",";
-      sl << "\n";
-    }
-    sl << "[" << vtx.x() << ", " << vtx.y() << "]";
-  }
-  return sl;
-}
-
-template <typename coll_t>
-Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
-    const coll_t& vertices) {
-  Vector2D vmax, vmin;
-  vmax = vertices[0];
-  vmin = vertices[0];
-
-  for (size_t i = 1; i < vertices.size(); i++) {
-    vmax = vmax.cwiseMax(vertices[i]);
-    vmin = vmin.cwiseMin(vertices[i]);
-  }
-
-  return {vmin, vmax};
-}
-
-std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
-  std::vector<double> values;
-  for (const auto& vtx : vertices()) {
-    values.push_back(vtx.x());
-    values.push_back(vtx.y());
-  }
-  return values;
-}
-
 template <typename coll_t>
 void Acts::ConvexPolygonBoundsBase::convex_impl(
     const coll_t& vertices) noexcept(false) {
@@ -84,6 +46,21 @@ void Acts::ConvexPolygonBoundsBase::convex_impl(
       }
     }
   }
+}
+
+template <typename coll_t>
+Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
+    const coll_t& vertices) {
+  Vector2D vmax, vmin;
+  vmax = vertices[0];
+  vmin = vertices[0];
+
+  for (size_t i = 1; i < vertices.size(); i++) {
+    vmax = vmax.cwiseMax(vertices[i]);
+    vmin = vmin.cwiseMin(vertices[i]);
+  }
+
+  return {vmin, vmax};
 }
 
 template <int N>
@@ -146,40 +123,5 @@ const Acts::RectangleBounds& Acts::ConvexPolygonBounds<N>::boundingBox() const {
 
 template <int N>
 void Acts::ConvexPolygonBounds<N>::checkConsistency() const noexcept(false) {
-  convex_impl(m_vertices);
-}
-
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::ConvexPolygonBounds(
-    const std::vector<Vector2D>& vertices)
-    : m_vertices(vertices.begin(), vertices.end()),
-      m_boundingBox(makeBoundingBox(vertices)) {}
-
-Acts::SurfaceBounds::BoundsType
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
-  return SurfaceBounds::eConvexPolygon;
-}
-
-bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
-    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lposition, m_vertices);
-}
-
-double Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, m_vertices);
-}
-
-std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<
-    Acts::PolygonDynamic>::vertices(unsigned int /*lseg*/) const {
-  return {m_vertices.begin(), m_vertices.end()};
-}
-
-const Acts::RectangleBounds&
-Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::boundingBox() const {
-  return m_boundingBox;
-}
-
-void Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::checkConsistency() const
-    noexcept(false) {
   convex_impl(m_vertices);
 }

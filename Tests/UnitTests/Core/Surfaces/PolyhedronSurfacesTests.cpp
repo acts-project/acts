@@ -56,7 +56,7 @@ namespace Acts {
 
 using namespace UnitLiterals;
 
-using IdentifiedPolyderon = std::tuple<std::string, bool, Polyhedron>;
+using IdentifiedPolyhedron = std::tuple<std::string, bool, Polyhedron>;
 
 namespace Test {
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit tests for Cone Surfaces
 BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
-  std::vector<IdentifiedPolyderon> testTypes;
+  std::vector<IdentifiedPolyhedron> testTypes;
 
   double hzpmin = 10_mm;
   double hzpos = 35_mm;
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
   ObjTestWriter::writeSectorPlanesObj("CylinderShiftedSectorPlanes", phiSector,
                                       averagePhi, 1.5 * r, 1.5 * hZ);
 
-  std::vector<IdentifiedPolyderon> testTypes;
+  std::vector<IdentifiedPolyhedron> testTypes;
 
   for (const auto& mode : testModes) {
     unsigned int segments = std::get<unsigned int>(mode);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
 
 /// Unit tests for Disc Surfaces
 BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
-  std::vector<IdentifiedPolyderon> testTypes;
+  std::vector<IdentifiedPolyhedron> testTypes;
 
   double innerR = 10_mm;
   double outerR = 25_mm;
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
 /// Unit tests for Plane Surfaces
 BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
-  std::vector<IdentifiedPolyderon> testTypes;
+  std::vector<IdentifiedPolyhedron> testTypes;
 
   double rhX = 10_mm;
   double rhY = 25_mm;
