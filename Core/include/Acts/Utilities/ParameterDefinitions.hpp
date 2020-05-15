@@ -299,10 +299,6 @@ using BoundSymMatrix =
 
 using GlobalBoundSymMatrix = ActsMatrixX<BoundParametersScalar>;
 
-using AlignmentToBoundMatrix =
-    ActsMatrix<BoundParametersScalar, eBoundParametersSize,
-               eAlignmentParametersSize>;
-
 // Matrix and vector types related to free track parameters.
 
 using FreeVector = ActsVector<FreeParametersScalar, eFreeParametersSize>;
@@ -319,6 +315,15 @@ using SpacePointSymMatrix =
     ActsMatrix<SpacePointScalar, eSpacePointSize, eSpacePointSize>;
 using SpacePointSymMatrix = ActsSymMatrix<SpacePointScalar, eSpacePointSize>;
 
+// Matrix and vector types related to alignment parameters.
+using AlignmentVector =
+    ActsVector<AlignmentParametersScalar, eAlignmentParametersSize>;
+using AlignmentRowVector =
+    ActsRowVector<AlignmentParametersScalar, eAlignmentParametersSize>;
+using AlingmentMatrix =
+    ActsMatrix<AlignmentParametersScalar, eAlignmentParametersSize,
+               eAlignmentParametersSize>;
+
 // Mapping to bound track parameters.
 //
 // Assumes that matrices represent maps from another space into the space of
@@ -329,6 +334,10 @@ using FreeToBoundMatrix = ActsMatrix<BoundParametersScalar,
                                      eBoundParametersSize, eFreeParametersSize>;
 using SpacePointToBoundMatrix =
     ActsMatrix<BoundParametersScalar, eBoundParametersSize, eSpacePointSize>;
+
+using AlignmentToBoundMatrix =
+    ActsMatrix<BoundParametersScalar, eBoundParametersSize,
+               eAlignmentParametersSize>;
 
 // Mapping to free track parameters.
 //

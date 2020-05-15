@@ -21,8 +21,6 @@ using AlignmentToCartesianMatrix =
                eAlignmentParametersSize>;
 using CartesianToBoundLocalMatrix =
     ActsMatrix<BoundParametersScalar, 2, eCartesianCoordinatesDimension>;
-using AlignmentRowVector =
-    ActsMatrix<AlignmentParametersScalar, 1, eAlignmentParametersSize>;
 
 /// @brief Evaluate the derivative of bound track parameters w.r.t. alignment
 /// parameters (i.e. local reference frame origin in global 3D Cartesian

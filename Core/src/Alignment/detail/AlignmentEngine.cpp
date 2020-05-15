@@ -32,7 +32,7 @@ AlignmentToBoundMatrix alignmentToBoundDerivative(
   const auto localYAxis = rframe.col(1);
   const auto localZAxis = rframe.col(2);
   // Get the derivative of local axes w.r.t. local axes rotation
-  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       rotationToLocalAxesDerivative(rframe);
   // The vector of track position in reference frame
   const auto localPosRowVec = (pos - rframeOrigin).transpose();
@@ -58,9 +58,8 @@ AlignmentToBoundMatrix alignmentToBoundDerivative(
   const double cosThetaDir = localZAxis.transpose() * dir;
   // Derivative of propagation path w.r.t. reference frame origin and rotation
   AlignmentRowVector alignmentToPath = AlignmentRowVector::Zero();
-  alignmentToPath.block<1, 3>(0, eOrigin_X) =
-      localZAxis.transpose() / cosThetaDir;
-  alignmentToPath.block<1, 3>(0, eRotation_X) =
+  alignmentToPath.segment<3>(eOrigin_X) = localZAxis.transpose() / cosThetaDir;
+  alignmentToPath.segment<3>(eRotation_X) =
       -localPosRowVec * rotToLocalZAxis / cosThetaDir;
 
   // Initialize the derivative of bound parameters w.r.t. alignment parameters
