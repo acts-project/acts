@@ -136,15 +136,36 @@ enum SpacePointIndices : unsigned int {
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
 enum AlignmentParametersIndices : unsigned int {
-  // Position of geometry object center
-  ePos_X = 0u,
-  ePos_Y = ePos_X + 1u,
-  ePos_Z = ePos_X + 2u,
-  // Rotation angle around global x/y/z axis of geometry object
-  eRot_X = 3u,
-  eRot_Y = eRot_X + 1u,
-  eRot_Z = eRot_X + 2u,
+  // Center of geometry object in global 3D cartesian coordinates
+  eCenter_X = 0u,
+  eCenter_Y = eCenter_X + 1u,
+  eCenter_Z = eCenter_X + 2u,
+  // Rotation angle around global x/y/z axis of geometry object or local
+  // reference frame
+  eRotation_X = 3u,
+  eRotation_Y = eRot_X + 1u,
+  eRotation_Z = eRot_X + 2u,
+  // Last uninitialized value contains the total number of components
   eAlignmentParametersSize,
+  // Origin of local reference frame in global 3D cartesian coordinates
+  eOrigin_X = eCenter_X,
+  eOrigin_Y = eCenter_Y,
+  eOrigin_Z = eCenter_Z,
+};
+
+/// Components of Cartesian coorindate indices vector.
+///
+/// To be used to access components by named indices instead of just numbers.
+/// This must be a regular `enum` and not a scoped `enum class` to allow
+/// implicit conversion to an integer. The enum value are thus visible directly
+/// in `namespace Acts` and are prefixed to avoid naming collisions.
+enum CartesianCoordinatesIndices : unsigned int {
+  // Cartesian coordinates
+  eX = 0u,
+  eY = eX + 1u,
+  eZ = eX + 2u,
+  // Last uninitialized value contains the total number of components
+  eCartesianCoordinatesDimension,
 };
 
 /// Underlying fundamental scalar type for bound track parameters.
