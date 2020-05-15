@@ -1,52 +1,25 @@
-file(GLOB_RECURSE doxygen_sources
-  ${PROJECT_SOURCE_DIR}/Core/include/*.hpp
-  ${PROJECT_SOURCE_DIR}/Fatras/include/*.hpp
-  ${PROJECT_SOURCE_DIR}/Plugins/*/include/*.hpp
-)
-set(sphinx_sources
-  integration/atlas.md
-  integration/fcc.md
-  integration/integration.rst
-  modules/eventdata.md
-  modules/geometry.md
-  modules/magnetic_field.rst
-  modules/material.rst
-  modules/modules.rst
-  modules/propagation.md
-  plugins/dd4hep.rst
-  plugins/digitization.rst
-  plugins/identification.rst
-  plugins/plugins.rst
-  plugins/tgeo.rst
-  utilities/grid_axis.md
-  utilities/logging.rst
-  utilities/units.rst
-  utilities/utilities.rst
-  authors.rst
-  codeguide.md
-  index.rst
-  license.rst
-  ../AUTHORS.md
-  ../LICENSE
-)
+# to be compatible with readthedocs.org, the documentation build is always
+# in-source (as opposed to the configurable out-of-source build directory for
+# the code) and is fully driven by the sphinx tool. Doxygen (to extract the
+# source code ) is called automatically by sphinx as well. That also means
+# that the CMake dependency handling does not apply and is ignored here.
 
-set(output_dir ${CMAKE_CURRENT_SOURCE_DIR}/_build)
-set(output_html_dir ${output_dir}/html)
-set(output_html_index ${output_dir}/html/index.html)
+set(output_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
+set(output_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
 
-# default target builds the full documentation
+# standard documentation target to build the full documentation
+# this can take quite a long time due to the auto-generation of the
 add_custom_target(
   doc
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
-      -d ${output_dir}/doctrees
+      -d ${output_doctrees}
       -j auto
       -t use_doxygen
       ${CMAKE_CURRENT_SOURCE_DIR}
-      ${output_html_dir}
+      ${output_html}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS conf.py Doxyfile ${doxygen_sources} ${sphinx_sources}
   COMMENT "Build documentation")
 # helper target for faster iterations without the doxygen API docs
 add_custom_target(
@@ -54,14 +27,13 @@ add_custom_target(
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
-      -d ${output_dir}/doctrees
+      -d ${output_doctrees}
       -j auto
       ${CMAKE_CURRENT_SOURCE_DIR}
-      ${output_html_dir}
+      ${output_html}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS conf.py Doxyfile ${doxygen_sources} ${sphinx_sources}
   COMMENT "Build documentation (without Doxygen)")
 
 install(
-  DIRECTORY ${output_html_dir}/
+  DIRECTORY ${output_html}/
   DESTINATION ${CMAKE_INSTALL_DOCDIR}/Acts OPTIONAL)
