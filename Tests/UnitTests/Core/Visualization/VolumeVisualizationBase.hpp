@@ -12,6 +12,7 @@
 #include "Acts/Visualization/IVisualization.hpp"
 
 #include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
@@ -61,6 +62,58 @@ static inline std::string test(IVisualization& helper, bool triangulate,
   Visualization::drawVolume(helper, *cuboid, gctx, Transform3D::Identity(), 72,
                             triangulate, boxColor);
   write("Volumes_CuboidVolume");
+
+  //----------------------------------------------------
+  // Cone volume section
+  IVisualization::ColorType coneColor = {255, 171, 3};
+
+  // Single solid Cone
+  auto solidCone =
+      std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 5., 5., 0., M_PI);
+  auto cone = std::make_shared<AbstractVolume>(identity, solidCone);
+  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
+                            triangulate, coneColor);
+  write("Volumes_ConeVolumeSolid");
+
+  // Single solid Cone - with cut off
+  auto cutOffCone =
+      std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 8., 5., 0., M_PI);
+  cone = std::make_shared<AbstractVolume>(identity, cutOffCone);
+  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
+                            triangulate, coneColor);
+  write("Volumes_ConeVolumeSolidCutOff");
+
+  // Cone - Cone inlay
+  auto cutOffHollowCone =
+      std::make_shared<ConeVolumeBounds>(0.35, 7., 0.45, 8., 5, 0., M_PI);
+  cone = std::make_shared<AbstractVolume>(identity, cutOffHollowCone);
+  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
+                            triangulate, coneColor);
+  write("Volumes_ConeVolumeConeCone");
+
+  // Sectoral Cone - Cone inlay
+  auto cutOffHollowSectoralCone =
+      std::make_shared<ConeVolumeBounds>(0.35, 7., 0.45, 8., 5., 0., 0.456);
+  cone = std::make_shared<AbstractVolume>(identity, cutOffHollowSectoralCone);
+  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
+                            triangulate, coneColor);
+  write("Volumes_ConeVolumeConeConeSectoral");
+
+  // Single Hollow Cone - cylindrical inlay
+  auto cutOffHollowCylCone =
+      std::make_shared<ConeVolumeBounds>(1., 0.45, 8., 5., 0., M_PI);
+  cone = std::make_shared<AbstractVolume>(identity, cutOffHollowCylCone);
+  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
+                            triangulate, coneColor);
+  write("Volumes_ConeVolumeConeCylinder");
+
+  // Single Hollow Cylinder - Cone inlay
+  auto cutOffHollowConeCyl =
+      std::make_shared<ConeVolumeBounds>(12., 0.35, 7., 5., 0., M_PI);
+  cone = std::make_shared<AbstractVolume>(identity, cutOffHollowConeCyl);
+  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
+                            triangulate, coneColor);
+  write("Volumes_ConeVolumeCylinderCone");
 
   //----------------------------------------------------
   // Cylinder volume section

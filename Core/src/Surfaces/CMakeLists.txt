@@ -4,6 +4,7 @@ target_sources_local(
     AnnulusBounds.cpp
     ConeBounds.cpp
     ConeSurface.cpp
+    ConvexPolygonBounds.cpp
     CylinderBounds.cpp
     CylinderSurface.cpp
     DiamondBounds.cpp
