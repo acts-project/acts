@@ -3,8 +3,8 @@ Material
 
 .. note::
 
-    This was originally written for the materials plugin that has been merged
-    into the material module
+   This was originally written for the materials plugin that has been merged
+   into the material module
 
 The material module allow to map material from a detailed full detector geometry
 onto the simplified Acts geometry. The material is mapped onto layers of the
@@ -18,9 +18,9 @@ grid during the geometry building process.
 
 .. note::
 
-    The :doc:`/plugins/dd4hep` offers the possibility to mark layers which should
-    carry material and to determine the grid granularity, using the class
-    :class:`Acts::ActsExtension`.
+   The :doc:`/plugins/dd4hep` offers the possibility to mark layers which should
+   carry material and to determine the grid granularity, using the class
+   :class:`Acts::ActsExtension`.
 
 Following the Acts philosophy the material mapping is agnostic to any file
 format and software used to create or store the material maps. The material
@@ -33,8 +33,8 @@ and its thickness at a certain position.
 
 The material mapping process can be split into two subprocesses:
 
-*   Material assignment
-*   Material averaging
+- Material assignment
+- Material averaging
 
 Material assignment
 -------------------
@@ -49,9 +49,9 @@ record and assigns the material of each step to the closest layer:
 
 .. figure:: /figures/MaterialAssignment.jpeg
 
-    Example of material assignment onto the inner boundary surface of the
-    layers. The green points are assigned to the current inner layer, the red to
-    the next inner layer."
+   Example of material assignment onto the inner boundary surface of the
+   layers. The green points are assigned to the current inner layer, the red to
+   the next inner layer."
 
 Material averaging
 ------------------
@@ -67,11 +67,11 @@ The full material mapping process should be done in the framework of the user.
 
 Possible workflow:
 
-* Create material map(s) of full detector geometry using :class:`Acts::MaterialTrack`.
-* Read in material map(s) and go through all collected material track records.
+- Create material map(s) of full detector geometry using :class:`Acts::MaterialTrack`.
+- Read in material map(s) and go through all collected material track records.
   Use :func:`Acts::MaterialMapping::mapMaterial()` for each material track
   record.
-* Use :func:`Acts::MaterialMapping::averageLayerMaterial()` once per run.
-* In the end of the process use
+- Use :func:`Acts::MaterialMapping::averageLayerMaterial()` once per run.
+- In the end of the process use
   :func:`Acts::MaterialMapping::finalizeLayerMaterial()` which assigns the
   final material to the layers.

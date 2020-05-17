@@ -3,4 +3,4 @@ TGeo plugin
 
 .. warning::
     
-    This is just a placeholder.
+   This is just a placeholder.

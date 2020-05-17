@@ -1,5 +1,5 @@
-A Common Tracking Software
-==========================
+Acts Common Tracking Software
+=============================
 
 This project contains an experiment-independent set of track reconstruction
 tools. The main philosophy is to provide high-level track reconstruction modules
@@ -21,14 +21,14 @@ Key features of this project include:
 *   basic seed finding algorithms.
 
 .. toctree::
-    :maxdepth: 2
+   :maxdepth: 2
 
-    getting_started
-    core/core
-    plugins/plugins
-    integration/integration
-    howto/howto
-    api/api
-    codeguide
-    authors
-    license
+   getting_started
+   core/core
+   plugins/plugins
+   integration/integration
+   howto/howto
+   api/api
+   codeguide
+   authors
+   license

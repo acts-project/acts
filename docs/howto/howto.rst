@@ -1,7 +1,7 @@
-Howto guides
-============
+How-to guides
+=============
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 1
 
-    run_truth_tracking
+   run_truth_tracking

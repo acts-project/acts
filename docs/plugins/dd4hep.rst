@@ -72,7 +72,7 @@ Prerequisites
 To guarantee a working translation from DD4hep input to Acts geometry the
 following conditions need to be met:
 
-* The detector needs to have a barrel-endcap structure: Every hierarchy of
+- The detector needs to have a barrel-endcap structure: Every hierarchy of
   subdetectors (e.g. PixelDetector, StripDetector,...) needs to be decomposed
   into
   
@@ -80,7 +80,7 @@ following conditions need to be met:
   #. {barrel + 2 endcaps}
   #. {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
 
-* If a hierachy is not only a single barrel but is decomposed of a barrel
+- If a hierachy is not only a single barrel but is decomposed of a barrel
   and its corresponding endcaps they need to be grouped together in an
   assembly using the ``DD4hep_SubdetectorAssembly`` constructor which is
   provided by DD4hep. Example of usage in xml file (where Barrel0, nEndCap0
@@ -88,64 +88,64 @@ following conditions need to be met:
   
   .. code-block:: xml
   
-      <include ref="PixelTracker.xml"/>
-      <detectors>
+     <include ref="PixelTracker.xml"/>
+     <detectors>
        <detector id="1" name="PixelTracker"type="DD4hep_SubdetectorAssembly"vis="BlueVisTrans">
          <shape name="PixelEnvelope" type="Tube" rmin="Env0_rmin"rmax="Env0_rmax"dz="Env0_dz" material="Air"/>
            <composite name="Barrel0"/>
            <composite name="nEndCap0"/>
            <composite name="pEndCap0"/>
        </detector>
-      </detectors>
+     </detectors>
 
   If a user wants to create his/her own constructor to group these
   volumes together the type needs to be set to "compound".
 
-* Since the translation walks trough the ``DetElement`` tree the following
+- Since the translation walks trough the ``DetElement`` tree the following
   objects need to be declared as a DD4hep ``DetElement``:
  
-  * The subvolumes e.g. barrel, endcap, beampipe (they are usually build with
+  - The subvolumes e.g. barrel, endcap, beampipe (they are usually build with
     different DD4hep constructors and are therefore DD4hep ``DetElement``'s
     per default).
-  * Layers when containing sensitive material and/or the layer should
+  - Layers when containing sensitive material and/or the layer should
     carry material (which will be mapped on the layer if indicated), or
     the layer is sensitive itself.
   
     .. note::
     
-        the layer does not need to be a direct child of the volume (barrel or
-        endcap),it an be nested in substructures
+       the layer does not need to be a direct child of the volume (barrel or
+       endcap),it an be nested in substructures
 
-  * Sensitive detector modules
+  - Sensitive detector modules
     
     .. note::
       
-        The sensitive detector modules need to be placed in a layer however
-        it can be nested in substructures (can be a component of a modules)
-        i.e. it does not need to be a direct child of the layer
+       The sensitive detector modules need to be placed in a layer however
+       it can be nested in substructures (can be a component of a modules)
+       i.e. it does not need to be a direct child of the layer
 
-* The Tracking geometry needs to be built from bottom to top to ensure
+- The Tracking geometry needs to be built from bottom to top to ensure
   navigation. Therefore the different hierarchies need to be sorted ascending.
   Per default the sub detectors are sorted by the id of their ``DetElement``.
   In case another sorting needs to be applied, the users can provide their own
   function.
 
-* The :class:`Acts::ActsExtension`'s need to be used during the detector
+- The :class:`Acts::ActsExtension`'s need to be used during the detector
   construction indicating if a ``DetElement``
   
-  * is a barrel
-  * is an endcap
-  * is the beampipe
-  * is a layer
+  - is a barrel
+  - is an endcap
+  - is the beampipe
+  - is a layer
 
 There are two modes building the layers around the sensitive detector modules:
 
-* The ``DetElement`` containing the sensitive modules have a geometrical
+- The ``DetElement`` containing the sensitive modules have a geometrical
   shape.
   
   The boundaries of the layers in Acts are taken directly from the given shape.
 
-* The ``DetElement`` containing the sensitive modules have no specific shape
+- The ``DetElement`` containing the sensitive modules have no specific shape
   (assembly).
   
   The boundaries of the layers are calculated automatically by adding a
@@ -155,7 +155,7 @@ There are two modes building the layers around the sensitive detector modules:
 
 The volumes are automatically build around the layers:
 
-* The boundaries for the volumes are calculated automatically by adding a
+- The boundaries for the volumes are calculated automatically by adding a
   tolerance to the geometric extension of the contained layers. The
   tolerance parameters ``layerEnvelopeR`` and ``layerEnvelopeZ`` need to be
   set in the :func:`Acts::convertDD4hepDetector()` function.
