@@ -23,7 +23,7 @@ using CartesianToBoundLocalMatrix =
     ActsMatrix<BoundParametersScalar, 2, eCartesianCoordinatesDimension>;
 
 /// @brief Evaluate the derivative of bound track parameters w.r.t. alignment
-/// parameters of its reference surface (i.e. local reference frame origin in
+/// parameters of its reference surface (i.e. local frame origin in
 /// global 3D Cartesian coordinates and rotation represented with extrinsic
 /// Euler angles)
 ///
@@ -32,18 +32,16 @@ using CartesianToBoundLocalMatrix =
 /// @param [in] derivatives Path length derivatives of the free, nominal
 /// parameters to help evaluate path correction due to change of alignment
 /// parameters
-/// @param [in] rframeOrigin The origin of local reference frame in global
-/// coordinate
 /// @param [in] cartesianToLocal The derivative of track position represented in
 /// (local) bound track parameters (could be in non-Cartesian coordinates)
 /// w.r.t. track position represented in local 3D Cartesian coordinates. This is
 /// needed because alignment is done w.r.t. Cartesian coordinates
 ///
-/// @return Derivative of bound track parameters w.r.t. local reference frame
+/// @return Derivative of bound track parameters w.r.t. local frame
 /// alignment parameters
 AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
     const GeometryContext& gctx, const BoundParameters& boundParams,
-    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const FreeVector& derivatives,
     const CartesianToBoundLocalMatrix& locCartesianToLocBound =
         CartesianToBoundLocalMatrix::Identity(2,
                                               eCartesianCoordinatesDimension));
@@ -60,8 +58,6 @@ AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
 /// @param [in] derivatives Path length derivatives of the free, nominal
 /// parameters to help evaluate path correction due to change of alignment
 /// parameters
-/// @param [in] rframeOrigin The origin of local reference frame in global
-/// coordinate
 /// @param [in] cartesianToLocal The derivative of track position represented in
 /// (local) bound track parameters (could be in non-Cartesian coordinates)
 /// w.r.t. track position represented in local 3D Cartesian coordinates. This is
@@ -73,7 +69,7 @@ AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
 /// parameters
 AlignmentToBoundMatrix layerAlignmentToBoundDerivative(
     const GeometryContext& gctx, const BoundParameters& boundParams,
-    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const FreeVector& derivatives,
     const AlignmentMatrix& layerAlignToSurfaceAlign,
     const CartesianToBoundLocalMatrix& locCartesianToLocBound =
         CartesianToBoundLocalMatrix::Identity(2,
@@ -91,8 +87,6 @@ AlignmentToBoundMatrix layerAlignmentToBoundDerivative(
 /// @param [in] derivatives Path length derivatives of the free, nominal
 /// parameters to help evaluate path correction due to change of alignment
 /// parameters
-/// @param [in] rframeOrigin The origin of local reference frame in global
-/// coordinate
 /// @param [in] cartesianToLocal The derivative of track position represented in
 /// (local) bound track parameters (could be in non-Cartesian coordinates)
 /// w.r.t. track position represented in local 3D Cartesian coordinates. This is
@@ -104,22 +98,22 @@ AlignmentToBoundMatrix layerAlignmentToBoundDerivative(
 /// parameters
 AlignmentToBoundMatrix volumeAlignmentToBoundDerivative(
     const GeometryContext& gctx, const BoundParameters& boundParams,
-    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const FreeVector& derivatives,
     const AlignmentMatrix& volumeAlignToSurfaceAlign,
     const CartesianToBoundLocalMatrix& locCartesianToLocBound =
         CartesianToBoundLocalMatrix::Identity(2,
                                               eCartesianCoordinatesDimension));
 
-/// @brief Evaluate the derivative of local reference frame axes vector w.r.t.
+/// @brief Evaluate the derivative of local frame axes vector w.r.t.
 /// its rotation around global x/y/z axis
 /// @Todo: add parameter for rotation axis order
 ///
-/// @param [in] rframe The local reference frame
+/// @param [in] rotation The local frame rotation
 ///
-/// @return Derivative of local reference frame x/y/z axis vector w.r.t. its
+/// @return Derivative of local frame x/y/z axis vector w.r.t. its
 /// rotation angles (extrinsic Euler angles) around global x/y/z axis
 std::tuple<RotationMatrix3D, RotationMatrix3D, RotationMatrix3D>
-rotationToLocalAxesDerivative(const RotationMatrix3D& rframe);
+rotationToLocalAxesDerivative(const RotationMatrix3D& rotation);
 
 }  // namespace detail
 }  // namespace Acts

@@ -12,40 +12,41 @@ namespace Acts {
 namespace detail {
 AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
     const GeometryContext& gctx, const BoundParameters& boundParams,
-    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const FreeVector& derivatives,
     CartesianToBoundLocalMatrix& locCartesianToLocBound) {
   // The position and momentum direction
   const auto pos = boundParams.position();
   const auto dir = boundParams.momentum().normalized();
   // The reference surface
   const auto surface = &boundParams.referenceSurface();
+  // The local frame transform
+  const auto& sTransform = surface->transform(gctx);
+  const auto& center = sTransform.translation();
+  const auto& rotation = sTransform.rotation();
+  // The vector between position and local frame origin
+  const auto localPosRowVec = (pos - center).transpose();
+  // The axes of local frame
+  const auto localXAxis = rotation.col(0);
+  const auto localYAxis = rotation.col(1);
+  const auto localZAxis = rotation.col(2);
 
   // Initialize the jacobian from free parameters to bound parameters
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-  // Set the jacobian to local, returns the transposed ref frame (i.e.
-  // measurement frame)
-  const auto rframeT =
-      surface->initJacobianToLocal(geoContext, jacToLocal, pos, dir);
-  const auto rframe = rframeT.transpose();
-  // The axes of local measurement frame in Cartesian coordinates
-  const auto localXAxis = rframe.col(0);
-  const auto localYAxis = rframe.col(1);
-  const auto localZAxis = rframe.col(2);
+  // Set the jacobian to local
+  surface->initJacobianToLocal(geoContext, jacToLocal, pos, dir);
   // Get the derivative of local axes w.r.t. local axes rotation
   const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      rotationToLocalAxesDerivative(rframe);
-  // The vector of track position in reference frame
-  const auto localPosRowVec = (pos - rframeOrigin).transpose();
+      rotationToLocalAxesDerivative(rotation);
 
   // Initialize the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
   AlignmentToCartesianMatrix alignToLocCartesian =
       AlignmentToCartesianMatrix::Zero();
-  // Derivative of local Cartesian 3D coordinates w.r.t. reference frame origin
-  alignToLocCartesian.block<1, 3>(eX, eOrigin_X) = -localXAxis.transpose();
-  alignToLocCartesian.block<1, 3>(eY, eOrigin_X) = -localYAxis.transpose();
-  alignToLocCartesian.block<1, 3>(eZ, eOrigin_X) = -localZAxis.transpose();
-  // Derivative of local Cartesian 3D coordinates w.r.t. reference frame
+  // Derivative of local Cartesian 3D coordinates w.r.t. local frame translation
+  alignToLocCartesian.block<1, 3>(eX, eCenter_X) = -localXAxis.transpose();
+  alignToLocCartesian.block<1, 3>(eY, eCenter_X) = -localYAxis.transpose();
+  alignToLocCartesian.block<1, 3>(eZ, eCenter_X) = -localZAxis.transpose();
+  // Derivative of local Cartesian 3D coordinates w.r.t. local frame
   // rotation
   alignToLocCartesian.block<1, 3>(eX, eRotation_X) =
       localPosRowVec * rotToLocalXAxis;
@@ -54,11 +55,12 @@ AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
   alignToLocCartesian.block<1, 3>(eZ, eRotation_X) =
       localPosRowVec * rotToLocalZAxis;
 
-  // Cosine of angle between momentum direction and z axis of measurement frame
+  // Cosine of angle between momentum direction and local frame z axis
   const double cosThetaDir = localZAxis.transpose() * dir;
-  // Derivative of propagation path w.r.t. reference frame origin and rotation
+  // Derivative of propagation path w.r.t. local frame translation (origin) and
+  // rotation
   AlignmentRowVector alignmentToPath = AlignmentRowVector::Zero();
-  alignmentToPath.segment<3>(eOrigin_X) = localZAxis.transpose() / cosThetaDir;
+  alignmentToPath.segment<3>(eCenter_X) = localZAxis.transpose() / cosThetaDir;
   alignmentToPath.segment<3>(eRotation_X) =
       -localPosRowVec * rotToLocalZAxis / cosThetaDir;
 
@@ -70,19 +72,19 @@ AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
   const auto jacToTheta = jacToLocal.block<1, eFreeParametersSize>(3, 0);
   const auto jacToQoP = jacToLocal.block<1, eFreeParametersSize>(4, 0);
   const auto jacToT = jacToLocal.block<1, eFreeParametersSize>(5, 0);
-  alignToBound.block<1, 6>(eLOC_0, eOrigin_X) =
+  alignToBound.block<1, 6>(eLOC_0, eCenter_X) =
       locCartesianToLocBound.block<1, 3>(eLOC_0, eX) * alignToLocCartesian +
       jacToLoc0 * derivatives * alignmentToPath;
-  alignToBound.block<1, 6>(eLOC_1, eOrigin_X) =
+  alignToBound.block<1, 6>(eLOC_1, eCenter_X) =
       locCartesianToLocBound.block<1, 3>(eLOC_1, eX) * alignToLocCartesian +
       jacToLoc1 * derivatives * alignmentToPath;
-  alignToBound.block<1, 6>(ePHI, eOrigin_X) =
+  alignToBound.block<1, 6>(ePHI, eCenter_X) =
       jacToPhi * derivatives * alignmentToPath;
-  alignToBound.block<1, 6>(eTHETA, eOrigin_X) =
+  alignToBound.block<1, 6>(eTHETA, eCenter_X) =
       jacToTheta * derivatives * alignmentToPath;
-  alignToBound.block<1, 6>(eQOP, eOrigin_X) =
+  alignToBound.block<1, 6>(eQOP, eCenter_X) =
       jacToQoP * derivatives * alignmentToPath;
-  alignToBound.block<1, 6>(eT, eOrigin_X) =
+  alignToBound.block<1, 6>(eT, eCenter_X) =
       jacToT * derivatives * alignmentToPath;
 
   return alignToBound;
@@ -90,34 +92,30 @@ AlignmentToBoundMatrix surfaceAlignmentToBoundDerivative(
 
 AlignmentToBoundMatrix layerAlignmentToBoundDerivative(
     const GeometryContext& gctx, const BoundParameters& boundParams,
-    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const FreeVector& derivatives,
     const AlignmentMatrix& layerAlignToSurfaceAlign,
-    const CartesianToBoundLocalMatrix& locCartesianToLocBound =
-        CartesianToBoundLocalMatrix::Identity(2,
-                                              eCartesianCoordinatesDimension)) {
+    const CartesianToBoundLocalMatrix& locCartesianToLocBound) {
   const auto surfaceAlignToBound = surfaceAlignmentToBoundDerivative(
-      gctx, boundParams, derivatives, rframeOrigin, locCartesianToLocBound);
+      gctx, boundParams, derivatives, locCartesianToLocBound);
   return surfaceAlignToBound * layerAlignToSurfaceAlign;
 }
 
 AlignmentToBoundMatrix volumeAlignmentToBoundDerivative(
     const GeometryContext& gctx, const BoundParameters& boundParams,
-    const FreeVector& derivatives, const Vector3D& rframeOrigin,
+    const FreeVector& derivatives,
     const AlignmentMatrix& volumeAlignToSurfaceAlign,
-    const CartesianToBoundLocalMatrix& locCartesianToLocBound =
-        CartesianToBoundLocalMatrix::Identity(2,
-                                              eCartesianCoordinatesDimension)) {
+    const CartesianToBoundLocalMatrix& locCartesianToLocBound) {
   const auto surfaceAlignToBound = surfaceAlignmentToBoundDerivative(
-      gctx, boundParams, derivatives, rframeOrigin, locCartesianToLocBound);
+      gctx, boundParams, derivatives, locCartesianToLocBound);
   return surfaceAlignToBound * volumeAlignToSurfaceAlign;
 }
 
 std::tuple<RotationMatrix3D, RotationMatrix3D, RotationMatrix3D>
-rotationToLocalAxesDerivative(const RotationMatrix3D& rframe) {
+rotationToLocalAxesDerivative(const RotationMatrix3D& rotation) {
   // Get Euler angles for rotation representated by rotZ * rotY * rotX, i.e.
   // first rotation around x axis, then y axis, last z axis
   // The elements stored in rotAngles is (rotZ, rotY, rotX)
-  const Vector3D rotAngles = rframe.eulerAngles(2, 1, 0);
+  const Vector3D rotAngles = rotation.eulerAngles(2, 1, 0);
   double sx = std::sin(rotAngles(2));
   double cx = std::cos(rotAngles(2));
   double sy = std::sin(rotAngles(1));

@@ -147,10 +147,6 @@ enum AlignmentParametersIndices : unsigned int {
   eRotation_Z = eRot_X + 2u,
   // Last uninitialized value contains the total number of components
   eAlignmentParametersSize,
-  // Origin of local reference frame in global 3D cartesian coordinates
-  eOrigin_X = eCenter_X,
-  eOrigin_Y = eCenter_Y,
-  eOrigin_Z = eCenter_Z,
 };
 
 /// Components of Cartesian coorindate indices vector.
