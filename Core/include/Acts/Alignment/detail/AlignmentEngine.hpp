@@ -130,9 +130,10 @@ AlignmentToCartesianMatrix alignmentToLocalCartesianDerivative(
 /// @param [in] direction The momentum direction (normalized)
 ///
 /// @return Derivative of path length w.r.t. the alignment parameters
-AlignmentToCartesianMatrix alignmentToPathDerivative(
-    const Transform3D& sTransform, const RotationToAxes& rotToAxes,
-    const Vector3D& position, const Vector3D& direction);
+AlignmentRowVector alignmentToPathDerivative(const Transform3D& sTransform,
+                                             const RotationToAxes& rotToAxes,
+                                             const Vector3D& position,
+                                             const Vector3D& direction);
 
 /// @brief Evaluate the derivative of local frame axes vector w.r.t.
 /// its rotation around global x/y/z axis

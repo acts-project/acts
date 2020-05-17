@@ -140,8 +140,7 @@ enum AlignmentParametersIndices : unsigned int {
   eCenter_X = 0u,
   eCenter_Y = eCenter_X + 1u,
   eCenter_Z = eCenter_X + 2u,
-  // Rotation angle around global x/y/z axis of geometry object or local
-  // reference frame
+  // Rotation angle around global x/y/z axis of geometry object
   eRotation_X = 3u,
   eRotation_Y = eRot_X + 1u,
   eRotation_Z = eRot_X + 2u,

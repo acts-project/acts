@@ -114,9 +114,10 @@ AlignmentToCartesianMatrix alignmentToLocalCartesianDerivative(
   return alignToLocCartesian;
 }
 
-AlignmentToCartesianMatrix alignToPathDerivative(
-    const Transform3D& sTransform, const RotationToAxes& rotToAxes,
-    const Vector3D& position, const Vector3D& direction) {
+AlignmentRowVector alignToPathDerivative(const Transform3D& sTransform,
+                                         const RotationToAxes& rotToAxes,
+                                         const Vector3D& position,
+                                         const Vector3D& direction) {
   const auto& center = sTransform.translation();
   const auto& rotation = sTransform.rotation();
   // The vector between position and local frame origin
