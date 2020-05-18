@@ -12,7 +12,7 @@ template <typename object_t>
 Acts::HierarchicalGeometryContainer<object_t>
 Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
     const nlohmann::json& map,
-    std::function<object_t(const nlohmann::json&, const Acts::GeometryID&)>
+    std::function<object_t(const Acts::GeometryID&, const nlohmann::json&)>
         fromJson) const {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("jsonToHierarchicalContainer", logLevel));
@@ -38,7 +38,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
               for (auto& [okey, ovalue] : bvalue.items()) {
                 if (okey == datakey) {
                   Acts::GeometryID id = makeId(vkey, bkey, "0", "0", "0");
-                  elements.push_back(fromJson(ovalue, id));
+                  elements.push_back(fromJson(id, ovalue));
                 }
               }
             }
@@ -55,7 +55,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
                   for (auto& [okey, ovalue] : lcvalue.items()) {
                     if (okey == datakey) {
                       Acts::GeometryID id = makeId(vkey, "0", lkey, "0", "0");
-                      elements.push_back(fromJson(ovalue, id));
+                      elements.push_back(fromJson(id, ovalue));
                     }
                   }
                 } else if (lckey == m_appkey and not lcvalue.empty()) {
@@ -67,7 +67,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
                       if (okey == datakey) {
                         Acts::GeometryID id =
                             makeId(vkey, "0", lkey, askey, "0");
-                        elements.push_back(fromJson(ovalue, id));
+                        elements.push_back(fromJson(id, ovalue));
                       }
                     }
                   }
@@ -80,7 +80,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
                       if (okey == datakey) {
                         Acts::GeometryID id =
                             makeId(vkey, "0", lkey, "0", sskey);
-                        elements.push_back(fromJson(ovalue, id));
+                        elements.push_back(fromJson(id, ovalue));
                       }
                     }
                   }
@@ -90,7 +90,7 @@ Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
           } else if (vckey == datakey and not vcvalue.empty()) {
             ACTS_VERBOSE("j2a: --> Volume Object to be parsed");
             Acts::GeometryID id = makeId(vkey, "0", "0", "0", "0");
-            elements.push_back(fromJson(vcvalue, id));
+            elements.push_back(fromJson(id, vcvalue));
           }
         }
       }

@@ -35,7 +35,7 @@ struct JsonHierarchicalObjectConverter {
   /// @param fromJson Function that return Hierarchical Object from json
   HierarchicalGeometryContainer<object_t> jsonToHierarchicalContainer(
       const nlohmann::json& map,
-      std::function<object_t(const nlohmann::json&, const Acts::GeometryID&)>
+      std::function<object_t(const Acts::GeometryID&, const nlohmann::json&)>
           fromJson) const;
 
   /// Convert json map to Hierarchical Object Container
