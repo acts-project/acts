@@ -210,3 +210,32 @@ inline const BoundRowVector LineSurface::derivativeFactors(
           (s_vec - pc * (long_mat * d_vec.asDiagonal() -
                          jacobian.block<3, eBoundParametersSize>(4, 0))));
 }
+
+inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
+    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
+    const Vector3D& position, const Vector3D& direction) const {
+  // The vector between position and surface center (local frame orgin)
+  const auto& sfcenter = center(gctx);
+  const auto localPosRowVec = (position - sfcenter).transpose();
+  // The local frame transform
+  const auto& sTransform = transform(gctx);
+  const auto& rotation = sTransform.rotation();
+  // The axes of local frame
+  const auto localZAxis = rotation.col(2);
+  // The local z coordinate
+  const double localZ = localPosRowVec * localZAxis;
+
+  // Cosine of angle between momentum direction and local frame z axis
+  const double cosThetaDir = localZAxis.transpose() * direction;
+  const double norm = 1. / (1. - cosThetaDir * cosThetaDir);
+  // Initialize the derivative of propagation path w.r.t. local frame
+  // translation (origin) and rotation
+  AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
+  alignToPath.segment<3>(eCenter_X) =
+      norm * (direction.transpose() - cosThetaDir * localZAxis.transpose());
+  alignToPath.segment<3>(eRotation_X) =
+      -norm * (cosThetaDir * localPosRowVec + localZ * direction.transpose()) *
+      rotToLocalZAxis;
+
+  return alignToPath;
+}
