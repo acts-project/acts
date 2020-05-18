@@ -67,7 +67,8 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
     if (std::sqrt(vertexAndTracks.vertex.position().x() *
                       vertexAndTracks.vertex.position().x() +
                   vertexAndTracks.vertex.position().y() *
-                      vertexAndTracks.vertex.position().y()) > 4_mm) {
+                      vertexAndTracks.vertex.position().y()) >
+        m_cfg.maxTransFitDistance) {
       continue;
     }
 
