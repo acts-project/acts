@@ -77,8 +77,6 @@ class AdaptiveMultiVertexFinder {
     // Track linearizer
     Linearizer_t linearizer;
 
-    // const bool usingGridSeedFinder = false;
-
     // Use a beam spot constraint, vertexConstraint in VertexingOptions
     // has to be set in this case
     bool useBeamSpotConstraint = true;
