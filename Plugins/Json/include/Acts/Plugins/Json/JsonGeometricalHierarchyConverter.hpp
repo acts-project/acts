@@ -128,21 +128,21 @@ struct JsonGeometricalHierarchyConverter {
       std::function<nlohmann::json(const object_t&)> toJson) const;
 
   /// The detector tag
-  std::string m_detkey = "detector";
+  static constexpr char m_detkey[] = "detector";
   /// The volume identification string
-  std::string m_volkey = "volumes";
+  static constexpr char m_volkey[] = "volumes";
   /// The boundary surface string
-  std::string m_boukey = "boundaries";
+  static constexpr char m_boukey[] = "boundaries";
   /// The layer identification string
-  std::string m_laykey = "layers";
+  static constexpr char m_laykey[] = "layers";
   /// The approach identification string
-  std::string m_appkey = "approach";
+  static constexpr char m_appkey[] = "approach";
   /// The sensitive identification string
-  std::string m_senkey = "sensitive";
+  static constexpr char m_senkey[] = "sensitive";
   /// The representing idntification string
-  std::string m_repkey = "representing";
+  static constexpr char m_repkey[] = "representing";
   /// The name identification
-  std::string m_namekey = "Name";
+  static constexpr char m_namekey[] = "Name";
 
   /// The config class
   Config m_cfg;
