@@ -207,8 +207,12 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
   auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(nullptr);
   BOOST_TEST(ccvbOrientedSurfaces.size(), 8);
 
+  auto geoCtx = GeometryContext();
+  Vector3D xaxis(1., 0., 0.);
+  Vector3D yaxis(0., 1., 0.);
+  Vector3D zaxis(0., 0., 1.);
+
   for (auto& os : ccvbOrientedSurfaces) {
-    auto geoCtx = GeometryContext();
     auto onSurface = os.first->binningPosition(geoCtx, binR);
     auto osNormal = os.first->normal(geoCtx, onSurface);
     double nDir = (double)os.second;
@@ -218,6 +222,12 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
 
     BOOST_CHECK(ccvb.inside(insideCcvb));
     BOOST_CHECK(!ccvb.inside(outsideCCvb));
+
+    // Test the orientation of the boundary surfaces
+    auto rot = os.first->transform(geoCtx).rotation();
+    BOOST_CHECK(rot.col(0).isApprox(xaxis));
+    BOOST_CHECK(rot.col(1).isApprox(yaxis));
+    BOOST_CHECK(rot.col(2).isApprox(zaxis));
   }
 }
 

@@ -27,7 +27,7 @@ class Surface;
 /// It's templated in the type of volume in order to allow for a return type tat
 /// is usable in the navigation stream.
 ///
-/// @note along/oppose definitions are given with respet to the normal vector
+/// @note along/oppose definitions are given with respect to the normal vector
 /// of the boundary surface.
 ///
 /// @todo change to one schema with BinnedArray0D

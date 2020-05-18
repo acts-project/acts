@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(construction_test) {
   BOOST_CHECK(cubo.inside({2.2, 1, 1}, 0.3));
 }
 
-BOOST_AUTO_TEST_CASE(BenericCuboidBoundsOrientedSurfaces) {
+BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
   std::array<Vector3D, 8> vertices;
   vertices = {{{0, 0, 0},
                {2, 0, 0},

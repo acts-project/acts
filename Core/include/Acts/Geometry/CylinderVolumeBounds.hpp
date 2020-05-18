@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -244,14 +244,14 @@ inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
 }
 
 template <class stream_t>
-stream_t& CylinderVolumeBounds::dumpT(stream_t& tstream) const {
-  tstream << std::setiosflags(std::ios::fixed);
-  tstream << std::setprecision(5);
-  tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
-             "averagePhi) = ";
-  tstream << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ)
-          << ", " << get(eHalfPhiSector) << get(eAveragePhi);
-  return tstream;
+stream_t& CylinderVolumeBounds::dumpT(stream_t& dt) const {
+  dt << std::setiosflags(std::ios::fixed);
+  dt << std::setprecision(5);
+  dt << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
+        "averagePhi) = ";
+  dt << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ) << ", "
+     << get(eHalfPhiSector) << get(eAveragePhi);
+  return dt;
 }
 
 inline std::vector<double> CylinderVolumeBounds::values() const {
