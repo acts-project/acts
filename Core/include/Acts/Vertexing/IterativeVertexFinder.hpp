@@ -107,6 +107,9 @@ class IterativeVertexFinder {
     double cutOffTrackWeight = 0.01;
   };
 
+  /// @struct State State struct for fulfilling interface
+  struct State {};
+
   /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
   /// @param cfg Configuration object
@@ -137,11 +140,13 @@ class IterativeVertexFinder {
   ///
   /// @param trackVector Input tracks
   /// @param vertexingOptions Vertexing options
+  /// @param state State for fulfilling interfaces
   ///
   /// @return Collection of vertices found by finder
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
  private:
   /// Configuration object
