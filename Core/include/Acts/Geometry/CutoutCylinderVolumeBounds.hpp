@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,8 +11,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -23,6 +21,9 @@
 namespace Acts {
 
 class IVisualization;
+
+class CylinderBounds;
+class DiscBounds;
 
 /// Class which implements a cutout cylinder. This shape is bascially a
 /// cylinder, with another, smaller cylinder subtracted from the center.
@@ -35,6 +36,7 @@ class IVisualization;
 /// --------- hlZ -------
 ///
 ///
+/// @todo add sectoral cutouts
 class CutoutCylinderVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
@@ -60,6 +62,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
                              double hlZc) noexcept(false)
       : m_values({rmin, rmed, rmax, hlZ, hlZc}) {
     checkConsistency();
+    buildSurfaceBounds();
   }
 
   /// Constructor - from a fixed size array
@@ -69,6 +72,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
       false)
       : m_values(values) {
     checkConsistency();
+    buildSurfaceBounds();
   }
 
   ~CutoutCylinderVolumeBounds() override = default;
@@ -89,13 +93,17 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @return Whether the point is inside or not.
   bool inside(const Vector3D& gpos, double tol = 0) const override;
 
-  /// Method to decompose the Bounds into Surfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
-  /// @param transform is the transform to position the surfaces in 3D space
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
   ///
-  /// @return vector of surfaces from the decopmosition
+  /// It will throw an exception if the orientation prescription is not adequate
   ///
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(
       const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
@@ -120,6 +128,16 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
 
  private:
   std::array<double, eSize> m_values;
+
+  // The surface bound objects
+  std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
+  std::shared_ptr<const CylinderBounds> m_cutoutCylinderBounds{nullptr};
+  std::shared_ptr<const CylinderBounds> m_outerCylinderBounds{nullptr};
+  std::shared_ptr<const DiscBounds> m_outerDiscBounds{nullptr};
+  std::shared_ptr<const DiscBounds> m_innerDiscBounds{nullptr};
+
+  /// Create the surface bound objects
+  void buildSurfaceBounds();
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given

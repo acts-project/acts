@@ -6,17 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// AbstractVolume.h, Acts project
-///////////////////////////////////////////////////////////////////
 #pragma once
-#include <memory>
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <memory>
 
 namespace Acts {
 
@@ -35,7 +33,6 @@ class Volume : public virtual GeometryObject {
  public:
   using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
 
-  ///  Default constructor
   Volume();
 
   /// Explicit constructor with shared arguments
@@ -55,7 +52,6 @@ class Volume : public virtual GeometryObject {
   /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Volume& vol, const Transform3D* shift = nullptr);
 
-  /// Destructor
   virtual ~Volume();
 
   /// Assignment operator

@@ -7,18 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
-
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
 #include <array>
 #include <ostream>
-
-#include "Acts/Geometry/Volume.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<Acts::Vector3D, 8>& vertices) noexcept(false)
@@ -56,10 +54,9 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
   return true;
 }
 
-std::vector<std::shared_ptr<const Acts::Surface>>
-Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
-    const Acts::Transform3D* transform) const {
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
+Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
+    const Transform3D* transform) const {
+  OrientedSurfaces oSurfaces;
 
   // approximate cog of the volume
   Vector3D cog(0, 0, 0);
@@ -71,21 +68,14 @@ Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
   cog *= 0.125;  // 1/8.
 
   auto make_surface = [&](const auto& a, const auto& b, const auto& c,
-                          const auto& d) {
+                          const auto& d) -> void {
     // calculate centroid of these points
     Vector3D ctrd = (a + b + c + d) / 4.;
     // create normal
     const Vector3D ab = b - a, ac = c - a;
     Vector3D normal = ab.cross(ac).normalized();
 
-    if ((cog - d).dot(normal) > 0) {
-      // normal points inwards, flip normal
-      normal *= -1.;
-    }
-    // get rid of -0 values if present
-    normal += Vector3D::Zero();
-
-    // normal should point away from volume center now
+    NavigationDirection nDir = ((cog - d).dot(normal) < 0) ? backward : forward;
 
     // build transform from z unit to normal
     // z is normal in local coordinates
@@ -117,7 +107,7 @@ Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
 
     auto srf = Surface::makeShared<PlaneSurface>(std::move(srfTrf), polyBounds);
 
-    surfaces.push_back(std::move(srf));
+    oSurfaces.push_back(OrientedSurface(std::move(srf), nDir));
   };
 
   make_surface(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
@@ -127,7 +117,7 @@ Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
   make_surface(m_vertices[2], m_vertices[3], m_vertices[7], m_vertices[6]);
   make_surface(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
 
-  return surfaces;
+  return oSurfaces;
 }
 
 std::ostream& Acts::GenericCuboidVolumeBounds::toStream(

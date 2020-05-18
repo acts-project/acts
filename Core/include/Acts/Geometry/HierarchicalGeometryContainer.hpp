@@ -8,14 +8,14 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/detail/DefaultGeometryIdGetter.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
-
-#include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Geometry/detail/DefaultGeometryIdGetter.hpp"
 
 namespace Acts {
 
