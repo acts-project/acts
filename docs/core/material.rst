@@ -57,7 +57,7 @@ Material averaging
 ------------------
 
 During the material mapping the user can decide to average the material whenever
-he/she prefers by using the function
+they prefer by using the function
 :func:`Acts::MaterialMapping::averageLayerMaterial()`. In the end when all
 material track records have been mapped one should use the function
 :func:`Acts::MaterialMapping::finalizeLayerMaterial()` in order to finalize the
