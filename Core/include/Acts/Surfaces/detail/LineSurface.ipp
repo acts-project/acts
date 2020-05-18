@@ -214,27 +214,26 @@ inline const BoundRowVector LineSurface::derivativeFactors(
 inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
-  // The vector between position and surface center (local frame orgin)
-  const auto& sfcenter = center(gctx);
-  const auto localPosRowVec = (position - sfcenter).transpose();
+  // The vector between position and center
+  const auto pcRowVec = (position - center(gctx)).transpose();
   // The local frame transform
   const auto& sTransform = transform(gctx);
   const auto& rotation = sTransform.rotation();
   // The axes of local frame
   const auto localZAxis = rotation.col(2);
   // The local z coordinate
-  const double localZ = localPosRowVec * localZAxis;
+  const double localZ = pcRowVec * localZAxis;
 
   // Cosine of angle between momentum direction and local frame z axis
-  const double cosThetaDir = localZAxis.transpose() * direction;
-  const double norm = 1. / (1. - cosThetaDir * cosThetaDir);
+  const double dirZ = localZAxis.transpose() * direction;
+  const double norm = 1. / (1. - dirZ * dirZ);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
   alignToPath.segment<3>(eCenter_X) =
-      norm * (direction.transpose() - cosThetaDir * localZAxis.transpose());
+      norm * (direction.transpose() - dirZ * localZAxis.transpose());
   alignToPath.segment<3>(eRotation_X) =
-      -norm * (cosThetaDir * localPosRowVec + localZ * direction.transpose()) *
+      -norm * (dirZ * pcRowVec + localZ * direction.transpose()) *
       rotToLocalZAxis;
 
   return alignToPath;

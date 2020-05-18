@@ -120,12 +120,10 @@ inline const BoundRowVector Surface::derivativeFactors(
 inline const AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& derivatives,
     const Vector3D& position, const Vector3D& direction) const {
-  // The vector between position and surface center (local frame orgin)
-  const auto& sfcenter = center(gctx);
-  const auto localPosRowVec = (position - sfcenter).transpose();
-  // The local frame transform
-  const auto& sTransform = transform(gctx);
-  const auto& rotation = sTransform.rotation();
+  // The vector between position and center
+  const auto pcRowVec = (position - center(gctx)).transpose();
+  // The local frame rotation
+  const auto& rotation = transform(gctx).rotation();
   // The axes of local frame
   const auto localXAxis = rotation.col(0);
   const auto localYAxis = rotation.col(1);
@@ -140,9 +138,9 @@ inline const AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
   alignToLoc3D.block<1, 3>(eX, eCenter_X) = -localXAxis.transpose();
   alignToLoc3D.block<1, 3>(eY, eCenter_X) = -localYAxis.transpose();
   alignToLoc3D.block<1, 3>(eZ, eCenter_X) = -localZAxis.transpose();
-  alignToLoc3D.block<1, 3>(eX, eRotation_X) = localPosRowVec * rotToLocalXAxis;
-  alignToLoc3D.block<1, 3>(eY, eRotation_X) = localPosRowVec * rotToLocalYAxis;
-  alignToLoc3D.block<1, 3>(eZ, eRotation_X) = localPosRowVec * rotToLocalZAxis;
+  alignToLoc3D.block<1, 3>(eX, eRotation_X) = pcRowVec * rotToLocalXAxis;
+  alignToLoc3D.block<1, 3>(eY, eRotation_X) = pcRowVec * rotToLocalYAxis;
+  alignToLoc3D.block<1, 3>(eZ, eRotation_X) = pcRowVec * rotToLocalZAxis;
   // 3) Calculate the derivative of track position represented in
   // (local) bound track parameters (could be in non-Cartesian coordinates)
   // w.r.t. track position represented in local 3D Cartesian coordinates.
@@ -175,23 +173,20 @@ inline const AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
 inline const AlignmentRowVector Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
-  // The vector between position and surface center (local frame orgin)
-  const auto& sfcenter = center(gctx);
-  const auto localPosRowVec = (position - sfcenter).transpose();
-  // The local frame transform
-  const auto& sTransform = transform(gctx);
-  const auto& rotation = sTransform.rotation();
+  // The vector between position and center
+  const auto pcRowVec = (position - center(gctx)).transpose();
+  // The local frame rotation
+  const auto& rotation = transform(gctx).rotation();
   // The axes of local frame
   const auto localZAxis = rotation.col(2);
 
   // Cosine of angle between momentum direction and local frame z axis
-  const double cosThetaDir = localZAxis.transpose() * direction;
+  const double dirZ = localZAxis.transpose() * direction;
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
-  alignToPath.segment<3>(eCenter_X) = localZAxis.transpose() / cosThetaDir;
-  alignToPath.segment<3>(eRotation_X) =
-      -localPosRowVec * rotToLocalZAxis / cosThetaDir;
+  alignToPath.segment<3>(eCenter_X) = localZAxis.transpose() / dirZ;
+  alignToPath.segment<3>(eRotation_X) = -pcRowVec * rotToLocalZAxis / dirZ;
 
   return alignToPath;
 }
