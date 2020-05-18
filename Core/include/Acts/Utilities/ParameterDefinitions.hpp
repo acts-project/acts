@@ -192,6 +192,16 @@ static_assert(3 <= SpacePointIndices::eSpacePointSize,
 static_assert(std::is_floating_point_v<SpacePointScalar>,
               "'SpacePointScalar' must be a floating point type");
 
+// Ensure alignment parameters definition is valid.
+static_assert(std::is_enum_v<AlignmentParametersIndices>,
+              "'AlignmentParametersIndices' is not an enum type");
+static_assert(std::is_convertible_v<AlignmentParametersIndices, size_t>,
+              "'AlignmentParametersIndices' is not convertible to size_t");
+static_assert(3 <= AlignmentParametersIndices::eAlignmentParametersSize,
+              "Alignment parameters must have at least three components");
+static_assert(std::is_floating_point_v<AlignmentParametersScalar>,
+              "'AlignmentParametersScalar' must be a floating point type");
+
 // Ensure bound track parameter components/ indices are consistently defined.
 static_assert(eLOC_0 != eLOC_1, "Local parameters must be differents");
 static_assert(eLOC_R == eLOC_0 or eLOC_R == eLOC_1,
@@ -224,6 +234,10 @@ static_assert(eSpacePos0 == eSpaceMom0, "Inconsisten position and momentum");
 static_assert(eSpacePos1 == eSpaceMom1, "Inconsisten position and momentum");
 static_assert(eSpacePos2 == eSpaceMom2, "Inconsisten position and momentum");
 static_assert(eSpaceTime == eSpaceEnergy, "Inconsistent time and energy");
+
+// Ensure alignment parameter components/ indices are consistently defined.
+static_assert(eCenter_Y == eCenter_X + 1u, "Center position must be continous");
+static_assert(eCenter_Z == eCenter_X + 2u, "Center position must be continous");
 
 namespace detail {
 template <BoundParametersIndices>
@@ -296,6 +310,7 @@ using SpacePointSymMatrix =
 using SpacePointSymMatrix = ActsSymMatrix<SpacePointScalar, eSpacePointSize>;
 
 // Matrix and vector types related to alignment parameters.
+
 using AlignmentVector =
     ActsVector<AlignmentParametersScalar, eAlignmentParametersSize>;
 using AlignmentRowVector =
