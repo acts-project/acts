@@ -15,16 +15,16 @@ issues with missing files after installation.
 A copy of [dfelibs](https://github.com/msmk0/dfelibs) v20200416, with the
 following folders removed:
 
-- examples
-- unittests
+-   examples
+-   unittests
 
 ## nlohmann_json
 
 A copy of [nlohmann::json](https://github.com/nlohmann/json) v3.7.3, with the
 following folders removed:
 
-- benchmarks
-- doc
-- test
-- include
-- third_party
+-   benchmarks
+-   doc
+-   test
+-   include
+-   third_party
