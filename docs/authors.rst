@@ -1,20 +1,7 @@
 Authors
 =======
 
-The following people have contributed to the project (in alphabetical order):
-
-- Andreas Salzburger, CERN
-- Bastian Schlag, CERN, JGU Mainz
-- Christian Gumpert
-- Corentin Allaire, CERN
-- Fabian Klimpel, Max-Planck-Institut für Physik
-- Hadrien Grasland, Centre National de la Recherche Scientifique
-- Julia Hrdinka
-- Moritz Kiehn, Université de Genève
-- Noemi Calace, CERN
-- Paul Gessinger, CERN, JGU Mainz
-- Robert Langenberg, CERN
-- Xiaocong Ai, LBNL
+.. include:: ../AUTHORS
 
 Detailed contributor information can also be found on the projects `Github contributors <https://github.com/acts-project/acts/graphs/contributors>`_ page.
 
