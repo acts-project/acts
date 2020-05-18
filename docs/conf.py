@@ -11,6 +11,10 @@ from recommonmark.transform import AutoStructify
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get('READTHEDOCS', None) == 'True'
 
+# always build the API docs w/ doxygen on RTD
+if on_readthedocs:
+    tags.add('use_doxygen')
+
 # -- Project information ------------------------------------------------------
 
 project = 'Acts'
