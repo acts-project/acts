@@ -31,6 +31,10 @@ source_suffix = {
     '.md': 'markdown',
 }
 master_doc = 'index'
+# ensure the in-source build directory is ignored
+exclude_patterns = [
+    '_build',
+]
 # cpp as default language
 primary_domain = 'cpp'
 highlight_language = 'cpp'
@@ -38,9 +42,9 @@ smartquotes = True
 
 # -- Options for HTML output --------------------------------------------------
 
+# ensure we use the RTD them when building locally
 if not on_readthedocs:
     import sphinx_rtd_theme
-
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
