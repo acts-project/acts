@@ -142,25 +142,10 @@ enum AlignmentParametersIndices : unsigned int {
   eCenter_Z = eCenter_X + 2u,
   // Rotation angle around global x/y/z axis of geometry object
   eRotation_X = 3u,
-  eRotation_Y = eRot_X + 1u,
-  eRotation_Z = eRot_X + 2u,
+  eRotation_Y = eRotation_X + 1u,
+  eRotation_Z = eRotation_X + 2u,
   // Last uninitialized value contains the total number of components
   eAlignmentParametersSize,
-};
-
-/// Components of Cartesian coorindate indices vector.
-///
-/// To be used to access components by named indices instead of just numbers.
-/// This must be a regular `enum` and not a scoped `enum class` to allow
-/// implicit conversion to an integer. The enum value are thus visible directly
-/// in `namespace Acts` and are prefixed to avoid naming collisions.
-enum CartesianCoordinatesIndices : unsigned int {
-  // Cartesian coordinates
-  eX = 0u,
-  eY = eX + 1u,
-  eZ = eX + 2u,
-  // Last uninitialized value contains the total number of components
-  eCartesianCoordinatesDimension,
 };
 
 /// Underlying fundamental scalar type for bound track parameters.
@@ -318,6 +303,8 @@ using AlignmentRowVector =
 using AlingmentMatrix =
     ActsMatrix<AlignmentParametersScalar, eAlignmentParametersSize,
                eAlignmentParametersSize>;
+using AlignmentToLocal3DMatrix =
+    ActsMatrix<AlignmentParametersScalar, 3, eAlignmentParametersSize>;
 
 // Mapping to bound track parameters.
 //
@@ -329,7 +316,6 @@ using FreeToBoundMatrix = ActsMatrix<BoundParametersScalar,
                                      eBoundParametersSize, eFreeParametersSize>;
 using SpacePointToBoundMatrix =
     ActsMatrix<BoundParametersScalar, eBoundParametersSize, eSpacePointSize>;
-
 using AlignmentToBoundMatrix =
     ActsMatrix<BoundParametersScalar, eBoundParametersSize,
                eAlignmentParametersSize>;

@@ -15,6 +15,7 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -445,6 +446,48 @@ class Surface : public virtual GeometryObject,
   /// @return A list of vertices and a face/facett description of it
   virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                               size_t lseg) const = 0;
+
+  /// Calculate the derivative of path length w.r.t. alignment parameters of the
+  /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
+  /// its rotation represented with extrinsic Euler angles)
+  ///
+  /// Re-implementation is needed for surface whose intersection with track is
+  /// not its local xy plane, e.g. LineSurface, CylinderSurface and ConeSurface
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
+  /// its rotation
+  /// @param position The position of the paramters in global
+  /// @param direction The direction of the track
+  ///
+  /// @return Derivative of path length w.r.t. the alignment parameters
+  virtual const AlignmentRowVector alignmentToPathDerivative(
+      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
+      const Vector3D& position, const Vector3D& direction) const;
+
+  /// Calculate the derivative of bound track parameters w.r.t. alignment
+  /// parameters of its reference surface (i.e. local frame origin in
+  /// global 3D Cartesian coordinates and its rotation represented with
+  /// extrinsic Euler angles)
+  ///
+  /// Re-implementation is needed for surface whose intersection with track is
+  /// not its local xy plane (e.g. LineSurface, CylinderSurface and ConeSurface)
+  /// or bound track parameters with local position in non-Cartesian
+  /// coordinates (e.g. DiscSurface, LineSurface, CylinderSurface and
+  /// ConeSurface)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param derivatives Path length derivatives of the free, nominal
+  /// parameters to help evaluate change of free track parameters caused by
+  /// change of alignment parameters
+  /// @param position The position of the paramters in global
+  /// @param direction The direction of the track
+  ///
+  /// @return Derivative of bound track parameters w.r.t. local frame
+  /// alignment parameters
+  virtual const AlignmentToBoundMatrix alignmentToBoundDerivative(
+      const GeometryContext& gctx, const FreeVector& derivatives,
+      const Vector3D& position, const Vector3D& direction) const;
 
  protected:
   /// Transform3D definition that positions
