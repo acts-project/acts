@@ -41,9 +41,10 @@ def main(token, repository, tag_name, retry, draft):
         assert tag_milestone is not None, "Did not find milestone for tag"
 
     with Spinner(f"Getting PRs for milestone {tag_milestone.title}"):
+        
         prs = list(
             gh.search_issues(
-                "", milestone=tag_milestone.title, repo=repository, type="pr"
+              "", milestone=tag_milestone.title, repo=repository, type="pr", **{"is": "merged"}
             )
         )
 
@@ -68,7 +69,10 @@ def main(token, repository, tag_name, retry, draft):
     for group, prs in groups.items():
         if len(prs) == 0:
             continue
-        body += f"#### {group}\n\n"
+        name = group
+        if name.lower() == "bug":
+          name = "Bug Fixes"
+        body += f"#### {name}:\n\n"
         for pr in prs:
             body += f"- {pr.title} [#{pr.number}]({pr.html_url})\n"
         body += "\n"
