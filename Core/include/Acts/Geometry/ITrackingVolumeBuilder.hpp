@@ -6,15 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// ITrackingVolumeBuilder.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
+
+#include "Acts/Geometry/GeometryContext.hpp"
+
 #include <memory>
 #include <tuple>
 #include <vector>
-#include "Acts/Geometry/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -47,12 +45,12 @@ class ITrackingVolumeBuilder {
   /// ITrackingVolumeBuilder interface method
   ///
   /// @param gctx is the geometry context for witch the volume is built
-  /// @param insideVolume is an (optional) volume to be wrapped
+  /// @param oppositeVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   ///
   /// @return shared pointer to a newly created TrackingVolume
   virtual MutableTrackingVolumePtr trackingVolume(
-      const GeometryContext& gctx, TrackingVolumePtr insideVolume = nullptr,
+      const GeometryContext& gctx, TrackingVolumePtr oppositeVolume = nullptr,
       VolumeBoundsPtr outsideBounds = nullptr) const = 0;
 };
 

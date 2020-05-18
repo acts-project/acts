@@ -29,21 +29,15 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 /// The Acts::AbstractVolume is constructed by giving a pointer to a Transform3D
 /// and a pointer to Acts::VolumeBounds, this implies that the ownership of the
 /// objects pointed to is passed as well. For memory optimisation, the
-/// AbstractVolume can also be
-/// constructed with shared_ptr objects.
+/// AbstractVolume can also be constructed with shared_ptr objects.
 ///
 /// A Acts::AbstractVolume is at first a collection class of
-/// Acts::BoundarySurface,
-/// the vector of Acts::BoundarySurface is returned by the Acts::VolumeBounds
-/// that
-/// carry a decompose method.
+/// Acts::BoundarySurface, the vector of Acts::BoundarySurface is returned by
+/// the Acts::VolumeBounds that carry a decompose method.
 ///
 /// Boundary surfaces can be shared between AbstractVolumes to enhance automatic
-/// navigation
-/// between AbstractVolumes, therefor they are reference counted by a
+/// navigation between AbstractVolumes, therefor they are reference counted by a
 /// std::shared_ptr holder class.
-///
-/// @image html VolumeShapes.gif
 
 class AbstractVolume : public Volume {
  public:
@@ -54,13 +48,10 @@ class AbstractVolume : public Volume {
   AbstractVolume(std::shared_ptr<const Transform3D> htrans,
                  VolumeBoundsPtr volbounds);
 
-  /// Copy constructor - defaulted
   AbstractVolume(const AbstractVolume& vol) = default;
 
-  /// Default Constructor - deleted
   AbstractVolume() = delete;
 
-  // Virtual Destructor
   ~AbstractVolume() override;
 
   /// Assignment operator - deleted

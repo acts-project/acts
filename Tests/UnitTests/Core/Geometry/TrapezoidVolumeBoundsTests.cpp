@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -45,6 +46,55 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   bb = tvb.boundingBox(&trf);
   CHECK_CLOSE_ABS(bb.max(), Vector3D(9.32577, 11.4906, 11.5777), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3D(-9.77021, -8.65268, -9.23688), tol);
+}
+
+BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
+  TrapezoidVolumeBounds tvb(5, 10, 8, 4);
+
+  auto tvbOrientedSurfaces = tvb.orientedSurfaces(nullptr);
+  BOOST_TEST(tvbOrientedSurfaces.size(), 6);
+
+  auto geoCtx = GeometryContext();
+
+  for (auto& os : tvbOrientedSurfaces) {
+    auto osCenter = os.first->center(geoCtx);
+    auto osNormal = os.first->normal(geoCtx, osCenter);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideTvb = osCenter + nDir * osNormal;
+    auto outsideTvb = osCenter - nDir * osNormal;
+    BOOST_CHECK(tvb.inside(insideTvb));
+    BOOST_CHECK(!tvb.inside(outsideTvb));
+  }
+
+  Vector3D xaxis(1., 0., 0.);
+  Vector3D yaxis(0., 1., 0.);
+  Vector3D zaxis(0., 0., 1.);
+
+  // Test the orientation of the boundary surfaces
+  auto nFaceXY =
+      tvbOrientedSurfaces[negativeFaceXY].first->transform(geoCtx).rotation();
+  BOOST_CHECK(nFaceXY.col(0).isApprox(xaxis));
+  BOOST_CHECK(nFaceXY.col(1).isApprox(yaxis));
+  BOOST_CHECK(nFaceXY.col(2).isApprox(zaxis));
+
+  auto pFaceXY =
+      tvbOrientedSurfaces[positiveFaceXY].first->transform(geoCtx).rotation();
+  BOOST_CHECK(pFaceXY.col(0).isApprox(xaxis));
+  BOOST_CHECK(pFaceXY.col(1).isApprox(yaxis));
+  BOOST_CHECK(pFaceXY.col(2).isApprox(zaxis));
+
+  auto nFaceZX =
+      tvbOrientedSurfaces[negativeFaceZX].first->transform(geoCtx).rotation();
+  BOOST_CHECK(nFaceZX.col(0).isApprox(zaxis));
+  BOOST_CHECK(nFaceZX.col(1).isApprox(xaxis));
+  BOOST_CHECK(nFaceZX.col(2).isApprox(yaxis));
+
+  auto pFaceZX =
+      tvbOrientedSurfaces[positiveFaceZX].first->transform(geoCtx).rotation();
+  BOOST_CHECK(pFaceZX.col(0).isApprox(zaxis));
+  BOOST_CHECK(pFaceZX.col(1).isApprox(xaxis));
+  BOOST_CHECK(pFaceZX.col(2).isApprox(yaxis));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

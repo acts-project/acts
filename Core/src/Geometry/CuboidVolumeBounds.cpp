@@ -17,12 +17,9 @@
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
                                              double halez)
-    : VolumeBounds(),
-      m_values({halex, haley, halez}),
-      m_xyBounds(std::make_shared<const RectangleBounds>(halex, haley)),
-      m_yzBounds(std::make_shared<const RectangleBounds>(haley, halez)),
-      m_zxBounds(std::make_shared<const RectangleBounds>(halez, halex)) {
+    : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
+  buildSurfaceBounds();
 }
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
@@ -43,62 +40,55 @@ Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
   return *this;
 }
 
-Acts::SurfacePtrVector Acts::CuboidVolumeBounds::decomposeToSurfaces(
+Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3D* transformPtr) const {
-  // the transform - apply when given
+  // The transform - apply when given
   Transform3D transform =
       (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
-  const Transform3D* tTransform = nullptr;
 
-  SurfacePtrVector rSurfaces;
-  rSurfaces.reserve(6);
-  // face surfaces xy -------------------------------------
+  OrientedSurfaces oSurfaces;
+  oSurfaces.reserve(6);
+  // Face surfaces xy -------------------------------------
   //   (1) - at negative local z
-  tTransform =
-      new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(0., 1., 0.)) *
-                      Translation3D(Vector3D(0., 0., get(eHalfLengthZ))));
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_xyBounds));
+  auto sf = Surface::makeShared<PlaneSurface>(
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(0., 0., -get(eHalfLengthZ))),
+      m_xyBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (2) - at positive local z
-  tTransform = new Transform3D(
-      transform * Translation3D(Vector3D(0., 0., get(eHalfLengthZ))));
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_xyBounds));
-  // face surfaces yz -------------------------------------
-  // transmute cyclical
+  sf = Surface::makeShared<PlaneSurface>(
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(0., 0., get(eHalfLengthZ))),
+      m_xyBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
+  // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
-  tTransform =
-      new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(0., 0., 1.)) *
-                      Translation3D(Vector3D(get(eHalfLengthX), 0., 0)) *
-                      AngleAxis3D(0.5 * M_PI, Vector3D(0., 1., 0)) *
-                      AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_yzBounds));
+  sf = Surface::makeShared<PlaneSurface>(
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(-get(eHalfLengthX), 0., 0.) * s_planeYZ),
+      m_yzBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (4) - at positive local x
-  tTransform = new Transform3D(
-      transform * Translation3D(Vector3D(get(eHalfLengthX), 0., 0.)) *
-      AngleAxis3D(0.5 * M_PI, Vector3D(0., 1., 0.)) *
-      AngleAxis3D(0.5 * M_PI, Vector3D(0., 0., 1.)));
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_yzBounds));
-  // face surfaces zx -------------------------------------
+  sf = Surface::makeShared<PlaneSurface>(
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(get(eHalfLengthX), 0., 0.) * s_planeYZ),
+      m_yzBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
+  // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
-  tTransform =
-      new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(1., 0., 0.)) *
-                      Translation3D(Vector3D(0., get(eHalfLengthY), 0.)) *
-                      AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.)) *
-                      AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_zxBounds));
+  sf = Surface::makeShared<PlaneSurface>(
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(0., -get(eHalfLengthY), 0.) * s_planeZX),
+      m_zxBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (6) - at positive local y
-  tTransform = new Transform3D(
-      transform * Translation3D(Vector3D(0., get(eHalfLengthY), 0.)) *
-      AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.)) *
-      AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
-  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
-      std::shared_ptr<const Transform3D>(tTransform), m_zxBounds));
-  // return the surfaces
-  return rSurfaces;
+  sf = Surface::makeShared<PlaneSurface>(
+      std::make_shared<const Transform3D>(
+          transform * Translation3D(0., get(eHalfLengthY), 0.) * s_planeZX),
+      m_zxBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
+
+  return oSurfaces;
 }
 
 std::ostream& Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
@@ -113,4 +103,13 @@ Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
 
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   return trf == nullptr ? box : box.transformed(*trf);
+}
+
+void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
+  m_xyBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthX),
+                                                       get(eHalfLengthY));
+  m_yzBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthY),
+                                                       get(eHalfLengthZ));
+  m_zxBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthZ),
+                                                       get(eHalfLengthX));
 }
