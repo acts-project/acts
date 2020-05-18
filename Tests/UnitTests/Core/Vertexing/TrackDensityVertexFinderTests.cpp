@@ -49,8 +49,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
-
-  TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+  using Finder =
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  Finder finder;
+  Finder::State state;
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
@@ -69,8 +71,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
   std::vector<const BoundParameters*> vec2 = {&params1c, &params1a, &params1b};
 
-  auto res1 = finder.find(vec1, vertexingOptions);
-  auto res2 = finder.find(vec2, vertexingOptions);
+  auto res1 = finder.find(vec1, vertexingOptions, state);
+  auto res2 = finder.find(vec2, vertexingOptions, state);
 
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
@@ -118,8 +120,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   vertexConstraint.setCovariance(constrCov);
 
   vertexingOptions.vertexConstraint = vertexConstraint;
-
-  TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+  using Finder =
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  Finder finder;
+  Finder::State state;
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
@@ -137,7 +141,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // Vector of track parameters
   std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
 
-  auto res = finder.find(vec1, vertexingOptions);
+  auto res = finder.find(vec1, vertexingOptions, state);
 
   if (!res.ok()) {
     std::cout << res.error().message() << std::endl;
@@ -183,8 +187,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
-
-  TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity> finder;
+  using Finder =
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  Finder finder;
+  Finder::State state;
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -221,7 +227,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     trackPtrVec.push_back(&trk);
   }
 
-  auto res3 = finder.find(trackPtrVec, vertexingOptions);
+  auto res3 = finder.find(trackPtrVec, vertexingOptions, state);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -277,8 +283,11 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   std::function<BoundParameters(InputTrack)> extractParameters =
       [](InputTrack params) { return params.parameters(); };
 
-  TrackDensityVertexFinder<DummyVertexFitter<InputTrack>, GaussianTrackDensity>
-      finder(extractParameters);
+  using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrack>,
+                                          GaussianTrackDensity>;
+
+  Finder finder(extractParameters);
+  Finder::State state;
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
@@ -296,7 +305,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Vector of track parameters
   std::vector<const InputTrack*> vec1 = {&params1a, &params1b, &params1c};
 
-  auto res = finder.find(vec1, vertexingOptions);
+  auto res = finder.find(vec1, vertexingOptions, state);
 
   if (!res.ok()) {
     std::cout << res.error().message() << std::endl;
