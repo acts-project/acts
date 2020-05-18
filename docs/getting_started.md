@@ -1,65 +1,54 @@
-# <a name="getting-started">Getting started</a>
+# Getting started
 
-1. [Getting started](#getting-started)
-    1. [Prerequisites](#prerequisites)
-    2. [Installation](#installation)
-    3. [CMake build system](#cmake)
-    4. [Build Acts on lxplus](#build-lxplus)
-    5. [Build Acts on your local machine](#build-local)
-2. [Using Acts in your own cmake project](#using-acts)
-3. [Documentation](#documentation)
+## Prerequisites
 
-## <a name="prerequisites">Prerequisites</a>
+The following dependencies are required to build the Acts Core library:
 
-Only few dependencies are required to build the Core library of Acts. A list of
-prerequisites required is given below with the version numbers indicating which
-versions were tested. Older versions may or may not work, feedback is very
-welcome.
-
-The following dependencies are required:
-
-*   A C++14 compatible compiler, e.g. [gcc](https://gcc.gnu.org) (>= 6.2) or [clang](http://clang.llvm.org) (>= 4.0)
-*   [cmake](https://cmake.org) (>= 3.7)
-*   [boost](http://boost.org) (>= 1.62, with `program_options` and `unit_test_framework`)
+*   A C++17 compatible compiler (recent versions of either gcc and clang should work)
+*   [CMake](https://cmake.org) (>= 3.11)
+*   [Boost](http://boost.org) (>= 1.69, with `filesystem`, `program_options`, and `unit_test_framework`)
 *   [Eigen](http://eigen.tuxfamily.org) (>= 3.2.9)
 
-The following dependencies are optional and are only needed for some of the
-components:
+The following dependencies are optional and are needed to build additional
+components.
 
-*   [DD4Hep](http://dd4hep.cern.ch) (>= 1.02) for the DD4Hep plugin
-*   [doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
-*   [graphviz](http://www.graphviz.org) (>= 2.28.00) for the documentation
-*   [ROOT](https://root.cern.ch) (>= 6.10.00) for the TGeo plugin
+*   [DD4Hep](http://dd4hep.cern.ch) (>= 1.10) for the DD4Hep plugin and some examples
+*   [Doxygen](http://doxygen.org) (>= 1.8.11) for the documentation
+*   [Geant4](http://geant4.org/) for some examples
+*   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) (>= 3.1) for some examples
+*   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
+*   [Intel Threading Building Blocks](https://01.org/tbb) for the examples
+*   [ROOT](https://root.cern.ch) (>= 6.10) for the TGeo plugin and the examples
+*   [Sphinx](https://www.sphinx-doc.org) (>= 2.0) for the documentation
 
 Compatible versions of all dependencies are provided by **LCG releases**.
-The current recommended release for building Acts is the
-[LCG94 Release](http://lcginfo.cern.ch/release/94). This release is also used in the
+The current recommended release for building Acts is
+[LCG 95](http://lcginfo.cern.ch/release/96). This release is also used in the
 continous integration (CI) system to test the software. Setup scripts are provided
 in the repository that can be used to setup this release, and a few others, on
 lxplus machines at CERN (see [below](#installation)).
 
-## <a name="installation">Installation and quick start</a>
+## Quick start
 
-The Acts repository is hosted on the GitLab instance at CERN. In order to aquire the latest
+The Acts repository is hosted Github. In order to aquire the latest
 version from the git repository you can simply clone:
 
-```bash
-git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
+```console
+git clone https://github.com/acts-project/acts.git
 ```
 
-You can then `cd <ACTS_DIR>` continue building Acts:
+You can then `cd acts` to continue building Acts:
 
-```bash
+```console
 source CI/setup_lcg94.sh
 mkdir build && cd build
 cmake ..
 cmake --build . -- install
 ```
 
+## CMake build system
 
-## <a name="cmake">CMake build system</a>
-
-CMake is used as build system for compiling and installing Acts.  For a
+CMake is used as build system for compiling and installing Acts. For a
 complete list of CMake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html)
 and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
 Important options relevant for the Acts project are given below. They are set
@@ -86,9 +75,9 @@ by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 | CMAKE_BUILD_TYPE                 |         | Build type (e.g. Debug, Release) affects compiler flags |
 | DD4hep_DIR                       |         | Path to the DD4hep installation                         |
 
-## <a name="building-acts">Building Acts</a>
+## Building Acts
 
-### <a name="build-lxplus">Building Acts on lxplus</a>
+### On lxplus
 
 The first step to build Acts is to acquire supported versions of the
 dependencies.  Which dependencies are required depends on the plugins you
@@ -98,7 +87,7 @@ If you are in an *lxplus-like* environment (i.e. `SLC6` or `CC7`, with
 `cvmfs`), you can use the setup scripts located in `<ACTS_DIR>/CI` to get the
 dependencies:
 
-```bash
+```console
 source <ACTS_DIR>/CI/setup_lcgXYZ.sh
 ```
 
@@ -113,7 +102,7 @@ Using one of the scripts, you can use the following commands to build Acts with
 all plugins using the same dependency versions as in the continous integration
 system.
 
-```bash
+```console
 source CI/setup_lcg94.sh # example, you can use any of the provided scripts.
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
@@ -125,25 +114,21 @@ cmake --build . -- install
 In this example the DD4hep, Material and TGeo plugins. The install prefix is
 set to `<path you want>`.
 
-### <a name="build-local">Building Acts on your local machine</a>
+### On your local machine
 
 Building and running Acts on your local machine is not offically supported.
 However, if you have the necessary prerequisites installed it should be
 possible to use it locally. Acts developers regularly use different
 recent Linux distributions and macOS to build and develop Acts.
 
-# <a name="using-acts">Using Acts in your own cmake project</a>
+## Using Acts
 
-When using Acts in your own cmake-based project, you need to include the
+When using Acts in your own CMake-based project, you need to include the
 following lines in your `CMakeLists.txt` file:
 
-```bash
+```cmake
 find_package (Acts COMPONENTS comp1 comp2 ...)
 ```
 
 where `compX` are the required components from the Acts project. See the
 `cmake` output for more information about which components are available.
-
-# <a name="documentation">Documentation</a>
-
-You can find a complete documentation of the Acts functionality and the class reference guide at [http://acts.web.cern.ch/ACTS/latest/doc/index.html](http://acts.web.cern.ch/ACTS/latest/doc/index.html).

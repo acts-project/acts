@@ -1,0 +1,10 @@
+version: 2
+# only build html pages
+formats: []
+python:
+  version: 3
+  install:
+    - requirements: docs/requirements.txt
+  system_packages: true
+sphinx:
+  configuration: docs/conf.py

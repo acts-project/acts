@@ -1,0 +1,4 @@
+# build products
+_build/
+# auto-generated api documentation
+api/
