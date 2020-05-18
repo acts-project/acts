@@ -37,7 +37,7 @@ json thingToJson(Thing thing) {
   return jThing;
 }
 
-Thing jsonToThing(json map, GeometryID id) {
+Thing jsonToThing(GeometryID id, json map) {
   Thing thing;
   thing.id = id;
   thing.value = map["value"];
