@@ -192,7 +192,7 @@ inline const AlignmentRowVector Surface::alignmentToPathDerivative(
 }
 
 inline const Local3DToBoundLocalMatrix Surface::local3DToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3D& position) const {
+    const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
   return Local3DToBoundLocalMatrix::Identity();
 }
 
