@@ -336,14 +336,14 @@ class FreeParameterSet {
     }
   }
 
-  //~ /**
-   //~ * @brief update covariance matrix
-   //~ *
-   //~ * @note No validation of the given covariance matrix is performed.
-   //~ *
-   //~ * @param cov unique pointer to new covariance matrix (nullptr is accepted)
-   //~ */
-  //~ void setCovariance(const CovMatrix_t& cov) { m_optCovariance = cov; }
+  /**
+   * @brief update covariance matrix
+   *
+   * @note No validation of the given covariance matrix is performed.
+   *
+   * @param cov unique pointer to new covariance matrix (nullptr is accepted)
+   */
+  void setCovariance(const CovMatrix_t& cov) { m_optCovariance = cov; }
 
   //~ /**
    //~ * @brief equality operator
