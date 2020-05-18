@@ -21,15 +21,6 @@
 #include <limits>
 #include <string>
 
-#ifndef ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
-#define ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
-#define takeSmaller(current, test) current = current < test ? current : test
-#define takeBigger(current, test) current = current > test ? current : test
-#define takeSmallerBigger(cSmallest, cBiggest, test) \
-  takeSmaller(cSmallest, test);                      \
-  takeBigger(cBiggest, test)
-#endif
-
 namespace Acts {
 
 class TrackingVolume;
@@ -73,8 +64,8 @@ struct VolumeConfig {
   /// @param [in] lConfig is the config to which it should be adapded
   void adaptZ(const VolumeConfig& lConfig) {
     if (lConfig) {
-      takeSmaller(zMin, lConfig.zMin);
-      takeBigger(zMax, lConfig.zMax);
+      zMin = std::min(zMin, lConfig.zMin);
+      zMax = std::max(zMax, lConfig.zMax);
     }
   }
 
@@ -84,8 +75,8 @@ struct VolumeConfig {
   /// @param [in] lConfig is the config to which it should be adapded
   void adaptR(const VolumeConfig& lConfig) {
     if (lConfig) {
-      takeSmaller(rMin, lConfig.rMin);
-      takeBigger(rMax, lConfig.rMax);
+      rMin = std::min(rMin, lConfig.rMin);
+      rMax = std::max(rMax, lConfig.rMax);
     }
   }
 

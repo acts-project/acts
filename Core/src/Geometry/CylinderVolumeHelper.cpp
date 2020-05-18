@@ -470,15 +470,15 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
       currentZmax = centerZ + (0.5 * (layerIter)->thickness());
     }
     // the raw data
-    takeSmaller(rMinClean, currentRmin);
-    takeBigger(rMaxClean, currentRmax);
-    takeSmaller(zMinClean, currentZmin);
-    takeBigger(zMaxClean, currentZmax);
+    rMinClean = std::min(rMinClean, currentRmin);
+    rMaxClean = std::max(rMaxClean, currentRmax);
+    zMinClean = std::min(zMinClean, currentZmin);
+    zMaxClean = std::max(zMaxClean, currentZmax);
     // assign if they overrule the minima/maxima (with layers thicknesses)
-    takeSmaller(layerRmin, currentRmin);
-    takeBigger(layerRmax, currentRmax);
-    takeSmaller(layerZmin, currentZmin);
-    takeBigger(layerZmax, currentZmax);
+    layerRmin = std::min(layerRmin, currentRmin);
+    layerRmax = std::max(layerRmax, currentRmax);
+    layerZmin = std::min(layerZmin, currentZmin);
+    layerZmax = std::max(layerZmax, currentZmax);
   }
 
   // set the binning value
