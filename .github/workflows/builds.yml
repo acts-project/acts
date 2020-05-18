@@ -88,3 +88,20 @@ jobs:
         run: source ${SETUP} && cmake --build build -- test
       - name: Integration tests
         run: source ${SETUP} && cmake --build build -- integrationtests
+  docs:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: >
+          apt-get install -y doxygen
+          && pip3 install -r docs/requirements.txt
+      - name: Configure
+        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
+      - name: Build
+        run: cmake --build build -- docs
+      - uses: actions/upload-artifact@v2
+        with:
+          name: acts-docs
+          path: docs/_build/html/
