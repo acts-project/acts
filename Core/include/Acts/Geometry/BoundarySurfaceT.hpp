@@ -41,7 +41,6 @@ class BoundarySurfaceT {
   using VolumeArray = BinnedArray<VolumePtr>;
 
  public:
-  /// Default Constructor
   BoundarySurfaceT()
       : m_surface(nullptr),
         m_oppositeVolume(nullptr),
@@ -93,6 +92,8 @@ class BoundarySurfaceT {
         m_oppositeVolumeArray(insideArray),
         m_alongVolumeArray(outsideArray) {}
 
+  virtual ~BoundarySurfaceT() = default;
+
   /// Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
   /// the TrackParameters and the requested direction
   ///
@@ -120,9 +121,6 @@ class BoundarySurfaceT {
 
   /// The Surface Representation of this
   virtual const Surface& surfaceRepresentation() const;
-
-  /// Virtual Destructor
-  virtual ~BoundarySurfaceT() = default;
 
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.

@@ -6,15 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// ITrackingVolumeBuilder.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
+
+#include "Acts/Geometry/GeometryContext.hpp"
+
 #include <memory>
 #include <tuple>
 #include <vector>
-#include "Acts/Geometry/GeometryContext.hpp"
 
 namespace Acts {
 

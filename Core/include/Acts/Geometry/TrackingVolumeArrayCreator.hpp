@@ -6,17 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TrackingVolumeArrayCreator.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
-#include <algorithm>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 
