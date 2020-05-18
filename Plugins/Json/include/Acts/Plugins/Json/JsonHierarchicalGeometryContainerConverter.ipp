@@ -10,10 +10,11 @@ using json = nlohmann::json;
 
 template <typename object_t>
 Acts::HierarchicalGeometryContainer<object_t>
-Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
-    const nlohmann::json& map,
-    std::function<object_t(const Acts::GeometryID&, const nlohmann::json&)>
-        fromJson) const {
+Acts::JsonHierarchicalGeometryContainerConverter<object_t>::
+    jsonToHierarchicalContainer(
+        const nlohmann::json& map,
+        std::function<object_t(const Acts::GeometryID&, const nlohmann::json&)>
+            fromJson) const {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("jsonToHierarchicalContainer", logLevel));
   auto& j = map;
@@ -105,10 +106,10 @@ Acts::JsonHierarchicalObjectConverter<object_t>::jsonToHierarchicalContainer(
 }
 
 template <typename object_t>
-nlohmann::json
-Acts::JsonHierarchicalObjectConverter<object_t>::hierarchicalObjectToJson(
-    const HierarchicalGeometryContainer<object_t>& hObject,
-    std::function<nlohmann::json(const object_t&)> toJson) const {
+nlohmann::json Acts::JsonHierarchicalGeometryContainerConverter<object_t>::
+    hierarchicalObjectToJson(
+        const HierarchicalGeometryContainer<object_t>& hObject,
+        std::function<nlohmann::json(const object_t&)> toJson) const {
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("hierarchicalObjectToJson", logLevel));
   json detectorj;

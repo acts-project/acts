@@ -21,7 +21,7 @@ namespace Acts {
 
 /// Convert Hierarchical Object Container to Json file and vice-versa
 template <typename object_t>
-struct JsonHierarchicalObjectConverter {
+struct JsonHierarchicalGeometryContainerConverter {
  public:
   /// The object key
   std::string datakey = "Object";
@@ -78,4 +78,4 @@ struct JsonHierarchicalObjectConverter {
 };
 
 }  // namespace Acts
-#include "Acts/Plugins/Json/JsonHierarchicalObjectConverter.ipp"
+#include "Acts/Plugins/Json/JsonHierarchicalGeometryContainerConverter.ipp"

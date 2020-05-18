@@ -10,7 +10,7 @@
 #include <iterator>
 #include <stdexcept>
 
-#include "Acts/Plugins/Json/JsonHierarchicalObjectConverter.hpp"
+#include "Acts/Plugins/Json/JsonHierarchicalGeometryContainerConverter.hpp"
 
 namespace {
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Convert_HierarchicalObject) {
       {makeId(2, 0, 2, 3, 0), 14.0},
       {makeId(2, 0, 2, 0, 2), 15.0},
   });
-  Acts::JsonHierarchicalObjectConverter<Thing> converter;
+  Acts::JsonHierarchicalGeometryContainerConverter<Thing> converter;
   converter.datakey = "Thing";
   json map = converter.hierarchicalObjectToJson(c, thingToJson);
 
