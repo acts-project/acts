@@ -43,7 +43,7 @@ class TrapezoidBounds;
 ///                             parallel to \f$ zx \f$ plane at negative \f$y\f$
 ///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
-
+///
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for acces / streaming

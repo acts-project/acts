@@ -23,7 +23,6 @@ namespace Acts {
 ///
 ///  The order of faces is chosen to follow - as much as
 ///  possible - a cycular structure.
-
 enum BoundarySurfaceFace {
   negativeFaceXY = 0,
   positiveFaceXY = 1,

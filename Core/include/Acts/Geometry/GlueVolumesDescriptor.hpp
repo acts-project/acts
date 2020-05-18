@@ -6,16 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// GlueVolumesDescriptor.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
+
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+
 #include <map>
 #include <memory>
 #include <vector>
-#include "Acts/Geometry/BoundarySurfaceFace.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 
 namespace Acts {
 

@@ -69,7 +69,6 @@ class IVisualization;
 //                          Rectangular Acts::PlaneSurface attached to
 ///                 [0] and [1] at positive \f$ \phi \f$
 ///
-
 class CylinderVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access

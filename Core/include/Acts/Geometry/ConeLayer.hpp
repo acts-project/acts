@@ -25,7 +25,6 @@ class ApproachDescriptor;
 ///
 /// Class to describe a conical detector layer for tracking, it inhertis from
 /// both, Layer base class and ConeSurface class
-///
 class ConeLayer : virtual public ConeSurface, public Layer {
  public:
   /// Factory for shared layer
