@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   double x = 0.5;
   double y = -0.2;
   double z = 0.3;
-  ActsVectorD<3> parValues(loc0, loc1, phi);
+  ActsVectorD<3> parValues(x, y, z);
 
   // parameter set with covariance matrix
   FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> parSet_with_cov(cov, x,
@@ -278,41 +278,41 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   // check stored covariance
   BOOST_CHECK(parSet_with_cov.getCovariance());
   BOOST_CHECK(*parSet_with_cov.getCovariance() == cov);
-  BOOST_CHECK(parSet_with_cov.getUncertainty<eBoundLoc0>() == sqrt(cov(0, 0)));
-  BOOST_CHECK(parSet_with_cov.getUncertainty<eBoundLoc1>() == sqrt(cov(1, 1)));
-  BOOST_CHECK(parSet_with_cov.getUncertainty<eBoundPhi>() == sqrt(cov(2, 2)));
+  BOOST_CHECK(parSet_with_cov.getUncertainty<eFreePos0>() == sqrt(cov(0, 0)));
+  BOOST_CHECK(parSet_with_cov.getUncertainty<eFreePos1>() == sqrt(cov(1, 1)));
+  BOOST_CHECK(parSet_with_cov.getUncertainty<eFreePos2>() == sqrt(cov(2, 2)));
 
   // same parameter set without covariance matrix
   FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> parSet_without_cov(
       std::nullopt, parValues);
 
-  //~ BOOST_CHECK(!parSet_without_cov.getCovariance());
-  //~ BOOST_CHECK(parSet_without_cov.getUncertainty<eBoundLoc0>() < 0);
-  //~ BOOST_CHECK(parSet_without_cov.getUncertainty<eBoundLoc1>() < 0);
-  //~ BOOST_CHECK(parSet_without_cov.getUncertainty<eBoundPhi>() < 0);
-  //~ BOOST_CHECK(parSet_without_cov.getParameters() ==
-              //~ parSet_with_cov.getParameters());
+  BOOST_CHECK(!parSet_without_cov.getCovariance());
+  BOOST_CHECK(parSet_without_cov.getUncertainty<eFreePos0>() < 0);
+  BOOST_CHECK(parSet_without_cov.getUncertainty<eFreePos1>() < 0);
+  BOOST_CHECK(parSet_without_cov.getUncertainty<eFreePos2>() < 0);
+  BOOST_CHECK(parSet_without_cov.getParameters() ==
+              parSet_with_cov.getParameters());
 
-  //~ // set new covariance matrix
-  //~ parSet_without_cov.setCovariance(cov);
+  // set new covariance matrix
+  parSet_without_cov.setCovariance(cov);
 
-  //~ BOOST_CHECK(parSet_without_cov.getCovariance());
-  //~ BOOST_CHECK(*parSet_without_cov.getCovariance() == cov);
+  BOOST_CHECK(parSet_without_cov.getCovariance());
+  BOOST_CHECK(*parSet_without_cov.getCovariance() == cov);
 
-  //~ // set new parameter values
-  //~ double newLoc0 = 0.1;
-  //~ double newLoc1 = 0.6;
-  //~ double newPhi = -0.15 * M_PI;
-  //~ parValues << newLoc0, newLoc1, newPhi;
-  //~ parSet_with_cov.setParameter<eBoundLoc0>(newLoc0);
-  //~ parSet_with_cov.setParameter<eBoundLoc1>(newLoc1);
-  //~ parSet_with_cov.setParameter<eBoundPhi>(newPhi);
+  // set new parameter values
+  double newX = 0.1;
+  double newY = 0.6;
+  double newZ = -0.15;
+  parValues << newX, newY, newZ;
+  parSet_with_cov.setParameter<eFreePos0>(newX);
+  parSet_with_cov.setParameter<eFreePos1>(newY);
+  parSet_with_cov.setParameter<eFreePos2>(newZ);
 
-  //~ BOOST_CHECK(parSet_with_cov.getParameter<eBoundLoc0>() == newLoc0);
-  //~ BOOST_CHECK(parSet_with_cov.getParameter<eBoundLoc1>() == newLoc1);
-  //~ BOOST_CHECK(parSet_with_cov.getParameter<eBoundPhi>() == newPhi);
-  //~ BOOST_CHECK(parSet_with_cov.getParameters() == parValues);
-//~ }
+  BOOST_CHECK(parSet_with_cov.getParameter<eFreePos0>() == newX);
+  BOOST_CHECK(parSet_with_cov.getParameter<eFreePos1>() == newY);
+  BOOST_CHECK(parSet_with_cov.getParameter<eFreePos2>() == newZ);
+  BOOST_CHECK(parSet_with_cov.getParameters() == parValues);
+}
 
 //~ /**
  //~ * @brief Unit test for copy/assignment/swap in ParameterSet class
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   //~ using std::swap;
   //~ swap(lhs, rhs);
   //~ BOOST_CHECK(lhs != rhs && rhs == lhs_copy && lhs == rhs_copy);
-}
+//~ }
 
 //~ /**
  //~ *  @brief Unit test for comparison operators in ParameterSet
