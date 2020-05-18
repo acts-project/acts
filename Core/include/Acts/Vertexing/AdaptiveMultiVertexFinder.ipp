@@ -104,10 +104,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       removeCompatibleTracksFromSeedTracks(vtxCandidate, seedTracks,
                                            fitterState, removedSeedTracks);
     } else {
-      bool removedNonCompatibleTrack =
-          canRemoveNonCompatibleTrackFromSeedTracks(
-              vtxCandidate, seedTracks, fitterState, removedSeedTracks);
-      if (!removedNonCompatibleTrack) {
+      bool removedIncompatibleTrack = removeTrackIfIncompatible(
+          vtxCandidate, seedTracks, fitterState, removedSeedTracks);
+      if (!removedIncompatibleTrack) {
         ACTS_DEBUG(
             "Could not remove any further track from seed tracks. Break.");
         allVertices.pop_back();
@@ -424,7 +423,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
-    canRemoveNonCompatibleTrackFromSeedTracks(
+    removeTrackIfIncompatible(
         Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
         FitterState_t& fitterState,
         std::vector<const InputTrack_t*>& removedSeedTracks) const -> bool {

@@ -346,7 +346,7 @@ class AdaptiveMultiVertexFinder {
       FitterState_t& fitterState,
       std::vector<const InputTrack_t*>& removedSeedTracks) const;
 
-  /// @brief Method that tries to remove a non-compatible track
+  /// @brief Method that tries to remove an incompatible track
   /// from seed tracks after removing a compatible track failed.
   ///
   /// @param vtx The vertex candidate
@@ -355,8 +355,8 @@ class AdaptiveMultiVertexFinder {
   /// @param[out] removedSeedTracks Collection of seed track that will be
   /// removed
   ///
-  /// @return Non-compatible track was removed
-  bool canRemoveNonCompatibleTrackFromSeedTracks(
+  /// @return Incompatible track was removed
+  bool removeTrackIfIncompatible(
       Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
       FitterState_t& fitterState,
       std::vector<const InputTrack_t*>& removedSeedTracks) const;
