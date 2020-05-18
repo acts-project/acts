@@ -235,6 +235,45 @@ template <>
 struct BoundParameterTraits<BoundParametersIndices::eBoundTime> {
   using type = unbound_parameter;
 };
+
+template <FreeParametersIndices>
+struct FreeParameterTraits;
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreePos0> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreePos1> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreePos2> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeTime> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeDir0> {
+  static constexpr double pMin() { return -1.; }
+  static constexpr double pMax() { return 1.; }
+  using type = bound_parameter<double, pMin, pMax>;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeDir1> {
+  static constexpr double pMin() { return -1.; }
+  static constexpr double pMax() { return 1.; }
+  using type = bound_parameter<double, pMin, pMax>;};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeDir2> {
+  static constexpr double pMin() { return -1.; }
+  static constexpr double pMax() { return 1.; }
+  using type = bound_parameter<double, pMin, pMax>;};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeQOverP> {
+  using type = unbound_parameter;
+};
 }  // namespace detail
 
 /// Single bound track parameter type for value constrains.
@@ -242,6 +281,12 @@ struct BoundParameterTraits<BoundParametersIndices::eBoundTime> {
 /// The singular name is not a typo since this describes individual components.
 template <BoundParametersIndices kIndex>
 using BoundParameterType = typename detail::BoundParameterTraits<kIndex>::type;
+
+/// Single free track parameter type for value constrains.
+///
+/// The singular name is not a typo since this describes individual components.
+template <FreeParametersIndices kIndex>
+using FreeParameterType = typename detail::FreeParameterTraits<kIndex>::type;
 
 // The following matrix and vector types are automatically derived from the
 // indices enums and scalar typedefs.
