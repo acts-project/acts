@@ -292,6 +292,7 @@ using BoundSymMatrix =
     ActsSymMatrix<BoundParametersScalar, eBoundParametersSize>;
 
 using GlobalBoundSymMatrix = ActsMatrixX<BoundParametersScalar>;
+using Local3DToBoundLocalMatrix = ActsMatrix<BoundParametersScalar, 2, 3>;
 
 // Matrix and vector types related to free track parameters.
 
