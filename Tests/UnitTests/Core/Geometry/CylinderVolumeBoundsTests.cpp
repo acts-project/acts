@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   ObjTestWriter::writeObj(tPolyhedrons);
 }
 
-BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
+BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
   GeometryContext tgContext = GeometryContext();
 
   CylinderVolumeBounds cvb(5, 10, 20);

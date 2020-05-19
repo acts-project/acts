@@ -113,7 +113,7 @@ class ConeVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+      const Transform3D* transform = nullptr) const final;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -149,7 +149,7 @@ class ConeVolumeBounds : public VolumeBounds {
   /// Output Method for std::ostream
   ///
   /// @param sl is ostream operator to be dumped into
-  std::ostream& toStream(std::ostream& sl) const override;
+  std::ostream& toStream(std::ostream& sl) const final;
 
  private:
   /// Check the input values for consistency,

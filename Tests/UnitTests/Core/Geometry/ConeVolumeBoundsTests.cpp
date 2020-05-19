@@ -83,6 +83,28 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   BOOST_TEST(cutOffHollowConeCylSurfaces.size() == 4);
 }
 
+BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
+  GeometryContext tgContext = GeometryContext();
+
+  ConeVolumeBounds hcone(10_mm, 0.45, 80_mm, 50_mm, 0., M_PI);
+
+  auto cvbOrientedSurfaces = hcone.orientedSurfaces(nullptr);
+  BOOST_TEST(cvbOrientedSurfaces.size(), 4);
+
+  auto geoCtx = GeometryContext();
+  Vector3D xaxis(1., 0., 0.);
+  Vector3D yaxis(0., 1., 0.);
+  Vector3D zaxis(0., 0., 1.);
+
+  for (auto& os : cvbOrientedSurfaces) {
+    // Test the orientation of the boundary surfaces
+    auto rot = os.first->transform(geoCtx).rotation();
+    BOOST_CHECK(rot.col(0).isApprox(xaxis));
+    BOOST_CHECK(rot.col(1).isApprox(yaxis));
+    BOOST_CHECK(rot.col(2).isApprox(zaxis));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
