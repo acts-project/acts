@@ -38,6 +38,30 @@ struct Extent {
   // Constructor
   Extent() = default;
 
+  /// Check if it intersects
+  /// @param other The source Extent
+  /// @param bValue The binning value for the check (binValues for all)
+  /// @param tolerance An additional tolerance for the intersection check
+  bool intersects(const Extent& other, BinningValue bVal = binValues,
+                  double tolerance = s_epsilon) {
+    // Helper to check
+    auto check = [&](BinningValue bvc) -> bool {
+      return (ranges[bvc].first > other.ranges[bvc].second + tolerance or
+              other.ranges[bvc].first > ranges[bvc].second + tolerance);
+    };
+    // Check all
+    if (bVal == binValues) {
+      for (int ibv = 0; ibv < (int)binValues; ++ibv) {
+        if (check((BinningValue)ibv)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    // Check specific
+    return check(bVal);
+  }
+
   /// Extend with another extent
   /// @param other is the source Extent
   void extend(const Extent& other) {

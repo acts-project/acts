@@ -26,6 +26,7 @@ target_sources_local(
     PlaneLayer.cpp
     Polyhedron.cpp
     ProtoLayer.cpp
+    ProtoLayerHelper.cpp
     SurfaceArrayCreator.cpp
     TrackingGeometry.cpp
     TrackingGeometryBuilder.cpp
