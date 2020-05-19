@@ -44,11 +44,12 @@ int main(int argc, char* argv[]) {
   // setup the Geant4 algorithm
   GeantinoRecording::Config g4;
   g4.detectorConstruction =
-      std::make_shared<DD4hepDetectorConstruction>(*geometrySvc->lcdd());
+      std::make_unique<DD4hepDetectorConstruction>(*geometrySvc->lcdd());
   g4.tracksPerEvent = 100;
   g4.seed1 = 536235167;
   g4.seed2 = 729237523;
-  sequencer.addAlgorithm(std::make_shared<GeantinoRecording>(g4, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<GeantinoRecording>(std::move(g4), logLevel));
 
   // setup the output writing
   if (vm["output-root"].template as<bool>()) {
