@@ -13,6 +13,7 @@
 #include <string>
 
 #include "ACTFW/Utilities/Helpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -61,16 +62,16 @@ class FakeRatePlotTool {
   /// @param fakeRatePlotCache the cache for fake rate plots
   void book(FakeRatePlotCache& fakeRatePlotCache) const;
 
-  /// @brief fill fake rate plots
+  /// @brief fill fake rate w.r.t. fitted track parameters
   ///
   /// @param fakeRatePlotCache cache object for fake rate plots
-  /// @param truthParticle the truth Particle
+  /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
   void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const ActsFatras::Particle& truthParticle, bool status) const;
+            const Acts::BoundParameters& fittedParameters, bool status) const;
 
-  /// @brief fill number of reco/truth-matched/fake tracks for a single
-  /// Multi-trajectory
+  /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
+  /// seed
   ///
   /// @param fakeRatePlotCache cache object for fake rate plots
   /// @param truthParticle the truth Particle

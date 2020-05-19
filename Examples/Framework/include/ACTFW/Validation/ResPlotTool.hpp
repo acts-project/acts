@@ -41,11 +41,11 @@ class ResPlotTool {
         {"Residual_d0", PlotHelpers::Binning("r_{d0} [mm]", 100, -0.5, 0.5)},
         {"Residual_z0", PlotHelpers::Binning("r_{z0} [mm]", 100, -0.5, 0.5)},
         {"Residual_phi",
-         PlotHelpers::Binning("r_{#phi} [rad]", 100, -0.005, 0.005)},
+         PlotHelpers::Binning("r_{#phi} [rad]", 100, -0.01, 0.01)},
         {"Residual_theta",
-         PlotHelpers::Binning("r_{#theta} [rad]", 100, -0.005, 0.005)},
+         PlotHelpers::Binning("r_{#theta} [rad]", 100, -0.01, 0.01)},
         {"Residual_qop",
-         PlotHelpers::Binning("r_{q/p} [c/GeV]", 100, -0.005, 0.005)},
+         PlotHelpers::Binning("r_{q/p} [c/GeV]", 100, -0.1, 0.1)},
         {"Residual_t", PlotHelpers::Binning("r_{t} [s]", 100, -1000, 1000)}};
   };
 
