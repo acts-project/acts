@@ -58,8 +58,13 @@ html_theme_options = {
     'prev_next_buttons_location': None, # no prev/next links
     'style_external_links': True,
 }
-html_logo = 'figures/ActsLogo.gif'
-html_static_path = []
+html_logo = 'figures/acts_logo_white.svg'
+html_static_path = ['_static']
+
+html_css_files = [
+    'custom.css',
+]
+
 html_copy_source = False
 html_show_sourcelink = False
 html_show_sphinx = False
