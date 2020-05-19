@@ -53,6 +53,8 @@ int main(int argc, char* argv[]) {
 
   BField_t::Config cfg(std::move(mapper));
   auto bFieldMap = BField_t(std::move(cfg));
+  using Cache = typename BField_t::Cache;
+  Acts::MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
   std::uniform_real_distribution<> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
@@ -63,6 +65,23 @@ int main(int argc, char* argv[]) {
     return {r * std::cos(phi), r * std::sin(phi), z};
   };
 
+  auto csv = [&](const std::string& name, auto res) {
+
+    auto& os = std::cerr;
+
+    os << name << "," << res.run_timings.size() << "," 
+      << res.iters_per_run << ","
+      << res.totalTime().count() << ","
+      << res.runTimeMedian().count() << ","
+      << 1.96*res.runTimeError().count() << ","
+      << res.iterTimeAverage().count() << ","
+      << 1.96*res.iterTimeError().count();
+
+    os << std::endl;
+  };
+
+  std::cerr << "name,runs,iters,total_time,run_time_median,run_time_error,iter_time_average,iter_time_error" << std::endl;
+
   // SolenoidBField lookup is so slow that the cost of generating a random field
   // lookup position is negligible in comparison...
   std::cout << "Benchmarking random SolenoidBField lookup: " << std::flush;
@@ -70,6 +89,7 @@ int main(int argc, char* argv[]) {
       [&] { return bSolenoidField.getField(genPos()); }, iters_solenoid,
       runs_solenoid);
   std::cout << solenoid_result << std::endl;
+  csv("solenoid", solenoid_result);
 
   // ...but for interpolated B-field map, the overhead of a field lookup is
   // comparable to that of generating a random position, so we must be more
@@ -79,11 +99,13 @@ int main(int argc, char* argv[]) {
   // - The first benchmark operates at constant position, so it measures only
   //   field lookup overhead but has unrealistically good cache locality. In
   //   that sense, it provides a lower bound of field lookup performance.
-  std::cout << "Benchmarking cached interpolated field lookup: " << std::flush;
+  std::cout << "Benchmarking interpolated field lookup: " << std::flush;
   const auto fixedPos = genPos();
   const auto map_cached_result = Acts::Test::microBenchmark(
       [&] { return bFieldMap.getField(fixedPos); }, iters_map);
   std::cout << map_cached_result << std::endl;
+  csv("interp_nocache_fixed", map_cached_result);
+
 
   // - The second benchmark generates random positions, so it is biased by the
   //   cost of random position generation and has unrealistically bad cache
@@ -92,4 +114,59 @@ int main(int argc, char* argv[]) {
   const auto map_rand_result = Acts::Test::microBenchmark(
       [&] { return bFieldMap.getField(genPos()); }, iters_map);
   std::cout << map_rand_result << std::endl;
+  csv("interp_nocache_random", map_rand_result);
+
+
+  {
+  std::cout << "Benchmarking cached interpolated field lookup: " << std::flush;
+  Cache cache{mctx};
+  const auto map_cached_result_cache = Acts::Test::microBenchmark(
+      [&] { return bFieldMap.getField(fixedPos, cache); }, iters_map);
+  std::cout << map_cached_result_cache << std::endl;
+  csv("interp_cache_fixed", map_cached_result_cache);
+}
+
+
+  // - The second benchmark generates random positions, so it is biased by the
+  //   cost of random position generation and has unrealistically bad cache
+  //   locality, but provides an upper bound of field lookup performance.
+  {
+    std::cout << "Benchmarking cached random interpolated field lookup: " << std::flush;
+    Cache cache2{mctx};
+    const auto map_rand_result_cache = Acts::Test::microBenchmark(
+        [&] { return bFieldMap.getField(genPos(), cache2); }, iters_map);
+    std::cout << map_rand_result_cache << std::endl;
+    csv("interp_cache_random", map_rand_result_cache);
+  }
+
+  {
+    std::cout << "Benchmarking advancing interpolated field lookup: " << std::flush;
+    Acts::Vector3D pos{0,0,0};
+    Acts::Vector3D dir{};
+    dir.setRandom();
+    double h = 1e-3;
+    const auto map_adv_result = Acts::Test::microBenchmark(
+        [&] {
+        pos += dir * h;
+        return bFieldMap.getField(pos); 
+        }, iters_map);
+    std::cout << map_adv_result << std::endl;
+    csv("interp_nocache_adv", map_adv_result);
+  }  
+
+  {
+    std::cout << "Benchmarking cached advancing interpolated field lookup: " << std::flush;
+    Cache cache{mctx};
+    Acts::Vector3D pos{0,0,0};
+    Acts::Vector3D dir{};
+    dir.setRandom();
+    double h = 1e-3;
+    const auto map_adv_result_cache = Acts::Test::microBenchmark(
+        [&] {
+        pos += dir * h;
+        return bFieldMap.getField(pos, cache); 
+        }, iters_map);
+    std::cout << map_adv_result_cache << std::endl;
+    csv("interp_cache_adv", map_adv_result_cache);
+  }  
 }
