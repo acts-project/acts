@@ -38,10 +38,9 @@ class GainMatrixSmoother {
       : m_logger(std::move(logger)) {}
 
   template <typename source_link_t>
-  Result<parameters_t> operator()(const GeometryContext& gctx,
-                                  MultiTrajectory<source_link_t>& trajectory,
-                                  size_t entryIndex,
-                                  GlobalBoundSymMatrix& optGlobalCov) const {
+  Result<parameters_t> operator()(
+      const GeometryContext& gctx, MultiTrajectory<source_link_t>& trajectory,
+      size_t entryIndex, GlobalBoundSymMatrix& globalTrackParamsCov) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
@@ -59,12 +58,12 @@ class GainMatrixSmoother {
     prev_ts.smoothed() = prev_ts.filtered();
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
-    // Fill the covariance of last state
-    if (optGlobalCov.size() != 0) {
-      size_t globalCovSize = optGlobalCov.rows();
+    // Fill global track parameters covariance matrix for last state
+    if (globalTrackParamsCov.size() != 0) {
+      size_t globalCovSize = globalTrackParamsCov.rows();
       assert(globalCovSize % parametersSize == 0);
       ACTS_VERBOSE("Size of global covariance matrix is: " << globalCovSize);
-      optGlobalCov.block<parametersSize, parametersSize>(
+      globalTrackParamsCov.block<parametersSize, parametersSize>(
           globalCovSize - parametersSize, globalCovSize - parametersSize) =
           prev_ts.smoothedCovariance();
     }
@@ -84,7 +83,7 @@ class GainMatrixSmoother {
       trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G, &error,
                                                      &nSmoothed,
                                                      &parametersSize,
-                                                     &optGlobalCov,
+                                                     &globalTrackParamsCov,
                                                      this](auto ts) {
         // should have filtered and predicted, this should also include the
         // covariances.
@@ -153,19 +152,23 @@ class GainMatrixSmoother {
         ts.smoothedCovariance() = smoothedCov;
         ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
 
-        if (optGlobalCov.size() != 0) {
-          // Fill global track parameters covariance matrix
-          size_t globalCovSize = optGlobalCov.rows();
+        // Fill global track parameters covariance matrix for this state related
+        // covariance
+        // @Todo: store the covariance only for measurement state
+        if (globalTrackParamsCov.size() != 0) {
+          size_t globalCovSize = globalTrackParamsCov.rows();
           size_t nStates = globalCovSize / parametersSize;
-          // Fill the diagonal element
+          assert(nSmoothed < nStates);
+          // -> Fill the diagonal element
           size_t iRow = globalCovSize - parametersSize * (nSmoothed + 1);
-          optGlobalCov.block<parametersSize, parametersSize>(iRow, iRow) =
-              ts.smoothedCovariance();
-          // Fill the correlation between this state and already smoothed states
+          globalTrackParamsCov.block<parametersSize, parametersSize>(
+              iRow, iRow) = ts.smoothedCovariance();
+          // -> Fill the correlation between this state and already smoothed
+          // states
           for (size_t iSmoothed = 1; iSmoothed <= nSmoothed; iSmoothed++) {
             size_t iCol = iRow + parametersSize * iSmoothed;
             CovMatrix_t prev_correlation =
-                optGlobalCov.block<parametersSize, parametersSize>(
+                globalTrackParamsCov.block<parametersSize, parametersSize>(
                     iRow + parametersSize, iCol);
             CovMatrix_t correlation = G * prev_correlation;
             ACTS_VERBOSE("Fill block of size ("
@@ -173,15 +176,15 @@ class GainMatrixSmoother {
                          << "), starting at (" << iRow << ", " << iCol
                          << ") for track parameters correlation:\n"
                          << correlation);
-            optGlobalCov.block<parametersSize, parametersSize>(iRow, iCol) =
-                correlation;
+            globalTrackParamsCov.block<parametersSize, parametersSize>(
+                iRow, iCol) = correlation;
             ACTS_VERBOSE("Fill block of size ("
                          << parametersSize << ", " << parametersSize
                          << "), starting at (" << iCol << ", " << iRow
                          << ") for track parameters correlation:\n"
                          << correlation.transpose());
-            optGlobalCov.block<parametersSize, parametersSize>(iCol, iRow) =
-                correlation.transpose();
+            globalTrackParamsCov.block<parametersSize, parametersSize>(
+                iCol, iRow) = correlation.transpose();
           }
         }
 
