@@ -51,7 +51,7 @@ class CuboidVolumeBounds : public VolumeBounds {
     eHalfLengthX = 0,
     eHalfLengthY = 1,
     eHalfLengthZ = 2,
-    eSize = 3
+    eSize
   };
 
   CuboidVolumeBounds() = delete;

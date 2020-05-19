@@ -54,7 +54,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
     eHalfLengthZ = 3,      //!< halflength in z
     eAlpha = 4,            //!< opening angle alpha (in point A)
     eBeta = 5,             //!< opening angle beta  (in point B)
-    eSize = 6              //!< length of the bounds vector
+    eSize                  //!< length of the bounds vector
   };
 
   TrapezoidVolumeBounds() = delete;

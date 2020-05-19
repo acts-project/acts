@@ -78,7 +78,7 @@ class CylinderVolumeBounds : public VolumeBounds {
     eHalfLengthZ = 2,
     eHalfPhiSector = 3,
     eAveragePhi = 4,
-    eSize = 5
+    eSize
   };
 
   CylinderVolumeBounds() = delete;

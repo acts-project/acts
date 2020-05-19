@@ -40,7 +40,7 @@ class ConeVolumeBounds : public VolumeBounds {
     eHalfLengthZ = 4,
     eAveragePhi = 5,
     eHalfPhiSector = 6,
-    eSize = 7
+    eSize
   };
 
   ConeVolumeBounds() = delete;
