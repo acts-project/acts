@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsCudaPlugin)
+add_subdirectory(Seeding)
+add_subdirectory(Utilities)

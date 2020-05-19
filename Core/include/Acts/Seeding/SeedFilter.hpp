@@ -76,6 +76,10 @@ class SeedFilter {
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           seedsPerSpM,
       std::vector<Seed<external_spacepoint_t>>& outVec) const;
+  const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
+  const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
+    return m_experimentCuts;
+  }
 
  private:
   const SeedFilterConfig m_cfg;

@@ -14,8 +14,8 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t>
-Seedfinder<external_spacepoint_t>::Seedfinder(
+template <typename external_spacepoint_t, typename platform_t>
+Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config)
     : m_config(std::move(config)) {
   // calculation of scattering using the highland formula
@@ -34,10 +34,10 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
 }
 
-template <typename external_spacepoint_t>
+template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
-Seedfinder<external_spacepoint_t>::createSeedsForGroup(
+Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
   for (auto spM : middleSPs) {
@@ -245,8 +245,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   return outputVec;
 }
 
-template <typename external_spacepoint_t>
-void Seedfinder<external_spacepoint_t>::transformCoordinates(
+template <typename external_spacepoint_t, typename platform_t>
+void Seedfinder<external_spacepoint_t, platform_t>::transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) const {
