@@ -148,8 +148,8 @@ DiscSurface::local3DToBoundLocalDerivative(const GeometryContext& gctx,
   const Vector3D localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
-  const double lcphi = cos(lphi);
-  const double lsphi = sin(lphi);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
   Local3DToBoundLocalMatrix loc3DToLocBound = Local3DToBoundLocalMatrix::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, -lsphi / lr, lcphi / lr, 0;
 

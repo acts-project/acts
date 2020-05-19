@@ -127,8 +127,8 @@ ConeSurface::local3DToBoundLocalDerivative(const GeometryContext& gctx,
   const Vector3D localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
-  const double lcphi = cos(phi);
-  const double lsphi = sin(lphi);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
   // Solve for radius R
   const double R = localPos.z() * bounds().tanAlpha();
   Local3DToBoundLocalMatrix loc3DToLocBound = Local3DToBoundLocalMatrix::Zero();

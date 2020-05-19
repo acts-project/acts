@@ -153,8 +153,8 @@ CylinderSurface::local3DToBoundLocalDerivative(const GeometryContext& gctx,
   const Vector3D localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
-  const double lcphi = cos(lphi);
-  const double lsphi = sin(lphi);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
   Local3DToBoundLocalMatrix loc3DToLocBound = Local3DToBoundLocalMatrix::Zero();
