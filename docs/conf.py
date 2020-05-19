@@ -58,7 +58,7 @@ html_theme_options = {
     'prev_next_buttons_location': None, # no prev/next links
     'style_external_links': True,
 }
-html_logo = 'figures/acts_logo_b_w.svg'
+html_logo = 'figures/acts_logo_white.svg'
 html_static_path = ['_static']
 
 html_css_files = [
