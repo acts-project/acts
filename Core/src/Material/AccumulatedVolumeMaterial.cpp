@@ -1,34 +1,36 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
+#include <iostream>
 
-void Acts::AccumulatedVolumeMaterial::accumulate(const Material& mat) {
-  // If nothing is set it is vacuum
-  if (!mat) {
-    m_vacuumEntries++;
+void Acts::AccumulatedVolumeMaterial::accumulate(
+    const MaterialProperties& mat) {
+  // Replace the vacuum by matter or add matter to matter
+  if (m_totalX0 == std::numeric_limits<float>::infinity()) {
+    m_totalX0 = mat.thickness() / mat.material().X0();
   } else {
-    // Replace the vacuum by matter or add matter to matter
-    if (m_totalX0 == std::numeric_limits<float>::infinity()) {
-      m_totalX0 = mat.X0();
-    } else {
-      m_totalX0 += mat.X0();
-    }
-    if (m_totalL0 == std::numeric_limits<float>::infinity()) {
-      m_totalL0 = mat.L0();
-    } else {
-      m_totalL0 += mat.L0();
-    }
-    m_totalAr += mat.Ar();
-    m_totalZ += mat.Z();
-    m_totalRho += mat.massDensity();
-    m_materialEntries++;
+    m_totalX0 += mat.thickness() / mat.material().X0();
   }
+  if (m_totalL0 == std::numeric_limits<float>::infinity()) {
+    m_totalL0 = mat.thickness() / mat.material().L0();
+  } else {
+    m_totalL0 += mat.thickness() / mat.material().L0();
+  }
+  m_totalAr += mat.material().Ar();
+  m_totalZ += mat.material().Z();
+  m_totalRho += mat.material().massDensity();
+  if (m_materialEntries == 0) {
+    m_thickness = mat.thickness();
+  } else {
+    m_thickness += mat.thickness();
+  }
+  m_materialEntries++;
 }
 
 Acts::Material Acts::AccumulatedVolumeMaterial::average() {
@@ -36,15 +38,9 @@ Acts::Material Acts::AccumulatedVolumeMaterial::average() {
   if (m_materialEntries == 0) {
     return Material();
   }
-  /// The following rescaling is a combination of two steps.
-  /// 1) All material entries are averaged.
-  /// 2) The numbers are rescaled by a material-to-totalEntries factor. This
-  /// rescaling is performed by dividing A, Z and rho by this factor and
-  /// multiplying X0 and L0 by it.
-  float scalor = m_materialEntries * m_materialEntries;
-  float totalEntries = (float)(m_vacuumEntries + m_materialEntries);
+
   // Create the material
-  return Material(m_totalX0 * totalEntries / scalor,
-                  m_totalL0 * totalEntries / scalor, m_totalAr / totalEntries,
-                  m_totalZ / totalEntries, m_totalRho / totalEntries);
+  return Material(m_thickness / m_totalX0, m_thickness / m_totalL0,
+                  m_totalAr / m_materialEntries, m_totalZ / m_materialEntries,
+                  m_totalRho / m_materialEntries);
 }

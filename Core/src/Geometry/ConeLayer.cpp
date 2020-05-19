@@ -6,15 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// ConeLayer.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
-#include <utility>
-
 #include "Acts/Geometry/ConeLayer.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <utility>
 
 Acts::ConeLayer::ConeLayer(std::shared_ptr<const Transform3D> transform,
                            std::shared_ptr<const ConeBounds> cbounds,

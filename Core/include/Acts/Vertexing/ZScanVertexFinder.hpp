@@ -16,7 +16,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
-#include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -43,12 +43,12 @@ class ZScanVertexFinder {
   struct Config {
     /// @brief Finder configuration
     ///
-    /// @param ipEst TrackToVertexIPEstimator
-    Config(TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEst)
-        : ipEstimator(std::move(ipEst)) {}
+    /// @param ipEst ImpactPointEstimator
+    Config(const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst)
+        : ipEstimator(ipEst) {}
 
-    // TrackToVertexIPEstimator
-    TrackToVertexIPEstimator<InputTrack_t, Propagator_t> ipEstimator;
+    // ImpactPointEstimator
+    ImpactPointEstimator<InputTrack_t, Propagator_t> ipEstimator;
 
     // FsmwMode1dFinder
     FsmwMode1dFinder mode1dFinder;
@@ -70,6 +70,9 @@ class ZScanVertexFinder {
     double minWeight = 0.01;
   };
 
+  /// @struct State State struct for fulfilling interface
+  struct State {};
+
   /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
   /// @param cfg Configuration object
@@ -77,7 +80,7 @@ class ZScanVertexFinder {
   template <typename T = InputTrack_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
 
-  ZScanVertexFinder(Config cfg,
+  ZScanVertexFinder(const Config& cfg,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
@@ -90,13 +93,11 @@ class ZScanVertexFinder {
   /// @param cfg Configuration object
   /// @param func Function extracting BoundParameters from InputTrack_t object
   /// @param logger Logging instance
-  ZScanVertexFinder(Config cfg,
+  ZScanVertexFinder(const Config& cfg,
                     std::function<BoundParameters(InputTrack_t)> func,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
-        m_logger(std::move(logger)) {}
+      : m_cfg(cfg), m_extractParameters(func), m_logger(std::move(logger)) {}
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,
@@ -104,12 +105,14 @@ class ZScanVertexFinder {
   ///
   /// @param trackVector Input track collection
   /// @param vertexingOptions Vertexing options
+  /// @param state State for fulfilling correct interface
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex<InputTrack_t>>> find(
       const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
  private:
   Config m_cfg;

@@ -9,8 +9,8 @@
 template <typename vfitter_t>
 auto Acts::ZScanVertexFinder<vfitter_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
-    -> Result<std::vector<Vertex<InputTrack_t>>> {
+    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Determine if we use constraint or not
   bool useConstraint = false;
   if (vertexingOptions.vertexConstraint.fullCovariance().determinant() != 0) {
@@ -30,7 +30,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     ImpactParametersAndSigma ipas;
     if (useConstraint &&
         vertexingOptions.vertexConstraint.covariance()(0, 0) != 0) {
-      auto estRes = m_cfg.ipEstimator.estimate(
+      auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
           params, vertexingOptions.vertexConstraint,
           vertexingOptions.geoContext, vertexingOptions.magFieldContext);
       if (estRes.ok()) {

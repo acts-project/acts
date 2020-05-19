@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(construction_test) {
   BOOST_CHECK(cubo.inside({2.2, 1, 1}, 0.3));
 }
 
-BOOST_AUTO_TEST_CASE(decomposeToSurfaces) {
+BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
   std::array<Vector3D, 8> vertices;
   vertices = {{{0, 0, 0},
                {2, 0, 0},
@@ -73,12 +73,12 @@ BOOST_AUTO_TEST_CASE(decomposeToSurfaces) {
     return false;
   };
 
-  auto surfaces = cubo.decomposeToSurfaces(nullptr);
+  auto surfaces = cubo.orientedSurfaces(nullptr);
   for (const auto& srf : surfaces) {
-    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
+    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
       Vector3D glob;
-      srf->localToGlobal(gctx, vtx, {}, glob);
+      srf.first->localToGlobal(gctx, vtx, {}, glob);
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -94,12 +94,12 @@ BOOST_AUTO_TEST_CASE(decomposeToSurfaces) {
                {0, 1, 1}}};
   cubo = GenericCuboidVolumeBounds(vertices);
 
-  surfaces = cubo.decomposeToSurfaces(nullptr);
+  surfaces = cubo.orientedSurfaces(nullptr);
   for (const auto& srf : surfaces) {
-    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
+    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
       Vector3D glob;
-      srf->localToGlobal(gctx, vtx, {}, glob);
+      srf.first->localToGlobal(gctx, vtx, {}, glob);
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -109,12 +109,12 @@ BOOST_AUTO_TEST_CASE(decomposeToSurfaces) {
   trf = Translation3D(Vector3D(0, 8, -5)) *
         AngleAxis3D(M_PI / 3., Vector3D(1, -3, 9).normalized());
 
-  surfaces = cubo.decomposeToSurfaces(&trf);
+  surfaces = cubo.orientedSurfaces(&trf);
   for (const auto& srf : surfaces) {
-    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf->bounds());
+    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
       Vector3D glob;
-      srf->localToGlobal(gctx, vtx, {}, glob);
+      srf.first->localToGlobal(gctx, vtx, {}, glob);
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(trf.inverse() * glob, vertices));
     }
@@ -181,6 +181,35 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   CHECK_CLOSE_ABS(bb.max(), Vector3D(1.00976, 2.26918, 1.11988), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3D(-0.871397, 0, -0.0867708), tol);
+}
+
+BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
+  std::array<Vector3D, 8> vertices;
+  vertices = {{{0, 0, 0},
+               {4, 0, 0},
+               {4, 2, 0},
+               {0, 2, 0},
+               {0, 0, 2},
+               {4, 0, 2},
+               {4, 2, 2},
+               {0, 2, 2}}};
+
+  GenericCuboidVolumeBounds cubo(vertices);
+
+  auto gcvbOrientedSurfaces = cubo.orientedSurfaces(nullptr);
+  BOOST_TEST(gcvbOrientedSurfaces.size(), 6);
+
+  for (auto& os : gcvbOrientedSurfaces) {
+    auto geoCtx = GeometryContext();
+    auto osCenter = os.first->center(geoCtx);
+    auto osNormal = os.first->normal(geoCtx);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideGcvb = osCenter + nDir * osNormal;
+    auto outsideGcvb = osCenter - nDir * osNormal;
+    BOOST_CHECK(cubo.inside(insideGcvb));
+    BOOST_CHECK(!cubo.inside(outsideGcvb));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

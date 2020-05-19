@@ -194,6 +194,23 @@ class Grid final {
     return grid_helper::getGlobalBin(localBins, m_axes);
   }
 
+  /// @brief  determine global bin index of the bin with the lower left edge
+  ///         closest to the given point for each axis
+  ///
+  /// @tparam Point any type with point semantics supporting component access
+  ///               through @c operator[]
+  ///
+  /// @param  [in] point point to look up in the grid
+  /// @return global index for bin containing the given point
+  ///
+  /// @pre The given @c Point type must represent a point in d (or higher)
+  ///      dimensions where d is dimensionality of the grid.
+  /// @note This could be a under-/overflow bin along one or more axes.
+  template <class Point>
+  size_t globalBinFromFromLowerLeftEdge(const Point& point) const {
+    return globalBinFromLocalBins(localBinsFromLowerLeftEdge(point));
+  }
+
   /// @brief  determine local bin index for each axis from the given point
   ///
   /// @tparam Point any type with point semantics supporting component access
@@ -221,6 +238,29 @@ class Grid final {
   ///       corresponding axis.
   index_t localBinsFromGlobalBin(size_t bin) const {
     return grid_helper::getLocalBinIndices(bin, m_axes);
+  }
+
+  /// @brief  determine local bin index of the bin with the lower left edge
+  ///         closest to the given point for each axis
+  ///
+  /// @tparam Point any type with point semantics supporting component access
+  ///               through @c operator[]
+  ///
+  /// @param  [in] point point to look up in the grid
+  /// @return array with local bin indices along each axis (in same order as
+  ///         given @c axes object)
+  ///
+  /// @pre The given @c Point type must represent a point in d (or higher)
+  ///      dimensions where d is dimensionality of the grid.
+  /// @note This could be a under-/overflow bin along one or more axes.
+  template <class Point>
+  index_t localBinsFromLowerLeftEdge(const Point& point) const {
+    Point shiftedPoint;
+    point_t width = grid_helper::getWidth(m_axes);
+    for (size_t i = 0; i < DIM; i++) {
+      shiftedPoint[i] = point[i] + width[i] / 2;
+    }
+    return grid_helper::getLocalBinIndices(shiftedPoint, m_axes);
   }
 
   /// @brief retrieve lower-left bin edge from set of local bin indices

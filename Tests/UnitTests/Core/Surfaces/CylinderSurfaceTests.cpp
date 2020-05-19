@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
      Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi) = (1.0000000, 10.0000000, 3.1415927, 0.0000000)"));
 }
 
-BOOST_AUTO_TEST_CASE(EqualityOperators) {
+BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
   double radius(1.0), halfZ(10.);
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
@@ -231,6 +231,28 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   *assignedCylinderSurface = *cylinderSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
+}
+
+/// Unit test for testing CylinderSurface properties
+BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
+  // Some radius and half length
+  double radius(1.0), halfZ(10.);
+  Translation3D translation{0., 0., 2.};
+  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto cylinderSurface =
+      Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
+  // The Extent, let's measure it
+  auto cylinderExtent =
+      cylinderSurface->polyhedronRepresentation(testContext, 1).extent();
+
+  CHECK_CLOSE_ABS(-8, cylinderExtent.min(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(12, cylinderExtent.max(binZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.min(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(binX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(binY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(binY), s_onSurfaceTolerance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

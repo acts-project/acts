@@ -16,22 +16,65 @@
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
 #include "SurfaceVisualizationBase.hpp"
+#include "VisualizationTester.hpp"
 
 namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
+/// This tests if the corresponding obj output is well formatted
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
   ObjVisualization obj;
-  SurfaceVisualization::test(obj, false, "");
-  SurfaceVisualization::test(obj, true, "_3Mesh");
+  // Standard test
+  bool triangulate = false;
+  auto objTest = SurfaceVisualization::test(obj, triangulate, "");
+  auto objErrors = testObjString(objTest, triangulate);
+  std::cout << "Sufaces Obj Test    : " << objTest.size()
+            << " characters written with " << objErrors.size() << " errors."
+            << std::endl;
+  BOOST_CHECK(objErrors.size() == 0);
+  for (auto objerr : objErrors) {
+    std::cout << objerr << std::endl;
+  }
+  // Triangular mesh test
+  triangulate = true;
+  auto objTest3M = SurfaceVisualization::test(obj, triangulate, "_3M");
+  auto objErrors3M = testObjString(objTest3M, triangulate);
+  std::cout << "Sufaces Obj Test 3M : " << objTest3M.size()
+            << " characters written with " << objErrors3M.size() << " errors."
+            << std::endl;
+  BOOST_CHECK(objErrors3M.size() == 0);
+  for (auto objerr : objErrors3M) {
+    std::cout << objerr << std::endl;
+  }
 }
 
+/// This tests if the corresponding ply output is well formatted
 BOOST_AUTO_TEST_CASE(SurfaceVisualizationPly) {
   PlyVisualization ply;
-  SurfaceVisualization::test(ply, false, "");
-  SurfaceVisualization::test(ply, true, "_3Mesh");
+  // Standard test
+  bool triangulate = false;
+  auto plyTest = SurfaceVisualization::test(ply, triangulate, "");
+  auto plyErrors = testPlyString(plyTest, triangulate);
+  std::cout << "Sufaces Ply Test    : " << plyTest.size()
+            << " characters written with " << plyErrors.size() << " errors."
+            << std::endl;
+  BOOST_CHECK(plyErrors.size() == 0);
+  for (auto plyerr : plyErrors) {
+    std::cout << plyerr << std::endl;
+  }
+  // Triangular mesh test
+  triangulate = true;
+  auto plyTest3M = SurfaceVisualization::test(ply, triangulate, "_3M");
+  auto plyErrors3M = testPlyString(plyTest3M, triangulate);
+  std::cout << "Sufaces Ply Test 3M : " << plyTest3M.size()
+            << " characters written with " << plyErrors3M.size() << " errors."
+            << std::endl;
+  BOOST_CHECK(plyErrors3M.size() == 0);
+  for (auto plyerr : plyErrors3M) {
+    std::cout << plyerr << std::endl;
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

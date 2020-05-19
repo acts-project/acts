@@ -21,8 +21,8 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
-#include "Acts/Vertexing/TrackToVertexIPEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 
@@ -113,19 +113,20 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     BilloirFitter bFitter(vertexFitterCfg);
 
-    // Set up all seed finder related things
-    TrackToVertexIPEstimator<BoundParameters, Propagator>::Config ipEstCfg(
-        propagator);
-    TrackToVertexIPEstimator<BoundParameters, Propagator> ipEst(ipEstCfg);
+    // Impact point estimator
+    using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+
+    IPEstimator::Config ipEstimatorCfg(bField, propagator);
+    IPEstimator ipEstimator(ipEstimatorCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
 
     static_assert(VertexFinderConcept<ZScanSeedFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    ZScanSeedFinder::Config sFcfg(std::move(ipEst));
+    ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
 
-    ZScanSeedFinder sFinder(std::move(sFcfg));
+    ZScanSeedFinder sFinder(seedFinderCfg);
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
@@ -133,19 +134,13 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    // IP 3D Estimator
-    using ImpactPointEstimator =
-        ImpactPoint3dEstimator<BoundParameters, Propagator>;
-
-    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
-    ImpactPointEstimator ip3dEst(ip3dEstCfg);
-
-    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder), std::move(ip3dEst));
+    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+                             ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg);
+    VertexFinder::State state;
 
     // Vector to be filled with all tracks in current event
     std::vector<std::unique_ptr<const BoundParameters>> tracks;
@@ -233,7 +228,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
                                                        magFieldContext);
 
     // find vertices
-    auto res = finder.find(tracksPtr, vertexingOptions);
+    auto res = finder.find(tracksPtr, vertexingOptions, state);
 
     BOOST_CHECK(res.ok());
 
@@ -342,29 +337,25 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     BilloirFitter bFitter(vertexFitterCfg, extractParameters);
 
-    // Set up all seed finder related things
-    TrackToVertexIPEstimator<InputTrack, Propagator>::Config ipEstCfg(
-        propagator);
-    TrackToVertexIPEstimator<InputTrack, Propagator> ipEst(ipEstCfg);
+    // IP Estimator
+    using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
+
+    IPEstimator::Config ipEstimatorCfg(bField, propagator);
+    IPEstimator ipEstimator(ipEstimatorCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
-    ZScanSeedFinder::Config sFcfg(std::move(ipEst));
+    ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
 
-    ZScanSeedFinder sFinder(std::move(sFcfg), extractParameters);
-
-    // IP 3D Estimator
-    using ImpactPointEstimator = ImpactPoint3dEstimator<InputTrack, Propagator>;
-
-    ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
-    ImpactPointEstimator ip3dEst(ip3dEstCfg);
+    ZScanSeedFinder sFinder(seedFinderCfg, extractParameters);
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder), std::move(ip3dEst));
+    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+                             ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg, extractParameters);
+    VertexFinder::State state;
 
     // Same for user track type tracks
     std::vector<std::unique_ptr<const InputTrack>> tracks;
@@ -455,7 +446,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
                                                     magFieldContext);
 
     // find vertices
-    auto res = finder.find(tracksPtr, vertexingOptionsUT);
+    auto res = finder.find(tracksPtr, vertexingOptionsUT, state);
 
     BOOST_CHECK(res.ok());
 

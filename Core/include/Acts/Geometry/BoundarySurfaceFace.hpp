@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// BoundarySurfaceFace.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include <iostream>
@@ -27,7 +23,6 @@ namespace Acts {
 ///
 ///  The order of faces is chosen to follow - as much as
 ///  possible - a cycular structure.
-
 enum BoundarySurfaceFace {
   negativeFaceXY = 0,
   positiveFaceXY = 1,
@@ -59,9 +54,6 @@ enum BoundarySurfaceFace {
   undefinedFace = 99
 
 };
-
-/// @brief specify the inside/outside with respect to the normal vector
-enum BoundaryOrientation { insideVolume = -1, outsideVolume = 1 };
 
 inline std::ostream& operator<<(std::ostream& os, BoundarySurfaceFace& face) {
   os << "BoundarySurfaceFace::";

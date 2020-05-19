@@ -35,7 +35,7 @@
 /// void myFunction() {
 ///    std::unique_ptr<const Acts::Logger> myLogger
 ///        = /* .. your initialization .. */;
-///    ACTS_LOCAL_LOGGER(myLogger);
+///    ACTS_LOCAL_LOGGER(std::move(myLogger));
 ///
 ///    ACTS_VERBOSE("hello world!");
 /// }
@@ -43,18 +43,18 @@
 #define ACTS_LOCAL_LOGGER(log_object)                                          \
   struct __local_acts_logger                                                   \
   {                                                                            \
-    __local_acts_logger(std::unique_ptr<const Logger> logger):                 \
+    __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger):         \
       m_logger(std::move(logger))                                              \
     {}                                                                         \
                                                                                \
-    const Logger& operator()() const                                           \
+    const ::Acts::Logger& operator()() const                                   \
     {                                                                          \
       return *m_logger;                                                        \
     }                                                                          \
                                                                                \
-    std::unique_ptr<const Logger> m_logger;                                    \
+    std::unique_ptr<const ::Acts::Logger> m_logger;                            \
   };                                                                           \
-  __local_acts_logger logger(std::move(log_object));
+  __local_acts_logger logger(log_object);
 
 /// @brief macro for verbose debug output
 /// @ingroup Logging

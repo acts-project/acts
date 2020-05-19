@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// TrapezoidVolumeBounds.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -28,7 +24,7 @@ class TrapezoidBounds;
 
 /// @class TrapezoidVolumeBounds
 ///
-/// Bounds for a trapezoidal shaped Volume, the decomposeToSurfaces method
+/// Bounds for a trapezoidal shaped Volume, the orientedSurface(...) method
 /// creates a vector of 6 surfaces:
 ///
 ///  BoundarySurfaceFace [index]:
@@ -48,8 +44,6 @@ class TrapezoidBounds;
 ///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
-///  @image html TrapezoidVolumeBounds_decomp.gif
-
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for acces / streaming
@@ -118,14 +112,18 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @return boolean indicator if position is inside
   bool inside(const Vector3D& pos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into Surfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
-  /// @param transformPtr is the transform to position the surfaces in 3D space
-  /// @note this is a factory method
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
   ///
-  /// @return vector of surfaces from the decopmosition
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
-      const Transform3D* transformPtr) const override;
+  /// It will throw an exception if the orientation prescription is not adequate
+  ///
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -147,16 +145,15 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// The internal version of the bounds can be float/double
   std::array<double, eSize> m_values;
   /// The face PlaneSurface parallel to local xy plane
-  std::shared_ptr<const TrapezoidBounds> m_faceXYTrapezoidBounds = nullptr;
+  std::shared_ptr<const TrapezoidBounds> m_faceXYTrapezoidBounds{nullptr};
   /// Thhe face PlaneSurface attached to alpha (negative local x)
-  std::shared_ptr<const RectangleBounds> m_faceAlphaRectangleBounds = nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceAlphaRectangleBounds{nullptr};
   /// The face PlaneSurface attached to beta (positive local x)
-  std::shared_ptr<const RectangleBounds> m_faceBetaRectangleBounds = nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceBetaRectangleBounds{nullptr};
   /// The face PlaneSurface parallel to local zx plane, negative local y
-  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsBottom =
-      nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsBottom{nullptr};
   /// The face PlaneSurface parallel to local zx plane, positive local y
-  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsTop = nullptr;
+  std::shared_ptr<const RectangleBounds> m_faceZXRectangleBoundsTop{nullptr};
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
@@ -166,12 +163,14 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   void buildSurfaceBounds();
 
   /// Templated dump methos
-  template <class T>
-  T& dumpT(T& dt) const;
+  /// @tparam stream_t The type of the stream for dumping
+  /// @param dt The stream object
+  template <class stream_t>
+  stream_t& dumpT(stream_t& dt) const;
 };
 
-template <class T>
-T& TrapezoidVolumeBounds::dumpT(T& dt) const {
+template <class stream_t>
+stream_t& TrapezoidVolumeBounds::dumpT(stream_t& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "

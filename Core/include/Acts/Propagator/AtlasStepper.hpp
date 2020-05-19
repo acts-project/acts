@@ -12,6 +12,7 @@
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -66,7 +67,6 @@ class AtlasStepper {
           newfield(true),
           field(0., 0., 0.),
           covariance(nullptr),
-          t0(pars.time()),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(mctx),
@@ -87,7 +87,7 @@ class AtlasStepper {
       pVector[0] = pos(0);
       pVector[1] = pos(1);
       pVector[2] = pos(2);
-      pVector[3] = 0.;
+      pVector[3] = pars.time();
       pVector[4] = Cf * Se;
       pVector[5] = Sf * Se;
       pVector[6] = Ce;
@@ -271,8 +271,6 @@ class AtlasStepper {
 
     // accummulated path length cache
     double pathAccumulated = 0.;
-    // Starting time
-    const double t0;
 
     // Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize = std::numeric_limits<double>::max();
@@ -337,7 +335,7 @@ class AtlasStepper {
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
 
   /// Time access
-  double time(const State& state) const { return state.t0 + state.pVector[3]; }
+  double time(const State& state) const { return state.pVector[3]; }
 
   /// Update surface status
   ///
@@ -399,15 +397,12 @@ class AtlasStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
-                        bool /*unused*/) const {
+  BoundState boundState(State& state, const Surface& surface) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
 
@@ -420,13 +415,13 @@ class AtlasStepper {
     std::unique_ptr<const Covariance> cov = nullptr;
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport) {
-      covarianceTransport(state, surface, true);
+      covarianceTransport(state, surface);
       covOpt = state.cov;
     }
 
     // Fill the end parameters
     BoundParameters parameters(state.geoContext, std::move(covOpt), gp, mom,
-                               charge(state), state.t0 + state.pVector[3],
+                               charge(state), state.pVector[3],
                                surface.getSharedPtr());
 
     return BoundState(std::move(parameters), state.jacobian,
@@ -437,14 +432,12 @@ class AtlasStepper {
   ///
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed
-  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state, bool /*unused*/) const {
+  CurvilinearState curvilinearState(State& state) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     //
@@ -454,12 +447,12 @@ class AtlasStepper {
 
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport) {
-      covarianceTransport(state, true);
+      covarianceTransport(state);
       covOpt = state.cov;
     }
 
     CurvilinearParameters parameters(std::move(covOpt), gp, mom, charge(state),
-                                     state.t0 + state.pVector[3]);
+                                     state.pVector[3]);
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);
@@ -659,11 +652,9 @@ class AtlasStepper {
   /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] reinitialize is a flag to steer whether the state should be
-  /// reinitialized at the new position
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state, bool /*unused*/) const {
+  void covarianceTransport(State& state) const {
     double P[60];
     for (unsigned int i = 0; i < 60; ++i) {
       P[i] = state.pVector[i];
@@ -814,10 +805,7 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
-  /// @param [in] reinitialize is a flag to steer whether the state should be
-  /// reinitialized at the new position
-  void covarianceTransport(State& state, const Surface& surface,
-                           bool /*unused*/) const {
+  void covarianceTransport(State& state, const Surface& surface) const {
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
     mom /= std::abs(state.pVector[7]);

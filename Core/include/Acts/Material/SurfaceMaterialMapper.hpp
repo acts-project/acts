@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// SurfaceMaterialMapper.hpp, Acts project MaterialPlugins
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -22,6 +18,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -29,10 +26,17 @@ namespace Acts {
 
 class TrackingGeometry;
 
-/// @brief selector for finding
+/// @brief selector for finding surface
 struct MaterialSurface {
   bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
+  }
+};
+
+/// @brief selector for finding volume
+struct MaterialVolume {
+  bool operator()(const TrackingVolume& vf) const {
+    return (vf.volumeMaterial() != nullptr);
   }
 };
 
@@ -92,6 +96,9 @@ class SurfaceMaterialMapper {
     /// The created surface material from it
     std::map<GeometryID, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
+
+    /// The volume material of the input tracking geometry
+    std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>> volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -155,6 +162,13 @@ class SurfaceMaterialMapper {
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
   void checkAndInsert(State& /*mState*/, const Surface& surface) const;
+
+  /// @brief check and insert
+  ///
+  /// @param mState is the map to be filled
+  /// @param surface is the surface to be checked for a Proxy
+  void collectMaterialVolumes(State& /*mState*/,
+                              const TrackingVolume& tVolume) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

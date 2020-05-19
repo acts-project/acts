@@ -269,5 +269,5 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     faces = facesMesh.first;
     triangularMesh = facesMesh.second;
   }
-  return Polyhedron(vertices, faces, triangularMesh);
+  return Polyhedron(vertices, faces, triangularMesh, false);
 }

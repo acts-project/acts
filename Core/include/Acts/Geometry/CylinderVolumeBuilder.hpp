@@ -6,15 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// CylinderVolumeBuilder.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
-
-#include <array>
-#include <limits>
-#include <string>
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
@@ -25,14 +17,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#ifndef ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
-#define ATAS_GEOMETRYTOOLS_TAKESMALLERBIGGER
-#define takeSmaller(current, test) current = current < test ? current : test
-#define takeBigger(current, test) current = current > test ? current : test
-#define takeSmallerBigger(cSmallest, cBiggest, test) \
-  takeSmaller(cSmallest, test);                      \
-  takeBigger(cBiggest, test)
-#endif
+#include <array>
+#include <limits>
+#include <string>
 
 namespace Acts {
 
@@ -77,8 +64,8 @@ struct VolumeConfig {
   /// @param [in] lConfig is the config to which it should be adapded
   void adaptZ(const VolumeConfig& lConfig) {
     if (lConfig) {
-      takeSmaller(zMin, lConfig.zMin);
-      takeBigger(zMax, lConfig.zMax);
+      zMin = std::min(zMin, lConfig.zMin);
+      zMax = std::max(zMax, lConfig.zMax);
     }
   }
 
@@ -88,8 +75,8 @@ struct VolumeConfig {
   /// @param [in] lConfig is the config to which it should be adapded
   void adaptR(const VolumeConfig& lConfig) {
     if (lConfig) {
-      takeSmaller(rMin, lConfig.rMin);
-      takeBigger(rMax, lConfig.rMax);
+      rMin = std::min(rMin, lConfig.rMin);
+      rMax = std::max(rMax, lConfig.rMax);
     }
   }
 

@@ -62,7 +62,7 @@ class StraightLineStepper {
         : pos(par.position()),
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
-          q((par.charge() != 0.) ? par.charge() : 1.),
+          q(par.charge()),
           t(par.time()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
@@ -180,7 +180,7 @@ class StraightLineStepper {
 
   /// Update surface status
   ///
-  /// This method intersect the provided surface and update the navigation
+  /// This method intersects the provided surface and update the navigation
   /// step estimation accordingly (hence it changes the state). It also
   /// returns the status of the intersection to trigger onSurface in case
   /// the surface is reached.
@@ -241,29 +241,24 @@ class StraightLineStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
-                        bool reinitialize) const;
+  BoundState boundState(State& state, const Surface& surface) const;
 
   /// Create and return a curvilinear state at the current position
   ///
   /// @brief This creates a curvilinear state.
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state, bool reinitialize) const;
+  CurvilinearState curvilinearState(State& state) const;
 
   /// Method to update a stepper state to the some parameters
   ///
@@ -286,10 +281,7 @@ class StraightLineStepper {
   /// or direction of the state - for the moment a dummy method
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] reinitialize is a flag to steer whether the
-  ///        state should be reinitialized at the new
-  ///        position
-  void covarianceTransport(State& state, bool reinitialize = false) const;
+  void covarianceTransport(State& state) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -300,13 +292,9 @@ class StraightLineStepper {
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
-  /// @param [in] reinitialize is a flag to steer whether the
-  ///        state should be reinitialized at the new
-  ///        position
   /// @note no check is done if the position is actually on the surface
   ///
-  void covarianceTransport(State& state, const Surface& surface,
-                           bool reinitialize = false) const;
+  void covarianceTransport(State& state, const Surface& surface) const;
 
   /// Perform a straight line propagation step
   ///
@@ -334,7 +322,8 @@ class StraightLineStepper {
       D.block<3, 3>(0, 4) = ActsSymMatrixD<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
-      D(3, 7) = h * state.options.mass * state.options.mass * state.stepping.q /
+      D(3, 7) = h * state.options.mass * state.options.mass *
+                (state.stepping.q == 0. ? 1. : state.stepping.q) /
                 (state.stepping.p * dtds);
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;

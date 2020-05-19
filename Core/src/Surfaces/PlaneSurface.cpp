@@ -114,6 +114,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
   std::vector<Vector3D> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
+  bool exactPolyhedron = true;
 
   // If you have bounds you can create a polyhedron representation
   if (m_bounds) {
@@ -125,6 +126,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
     bool innerExists = false, coversFull = false;
     if (isEllipse) {
+      exactPolyhedron = false;
       auto vStore = bounds().values();
       innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon and
                     vStore[EllipseBounds::eInnerRy] > s_epsilon;
@@ -150,5 +152,5 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     throw std::domain_error(
         "Polyhedron repr of boundless surface not possible.");
   }
-  return Polyhedron(vertices, faces, triangularMesh);
+  return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
 }

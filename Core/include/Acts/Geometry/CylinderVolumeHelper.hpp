@@ -6,20 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// CylinderVolumeHelper.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
-
-#ifndef ACTS_TOOLS_TAKESMALLERBIGGER
-#define ACTS_TOOLS_TAKESMALLERBIGGER
-#define takeSmaller(current, test) current = current < test ? current : test
-#define takeBigger(current, test) current = current > test ? current : test
-#define takeSmallerBigger(cSmallest, cBiggest, test) \
-  takeSmaller(cSmallest, test);                      \
-  takeBigger(cBiggest, test)
-#endif
 
 #include <memory>
 #include <string>

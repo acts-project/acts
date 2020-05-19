@@ -9,8 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
+#include <chrono>
 
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -18,8 +17,11 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -52,10 +54,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
 
-  IPEstimator::Config ip3dEstCfg(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstCfg);
+  IPEstimator::Config ipEstimatorCfg(bField, propagator);
+  IPEstimator ipEstimator(ipEstimatorCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   AnnealingUtility::Config annealingConfig(temperatures);
@@ -63,7 +65,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   using Fitter = AdaptiveMultiVertexFitter<BoundParameters, Linearizer>;
 
-  Fitter::Config fitterCfg(ip3dEst);
+  Fitter::Config fitterCfg(ipEstimator);
 
   fitterCfg.annealingTool = annealingUtility;
 
@@ -80,22 +82,16 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   SeedFinder seedFinder;
 
-  using IPEstimater = TrackToVertexIPEstimator<BoundParameters, Propagator>;
-
-  IPEstimater::Config ipEstCfg(propagator);
-
-  // Create TrackToVertexIPEstimator
-  IPEstimater ipEst(ipEstCfg);
-
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                              std::move(ipEst), std::move(linearizer));
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
+                              linearizer);
 
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
 
   Finder finder(finderConfig);
+  Finder::State state;
 
   auto tracks = getAthenaTracks();
 
@@ -132,7 +128,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   vertexingOptions.vertexConstraint = constraintVtx;
 
-  auto findResult = finder.find(tracksPtr, vertexingOptions);
+  auto t1 = std::chrono::system_clock::now();
+  auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+  auto t2 = std::chrono::system_clock::now();
+
+  auto timediff =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
@@ -143,6 +144,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   std::vector<Vertex<BoundParameters>> allVertices = *findResult;
 
   if (debugMode) {
+    std::cout << "Time needed: " << timediff << " ms." << std::endl;
     std::cout << "Number of vertices reconstructed: " << allVertices.size()
               << std::endl;
 
@@ -228,7 +230,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
         trkCount++;
       }
     }
-
     count++;
   }
 }
@@ -269,10 +270,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
       [](InputTrack params) { return params.parameters(); };
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPoint3dEstimator<InputTrack, Propagator>;
+  using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
 
-  IPEstimator::Config ip3dEstCfg(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstCfg);
+  IPEstimator::Config ipEstimatorCfg(bField, propagator);
+  IPEstimator ipEstimator(ipEstimatorCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   AnnealingUtility::Config annealingConfig(temperatures);
@@ -280,7 +281,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   using Fitter = AdaptiveMultiVertexFitter<InputTrack, Linearizer>;
 
-  Fitter::Config fitterCfg(ip3dEst);
+  Fitter::Config fitterCfg(ipEstimator);
 
   fitterCfg.annealingTool = annealingUtility;
 
@@ -297,17 +298,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   SeedFinder seedFinder(extractParameters);
 
-  using IPEstimater = TrackToVertexIPEstimator<InputTrack, Propagator>;
-
-  IPEstimater::Config ipEstCfg(propagator);
-
-  // Create TrackToVertexIPEstimator
-  IPEstimater ipEst(ipEstCfg);
-
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                              std::move(ipEst), std::move(linearizer));
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
+                              linearizer);
+  Finder::State state;
 
   Finder finder(finderConfig, extractParameters);
 
@@ -352,7 +347,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   vertexingOptions.vertexConstraint = constraintVtx;
 
-  auto findResult = finder.find(userTracksPtr, vertexingOptions);
+  auto findResult = finder.find(userTracksPtr, vertexingOptions, state);
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
@@ -457,6 +452,171 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     }
 
     count++;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
+  // Set debug mode
+  bool debugMode = true;
+  if (debugMode) {
+    std::cout << "Starting AMVF test with grid seed finder..." << std::endl;
+  }
+  // Set up constant B-Field
+  ConstantBField bField(Vector3D(0., 0., 2_T));
+
+  // Set up EigenStepper
+  // EigenStepper<ConstantBField> stepper(bField);
+  EigenStepper<ConstantBField> stepper(bField);
+
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  // IP Estimator
+  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+
+  IPEstimator::Config ipEstCfg(bField, propagator);
+  IPEstimator ipEst(ipEstCfg);
+
+  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  AnnealingUtility::Config annealingConfig(temperatures);
+  AnnealingUtility annealingUtility(annealingConfig);
+
+  using Fitter = AdaptiveMultiVertexFitter<BoundParameters, Linearizer>;
+
+  Fitter::Config fitterCfg(ipEst);
+
+  fitterCfg.annealingTool = annealingUtility;
+
+  // Linearizer for BoundParameters type test
+  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer linearizer(ltConfig);
+
+  // Test smoothing
+  fitterCfg.doSmoothing = true;
+
+  Fitter fitter(fitterCfg);
+
+  // using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
+  using SeedFinder = GridDensityVertexFinder<2000, 35>;
+  SeedFinder::Config seedFinderCfg;
+  seedFinderCfg.cacheGridStateForTrackRemoval = true;
+
+  SeedFinder seedFinder(seedFinderCfg);
+
+  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer);
+
+  finderConfig.refitAfterBadVertex = false;
+  // TODO: test this as well!
+  // finderConfig.useBeamSpotConstraint = false;
+
+  Finder finder(finderConfig);
+  Finder::State state;
+
+  auto tracks = getAthenaTracks();
+
+  if (debugMode) {
+    std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
+    int maxCout = 10;
+    int count = 0;
+    for (const auto& trk : tracks) {
+      std::cout << count << ". track: " << std::endl;
+      std::cout << "params: " << trk << std::endl;
+      count++;
+      if (count == maxCout) {
+        break;
+      }
+    }
+  }
+
+  std::vector<const BoundParameters*> tracksPtr;
+  for (const auto& trk : tracks) {
+    tracksPtr.push_back(&trk);
+  }
+
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
+
+  Vector3D constraintPos{0._mm, 0._mm, 0_mm};
+  ActsSymMatrixD<3> constraintCov;
+  constraintCov << 0.000196000008145347238, 0, 0, 0, 0.000196000008145347238, 0,
+      0, 0, 2809;
+
+  Vertex<BoundParameters> constraintVtx;
+  constraintVtx.setPosition(constraintPos);
+  constraintVtx.setCovariance(constraintCov);
+
+  vertexingOptions.vertexConstraint = constraintVtx;
+
+  auto t1 = std::chrono::system_clock::now();
+  auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+  auto t2 = std::chrono::system_clock::now();
+
+  auto timediff =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+  if (!findResult.ok()) {
+    std::cout << findResult.error().message() << std::endl;
+  }
+
+  BOOST_CHECK(findResult.ok());
+
+  std::vector<Vertex<BoundParameters>> allVertices = *findResult;
+
+  if (debugMode) {
+    std::cout << "Time needed: " << timediff << " ms." << std::endl;
+    std::cout << "Number of vertices reconstructed: " << allVertices.size()
+              << std::endl;
+
+    int count = 0;
+    for (const auto& vtx : allVertices) {
+      count++;
+      std::cout << count << ". Vertex at position: " << vtx.position()[0]
+                << ", " << vtx.position()[1] << ", " << vtx.position()[2]
+                << std::endl;
+      std::cout << count << ". Vertex with cov: " << vtx.covariance()
+                << std::endl;
+      std::cout << "\t with n tracks: " << vtx.tracks().size() << std::endl;
+    }
+  }
+  // Test expected outcomes from athena implementation
+  // Number of reconstructed vertices
+  const int expNRecoVertices = 15;
+
+  // Vertex z positions of all found vertices
+  const std::vector<double> expAllVtxZPos{
+      -6.070_mm,   -12.0605_mm, -15.1093_mm, -27.6569_mm, -22.1054_mm,
+      -45.7010_mm, -5.0622_mm,  -26.5496_mm, -28.9597_mm, -37.7430_mm,
+      5.4828_mm,   -47.8939_mm, 2.5777_mm,   -0.2656_mm,  -39.8197_mm};
+
+  std::vector<bool> vtxFound(expAllVtxZPos.size(), false);
+
+  // Number of tracks of all vertices
+  const std::vector<int> expAllNTracks{4, 2, 3, 14, 5, 9, 8, 17,
+                                       7, 2, 2, 4,  2, 7, 5};
+
+  BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
+
+  for (auto vtx : allVertices) {
+    double vtxZ = vtx.position()[2];
+    double diffZ = 1e5;
+    int foundVtxIdx = -1;
+    for (unsigned int i = 0; i < expAllVtxZPos.size(); i++) {
+      if (not vtxFound[i]) {
+        if (std::abs(vtxZ - expAllVtxZPos[i]) < diffZ) {
+          diffZ = std::abs(vtxZ - expAllVtxZPos[i]);
+          foundVtxIdx = i;
+        }
+      }
+    }
+    if (diffZ < 0.5_mm) {
+      vtxFound[foundVtxIdx] = true;
+      CHECK_CLOSE_ABS(vtx.tracks().size(), expAllNTracks[foundVtxIdx], 1);
+    }
+  }
+  for (bool found : vtxFound) {
+    BOOST_CHECK_EQUAL(found, true);
   }
 }
 

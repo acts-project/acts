@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -113,6 +114,8 @@ class JsonGeometryConverter {
     std::string bin0key = "bin0";
     /// The bin1 key
     std::string bin1key = "bin1";
+    /// The bin2 key
+    std::string bin2key = "bin2";
     /// The type key -> proto, else
     std::string typekey = "type";
     /// The data key
@@ -122,7 +125,7 @@ class JsonGeometryConverter {
     /// The surface geoid key
     std::string surfacegeoidkey = "SGeoid";
     /// The mapping key, add surface to map if true
-    std::string mapkey = "matSurface";
+    std::string mapkey = "mapMaterial";
     /// The surface type key
     std::string surfacetypekey = "stype";
     /// The surface position key
@@ -144,6 +147,8 @@ class JsonGeometryConverter {
     bool processBoundaries = true;
     /// Steering to handle volume data
     bool processVolumes = true;
+    /// Steering to handle volume data
+    bool processDenseVolumes = false;
     /// Add proto material to all surfaces
     bool processnonmaterial = false;
     /// Write out data
@@ -199,6 +204,11 @@ class JsonGeometryConverter {
   /// @param material is the json part representing a material object
   const ISurfaceMaterial* jsonToSurfaceMaterial(const nlohmann::json& material);
 
+  /// Create the Volume Material from Json
+  /// - factory method, ownership given
+  /// @param material is the json part representing a material object
+  const IVolumeMaterial* jsonToVolumeMaterial(const nlohmann::json& material);
+
   /// Create the Material Matrix from Json
   ///
   /// @param data is the json part representing a material data array
@@ -215,6 +225,11 @@ class JsonGeometryConverter {
   /// @param the SurfaceMaterial
   nlohmann::json surfaceMaterialToJson(const ISurfaceMaterial& sMaterial);
 
+  /// VolumeMaterial to Json
+  ///
+  /// @param the VolumeMaterial
+  nlohmann::json volumeMaterialToJson(const IVolumeMaterial& vMaterial);
+
   /// Add surface information to json surface
   ///
   /// @param The json surface The surface
@@ -224,6 +239,11 @@ class JsonGeometryConverter {
   ///
   /// @param the Surface
   Acts::BinUtility DefaultBin(const Acts::Surface& surface);
+
+  /// Default BinUtility to create proto material
+  ///
+  /// @param the Volume
+  Acts::BinUtility DefaultBin(const Acts::TrackingVolume& volume);
 
   /// The config class
   Config m_cfg;

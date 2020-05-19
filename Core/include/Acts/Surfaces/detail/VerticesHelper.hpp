@@ -240,6 +240,30 @@ bool isInsideRectangle(const vertex_t& point, const vertex_t& lowerLeft,
          (lowerLeft[1] <= point[1]) && (point[1] < upperRight[1]);
 }
 
+/// This method checks if a cloud of points are on 2D hyper-plane in 3D space
+///
+/// @param vertices The list of vertices to test
+/// @param tolerance The allowed out of plane tolerance
+///
+/// It bails out at the first moment a point is outside the hyper plane
+/// @return boolean to indicate if all points are inside/outside
+static bool onHyperPlane(const std::vector<Vector3D>& vertices,
+                         double tolerance = s_onSurfaceTolerance) {
+  // Obvious always on one surface
+  if (vertices.size() < 4) {
+    return true;
+  }
+  // Create the hyperplane
+  auto hyperPlane = Eigen::Hyperplane<double, 3>::Through(
+      vertices[0], vertices[1], vertices[2]);
+  for (size_t ip = 3; ip < vertices.size(); ++ip) {
+    if (hyperPlane.absDistance(vertices[ip]) > tolerance) {
+      return false;
+    }
+  }
+  return true;
+}
+
 };  // namespace VerticesHelper
 
 }  // namespace detail

@@ -512,10 +512,14 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
 
         double hZ = cLayer->surfaceRepresentation().bounds().get(
             CylinderBounds::eHalfLengthZ);
-        takeSmaller(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
-        takeBigger(lConfig.rMax, rMaxC + m_cfg.layerEnvelopeR.second);
-        takeSmaller(lConfig.zMin, center.z() - hZ - m_cfg.layerEnvelopeZ);
-        takeBigger(lConfig.zMax, center.z() + hZ + m_cfg.layerEnvelopeZ);
+        lConfig.rMin =
+            std::min(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
+        lConfig.rMax =
+            std::max(lConfig.rMax, rMaxC + m_cfg.layerEnvelopeR.second);
+        lConfig.zMin =
+            std::min(lConfig.zMin, center.z() - hZ - m_cfg.layerEnvelopeZ);
+        lConfig.zMax =
+            std::max(lConfig.zMax, center.z() + hZ + m_cfg.layerEnvelopeZ);
       }
       // proceed further if it is a Disc layer
       const RadialBounds* dBounds = dynamic_cast<const RadialBounds*>(
@@ -526,22 +530,26 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
         double rMaxD = dBounds->rMax();
         double zMinD = center.z() - 0.5 * thickness;
         double zMaxD = center.z() + 0.5 * thickness;
-        takeSmaller(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
-        takeBigger(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
-        takeSmaller(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
-        takeBigger(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
+        lConfig.rMin =
+            std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
+        lConfig.rMax =
+            std::max(lConfig.rMax, rMaxD + m_cfg.layerEnvelopeR.second);
+        lConfig.zMin = std::min(lConfig.zMin, zMinD - m_cfg.layerEnvelopeZ);
+        lConfig.zMax = std::max(lConfig.zMax, zMaxD + m_cfg.layerEnvelopeZ);
       }
     }
     for (auto& volume : mtvVector) {
       const CylinderVolumeBounds* cvBounds =
           dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
       if (cvBounds != nullptr) {
-        takeSmaller(lConfig.rMin, cvBounds->get(CylinderVolumeBounds::eMinR));
-        takeBigger(lConfig.rMax, cvBounds->get(CylinderVolumeBounds::eMaxR));
-        takeSmaller(lConfig.zMin,
-                    -cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
-        takeBigger(lConfig.zMax,
-                   cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
+        lConfig.rMin =
+            std::min(lConfig.rMin, cvBounds->get(CylinderVolumeBounds::eMinR));
+        lConfig.rMax =
+            std::max(lConfig.rMax, cvBounds->get(CylinderVolumeBounds::eMaxR));
+        lConfig.zMin = std::min(
+            lConfig.zMin, -cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
+        lConfig.zMax = std::max(
+            lConfig.zMax, cvBounds->get(CylinderVolumeBounds::eHalfLengthZ));
       }
     }
   }

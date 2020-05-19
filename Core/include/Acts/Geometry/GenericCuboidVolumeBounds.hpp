@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -63,16 +63,18 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @return boolean indicating if the position is inside
   bool inside(const Vector3D& gpos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into Surfaces
-  /// the Volume can turn them into BoundarySurfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
   /// @param transform is the 3D transform to be applied to the boundary
   /// surfaces to position them in 3D space
-  /// @note this is factory method
+  ///
+  /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
-      const Transform3D* transform) const override;
+  OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -100,6 +102,6 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// Private helper method to contruct the Volume bounds
   /// to be called by the constructors, from the ordered input vertices
   void construct() noexcept(false);
-  ;
 };
+
 }  // namespace Acts

@@ -44,7 +44,6 @@ struct MaterialInteraction {
   /// Update the volume step to implment the proper step size
   bool updatedVolumeStep = false;
   /// The path correction factor due to non-zero incidence on the surface.
-  /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
   MaterialProperties materialProperties;
@@ -143,9 +142,8 @@ struct MaterialInteractor {
 
       // To integrate process noise, we need to transport
       // the covariance to the current position in space
-      // the 'true' indicates re-initializaiton of the further transport
       if (d.performCovarianceTransport) {
-        stepper.covarianceTransport(state.stepping, true);
+        stepper.covarianceTransport(state.stepping);
       }
       // Apply the material interactions
       d.updateState(state, stepper);
@@ -206,9 +204,6 @@ struct MaterialInteractor {
     mi.position = d.pos;
     mi.time = d.time;
     mi.direction = d.dir;
-    mi.sigmaPhi2 = d.variancePhi;
-    mi.sigmaTheta2 = d.varianceTheta;
-    mi.sigmaQoP2 = d.varianceQoverP;
     mi.surface = nullptr;
     mi.volume = d.volume;
     mi.pathCorrection = d.pathCorrection;

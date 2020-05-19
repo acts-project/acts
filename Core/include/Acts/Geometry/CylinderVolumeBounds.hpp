@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,8 +11,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -33,7 +31,7 @@ class IVisualization;
 
 /// @class CylinderVolumeBounds
 ///
-/// Bounds for a cylindrical Volume, the decomposeToSurfaces method creates a
+/// Bounds for a cylindrical Volume, the orientedSurfaces(..) method creates a
 /// vector of up to 6 surfaces:
 ///
 /// case A) 3 Surfaces (full cylindrical tube):
@@ -71,8 +69,6 @@ class IVisualization;
 //                          Rectangular Acts::PlaneSurface attached to
 ///                 [0] and [1] at positive \f$ \phi \f$
 ///
-///  @image html CylinderVolumeBounds_decomp.gif
-
 class CylinderVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
@@ -150,11 +146,18 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param tol is the tolerance for the check
   bool inside(const Vector3D& pos, double tol = 0.) const override;
 
-  /// Method to decompose the Bounds into boundarySurfaces
-  /// @param transformPtr is the transform where the boundary surfaces are
-  /// situated
-  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
-      const Transform3D* transformPtr = nullptr) const override;
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
+  ///
+  /// @param transform is the 3D transform to be applied to the boundary
+  /// surfaces to position them in 3D space
+  ///
+  /// It will throw an exception if the orientation prescription is not adequate
+  ///
+  /// @return a vector of surfaces bounding this volume
+  OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
@@ -185,11 +188,11 @@ class CylinderVolumeBounds : public VolumeBounds {
  private:
   /// The internal version of the bounds can be float/double
   std::array<double, eSize> m_values;
-  /// Bounds of the inner CylinderSurfaces
+  /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
-  /// Bounds of the inner CylinderSurfaces
+  /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_outerCylinderBounds{nullptr};
-  /// Bounds of the bottom/top DiscSurface
+  /// Bounds of the bottom/top Radial
   std::shared_ptr<const RadialBounds> m_discBounds{nullptr};
   /// Bounds of the sector planes
   std::shared_ptr<const PlanarBounds> m_sectorPlaneBounds{nullptr};
@@ -201,9 +204,11 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Helper method to create the surface bounds
   void buildSurfaceBounds();
 
-  /// templated dumpT method
-  template <class T>
-  T& dumpT(T& tstream) const;
+  /// Templated dumpT method
+  /// @tparam stream_t The type fo the dump stream
+  /// @param dt The dump stream object
+  template <class stream_t>
+  stream_t& dumpT(stream_t& dt) const;
 };
 
 inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
@@ -238,15 +243,15 @@ inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
   return VolumeBounds::binningBorder(bValue);
 }
 
-template <class T>
-T& CylinderVolumeBounds::dumpT(T& tstream) const {
-  tstream << std::setiosflags(std::ios::fixed);
-  tstream << std::setprecision(5);
-  tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
-             "averagePhi) = ";
-  tstream << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ)
-          << ", " << get(eHalfPhiSector) << get(eAveragePhi);
-  return tstream;
+template <class stream_t>
+stream_t& CylinderVolumeBounds::dumpT(stream_t& dt) const {
+  dt << std::setiosflags(std::ios::fixed);
+  dt << std::setprecision(5);
+  dt << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
+        "averagePhi) = ";
+  dt << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ) << ", "
+     << get(eHalfPhiSector) << get(eAveragePhi);
+  return dt;
 }
 
 inline std::vector<double> CylinderVolumeBounds::values() const {

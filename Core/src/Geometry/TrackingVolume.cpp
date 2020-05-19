@@ -6,16 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TrackingVolume.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include <functional>
 #include <utility>
 
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -112,7 +109,7 @@ const Acts::TrackingVolumeBoundaries& Acts::TrackingVolume::boundarySurfaces()
 void Acts::TrackingVolume::connectDenseBoundarySurfaces(
     MutableTrackingVolumeVector& confinedDenseVolumes) {
   if (!confinedDenseVolumes.empty()) {
-    BoundaryOrientation bo;
+    NavigationDirection navDir;
     // Walk over each dense volume
     for (auto& confDenseVol : confinedDenseVolumes) {
       // Walk over each boundary surface of the volume
@@ -129,15 +126,15 @@ void Acts::TrackingVolume::connectDenseBoundarySurfaces(
         auto mutableBs =
             std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
                 boundSur.at(i));
-        if (mutableBs->m_insideVolume != nullptr &&
-            mutableBs->m_outsideVolume == nullptr) {
-          bo = BoundaryOrientation::outsideVolume;
-          mutableBs->attachVolume(this, bo);
+        if (mutableBs->m_oppositeVolume != nullptr &&
+            mutableBs->m_alongVolume == nullptr) {
+          navDir = forward;
+          mutableBs->attachVolume(this, navDir);
         } else {
-          if (mutableBs->m_insideVolume == nullptr &&
-              mutableBs->m_outsideVolume != nullptr) {
-            bo = BoundaryOrientation::insideVolume;
-            mutableBs->attachVolume(this, bo);
+          if (mutableBs->m_oppositeVolume == nullptr &&
+              mutableBs->m_alongVolume != nullptr) {
+            navDir = backward;
+            mutableBs->attachVolume(this, navDir);
           }
         }
 
@@ -151,27 +148,23 @@ void Acts::TrackingVolume::connectDenseBoundarySurfaces(
 }
 
 void Acts::TrackingVolume::createBoundarySurfaces() {
-  // transform Surfaces To BoundarySurfaces
-  std::vector<std::shared_ptr<const Surface>> surfaces =
-      Volume::volumeBounds().decomposeToSurfaces(m_transform.get());
+  using Boundary = BoundarySurfaceT<TrackingVolume>;
 
-  // counter to flip the inner/outer position for Cylinders
-  int sfCounter = 0;
-  size_t sfNumber = surfaces.size();
+  // Transform Surfaces To BoundarySurfaces
+  auto orientedSurfaces =
+      Volume::volumeBounds().orientedSurfaces(m_transform.get());
 
-  for (auto& sf : surfaces) {
-    // flip inner/outer for cylinders
-    TrackingVolume* inner =
-        (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
-            ? nullptr
-            : this;
-    TrackingVolume* outer = (inner) != nullptr ? nullptr : this;
-    // create the boundary surface
-    m_boundarySurfaces.push_back(
-        std::make_shared<const BoundarySurfaceT<TrackingVolume>>(std::move(sf),
-                                                                 inner, outer));
-    // increase the counter
-    ++sfCounter;
+  m_boundarySurfaces.reserve(orientedSurfaces.size());
+  for (auto& osf : orientedSurfaces) {
+    TrackingVolume* opposite = nullptr;
+    TrackingVolume* along = nullptr;
+    if (osf.second == backward) {
+      opposite = this;
+    } else {
+      along = this;
+    }
+    m_boundarySurfaces.push_back(std::make_shared<const Boundary>(
+        std::move(osf.first), opposite, along));
   }
 }
 
@@ -192,8 +185,8 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
   Vector3D nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  BoundaryOrientation bOrientation =
-      (nvector.dot(distance) > 0.) ? outsideVolume : insideVolume;
+  NavigationDirection navDir =
+      (nvector.dot(distance) > 0.) ? forward : backward;
   // The easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -201,7 +194,7 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
     // the boundary orientation
     auto mutableBSurfaceMine =
         std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(bSurfaceMine);
-    mutableBSurfaceMine->attachVolume(neighbor, bOrientation);
+    mutableBSurfaceMine->attachVolume(neighbor, navDir);
     // Make sure you keep the boundary material if there
     const Surface& neighborSurface =
         neighbor->m_boundarySurfaces.at(bsfNeighbor)->surfaceRepresentation();
@@ -238,8 +231,8 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   Vector3D nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  BoundaryOrientation bOrientation =
-      (nvector.dot(distance) > 0.) ? outsideVolume : insideVolume;
+  NavigationDirection navDir =
+      (nvector.dot(distance) > 0.) ? forward : backward;
   // the easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -247,7 +240,7 @@ void Acts::TrackingVolume::glueTrackingVolumes(
     // the boundary orientation
     auto mutableBSurfaceMine =
         std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(bSurfaceMine);
-    mutableBSurfaceMine->attachVolumeArray(neighbors, bOrientation);
+    mutableBSurfaceMine->attachVolumeArray(neighbors, navDir);
     // now set it to the neighbor volumes - the optised way
     for (auto& nVolume : neighbors->arrayObjects()) {
       auto mutableNVolume = std::const_pointer_cast<TrackingVolume>(nVolume);
@@ -374,6 +367,15 @@ void Acts::TrackingVolume::closeGeometry(
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*thisVolume);
   }
+  if (thisVolume->volumeMaterial() == nullptr && thisVolume->motherVolume() &&
+      thisVolume->motherVolume()->volumeMaterial() != nullptr) {
+    auto protoMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(
+        thisVolume->motherVolume()->volumeMaterial());
+    if (protoMaterial == nullptr) {
+      thisVolume->assignVolumeMaterial(
+          thisVolume->motherVolume()->volumeMaterialSharedPtr());
+    }
+  }
 
   this->assignGeoID(volumeID);
   // loop over the boundary surfaces
@@ -429,8 +431,8 @@ void Acts::TrackingVolume::closeGeometry(
     for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
       mutableVolumesIter->setMotherVolume(this);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
 
@@ -438,8 +440,8 @@ void Acts::TrackingVolume::closeGeometry(
     for (auto& volumesIter : m_confinedDenseVolumes) {
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
       mutableVolumesIter->setMotherVolume(this);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
 }

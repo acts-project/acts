@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
                                                      magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
@@ -326,7 +327,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
                                                      magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPoint3dEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);

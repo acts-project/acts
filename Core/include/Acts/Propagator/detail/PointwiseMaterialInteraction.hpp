@@ -19,27 +19,40 @@ struct PointwiseMaterialInteraction {
   /// Data from the propagation state
   const Surface* surface;
 
-  const Vector3D pos;
-  const double time;
-  const Vector3D dir;
+  /// The particle position at the interaction.
+  const Vector3D pos = Vector3D(0., 0., 0);
+  /// The particle time at the interaction.
+  const double time = 0.0;
+  /// The particle direction at the interaction.
+  const Vector3D dir = Vector3D(0., 0., 0);
+  /// The particle momentum at the interaction
   const double momentum;
+  /// The particle charge
   const double q;
+  /// The particle q/p at the interaction
   const double qOverP;
-
+  /// The particle mass
   const double mass;
+  /// The particle pdg
   const int pdg;
+  /// The covariance transport decision at the interaction
   const bool performCovarianceTransport;
+  /// The navigation direction
   const NavigationDirection nav;
 
-  /// Data evaluated within this struct
+  /// The effective, passed material properties including the path correction.
   MaterialProperties slab;
+  /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection;
-
+  /// Expected phi variance due to the interactions.
   double variancePhi = 0.;
+  /// Expected theta variance due to the interactions.
   double varianceTheta = 0.;
+  /// Expected q/p variance due to the interactions.
   double varianceQoverP = 0.;
-
+  /// The energy change due to the interaction.
   double Eloss = 0.;
+  /// The momentum after the interaction
   double nextP;
 
   /// @brief Contructor
@@ -124,12 +137,14 @@ struct PointwiseMaterialInteraction {
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
+    // Update covariance matrix
+    NoiseUpdateMode mode = (nav == forward) ? addNoise : removeNoise;
     state.stepping.cov(ePHI, ePHI) =
-        updateVariance(state.stepping.cov(ePHI, ePHI), variancePhi);
+        updateVariance(state.stepping.cov(ePHI, ePHI), variancePhi, mode);
     state.stepping.cov(eTHETA, eTHETA) =
-        updateVariance(state.stepping.cov(eTHETA, eTHETA), varianceTheta);
+        updateVariance(state.stepping.cov(eTHETA, eTHETA), varianceTheta, mode);
     state.stepping.cov(eQOP, eQOP) =
-        updateVariance(state.stepping.cov(eQOP, eQOP), varianceQoverP);
+        updateVariance(state.stepping.cov(eQOP, eQOP), varianceQoverP, mode);
   }
 
  private:

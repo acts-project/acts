@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// ConeSurface.ipp, Acts project
-///////////////////////////////////////////////////////////////////
-
 inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction) const {
