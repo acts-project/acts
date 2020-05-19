@@ -272,6 +272,17 @@ class LineSurface : public Surface {
       const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
       const Vector3D& position, const Vector3D& direction) const final;
 
+  /// Calculate the derivative of bound track parameters local position w.r.t.
+  /// position in local 3D Cartesian coordinates
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position of the paramters in global
+  ///
+  /// @return Derivative of bound local position w.r.t. position in local 3D
+  /// cartesian coordinates
+  const Local3DToBoundLocalMatrix local3DToBoundLocalDerivative(
+      const GeometryContext& gctx, const Vector3D& position) const final;
+
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
 
