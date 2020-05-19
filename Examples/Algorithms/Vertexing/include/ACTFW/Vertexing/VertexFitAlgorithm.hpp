@@ -29,6 +29,10 @@ class VertexFitAlgorithm : public FW::BareAlgorithm {
 
     bool doConstrainedFit = false;
 
+    // Max. transversal distance to beam axis for still
+    // allowing vertices to be fit
+    double maxTransFitDistance = 4_mm;
+
     /// Vertex constraint covariance matrix
     Acts::ActsSymMatrixD<3> constraintCov =
         Acts::Vector3D(3_mm, 3_mm, 10_mm).asDiagonal();

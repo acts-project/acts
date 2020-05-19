@@ -9,8 +9,8 @@
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
-    -> Result<std::vector<Vertex<InputTrack_t>>> {
+    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Original tracks
   const std::vector<const InputTrack_t*>& origTracks = trackVector;
   // Tracks for seeding
@@ -151,7 +151,8 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
     const std::vector<const InputTrack_t*>& seedTracks,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<Vertex<InputTrack_t>> {
-  auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions);
+  typename sfinder_t::State state;
+  auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions, state);
   if (res.ok()) {
     auto vertexCollection = *res;
     if (vertexCollection.empty()) {

@@ -1,6 +1,6 @@
 # Full chain examples for development and (manual) tests
 
-**Warning** This is a set of internal tools used for the development of the
+**Warning** This is a set of internal tools used for the development of the core
 library. This is **absolutely not** intended for production use. Only the final
 build artifacts are installed; the code is not.
 

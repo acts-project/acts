@@ -39,7 +39,7 @@ option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 # other options
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except documentation)" OFF)
-option(ACTS_BUILD_DOC "Build documentation" OFF)
+option(ACTS_BUILD_DOCS "Build documentation" OFF)
 
 # handle option inter-dependencies and the everything flag
 # DD4hep and HepMC3 are excluded from the EVERYTHING option for now since
@@ -159,8 +159,9 @@ endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   find_package(Pythia8 REQUIRED)
 endif()
-if(ACTS_BUILD_DOC)
+if(ACTS_BUILD_DOCS)
   find_package(Doxygen 1.8.11 REQUIRED)
+  find_package(Sphinx REQUIRED)
 endif()
 
 # core library, core plugins, and other components
@@ -178,7 +179,7 @@ endif()
 add_subdirectory(Tests)
 
 # documentation
-add_subdirectory_if(doc ACTS_BUILD_DOC)
+add_subdirectory_if(docs ACTS_BUILD_DOCS)
 
 # create cmake configuration files and environment setup script
 include(ActsCreateCMakeConfig)

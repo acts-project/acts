@@ -61,6 +61,17 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
   for (auto& vertexAndTracks : input) {
     const auto& inputTrackCollection = vertexAndTracks.tracks;
 
+    // Only fit vertices where true vertex is indeed close to beam line
+    // This removed secondaries and odd vertices that are not wanted in
+    // this example
+    if (std::sqrt(vertexAndTracks.vertex.position().x() *
+                      vertexAndTracks.vertex.position().x() +
+                  vertexAndTracks.vertex.position().y() *
+                      vertexAndTracks.vertex.position().y()) >
+        m_cfg.maxTransFitDistance) {
+      continue;
+    }
+
     std::vector<const Acts::BoundParameters*> inputTrackPtrCollection;
     for (const auto& trk : inputTrackCollection) {
       inputTrackPtrCollection.push_back(&trk);
@@ -80,6 +91,7 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
         fittedVertex = *fitRes;
       } else {
         ACTS_ERROR("Error in vertex fit.");
+        ACTS_ERROR(fitRes.error().message());
       }
     } else {
       // Vertex constraint
@@ -97,7 +109,8 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
       if (fitRes.ok()) {
         fittedVertex = *fitRes;
       } else {
-        ACTS_ERROR("Error in vertex fit.");
+        ACTS_ERROR("Error in vertex fit with constraint.");
+        ACTS_ERROR(fitRes.error().message());
       }
     }
 

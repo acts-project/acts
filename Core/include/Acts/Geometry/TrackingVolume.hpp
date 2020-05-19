@@ -6,14 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TrackingVolume.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
-#include <functional>
-#include <map>
-#include <string>
+
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
@@ -27,6 +21,10 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
+
+#include <functional>
+#include <map>
+#include <string>
 
 namespace Acts {
 
@@ -51,7 +49,7 @@ using LayerVector = std::vector<LayerPtr>;
 // Intersection with Layer
 using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
-// full intersection with surface
+// Full intersection with surface
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
 
@@ -80,13 +78,10 @@ class TrackingVolume : public Volume {
   friend class TrackingGeometry;
 
  public:
-  /// Destructor
   ~TrackingVolume() override;
 
-  /// Forbidden copy constructor - deleted
   TrackingVolume(const TrackingVolume&) = delete;
 
-  /// Forbidden assignment - deleted
   TrackingVolume& operator=(const TrackingVolume&) = delete;
 
   /// Factory constructor for a container TrackingVolume

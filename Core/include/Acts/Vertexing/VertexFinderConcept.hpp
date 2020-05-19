@@ -19,18 +19,23 @@ namespace Acts {
 namespace concept {
   namespace VertexFinder {
 
+  template <typename T>
+  using state_t = typename T::State;
+
   METHOD_TRAIT(find_t, find);
 
   // clang-format off
     template <typename S>
       struct VertexFinderConcept {
+        constexpr static bool state_exists = exists<state_t, S>;
+        static_assert(state_exists, "State type not found");
         
         constexpr static bool find_exists = has_method<const S, Result<std::vector<Vertex<typename S::InputTrack_t>>>,
          find_t, const std::vector<const typename S::InputTrack_t*>&, 
-         const VertexingOptions<typename S::InputTrack_t>&>;
+         const VertexingOptions<typename S::InputTrack_t>&, typename S::State&>;
         static_assert(find_exists, "find method not found");
 
-        constexpr static bool value = require<find_exists>;
+        constexpr static bool value = require<state_exists, find_exists>;
       };
   // clang-format on
   }  // namespace VertexFinder

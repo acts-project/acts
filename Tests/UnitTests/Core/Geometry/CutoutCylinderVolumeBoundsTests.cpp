@@ -171,14 +171,15 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
   std::vector<IdentifiedPolyderon> tPolyhedrons;
 
-  auto combineAndDecompose = [&](const SurfacePtrVector& surfaces,
+  auto combineAndDecompose = [&](const OrientedSurfaces& surfaces,
                                  const std::string& name) -> void {
     std::string writeBase = std::string("CutoutCylinderVolumeBounds") + name;
 
     Polyhedron phCombined;
     size_t is = 0;
     for (const auto& sf : surfaces) {
-      Polyhedron phComponent = sf->polyhedronRepresentation(tgContext, 72);
+      Polyhedron phComponent =
+          sf.first->polyhedronRepresentation(tgContext, 72);
       phCombined.merge(phComponent);
       tPolyhedrons.push_back(
           {writeBase + std::string("_comp_") + std::to_string(is++), false,
@@ -192,10 +193,42 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   CHECK_CLOSE_ABS(box.min(), Vector3D(-15, -15, -30), 1e-6);
   CHECK_CLOSE_ABS(box.max(), Vector3D(15, 15, 30), 1e-6);
 
-  auto ccvbSurfaces = ccvb.decomposeToSurfaces();
+  auto ccvbSurfaces = ccvb.orientedSurfaces(nullptr);
   combineAndDecompose(ccvbSurfaces, "");
   ObjTestWriter::writeObj("CutoutCylinderVolumeBounds_BB", box);
   ObjTestWriter::writeObj(tPolyhedrons);
+}
+
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
+  GeometryContext tgContext = GeometryContext();
+
+  CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
+
+  auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(nullptr);
+  BOOST_TEST(ccvbOrientedSurfaces.size(), 8);
+
+  auto geoCtx = GeometryContext();
+  Vector3D xaxis(1., 0., 0.);
+  Vector3D yaxis(0., 1., 0.);
+  Vector3D zaxis(0., 0., 1.);
+
+  for (auto& os : ccvbOrientedSurfaces) {
+    auto onSurface = os.first->binningPosition(geoCtx, binR);
+    auto osNormal = os.first->normal(geoCtx, onSurface);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideCcvb = onSurface + nDir * osNormal;
+    auto outsideCCvb = onSurface - nDir * osNormal;
+
+    BOOST_CHECK(ccvb.inside(insideCcvb));
+    BOOST_CHECK(!ccvb.inside(outsideCCvb));
+
+    // Test the orientation of the boundary surfaces
+    auto rot = os.first->transform(geoCtx).rotation();
+    BOOST_CHECK(rot.col(0).isApprox(xaxis));
+    BOOST_CHECK(rot.col(1).isApprox(yaxis));
+    BOOST_CHECK(rot.col(2).isApprox(zaxis));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

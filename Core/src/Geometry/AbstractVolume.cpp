@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// AbstractVolume.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include <iostream>
 #include <utility>
@@ -32,25 +28,22 @@ Acts::AbstractVolume::boundarySurfaces() const {
 }
 
 void Acts::AbstractVolume::createBoundarySurfaces() {
-  // transform Surfaces To BoundarySurfaces
-  std::vector<std::shared_ptr<const Surface>> surfaces =
-      Volume::volumeBounds().decomposeToSurfaces(m_transform.get());
+  using Boundary = BoundarySurfaceT<AbstractVolume>;
 
-  // counter to flip the inner/outer position for Cylinders
-  int sfCounter = 0;
-  size_t sfNumber = surfaces.size();
+  // Transform Surfaces To BoundarySurfaces
+  auto orientedSurfaces =
+      Volume::volumeBounds().orientedSurfaces(m_transform.get());
 
-  for (auto& sf : surfaces) {
-    // flip inner/outer for cylinders
-    AbstractVolume* inner =
-        (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
-            ? nullptr
-            : this;
-    AbstractVolume* outer = (inner) != nullptr ? nullptr : this;
-    // create the boundary surface
-    BoundarySurfacePtr bSurface =
-        std::make_shared<const BoundarySurfaceT<AbstractVolume>>(std::move(sf),
-                                                                 inner, outer);
-    m_boundarySurfaces.push_back(bSurface);
+  m_boundarySurfaces.reserve(orientedSurfaces.size());
+  for (auto& osf : orientedSurfaces) {
+    AbstractVolume* opposite = nullptr;
+    AbstractVolume* along = nullptr;
+    if (osf.second == backward) {
+      opposite = this;
+    } else {
+      along = this;
+    }
+    m_boundarySurfaces.push_back(std::make_shared<const Boundary>(
+        std::move(osf.first), opposite, along));
   }
 }

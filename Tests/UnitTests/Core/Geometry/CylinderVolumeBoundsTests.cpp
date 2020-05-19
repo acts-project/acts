@@ -33,19 +33,19 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
 
   // Test different construciton modes: solid
   CylinderVolumeBounds solidCylinder(0., rmax, halfz);
-  BOOST_CHECK_EQUAL(solidCylinder.decomposeToSurfaces().size(), 3);
+  BOOST_CHECK_EQUAL(solidCylinder.orientedSurfaces().size(), 3);
 
   // Test different construciton modes: sectoral solid
   CylinderVolumeBounds solidCylinderSector(0., rmax, halfz, halfphi);
-  BOOST_CHECK_EQUAL(solidCylinderSector.decomposeToSurfaces().size(), 5);
+  BOOST_CHECK_EQUAL(solidCylinderSector.orientedSurfaces().size(), 5);
 
   // Test different construciton modes: tube
   CylinderVolumeBounds tubeCylinder(rmin, rmax, halfz);
-  BOOST_CHECK_EQUAL(tubeCylinder.decomposeToSurfaces().size(), 4);
+  BOOST_CHECK_EQUAL(tubeCylinder.orientedSurfaces().size(), 4);
 
   // Test different construciton modes: sectoral tube
   CylinderVolumeBounds tubeCylinderSector(rmin, rmax, halfz, halfphi);
-  BOOST_CHECK_EQUAL(tubeCylinderSector.decomposeToSurfaces().size(), 6);
+  BOOST_CHECK_EQUAL(tubeCylinderSector.orientedSurfaces().size(), 6);
 
   CylinderVolumeBounds original(rmin, rmax, halfz, halfphi, avgphi);
 
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsAccess) {
   BOOST_CHECK_EQUAL(cvBounds.get(CylinderVolumeBounds::eAveragePhi), avgphi);
 }
 
-/// Unit test for testing the decomposeToSurfaces() function
-BOOST_DATA_TEST_CASE(CylinderVolumeBoundsDecomposeToSurfaces,
+/// Unit test for testing the orientedSurfaces() function
+BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
                      bdata::random(-M_PI, M_PI) ^ bdata::random(-M_PI, M_PI) ^
                          bdata::random(-M_PI, M_PI) ^ bdata::random(-10., 10.) ^
                          bdata::random(-10., 10.) ^ bdata::random(-10., 10.) ^
@@ -174,21 +174,24 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsDecomposeToSurfaces,
   auto transformPtr =
       std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
   // get the boundary surfaces
-  std::vector<std::shared_ptr<const Acts::Surface>> boundarySurfaces =
-      cylBounds.decomposeToSurfaces(transformPtr.get());
+  auto boundarySurfaces = cylBounds.orientedSurfaces(transformPtr.get());
   // Test
 
   // check if difference is halfZ - sign and direction independent
-  CHECK_CLOSE_REL((pos - boundarySurfaces.at(0)->center(tgContext)).norm(),
-                  cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
-  CHECK_CLOSE_REL((pos - boundarySurfaces.at(1)->center(tgContext)).norm(),
-                  cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
+  CHECK_CLOSE_REL(
+      (pos - boundarySurfaces.at(0).first->center(tgContext)).norm(),
+      cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
+  CHECK_CLOSE_REL(
+      (pos - boundarySurfaces.at(1).first->center(tgContext)).norm(),
+      cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   // transform to local
-  double posDiscPosZ =
-      (transformPtr->inverse() * boundarySurfaces.at(1)->center(tgContext)).z();
+  double posDiscPosZ = (transformPtr->inverse() *
+                        boundarySurfaces.at(1).first->center(tgContext))
+                           .z();
   double centerPosZ = (transformPtr->inverse() * pos).z();
-  double negDiscPosZ =
-      (transformPtr->inverse() * boundarySurfaces.at(0)->center(tgContext)).z();
+  double negDiscPosZ = (transformPtr->inverse() *
+                        boundarySurfaces.at(0).first->center(tgContext))
+                           .z();
   // check if center of disc boundaries lies in the middle in z
   BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
   BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
@@ -204,32 +207,33 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsDecomposeToSurfaces,
   // positive disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transformPtr->rotation().col(2).dot(
-          boundarySurfaces.at(1)->normal(tgContext, Acts::Vector2D(0., 0.))),
+      transformPtr->rotation().col(2).dot(boundarySurfaces.at(1).first->normal(
+          tgContext, Acts::Vector2D(0., 0.))),
       1., 1e-12);
-  // negative disc durface should point in negative direction in the frame of
+  // negative disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transformPtr->rotation().col(2).dot(
-          boundarySurfaces.at(0)->normal(tgContext, Acts::Vector2D(0., 0.))),
-      -1., 1e-12);
+      transformPtr->rotation().col(2).dot(boundarySurfaces.at(0).first->normal(
+          tgContext, Acts::Vector2D(0., 0.))),
+      1., 1e-12);
   // test in r
-  CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(tgContext), pos, 1e-12);
-  CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(tgContext), pos, 1e-12);
+  CHECK_CLOSE_REL(boundarySurfaces.at(3).first->center(tgContext), pos, 1e-12);
+  CHECK_CLOSE_REL(boundarySurfaces.at(2).first->center(tgContext), pos, 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
   std::vector<IdentifiedPolyderon> tPolyhedrons;
 
-  auto combineAndDecompose = [&](const SurfacePtrVector& surfaces,
+  auto combineAndDecompose = [&](const OrientedSurfaces& surfaces,
                                  const std::string& name) -> void {
     std::string writeBase = std::string("CylinderVolumeBounds_") + name;
 
     Polyhedron phCombined;
     size_t is = 0;
     for (const auto& sf : surfaces) {
-      Polyhedron phComponent = sf->polyhedronRepresentation(tgContext, 72);
+      Polyhedron phComponent =
+          sf.first->polyhedronRepresentation(tgContext, 72);
       phCombined.merge(phComponent);
       tPolyhedrons.push_back(
           {writeBase + std::string("_comp_") + std::to_string(is++), false,
@@ -241,7 +245,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   float tol = 1e-4;
 
   CylinderVolumeBounds cvb(0., 5, 10);
-  auto cvbSurfaces = cvb.decomposeToSurfaces();
+  auto cvbSurfaces = cvb.orientedSurfaces();
   combineAndDecompose(cvbSurfaces, "Solid");
   auto bb = cvb.boundingBox();
   ObjTestWriter::writeObj("CylinderVolumeBounds_Solid_BB", bb);
@@ -263,7 +267,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   BOOST_CHECK_EQUAL(bb.max(), Vector3D(8, 8, 12));
   BOOST_CHECK_EQUAL(bb.min(), Vector3D(-8, -8, -12));
-  cvbSurfaces = cvb.decomposeToSurfaces();
+  cvbSurfaces = cvb.orientedSurfaces();
   combineAndDecompose(cvbSurfaces, "Tube");
   ObjTestWriter::writeObj("CylinderVolumeBounds_Tube_BB", bb);
 
@@ -274,7 +278,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   CHECK_CLOSE_ABS(bb.max(), Vector3D(8, 8 * std::sin(angle), 13), tol);
   CHECK_CLOSE_ABS(
       bb.min(), Vector3D(5 * std::cos(angle), -8 * std::sin(angle), -13), tol);
-  cvbSurfaces = cvb.decomposeToSurfaces();
+  cvbSurfaces = cvb.orientedSurfaces();
   combineAndDecompose(cvbSurfaces, "TubeSector");
   ObjTestWriter::writeObj("CylinderVolumeBounds_TubeSector_BB", bb);
 
@@ -291,6 +295,38 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   CHECK_CLOSE_ABS(bb.max(), Vector3D(8.40007, 15.2828, 3.88911), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3D(-7.27834, -8.12028, -14.2182), tol);
   ObjTestWriter::writeObj(tPolyhedrons);
+}
+
+BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
+  GeometryContext tgContext = GeometryContext();
+
+  CylinderVolumeBounds cvb(5, 10, 20);
+
+  auto cvbOrientedSurfaces = cvb.orientedSurfaces(nullptr);
+  BOOST_TEST(cvbOrientedSurfaces.size(), 4);
+
+  auto geoCtx = GeometryContext();
+  Vector3D xaxis(1., 0., 0.);
+  Vector3D yaxis(0., 1., 0.);
+  Vector3D zaxis(0., 0., 1.);
+
+  for (auto& os : cvbOrientedSurfaces) {
+    auto onSurface = os.first->binningPosition(geoCtx, binR);
+    auto osNormal = os.first->normal(geoCtx, onSurface);
+    double nDir = (double)os.second;
+    // Check if you step inside the volume with the oriented normal
+    auto insideCvb = onSurface + nDir * osNormal;
+    auto outsideCvb = onSurface - nDir * osNormal;
+
+    BOOST_CHECK(cvb.inside(insideCvb));
+    BOOST_CHECK(!cvb.inside(outsideCvb));
+
+    // Test the orientation of the boundary surfaces
+    auto rot = os.first->transform(geoCtx).rotation();
+    BOOST_CHECK(rot.col(0).isApprox(xaxis));
+    BOOST_CHECK(rot.col(1).isApprox(yaxis));
+    BOOST_CHECK(rot.col(2).isApprox(zaxis));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

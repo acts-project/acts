@@ -26,15 +26,10 @@ class BoundaryCheck;
 /// @class ApproachDescriptor
 ///
 /// Virtual base class to decide and return which approaching surface to be
-/// taken,
-/// the surfaces are std::shared_ptr, as they can be the boundary surfaces of
-/// the
-/// representingVolume of the Layer
-///
-///
+/// taken, the surfaces are std::shared_ptr, as they can be the boundary
+/// surfaces of the representingVolume of the Layer
 class ApproachDescriptor {
  public:
-  /// Default constructor
   ApproachDescriptor() = default;
 
   /// Virtual destructor

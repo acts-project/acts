@@ -24,7 +24,17 @@ class VolumeBounds;
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 using SurfacePtr = std::shared_ptr<const Surface>;
-using SurfacePtrVector = std::vector<SurfacePtr>;
+using OrientedSurface = std::pair<SurfacePtr, NavigationDirection>;
+using OrientedSurfaces = std::vector<OrientedSurface>;
+
+// Planar definitions to help construct the boundary surfaces
+static const Transform3D s_planeXY = Transform3D::Identity();
+static const Transform3D s_planeYZ =
+    AngleAxis3D(0.5 * M_PI, Vector3D::UnitY()) *
+    AngleAxis3D(0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
+static const Transform3D s_planeZX =
+    AngleAxis3D(-0.5 * M_PI, Vector3D::UnitX()) *
+    AngleAxis3D(-0.5 * M_PI, Vector3D::UnitZ()) * Transform3D::Identity();
 
 /// @class VolumeBounds
 ///
@@ -32,14 +42,12 @@ using SurfacePtrVector = std::vector<SurfacePtr>;
 ///
 /// Acts::VolumeBounds are a set of up to six confining Surfaces that are stored
 /// in a std::vector.
-/// Each type of Acts::VolumeBounds has to implement a decomposeToSurfaces() and
+/// Each type of Acts::VolumeBounds has to implement a orientedSurfaces() and
 /// a inside() method.
-///
-/// The orientation of the Surfaces are in a way that the normal vector points
-/// to the outside world.
 ///
 /// The Volume, retrieving a set of Surfaces from the VolumeBounds, can turn the
 /// Surfaces into BoundarySurfaces.
+
 class VolumeBounds {
  public:
   // @enum BoundsType
@@ -78,15 +86,18 @@ class VolumeBounds {
   /// @return boolean indicating if the position is inside
   virtual bool inside(const Vector3D& gpos, double tol = 0.) const = 0;
 
-  /// Method to decompose the Bounds into Surfaces
-  /// the Volume can turn them into BoundarySurfaces
+  /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
+  /// according navigation direction into the volume given the normal
+  /// vector on the surface
   ///
   /// @param transform is the 3D transform to be applied to the boundary
   /// surfaces to position them in 3D space
   ///
+  /// It will throw an exception if the orientation prescription is not adequate
+  ///
   /// @return a vector of surfaces bounding this volume
-  virtual SurfacePtrVector decomposeToSurfaces(
-      const Transform3D* transform) const = 0;
+  virtual OrientedSurfaces orientedSurfaces(
+      const Transform3D* transform = nullptr) const = 0;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

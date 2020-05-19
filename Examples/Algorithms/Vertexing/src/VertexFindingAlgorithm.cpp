@@ -81,6 +81,7 @@ FW::ProcessCode FWE::VertexFindingAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
+  VertexFinder::State state;
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // Setup containers
@@ -112,7 +113,7 @@ FW::ProcessCode FWE::VertexFindingAlgorithm::execute(
   }
 
   // Find vertices
-  auto res = finder.find(inputTrackPtrCollection, finderOpts);
+  auto res = finder.find(inputTrackPtrCollection, finderOpts, state);
 
   if (res.ok()) {
     // Retrieve vertices found by vertex finder
