@@ -140,16 +140,18 @@ inline Intersection DiscSurface::intersectionEstimate(
 inline const Local3DToBoundLocalMatrix
 DiscSurface::local3DToBoundLocalDerivative(const GeometryContext& gctx,
                                            const Vector3D& position) const {
+  using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coorinates
   const Vector3D localPos = sTransform.inverse() * position;
+  const double lr = perp(localPos);
   const double lphi = phi(localPos);
   const double lcphi = cos(lphi);
   const double lsphi = sin(lphi);
   Local3DToBoundLocalMatrix loc3DToLocBound = Local3DToBoundLocalMatrix::Zero();
-  loc3DToLocBound << lcphi, lsphi, 0, -lsphi, lcphi, 0;
+  loc3DToLocBound << lcphi, lsphi, 0, -lsphi / lr, lcphi / lr, 0;
 
   return loc3DToLocBound;
 }

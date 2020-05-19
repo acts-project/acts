@@ -115,3 +115,25 @@ inline SurfaceIntersection ConeSurface::intersect(
   }
   return cIntersection;
 }
+
+inline const Local3DToBoundLocalMatrix
+ConeSurface::local3DToBoundLocalDerivative(const GeometryContext& gctx,
+                                           const Vector3D& position) const {
+  using VectorHelpers::perp;
+  using VectorHelpers::phi;
+  // The local frame transform
+  const auto& sTransform = transform(gctx);
+  // calculate the transformation to local coorinates
+  const Vector3D localPos = sTransform.inverse() * position;
+  const double lr = perp(localPos);
+  const double lphi = phi(localPos);
+  const double lcphi = cos(phi);
+  const double lsphi = sin(lphi);
+  // Solve for radius R
+  const double R = localPos.z() * bounds().tanAlpha();
+  Local3DToBoundLocalMatrix loc3DToLocBound = Local3DToBoundLocalMatrix::Zero();
+  loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr,
+      lphi * bounds().tanAlpha(), 0, 0, 1;
+
+  return loc3DToLocBound;
+}
