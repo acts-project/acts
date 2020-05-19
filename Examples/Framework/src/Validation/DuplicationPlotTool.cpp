@@ -76,16 +76,17 @@ void FW::DuplicationPlotTool::write(
 
 void FW::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
-    const ActsFatras::Particle& truthParticle, bool status) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
-  const auto t_pT = truthParticle.transverseMomentum();
+    const Acts::BoundParameters& fittedParameters, bool status) const {
+  const auto& momentum = fittedParameters.momentum();
+  const double fit_phi = phi(momentum);
+  const double fit_eta = eta(momentum);
+  const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_pT, t_pT,
+  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_pT, fit_pT,
                        status);
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_eta, t_eta,
+  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_eta, fit_eta,
                        status);
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_phi, t_phi,
+  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_phi, fit_phi,
                        status);
 }
 
