@@ -96,7 +96,7 @@ class DD4hepGeometryService : public BareService {
   /// The config class
   Config m_cfg;
   /// Pointer to the interface to the DD4hep geometry
-  dd4hep::Detector* m_lcdd;
+  dd4hep::Detector* m_lcdd = nullptr;
   /// The world DD4hep DetElement
   dd4hep::DetElement m_dd4hepGeometry;
   /// The ACTS TrackingGeometry

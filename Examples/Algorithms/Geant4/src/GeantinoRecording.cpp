@@ -22,10 +22,10 @@
 
 using namespace ActsExamples;
 
-GeantinoRecording::GeantinoRecording(const GeantinoRecording::Config& cfg,
+GeantinoRecording::GeantinoRecording(GeantinoRecording::Config&& cfg,
                                      Acts::Logging::Level lvl)
     : BareAlgorithm("GeantinoRecording", lvl),
-      m_cfg(cfg),
+      m_cfg(std::move(cfg)),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.outputMaterialTracks.empty()) {
     throw std::invalid_argument("Missing output material tracks collection");
@@ -34,7 +34,7 @@ GeantinoRecording::GeantinoRecording(const GeantinoRecording::Config& cfg,
     throw std::invalid_argument("Missing detector construction object");
   }
 
-  m_runManager->SetUserInitialization(m_cfg.detectorConstruction.get());
+  m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new RunAction());
   m_runManager->SetUserAction(new EventAction());
