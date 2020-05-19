@@ -23,8 +23,7 @@ struct SpacePoint {
 };
 
 bool operator==(SpacePoint a, SpacePoint b) {
-  if (a.m_x == b.m_x && a.m_y == b.m_y && a.m_z == b.m_z &&
-      a.surface == b.surface) {
+  if (a.m_x == b.m_x && a.m_y == b.m_y && a.m_z == b.m_z) {
     return true;
   } else {
     return false;
