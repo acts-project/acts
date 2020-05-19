@@ -36,7 +36,7 @@ class GeantinoRecording final : public FW::BareAlgorithm {
     /// Output collection for the generated material tracks.
     std::string outputMaterialTracks = "geant-material-tracks";
     /// Detector construction object.
-    std::shared_ptr<G4VUserDetectorConstruction> detectorConstruction;
+    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction;
     /// The number of tracks per event.
     size_t tracksPerEvent = 0;
     /// random number seed 1.
@@ -45,7 +45,7 @@ class GeantinoRecording final : public FW::BareAlgorithm {
     int seed2 = 45678;
   };
 
-  GeantinoRecording(const Config& cfg, Acts::Logging::Level lvl);
+  GeantinoRecording(Config&& cfg, Acts::Logging::Level lvl);
   ~GeantinoRecording();
 
   FW::ProcessCode execute(const FW::AlgorithmContext& ctx) const final override;

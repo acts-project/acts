@@ -30,7 +30,7 @@ struct LinCircle {
   float U;
   float V;
 };
-template <typename external_spacepoint_t>
+template <typename external_spacepoint_t, typename platform_t = void*>
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
@@ -44,9 +44,9 @@ class Seedfinder {
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
   Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t>&) = delete;
-  Seedfinder<external_spacepoint_t>& operator=(
-      const Seedfinder<external_spacepoint_t>&) = delete;
+  Seedfinder(const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
+  Seedfinder<external_spacepoint_t, platform_t>& operator=(
+      const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.

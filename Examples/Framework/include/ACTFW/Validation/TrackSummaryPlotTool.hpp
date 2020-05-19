@@ -13,6 +13,7 @@
 #include <string>
 
 #include "ACTFW/Utilities/Helpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -55,16 +56,16 @@ class TrackSummaryPlotTool {
   /// @param trackSummaryPlotCache the cache for track info plots
   void book(TrackSummaryPlotCache& trackSummaryPlotCache) const;
 
-  /// @brief fill track info
+  /// @brief fill reco track info w.r.t. fitted track parameters
   ///
   /// @param trackSummaryPlotCache cache object for track info plots
-  /// @param truthParticle truth particle for this track
+  /// @param fittedParameters fitted track parameters of this track
   /// @param nStates number of track states
   /// @param nMeasurements number of measurements
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
   void fill(TrackSummaryPlotCache& trackSummaryPlotCache,
-            const ActsFatras::Particle& truthParticle, size_t nStates,
+            const Acts::BoundParameters& fittedParameters, size_t nStates,
             size_t nMeasurments, size_t Outliers, size_t nHoles) const;
 
   /// @brief write the track info plots to file

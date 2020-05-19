@@ -94,5 +94,10 @@ struct SeedfinderConfig {
   float pTPerHelixRadius = 0;
   float minHelixDiameter2 = 0;
   float pT2perRadius = 0;
+
+  // only for Cuda plugin
+  int maxBlockSize = 1024;
+  int nTrplPerSpBLimit = 100;
+  int nAvgTrplPerSpBLimit = 2;
 };
 }  // namespace Acts

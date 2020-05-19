@@ -13,6 +13,7 @@
 #include <string>
 
 #include "ACTFW/Utilities/Helpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -57,16 +58,15 @@ class DuplicationPlotTool {
   /// @param duplicationPlotCache the cache for duplication plots
   void book(DuplicationPlotCache& duplicationPlotCache) const;
 
-  /// @brief fill duplication plots
+  /// @brief fill duplication rate w.r.t. fitted track parameters
   ///
   /// @param duplicationPlotCache cache object for duplication plots
-  /// @param truthParticle the truth Particle
+  /// @param fittedParameters fitted track parameters of this track
   /// @param status the (truth-matched) reconstructed track is duplicated or not
   void fill(DuplicationPlotCache& duplicationPlotCache,
-            const ActsFatras::Particle& truthParticle, bool status) const;
+            const Acts::BoundParameters& fittedParameters, bool status) const;
 
-  /// @brief fill number of duplicated tracks for a single
-  /// Multi-trajectory
+  /// @brief fill number of duplicated tracks for a truth particle seed
   ///
   /// @param duplicationPlotCache cache object for duplication plots
   /// @param truthParticle the truth Particle

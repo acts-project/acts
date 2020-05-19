@@ -21,9 +21,6 @@
 #define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
 #define takeSmaller(current, test) current = current < test ? current : test
 #define takeBigger(current, test) current = current > test ? current : test
-#define takeSmallerBigger(cSmallest, cBiggest, test) \
-  takeSmaller(cSmallest, test);                      \
-  takeBigger(cBiggest, test)
 #endif
 
 namespace Acts {

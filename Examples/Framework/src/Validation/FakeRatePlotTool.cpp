@@ -90,14 +90,15 @@ void FW::FakeRatePlotTool::write(
 
 void FW::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
-    const ActsFatras::Particle& truthParticle, bool status) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
-  const auto t_pT = truthParticle.transverseMomentum();
+    const Acts::BoundParameters& fittedParameters, bool status) const {
+  const auto& momentum = fittedParameters.momentum();
+  const double fit_phi = phi(momentum);
+  const double fit_eta = eta(momentum);
+  const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_pT, t_pT, status);
-  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_eta, t_eta, status);
-  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_phi, t_phi, status);
+  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_pT, fit_pT, status);
+  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_eta, fit_eta, status);
+  PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_phi, fit_phi, status);
 }
 
 void FW::FakeRatePlotTool::fill(
