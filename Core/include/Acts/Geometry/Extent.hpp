@@ -45,21 +45,26 @@ struct Extent {
   bool intersects(const Extent& other, BinningValue bVal = binValues,
                   double tolerance = s_epsilon) {
     // Helper to check
-    auto check = [&](BinningValue bvc) -> bool {
-      return (ranges[bvc].first > other.ranges[bvc].second + tolerance or
-              other.ranges[bvc].first > ranges[bvc].second + tolerance);
+    auto checkRange = [&](BinningValue bvc) -> bool {
+      auto check = [&](const Range& a, const Range& b) -> bool {
+        return (a.second + tolerance > b.first and
+                a.first - tolerance < b.second);
+      };
+      return (check(ranges[bvc], other.ranges[bvc]) and
+              check(other.ranges[bvc], ranges[bvc]));
     };
+
     // Check all
     if (bVal == binValues) {
       for (int ibv = 0; ibv < (int)binValues; ++ibv) {
-        if (check((BinningValue)ibv)) {
+        if (checkRange((BinningValue)ibv)) {
           return true;
         }
       }
       return false;
     }
     // Check specific
-    return check(bVal);
+    return checkRange(bVal);
   }
 
   /// Extend with another extent

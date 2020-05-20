@@ -9,13 +9,11 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
+#include <iostream>
 
-// Helper
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-// The class to test
 #include "Acts/Geometry/Extent.hpp"
-
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -73,29 +71,19 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
 BOOST_AUTO_TEST_CASE(ExtentTestIntersects) {
   Extent aExtent;
-  aExtent.ranges = {{1, 2},
-                    {2, 3},
-                    {4, 5},
-                    {0., sqrt(5.)},
-                    {-0.1, 1.4},
-                    { -4., 4.},
-                    {0., 0.},
-                    {-2., 2.},
-                    {0., sqrt(9.)}};
+  aExtent.ranges = {{1, 2},    {2, 3},   {4, 5},    {0., sqrt(5.)}, {-0.1, 1.4},
+                    {-4., 4.}, {0., 0.}, {-2., 2.}, {0., sqrt(9.)}};
 
   Extent bExtent;
-  bExtent.ranges = {{-1, -2},
-                    {1, 2.5},
-                    {6, 8},
-                    {0., sqrt(5.)},
-                    {-0.1, 1.4},
-                    { -4., 4.},
-                    {0., 0.},
-                    {-2., 2.},
-                    {0., sqrt(9.)}};
+  bExtent.ranges = {{-1, -2},  {1, 2.5}, {6, 8},    {0., sqrt(5.)}, {-0.1, 1.4},
+                    {-4., 4.}, {0., 0.}, {-2., 2.}, {0., sqrt(9.)}};
 
-  std::cout << aExtent.ranges[binX].first > bExtent.ranges[binX].second << std::endl; 
-  std::cout << bExtent.ranges[binX].first > aExtent.ranges[binX].second << std::endl;
+  std::cout << (aExtent.ranges[binX].second > bExtent.ranges[binX].first &&
+                aExtent.ranges[binX].second < bExtent.ranges[binX].first)
+            << std::endl;
+  std::cout << (bExtent.ranges[binX].second > aExtent.ranges[binX].first &&
+                bExtent.ranges[binX].second < aExtent.ranges[binX].first)
+            << std::endl;
 
   // They certainly intersect
   BOOST_CHECK(aExtent.intersects(bExtent));
