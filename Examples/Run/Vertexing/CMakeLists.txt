@@ -26,10 +26,15 @@ target_link_libraries(ActsRecVertexWriter PRIVATE ${_common_libraries})
 add_executable(ActsRecVertexReader VertexAndTracksReaderAndFinderExample.cpp)
 target_link_libraries(ActsRecVertexReader PRIVATE ${_common_libraries})
 
+# AMVF tutorial example
+add_executable(ActsAMVFTutorial TutorialAMVFExample.cpp)
+target_link_libraries(ActsAMVFTutorial PRIVATE ${_common_libraries})
+
 install(
   TARGETS
     ActsRecVertexFitter
     ActsRecVertexFinder
     ActsRecVertexWriter
     ActsRecVertexReader
+    ActsAMVFTutorial
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
