@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-using IdentifiedPolyderon = std::tuple<std::string, bool, Polyhedron>;
+using IdentifiedPolyhedron = std::tuple<std::string, bool, Polyhedron>;
 
 namespace Test {
 
@@ -87,7 +87,7 @@ struct ObjTestWriter {
   /// It will draw the polyhedron and create a file, the boolean
   /// steers whether the obj should be triangulated
   /// @param iphs The Identified Polyhedrons (= with name and boolean)
-  static void writeObj(const std::vector<IdentifiedPolyderon>& iphs) {
+  static void writeObj(const std::vector<IdentifiedPolyhedron>& iphs) {
     for (const auto& iph : iphs) {
       std::ofstream ostream;
       ostream.open(std::get<std::string>(iph) + ".obj");

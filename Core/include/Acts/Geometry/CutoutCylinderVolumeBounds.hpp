@@ -46,7 +46,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
     eMaxR = 2,
     eHalfLengthZ = 3,
     eHalfLengthZcutout = 4,
-    eSize = 5
+    eSize
   };
 
   CutoutCylinderVolumeBounds() = delete;
