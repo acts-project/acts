@@ -45,15 +45,6 @@ FW::ProcessCode FW::TrackFindingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3D{0., 0., 0.});
 
-  // Prepare input measurements for CKF which takes all measurements in one
-  // event. NB: The conversion from boost::flat_multiset to std::vector is
-  // performed below
-  std::vector<SimSourceLink> trackSourceLinks;
-  trackSourceLinks.reserve(sourceLinks.size());
-  for (const auto& sl : sourceLinks) {
-    trackSourceLinks.push_back(sl);
-  }
-
   // Perform the track finding for each starting parameter
   // @TODO: use seeds from track seeding algorithm as starting parameter
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
@@ -65,7 +56,7 @@ FW::ProcessCode FW::TrackFindingAlgorithm::execute(
         m_cfg.sourcelinkSelectorCfg, &(*pSurface));
 
     ACTS_DEBUG("Invoke track finding seeded by truth particle " << iseed);
-    auto result = m_cfg.findTracks(trackSourceLinks, initialParams, ckfOptions);
+    auto result = m_cfg.findTracks(sourceLinks, initialParams, ckfOptions);
     if (result.ok()) {
       // Get the track finding output object
       const auto& trackFindingOutput = result.value();
