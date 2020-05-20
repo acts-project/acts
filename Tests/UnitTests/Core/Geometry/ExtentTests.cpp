@@ -78,10 +78,7 @@ BOOST_AUTO_TEST_CASE(ExtentTestIntersects) {
                     {4, 5},
                     {0., sqrt(5.)},
                     {-0.1, 1.4},
-                    {
-                        -4.,
-                        4.,
-                    },
+                    { -4., 4.},
                     {0., 0.},
                     {-2., 2.},
                     {0., sqrt(9.)}};
@@ -92,13 +89,13 @@ BOOST_AUTO_TEST_CASE(ExtentTestIntersects) {
                     {6, 8},
                     {0., sqrt(5.)},
                     {-0.1, 1.4},
-                    {
-                        -4.,
-                        4.,
-                    },
+                    { -4., 4.},
                     {0., 0.},
                     {-2., 2.},
                     {0., sqrt(9.)}};
+
+  std::cout << aExtent.ranges[binX].first > bExtent.ranges[binX].second << std::endl; 
+  std::cout << bExtent.ranges[binX].first > aExtent.ranges[binX].second << std::endl;
 
   // They certainly intersect
   BOOST_CHECK(aExtent.intersects(bExtent));
