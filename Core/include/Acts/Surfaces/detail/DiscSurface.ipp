@@ -137,9 +137,9 @@ inline Intersection DiscSurface::intersectionEstimate(
   return intersection;
 }
 
-inline const Local3DToBoundLocalMatrix
-DiscSurface::local3DToBoundLocalDerivative(const GeometryContext& gctx,
-                                           const Vector3D& position) const {
+inline const LocalCartesianToBoundLocalMatrix
+DiscSurface::localCartesianToBoundLocalDerivative(
+    const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
@@ -150,7 +150,8 @@ DiscSurface::local3DToBoundLocalDerivative(const GeometryContext& gctx,
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
-  Local3DToBoundLocalMatrix loc3DToLocBound = Local3DToBoundLocalMatrix::Zero();
+  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
+      LocalCartesianToBoundLocalMatrix::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, -lsphi / lr, lcphi / lr, 0;
 
   return loc3DToLocBound;

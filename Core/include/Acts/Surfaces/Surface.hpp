@@ -495,8 +495,9 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  virtual const Local3DToBoundLocalMatrix local3DToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const;
+  virtual const LocalCartesianToBoundLocalMatrix
+  localCartesianToBoundLocalDerivative(const GeometryContext& gctx,
+                                       const Vector3D& position) const;
 
  protected:
   /// Transform3D definition that positions

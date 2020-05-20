@@ -134,7 +134,8 @@ inline const AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
       detail::AlignmentHelper::rotationToLocalAxesDerivative(rotation);
   // 2) Calculate the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
-  AlignmentToLocal3DMatrix alignToLoc3D = AlignmentToLocal3DMatrix::Zero();
+  AlignmentToLocalCartesianMatrix alignToLoc3D =
+      AlignmentToLocalCartesianMatrix::Zero();
   alignToLoc3D.block<1, 3>(eX, eCenter_X) = -localXAxis.transpose();
   alignToLoc3D.block<1, 3>(eY, eCenter_X) = -localYAxis.transpose();
   alignToLoc3D.block<1, 3>(eZ, eCenter_X) = -localZAxis.transpose();
@@ -144,7 +145,8 @@ inline const AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
   // 3) Calculate the derivative of track position represented in
   // (local) bound track parameters (could be in non-Cartesian coordinates)
   // w.r.t. track position represented in local 3D Cartesian coordinates.
-  const auto& loc3DToLocBound = local3DToBoundLocalDerivative(gctx, position);
+  const auto& loc3DToLocBound =
+      localCartesianToBoundLocalDerivative(gctx, position);
   // 4) Calculate the derivative of path length w.r.t. alignment parameters
   const auto& alignToPath =
       alignmentToPathDerivative(gctx, rotToLocalZAxis, position, direction);
@@ -191,9 +193,10 @@ inline const AlignmentRowVector Surface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline const Local3DToBoundLocalMatrix Surface::local3DToBoundLocalDerivative(
+inline const LocalCartesianToBoundLocalMatrix
+Surface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
-  return Local3DToBoundLocalMatrix::Identity();
+  return LocalCartesianToBoundLocalMatrix::Identity();
 }
 
 inline const DetectorElementBase* Surface::associatedDetectorElement() const {

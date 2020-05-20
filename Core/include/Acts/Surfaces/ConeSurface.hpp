@@ -220,7 +220,7 @@ class ConeSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const Local3DToBoundLocalMatrix local3DToBoundLocalDerivative(
+  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

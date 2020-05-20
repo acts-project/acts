@@ -292,7 +292,8 @@ using BoundSymMatrix =
     ActsSymMatrix<BoundParametersScalar, eBoundParametersSize>;
 
 using GlobalBoundSymMatrix = ActsMatrixX<BoundParametersScalar>;
-using Local3DToBoundLocalMatrix = ActsMatrix<BoundParametersScalar, 2, 3>;
+using LocalCartesianToBoundLocalMatrix =
+    ActsMatrix<BoundParametersScalar, 2, 3>;
 
 // Matrix and vector types related to free track parameters.
 
@@ -319,7 +320,7 @@ using AlignmentRowVector =
 using AlingmentMatrix =
     ActsMatrix<AlignmentParametersScalar, eAlignmentParametersSize,
                eAlignmentParametersSize>;
-using AlignmentToLocal3DMatrix =
+using AlignmentToLocalCartesianMatrix =
     ActsMatrix<AlignmentParametersScalar, 3, eAlignmentParametersSize>;
 
 // Mapping to bound track parameters.
