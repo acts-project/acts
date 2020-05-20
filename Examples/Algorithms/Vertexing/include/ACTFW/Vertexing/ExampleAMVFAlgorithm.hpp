@@ -27,9 +27,6 @@ class ExampleAMVFAlgorithm : public FW::BareAlgorithm {
   struct Config {
     /// Input track collection
     std::string trackCollection;
-
-    /// The magnetic field
-    Acts::Vector3D bField;
   };
 
   /// Constructor
@@ -44,6 +41,8 @@ class ExampleAMVFAlgorithm : public FW::BareAlgorithm {
  private:
   /// The config class
   Config m_cfg;
+
+  std::vector<Acts::BoundParameters> getInputTrackCollection(const FW::AlgorithmContext& ctx) const;
 };
 
 }  // namespace FWE

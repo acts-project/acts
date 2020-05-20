@@ -22,15 +22,15 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-#include "Acts/Vertexing/ZScanVertexFinder.hpp"
+#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+#include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
+#include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 
 FWE::ExampleAMVFAlgorithm::ExampleAMVFAlgorithm(const Config& cfg,
                                                     Acts::Logging::Level level)
@@ -40,77 +40,62 @@ FWE::ExampleAMVFAlgorithm::ExampleAMVFAlgorithm(const Config& cfg,
 /// and finds and fits its vertices
 FW::ProcessCode FWE::ExampleAMVFAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
-  using MagneticField = Acts::ConstantBField;
-  using Stepper = Acts::EigenStepper<MagneticField>;
-  using Propagator = Acts::Propagator<Stepper>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using TrackParameters = Acts::BoundParameters;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<TrackParameters, Linearizer>;
-  using ImpactPointEstimator =
-      Acts::ImpactPointEstimator<TrackParameters, Propagator>;
-  using VertexSeeder = Acts::ZScanVertexFinder<VertexFitter>;
-  using VertexFinder = Acts::IterativeVertexFinder<VertexFitter, VertexSeeder>;
-  using VertexFinderOptions = Acts::VertexingOptions<TrackParameters>;
+  using namespace Acts::UnitLiterals;
 
-  static_assert(Acts::VertexFinderConcept<VertexSeeder>,
-                "VertexSeeder does not fulfill vertex finder concept.");
-  static_assert(Acts::VertexFinderConcept<VertexFinder>,
-                "VertexFinder does not fulfill vertex finder concept.");
-
-  // Set up the magnetic field
-  MagneticField bField(m_cfg.bField);
-  // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(Stepper(bField));
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
-  // Setup the vertex fitter
-  VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(std::move(vertexFitterCfg));
-  // Setup the track linearizer
-  Linearizer::Config linearizerCfg(bField, propagator);
-  Linearizer linearizer(std::move(linearizerCfg));
-  // Setup the seed finder
-  ImpactPointEstimator::Config ipEstCfg(bField, propagator);
-  ImpactPointEstimator ipEst(std::move(ipEstCfg));
-  VertexSeeder::Config seederCfg(ipEst);
-  VertexSeeder seeder(std::move(seederCfg));
-  // Set up the actual vertex finder
-  VertexFinder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
-                                 std::move(seeder), ipEst);
-  finderCfg.maxVertices = 200;
-  finderCfg.reassignTracksAfterFirstFit = true;
-  VertexFinder finder(finderCfg);
-  VertexFinder::State state;
-  VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
-
-  // Setup containers
-  const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
-      m_cfg.trackCollection);
-  std::vector<Acts::BoundParameters> inputTrackCollection;
-
-  int counte = 0;
-  for (auto& bla : input) {
-    counte += bla.tracks.size();
-  }
-
-  ACTS_INFO("Truth vertices in event: " << input.size());
-
-  for (auto& vertexAndTracks : input) {
-    ACTS_INFO("\t True vertex at ("
-              << vertexAndTracks.vertex.position().x() << ","
-              << vertexAndTracks.vertex.position().y() << ","
-              << vertexAndTracks.vertex.position().z() << ") with "
-              << vertexAndTracks.tracks.size() << " tracks.");
-    inputTrackCollection.insert(inputTrackCollection.end(),
-                                vertexAndTracks.tracks.begin(),
-                                vertexAndTracks.tracks.end());
-  }
-
+  // The input track collection
   std::vector<const Acts::BoundParameters*> inputTrackPtrCollection;
-  for (const auto& trk : inputTrackCollection) {
+  for (const auto& trk : getInputTrackCollection(ctx)) {
     inputTrackPtrCollection.push_back(&trk);
   }
+
+  // Set up the magnetic field
+  Acts::ConstantBField bField(Acts::Vector3D(0., 0., 2_T));
+
+  // Set up EigenStepper
+  Acts::EigenStepper<Acts::ConstantBField> stepper(bField);
+
+  // Set up the propagator
+  using Propagator = Acts::Propagator<Acts::EigenStepper<Acts::ConstantBField>>;
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  // Set up ImpactPointEstimator
+  using IPEstimator = Acts::ImpactPointEstimator<Acts::BoundParameters, Propagator>;
+  IPEstimator::Config ipEstimatorCfg(bField, propagator);
+  IPEstimator ipEstimator(ipEstimatorCfg);
+
+  // Set up deterministic annealing with user-defined temperatures
+  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  Acts::AnnealingUtility::Config annealingConfig(temperatures);
+  Acts::AnnealingUtility annealingUtility(annealingConfig);
+
+  // Set up the track linearizer
+  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer linearizer(ltConfig);
+
+  // Set up the vertex fitter with user-defined annealing
+  using Fitter = Acts::AdaptiveMultiVertexFitter<Acts::BoundParameters, Linearizer>;
+  Fitter::Config fitterCfg(ipEstimator);
+  fitterCfg.annealingTool = annealingUtility;
+  Fitter fitter(fitterCfg);
+
+  // Set up the vertex seed finder
+  using SeedFinder = Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
+  SeedFinder seedFinder;
+
+  // Finally, set up the vertex finder
+  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
+                              linearizer);
+  // We do not want to use a beamspot constraint here
+  finderConfig.useBeamSpotConstraint = false;
+  Finder finder(finderConfig);
+  // The vertex finder state
+  Finder::State state;
+
+  // Default options, this is where e.g. a constraint could be set
+  using VertexingOptions = Acts::VertexingOptions<Acts::BoundParameters>;
+  VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // Find vertices
   auto res = finder.find(inputTrackPtrCollection, finderOpts, state);
@@ -133,4 +118,20 @@ FW::ProcessCode FWE::ExampleAMVFAlgorithm::execute(
   }
 
   return FW::ProcessCode::SUCCESS;
+}
+
+std::vector<Acts::BoundParameters> FWE::ExampleAMVFAlgorithm::getInputTrackCollection(const FW::AlgorithmContext& ctx) const{
+
+  // Setup containers
+  const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
+      m_cfg.trackCollection);
+  std::vector<Acts::BoundParameters> inputTrackCollection;
+
+  for (auto& vertexAndTracks : input) {
+    inputTrackCollection.insert(inputTrackCollection.end(),
+                                vertexAndTracks.tracks.begin(),
+                                vertexAndTracks.tracks.end());
+  }
+
+  return inputTrackCollection;
 }
