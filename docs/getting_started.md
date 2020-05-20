@@ -121,6 +121,49 @@ However, if you have the necessary prerequisites installed it should be
 possible to use it locally. Acts developers regularly use different
 recent Linux distributions and macOS to build and develop Acts.
 
+## Building the documentation
+
+The documentation uses [Doxygen][doxygen] to extract the source code
+documentation and [Sphinx][sphinx] with the [Breathe][breathe] and
+[Exhale][exhale] extensions to generate the documentation website. To build the
+documentation locally, you need to have [Doxygen][doxygen] installed from your
+package manager. [Sphinx][sphinx] and its extensions can be installed using the
+Python package manager via
+
+```console
+cd <path/to/repository>
+# --user installs to a user-specific directory instead of the system
+pip install --user -r docs/requirements
+```
+
+To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
+
+```console
+cmake -B <build-dir> -S <path/to/repository> -DACTS_BUILD_DOCS=on
+```
+
+Then the documentation can be build with either of the following two build
+targets
+
+```console
+cmake --build <build-dir> docs # default fast option
+# or
+cmake --build <build-dir> docs-with-api # full documentation
+```
+
+The default option includes the Doxygen, Sphinx, and the Breathe extension, i.e.
+the source code information can be used in the manually written documentation
+but the full API documentation is not generated. The second target builds the
+full documentation using Exhale to automatically generate the API documentation.
+This is equivalent to the public [Read the Docs][rtd_acts] documentation, but
+the build takes around ten minutes to finish.
+
+[doxygen]: https://doxygen.nl/
+[sphinx]: https://www.sphinx-doc.org
+[breathe]: https://breathe.readthedocs.io
+[exhale]: https://exhale.readthedocs.io
+[rtd_acts]: https://acts.readthedocs.io
+
 ## Using Acts
 
 When using Acts in your own CMake-based project, you need to include the
