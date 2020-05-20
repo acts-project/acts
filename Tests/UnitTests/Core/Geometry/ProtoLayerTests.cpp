@@ -77,6 +77,19 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   BOOST_CHECK(pLayerSf.extent.ranges == pLayerSfShared.extent.ranges);
   BOOST_CHECK(pLayerSf.envelope == pLayerSfShared.envelope);
 
+  // CHECK That you have 4 surfaces
+  BOOST_CHECK(pLayerSf.surfaces().size() == 4);
+  // Add one surface
+  auto rB = std::make_shared<RectangleBounds>(30., 60.);
+  auto pSurface = Surface::makeShared<PlaneSurface>(
+      std::make_shared<Transform3D>(Transform3D::Identity()), rB);
+  pLayerSf.add(tgContext, *pSurface.get());
+  // CHECK That if you now have 5 surfaces
+  BOOST_CHECK(pLayerSf.surfaces().size() == 5);
+
+  // That should invalidate the ranges
+  BOOST_CHECK(pLayerSf.extent.ranges != pLayerSfShared.extent.ranges);
+
   // Test 1 - identity transform
   auto protoLayer = createProtoLayer(Transform3D::Identity());
 

@@ -22,14 +22,16 @@ using Acts::VectorHelpers::phi;
 namespace Acts {
 
 ProtoLayer::ProtoLayer(const GeometryContext& gctx,
-                       const std::vector<const Surface*>& surfaces) {
+                       const std::vector<const Surface*>& surfaces)
+    : m_surfaces(surfaces) {
   measure(gctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
     const GeometryContext& gctx,
-    const std::vector<std::shared_ptr<const Surface>>& surfaces) {
-  measure(gctx, unpack_shared_vector(surfaces));
+    const std::vector<std::shared_ptr<const Surface>>& surfaces)
+    : m_surfaces(unpack_shared_vector(surfaces)) {
+  measure(gctx, m_surfaces);
 }
 
 double ProtoLayer::min(BinningValue bval, bool addenv) {
@@ -77,6 +79,26 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       }
       continue;
     }
+    extent.extend(sfPolyhedron.extent());
+  }
+}
+
+void ProtoLayer::add(const GeometryContext& gctx, const Surface& surface) {
+  m_surfaces.push_back(&surface);
+  auto sfPolyhedron = surface.polyhedronRepresentation(gctx, 1);
+  const DetectorElementBase* element = surface.associatedDetectorElement();
+  if (element != nullptr) {
+    // Take the thickness in account if necessary
+    double thickness = element->thickness();
+    // We need a translation along and opposite half thickness
+    Vector3D sfNormal = surface.normal(gctx, surface.center(gctx));
+    std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
+    for (const auto& dT : deltaT) {
+      Transform3D dtransform = Transform3D::Identity();
+      dtransform.pretranslate(dT * sfNormal);
+      extent.extend(sfPolyhedron.extent(dtransform));
+    }
+  } else {
     extent.extend(sfPolyhedron.extent());
   }
 }

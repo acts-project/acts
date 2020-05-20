@@ -71,24 +71,30 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
 BOOST_AUTO_TEST_CASE(ExtentTestIntersects) {
   Extent aExtent;
-  aExtent.ranges = {{1, 2},    {2, 3},   {4, 5},    {0., sqrt(5.)}, {-0.1, 1.4},
-                    {-4., 4.}, {0., 0.}, {-2., 2.}, {0., sqrt(9.)}};
+  aExtent.ranges = {{1, 2},    {2, 3},   {4, 5},   {2., sqrt(5.)}, {-0.1, 1.4},
+                    {-4., 4.}, {0., 0.}, {1., 2.}, {0., sqrt(9.)}};
 
   Extent bExtent;
-  bExtent.ranges = {{-1, -2},  {1, 2.5}, {6, 8},    {0., sqrt(5.)}, {-0.1, 1.4},
-                    {-4., 4.}, {0., 0.}, {-2., 2.}, {0., sqrt(9.)}};
-
-  std::cout << (aExtent.ranges[binX].second > bExtent.ranges[binX].first &&
-                aExtent.ranges[binX].second < bExtent.ranges[binX].first)
-            << std::endl;
-  std::cout << (bExtent.ranges[binX].second > aExtent.ranges[binX].first &&
-                bExtent.ranges[binX].second < aExtent.ranges[binX].first)
-            << std::endl;
+  bExtent.ranges = {{-2, -1},        {1, 2.5},    {6, 8},
+                    {0., sqrt(12.)}, {-0.1, 1.4}, {-2., 2.},
+                    {0., 0.},        {-2., 0.},   {0., sqrt(9.)}};
 
   // They certainly intersect
   BOOST_CHECK(aExtent.intersects(bExtent));
   // They do not intersect in x
   BOOST_CHECK(!aExtent.intersects(bExtent, binX));
+  // They do with a large tolerance though in x
+  BOOST_CHECK(aExtent.intersects(bExtent, binX, 3.));
+  // They do intersect in y
+  BOOST_CHECK(aExtent.intersects(bExtent, binY));
+  // They do not intersect in z
+  BOOST_CHECK(!aExtent.intersects(bExtent, binZ));
+  // They do intersect in r
+  BOOST_CHECK(aExtent.intersects(bExtent, binR));
+  // They do not intersect in eta
+  BOOST_CHECK(!aExtent.intersects(bExtent, binEta));
+  // They do intersect with tolerance in eta
+  BOOST_CHECK(aExtent.intersects(bExtent, binEta, 3.));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
