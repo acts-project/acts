@@ -29,7 +29,7 @@ struct TrackFinderFunctionImpl {
   TrackFinderFunctionImpl(TrackFinder&& f) : trackFinder(std::move(f)) {}
 
   FW::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const std::vector<FW::SimSourceLink>& sourceLinks,
+      const FW::SimSourceLinkContainer& sourceLinks,
       const FW::TrackParameters& initialParameters,
       const Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>&
           options) const {
