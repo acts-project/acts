@@ -197,8 +197,8 @@ static_assert(std::is_enum_v<AlignmentParametersIndices>,
               "'AlignmentParametersIndices' is not an enum type");
 static_assert(std::is_convertible_v<AlignmentParametersIndices, size_t>,
               "'AlignmentParametersIndices' is not convertible to size_t");
-static_assert(3 <= AlignmentParametersIndices::eAlignmentParametersSize,
-              "Alignment parameters must have at least three components");
+static_assert(6 <= AlignmentParametersIndices::eAlignmentParametersSize,
+              "Alignment parameters must have at least six components");
 static_assert(std::is_floating_point_v<AlignmentParametersScalar>,
               "'AlignmentParametersScalar' must be a floating point type");
 
@@ -238,6 +238,8 @@ static_assert(eSpaceTime == eSpaceEnergy, "Inconsistent time and energy");
 // Ensure alignment parameter components/ indices are consistently defined.
 static_assert(eCenter_Y == eCenter_X + 1u, "Center position must be continous");
 static_assert(eCenter_Z == eCenter_X + 2u, "Center position must be continous");
+static_assert(eRotation_Y == eRotation_X + 1u, "Rotation must be continous");
+static_assert(eRotation_Z == eRotation_X + 2u, "Rotation must be continous");
 
 namespace detail {
 template <BoundParametersIndices>
