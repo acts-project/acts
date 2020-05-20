@@ -31,7 +31,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using CKFOptions =
       Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>;
   using TrackFinderFunction = std::function<TrackFinderResult(
-      const std::vector<SimSourceLink>&, const TrackParameters&,
+      const SimSourceLinkContainer&, const TrackParameters&,
       const CKFOptions&)>;
 
   /// Create the track finder function implementation.

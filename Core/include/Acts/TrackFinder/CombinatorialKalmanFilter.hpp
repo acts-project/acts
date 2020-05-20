@@ -1117,8 +1117,7 @@ class CombinatorialKalmanFilter {
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
   ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
+  /// @tparam source_link_container_t Source link container type
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam comb_kalman_filter_options_t Type of the CombinatorialKalmanFilter
   /// options
@@ -1134,13 +1133,15 @@ class CombinatorialKalmanFilter {
   /// the track finding.
   ///
   /// @return the output as an output track
-  template <typename source_link_t, typename start_parameters_t,
+  template <typename source_link_container_t, typename start_parameters_t,
             typename comb_kalman_filter_options_t,
             typename parameters_t = BoundParameters>
-  Result<CombinatorialKalmanFilterResult<source_link_t>> findTracks(
-      const std::vector<source_link_t>& sourcelinks,
-      const start_parameters_t& sParameters,
-      const comb_kalman_filter_options_t& tfOptions) const {
+  Result<CombinatorialKalmanFilterResult<
+      typename source_link_container_t::value_type>>
+  findTracks(const source_link_container_t& sourcelinks,
+             const start_parameters_t& sParameters,
+             const comb_kalman_filter_options_t& tfOptions) const {
+    using source_link_t = typename source_link_container_t::value_type;
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
