@@ -1,0 +1,301 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Geometry/ConeVolumeBounds.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
+
+#include <cmath>
+#include <iostream>
+
+Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
+                                         double outerAlpha, double outerOffsetZ,
+                                         double halflengthZ, double averagePhi,
+                                         double halfPhiSector) noexcept(false)
+    : VolumeBounds(), m_values() {
+  m_values[eInnerAlpha] = innerAlpha;
+  m_values[eInnerOffsetZ] = innerOffsetZ;
+  m_values[eOuterAlpha] = outerAlpha;
+  m_values[eOuterOffsetZ] = outerOffsetZ;
+  m_values[eHalfLengthZ] = halflengthZ;
+  m_values[eAveragePhi] = averagePhi;
+  m_values[eHalfPhiSector] = halfPhiSector;
+  buildSurfaceBounds();
+  checkConsistency();
+}
+
+Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
+                                         double offsetZ, double halflengthZ,
+                                         double averagePhi,
+                                         double halfPhiSector) noexcept(false)
+    : VolumeBounds(), m_values() {
+  m_values[eInnerAlpha] = 0.;
+  m_values[eInnerOffsetZ] = 0.;
+  m_values[eOuterAlpha] = 0.;
+  m_values[eOuterOffsetZ] = 0.;
+  m_values[eHalfLengthZ] = halflengthZ;
+  m_values[eAveragePhi] = averagePhi;
+  m_values[eHalfPhiSector] = halfPhiSector;
+
+  // Cone parameters
+  double tanAlpha = std::tan(alpha);
+  double zmin = offsetZ - halflengthZ;
+  double zmax = offsetZ + halflengthZ;
+  double rmin = std::abs(zmin) * tanAlpha;
+  double rmax = std::abs(zmax) * tanAlpha;
+
+  if (rmin >= cylinderR) {
+    // Cylindrical cut-out of a cone
+    m_innerRmin = cylinderR;
+    m_innerRmax = cylinderR;
+    m_outerTanAlpha = tanAlpha;
+    m_outerRmin = rmin;
+    m_outerRmax = rmax;
+    m_values[eOuterAlpha] = alpha;
+    m_values[eOuterOffsetZ] = offsetZ;
+  } else if (rmax <= cylinderR) {
+    // Conical cut-out of a cylinder
+    m_outerRmin = cylinderR;
+    m_outerRmax = cylinderR;
+    m_innerTanAlpha = tanAlpha;
+    m_innerRmin = rmin;
+    m_innerRmax = rmax;
+    m_values[eInnerAlpha] = alpha;
+    m_values[eInnerOffsetZ] = offsetZ;
+  } else {
+    throw std::domain_error(
+        "Cylinder and Cone are intersecting, not possible.");
+  }
+  buildSurfaceBounds();
+  checkConsistency();
+}
+
+Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
+    const Transform3D* transformPtr) const {
+  // The transform - apply when given
+  Transform3D transform =
+      (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
+
+  OrientedSurfaces oSurfaces;
+  oSurfaces.reserve(6);
+
+  // Create an inner Cone
+  if (m_innerConeBounds != nullptr) {
+    auto innerConeTrans = std::make_shared<Transform3D>(
+        transform * Translation3D(0., 0., -get(eInnerOffsetZ)));
+    auto innerCone =
+        Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
+    oSurfaces.push_back(OrientedSurface(std::move(innerCone), forward));
+  } else if (m_innerCylinderBounds != nullptr) {
+    // Or alternatively the inner Cylinder
+    auto innerCylinderTrans = std::make_shared<Transform3D>(transform);
+    auto innerCylinder = Surface::makeShared<CylinderSurface>(
+        innerCylinderTrans, m_innerCylinderBounds);
+    oSurfaces.push_back(OrientedSurface(std::move(innerCylinder), forward));
+  }
+
+  // Create an outer Cone
+  if (m_outerConeBounds != nullptr) {
+    auto outerConeTrans = std::make_shared<Transform3D>(
+        transform * Translation3D(0., 0., -get(eOuterOffsetZ)));
+    auto outerCone =
+        Surface::makeShared<ConeSurface>(outerConeTrans, m_outerConeBounds);
+    oSurfaces.push_back(OrientedSurface(std::move(outerCone), backward));
+  } else if (m_outerCylinderBounds != nullptr) {
+    // or alternatively an outer Cylinder
+    auto outerCylinderTrans = std::make_shared<Transform3D>(transform);
+    auto outerCylinder = Surface::makeShared<CylinderSurface>(
+        outerCylinderTrans, m_outerCylinderBounds);
+    oSurfaces.push_back(OrientedSurface(std::move(outerCylinder), backward));
+  }
+
+  // Set a disc at Zmin
+  if (m_negativeDiscBounds != nullptr) {
+    auto negativeDiscTrans = std::make_shared<Transform3D>(
+        transform * Translation3D(0., 0., -get(eHalfLengthZ)));
+    auto negativeDisc = Surface::makeShared<DiscSurface>(negativeDiscTrans,
+                                                         m_negativeDiscBounds);
+    oSurfaces.push_back(OrientedSurface(std::move(negativeDisc), forward));
+  }
+
+  // Set a disc at Zmax
+  auto positiveDiscTrans = std::make_shared<Transform3D>(
+      transform * Translation3D(0., 0., get(eHalfLengthZ)));
+  auto positiveDisc =
+      Surface::makeShared<DiscSurface>(positiveDiscTrans, m_positiveDiscBounds);
+  oSurfaces.push_back(OrientedSurface(std::move(positiveDisc), backward));
+
+  if (m_sectorBounds) {
+    RotationMatrix3D sectorRotation;
+    sectorRotation.col(0) = Vector3D::UnitZ();
+    sectorRotation.col(1) = Vector3D::UnitX();
+    sectorRotation.col(2) = Vector3D::UnitY();
+
+    Transform3D negSectorRelTrans{sectorRotation};
+    negSectorRelTrans.prerotate(
+        AngleAxis3D(get(eAveragePhi) - get(eHalfPhiSector), Vector3D::UnitZ()));
+    auto negSectorAbsTrans =
+        std::make_shared<Transform3D>(transform * negSectorRelTrans);
+
+    auto negSectorPlane =
+        Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
+    oSurfaces.push_back(OrientedSurface(std::move(negSectorPlane), forward));
+
+    Transform3D posSectorRelTrans{sectorRotation};
+    posSectorRelTrans.prerotate(
+        AngleAxis3D(get(eAveragePhi) + get(eHalfPhiSector), Vector3D::UnitZ()));
+    auto posSectorAbsTrans =
+        std::make_shared<Transform3D>(transform * posSectorRelTrans);
+
+    auto posSectorPlane =
+        Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
+
+    oSurfaces.push_back(OrientedSurface(std::move(posSectorPlane), backward));
+  }
+  return oSurfaces;
+}
+
+void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
+  if (innerRmin() > outerRmin() or innerRmax() > outerRmax()) {
+    throw std::invalid_argument("ConeVolumeBounds: invalid radial input.");
+  }
+  if (get(eHalfLengthZ) <= 0) {
+    throw std::invalid_argument(
+        "ConeVolumeBounds: invalid longitudinal input.");
+  }
+  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("ConeVolumeBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("ConeVolumeBounds: invalid phi positioning.");
+  }
+  if (get(eInnerAlpha) == 0. and get(eOuterAlpha) == 0.) {
+    throw std::invalid_argument(
+        "ConeVolumeBounds: neither inner nor outer cone.");
+  }
+}
+
+bool Acts::ConeVolumeBounds::inside(const Vector3D& pos, double tol) const {
+  double z = pos.z();
+  double zmin = z + tol;
+  double zmax = z - tol;
+  // Quick check ouside z
+  if (zmin < -get(eHalfLengthZ) or zmax > get(eHalfLengthZ)) {
+    return false;
+  }
+  double r = VectorHelpers::perp(pos);
+  if (std::abs(get(eHalfPhiSector) - M_PI) > s_onSurfaceTolerance) {
+    // need to check the phi sector - approximate phi tolerance
+    double phitol = tol / r;
+    double phi = VectorHelpers::phi(pos);
+    double phimin = phi - phitol;
+    double phimax = phi + phitol;
+    if (phimin < get(eAveragePhi) - get(eHalfPhiSector) or
+        phimax > get(eAveragePhi) + get(eHalfPhiSector)) {
+      return false;
+    }
+  }
+  // We are within phi sector check box r quickly
+  double rmin = r + tol;
+  double rmax = r - tol;
+  if (rmin > innerRmax() and rmax < outerRmin()) {
+    return true;
+  }
+  // Finally we need to check the cone
+  if (m_innerConeBounds != nullptr) {
+    double innerConeR = m_innerConeBounds->r(std::abs(z + get(eInnerOffsetZ)));
+    if (innerConeR > rmin) {
+      return false;
+    }
+  } else if (innerRmax() > rmin) {
+    return false;
+  }
+  // And the outer cone
+  if (m_outerConeBounds != nullptr) {
+    double outerConeR = m_outerConeBounds->r(std::abs(z + get(eOuterOffsetZ)));
+    if (outerConeR < rmax) {
+      return false;
+    }
+  } else if (outerRmax() < rmax) {
+    return false;
+  }
+  return true;
+}
+
+void Acts::ConeVolumeBounds::buildSurfaceBounds() {
+  // Build inner cone or inner cylinder
+  if (get(eInnerAlpha) > s_epsilon) {
+    m_innerTanAlpha = std::tan(get(eInnerAlpha));
+    double innerZmin = get(eInnerOffsetZ) - get(eHalfLengthZ);
+    double innerZmax = get(eInnerOffsetZ) + get(eHalfLengthZ);
+    m_innerRmin = std::abs(innerZmin) * m_innerTanAlpha;
+    m_innerRmax = std::abs(innerZmax) * m_innerTanAlpha;
+    m_innerConeBounds =
+        std::make_shared<ConeBounds>(get(eInnerAlpha), innerZmin, innerZmax,
+                                     get(eHalfPhiSector), get(eAveragePhi));
+  } else if (m_innerRmin == m_innerRmax and m_innerRmin > s_epsilon) {
+    m_innerCylinderBounds = std::make_shared<CylinderBounds>(
+        m_innerRmin, get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+  }
+
+  if (get(eOuterAlpha) > s_epsilon) {
+    m_outerTanAlpha = std::tan(get(eOuterAlpha));
+    double outerZmin = get(eOuterOffsetZ) - get(eHalfLengthZ);
+    double outerZmax = get(eOuterOffsetZ) + get(eHalfLengthZ);
+    m_outerRmin = std::abs(outerZmin) * m_outerTanAlpha;
+    m_outerRmax = std::abs(outerZmax) * m_outerTanAlpha;
+    m_outerConeBounds =
+        std::make_shared<ConeBounds>(get(eOuterAlpha), outerZmin, outerZmax,
+                                     get(eHalfPhiSector), get(eAveragePhi));
+
+  } else if (m_outerRmin == m_outerRmax) {
+    m_outerCylinderBounds = std::make_shared<CylinderBounds>(
+        m_outerRmax, get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
+  }
+
+  if (get(eHalfLengthZ) < std::max(get(eInnerOffsetZ), get(eOuterOffsetZ))) {
+    m_negativeDiscBounds = std::make_shared<RadialBounds>(
+        m_innerRmin, m_outerRmin, get(eHalfPhiSector), get(eAveragePhi));
+  }
+
+  m_positiveDiscBounds = std::make_shared<RadialBounds>(
+      m_innerRmax, m_outerRmax, get(eHalfPhiSector), get(eAveragePhi));
+
+  // Create the sector bounds
+  if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
+    // The 4 points building the sector
+    std::vector<Vector2D> polyVertices = {{-get(eHalfLengthZ), m_innerRmin},
+                                          {get(eHalfLengthZ), m_innerRmax},
+                                          {get(eHalfLengthZ), m_outerRmax},
+                                          {-get(eHalfLengthZ), m_outerRmin}};
+    m_sectorBounds =
+        std::make_shared<ConvexPolygonBounds<4>>(std::move(polyVertices));
+  }
+}
+
+// ostream operator overload
+std::ostream& Acts::ConeVolumeBounds::toStream(std::ostream& sl) const {
+  return dumpT(sl);
+}
+
+Acts::Volume::BoundingBox Acts::ConeVolumeBounds::boundingBox(
+    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Volume* entity) const {
+  Vector3D vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
+  Vector3D vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));
+  Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
+  return trf == nullptr ? box : box.transformed(*trf);
+}

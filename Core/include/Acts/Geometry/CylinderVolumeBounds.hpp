@@ -72,13 +72,13 @@ class IVisualization;
 class CylinderVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
-  enum BoundValues {
+  enum BoundValues : unsigned int {
     eMinR = 0,
     eMaxR = 1,
     eHalfLengthZ = 2,
     eHalfPhiSector = 3,
     eAveragePhi = 4,
-    eSize = 5
+    eSize
   };
 
   CylinderVolumeBounds() = delete;
