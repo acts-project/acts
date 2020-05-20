@@ -100,7 +100,7 @@ jobs:
       - name: Configure
         run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=on
       - name: Build
-        run: cmake --build build -- docs
+        run: cmake --build build -- docs-with-api
       - uses: actions/upload-artifact@v2
         with:
           name: acts-docs

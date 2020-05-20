@@ -47,14 +47,14 @@ class TrapezoidBounds;
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for acces / streaming
-  enum BoundValues {
+  enum BoundValues : unsigned int {
     eHalfLengthXnegY = 0,  //!< halflength in x at negative y
     eHalfLengthXposY = 1,  //!< halflength in x at positive y
     eHalfLengthY = 2,      //!< halflength in y
     eHalfLengthZ = 3,      //!< halflength in z
     eAlpha = 4,            //!< opening angle alpha (in point A)
     eBeta = 5,             //!< opening angle beta  (in point B)
-    eSize = 6              //!< length of the bounds vector
+    eSize                  //!< length of the bounds vector
   };
 
   TrapezoidVolumeBounds() = delete;
