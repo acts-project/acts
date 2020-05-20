@@ -15,9 +15,10 @@ void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
 
   auto opt = desc.add_options();
   opt("ckf-chi2max-slselection", value<double>()->default_value(15),
-      "Global maximum chi2 in CKF source link selection");
+      "Global criteria of maximum chi2 for CKF source link selection");
   opt("ckf-nslsmax-slselection", value<int>()->default_value(10),
-      "Global maximum number of in CKF source link selection");
+      "Global criteria of maximum number of source link candidates on a "
+      "surface for CKF source link selection");
 }
 
 FW::TrackFindingAlgorithm::Config FW::Options::readTrackFindingConfig(
