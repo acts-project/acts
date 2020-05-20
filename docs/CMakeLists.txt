@@ -1,47 +1,71 @@
 # to be compatible with readthedocs.org, the documentation build is always
-# in-source (as opposed to the configurable out-of-source build directory for
-# the code) and is fully driven by the sphinx tool. Doxygen (to extract the
-# source code ) is called automatically by sphinx as well. That also means
-# that the CMake dependency handling does not apply and is ignored here.
+# in-source; as opposed to the configurable out-of-source build directory for
+# the code. when running running on readthedocs.org, the build is fully driven
+# by Sphinx, including running Doxygen.
+#
+# this CMake-based build is only intended for local development. Doxygen is
+# run separate from Sphinx to avoid running it when no code has change. since
+# the full documentation with automatic generation of API docs take O(10mins)
+# to build, the default `docs` target does not include the API docs generation
+# but includes the Sphinx-Doxygen integration (breathe).
+#
+# the full documentation as on readthedocs.org can be build via the additional
+# `docs-with-api` target.
+#
+# WARNING: after you ran `docs-with-api` the regular `docs` target will
+#          accidentaly pick up the auto-generated api files. remove the
+#          `_build` and the `api` directory manually to avoid this.
 
-set(output_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
-set(output_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
+# this should match the INPUT declaration in the Doxyfile
+# CONFIGURE_DEPENDS ensures that adding/removing files leads to reprocessing
+file(
+  GLOB_RECURSE doxygen_sources
+  ../Core/include/*.hpp
+  ../Fatras/include/*.hpp
+  ../Plugins/include/*.hpp)
 
-# this is a debug target that is not part of the regular documentation build
-# only intended to diagnose issues with the Doxygen configuration
-add_custom_target(
-  run-doxygen
+set(doxygen_index ${CMAKE_CURRENT_SOURCE_DIR}/_build/doxygen-xml/index.xml)
+set(sphinx_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
+set(sphinx_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
+
+add_custom_command(
+  OUTPUT ${doxygen_index}
   COMMAND ${DOXYGEN_EXECUTABLE}
+  DEPENDS ${doxygen_sources} Doxyfile
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Run Doxygen")
+  COMMENT "Parse source code documentation with Doxygen")
 
-# standard documentation target to build the full documentation
-# this can take quite a long time due to the auto-generation of the
+# this is a debug target to diagnose issues with the Doxygen configuration
+add_custom_target(run-doxygen DEPENDS ${doxygen_index})
+
+# standard target to build the documentation without automatic API generation
 add_custom_target(
   docs
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
-      -d ${output_doctrees}
+      -d ${sphinx_doctrees}
       -j auto
-      -t use_doxygen
       ${CMAKE_CURRENT_SOURCE_DIR}
-      ${output_html}
+      ${sphinx_html}
+  DEPENDS ${doxygen_index}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Build documentation")
-# helper target for faster iterations without the doxygen API docs
+  COMMENT "Build documentation WITHOUT API documentation")
+# extended target to build the full documentation with automatic API generation
 add_custom_target(
-  docs-without-doxygen
+  docs-with-api
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
-      -d ${output_doctrees}
+      -d ${sphinx_doctrees}
       -j auto
+      -t use_exhale
       ${CMAKE_CURRENT_SOURCE_DIR}
-      ${output_html}
+      ${sphinx_html}
+  DEPENDS ${doxygen_index}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Build documentation (without Doxygen)")
+  COMMENT "Build full documentation")
 
 install(
-  DIRECTORY ${output_html}/
+  DIRECTORY ${sphinx_html}/
   DESTINATION ${CMAKE_INSTALL_DOCDIR}/Acts OPTIONAL)

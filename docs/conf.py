@@ -1,8 +1,4 @@
 # Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
 
 import os
 
@@ -10,10 +6,6 @@ from recommonmark.transform import AutoStructify
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get('READTHEDOCS', None) == 'True'
-
-# always build the API docs w/ doxygen on RTD
-if on_readthedocs:
-    tags.add('use_doxygen')
 
 # -- Project information ------------------------------------------------------
 
@@ -26,8 +18,9 @@ copyright = '2014–2020 CERN for the benefit of the Acts project'
 # -- General ------------------------------------------------------------------
 
 extensions = [
-    'sphinx.ext.mathjax',
+    'breathe',
     'recommonmark',
+    'sphinx.ext.mathjax',
     'sphinx_markdown_tables',
 ]
 source_suffix = {
@@ -49,8 +42,11 @@ smartquotes = True
 # ensure we use the RTD them when building locally
 if not on_readthedocs:
     import sphinx_rtd_theme
+
     html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+    html_theme_path = [
+        sphinx_rtd_theme.get_html_theme_path(),
+    ]
 
 html_theme_options = {
     'collapse_navigation': False,
@@ -59,45 +55,51 @@ html_theme_options = {
     'style_external_links': True,
 }
 html_logo = 'figures/acts_logo_white.svg'
-html_static_path = ['_static']
-
+html_static_path = [
+    '_static',
+]
 html_css_files = [
     'custom.css',
 ]
-
 html_copy_source = False
 html_show_sourcelink = False
 html_show_sphinx = False
 
-# -- Doxygen integration with Breathe+Exhale ----------------------------------
+# -- Doxygen integration with Breathe -----------------------------------------
 
-if tags.has('use_doxygen'):
-    extensions += [
-        'breathe',
-        'exhale',
-    ]
-    breathe_projects = {
-        'Acts': '_build/doxygen-xml',
-    }
-    breathe_default_project = 'Acts'
-    breathe_domain_by_extension = {
-        'cpp': 'cpp',
-        'hpp': 'cpp',
-        'ipp': 'cpp',
-    }
-    breathe_default_members = ('members', 'undoc-members')
-    exhale_args = {
-        'containmentFolder': 'api',
-        'rootFileName': 'api.rst',
-        'rootFileTitle': 'API',
-        'createTreeView': True,
-        # let exhale handle the doxygen execution
-        'exhaleExecutesDoxygen': True,
-        'exhaleUseDoxyfile': True,
-        # OUTPUT_DIRECTORY in Doxyfile must match breathe default project path
-        # this must match STRIP_FROM_PATH in the Doxyfile
-        'doxygenStripFromPath': '..',
-    }
+breathe_projects = {
+    'Acts': '_build/doxygen-xml',
+}
+breathe_default_project = 'Acts'
+breathe_domain_by_extension = {
+    'cpp': 'cpp',
+    'hpp': 'cpp',
+    'ipp': 'cpp',
+}
+breathe_default_members = ('members', 'undoc-members')
+
+# -- Automatic API documentation generation with Exhale -----------------------
+
+exhale_args = {
+    'containmentFolder': 'api',
+    'rootFileName': 'api.rst',
+    'rootFileTitle': 'API',
+    'createTreeView': True,
+    'exhaleUseDoxyfile': True,
+    # note: OUTPUT_DIRECTORY in Doxyfile must match breathe default project path
+    # note: this must match STRIP_FROM_PATH in Doxyfile
+    'doxygenStripFromPath': '..',
+}
+
+if on_readthedocs:
+    # if we are running on RTD Doxygen must be run as part of the build
+    # let exhale handle the doxygen execution
+    extensions.append('exhale')
+    exhale_args['exhaleExecutesDoxygen'] = True
+elif tags.has('use_exhale'):
+    # if exhale is requested manually, we expect the Doxygen has been run for us
+    extensions.append('exhale')
+    exhale_args['exhaleExecutesDoxygen'] = False
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 
