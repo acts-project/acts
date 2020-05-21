@@ -104,6 +104,13 @@ class SurfaceStub : public Surface {
     return Polyhedron(vertices, faces, triangularMesh);
   }
 
+  // Cartesian 3D to local bound derivative
+  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+      const GeometryContext& /*unused*/,
+      const Vector3D& /*unused*/) const final {
+    return LocalCartesianToBoundLocalMatrix::Identity();
+  };
+
  private:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;

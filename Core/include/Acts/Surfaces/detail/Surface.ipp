@@ -183,7 +183,7 @@ inline const AlignmentRowVector Surface::alignmentToPathDerivative(
   const auto localZAxis = rotation.col(2);
 
   // Cosine of angle between momentum direction and local frame z axis
-  const double dirZ = localZAxis.transpose() * direction;
+  const double dirZ = localZAxis.dot(direction);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
@@ -191,12 +191,6 @@ inline const AlignmentRowVector Surface::alignmentToPathDerivative(
   alignToPath.segment<3>(eRotation_X) = -pcRowVec * rotToLocalZAxis / dirZ;
 
   return alignToPath;
-}
-
-inline const LocalCartesianToBoundLocalMatrix
-Surface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
-  return LocalCartesianToBoundLocalMatrix::Identity();
 }
 
 inline const DetectorElementBase* Surface::associatedDetectorElement() const {

@@ -225,7 +225,7 @@ inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
   const double localZ = pcRowVec * localZAxis;
 
   // Cosine of angle between momentum direction and local frame z axis
-  const double dirZ = localZAxis.transpose() * direction;
+  const double dirZ = localZAxis.dot(direction);
   const double norm = 1. / (1. - dirZ * dirZ);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation

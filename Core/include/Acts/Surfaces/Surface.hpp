@@ -486,10 +486,6 @@ class Surface : public virtual GeometryObject,
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
   ///
-  /// Re-implementation is needed for bound track parameters with local position
-  /// in non-Cartesian coordinates (e.g. DiscSurface, LineSurface,
-  /// CylinderSurface and ConeSurface)
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position of the paramters in global
   ///
@@ -497,7 +493,7 @@ class Surface : public virtual GeometryObject,
   /// cartesian coordinates
   virtual const LocalCartesianToBoundLocalMatrix
   localCartesianToBoundLocalDerivative(const GeometryContext& gctx,
-                                       const Vector3D& position) const;
+                                       const Vector3D& position) const = 0;
 
  protected:
   /// Transform3D definition that positions

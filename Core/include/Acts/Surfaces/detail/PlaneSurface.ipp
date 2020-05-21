@@ -46,3 +46,9 @@ inline Intersection PlaneSurface::intersectionEstimate(
   }
   return intersection;
 }
+
+inline const LocalCartesianToBoundLocalMatrix
+PlaneSurface::localCartesianToBoundLocalDerivative(
+    const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
+  return LocalCartesianToBoundLocalMatrix::Identity();
+}
