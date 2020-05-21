@@ -179,7 +179,7 @@ inline const AlignmentRowVector Surface::alignmentToPathDerivative(
   const auto pcRowVec = (position - center(gctx)).transpose();
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
-  // The axes of local frame
+  // The local frame z axis
   const auto localZAxis = rotation.col(2);
 
   // Cosine of angle between momentum direction and local frame z axis

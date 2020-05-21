@@ -219,7 +219,7 @@ inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
   // The local frame transform
   const auto& sTransform = transform(gctx);
   const auto& rotation = sTransform.rotation();
-  // The axes of local frame
+  // The local frame z axis
   const auto localZAxis = rotation.col(2);
   // The local z coordinate
   const double localZ = pcRowVec * localZAxis;
