@@ -19,6 +19,9 @@ namespace detail {
 /// @brief Helper methods for calculating derivatives related with surface
 /// alignment
 namespace AlignmentHelper {
+// The container for derivative of local frame axis w.r.t. its
+// rotation parameters. The first element is for x axis, second for y axis and
+// last for z axis
 using RotationToAxes =
     std::tuple<RotationMatrix3D, RotationMatrix3D, RotationMatrix3D>;
 
