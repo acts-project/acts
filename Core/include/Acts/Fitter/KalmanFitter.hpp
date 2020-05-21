@@ -150,8 +150,7 @@ struct KalmanFitterResult {
   std::vector<const Surface*> passedAgainSurfaces;
 
   // Global track parameters covariance matrix
-  std::optional<GlobalBoundSymMatrix> globalTrackParamsCovariance =
-      std::nullopt;
+  GlobalBoundSymMatrix globalTrackParamsCovariance;
 
   Result<void> result{Result<void>::success()};
 };
@@ -884,25 +883,22 @@ class KalmanFitter {
                                            << " filtered track states.");
       }
 
-      // Temporary matrix for global track parameters covariance
-      GlobalBoundSymMatrix globalTrackParamsCov;
-      // Set valid matrix size if its calculation is requested; Otherwise, the
-      // default size will be zero
+      // Construct a pointer for the global track parameters covariance
+      GlobalBoundSymMatrix* globalTrackParamsCovPtr = nullptr;
       if (globalCovariance) {
-        globalTrackParamsCov.resize(nStates * eBoundParametersSize,
-                                    nStates * eBoundParametersSize);
+        // Set global track parameters covariance size
+        result.globalTrackParamsCovariance.resize(
+            nStates * eBoundParametersSize, nStates * eBoundParametersSize);
+        // Reset the pointer
+        globalTrackParamsCovPtr = &result.globalTrackParamsCovariance;
       }
       // Smooth the track states
       auto smoothRes =
           m_smoother(state.geoContext, result.fittedStates,
-                     measurementIndices.front(), globalTrackParamsCov);
+                     measurementIndices.front(), globalTrackParamsCovPtr);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
-      }
-      // Copy and store the global track parameters covariance if needed
-      if (globalCovariance) {
-        result.globalTrackParamsCovariance = std::move(globalTrackParamsCov);
       }
 
       // Obtain the smoothed parameters at first measurement state

@@ -373,6 +373,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
       tgContext, mfContext, calContext, outlierFinder, rSurface);
+  // Set to calculate the covariance
   kfOptions.globalCovariance = true;
 
   // Fit the track
@@ -381,11 +382,20 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto& fittedTrack = *fitRes;
   auto fittedParameters = fittedTrack.fittedParameters.value();
 
+  // Check the size of the global track parameters size
+  BOOST_CHECK_EQUAL(fittedTrack.globalTrackParamsCovariance.rows(),
+                    6 * eBoundParametersSize);
+  // Reset to not calculate the covariance
+  kfOptions.globalCovariance = false;
+
   // Make sure it is deterministic
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedAgainTrack = *fitRes;
   auto fittedAgainParameters = fittedAgainTrack.fittedParameters.value();
+
+  // Check the size of the global track parameters size
+  BOOST_CHECK_EQUAL(fittedAgainTrack.globalTrackParamsCovariance.size(), 0u);
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
                   fittedAgainParameters.parameters().template head<5>(), 1e-5);

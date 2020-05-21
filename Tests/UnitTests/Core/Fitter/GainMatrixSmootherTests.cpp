@@ -115,8 +115,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   // "smooth" these three track states
 
   GainMatrixSmoother<BoundParameters> gms;
-  GlobalBoundSymMatrix gloCov;
-  BOOST_CHECK(gms(tgContext, traj, ts_idx, gloCov).ok());
+  BOOST_CHECK(gms(tgContext, traj, ts_idx).ok());
 
   // Regression tests, only tests very basic correctness of the math, but tests
   // for regressions in the result.
