@@ -150,8 +150,6 @@ struct KalmanFitterResult {
   std::vector<const Surface*> passedAgainSurfaces;
 
   // Global track parameters covariance matrix
-  // @Todo: add option for calculating the global track parameters
-  // covariance
   std::optional<GlobalBoundSymMatrix> globalTrackParamsCovariance =
       std::nullopt;
 
