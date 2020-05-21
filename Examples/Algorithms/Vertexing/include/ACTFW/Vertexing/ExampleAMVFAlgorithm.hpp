@@ -31,7 +31,7 @@ class ExampleAMVFAlgorithm : public FW::BareAlgorithm {
 
   /// Constructor
   ExampleAMVFAlgorithm(const Config& cfg,
-                         Acts::Logging::Level level = Acts::Logging::INFO);
+                       Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Framework execute method
   /// @param [in] context is the Algorithm context for event consistency
@@ -42,7 +42,8 @@ class ExampleAMVFAlgorithm : public FW::BareAlgorithm {
   /// The config class
   Config m_cfg;
 
-  std::vector<Acts::BoundParameters> getInputTrackCollection(const FW::AlgorithmContext& ctx) const;
+  std::vector<Acts::BoundParameters> getInputTrackCollection(
+      const FW::AlgorithmContext& ctx) const;
 };
 
 }  // namespace FWE
