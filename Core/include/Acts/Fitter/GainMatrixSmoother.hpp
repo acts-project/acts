@@ -37,6 +37,16 @@ class GainMatrixSmoother {
           getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()))
       : m_logger(std::move(logger)) {}
 
+  /// @brief Operater for Kalman smoothing
+  ///
+  /// @tparam source_link_t The type of source link
+  ///
+  /// @param gctx The geometry context for the smoothing
+  /// @param trajectory The trajectory to be smoothed
+  /// @param entryIndex The index of state to start the smoothing
+  /// @param globalTrackParamsCov The global track parameters covariance matrix
+  ///
+  /// @return The smoothed track parameters at the first measurement state
   template <typename source_link_t>
   Result<parameters_t> operator()(
       const GeometryContext& gctx, MultiTrajectory<source_link_t>& trajectory,
@@ -48,9 +58,6 @@ class GainMatrixSmoother {
     using CovMatrix_t = typename parameters_t::CovMatrix_t;
     using gain_matrix_t = CovMatrix_t;
 
-    // The bound parameters size
-    constexpr size_t parametersSize = eBoundParametersSize;
-
     // For the last state: smoothed is filtered - also: switch to next
     ACTS_VERBOSE("Getting previous track state");
     auto prev_ts = trajectory.getTrackState(entryIndex);
@@ -60,12 +67,12 @@ class GainMatrixSmoother {
 
     // Fill global track parameters covariance matrix for last state
     if (globalTrackParamsCov.size() != 0) {
-      size_t globalCovSize = globalTrackParamsCov.rows();
-      assert(globalCovSize % parametersSize == 0);
-      ACTS_VERBOSE("Size of global covariance matrix is: " << globalCovSize);
-      globalTrackParamsCov.block<parametersSize, parametersSize>(
-          globalCovSize - parametersSize, globalCovSize - parametersSize) =
-          prev_ts.smoothedCovariance();
+      assert(globalTrackParamsCov.rows() % eBoundParametersSize == 0);
+      ACTS_VERBOSE("Size of global covariance matrix is: "
+                   << globalTrackParamsCov.rows());
+      const size_t iRow = globalTrackParamsCov.rows() - eBoundParametersSize;
+      globalTrackParamsCov.block<eBoundParametersSize, eBoundParametersSize>(
+          iRow, iRow) = prev_ts.smoothedCovariance();
     }
 
     // Smoothing gain matrix
@@ -82,7 +89,6 @@ class GainMatrixSmoother {
       size_t nSmoothed = 1;
       trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G, &error,
                                                      &nSmoothed,
-                                                     &parametersSize,
                                                      &globalTrackParamsCov,
                                                      this](auto ts) {
         // should have filtered and predicted, this should also include the
@@ -153,38 +159,45 @@ class GainMatrixSmoother {
         ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
 
         // Fill global track parameters covariance matrix for this state related
-        // covariance
+        // covariance based on formulas at Journal of Physics: Conference Series
+        // 219 (2010) 032028.
         // @Todo: store the covariance only for measurement state
         if (globalTrackParamsCov.size() != 0) {
-          size_t globalCovSize = globalTrackParamsCov.rows();
-          size_t nStates = globalCovSize / parametersSize;
+          const size_t nStates =
+              globalTrackParamsCov.rows() / eBoundParametersSize;
           assert(nSmoothed < nStates);
-          // -> Fill the diagonal element
-          size_t iRow = globalCovSize - parametersSize * (nSmoothed + 1);
-          globalTrackParamsCov.block<parametersSize, parametersSize>(
-              iRow, iRow) = ts.smoothedCovariance();
-          // -> Fill the correlation between this state and already smoothed
-          // states
+          // -> Fill the covariance of this state
+          const size_t iRow = globalTrackParamsCov.rows() -
+                              eBoundParametersSize * (nSmoothed + 1);
+          globalTrackParamsCov
+              .block<eBoundParametersSize, eBoundParametersSize>(iRow, iRow) =
+              ts.smoothedCovariance();
+          // -> Fill the correlation between this state (indexed by i-1) and
+          // already smoothed states (indexed by j): C^n_{i-1, j}= G_{i-1} *
+          // C^n_{i, j} for i <= j
           for (size_t iSmoothed = 1; iSmoothed <= nSmoothed; iSmoothed++) {
-            size_t iCol = iRow + parametersSize * iSmoothed;
+            const size_t iCol = iRow + eBoundParametersSize * iSmoothed;
             CovMatrix_t prev_correlation =
-                globalTrackParamsCov.block<parametersSize, parametersSize>(
-                    iRow + parametersSize, iCol);
+                globalTrackParamsCov
+                    .block<eBoundParametersSize, eBoundParametersSize>(
+                        iRow + eBoundParametersSize, iCol);
             CovMatrix_t correlation = G * prev_correlation;
             ACTS_VERBOSE("Fill block of size ("
-                         << parametersSize << ", " << parametersSize
+                         << eBoundParametersSize << ", " << eBoundParametersSize
                          << "), starting at (" << iRow << ", " << iCol
                          << ") for track parameters correlation:\n"
                          << correlation);
-            globalTrackParamsCov.block<parametersSize, parametersSize>(
-                iRow, iCol) = correlation;
+            globalTrackParamsCov
+                .block<eBoundParametersSize, eBoundParametersSize>(iRow, iCol) =
+                correlation;
             ACTS_VERBOSE("Fill block of size ("
-                         << parametersSize << ", " << parametersSize
+                         << eBoundParametersSize << ", " << eBoundParametersSize
                          << "), starting at (" << iCol << ", " << iRow
                          << ") for track parameters correlation:\n"
                          << correlation.transpose());
-            globalTrackParamsCov.block<parametersSize, parametersSize>(
-                iCol, iRow) = correlation.transpose();
+            globalTrackParamsCov
+                .block<eBoundParametersSize, eBoundParametersSize>(iCol, iRow) =
+                correlation.transpose();
           }
         }
 
