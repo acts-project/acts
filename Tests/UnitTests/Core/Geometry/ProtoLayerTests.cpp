@@ -13,9 +13,11 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
+#include <sstream>
 
 namespace Acts {
 
@@ -79,11 +81,15 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
 
   // CHECK That you have 4 surfaces
   BOOST_CHECK(pLayerSf.surfaces().size() == 4);
-  // Add one surface
+  // Add one surface from a detector element (to test thickness)
   auto rB = std::make_shared<RectangleBounds>(30., 60.);
-  auto pSurface = Surface::makeShared<PlaneSurface>(
-      std::make_shared<Transform3D>(Transform3D::Identity()), rB);
-  pLayerSf.add(tgContext, *pSurface.get());
+
+  // Create the detector element
+  auto detElement = std::make_unique<const DetectorElementStub>(
+      std::make_shared<Transform3D>(Transform3D::Identity()), rB, 0.125,
+      nullptr);
+
+  pLayerSf.add(tgContext, detElement->surface());
   // CHECK That if you now have 5 surfaces
   BOOST_CHECK(pLayerSf.surfaces().size() == 5);
 
@@ -124,6 +130,10 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   CHECK_CLOSE_ABS(protoLayerRot.max(binZ), 6., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.min(binR), 3., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
+
+  std::stringstream sstream;
+  protoLayerRot.toStream(sstream);
+  std::cout << sstream.str() << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

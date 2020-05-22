@@ -29,6 +29,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -50,6 +51,54 @@ struct CylindricalTrackingGeometry {
 
   /// The detector store for memory management
   DetectorStore detectorStore = {};
+
+  /// Generartor of surfaces for a ring
+  std::vector<const Surface*> surfacesRing(
+      DetectorStore& detStore, double moduleHalfXminY, double moudleHalfXmaxY,
+      double moduleHalfY, double moduleThickness, double moduleTilt,
+      double ringRadius, double ringZ, double zStagger, int nPhi) {
+    std::vector<const Surface*> layerSurfaces;
+
+    // Module material from input
+    MaterialProperties moduleMaterial(makeSilicon(), moduleThickness);
+
+    // Create a new surface material
+    std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
+        std::shared_ptr<const ISurfaceMaterial>(
+            new Acts::HomogeneousSurfaceMaterial(moduleMaterial));
+
+    // The rectangle/trapezoid bounds for all modules
+    std::shared_ptr<PlanarBounds> mBounds = nullptr;
+    if (moduleHalfXminY == moudleHalfXmaxY) {
+      mBounds = std::make_shared<RectangleBounds>(moduleHalfXminY, moduleHalfY);
+    } else {
+      mBounds = std::make_shared<TrapezoidBounds>(moduleHalfXminY,
+                                                  moudleHalfXmaxY, moduleHalfY);
+    }
+
+    double phiStep = 2 * M_PI / nPhi;
+
+    for (int im = 0; im < nPhi; ++im) {
+      // Get the moduleTransform
+      double phi = -M_PI + im * phiStep;
+      std::shared_ptr<Transform3D> mModuleTransform =
+          std::make_shared<Transform3D>(
+              Translation3D(ringRadius * std::cos(phi),
+                            ringRadius * std::sin(phi),
+                            ringZ + (im % 2) * zStagger) *
+              AngleAxis3D(phi - 0.5 * M_PI, Vector3D::UnitZ()) *
+              AngleAxis3D(moduleTilt, Vector3D::UnitY()));
+
+      // Create the detector element
+      auto detElement = std::make_unique<const DetectorElementStub>(
+          mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
+
+      layerSurfaces.push_back(&detElement->surface());
+      detStore.push_back(std::move(detElement));
+    }
+
+    return layerSurfaces;
+  }
 
   /// Generator of surfaces for a cylindrical layer
   ///
