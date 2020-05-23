@@ -58,6 +58,7 @@ double ProtoLayer::range(BinningValue bval, bool addenv) {
 
 std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
+  extent.toStream(sl);
   return sl;
 }
 
@@ -85,22 +86,7 @@ void ProtoLayer::measure(const GeometryContext& gctx,
 
 void ProtoLayer::add(const GeometryContext& gctx, const Surface& surface) {
   m_surfaces.push_back(&surface);
-  auto sfPolyhedron = surface.polyhedronRepresentation(gctx, 1);
-  const DetectorElementBase* element = surface.associatedDetectorElement();
-  if (element != nullptr) {
-    // Take the thickness in account if necessary
-    double thickness = element->thickness();
-    // We need a translation along and opposite half thickness
-    Vector3D sfNormal = surface.normal(gctx, surface.center(gctx));
-    std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
-    for (const auto& dT : deltaT) {
-      Transform3D dtransform = Transform3D::Identity();
-      dtransform.pretranslate(dT * sfNormal);
-      extent.extend(sfPolyhedron.extent(dtransform));
-    }
-  } else {
-    extent.extend(sfPolyhedron.extent());
-  }
+  measure(gctx, m_surfaces);
 }
 
 }  // namespace Acts

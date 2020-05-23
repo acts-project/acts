@@ -52,7 +52,20 @@ struct CylindricalTrackingGeometry {
   /// The detector store for memory management
   DetectorStore detectorStore = {};
 
-  /// Generartor of surfaces for a ring
+  /// Generator of surfaces for a ring
+  ///
+  /// @param detStore The DetectorStore for storing the modules
+  /// @param moduleHalfXminY The half lenght in X (at Y min) of the module
+  /// @param moduleHalfXmaxY The half lenght in X (at Y max) of the module
+  /// @param moduleHalfY The half lenght in Y of the module
+  /// @param moduleThickness The module thickness
+  /// @param moduleTilt The tilt out of the plane for discs
+  /// @param ringRadius The central radius of the ring
+  /// @param ringZ The z position of the ring
+  /// @param zStagger The z offset of phi moudles
+  /// @param nPhi The number of phi modules
+  ///
+  /// @return A vector of Surfaces
   std::vector<const Surface*> surfacesRing(
       DetectorStore& detStore, double moduleHalfXminY, double moudleHalfXmaxY,
       double moduleHalfY, double moduleThickness, double moduleTilt,

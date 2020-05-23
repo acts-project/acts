@@ -45,7 +45,7 @@ class ProtoLayerHelper {
   /// @param gctx The geometry context (usually building context at this stage)
   /// @param surfaces The surfaces to be sorted into arrays
   /// @param bValue The binning value for the sorting
-  /// @param joinTolerance The tolerance for which binns are joined
+  /// @param joinTolerance The tolerance for which bins are joined
   ///
   /// @return A vector of ProtoLayers
   std::vector<ProtoLayer> protoLayers(

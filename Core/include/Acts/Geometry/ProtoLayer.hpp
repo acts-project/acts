@@ -83,6 +83,7 @@ struct ProtoLayer {
   const std::vector<const Surface*>& surfaces() const;
 
   /// Add a surface, this will also increase the extent
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param surface The surface which is added to the ProtoLayer
   void add(const GeometryContext& gctx, const Surface& surface);
 
