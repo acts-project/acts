@@ -35,8 +35,6 @@ struct InterpolatedBFieldMapper {
 
   /// @brief struct representing smallest grid unit in magnetic field grid
   ///
-  /// @tparam DIM_POS Dimensionality of magnetic field map
-  ///
   /// This type encapsulate all required information to perform linear
   /// interpolation of magnetic field values within a confined 3D volume.
   struct FieldCell {

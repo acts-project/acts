@@ -4,70 +4,203 @@ Magnetic field
 This module collects information about classes and typedefs useful for
 describing different magnetic field configurations. Acts is independent of the
 magnetic field implementation used. Algorithms which need magnetic field
-information (e.g. :class:`Acts::RungeKuttaEngine`, :class:`Acts::AtlasStepper`,
+information (e.g. :class:`Acts::AtlasStepper`,
 :class:`Acts::EigenStepper`) are templated on the magnetic field. The
-requirements for the magnetic field implementation are the implementation of the
-following functions:
+requirements for the magnetic field implementation are shown in the example ``FieldProvider`` given below:
 
-.. code-block::
+.. code-block:: cpp
 
-    // retrieve field at given position
-    Acts::Vector3D getField(const Acts::Vector3D& position) const
-    // retrieve magnetic field cell at given position
-    // where Cache is the specific Cache struct defined by the magnetic field implementation
-    Acts::Vector3D getField(const Acts::Vector3D& position, Cache& cache) const
-    // retrieve gradient of magnetic field value
-    Acts::Vector3D getFieldGradient(const Acts::Vector3D& position, Acts::ActsMatrixD<3, 3>&     derivative) const
-    // check whether given 3D position is inside this field cell
-    bool isInside(const Acts::Vector3D& position) const
+    struct FieldProvider {
+      struct Cache {
+      // implementation specific
+      };
+
+      // get field for a given position, no cache
+      Vector3D getField(const Vector3D& pos) const;
+      // get field and the gradient, no cache
+      Vector3D getFieldGradient(const Vector3D& pos, ActsMatrixD<3, 3>& deriv) const;
+
+      // get the field for a given position, and provide the cache object
+      Vector3D getField(const Vector3D& position, Cache& cache) const;
+      // get the field and gradient for a given position, provide cache
+      Vector3D getFieldGradient(const Vector3D& pos, 
+                                ActsMatrixD<3, 3>& deriv, // mutable reference
+                                Cache& cache) const;
+    };
+
+    // client code
+    FieldProvider p;
+    FieldProvider::Cache cache;
+    auto field = p.getField({1, 2, 3}, cache); // retrieve field
+
 
 Each magnetic field implementation expects to be passed a reference to an
-implementation specific cache object. This can usually be achieved through
-``typename BField::Cache cache``, where ``BField`` is a template parameter. Acts
-comes with the following implementations of this (implicit) interface.
+implementation specific cache object. The cache type is provided as a nested
+struct of the field provider.  It can usually be extracted using ``typename BField::Cache cache``, where ``BField`` is a template parameter. Acts comes
+with the following implementations of this (implicit) interface:
 
-Constant magnetic field implementation
---------------------------------------
+- :ref:`constantbfield`
+- :ref:`interpolatedbfield`
+- :ref:`solenoidbfield`
+- :ref:`sharedbfield`
 
-Should be used to describe a constant magnetic field. The
-:class:`Acts::ConstantBField` returns a given constant magnetic field value at
-every point and can be set by the user either at construction or with a set
-function.
 
-Interpolated magnetic field implementation
-------------------------------------------
+.. _constantbfield:
+
+Constant magnetic field
+-----------------------
+
+The simplest implementation is the a constant field, which returns the same field values at every queried location. It is implemented in the :class:`Acts::ConstantBField` class.
+
+.. doxygenclass:: Acts::ConstantBField
+   :members: ConstantBField
+
+As seen above, the class is constructed from a three-dimensional field vector, which is returned unmodified to every call to :func:`Acts::ConstantBField::getField`.
+
+.. _interpolatedbfield:
+
+Interpolated magnetic field
+---------------------------
 
 For more complex magnetic field implementations the
-:class:`Acts::InterpolatedBFieldMap` can be used. The
-:class:`Acts::InterpolatedBFieldMap` internally uses a field mapper which
-follows :any:`Acts::concept::AnyFieldLookup` concept. This allows users to
-provide their own field mapper implementation using the
-:class:`Acts::InterpolatedBFieldMap` interface. Acts provides a default field
-mapper implementation :class:`Acts::InterpolatedBFieldMap::FieldMapper`, which
-maps global cartesian 3D positions to magnetic field values. It uses an
-underlying grid which follows the :any:`Acts::concept::AnyNDimGrid` concept which can be
-a grid of any dimension and allows users to provide their own grid
-implementation. Furthermore users also need to provide two functions in order to
-use the :class:`Acts::InterpolatedBFieldMap::FieldMapper`:
+:class:`Acts::InterpolatedBFieldMap` can be used. The idea here is to calculate
+an interpolated value of the magnetic field from a grid of known field values.
+In 3D, this means the interpolation is done from the 8 cornerpoints of a *field
+cell*. The field cell can be retrieved for any given position. Since during
+typical access patterns, e.g. the propagation, subsequent steps are relatively
+likely to not cross the field cell boundary, the field cell can be cached.
 
-#. A function mapping cartesian global 3D coordinates onto the grid coordinates
-   of dimension N.
-#. A function calculating cartesian global 3D coordinates of the magnetic field
-   with the local N dimensional field and the global 3D position as an input.
+.. figure:: ../figures/bfield/field_cell.svg
+  :width: 300
 
-A default :class:`Acts::detail::Grid` implementation is provided following the
-`Acts::concept::AnyNDimGrid`, which is flexible (using template parameters) on
-the dimension of the grid and the value stored in the grid. Two convenience
-functions are provided to  ease the creation of an
-:class:`Acts::InterpolatedBFieldMap::FieldMapper` e.g. when reading in a field
-map from a file, are provided:
+  Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only need to be refetched when the propagation crosses into the next grid region.
 
-#. :func:`Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::FieldMapperRZ()`
-#. :func:`Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ()`
 
-SharedBField
-------------
+The class constructor
 
-Wraps another ``BField`` type, which it holds as a ``std::shared_ptr<...>``. The
-instance can then be copied without having to duplicate the underlying field
-implementation. This is useful in the case of a large B-Field map.
+.. doxygenfunction:: Acts::InterpolatedBFieldMap::InterpolatedBFieldMap
+   :outline:
+
+accepts a single object of type :struct:`Acts::InterpolatedBFieldMap::Config`:
+
+.. doxygenstruct:: Acts::InterpolatedBFieldMap::Config
+   :members: mapper, scale
+   :outline:
+
+The config object contains an instance of a *mapper* type, as well as a global
+scale to be applied to any field values.
+
+One implementation :struct:`Acts::InterpolatedBFieldMapper` is provided, but
+since the mapper type is a template parameter, this implementation can also be
+switched out. The default implementation uses :class:`Acts::detail::Grid` as
+the underlying data storage. It is generic over the number of dimensions.
+
+Most notably it exposes a type
+:struct:`Acts::InterpolatedBFieldMapper::FieldCell` that corresponds to the
+concept of a field cell discussed above. It also exposes a function
+
+.. doxygenfunction:: Acts::InterpolatedBFieldMapper::getFieldCell
+   :outline:
+
+that allows retrieval of such a field cell at a given position. This function
+is used by :class:`Acts::InterpolatedBFieldMap` to lookup and use field cells.
+:class:`Acts::InterpolatedBFieldMap` will store the most recent field cell in
+the ``Cache`` object provided by the client, and only talk to
+:struct:`Acts::InterpolatedBFieldMapper` when the position leaves the current
+field cell. Access to the magnetic field is done using the common interface methods
+
+.. doxygenclass:: Acts::InterpolatedBFieldMap
+   :members: getField
+   :outline:
+
+where the ``Cache`` type hides the concrete mapper used.
+
+Helpers to construct mappers from text and root file inputs are provided:
+
+- :func:`Acts::fieldMapperRZ`
+- :func:`Acts::fieldMapperXYZ`
+
+.. _solenoidbfield:
+
+Analytical solenoid magnetic field
+----------------------------------
+
+Acts also provides a field provider that calculates the field vectors analytically for a solenoid field. 
+
+.. image:: ../figures/bfield/quiver.png
+   :width: 600
+   :alt: Picture of a solenoid field in rz, with arrows indicating the direction of the field, and their size denoting the strength. The field is almost homogeneous in the center.
+
+The implementation can has configurable solenoid parameters:
+
+.. doxygenstruct:: Acts::SolenoidBField::Config
+
+.. note::
+
+    A configuration of 
+
+    .. code-block:: cpp
+
+        SolenoidBField::Config cfg;
+        cfg.length = 5.8_m;
+        cfg.radius = (2.56 + 2.46) * 0.5 * 0.5_m;
+        cfg.nCoils = 1154;
+        cfg.bMagCenter = 2_T;
+        SolenoidBField bField(cfg);
+
+    roughly corresponds to the solenoid wrapping the Inner Detector in ATLAS.
+
+Implementation
+**************
+
+The calculation uses two special functions:
+
+- :math:`E_1(k^2)` is the complete elliptic integral of the 1st kind
+- :math:`E_2(k^2)` is the complete elliptic integral of the 2nd kind
+
+:math:`E_1(k^2)` and :math:`E_2(k^2)` are usually indicated as :math:`K(k^2)` and :math:`E(k^2)` in literature, respectively:
+
+.. math::
+
+  E_1(k^2) = \int_0^{\pi/2} \left( 1 - k^2 \sin^2{\theta} \right )^{-1/2} \mathop{}\!\mathrm{d}\theta
+
+.. math::
+
+  E_2(k^2) = \int_0^{\pi/2}\sqrt{1 - k^2 \sin^2{\theta}} \mathop{}\!\mathrm{d}\theta
+
+:math:`k^2` is a function of the point :math:`(r, z)` and of the radius of the coil :math:`R`
+
+.. math::
+
+  k^2 = \frac{4Rr}{(R+r)^2 + z^2}
+
+Using these, you can evaluate the two components :math:`B_r` and :math:`B_z` of the magnetic field:
+
+.. math::
+
+  B_r(r, z) = \frac{\mu_0 I}{4\pi} \frac{kz}{\sqrt{Rr^3}} \left[ \left(\frac{2-k^2}{2-2k^2}\right)E_2(k^2) - E_1(k^2) \right ]
+
+.. math::
+
+  B_z(r,z) = \frac{\mu_0 I}{4\pi} \frac{k}{\sqrt{Rr}} \left[ \left( \frac{(R+r)k^2-2r}{2r(1-k^2)} \right ) E_2(k^2) + E_1(k^2) \right ]
+
+In the implementation the factor of :math:`(\mu_0\cdot I)` is defined to be a scaling factor. It is evaluated and defined the magnetic field in the center of the coil, i.e. the scale set in :any:`Acts::SolenoidBField::Config::bMagCenter`.
+
+.. warning::
+    
+    Evaluation of :math:`E_1(k^2)` and :math:`E_2(k^2)` is **slow**. The
+    :class:`Acts::InterpolatedBFieldMap` easily outperforms
+    :class:`Acts::SolenoidBField`. A helper :func:`Acts::solenoidFieldMapper`
+    is provided that builds a map from the analytical implementation and is
+    much faster to lookup.
+
+.. _sharedbfield:
+
+Shared magnetic field
+--------------------
+
+:class:`Acts::SharedBField` wraps another one of the magnetic field types from above.
+Internally, it holds a ``std::shared_ptr<...>``, so the same field provider can be reused. This is useful in case of a larger map, for example.
+
+.. doxygenfunction:: Acts::SharedBField::SharedBField
+
