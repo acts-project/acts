@@ -2,7 +2,7 @@
 
 ## Quick start
 
-Acts is developed in C++ and is build using [CMake](https://cmake.org). Building
+Acts is developed in C++ and is built using [CMake](https://cmake.org). Building
 the core library requires a C++17 compatible compiler,
 [Boost](http://boost.org), and [Eigen](http://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
