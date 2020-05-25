@@ -29,7 +29,7 @@ option(ACTS_BUILD_JSON_PLUGIN "Build json plugin" OFF)
 option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json installation" ON)
 option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 option(ACTS_BUILD_LEGACY "Build legacy plugin" OFF)
-#
+# fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
@@ -45,8 +45,6 @@ option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 
 # handle option inter-dependencies and the everything flag
-# DD4hep and HepMC3 are excluded from the EVERYTHING option for now since
-# they are not yet available in every CI build.
 include(ActsOptionHelpers)
 # options without inter-dependencies
 set_option_if(ACTS_BUILD_BENCHMARKS ACTS_BUILD_EVERYTHING)
