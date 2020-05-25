@@ -71,16 +71,16 @@ class SolenoidBField {
     Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
   };
 
-  /// Config struct for the SolenoidBfield
+  /// Config struct for the SolenoidBfield.
   struct Config {
-    /// Radius at which the coils are located
+    /// Radius at which the coils are located.
     double radius;
     /// Extent of the solenoid in z. It goes from
     /// -length/2 to +length/2 by convention
     double length;
     /// The number of coils that make up the solenoid
     size_t nCoils;
-    /// The target magnetic field strength at the center
+    /// The target magnetic field strength at the center.
     /// This will be used to scale coefficients
     double bMagCenter;
   };

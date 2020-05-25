@@ -13,7 +13,6 @@
 namespace Acts {
 
 /// @ingroup MagneticField
-/// @brief returns a given constant field value at every point
 ///
 /// This class implements a simple constant magnetic field. The
 /// magnetic field value has to be set at creation time, but can
@@ -25,7 +24,7 @@ class ConstantBField final {
     Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
   };
 
-  /// @brief construct constant magnetic field from field vector
+  /// Construct constant magnetic field from field vector.
   ///
   /// @param [in] B magnetic field vector in global coordinate system
   explicit ConstantBField(Vector3D B) : m_BField(std::move(B)) {}
