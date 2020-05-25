@@ -46,12 +46,10 @@ struct Extent {
                   double tolerance = s_epsilon) {
     // Helper to check
     auto checkRange = [&](BinningValue bvc) -> bool {
-      auto check = [&](const Range& a, const Range& b) -> bool {
-        return (a.second + tolerance > b.first and
-                a.first - tolerance < b.second);
-      };
-      return (check(ranges[bvc], other.ranges[bvc]) and
-              check(other.ranges[bvc], ranges[bvc]));
+      auto& a = ranges[bvc];
+      auto& b = other.ranges[bvc];
+      return (a.second + tolerance > b.first and
+              a.first - tolerance < b.second);
     };
 
     // Check all
