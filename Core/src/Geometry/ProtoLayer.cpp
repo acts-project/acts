@@ -22,14 +22,16 @@ using Acts::VectorHelpers::phi;
 namespace Acts {
 
 ProtoLayer::ProtoLayer(const GeometryContext& gctx,
-                       const std::vector<const Surface*>& surfaces) {
+                       const std::vector<const Surface*>& surfaces)
+    : m_surfaces(surfaces) {
   measure(gctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
     const GeometryContext& gctx,
-    const std::vector<std::shared_ptr<const Surface>>& surfaces) {
-  measure(gctx, unpack_shared_vector(surfaces));
+    const std::vector<std::shared_ptr<const Surface>>& surfaces)
+    : m_surfaces(unpack_shared_vector(surfaces)) {
+  measure(gctx, m_surfaces);
 }
 
 double ProtoLayer::min(BinningValue bval, bool addenv) {
@@ -56,6 +58,7 @@ double ProtoLayer::range(BinningValue bval, bool addenv) {
 
 std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
+  extent.toStream(sl);
   return sl;
 }
 
@@ -79,6 +82,11 @@ void ProtoLayer::measure(const GeometryContext& gctx,
     }
     extent.extend(sfPolyhedron.extent());
   }
+}
+
+void ProtoLayer::add(const GeometryContext& gctx, const Surface& surface) {
+  m_surfaces.push_back(&surface);
+  measure(gctx, m_surfaces);
 }
 
 }  // namespace Acts
