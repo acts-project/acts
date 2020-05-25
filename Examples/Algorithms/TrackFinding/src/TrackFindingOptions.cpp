@@ -8,15 +8,16 @@
 
 #include "ACTFW/TrackFinding/TrackFindingOptions.hpp"
 
+#include <boost/program_options.hpp>
 #include <string>
 
 void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("ckf-chi2max-slselection", value<double>()->default_value(15),
+  opt("ckf-slselection-chi2max", value<double>()->default_value(15),
       "Global criteria of maximum chi2 for CKF source link selection");
-  opt("ckf-nslsmax-slselection", value<int>()->default_value(10),
+  opt("ckf-slselection-nmax", value<int>()->default_value(10),
       "Global criteria of maximum number of source link candidates on a "
       "surface for CKF source link selection");
 }
@@ -27,9 +28,9 @@ FW::TrackFindingAlgorithm::Config FW::Options::readTrackFindingConfig(
   Config tfAlgCfg;
 
   tfAlgCfg.sourcelinkSelectorCfg.globalChi2CutOff =
-      variables["ckf-chi2max-slselection"].template as<double>();
+      variables["ckf-slselection-chi2max"].template as<double>();
   tfAlgCfg.sourcelinkSelectorCfg.globalNumSourcelinksCutOff =
-      variables["ckf-nslsmax-slselection"].template as<int>();
+      variables["ckf-slselection-nmax"].template as<int>();
 
   return tfAlgCfg;
 }

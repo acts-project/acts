@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ACTFW/Utilities/OptionsFwd.hpp"
 #include "Acts/Utilities/Logger.hpp"
