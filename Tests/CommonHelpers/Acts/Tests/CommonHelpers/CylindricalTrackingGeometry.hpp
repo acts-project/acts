@@ -29,6 +29,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -46,10 +47,139 @@ struct CylindricalTrackingGeometry {
       std::reference_wrapper<const GeometryContext> gctx)
       : geoContext(gctx) {}
 
-  /// The detector store for memory management
-  std::vector<std::unique_ptr<const DetectorElementStub>> detectorStore = {};
+  using DetectorStore = std::vector<std::unique_ptr<const DetectorElementStub>>;
 
-  /// helper method for cylinder layer
+  /// The detector store for memory management
+  DetectorStore detectorStore = {};
+
+  /// Generator of surfaces for a ring
+  ///
+  /// @param detStore The DetectorStore for storing the modules
+  /// @param moduleHalfXminY The half lenght in X (at Y min) of the module
+  /// @param moduleHalfXmaxY The half lenght in X (at Y max) of the module
+  /// @param moduleHalfY The half lenght in Y of the module
+  /// @param moduleThickness The module thickness
+  /// @param moduleTilt The tilt out of the plane for discs
+  /// @param ringRadius The central radius of the ring
+  /// @param ringZ The z position of the ring
+  /// @param zStagger The z offset of phi moudles
+  /// @param nPhi The number of phi modules
+  ///
+  /// @return A vector of Surfaces
+  std::vector<const Surface*> surfacesRing(
+      DetectorStore& detStore, double moduleHalfXminY, double moudleHalfXmaxY,
+      double moduleHalfY, double moduleThickness, double moduleTilt,
+      double ringRadius, double ringZ, double zStagger, int nPhi) {
+    std::vector<const Surface*> layerSurfaces;
+
+    // Module material from input
+    MaterialProperties moduleMaterial(makeSilicon(), moduleThickness);
+
+    // Create a new surface material
+    std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
+        std::shared_ptr<const ISurfaceMaterial>(
+            new Acts::HomogeneousSurfaceMaterial(moduleMaterial));
+
+    // The rectangle/trapezoid bounds for all modules
+    std::shared_ptr<PlanarBounds> mBounds = nullptr;
+    if (moduleHalfXminY == moudleHalfXmaxY) {
+      mBounds = std::make_shared<RectangleBounds>(moduleHalfXminY, moduleHalfY);
+    } else {
+      mBounds = std::make_shared<TrapezoidBounds>(moduleHalfXminY,
+                                                  moudleHalfXmaxY, moduleHalfY);
+    }
+
+    double phiStep = 2 * M_PI / nPhi;
+
+    for (int im = 0; im < nPhi; ++im) {
+      // Get the moduleTransform
+      double phi = -M_PI + im * phiStep;
+      std::shared_ptr<Transform3D> mModuleTransform =
+          std::make_shared<Transform3D>(
+              Translation3D(ringRadius * std::cos(phi),
+                            ringRadius * std::sin(phi),
+                            ringZ + (im % 2) * zStagger) *
+              AngleAxis3D(phi - 0.5 * M_PI, Vector3D::UnitZ()) *
+              AngleAxis3D(moduleTilt, Vector3D::UnitY()));
+
+      // Create the detector element
+      auto detElement = std::make_unique<const DetectorElementStub>(
+          mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
+
+      layerSurfaces.push_back(&detElement->surface());
+      detStore.push_back(std::move(detElement));
+    }
+
+    return layerSurfaces;
+  }
+
+  /// Generator of surfaces for a cylindrical layer
+  ///
+  /// @param detStore The DetectorStore for storing the modules
+  /// @param moduleHalfX The half lenght in X of the module
+  /// @param moduleHalfY The half lenght in Y of the module
+  /// @param moduleThickness The module thickness
+  /// @param moduleTilePhi The tilt in phi direction of the module
+  /// @param layerRadius The radius fo the cylindrical layer
+  /// @param radialStagger The radial delta of modules next in z
+  /// @param longitudinalOverlap The z overlap of modules next in z
+  /// @param binningSchema The number of bins in phi/z
+  ///
+  /// @return A vector of Surfaces
+  std::vector<const Surface*> surfacesCylinder(
+      DetectorStore& detStore, double moduleHalfX, double moduleHalfY,
+      double moduleThickness, double moduleTiltPhi, double layerRadius,
+      double radialStagger, double longitudinalOverlap,
+      const std::pair<int, int>& binningSchema) {
+    std::vector<const Surface*> layerSurfaces;
+
+    // Module material from input
+    MaterialProperties moduleMaterial(makeSilicon(), moduleThickness);
+
+    // Create a new surface material
+    std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
+        std::shared_ptr<const ISurfaceMaterial>(
+            new Acts::HomogeneousSurfaceMaterial(moduleMaterial));
+
+    // The rectangle bounds for all modules
+    auto mBounds = std::make_shared<RectangleBounds>(moduleHalfX, moduleHalfY);
+
+    // Create the module centers
+    auto moduleCenters =
+        modulePositionsCylinder(layerRadius, radialStagger, moduleHalfY,
+                                longitudinalOverlap, binningSchema);
+
+    for (auto& mCenter : moduleCenters) {
+      // The association transform
+      double modulePhi = VectorHelpers::phi(mCenter);
+      // Local z axis is the normal vector
+      Vector3D moduleLocalZ(cos(modulePhi + moduleTiltPhi),
+                            sin(modulePhi + moduleTiltPhi), 0.);
+      // Local y axis is the global z axis
+      Vector3D moduleLocalY(0., 0., 1);
+      // Local x axis the normal to local y,z
+      Vector3D moduleLocalX(-sin(modulePhi + moduleTiltPhi),
+                            cos(modulePhi + moduleTiltPhi), 0.);
+      // Create the RotationMatrix
+      RotationMatrix3D moduleRotation;
+      moduleRotation.col(0) = moduleLocalX;
+      moduleRotation.col(1) = moduleLocalY;
+      moduleRotation.col(2) = moduleLocalZ;
+      // Get the moduleTransform
+      std::shared_ptr<Transform3D> mModuleTransform =
+          std::make_shared<Transform3D>(Translation3D(mCenter) *
+                                        moduleRotation);
+      // Create the detector element
+      auto detElement = std::make_unique<const DetectorElementStub>(
+          mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
+
+      layerSurfaces.push_back(&detElement->surface());
+      detStore.push_back(std::move(detElement));
+    }
+    return layerSurfaces;
+  }
+
+  /// Helper method for cylinder layer
   /// create the positions for module surfaces on a cylinder
   std::vector<Vector3D> modulePositionsCylinder(
       double radius, double zStagger, double moduleHalfLength, double lOverlap,
@@ -151,9 +281,6 @@ struct CylindricalTrackingGeometry {
         std::shared_ptr<const ISurfaceMaterial>(
             new Acts::HomogeneousSurfaceMaterial(lProperties));
 
-    // Module material - X0, L0, A, Z, Rho
-    Material pcMaterial = makeSilicon();
-
     std::vector<double> pLayerRadii = {32., 72., 116., 172.};
     std::vector<std::pair<int, int>> pLayerBinning = {
         {16, 14}, {32, 14}, {52, 14}, {78, 14}};
@@ -165,56 +292,23 @@ struct CylindricalTrackingGeometry {
     std::vector<LayerPtr> pLayers;
 
     for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
-      std::vector<std::shared_ptr<const Surface>> layerModules;
+      std::vector<const Surface*> layerSurfaces =
+          surfacesCylinder(detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
+                           pModuleThickness[ilp], pModuleTiltPhi[ilp],
+                           pLayerRadii[ilp], 2_mm, 5_mm, pLayerBinning[ilp]);
 
-      // Module material from input
-      MaterialProperties moduleMaterialProperties(pcMaterial,
-                                                  pModuleThickness[ilp]);
-      // Create a new surface material
-      std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
-          std::shared_ptr<const ISurfaceMaterial>(
-              new Acts::HomogeneousSurfaceMaterial(moduleMaterialProperties));
-
-      // The rectangle bounds for all modules
-      auto mBounds = std::make_shared<RectangleBounds>(pModuleHalfX[ilp],
-                                                       pModuleHalfY[ilp]);
-      // Create the module centers
-      auto moduleCenters = modulePositionsCylinder(
-          pLayerRadii[ilp], 2_mm, pModuleHalfY[ilp], 5_mm, pLayerBinning[ilp]);
-
-      for (auto& mCenter : moduleCenters) {
-        // The association transform
-        double modulePhi = VectorHelpers::phi(mCenter);
-        // Local z axis is the normal vector
-        Vector3D moduleLocalZ(cos(modulePhi + pModuleTiltPhi[ilp]),
-                              sin(modulePhi + pModuleTiltPhi[ilp]), 0.);
-        // Local y axis is the global z axis
-        Vector3D moduleLocalY(0., 0., 1);
-        // Local x axis the normal to local y,z
-        Vector3D moduleLocalX(-sin(modulePhi + pModuleTiltPhi[ilp]),
-                              cos(modulePhi + pModuleTiltPhi[ilp]), 0.);
-        // Create the RotationMatrix
-        RotationMatrix3D moduleRotation;
-        moduleRotation.col(0) = moduleLocalX;
-        moduleRotation.col(1) = moduleLocalY;
-        moduleRotation.col(2) = moduleLocalZ;
-        // Get the moduleTransform
-        std::shared_ptr<Transform3D> mModuleTransform =
-            std::make_shared<Transform3D>(Translation3D(mCenter) *
-                                          moduleRotation);
-        // Create the detector element
-        auto detElement = std::make_unique<const DetectorElementStub>(
-            mModuleTransform, mBounds, pModuleThickness[ilp],
-            moduleMaterialPtr);
-
-        layerModules.push_back(detElement->surface().getSharedPtr());
-        detectorStore.push_back(std::move(detElement));
+      // Make a shared version out of it
+      std::vector<std::shared_ptr<const Surface>> layerSurfacePtrs;
+      layerSurfacePtrs.reserve(layerSurfaces.size());
+      for (auto& sf : layerSurfaces) {
+        layerSurfacePtrs.push_back(sf->getSharedPtr());
       }
+
       // create the layer and store it
-      ProtoLayer protoLayer(geoContext, layerModules);
+      ProtoLayer protoLayer(geoContext, layerSurfaces);
       protoLayer.envelope[binR] = {0.5, 0.5};
       auto pLayer = layerCreator->cylinderLayer(
-          geoContext, std::move(layerModules), pLayerBinning[ilp].first,
+          geoContext, std::move(layerSurfacePtrs), pLayerBinning[ilp].first,
           pLayerBinning[ilp].second, protoLayer);
       auto approachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
       auto mutableOuterSurface =

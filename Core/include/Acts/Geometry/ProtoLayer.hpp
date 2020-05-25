@@ -53,7 +53,6 @@ struct ProtoLayer {
   ProtoLayer(const GeometryContext& gctx,
              const std::vector<std::shared_ptr<const Surface>>& surfaces);
 
-  // Defaulated empty constructor
   ProtoLayer() = default;
 
   /// Get the parameters : min
@@ -80,6 +79,14 @@ struct ProtoLayer {
   /// @param sl the input ostream
   std::ostream& toStream(std::ostream& sl) const;
 
+  /// Give access to the surfaces used/assigned to the ProtoLayer
+  const std::vector<const Surface*>& surfaces() const;
+
+  /// Add a surface, this will also increase the extent
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param surface The surface which is added to the ProtoLayer
+  void add(const GeometryContext& gctx, const Surface& surface);
+
  private:
   /// Helper method which performs the actual min/max calculation
   ///
@@ -87,5 +94,13 @@ struct ProtoLayer {
   /// @param surfaces The surfaces to build this protolayer out of
   void measure(const GeometryContext& gctx,
                const std::vector<const Surface*>& surfaces);
+
+  /// Store the list of surfaces used for this proto layer
+  std::vector<const Surface*> m_surfaces = {};
 };
+
+inline const std::vector<const Surface*>& ProtoLayer::surfaces() const {
+  return m_surfaces;
+}
+
 }  // namespace Acts
