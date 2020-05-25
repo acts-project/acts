@@ -21,6 +21,7 @@
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Plugins/BField/BFieldOptions.hpp"
 #include "ACTFW/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ACTFW/TrackFinding/TrackFindingOptions.hpp"
 #include "ACTFW/TruthTracking/ParticleSmearing.hpp"
 #include "ACTFW/TruthTracking/TruthSeedSelector.hpp"
 #include "ACTFW/Utilities/Options.hpp"
@@ -42,6 +43,7 @@ int main(int argc, char* argv[]) {
   Options::addOutputOptions(desc);
   detector.addOptions(desc);
   Options::addBFieldOptions(desc);
+  Options::addTrackFindingOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -132,16 +134,11 @@ int main(int argc, char* argv[]) {
   // Setup the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
-  // @TODO: add options for source link selection criteria
-  Acts::CKFSourceLinkSelector::Config slSelectorCfg;
-  slSelectorCfg.globalChi2CutOff = 15;
-  slSelectorCfg.globalNumSourcelinksCutOff = 10;
-  TrackFindingAlgorithm::Config trackFindingCfg;
+  auto trackFindingCfg = Options::readTrackFindingConfig(vm);
   trackFindingCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
   trackFindingCfg.outputTrajectories = "trajectories";
-  trackFindingCfg.sourcelinkSelectorCfg = std::move(slSelectorCfg);
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
       trackingGeometry, magneticField, logLevel);
   sequencer.addAlgorithm(
