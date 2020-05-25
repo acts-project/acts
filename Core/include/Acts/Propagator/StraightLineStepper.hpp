@@ -130,9 +130,9 @@ class StraightLineStepper {
     }
 
     /// Transform from directions to angles in jacobian
-    ActsMatrixD<8, 7> jacDirToAngle = ActsMatrixD<8, 7>::Zero();
+    ActsMatrixD<8, 7> jacAngleToDir = ActsMatrixD<8, 7>::Zero();
     /// Transform from angles to directions in jacobian
-    ActsMatrixD<7, 8> jacAngleToDir = ActsMatrixD<7, 8>::Zero();
+    ActsMatrixD<7, 8> jacDirToAngle = ActsMatrixD<7, 8>::Zero();
 
     /// Jacobian from local to the global frame
     std::optional<BoundToFreeMatrix> jacToGlobal = std::nullopt;

@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   auto jacAngleToDir = detail::jacobianAnglesToDirections(direction);
   BOOST_TEST(jacAngleToDir != decltype(jacAngleToDir)::Zero());
 
-  auto product = jacAngleToDir * jacDirToAngle;
+  auto product = jacDirToAngle * jacAngleToDir;
   CHECK_CLOSE_ABS(product, decltype(product)::Identity(),
                   std::numeric_limits<double>::epsilon());
 
