@@ -146,7 +146,7 @@ following command will make the source directory available as `/acts` in the
 container and start an interactive `bash` shell
 
 ```console
-$ docker --volume=<source>:/acts:ro --interactive --tty <image> /bin/bash
+$ docker run --volume=<source>:/acts:ro --interactive --tty <image> /bin/bash
 ```
 
 where `<image>` is the image id that was previously mentioned. If you are using the Ubuntu-based image you are already good to go. For the images based on LCG releases, you can now activate the LCG release in the container shell by sourcing a setup script:
