@@ -49,8 +49,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
    public:
     /// Identify the layer by name
     std::string layerName = "";
-    /// Identify the sensor by name
-    std::string sensorName = "";
+    /// Identify the sensor(s) by name
+    std::vector<std::string> sensorNames = {};
     /// The local axis definition of TGeo object to Acts::Surface
     std::string localAxes = "xyz";
     /// Parse area :  in r
@@ -82,7 +82,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     // Default constructor
     LayerConfig()
         : layerName(""),
-          sensorName(""),
+          sensorNames({}),
           localAxes("XZY"),
           envelope(std::pair<double, double>(1_mm, 1_mm)) {}
   };
@@ -201,9 +201,16 @@ class TGeoLayerBuilder : public ILayerBuilder {
                    int type = 0);
 
   /// Private helper method : match string with wildcards
-  /// @param wc is the one with the potential wildcard
-  /// @param test is the test string
+  /// @param first is the one with the potential wildcard
+  /// @param second is the test string
   bool match(const char* first, const char* second) const;
+
+  /// Private helper method : match string with wildcards
+  /// Method that uses the match method with wild cards and 
+  /// performs it on an input list 
+  /// @param first is the one with the potential wildcard
+  /// @param second is the test string
+  bool match(const std::vector<std::string>& first, const char* second) const;
 
   /// Private helper method : register splitting input
   void registerSplit(std::vector<double>& parameters, double test,
@@ -245,6 +252,8 @@ inline const std::string& TGeoLayerBuilder::identification() const {
 // match. The first string may contain wildcard characters
 inline bool TGeoLayerBuilder::match(const char* first,
                                     const char* second) const {
+
+
   // If we reach at the end of both strings, we are done
   if (*first == '\0' && *second == '\0') {
     return true;
@@ -271,4 +280,18 @@ inline bool TGeoLayerBuilder::match(const char* first,
   }
   return false;
 }
+
+// The main function that checks if two given strings
+// match. The first string may contain wildcard characters
+inline bool TGeoLayerBuilder::match(const std::vector<std::string>& first,
+                                    const char* second) const {
+
+   for (auto& f : first){
+     if (match(f.c_str(),second)){
+       return true;
+     }
+   }
+   return false;
+}
+
 }  // namespace Acts
