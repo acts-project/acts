@@ -89,7 +89,10 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     LayerSurfaceVector layerSurfaces;
 
     ACTS_DEBUG("- layer configuration found for layer "
-               << layerCfg.layerName << " with sensor " << layerCfg.sensorName);
+               << layerCfg.layerName << " with sensors ");
+    for (auto& sensor : layerCfg.sensorNames){
+      ACTS_DEBUG("  - sensor: " << sensor);
+    }
     ACTS_DEBUG("- layers radially bound to rmin/rmax = "
                << layerCfg.parseRangeR.first << "/"
                << layerCfg.parseRangeR.second);
@@ -244,7 +247,8 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
     TGeoVolume* tgVolume, TGeoNode* tgNode, const TGeoMatrix& tgTransform,
     LayerConfig& layerConfig, int type, bool correctBranch,
     const std::string& offset) {
-  if (tgVolume != nullptr) {
+
+if (tgVolume != nullptr) {
     std::string volumeName = tgVolume->GetName();
     /// Some screen output indicating that the volume was found
     if (m_cfg.nodeSearchDebug) {
@@ -305,19 +309,28 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
     std::string tNodeName = tgNode->GetName();
     if (m_cfg.nodeSearchDebug) {
       ACTS_VERBOSE(offset << "[>] Node : " << tNodeName
-                          << " - checking for sensor name "
-                          << layerConfig.sensorName);
+                          << " - checking for sensor names: ");
+      for (auto& sensorName : layerConfig.sensorNames){
+        ACTS_VERBOSE(offset << " -- sensor: " << sensorName);
+      }
+
     }
+
+    auto isAmongst = [](const std::string& layer, const std::vector<std::string>& sensors) -> bool {
+        for (const auto& sensor : sensors){
+          if (layer.find(sensor) != std::string::npos){
+            return true;
+          }
+        }
+        return false;
+    }; 
+
     // Find out the branch hit, ingle layer depth supported by sensor==layer
-    bool branchHit =
-        correctBranch || (layerConfig.sensorName == layerConfig.layerName);
-    if (branchHit &&
-        (tNodeName.find(layerConfig.sensorName) != std::string::npos ||
-         match(layerConfig.sensorName.c_str(), tNodeName.c_str()))) {
+    bool branchHit = correctBranch || isAmongst(layerConfig.layerName, layerConfig.sensorNames);
+    if (branchHit && (isAmongst(tNodeName, layerConfig.sensorNames) ||
+         match(layerConfig.sensorNames, tNodeName.c_str()))) {
       if (m_cfg.nodeSearchDebug) {
-        ACTS_VERBOSE(offset << "Sensor name '" << layerConfig.sensorName
-                            << "' found in branch '" << layerConfig.layerName
-                            << "'.");
+        ACTS_VERBOSE(offset << "Matching ensor name found in branch '" << layerConfig.layerName << "'.");
       }
 
       // Create the detector element
@@ -387,4 +400,5 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
   } else if (m_cfg.nodeSearchDebug) {
     ACTS_VERBOSE("No node present.");
   }
+  
 }
