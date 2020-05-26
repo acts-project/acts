@@ -184,7 +184,7 @@ Python package manager via
 ```console
 $ cd <path/to/repository>
 # --user installs to a user-specific directory instead of the system
-$ pip install --user -r docs/requirements
+$ pip install --user -r docs/requirements.txt
 ```
 
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
