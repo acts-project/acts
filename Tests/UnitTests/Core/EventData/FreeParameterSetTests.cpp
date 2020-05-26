@@ -228,7 +228,7 @@ namespace {
 /// @endcond
 
 /**
- * @brief Unit test for checking consistency of ParameterSet class
+ * @brief Unit test for checking consistency of FreeParameterSet class
  *
  * The following functions are tested to yield the expected result/behavior:
  * -# ParameterSet::size
@@ -314,177 +314,176 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   BOOST_CHECK(parSet_with_cov.getParameters() == parValues);
 }
 
-//~ /**
- //~ * @brief Unit test for copy/assignment/swap in ParameterSet class
- //~ *
- //~ * The behavior of the following functions is checked:
- //~ * -# ParameterSet::ParameterSet
- //~ * -# ParameterSet::operator=
- //~ * -# ParameterSet::swap
- //~ */
-//~ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
-  //~ // covariance matrix
-  //~ ActsSymMatrixD<3> cov;
-  //~ cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
+/**
+ * @brief Unit test for copy/assignment/swap in FreeParameterSet class
+ *
+ * The behavior of the following functions is checked:
+ * -# ParameterSet::ParameterSet
+ * -# ParameterSet::operator=
+ * -# ParameterSet::swap
+ */
+BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
+  // covariance matrix
+  ActsSymMatrixD<3> cov;
+  cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
-  //~ // parameter values
-  //~ double loc0 = 0.5;
-  //~ double loc1 = -0.2;
-  //~ double phi = 0.3 * M_PI;  // this should be within [-M_PI,M_PI) to avoid
-                            //~ // failed tests due to angle range corrections
-  //~ ActsVectorD<3> first_parValues(loc0, loc1, phi);
+  // parameter values
+  double x = 0.5;
+  double y = -0.2;
+  double z = 0.3;
+  ActsVectorD<3> first_parValues(x, y, z);
 
-  //~ // parameter set with covariance matrix
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
+  // parameter set with covariance matrix
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> first(cov, x, y, z);
 
-  //~ // check copy constructor
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> copy(first);
-  //~ BOOST_CHECK(first == copy);
+  // check copy constructor
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> copy(first);
+  BOOST_CHECK(first == copy);
 
-  //~ // check move constructor
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> moved(std::move(copy));
-  //~ BOOST_CHECK(first == moved);
+  // check move constructor
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> moved(std::move(copy));
+  BOOST_CHECK(first == moved);
 
-  //~ // check assignment operator
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> assigned = moved;
-  //~ BOOST_CHECK(assigned == moved);
+  // check assignment operator
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> assigned = moved;
+  BOOST_CHECK(assigned == moved);
 
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> other(std::nullopt, 0, 1.7,
-                                                        //~ -0.15);
-  //~ BOOST_CHECK(assigned != other);
-  //~ assigned = other;
-  //~ BOOST_CHECK(assigned == other);
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> other(std::nullopt, 0, 1.7,
+                                                        -0.15);
+  BOOST_CHECK(assigned != other);
+  assigned = other;
+  BOOST_CHECK(assigned == other);
 
-  //~ // check move assignment
-  //~ BOOST_CHECK(first != assigned);
-  //~ first = ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi>(assigned);
-  //~ BOOST_CHECK(first == assigned);
+  // check move assignment
+  BOOST_CHECK(first != assigned);
+  first = FreeParameterSet<eFreePos0, eFreePos1, eFreePos2>(assigned);
+  BOOST_CHECK(first == assigned);
 
-  //~ // check swap method
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> lhs(cov, loc0, loc1, phi);
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> rhs(std::nullopt, 2 * loc0,
-                                                      //~ 2 * loc1, 2 * phi);
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> lhs_copy = lhs;
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> rhs_copy = rhs;
+  // check swap method
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> lhs(cov, x, y, z);
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> rhs(std::nullopt, 2 * x,
+                                                      2 * y, 2 * z);
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> lhs_copy = lhs;
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> rhs_copy = rhs;
 
-  //~ BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
-  //~ using std::swap;
-  //~ swap(lhs, rhs);
-  //~ BOOST_CHECK(lhs != rhs && rhs == lhs_copy && lhs == rhs_copy);
-//~ }
+  BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
+  using std::swap;
+  swap(lhs, rhs);
+  BOOST_CHECK(lhs != rhs && rhs == lhs_copy && lhs == rhs_copy);
+}
 
-//~ /**
- //~ *  @brief Unit test for comparison operators in ParameterSet
- //~ *
- //~ *  @sa ParameterSet::operator==, ParameterSet::operator!=
- //~ */
-//~ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
-  //~ // covariance matrix
-  //~ ActsSymMatrixD<3> cov;
-  //~ cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
+/**
+ *  @brief Unit test for comparison operators in FreeParameterSet
+ *
+ *  @sa FreeParameterSet::operator==, FreeParameterSet::operator!=
+ */
+BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
+  // covariance matrix
+  ActsSymMatrixD<3> cov;
+  cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
-  //~ // parameter values
-  //~ double loc0 = 0.5;
-  //~ double loc1 = -0.2;
-  //~ double phi = 0.3 * M_PI;  // this should be within [-M_PI,M_PI) to avoid
-                            //~ // failed tests due to angle range corrections
+  // parameter values
+  double x = 0.5;
+  double y = -0.2;
+  double z = 0.3;
+  
+  // parameter set with covariance matrix
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> first(cov, x, y, z);
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> second(std::nullopt, 2 * x,
+                                                         2 * y, 2 * z);
 
-  //~ // parameter set with covariance matrix
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> second(std::nullopt, 2 * loc0,
-                                                         //~ 2 * loc1, 2 * phi);
+  // check self comparison
+  BOOST_CHECK(first == first);
+  BOOST_CHECK(not(first != first));
 
-  //~ // check self comparison
-  //~ BOOST_CHECK(first == first);
-  //~ BOOST_CHECK(not(first != first));
+  // check mutual exclusivity
+  BOOST_CHECK(first != second);
+  BOOST_CHECK(not(first == second));
+  first = second;
+  BOOST_CHECK(first == second);
 
-  //~ // check mutual exclusivity
-  //~ BOOST_CHECK(first != second);
-  //~ BOOST_CHECK(not(first == second));
-  //~ first = second;
-  //~ BOOST_CHECK(first == second);
+  // check that comparison fails for unequal parameter values
+  second.setParameter<eFreePos0>(3 * x);
+  BOOST_CHECK(first != second);
+  first = second;
+  BOOST_CHECK(first == second);
 
-  //~ // check that comparison fails for unequal parameter values
-  //~ second.setParameter<eBoundLoc0>(3 * loc0);
-  //~ BOOST_CHECK(first != second);
-  //~ first = second;
-  //~ BOOST_CHECK(first == second);
+  second.setParameter<eFreePos1>(3 * y);
+  BOOST_CHECK(first != second);
+  first = second;
+  BOOST_CHECK(first == second);
 
-  //~ second.setParameter<eBoundLoc1>(3 * loc1);
-  //~ BOOST_CHECK(first != second);
-  //~ first = second;
-  //~ BOOST_CHECK(first == second);
+  second.setParameter<eFreePos2>(3 * z);
+  BOOST_CHECK(first != second);
+  first = second;
+  BOOST_CHECK(first == second);
 
-  //~ second.setParameter<eBoundPhi>(3 * phi);
-  //~ BOOST_CHECK(first != second);
-  //~ first = second;
-  //~ BOOST_CHECK(first == second);
+  // check that comparison fails for unequal covariance matrices
+  second.setCovariance(cov);
+  BOOST_CHECK(first != second);
+  first = second;
+  BOOST_CHECK(first == second);
 
-  //~ // check that comparison fails for unequal covariance matrices
-  //~ second.setCovariance(cov);
-  //~ BOOST_CHECK(first != second);
-  //~ first = second;
-  //~ BOOST_CHECK(first == second);
+  cov(0, 0) = 2 * cov(0, 0);
+  second.setCovariance(cov);
+  BOOST_CHECK(first != second);
+  first = second;
+  BOOST_CHECK(first == second);
+}
 
-  //~ cov(0, 0) = 2 * cov(0, 0);
-  //~ second.setCovariance(cov);
-  //~ BOOST_CHECK(first != second);
-  //~ first = second;
-  //~ BOOST_CHECK(first == second);
-//~ }
+/**
+ * @brief Unit test for projection matrices in FreeParameterSet
+ *
+ * Checks the correctness of the projection matrices from the full parameter
+ * space
+ * onto different parameter sub-spaces
+ *
+ * @sa FreeParameterSet::projector
+ */
+BOOST_AUTO_TEST_CASE(parset_projection_tests) {
+  ActsMatrixD<1, eFreeParametersSize> z_proj;
+  z_proj << 0, 0, 1, 0, 0, 0, 0, 0;
 
-//~ /**
- //~ * @brief Unit test for projection matrices in ParameterSet
- //~ *
- //~ * Checks the correctness of the projection matrices from the full parameter
- //~ * space
- //~ * onto different parameter sub-spaces
- //~ *
- //~ * @sa ParameterSet::projector
- //~ */
-//~ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
-  //~ ActsMatrixD<1, eBoundParametersSize> phi_proj;
-  //~ phi_proj << 0, 0, 1, 0, 0, 0;
+  ActsMatrixD<2, eFreeParametersSize> x_qop_proj;
+  x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0, 0, 0, 0, 1;
 
-  //~ ActsMatrixD<2, eBoundParametersSize> loc0_qop_proj;
-  //~ loc0_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
+  //~ ActsMatrixD<2, eFreeParametersSize> y_tz_proj;
+  //~ y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0;
 
-  //~ ActsMatrixD<2, eBoundParametersSize> loc1_theta_proj;
-  //~ loc1_theta_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0;
+  //~ ActsMatrixD<3, eFreeParametersSize> loc0_y_z_proj;
+  //~ loc0_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
 
-  //~ ActsMatrixD<3, eBoundParametersSize> loc0_loc1_phi_proj;
-  //~ loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
-
-  //~ ActsMatrixD<4, eBoundParametersSize> loc0_phi_theta_qop_proj;
-  //~ loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+  //~ ActsMatrixD<4, eFreeParametersSize> loc0_z_tz_qop_proj;
+  //~ loc0_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
       //~ 0, 0, 0, 0, 0, 1, 0;
 
-  //~ ActsMatrixD<5, eBoundParametersSize> loc0_loc1_phi_theta_qop_proj;
-  //~ loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+  //~ ActsMatrixD<5, eFreeParametersSize> loc0_y_z_tz_qop_proj;
+  //~ loc0_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       //~ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
 
-  //~ ActsMatrixD<eBoundParametersSize, eBoundParametersSize>
-      //~ loc0_loc1_phi_theta_qop_t_proj;
-  //~ loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
+  //~ ActsMatrixD<eFreeParametersSize, eFreeParametersSize>
+      //~ loc0_y_z_tz_qop_t_proj;
+  //~ loc0_y_z_tz_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       //~ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 
-  //~ BOOST_CHECK((ParameterSet<eBoundPhi>::projector() == phi_proj));
+  BOOST_CHECK((FreeParameterSet<eFreePos2>::projector() == z_proj));
+  BOOST_CHECK(
+      (FreeParameterSet<eFreePos0, eFreeQOverP>::projector() == loc0_qop_proj));
   //~ BOOST_CHECK(
-      //~ (ParameterSet<eBoundLoc0, eBoundQOverP>::projector() == loc0_qop_proj));
+      //~ (FreeParameterSet<eBoundy, eBoundtz>::projector() == y_tz_proj));
+  //~ BOOST_CHECK((FreeParameterSet<eBoundLoc0, eBoundy, eBoundPhi>::projector() ==
+               //~ loc0_y_z_proj));
   //~ BOOST_CHECK(
-      //~ (ParameterSet<eBoundLoc1, eBoundTheta>::projector() == loc1_theta_proj));
-  //~ BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi>::projector() ==
-               //~ loc0_loc1_phi_proj));
-  //~ BOOST_CHECK(
-      //~ (ParameterSet<eBoundLoc0, eBoundPhi, eBoundTheta,
-                    //~ eBoundQOverP>::projector() == loc0_phi_theta_qop_proj));
-  //~ BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
+      //~ (FreeParameterSet<eBoundLoc0, eBoundPhi, eBoundtz,
+                    //~ eBoundQOverP>::projector() == loc0_z_tz_qop_proj));
+  //~ BOOST_CHECK((FreeParameterSet<eBoundLoc0, eBoundy, eBoundPhi, eBoundtz,
                             //~ eBoundQOverP>::projector() ==
-               //~ loc0_loc1_phi_theta_qop_proj));
-  //~ BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
+               //~ loc0_y_z_tz_qop_proj));
+  //~ BOOST_CHECK((FreeParameterSet<eBoundLoc0, eBoundy, eBoundPhi, eBoundtz,
                             //~ eBoundQOverP, eT>::projector() ==
-               //~ loc0_loc1_phi_theta_qop_t_proj));
-//~ }
+               //~ loc0_y_z_tz_qop_t_proj));
+}
 
 //~ /**
  //~ * @brief Unit test for residuals between different ParameterSet objects
