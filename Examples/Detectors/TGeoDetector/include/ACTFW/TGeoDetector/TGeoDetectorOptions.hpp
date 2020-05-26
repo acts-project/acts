@@ -11,6 +11,7 @@
 #include <boost/program_options.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 #include "ACTFW/Utilities/Options.hpp"
@@ -249,6 +250,18 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
     ++idetaddon;
   }
 
+  // Split the sensor names if there are mulitple ones
+  auto splitAtOr =
+      [](const std::string& sensorNames) -> std::vector<std::string> {
+    std::vector<std::string> sensors;
+    std::istringstream feed(sensorNames);
+    std::string split;
+    while (getline(feed, split, '|')) {
+      sensors.push_back(split);
+    }
+    return sensors;
+  };
+
   // Prepare the TGeoLayerBuilder::Configs
   for (size_t idet = 0; idet < max_series; ++idet) {
     // Each detector needs a layer builder
@@ -261,7 +274,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
         // Create the layer config object and fill it
         Acts::TGeoLayerBuilder::LayerConfig lConfig;
         lConfig.layerName = layernames[ncp][ti[ncp]];
-        lConfig.sensorName = sensitivenames[ncp][ti[ncp]];
+        lConfig.sensorNames = splitAtOr(sensitivenames[ncp][ti[ncp]]);
         lConfig.localAxes = sensitiveaxes[ncp][ti[ncp]];
         // Fill the parsing restrictions in r
         auto trmin = rmin[ncp];
