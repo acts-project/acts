@@ -345,45 +345,42 @@ class FreeParameterSet {
    */
   void setCovariance(const CovMatrix_t& cov) { m_optCovariance = cov; }
 
-  //~ /**
-   //~ * @brief equality operator
-   //~ *
-   //~ * @return @c true if stored parameter values are equal and both covariance
-   //~ * matrices are
-   //~ *         either identical or not set, otherwise @c false
-   //~ */
-  //~ bool operator==(const ParSet_t& rhs) const {
-    //~ // shortcut comparison with myself
-    //~ if (&rhs == this) {
-      //~ return true;
-    //~ }
+  /**
+   * @brief equality operator
+   *
+   * @return @c true if stored parameter values are equal and both covariance
+   * matrices are either identical or not set, otherwise @c false
+   */
+  bool operator==(const ParSet_t& rhs) const {
+    // shortcut comparison with myself
+    if (&rhs == this) {
+      return true;
+    }
+    // parameter values
+    if (m_vValues != rhs.m_vValues) {
+      return false;
+    }
+    // both have covariance matrices set
+    if ((m_optCovariance && rhs.m_optCovariance) &&
+        (*m_optCovariance != *rhs.m_optCovariance)) {
+      return false;
+    }
+    // only one has a covariance matrix set
+    if ((m_optCovariance && !rhs.m_optCovariance) ||
+        (!m_optCovariance && rhs.m_optCovariance)) {
+      return false;
+    }
+    return true;
+  }
 
-    //~ // parameter values
-    //~ if (m_vValues != rhs.m_vValues) {
-      //~ return false;
-    //~ }
-    //~ // both have covariance matrices set
-    //~ if ((m_optCovariance && rhs.m_optCovariance) &&
-        //~ (*m_optCovariance != *rhs.m_optCovariance)) {
-      //~ return false;
-    //~ }
-    //~ // only one has a covariance matrix set
-    //~ if ((m_optCovariance && !rhs.m_optCovariance) ||
-        //~ (!m_optCovariance && rhs.m_optCovariance)) {
-      //~ return false;
-    //~ }
-
-    //~ return true;
-  //~ }
-
-  //~ /**
-   //~ * @brief inequality operator
-   //~ *
-   //~ * @return @c true if both objects are not equal, otherwise @c false
-   //~ *
-   //~ * @sa FreeParameterSet::operator==
-   //~ */
-  //~ bool operator!=(const ParSet_t& rhs) const { return !(*this == rhs); }
+  /**
+   * @brief inequality operator
+   *
+   * @return @c true if both objects are not equal, otherwise @c false
+   *
+   * @sa FreeParameterSet::operator==
+   */
+  bool operator!=(const ParSet_t& rhs) const { return !(*this == rhs); }
 
   //~ /**
    //~ * @brief project vector of full parameter set onto parameter sub-space
@@ -495,19 +492,19 @@ class FreeParameterSet {
         //~ m_vValues, otherParSet.m_vValues);
   //~ }
 
-  //~ /**
-   //~ * @brief get projection matrix
-   //~ *
-   //~ * The projection matrix performs a mapping of the full parameter space onto
-   //~ * the sub-space
-   //~ * spanned by the parameters defined in this FreeParameterSet object.
-   //~ *
-   //~ * @return constant matrix with @c #NPars rows and @c
-   //~ * #Acts::eBoundParametersSize columns
-   //~ */
-  //~ static const ActsMatrix<ParValue_t, NPars, eBoundParametersSize> projector() {
-    //~ return sProjector;
-  //~ }
+  /**
+   * @brief get projection matrix
+   *
+   * The projection matrix performs a mapping of the full parameter space onto
+   * the sub-space
+   * spanned by the parameters defined in this FreeParameterSet object.
+   *
+   * @return constant matrix with @c #NPars rows and @c
+   * #Acts::eBoundParametersSize columns
+   */
+  static const ActsMatrix<ParValue_t, NPars, eBoundParametersSize> projector() {
+    return sProjector;
+  }
 
   /**
    * @brief number of stored parameters
@@ -546,8 +543,8 @@ class FreeParameterSet {
 //~ template <FreeParametersIndices... params>
 //~ constexpr unsigned int FreeParameterSet<params...>::NPars;
 
-//~ template <FreeParametersIndices... params>
-//~ const typename FreeParameterSet<params...>::Projection_t
-    //~ FreeParameterSet<params...>::sProjector = detail::make_projection_matrix<
-        //~ eFreeParametersSize, static_cast<unsigned int>(params)...>::init();
+template <FreeParametersIndices... params>
+const typename FreeParameterSet<params...>::Projection_t
+    FreeParameterSet<params...>::sProjector = detail::make_projection_matrix<
+        eFreeParametersSize, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts
