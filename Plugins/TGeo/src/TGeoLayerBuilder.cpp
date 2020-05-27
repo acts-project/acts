@@ -88,14 +88,18 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     using LayerSurfaceVector = std::vector<std::shared_ptr<const Surface>>;
     LayerSurfaceVector layerSurfaces;
 
-    ACTS_DEBUG("- layer configuration found for layer "
-               << layerCfg.layerName << " with sensors ");
-    for (auto& sensor : layerCfg.sensorNames){
+    ACTS_DEBUG("- layer configuration found for layer " << layerCfg.layerName
+                                                        << " with sensors ");
+    for (auto& sensor : layerCfg.sensorNames) {
       ACTS_DEBUG("  - sensor: " << sensor);
     }
     ACTS_DEBUG("- layers radially bound to rmin/rmax = "
                << layerCfg.parseRangeR.first << "/"
                << layerCfg.parseRangeR.second);
+    ACTS_DEBUG("- layers longitudinally bound to zmin/zmax = "
+               << layerCfg.parseRangeZ.first << "/"
+               << layerCfg.parseRangeZ.second);
+
     // Step down from the top volume each time to collect the logical tree
     TGeoVolume* tvolume = gGeoManager->GetTopVolume();
     if (tvolume != nullptr) {
@@ -247,8 +251,7 @@ void Acts::TGeoLayerBuilder::resolveSensitive(
     TGeoVolume* tgVolume, TGeoNode* tgNode, const TGeoMatrix& tgTransform,
     LayerConfig& layerConfig, int type, bool correctBranch,
     const std::string& offset) {
-
-if (tgVolume != nullptr) {
+  if (tgVolume != nullptr) {
     std::string volumeName = tgVolume->GetName();
     /// Some screen output indicating that the volume was found
     if (m_cfg.nodeSearchDebug) {
@@ -310,34 +313,40 @@ if (tgVolume != nullptr) {
     if (m_cfg.nodeSearchDebug) {
       ACTS_VERBOSE(offset << "[>] Node : " << tNodeName
                           << " - checking for sensor names: ");
-      for (auto& sensorName : layerConfig.sensorNames){
+      for (auto& sensorName : layerConfig.sensorNames) {
         ACTS_VERBOSE(offset << " -- sensor: " << sensorName);
       }
-
     }
 
-    auto isAmongst = [](const std::string& layer, const std::vector<std::string>& sensors) -> bool {
-        for (const auto& sensor : sensors){
-          if (layer.find(sensor) != std::string::npos){
-            return true;
-          }
+    auto isAmongst = [](const std::string& layer,
+                        const std::vector<std::string>& sensors) -> bool {
+      for (const auto& sensor : sensors) {
+        if (layer.find(sensor) != std::string::npos) {
+          return true;
         }
-        return false;
-    }; 
+      }
+      return false;
+    };
 
     // Find out the branch hit, ingle layer depth supported by sensor==layer
-    bool branchHit = correctBranch || isAmongst(layerConfig.layerName, layerConfig.sensorNames);
+    bool branchHit = correctBranch ||
+                     isAmongst(layerConfig.layerName, layerConfig.sensorNames);
     if (branchHit && (isAmongst(tNodeName, layerConfig.sensorNames) ||
-         match(layerConfig.sensorNames, tNodeName.c_str()))) {
+                      match(layerConfig.sensorNames, tNodeName.c_str()))) {
       if (m_cfg.nodeSearchDebug) {
-        ACTS_VERBOSE(offset << "Matching ensor name found in branch '" << layerConfig.layerName << "'.");
+        ACTS_VERBOSE(offset << "Matching ensor name found in branch '"
+                            << layerConfig.layerName << "'.");
       }
 
       // Create the detector element
       // - check on the type for the side
       // - check for the parsing volume
-      bool insideParseRange = r >= layerConfig.parseRangeR.first and
-                              r <= layerConfig.parseRangeR.second;
+      bool insideParseRangeR = r >= layerConfig.parseRangeR.first and
+                               r <= layerConfig.parseRangeR.second;
+      bool insideParseRangeZ = z >= layerConfig.parseRangeZ.first and
+                               z <= layerConfig.parseRangeZ.second;
+
+      bool insideParseRange = insideParseRangeR and insideParseRangeZ;
 
       if (insideParseRange and ((type == 0) || type * z > 0.)) {
         //  Senstive volume found, collect it
@@ -400,5 +409,4 @@ if (tgVolume != nullptr) {
   } else if (m_cfg.nodeSearchDebug) {
     ACTS_VERBOSE("No node present.");
   }
-  
 }
