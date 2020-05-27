@@ -32,6 +32,8 @@ struct Interval {
   std::optional<double> upper;
 };
 
+using Intervals = std::vector<Interval>;
+
 /// Extract an interval from an input of the form 'lower:upper'.
 ///
 /// An input of the form `lower:` or `:upper` sets just one of the limits. Any
@@ -43,6 +45,18 @@ std::istream& operator>>(std::istream& is, Interval& interval);
 
 /// Print an interval as `lower:upper`.
 std::ostream& operator<<(std::ostream& os, const Interval& interval);
+
+/// Extract an interval from an input of the form 'lower:upper'.
+///
+/// An input of the form `lower:` or `:upper` sets just one of the limits. Any
+/// other input leads to an unbounded interval. If the input is `:SECOND` the
+///
+/// @note The more common range notation uses `lower-upper` but the `-`
+///       separator complicates the parsing of negative values.
+std::istream& operator>>(std::istream& is, Intervals& intervals);
+
+/// Print an interval as `lower:upper`.
+std::ostream& operator<<(std::ostream& os, const Intervals& intervals);
 
 }  // namespace Options
 }  // namespace FW

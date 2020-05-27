@@ -206,8 +206,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
   bool match(const char* first, const char* second) const;
 
   /// Private helper method : match string with wildcards
-  /// Method that uses the match method with wild cards and 
-  /// performs it on an input list 
+  /// Method that uses the match method with wild cards and
+  /// performs it on an input list
   /// @param first is the one with the potential wildcard
   /// @param second is the test string
   bool match(const std::vector<std::string>& first, const char* second) const;
@@ -252,8 +252,6 @@ inline const std::string& TGeoLayerBuilder::identification() const {
 // match. The first string may contain wildcard characters
 inline bool TGeoLayerBuilder::match(const char* first,
                                     const char* second) const {
-
-
   // If we reach at the end of both strings, we are done
   if (*first == '\0' && *second == '\0') {
     return true;
@@ -285,13 +283,12 @@ inline bool TGeoLayerBuilder::match(const char* first,
 // match. The first string may contain wildcard characters
 inline bool TGeoLayerBuilder::match(const std::vector<std::string>& first,
                                     const char* second) const {
-
-   for (auto& f : first){
-     if (match(f.c_str(),second)){
-       return true;
-     }
-   }
-   return false;
+  for (auto& f : first) {
+    if (match(f.c_str(), second)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace Acts
