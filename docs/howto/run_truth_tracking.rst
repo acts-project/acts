@@ -17,12 +17,12 @@ using the following command:
 
 .. code-block:: console
 
-   <build>/bin/ActsSimFatrasGeneric \
-     --evg-input-type=pythia8 \
-     --evg-pileup=50 \
-     --output-dir=sim \
-     --output-csv=1 \
-     --events=10
+   $ <build>/bin/ActsSimFatrasGeneric \
+       --evg-input-type=pythia8 \
+       --evg-pileup=50 \
+       --output-dir=sim \
+       --output-csv=1 \
+       --events=10
 
 Setting the output to CSV is necessary since the truth tracking only reads
 CSV files at the moment.
@@ -36,6 +36,6 @@ information to group simulated hits into tracks) and fits them:
 
 .. code-block:: console
 
-   <build>/bin/ActsRecTruthTracks \
-     --input-dir=sim \
-     --output-dir=rec
+   $ <build>/bin/ActsRecTruthTracks \
+       --input-dir=sim \
+       --output-dir=rec
