@@ -448,41 +448,80 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
                 0, 0, 0, 0, 0, 0, 0, 1;
 
-  //~ ActsMatrixD<2, eFreeParametersSize> y_tz_proj;
-  //~ y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0;
+  ActsMatrixD<2, eFreeParametersSize> y_tz_proj;
+  y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0
+               0, 0, 0, 0, 0, 0, 1, 0;
 
-  //~ ActsMatrixD<3, eFreeParametersSize> loc0_y_z_proj;
-  //~ loc0_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
+  ActsMatrixD<3, eFreeParametersSize> x_y_z_proj;
+  x_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 0,
+                0, 1, 0, 0, 0, 0, 0, 0, 
+                0, 0, 1, 0, 0, 0, 0, 0;
 
-  //~ ActsMatrixD<4, eFreeParametersSize> loc0_z_tz_qop_proj;
-  //~ loc0_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-      //~ 0, 0, 0, 0, 0, 1, 0;
+  ActsMatrixD<4, eFreeParametersSize> x_z_tz_qop_proj;
+  x_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                     0, 0, 1, 0, 0, 0, 0, 0, 
+                     0, 0, 0, 0, 0, 0, 1, 0,
+                     0, 0, 0, 0, 0, 0, 0, 1;
 
-  //~ ActsMatrixD<5, eFreeParametersSize> loc0_y_z_tz_qop_proj;
-  //~ loc0_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      //~ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
+  ActsMatrixD<5, eFreeParametersSize> x_y_z_tz_qop_proj;
+  x_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
+                       0, 1, 0, 0, 0, 0, 0, 0, 
+                       0, 0, 1, 0, 0, 0, 0, 0, 
+                       0, 0, 0, 0, 0, 0, 1, 0, 
+                       0, 0, 0, 0, 0, 0, 0, 1;
 
-  //~ ActsMatrixD<eFreeParametersSize, eFreeParametersSize>
-      //~ loc0_y_z_tz_qop_t_proj;
-  //~ loc0_y_z_tz_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      //~ 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  ActsMatrixD<6, eFreeParametersSize>
+       x_y_z_t_tz_qop_proj;
+  x_y_z_t_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                         0, 1, 0, 0, 0, 0, 0, 0, 
+                         0, 0, 1, 0, 0, 0, 0, 0, 
+                         0, 0, 0, 1, 0, 0, 0, 0, 
+                         0, 0, 0, 0, 0, 0, 1, 0, 
+                         0, 0, 0, 0, 0, 0, 0, 1;
+  
+  ActsMatrixD<7, eFreeParametersSize>
+       x_y_z_t_ty_tz_qop_proj;
+  x_y_z_t_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                            0, 1, 0, 0, 0, 0, 0, 0, 
+                            0, 0, 1, 0, 0, 0, 0, 0, 
+                            0, 0, 0, 1, 0, 0, 0, 0, 
+                            0, 0, 0, 0, 0, 1, 0, 0,
+                            0, 0, 0, 0, 0, 0, 1, 0, 
+                            0, 0, 0, 0, 0, 0, 0, 1;
+
+  ActsMatrixD<eFreeParametersSize, eFreeParametersSize>
+       x_y_z_t_tx_ty_tz_qop_proj;
+  x_y_z_t_tx_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                            0, 1, 0, 0, 0, 0, 0, 0, 
+                            0, 0, 1, 0, 0, 0, 0, 0, 
+                            0, 0, 0, 1, 0, 0, 0, 0,
+                            0, 0, 0, 0, 1, 0, 0, 0,
+                            0, 0, 0, 0, 0, 1, 0, 0,
+                            0, 0, 0, 0, 0, 0, 1, 0, 
+                            0, 0, 0, 0, 0, 0, 0, 1;
 
   BOOST_CHECK((FreeParameterSet<eFreePos2>::projector() == z_proj));
   BOOST_CHECK(
-      (FreeParameterSet<eFreePos0, eFreeQOverP>::projector() == loc0_qop_proj));
-  //~ BOOST_CHECK(
-      //~ (FreeParameterSet<eBoundy, eBoundtz>::projector() == y_tz_proj));
-  //~ BOOST_CHECK((FreeParameterSet<eBoundLoc0, eBoundy, eBoundPhi>::projector() ==
-               //~ loc0_y_z_proj));
-  //~ BOOST_CHECK(
-      //~ (FreeParameterSet<eBoundLoc0, eBoundPhi, eBoundtz,
-                    //~ eBoundQOverP>::projector() == loc0_z_tz_qop_proj));
-  //~ BOOST_CHECK((FreeParameterSet<eBoundLoc0, eBoundy, eBoundPhi, eBoundtz,
-                            //~ eBoundQOverP>::projector() ==
-               //~ loc0_y_z_tz_qop_proj));
-  //~ BOOST_CHECK((FreeParameterSet<eBoundLoc0, eBoundy, eBoundPhi, eBoundtz,
-                            //~ eBoundQOverP, eT>::projector() ==
-               //~ loc0_y_z_tz_qop_t_proj));
+      (FreeParameterSet<eFreePos0, eFreeQOverP>::projector() == x_qop_proj));
+  BOOST_CHECK(
+      (FreeParameterSet<eFreePos1, eFreeDir2>::projector() == y_tz_proj));
+  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2>::projector() ==
+               x_y_z_proj));
+  BOOST_CHECK(
+      (FreeParameterSet<eFreePos0, eFreePos2, eFreeDir2,
+                     eFreeQOverP>::projector() == x_z_tz_qop_proj));
+  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir2,
+                             eFreeQOverP>::projector() ==
+               x_y_z_tz_qop_proj));
+  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir2,
+                             eFreeQOverP, eFreeT>::projector() ==
+               x_y_z_t_tz_qop_proj));
+  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir1, eFreeDir2,
+                             eFreeQOverP, eFreeT>::projector() ==
+               x_y_z_t_ty_tz_qop_proj));
+  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir0, eFreeDir1, eFreeDir2,
+                             eFreeQOverP, eFreeT>::projector() ==
+               x_y_z_t_tx_ty_tz_qop_proj));
 }
 
 //~ /**
@@ -501,11 +540,11 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   //~ const double large_number = 12443534120;
   //~ const double small_number = -924342675;
   //~ const double normal_number = 1.234;
-  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eBoundQOverP> unbound(
+  //~ ParameterSet<eBoundLoc0, eBoundLoc1, eFreeQOverP> unbound(
       //~ std::nullopt, small_number, large_number, normal_number);
   //~ BOOST_CHECK(unbound.getParameter<eBoundLoc0>() == small_number);
   //~ BOOST_CHECK(unbound.getParameter<eBoundLoc1>() == large_number);
-  //~ BOOST_CHECK(unbound.getParameter<eBoundQOverP>() == normal_number);
+  //~ BOOST_CHECK(unbound.getParameter<eFreeQOverP>() == normal_number);
 
   //~ // check bound parameter type
   //~ ParameterSet<eBoundTheta> bound(std::nullopt, small_number);
