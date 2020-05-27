@@ -82,7 +82,7 @@ class FreeParameterSet {
       detail::are_sorted<true, true, FreeParametersIndices, params...>::value,
       "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int, 0, eBoundParametersSize,
+      detail::are_within<unsigned int, 0, eFreeParametersSize,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
@@ -468,7 +468,7 @@ class FreeParameterSet {
    * @return constant matrix with @c #NPars rows and @c
    * #Acts::eBoundParametersSize columns
    */
-  static const ActsMatrix<ParValue_t, NPars, eBoundParametersSize> projector() {
+  static const ActsMatrix<ParValue_t, NPars, eFreeParametersSize> projector() {
     return sProjector;
   }
 
