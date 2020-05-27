@@ -118,11 +118,11 @@ continous integration setup and come with all dependencies pre-installed.
 -   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
     software
 -   `centos7-lcg95apython3`: based on CentOS 7 with HEP-specific software from
-    LCG release 95apython
+    LCG release 95apython3
 -   `centos7-lcg96`: based on CentOS 7 with HEP-specific software from LCG
     release 96
 -   `slc6-lcg95apython3`: based on SLC 6 with HEP-specific software from LCG
-    release 95apython
+    release 95apython3
 
 To use these locally, you first need to pull the relevant images from the
 registry. The current version is always tagged as `master.
@@ -152,18 +152,17 @@ $ docker run --volume=<source>:/acts:ro --interactive --tty <image> /bin/bash
 where `<image>` is the image id that was previously mentioned. If you are using the Ubuntu-based image you are already good to go. For the images based on LCG releases, you can now activate the LCG release in the container shell by sourcing a setup script:
 
 ```console
-container$ source /opt/lcg_view/setup.sh
+container $ source /opt/lcg_view/setup.sh
 ```
 
 Building Acts follows the instructions above with `/acts` as the source directory, e.g.
 
 ```console
-container$ cmake -B build -S /acts -DACTS_BUILD_FATRAS=on
-container$ cmake --build build
+container $ cmake -B build -S /acts -DACTS_BUILD_FATRAS=on
+container $ cmake --build build
 ```
 
 [acts_containers]: https://gitlab.cern.ch/acts/machines/container_registry
-
 
 ### On your local machine
 
