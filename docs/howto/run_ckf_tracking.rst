@@ -45,7 +45,6 @@ and run the CKF which will perform the track finding and track fitting simultane
 Currently, there are two configurable criteria to select compatible source links on a surface with track parameters in CKF:
 
 * Global maximum chi2 of Kalman filtering. This could be set up via ``--ckf-slselection-chi2max``
-
 * Global maximum number of source links on a surface. This could be set up via ``--ckf-slselection-nmax`` 
 
 .. code-block:: console
