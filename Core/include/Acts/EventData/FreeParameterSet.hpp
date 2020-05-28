@@ -435,35 +435,46 @@ class FreeParameterSet {
   /// @cond
   template <
       typename T = ParSet_t,
-      std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
+      std::enable_if_t<not std::is_same<T, FullFreeParameterSet>::value, int> = 0>
   /// @endcond
   ParVector_t residual(const FullFreeParameterSet& fullParSet) const {
     return detail::residual_calculator<params...>::result(
         m_vValues, projector() * fullParSet.getParameters());
   }
 
-  //~ /**
-  //~ * @brief calculate residual difference to other parameter vector
-  //~ *
-  //~ * Calculate the residual differences of the stored parameter values with
-  //~ * respect to the values of
-  //~ * another FreeParameterSet object containing the same set of parameters.
-  // Hereby, ~ * the residual vector is ~ * defined as ~ * ~ * \f[ ~ * \vec{r} =
-  //\left( \begin{array}{c} r_{i_1} \\ \vdots \\ r_{i_m} \end{array} ~ * \right)
-  //~ *  = \left( \begin{array}{c} v_{i_1} \\ \vdots \\ v_{i_m} \end{array}
-  //\right) ~ * -  \left( \begin{array}{c} v^0_{1} \\ \vdots \\ v^0_{N}
-  //\end{array} \right) ~ *  = \vec{v} - \left( \vec{v}^0 \right) ~ * \f] ~ * ~
-  //* where \f$\vec{v}\f$ is the vector of parameter values of this
-  // FreeParameterSet ~ * object and \f$\vec{v}^0\f$ ~ * is the parameter value
-  // vector of the other FreeParameterSet object. ~ * ~ * @note Constraint and
-  // cyclic parameter value ranges are taken into account ~ * when calculating ~
-  //*       the residual values. ~ * ~ * @param otherParSet FreeParameterSet
-  // object with identical set of contained ~ * parameters ~ * ~ * @return
-  // vector  containing the residual parameter values of this ~ * FreeParameterSet
-  // object ~ *         with respect to the given other parameter set ~ */ ~
-  //ParVector_t residual(const ParSet_t& otherParSet) const { ~ return
-  //detail::residual_calculator<params...>::result( ~ m_vValues,
-  //otherParSet.m_vValues); ~ }
+  /**
+   * @brief calculate residual difference to other parameter vector
+   *
+   * Calculate the residual differences of the stored parameter values with
+   * respect to the values of another FreeParameterSet object containing the same set of parameters. Hereby, the residual vector is defined as
+   *
+   * \f[
+   * \vec{r} = \left( \begin{array}{c} r_{i_1} \\ \vdots \\ r_{i_m} \end{array}
+   * \right)
+   *  = \left( \begin{array}{c} v_{i_1} \\ \vdots \\ v_{i_m} \end{array} \right)
+   * -  \left( \begin{array}{c} v^0_{1} \\ \vdots \\ v^0_{N} \end{array} \right)
+   *  = \vec{v} - \left( \vec{v}^0 \right)
+   * \f]
+   *
+   * where \f$\vec{v}\f$ is the vector of parameter values of this FreeParameterSet
+   * object and \f$\vec{v}^0\f$
+   * is the parameter value vector of the other FreeParameterSet object.
+   *
+   * @note Constraint parameter value ranges are taken into account
+   * when calculating
+   *       the residual values.
+   *
+   * @param otherParSet FreeParameterSet object with identical set of contained
+   * parameters
+   *
+   * @return vector containing the residual parameter values of this
+   * FreeParameterSet object
+   *         with respect to the given other parameter set
+   */
+  ParVector_t residual(const ParSet_t& otherParSet) const {
+    return detail::free_residual_calculator<params...>::result(
+        m_vValues, otherParSet.m_vValues);
+  }
 
   /**
    * @brief get projection matrix
