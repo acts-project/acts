@@ -12,6 +12,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <random>
 
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
@@ -32,6 +33,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+#include "MeasurementApproacher.hpp"
+#include "MeasurementGenerator.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -150,12 +154,14 @@ class PropagationAlgorithm : public BareAlgorithm {
   /// @param [in] context The Context for this call
   /// @param [in] startParameters the start parameters
   /// @param [in] pathLengthe the path limit of this propagation
+  /// @param [in] gauss distribution
   ///
   /// @return collection of Propagation steps for further analysis
   template <typename parameters_t>
-  PropagationOutput executeTest(
-      const AlgorithmContext& context, const parameters_t& startParameters,
-      double pathLength = std::numeric_limits<double>::max()) const;
+  PropagationOutput executeTest(const AlgorithmContext& context,
+                                const parameters_t& startParameters,
+                                double pathLength, FW::RandomEngine& rnd,
+                                std::normal_distribution<double>& gauss) const;
 };
 
 #include "PropagationAlgorithm.ipp"

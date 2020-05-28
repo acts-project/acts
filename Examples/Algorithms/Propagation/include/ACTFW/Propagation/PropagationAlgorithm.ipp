@@ -6,9 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/Utilities/Helpers.hpp>
-#include <random>
-
 template <typename propagator_t>
 std::optional<Acts::BoundSymMatrix>
 PropagationAlgorithm<propagator_t>::generateCovariance(
@@ -48,7 +45,8 @@ template <typename propagator_t>
 template <typename parameters_t>
 PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     const AlgorithmContext& context, const parameters_t& startParameters,
-    double pathLength) const {
+    double pathLength, FW::RandomEngine& rnd,
+    std::normal_distribution<double>& gauss) const {
   ACTS_DEBUG("Test propagation/extrapolation starts");
 
   PropagationOutput pOutput;
@@ -60,10 +58,12 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     using SteppingLogger = Acts::detail::SteppingLogger;
     using DebugOutput = Acts::DebugOutputActor;
     using EndOfWorld = Acts::EndOfWorldReached;
+    using Generator = Acts::MeasurementGenerator;
+    using Approacher = Acts::MeasurementApproacher;
 
     // Action list and abort list
-    using ActionList =
-        Acts::ActionList<SteppingLogger, MaterialInteractor, DebugOutput>;
+    using ActionList = Acts::ActionList<Generator, SteppingLogger,
+                                        MaterialInteractor, DebugOutput>;
     using AbortList = Acts::AbortList<EndOfWorld>;
     using PropagatorOptions =
         Acts::DenseStepperPropagatorOptions<ActionList, AbortList>;
@@ -76,6 +76,10 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     options.loopProtection =
         (Acts::VectorHelpers::perp(startParameters.momentum()) <
          m_cfg.ptLoopers);
+
+    // Set the radii for the generation
+    auto& mGenerator = options.actionList.get<Generator>();
+    mGenerator.radii = {200, 205, 210, 215, 220, 225, 230, 235, 240, 245};
 
     // Switch the material interaction on/off & eventually into logging mode
     auto& mInteractor = options.actionList.get<MaterialInteractor>();
@@ -91,6 +95,24 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
         m_cfg.propagator.propagate(startParameters, options).value();
     auto steppingResults = result.template get<SteppingLogger::result_type>();
 
+    // Get the output generation result & create smeared space points
+    std::vector<Acts::Vector3D> smearedSpacePoints;
+    double smearT = 2.;
+    double smearL = 5.;
+    auto generatorResult = result.template get<Generator::result_type>();
+    ACTS_DEBUG("Generator created " << generatorResult.spacepoints.size()
+                                    << " measurements.");
+
+    smearedSpacePoints.reserve(generatorResult.spacepoints.size());
+    for (auto& pos : generatorResult.spacepoints) {
+      Acts::Vector3D spos(pos.x() + smearT * gauss(rnd),
+                          pos.y() + smearT * gauss(rnd),
+                          pos.z() + smearL * gauss(rnd));
+      ACTS_VERBOSE(" --> Measurement at radius = "
+                   << Acts::VectorHelpers::perp(pos) << " created.");
+      smearedSpacePoints.push_back(spos);
+    }
+
     // Set the stepping result
     pOutput.first = std::move(steppingResults.steps);
     // Also set the material recording result - if configured
@@ -104,6 +126,57 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     if (m_cfg.debugOutput) {
       auto& debugResult = result.template get<DebugOutput::result_type>();
       ACTS_VERBOSE(debugResult.debugString);
+    }
+
+    if (not generatorResult.spacepoints.empty()) {
+      // Action list and abort list
+      using ActionRecList = Acts::ActionList<Approacher, SteppingLogger,
+                                             MaterialInteractor, DebugOutput>;
+      using PropagatorRecOptions =
+          Acts::DenseStepperPropagatorOptions<ActionRecList, AbortList>;
+
+      PropagatorRecOptions recOptions(context.geoContext,
+                                      context.magFieldContext);
+      recOptions.pathLimit = pathLength;
+      recOptions.debug = m_cfg.debugOutput;
+
+      // Activate loop protection at some pt value
+      recOptions.loopProtection =
+          (Acts::VectorHelpers::perp(startParameters.momentum()) <
+           m_cfg.ptLoopers);
+
+      // Set the radii for the generation
+      auto& mApproacher = recOptions.actionList.get<Approacher>();
+      mApproacher.measurements = smearedSpacePoints;
+
+      // Switch the material interaction on/off & eventually into logging mode
+      auto& mRecInteractor = recOptions.actionList.get<MaterialInteractor>();
+      mRecInteractor.multipleScattering = m_cfg.multipleScattering;
+      mRecInteractor.energyLoss = m_cfg.energyLoss;
+      mRecInteractor.recordInteractions = m_cfg.recordMaterialInteractions;
+
+      // Set a maximum step size
+      recOptions.maxStepSize = m_cfg.maxStepSize;
+
+      // Propagate using the propagator - for the reconstruction step
+      const auto& recResult =
+          m_cfg.propagator.propagate(startParameters, recOptions).value();
+
+      auto approacherResult = recResult.template get<Approacher::result_type>();
+      ACTS_DEBUG("Approacher found " << approacherResult.approaches.size()
+                                     << " measurements.");
+    
+      if (approacherResult.approaches.size() ==
+          mApproacher.measurements.size()) {
+        for (size_t is = 0; is < approacherResult.approaches.size(); ++is) {
+          auto approach = approacherResult.approaches[is];
+          auto measurement = mApproacher.measurements[is];
+          std::cout << approach.x() << "," << approach.y() << ","
+                    << approach.z() << "," << measurement.x() << "," << measurement.y()
+                    << "," << measurement.z() << ","
+                    << (approach - measurement).norm() << std::endl;
+        }
+      }
     }
   }
   return pOutput;
@@ -173,15 +246,16 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
                                             std::move(pars), surface);
       sPosition = startParameters.position();
       sMomentum = startParameters.momentum();
-      pOutput = executeTest<Acts::TrackParameters>(context, startParameters);
+      pOutput = executeTest<Acts::TrackParameters>(context, startParameters,
+                                                   1000., rng, gauss);
     } else {
       // execute the test for neeutral particles
       Acts::NeutralBoundParameters neutralParameters(
           context.geoContext, std::move(cov), std::move(pars), surface);
       sPosition = neutralParameters.position();
       sMomentum = neutralParameters.momentum();
-      pOutput =
-          executeTest<Acts::NeutralParameters>(context, neutralParameters);
+      pOutput = executeTest<Acts::NeutralParameters>(context, neutralParameters,
+                                                     1000., rng, gauss);
     }
     // Record the propagator steps
     propagationSteps.push_back(std::move(pOutput.first));
