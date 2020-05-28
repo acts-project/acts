@@ -27,9 +27,15 @@ namespace detail {
 template <ParID_t... params>
 struct residual_calculator;
 
+template <FreeParametersIndices... params>
+struct free_residual_calculator;
+
 /// @cond
 template <typename R, ParID_t... params>
 struct residual_calculator_impl;
+
+template <typename R, FreeParametersIndices... params>
+struct free_residual_calculator_impl;
 
 template <ParID_t... params>
 struct residual_calculator {
@@ -38,6 +44,18 @@ struct residual_calculator {
   static ParVector_t result(const ParVector_t& test, const ParVector_t& ref) {
     ParVector_t result;
     residual_calculator_impl<ParVector_t, params...>::calculate(result, test,
+                                                                ref, 0);
+    return result;
+  }
+};
+
+template <FreeParametersIndices... params>
+struct free_residual_calculator {
+  using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
+
+  static ParVector_t result(const ParVector_t& test, const ParVector_t& ref) {
+    ParVector_t result;
+    free_residual_calculator_impl<ParVector_t, params...>::calculate(result, test,
                                                                 ref, 0);
     return result;
   }
@@ -53,11 +71,29 @@ struct residual_calculator_impl<R, first, others...> {
   }
 };
 
+template <typename R, FreeParametersIndices first, FreeParametersIndices... others>
+struct free_residual_calculator_impl<R, first, others...> {
+  static void calculate(R& result, const R& test, const R& ref,
+                        unsigned int pos) {
+    result(pos) = FreeParameterType<first>::getDifference(test(pos), ref(pos));
+    free_residual_calculator_impl<R, others...>::calculate(result, test, ref,
+                                                      pos + 1);
+  }
+};
+
 template <typename R, ParID_t last>
 struct residual_calculator_impl<R, last> {
   static void calculate(R& result, const R& test, const R& ref,
                         unsigned int pos) {
     result(pos) = BoundParameterType<last>::getDifference(test(pos), ref(pos));
+  }
+};
+
+template <typename R, FreeParametersIndices last>
+struct free_residual_calculator_impl<R, last> {
+  static void calculate(R& result, const R& test, const R& ref,
+                        unsigned int pos) {
+    result(pos) = FreeParameterType<last>::getDifference(test(pos), ref(pos));
   }
 };
 /// @endcond
