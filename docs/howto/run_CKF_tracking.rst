@@ -53,7 +53,7 @@ Currently, there are two configurable criteria to select compatible source links
    $ <build>/bin/ActsRecCKFTracks \
        --input-dir=sim_ttbar_pu200 \
        --bf-value=0 0 2 \
-       --ckf-slselection-chi2max 20 \
+       --ckf-slselection-chi2max 15 \
        --ckf-slselection-nmax 10 \
        --output-dir=rec_ttbar_pu200
 
@@ -63,4 +63,15 @@ Look at the CKF tracking performance
 ----------------------
 
 The CKF tracking will generate a root file named ``performance_ckf.root`` (the name is currently not configurable via the command line) in the ``output-dir``.
-This file includes a few efficiency plots showing the CKF efficiency, fake rate, duplication and other plots showing detailed reconstruction info etc.
+This file includes a few efficiency plots showing the CKF efficiency, fake rate, duplication rate and other plots showing detailed reconstruction info etc.
+
+Example plots to show the CKF efficiency, fake rate and duplication rate for the ttbar sample generated above:
+
+.. image:: ../figures/performance/CKF/trackeff_vs_eta_ttbar_pu200.png
+   :width: 300
+
+.. image:: ../figures/performance/CKF/fakerate_vs_eta_ttbar_pu200.png
+   :width: 300
+
+.. image:: ../figures/performance/CKF/duplicationrate_vs_eta_ttbar_pu200.png
+   :width: 300
