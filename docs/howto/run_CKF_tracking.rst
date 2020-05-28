@@ -28,7 +28,7 @@ Generate a simulation dataset with ttbar process with an average of 200 addition
        --output-csv=1 \
        --events=10
 
-Setting the output to CSV is necessary since the truth tracking only reads
+Setting the output to CSV is necessary since the CKF tracking only reads
 CSV files at the moment. 
 
 The above simulation also includes particle selection at different phase, e.g. only generated particles with pT > 100 MeV 
@@ -57,7 +57,7 @@ Currently, there are two configurable criteria to select compatible source links
        --ckf-slselection-nmax 10 \
        --output-dir=rec_ttbar_pu200
 
-The magnetic field setup should be consistent between simulation and truth tracking.
+The magnetic field setup should be consistent between simulation and CKF tracking.
 
 Look at the CKF tracking performance
 ----------------------
