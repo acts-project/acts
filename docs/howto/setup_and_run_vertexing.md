@@ -1,40 +1,19 @@
 # ACTS Vertexing Tutorial - Example: Adaptive Multi-Vertex Finder (AMVF) - Pythia8
 This tutorial sets up and runs the ACTS Adaptive Multi-Vertex Finder on smeared ACTS Pythia8 truth tracks.
 *Note*: You have to have Pythia8 available on your machine for following this tutorial.
-## Setting up ACTS
-If you already have ACTS set up on your machine, skip Step 1 and go directly to Step 2.
-**Step 1**: 
-First, you need to get your ACTS clone:
+## Prerequisites
+For setting up and building ACTS, please refer to the general how-to ACTS guide. For this example you will need to enable Pythia8 in the examples by adding
 ```bash
-git clone https://github.com/acts-project/acts.git
-cd acts
+-DACTS_BUILD_EXAMPLES_PYTHIA8=ON
 ```
+to your cmake command.
 
-**Step 2**:
-If you're working on e.g. lxplus, you might want to set up an LCG release (in order to make Pythia8 available):
-```bash
-source CI/setup_lcg95.sh # or setup_lcg96.sh
-```
-On your local machine you have to specify your Pythia8 location by adding
-```bash
--DCMAKE_INSTALL_PREFIX=<path_to_your_pythia8>
-```
-to the cmake command below.
-
-Let's try and build ACTS *without* the vertexing example algorithm for now: 
-```bash
-mkdir -p build; cd build
-cmake -DACTS_BUILD_EXAMPLES=ON -DACTS_BUILD_EXAMPLES_PYTHIA8=ON .. 
-make -j4
-```
-
-Note: By adding
+Note: Additionally adding
 ```bash
 -DCMAKE_BUILD_TYPE=Release
 ```
-to your cmake above, you will significantly speed up the execution time of the vertexing algorithm below, it will however slow down the compilation process.
+to your cmake command will significantly speed up the execution time of the vertexing example algorithm below, it will however slow down the compilation process.
 
-If the previous step worked fine (or in the meantime), we can now start to set up the ACTS Adaptive Multi-Vertex Finder in an example algorithm. 
 ## Setting up an ACTS Adaptive Multi-Vertex Finder Algorithm
 
 A template algorithm file with an (almost) empty ```execute()``` method to be filled in the following is provided here:
@@ -147,18 +126,5 @@ if (res.ok()) {
  In your build directory, recompile and run the example on three pileup-50 pythia events to get your first ACTS vertices:
 ```
 make -j4
-./bin/ActsAMVFTutorial --evg-pileup 50 -n 3
+./bin/ActsTutorialAMVF --evg-pileup 50 -n 3
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
