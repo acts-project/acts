@@ -22,7 +22,7 @@
 
 namespace FWE {
 
-class ExampleAMVFAlgorithm : public FW::BareAlgorithm {
+class TutorialExampleAMVFAlgorithm : public FW::BareAlgorithm {
  public:
   struct Config {
     /// Input track collection
@@ -30,7 +30,7 @@ class ExampleAMVFAlgorithm : public FW::BareAlgorithm {
   };
 
   /// Constructor
-  ExampleAMVFAlgorithm(const Config& cfg,
+  TutorialExampleAMVFAlgorithm(const Config& cfg,
                        Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Framework execute method

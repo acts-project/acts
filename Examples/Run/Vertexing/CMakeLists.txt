@@ -26,9 +26,13 @@ target_link_libraries(ActsRecVertexWriter PRIVATE ${_common_libraries})
 add_executable(ActsRecVertexReader VertexAndTracksReaderAndFinderExample.cpp)
 target_link_libraries(ActsRecVertexReader PRIVATE ${_common_libraries})
 
-# AMVF tutorial example
-add_executable(ActsAMVFTutorial TutorialAMVFExample.cpp)
-target_link_libraries(ActsAMVFTutorial PRIVATE ${_common_libraries})
+# Tutorial AMVF example
+add_executable(ActsTutorialAMVF TutorialAMVFExample.cpp)
+target_link_libraries(ActsTutorialAMVF PRIVATE ${_common_libraries})
+
+# Full AMVF example
+add_executable(ActsAdaptiveMultiVertexFinderExample FullAMVFExample.cpp)
+target_link_libraries(ActsAdaptiveMultiVertexFinderExample PRIVATE ${_common_libraries})
 
 install(
   TARGETS
@@ -36,5 +40,6 @@ install(
     ActsRecVertexFinder
     ActsRecVertexWriter
     ActsRecVertexReader
-    ActsAMVFTutorial
+    ActsTutorialAMVF
+    ActsAdaptiveMultiVertexFinderExample
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Vertexing/ExampleAMVFAlgorithm.hpp"
+#include "ACTFW/Vertexing/TutorialExampleAMVFAlgorithm.hpp"
 
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
@@ -32,13 +32,13 @@
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-FWE::ExampleAMVFAlgorithm::ExampleAMVFAlgorithm(const Config& cfg,
+FWE::TutorialExampleAMVFAlgorithm::TutorialExampleAMVFAlgorithm(const Config& cfg,
                                                 Acts::Logging::Level level)
-    : FW::BareAlgorithm("AMVF Algorithm", level), m_cfg(cfg) {}
+    : FW::BareAlgorithm("Tutorial AMVF Algorithm", level), m_cfg(cfg) {}
 
 /// @brief Tutorial algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices using the AMVF
-FW::ProcessCode FWE::ExampleAMVFAlgorithm::execute(
+FW::ProcessCode FWE::TutorialExampleAMVFAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
@@ -51,16 +51,27 @@ FW::ProcessCode FWE::ExampleAMVFAlgorithm::execute(
   }
   //* Do not change the code above this line *//
 
-  ////////////////////////////////////////
-  /* Add the tutorial example code here */
-  ////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
+  /*****   Note: This is a skeleton file to be filled with tutorial code  *****/
+  /*****   provided in the Acts Docs - Vertexing section under the link:  *****/
+  /* https://acts.readthedocs.io/en/latest/howto/setup_and_run_vertexing.html */ 
+  //////////////////////////////////////////////////////////////////////////////
+  
+
+  /////////////////////////////////////////////
+  /*    Add the tutorial example code here   */
+  /////////////////////////////////////////////
+  /////////////////////////////////////////////
+  /* For the full tutorial code please refer */
+  /*     to FullExampleAMVFAlgorithm.cpp     */
+  /////////////////////////////////////////////
 
   //* Do not change the code below this line *//
   return FW::ProcessCode::SUCCESS;
 }
 
 std::vector<Acts::BoundParameters>
-FWE::ExampleAMVFAlgorithm::getInputTrackCollection(
+FWE::TutorialExampleAMVFAlgorithm::getInputTrackCollection(
     const FW::AlgorithmContext& ctx) const {
   // Setup containers
   const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
