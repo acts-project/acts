@@ -1,7 +1,8 @@
 add_library(
   ActsExamplesTrackFinding SHARED
   src/TrackFindingAlgorithm.cpp
-  src/TrackFindingAlgorithmTrackFinderFunction.cpp)
+  src/TrackFindingAlgorithmTrackFinderFunction.cpp
+  src/TrackFindingOptions.cpp)
 target_include_directories(
   ActsExamplesTrackFinding
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

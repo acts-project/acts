@@ -18,7 +18,7 @@
 ///
 /// Straight forward example of reading a HepMC3 file.
 ///
-int main(int argc, char* argv[]) {
+int main(int /*argc*/, char** /*argv*/) {
   FW::HepMC3ReaderAscii simReader;
 
   std::cout << "Preparing reader " << std::flush;

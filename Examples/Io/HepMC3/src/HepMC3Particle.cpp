@@ -34,8 +34,8 @@ std::unique_ptr<FW::SimVertex> FW::HepMC3Particle::productionVertex(
 
   // Return the vertex if it exists
   if (particle->production_vertex())
-    return std::move(simVert.processVertex(
-        std::make_shared<HepMC3::GenVertex>(*particle->production_vertex())));
+    return simVert.processVertex(
+        std::make_shared<HepMC3::GenVertex>(*particle->production_vertex()));
   else
     return nullptr;
 }
@@ -46,8 +46,8 @@ std::unique_ptr<FW::SimVertex> FW::HepMC3Particle::endVertex(
 
   // Return the vertex if it exists
   if (particle->end_vertex())
-    return std::move(simVert.processVertex(
-        std::make_shared<HepMC3::GenVertex>(*(particle->end_vertex()))));
+    return simVert.processVertex(
+        std::make_shared<HepMC3::GenVertex>(*(particle->end_vertex())));
   else
     return nullptr;
 }

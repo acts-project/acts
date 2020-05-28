@@ -4,6 +4,7 @@ target_sources_local(
     AbstractVolume.cpp
     BinUtility.cpp
     ConeLayer.cpp
+    ConeVolumeBounds.cpp
     CuboidVolumeBounds.cpp
     CuboidVolumeBuilder.cpp
     CutoutCylinderVolumeBounds.cpp
@@ -25,6 +26,7 @@ target_sources_local(
     PlaneLayer.cpp
     Polyhedron.cpp
     ProtoLayer.cpp
+    ProtoLayerHelper.cpp
     SurfaceArrayCreator.cpp
     TrackingGeometry.cpp
     TrackingGeometryBuilder.cpp

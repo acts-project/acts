@@ -20,7 +20,7 @@ following folders removed:
 
 ## nlohmann_json
 
-A copy of [nlohmann::json](https://github.com/nlohmann/json) v3.7.3, with the
+A copy of [nlohmann::json](https://github.com/nlohmann/json) revision 84f19d6, with the
 following folders removed:
 
 -   benchmarks

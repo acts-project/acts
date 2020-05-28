@@ -1117,8 +1117,7 @@ class CombinatorialKalmanFilter {
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
   ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
+  /// @tparam source_link_container_t Source link container type
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam comb_kalman_filter_options_t Type of the CombinatorialKalmanFilter
   /// options
@@ -1134,14 +1133,16 @@ class CombinatorialKalmanFilter {
   /// the track finding.
   ///
   /// @return the output as an output track
-  template <typename source_link_t, typename start_parameters_t,
+  template <typename source_link_container_t, typename start_parameters_t,
             typename comb_kalman_filter_options_t,
             typename parameters_t = BoundParameters>
-  Result<CombinatorialKalmanFilterResult<source_link_t>> findTracks(
-      const std::vector<source_link_t>& sourcelinks,
-      const start_parameters_t& sParameters,
-      const comb_kalman_filter_options_t& tfOptions) const {
-    static_assert(SourceLinkConcept<source_link_t>,
+  Result<CombinatorialKalmanFilterResult<
+      typename source_link_container_t::value_type>>
+  findTracks(const source_link_container_t& sourcelinks,
+             const start_parameters_t& sParameters,
+             const comb_kalman_filter_options_t& tfOptions) const {
+    using SourceLink = typename source_link_container_t::value_type;
+    static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");
 
     static_assert(
@@ -1155,7 +1156,7 @@ class CombinatorialKalmanFilter {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::unordered_map<const Surface*, std::vector<source_link_t>>
+    std::unordered_map<const Surface*, std::vector<SourceLink>>
         inputMeasurements;
     for (const auto& sl : sourcelinks) {
       const Surface* srf = &sl.referenceSurface();
@@ -1163,9 +1164,8 @@ class CombinatorialKalmanFilter {
     }
 
     // Create the ActionList and AbortList
-    using CombinatorialKalmanFilterAborter =
-        Aborter<source_link_t, parameters_t>;
-    using CombinatorialKalmanFilterActor = Actor<source_link_t, parameters_t>;
+    using CombinatorialKalmanFilterAborter = Aborter<SourceLink, parameters_t>;
+    using CombinatorialKalmanFilterActor = Actor<SourceLink, parameters_t>;
     using CombinatorialKalmanFilterResult =
         typename CombinatorialKalmanFilterActor::result_type;
     using Actors = ActionList<CombinatorialKalmanFilterActor>;

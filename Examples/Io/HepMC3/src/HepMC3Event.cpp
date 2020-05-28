@@ -233,10 +233,10 @@ std::vector<std::unique_ptr<FW::SimParticle>> FW::HepMC3Event::particles(
 
   // Translate all particles
   for (auto& genParticle : genParticles)
-    actsParticles.push_back(std::move(
-        simPart.particle(std::make_shared<HepMC3::GenParticle>(*genParticle))));
+    actsParticles.push_back(
+        simPart.particle(std::make_shared<HepMC3::GenParticle>(*genParticle)));
 
-  return std::move(actsParticles);
+  return actsParticles;
 }
 
 std::vector<std::unique_ptr<FW::SimVertex>> FW::HepMC3Event::vertices(
@@ -248,10 +248,10 @@ std::vector<std::unique_ptr<FW::SimVertex>> FW::HepMC3Event::vertices(
 
   // Translate all vertices
   for (auto& genVertex : genVertices) {
-    actsVertices.push_back(std::move(simVert.processVertex(
-        std::make_shared<HepMC3::GenVertex>(*genVertex))));
+    actsVertices.push_back(
+        simVert.processVertex(std::make_shared<HepMC3::GenVertex>(*genVertex)));
   }
-  return std::move(actsVertices);
+  return actsVertices;
 }
 
 std::vector<std::unique_ptr<FW::SimParticle>> FW::HepMC3Event::beams(
@@ -263,9 +263,9 @@ std::vector<std::unique_ptr<FW::SimParticle>> FW::HepMC3Event::beams(
 
   // Translate beam particles and store the result
   for (auto& genBeam : genBeams)
-    actsBeams.push_back(std::move(
-        simPart.particle(std::make_shared<HepMC3::GenParticle>(*genBeam))));
-  return std::move(actsBeams);
+    actsBeams.push_back(
+        simPart.particle(std::make_shared<HepMC3::GenParticle>(*genBeam)));
+  return actsBeams;
 }
 
 std::vector<std::unique_ptr<FW::SimParticle>> FW::HepMC3Event::finalState(

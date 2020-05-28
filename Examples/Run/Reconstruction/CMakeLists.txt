@@ -36,6 +36,6 @@ target_link_libraries(
 
 install(
   TARGETS
-   ActsRecTruthTracks
+  ActsRecCKFTracks
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

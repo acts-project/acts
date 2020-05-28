@@ -47,11 +47,11 @@ class Surface;
 class CuboidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for streaming and access
-  enum BoundValues : int {
+  enum BoundValues : unsigned int {
     eHalfLengthX = 0,
     eHalfLengthY = 1,
     eHalfLengthZ = 2,
-    eSize = 3
+    eSize
   };
 
   CuboidVolumeBounds() = delete;
@@ -120,14 +120,14 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3D& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
+  /// Access to the bound values
+  /// @param bValue the class nested enum for the array access
+  double get(BoundValues bValue) const { return m_values[bValue]; }
+
   /// Output Method for std::ostream
   ///
   /// @param sl is ostream operator to be dumped into
   std::ostream& toStream(std::ostream& sl) const override;
-
-  /// Access to the bound values
-  /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
   /// Templated dumpT method
