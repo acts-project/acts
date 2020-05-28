@@ -11,7 +11,7 @@ is used to identify the path to the build directory.
 Generate a simulation dataset
 -----------------------------
 
-Two examples of generating simulation dataset based on the generic example detector with default QCD process and ttbar process:
+Two examples of generating simulation dataset with different signal process based on the generic example detector in a 2T magnetic field:
 
 -   QCD process with an average of 50 additional pile-up interactions
 
@@ -23,11 +23,12 @@ Two examples of generating simulation dataset based on the generic example detec
        --select-pt-gev '0.1:' \
        --select-eta '-2.5:2.5' \
        --remove-neutral 1 \
+       --bf-value=0 0 2 \
        --output-dir=sim_QCD_pu50 \
        --output-csv=1 \
        --events=10
 
--  ttbar process with an averae of 200 additional pile-up interactions
+-  ttbar process with an average of 200 additional pile-up interactions
 
 .. code-block:: console
 
@@ -38,6 +39,7 @@ Two examples of generating simulation dataset based on the generic example detec
        --select-pt-gev '0.1:' \
        --select-eta '-2.5:2.5' \
        --remove-neutral 1 \
+       --bf-value=0 0 2 \
        --output-dir=sim_ttbar_pu200 \
        --output-csv=1 \
        --events=10
