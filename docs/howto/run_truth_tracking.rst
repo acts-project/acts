@@ -8,27 +8,29 @@ Acts must be build with activated examples and Pythia8 support
 (``ACTS_BUILD_EXAMPLES_PYTHIA8=on``) to enable the fast simulation. ``<build>``
 is used to identify the path to the build directory.
 
-Generate a simulation dataset
+Generate simulation datasets
 -----------------------------
 
-Two examples of generating simulation dataset with different signal process based on the generic example detector in a 2T magnetic field:
+Generate two different example simulation datasets based on the generic example detector in a 2T magnetic field:
 
--   QCD process with an average of 50 additional pile-up interactions
+-  10000 (``--pg-nparticles 10000``) single muons with pT at [0.1, 100 ) GeV (``--pg-pt-range 0.1 100``) and |eta| <= 2.5 (``--pg-eta-range -2.5 2.5``)
 
 .. code-block:: console
 
    $ <build>/bin/ActsSimFatrasGeneric \
-       --evg-input-type=pythia8 \
-       --evg-pileup=50 \
-       --select-pt-gev '0.1:' \
-       --select-eta '-2.5:2.5' \
-       --remove-neutral 1 \
+       --evg-input-type=gun \
+       --pg-nparticles 10000 \
+       --pg-pt-range 0.1 100 \
+       --pg-eta-range -2.5 2.5 \
        --bf-value=0 0 2 \
-       --output-dir=sim_QCD_pu50 \
+       --output-dir=sim_singlemuon \
        --output-csv=1 \
        --events=10
 
--  ttbar process with an average of 200 additional pile-up interactions
+-  ttbar process with an average of 200 additional pile-up interactions (``--evg-pileup=200``)
+The particles are selected at different phase, e.g. only generated particles with pT > 100 MeV 
+(``--select-pt-gev '0.1:'``) and |eta| <= 2.5 (``--select-eta '-2.5:2.5'``) are passed to simulation.
+Further particle selection, e.g. removing neutral particles (``--remove-neutral 1``), is done during the simulation.
 
 .. code-block:: console
 
@@ -47,10 +49,6 @@ Two examples of generating simulation dataset with different signal process base
 Setting the output to CSV is necessary since the truth tracking only reads
 CSV files at the moment. 
 
-The above examples also show how to select particles at different phase, e.g. only generated particles with pT > 100 MeV 
-(``--select-pt-gev '0.1:'``) and |eta| <= 2.5 (``--select-eta '-2.5:2.5'``) are passed to simulation.
-Further particle selection, e.g. removing neutral particles (``--remove-neutral 1``), could be done during the simulation.
-
 Run the truth tracking
 ----------------------
 
@@ -58,14 +56,14 @@ Run the truth tracking tool that reads the simulation output (truth hits and tru
 measurements from the true hits, creates seeds (i.e. starting track parameters) from the truth particles, builds truth tracks (i.e. uses the truth
 information to group simulated hits into tracks) and fits them. Examples of truth tracking with the different simulation output generated above:
 
--   QCD sample
+-   Single muon sample
 
 .. code-block:: console
 
    $ <build>/bin/ActsRecTruthTracks \
-       --input-dir=sim_QCD_pu50 \
+       --input-dir=sim_singlemuon \
        --bf-value=0 0 2 \
-       --output-dir=rec_QCD_pu50
+       --output-dir=rec_singlemuon
 
 -  ttbar sample
 
