@@ -64,6 +64,7 @@ information to group simulated hits into tracks) and fits them. Examples of trut
 
    $ <build>/bin/ActsRecTruthTracks \
        --input-dir=sim_QCD_pu50 \
+       --bf-value=0 0 2 \
        --output-dir=rec_QCD_pu50
 
 -  ttbar sample
@@ -72,9 +73,12 @@ information to group simulated hits into tracks) and fits them. Examples of trut
 
    $ <build>/bin/ActsRecTruthTracks \
        --input-dir=sim_ttbar_pu200 \
+       --bf-value=0 0 2 \
        --output-dir=rec_ttbar_pu200
 
-Look at truth tracking performance
+The magnetic field setup should be consistent between simulation and truth tracking. 
+
+Look at the truth tracking performance
 ----------------------
 
 The truth tracking will generate three root files (the name of those root files are currently not configurable via the command line) in the ``output-dir``:

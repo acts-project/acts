@@ -21,6 +21,7 @@ Generate a simulation dataset with ttbar process with an average of 200 addition
        --evg-pileup=200 \
        --select-pt-gev '0.1:' \
        --select-eta '-2.5:2.5' \
+       --fatras-pmin-gev 0.1 \
        --remove-neutral 1 \
        --bf-value=0 0 2 \
        --output-dir=sim_ttbar_pu200 \
@@ -32,7 +33,7 @@ CSV files at the moment.
 
 The above simulation also includes particle selection at different phase, e.g. only generated particles with pT > 100 MeV 
 (``--select-pt-gev '0.1:'``) and |eta| <= 2.5 (``--select-eta '-2.5:2.5'``) are passed to simulation.
-Further particle selection, e.g. removing neutral particles (``--remove-neutral 1``), is done during the simulation.
+Further particle selection, e.g. requiring a minimum momentum at 100 MeV (``--fatras-pmin-gev 0.1``) and removing neutral particles (``--remove-neutral 1``), is done during the simulation.
 
 Run the CKF tracking
 ----------------------
@@ -41,13 +42,24 @@ Run the CKF tracking tool that reads the simulation output (truth hits and truth
 measurements from the true hits, creates seeds (i.e. starting track parameters) from the pre-selected truth particles, 
 and run the CKF which will perform the track finding and track fitting simultaneously:
 
+Currently, there are two configurable criteria to select compatible source links on a surface with track parameters in CKF:
+
+* Global maximum chi2 of Kalman filtering. This could be set up via ``--ckf-slselection-chi2max``
+
+* Global maximum number of source links on a surface. This could be set up via ``--ckf-slselection-nmax`` 
+
 .. code-block:: console
 
    $ <build>/bin/ActsRecCKFTracks \
        --input-dir=sim_ttbar_pu200 \
+       --bf-value=0 0 2 \
+       --ckf-slselection-chi2max 20 \
+       --ckf-slselection-nmax 10 \
        --output-dir=rec_ttbar_pu200
 
-Look at CKF tracking performance
+The magnetic field setup should be consistent between simulation and truth tracking.
+
+Look at the CKF tracking performance
 ----------------------
 
 The CKF tracking will generate a root file named ``performance_ckf.root`` (the name is currently not configurable via the command line) in the ``output-dir``.
