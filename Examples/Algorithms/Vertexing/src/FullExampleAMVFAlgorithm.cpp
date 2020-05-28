@@ -40,7 +40,6 @@ FWE::FullExampleAMVFAlgorithm::FullExampleAMVFAlgorithm(
 /// and finds and fits its vertices
 FW::ProcessCode FWE::FullExampleAMVFAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
-  
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */
   //////////////////////////////////////////////

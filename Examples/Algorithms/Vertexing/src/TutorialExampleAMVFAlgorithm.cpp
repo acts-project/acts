@@ -32,8 +32,8 @@
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-FWE::TutorialExampleAMVFAlgorithm::TutorialExampleAMVFAlgorithm(const Config& cfg,
-                                                Acts::Logging::Level level)
+FWE::TutorialExampleAMVFAlgorithm::TutorialExampleAMVFAlgorithm(
+    const Config& cfg, Acts::Logging::Level level)
     : FW::BareAlgorithm("Tutorial AMVF Algorithm", level), m_cfg(cfg) {}
 
 /// @brief Tutorial algorithm that receives all selected tracks from an event
@@ -54,9 +54,8 @@ FW::ProcessCode FWE::TutorialExampleAMVFAlgorithm::execute(
   //////////////////////////////////////////////////////////////////////////////
   /*****   Note: This is a skeleton file to be filled with tutorial code  *****/
   /*****   provided in the Acts Docs - Vertexing section under the link:  *****/
-  /* https://acts.readthedocs.io/en/latest/howto/setup_and_run_vertexing.html */ 
+  /* https://acts.readthedocs.io/en/latest/howto/setup_and_run_vertexing.html */
   //////////////////////////////////////////////////////////////////////////////
-  
 
   /////////////////////////////////////////////
   /*    Add the tutorial example code here   */

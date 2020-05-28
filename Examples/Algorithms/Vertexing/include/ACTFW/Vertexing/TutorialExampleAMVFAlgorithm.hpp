@@ -30,8 +30,8 @@ class TutorialExampleAMVFAlgorithm : public FW::BareAlgorithm {
   };
 
   /// Constructor
-  TutorialExampleAMVFAlgorithm(const Config& cfg,
-                       Acts::Logging::Level level = Acts::Logging::INFO);
+  TutorialExampleAMVFAlgorithm(
+      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Framework execute method
   /// @param [in] context is the Algorithm context for event consistency

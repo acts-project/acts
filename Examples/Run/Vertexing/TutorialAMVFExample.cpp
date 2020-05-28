@@ -88,8 +88,8 @@ int main(int argc, char* argv[]) {
   // Add the finding algorithm
   FWE::TutorialExampleAMVFAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = selectorConfig.output;
-  sequencer.addAlgorithm(
-      std::make_shared<FWE::TutorialExampleAMVFAlgorithm>(vertexFindingCfg, logLevel));
+  sequencer.addAlgorithm(std::make_shared<FWE::TutorialExampleAMVFAlgorithm>(
+      vertexFindingCfg, logLevel));
 
   return sequencer.run();
 }
