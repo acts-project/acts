@@ -90,10 +90,24 @@ This includes a tree showing performance of the truth track finding.
 *  ``peformance_track_fitter.root``
 This includes a few histograms showing the residual&pull of the fitted perigee track parameters and efficiency plots showing the fitting efficiency etc.
 
-To draw the resolution of fitted perigee track parameters for e.g. ttbar sample, one could use:
+Example plots to show the fitting efficiency versus eta/pt for ttbar sample generated above:
+
+![trackeff_vs_eta](/figures/performance/fitter/trackeff_vs_eta_ttbar_pu200.png)
+![trackeff_vs_pT](/figures/performance/fitter/trackeff_vs_pT_ttbar_pu200.png)
+
+Example plots to show the number of measurments/holes versus eta for ttbar sample generated above:
+
+![nMeasurements_vs_eta](/figures/performance/fitter/nHoles_vs_eta_ttbar_pu200.png)
+![nHoles_vs_eta](/figures/performance/fitter/nHoles_vs_eta_ttbar_pu200.png)
+
+To draw the resolution (residual and pull) of fitted perigee track parameters for e.g. ttbar sample, one could use:
 
 .. code-block:: console
 
  $ root <source>/Examples/Scripts/perigeeParamResolution.C("rec_ttbar_pu200/performance_track_fitter.root")'
 
 ``<source>`` here is used to identify the path of the source directory. 
+
+An example plot of the pull distribution of fitted perigee track parameters for the ttbar sample generated above:
+
+![pull_perigee_parameters](/figures/performance/fitter/pull_perigee_parameters_ttbar_pu200.png)
