@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "TGeoArb8.h"
 #include "TGeoBBox.h"
@@ -188,8 +189,12 @@ void Acts::TGeoDetectorElement::construct(
     TGeoBBox* box = dynamic_cast<TGeoBBox*>(tgShape);
     // check if it's a trapezoid - unfortunately box is the base of everything
     TGeoTrd2* trapezoid = dynamic_cast<TGeoTrd2*>(tgShape);
+    // check if it's a Arb8 
+    TGeoArb8* polygon = dynamic_cast<TGeoArb8*>(tgShape);
     // check if it's a tube segment
     TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(tgShape);
+
+
     if (tube != nullptr) {
       m_transform = std::make_shared<const Transform3D>(
           makeTransform(colX, colY, colZ, colT));
@@ -213,6 +218,8 @@ void Acts::TGeoDetectorElement::construct(
         surface = Surface::makeShared<CylinderSurface>(cylinderBounds, *this);
       }
     } else {
+
+
       if (boost::iequals(axes, "XYZ")) {
         // get the sign of the axes
         int signX = 1;
