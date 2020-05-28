@@ -31,23 +31,6 @@ namespace {
 //~ // tolerance used for floating point comparison in this translation unit
 //~ const double tol = 1e-6;
 
-//~ double get_cyclic_value(double value, double min, double max) {
-//~ return value - (max - min) * std::floor((value - min) / (max - min));
-//~ }
-
-//~ double get_cyclic_difference(double a, double b, double min, double max) {
-//~ const double period = max - min;
-//~ const double half_period = period / 2;
-//~ a = get_cyclic_value(a, min, max);
-//~ b = get_cyclic_value(b, min, max);
-//~ double raw_diff = a - b;
-//~ double diff =
-//~ (raw_diff > half_period)
-//~ ? raw_diff - period
-//~ : ((raw_diff < -half_period) ? period + raw_diff : raw_diff);
-//~ return diff;
-//~ }
-
 //~ void check_residuals_for_bound_parameters() {
 //~ const double max = BoundParameterType<eFreeDir2>::max;
 //~ const double min = BoundParameterType<eFreeDir2>::min;
@@ -108,41 +91,6 @@ namespace {
 //~ CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 //~ dTheta << min - max;
 //~ CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
-//~ }
-
-//~ void check_residuals_for_cyclic_parameters() {
-//~ const double max = BoundParameterType<eBoundPhi>::max;
-//~ const double min = BoundParameterType<eBoundPhi>::min;
-
-//~ double phi_1 = 0.7 * M_PI;
-//~ double phi_2 = 0.4 * M_PI;
-//~ ActsVectorD<1> dPhi;
-//~ dPhi << (phi_1 - phi_2);
-
-//~ ParameterSet<eBoundPhi> cyclic1(std::nullopt, phi_1);
-//~ ParameterSet<eBoundPhi> cyclic2(std::nullopt, phi_2);
-
-//~ // no boundary crossing, difference is positive
-//~ CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
-
-//~ // no boundary crossing, difference is negative
-//~ CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
-
-//~ // forward boundary crossing
-//~ phi_1 = -0.9 * M_PI;
-//~ cyclic1.setParameter<eBoundPhi>(phi_1);
-//~ dPhi << get_cyclic_difference(phi_1, phi_2, min, max);
-//~ CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
-//~ CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
-
-//~ // backward boundary crossing
-//~ phi_1 = 0.7 * M_PI;
-//~ phi_2 = -0.9 * M_PI;
-//~ cyclic1.setParameter<eBoundPhi>(phi_1);
-//~ cyclic2.setParameter<eBoundPhi>(phi_2);
-//~ dPhi << get_cyclic_difference(phi_1, phi_2, min, max);
-//~ CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
-//~ CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
 //~ }
 
 //~ void random_residual_tests() {
@@ -240,7 +188,7 @@ namespace {
  * -# ParameterSet::setParameter
  * -# ParameterSet::getUncertainty
  */
-BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
+BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
   // check template parameter based information
   BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1>::size() == 2));
 
@@ -322,7 +270,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
  * -# ParameterSet::operator=
  * -# ParameterSet::swap
  */
-BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
+BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   // covariance matrix
   ActsSymMatrixD<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
@@ -377,7 +325,7 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
  *
  *  @sa FreeParameterSet::operator==, FreeParameterSet::operator!=
  */
-BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
+BOOST_AUTO_TEST_CASE(free_parset_comparison_tests) {
   // covariance matrix
   ActsSymMatrixD<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
@@ -440,7 +388,7 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
  *
  * @sa FreeParameterSet::projector
  */
-BOOST_AUTO_TEST_CASE(parset_projection_tests) {
+BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
   ActsMatrixD<1, eFreeParametersSize> z_proj;
   z_proj << 0, 0, 1, 0, 0, 0, 0, 0;
 
@@ -448,7 +396,7 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<2, eFreeParametersSize> y_tz_proj;
-  y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0 0, 0, 0, 0, 0, 0, 1, 0;
+  y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<3, eFreeParametersSize> x_y_z_proj;
   x_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
@@ -491,97 +439,71 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
       (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir2,
                         eFreeQOverP>::projector() == x_y_z_tz_qop_proj));
   BOOST_CHECK(
-      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir2, eFreeQOverP,
-                        eFreeT>::projector() == x_y_z_t_tz_qop_proj));
-  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir1,
-                                eFreeDir2, eFreeQOverP, eFreeT>::projector() ==
+      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir2, eFreeQOverP
+                        >::projector() == x_y_z_t_tz_qop_proj));
+  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir1,
+                                eFreeDir2, eFreeQOverP>::projector() ==
                x_y_z_t_ty_tz_qop_proj));
   BOOST_CHECK(
-      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir0, eFreeDir1,
-                        eFreeDir2, eFreeQOverP, eFreeT>::projector() ==
+      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+                        eFreeDir2, eFreeQOverP>::projector() ==
        x_y_z_t_tx_ty_tz_qop_proj));
 }
 
-// /**
-//  * @brief Unit test for residuals between different FreeParameterSet objects
-//  *
-//  * The result of the residual calculation between two FreeParameterSet objects is
-//  * checked.
-//  * A test of the automatic correction of stored parameter values for
-//  * out-of-bounds/cyclic
-//  * corrections is also implemented.
-//  *
-// * @sa FreeParameterSet::residual, FreeParameterSet::getParameter
-// */
-// BOOST_AUTO_TEST_CASE(parset_residual_tests) {
-// // check unbound parameter type
-// const double large_number = 12443534120;
-// const double small_number = -924342675;
-// const double normal_number = 1.234;
-// FreeParameterSet<eFreePos0, eFreePos1, eFreeQOverP> unbound(
-// std::nullopt, small_number, large_number, normal_number);
-// BOOST_CHECK(unbound.getParameter<eFreePos0>() == small_number);
-// BOOST_CHECK(unbound.getParameter<eFreePos1>() == large_number);
-// BOOST_CHECK(unbound.getParameter<eFreeQOverP>() == normal_number);
+/**
+ * @brief Unit test for residuals between different FreeParameterSet objects
+ *
+ * The result of the residual calculation between two FreeParameterSet objects is
+ * checked.
+ * A test of the automatic correction of stored parameter values for
+ * out-of-bounds
+ * corrections is also implemented.
+ *
+* @sa FreeParameterSet::residual, FreeParameterSet::getParameter
+*/
+BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
+// check unbound parameter type
+const double large_number = 12443534120;
+const double small_number = -924342675;
+const double normal_number = 0.1234;
+FreeParameterSet<eFreePos0, eFreePos1, eFreeQOverP> unbound(
+std::nullopt, small_number, large_number, normal_number);
+BOOST_CHECK(unbound.getParameter<eFreePos0>() == small_number);
+BOOST_CHECK(unbound.getParameter<eFreePos1>() == large_number);
+BOOST_CHECK(unbound.getParameter<eFreeQOverP>() == normal_number);
 
-// // check bound parameter type
-// ParameterSet<eFreeDir2> bound(std::nullopt, small_number);
-// BOOST_CHECK((bound.getParameter<eFreeDir2>() ==
-// BoundParameterType<eFreeDir2>::min));
-// bound.setParameter<eFreeDir2>(large_number);
-// BOOST_CHECK((bound.getParameter<eFreeDir2>() ==
-// BoundParameterType<eFreeDir2>::max));
-// bound.setParameter<eFreeDir2>(normal_number);
-// BOOST_CHECK((bound.getParameter<eFreeDir2>() == normal_number));
+// check bound parameter type
+FreeParameterSet<eFreeDir2> bound(std::nullopt, small_number);
+BOOST_CHECK((bound.getParameter<eFreeDir2>() ==
+FreeParameterType<eFreeDir2>::min));
+bound.setParameter<eFreeDir2>(large_number);
+BOOST_CHECK((bound.getParameter<eFreeDir2>() ==
+FreeParameterType<eFreeDir2>::max));
+bound.setParameter<eFreeDir2>(normal_number);
+BOOST_CHECK((bound.getParameter<eFreeDir2>() == normal_number));
 
-// // check cyclic parameter type
-// ParameterSet<eBoundPhi> cyclic(std::nullopt, small_number);
-// // calculate expected results
-// const double min = BoundParameterType<eBoundPhi>::min;
-// const double max = BoundParameterType<eBoundPhi>::max;
-// // check that difference between original phi and stored phi is a multiple
-// // of the cyclic period
-// double multiple =
-// (cyclic.getParameter<eBoundPhi>() - small_number) / (max - min);
-// BOOST_CHECK(cyclic.getParameter<eBoundPhi>() >= min);
-// BOOST_CHECK(cyclic.getParameter<eBoundPhi>() < max);
-// BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
+// check residual calculation
 
-// cyclic.setParameter<eBoundPhi>(large_number);
-// multiple = (cyclic.getParameter<eBoundPhi>() - large_number) / (max - min);
-// BOOST_CHECK(cyclic.getParameter<eBoundPhi>() >= min);
-// BOOST_CHECK(cyclic.getParameter<eBoundPhi>() < max);
-// BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
+// input numbers
+const double first_x = 0.3;
+const double first_y = 0.9;
+const double first_z = 0.7;
 
-// cyclic.setParameter<eBoundPhi>(normal_number);
-// multiple = (cyclic.getParameter<eBoundPhi>() - normal_number) / (max - min);
-// BOOST_CHECK(cyclic.getParameter<eBoundPhi>() >= min);
-// BOOST_CHECK(cyclic.getParameter<eBoundPhi>() < max);
-// BOOST_CHECK(std::abs(multiple - std::floor(multiple + 0.5)) < tol);
+const double second_x = 2.7;
+const double second_y = -0.9;
+const double second_z = 0.35;
 
-// // check residual calculation
+// expected results for residual second wrt first
+const double delta_x = second_x - first_x;
+const double delta_y = second_y - first_y;
+const double delta_z = second_z - first_z;
+ActsVectorD<3> residuals(delta_x, delta_y, delta_z);
 
-// // input numbers
-// const double first_loc0 = 0.3;
-// const double first_phi = 0.9 * M_PI;
-// const double first_theta = 0.7 * M_PI;
-
-// const double second_loc0 = 2.7;
-// const double second_phi = -0.9 * M_PI;
-// const double second_theta = 0.35 * M_PI;
-
-// // expected results for residual second wrt first
-// const double delta_loc0 = second_loc0 - first_loc0;
-// const double delta_phi =
-// get_cyclic_difference(second_phi, first_phi, min, max);
-// const double delta_theta = second_theta - first_theta;
-// ActsVectorD<3> residuals(delta_loc0, delta_phi, delta_theta);
-
-// ParameterSet<eFreePos0, eBoundPhi, eFreeDir2> first(
-// std::nullopt, first_loc0, first_phi, first_theta);
-// ParameterSet<eFreePos0, eBoundPhi, eFreeDir2> second(
-// std::nullopt, second_loc0, second_phi, second_theta);
-// CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
+FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> first(
+std::nullopt, first_x, first_y, first_z);
+FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> second(
+std::nullopt, second_x, second_y, second_z);
+CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
 // // some more checks for bound variables
 // check_residuals_for_bound_parameters();
@@ -591,16 +513,16 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
 
 // // inspecific residual tests with random numbers
 // random_residual_tests();
-// }
+}
 
 //~ template <ParID_t... params>
-//~ using ParSet = ParameterSet<params...>;
+//~ using ParSet = FreeParameterSet<params...>;
 
 //~ /**
 //~ * @brief Unit test for index-/type-based access of coordinates
 //~ *
-//~ * @sa ParameterSet::getIndex
-//~ * @sa ParameterSet::getParID
+//~ * @sa FreeParameterSet::getIndex
+//~ * @sa FreeParameterSet::getParID
 //~ */
 //~ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
 //~ // check logic for type-based access
@@ -628,7 +550,7 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
 //~ eT>::getParID<4>() == eT));
 
 //~ // check consistency
-//~ using FullSet = FullParameterSet;
+//~ using FullSet = FullFreeParameterSet;
 //~ BOOST_CHECK((FullSet::getIndex<FullSet::getParID<0>()>() == 0));
 //~ BOOST_CHECK((FullSet::getIndex<FullSet::getParID<1>()>() == 1));
 //~ BOOST_CHECK((FullSet::getIndex<FullSet::getParID<2>()>() == 2));
