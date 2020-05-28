@@ -20,7 +20,7 @@
 #include "ACTFW/TruthTracking/TrackSelector.hpp"
 #include "ACTFW/TruthTracking/TruthVerticesToTracks.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
-#include "ACTFW/Vertexing/TutorialExampleAMVFAlgorithm.hpp"
+#include "ACTFW/Vertexing/TutorialAMVFAlgorithm.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 
 using namespace Acts::UnitLiterals;
@@ -86,10 +86,10 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackSelector>(selectorConfig, logLevel));
 
   // Add the finding algorithm
-  FWE::TutorialExampleAMVFAlgorithm::Config vertexFindingCfg;
+  FWE::TutorialAMVFAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = selectorConfig.output;
-  sequencer.addAlgorithm(std::make_shared<FWE::TutorialExampleAMVFAlgorithm>(
-      vertexFindingCfg, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<FWE::TutorialAMVFAlgorithm>(vertexFindingCfg, logLevel));
 
   return sequencer.run();
 }

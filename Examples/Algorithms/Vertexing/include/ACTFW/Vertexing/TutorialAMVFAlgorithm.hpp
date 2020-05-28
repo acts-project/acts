@@ -22,7 +22,7 @@
 
 namespace FWE {
 
-class TutorialExampleAMVFAlgorithm : public FW::BareAlgorithm {
+class TutorialAMVFAlgorithm : public FW::BareAlgorithm {
  public:
   struct Config {
     /// Input track collection
@@ -30,8 +30,8 @@ class TutorialExampleAMVFAlgorithm : public FW::BareAlgorithm {
   };
 
   /// Constructor
-  TutorialExampleAMVFAlgorithm(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+  TutorialAMVFAlgorithm(const Config& cfg,
+                        Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Framework execute method
   /// @param [in] context is the Algorithm context for event consistency
