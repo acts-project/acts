@@ -272,16 +272,17 @@ class FreeParameterSet {
         FreeParameterType<parameter>::getValue(value);
   }
 
-  //~ /**
-  //~ * @brief sets values of stored parameters
-  //~ *
-  //~ * The values of the given vector are interpreted as parameter values in
-  // the ~ * order ~ * of the class template `params...`. ~ * ~ * @param values
-  // vector of length #NPars ~ */
-  //~ void setParameters(const ParVector_t& values) {
-  //~ detail::initialize_parset<FreeParametersIndices, params...>::init(*this,
-  // values);
-  //~ }
+   /**
+   * @brief sets values of stored parameters
+   *
+   * The values of the given vector are interpreted as parameter values in the 
+   * order of the class template `params...`. 
+   * 
+   *  @param values vector of length #NPars ~ */
+   void setParameters(const ParVector_t& values) {
+   detail::initialize_parset<FreeParametersIndices, params...>::init(*this,
+  values);
+   }
 
   /**
    * @brief checks whether a given parameter is included in this set of
