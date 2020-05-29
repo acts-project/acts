@@ -6,3 +6,4 @@ How-to guides
 
    run_fatras
    run_truth_tracking
+   run_ckf_tracking
