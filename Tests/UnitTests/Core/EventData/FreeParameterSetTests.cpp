@@ -31,69 +31,69 @@ namespace {
 //~ // tolerance used for floating point comparison in this translation unit
 //~ const double tol = 1e-6;
 
-//~ void check_residuals_for_bound_parameters() {
-//~ const double max = BoundParameterType<eFreeDir2>::max;
-//~ const double min = BoundParameterType<eFreeDir2>::min;
-//~ double theta_1 = 0.7 * M_PI;
-//~ double theta_2 = 0.4 * M_PI;
-//~ ActsVectorD<1> dTheta;
-//~ dTheta << (theta_1 - theta_2);
+void check_residuals_for_bound_parameters() {
+const double max = FreeParameterType<eFreeDir0>::max;
+const double min = FreeParameterType<eFreeDir0>::min;
+double tx_1 = 0.7;
+double tx_2 = 0.4;
+ActsVectorD<1> dTx;
+dTx << (tx_1 - tx_2);
 
-//~ // both parameters inside bounds, difference is positive
-//~ ParameterSet<eFreeDir2> bound1(std::nullopt, theta_1);
-//~ ParameterSet<eFreeDir2> bound2(std::nullopt, theta_2);
-//~ CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
+// both parameters inside bounds, difference is positive
+FreeParameterSet<eFreeDir0> bound1(std::nullopt, tx_1);
+FreeParameterSet<eFreeDir0> bound2(std::nullopt, tx_2);
+CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
-//~ // both parameters inside bound, difference negative
-//~ dTheta << (theta_2 - theta_1);
-//~ CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
+// both parameters inside bound, difference negative
+dTx << (tx_2 - tx_1);
+CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
 
-//~ // one parameter above upper bound, difference positive
-//~ theta_1 = max + 1;
-//~ bound1.setParameter<eFreeDir2>(theta_1);
-//~ dTheta << max - theta_2;
-//~ CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
+// one parameter above upper bound, difference positive
+tx_1 = max + 1;
+bound1.setParameter<eFreeDir0>(tx_1);
+dTx << max - tx_2;
+CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
-//~ // one parameter above upper bound, difference negative
-//~ dTheta << theta_2 - max;
-//~ CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
+// one parameter above upper bound, difference negative
+dTx << tx_2 - max;
+CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 
-//~ // one parameter below lower bound, difference positive
-//~ theta_1 = min - 1;
-//~ bound1.setParameter<eFreeDir2>(theta_1);
-//~ dTheta << theta_2 - min;
-//~ CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
+// one parameter below lower bound, difference positive
+tx_1 = min - 1;
+bound1.setParameter<eFreeDir0>(tx_1);
+dTx << tx_2 - min;
+CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 
-//~ // one parameter below lower bound, difference negative
-//~ dTheta << min - theta_2;
-//~ CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
+// one parameter below lower bound, difference negative
+dTx << min - tx_2;
+CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
-//~ // both parameters outside bounds, both below
-//~ theta_1 = min - 1;
-//~ theta_2 = min - 2;
-//~ bound1.setParameter<eFreeDir2>(theta_1);
-//~ bound2.setParameter<eFreeDir2>(theta_2);
-//~ CHECK_SMALL(bound1.residual(bound2), tol);
+// both parameters outside bounds, both below
+tx_1 = min - 1;
+tx_2 = min - 2;
+bound1.setParameter<eFreeDir0>(tx_1);
+bound2.setParameter<eFreeDir0>(tx_2);
+CHECK_SMALL(bound1.residual(bound2), tol);
 
-//~ // both parameters outside bounds, both above
-//~ theta_1 = max + 1;
-//~ theta_2 = max + 2;
-//~ bound1.setParameter<eFreeDir2>(theta_1);
-//~ bound2.setParameter<eFreeDir2>(theta_2);
-//~ CHECK_SMALL(bound1.residual(bound2), tol);
+// both parameters outside bounds, both above
+tx_1 = max + 1;
+tx_2 = max + 2;
+bound1.setParameter<eFreeDir0>(tx_1);
+bound2.setParameter<eFreeDir0>(tx_2);
+CHECK_SMALL(bound1.residual(bound2), tol);
 
-//~ // both parameters outside bounds, one above, one below
-//~ theta_1 = max + 1;
-//~ theta_2 = min - 2;
-//~ bound1.setParameter<eFreeDir2>(theta_1);
-//~ bound2.setParameter<eFreeDir2>(theta_2);
-//~ dTheta << max - min;
-//~ CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
-//~ dTheta << min - max;
-//~ CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
-//~ }
+// both parameters outside bounds, one above, one below
+tx_1 = max + 1;
+tx_2 = min - 2;
+bound1.setParameter<eFreeDir0>(tx_1);
+bound2.setParameter<eFreeDir0>(tx_2);
+dTx << max - min;
+CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
+dTx << min - max;
+CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
+}
 
-//~ void random_residual_tests() {
+void random_residual_tests() {
 //~ // random number generators
 //~ std::default_random_engine e;
 //~ std::uniform_real_distribution<float> uniform_dist(-1000, 300);
@@ -171,7 +171,7 @@ namespace {
 //~ break;
 //~ }
 //~ }
-//~ }
+}
 }  // namespace
 /// @endcond
 
@@ -505,11 +505,8 @@ FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> second(
 std::nullopt, second_x, second_y, second_z);
 CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
-// // some more checks for bound variables
-// check_residuals_for_bound_parameters();
-
-// // some more checks for cyclic variables
-// check_residuals_for_cyclic_parameters();
+// some more checks for bound variables
+check_residuals_for_bound_parameters();
 
 // // inspecific residual tests with random numbers
 // random_residual_tests();
