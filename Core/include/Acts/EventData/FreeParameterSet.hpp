@@ -29,46 +29,54 @@
 
 namespace Acts {
 /// @cond
-// forward type declaration for full parameter set
+// forward type declaration for full free parameter set
 using FullFreeParameterSet = typename detail::full_free_parset::type;
 /// @endcond
 
-//~ /**
-//~ * @class ParameterSet
-//~ *
-//~ * @brief Description of a set of (local) parameters
-//~ *
-//~ * @pre
-//~ * The template parameter @c ParameterPolicy must fulfill the following
-//~ * requirements:
-//~ *  -# It must contain a <tt>typedef #ParID_t</tt> specifying an integral
-//~ * type used to identify different
-//~ *     parameters. This could for example be an @c enum, @c short, or
-//~ * <tt>unsigned int</tt>.
-//~ *     This @c typedef must be convertible to an <tt>unsigned int</tt>
-//~ *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
-//~ * the parameter values. This could for
-//~ *     instance be @c double, or @c float.
-//~ *  -# It must contain a definition of an integral constant named @c N which
-// is ~ * assignable to an <tt>unsigned ~ *     int</tt> and which is equal to
-// the total number of parameters in the ~ * system. ~ * @pre ~ * ~ * The
-// template parameter pack @c params must be given in a strictly ascending ~ *
-// order. The parameter pack must ~ * be non-empty and it cannot contain more
-// elements than ~ * <tt>Acts::eBoundParametersSize</tt>. ~ * ~ * @test The
-// behavior of this class is tested in the following unit tests: ~ *       -
-//\link Acts::Test::BOOST_AUTO_TEST_CASE(parset_consistency_tests) ~ * general
-// consistency\endlink ~ *       - \link
-// Acts::Test::BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) ~ *
-// copy/assignment/swap\endlink ~ *       - \link
-// Acts::Test::BOOST_AUTO_TEST_CASE(parset_comparison_tests) ~ * comparison
-// operators\endlink ~ *       - \link
-// Acts::Test::BOOST_AUTO_TEST_CASE(parset_projection_tests) ~ * projection
-// matrices\endlink ~ *       - \link
-// Acts::Test::BOOST_AUTO_TEST_CASE(parset_residual_tests) ~ * residual
-// calculation\endlink ~ * ~ * @tparam ParameterPolicy  struct or class
-// containing the parameter definitions ~ * (see above) ~ * @tparam params
-// parameter pack containing the (local) parameters ~ * stored in this class ~
-// */
+/**
+ * @class FreeParameterSet
+ *
+ * @brief Description of a set of (local) parameters
+ *
+ * @pre
+ * The template parameter @c ParameterPolicy must fulfill the following
+ * requirements:
+ *  -# It must contain a <tt>typedef #ParID_t</tt> specifying an integral
+ * type used to identify different
+ *     parameters. This could for example be an @c enum, @c short, or
+ * <tt>unsigned int</tt>.
+ *     This @c typedef must be convertible to an <tt>unsigned int</tt>
+ *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
+ * the parameter values. This could for
+ *     instance be @c double, or @c float.
+ *  -# It must contain a definition of an integral constant named @c N which is
+ * assignable to an <tt>unsigned
+ *     int</tt> and which is equal to the total number of parameters in the
+ * system.
+ * @pre
+ *
+ * The template parameter pack @c params must be given in a strictly ascending
+ * order. The parameter pack must
+ * be non-empty and it cannot contain more elements than
+ * <tt>Acts::eBoundParametersSize</tt>.
+ *
+ * @test The behavior of this class is tested in the following unit tests:
+ *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_consistency_tests)
+ * general consistency\endlink
+ *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests)
+ * copy/assignment/swap\endlink
+ *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_comparison_tests)
+ * comparison operators\endlink
+ *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_projection_tests)
+ * projection matrices\endlink
+ *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_residual_tests)
+ * residual calculation\endlink
+ *
+ * @tparam ParameterPolicy  struct or class containing the parameter definitions
+ * (see above)
+ * @tparam params           parameter pack containing the (local) parameters
+ * stored in this class
+ */
 template <FreeParametersIndices... params>
 class FreeParameterSet {
  private:
@@ -219,21 +227,21 @@ class FreeParameterSet {
                                 params...>::value;
   }
 
-  //~ /**
-  //~ * @brief return parameter identifier for given index
-  //~ *
-  //~ * @tparam index position of parameter identifier in @c params
-  //~ * @remark @c index must be a positive number smaller than the size of the
-  //~ *         parameter pack @c params. Otherwise a compile-time error is
-  //~ *         generated.
-  //~ *
-  //~ * @return parameter identifier at position @c index in variadic template
-  //~ *         parameter set @c params
-  //~ */
-  //~ template <size_t index>
-  //~ static constexpr FreeParametersIndices getParID() {
-  //~ return detail::at_index<FreeParametersIndices, index, params...>::value;
-  //~ }
+ /**
+  * @brief return parameter identifier for given index
+ *
+ * @tparam index position of parameter identifier in @c params
+ * @remark @c index must be a positive number smaller than the size of the
+ *         parameter pack @c params. Otherwise a compile-time error is
+   *         generated.
+   *
+   * @return parameter identifier at position @c index in variadic template
+   *         parameter set @c params
+   */
+   template <size_t index>
+   static constexpr FreeParametersIndices getParID() {
+   return detail::at_index<FreeParametersIndices, index, params...>::value;
+   }
 
   /**
    * @brief retrieve stored value for given parameter
@@ -278,7 +286,7 @@ class FreeParameterSet {
    * The values of the given vector are interpreted as parameter values in the 
    * order of the class template `params...`. 
    * 
-   *  @param values vector of length #NPars ~ */
+   *  @param values vector of length #NPars
    void setParameters(const ParVector_t& values) {
    detail::initialize_parset<FreeParametersIndices, params...>::init(*this,
   values);
@@ -380,25 +388,6 @@ class FreeParameterSet {
    */
   bool operator!=(const ParSet_t& rhs) const { return !(*this == rhs); }
 
-  //~ /**
-  //~ * @brief project vector of full parameter set onto parameter sub-space
-  //~ *
-  //~ * Let \f$ \left(p_1 \dots p_N \right)\f$ be the full set of parameters out
-  // of ~ * which the \f$m\f$ ~ * parameters \f$ \left( p_{i_1} \dots p_{i_m}
-  //\right), i_1 < i_2 < \dots < ~ * i_m, m \le N, i_j \le N\f$ ~ * are stored
-  // in this FreeParameterSet object. Let \f$ \left(v^0_1 \dots v^0_N ~ *
-  //\right)\f$ be the parameter ~ * values given in the full FreeParameterSet,
-  // then this methods applies the ~ * following mapping: ~ * \f[ ~ *
-  //\mathbb{R}^{N \times 1} \mapsto \mathbb{R}^{m \times 1} : \left( ~ *
-  //\begin{array}{c} v_1^0 \\ \vdots \\ v_N^0 \end{array} \right) \mapsto ~ *
-  //\left( \begin{array}{c} v_{i_1}^0 \\ \vdots \\ v_{i_m}^0 \end{array} ~ *
-  //\right) ~ * \f] ~ * ~ * @param fullParSet FreeParameterSet object containing
-  // values for all defined ~ * parameters ~ * ~ * @return vector containing
-  // only  the parameter values from the full parameter ~ * vector ~ *
-  // which  are also defined for this FreeParameterSet object ~ */ ~ ParVector_t
-  //project(const FullFreeParameterSet& fullParSet) const { ~ return projector()
-  //* fullParSet.getParameters(); ~ }
-
   /**
    * @brief calculate residual difference to full parameter vector
    *
@@ -497,21 +486,6 @@ class FreeParameterSet {
    * @return number of stored parameters
    */
   static constexpr unsigned int size() { return NPars; }
-
-  //~ /**
-  //~ * @brief correct given parameter values
-  //~ *
-  //~ * Check that the given values are within in a valid range for the
-  //~ * corresponding parameter. If not, an
-  //~ * in-place correction is applied. The values are interpreted as parameter
-  //~ * values in the same order as
-  //~ * specified in the class template @c params.
-  //~ *
-  //~ * @param values vector with parameter values to be checked and corrected
-  // if ~ * necessary ~ */
-  //~ static void correctValues(ParVector_t& values) {
-  //~ detail::value_corrector<params...>::result(values);
-  //~ }
 
  private:
   ParVector_t m_vValues{ParVector_t::Zero()};  ///< column vector containing
