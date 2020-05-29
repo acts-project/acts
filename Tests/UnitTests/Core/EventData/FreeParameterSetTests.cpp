@@ -28,8 +28,8 @@ namespace Acts {
 namespace Test {
 /// @cond
 namespace {
-//~ // tolerance used for floating point comparison in this translation unit
-//~ const double tol = 1e-6;
+// tolerance used for floating point comparison in this translation unit
+const double tol = 1e-6;
 
 void check_residuals_for_bound_parameters() {
 const double max = FreeParameterType<eFreeDir0>::max;
@@ -46,7 +46,7 @@ CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
 // both parameters inside bound, difference negative
 dTx << (tx_2 - tx_1);
-CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
+CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 
 // one parameter above upper bound, difference positive
 tx_1 = max + 1;
@@ -94,83 +94,92 @@ CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 }
 
 void random_residual_tests() {
-//~ // random number generators
-//~ std::default_random_engine e;
-//~ std::uniform_real_distribution<float> uniform_dist(-1000, 300);
+// random number generators
+std::default_random_engine e;
+std::uniform_real_distribution<float> uniform_dist(-1000, 300);
 
-//~ const double theta_max = BoundParameterType<eFreeDir2>::max;
-//~ const double theta_min = BoundParameterType<eFreeDir2>::min;
-//~ const double phi_max = BoundParameterType<eBoundPhi>::max;
-//~ const double phi_min = BoundParameterType<eBoundPhi>::min;
+const double tx_max = FreeParameterType<eFreeDir0>::max;
+const double tx_min = FreeParameterType<eFreeDir0>::min;
+const double ty_max = FreeParameterType<eFreeDir1>::max;
+const double ty_min = FreeParameterType<eFreeDir1>::min;
+const double tz_max = FreeParameterType<eFreeDir2>::max;
+const double tz_min = FreeParameterType<eFreeDir2>::min;
 
-//~ BoundVector parValues_1;
-//~ BoundVector parValues_2;
-//~ FullParameterSet parSet_1(std::nullopt, parValues_1);
-//~ FullParameterSet parSet_2(std::nullopt, parValues_2);
-//~ BoundVector residual;
-//~ const unsigned int toys = 1000;
-//~ for (unsigned int i = 0; i < toys; ++i) {
-//~ const double loc0_1 = uniform_dist(e);
-//~ const double loc1_1 = uniform_dist(e);
-//~ const double phi_1 = uniform_dist(e);
-//~ const double theta_1 = uniform_dist(e);
-//~ const double qop_1 = uniform_dist(e);
-//~ parValues_1 << loc0_1, loc1_1, phi_1, theta_1, qop_1, 0.;
-//~ parSet_1.setParameters(parValues_1);
+FreeVector parValues_1;
+FreeVector parValues_2;
+FullFreeParameterSet parSet_1(std::nullopt, parValues_1);
+FullFreeParameterSet parSet_2(std::nullopt, parValues_2);
+FreeVector residual;
+const unsigned int toys = 1000;
+for (unsigned int i = 0; i < toys; ++i) {
+const double x1 = uniform_dist(e);
+const double y1 = uniform_dist(e);
+const double z1 = uniform_dist(e);
+const double t1 = uniform_dist(e);
+const double tx1 = uniform_dist(e);
+const double ty1 = uniform_dist(e);
+const double tz1 = uniform_dist(e);
+const double qop1 = uniform_dist(e);
+parValues_1 << x1, y1, z1, t1, tx1, ty1, tz1, qop1;
+parSet_1.setParameters(parValues_1);
 
-//~ const double loc0_2 = uniform_dist(e);
-//~ const double loc1_2 = uniform_dist(e);
-//~ const double phi_2 = uniform_dist(e);
-//~ const double theta_2 = uniform_dist(e);
-//~ const double qop_2 = uniform_dist(e);
-//~ parValues_2 << loc0_2, loc1_2, phi_2, theta_2, qop_2, 0.;
-//~ parSet_2.setParameters(parValues_2);
+const double x2 = uniform_dist(e);
+const double y2 = uniform_dist(e);
+const double z2 = uniform_dist(e);
+const double t2 = uniform_dist(e);
+const double tx2 = uniform_dist(e);
+const double ty2 = uniform_dist(e);
+const double tz2 = uniform_dist(e);
+const double qop2 = uniform_dist(e);
+parValues_2 << x2, y2, z2, t2, tx2, ty2, tz2, qop2;
+parSet_2.setParameters(parValues_2);
 
-//~ const double delta_loc0 = loc0_1 - loc0_2;
-//~ const double delta_loc1 = loc1_1 - loc1_2;
-//~ // for theta make sure that the difference calculation considers the
-//~ // restricted value range
-//~ const double delta_theta =
-//~ (theta_1 > theta_max ? theta_max
-//~ : (theta_1 < theta_min ? theta_min : theta_1)) -
-//~ (theta_2 > theta_max ? theta_max
-//~ : (theta_2 < theta_min ? theta_min : theta_2));
-//~ const double delta_qop = qop_1 - qop_2;
-//~ residual = parSet_1.residual(parSet_2);
+const double delta_x = x1 - x2;
+const double delta_y = y1 - y2;
+const double delta_z = z1 - z2;
+const double delta_t = t1 - t2;
+// for direction make sure that the difference calculation considers the
+// restricted value range
+const double delta_tx = std::max(std::min(tx1, tx_max), tx_min) - std::max(std::min(tx2, tx_max), tx_min);
+const double delta_ty = std::max(std::min(ty1, ty_max), ty_min) - std::max(std::min(ty2, ty_max), ty_min);
+const double delta_tz = std::max(std::min(tz1, tz_max), tz_min) - std::max(std::min(tz2, tz_max), tz_min);
+const double delta_qop = qop1 - qop2;
+residual = parSet_1.residual(parSet_2);
 
-//~ // local parameters are unbound -> check for usual difference
-//~ if (std::abs(residual(0) - delta_loc0) > tol) {
-//~ BOOST_CHECK(false);
-//~ break;
-//~ }
-//~ if (std::abs(residual(1) - delta_loc1) > tol) {
-//~ BOOST_CHECK(false);
-//~ break;
-//~ }
-//~ // phi is a cyclic parameter -> check that (unsigned) difference is not
-//~ // larger than half period
-//~ // check that corrected(corrected(phi_2) + residual) == corrected(phi_1)
-//~ if (std::abs(get_cyclic_value(
-//~ get_cyclic_value(phi_2, phi_min, phi_max) + residual(2),
-//~ phi_min, phi_max) -
-//~ get_cyclic_value(phi_1, phi_min, phi_max)) > tol or
-//~ std::abs(residual(2)) > (phi_max - phi_min) / 2) {
-//~ BOOST_CHECK(false);
-//~ break;
-//~ }
-//~ // theta is bound -> check that (unsigned) difference is not larger then
-//~ // allowed range, check corrected difference
-//~ if (std::abs(residual(3) - delta_theta) > tol or
-//~ std::abs(residual(3)) > (theta_max - theta_min)) {
-//~ BOOST_CHECK(false);
-//~ break;
-//~ }
-//~ // qop is unbound -> check usual difference
-//~ if (std::abs(residual(4) - delta_qop) > tol) {
-//~ BOOST_CHECK(false);
-//~ break;
-//~ }
-//~ }
+// local parameters are unbound -> check for usual difference
+if (std::abs(residual(0) - delta_x) > tol) {
+BOOST_CHECK(false);
+break;
+}
+if (std::abs(residual(1) - delta_y) > tol) {
+BOOST_CHECK(false);
+break;
+}
+if (std::abs(residual(2) - delta_z) > tol) {
+BOOST_CHECK(false);
+break;
+}
+if (std::abs(residual(3) - delta_t) > tol) {
+BOOST_CHECK(false);
+break;
+}
+if (std::abs(residual(4) - delta_tx) > tol) {
+BOOST_CHECK(false);
+break;
+}
+if (std::abs(residual(5) - delta_ty) > tol) {
+BOOST_CHECK(false);
+break;
+}
+if (std::abs(residual(6) - delta_tz) > tol) {
+BOOST_CHECK(false);
+break;
+}
+if (std::abs(residual(7) - delta_qop) > tol) {
+BOOST_CHECK(false);
+break;
+}
+}
 }
 }  // namespace
 /// @endcond
@@ -508,11 +517,11 @@ CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 // some more checks for bound variables
 check_residuals_for_bound_parameters();
 
-// // inspecific residual tests with random numbers
-// random_residual_tests();
+// inspecific residual tests with random numbers
+random_residual_tests();
 }
 
-//~ template <ParID_t... params>
+// template <ParID_t... params>
 //~ using ParSet = FreeParameterSet<params...>;
 
 //~ /**
