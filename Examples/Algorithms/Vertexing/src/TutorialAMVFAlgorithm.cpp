@@ -8,12 +8,12 @@
 
 #include "ACTFW/Vertexing/TutorialAMVFAlgorithm.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -56,13 +56,13 @@ FW::ProcessCode FWE::TutorialAMVFAlgorithm::execute(
   /*** or in the Acts repository in  docs/howto/setup_and_run_vertexing.md  ***/
   //////////////////////////////////////////////////////////////////////////////
 
-  /////////////////////////////////////////////
-  /*    Add the tutorial example code here   */
-  /////////////////////////////////////////////
-  /////////////////////////////////////////////
-  /* For the full tutorial code please refer */
-  /*     to FullExampleAMVFAlgorithm.cpp     */
-  /////////////////////////////////////////////
+  ///////////////////////////////////////////////
+  /*     Add the tutorial example code here    */
+  ///////////////////////////////////////////////
+  ///////////////////////////////////////////////
+  /*  For the full tutorial code please refer  */
+  /* to AdaptiveMultiVertexFinderAlgorithm.cpp */
+  ///////////////////////////////////////////////
 
   //* Do not change the code below this line *//
   return FW::ProcessCode::SUCCESS;

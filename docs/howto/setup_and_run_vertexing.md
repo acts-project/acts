@@ -121,7 +121,7 @@ if (res.ok()) {
   ACTS_ERROR("Error in vertex finder: " << res.error().message());
 }
 ```
- For reference, the full tutorial code can also be found in a file called ```FullExampleAMVFAlgorithm.cpp``` in the same directory as ```ExampleAMVFAlgorithm.cpp```.
+ For reference, the full tutorial code can also be found in a file called ```AdaptiveMultiVertexFinderAlgorithm.cpp``` in the same directory as ```ExampleAMVFAlgorithm.cpp```.
  ## Running the example algorithm
  In your build directory, recompile and run the example on three pileup-50 pythia events to get your first ACTS vertices:
 ```

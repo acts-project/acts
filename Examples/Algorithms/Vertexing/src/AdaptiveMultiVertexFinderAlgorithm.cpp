@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Vertexing/FullExampleAMVFAlgorithm.hpp"
+#include "ACTFW/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -30,13 +30,13 @@
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-FWE::FullExampleAMVFAlgorithm::FullExampleAMVFAlgorithm(
+FWE::AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level level)
     : FW::BareAlgorithm("AMVF Algorithm", level), m_cfg(cfg) {}
 
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
-FW::ProcessCode FWE::FullExampleAMVFAlgorithm::execute(
+FW::ProcessCode FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */
@@ -128,7 +128,7 @@ FW::ProcessCode FWE::FullExampleAMVFAlgorithm::execute(
 }
 
 std::vector<Acts::BoundParameters>
-FWE::FullExampleAMVFAlgorithm::getInputTrackCollection(
+FWE::AdaptiveMultiVertexFinderAlgorithm::getInputTrackCollection(
     const FW::AlgorithmContext& ctx) const {
   // Setup containers
   const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
