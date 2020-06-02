@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <functional>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -297,7 +298,7 @@ class AtlasStepper {
     size_t debugMsgWidth = 50;
   };
 
-  AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};
+  AtlasStepper(bfield_t bField) : m_bField(std::move(bField)){};
 
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,
