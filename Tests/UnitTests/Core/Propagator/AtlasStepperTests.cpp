@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(atlas_stepper_test) {
   // Build the state and the stepper
   AtlasStepper<ConstantBField>::State asState(tgContext, mfContext, cp, ndir,
                                               stepSize, tolerance);
-  AtlasStepper<ConstantBField> as;
+  AtlasStepper<ConstantBField> as(bField);
 
   // Test the getters
   BOOST_TEST(as.position(asState) == pos);
