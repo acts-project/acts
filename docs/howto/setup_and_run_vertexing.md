@@ -21,7 +21,7 @@ A template algorithm file with an (almost) empty ```execute()``` method to be fi
 ../Examples/Algorithms/Vertexing/src/ExampleAMVFAlgorithm.cpp
 ```
 Open the file in your editor and let's start setting up the AMVF. We will start setting up all necessary components in the ```execute()``` method.
-*Note:* You would normally **not** want to do all the following setup steps in the ```execute()``` method (that is run on every single event), but rather in some kind of initialization method that is executed only once (which is however not available in the lightweight example framework we will be using here).
+*Note:* You would normally **not** want to do all the following setup steps in the ```execute()``` method (that is run on every single event), but rather in e.g. the constructor. For the sake of this tutorial, however, everything will be set up and run in the ```execute()``` method.
 
 ### Setting up required tools: Magnetic field and propagator
 Let's start with setting up a constant magnetic field:
