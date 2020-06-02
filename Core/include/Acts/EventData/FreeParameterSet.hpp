@@ -36,7 +36,7 @@ using FullFreeParameterSet = typename detail::full_free_parset::type;
 /**
  * @class FreeParameterSet
  *
- * @brief Description of a set of (local) parameters
+ * @brief Description of a set of (global) parameters
  *
  * @pre
  * The template parameter @c ParameterPolicy must fulfill the following
