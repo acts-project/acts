@@ -8,10 +8,8 @@
 
 #include "ACTFW/Vertexing/TutorialAMVFAlgorithm.hpp"
 
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/MagneticField/MagneticFieldContext.hpp>
-#include <iostream>
-
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -55,6 +53,7 @@ FW::ProcessCode FWE::TutorialAMVFAlgorithm::execute(
   /*****   Note: This is a skeleton file to be filled with tutorial code  *****/
   /*****   provided in the Acts Docs - Vertexing section under the link:  *****/
   /* https://acts.readthedocs.io/en/latest/howto/setup_and_run_vertexing.html */
+  /*** or in the Acts repository in  docs/howto/setup_and_run_vertexing.md  ***/
   //////////////////////////////////////////////////////////////////////////////
 
   /////////////////////////////////////////////

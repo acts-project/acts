@@ -8,10 +8,8 @@
 
 #include "ACTFW/Vertexing/FullExampleAMVFAlgorithm.hpp"
 
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/MagneticField/MagneticFieldContext.hpp>
-#include <iostream>
-
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
