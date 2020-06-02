@@ -23,6 +23,9 @@ class SharedBField {
   // typedef wrapped BField's cache type
   using Cache = typename BField::Cache;
 
+  /// Disallow construction without a valid underlying field.
+  SharedBField() = delete;
+
   /// Constructur with a shared pointer from a shared pointer.
   /// @note Since it is a shared field, we enforce it to be const
   /// @tparam bField is the shared BField to be stored
