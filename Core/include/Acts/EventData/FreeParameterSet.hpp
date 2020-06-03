@@ -41,24 +41,21 @@ using FullFreeParameterSet = typename detail::full_free_parset::type;
  * @pre
  * The template parameter @c ParameterPolicy must fulfill the following
  * requirements:
- *  -# It must contain a <tt>typedef #ParID_t</tt> specifying an integral
- * type used to identify different
- *     parameters. This could for example be an @c enum, @c short, or
- * <tt>unsigned int</tt>.
- *     This @c typedef must be convertible to an <tt>unsigned int</tt>
- *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
- * the parameter values. This could for
- *     instance be @c double, or @c float.
+ *  -# It must contain a <tt>typedef #FreeParametersIndices</tt> specifying an
+ * integral type used to identify different parameters. This could for example
+ * be an @c enum, @c short, or <tt>unsigned int</tt>. This @c typedef must be
+ * convertible to an <tt>unsigned int</tt>
+ *  -# It must contain a <tt>typedef #FreeparametersScalar</tt> specifying the
+ * type of the parameter values. This could for instance be @c double, or @c
+ * float.
  *  -# It must contain a definition of an integral constant named @c N which is
- * assignable to an <tt>unsigned
- *     int</tt> and which is equal to the total number of parameters in the
- * system.
+ * assignable to an <tt>unsigned int</tt> and which is equal to the total number
+ * of parameters in the system.
  * @pre
  *
  * The template parameter pack @c params must be given in a strictly ascending
- * order. The parameter pack must
- * be non-empty and it cannot contain more elements than
- * <tt>Acts::eBoundParametersSize</tt>.
+ * order. The parameter pack must be non-empty and it cannot contain more
+ * elements than <tt>Acts::eFreeParametersSize</tt>.
  *
  * @test The behavior of this class is tested in the following unit tests:
  *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_consistency_tests)
@@ -101,7 +98,7 @@ class FreeParameterSet {
 
  public:
   // public typedefs
-  /// matrix type for projecting full parameter vector onto local parameter
+  /// matrix type for projecting full parameter vector onto subset of parameter
   /// space
   using Projection_t = ActsMatrix<ParValue_t, NPars, eFreeParametersSize>;
   /// vector type for stored parameters
@@ -115,7 +112,7 @@ class FreeParameterSet {
    * @note  No validation of the given covariance matrix is performed (e.g. that
    * it is symmetric).
    *
-   * @param cov unique pointer to covariance matrix (nullptr is accepted)
+   * @param cov covariance matrix (std::nullopt is accepted)
    * @param head value for first parameter
    * @param values values for the remaining stored parameters
    */
@@ -137,11 +134,10 @@ class FreeParameterSet {
    * matrix
    *
    * @note The values in the passed vector are interpreted as parameter values
-   * in the order given
-   *       by the class template @c params. No validation of the given
-   * covariance matrix is performed.
+   * in the order given by the class template @c params. No validation of the
+   * given covariance matrix is performed.
    *
-   * @param cov unique pointer to covariance matrix (nullptr is accepted)
+   * @param cov covariance matrix (std::nullopt is accepted)
    * @param values vector with parameter values
    */
   FreeParameterSet(std::optional<CovMatrix_t> cov, const ParVector_t& values)
@@ -217,7 +213,7 @@ class FreeParameterSet {
    *
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
-   *         Otherwise a compile-time error is generated.
+   * Otherwise a compile-time error is generated.
    *
    * @return position of parameter in variadic template parameter set @c params
    */
@@ -227,28 +223,27 @@ class FreeParameterSet {
                                 params...>::value;
   }
 
- /**
-  * @brief return parameter identifier for given index
- *
- * @tparam index position of parameter identifier in @c params
- * @remark @c index must be a positive number smaller than the size of the
- *         parameter pack @c params. Otherwise a compile-time error is
-   *         generated.
+  /**
+   * @brief return parameter identifier for given index
+   *
+   * @tparam index position of parameter identifier in @c params
+   * @remark @c index must be a positive number smaller than the size of the
+   * parameter pack @c params. Otherwise a compile-time error is generated.
    *
    * @return parameter identifier at position @c index in variadic template
    *         parameter set @c params
    */
-   template <size_t index>
-   static constexpr FreeParametersIndices getParID() {
-   return detail::at_index<FreeParametersIndices, index, params...>::value;
-   }
+  template <size_t index>
+  static constexpr FreeParametersIndices getParID() {
+    return detail::at_index<FreeParametersIndices, index, params...>::value;
+  }
 
   /**
    * @brief retrieve stored value for given parameter
    *
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
-   *         Otherwise a compile-time error is generated.
+   * Otherwise a compile-time error is generated.
    *
    * @return value of the stored parameter
    */
@@ -269,8 +264,7 @@ class FreeParameterSet {
    *
    * @tparam parameter identifier for the parameter to be stored
    * @remark @c parameter must be part of the template parameter pack @c params.
-   * Otherwise a compile-time
-   *         error is generated.
+   * Otherwise a compile-time error is generated.
    *
    * @return previously stored value of this parameter
    */
@@ -280,26 +274,25 @@ class FreeParameterSet {
         FreeParameterType<parameter>::getValue(value);
   }
 
-   /**
+  /**
    * @brief sets values of stored parameters
    *
-   * The values of the given vector are interpreted as parameter values in the 
-   * order of the class template `params...`. 
-   * 
+   * The values of the given vector are interpreted as parameter values in the
+   * order of the class template `params...`.
+   *
    *  @param values vector of length #NPars
    */
-   void setParameters(const ParVector_t& values) {
-   detail::initialize_parset<FreeParametersIndices, params...>::init(*this,
-  values);
-   }
+  void setParameters(const ParVector_t& values) {
+    detail::initialize_parset<FreeParametersIndices, params...>::init(*this,
+                                                                      values);
+  }
 
   /**
    * @brief checks whether a given parameter is included in this set of
    parameters
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
-   Otherwise a compile-time
-   *         error is generated.
+   Otherwise a compile-time error is generated.
    *
    * @return @c true if the parameter is stored in this set, otherwise @c false
    */
@@ -315,7 +308,7 @@ class FreeParameterSet {
    * @note The ownership of the covariance matrix is @b not transferred with
    * this call.
    *
-   * @return raw pointer to covariance matrix (can be a nullptr)
+   * @return reference to covariance matrix (can be a std::nullopt)
    */
   const std::optional<CovMatrix_t>& getCovariance() const {
     return m_optCovariance;
@@ -326,12 +319,10 @@ class FreeParameterSet {
    *
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
-   * Otherwise a compile-time
-   *         error is generated.
+   * Otherwise a compile-time error is generated.
    *
    * @return uncertainty \f$\sigma \ge 0\f$ of given parameter, a negative value
-   * is returned if no
-   *         covariance matrix is set
+   * is returned if no covariance matrix is set
    */
   template <FreeParametersIndices parameter>
   ParValue_t getUncertainty() const {
@@ -348,7 +339,7 @@ class FreeParameterSet {
    *
    * @note No validation of the given covariance matrix is performed.
    *
-   * @param cov unique pointer to new covariance matrix (nullptr is accepted)
+   * @param cov new covariance matrix (std::nullopt is accepted)
    */
   void setCovariance(const CovMatrix_t& cov) { m_optCovariance = cov; }
 
@@ -393,9 +384,8 @@ class FreeParameterSet {
    * @brief calculate residual difference to full parameter vector
    *
    * Calculate the residual differences of the stored parameter values with
-   * respect to the corresponding
-   * parameter values in the full parameter vector. Hereby, the residual vector
-   * is defined as
+   * respect to the corresponding parameter values in the full parameter vector.
+   * Hereby, the residual vector is defined as
    *
    * \f[
    * \vec{r} = \left( \begin{array}{c} r_{i_1} \\ \vdots \\ r_{i_m} \end{array}
@@ -407,26 +397,23 @@ class FreeParameterSet {
    * \f]
    *
    * where \f$\mathrm{Proj}\f$ is the projection matrix, \f$\vec{v}\f$ is the
-   * vector of parameter values of
-   * this ParameterSet object and \f$\vec{v}^0\f$ is the full parameter value
-   * vector.
+   * vector of parameter values of this FreeParameterSet object and
+   * \f$\vec{v}^0\f$ is the full parameter value vector.
    *
-   * @note Constraint and cyclic parameter value ranges are taken into account
-   * when calculating
-   *       the residual values.
+   * @note Constraint parameter value ranges are taken into account
+   * when calculating the residual values.
    *
    * @param fullParSet ParameterSet object containing the full set of parameters
    *
    * @return vector containing the residual parameter values of this
-   * ParameterSet object
-   *         with respect to the given full parameter vector
+   * ParameterSet object with respect to the given full parameter vector
    *
    * @sa ParameterSet::projector
    */
   /// @cond
-  template <
-      typename T = ParSet_t,
-      std::enable_if_t<not std::is_same<T, FullFreeParameterSet>::value, int> = 0>
+  template <typename T = ParSet_t,
+            std::enable_if_t<not std::is_same<T, FullFreeParameterSet>::value,
+                             int> = 0>
   /// @endcond
   ParVector_t residual(const FullFreeParameterSet& fullParSet) const {
     return detail::residual_calculator<params...>::result(
@@ -437,7 +424,8 @@ class FreeParameterSet {
    * @brief calculate residual difference to other parameter vector
    *
    * Calculate the residual differences of the stored parameter values with
-   * respect to the values of another FreeParameterSet object containing the same set of parameters. Hereby, the residual vector is defined as
+   * respect to the values of another FreeParameterSet object containing the
+   * same set of parameters. Hereby, the residual vector is defined as
    *
    * \f[
    * \vec{r} = \left( \begin{array}{c} r_{i_1} \\ \vdots \\ r_{i_m} \end{array}
@@ -447,20 +435,18 @@ class FreeParameterSet {
    *  = \vec{v} - \left( \vec{v}^0 \right)
    * \f]
    *
-   * where \f$\vec{v}\f$ is the vector of parameter values of this FreeParameterSet
-   * object and \f$\vec{v}^0\f$
-   * is the parameter value vector of the other FreeParameterSet object.
+   * where \f$\vec{v}\f$ is the vector of parameter values of this
+   * FreeParameterSet object and \f$\vec{v}^0\f$ is the parameter value vector
+   * of the other FreeParameterSet object.
    *
    * @note Constraint parameter value ranges are taken into account
-   * when calculating
-   *       the residual values.
+   * when calculating the residual values.
    *
    * @param otherParSet FreeParameterSet object with identical set of contained
    * parameters
    *
    * @return vector containing the residual parameter values of this
-   * FreeParameterSet object
-   *         with respect to the given other parameter set
+   * FreeParameterSet object with respect to the given other parameter set
    */
   ParVector_t residual(const ParSet_t& otherParSet) const {
     return detail::free_residual_calculator<params...>::result(
@@ -471,11 +457,11 @@ class FreeParameterSet {
    * @brief get projection matrix
    *
    * The projection matrix performs a mapping of the full parameter space onto
-   * the sub-space
-   * spanned by the parameters defined in this FreeParameterSet object.
+   * the sub-space spanned by the parameters defined in this FreeParameterSet
+   * object.
    *
    * @return constant matrix with @c #NPars rows and @c
-   * #Acts::eBoundParametersSize columns
+   * #Acts::eFreeParametersSize columns
    */
   static const ActsMatrix<ParValue_t, NPars, eFreeParametersSize> projector() {
     return sProjector;
