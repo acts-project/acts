@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Vertexing/VertexFindingAlgorithm.hpp"
+#include "ACTFW/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
@@ -32,13 +32,13 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
-FWE::VertexFindingAlgorithm::VertexFindingAlgorithm(const Config& cfg,
-                                                    Acts::Logging::Level level)
+FWE::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
+    const Config& cfg, Acts::Logging::Level level)
     : FW::BareAlgorithm("VertexFinding", level), m_cfg(cfg) {}
 
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
-FW::ProcessCode FWE::VertexFindingAlgorithm::execute(
+FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,7 +20,7 @@
 #include "ACTFW/TruthTracking/TrackSelector.hpp"
 #include "ACTFW/TruthTracking/TruthVerticesToTracks.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
-#include "ACTFW/Vertexing/VertexFindingAlgorithm.hpp"
+#include "ACTFW/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 
 using namespace Acts::UnitLiterals;
@@ -86,11 +86,11 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackSelector>(selectorConfig, logLevel));
 
   // Add the finding algorithm
-  FWE::VertexFindingAlgorithm::Config vertexFindingCfg;
+  FWE::AdaptiveMultiVertexFinderAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = selectorConfig.output;
-  vertexFindingCfg.bField = trkConvConfig.bField;
-  sequencer.addAlgorithm(std::make_shared<FWE::VertexFindingAlgorithm>(
-      vertexFindingCfg, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<FWE::AdaptiveMultiVertexFinderAlgorithm>(
+          vertexFindingCfg, logLevel));
 
   return sequencer.run();
 }
