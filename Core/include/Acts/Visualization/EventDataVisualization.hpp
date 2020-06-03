@@ -193,8 +193,8 @@ static inline void drawBoundParameters(
                    0.025, 0.05, 2., 72, pcolor);
 
   if (parameters.covariance().has_value()) {
-    auto lposition =
-        parameters.getParameterSet().getParameters().template block<2, 1>(0, 0);
+    auto paramVec = parameters.parameters();
+    auto lposition = paramVec.template block<2, 1>(0, 0);
 
     // Draw the local covariance
     const auto& covariance = *parameters.covariance();
