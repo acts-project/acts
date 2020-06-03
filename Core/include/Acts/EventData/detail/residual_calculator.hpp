@@ -55,8 +55,8 @@ struct free_residual_calculator {
 
   static ParVector_t result(const ParVector_t& test, const ParVector_t& ref) {
     ParVector_t result;
-    free_residual_calculator_impl<ParVector_t, params...>::calculate(result, test,
-                                                                ref, 0);
+    free_residual_calculator_impl<ParVector_t, params...>::calculate(
+        result, test, ref, 0);
     return result;
   }
 };
@@ -71,13 +71,14 @@ struct residual_calculator_impl<R, first, others...> {
   }
 };
 
-template <typename R, FreeParametersIndices first, FreeParametersIndices... others>
+template <typename R, FreeParametersIndices first,
+          FreeParametersIndices... others>
 struct free_residual_calculator_impl<R, first, others...> {
   static void calculate(R& result, const R& test, const R& ref,
                         unsigned int pos) {
     result(pos) = FreeParameterType<first>::getDifference(test(pos), ref(pos));
     free_residual_calculator_impl<R, others...>::calculate(result, test, ref,
-                                                      pos + 1);
+                                                           pos + 1);
   }
 };
 
