@@ -65,7 +65,7 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
 
   // 1) Calcuate the derivative of local frame axes w.r.t its rotation
   const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      Acts::detail::AlignmentHelper::rotationToLocalAxesDerivative(rotation);
+      Acts::detail::rotationToLocalAxesDerivative(rotation);
   // 2) Calculate the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
   Acts::AlignmentToLocalCartesianMatrix alignToLoc3D =

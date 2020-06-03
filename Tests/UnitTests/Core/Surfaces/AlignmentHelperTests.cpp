@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   // Call the alignment helper to calculate the derivative of local frame axes
   // w.r.t its rotation
   const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::AlignmentHelper::rotationToLocalAxesDerivative(rotation);
+      detail::rotationToLocalAxesDerivative(rotation);
 
   // Check if the derivative for local x axis is as expected
   CHECK_CLOSE_ABS(refRotToXAxis, rotToLocalXAxis, 1e-15);
