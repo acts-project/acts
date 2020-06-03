@@ -230,9 +230,9 @@ inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
-  alignToPath.segment<3>(eCenter_X) =
+  alignToPath.segment<3>(eAlignmentCenter0) =
       norm * (direction.transpose() - dirZ * localZAxis.transpose());
-  alignToPath.segment<3>(eRotation_X) =
+  alignToPath.segment<3>(eAlignmentRotation0) =
       -norm * (dirZ * pcRowVec + localZ * direction.transpose()) *
       rotToLocalZAxis;
 

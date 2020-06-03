@@ -37,7 +37,7 @@ class GainMatrixSmoother {
           getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()))
       : m_logger(std::move(logger)) {}
 
-  /// @brief Operater for Kalman smoothing
+  /// @Operater for Kalman smoothing
   ///
   /// @tparam source_link_t The type of source link
   ///
