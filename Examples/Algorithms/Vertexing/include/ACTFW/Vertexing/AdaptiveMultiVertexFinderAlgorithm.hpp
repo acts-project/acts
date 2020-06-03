@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,19 +22,16 @@
 
 namespace FWE {
 
-class VertexFindingAlgorithm : public FW::BareAlgorithm {
+class AdaptiveMultiVertexFinderAlgorithm : public FW::BareAlgorithm {
  public:
   struct Config {
     /// Input track collection
     std::string trackCollection;
-
-    /// The magnetic field
-    Acts::Vector3D bField;
   };
 
   /// Constructor
-  VertexFindingAlgorithm(const Config& cfg,
-                         Acts::Logging::Level level = Acts::Logging::INFO);
+  AdaptiveMultiVertexFinderAlgorithm(
+      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Framework execute method
   /// @param [in] context is the Algorithm context for event consistency
@@ -44,6 +41,9 @@ class VertexFindingAlgorithm : public FW::BareAlgorithm {
  private:
   /// The config class
   Config m_cfg;
+
+  std::vector<Acts::BoundParameters> getInputTrackCollection(
+      const FW::AlgorithmContext& ctx) const;
 };
 
 }  // namespace FWE
