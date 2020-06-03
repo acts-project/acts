@@ -69,15 +69,16 @@ struct full_parset {
 /// @brief generate FreeParameterSet type containing all defined parameters
 ///
 /// @return full_free_parset<Policy>::type is equivalent to
-///         `FreeParameterSet<Policy,ID_t(0),ID_t(1),...,ID_t(N-1)>` where @c ID_t
-///         is a @c typedef to `Policy::par_id_type` and @c N is the total
+///         `FreeParameterSet<Policy,ID_t(0),ID_t(1),...,ID_t(N-1)>` where @c
+///         ID_t is a @c typedef to `Policy::par_id_type` and @c N is the total
 ///         number of parameters
 struct full_free_parset {
   template <FreeParametersIndices v, typename C>
   struct add_to_value_container;
 
   template <FreeParametersIndices v, FreeParametersIndices... others>
-  struct add_to_value_container<v, std::integer_sequence<FreeParametersIndices, others...>> {
+  struct add_to_value_container<
+      v, std::integer_sequence<FreeParametersIndices, others...>> {
     using type = std::integer_sequence<FreeParametersIndices, others..., v>;
   };
 
@@ -100,8 +101,8 @@ struct full_free_parset {
     using type = FreeParameterSet<values...>;
   };
 
-  using type = typename converter<
-      typename tparam_generator<FreeParametersIndices, eFreeParametersSize - 1>::type>::type;
+  using type = typename converter<typename tparam_generator<
+      FreeParametersIndices, eFreeParametersSize - 1>::type>::type;
 };
 }  // namespace detail
 /// @endcond

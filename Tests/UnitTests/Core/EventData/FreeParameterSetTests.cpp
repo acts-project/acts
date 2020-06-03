@@ -32,154 +32,157 @@ namespace {
 const double tol = 1e-6;
 
 void check_residuals_for_bound_parameters() {
-const double max = FreeParameterType<eFreeDir0>::max;
-const double min = FreeParameterType<eFreeDir0>::min;
-double tx_1 = 0.7;
-double tx_2 = 0.4;
-ActsVectorD<1> dTx;
-dTx << (tx_1 - tx_2);
+  const double max = FreeParameterType<eFreeDir0>::max;
+  const double min = FreeParameterType<eFreeDir0>::min;
+  double tx_1 = 0.7;
+  double tx_2 = 0.4;
+  ActsVectorD<1> dTx;
+  dTx << (tx_1 - tx_2);
 
-// both parameters inside bounds, difference is positive
-FreeParameterSet<eFreeDir0> bound1(std::nullopt, tx_1);
-FreeParameterSet<eFreeDir0> bound2(std::nullopt, tx_2);
-CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
+  // both parameters inside bounds, difference is positive
+  FreeParameterSet<eFreeDir0> bound1(std::nullopt, tx_1);
+  FreeParameterSet<eFreeDir0> bound2(std::nullopt, tx_2);
+  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
-// both parameters inside bound, difference negative
-dTx << (tx_2 - tx_1);
-CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
+  // both parameters inside bound, difference negative
+  dTx << (tx_2 - tx_1);
+  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 
-// one parameter above upper bound, difference positive
-tx_1 = max + 1;
-bound1.setParameter<eFreeDir0>(tx_1);
-dTx << max - tx_2;
-CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
+  // one parameter above upper bound, difference positive
+  tx_1 = max + 1;
+  bound1.setParameter<eFreeDir0>(tx_1);
+  dTx << max - tx_2;
+  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
-// one parameter above upper bound, difference negative
-dTx << tx_2 - max;
-CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
+  // one parameter above upper bound, difference negative
+  dTx << tx_2 - max;
+  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 
-// one parameter below lower bound, difference positive
-tx_1 = min - 1;
-bound1.setParameter<eFreeDir0>(tx_1);
-dTx << tx_2 - min;
-CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
+  // one parameter below lower bound, difference positive
+  tx_1 = min - 1;
+  bound1.setParameter<eFreeDir0>(tx_1);
+  dTx << tx_2 - min;
+  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 
-// one parameter below lower bound, difference negative
-dTx << min - tx_2;
-CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
+  // one parameter below lower bound, difference negative
+  dTx << min - tx_2;
+  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
-// both parameters outside bounds, both below
-tx_1 = min - 1;
-tx_2 = min - 2;
-bound1.setParameter<eFreeDir0>(tx_1);
-bound2.setParameter<eFreeDir0>(tx_2);
-CHECK_SMALL(bound1.residual(bound2), tol);
+  // both parameters outside bounds, both below
+  tx_1 = min - 1;
+  tx_2 = min - 2;
+  bound1.setParameter<eFreeDir0>(tx_1);
+  bound2.setParameter<eFreeDir0>(tx_2);
+  CHECK_SMALL(bound1.residual(bound2), tol);
 
-// both parameters outside bounds, both above
-tx_1 = max + 1;
-tx_2 = max + 2;
-bound1.setParameter<eFreeDir0>(tx_1);
-bound2.setParameter<eFreeDir0>(tx_2);
-CHECK_SMALL(bound1.residual(bound2), tol);
+  // both parameters outside bounds, both above
+  tx_1 = max + 1;
+  tx_2 = max + 2;
+  bound1.setParameter<eFreeDir0>(tx_1);
+  bound2.setParameter<eFreeDir0>(tx_2);
+  CHECK_SMALL(bound1.residual(bound2), tol);
 
-// both parameters outside bounds, one above, one below
-tx_1 = max + 1;
-tx_2 = min - 2;
-bound1.setParameter<eFreeDir0>(tx_1);
-bound2.setParameter<eFreeDir0>(tx_2);
-dTx << max - min;
-CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
-dTx << min - max;
-CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
+  // both parameters outside bounds, one above, one below
+  tx_1 = max + 1;
+  tx_2 = min - 2;
+  bound1.setParameter<eFreeDir0>(tx_1);
+  bound2.setParameter<eFreeDir0>(tx_2);
+  dTx << max - min;
+  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
+  dTx << min - max;
+  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 }
 
 void random_residual_tests() {
-// random number generators
-std::default_random_engine e;
-std::uniform_real_distribution<float> uniform_dist(-1000, 300);
+  // random number generators
+  std::default_random_engine e;
+  std::uniform_real_distribution<float> uniform_dist(-1000, 300);
 
-const double tx_max = FreeParameterType<eFreeDir0>::max;
-const double tx_min = FreeParameterType<eFreeDir0>::min;
-const double ty_max = FreeParameterType<eFreeDir1>::max;
-const double ty_min = FreeParameterType<eFreeDir1>::min;
-const double tz_max = FreeParameterType<eFreeDir2>::max;
-const double tz_min = FreeParameterType<eFreeDir2>::min;
+  const double tx_max = FreeParameterType<eFreeDir0>::max;
+  const double tx_min = FreeParameterType<eFreeDir0>::min;
+  const double ty_max = FreeParameterType<eFreeDir1>::max;
+  const double ty_min = FreeParameterType<eFreeDir1>::min;
+  const double tz_max = FreeParameterType<eFreeDir2>::max;
+  const double tz_min = FreeParameterType<eFreeDir2>::min;
 
-FreeVector parValues_1;
-FreeVector parValues_2;
-FullFreeParameterSet parSet_1(std::nullopt, parValues_1);
-FullFreeParameterSet parSet_2(std::nullopt, parValues_2);
-FreeVector residual;
-const unsigned int toys = 1000;
-for (unsigned int i = 0; i < toys; ++i) {
-const double x1 = uniform_dist(e);
-const double y1 = uniform_dist(e);
-const double z1 = uniform_dist(e);
-const double t1 = uniform_dist(e);
-const double tx1 = uniform_dist(e);
-const double ty1 = uniform_dist(e);
-const double tz1 = uniform_dist(e);
-const double qop1 = uniform_dist(e);
-parValues_1 << x1, y1, z1, t1, tx1, ty1, tz1, qop1;
-parSet_1.setParameters(parValues_1);
+  FreeVector parValues_1;
+  FreeVector parValues_2;
+  FullFreeParameterSet parSet_1(std::nullopt, parValues_1);
+  FullFreeParameterSet parSet_2(std::nullopt, parValues_2);
+  FreeVector residual;
+  const unsigned int toys = 1000;
+  for (unsigned int i = 0; i < toys; ++i) {
+    const double x1 = uniform_dist(e);
+    const double y1 = uniform_dist(e);
+    const double z1 = uniform_dist(e);
+    const double t1 = uniform_dist(e);
+    const double tx1 = uniform_dist(e);
+    const double ty1 = uniform_dist(e);
+    const double tz1 = uniform_dist(e);
+    const double qop1 = uniform_dist(e);
+    parValues_1 << x1, y1, z1, t1, tx1, ty1, tz1, qop1;
+    parSet_1.setParameters(parValues_1);
 
-const double x2 = uniform_dist(e);
-const double y2 = uniform_dist(e);
-const double z2 = uniform_dist(e);
-const double t2 = uniform_dist(e);
-const double tx2 = uniform_dist(e);
-const double ty2 = uniform_dist(e);
-const double tz2 = uniform_dist(e);
-const double qop2 = uniform_dist(e);
-parValues_2 << x2, y2, z2, t2, tx2, ty2, tz2, qop2;
-parSet_2.setParameters(parValues_2);
+    const double x2 = uniform_dist(e);
+    const double y2 = uniform_dist(e);
+    const double z2 = uniform_dist(e);
+    const double t2 = uniform_dist(e);
+    const double tx2 = uniform_dist(e);
+    const double ty2 = uniform_dist(e);
+    const double tz2 = uniform_dist(e);
+    const double qop2 = uniform_dist(e);
+    parValues_2 << x2, y2, z2, t2, tx2, ty2, tz2, qop2;
+    parSet_2.setParameters(parValues_2);
 
-const double delta_x = x1 - x2;
-const double delta_y = y1 - y2;
-const double delta_z = z1 - z2;
-const double delta_t = t1 - t2;
-// for direction make sure that the difference calculation considers the
-// restricted value range
-const double delta_tx = std::max(std::min(tx1, tx_max), tx_min) - std::max(std::min(tx2, tx_max), tx_min);
-const double delta_ty = std::max(std::min(ty1, ty_max), ty_min) - std::max(std::min(ty2, ty_max), ty_min);
-const double delta_tz = std::max(std::min(tz1, tz_max), tz_min) - std::max(std::min(tz2, tz_max), tz_min);
-const double delta_qop = qop1 - qop2;
-residual = parSet_1.residual(parSet_2);
+    const double delta_x = x1 - x2;
+    const double delta_y = y1 - y2;
+    const double delta_z = z1 - z2;
+    const double delta_t = t1 - t2;
+    // for direction make sure that the difference calculation considers the
+    // restricted value range
+    const double delta_tx = std::max(std::min(tx1, tx_max), tx_min) -
+                            std::max(std::min(tx2, tx_max), tx_min);
+    const double delta_ty = std::max(std::min(ty1, ty_max), ty_min) -
+                            std::max(std::min(ty2, ty_max), ty_min);
+    const double delta_tz = std::max(std::min(tz1, tz_max), tz_min) -
+                            std::max(std::min(tz2, tz_max), tz_min);
+    const double delta_qop = qop1 - qop2;
+    residual = parSet_1.residual(parSet_2);
 
-// local parameters are unbound -> check for usual difference
-if (std::abs(residual(0) - delta_x) > tol) {
-BOOST_CHECK(false);
-break;
-}
-if (std::abs(residual(1) - delta_y) > tol) {
-BOOST_CHECK(false);
-break;
-}
-if (std::abs(residual(2) - delta_z) > tol) {
-BOOST_CHECK(false);
-break;
-}
-if (std::abs(residual(3) - delta_t) > tol) {
-BOOST_CHECK(false);
-break;
-}
-if (std::abs(residual(4) - delta_tx) > tol) {
-BOOST_CHECK(false);
-break;
-}
-if (std::abs(residual(5) - delta_ty) > tol) {
-BOOST_CHECK(false);
-break;
-}
-if (std::abs(residual(6) - delta_tz) > tol) {
-BOOST_CHECK(false);
-break;
-}
-if (std::abs(residual(7) - delta_qop) > tol) {
-BOOST_CHECK(false);
-break;
-}
-}
+    // local parameters are unbound -> check for usual difference
+    if (std::abs(residual(0) - delta_x) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+    if (std::abs(residual(1) - delta_y) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+    if (std::abs(residual(2) - delta_z) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+    if (std::abs(residual(3) - delta_t) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+    if (std::abs(residual(4) - delta_tx) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+    if (std::abs(residual(5) - delta_ty) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+    if (std::abs(residual(6) - delta_tz) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+    if (std::abs(residual(7) - delta_qop) > tol) {
+      BOOST_CHECK(false);
+      break;
+    }
+  }
 }
 }  // namespace
 /// @endcond
@@ -448,143 +451,176 @@ BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
       (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeDir2,
                         eFreeQOverP>::projector() == x_y_z_tz_qop_proj));
   BOOST_CHECK(
-      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir2, eFreeQOverP
-                        >::projector() == x_y_z_t_tz_qop_proj));
-  BOOST_CHECK((FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir1,
-                                eFreeDir2, eFreeQOverP>::projector() ==
-               x_y_z_t_ty_tz_qop_proj));
+      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir2,
+                        eFreeQOverP>::projector() == x_y_z_t_tz_qop_proj));
   BOOST_CHECK(
-      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir1,
                         eFreeDir2, eFreeQOverP>::projector() ==
+       x_y_z_t_ty_tz_qop_proj));
+  BOOST_CHECK(
+      (FreeParameterSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                        eFreeDir1, eFreeDir2, eFreeQOverP>::projector() ==
        x_y_z_t_tx_ty_tz_qop_proj));
 }
 
 /**
  * @brief Unit test for residuals between different FreeParameterSet objects
  *
- * The result of the residual calculation between two FreeParameterSet objects is
- * checked.
- * A test of the automatic correction of stored parameter values for
+ * The result of the residual calculation between two FreeParameterSet objects
+ * is checked. A test of the automatic correction of stored parameter values for
  * out-of-bounds
  * corrections is also implemented.
  *
-* @sa FreeParameterSet::residual, FreeParameterSet::getParameter
-*/
+ * @sa FreeParameterSet::residual, FreeParameterSet::getParameter
+ */
 BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
-// check unbound parameter type
-const double large_number = 12443534120;
-const double small_number = -924342675;
-const double normal_number = 0.1234;
-FreeParameterSet<eFreePos0, eFreePos1, eFreeQOverP> unbound(
-std::nullopt, small_number, large_number, normal_number);
-BOOST_CHECK(unbound.getParameter<eFreePos0>() == small_number);
-BOOST_CHECK(unbound.getParameter<eFreePos1>() == large_number);
-BOOST_CHECK(unbound.getParameter<eFreeQOverP>() == normal_number);
+  // check unbound parameter type
+  const double large_number = 12443534120;
+  const double small_number = -924342675;
+  const double normal_number = 0.1234;
+  FreeParameterSet<eFreePos0, eFreePos1, eFreeQOverP> unbound(
+      std::nullopt, small_number, large_number, normal_number);
+  BOOST_CHECK(unbound.getParameter<eFreePos0>() == small_number);
+  BOOST_CHECK(unbound.getParameter<eFreePos1>() == large_number);
+  BOOST_CHECK(unbound.getParameter<eFreeQOverP>() == normal_number);
 
-// check bound parameter type
-FreeParameterSet<eFreeDir2> bound(std::nullopt, small_number);
-BOOST_CHECK((bound.getParameter<eFreeDir2>() ==
-FreeParameterType<eFreeDir2>::min));
-bound.setParameter<eFreeDir2>(large_number);
-BOOST_CHECK((bound.getParameter<eFreeDir2>() ==
-FreeParameterType<eFreeDir2>::max));
-bound.setParameter<eFreeDir2>(normal_number);
-BOOST_CHECK((bound.getParameter<eFreeDir2>() == normal_number));
+  // check bound parameter type
+  FreeParameterSet<eFreeDir2> bound(std::nullopt, small_number);
+  BOOST_CHECK(
+      (bound.getParameter<eFreeDir2>() == FreeParameterType<eFreeDir2>::min));
+  bound.setParameter<eFreeDir2>(large_number);
+  BOOST_CHECK(
+      (bound.getParameter<eFreeDir2>() == FreeParameterType<eFreeDir2>::max));
+  bound.setParameter<eFreeDir2>(normal_number);
+  BOOST_CHECK((bound.getParameter<eFreeDir2>() == normal_number));
 
-// check residual calculation
+  // check residual calculation
 
-// input numbers
-const double first_x = 0.3;
-const double first_y = 0.9;
-const double first_z = 0.7;
+  // input numbers
+  const double first_x = 0.3;
+  const double first_y = 0.9;
+  const double first_z = 0.7;
 
-const double second_x = 2.7;
-const double second_y = -0.9;
-const double second_z = 0.35;
+  const double second_x = 2.7;
+  const double second_y = -0.9;
+  const double second_z = 0.35;
 
-// expected results for residual second wrt first
-const double delta_x = second_x - first_x;
-const double delta_y = second_y - first_y;
-const double delta_z = second_z - first_z;
-ActsVectorD<3> residuals(delta_x, delta_y, delta_z);
+  // expected results for residual second wrt first
+  const double delta_x = second_x - first_x;
+  const double delta_y = second_y - first_y;
+  const double delta_z = second_z - first_z;
+  ActsVectorD<3> residuals(delta_x, delta_y, delta_z);
 
-FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> first(
-std::nullopt, first_x, first_y, first_z);
-FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> second(
-std::nullopt, second_x, second_y, second_z);
-CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> first(std::nullopt, first_x,
+                                                          first_y, first_z);
+  FreeParameterSet<eFreePos0, eFreePos1, eFreePos2> second(
+      std::nullopt, second_x, second_y, second_z);
+  CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
-// some more checks for bound variables
-check_residuals_for_bound_parameters();
+  // some more checks for bound variables
+  check_residuals_for_bound_parameters();
 
-// inspecific residual tests with random numbers
-random_residual_tests();
+  // inspecific residual tests with random numbers
+  random_residual_tests();
 }
 
 template <FreeParametersIndices... params>
 using ParSet = FreeParameterSet<params...>;
 
 /**
-* @brief Unit test for index-/type-based access of coordinates
-*
-* @sa FreeParameterSet::getIndex
-* @sa FreeParameterSet::getParID
-*/
+ * @brief Unit test for index-/type-based access of coordinates
+ *
+ * @sa FreeParameterSet::getIndex
+ * @sa FreeParameterSet::getParID
+ */
 BOOST_AUTO_TEST_CASE(free_parset_parID_mapping) {
-// check logic for type-based access
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreePos0>() == 0));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreePos1>() == 1));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreePos2>() == 2));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreeTime>() == 3));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreeDir0>() == 4));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreeDir1>() == 5));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreeDir2>() == 6));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getIndex<eFreeQOverP>() == 7));
+  // check logic for type-based access
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreePos0>() == 0));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreePos1>() == 1));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreePos2>() == 2));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreeTime>() == 3));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreeDir0>() == 4));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreeDir1>() == 5));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreeDir2>() == 6));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getIndex<eFreeQOverP>() == 7));
 
-// check logic for index-based access
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<0>() == eFreePos0));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<1>() == eFreePos1));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<2>() == eFreePos2));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<3>() == eFreeTime));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<4>() == eFreeDir0));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<5>() == eFreeDir1));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<6>() == eFreeDir2));
-BOOST_CHECK((ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<7>() == eFreeQOverP));
+  // check logic for index-based access
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<0>() == eFreePos0));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<1>() == eFreePos1));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<2>() == eFreePos2));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<3>() == eFreeTime));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<4>() == eFreeDir0));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<5>() == eFreeDir1));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<6>() == eFreeDir2));
+  BOOST_CHECK(
+      (ParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+              eFreeDir2, eFreeQOverP>::getParID<7>() == eFreeQOverP));
 
-// check consistency
-using FullSet = FullFreeParameterSet;
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<0>()>() == 0));
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<1>()>() == 1));
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<2>()>() == 2));
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<3>()>() == 3));
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<4>()>() == 4));
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<5>()>() == 5));
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<6>()>() == 6));
-BOOST_CHECK((FullSet::getIndex<FullSet::getParID<7>()>() == 7));
+  // check consistency
+  using FullSet = FullFreeParameterSet;
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<0>()>() == 0));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<1>()>() == 1));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<2>()>() == 2));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<3>()>() == 3));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<4>()>() == 4));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<5>()>() == 5));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<6>()>() == 6));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<7>()>() == 7));
 
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreePos0>()>() == eFreePos0));
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreePos1>()>() == eFreePos1));
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreePos2>()>() == eFreePos2));
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreeTime>()>() == eFreeTime));
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreeDir0>()>() == eFreeDir0));
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreeDir1>()>() == eFreeDir1));
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreeDir2>()>() == eFreeDir2));
-BOOST_CHECK(
-(FullSet::getParID<FullSet::getIndex<eFreeQOverP>()>() == eFreeQOverP));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreePos0>()>() == eFreePos0));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreePos1>()>() == eFreePos1));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreePos2>()>() == eFreePos2));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreeTime>()>() == eFreeTime));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreeDir0>()>() == eFreeDir0));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreeDir1>()>() == eFreeDir1));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreeDir2>()>() == eFreeDir2));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eFreeQOverP>()>() == eFreeQOverP));
 
-// consistency of types
-BOOST_CHECK((std::is_same<std::remove_cv<decltype(
-at_index<FreeParametersIndices, 0, eFreePos0>::value)>::type,
-decltype(eFreePos0)>::value));
-BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
-decltype(eFreePos0)>::value));
+  // consistency of types
+  BOOST_CHECK(
+      (std::is_same<std::remove_cv<decltype(at_index<FreeParametersIndices, 0,
+                                                     eFreePos0>::value)>::type,
+                    decltype(eFreePos0)>::value));
+  BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
+                            decltype(eFreePos0)>::value));
 }
 }  // namespace Test
 }  // namespace Acts
