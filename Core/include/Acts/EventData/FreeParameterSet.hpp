@@ -416,7 +416,7 @@ class FreeParameterSet {
                              int> = 0>
   /// @endcond
   ParVector_t residual(const FullFreeParameterSet& fullParSet) const {
-    return detail::residual_calculator<params...>::result(
+    return detail::residual_calculator<FreeParametersIndices, static_cast<unsigned int>(params)...>::result(
         m_vValues, projector() * fullParSet.getParameters());
   }
 
@@ -449,7 +449,7 @@ class FreeParameterSet {
    * FreeParameterSet object with respect to the given other parameter set
    */
   ParVector_t residual(const ParSet_t& otherParSet) const {
-    return detail::free_residual_calculator<params...>::result(
+    return detail::residual_calculator<FreeParametersIndices, static_cast<unsigned int>(params)...>::result(
         m_vValues, otherParSet.m_vValues);
   }
 

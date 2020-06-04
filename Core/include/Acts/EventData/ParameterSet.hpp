@@ -505,8 +505,13 @@ class ParameterSet {
    * ParameterSet object
    *         with respect to the given other parameter set
    */
+<<<<<<< HEAD
   ParameterVector residual(const Self& otherParSet) const {
     return detail::residual_calculator<parameter_indices_t, params...>::result(
+=======
+  ParVector_t residual(const ParSet_t& otherParSet) const {
+    return detail::residual_calculator<BoundParametersIndices, static_cast<unsigned int>(params)...>::result(
+>>>>>>> Simplified residual calculation
         m_vValues, otherParSet.m_vValues);
   }
 
