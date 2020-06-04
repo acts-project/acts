@@ -18,9 +18,6 @@ namespace Acts {
 // forward declaration
 template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet;
-
-template <FreeParametersIndices... params>
-class FreeParameterSet;
 /// @endcond
 
 /// @cond detail
@@ -44,7 +41,8 @@ struct full_parset {
 
   template <typename T, unsigned int N>
   struct tparam_generator {
-    using type = typename add_to_value_container<static_cast<T>(N), typename tparam_generator<T, N - 1>::type>::type;
+    using type = typename add_to_value_container<
+        static_cast<T>(N), typename tparam_generator<T, N - 1>::type>::type;
   };
 
   template <typename T>
@@ -63,45 +61,6 @@ struct full_parset {
   using type = typename converter<typename tparam_generator<
       parameter_indices_t,
       detail::ParametersSize<parameter_indices_t>::size - 1>::type>::type;
-};
-
-/// @brief generate FreeParameterSet type containing all defined parameters
-///
-/// @return full_free_parset<Policy>::type is equivalent to
-///         `FreeParameterSet<Policy,ID_t(0),ID_t(1),...,ID_t(N-1)>` where @c
-///         ID_t is a @c typedef to `Policy::par_id_type` and @c N is the total
-///         number of parameters
-struct full_free_parset {
-  template <FreeParametersIndices v, typename C>
-  struct add_to_value_container;
-
-  template <FreeParametersIndices v, FreeParametersIndices... others>
-  struct add_to_value_container<
-      v, std::integer_sequence<FreeParametersIndices, others...>> {
-    using type = std::integer_sequence<FreeParametersIndices, others..., v>;
-  };
-
-  template <typename T, unsigned int N>
-  struct tparam_generator {
-    using type = typename add_to_value_container<
-        static_cast<T>(N), typename tparam_generator<T, N - 1>::type>::type;
-  };
-
-  template <typename T>
-  struct tparam_generator<T, 0> {
-    using type = std::integer_sequence<T, static_cast<T>(0)>;
-  };
-
-  template <typename T>
-  struct converter;
-
-  template <FreeParametersIndices... values>
-  struct converter<std::integer_sequence<FreeParametersIndices, values...>> {
-    using type = FreeParameterSet<values...>;
-  };
-
-  using type = typename converter<typename tparam_generator<
-      FreeParametersIndices, eFreeParametersSize - 1>::type>::type;
 };
 }  // namespace detail
 /// @endcond

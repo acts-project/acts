@@ -68,22 +68,6 @@ struct residual_calculator_impl<parameter_indices_t, R, last> {
             test(pos), ref(pos));
   }
 };
-
-template <typename R, FreeParametersIndices last>
-struct free_residual_calculator_impl<R, last> {
-  static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
-    if constexpr (std::is_same<parameter_indices_t, BoundParametersIndices>::value)
-    {
-      result(pos) = BoundParameterType<static_cast<BoundParametersIndices>(last)>::getDifference(test(pos), ref(pos));
-    }
-    else
-    {
-      result(pos) = FreeParameterType<static_cast<FreeParametersIndices>(last)>::getDifference(test(pos), ref(pos));
-    }
-    
-  }
-};
 /// @endcond
 }  // namespace detail
 /// @endcond
