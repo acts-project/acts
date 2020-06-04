@@ -37,7 +37,7 @@ class GainMatrixSmoother {
           getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()))
       : m_logger(std::move(logger)) {}
 
-  /// @Operater for Kalman smoothing
+  /// Operater for Kalman smoothing
   ///
   /// @tparam source_link_t The type of source link
   ///
@@ -49,10 +49,11 @@ class GainMatrixSmoother {
   ///
   /// @return The smoothed track parameters at the first measurement state
   template <typename source_link_t>
-  Result<parameters_t> operator()(
-      const GeometryContext& gctx, MultiTrajectory<source_link_t>& trajectory,
-      size_t entryIndex,
-      GlobalBoundSymMatrix* globalTrackParamsCovPtr = nullptr) const {
+  Result<parameters_t> operator()(const GeometryContext& gctx,
+                                  MultiTrajectory<source_link_t>& trajectory,
+                                  size_t entryIndex,
+                                  ActsMatrixX<BoundParametersScalar>*
+                                      globalTrackParamsCovPtr = nullptr) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 

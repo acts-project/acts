@@ -150,7 +150,7 @@ struct KalmanFitterResult {
   std::vector<const Surface*> passedAgainSurfaces;
 
   // Global track parameters covariance matrix
-  GlobalBoundSymMatrix globalTrackParamsCovariance;
+  ActsMatrixX<BoundParametersScalar> globalTrackParamsCovariance;
 
   Result<void> result{Result<void>::success()};
 };
@@ -884,7 +884,7 @@ class KalmanFitter {
       }
 
       // Construct a pointer for the global track parameters covariance
-      GlobalBoundSymMatrix* globalTrackParamsCovPtr = nullptr;
+      ActsMatrixX<BoundParametersScalar>* globalTrackParamsCovPtr = nullptr;
       if (globalCovariance) {
         // Set global track parameters covariance size
         result.globalTrackParamsCovariance.resize(

@@ -256,7 +256,6 @@ using BoundMatrix = ActsMatrix<BoundParametersScalar, eBoundParametersSize,
 using BoundSymMatrix =
     ActsSymMatrix<BoundParametersScalar, eBoundParametersSize>;
 
-using GlobalBoundSymMatrix = ActsMatrixX<BoundParametersScalar>;
 using LocalCartesianToBoundLocalMatrix =
     ActsMatrix<BoundParametersScalar, 2, 3>;
 

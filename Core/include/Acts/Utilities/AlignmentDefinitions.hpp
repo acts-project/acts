@@ -37,26 +37,6 @@ enum AlignmentParametersIndices : unsigned int {
 /// Underlying fundamental scalar type for alignment parameters.
 using AlignmentParametersScalar = double;
 
-// Ensure alignment parameters definition is valid.
-static_assert(std::is_enum_v<AlignmentParametersIndices>,
-              "'AlignmentParametersIndices' is not an enum type");
-static_assert(std::is_convertible_v<AlignmentParametersIndices, size_t>,
-              "'AlignmentParametersIndices' is not convertible to size_t");
-static_assert(6 <= AlignmentParametersIndices::eAlignmentParametersSize,
-              "Alignment parameters must have at least six components");
-static_assert(std::is_floating_point_v<AlignmentParametersScalar>,
-              "'AlignmentParametersScalar' must be a floating point type");
-
-// Ensure alignment parameter components/ indices are consistently defined.
-static_assert(eAlignmentCenter1 == eAlignmentCenter0 + 1u,
-              "Center position must be continous");
-static_assert(eAlignmentCenter2 == eAlignmentCenter0 + 2u,
-              "Center position must be continous");
-static_assert(eAlignmentRotation1 == eAlignmentRotation0 + 1u,
-              "Rotation must be continous");
-static_assert(eAlignmentRotation2 == eAlignmentRotation0 + 2u,
-              "Rotation must be continous");
-
 // Matrix and vector types related to alignment parameters.
 using AlignmentVector =
     ActsVector<AlignmentParametersScalar, eAlignmentParametersSize>;
