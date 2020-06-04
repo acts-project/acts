@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,8 +30,10 @@
 namespace Acts {
 /// @cond
 // forward type declaration for full parameter set
-using FullParameterSet = typename detail::full_parset<BoundParametersIndices>::type;
-using FullFreeParameterSet = typename detail::full_parset<FreeParametersIndices>::type;
+using FullParameterSet =
+    typename detail::full_parset<BoundParametersIndices>::type;
+using FullFreeParameterSet =
+    typename detail::full_parset<FreeParametersIndices>::type;
 /// @endcond
 
 /**
@@ -42,11 +44,10 @@ using FullFreeParameterSet = typename detail::full_parset<FreeParametersIndices>
  * @pre
  * The template parameter @c ParameterPolicy must fulfill the following
  * requirements:
- *  -# It must contain a <tt>typedef #parameter_indices_t</tt> specifying an integral
- * type used to identify different
- *     parameters. This could for example be an @c enum, @c short, or
- * <tt>unsigned int</tt>.
- *     This @c typedef must be convertible to an <tt>unsigned int</tt>
+ *  -# It must contain a <tt>typedef #parameter_indices_t</tt> specifying an
+ * integral type used to identify different parameters. This could for example
+ * be an @c enum, @c short, or <tt>unsigned int</tt>. This @c typedef must be
+ * convertible to an <tt>unsigned int</tt>
  *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
  * the parameter values. This could for
  *     instance be @c double, or @c float.
@@ -82,14 +83,17 @@ template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
   // local typedefs and constants
-  using ParSet_t = ParameterSet<parameter_indices_t, params...>;  ///< type of this parameter set
+  using ParSet_t = ParameterSet<parameter_indices_t,
+                                params...>;  ///< type of this parameter set
   static constexpr unsigned int NPars =
       sizeof...(params);  ///< number of parameters stored in this class
-  static constexpr unsigned int parsSize = detail::ParametersSize<parameter_indices_t>::size; ///< Highes index in used parameter indices
+  static constexpr unsigned int parsSize = detail::ParametersSize<
+      parameter_indices_t>::size;  ///< Highes index in used parameter indices
 
   // static assert to check that the template parameters are consistent
-  static_assert(detail::are_sorted<true, true, parameter_indices_t, params...>::value,
-                "parameter identifiers are not sorted");
+  static_assert(
+      detail::are_sorted<true, true, parameter_indices_t, params...>::value,
+      "parameter identifiers are not sorted");
   static_assert(
       detail::are_within<unsigned int, 0, parsSize,
                          static_cast<unsigned int>(params)...>::value,
@@ -128,7 +132,8 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head, values...);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head,
+                                                                    values...);
   }
 
   /**
@@ -148,7 +153,8 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this, values);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
+                                                                    values);
   }
 
   /**
@@ -219,7 +225,8 @@ class ParameterSet {
    */
   template <parameter_indices_t parameter>
   static constexpr size_t getIndex() {
-    return detail::get_position<parameter_indices_t, parameter, params...>::value;
+    return detail::get_position<parameter_indices_t, parameter,
+                                params...>::value;
   }
 
   /**
@@ -271,15 +278,14 @@ class ParameterSet {
    */
   template <parameter_indices_t parameter>
   void setParameter(ParValue_t value) {
-    if constexpr (std::is_same<parameter_indices_t, BoundParametersIndices>::value)
-   { m_vValues(getIndex<parameter>()) =
-        BoundParameterType<parameter>::getValue(value);
-  }else
-    {
+    if constexpr (std::is_same<parameter_indices_t,
+                               BoundParametersIndices>::value) {
       m_vValues(getIndex<parameter>()) =
-        FreeParameterType<parameter>::getValue(value);
+          BoundParameterType<parameter>::getValue(value);
+    } else {
+      m_vValues(getIndex<parameter>()) =
+          FreeParameterType<parameter>::getValue(value);
     }
-    
   }
 
   /**
@@ -292,7 +298,8 @@ class ParameterSet {
    * @param values vector of length #NPars
    */
   void setParameters(const ParVector_t& values) {
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this, values);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
+                                                                    values);
   }
 
   /**
@@ -308,7 +315,8 @@ class ParameterSet {
    */
   template <parameter_indices_t parameter>
   bool contains() const {
-    return detail::is_contained<parameter_indices_t, parameter, params...>::value;
+    return detail::is_contained<parameter_indices_t, parameter,
+                                params...>::value;
   }
 
   /**
@@ -463,8 +471,9 @@ class ParameterSet {
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
   /// @endcond
   ParVector_t residual(const FullParameterSet& fullParSet) const {
-    return detail::residual_calculator<parameter_indices_t, static_cast<unsigned int>(params)...>::result(
-        m_vValues, projector() * fullParSet.getParameters());
+    return detail::residual_calculator<parameter_indices_t,
+                                       static_cast<unsigned int>(params)...>::
+        result(m_vValues, projector() * fullParSet.getParameters());
   }
 
   /**
@@ -500,8 +509,10 @@ class ParameterSet {
    *         with respect to the given other parameter set
    */
   ParVector_t residual(const ParSet_t& otherParSet) const {
-    return detail::residual_calculator<parameter_indices_t, static_cast<unsigned int>(params)...>::result(
-        m_vValues, otherParSet.m_vValues);
+    return detail::residual_calculator<
+        parameter_indices_t,
+        static_cast<unsigned int>(params)...>::result(m_vValues,
+                                                      otherParSet.m_vValues);
   }
 
   /**
@@ -557,6 +568,7 @@ constexpr unsigned int ParameterSet<parameter_indices_t, params...>::NPars;
 
 template <typename parameter_indices_t, parameter_indices_t... params>
 const typename ParameterSet<parameter_indices_t, params...>::Projection_t
-    ParameterSet<parameter_indices_t, params...>::sProjector = detail::make_projection_matrix<
-        parsSize, static_cast<unsigned int>(params)...>::init();
+    ParameterSet<parameter_indices_t, params...>::sProjector =
+        detail::make_projection_matrix<
+            parsSize, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts

@@ -277,19 +277,22 @@ struct FreeParameterTraits<FreeParametersIndices::eFreeQOverP> {
   using type = unbound_parameter;
 };
 
-template<typename parameter_indices_t>
+template <typename parameter_indices_t>
 struct ParametersSize;
-template<>
+template <>
 struct ParametersSize<BoundParametersIndices> {
-  static constexpr unsigned int size = static_cast<unsigned int>(BoundParametersIndices::eBoundParametersSize);
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(BoundParametersIndices::eBoundParametersSize);
 };
-template<>
+template <>
 struct ParametersSize<FreeParametersIndices> {
-  static constexpr unsigned int size = static_cast<unsigned int>(FreeParametersIndices::eFreeParametersSize);
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(FreeParametersIndices::eFreeParametersSize);
 };
-template<>
+template <>
 struct ParametersSize<SpacePointIndices> {
-  static constexpr unsigned int size = static_cast<unsigned int>(SpacePointIndices::eSpacePointSize);
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(SpacePointIndices::eSpacePointSize);
 };
 }  // namespace detail
 
