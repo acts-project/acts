@@ -44,8 +44,7 @@ struct full_parset {
 
   template <typename T, unsigned int N>
   struct tparam_generator {
-    using type = typename add_to_value_container<
-        static_cast<T>(N), typename tparam_generator<T, N - 1>::type>::type;
+    using type = typename add_to_value_container<static_cast<T>(N), typename tparam_generator<T, N - 1>::type>::type;
   };
 
   template <typename T>
@@ -60,7 +59,7 @@ struct full_parset {
   struct converter<std::integer_sequence<parameter_indices_t, values...>> {
     using type = ParameterSet<parameter_indices_t, values...>;
   };
-
+  
   using type = typename converter<typename tparam_generator<
       parameter_indices_t,
       detail::ParametersSize<parameter_indices_t>::size - 1>::type>::type;

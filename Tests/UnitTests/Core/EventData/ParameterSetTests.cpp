@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
       get_cyclic_difference(second_phi, first_phi, min, max);
   const double delta_theta = second_theta - first_theta;
   ActsVectorD<3> residuals(delta_loc0, delta_phi, delta_theta);
-
+  
   ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundPhi, eBoundTheta>
       first(std::nullopt, first_loc0, first_phi, first_theta);
   ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundPhi, eBoundTheta>
