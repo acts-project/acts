@@ -117,6 +117,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
   auto referenceFrame = surface.referenceFrame(
       tgContext, reference, mom);  // need more complex case to test
+  std::cout << "reference frame = " << referenceFrame << std::endl;
   BOOST_CHECK_EQUAL(referenceFrame, unitary);
   // normal()
   auto normal = surface.Surface::normal(tgContext,
