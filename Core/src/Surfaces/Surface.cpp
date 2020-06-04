@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -65,7 +66,7 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
 
   // 1) Calcuate the derivative of local frame axes w.r.t its rotation
   const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      Acts::detail::rotationToLocalAxesDerivative(rotation);
+      detail::rotationToLocalAxesDerivative(rotation);
   // 2) Calculate the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
   Acts::AlignmentToLocalCartesianMatrix alignToLoc3D =
