@@ -31,6 +31,7 @@ namespace Acts {
 /// @cond
 // forward type declaration for full parameter set
 using FullParameterSet = typename detail::full_parset<BoundParametersIndices>::type;
+using FullFreeParameterSet = typename detail::full_parset<FreeParametersIndices>::type;
 /// @endcond
 
 /**
