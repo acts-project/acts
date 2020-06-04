@@ -276,6 +276,21 @@ template <>
 struct FreeParameterTraits<FreeParametersIndices::eFreeQOverP> {
   using type = unbound_parameter;
 };
+
+template<typename parameter_indices_t>
+struct ParametersSize;
+template<>
+struct ParametersSize<BoundParametersIndices> {
+  static constexpr unsigned int size = static_cast<unsigned int>(BoundParametersIndices::eBoundParametersSize);
+};
+template<>
+struct ParametersSize<FreeParametersIndices> {
+  static constexpr unsigned int size = static_cast<unsigned int>(FreeParametersIndices::eFreeParametersSize);
+};
+template<>
+struct ParametersSize<SpacePointIndices> {
+  static constexpr unsigned int size = static_cast<unsigned int>(SpacePointIndices::eSpacePointSize);
+};
 }  // namespace detail
 
 /// Single bound track parameter type for value constrains.

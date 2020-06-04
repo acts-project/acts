@@ -58,7 +58,7 @@ using FullParameterSet = typename detail::full_parset::type;
  * The template parameter pack @c params must be given in a strictly ascending
  * order. The parameter pack must
  * be non-empty and it cannot contain more elements than
- * <tt>Acts::eBoundParametersSize</tt>.
+ * <tt>parsSize</tt>.
  *
  * @test The behavior of this class is tested in the following unit tests:
  *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_consistency_tests)
@@ -77,32 +77,33 @@ using FullParameterSet = typename detail::full_parset::type;
  * @tparam params           parameter pack containing the (local) parameters
  * stored in this class
  */
-template <ParID_t... params>
+template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
   // local typedefs and constants
-  using ParSet_t = ParameterSet<params...>;  ///< type of this parameter set
+  using ParSet_t = ParameterSet<parameter_indices_t, params...>;  ///< type of this parameter set
   static constexpr unsigned int NPars =
       sizeof...(params);  ///< number of parameters stored in this class
+  static constexpr unsigned int parsSize = detail::ParameterSize<parameter_indices_t>::size; ///< Highes index in used parameter indices
 
   // static assert to check that the template parameters are consistent
   static_assert(detail::are_sorted<true, true, ParID_t, params...>::value,
                 "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int, 0, eBoundParametersSize,
+      detail::are_within<unsigned int, 0, parsSize,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
   static_assert(NPars > 0, "number of stored parameters can not be zero");
   static_assert(
-      NPars <= eBoundParametersSize,
+      NPars <= parsSize,
       "number of stored parameters can not exceed number of total parameters");
 
  public:
   // public typedefs
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
-  using Projection_t = ActsMatrix<ParValue_t, NPars, eBoundParametersSize>;
+  using Projection_t = ActsMatrix<ParValue_t, NPars, parsSize>;
   /// vector type for stored parameters
   using ParVector_t = ActsVector<ParValue_t, NPars>;
   /// type of covariance matrix
@@ -269,8 +270,15 @@ class ParameterSet {
    */
   template <ParID_t parameter>
   void setParameter(ParValue_t value) {
-    m_vValues(getIndex<parameter>()) =
+    if constexpr (std::is_same<parameter_indices_t, BoundParameterIndices>)
+   { m_vValues(getIndex<parameter>()) =
         BoundParameterType<parameter>::getValue(value);
+  }else
+    {
+      m_vValues(getIndex<parameter>()) =
+        FreeParameterType<parameter>::getValue(value);
+    }
+    
   }
 
   /**
@@ -454,7 +462,7 @@ class ParameterSet {
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
   /// @endcond
   ParVector_t residual(const FullParameterSet& fullParSet) const {
-    return detail::residual_calculator<BoundParametersIndices, static_cast<unsigned int>(params)...>::result(
+    return detail::residual_calculator<parameter_indices_t, static_cast<unsigned int>(params)...>::result(
         m_vValues, projector() * fullParSet.getParameters());
   }
 
@@ -491,7 +499,7 @@ class ParameterSet {
    *         with respect to the given other parameter set
    */
   ParVector_t residual(const ParSet_t& otherParSet) const {
-    return detail::residual_calculator<BoundParametersIndices, static_cast<unsigned int>(params)...>::result(
+    return detail::residual_calculator<parameter_indices_t, static_cast<unsigned int>(params)...>::result(
         m_vValues, otherParSet.m_vValues);
   }
 
@@ -503,9 +511,9 @@ class ParameterSet {
    * spanned by the parameters defined in this ParameterSet object.
    *
    * @return constant matrix with @c #NPars rows and @c
-   * #Acts::eBoundParametersSize columns
+   * #parsSize columns
    */
-  static const ActsMatrix<ParValue_t, NPars, eBoundParametersSize> projector() {
+  static const ActsMatrix<ParValue_t, NPars, parsSize> projector() {
     return sProjector;
   }
 
@@ -549,5 +557,5 @@ constexpr unsigned int ParameterSet<params...>::NPars;
 template <ParID_t... params>
 const typename ParameterSet<params...>::Projection_t
     ParameterSet<params...>::sProjector = detail::make_projection_matrix<
-        eBoundParametersSize, static_cast<unsigned int>(params)...>::init();
+        parsSize, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts
