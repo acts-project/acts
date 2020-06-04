@@ -234,8 +234,8 @@ void check_residuals_for_bound_free_parameters() {
   dTx << (tx_1 - tx_2);
 
   // both parameters inside bounds, difference is positive
-  ParameterSet<FreeParametersIndices, <eFreeDir0> bound1(std::nullopt, tx_1);
-  ParameterSet<FreeParametersIndices, <eFreeDir0> bound2(std::nullopt, tx_2);
+  ParameterSet<FreeParametersIndices, eFreeDir0> bound1(std::nullopt, tx_1);
+  ParameterSet<FreeParametersIndices, eFreeDir0> bound2(std::nullopt, tx_2);
   CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
 
   // both parameters inside bound, difference negative
@@ -287,7 +287,7 @@ void check_residuals_for_bound_free_parameters() {
   CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
 }
 
-void random_residual_tests() {
+void free_random_residual_tests() {
   // random number generators
   std::default_random_engine e;
   std::uniform_real_distribution<float> uniform_dist(-1000, 300);
@@ -808,7 +808,7 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
  */
 BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
   // check template parameter based information
-  BOOST_CHECK((ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1>::size() == 2));
+  BOOST_CHECK((ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1>::size() == 2));
 
   // covariance matrix
   ActsSymMatrixD<3> cov;
@@ -821,7 +821,7 @@ BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
   ActsVectorD<3> parValues(x, y, z);
 
   // parameter set with covariance matrix
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> parSet_with_cov(cov, x, y,
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> parSet_with_cov(cov, x, y,
                                                                     z);
 
   // check number and type of stored parameters
@@ -849,7 +849,7 @@ BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
   BOOST_CHECK(parSet_with_cov.getUncertainty<eFreePos2>() == sqrt(cov(2, 2)));
 
   // same parameter set without covariance matrix
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> parSet_without_cov(
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> parSet_without_cov(
       std::nullopt, parValues);
 
   BOOST_CHECK(!parSet_without_cov.getCovariance());
@@ -903,18 +903,18 @@ BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> first(cov, x, y, z);
 
   // check copy constructor
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> copy(first);
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> copy(first);
   BOOST_CHECK(first == copy);
 
   // check move constructor
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> moved(std::move(copy));
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> moved(std::move(copy));
   BOOST_CHECK(first == moved);
 
   // check assignment operator
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> assigned = moved;
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> assigned = moved;
   BOOST_CHECK(assigned == moved);
 
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> other(std::nullopt, 0, 1.7,
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> other(std::nullopt, 0, 1.7,
                                                           -0.15);
   BOOST_CHECK(assigned != other);
   assigned = other;
@@ -922,15 +922,15 @@ BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
 
   // check move assignment
   BOOST_CHECK(first != assigned);
-  first = ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2>(assigned);
+  first = ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2>(assigned);
   BOOST_CHECK(first == assigned);
 
   // check swap method
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> lhs(cov, x, y, z);
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> rhs(std::nullopt, 2 * x,
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> lhs(cov, x, y, z);
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> rhs(std::nullopt, 2 * x,
                                                         2 * y, 2 * z);
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> lhs_copy = lhs;
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> rhs_copy = rhs;
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> lhs_copy = lhs;
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> rhs_copy = rhs;
 
   BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
   using std::swap;
@@ -954,8 +954,8 @@ BOOST_AUTO_TEST_CASE(free_parset_comparison_tests) {
   double z = 0.3;
 
   // parameter set with covariance matrix
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> first(cov, x, y, z);
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> second(std::nullopt, 2 * x,
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> first(cov, x, y, z);
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> second(std::nullopt, 2 * x,
                                                            2 * y, 2 * z);
 
   // check self comparison
@@ -1044,27 +1044,27 @@ BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
       0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
 
-  BOOST_CHECK((ParameterSet<FreeParametersIndices, <eFreePos2>::projector() == z_proj));
+  BOOST_CHECK((ParameterSet<FreeParametersIndices, eFreePos2>::projector() == z_proj));
   BOOST_CHECK(
-      (ParameterSet<FreeParametersIndices, <eFreePos0, eFreeQOverP>::projector() == x_qop_proj));
+      (ParameterSet<FreeParametersIndices, eFreePos0, eFreeQOverP>::projector() == x_qop_proj));
   BOOST_CHECK(
-      (ParameterSet<FreeParametersIndices, <eFreePos1, eFreeDir2>::projector() == y_tz_proj));
-  BOOST_CHECK((ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2>::projector() ==
+      (ParameterSet<FreeParametersIndices, eFreePos1, eFreeDir2>::projector() == y_tz_proj));
+  BOOST_CHECK((ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2>::projector() ==
                x_y_z_proj));
-  BOOST_CHECK((ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos2, eFreeDir2,
+  BOOST_CHECK((ParameterSet<FreeParametersIndices, eFreePos0, eFreePos2, eFreeDir2,
                                 eFreeQOverP>::projector() == x_z_tz_qop_proj));
   BOOST_CHECK(
-      (ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2, eFreeDir2,
+      (ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2, eFreeDir2,
                         eFreeQOverP>::projector() == x_y_z_tz_qop_proj));
   BOOST_CHECK(
-      (ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir2,
+      (ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir2,
                         eFreeQOverP>::projector() == x_y_z_t_tz_qop_proj));
   BOOST_CHECK(
-      (ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir1,
+      (ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir1,
                         eFreeDir2, eFreeQOverP>::projector() ==
        x_y_z_t_ty_tz_qop_proj));
   BOOST_CHECK(
-      (ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+      (ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
                         eFreeDir1, eFreeDir2, eFreeQOverP>::projector() ==
        x_y_z_t_tx_ty_tz_qop_proj));
 }
@@ -1084,14 +1084,14 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   const double large_number = 12443534120;
   const double small_number = -924342675;
   const double normal_number = 0.1234;
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreeQOverP> unbound(
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreeQOverP> unbound(
       std::nullopt, small_number, large_number, normal_number);
   BOOST_CHECK(unbound.getParameter<eFreePos0>() == small_number);
   BOOST_CHECK(unbound.getParameter<eFreePos1>() == large_number);
   BOOST_CHECK(unbound.getParameter<eFreeQOverP>() == normal_number);
 
   // check bound parameter type
-  ParameterSet<FreeParametersIndices, <eFreeDir2> bound(std::nullopt, small_number);
+  ParameterSet<FreeParametersIndices, eFreeDir2> bound(std::nullopt, small_number);
   BOOST_CHECK(
       (bound.getParameter<eFreeDir2>() == FreeParameterType<eFreeDir2>::min));
   bound.setParameter<eFreeDir2>(large_number);
@@ -1117,9 +1117,9 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   const double delta_z = second_z - first_z;
   ActsVectorD<3> residuals(delta_x, delta_y, delta_z);
 
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> first(std::nullopt, first_x,
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> first(std::nullopt, first_x,
                                                           first_y, first_z);
-  ParameterSet<FreeParametersIndices, <eFreePos0, eFreePos1, eFreePos2> second(
+  ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> second(
       std::nullopt, second_x, second_y, second_z);
   CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   check_residuals_for_bound_free_parameters();
 
   // inspecific residual tests with random numbers
-  random_residual_tests();
+  free_random_residual_tests();
 }
 
 template <FreeParametersIndices... params>
@@ -1228,7 +1228,5 @@ BOOST_AUTO_TEST_CASE(free_parset_parID_mapping) {
   BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
                             decltype(eFreePos0)>::value));
 }
-}  // namespace Test
-}  // namespace Acts
 }  // namespace Test
 }  // namespace Acts
