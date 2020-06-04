@@ -83,26 +83,41 @@ template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
   // local typedefs and constants
+<<<<<<< HEAD
   using Self = ParameterSet<parameter_indices_t,
                             params...>;  ///< type of this parameter set
   static constexpr unsigned int kNumberOfParameters =
       sizeof...(params);  ///< number of parameters stored in this class
   static constexpr unsigned int kSizeMax = detail::ParametersSize<
       parameter_indices_t>::size;  ///< Highest index in used parameter indices
+=======
+  using ParSet_t = ParameterSet<parameter_indices_t, params...>;  ///< type of this parameter set
+  static constexpr unsigned int NPars =
+      sizeof...(params);  ///< number of parameters stored in this class
+  static constexpr unsigned int parsSize = detail::ParameterSize<parameter_indices_t>::size; ///< Highes index in used parameter indices
+>>>>>>> Drafted modified ParameterSet
 
   // static assert to check that the template parameters are consistent
   static_assert(
+<<<<<<< HEAD
       detail::are_sorted<true, true, parameter_indices_t, params...>::value,
       "parameter identifiers are not sorted");
   static_assert(
       detail::are_within<unsigned int, 0, kSizeMax,
+=======
+      detail::are_within<unsigned int, 0, parsSize,
+>>>>>>> Drafted modified ParameterSet
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
   static_assert(kNumberOfParameters > 0,
                 "number of stored parameters can not be zero");
   static_assert(
+<<<<<<< HEAD
       kNumberOfParameters <= kSizeMax,
+=======
+      NPars <= parsSize,
+>>>>>>> Drafted modified ParameterSet
       "number of stored parameters can not exceed number of total parameters");
 
  public:
