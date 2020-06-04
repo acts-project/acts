@@ -1,0 +1,7 @@
+set(unittest_extra_libraries ActsTGeoPlugin)
+
+add_unittest(TGeoArb8ConversionTests TGeoArb8ConversionTests.cpp)
+add_unittest(TGeoBBoxConversionTests TGeoBBoxConversionTests.cpp)
+add_unittest(TGeoTrd1ConversionTests TGeoTrd1ConversionTests.cpp)
+add_unittest(TGeoTrd2ConversionTests TGeoTrd2ConversionTests.cpp)
+add_unittest(TGeoTubeConversionTests TGeoTubeConversionTests.cpp)

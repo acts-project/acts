@@ -75,9 +75,9 @@ inline void drawVolume(IVisualization& helper, const volume_t& volume,
 /// @param helper [in, out] The visualization helper
 /// @param start The start point
 /// @param end The end point
-/// @param thickness of the line, if bigger 0, approximated by cylinder
+/// @param thickness of the line
 /// @param arrows [ -1 | 0 | 1 | 2 ] = [ start | none | end | both ]
-/// @param arrowLength wrt halflength
+/// @param arrowLength wrt thickness
 /// @param arrowWidth wrt thickness
 /// @param lseg The number of segments for a full arch (if needed)
 /// @param color the (optional) color of the object to be written
@@ -97,7 +97,8 @@ static inline void drawSegmentBase(
   lrotation.col(2) = direction;
 
   Vector3D lcenter = 0.5 * (start + end);
-  double alength = arrowLength * (2 * hlength);
+
+  double alength = (thickness > 0.) ? arrowLength * thickness : 2.;
 
   if (arrows == 2) {
     hlength -= alength;
@@ -123,8 +124,9 @@ static inline void drawSegmentBase(
 
   // Arrowheads - if configured
   if (arrows != 0) {
-    double awith = thickness * arrowWidth;
-    double alpha = atan2(thickness * arrowWidth, alength);
+    double cthickness = thickness > 0. ? thickness : 1.;
+    double awith = cthickness * arrowWidth;
+    double alpha = atan2(cthickness * arrowWidth, alength);
     auto plateBounds = std::make_shared<RadialBounds>(thickness, awith);
 
     if (arrows > 0) {
@@ -188,8 +190,8 @@ static inline void drawSegment(IVisualization& helper, const Vector3D& start,
 /// @param helper [in, out] The visualization helper
 /// @param start The start point
 /// @param end The end point
-/// @param thickness of the line, if bigger 0, approximated by cylinder
-/// @param arrowLength wrt halflength
+/// @param thickness of the line
+/// @param arrowLength wrt thickness
 /// @param arrorWidth wrt thickness
 /// @param lseg The number of segments for a full arch (if needed)
 /// @param color the (optional) color of the object to be written
@@ -206,8 +208,8 @@ static inline void drawArrowBackward(
 /// @param helper [in, out] The visualization helper
 /// @param start The start point
 /// @param end The end point
-/// @param thickness of the line, if bigger 0, approximated by cylinder
-/// @param arrowLength wrt halflength
+/// @param thickness of the line
+/// @param arrowLength wrt thickness
 /// @param arrorWidth wrt thickness
 /// @param lseg The number of segments for a full arch (if needed)
 /// @param color the (optional) color of the object to be written
