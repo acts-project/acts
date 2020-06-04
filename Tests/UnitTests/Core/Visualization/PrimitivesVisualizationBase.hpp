@@ -54,17 +54,17 @@ static inline std::string test(IVisualization& helper) {
   // Arrows visualization ------------------------------------------------
   start = {1., 0., 0.};
   end = {4., 0., 0.};
-  Acts::Visualization::drawArrowForward(helper, start, end, 0.1, 0.1, 3., 72,
+  Acts::Visualization::drawArrowForward(helper, start, end, 0.1, 4., 3., 72,
                                         {0, 75, 0});
 
   start = {1., 2., 0.};
   end = {4., 2., 0.};
-  Acts::Visualization::drawArrowBackward(helper, start, end, 0.1, 0.1, 3., 72,
+  Acts::Visualization::drawArrowBackward(helper, start, end, 0.1, 4., 3., 72,
                                          {0, 150, 0});
 
   start = {1., 4., 0.};
   end = {4., 4., 0.};
-  Acts::Visualization::drawArrowsBoth(helper, start, end, 0.1, 0.1, 3., 72,
+  Acts::Visualization::drawArrowsBoth(helper, start, end, 0.1, 4., 3., 72,
                                       {0, 250, 0});
   helper.write("Primitives_Arrows");
   helper.write(ss);

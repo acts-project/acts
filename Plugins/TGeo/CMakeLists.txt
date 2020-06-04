@@ -1,5 +1,6 @@
 add_library(
   ActsTGeoPlugin SHARED
+  src/TGeoSurfaceConverter.cpp
   src/TGeoDetectorElement.cpp
   src/TGeoLayerBuilder.cpp)
 target_include_directories(

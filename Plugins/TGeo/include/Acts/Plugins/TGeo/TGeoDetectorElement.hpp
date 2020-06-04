@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TGeoDetectorElement.hpp, Acts project, TGeoDetector plugin
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 #include <iostream>
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -92,7 +88,6 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// 	- capital      -> positive orientation of the axis
   ///		- lower case   -> negative oriantation of the axis
   ///
-  ///
   /// Example options are:
   /// 	- "XYZ" -> identical frame definition (default value)
   /// 	- "YZX" -> node y axis is tracking x axis, etc.
@@ -122,10 +117,8 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
       std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
           nullptr);
 
-  ///  Destructor
   ~TGeoDetectorElement() override;
 
-  /// Identifier
   Identifier identifier() const final;
 
   /// Return local to global transform associated with this identifier
@@ -167,7 +160,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   ///  Thickness of this detector element
   double m_thickness{0.};  //@todo implement thickness from TGeoMode
   /// Corresponding Surface
-  std::shared_ptr<const Surface> m_surface{nullptr};
+  std::shared_ptr<Surface> m_surface{nullptr};
   /// The Digitization module
   std::shared_ptr<const Acts::DigitizationModule> m_digitizationModule{nullptr};
 };
