@@ -1101,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   const double delta_y = second_y - first_y;
   const double delta_z = second_z - first_z;
   ActsVectorD<3> residuals(delta_x, delta_y, delta_z);
-  
+
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> first(
       std::nullopt, first_x, first_y, first_z);
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> second(
