@@ -57,7 +57,7 @@ class Measurement {
   // private typedefs
 
   /// type of the underlying ParameterSet object
-  using ParSet_t = ParameterSet<params...>;
+  using ParSet_t = ParameterSet<BoundParametersIndices, params...>;
 
  public:
   /// type of the vector containing the parameter values

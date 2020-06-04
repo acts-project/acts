@@ -30,7 +30,7 @@
 namespace Acts {
 /// @cond
 // forward type declaration for full parameter set
-using FullParameterSet = typename detail::full_parset::type;
+using FullParameterSet = typename detail::full_parset<BoundParametersIndices>::type;
 /// @endcond
 
 /**
@@ -41,7 +41,7 @@ using FullParameterSet = typename detail::full_parset::type;
  * @pre
  * The template parameter @c ParameterPolicy must fulfill the following
  * requirements:
- *  -# It must contain a <tt>typedef #ParID_t</tt> specifying an integral
+ *  -# It must contain a <tt>typedef #parameter_indices_t</tt> specifying an integral
  * type used to identify different
  *     parameters. This could for example be an @c enum, @c short, or
  * <tt>unsigned int</tt>.
@@ -84,10 +84,10 @@ class ParameterSet {
   using ParSet_t = ParameterSet<parameter_indices_t, params...>;  ///< type of this parameter set
   static constexpr unsigned int NPars =
       sizeof...(params);  ///< number of parameters stored in this class
-  static constexpr unsigned int parsSize = detail::ParameterSize<parameter_indices_t>::size; ///< Highes index in used parameter indices
+  static constexpr unsigned int parsSize = detail::ParametersSize<parameter_indices_t>::size; ///< Highes index in used parameter indices
 
   // static assert to check that the template parameters are consistent
-  static_assert(detail::are_sorted<true, true, ParID_t, params...>::value,
+  static_assert(detail::are_sorted<true, true, parameter_indices_t, params...>::value,
                 "parameter identifiers are not sorted");
   static_assert(
       detail::are_within<unsigned int, 0, parsSize,
@@ -127,7 +127,7 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<ParID_t, params...>::init(*this, head, values...);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head, values...);
   }
 
   /**
@@ -147,7 +147,7 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<ParID_t, params...>::init(*this, values);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this, values);
   }
 
   /**
@@ -216,9 +216,9 @@ class ParameterSet {
    *
    * @return position of parameter in variadic template parameter set @c params
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   static constexpr size_t getIndex() {
-    return detail::get_position<ParID_t, parameter, params...>::value;
+    return detail::get_position<parameter_indices_t, parameter, params...>::value;
   }
 
   /**
@@ -233,8 +233,8 @@ class ParameterSet {
    *         parameter set @c params
    */
   template <size_t index>
-  static constexpr ParID_t getParID() {
-    return detail::at_index<ParID_t, index, params...>::value;
+  static constexpr parameter_indices_t getParID() {
+    return detail::at_index<parameter_indices_t, index, params...>::value;
   }
 
   /**
@@ -246,7 +246,7 @@ class ParameterSet {
    *
    * @return value of the stored parameter
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   ParValue_t getParameter() const {
     return m_vValues(getIndex<parameter>());
   }
@@ -268,9 +268,9 @@ class ParameterSet {
    *
    * @return previously stored value of this parameter
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   void setParameter(ParValue_t value) {
-    if constexpr (std::is_same<parameter_indices_t, BoundParameterIndices>)
+    if constexpr (std::is_same<parameter_indices_t, BoundParametersIndices>::value)
    { m_vValues(getIndex<parameter>()) =
         BoundParameterType<parameter>::getValue(value);
   }else
@@ -291,7 +291,7 @@ class ParameterSet {
    * @param values vector of length #NPars
    */
   void setParameters(const ParVector_t& values) {
-    detail::initialize_parset<ParID_t, params...>::init(*this, values);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this, values);
   }
 
   /**
@@ -305,9 +305,9 @@ class ParameterSet {
    *
    * @return @c true if the parameter is stored in this set, otherwise @c false
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   bool contains() const {
-    return detail::is_contained<ParID_t, parameter, params...>::value;
+    return detail::is_contained<parameter_indices_t, parameter, params...>::value;
   }
 
   /**
@@ -334,7 +334,7 @@ class ParameterSet {
    * is returned if no
    *         covariance matrix is set
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   ParValue_t getUncertainty() const {
     if (m_optCovariance) {
       size_t index = getIndex<parameter>();
@@ -551,11 +551,11 @@ class ParameterSet {
 };
 
 // initialize static class members
-template <ParID_t... params>
-constexpr unsigned int ParameterSet<params...>::NPars;
+template <typename parameter_indices_t, parameter_indices_t... params>
+constexpr unsigned int ParameterSet<parameter_indices_t, params...>::NPars;
 
-template <ParID_t... params>
-const typename ParameterSet<params...>::Projection_t
-    ParameterSet<params...>::sProjector = detail::make_projection_matrix<
+template <typename parameter_indices_t, parameter_indices_t... params>
+const typename ParameterSet<parameter_indices_t, params...>::Projection_t
+    ParameterSet<parameter_indices_t, params...>::sProjector = detail::make_projection_matrix<
         parsSize, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts

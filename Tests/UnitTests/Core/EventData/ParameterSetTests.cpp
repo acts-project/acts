@@ -57,8 +57,8 @@ void check_residuals_for_bound_parameters() {
   dTheta << (theta_1 - theta_2);
 
   // both parameters inside bounds, difference is positive
-  ParameterSet<eBoundTheta> bound1(std::nullopt, theta_1);
-  ParameterSet<eBoundTheta> bound2(std::nullopt, theta_2);
+  ParameterSet<BoundParametersIndices, eBoundTheta> bound1(std::nullopt, theta_1);
+  ParameterSet<BoundParametersIndices, eBoundTheta> bound2(std::nullopt, theta_2);
   CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 
   // both parameters inside bound, difference negative
@@ -119,8 +119,8 @@ void check_residuals_for_cyclic_parameters() {
   ActsVectorD<1> dPhi;
   dPhi << (phi_1 - phi_2);
 
-  ParameterSet<eBoundPhi> cyclic1(std::nullopt, phi_1);
-  ParameterSet<eBoundPhi> cyclic2(std::nullopt, phi_2);
+  ParameterSet<BoundParametersIndices, eBoundPhi> cyclic1(std::nullopt, phi_1);
+  ParameterSet<BoundParametersIndices, eBoundPhi> cyclic2(std::nullopt, phi_2);
 
   // no boundary crossing, difference is positive
   CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
@@ -242,7 +242,7 @@ void random_residual_tests() {
  */
 BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   // check template parameter based information
-  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1>::size() == 2));
+  BOOST_CHECK((ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1>::size() == 2));
 
   // covariance matrix
   ActsSymMatrixD<3> cov;
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   ActsVectorD<3> parValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> parSet_with_cov(cov, loc0,
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> parSet_with_cov(cov, loc0,
                                                                   loc1, phi);
 
   // check number and type of stored parameters
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   BOOST_CHECK(parSet_with_cov.getUncertainty<eBoundPhi>() == sqrt(cov(2, 2)));
 
   // same parameter set without covariance matrix
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> parSet_without_cov(
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> parSet_without_cov(
       std::nullopt, parValues);
 
   BOOST_CHECK(!parSet_without_cov.getCovariance());
@@ -334,21 +334,21 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   ActsVectorD<3> first_parValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
 
   // check copy constructor
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> copy(first);
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> copy(first);
   BOOST_CHECK(first == copy);
 
   // check move constructor
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> moved(std::move(copy));
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> moved(std::move(copy));
   BOOST_CHECK(first == moved);
 
   // check assignment operator
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> assigned = moved;
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> assigned = moved;
   BOOST_CHECK(assigned == moved);
 
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> other(std::nullopt, 0, 1.7,
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> other(std::nullopt, 0, 1.7,
                                                         -0.15);
   BOOST_CHECK(assigned != other);
   assigned = other;
@@ -356,15 +356,15 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
 
   // check move assignment
   BOOST_CHECK(first != assigned);
-  first = ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi>(assigned);
+  first = ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi>(assigned);
   BOOST_CHECK(first == assigned);
 
   // check swap method
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> lhs(cov, loc0, loc1, phi);
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> rhs(std::nullopt, 2 * loc0,
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> lhs(cov, loc0, loc1, phi);
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> rhs(std::nullopt, 2 * loc0,
                                                       2 * loc1, 2 * phi);
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> lhs_copy = lhs;
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> rhs_copy = rhs;
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> lhs_copy = lhs;
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> rhs_copy = rhs;
 
   BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
   using std::swap;
@@ -389,8 +389,8 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
                             // failed tests due to angle range corrections
 
   // parameter set with covariance matrix
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi> second(std::nullopt, 2 * loc0,
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> first(cov, loc0, loc1, phi);
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> second(std::nullopt, 2 * loc0,
                                                          2 * loc1, 2 * phi);
 
   // check self comparison
@@ -467,20 +467,20 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
       0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
 
-  BOOST_CHECK((ParameterSet<eBoundPhi>::projector() == phi_proj));
+  BOOST_CHECK((ParameterSet<BoundParametersIndices, eBoundPhi>::projector() == phi_proj));
   BOOST_CHECK(
-      (ParameterSet<eBoundLoc0, eBoundQOverP>::projector() == loc0_qop_proj));
+      (ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundQOverP>::projector() == loc0_qop_proj));
   BOOST_CHECK(
-      (ParameterSet<eBoundLoc1, eBoundTheta>::projector() == loc1_theta_proj));
-  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi>::projector() ==
+      (ParameterSet<BoundParametersIndices, eBoundLoc1, eBoundTheta>::projector() == loc1_theta_proj));
+  BOOST_CHECK((ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi>::projector() ==
                loc0_loc1_phi_proj));
   BOOST_CHECK(
-      (ParameterSet<eBoundLoc0, eBoundPhi, eBoundTheta,
+      (ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundPhi, eBoundTheta,
                     eBoundQOverP>::projector() == loc0_phi_theta_qop_proj));
-  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
+  BOOST_CHECK((ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
                             eBoundQOverP>::projector() ==
                loc0_loc1_phi_theta_qop_proj));
-  BOOST_CHECK((ParameterSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
+  BOOST_CHECK((ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta,
                             eBoundQOverP, eT>::projector() ==
                loc0_loc1_phi_theta_qop_t_proj));
 }
@@ -501,14 +501,14 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   const double large_number = 12443534120;
   const double small_number = -924342675;
   const double normal_number = 1.234;
-  ParameterSet<eBoundLoc0, eBoundLoc1, eBoundQOverP> unbound(
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundQOverP> unbound(
       std::nullopt, small_number, large_number, normal_number);
   BOOST_CHECK(unbound.getParameter<eBoundLoc0>() == small_number);
   BOOST_CHECK(unbound.getParameter<eBoundLoc1>() == large_number);
   BOOST_CHECK(unbound.getParameter<eBoundQOverP>() == normal_number);
 
   // check bound parameter type
-  ParameterSet<eBoundTheta> bound(std::nullopt, small_number);
+  ParameterSet<BoundParametersIndices, eBoundTheta> bound(std::nullopt, small_number);
   BOOST_CHECK((bound.getParameter<eBoundTheta>() ==
                BoundParameterType<eBoundTheta>::min));
   bound.setParameter<eBoundTheta>(large_number);
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   BOOST_CHECK((bound.getParameter<eBoundTheta>() == normal_number));
 
   // check cyclic parameter type
-  ParameterSet<eBoundPhi> cyclic(std::nullopt, small_number);
+  ParameterSet<BoundParametersIndices, eBoundPhi> cyclic(std::nullopt, small_number);
   // calculate expected results
   const double min = BoundParameterType<eBoundPhi>::min;
   const double max = BoundParameterType<eBoundPhi>::max;
@@ -560,9 +560,9 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   const double delta_theta = second_theta - first_theta;
   ActsVectorD<3> residuals(delta_loc0, delta_phi, delta_theta);
 
-  ParameterSet<eBoundLoc0, eBoundPhi, eBoundTheta> first(
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundPhi, eBoundTheta> first(
       std::nullopt, first_loc0, first_phi, first_theta);
-  ParameterSet<eBoundLoc0, eBoundPhi, eBoundTheta> second(
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundPhi, eBoundTheta> second(
       std::nullopt, second_loc0, second_phi, second_theta);
   CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
 }
 
 template <ParID_t... params>
-using ParSet = ParameterSet<params...>;
+using ParSet = ParameterSet<BoundParametersIndices, params...>;
 
 /**
  * @brief Unit test for index-/type-based access of coordinates
