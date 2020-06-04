@@ -16,6 +16,7 @@ namespace Acts {
 namespace detail {
 /// @brief calculate residuals from two parameter vectors
 ///
+/// @tparam parameter_indices_t Specifying the underlying parameter index enum 
 /// @tparam params template parameter pack containing the multiple parameter
 ///                identifiers
 ///
@@ -24,77 +25,56 @@ namespace detail {
 ///
 /// @return residual_calculator<params...>::result(first,second) yields the
 ///         residuals of `first` with respect to `second`
-template <ParID_t... params>
+template <typename parameter_indices_t, unsigned int... params>
 struct residual_calculator;
-
-template <FreeParametersIndices... params>
-struct free_residual_calculator;
-
 /// @cond
-template <typename R, ParID_t... params>
+
+template <typename parameter_indices_t, typename R, unsigned int ... params>
 struct residual_calculator_impl;
 
-template <typename R, FreeParametersIndices... params>
-struct free_residual_calculator_impl;
-
-template <ParID_t... params>
+template <typename parameter_indices_t, unsigned int... params>
 struct residual_calculator {
   using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
 
   static ParVector_t result(const ParVector_t& test, const ParVector_t& ref) {
     ParVector_t result;
-    residual_calculator_impl<ParVector_t, params...>::calculate(result, test,
+    residual_calculator_impl<parameter_indices_t, ParVector_t, params...>::calculate(result, test,
                                                                 ref, 0);
     return result;
   }
 };
 
-template <FreeParametersIndices... params>
-struct free_residual_calculator {
-  using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
-
-  static ParVector_t result(const ParVector_t& test, const ParVector_t& ref) {
-    ParVector_t result;
-    free_residual_calculator_impl<ParVector_t, params...>::calculate(
-        result, test, ref, 0);
-    return result;
-  }
-};
-
-template <typename R, ParID_t first, ParID_t... others>
-struct residual_calculator_impl<R, first, others...> {
+template <typename parameter_indices_t, typename R, unsigned int first, unsigned int... others>
+struct residual_calculator_impl<parameter_indices_t, R, first, others...> {
   static void calculate(R& result, const R& test, const R& ref,
                         unsigned int pos) {
-    result(pos) = BoundParameterType<first>::getDifference(test(pos), ref(pos));
-    residual_calculator_impl<R, others...>::calculate(result, test, ref,
+    if constexpr (std::is_same<parameter_indices_t, BoundParametersIndices>::value)
+    {
+      result(pos) = BoundParameterType<static_cast<BoundParametersIndices>(first)>::getDifference(test(pos), ref(pos));
+    }
+    else
+    {
+      result(pos) = FreeParameterType<static_cast<FreeParametersIndices>(first)>::getDifference(test(pos), ref(pos));
+    }
+    
+    residual_calculator_impl<parameter_indices_t, R, others...>::calculate(result, test, ref,
                                                       pos + 1);
   }
 };
 
-template <typename R, FreeParametersIndices first,
-          FreeParametersIndices... others>
-struct free_residual_calculator_impl<R, first, others...> {
+template <typename parameter_indices_t, typename R, unsigned int last>
+struct residual_calculator_impl<parameter_indices_t, R, last> {
   static void calculate(R& result, const R& test, const R& ref,
                         unsigned int pos) {
-    result(pos) = FreeParameterType<first>::getDifference(test(pos), ref(pos));
-    free_residual_calculator_impl<R, others...>::calculate(result, test, ref,
-                                                           pos + 1);
-  }
-};
-
-template <typename R, ParID_t last>
-struct residual_calculator_impl<R, last> {
-  static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
-    result(pos) = BoundParameterType<last>::getDifference(test(pos), ref(pos));
-  }
-};
-
-template <typename R, FreeParametersIndices last>
-struct free_residual_calculator_impl<R, last> {
-  static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
-    result(pos) = FreeParameterType<last>::getDifference(test(pos), ref(pos));
+    if constexpr (std::is_same<parameter_indices_t, BoundParametersIndices>::value)
+    {
+      result(pos) = BoundParameterType<static_cast<BoundParametersIndices>(last)>::getDifference(test(pos), ref(pos));
+    }
+    else
+    {
+      result(pos) = FreeParameterType<static_cast<FreeParametersIndices>(last)>::getDifference(test(pos), ref(pos));
+    }
+    
   }
 };
 /// @endcond
