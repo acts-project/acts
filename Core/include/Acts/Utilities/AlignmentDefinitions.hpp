@@ -47,7 +47,6 @@ using AlingmentMatrix =
                eAlignmentParametersSize>;
 using AlignmentToLocalCartesianMatrix =
     ActsMatrix<AlignmentParametersScalar, 3, eAlignmentParametersSize>;
-
 using AlignmentToBoundMatrix =
     ActsMatrix<BoundParametersScalar, eBoundParametersSize,
                eAlignmentParametersSize>;
