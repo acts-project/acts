@@ -31,14 +31,14 @@ Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
   rotToLocalXAxis.col(1) = Vector3D(-cz * sy, -sz * sy, -cy);
   rotToLocalXAxis.col(2) = Vector3D(-sz * cy, cz * cy, 0);
   // Derivative of local y axis w.r.t. (rotX, rotY, rotZ)
-  Acts::RotationMatrix3D rotToLocalYAxis = Acts::RotationMatrix3D::Zero();
+  RotationMatrix3D rotToLocalYAxis = RotationMatrix3D::Zero();
   rotToLocalYAxis.col(0) =
       Vector3D(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
   rotToLocalYAxis.col(1) = Vector3D(cz * cy * sx, sz * cy * sx, -sy * sx);
   rotToLocalYAxis.col(2) =
       Vector3D(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
   // Derivative of local z axis w.r.t. (rotX, rotY, rotZ)
-  Acts::RotationMatrix3D rotToLocalZAxis = Acts::RotationMatrix3D::Zero();
+  RotationMatrix3D rotToLocalZAxis = RotationMatrix3D::Zero();
   rotToLocalZAxis.col(0) =
       Vector3D(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
   rotToLocalZAxis.col(1) = Vector3D(cz * cy * cx, sz * cy * cx, -sy * cx);

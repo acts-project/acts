@@ -53,7 +53,7 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 }
 
 const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
-    const GeometryContext& gctx, const Acts::FreeVector& derivatives,
+    const GeometryContext& gctx, const FreeVector& derivatives,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
@@ -70,8 +70,8 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
       detail::rotationToLocalAxesDerivative(rotation);
   // 2) Calculate the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
-  Acts::AlignmentToLocalCartesianMatrix alignToLoc3D =
-      Acts::AlignmentToLocalCartesianMatrix::Zero();
+  AlignmentToLocalCartesianMatrix alignToLoc3D =
+      AlignmentToLocalCartesianMatrix::Zero();
   alignToLoc3D.block<1, 3>(eX, eAlignmentCenter0) = -localXAxis.transpose();
   alignToLoc3D.block<1, 3>(eY, eAlignmentCenter0) = -localYAxis.transpose();
   alignToLoc3D.block<1, 3>(eZ, eAlignmentCenter0) = -localZAxis.transpose();
@@ -90,12 +90,11 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   const auto& alignToPath =
       alignmentToPathDerivative(gctx, rotToLocalZAxis, position, direction);
   // 5) Calculate the jacobian from free parameters to bound parameters
-  Acts::FreeToBoundMatrix jacToLocal = Acts::FreeToBoundMatrix::Zero();
+  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   initJacobianToLocal(gctx, jacToLocal, position, direction);
   // 6) Initialize the derivative of bound parameters w.r.t. alignment
   // parameters
-  Acts::AlignmentToBoundMatrix alignToBound =
-      Acts::AlignmentToBoundMatrix::Zero();
+  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
   // -> For bound track parameters eLOC_0, eLOC_1, it's
   // loc3DToLocBound*alignToLoc3D +
   // jacToLocal*derivatives*alignToPath
@@ -127,7 +126,7 @@ const Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
   const double dirZ = localZAxis.dot(direction);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
-  Acts::AlignmentRowVector alignToPath = Acts::AlignmentRowVector::Zero();
+  AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
   alignToPath.segment<3>(eAlignmentCenter0) = localZAxis.transpose() / dirZ;
   alignToPath.segment<3>(eAlignmentRotation0) =
       -pcRowVec * rotToLocalZAxis / dirZ;
