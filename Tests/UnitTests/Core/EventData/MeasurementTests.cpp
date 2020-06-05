@@ -21,7 +21,7 @@ namespace Test {
 using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
-using MeasurementType = Measurement<SourceLink, params...>;
+using MeasurementType = Measurement<SourceLink, BoundParametersIndices, params...>;
 
 /// @brief Unit test for creation of Measurement object
 ///

@@ -76,7 +76,7 @@ using SourceLink = MinimalSourceLink;
 
 template <par_t... pars>
 struct meas_factory {
-  using type = Measurement<SourceLink, pars...>;
+  using type = Measurement<SourceLink, BoundParametersIndices, pars...>;
 };
 
 constexpr par_t operator"" _p(unsigned long long i) {
@@ -86,72 +86,72 @@ constexpr par_t operator"" _p(unsigned long long i) {
 BOOST_AUTO_TEST_CASE(variant_measurement_generation_test) {
   {
     using actual = detail::type_generator_t<meas_factory, 1>;
-    using expected = std::variant<Measurement<SourceLink, 0_p>>;
+    using expected = std::variant<Measurement<SourceLink, BoundParametersIndices, 0_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 2>;
     using expected =
-        std::variant<Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-                     Measurement<SourceLink, 0_p, 1_p>>;
+        std::variant<Measurement<SourceLink, BoundParametersIndices, 0_p>, Measurement<SourceLink, BoundParametersIndices,1_p>,
+                     Measurement<SourceLink, BoundParametersIndices,0_p, 1_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 3>;
     using expected = std::variant<
-        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
-        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p>>;
+        Measurement<SourceLink, BoundParametersIndices, 0_p>, Measurement<SourceLink, BoundParametersIndices,1_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p>, Measurement<SourceLink, BoundParametersIndices, 2_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 2_p>, Measurement<SourceLink, BoundParametersIndices, 1_p, 2_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 2_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 4>;
     using expected = std::variant<
-        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
-        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p>, Measurement<SourceLink, 3_p>,
-        Measurement<SourceLink, 0_p, 3_p>, Measurement<SourceLink, 1_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 3_p>,
-        Measurement<SourceLink, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 2_p, 3_p>,
-        Measurement<SourceLink, 1_p, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p>>;
+        Measurement<SourceLink, BoundParametersIndices, 0_p>, Measurement<SourceLink, BoundParametersIndices, 1_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p>, Measurement<SourceLink, BoundParametersIndices, 2_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 2_p>, Measurement<SourceLink, BoundParametersIndices, 1_p, 2_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 2_p>, Measurement<SourceLink, BoundParametersIndices, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 3_p>, Measurement<SourceLink, BoundParametersIndices, 1_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 2_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 2_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 1_p, 2_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 2_p, 3_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
   {
     using actual = detail::type_generator_t<meas_factory, 5>;
     using expected = std::variant<
-        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
-        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p>, Measurement<SourceLink, 3_p>,
-        Measurement<SourceLink, 0_p, 3_p>, Measurement<SourceLink, 1_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 3_p>,
-        Measurement<SourceLink, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 2_p, 3_p>,
-        Measurement<SourceLink, 1_p, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p>,
-        Measurement<SourceLink, 4_p>, Measurement<SourceLink, 0_p, 4_p>,
-        Measurement<SourceLink, 1_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 4_p>,
-        Measurement<SourceLink, 2_p, 4_p>,
-        Measurement<SourceLink, 0_p, 2_p, 4_p>,
-        Measurement<SourceLink, 1_p, 2_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 4_p>,
-        Measurement<SourceLink, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 3_p, 4_p>,
-        Measurement<SourceLink, 1_p, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 3_p, 4_p>,
-        Measurement<SourceLink, 2_p, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 2_p, 3_p, 4_p>,
-        Measurement<SourceLink, 1_p, 2_p, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p, 4_p>>;
+        Measurement<SourceLink, BoundParametersIndices, 0_p>, Measurement<SourceLink, BoundParametersIndices, 1_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p>, Measurement<SourceLink, BoundParametersIndices, 2_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 2_p>, Measurement<SourceLink, BoundParametersIndices, 1_p, 2_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 2_p>, Measurement<SourceLink, BoundParametersIndices, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 3_p>, Measurement<SourceLink, BoundParametersIndices, 1_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 2_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 2_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 1_p, 2_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 2_p, 3_p>,
+        Measurement<SourceLink, BoundParametersIndices, 4_p>, Measurement<SourceLink, BoundParametersIndices, 0_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 1_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 2_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 2_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 1_p, 2_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 2_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 3_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 3_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 1_p, 3_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 3_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 2_p, 3_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 2_p, 3_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 1_p, 2_p, 3_p, 4_p>,
+        Measurement<SourceLink, BoundParametersIndices, 0_p, 1_p, 2_p, 3_p, 4_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }

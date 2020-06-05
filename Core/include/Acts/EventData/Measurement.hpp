@@ -301,23 +301,23 @@ class Measurement {
  * Required factory metafunction which produces measurements.
  * This encodes the source_link_t and hides it from the type generator.
  */
-template <typename source_link_t, parameter_indices_t>
+template <typename source_link_t>
 struct fittable_measurement_helper {
-  template <parameter_indices_t... pars>
+  template <BoundParametersIndices... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, parameter_indices_t, pars...>;
+    using type = Measurement<source_link_t, BoundParametersIndices, pars...>;
   };
 
   using type =
-      typename detail::type_generator_t<meas_factory, ParametersSize<parameter_indices_t>::size;
+      typename detail::type_generator_t<meas_factory, eBoundParametersSize>;
 };
 
 /**
  * @brief FittableMeasurement variant type
  */
-template <typename source_link_t, typename parameter_indices_t>
+template <typename source_link_t>
 using FittableMeasurement =
-    typename fittable_measurement_helper<source_link_t, parameter_indices_t>::type;
+    typename fittable_measurement_helper<source_link_t>::type;
 
 
 // // https://stackoverflow.com/questions/59250481/is-it-ok-to-use-stdvariant-of-stdvariants
