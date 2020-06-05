@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   const auto& loc3DToLocBound =
       planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                                globalPosition);
-  // For plane surface, this should be unitary matrix
+  // For plane surface, this should be identity matrix
   CHECK_CLOSE_ABS(LocalCartesianToBoundLocalMatrix::Identity(), loc3DToLocBound,
                   1e-15);
 

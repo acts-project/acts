@@ -19,7 +19,7 @@ namespace Test {
 /// Test for rotation matrix and calculation of derivative of rotated x/y/z axis
 /// w.r.t. rotation parameters
 BOOST_AUTO_TEST_CASE(alignment_helper_test) {
-  // (a) Test with non-unitary rotation matrix
+  // (a) Test with non-identity rotation matrix
   // Rotation angle parameters
   const double alpha = M_PI;
   const double beta = 0;
@@ -98,13 +98,13 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   // Check if the derivative for local z axis is as expected
   CHECK_CLOSE_ABS(refRotToZAxis, rotToLocalZAxis, 1e-15);
 
-  // (b) Test with unitary rotation matrix
-  RotationMatrix3D uRotation = RotationMatrix3D::Identity();
+  // (b) Test with identity rotation matrix
+  RotationMatrix3D iRotation = RotationMatrix3D::Identity();
 
   // Call the alignment helper to calculate the derivative of local frame axes
   // w.r.t its rotation
-  const auto& [urotToLocalXAxis, urotToLocalYAxis, urotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(uRotation);
+  const auto& [irotToLocalXAxis, irotToLocalYAxis, irotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(iRotation);
 
   // The expected derivatives
   refRotToXAxis << 0, 0, 0, 0, 0, 1, 0, -1, 0;
@@ -112,13 +112,13 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   refRotToZAxis << 0, 1, 0, -1, 0, 0, 0, 0, 0;
 
   // Check if the derivative for local x axis is as expected
-  CHECK_CLOSE_ABS(refRotToXAxis, urotToLocalXAxis, 1e-15);
+  CHECK_CLOSE_ABS(refRotToXAxis, irotToLocalXAxis, 1e-15);
 
   // Check if the derivative for local y axis is as expected
-  CHECK_CLOSE_ABS(refRotToYAxis, urotToLocalYAxis, 1e-15);
+  CHECK_CLOSE_ABS(refRotToYAxis, irotToLocalYAxis, 1e-15);
 
   // Check if the derivative for local z axis is as expected
-  CHECK_CLOSE_ABS(refRotToZAxis, urotToLocalZAxis, 1e-15);
+  CHECK_CLOSE_ABS(refRotToZAxis, irotToLocalZAxis, 1e-15);
 }
 }  // namespace Test
 }  // namespace Acts
