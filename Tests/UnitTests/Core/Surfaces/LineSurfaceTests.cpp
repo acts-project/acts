@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_assignment_test) {
   BOOST_CHECK(assignedLine == originalLine);  // operator == from base
 }
 
-/// Unit test for testing PlaneSurface alignment derivatives
+/// Unit test for testing LineSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   Translation3D translation{0., 1., 2.};
   Transform3D transform(translation);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   // Check the local z axis is aligned to global z axis
   CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
 
-  /// Define the track (local) position and direction
+  /// Define the track (global) position and direction
   Vector3D globalPosition{1, 2, 4};
   Vector3D momentum{-1, 1, 1};
   Vector3D direction = momentum.normalized();
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   const double value = std::sqrt(3) / 2;
   expAlignToPath << -value, value, 0, -3 * value, -value, 0;
   // Check if the calculated derivative is as expected
-  CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-15);
+  CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
 
   // (b) Test the derivative of bound track parameters local position w.r.t.
   // position in local 3D Cartesian coordinates
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   LocalCartesianToBoundLocalMatrix expLoc3DToLocBound =
       LocalCartesianToBoundLocalMatrix::Zero();
   expLoc3DToLocBound << 1 / std::sqrt(2), 1 / std::sqrt(2), 0, 0, 0, 1;
-  CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-15);
+  CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
