@@ -11,8 +11,8 @@
 #include <iomanip>
 #include <ostream>
 
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -102,18 +102,23 @@ class SingleFreeTrackParameters {
   /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const std::optional<CovMatrix_t>& covariance() const { return m_oParameters.getCovariance(); }
+  const std::optional<CovMatrix_t>& covariance() const {
+    return m_oParameters.getCovariance();
+  }
 
   /// @brief access position in global coordinate system
   ///
   /// @return 3D vector with global position
-  Vector3D position() const { return parameters().template segment<3>(eFreePos0); }
+  Vector3D position() const {
+    return parameters().template segment<3>(eFreePos0);
+  }
 
   /// @brief access momentum in global coordinate system
   ///
   /// @return 3D vector with global momentum
   Vector3D momentum() const {
-    return parameters().template segment<3>(eFreeDir0) / std::abs(get<eFreeQOverP>());
+    return parameters().template segment<3>(eFreeDir0) /
+           std::abs(get<eFreeQOverP>());
   }
 
   /// @brief retrieve electric charge
@@ -128,8 +133,8 @@ class SingleFreeTrackParameters {
 
   /// @brief access to the internally stored FreeParameterSet
   ///
-  /// @return FreeParameterSet object holding parameter values and their covariance
-  /// matrix
+  /// @return FreeParameterSet object holding parameter values and their
+  /// covariance matrix
   const FullFreeParameterSet& getParameterSet() const { return m_oParameters; }
 
   /// @brief Equality operator
@@ -210,8 +215,9 @@ class SingleFreeTrackParameters {
   }
 
  private:
-   FullFreeParameterSet m_oParameters;  ///< FreeParameterSet object holding the
-                                   /// parameter values and covariance matrix
+  FullFreeParameterSet
+      m_oParameters;             ///< FreeParameterSet object holding the
+                                 /// parameter values and covariance matrix
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
 };
