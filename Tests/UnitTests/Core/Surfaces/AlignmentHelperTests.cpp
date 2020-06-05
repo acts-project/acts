@@ -42,33 +42,33 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   // [ cz*cy  cz*sy*sx-cx*sz  sz*sx+cz*cx*sy ]
   // [ cy*sz  cz*cx+sz*sy*sx  cx*sz*sy-cz*sx ]
   // [ -sy    cy*sx           cy*cx          ]
-  RotationMatrix3D refRot = RotationMatrix3D::Zero();
-  refRot.col(0) = Vector3D(cz * cy, cy * sz, -sy);
-  refRot.col(1) =
+  RotationMatrix3D expRot = RotationMatrix3D::Zero();
+  expRot.col(0) = Vector3D(cz * cy, cy * sz, -sy);
+  expRot.col(1) =
       Vector3D(cz * sy * sx - cx * sz, cz * cx + sz * sy * sx, cy * sx);
-  refRot.col(2) =
+  expRot.col(2) =
       Vector3D(sz * sx + cz * cx * sy, cx * sz * sy - cz * sx, cy * cx);
 
   // Calculate the expected derivative of local x axis to its rotation
-  RotationMatrix3D refRotToXAxis = RotationMatrix3D::Zero();
-  refRotToXAxis.col(0) = Vector3D(0, 0, 0);
-  refRotToXAxis.col(1) = Vector3D(-cz * sy, -sz * sy, -cy);
-  refRotToXAxis.col(2) = Vector3D(-sz * cy, cz * cy, 0);
+  RotationMatrix3D expRotToXAxis = RotationMatrix3D::Zero();
+  expRotToXAxis.col(0) = Vector3D(0, 0, 0);
+  expRotToXAxis.col(1) = Vector3D(-cz * sy, -sz * sy, -cy);
+  expRotToXAxis.col(2) = Vector3D(-sz * cy, cz * cy, 0);
 
   // Calculate the expected derivative of local y axis to its rotation
-  RotationMatrix3D refRotToYAxis = RotationMatrix3D::Zero();
-  refRotToYAxis.col(0) =
+  RotationMatrix3D expRotToYAxis = RotationMatrix3D::Zero();
+  expRotToYAxis.col(0) =
       Vector3D(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
-  refRotToYAxis.col(1) = Vector3D(cz * cy * sx, sz * cy * sx, -sy * sx);
-  refRotToYAxis.col(2) =
+  expRotToYAxis.col(1) = Vector3D(cz * cy * sx, sz * cy * sx, -sy * sx);
+  expRotToYAxis.col(2) =
       Vector3D(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
 
   // Calculate the expected derivative of local z axis to its rotation
-  RotationMatrix3D refRotToZAxis = RotationMatrix3D::Zero();
-  refRotToZAxis.col(0) =
+  RotationMatrix3D expRotToZAxis = RotationMatrix3D::Zero();
+  expRotToZAxis.col(0) =
       Vector3D(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
-  refRotToZAxis.col(1) = Vector3D(cz * cy * cx, sz * cy * cx, -sy * cx);
-  refRotToZAxis.col(2) =
+  expRotToZAxis.col(1) = Vector3D(cz * cy * cx, sz * cy * cx, -sy * cx);
+  expRotToZAxis.col(2) =
       Vector3D(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
 
   // Construct a transform
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   const auto rotation = transform->rotation();
 
   // Check if the rotation matrix is as expected
-  CHECK_CLOSE_ABS(refRot, rotation, 1e-15);
+  CHECK_CLOSE_ABS(rotation, expRot, 1e-15);
 
   // Call the alignment helper to calculate the derivative of local frame axes
   // w.r.t its rotation
@@ -90,13 +90,13 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
       detail::rotationToLocalAxesDerivative(rotation);
 
   // Check if the derivative for local x axis is as expected
-  CHECK_CLOSE_ABS(refRotToXAxis, rotToLocalXAxis, 1e-15);
+  CHECK_CLOSE_ABS(rotToLocalXAxis, expRotToXAxis, 1e-15);
 
   // Check if the derivative for local y axis is as expected
-  CHECK_CLOSE_ABS(refRotToYAxis, rotToLocalYAxis, 1e-15);
+  CHECK_CLOSE_ABS(rotToLocalYAxis, expRotToYAxis, 1e-15);
 
   // Check if the derivative for local z axis is as expected
-  CHECK_CLOSE_ABS(refRotToZAxis, rotToLocalZAxis, 1e-15);
+  CHECK_CLOSE_ABS(rotToLocalZAxis, expRotToZAxis, 1e-15);
 
   // (b) Test with identity rotation matrix
   RotationMatrix3D iRotation = RotationMatrix3D::Identity();
@@ -107,18 +107,18 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
       detail::rotationToLocalAxesDerivative(iRotation);
 
   // The expected derivatives
-  refRotToXAxis << 0, 0, 0, 0, 0, 1, 0, -1, 0;
-  refRotToYAxis << 0, 0, -1, 0, 0, 0, 1, 0, 0;
-  refRotToZAxis << 0, 1, 0, -1, 0, 0, 0, 0, 0;
+  expRotToXAxis << 0, 0, 0, 0, 0, 1, 0, -1, 0;
+  expRotToYAxis << 0, 0, -1, 0, 0, 0, 1, 0, 0;
+  expRotToZAxis << 0, 1, 0, -1, 0, 0, 0, 0, 0;
 
   // Check if the derivative for local x axis is as expected
-  CHECK_CLOSE_ABS(refRotToXAxis, irotToLocalXAxis, 1e-15);
+  CHECK_CLOSE_ABS(irotToLocalXAxis, expRotToXAxis, 1e-15);
 
   // Check if the derivative for local y axis is as expected
-  CHECK_CLOSE_ABS(refRotToYAxis, irotToLocalYAxis, 1e-15);
+  CHECK_CLOSE_ABS(irotToLocalYAxis, expRotToYAxis, 1e-15);
 
   // Check if the derivative for local z axis is as expected
-  CHECK_CLOSE_ABS(refRotToZAxis, irotToLocalZAxis, 1e-15);
+  CHECK_CLOSE_ABS(irotToLocalZAxis, expRotToZAxis, 1e-15);
 }
 }  // namespace Test
 }  // namespace Acts

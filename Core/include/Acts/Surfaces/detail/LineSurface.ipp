@@ -234,7 +234,7 @@ inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
   alignToPath.segment<3>(eAlignmentCenter0) =
       norm * (direction.transpose() - dirZ * localZAxis.transpose());
   alignToPath.segment<3>(eAlignmentRotation0) =
-      -norm * (dirZ * pcRowVec + localZ * direction.transpose()) *
+      norm * (dirZ * pcRowVec + localZ * direction.transpose()) *
       rotToLocalZAxis;
 
   return alignToPath;
