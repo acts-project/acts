@@ -56,13 +56,14 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const Acts::FreeVector& derivatives,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
-  const auto pcRowVec = (position - center(gctx)).transpose();
+  const ActsRowVector<double, 3> pcRowVec =
+      (position - center(gctx)).transpose();
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
   // The axes of local frame
-  const auto localXAxis = rotation.col(0);
-  const auto localYAxis = rotation.col(1);
-  const auto localZAxis = rotation.col(2);
+  const Vector3D localXAxis = rotation.col(0);
+  const Vector3D localYAxis = rotation.col(1);
+  const Vector3D localZAxis = rotation.col(2);
 
   // 1) Calcuate the derivative of local frame axes w.r.t its rotation
   const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
@@ -115,11 +116,12 @@ const Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
-  const auto pcRowVec = (position - center(gctx)).transpose();
+  const ActsRowVector<double, 3> pcRowVec =
+      (position - center(gctx)).transpose();
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
-  const auto localZAxis = rotation.col(2);
+  const Vector3D localZAxis = rotation.col(2);
 
   // Cosine of angle between momentum direction and local frame z axis
   const double dirZ = localZAxis.dot(direction);

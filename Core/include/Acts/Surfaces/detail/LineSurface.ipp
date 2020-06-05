@@ -215,7 +215,8 @@ inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
-  const auto pcRowVec = (position - center(gctx)).transpose();
+  const ActsRowVector<double, 3> pcRowVec =
+      (position - center(gctx)).transpose();
   // The local frame transform
   const auto& sTransform = transform(gctx);
   const auto& rotation = sTransform.rotation();
