@@ -96,7 +96,6 @@ static inline void drawCovarianceCartesian(
     const IVisualization::ColorType& color = {20, 120, 20},
     double outOfPlane = 0.1) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
-  std::cout << "locErrorScale = " << locErrorScale << std::endl;
 
   // Now generate the ellipse points
   std::vector<Vector3D> ellipse =
@@ -257,15 +256,15 @@ static inline void drawMultiTrajectory(
     const IVisualization::ColorType& ppcolor = {20, 120, 20},
     const IVisualization::ColorType& fpcolor = {255, 102, 0},
     const IVisualization::ColorType& spcolor = {204, 153, 255}) {
-    // Visit the track states on the trajectory 
-      	multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
-     // Only draw the measurement state
-     if(not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)){
+  // Visit the track states on the trajectory
+  multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
+    // Only draw the measurement states
+    if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       return true;
-     }
+    }
 
-    // No scaling for the first measurement
-    // @Todo: add parameter for the first measurement error scaling
+    // No scaling for the first state
+    // @Todo: add parameter for the first state error scaling
     if (state.index() == 0) {
       locErrorScale = 1;
       angularErrorScale = 1;
