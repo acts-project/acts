@@ -12,7 +12,7 @@
 #include <ostream>
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/EventData/FreeParameterSet.hpp"
+#include "Acts/EventData/ParameterSet.hpp"
 
 namespace Acts {
 
