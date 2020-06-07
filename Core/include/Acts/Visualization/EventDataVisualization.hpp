@@ -168,6 +168,7 @@ static inline void drawCovarianceAngular(
 /// @param lseg The number of segments for a full arch (if needed)
 /// @param pcolor the (optional) color of the parameters to be written
 /// @param scolor the (optional) color of the surface to be written
+/// @param outOfPlane The out of plane drawning option
 template <typename parameters_t>
 static inline void drawBoundParameters(
     IVisualization& helper, const parameters_t& parameters,
@@ -175,7 +176,8 @@ static inline void drawBoundParameters(
     double locErrorScale = 1., double angularErrorScale = 1.,
     bool drawParameterSurface = true, size_t lseg = 72,
     const IVisualization::ColorType& pcolor = {20, 120, 20},
-    const IVisualization::ColorType& scolor = {235, 198, 52}) {
+    const IVisualization::ColorType& scolor = {235, 198, 52},
+    double outOfPlane = 0.1) {
   // First, if necessary, draw the surface
   if (drawParameterSurface) {
     drawSurface(helper, parameters.referenceSurface(), gctx,
@@ -203,7 +205,7 @@ static inline void drawBoundParameters(
     drawCovarianceCartesian(helper, lposition,
                             covariance.template block<2, 2>(0, 0),
                             parameters.referenceSurface().transform(gctx), {3},
-                            locErrorScale, 72, pcolor, 0.01);
+                            locErrorScale, 72, pcolor, outOfPlane);
 
     drawCovarianceAngular(
         helper, parameters.position(), parameters.momentum().normalized(),
@@ -242,6 +244,7 @@ static inline void drawBoundParameters(
 /// written
 /// @param spcolor the (optional) color of the smoothed track parameters to be
 /// written
+/// @param outOfPlane The out of plane drawning option
 template <typename source_link_t>
 static inline void drawMultiTrajectory(
     IVisualization& helper,
@@ -252,10 +255,11 @@ static inline void drawMultiTrajectory(
     bool drawMeasurement = true, bool drawPredictedParameters = true,
     bool drawFilteredParameters = true, bool drawSmoothedParameters = true,
     size_t lseg = 72, const IVisualization::ColorType& scolor = {235, 198, 52},
-    const IVisualization::ColorType& mcolor = {153, 204, 0},
+    const IVisualization::ColorType& mcolor = {218, 165, 32},
     const IVisualization::ColorType& ppcolor = {20, 120, 20},
     const IVisualization::ColorType& fpcolor = {255, 102, 0},
-    const IVisualization::ColorType& spcolor = {204, 153, 255}) {
+    const IVisualization::ColorType& spcolor = {204, 153, 255},
+    double outOfPlane = -0.1) {
   // Visit the track states on the trajectory
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Only draw the measurement states
@@ -286,7 +290,7 @@ static inline void drawMultiTrajectory(
           state.calibratedCovariance().template topLeftCorner<2, 2>();
       drawCovarianceCartesian(helper, lposition, covariance,
                               state.referenceSurface().transform(gctx), {3},
-                              locErrorScale, 72, mcolor, 0.01);
+                              locErrorScale, 72, mcolor, outOfPlane);
     }
 
     // Last, if necessary and present, draw the track parameters
@@ -298,7 +302,7 @@ static inline void drawMultiTrajectory(
                                 state.predicted(),
                                 state.referenceSurface().getSharedPtr()),
           gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
-          ppcolor);
+          ppcolor, scolor, outOfPlane);
     }
     // (b) filtered track parameters
     if (drawFilteredParameters and state.hasFiltered()) {
@@ -308,7 +312,7 @@ static inline void drawMultiTrajectory(
                                 state.filtered(),
                                 state.referenceSurface().getSharedPtr()),
           gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
-          fpcolor);
+          fpcolor, scolor, outOfPlane);
     }
     // (c) smoothed track parameters
     if (drawSmoothedParameters and state.hasSmoothed()) {
@@ -318,7 +322,7 @@ static inline void drawMultiTrajectory(
                                 state.smoothed(),
                                 state.referenceSurface().getSharedPtr()),
           gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
-          spcolor);
+          spcolor, scolor, outOfPlane);
     }
     return true;
   });
