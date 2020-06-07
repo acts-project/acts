@@ -46,9 +46,7 @@ BOOST_AUTO_TEST_CASE(BoundParametersVisualizationPly) {
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
   ObjVisualization obj;
-  std::cout << "enter testMultiTrajectory" << std::endl;
   auto objTest = EventDataVisualization::testMultiTrajectory(obj);
-  std::cout << "return testMultiTrajectory" << std::endl;
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {

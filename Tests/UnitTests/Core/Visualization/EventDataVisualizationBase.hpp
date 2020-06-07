@@ -33,6 +33,8 @@
 #include "Acts/Visualization/EventDataVisualization.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+
 #include <cmath>
 #include <fstream>
 #include <optional>
@@ -109,7 +111,6 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   CalibrationContext calContext = CalibrationContext();
 
   // Construct the rotation
-  std::cout << "Construt the rotation" << std::endl;
   RotationMatrix3D rotation = RotationMatrix3D::Identity();
   double rotationAngle = 90_degree;
   Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
@@ -130,7 +131,6 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
 
   // Set translation vectors
   std::vector<Vector3D> translations;
-  std::cout << "Construt the translation" << std::endl;
   translations.reserve(6);
   translations.push_back({-500_mm, 0., 0.});
   translations.push_back({-300_mm, 0., 0.});
@@ -140,7 +140,6 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   translations.push_back({500_mm, 0., 0.});
 
   // Construct layer configs
-  std::cout << "Construt the layer configs" << std::endl;
   std::vector<CuboidVolumeBuilder::LayerConfig> lConfs;
   lConfs.reserve(6);
   unsigned int i;
@@ -152,13 +151,17 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
     sConf.surMat = surfaceMaterial;
     // The thickness to construct the associated detector element
     sConf.thickness = 1._um;
+    sConf.detElementConstructor =
+        [](std::shared_ptr<const Transform3D> trans,
+           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+          return new Test::DetectorElementStub(trans, bounds, thickness);
+        };
     CuboidVolumeBuilder::LayerConfig lConf;
     lConf.surfaceCfg = sConf;
     lConfs.push_back(lConf);
   }
 
   // Construct volume config
-  std::cout << "Construt the volume config" << std::endl;
   CuboidVolumeBuilder::VolumeConfig vConf;
   vConf.position = {0., 0., 0.};
   vConf.length = {1.2_m, 1._m, 1._m};
@@ -166,7 +169,6 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   vConf.name = "Tracker";
 
   // Construct volume builder config
-  std::cout << "Construt the volume builder config" << std::endl;
   CuboidVolumeBuilder::Config conf;
   conf.position = {0., 0., 0.};
   conf.length = {1.2_m, 1._m, 1._m};
@@ -186,18 +188,14 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
       tgb.trackingGeometry(tgContext);
 
   // Get the surfaces;
-  std::cout << "Get and check surfaces" << std::endl;
   std::vector<const Surface*> surfaces;
   surfaces.reserve(6);
   detector->visitSurfaces([&](const Surface* surface) {
-    if (not surface or not surface->associatedDetectorElement()) {
-      return;
+    if (surface and surface->associatedDetectorElement()) {
+      std::cout << "surface " << surface->geoID() << " placed at: ("
+                << surface->center(tgContext).transpose() << " )" << std::endl;
+      surfaces.push_back(surface);
     }
-    std::cout << "surface " << surface->geoID()
-              << " has position: " << surface->center(tgContext).transpose()
-              << ", normal: " << surface->normal(tgContext).transpose()
-              << std::endl;
-    surfaces.push_back(surface);
   });
   std::cout << "There are " << surfaces.size() << " surfaces" << std::endl;
 
@@ -268,7 +266,10 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
-  BOOST_CHECK(fitRes.ok());
+  if (not fitRes.ok()) {
+    std::cout << "Fit failed" << std::endl;
+    return ss.str();
+  }
   auto& fittedTrack = *fitRes;
 
   // Draw the track
