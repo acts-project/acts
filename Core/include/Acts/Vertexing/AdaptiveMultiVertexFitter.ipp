@@ -325,9 +325,9 @@ template <typename input_track_t, typename linearizer_t>
 bool Acts::AdaptiveMultiVertexFitter<
     input_track_t, linearizer_t>::checkSmallShift(State& state) const {
   for (auto vtx : state.vertexCollection) {
-    auto diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
-                vtx->fullPosition().template head<3>();
-    const auto& vtxWgt =
+    Vector3D diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
+                    vtx->fullPosition().template head<3>();
+    ActsSymMatrixD<3> vtxWgt =
         (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
