@@ -267,7 +267,7 @@ static inline void drawMultiTrajectory(
       return true;
     }
 
-    // No scaling for the first state
+    // Use unit scaling factors for the first state
     // @Todo: add parameter for the first state error scaling
     if (state.index() == 0) {
       locErrorScale = 1;
