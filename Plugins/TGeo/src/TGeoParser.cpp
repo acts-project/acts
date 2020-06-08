@@ -53,29 +53,28 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
       const Double_t* translation = transform.GetTranslation();
 
       // Create a eigen transform
-      Vector3D t(options.scalor * translation[0],
-                 options.scalor * translation[1],
-                 options.scalor * translation[2]);
+      Vector3D t(options.unit * translation[0], options.unit * translation[1],
+                 options.unit * translation[2]);
       Vector3D cx(rotation[0], rotation[3], rotation[6]);
       Vector3D cy(rotation[1], rotation[4], rotation[7]);
       Vector3D cz(rotation[2], rotation[5], rotation[8]);
       auto etrf = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
 
       bool accept = true;
-      if (not options.parseRestrictions.empty()) {
+      if (not options.parseRanges.empty()) {
         auto shape =
             dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
         // It uses the bounding box of TGeoBBox
         // @TODO this should be replace by a proper TGeo to Acts::VolumeBounds
         // and vertices converision which would make a more appropriate parsomg
-        double dx = options.scalor * shape->GetDX();
-        double dy = options.scalor * shape->GetDY();
-        double dz = options.scalor * shape->GetDZ();
+        double dx = options.unit * shape->GetDX();
+        double dy = options.unit * shape->GetDY();
+        double dz = options.unit * shape->GetDZ();
         for (auto x : std::vector<double>{-dx, dx}) {
           for (auto y : std::vector<double>{-dy, dy}) {
             for (auto z : std::vector<double>{-dz, dz}) {
               Vector3D edge = etrf * Vector3D(x, y, z);
-              for (auto& check : options.parseRestrictions) {
+              for (auto& check : options.parseRanges) {
                 double val = VectorHelpers::cast(edge, check.first);
                 if (val < check.second.first or val > check.second.second) {
                   accept = false;

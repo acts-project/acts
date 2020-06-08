@@ -10,7 +10,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
+#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -101,7 +101,7 @@ Acts::DD4hepVolumeBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const {
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
   auto transform =
-      std::make_shared<const Transform3D>(TGeoPrimitivesHelpers::makeTransform(
+      std::make_shared<const Transform3D>(TGeoPrimitivesHelper::makeTransform(
           Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
           Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
           Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
