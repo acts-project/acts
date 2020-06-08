@@ -195,11 +195,6 @@ class GainMatrixSmoother {
             globalTrackParamsCovPtr
                 ->block<eBoundParametersSize, eBoundParametersSize>(
                     iRow, iCol) = correlation;
-            ACTS_VERBOSE("Fill block of size ("
-                         << eBoundParametersSize << ", " << eBoundParametersSize
-                         << "), starting at (" << iCol << ", " << iRow
-                         << ") for track parameters correlation:\n"
-                         << correlation.transpose());
             globalTrackParamsCovPtr
                 ->block<eBoundParametersSize, eBoundParametersSize>(
                     iCol, iRow) = correlation.transpose();
