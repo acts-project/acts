@@ -260,13 +260,13 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
           double rmin = rrange[ti[ncp]].lower.value_or(0.);
           double rmax = rrange[ti[ncp]].upper.value_or(
               std::numeric_limits<double>::max());
-          lConfig.parseRangeR = {rmin, rmax};
+          lConfig.parseRanges.push_back({Acts::binR, {rmin, rmax}});
         }
         // Fill the layer splitting parameters in r
-        if (splittolr[ncp].size() > ti[ncp]) {
-          layerBuilderConfig.layerSplitToleranceR[ncp] =
-              splittolr[ncp][ti[ncp]];
-        }
+        // if (splittolr[ncp].size() > ti[ncp]) {
+        //  layerBuilderConfig.layerSplitToleranceR[ncp] =
+        //      splittolr[ncp][ti[ncp]];
+        // }
         // Fill the parsing restrictions in z
         auto zrange = zranges[ncp];
         if (zrange.size() > ti[ncp]) {
@@ -274,24 +274,20 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
               -std::numeric_limits<double>::max());
           double zmax = zrange[ti[ncp]].upper.value_or(
               std::numeric_limits<double>::max());
-          lConfig.parseRangeZ = {zmin, zmax};
+          lConfig.parseRanges.push_back({Acts::binZ, {zmin, zmax}});
         }
+        //
         // Fill the layer splitting parameters in r
-        if (splittolr[ncp].size() > ti[ncp]) {
-          layerBuilderConfig.layerSplitToleranceR[ncp] =
-              splittolr[ncp][ti[ncp]];
-        }
+        // if (splittolr[ncp].size() > ti[ncp]) {
+        //  layerBuilderConfig.layerSplitToleranceR[ncp] =
+        //      splittolr[ncp][ti[ncp]];
+        //}
         // Fill the layer splitting parameters in z
-        if (splittolz[ncp].size() > ti[ncp]) {
-          layerBuilderConfig.layerSplitToleranceZ[ncp] =
-              splittolz[ncp][ti[ncp]];
-        }
+        // if (splittolz[ncp].size() > ti[ncp]) {
+        //  layerBuilderConfig.layerSplitToleranceZ[ncp] =
+        //      splittolz[ncp][ti[ncp]];
+        // }
         layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
-        // Set the ring layout if configured to do so
-        if (ringlayout.size() > idet and ringtolerance.size() > idet) {
-          layerBuilderConfig.checkRingLayout = (ringlayout[idet] != 0);
-          layerBuilderConfig.ringTolerance = ringtolerance[idet];
-        }
       }
     }
 

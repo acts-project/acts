@@ -28,24 +28,7 @@
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
 
-/** Geometry primitives helper functions
- */
-
 namespace Acts {
-
-/** EventPrimitvesToStringConverter
-
-    inline methods for conversion of EventPrimitives (Matrix)
-    to std::string.
-
-    This is to enhance formatted screen ouput and for ASCII based
-    testing.
-
-    The offset can be used to offset the lines (starting from line 2) wrt to the
-    zero position for formatting reasons.
-
-
- */
 
 namespace VectorHelpers {
 namespace detail {

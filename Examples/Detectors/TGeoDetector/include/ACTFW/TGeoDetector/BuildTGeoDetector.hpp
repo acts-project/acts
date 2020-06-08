@@ -137,8 +137,6 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     Acts::CylinderVolumeBuilder::Config volumeConfig;
     volumeConfig.trackingVolumeHelper = cylinderVolumeHelper;
     volumeConfig.volumeName = lbc.configurationName;
-    volumeConfig.checkRingLayout = lbc.checkRingLayout;
-    volumeConfig.ringTolerance = lbc.ringTolerance;
     volumeConfig.buildToRadiusZero = (volumeBuilders.size() == 0);
     volumeConfig.layerEnvelopeR = {1. * Acts::units::_mm,
                                    5. * Acts::units::_mm};

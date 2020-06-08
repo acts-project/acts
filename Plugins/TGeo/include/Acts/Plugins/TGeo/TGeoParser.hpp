@@ -12,12 +12,15 @@
 #include <vector>
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "TGeoMatrix.h"
 
 class TGeoNode;
 class TGeoVolume;
 
 namespace Acts {
+
+using namespace UnitLiterals;
 
 /// @brief TGeoParser is a helper struct that
 /// walks recursively through a TGeometry and selects by
@@ -62,9 +65,9 @@ struct TGeoParser {
     /// The local axis definition of TGeo object wrt Acts::Surface
     std::string localAxes = "XYZ";
     /// Scaling from TGeo to ROOT
-    double scalor = 10.;
+    double unit = 1_cm;
     /// Parse restrictions, several can apply
-    std::vector<std::pair<BinningValue, ParseRange> > parseRestrictions = {};
+    std::vector<std::pair<BinningValue, ParseRange> > parseRanges = {};
   };
 
   /// The parsing module, it takes the top Volume and recursively steps down

@@ -37,7 +37,7 @@ struct TGeoSurfaceConverter {
                     std::shared_ptr<const Transform3D>, double>
   cylinderComponents(const TGeoShape& tgShape, const Double_t* rotation,
                      const Double_t* translation, const std::string& axes,
-                     double scalor) noexcept(false);
+                     double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into disk surface components
   ///
@@ -52,7 +52,7 @@ struct TGeoSurfaceConverter {
                     std::shared_ptr<const Transform3D>, double>
   discComponents(const TGeoShape& tgShape, const Double_t* rotation,
                  const Double_t* translation, const std::string& axes,
-                 double scalor) noexcept(false);
+                 double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into plane surface components
   ///
@@ -67,7 +67,7 @@ struct TGeoSurfaceConverter {
                     std::shared_ptr<const Transform3D>, double>
   planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
                   const Double_t* translation, const std::string& axes,
-                  double scalor) noexcept(false);
+                  double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape to a Surface
   ///
@@ -77,10 +77,9 @@ struct TGeoSurfaceConverter {
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return shared pointer to a surface
-  static std::shared_ptr<Surface> toSurface(const TGeoShape& tgShape,
-                                            const TGeoMatrix& tgMatrix,
-                                            const std::string& axes,
-                                            double scalor) noexcept(false);
+  static std::shared_ptr<Surface> toSurface(
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
+      const std::string& axes, double scalor = 10.) noexcept(false);
 
   /// Transalte TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
@@ -91,7 +90,7 @@ struct TGeoSurfaceConverter {
       degree -= 360;
     }
     return degree / 180. * M_PI;
-  };
+  }
 };
 
 }  // namespace Acts
