@@ -86,7 +86,7 @@ Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
 }
 
 bool Acts::Volume::operator==(const Acts::Volume& other) const {
-  return (*m_transform == *other.m_transform) && (m_itransform.isApprox(other.m_itransform)) && (m_center == other.m_center) && (*m_volumeBounds == *other.m_volumeBounds)
+  return ((*m_transform).isApprox(*other.m_transform)) && (m_itransform.isApprox(other.m_itransform)) && (m_center == other.m_center) && (*m_volumeBounds == *other.m_volumeBounds)
   && (m_orientedBoundingBox == other.m_orientedBoundingBox);
 }
 
