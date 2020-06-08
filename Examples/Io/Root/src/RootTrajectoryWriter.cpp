@@ -25,8 +25,9 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
-using Measurement = Acts::Measurement<FW::SimSourceLink, Acts::ParDef::eLOC_0,
-                                      Acts::ParDef::eLOC_1>;
+using Measurement =
+    Acts::Measurement<FW::SimSourceLink, Acts::BoundParametersIndices,
+                      Acts::ParDef::eLOC_0, Acts::ParDef::eLOC_1>;
 
 FW::RootTrajectoryWriter::RootTrajectoryWriter(
     const FW::RootTrajectoryWriter::Config& cfg, Acts::Logging::Level lvl)
@@ -269,7 +270,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
     m_trajNr = iTraj;
 
     // The trajectory entry indices and the multiTrajectory
-    const auto& [trackTips, mj] = traj.trajectory();
+    const auto & [ trackTips, mj ] = traj.trajectory();
     if (trackTips.empty()) {
       ACTS_WARNING("Empty multiTrajectory.");
       continue;
