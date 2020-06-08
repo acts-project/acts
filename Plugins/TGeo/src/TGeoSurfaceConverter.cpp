@@ -13,7 +13,7 @@
 #include <memory>
 #include <tuple>
 
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
+#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
@@ -74,7 +74,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     Vector3D az = ax.cross(ay);
 
     transform = std::make_shared<const Transform3D>(
-        TGeoPrimitivesHelpers::makeTransform(ax, ay, az, t));
+        TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
 
     double minR = tube->GetRmin() * scalor;
     double maxR = tube->GetRmax() * scalor;
@@ -126,6 +126,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
           "'(x/X)(y/Y)(*)' "
           "axes");
     }
+
     // Create translation and rotation
     Vector3D t(scalor * translation[0], scalor * translation[1],
                scalor * translation[2]);
@@ -134,7 +135,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     Vector3D az(rotation[2], rotation[5], rotation[8]);
 
     transform = std::make_shared<const Transform3D>(
-        TGeoPrimitivesHelpers::makeTransform(ax, ay, az, t));
+        TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
 
     auto interNode = dynamic_cast<TGeoIntersection*>(compShape->GetBoolNode());
     if (interNode != nullptr) {
@@ -232,7 +233,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       Vector3D az = ax.cross(ay);
 
       transform = std::make_shared<const Transform3D>(
-          TGeoPrimitivesHelpers::makeTransform(ax, ay, az, t));
+          TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
 
       double minR = tube->GetRmin() * scalor;
       double maxR = tube->GetRmax() * scalor;
@@ -440,7 +441,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   // Create the normal vector & the transfrom
   auto cz = cx.cross(cy);
   auto transform = std::make_shared<const Transform3D>(
-      TGeoPrimitivesHelpers::makeTransform(cx, cy, cz, t));
+      TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t));
 
   return {bounds, transform, thickness};
 }
