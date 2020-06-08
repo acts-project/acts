@@ -85,6 +85,15 @@ Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
   return *this;
 }
 
+bool Acts::Volume::operator==(const Acts::Volume& other) const {
+  return (*m_transform == *other.m_transform) && (m_itransform.isApprox(other.m_itransform)) && (m_center == other.m_center) && (*m_volumeBounds == *other.m_volumeBounds)
+  && (m_orientedBoundingBox == other.m_orientedBoundingBox);
+}
+
+bool Acts::Volume::operator!=(const Acts::Volume& other) const {
+  return !(operator==(other));
+}
+
 bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
   if (!m_transform) {
     return (volumeBounds()).inside(gpos, tol);

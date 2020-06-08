@@ -308,6 +308,20 @@ class AxisAlignedBoundingBox {
                     value_type unit = 10, std::string label = "",
                     std::string fillcolor = "grey") const;
 
+    /// Equality operator
+  bool operator==(const AxisAlignedBoundingBox<entity_t, value_t, DIM>& other) const
+  {
+      return (*m_entity == *other.m_entity) && (m_vmin == other.m_vmin) && (m_vmax == other.m_vmax) && (m_center == other.m_center)
+    && (m_width == other.m_width) && (m_iwidth == other.m_iwidth) && (*m_left_child == *other.m_left_child) && (*m_right_child == *other.m_right_child)
+    && (*m_skip == *other.m_skip);
+  }
+
+    /// Inequality operator
+  bool operator!=(const AxisAlignedBoundingBox<entity_t, value_t, DIM>& other) const
+  {
+      return !(operator==(other));
+  }
+
  private:
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::pair<VertexType, VertexType> transformVertices(
