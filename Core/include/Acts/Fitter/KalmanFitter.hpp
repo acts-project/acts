@@ -30,7 +30,6 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <functional>
@@ -65,14 +64,13 @@ struct KalmanFitterOptions {
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   /// @param bwdFiltering Whether to run backward filtering as smoothing
-  /// @param gCovariance Whether to calculate global track parameters covariance
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
                       const OutlierFinder& outlierFinder,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool bwdFiltering = false, bool gCovariance = false)
+                      bool bwdFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -80,8 +78,7 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        backwardFiltering(bwdFiltering),
-        globalCovariance(gCovariance) {}
+        backwardFiltering(bwdFiltering) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -104,9 +101,6 @@ struct KalmanFitterOptions {
 
   /// Whether to run backward filtering
   bool backwardFiltering = false;
-
-  /// Whether to calculate global track parameters covariance
-  bool globalCovariance = false;
 };
 
 template <typename source_link_t>
@@ -148,9 +142,6 @@ struct KalmanFitterResult {
 
   // Measurement surfaces handled in both forward and backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
-
-  // Global track parameters covariance matrix
-  ActsMatrixX<BoundParametersScalar> globalTrackParamsCovariance;
 
   Result<void> result{Result<void>::success()};
 };
@@ -279,9 +270,6 @@ class KalmanFitter {
 
     /// Whether run smoothing as backward filtering
     bool backwardFiltering = false;
-
-    /// Whether to calculate global track parameters covariance
-    bool globalCovariance = false;
 
     /// @brief Kalman actor operation
     ///
@@ -883,19 +871,9 @@ class KalmanFitter {
                                            << " filtered track states.");
       }
 
-      // Construct a pointer for the global track parameters covariance
-      ActsMatrixX<BoundParametersScalar>* globalTrackParamsCovPtr = nullptr;
-      if (globalCovariance) {
-        // Set global track parameters covariance size
-        result.globalTrackParamsCovariance.resize(
-            nStates * eBoundParametersSize, nStates * eBoundParametersSize);
-        // Reset the pointer
-        globalTrackParamsCovPtr = &result.globalTrackParamsCovariance;
-      }
       // Smooth the track states
-      auto smoothRes =
-          m_smoother(state.geoContext, result.fittedStates,
-                     measurementIndices.front(), globalTrackParamsCovPtr);
+      auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
+                                  measurementIndices.front());
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -1027,7 +1005,6 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
-    kalmanActor.globalCovariance = kfOptions.globalCovariance;
 
     // Set config for outlier finder
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
@@ -1129,7 +1106,6 @@ class KalmanFitter {
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
-    kalmanActor.globalCovariance = kfOptions.globalCovariance;
 
     // Set config for outlier finder
     kalmanActor.m_outlierFinder.m_config = kfOptions.outlierFinderConfig;

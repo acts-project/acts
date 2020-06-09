@@ -14,6 +14,7 @@
 #include <random>
 #include <vector>
 
+#include "Acts/Alignment/detail/AlignmentEngine.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -373,8 +374,6 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
       tgContext, mfContext, calContext, outlierFinder, rSurface);
-  // Set to calculate the covariance
-  kfOptions.globalCovariance = true;
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
@@ -382,20 +381,18 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto& fittedTrack = *fitRes;
   auto fittedParameters = fittedTrack.fittedParameters.value();
 
+  // Check the calculation of global track parameters covariance matrix
+  const auto& trackParamsCov = detail::globalTrackParametersCovariance(
+      fittedTrack.fittedStates, fittedTrack.trackTip);
+
   // Check the size of the global track parameters size
-  BOOST_CHECK_EQUAL(fittedTrack.globalTrackParamsCovariance.rows(),
-                    6 * eBoundParametersSize);
-  // Reset to not calculate the covariance
-  kfOptions.globalCovariance = false;
+  BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundParametersSize);
 
   // Make sure it is deterministic
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedAgainTrack = *fitRes;
   auto fittedAgainParameters = fittedAgainTrack.fittedParameters.value();
-
-  // Check the size of the global track parameters size
-  BOOST_CHECK_EQUAL(fittedAgainTrack.globalTrackParamsCovariance.size(), 0u);
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
                   fittedAgainParameters.parameters().template head<5>(), 1e-5);
@@ -430,6 +427,13 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK(fitRes.ok());
   auto& fittedWithHoleTrack = *fitRes;
   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.value();
+
+  // Check the calculation of global track parameters covariance matrix
+  const auto& holeTrackTrackParamsCov = detail::globalTrackParametersCovariance(
+      fittedWithHoleTrack.fittedStates, fittedWithHoleTrack.trackTip);
+
+  // Check the size of the global track parameters size
+  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 5 * eBoundParametersSize);
 
   // Count one hole
   BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);
