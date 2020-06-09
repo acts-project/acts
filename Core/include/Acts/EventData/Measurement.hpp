@@ -253,7 +253,7 @@ class Measurement {
   /// must still be valid at the same memory location.
   ///
   /// @return reference to surface at which the measurement took place
-  template <typename T = parameter_indices_t, std::enable_if_t<std::is_same<T, BoundParametersIndices>::value, int> = 0>
+  // template <typename T = parameter_indices_t, std::enable_if_t<std::is_same<T, BoundParametersIndices>::value, int> = 0>
   const Acts::Surface& referenceSurface() const { return *m_pSurface; }
 
   /// @brief access associated volume
@@ -262,7 +262,7 @@ class Measurement {
   /// must still be valid at the same memory location.
   ///
   /// @return reference to volume in which the measurement took place
-  template <typename T = parameter_indices_t, std::enable_if_t<std::is_same<T, FreeParametersIndices>::value, int> = 0>
+  // template <typename T = parameter_indices_t, std::enable_if_t<std::is_same<T, FreeParametersIndices>::value, int> = 0>
   const Acts::Volume& referenceVolume() const { return *m_pVolume; }
 
   /// @brief link access to the source of the measurement.
@@ -299,19 +299,10 @@ class Measurement {
   /// otherwise @c false
   virtual bool operator==(
       const Measurement<source_link_t, parameter_indices_t, params...>& rhs) const {
-    if constexpr (std::is_same<parameter_indices_t, BoundParametersIndices>::value)
-    {
     return ((m_oParameters == rhs.m_oParameters) &&
             (*m_pSurface == *rhs.m_pSurface) &&
-            (m_sourceLink == rhs.m_sourceLink));
-    }
-    if constexpr (std::is_same<parameter_indices_t, FreeParametersIndices>::value)
-    {
-    return ((m_oParameters == rhs.m_oParameters) &&
             (*m_pVolume == *rhs.m_pVolume) &&
             (m_sourceLink == rhs.m_sourceLink));
-    }
-    return false;
   }
 
   /// @brief inequality operator
@@ -357,15 +348,26 @@ class Measurement {
  * Required factory metafunction which produces measurements.
  * This encodes the source_link_t and hides it from the type generator.
  */
-template <typename source_link_t, typename parameter_indices_t, std::enable_if_t<std::is_enum<parameter_indices_t>::value, int> = 0>
-struct fittable_measurement_helper {
-  template <parameter_indices_t... pars>
+template <typename source_link_t>
+struct fittable_surface_measurement_helper {
+  template <BoundParametersIndices... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, parameter_indices_t, pars...>;
+    using type = Measurement<source_link_t, BoundParametersIndices, pars...>;
   };
 
   using type =
-      typename detail::type_generator_t<parameter_indices_t, meas_factory>;
+      typename detail::type_generator_t<BoundParametersIndices, meas_factory>;
+};
+
+template <typename source_link_t>
+struct fittable_volume_measurement_helper {
+  template <FreeParametersIndices... pars>
+  struct meas_factory {
+    using type = Measurement<source_link_t, FreeParametersIndices, pars...>;
+  };
+
+  using type =
+      typename detail::type_generator_t<FreeParametersIndices, meas_factory>;
 };
 
 /**
@@ -377,11 +379,11 @@ struct fittable_measurement_helper {
 
 template <typename source_link_t>
 using FittableSurfaceMeasurement =
-    typename fittable_measurement_helper<source_link_t, BoundParametersIndices>::type;
+    typename fittable_surface_measurement_helper<source_link_t>::type;
 
 template <typename source_link_t>
 using FittableVolumeMeasurement =
-    typename fittable_measurement_helper<source_link_t, FreeParametersIndices>::type;
+    typename fittable_volume_measurement_helper<source_link_t>::type;
 
 // https://stackoverflow.com/questions/59250481/is-it-ok-to-use-stdvariant-of-stdvariants
 template <typename Var1, typename Var2> struct variant_flat;
