@@ -88,16 +88,17 @@ constexpr auto unique_ordered_sublists() {
  *                   list
  * @tparam W The size of the parameter pack to generate the sublists over.
  */
-template <template <ParID_t...> class meas_meta, size_t W>
+template <typename parameter_indices_t, template <parameter_indices_t...> class meas_meta>
 constexpr auto type_generator() {
   // generate sublists
+  constexpr size_t W = detail::ParametersSize<parameter_indices_t>::size;
   constexpr auto sublists = unique_ordered_sublists<W>();
   // map each sublist (tuple of paramater indices) into a measurement using
   // the provided `meas_meta` metafunction.
   constexpr auto measurements_h = hana::transform(sublists, [](auto s) {
     return hana::unpack(s, [](auto... i) {
       return hana::type_c<
-          typename meas_meta<ParID_t(decltype(i)::value)...>::type>;
+          typename meas_meta<parameter_indices_t(decltype(i)::value)...>::type>;
     });
   });
   // return tuple of measurements
@@ -110,9 +111,9 @@ constexpr auto type_generator() {
  * @tparam meas_meta Factory meta function for measurements.
  * @tparam W max number of parameters.
  */
-template <template <ParID_t...> class meas_meta, size_t W>
+template <typename parameter_indices_t, template <parameter_indices_t...> class meas_meta>
 using type_generator_t = typename decltype(hana::unpack(
-    type_generator<meas_meta, W>(), hana::template_<std::variant>))::type;
+    type_generator<parameter_indices_t, meas_meta>(), hana::template_<std::variant>))::type;
 
 /// @endcond
 }  // namespace detail

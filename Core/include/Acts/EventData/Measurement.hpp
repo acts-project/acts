@@ -357,23 +357,23 @@ class Measurement {
  * Required factory metafunction which produces measurements.
  * This encodes the source_link_t and hides it from the type generator.
  */
-template <typename source_link_t, typename parameter_indices_t = BoundParametersIndices>
+template <typename source_link_t, typename parameter_indices_t, std::enable_if_t<std::is_enum<parameter_indices_t>::value, int> = 0>
 struct fittable_measurement_helper {
   template <parameter_indices_t... pars>
   struct meas_factory {
     using type = Measurement<source_link_t, parameter_indices_t, pars...>;
   };
-  
+
   using type =
-      typename detail::type_generator_t<meas_factory, detail::ParametersSize<parameter_indices_t>::size>;
+      typename detail::type_generator_t<parameter_indices_t, meas_factory>;
 };
 
 /**
  * @brief FittableMeasurement variant type
  */
-// template <typename source_link_t>
-// using FittableMeasurement =
-//     typename fittable_measurement_helper<source_link_t>::type;
+//  template <typename source_link_t>
+//  using FittableMeasurement =
+//     typename fittable_measurement_helper<source_link_t, BoundParametersIndices>::type;
 
 template <typename source_link_t>
 using FittableSurfaceMeasurement =
