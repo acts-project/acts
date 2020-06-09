@@ -357,32 +357,43 @@ class Measurement {
  * Required factory metafunction which produces measurements.
  * This encodes the source_link_t and hides it from the type generator.
  */
-template <typename source_link_t>
+template <typename source_link_t, typename parameter_indices_t = BoundParametersIndices>
 struct fittable_measurement_helper {
-  template <BoundParametersIndices... pars>
+  template <parameter_indices_t... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, BoundParametersIndices, pars...>;
+    using type = Measurement<source_link_t, parameter_indices_t, pars...>;
   };
 
   using type =
-      typename detail::type_generator_t<meas_factory, eBoundParametersSize>;
+      typename detail::type_generator_t<meas_factory, detail::ParametersSize<parameter_indices_t>::size>;
 };
 
 /**
  * @brief FittableMeasurement variant type
  */
+// template <typename source_link_t>
+// using FittableMeasurement =
+//     typename fittable_measurement_helper<source_link_t>::type;
+
 template <typename source_link_t>
-using FittableMeasurement =
-    typename fittable_measurement_helper<source_link_t>::type;
+using FittableSurfaceMeasurement =
+    typename fittable_measurement_helper<source_link_t, BoundParametersIndices>::type;
 
+template <typename source_link_t>
+using FittableVolumeMeasurement =
+    typename fittable_measurement_helper<source_link_t, FreeParametersIndices>::type;
 
-// // https://stackoverflow.com/questions/59250481/is-it-ok-to-use-stdvariant-of-stdvariants
-// template <typename Var1, typename Var2> struct variant_flat;
+// https://stackoverflow.com/questions/59250481/is-it-ok-to-use-stdvariant-of-stdvariants
+template <typename Var1, typename Var2> struct variant_flat;
 
-// template <typename ... Ts1, typename ... Ts2>
-// struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>>
-// {
-//     using type = std::variant<Ts1..., Ts2...>;
-// };
+template <typename ... Ts1, typename ... Ts2>
+struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>>
+{
+    using type = std::variant<Ts1..., Ts2...>;
+};
+
+template <typename source_link_t>
+using FittableMeasurement = variant_flat<FittableSurfaceMeasurement<source_link_t>, FittableVolumeMeasurement<source_link_t>>::type;
+
 
 }  // namespace Acts
