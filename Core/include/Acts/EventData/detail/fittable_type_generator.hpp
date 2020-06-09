@@ -84,11 +84,12 @@ constexpr auto unique_ordered_sublists() {
 
 /**
  * Generates a tuple of types using `unique_ordered_sublists` from above.
+ * @tparam parameter_indices_t Parameter indices enum
  * @tparam meas_meta Metafunction which will create a type given a parameter
  *                   list
- * @tparam W The size of the parameter pack to generate the sublists over.
  */
-template <typename parameter_indices_t, template <parameter_indices_t...> class meas_meta>
+template <typename parameter_indices_t,
+          template <parameter_indices_t...> class meas_meta>
 constexpr auto type_generator() {
   // generate sublists
   constexpr size_t W = detail::ParametersSize<parameter_indices_t>::size;
@@ -108,12 +109,14 @@ constexpr auto type_generator() {
 /**
  * Type alias which unpacks the hana tuple generated in `type_generator`
  * into an `std::variant`.
+ * @tparam parameter_indices_t Parameter indices enum
  * @tparam meas_meta Factory meta function for measurements.
- * @tparam W max number of parameters.
  */
-template <typename parameter_indices_t, template <parameter_indices_t...> class meas_meta>
-using type_generator_t = typename decltype(hana::unpack(
-    type_generator<parameter_indices_t, meas_meta>(), hana::template_<std::variant>))::type;
+template <typename parameter_indices_t,
+          template <parameter_indices_t...> class meas_meta>
+using type_generator_t = typename decltype(
+    hana::unpack(type_generator<parameter_indices_t, meas_meta>(),
+                 hana::template_<std::variant>))::type;
 
 /// @endcond
 }  // namespace detail

@@ -253,7 +253,6 @@ class Measurement {
   /// must still be valid at the same memory location.
   ///
   /// @return reference to surface at which the measurement took place
-  // template <typename T = parameter_indices_t, std::enable_if_t<std::is_same<T, BoundParametersIndices>::value, int> = 0>
   const Acts::Surface& referenceSurface() const { return *m_pSurface; }
 
   /// @brief access associated volume
@@ -262,7 +261,6 @@ class Measurement {
   /// must still be valid at the same memory location.
   ///
   /// @return reference to volume in which the measurement took place
-  // template <typename T = parameter_indices_t, std::enable_if_t<std::is_same<T, FreeParametersIndices>::value, int> = 0>
   const Acts::Volume& referenceVolume() const { return *m_pVolume; }
 
   /// @brief link access to the source of the measurement.
@@ -371,12 +369,8 @@ struct fittable_volume_measurement_helper {
 };
 
 /**
- * @brief FittableMeasurement variant type
+ * @brief Measurement variant types
  */
-//  template <typename source_link_t>
-//  using FittableMeasurement =
-//     typename fittable_measurement_helper<source_link_t, BoundParametersIndices>::type;
-
 template <typename source_link_t>
 using FittableMeasurement =
     typename fittable_surface_measurement_helper<source_link_t>::type;
@@ -396,6 +390,4 @@ struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>>
 
 template <typename source_link_t>
 using FittableCombinedMeasurement = typename variant_flat<FittableMeasurement<source_link_t>, FittableVolumeMeasurement<source_link_t>>::type;
-
-
 }  // namespace Acts
