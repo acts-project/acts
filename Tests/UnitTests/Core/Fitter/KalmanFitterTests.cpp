@@ -433,18 +433,17 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       fittedWithHoleTrack.fittedStates, fittedWithHoleTrack.trackTip);
 
   // Check the size of the global track parameters size
-  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 5 * eBoundParametersSize);
+  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 6 * eBoundParametersSize);
 
-  // Calculate global track parameters covariance matrix (including
-  // non-measurement states)
+  // Calculate global track parameters covariance matrix (only for measurement
+  // states)
   const auto& holeTrackFullTrackParamsCov =
-      detail::globalTrackParametersCovariance(fittedWithHoleTrack.fittedStates,
-                                              fittedWithHoleTrack.trackTip,
-                                              false);
+      detail::globalTrackParametersCovariance(
+          fittedWithHoleTrack.fittedStates, fittedWithHoleTrack.trackTip, true);
 
   // Check the size of the global track parameters size
   BOOST_CHECK_EQUAL(holeTrackFullTrackParamsCov.rows(),
-                    6 * eBoundParametersSize);
+                    5 * eBoundParametersSize);
 
   // Count one hole
   BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);

@@ -34,7 +34,7 @@ namespace detail {
 template <typename source_link_t, typename parameters_t = BoundParameters>
 ActsMatrixX<BoundParametersScalar> globalTrackParametersCovariance(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex, bool covarianceForMeasurementStates = true) {
+    const size_t& entryIndex, bool covarianceForMeasurementStates = false) {
   using CovMatrix_t = typename parameters_t::CovMatrix_t;
   using gain_matrix_t = CovMatrix_t;
 
