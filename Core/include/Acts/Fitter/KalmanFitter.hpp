@@ -878,7 +878,6 @@ class KalmanFitter {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
       }
-
       // Obtain the smoothed parameters at first measurement state
       auto firstMeasurement =
           result.fittedStates.getTrackState(measurementIndices.back());

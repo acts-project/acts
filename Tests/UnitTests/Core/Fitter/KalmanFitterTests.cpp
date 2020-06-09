@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto& fittedTrack = *fitRes;
   auto fittedParameters = fittedTrack.fittedParameters.value();
 
-  // Check the calculation of global track parameters covariance matrix
+  // Calculate global track parameters covariance matrix
   const auto& trackParamsCov = detail::globalTrackParametersCovariance(
       fittedTrack.fittedStates, fittedTrack.trackTip);
 
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto& fittedWithHoleTrack = *fitRes;
   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.value();
 
-  // Check the calculation of global track parameters covariance matrix
+  // Calculate global track parameters covariance matrix
   const auto& holeTrackTrackParamsCov = detail::globalTrackParametersCovariance(
       fittedWithHoleTrack.fittedStates, fittedWithHoleTrack.trackTip);
 

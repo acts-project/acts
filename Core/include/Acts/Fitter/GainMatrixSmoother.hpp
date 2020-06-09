@@ -15,7 +15,6 @@
 #include "Acts/EventData/detail/covariance_helper.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
