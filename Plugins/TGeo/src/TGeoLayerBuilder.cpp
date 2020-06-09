@@ -94,12 +94,16 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        const LayerConfig& lCfg) -> void {
     // Create the layer  - either way as cylinder or disk
     if (type == 0) {
+      ACTS_DEBUG("- creating CylinderLayer with " << lSurfaces.size()
+                                                  << " surfaces.");
       ProtoLayer pl(gctx, lSurfaces);
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
       layers.push_back(m_cfg.layerCreator->cylinderLayer(
           gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
     } else {
+      ACTS_DEBUG("- creating DiscLayer with " << lSurfaces.size()
+                                              << " surfaces.");
       ProtoLayer pl(gctx, lSurfaces);
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
@@ -144,6 +148,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       TGeoParser::select(tgpState, tgpOptions);
 
+      ACTS_DEBUG("- number of selsected nodes found : "
+                 << tgpState.selectedNodes.size());
+
       for (auto& snode : tgpState.selectedNodes) {
         auto identifier =
             m_cfg.identifierProvider != nullptr
@@ -157,13 +164,13 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         layerSurfaces.push_back(tgElement->surface().getSharedPtr());
       }
 
-      ACTS_DEBUG(
-          "- number of senstive sensors found : " << layerSurfaces.size());
+      ACTS_DEBUG("- created TGeoDetectorElements : " << layerSurfaces.size());
 
       if (m_cfg.protoLayerHelper != nullptr and
           not layerCfg.splitConfigs.empty()) {
         auto protoLayers = m_cfg.protoLayerHelper->protoLayers(
             gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs);
+        ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
         for (auto& pLayer : protoLayers) {
           layerSurfaces.clear();
           for (const auto& lsurface : pLayer.surfaces()) {

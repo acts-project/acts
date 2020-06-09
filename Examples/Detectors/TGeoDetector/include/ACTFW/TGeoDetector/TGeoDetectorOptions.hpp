@@ -128,7 +128,8 @@ void addTGeoGeometryOptions(options_t& opt) {
 template <typename variable_map_t>
 std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
     const variable_map_t& vm,
-    std::shared_ptr<const Acts::LayerCreator> layerCreator) {
+    std::shared_ptr<const Acts::LayerCreator> layerCreator,
+    std::shared_ptr<const Acts::ProtoLayerHelper> protoLayerHelper) {
   std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // General: subdetector naming
@@ -265,7 +266,9 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
         // Fill the layer splitting parameters in r
         if (splittolr[ncp].size() > ti[ncp]) {
           double rsplitol = splittolr[ncp][ti[ncp]];
-          lConfig.splitConfigs.push_back({Acts::binR, rsplitol});
+          if (rsplitol > 0.) {
+            lConfig.splitConfigs.push_back({Acts::binR, rsplitol});
+          }
         }
         // Fill the parsing restrictions in z
         auto zrange = zranges[ncp];
@@ -279,7 +282,9 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
         // Fill the layer splitting parameters in z
         if (splittolz[ncp].size() > ti[ncp]) {
           double zsplitol = splittolz[ncp][ti[ncp]];
-          lConfig.splitConfigs.push_back({Acts::binR, zsplitol});
+          if (zsplitol > 0.) {
+            lConfig.splitConfigs.push_back({Acts::binZ, zsplitol});
+          }
         }
         layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
       }
@@ -289,6 +294,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
     layerBuilderConfig.configurationName = subdetectors[idet + idetaddon];
     layerBuilderConfig.unit = unitScalor;
     layerBuilderConfig.layerCreator = layerCreator;
+    layerBuilderConfig.protoLayerHelper = protoLayerHelper;
 
     // Node search (ultra verbose) screen debug
     layerBuilderConfig.nodeSearchDebug =

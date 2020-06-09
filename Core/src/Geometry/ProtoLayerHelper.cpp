@@ -16,9 +16,6 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
 
   using SurfaceCluster = std::pair<Extent, std::vector<const Surface*>>;
   std::vector<SurfaceCluster> clusteredSurfaces;
-
-  ACTS_DEBUG("Received " << surfaces.size() << " surfaces at input.");
-
   /// Helper function to find/create the cluster of surfaces where
   /// the Extent belongs to. In case none is found, a new one is inserted
   ///
