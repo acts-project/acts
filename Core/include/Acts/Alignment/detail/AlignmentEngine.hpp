@@ -15,6 +15,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
+#include <unordered_map>
+
 namespace Acts {
 namespace detail {
 /// Calculate the global track parameters covariance for a smoothed trajectory
@@ -54,9 +56,10 @@ globalTrackParametersCovariance(
   });
 
   // Set the size of global track parameters covariance for all smoothed states
-  ActsMatrixX<BoundParametersScalar> fullGlobalTrackParamsCov;
-  fullGlobalTrackParamsCov.resize(nSmoothedStates * eBoundParametersSize,
-                                  nSmoothedStates * eBoundParametersSize);
+  ActsMatrixX<BoundParametersScalar> fullGlobalTrackParamsCov =
+      ActsMatrixX<BoundParametersScalar>::Zero(
+          nSmoothedStates * eBoundParametersSize,
+          nSmoothedStates * eBoundParametersSize);
   // The index of state within the trajectory and the starting row/column for
   // this state in the global covariance matrix
   std::unordered_map<size_t, size_t> stateRowIndices;
