@@ -50,6 +50,7 @@ inline Intersection PlaneSurface::intersectionEstimate(
 inline const LocalCartesianToBoundLocalMatrix
 PlaneSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
-	const LocalCartesianToBoundLocalMatrix loc3DToLocBound = LocalCartesianToBoundLocalMatrix::Identity(); 
+  const LocalCartesianToBoundLocalMatrix loc3DToLocBound =
+      LocalCartesianToBoundLocalMatrix::Identity();
   return loc3DToLocBound;
 }
