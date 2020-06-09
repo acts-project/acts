@@ -446,11 +446,11 @@ class TrackStateProxy {
   /// *invalid* (i.e. unset) for this TrackState..
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>, typename parameter_indices_t,
-            parameter_indices_t... params>
-  void setCalibrated(const Acts::Measurement<SourceLink, parameter_indices_t, params...>& meas) {
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
+            ParID_t... params>
+  void setCalibrated(const Acts::Measurement<SourceLink, BoundParametersIndices, params...>& meas) {
     IndexData& dataref = data();
-    constexpr size_t measdim = Acts::Measurement<SourceLink, parameter_indices_t, params...>::size();
+    constexpr size_t measdim = Acts::Measurement<SourceLink, BoundParametersIndices, params...>::size();
 
     dataref.measdim = measdim;
 
@@ -485,9 +485,9 @@ class TrackStateProxy {
   /// they will **not be removed**, but may become unaccessible.
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>, typename parameter_indices_t,
-            parameter_indices_t... params>
-  void resetCalibrated(const Acts::Measurement<SourceLink, parameter_indices_t, params...>& meas) {
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
+            ParID_t... params>
+  void resetCalibrated(const Acts::Measurement<SourceLink, BoundParametersIndices, params...>& meas) {
     IndexData& dataref = data();
     auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index

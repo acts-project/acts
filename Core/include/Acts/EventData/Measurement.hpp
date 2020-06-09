@@ -378,7 +378,7 @@ struct fittable_volume_measurement_helper {
 //     typename fittable_measurement_helper<source_link_t, BoundParametersIndices>::type;
 
 template <typename source_link_t>
-using FittableSurfaceMeasurement =
+using FittableMeasurement =
     typename fittable_surface_measurement_helper<source_link_t>::type;
 
 template <typename source_link_t>
@@ -395,7 +395,7 @@ struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>>
 };
 
 template <typename source_link_t>
-using FittableMeasurement = typename variant_flat<FittableSurfaceMeasurement<source_link_t>, FittableVolumeMeasurement<source_link_t>>::type;
+using FittableCombinedMeasurement = typename variant_flat<FittableMeasurement<source_link_t>, FittableVolumeMeasurement<source_link_t>>::type;
 
 
 }  // namespace Acts
