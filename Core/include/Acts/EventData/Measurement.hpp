@@ -17,9 +17,9 @@
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Geometry/Volume.hpp"
 
 namespace Acts {
 
@@ -51,7 +51,8 @@ class Surface;
 /// @tparam Identifier identification object for this measurement
 /// @tparam parameter_indices_t Enum of parameter identifier
 /// @tparam params     parameter pack containing the measured parameters
-template <typename source_link_t, typename parameter_indices_t, parameter_indices_t... params>
+template <typename source_link_t, typename parameter_indices_t,
+          parameter_indices_t... params>
 class Measurement {
   // check type conditions
   static_assert(SourceLinkConcept<source_link_t>,
@@ -93,7 +94,9 @@ class Measurement {
   /// @param cov covariance matrix of the measurement.
   /// @param head,values consistent number of parameter values of the
   /// measurement
-  template <typename T = parameter_indices_t, typename... Tail, std::enable_if_t<std::is_same<T, BoundParametersIndices>::value, int> = 0>
+  template <
+      typename T = parameter_indices_t, typename... Tail,
+      std::enable_if_t<std::is_same<T, BoundParametersIndices>::value, int> = 0>
   Measurement(std::shared_ptr<const Surface> surface,
               const source_link_t& source, CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
@@ -124,9 +127,11 @@ class Measurement {
   /// @param cov covariance matrix of the measurement.
   /// @param head,values consistent number of parameter values of the
   /// measurement
-  template <typename T = parameter_indices_t, typename... Tail, std::enable_if_t<std::is_same<T, FreeParametersIndices>::value, int> = 0>
-  Measurement(std::shared_ptr<const Volume> volume,
-              const source_link_t& source, CovMatrix_t cov,
+  template <
+      typename T = parameter_indices_t, typename... Tail,
+      std::enable_if_t<std::is_same<T, FreeParametersIndices>::value, int> = 0>
+  Measurement(std::shared_ptr<const Volume> volume, const source_link_t& source,
+              CovMatrix_t cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
@@ -146,7 +151,8 @@ class Measurement {
   /// @tparam params...The local parameter pack
   ///
   /// @param copy is the source for the copy
-  Measurement(const Measurement<source_link_t, parameter_indices_t, params...>& copy)
+  Measurement(
+      const Measurement<source_link_t, parameter_indices_t, params...>& copy)
       : m_oParameters(copy.m_oParameters),
         m_pSurface(copy.m_pSurface),
         m_pVolume(copy.m_pVolume),
@@ -159,7 +165,8 @@ class Measurement {
   /// @tparam params...The local parameter pack
   ///
   /// @param other is the source for the move
-  Measurement(Measurement<source_link_t, parameter_indices_t, params...>&& other)
+  Measurement(
+      Measurement<source_link_t, parameter_indices_t, params...>&& other)
       : m_oParameters(std::move(other.m_oParameters)),
         m_pSurface(std::move(other.m_pSurface)),
         m_pVolume(std::move(other.m_pVolume)),
@@ -293,10 +300,10 @@ class Measurement {
 
   /// @brief equality operator
   ///
-  /// @return @c true if parameter sets and associated surfaces/volumes compare equal,
-  /// otherwise @c false
-  virtual bool operator==(
-      const Measurement<source_link_t, parameter_indices_t, params...>& rhs) const {
+  /// @return @c true if parameter sets and associated surfaces/volumes compare
+  /// equal, otherwise @c false
+  virtual bool operator==(const Measurement<source_link_t, parameter_indices_t,
+                                            params...>& rhs) const {
     return ((m_oParameters == rhs.m_oParameters) &&
             (*m_pSurface == *rhs.m_pSurface) &&
             (*m_pVolume == *rhs.m_pVolume) &&
@@ -308,7 +315,8 @@ class Measurement {
   /// @return @c true if both objects are not equal, otherwise @c false
   ///
   /// @sa Measurement::operator==
-  bool operator!=(const Measurement<source_link_t, parameter_indices_t, params...>& rhs) const {
+  bool operator!=(const Measurement<source_link_t, parameter_indices_t,
+                                    params...>& rhs) const {
     return !(*this == rhs);
   }
 
@@ -316,7 +324,8 @@ class Measurement {
   static Projection projector() { return ParSet_t::projector(); }
 
   friend std::ostream& operator<<(
-      std::ostream& out, const Measurement<source_link_t, parameter_indices_t, params...>& m) {
+      std::ostream& out,
+      const Measurement<source_link_t, parameter_indices_t, params...>& m) {
     m.print(out);
     return out;
   }
@@ -336,9 +345,10 @@ class Measurement {
 
  private:
   ParSet_t m_oParameters;  ///< measured parameter set
-  std::shared_ptr<const Surface>
-      m_pSurface = nullptr;  ///< surface at which the measurement took place
-  std::shared_ptr<const Volume> m_pVolume = nullptr; ///< volume in which the measurement took place
+  std::shared_ptr<const Surface> m_pSurface =
+      nullptr;  ///< surface at which the measurement took place
+  std::shared_ptr<const Volume> m_pVolume =
+      nullptr;                 ///< volume in which the measurement took place
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
@@ -380,14 +390,16 @@ using FittableVolumeMeasurement =
     typename fittable_volume_measurement_helper<source_link_t>::type;
 
 // https://stackoverflow.com/questions/59250481/is-it-ok-to-use-stdvariant-of-stdvariants
-template <typename Var1, typename Var2> struct variant_flat;
+template <typename Var1, typename Var2>
+struct variant_flat;
 
-template <typename ... Ts1, typename ... Ts2>
-struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>>
-{
-    using type = std::variant<Ts1..., Ts2...>;
+template <typename... Ts1, typename... Ts2>
+struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>> {
+  using type = std::variant<Ts1..., Ts2...>;
 };
 
 template <typename source_link_t>
-using FittableCombinedMeasurement = typename variant_flat<FittableMeasurement<source_link_t>, FittableVolumeMeasurement<source_link_t>>::type;
+using FittableCombinedMeasurement =
+    typename variant_flat<FittableMeasurement<source_link_t>,
+                          FittableVolumeMeasurement<source_link_t>>::type;
 }  // namespace Acts

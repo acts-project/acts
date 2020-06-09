@@ -270,7 +270,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
     m_trajNr = iTraj;
 
     // The trajectory entry indices and the multiTrajectory
-    const auto & [ trackTips, mj ] = traj.trajectory();
+    const auto& [trackTips, mj] = traj.trajectory();
     if (trackTips.empty()) {
       ACTS_WARNING("Empty multiTrajectory.");
       continue;

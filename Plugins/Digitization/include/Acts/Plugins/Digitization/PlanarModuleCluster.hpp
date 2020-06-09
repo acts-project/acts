@@ -26,7 +26,8 @@ using Identifier = Acts::MinimalSourceLink;
 namespace Acts {
 
 template <ParID_t... params>
-using Measurement_t = Measurement<Identifier, BoundParametersIndices, params...>;
+using Measurement_t =
+    Measurement<Identifier, BoundParametersIndices, params...>;
 
 class PlanarModuleCluster
     : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1, ParDef::eT> {
