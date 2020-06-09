@@ -363,7 +363,7 @@ struct fittable_measurement_helper {
   struct meas_factory {
     using type = Measurement<source_link_t, parameter_indices_t, pars...>;
   };
-
+  
   using type =
       typename detail::type_generator_t<meas_factory, detail::ParametersSize<parameter_indices_t>::size>;
 };
@@ -393,7 +393,7 @@ struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>>
 };
 
 template <typename source_link_t>
-using FittableMeasurement = variant_flat<FittableSurfaceMeasurement<source_link_t>, FittableVolumeMeasurement<source_link_t>>::type;
+using FittableMeasurement = typename variant_flat<FittableSurfaceMeasurement<source_link_t>, FittableVolumeMeasurement<source_link_t>>::type;
 
 
 }  // namespace Acts
