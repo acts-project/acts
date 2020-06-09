@@ -27,14 +27,15 @@ namespace detail {
 /// @param multiTraj The MultiTrajectory containing the trajectory to be
 /// investigated
 /// @param entryIndex The trajectory entry index
-/// @param covarianceForMeasurementStates Indicator for whether to consider only
-/// measurement states
 ///
-/// @return The global track parameters covariance matrix
+/// @return The global track parameters covariance matrix and the starting
+/// row/column for smoothed states
 template <typename source_link_t, typename parameters_t = BoundParameters>
-ActsMatrixX<BoundParametersScalar> globalTrackParametersCovariance(
+std::pair<ActsMatrixX<BoundParametersScalar>,
+          std::unordered_map<size_t, size_t>>
+globalTrackParametersCovariance(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex, bool covarianceForMeasurementStates = false) {
+    const size_t& entryIndex) {
   using CovMatrix_t = typename parameters_t::CovMatrix_t;
   using gain_matrix_t = CovMatrix_t;
 
@@ -42,11 +43,6 @@ ActsMatrixX<BoundParametersScalar> globalTrackParametersCovariance(
   size_t lastSmoothedIndex = SIZE_MAX;
   // The total number of smoothed states
   size_t nSmoothedStates = 0;
-  // The order of smoothing for those measurement states (necessary to retrieve
-  // elements relevant to measurements in the full global track parameters
-  // covariance)
-  std::vector<size_t> smoothingOrders;
-  smoothingOrders.reserve(15);
   // Visit all the states
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
     if (ts.hasSmoothed()) {
@@ -54,9 +50,6 @@ ActsMatrixX<BoundParametersScalar> globalTrackParametersCovariance(
         lastSmoothedIndex = ts.index();
       }
       nSmoothedStates++;
-      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-        smoothingOrders.push_back(nSmoothedStates);
-      }
     }
   });
 
@@ -64,6 +57,9 @@ ActsMatrixX<BoundParametersScalar> globalTrackParametersCovariance(
   ActsMatrixX<BoundParametersScalar> fullGlobalTrackParamsCov;
   fullGlobalTrackParamsCov.resize(nSmoothedStates * eBoundParametersSize,
                                   nSmoothedStates * eBoundParametersSize);
+  // The index of state within the trajectory and the starting row/column for
+  // this state in the global covariance matrix
+  std::unordered_map<size_t, size_t> stateRowIndices;
   // Visit the smoothed states to calculate the full global track parameters
   // covariance
   size_t nProcessed = 0;
@@ -98,43 +94,12 @@ ActsMatrixX<BoundParametersScalar> globalTrackParametersCovariance(
             correlation.transpose();
       }
     }
+    stateRowIndices.emplace(ts.index(), iRow);
     nProcessed++;
     prev_ts = ts;
   });
 
-  // If necessary, extract only those elements for measurement states
-  if (covarianceForMeasurementStates) {
-    ActsMatrixX<BoundParametersScalar> shrinkedGlobalTrackParamsCov;
-    size_t nMeasurementStates = smoothingOrders.size();
-    // Set the size of the matrix
-    shrinkedGlobalTrackParamsCov.resize(
-        nMeasurementStates * eBoundParametersSize,
-        nMeasurementStates * eBoundParametersSize);
-    for (size_t i = 0; i < nMeasurementStates; i++) {
-      for (size_t j = 0; j < nMeasurementStates; j++) {
-        // Get the covariance/correlation
-        size_t iRowFull =
-            (nSmoothedStates - smoothingOrders.at(i)) * eBoundParametersSize;
-        size_t iColFull =
-            (nSmoothedStates - smoothingOrders.at(j)) * eBoundParametersSize;
-        CovMatrix_t correlation =
-            fullGlobalTrackParamsCov
-                .block<eBoundParametersSize, eBoundParametersSize>(iRowFull,
-                                                                   iColFull);
-        // Fill the covariance/correlation
-        size_t iRowShrinked =
-            (nMeasurementStates - i - 1) * eBoundParametersSize;
-        size_t iColShrinked =
-            (nMeasurementStates - j - 1) * eBoundParametersSize;
-        shrinkedGlobalTrackParamsCov
-            .block<eBoundParametersSize, eBoundParametersSize>(
-                iRowShrinked, iColShrinked) = correlation;
-      }
-    }
-    return shrinkedGlobalTrackParamsCov;
-  }
-
-  return fullGlobalTrackParamsCov;
+  return std::make_pair(fullGlobalTrackParamsCov, stateRowIndices);
 }
 
 }  // namespace detail

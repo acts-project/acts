@@ -382,10 +382,13 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto fittedParameters = fittedTrack.fittedParameters.value();
 
   // Calculate global track parameters covariance matrix
-  const auto& trackParamsCov = detail::globalTrackParametersCovariance(
-      fittedTrack.fittedStates, fittedTrack.trackTip);
+  const auto& [trackParamsCov, stateRowIndices] =
+      detail::globalTrackParametersCovariance(fittedTrack.fittedStates,
+                                              fittedTrack.trackTip);
 
   // Check the size of the global track parameters size
+  BOOST_CHECK_EQUAL(stateRowIndices.size(), 6);
+  BOOST_CHECK_EQUAL(stateRowIndices.at(fittedTrack.trackTip), 30);
   BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundParametersSize);
 
   // Make sure it is deterministic
@@ -429,21 +432,15 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.value();
 
   // Calculate global track parameters covariance matrix
-  const auto& holeTrackTrackParamsCov = detail::globalTrackParametersCovariance(
-      fittedWithHoleTrack.fittedStates, fittedWithHoleTrack.trackTip);
+  const auto& [holeTrackTrackParamsCov, holeTrackStateRowIndices] =
+      detail::globalTrackParametersCovariance(fittedWithHoleTrack.fittedStates,
+                                              fittedWithHoleTrack.trackTip);
 
   // Check the size of the global track parameters size
+  BOOST_CHECK_EQUAL(holeTrackStateRowIndices.size(), 6);
+  BOOST_CHECK_EQUAL(holeTrackStateRowIndices.at(fittedWithHoleTrack.trackTip),
+                    30);
   BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 6 * eBoundParametersSize);
-
-  // Calculate global track parameters covariance matrix (only for measurement
-  // states)
-  const auto& holeTrackFullTrackParamsCov =
-      detail::globalTrackParametersCovariance(
-          fittedWithHoleTrack.fittedStates, fittedWithHoleTrack.trackTip, true);
-
-  // Check the size of the global track parameters size
-  BOOST_CHECK_EQUAL(holeTrackFullTrackParamsCov.rows(),
-                    5 * eBoundParametersSize);
 
   // Count one hole
   BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);
