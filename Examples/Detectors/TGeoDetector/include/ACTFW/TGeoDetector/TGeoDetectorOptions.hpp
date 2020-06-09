@@ -263,10 +263,10 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
           lConfig.parseRanges.push_back({Acts::binR, {rmin, rmax}});
         }
         // Fill the layer splitting parameters in r
-        // if (splittolr[ncp].size() > ti[ncp]) {
-        //  layerBuilderConfig.layerSplitToleranceR[ncp] =
-        //      splittolr[ncp][ti[ncp]];
-        // }
+        if (splittolr[ncp].size() > ti[ncp]) {
+          double rsplitol = splittolr[ncp][ti[ncp]];
+          lConfig.splitConfigs.push_back({Acts::binR, rsplitol});
+        }
         // Fill the parsing restrictions in z
         auto zrange = zranges[ncp];
         if (zrange.size() > ti[ncp]) {
@@ -276,17 +276,11 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
               std::numeric_limits<double>::max());
           lConfig.parseRanges.push_back({Acts::binZ, {zmin, zmax}});
         }
-        //
-        // Fill the layer splitting parameters in r
-        // if (splittolr[ncp].size() > ti[ncp]) {
-        //  layerBuilderConfig.layerSplitToleranceR[ncp] =
-        //      splittolr[ncp][ti[ncp]];
-        //}
         // Fill the layer splitting parameters in z
-        // if (splittolz[ncp].size() > ti[ncp]) {
-        //  layerBuilderConfig.layerSplitToleranceZ[ncp] =
-        //      splittolz[ncp][ti[ncp]];
-        // }
+        if (splittolz[ncp].size() > ti[ncp]) {
+          double zsplitol = splittolz[ncp][ti[ncp]];
+          lConfig.splitConfigs.push_back({Acts::binR, zsplitol});
+        }
         layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
       }
     }

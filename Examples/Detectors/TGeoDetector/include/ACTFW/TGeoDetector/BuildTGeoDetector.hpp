@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -133,6 +133,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
                                     layerLogLevel));
     // remember the layer builder
     tgLayerBuilders.push_back(layerBuilder);
+
     // build the pixel volume
     Acts::CylinderVolumeBuilder::Config volumeConfig;
     volumeConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -140,6 +141,21 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     volumeConfig.buildToRadiusZero = (volumeBuilders.size() == 0);
     volumeConfig.layerEnvelopeR = {1. * Acts::units::_mm,
                                    5. * Acts::units::_mm};
+    auto ringLayoutConfiguration =
+        [&](const std::vector<Acts::TGeoLayerBuilder::LayerConfig>& lConfigs)
+        -> void {
+      for (const auto& lcfg : lConfigs) {
+        for (const auto& scfg : lcfg.splitConfigs) {
+          if (scfg.first == Acts::binR) {
+            volumeConfig.ringTolerance =
+                std::max(volumeConfig.ringTolerance, scfg.second);
+            volumeConfig.checkRingLayout = true;
+          }
+        }
+      }
+    };
+    ringLayoutConfiguration(lbc.layerConfigurations[0]);
+    ringLayoutConfiguration(lbc.layerConfigurations[2]);
     volumeConfig.layerBuilder = layerBuilder;
     volumeConfig.volumeSignature = 0;
     auto volumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
