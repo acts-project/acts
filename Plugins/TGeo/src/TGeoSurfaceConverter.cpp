@@ -120,7 +120,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   // Special test for composite shape of silicon
   auto compShape = dynamic_cast<const TGeoCompositeShape*>(&tgShape);
   if (compShape != nullptr) {
-    if (boost::istarts_with(axes, "XY")) {
+    if (not boost::istarts_with(axes, "XY")) {
       throw std::invalid_argument(
           "TGeoShape -> DiscSurface (Annulus): can only be converted with "
           "'(x/X)(y/Y)(*)' "
@@ -346,8 +346,8 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       Double_t* tgverts = polygon8->GetVertices();
       std::vector<Vector2D> pVertices;
       for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
-        pVertices.push_back(
-            Vector2D(xs * tgverts[ivtx * 2], ys * tgverts[ivtx * 2 + 1]));
+        pVertices.push_back(Vector2D(scalor * xs * tgverts[ivtx * 2],
+                                     scalor * ys * tgverts[ivtx * 2 + 1]));
       }
       bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
       thickness = scalor * polygon8->GetDz();
@@ -414,8 +414,8 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       const Double_t* tgverts = polygon8->GetVertices();
       std::vector<Vector2D> pVertices;
       for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
-        pVertices.push_back(
-            Vector2D(xs * tgverts[ivtx * 2 + 1], ys * tgverts[ivtx * 2]));
+        pVertices.push_back(Vector2D(scalor * xs * tgverts[ivtx * 2 + 1],
+                                     scalor * ys * tgverts[ivtx * 2]));
       }
       bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
       thickness = scalor * polygon8->GetDz();

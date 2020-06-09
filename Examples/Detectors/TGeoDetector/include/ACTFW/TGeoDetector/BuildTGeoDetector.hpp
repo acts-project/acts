@@ -57,6 +57,10 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       sacConfig,
       Acts::getDefaultLogger("SurfaceArrayCreator", surfaceLogLevel));
+  // configure the proto layer helper
+  Acts::ProtoLayerHelper::Config plhConfig;
+  auto protoLayerHelper = std::make_shared<const Acts::ProtoLayerHelper>(
+      plhConfig, Acts::getDefaultLogger("ProtoLayerHelper", layerLogLevel));
   // configure the layer creator that uses the surface array creator
   Acts::LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
@@ -121,8 +125,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   TGeoManager::Import(rootFileName.c_str());
 
   auto layerBuilderConfigs =
-      FW::Options::readTGeoLayerBuilderConfigs<variable_maps_t>(vm,
-                                                                layerCreator);
+      FW::Options::readTGeoLayerBuilderConfigs<variable_maps_t>(
+          vm, layerCreator, protoLayerHelper);
 
   // remember the layer builders to collect the detector elements
   std::vector<std::shared_ptr<const Acts::TGeoLayerBuilder>> tgLayerBuilders;
@@ -146,7 +150,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
         -> void {
       for (const auto& lcfg : lConfigs) {
         for (const auto& scfg : lcfg.splitConfigs) {
-          if (scfg.first == Acts::binR) {
+          if (scfg.first == Acts::binR and scfg.second > 0.) {
             volumeConfig.ringTolerance =
                 std::max(volumeConfig.ringTolerance, scfg.second);
             volumeConfig.checkRingLayout = true;
