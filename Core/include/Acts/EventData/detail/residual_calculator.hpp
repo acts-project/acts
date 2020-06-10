@@ -64,7 +64,7 @@ struct residual_calculator_impl<parameter_indices_t, R, last> {
   static void calculate(R& result, const R& test, const R& ref,
                         unsigned int pos) {
       result(pos) = ParameterTypeFor<parameter_indices_t, static_cast<parameter_indices_t>(
-          last)>type::::getDifference(test(pos), ref(pos));
+          last)>::type::getDifference(test(pos), ref(pos));
   }
 };
 /// @endcond
