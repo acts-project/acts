@@ -53,7 +53,7 @@ struct ExtendedMinimalSourceLink {
     return meas == rhs.meas;
   }
 
-  const Surface& referenceSurface() const {
+  const Surface* referenceSurface() const {
     return *MeasurementHelpers::getSurface(*meas);
   }
 
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
                                                            42.);
 
-    const Surface* rSurface = &rStart.referenceSurface();
+    const Surface* rSurface = rStart.referenceSurface();
 
     CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
         tgContext, mfContext, calContext, sourcelinkSelectorConfig, rSurface);

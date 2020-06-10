@@ -117,9 +117,9 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
     Acts::Vector3D pos(0, 0, 0);
     Acts::Vector3D mom(1, 1, 1);
     // the cluster surface
-    const auto& clusterSurface = cluster.referenceSurface();
+    const auto* clusterSurface = cluster.referenceSurface();
     // transform local into global position information
-    clusterSurface.localToGlobal(ctx.geoContext, local, mom, pos);
+    clusterSurface->localToGlobal(ctx.geoContext, local, mom, pos);
     // identification
     m_volumeID = geoId.volume();
     m_layerID = geoId.layer();
@@ -135,7 +135,7 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
     // get the cells and run through them
     const auto& cells = cluster.digitizationCells();
     auto detectorElement = dynamic_cast<const Acts::IdentifiedDetectorElement*>(
-        clusterSurface.associatedDetectorElement());
+        clusterSurface->associatedDetectorElement());
     for (auto& cell : cells) {
       // cell identification
       m_cell_IDx.push_back(cell.channel0);
@@ -164,7 +164,7 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
 
       // local position to be calculated
       Acts::Vector2D lPosition;
-      clusterSurface.globalToLocal(ctx.geoContext, simHit.position(),
+      clusterSurface->globalToLocal(ctx.geoContext, simHit.position(),
                                    simHit.unitDirection(), lPosition);
       // fill the variables
       m_t_gx.push_back(simHit.position().x());
