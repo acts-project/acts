@@ -14,7 +14,6 @@
 #include <random>
 #include <vector>
 
-#include "Acts/Alignment/detail/AlignmentEngine.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -22,6 +21,7 @@
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
+#include "Acts/Fitter/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"

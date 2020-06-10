@@ -38,8 +38,8 @@ std::pair<ActsMatrixX<BoundParametersScalar>,
 globalTrackParametersCovariance(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
     const size_t& entryIndex) {
-  using CovMatrix_t = typename parameters_t::CovMatrix_t;
-  using gain_matrix_t = CovMatrix_t;
+  using CovMatrix = typename parameters_t::CovMatrix_t;
+  using GainMatrix = CovMatrix;
 
   // The last smoothed state index
   size_t lastSmoothedIndex = SIZE_MAX;
@@ -78,17 +78,16 @@ globalTrackParametersCovariance(
     // C^n_{i, j} for i <= j
     if (nProcessed > 0) {
       // Calculate the gain matrix
-      gain_matrix_t G = ts.filteredCovariance() *
-                        prev_ts.jacobian().transpose() *
-                        prev_ts.predictedCovariance().inverse();
+      GainMatrix G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
+                     prev_ts.predictedCovariance().inverse();
       // Loop over the beforehand smoothed states
       for (size_t iProcessed = 1; iProcessed <= nProcessed; iProcessed++) {
         const size_t iCol = iRow + eBoundParametersSize * iProcessed;
-        CovMatrix_t prev_correlation =
+        CovMatrix prev_correlation =
             fullGlobalTrackParamsCov
                 .block<eBoundParametersSize, eBoundParametersSize>(
                     iRow + eBoundParametersSize, iCol);
-        CovMatrix_t correlation = G * prev_correlation;
+        CovMatrix correlation = G * prev_correlation;
         fullGlobalTrackParamsCov
             .block<eBoundParametersSize, eBoundParametersSize>(iRow, iCol) =
             correlation;
