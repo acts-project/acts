@@ -308,6 +308,25 @@ using BoundParameterType = typename detail::BoundParameterTraits<kIndex>::type;
 template <FreeParametersIndices kIndex>
 using FreeParameterType = typename detail::FreeParameterTraits<kIndex>::type;
 
+/// Access the (Bound/Free)ParameterType through common struct
+///
+/// @tparam T Parameter indices enum
+/// @tparam I Index of @p T
+template <typename T, T I>
+struct ParameterTypeFor {};
+
+/// Access for @c BoundParametersIndices
+template <BoundParametersIndices I>
+struct ParameterTypeFor<BoundParametersIndices, I> {
+  using type = BoundParameterType<I>;
+};
+
+/// Access for @c FreeParametersIndices
+template <FreeParametersIndices I>
+struct ParameterTypeFor<FreeParametersIndices, I> {
+  using type = FreeParameterType<I>;
+};
+
 // The following matrix and vector types are automatically derived from the
 // indices enums and scalar typedefs.
 
