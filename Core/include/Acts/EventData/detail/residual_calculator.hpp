@@ -49,7 +49,7 @@ template <typename parameter_indices_t, typename R, parameter_indices_t first,
           parameter_indices_t... others>
 struct residual_calculator_impl<parameter_indices_t, R, first, others...> {
   static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
+                        parameter_indices_t pos) {
     result(pos) =
         ParameterTypeFor<parameter_indices_t, first>::type::getDifference(
             test(pos), ref(pos));
