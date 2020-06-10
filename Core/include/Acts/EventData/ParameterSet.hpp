@@ -471,9 +471,8 @@ class ParameterSet {
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
   /// @endcond
   ParVector_t residual(const FullParameterSet& fullParSet) const {
-    return detail::residual_calculator<parameter_indices_t,
-                                       static_cast<unsigned int>(params)...>::
-        result(m_vValues, projector() * fullParSet.getParameters());
+    return detail::residual_calculator<parameter_indices_t, params...>::result(
+        m_vValues, projector() * fullParSet.getParameters());
   }
 
   /**

@@ -25,14 +25,15 @@ namespace detail {
 ///
 /// @return residual_calculator<params...>::result(first,second) yields the
 ///         residuals of `first` with respect to `second`
-template <typename parameter_indices_t, unsigned int... params>
+template <typename parameter_indices_t, parameter_indices_t... params>
 struct residual_calculator;
 /// @cond
 
-template <typename parameter_indices_t, typename R, unsigned int... params>
+template <typename parameter_indices_t, typename R,
+          parameter_indices_t... params>
 struct residual_calculator_impl;
 
-template <typename parameter_indices_t, unsigned int... params>
+template <typename parameter_indices_t, parameter_indices_t... params>
 struct residual_calculator {
   using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
 
@@ -44,27 +45,27 @@ struct residual_calculator {
   }
 };
 
-template <typename parameter_indices_t, typename R, unsigned int first,
-          unsigned int... others>
+template <typename parameter_indices_t, typename R, parameter_indices_t first,
+          parameter_indices_t... others>
 struct residual_calculator_impl<parameter_indices_t, R, first, others...> {
   static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
+                        parameter_indices_t pos) {
     result(pos) =
-        ParameterTypeFor<parameter_indices_t,
-                         static_cast<parameter_indices_t>(
-                             first)>::type::getDifference(test(pos), ref(pos));
+        ParameterTypeFor<parameter_indices_t, first>::type::getDifference(
+            test(pos), ref(pos));
 
     residual_calculator_impl<parameter_indices_t, R, others...>::calculate(
         result, test, ref, pos + 1);
   }
 };
 
-template <typename parameter_indices_t, typename R, unsigned int last>
+template <typename parameter_indices_t, typename R, parameter_indices_t last>
 struct residual_calculator_impl<parameter_indices_t, R, last> {
   static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
-      result(pos) = ParameterTypeFor<parameter_indices_t, static_cast<parameter_indices_t>(
-          last)>::type::getDifference(test(pos), ref(pos));
+                        parameter_indices_t pos) {
+    result(pos) =
+        ParameterTypeFor<parameter_indices_t, last>::type::getDifference(
+            test(pos), ref(pos));
   }
 };
 /// @endcond
