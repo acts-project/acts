@@ -11,23 +11,19 @@
 #include <vector>
 
 namespace Acts {
-template <typename SpacePoint>
+template <typename spacepoint_t>
 class Seed {
-  /////////////////////////////////////////////////////////////////////////////////
-  // Public methods:
-  /////////////////////////////////////////////////////////////////////////////////
-
  public:
-  Seed(const SpacePoint& b, const SpacePoint& m, const SpacePoint& u,
+  Seed(const spacepoint_t& b, const spacepoint_t& m, const spacepoint_t& u,
        float vertex);
   Seed(const Seed&) = default;
   Seed& operator=(const Seed&);
 
-  const std::vector<const SpacePoint*>& sp() const { return m_spacepoints; }
+  const std::vector<const spacepoint_t*>& sp() const { return m_spacepoints; }
   double z() const { return m_zvertex; }
 
  private:
-  std::vector<const SpacePoint*> m_spacepoints;
+  std::vector<const spacepoint_t*> m_spacepoints;
   float m_zvertex;
 };
 
@@ -35,9 +31,9 @@ class Seed {
 // Constructors
 ///////////////////////////////////////////////////////////////////////////////
 
-template <typename SpacePoint>
-Seed<SpacePoint>::Seed(const SpacePoint& b, const SpacePoint& m,
-                       const SpacePoint& u, float vertex) {
+template <typename spacepoint_t>
+Seed<spacepoint_t>::Seed(const spacepoint_t& b, const spacepoint_t& m,
+                         const spacepoint_t& u, float vertex) {
   m_zvertex = vertex;
   m_spacepoints.push_back(&b);
   m_spacepoints.push_back(&m);

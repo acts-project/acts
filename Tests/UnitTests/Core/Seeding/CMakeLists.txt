@@ -1,2 +1,2 @@
-add_executable(SeedfinderTest SeedfinderTest.cpp)
-target_link_libraries(SeedfinderTest PRIVATE ActsCore Boost::boost)
+add_executable(SeedFinderTest SeedFinderTest.cpp)
+target_link_libraries(SeedFinderTest PRIVATE ActsCore Boost::boost)

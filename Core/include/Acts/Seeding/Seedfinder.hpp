@@ -10,7 +10,7 @@
 
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 #include <array>
 #include <list>
@@ -31,22 +31,22 @@ struct LinCircle {
   float V;
 };
 template <typename external_spacepoint_t, typename platform_t = void*>
-class Seedfinder {
+class SeedFinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
 
  public:
   /// The only constructor. Requires a config object.
-  /// @param config the configuration for the Seedfinder
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
-  ~Seedfinder() = default;
+  /// @param config the configuration for the SeedFinder
+  SeedFinder(SeedFinderConfig<external_spacepoint_t> config);
+  ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
-  Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
-  Seedfinder<external_spacepoint_t, platform_t>& operator=(
-      const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
+  SeedFinder() = delete;
+  SeedFinder(const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
+  SeedFinder<external_spacepoint_t, platform_t>& operator=(
+      const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -67,9 +67,9 @@ class Seedfinder {
       const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
       std::vector<LinCircle>& linCircleVec) const;
 
-  Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  SeedFinderConfig<external_spacepoint_t> m_config;
 };
 
 }  // namespace Acts
 
-#include "Acts/Seeding/Seedfinder.ipp"
+#include "Acts/Seeding/SeedFinder.ipp"

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// AtlasSeedfinder.hpp Acts project
+// AtlasSeedFinder.hpp Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -24,7 +24,7 @@
 namespace Acts {
 namespace Legacy {
 template <typename SpacePoint>
-class AtlasSeedfinder {
+class AtlasSeedFinder {
   struct Config {
     // UNIT AS RETURNED BY m_fieldService->getField() default value in ATLAS
     // was
@@ -49,8 +49,8 @@ class AtlasSeedfinder {
   // Standard tool methods
   ///////////////////////////////////////////////////////////////////
 
-  AtlasSeedfinder();
-  virtual ~AtlasSeedfinder();
+  AtlasSeedFinder();
+  virtual ~AtlasSeedFinder();
 
   ///////////////////////////////////////////////////////////////////
   // Methods to initialize tool for new event or region
@@ -80,8 +80,8 @@ class AtlasSeedfinder {
  protected:
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
-  AtlasSeedfinder(const AtlasSeedfinder<SpacePoint>&) = delete;
-  AtlasSeedfinder<SpacePoint>& operator=(const AtlasSeedfinder<SpacePoint>&) =
+  AtlasSeedFinder(const AtlasSeedFinder<SpacePoint>&) = delete;
+  AtlasSeedFinder<SpacePoint>& operator=(const AtlasSeedFinder<SpacePoint>&) =
       delete;
   //@}
   ///////////////////////////////////////////////////////////////////
@@ -229,7 +229,7 @@ class AtlasSeedfinder {
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline const Seed<SpacePoint>* AtlasSeedfinder<SpacePoint>::next() {
+inline const Seed<SpacePoint>* AtlasSeedFinder<SpacePoint>::next() {
   do {
     if (i_seed == i_seede) {
       findNext();
@@ -243,7 +243,7 @@ inline const Seed<SpacePoint>* AtlasSeedfinder<SpacePoint>::next() {
 }
 
 template <typename SpacePoint>
-inline bool AtlasSeedfinder<SpacePoint>::isZCompatible(float& Zv) {
+inline bool AtlasSeedFinder<SpacePoint>::isZCompatible(float& Zv) {
   if (Zv < m_zminU || Zv > m_zmaxU) {
     return false;
   } else {
@@ -256,7 +256,7 @@ inline bool AtlasSeedfinder<SpacePoint>::isZCompatible(float& Zv) {
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline SPForSeed<SpacePoint>* AtlasSeedfinder<SpacePoint>::newSpacePoint(
+inline SPForSeed<SpacePoint>* AtlasSeedFinder<SpacePoint>::newSpacePoint(
     SpacePoint* const& sp) {
   SPForSeed<SpacePoint>* sps;
 
@@ -299,4 +299,4 @@ class comCurvature {
 };
 }  // namespace Legacy
 }  // namespace Acts
-#include "Acts/Seeding/AtlasSeedfinder.ipp"
+#include "Acts/Seeding/AtlasSeedFinder.ipp"

@@ -14,6 +14,7 @@
 namespace Acts {
 
 /// @class BinFinder
+///
 /// The BinFinder is used by the ISPGroupSelector. It can be
 /// used to find both bins that could be bottom bins as well as bins that could
 /// be top bins, which are assumed to be the same bins. Does not take
@@ -21,7 +22,6 @@ namespace Acts {
 template <typename external_spacepoint_t>
 class BinFinder {
  public:
-  /// destructor
   ~BinFinder() = default;
 
   /// Return all bins that could contain space points that can be used with the

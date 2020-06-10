@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,7 @@
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <memory>
@@ -105,7 +105,7 @@ class NeighborhoodIterator {
   std::vector<size_t> m_indices;
   // current bin
   size_t m_curInd;
-  const Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
+  const SpacePointGrid<external_spacepoint_t>* m_grid;
 };
 
 ///@class Neighborhood Used to access iterators to access a group of bins
@@ -236,13 +236,12 @@ class BinnedSPGroup {
   template <typename spacepoint_iterator_t>
   BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-      std::function<Acts::Vector2D(const external_spacepoint_t&, float, float,
-                                   float)>
+      std::function<Vector2D(const external_spacepoint_t&, float, float, float)>
           covTool,
-      std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
-      std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
+      std::shared_ptr<BinFinder<external_spacepoint_t>> botBinFinder,
+      std::shared_ptr<BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-      SeedfinderConfig<external_spacepoint_t>& config);
+      SeedFinderConfig<external_spacepoint_t>& config);
 
   size_t size() { return m_binnedSP.size(); }
 
@@ -260,9 +259,9 @@ class BinnedSPGroup {
 
  private:
   // grid with ownership of all InternalSpacePoint
-  std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_binnedSP;
+  std::unique_ptr<SpacePointGrid<external_spacepoint_t>> m_binnedSP;
 
-  // BinFinder must return std::vector<Acts::Seeding::Bin> with content of
+  // BinFinder must return std::vector<Seeding::Bin> with content of
   // each bin sorted in r (ascending)
   std::shared_ptr<BinFinder<external_spacepoint_t>> m_topBinFinder;
   std::shared_ptr<BinFinder<external_spacepoint_t>> m_bottomBinFinder;
