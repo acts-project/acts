@@ -114,8 +114,8 @@ class Vertex {
   SpacePointVector m_position = SpacePointVector::Zero();
   SpacePointSymMatrix m_covariance = SpacePointSymMatrix::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
-  double m_chiSquared = 1e9;  // chi2 of the fit
-  double m_numberDoF = 0.;    // number of degrees of freedom
+  double m_chiSquared = 0.;  // chi2 of the fit
+  double m_numberDoF = 0.;   // number of degrees of freedom
 };
 
 }  // namespace Acts
