@@ -467,7 +467,7 @@ class ParameterSet {
   template <
       typename T = Self,
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
-  /// @endcondh
+  /// @endcond
   ParameterVector residual(const FullParameterSet& fullParSet) const {
     return detail::residual_calculator<parameter_indices_t, params...>::result(
         m_vValues, projector() * fullParSet.getParameters());
