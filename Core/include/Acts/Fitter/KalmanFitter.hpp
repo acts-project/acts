@@ -155,8 +155,6 @@ struct KalmanFitterResult {
 /// @tparam smoother_t Type of the kalman smoother class
 /// @tparam outlier_finder_t Type of the outlier finder class
 /// @tparam calibrator_t Type of the calibrator class
-/// @tparam input_converter_t Type of the input converter class
-/// @tparam output_converter_t Type of the output converter class
 ///
 /// The Kalman filter contains an Actor and a Sequencer sub-class.
 /// The Sequencer has to be part of the Navigator of the Propagator
@@ -178,19 +176,11 @@ struct KalmanFitterResult {
 /// measurement ordering needs to be figured out by the navigation of
 /// the propagator.
 ///
-/// The Input converter is a converter that transforms the input
-/// measurement/track/segments into a set of FittableMeasurements
-///
-/// The Output converter is a converter that transforms the
-/// set of track states into a given track/track particle class
-///
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
           typename outlier_finder_t = VoidOutlierFinder,
-          typename calibrator_t = VoidMeasurementCalibrator,
-          typename input_converter_t = VoidKalmanComponents,
-          typename output_converter_t = VoidKalmanComponents>
+          typename calibrator_t = VoidMeasurementCalibrator>
 class KalmanFitter {
  public:
   /// Shorthand definition
@@ -208,23 +198,13 @@ class KalmanFitter {
   /// Constructor from arguments
   KalmanFitter(propagator_t pPropagator,
                std::unique_ptr<const Logger> logger =
-                   getDefaultLogger("KalmanFilter", Logging::INFO),
-               input_converter_t pInputCnv = input_converter_t(),
-               output_converter_t pOutputCnv = output_converter_t())
+                   getDefaultLogger("KalmanFilter", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
-        m_inputConverter(std::move(pInputCnv)),
-        m_outputConverter(std::move(pOutputCnv)),
         m_logger(logger.release()) {}
 
  private:
   /// The propgator for the transport and material update
   propagator_t m_propagator;
-
-  /// The input converter to Fittable measurements
-  input_converter_t m_inputConverter;
-
-  /// The output converter into a given format
-  output_converter_t m_outputConverter;
 
   /// Logger getter to support macros
   const Logger& logger() const { return *m_logger; }
@@ -242,7 +222,6 @@ class KalmanFitter {
   template <typename source_link_t, typename parameters_t>
   class Actor {
    public:
-    using TrackStateType = TrackState<source_link_t, parameters_t>;
 
     /// Explicit constructor with updater and calibrator
     Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
@@ -406,18 +385,6 @@ class KalmanFitter {
         }
       }
     }
-
-    /// @brief Kalman actor operation : initialize
-    ///
-    /// @tparam propagator_state_t is the type of Propagagor state
-    /// @tparam stepper_t Type of the stepper
-    ///
-    /// @param state is the mutable propagator state object
-    /// @param stepper The stepper in use
-    /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
-    void initialize(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    result_type& /*result*/) const {}
 
     /// @brief Kalman actor operation : reverse direction
     ///
@@ -1037,7 +1004,7 @@ class KalmanFitter {
     }
 
     // Return the converted Track
-    return m_outputConverter(std::move(kalmanResult));
+    return std::move(kalmanResult);
   }
 
   /// Fit implementation of the foward filter, calls the
@@ -1143,7 +1110,7 @@ class KalmanFitter {
     }
 
     // Return the converted Track
-    return m_outputConverter(std::move(kalmanResult));
+    return std::move(kalmanResult);
   }
 };
 
