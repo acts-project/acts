@@ -83,7 +83,7 @@ constexpr par_t operator"" _p(unsigned long long i) {
   return par_t(i);
 }
 
-BOOST_AUTO_TEST_CASE(variant_measurement_generation_test) {
+BOOST_AUTO_TEST_CASE(variant_bound_measurement_generation_test) {
   {
     using actual = detail::type_generator_t<par_t, meas_factory>;
     using expected = std::variant<
@@ -162,7 +162,7 @@ constexpr par_t2 operator"" _p(unsigned long long i) {
   return par_t2(i);
 }
 
-BOOST_AUTO_TEST_CASE(variant_measurement_generation_test) {
+BOOST_AUTO_TEST_CASE(variant_free_measurement_generation_test) {
   {
     using actual = detail::type_generator_t<par_t2, meas_factory2>;
     using expected = std::variant<
