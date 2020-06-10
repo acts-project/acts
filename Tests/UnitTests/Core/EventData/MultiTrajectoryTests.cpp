@@ -76,7 +76,7 @@ auto make_trackstate(size_t dim = 3) {
 
     // "calibrate", keep original source link (stack address)
     ts.measurement.calibrated =
-        decltype(meas){meas.referenceSurface().getSharedPtr(),
+        decltype(meas){meas.referenceSurface()->getSharedPtr(),
                        sl,
                        meas.covariance(),
                        meas.parameters()[0],
@@ -102,7 +102,7 @@ auto make_trackstate(size_t dim = 3) {
 
     // "calibrate", keep original source link (stack address)
     ts.measurement.calibrated = decltype(meas){
-        meas.referenceSurface().getSharedPtr(), sl, meas.covariance(),
+        meas.referenceSurface()->getSharedPtr(), sl, meas.covariance(),
         meas.parameters()[0], meas.parameters()[1]};
     tso = ts;
   } else {
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   ActsVectorD<2> mPar;
   mPar.setRandom();
   Measurement<SourceLink, eLOC_0, eLOC_1> m2{
-      ots.referenceSurface().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
+      ots.referenceSurface()->getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
 
   ts.setCalibrated(m2);
 
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(*ts.parameter.smoothed->covariance(),
                     tsProxy.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(&tsProxy.referenceSurface(), &ts.referenceSurface());
+  BOOST_CHECK_EQUAL(tsProxy.referenceSurface(), ts.referenceSurface());
 
   BOOST_CHECK(tsProxy.hasJacobian());
   BOOST_CHECK_EQUAL(tsProxy.jacobian(), *ts.parameter.jacobian);
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_NE(ts1.pathLength(), ts2.pathLength());
-  BOOST_CHECK_NE(&ts1.referenceSurface(), &ts2.referenceSurface());
+  BOOST_CHECK_NE(ts1.referenceSurface(), ts2.referenceSurface());
 
   ts1.copyFrom(ts2);
 
@@ -746,7 +746,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_EQUAL(ts1.pathLength(), ts2.pathLength());
-  BOOST_CHECK_EQUAL(&ts1.referenceSurface(), &ts2.referenceSurface());
+  BOOST_CHECK_EQUAL(ts1.referenceSurface(), ts2.referenceSurface());
 
   // full copy proven to work. now let's do partial copy
   ts2 = mkts(PM::Predicted | PM::Jacobian | PM::Calibrated);
@@ -766,7 +766,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_NE(ts1.pathLength(), ts2.pathLength());
-  BOOST_CHECK_NE(&ts1.referenceSurface(), &ts2.referenceSurface());
+  BOOST_CHECK_NE(ts1.referenceSurface(), ts2.referenceSurface());
 
   ts1.copyFrom(ts2);
 
@@ -783,8 +783,8 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());              // always copied
   BOOST_CHECK_EQUAL(ts1.pathLength(), ts2.pathLength());  // always copied
-  BOOST_CHECK_EQUAL(&ts1.referenceSurface(),
-                    &ts2.referenceSurface());  // always copied
+  BOOST_CHECK_EQUAL(ts1.referenceSurface(),
+                    ts2.referenceSurface());  // always copied
 }
 
 }  // namespace Test

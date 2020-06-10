@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   // Test is we can shuffle the track states
   // Test to extract the surface of these guys
   for (auto& ts : trackStates) {
-    const Surface* sf = &ts.referenceSurface();
+    const Surface* sf = ts.referenceSurface();
     BOOST_CHECK_EQUAL(sf, plane.get());
   }
 

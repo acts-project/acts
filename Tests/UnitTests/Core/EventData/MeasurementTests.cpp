@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   auto mcCopy(mc);
 
   // The surface should be not null and point to the same
-  const Surface* sfCopy = &mcCopy.referenceSurface();
+  const Surface* sfCopy = mcCopy.referenceSurface();
   BOOST_CHECK_NE(sfCopy, nullptr);
   BOOST_CHECK_EQUAL(sfCopy, cylinder.get());
   // The parameters should be identical though
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   auto mcAssigned = mc;
 
   // The surface should be not null and point to the same
-  const Surface* sfAssigned = &mcAssigned.referenceSurface();
+  const Surface* sfAssigned = mcAssigned.referenceSurface();
   BOOST_CHECK_NE(sfAssigned, nullptr);
   BOOST_CHECK_EQUAL(sfAssigned, cylinder.get());
   // The parameters should be identical though

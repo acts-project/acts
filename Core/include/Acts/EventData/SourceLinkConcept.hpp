@@ -35,7 +35,7 @@ namespace concept {
                   "Source link does not implement equality operator");
 
     constexpr static bool surface_method_exists =
-        converts_to<const Surface&, surface_method_t, T>;
+        converts_to<const Surface*, surface_method_t, T>;
     static_assert(
         surface_method_exists,
         "Source link does not have compliant referenceSurface method");

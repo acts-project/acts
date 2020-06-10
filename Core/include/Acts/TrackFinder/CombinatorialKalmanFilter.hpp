@@ -501,7 +501,7 @@ class CombinatorialKalmanFilter {
           result.fittedStates.getTrackState(result.activeTips.back().first);
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
-      state.navigation.startSurface = &currentState.referenceSurface();
+      state.navigation.startSurface = currentState.referenceSurface();
       if (state.navigation.startSurface->associatedLayer() != nullptr) {
         state.navigation.startLayer =
             state.navigation.startSurface->associatedLayer();
@@ -516,7 +516,7 @@ class CombinatorialKalmanFilter {
       stepper.update(state.stepping,
                      currentState.filteredParameters(state.options.geoContext));
       // Reinitialize the stepping jacobian
-      currentState.referenceSurface().initJacobianToGlobal(
+      currentState.referenceSurface()->initJacobianToGlobal(
           state.options.geoContext, state.stepping.jacToGlobal,
           state.stepping.pos, state.stepping.dir,
           currentState.filteredParameters(state.options.geoContext)
@@ -1159,7 +1159,7 @@ class CombinatorialKalmanFilter {
     std::unordered_map<const Surface*, std::vector<SourceLink>>
         inputMeasurements;
     for (const auto& sl : sourcelinks) {
-      const Surface* srf = &sl.referenceSurface();
+      const Surface* srf = sl.referenceSurface();
       inputMeasurements[srf].emplace_back(sl);
     }
 

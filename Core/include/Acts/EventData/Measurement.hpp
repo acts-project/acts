@@ -209,8 +209,8 @@ class Measurement {
   /// @pre The @c Surface object used to construct this @c Measurement object
   /// must still be valid at the same memory location.
   ///
-  /// @return reference to surface at which the measurement took place
-  const Acts::Surface& referenceSurface() const { return *m_pSurface; }
+  /// @return pointer to surface at which the measurement took place
+  const Acts::Surface* referenceSurface() const { return m_pSurface.get(); }
 
   /// @brief link access to the source of the measurement.
   ///

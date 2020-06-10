@@ -227,7 +227,7 @@ inline size_t MultiTrajectory<SL>::addTrackState(
   TrackStateProxy nts = getTrackState(index);
 
   // make shared ownership held by this multi trajectory
-  nts.setReferenceSurface(ts.referenceSurface().getSharedPtr());
+  nts.setReferenceSurface(ts.referenceSurface()->getSharedPtr());
 
   // we don't need to check allocation, because we ORed with required components
   // above

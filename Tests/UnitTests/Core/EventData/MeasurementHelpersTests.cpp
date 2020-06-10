@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
   FittableMeasurement fm = m;
   MinimalSourceLink msl{&fm};
 
-  BOOST_CHECK_EQUAL(&msl.referenceSurface(), cylinder.get());
+  BOOST_CHECK_EQUAL(msl.referenceSurface(), cylinder.get());
 
   MinimalSourceLink msl2{&fm};
   BOOST_CHECK_EQUAL(msl, msl2);
