@@ -165,7 +165,7 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
       // local position to be calculated
       Acts::Vector2D lPosition;
       clusterSurface->globalToLocal(ctx.geoContext, simHit.position(),
-                                   simHit.unitDirection(), lPosition);
+                                    simHit.unitDirection(), lPosition);
       // fill the variables
       m_t_gx.push_back(simHit.position().x());
       m_t_gy.push_back(simHit.position().y());

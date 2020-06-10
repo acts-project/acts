@@ -368,7 +368,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       // get global position
       Acts::Vector3D global(0, 0, 0);
       Acts::Vector3D mom(1, 1, 1);
-      meas.referenceSurface()->localToGlobal(ctx.geoContext, local, mom, global);
+      meas.referenceSurface()->localToGlobal(ctx.geoContext, local, mom,
+                                             global);
 
       // get measurement covariance
       auto cov = meas.covariance();
