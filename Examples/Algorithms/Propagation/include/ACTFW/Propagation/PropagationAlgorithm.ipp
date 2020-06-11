@@ -176,7 +176,7 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
       pOutput = executeTest<Acts::TrackParameters>(context, startParameters);
     } else {
       // execute the test for neeutral particles
-      Acts::NeutralBoundParameters neutralParameters(
+      Acts::NeutralBoundTrackParameters neutralParameters(
           context.geoContext, std::move(cov), std::move(pars), surface);
       sPosition = neutralParameters.position();
       sMomentum = neutralParameters.momentum();

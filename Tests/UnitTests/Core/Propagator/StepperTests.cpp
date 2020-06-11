@@ -158,14 +158,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_TEST(esState.tolerance == tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearParameters ncp(std::nullopt, pos, mom, time);
+  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_TEST(esState.q == 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearParameters(cov, pos, mom, time);
+  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());

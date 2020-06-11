@@ -95,12 +95,12 @@ BOOST_DATA_TEST_CASE(
                                        21., pSurface);
   consistencyCheck(ataPlane_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
-  NeutralBoundParameters n_ataPlane_from_pars(tgContext, std::nullopt, pars,
-                                              pSurface);
+  NeutralBoundTrackParameters n_ataPlane_from_pars(tgContext, std::nullopt,
+                                                   pars, pSurface);
   consistencyCheck(n_ataPlane_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataPlane_from_global(tgContext, std::nullopt, pos,
-                                                mom, 21., pSurface);
+  NeutralBoundTrackParameters n_ataPlane_from_global(tgContext, std::nullopt,
+                                                     pos, mom, 21., pSurface);
   consistencyCheck(n_ataPlane_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
@@ -201,12 +201,12 @@ BOOST_DATA_TEST_CASE(
                                       21., dSurface);
   consistencyCheck(ataDisc_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
-  NeutralBoundParameters n_ataDisc_from_pars(tgContext, std::nullopt, pars,
-                                             dSurface);
+  NeutralBoundTrackParameters n_ataDisc_from_pars(tgContext, std::nullopt, pars,
+                                                  dSurface);
   consistencyCheck(n_ataDisc_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataDisc_from_global(tgContext, std::nullopt, pos,
-                                               mom, 21., dSurface);
+  NeutralBoundTrackParameters n_ataDisc_from_global(tgContext, std::nullopt,
+                                                    pos, mom, 21., dSurface);
   consistencyCheck(n_ataDisc_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
@@ -292,12 +292,12 @@ BOOST_DATA_TEST_CASE(
                                           21., cSurface);
   consistencyCheck(ataCylinder_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
-  NeutralBoundParameters n_ataCylinder_from_pars(tgContext, std::nullopt, pars,
-                                                 cSurface);
+  NeutralBoundTrackParameters n_ataCylinder_from_pars(tgContext, std::nullopt,
+                                                      pars, cSurface);
   consistencyCheck(n_ataCylinder_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataCylinder_from_global(tgContext, std::nullopt, pos,
-                                                   mom, 21., cSurface);
+  NeutralBoundTrackParameters n_ataCylinder_from_global(
+      tgContext, std::nullopt, pos, mom, 21., cSurface);
   consistencyCheck(n_ataCylinder_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
@@ -375,12 +375,12 @@ BOOST_DATA_TEST_CASE(
                                          21., pSurface);
   consistencyCheck(ataPerigee_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
-  NeutralBoundParameters n_ataPerigee_from_pars(tgContext, std::nullopt, pars,
-                                                pSurface);
+  NeutralBoundTrackParameters n_ataPerigee_from_pars(tgContext, std::nullopt,
+                                                     pars, pSurface);
   consistencyCheck(n_ataPerigee_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataPerigee_from_global(tgContext, std::nullopt, pos,
-                                                  mom, 21., pSurface);
+  NeutralBoundTrackParameters n_ataPerigee_from_global(tgContext, std::nullopt,
+                                                       pos, mom, 21., pSurface);
   consistencyCheck(n_ataPerigee_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface
@@ -450,12 +450,12 @@ BOOST_DATA_TEST_CASE(
                                       21., sSurface);
   consistencyCheck(ataLine_from_global, pos, mom, 1., 21., pars_array);
   // constructor for neutral parameters
-  NeutralBoundParameters n_ataLine_from_pars(tgContext, std::nullopt, pars,
-                                             sSurface);
+  NeutralBoundTrackParameters n_ataLine_from_pars(tgContext, std::nullopt, pars,
+                                                  sSurface);
   consistencyCheck(n_ataLine_from_pars, pos, mom, 0., 21., pars_array);
   // constructor for neutral global parameters
-  NeutralBoundParameters n_ataLine_from_global(tgContext, std::nullopt, pos,
-                                               mom, 21., sSurface);
+  NeutralBoundTrackParameters n_ataLine_from_global(tgContext, std::nullopt,
+                                                    pos, mom, 21., sSurface);
   consistencyCheck(n_ataLine_from_global, pos, mom, 0., 21., pars_array);
 
   // check shared ownership of same surface

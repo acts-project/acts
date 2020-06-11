@@ -19,9 +19,9 @@ extern template class SingleBoundTrackParameters<NeutralPolicy>;
 extern template class SingleCurvilinearTrackParameters<NeutralPolicy>;
 extern template class SingleFreeTrackParameters<NeutralPolicy>;
 
-using NeutralBoundParameters = SingleBoundTrackParameters<NeutralPolicy>;
-using NeutralCurvilinearParameters =
+using NeutralBoundTrackParameters = SingleBoundTrackParameters<NeutralPolicy>;
+using NeutralCurvilinearTrackParameters =
     SingleCurvilinearTrackParameters<NeutralPolicy>;
-using NeutralFreeParameters = SingleFreeTrackParameters<NeutralPolicy>;
+using NeutralFreeTrackParameters = SingleFreeTrackParameters<NeutralPolicy>;
 
 }  // namespace Acts

@@ -69,30 +69,31 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   /// Repeat constructing and assignment with neutral parameters
 
   // Test if the object can be created w/o covariance
-  NeutralFreeParameters nfpwoCov(std::nullopt, params);
+  NeutralFreeTrackParameters nfpwoCov(std::nullopt, params);
   BOOST_TEST(!nfpwoCov.covariance().has_value());
   CHECK_CLOSE_ABS(nfpwoCov.parameters(), params, 1e-6);
 
   covCpy = *cov;
-  NeutralFreeParameters nfp(covCpy, params);
+  NeutralFreeTrackParameters nfp(covCpy, params);
   CHECK_CLOSE_COVARIANCE(*nfp.covariance(), *cov, 1e-6);
   CHECK_CLOSE_ABS(nfp.parameters(), params, 1e-6);
 
-  NeutralFreeParameters nfpCopyConstr(nfp);
+  NeutralFreeTrackParameters nfpCopyConstr(nfp);
   BOOST_TEST(nfpCopyConstr == nfp);
 
   covCpy = *cov;
-  NeutralFreeParameters nfpMoveConstr(NeutralFreeParameters(covCpy, params));
+  NeutralFreeTrackParameters nfpMoveConstr(
+      NeutralFreeTrackParameters(covCpy, params));
   BOOST_TEST(nfpMoveConstr == nfp);
 
   // Test copy assignment
-  NeutralFreeParameters nfpCopyAssignment = nfp;
+  NeutralFreeTrackParameters nfpCopyAssignment = nfp;
   BOOST_TEST(nfpCopyAssignment == nfp);
 
   // Test move assignment
   covCpy = *cov;
-  NeutralFreeParameters nfpMoveAssignment =
-      NeutralFreeParameters(covCpy, params);
+  NeutralFreeTrackParameters nfpMoveAssignment =
+      NeutralFreeTrackParameters(covCpy, params);
   BOOST_TEST(nfpMoveAssignment == nfp);
 
   /// Test getters/setters
