@@ -11,7 +11,6 @@
 #include <iomanip>
 #include <ostream>
 
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
