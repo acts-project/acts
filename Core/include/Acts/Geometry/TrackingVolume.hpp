@@ -31,6 +31,9 @@ namespace Acts {
 class GlueVolumesDescriptor;
 class VolumeBounds;
 
+template <typename object_t>
+struct NavigationOptions;
+
 // master typedefs
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
@@ -170,10 +173,9 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  template <typename options_t>
   std::vector<LayerIntersection> compatibleLayers(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options) const;
+      const Vector3D& direction, const NavigationOptions<Layer>& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
@@ -187,10 +189,10 @@ class TrackingVolume : public Volume {
   /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
-  template <typename options_t>
   std::vector<BoundaryIntersection> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options) const;
+      const Vector3D& direction,
+      const NavigationOptions<Surface>& options) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
@@ -202,10 +204,10 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return Vector of surface candidates
-  template <typename options_t>
   std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, double angle, const options_t& options) const;
+      const Vector3D& direction, double angle,
+      const NavigationOptions<Surface>& options) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
@@ -417,10 +419,6 @@ class TrackingVolume : public Volume {
 
   /// interlink the layers in this TrackingVolume
   void interlinkLayers();
-
-  template <typename T>
-  static std::vector<const Volume*> intersectSearchHierarchy(
-      const T obj, const Volume::BoundingBox* lnode);
 
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
