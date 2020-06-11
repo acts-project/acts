@@ -362,7 +362,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
       auto meas = std::get<Measurement>(*state.uncalibrated());
       if(meas.referenceSurface() == nullptr)
-		continue;
+		return true;
 
       // get local position
       Acts::Vector2D local(meas.parameters()[Acts::ParDef::eLOC_0],
