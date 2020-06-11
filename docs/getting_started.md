@@ -25,7 +25,7 @@ The following dependencies are required to build the Acts core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
 -   [CMake](https://cmake.org) >= 3.11
--   [Boost](http://boost.org) >= 1.69 with `filesystem`, `program_options`, and `unit_test_framework`
+-   [Boost](http://boost.org) >= 1.69 with `program_options`, and `unit_test_framework`
 -   [Eigen](http://eigen.tuxfamily.org) >= 3.2.9
 
 The following dependencies are optional and are needed to build additional
