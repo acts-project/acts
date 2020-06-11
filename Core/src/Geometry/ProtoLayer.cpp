@@ -32,25 +32,25 @@ ProtoLayer::ProtoLayer(
   measure(gctx, unpack_shared_vector(surfaces));
 }
 
-double ProtoLayer::min(BinningValue bval, bool addenv) {
+double ProtoLayer::min(BinningValue bval, bool addenv) const {
   if (addenv) {
     return extent.min(bval) - envelope[bval].first;
   }
   return extent.min(bval);
 }
 
-double ProtoLayer::max(BinningValue bval, bool addenv) {
+double ProtoLayer::max(BinningValue bval, bool addenv) const {
   if (addenv) {
     return extent.max(bval) + envelope[bval].second;
   }
   return extent.max(bval);
 }
 
-double ProtoLayer::medium(BinningValue bval, bool addenv) {
+double ProtoLayer::medium(BinningValue bval, bool addenv) const {
   return 0.5 * (min(bval, addenv) + max(bval, addenv));
 }
 
-double ProtoLayer::range(BinningValue bval, bool addenv) {
+double ProtoLayer::range(BinningValue bval, bool addenv) const {
   return std::abs(max(bval, addenv) - min(bval, addenv));
 }
 
