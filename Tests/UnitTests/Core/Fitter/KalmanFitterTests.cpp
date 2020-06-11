@@ -21,6 +21,7 @@
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
+#include "Acts/Fitter/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -380,6 +381,16 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto& fittedTrack = *fitRes;
   auto fittedParameters = fittedTrack.fittedParameters.value();
 
+  // Calculate global track parameters covariance matrix
+  const auto& [trackParamsCov, stateRowIndices] =
+      detail::globalTrackParametersCovariance(fittedTrack.fittedStates,
+                                              fittedTrack.trackTip);
+
+  // Check the size of the global track parameters size
+  BOOST_CHECK_EQUAL(stateRowIndices.size(), 6);
+  BOOST_CHECK_EQUAL(stateRowIndices.at(fittedTrack.trackTip), 30);
+  BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundParametersSize);
+
   // Make sure it is deterministic
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
@@ -419,6 +430,17 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK(fitRes.ok());
   auto& fittedWithHoleTrack = *fitRes;
   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.value();
+
+  // Calculate global track parameters covariance matrix
+  const auto& [holeTrackTrackParamsCov, holeTrackStateRowIndices] =
+      detail::globalTrackParametersCovariance(fittedWithHoleTrack.fittedStates,
+                                              fittedWithHoleTrack.trackTip);
+
+  // Check the size of the global track parameters size
+  BOOST_CHECK_EQUAL(holeTrackStateRowIndices.size(), 6);
+  BOOST_CHECK_EQUAL(holeTrackStateRowIndices.at(fittedWithHoleTrack.trackTip),
+                    30);
+  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 6 * eBoundParametersSize);
 
   // Count one hole
   BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);

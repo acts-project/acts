@@ -210,3 +210,50 @@ inline const BoundRowVector LineSurface::derivativeFactors(
           (s_vec - pc * (long_mat * d_vec.asDiagonal() -
                          jacobian.block<3, eBoundParametersSize>(4, 0))));
 }
+
+inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
+    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
+    const Vector3D& position, const Vector3D& direction) const {
+  // The vector between position and center
+  const ActsRowVector<double, 3> pcRowVec =
+      (position - center(gctx)).transpose();
+  // The local frame transform
+  const auto& sTransform = transform(gctx);
+  const auto& rotation = sTransform.rotation();
+  // The local frame z axis
+  const Vector3D localZAxis = rotation.col(2);
+  // The local z coordinate
+  const double localZ = pcRowVec * localZAxis;
+
+  // Cosine of angle between momentum direction and local frame z axis
+  const double dirZ = localZAxis.dot(direction);
+  const double norm = 1. / (1. - dirZ * dirZ);
+  // Initialize the derivative of propagation path w.r.t. local frame
+  // translation (origin) and rotation
+  AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
+  alignToPath.segment<3>(eAlignmentCenter0) =
+      norm * (direction.transpose() - dirZ * localZAxis.transpose());
+  alignToPath.segment<3>(eAlignmentRotation0) =
+      norm * (dirZ * pcRowVec + localZ * direction.transpose()) *
+      rotToLocalZAxis;
+
+  return alignToPath;
+}
+
+inline const LocalCartesianToBoundLocalMatrix
+LineSurface::localCartesianToBoundLocalDerivative(
+    const GeometryContext& gctx, const Vector3D& position) const {
+  using VectorHelpers::phi;
+  // The local frame transform
+  const auto& sTransform = transform(gctx);
+  // calculate the transformation to local coorinates
+  const Vector3D localPos = sTransform.inverse() * position;
+  const double lphi = phi(localPos);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
+  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
+      LocalCartesianToBoundLocalMatrix::Zero();
+  loc3DToLocBound << lcphi, lsphi, 0, 0, 0, 1;
+
+  return loc3DToLocBound;
+}
