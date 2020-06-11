@@ -21,6 +21,6 @@ extern template class SingleFreeTrackParameters<ChargedPolicy>;
 
 using BoundParameters = SingleBoundTrackParameters<ChargedPolicy>;
 using CurvilinearParameters = SingleCurvilinearTrackParameters<ChargedPolicy>;
-using FreeParameters = SingleFreeTrackParameters<ChargedPolicy>;
+using FreeTrackParameters = SingleFreeTrackParameters<ChargedPolicy>;
 
 }  // namespace Acts

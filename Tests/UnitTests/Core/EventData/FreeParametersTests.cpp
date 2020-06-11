@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   std::optional<FreeSymMatrix> cov = std::nullopt;
 
   // Test if the object can be created w/o covariance
-  FreeParameters fpwoCov(cov, params);
+  FreeTrackParameters fpwoCov(cov, params);
   BOOST_TEST(!fpwoCov.covariance().has_value());
   CHECK_CLOSE_ABS(fpwoCov.parameters(), params, 1e-6);
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
       0., 7., 0., 0., 0., 0., 0., 0., 0., 0., 8.;
   std::optional<FreeSymMatrix> covCpy = *cov;
 
-  FreeParameters fp(covCpy, params);
+  FreeTrackParameters fp(covCpy, params);
   CHECK_CLOSE_COVARIANCE(*fp.covariance(), *cov, 1e-6);
   CHECK_CLOSE_ABS(fp.parameters(), params, 1e-6);
 
@@ -50,20 +50,20 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   BOOST_TEST(fp == fp);
   BOOST_TEST(fp != fpwoCov);
 
-  FreeParameters fpCopyConstr(fp);
+  FreeTrackParameters fpCopyConstr(fp);
   BOOST_TEST(fpCopyConstr == fp);
 
   covCpy = *cov;
-  FreeParameters fpMoveConstr(FreeParameters(covCpy, params));
+  FreeTrackParameters fpMoveConstr(FreeTrackParameters(covCpy, params));
   BOOST_TEST(fpMoveConstr == fp);
 
   // Test copy assignment
-  FreeParameters fpCopyAssignment = fp;
+  FreeTrackParameters fpCopyAssignment = fp;
   BOOST_TEST(fpCopyAssignment == fp);
 
   // Test move assignment
   covCpy = *cov;
-  FreeParameters fpMoveAssignment = FreeParameters(covCpy, params);
+  FreeTrackParameters fpMoveAssignment = FreeTrackParameters(covCpy, params);
   BOOST_TEST(fpMoveAssignment == fp);
 
   /// Repeat constructing and assignment with neutral parameters
