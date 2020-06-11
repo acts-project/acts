@@ -361,6 +361,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       m_moduleID.push_back(geoID.sensitive());
 
       auto meas = std::get<Measurement>(*state.uncalibrated());
+      if(meas.referenceSurface() == nullptr)
+		continue;
 
       // get local position
       Acts::Vector2D local(meas.parameters()[Acts::ParDef::eLOC_0],

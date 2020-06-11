@@ -60,6 +60,8 @@ FW::ProcessCode FW::CsvPlanarClusterWriter::writeT(
   for (const auto& entry : clusters) {
     Acts::GeometryID geoId = entry.first;
     const Acts::PlanarModuleCluster& cluster = entry.second;
+    if(cluster.referenceSurface() == nullptr)
+		continue;
     // local cluster information
     const auto& parameters = cluster.parameters();
     Acts::Vector2D localPos(parameters[0], parameters[1]);

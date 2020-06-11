@@ -108,6 +108,8 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
   for (const auto& entry : clusters) {
     Acts::GeometryID geoId = entry.first;
     const Acts::PlanarModuleCluster& cluster = entry.second;
+    if(cluster.referenceSurface() == nullptr)
+		continue;
     // local cluster information: position, @todo coveraiance
     auto parameters = cluster.parameters();
     Acts::Vector2D local(parameters[Acts::ParDef::eLOC_0],

@@ -1160,7 +1160,8 @@ class CombinatorialKalmanFilter {
         inputMeasurements;
     for (const auto& sl : sourcelinks) {
       const Surface* srf = sl.referenceSurface();
-      inputMeasurements[srf].emplace_back(sl);
+      if(srf != nullptr)
+		inputMeasurements[srf].emplace_back(sl);
     }
 
     // Create the ActionList and AbortList

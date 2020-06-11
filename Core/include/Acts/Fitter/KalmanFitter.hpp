@@ -982,7 +982,8 @@ class KalmanFitter {
     std::map<const Surface*, source_link_t> inputMeasurements;
     for (const auto& sl : sourcelinks) {
       const Surface* srf = sl.referenceSurface();
-      inputMeasurements.emplace(srf, sl);
+      if(srf != nullptr)
+		inputMeasurements.emplace(srf, sl);
     }
 
     // Create the ActionList and AbortList
@@ -1083,7 +1084,8 @@ class KalmanFitter {
     std::map<const Surface*, source_link_t> inputMeasurements;
     for (const auto& sl : sourcelinks) {
       const Surface* srf = sl.referenceSurface();
-      inputMeasurements.emplace(srf, sl);
+      if(srf != nullptr)
+		inputMeasurements.emplace(srf, sl);
     }
 
     // Create the ActionList and AbortList
