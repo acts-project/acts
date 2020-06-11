@@ -21,7 +21,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
-  PRIVATE ${TBB_LIBRARIES} Boost::filesystem dfelibs)
+  PRIVATE ${TBB_LIBRARIES} dfelibs std::filesystem)
 target_compile_definitions(
   ActsExamplesFramework
   # framework event data is based on a specific identifier
