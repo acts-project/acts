@@ -57,6 +57,7 @@ class TrackState {
   ///
   /// @param m The measurement object
   TrackState(SourceLink m) : m_surface(m.referenceSurface()) {
+	assert(m_surface != nullptr);
     measurement.uncalibrated = std::move(m);
     m_typeFlags.set(MeasurementFlag);
   }
@@ -115,7 +116,7 @@ class TrackState {
   }
 
   /// @brief return method for the surface
-  const Surface* referenceSurface() const { return m_surface; }
+  const Surface& referenceSurface() const { return (*m_surface); }
 
   /// @brief set the type flag
   void setType(const TrackStateFlag& flag, bool status = true) {

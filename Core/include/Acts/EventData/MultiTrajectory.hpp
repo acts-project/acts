@@ -232,9 +232,9 @@ class TrackStateProxy {
 
   /// Reference surface.
   /// @return the reference surface
-  const Surface* referenceSurface() const {
+  const Surface& referenceSurface() const {
     assert(data().irefsurface != IndexData::kInvalid);
-    return m_traj->m_referenceSurfaces[data().irefsurface].get();
+    return *m_traj->m_referenceSurfaces[data().irefsurface];
   }
 
   /// Set the reference surface to a given value
@@ -471,6 +471,7 @@ class TrackStateProxy {
     if (!refSrf) {
       // ref surface is not set, set it now
       refSrf = meas.referenceSurface()->getSharedPtr();
+      assert(refSrf != nullptr);
     }
 
     assert(dataref.icalibratedsourcelink != IndexData::kInvalid);
