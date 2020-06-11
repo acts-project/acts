@@ -33,7 +33,7 @@ struct Extent {
   static constexpr Range maxrange = {maxval, -maxval};
 
   // The different ranges
-  std::vector<Range> ranges = std::vector<Range>(9, maxrange);
+  std::vector<Range> ranges{(int)binValues, maxrange};
 
   // Constructor
   Extent() = default;
@@ -80,7 +80,15 @@ struct Extent {
 
   /// Access the minimum parameter
   /// @param bval the binning identification
+  double& min(BinningValue bval) { return ranges[bval].first; }
+
+  /// Access the minimum parameter
+  /// @param bval the binning identification
   double min(BinningValue bval) const { return ranges[bval].first; }
+
+  /// Access the max parameter
+  /// @param bval the binning identification
+  double& max(BinningValue bval) { return ranges[bval].second; }
 
   /// Access the max parameter
   /// @param bval the binning identification
