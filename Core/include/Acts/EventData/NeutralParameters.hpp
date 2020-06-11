@@ -12,14 +12,12 @@
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/SingleFreeTrackParameters.hpp"
-#include "Acts/EventData/SingleTrackParameters.hpp"
 
 namespace Acts {
 
-using NeutralParameters = SingleTrackParameters<NeutralPolicy>;
+using NeutralBoundParameters = SingleBoundTrackParameters<NeutralPolicy>;
 using NeutralCurvilinearParameters =
     SingleCurvilinearTrackParameters<NeutralPolicy>;
-using NeutralBoundParameters = SingleBoundTrackParameters<NeutralPolicy>;
 using NeutralFreeParameters = SingleFreeTrackParameters<NeutralPolicy>;
 
 }  // namespace Acts
