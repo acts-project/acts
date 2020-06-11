@@ -15,6 +15,10 @@
 
 namespace Acts {
 
+extern template class SingleBoundTrackParameters<ChargedPolicy>;
+extern template class SingleCurvilinearTrackParameters<ChargedPolicy>;
+extern template class SingleFreeTrackParameters<ChargedPolicy>;
+
 using BoundParameters = SingleBoundTrackParameters<ChargedPolicy>;
 using CurvilinearParameters = SingleCurvilinearTrackParameters<ChargedPolicy>;
 using FreeParameters = SingleFreeTrackParameters<ChargedPolicy>;

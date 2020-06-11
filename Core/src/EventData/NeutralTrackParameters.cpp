@@ -12,6 +12,6 @@ namespace Acts {
 
 template class SingleBoundTrackParameters<NeutralPolicy>;
 template class SingleCurvilinearTrackParameters<NeutralPolicy>;
-template class SingleTrackParameters<NeutralPolicy>;
+template class SingleFreeTrackParameters<NeutralPolicy>;
 
 }  // namespace Acts
