@@ -8,16 +8,17 @@
 
 #include "ACTFW/Utilities/Paths.hpp"
 
-#include <Acts/Utilities/Logger.hpp>
-#include <boost/filesystem.hpp>
 #include <charconv>
 #include <cstdio>
+#include <filesystem>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
 
+#include "Acts/Utilities/Logger.hpp"
+
 std::string FW::ensureWritableDirectory(const std::string& dir) {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
 
   auto dir_path = dir.empty() ? current_path() : path(dir);
   if (exists(dir_path) and not is_directory(dir_path)) {
@@ -51,7 +52,7 @@ std::string FW::perEventFilepath(const std::string& dir,
 
 std::pair<size_t, size_t> FW::determineEventFilesRange(
     const std::string& dir, const std::string& name) {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
 
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("EventFilesRange", Acts::Logging::VERBOSE));
