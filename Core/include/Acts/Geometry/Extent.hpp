@@ -55,11 +55,16 @@ struct Extent {
   /// @param bval the binning identification
   double& min(BinningValue bval) { return ranges[bval].first; }
 
+  /// Access the minimum parameter
+  /// @param bval the binning identification
   double min(BinningValue bval) const { return ranges[bval].first; }
 
   /// Access the max parameter
   /// @param bval the binning identification
   double& max(BinningValue bval) { return ranges[bval].second; }
+
+  /// Access the max parameter
+  /// @param bval the binning identification
   double max(BinningValue bval) const { return ranges[bval].second; }
 
   /// Access the medium parameter
