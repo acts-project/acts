@@ -39,10 +39,7 @@ class SingleFreeTrackParameters {
   /// Type of covariance matrix
   using CovMatrix_t = FreeSymMatrix;
 
-  /// @brief Default virtual destructor
-  ~SingleFreeTrackParameters() = default;
-
-  /// @brief Standard constructor for track parameters of charged particles
+  /// Construct track parameters for charged particles.
   ///
   /// @tparam T Type of the charge policy (ChargedPolicy)
   /// @param [in] cov The covariance matrix
@@ -55,7 +52,7 @@ class SingleFreeTrackParameters {
         m_oChargePolicy((0 < parValues(eFreeQOverP)) ? 1. : -1.),
         m_covariance(std::move(cov)) {}
 
-  /// @brief Standard constructor for track parameters of neutral particles
+  /// Construct track parameters for neutral particles.
   ///
   /// @tparam T Type of the charge policy (NeutralPolicy)
   /// @param [in] cov The covariance matrix
@@ -68,53 +65,8 @@ class SingleFreeTrackParameters {
         m_oChargePolicy(),
         m_covariance(std::move(cov)) {}
 
-  /// @brief Copy assignment operator
-  ///
-  /// @param [in] rhs Object to be copied
-  ///
-  /// @return The assigned-to object `*this`
-  SingleFreeTrackParameters<ChargePolicy>& operator=(
-      const SingleFreeTrackParameters<ChargePolicy>& rhs) {
-    // Check for self-assignment
-    if (this != &rhs) {
-      m_oChargePolicy = rhs.m_oChargePolicy;
-      m_parameters = rhs.m_parameters;
-      m_covariance = rhs.m_covariance;
-    }
-    return *this;
-  }
-
-  /// @brief Move assignment operator
-  ///
-  /// @param [in] rhs object to be movied into `*this`
-  ///
-  /// @return The assigned-to object `*this`
-  SingleFreeTrackParameters<ChargePolicy>& operator=(
-      SingleFreeTrackParameters<ChargePolicy>&& rhs) {
-    // Check for self-assignment
-    if (this != &rhs) {
-      m_oChargePolicy = std::move(rhs.m_oChargePolicy);
-      m_parameters = std::move(rhs.m_parameters);
-      m_covariance = std::move(rhs.m_covariance);
-    }
-    return *this;
-  }
-
-  /// @brief Default copy constructor
-  ///
-  /// @param [in] copy The object to copy from
-  SingleFreeTrackParameters(const SingleFreeTrackParameters<ChargePolicy>& copy)
-      : m_parameters(copy.m_parameters),
-        m_oChargePolicy(copy.m_oChargePolicy),
-        m_covariance(copy.m_covariance) {}
-
-  /// @brief Default move constructor
-  ///
-  /// @param [in] copy The object to move from
-  SingleFreeTrackParameters(SingleFreeTrackParameters<ChargePolicy>&& copy) {
-    this->operator=(
-        std::forward<const SingleFreeTrackParameters<ChargePolicy>>(copy));
-  }
+  // this class does not have a custom default constructor and thus should not
+  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
   /// @brief Access all parameters
   ///
@@ -134,8 +86,8 @@ class SingleFreeTrackParameters {
 
   /// @brief Access track parameter uncertainty
   ///
-  /// @tparam par Identifier of the parameter uncertainty index which will be
-  /// retrieved
+  /// @tparam par Identifier of the parameter uncertainty index which will
+  /// be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
   template <unsigned int par,
@@ -146,8 +98,8 @@ class SingleFreeTrackParameters {
 
   /// @brief Access covariance matrix of track parameters
   ///
-  /// @note The ownership of the covariance matrix is @b not transferred with
-  /// this call.
+  /// @note The ownership of the covariance matrix is @b not transferred
+  /// with this call.
   ///
   /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
@@ -180,8 +132,8 @@ class SingleFreeTrackParameters {
   ///
   /// @param [in] rhs Object to compare `*this` to
   ///
-  /// @return Boolean value whether the objects can be casted into each other
-  /// and the content of the member variables is the same
+  /// @return Boolean value whether the objects can be casted into each
+  /// other and the content of the member variables is the same
   bool operator==(const SingleFreeTrackParameters& rhs) const {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
     if (!casted) {
@@ -216,8 +168,8 @@ class SingleFreeTrackParameters {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param newValue The new updaed value
   ///
-  /// @note The context is not used here but makes the API consistent with @c
-  /// SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
+  /// @note The context is not used here but makes the API consistent with
+  /// @c SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
   template <unsigned int par,
             std::enable_if_t<par<eFreeParametersSize, int> = 0> void set(
                 const GeometryContext& /*gctx*/, ParValue_t newValue) {
