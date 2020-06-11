@@ -220,15 +220,6 @@ class KalmanFitter {
   class Actor {
    public:
 
-    /// Explicit constructor with updater and calibrator
-    Actor(updater_t pUpdater = updater_t(), smoother_t pSmoother = smoother_t(),
-          outlier_finder_t pOutlierFinder = outlier_finder_t(),
-          calibrator_t pCalibrator = calibrator_t())
-        : m_updater(std::move(pUpdater)),
-          m_smoother(std::move(pSmoother)),
-          m_outlierFinder(std::move(pOutlierFinder)),
-          m_calibrator(std::move(pCalibrator)) {}
-
     /// Broadcast the result_type
     using result_type = KalmanFitterResult<source_link_t>;
 
@@ -901,7 +892,6 @@ class KalmanFitter {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam kalman_fitter_options_t Type of the kalman fitter options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -914,20 +904,13 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename kalman_fitter_options_t,
             typename parameters_t = BoundParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const kalman_fitter_options_t& kfOptions) const
+           const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
       -> std::enable_if_t<!isDirectNavigator, Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
-
-    static_assert(
-        std::is_same<outlier_finder_t,
-                     typename kalman_fitter_options_t::OutlierFinder>::value,
-        "Inconsistent type of outlier finder between kalman fitter and "
-        "kalman fitter options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
@@ -964,7 +947,7 @@ class KalmanFitter {
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;
     kalmanActor.m_smoother.m_logger = m_logger;
-
+    
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);
 
@@ -999,7 +982,6 @@ class KalmanFitter {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam kalman_fitter_options_t Type of the kalman fitter options
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1013,21 +995,14 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename kalman_fitter_options_t,
             typename parameters_t = BoundParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const kalman_fitter_options_t& kfOptions,
+           const KalmanFitterOptions<outlier_finder_t>& kfOptions,
            const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator, Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
-
-    static_assert(
-        std::is_same<outlier_finder_t,
-                     typename kalman_fitter_options_t::OutlierFinder>::value,
-        "Inconsistent type of outlier finder between kalman fitter and "
-        "kalman fitter options");
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
