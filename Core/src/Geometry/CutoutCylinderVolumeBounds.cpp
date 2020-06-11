@@ -86,7 +86,7 @@ Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
         *trf * Translation3D(Vector3D(0, 0, -zChoke)));
     auto negInner = Surface::makeShared<CylinderSurface>(negChokeTrf,
                                                          m_innerCylinderBounds);
-    oSurfaces.at(index6) = OrientedSurface(std::move(negInner), forward);
+    oSurfaces.at(index6) = OrientedSurface(std::move(negInner), backward);
   }
 
   // Two Outer disks
