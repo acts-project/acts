@@ -355,7 +355,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       }
 
       // get the geometry ID
-      auto geoID = state.referenceSurface()->geoID();
+      auto geoID = state.referenceSurface().geoID();
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
@@ -425,7 +425,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_nPredicted++;
         Acts::BoundParameters parameter(
             gctx, state.predictedCovariance(), state.predicted(),
-            state.referenceSurface()->getSharedPtr());
+            state.referenceSurface().getSharedPtr());
         auto covariance = state.predictedCovariance();
         // local hit residual info
         auto H = meas.projector();
@@ -560,7 +560,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_nFiltered++;
         Acts::BoundParameters parameter(
             gctx, state.filteredCovariance(), state.filtered(),
-            state.referenceSurface()->getSharedPtr());
+            state.referenceSurface().getSharedPtr());
         auto covariance = state.filteredCovariance();
         // filtered parameter
         m_eLOC0_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0]);
@@ -671,7 +671,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_nSmoothed++;
         Acts::BoundParameters parameter(
             gctx, state.smoothedCovariance(), state.smoothed(),
-            state.referenceSurface()->getSharedPtr());
+            state.referenceSurface().getSharedPtr());
         auto covariance = state.smoothedCovariance();
 
         // smoothed parameter
