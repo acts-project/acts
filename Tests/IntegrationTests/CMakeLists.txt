@@ -32,6 +32,7 @@ endmacro()
 
 add_integrationtest(BVHNavigation BVHNavigationTest.cpp)
 add_integrationtest(InterpolatedSolenoidBField InterpolatedSolenoidBFieldTest.cpp)
+add_integrationtest(PrintDataDirectory PrintDataDirectory.cpp)
 add_integrationtest(Propagation PropagationTests.cpp)
 
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
