@@ -99,6 +99,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR
 set(Boost_NO_BOOST_CMAKE ON) # disable new cmake features from Boost 1.70 on
 find_package(Boost 1.69 REQUIRED COMPONENTS filesystem program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
+find_package(Filesystem REQUIRED)
 
 # optional packages
 #
