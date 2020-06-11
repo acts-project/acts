@@ -255,6 +255,35 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
   CHECK_CLOSE_ABS(radius, cylinderExtent.max(binY), s_onSurfaceTolerance);
 }
 
+/// Unit test for testing CylinderSurface alignment derivatives
+BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
+  double radius(1.0), halfZ(10.);
+  Translation3D translation{0., 1., 2.};
+  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto cylinderSurfaceObject =
+      Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
+
+  const auto& rotation = pTransform->rotation();
+  // The local frame z axis
+  const Vector3D localZAxis = rotation.col(2);
+  // Check the local z axis is aligned to global z axis
+  CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
+
+  /// Define the track (global) position and direction
+  Vector3D globalPosition{0, 2, 2};
+
+  // Test the derivative of bound track parameters local position w.r.t.
+  // position in local 3D Cartesian coordinates
+  const auto& loc3DToLocBound =
+      cylinderSurfaceObject->localCartesianToBoundLocalDerivative(
+          testContext, globalPosition);
+  // Check if the result is as expected
+  LocalCartesianToBoundLocalMatrix expLoc3DToLocBound =
+      LocalCartesianToBoundLocalMatrix::Zero();
+  expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
+  CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test

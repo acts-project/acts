@@ -245,6 +245,73 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
                   s_onSurfaceTolerance);
 }
 
+/// Unit test for testing PlaneSurface alignment derivatives
+BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
+  // bounds object, rectangle type
+  auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
+  /// Test clone method
+  Translation3D translation{0., 1., 2.};
+  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto planeSurfaceObject =
+      Surface::makeShared<PlaneSurface>(pTransform, rBounds);
+  const auto& rotation = pTransform->rotation();
+  // The local frame z axis
+  const Vector3D localZAxis = rotation.col(2);
+  // Check the local z axis is aligned to global z axis
+  CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
+
+  /// Define the track (local) position and direction
+  Vector2D localPosition{1, 2};
+  Vector3D momentum{0, 0, 1};
+  Vector3D direction = momentum.normalized();
+  /// Get the global position
+  Vector3D globalPosition{0, 0, 0};
+  planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
+                                    globalPosition);
+
+  // Call the function to calculate the derivative of local frame axes w.r.t its
+  // rotation
+  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(rotation);
+
+  // (a) Test the derivative of path length w.r.t. alignment parameters
+  const AlignmentRowVector& alignToPath =
+      planeSurfaceObject->alignmentToPathDerivative(tgContext, rotToLocalZAxis,
+                                                    globalPosition, direction);
+  // The expected results
+  AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
+  expAlignToPath << 0, 0, 1, 2, -1, 0;
+  // Check if the calculated derivative is as expected
+  CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
+
+  // (b) Test the derivative of bound track parameters local position w.r.t.
+  // position in local 3D Cartesian coordinates
+  const auto& loc3DToLocBound =
+      planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
+                                                               globalPosition);
+  // For plane surface, this should be identity matrix
+  CHECK_CLOSE_ABS(loc3DToLocBound, LocalCartesianToBoundLocalMatrix::Identity(),
+                  1e-10);
+
+  // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
+  // w.r.t. alignment parameters
+  FreeVector derivatives = FreeVector::Zero();
+  derivatives.segment<3>(0) = momentum;
+  const AlignmentToBoundMatrix& alignToBound =
+      planeSurfaceObject->alignmentToBoundDerivative(tgContext, derivatives,
+                                                     globalPosition, direction);
+  const AlignmentRowVector& alignToloc0 = alignToBound.block<1, 6>(0, 0);
+  const AlignmentRowVector& alignToloc1 = alignToBound.block<1, 6>(1, 0);
+  // The expected results
+  AlignmentRowVector expAlignToloc0;
+  expAlignToloc0 << -1, 0, 0, 0, 0, 2;
+  AlignmentRowVector expAlignToloc1;
+  expAlignToloc1 << 0, -1, 0, 0, 0, -1;
+  // Check if the calculated derivatives are as expected
+  CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);
+  CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test

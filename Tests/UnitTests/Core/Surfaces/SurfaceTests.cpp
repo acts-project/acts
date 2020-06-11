@@ -146,6 +146,9 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   Translation3D translation2{1., 1., 2.};
   auto pTransform1 = std::make_shared<const Transform3D>(translation1);
   auto pTransform2 = std::make_shared<const Transform3D>(translation2);
+  // build a planeSurface to be compared
+  auto planeSurface =
+      Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
   auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound);
   MaterialProperties properties{1., 1., 1., 20., 10, 5.};
   auto pMaterial =
@@ -158,6 +161,8 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   SurfaceStub surface2(detElement1);  // 1 and 2 are the same
   SurfaceStub surface3(detElement2);  // 3 differs in thickness
   SurfaceStub surface4(detElement3);  // 4 has a different transform and id
+  SurfaceStub surface5(detElement1);
+  surface5.assignSurfaceMaterial(pMaterial);  // 5 has non-null surface matrial
   //
   BOOST_CHECK(surface1 == surface2);
   //
@@ -168,6 +173,14 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // BOOST_CHECK_NE(surface1, surface3);  // will fail
   //
   BOOST_CHECK(surface1 != surface4);
+  //
+  BOOST_CHECK(surface1 != surface5);
+  //
+  BOOST_CHECK(surface1 != *planeSurface);
+  // Test the getSharedPtr
+  const auto surfacePtr = Surface::makeShared<const SurfaceStub>(detElement1);
+  const auto sharedSurfacePtr = surfacePtr->getSharedPtr();
+  BOOST_CHECK(*surfacePtr == *sharedSurfacePtr);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
