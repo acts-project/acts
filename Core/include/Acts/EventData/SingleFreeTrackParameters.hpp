@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,9 +16,7 @@
 
 namespace Acts {
 
-/// @class SingleFreeParameters
-///
-/// @brief Container class for free parameters
+/// Free track parameters not bound to a surface.
 ///
 /// This is a base class for neutral and charged free parameters. All parameters
 /// and the corresponding covariance matrix is stored in global coordinates. It
@@ -26,11 +24,11 @@ namespace Acts {
 /// entries of the covariance as well) is given as (position_x, position_y,
 /// position_z, time, direction_x, direction_y, direction_z, charge /
 /// |momentum|).
-/// @tparam ChargePolicy Parameter that describes if the particle is charged or
-/// neutral
+///
+/// @tparam ChargePolicy Selection typt if the particle is charged or neutral
 /// @note It is assumed that a charged particle has a charge of +/-1
 template <class ChargePolicy>
-class SingleFreeParameters {
+class SingleFreeTrackParameters {
   static_assert(std::is_same<ChargePolicy, ChargedPolicy>::value or
                     std::is_same<ChargePolicy, NeutralPolicy>::value,
                 "ChargePolicy must either be 'Acts::ChargedPolicy' or "
@@ -42,7 +40,7 @@ class SingleFreeParameters {
   using CovMatrix_t = FreeSymMatrix;
 
   /// @brief Default virtual destructor
-  ~SingleFreeParameters() = default;
+  ~SingleFreeTrackParameters() = default;
 
   /// @brief Standard constructor for track parameters of charged particles
   ///
@@ -51,8 +49,8 @@ class SingleFreeParameters {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleFreeParameters(std::optional<CovMatrix_t> cov,
-                       const FreeVector& parValues)
+  SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
+                            const FreeVector& parValues)
       : m_parameters(parValues),
         m_oChargePolicy((0 < parValues(eFreeQOverP)) ? 1. : -1.),
         m_covariance(std::move(cov)) {}
@@ -64,8 +62,8 @@ class SingleFreeParameters {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeParameters(std::optional<CovMatrix_t> cov,
-                       const FreeVector& parValues)
+  SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
+                            const FreeVector& parValues)
       : m_parameters(parValues),
         m_oChargePolicy(),
         m_covariance(std::move(cov)) {}
@@ -75,8 +73,8 @@ class SingleFreeParameters {
   /// @param [in] rhs Object to be copied
   ///
   /// @return The assigned-to object `*this`
-  SingleFreeParameters<ChargePolicy>& operator=(
-      const SingleFreeParameters<ChargePolicy>& rhs) {
+  SingleFreeTrackParameters<ChargePolicy>& operator=(
+      const SingleFreeTrackParameters<ChargePolicy>& rhs) {
     // Check for self-assignment
     if (this != &rhs) {
       m_oChargePolicy = rhs.m_oChargePolicy;
@@ -91,8 +89,8 @@ class SingleFreeParameters {
   /// @param [in] rhs object to be movied into `*this`
   ///
   /// @return The assigned-to object `*this`
-  SingleFreeParameters<ChargePolicy>& operator=(
-      SingleFreeParameters<ChargePolicy>&& rhs) {
+  SingleFreeTrackParameters<ChargePolicy>& operator=(
+      SingleFreeTrackParameters<ChargePolicy>&& rhs) {
     // Check for self-assignment
     if (this != &rhs) {
       m_oChargePolicy = std::move(rhs.m_oChargePolicy);
@@ -105,7 +103,7 @@ class SingleFreeParameters {
   /// @brief Default copy constructor
   ///
   /// @param [in] copy The object to copy from
-  SingleFreeParameters(const SingleFreeParameters<ChargePolicy>& copy)
+  SingleFreeTrackParameters(const SingleFreeTrackParameters<ChargePolicy>& copy)
       : m_parameters(copy.m_parameters),
         m_oChargePolicy(copy.m_oChargePolicy),
         m_covariance(copy.m_covariance) {}
@@ -113,9 +111,9 @@ class SingleFreeParameters {
   /// @brief Default move constructor
   ///
   /// @param [in] copy The object to move from
-  SingleFreeParameters(SingleFreeParameters<ChargePolicy>&& copy) {
+  SingleFreeTrackParameters(SingleFreeTrackParameters<ChargePolicy>&& copy) {
     this->operator=(
-        std::forward<const SingleFreeParameters<ChargePolicy>>(copy));
+        std::forward<const SingleFreeTrackParameters<ChargePolicy>>(copy));
   }
 
   /// @brief Access all parameters
@@ -184,7 +182,7 @@ class SingleFreeParameters {
   ///
   /// @return Boolean value whether the objects can be casted into each other
   /// and the content of the member variables is the same
-  bool operator==(const SingleFreeParameters& rhs) const {
+  bool operator==(const SingleFreeTrackParameters& rhs) const {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
     if (!casted) {
       return false;
@@ -208,7 +206,7 @@ class SingleFreeParameters {
   /// @brief inequality operator
   ///
   /// @return `not (*this == rhs)`
-  bool operator!=(const SingleFreeParameters& rhs) const {
+  bool operator!=(const SingleFreeTrackParameters& rhs) const {
     return !(*this == rhs);
   }
 
@@ -261,7 +259,7 @@ class SingleFreeParameters {
   ///
   /// @return Modified output stream object
   friend std::ostream& operator<<(std::ostream& out,
-                                  const SingleFreeParameters& sfp) {
+                                  const SingleFreeTrackParameters& sfp) {
     sfp.print(out);
     return out;
   }

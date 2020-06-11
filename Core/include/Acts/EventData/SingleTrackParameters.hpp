@@ -1,13 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <type_traits>
+
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
@@ -151,7 +153,7 @@ class SingleTrackParameters {
   ///
   /// Prints information about this object to the output stream using the
   /// virtual
-  /// TrackParameters::print or SingleFreeParameters::print method.
+  /// TrackParameters::print method.
   ///
   /// @return modified output stream object
   friend std::ostream& operator<<(std::ostream& out,
@@ -294,4 +296,5 @@ class SingleTrackParameters {
   Vector3D m_vPosition;            ///< 3D vector with global position
   Vector3D m_vMomentum;            ///< 3D vector with global momentum
 };
+
 }  // namespace Acts
