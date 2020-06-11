@@ -1227,7 +1227,7 @@ class CombinatorialKalmanFilter {
     }
 
     // Return the converted Track
-    return m_outputConverter(std::move(combKalmanResult));
+    return std::move(combKalmanResult);
   }
 
 };  // namespace Acts

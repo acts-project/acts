@@ -125,9 +125,6 @@ struct KalmanFitterResult {
   // Indicator if smoothing has been done.
   bool smoothed = false;
 
-  // Indicator if initialization has been performed.
-  bool initialized = false;
-
   // Indicator if the propagation state has been reset
   bool reset = false;
 
@@ -279,16 +276,6 @@ class KalmanFitter {
         // We only do this after the backward-propagation starting layer has
         // been processed
         result.reset = false;
-      }
-
-      // Initialization:
-      // - Only when track states are not set
-      if (!result.initialized) {
-        // -> Move the TrackState vector
-        // -> Feed the KalmanSequencer with the measurements to be fitted
-        ACTS_VERBOSE("Initializing");
-        initialize(state, stepper, result);
-        result.initialized = true;
       }
 
       // Update:
@@ -928,12 +915,11 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename kalman_fitter_options_t,
-            typename parameters_t = BoundParameters,
-            typename result_t = Result<KalmanFitterResult<source_link_t>>>
+            typename parameters_t = BoundParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
            const kalman_fitter_options_t& kfOptions) const
-      -> std::enable_if_t<!isDirectNavigator, result_t> {
+      -> std::enable_if_t<!isDirectNavigator, Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -1028,13 +1014,12 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename kalman_fitter_options_t,
-            typename parameters_t = BoundParameters,
-            typename result_t = Result<KalmanFitterResult<source_link_t>>>
+            typename parameters_t = BoundParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
            const kalman_fitter_options_t& kfOptions,
            const std::vector<const Surface*>& sSequence) const
-      -> std::enable_if_t<isDirectNavigator, result_t> {
+      -> std::enable_if_t<isDirectNavigator, Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
