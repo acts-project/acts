@@ -1,4 +1,10 @@
 # Acts compiler flags
+if (NOT CMAKE_BUILD_TYPE)
+  set(_default_build_type RelWithDebInfo)
+  set(CMAKE_BUILD_TYPE ${_default_build_type} CACHE STRING "Build type configuration")
+  message(STATUS "Setting default build type: ${_default_build_type}")
+endif() 
+
 set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wunused-local-typedefs")
 set(ACTS_CXX_FLAGS_DEBUG "--coverage")
 set(ACTS_CXX_FLAGS_MINSIZEREL "")
