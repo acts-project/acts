@@ -84,7 +84,7 @@ class ParameterSet {
  private:
   // local typedefs and constants
   using Self = ParameterSet<parameter_indices_t,
-                                params...>;  ///< type of this parameter set
+                            params...>;  ///< type of this parameter set
   static constexpr unsigned int kNumberOfParameters =
       sizeof...(params);  ///< number of parameters stored in this class
   static constexpr unsigned int kSizeMax = detail::ParametersSize<
@@ -99,7 +99,8 @@ class ParameterSet {
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
-  static_assert(kNumberOfParameters > 0, "number of stored parameters can not be zero");
+  static_assert(kNumberOfParameters > 0,
+                "number of stored parameters can not be zero");
   static_assert(
       kNumberOfParameters <= kSizeMax,
       "number of stored parameters can not exceed number of total parameters");
@@ -125,9 +126,11 @@ class ParameterSet {
    * @param values values for the remaining stored parameters
    */
   template <typename... Tail>
-  ParameterSet(std::optional<CovarianceMatrix> cov,
-               std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, ParValue_t> head,
-               Tail... values)
+  ParameterSet(
+      std::optional<CovarianceMatrix> cov,
+      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, ParValue_t>
+          head,
+      Tail... values)
       : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
@@ -148,7 +151,8 @@ class ParameterSet {
    * @param cov unique pointer to covariance matrix (nullptr is accepted)
    * @param values vector with parameter values
    */
-  ParameterSet(std::optional<CovarianceMatrix> cov, const ParameterVector& values)
+  ParameterSet(std::optional<CovarianceMatrix> cov,
+               const ParameterVector& values)
       : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
@@ -278,15 +282,8 @@ class ParameterSet {
    */
   template <parameter_indices_t parameter>
   void setParameter(ParValue_t value) {
-	  m_vValues(getIndex<parameter>()) = ParameterTypeFor<parameter_indices_t, parameter>::type::getValue(value);
-    //~ if constexpr (std::is_same<parameter_indices_t,
-                               //~ BoundParametersIndices>::value) {
-      //~ m_vValues(getIndex<parameter>()) =
-          //~ BoundParameterType<parameter>::getValue(value);
-    //~ } else {
-      //~ m_vValues(getIndex<parameter>()) =
-          //~ FreeParameterType<parameter>::getValue(value);
-    //~ }
+    m_vValues(getIndex<parameter>()) =
+        ParameterTypeFor<parameter_indices_t, parameter>::type::getValue(value);
   }
 
   /**
@@ -523,7 +520,8 @@ class ParameterSet {
    * @return constant matrix with @c #kNumberOfParameters rows and @c
    * #kSizeMax columns
    */
-  static const ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax> projector() {
+  static const ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax>
+  projector() {
     return sProjector;
   }
 
@@ -551,18 +549,20 @@ class ParameterSet {
   }
 
  private:
-  ParameterVector m_vValues{ParameterVector::Zero()};  ///< column vector containing
-                                               ///< values of local parameters
+  ParameterVector m_vValues{
+      ParameterVector::Zero()};  ///< column vector containing
+                                 ///< values of local parameters
   std::optional<CovarianceMatrix> m_optCovariance{
       std::nullopt};  ///< an optional covariance matrix
 
   static const Projection sProjector;  ///< matrix to project full parameter
-                                         /// vector onto local parameter space
+                                       /// vector onto local parameter space
 };
 
 // initialize static class members
 template <typename parameter_indices_t, parameter_indices_t... params>
-constexpr unsigned int ParameterSet<parameter_indices_t, params...>::kNumberOfParameters;
+constexpr unsigned int
+    ParameterSet<parameter_indices_t, params...>::kNumberOfParameters;
 
 template <typename parameter_indices_t, parameter_indices_t... params>
 const typename ParameterSet<parameter_indices_t, params...>::Projection
