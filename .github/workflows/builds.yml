@@ -62,7 +62,6 @@ jobs:
       matrix:
         os:
           - centos7
-          - slc6
         lcg:
           - 95apython3
           - 96
