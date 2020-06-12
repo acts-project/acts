@@ -61,7 +61,7 @@ Write access for developers has been disabled for developers on acts-project. Th
 If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch.
 
 1. **Never, ever directly work on any "official" branch!**
-Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the Acts project you should not work directly on branches which are **protected** in the repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
+Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the Acts project you should not work directly on branches which are **protected** in the repository. Usually, these are the _master_ and _release/X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
 
 1. **Use atomic commits!**
 Similarly to the concept of branches, each commit should reflect a self-contained change. Try to avoid overly large commits (bad examples are for instance mixing logical change with code cleanup and typo fixes).
@@ -95,17 +95,21 @@ In addition, some conventions are used in Acts code, details can be found [here]
 - Use `@note` to provide additional information.
 - Link other related entities (e.g. functions) using `@sa`.
 
-### Make a bugfix while working on a feature
+### Example: Make a bugfix while working on a feature
   
 During the development of a new feature you discover a bug which needs to be fixed. In order to not mix bugfix and feature development, the bugfix should happen in a different branch. The recommended procedure for handling this situation is the following:
 1. Get into a clean state of your working directory on your feature branch (either by commiting open changes or by stashing them).
-1. Checkout the branch the bugfix should be merged into (either _master_ or _release-X.Y.Z_) and get the most recent version.
+1. Checkout the branch the bugfix should be merged into (either _master_ or _release/X.Y.Z_) and get the most recent version.
 1. Create a new branch for the bugfix.
 1. Fix the bug, write a test, update documentation etc.
 1. Open a pull request for the bug fix.
 1. Switch back to your feature branch.
 1. Merge your local bugfix branch into the feature branch. Continue your feature development.
 1. Eventually, the bugfix will be merged into _master_. Then, you can rebase your feature branch on master which will remove all duplicate commits related to the bugfix.
+
+### Example: Backporting a feature or bugfix
+
+Suppose you have a bugfix or feature branch that is eventually going to be merged in `master`. You might want to have the feature/bugfix avilable in a patch (say `0.25.1`) tag. To to that, find the corresponding release branch, for this example that would be `release/v0.25.X`. You must create a dedicated branch that **only** contains the commits that relate to your feature/bugfix, otherwise the PR will contain all other commits that were merged into master since the release was branched off. With that branch, open a PR to that branch, and make it clear that it is a backport, also linking to a potential equivalent PR that targets `master`.
 
 ### Tips for users migrating from Gitlab
 
