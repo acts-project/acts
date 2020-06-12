@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -97,8 +98,9 @@ static inline void drawCovarianceCartesian(
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
   // Now generate the ellipse points
-  std::vector<Vector3D> ellipse = createEllipse(
-      lambda0, lambda1, theta, lseg, outOfPlane, lposition, transform);
+  std::vector<Vector3D> ellipse =
+      createEllipse(lambda0 * locErrorScale, lambda1 * locErrorScale, theta,
+                    lseg, outOfPlane, lposition, transform);
 
   ellipse.push_back(transform *
                     Vector3D(lposition.x(), lposition.y(), outOfPlane));
@@ -107,7 +109,7 @@ static inline void drawCovarianceCartesian(
   ellipseHedron.draw(helper, false, color);
 }
 
-/// Helper method to error cone of a direction
+/// Helper method to draw error cone of a direction
 ///
 /// @param helper [in, out] The visualization helper
 /// @param position Where the cone originates from
@@ -154,7 +156,7 @@ static inline void drawCovarianceAngular(
   coneHedron.draw(helper, true, color);
 }
 
-/// Helper method to Surface objects
+/// Helper method to draw bound parameters object
 ///
 /// @param helper [in, out] The visualization helper
 /// @param parameters The bound parameters to be drawn
@@ -166,6 +168,7 @@ static inline void drawCovarianceAngular(
 /// @param lseg The number of segments for a full arch (if needed)
 /// @param pcolor the (optional) color of the parameters to be written
 /// @param scolor the (optional) color of the surface to be written
+/// @param outOfPlane The out of plane drawning option
 template <typename parameters_t>
 static inline void drawBoundParameters(
     IVisualization& helper, const parameters_t& parameters,
@@ -173,7 +176,8 @@ static inline void drawBoundParameters(
     double locErrorScale = 1., double angularErrorScale = 1.,
     bool drawParameterSurface = true, size_t lseg = 72,
     const IVisualization::ColorType& pcolor = {20, 120, 20},
-    const IVisualization::ColorType& scolor = {235, 198, 52}) {
+    const IVisualization::ColorType& scolor = {235, 198, 52},
+    double outOfPlane = 0.1) {
   // First, if necessary, draw the surface
   if (drawParameterSurface) {
     drawSurface(helper, parameters.referenceSurface(), gctx,
@@ -201,13 +205,128 @@ static inline void drawBoundParameters(
     drawCovarianceCartesian(helper, lposition,
                             covariance.template block<2, 2>(0, 0),
                             parameters.referenceSurface().transform(gctx), {3},
-                            locErrorScale, 72, pcolor, 0.01);
+                            locErrorScale, 72, pcolor, outOfPlane);
 
     drawCovarianceAngular(
         helper, parameters.position(), parameters.momentum().normalized(),
         covariance.template block<2, 2>(2, 2), {3}, 0.9 * p * momentumScale,
         angularErrorScale, 72, pcolor);
   }
+}
+
+/// Helper method to draw one trajectory stored in a MultiTrajectory object
+///
+/// @tparam source_link_t The source link type
+
+/// @param helper [in, out] The visualization helper
+/// @param multiTraj The MultiTrajectory storing the trajectory to be drawn
+/// @param entryIndex The trajectory entry index
+/// @param gctx The geometry context for which it is drawn
+/// @param momentumScale The scale of the momentum
+/// @param locErrorScale  The scale of the local error
+/// @param angularErrorScale The sclae of the angular error
+/// @param drawParameterSurface The indicator whether to draw the surface
+/// @param drawMeasurement The indicator whether to draw the (calibrated)
+/// measurement
+/// @param drawPredictedParameters The indicator whether to draw the predicted
+/// track parameters
+/// @param drawFilteredParameters The indicator whether to draw the filtered
+/// track parameters
+/// @param drawSmoothedParameters The indicator whether to draw the smoothed
+/// track parameters
+/// @param lseg The number of segments for a full arch (if needed)
+/// @param scolor the (optional) color of the surface to be written
+/// @param mcolor the (optional) color of the (calibrated) measurement to be
+/// written
+/// @param ppcolor the (optional) color of the predicted track parameters to be
+/// written
+/// @param fpcolor the (optional) color of the filtered track parameters to be
+/// written
+/// @param spcolor the (optional) color of the smoothed track parameters to be
+/// written
+/// @param outOfPlanes The out of plane drawning option for measurment,
+/// predicted parameter, filtered parameter and smoothed parameters.
+template <typename source_link_t>
+static inline void drawMultiTrajectory(
+    IVisualization& helper,
+    const Acts::MultiTrajectory<source_link_t>& multiTraj,
+    const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
+    double momentumScale = 1., double locErrorScale = 1.,
+    double angularErrorScale = 1., bool drawParameterSurface = true,
+    bool drawMeasurement = true, bool drawPredictedParameters = true,
+    bool drawFilteredParameters = true, bool drawSmoothedParameters = true,
+    size_t lseg = 72, const IVisualization::ColorType& scolor = {235, 198, 52},
+    const IVisualization::ColorType& mcolor = {218, 165, 32},
+    const IVisualization::ColorType& ppcolor = {20, 120, 20},
+    const IVisualization::ColorType& fpcolor = {255, 102, 0},
+    const IVisualization::ColorType& spcolor = {204, 153, 255},
+    std::array<double, 4> outOfPlanes = {-0.01, -0.02, -0.03, -0.04}) {
+  // Visit the track states on the trajectory
+  multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
+    // Only draw the measurement states
+    if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      return true;
+    }
+
+    // Use unit scaling factors for the first state
+    // @Todo: add parameter for the first state error scaling
+    if (state.index() == 0) {
+      locErrorScale = 1;
+      angularErrorScale = 1;
+    }
+
+    // First, if necessary, draw the surface
+    if (drawParameterSurface) {
+      drawSurface(helper, state.referenceSurface(), gctx,
+                  Transform3D::Identity(), lseg, false, scolor);
+    }
+
+    // Second, if necessary and present, draw the calibrated measurement (only
+    // draw 2D measurement here)
+    // @Todo: how to draw 1D measurement?
+    if (drawMeasurement and state.hasCalibrated() and
+        state.calibratedSize() == 2) {
+      const Vector2D& lposition = state.calibrated().template head<2>();
+      ActsSymMatrixD<2> covariance =
+          state.calibratedCovariance().template topLeftCorner<2, 2>();
+      drawCovarianceCartesian(helper, lposition, covariance,
+                              state.referenceSurface().transform(gctx), {3},
+                              locErrorScale, 72, mcolor, outOfPlanes.at(0));
+    }
+
+    // Last, if necessary and present, draw the track parameters
+    // (a) predicted track parameters
+    if (drawPredictedParameters and state.hasPredicted()) {
+      drawBoundParameters(
+          helper,
+          Acts::BoundParameters(gctx, state.predictedCovariance(),
+                                state.predicted(),
+                                state.referenceSurface().getSharedPtr()),
+          gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
+          ppcolor, scolor, outOfPlanes.at(1));
+    }
+    // (b) filtered track parameters
+    if (drawFilteredParameters and state.hasFiltered()) {
+      drawBoundParameters(
+          helper,
+          Acts::BoundParameters(gctx, state.filteredCovariance(),
+                                state.filtered(),
+                                state.referenceSurface().getSharedPtr()),
+          gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
+          fpcolor, scolor, outOfPlanes.at(2));
+    }
+    // (c) smoothed track parameters
+    if (drawSmoothedParameters and state.hasSmoothed()) {
+      drawBoundParameters(
+          helper,
+          Acts::BoundParameters(gctx, state.smoothedCovariance(),
+                                state.smoothed(),
+                                state.referenceSurface().getSharedPtr()),
+          gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
+          spcolor, scolor, outOfPlanes.at(3));
+    }
+    return true;
+  });
 }
 
 }  // namespace Visualization
