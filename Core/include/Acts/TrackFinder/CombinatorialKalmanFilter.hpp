@@ -220,12 +220,11 @@ class CombinatorialKalmanFilter {
   CombinatorialKalmanFilter() = delete;
 
   /// Constructor from arguments
-  CombinatorialKalmanFilter(
-      propagator_t pPropagator,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("CombinatorialKalmanFilter", Logging::INFO))
-      : m_propagator(std::move(pPropagator)),
-        m_logger(logger.release()) {}
+  CombinatorialKalmanFilter(propagator_t pPropagator,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("CombinatorialKalmanFilter",
+                                                 Logging::INFO))
+      : m_propagator(std::move(pPropagator)), m_logger(logger.release()) {}
 
  private:
   /// The propgator for the transport and material update
@@ -1059,9 +1058,9 @@ class CombinatorialKalmanFilter {
   template <typename source_link_t, typename parameters_t>
   class Aborter {
    public:
-	/// Broadcast the result_type
+    /// Broadcast the result_type
     using action_type = Actor<source_link_t, parameters_t>;
-    
+
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
@@ -1097,7 +1096,8 @@ class CombinatorialKalmanFilter {
       typename source_link_container_t::value_type>>
   findTracks(const source_link_container_t& sourcelinks,
              const start_parameters_t& sParameters,
-             const CombinatorialKalmanFilterOptions<source_link_selector_t>& tfOptions) const {
+             const CombinatorialKalmanFilterOptions<source_link_selector_t>&
+                 tfOptions) const {
     using SourceLink = typename source_link_container_t::value_type;
     static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");

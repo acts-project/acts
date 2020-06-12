@@ -48,13 +48,14 @@ class GainMatrixSmoother {
   /// @return The smoothed track parameters at the first measurement state
   template <typename source_link_t>
   Result<void> operator()(const GeometryContext& gctx,
-                                  MultiTrajectory<source_link_t>& trajectory,
-                                  size_t entryIndex) const {
+                          MultiTrajectory<source_link_t>& trajectory,
+                          size_t entryIndex) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
     // using ParVector_t = typename parameters_t::ParVector_t;
-    using Matrix_t = ActsSymMatrixD<MultiTrajectory<source_link_t>::ParametersSize>;
+    using Matrix_t =
+        ActsSymMatrixD<MultiTrajectory<source_link_t>::ParametersSize>;
 
     // For the last state: smoothed is filtered - also: switch to next
     ACTS_VERBOSE("Getting previous track state");

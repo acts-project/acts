@@ -196,8 +196,7 @@ class KalmanFitter {
   KalmanFitter(propagator_t pPropagator,
                std::unique_ptr<const Logger> logger =
                    getDefaultLogger("KalmanFilter", Logging::INFO))
-      : m_propagator(std::move(pPropagator)),
-        m_logger(logger.release()) {}
+      : m_propagator(std::move(pPropagator)), m_logger(logger.release()) {}
 
  private:
   /// The propgator for the transport and material update
@@ -219,7 +218,6 @@ class KalmanFitter {
   template <typename source_link_t, typename parameters_t>
   class Actor {
    public:
-
     /// Broadcast the result_type
     using result_type = KalmanFitterResult<source_link_t>;
 
@@ -908,7 +906,8 @@ class KalmanFitter {
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
-      -> std::enable_if_t<!isDirectNavigator, Result<KalmanFitterResult<source_link_t>>> {
+      -> std::enable_if_t<!isDirectNavigator,
+                          Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -947,7 +946,7 @@ class KalmanFitter {
     // also set logger on updater and smoother
     kalmanActor.m_updater.m_logger = m_logger;
     kalmanActor.m_smoother.m_logger = m_logger;
-    
+
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);
 
@@ -1000,7 +999,8 @@ class KalmanFitter {
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<outlier_finder_t>& kfOptions,
            const std::vector<const Surface*>& sSequence) const
-      -> std::enable_if_t<isDirectNavigator, Result<KalmanFitterResult<source_link_t>>> {
+      -> std::enable_if_t<isDirectNavigator,
+                          Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
