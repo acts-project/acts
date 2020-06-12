@@ -207,7 +207,8 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   BOOST_CHECK(pars.covariance().has_value());
   BOOST_CHECK_NE(*pars.covariance(), cov);
   // check Jacobian. should be identity since there was no propagation yet
-  CHECK_CLOSE_ABS(std::get<BoundMatrix>(jac), Jacobian(Jacobian::Identity()), eps);
+  CHECK_CLOSE_ABS(std::get<BoundMatrix>(jac), Jacobian(Jacobian::Identity()),
+                  eps);
   // check propagation length
   CHECK_CLOSE_ABS(pathLength, 0., eps);
 }
@@ -229,7 +230,8 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   BOOST_CHECK(pars.covariance().has_value());
   BOOST_CHECK_NE(*pars.covariance(), cov);
   // check Jacobian. should be identity since there was no propagation yet
-  CHECK_CLOSE_ABS(std::get<BoundMatrix>(jac), Jacobian(Jacobian::Identity()), eps);
+  CHECK_CLOSE_ABS(std::get<BoundMatrix>(jac), Jacobian(Jacobian::Identity()),
+                  eps);
   // check propagation length
   CHECK_CLOSE_ABS(pathLength, 0., eps);
 }
