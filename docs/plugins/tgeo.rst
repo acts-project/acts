@@ -20,7 +20,7 @@ Conversion of TGeoShapes to Acts::Surfaces
 ==========================================
 
 An automatic translation of ``TGeoShape`` objects into corresponding ``Acts::Surface`` objects with appropriate bound descriptions is done by the ``Acts::TGeoSurfaceConverter`` class. 
-There is some limited freedom in re-defining the orientation of the coordiante system between ROOT and Acts which can be used to adapt local coordiante definitions on the converted objects.
+There is some limited freedom in re-defining the orientation of the coordinate system between ROOT and Acts which can be used to adapt local coordinate definitions on the converted objects.
 This is indicated by the ``const std::string& axes`` argument of the converter.
 
 The nominclature/convention is the following:
