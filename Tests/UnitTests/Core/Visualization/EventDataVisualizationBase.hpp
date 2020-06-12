@@ -274,9 +274,9 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
 
   // Draw the track
   std::cout << "Draw the fitted track" << std::endl;
-  double momentumScale = 10;
+  double momentumScale = 5;
   double localErrorScale = 100.;
-  double directionErrorScale = 1000000;
+  double directionErrorScale = 500000;
 
   const IVisualization::ColorType scolor = {235, 198, 52};
   const IVisualization::ColorType& mcolor = {255, 145, 48};
