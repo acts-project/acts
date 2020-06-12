@@ -1,8 +1,7 @@
 # Acts compiler flags
 if (NOT CMAKE_BUILD_TYPE)
-  set(_default_build_type RelWithDebInfo)
-  set(CMAKE_BUILD_TYPE ${_default_build_type} CACHE STRING "Build type configuration")
-  message(STATUS "Setting default build type: ${_default_build_type}")
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type configuration" FORCE)
+  message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif() 
 
 set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wunused-local-typedefs")
