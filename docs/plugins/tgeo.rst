@@ -13,7 +13,7 @@ Parsing the ROOT Geometry
 
 Once a geometry is imported in ROOT, it can be accessed via the ``gGeoManager``. The ``Acts::TGeoLayerBuilder`` relies on the fact that this ``gGeoManager`` is accessible, if it points to ``nullptr``, obviously no conversion is done.
 The ``Acts::TGeoLayerBuilder`` can hereby be configured to search within given parsing ranges for ``TGeoNode`` objects to be converted into ``Acts::Surface`` objects. A vector of search strings can be used for situations where multiple sensor types are used or additional objects are bound to be described. 
-A dedicated ``Acts::TGeopParser`` struct is then used to select the nodes from the ROOT geometry.
+A dedicated ``Acts::TGeoParser`` struct is then used to select the nodes from the ROOT geometry.
 
 
 Conversion of TGeoShapes to Acts::Surfaces
