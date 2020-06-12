@@ -14,6 +14,7 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Visualization/GeometryVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 
@@ -26,7 +27,8 @@ namespace Test {
 /// @brief struct to load the global geometry
 struct RootGeometry {
   RootGeometry() {
-    TGeoManager::Import("http://cern.ch/asalzbur/acts/panda.root");
+    auto path = Acts::Test::getDataPath("panda.root");
+    TGeoManager::Import(path.c_str());
   }
 };
 

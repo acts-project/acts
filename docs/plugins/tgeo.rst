@@ -13,17 +13,17 @@ Parsing the ROOT Geometry
 
 Once a geometry is imported in ROOT, it can be accessed via the ``gGeoManager``. The ``Acts::TGeoLayerBuilder`` relies on the fact that this ``gGeoManager`` is accessible, if it points to ``nullptr``, obviously no conversion is done.
 The ``Acts::TGeoLayerBuilder`` can hereby be configured to search within given parsing ranges for ``TGeoNode`` objects to be converted into ``Acts::Surface`` objects. A vector of search strings can be used for situations where multiple sensor types are used or additional objects are bound to be described. 
-A dedicated ``Acts::TGeopParser`` struct is then used to select the nodes from the ROOT geometry.
+A dedicated ``Acts::TGeoParser`` struct is then used to select the nodes from the ROOT geometry.
 
 
 Conversion of TGeoShapes to Acts::Surfaces
 ==========================================
 
 An automatic translation of ``TGeoShape`` objects into corresponding ``Acts::Surface`` objects with appropriate bound descriptions is done by the ``Acts::TGeoSurfaceConverter`` class. 
-There is some limited freedom in re-defining the orientation of the coordiante system between ROOT and Acts which can be used to adapt local coordiante definitions on the converted objects.
+There is some limited freedom in re-defining the orientation of the coordinate system between ROOT and Acts which can be used to adapt local coordinate definitions on the converted objects.
 This is indicated by the ``const std::string& axes`` argument of the converter.
 
-The nominclature/convention is the following:
+The nomenclature/convention is the following:
  * the resulting local cartesian coordinate system must by right-handed: this is guaranteed by the fact that the third local axis is contructed as a cross product of the first two local axis
  * defining the new local axes with respect to the ``TGeo`` definition is done by naming the new axes in order, e.g. an unchanged coordinate system has the tag ``XYZ``, or ``XY*``, as the third axis is defined by the first two ones
  * flipping the direction of a axis is done by lower capital, e.g. ``yZ*`` redefines the negative y-axis of the ``TGeoMatrix`` as the (obvisouly) positive x-axis of the ``Acts::Transform3D`` and redefines the positive z-axis of the ``TGeoMatrix`` as corresponding y-axis of the ``Acts::Transform3D`` 
