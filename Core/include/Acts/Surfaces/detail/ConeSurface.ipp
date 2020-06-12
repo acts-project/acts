@@ -115,3 +115,26 @@ inline SurfaceIntersection ConeSurface::intersect(
   }
   return cIntersection;
 }
+
+inline const LocalCartesianToBoundLocalMatrix
+ConeSurface::localCartesianToBoundLocalDerivative(
+    const GeometryContext& gctx, const Vector3D& position) const {
+  using VectorHelpers::perp;
+  using VectorHelpers::phi;
+  // The local frame transform
+  const auto& sTransform = transform(gctx);
+  // calculate the transformation to local coorinates
+  const Vector3D localPos = sTransform.inverse() * position;
+  const double lr = perp(localPos);
+  const double lphi = phi(localPos);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
+  // Solve for radius R
+  const double R = localPos.z() * bounds().tanAlpha();
+  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
+      LocalCartesianToBoundLocalMatrix::Zero();
+  loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr,
+      lphi * bounds().tanAlpha(), 0, 0, 1;
+
+  return loc3DToLocBound;
+}

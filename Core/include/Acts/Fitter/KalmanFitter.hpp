@@ -99,7 +99,7 @@ struct KalmanFitterOptions {
   /// Whether to consider energy loss
   bool energyLoss = true;
 
-  /// Whether to run backward filtering.
+  /// Whether to run backward filtering
   bool backwardFiltering = false;
 };
 
@@ -870,10 +870,10 @@ class KalmanFitter {
         ACTS_VERBOSE("Apply smoothing on " << nStates
                                            << " filtered track states.");
       }
+
       // Smooth the track states
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
                                   measurementIndices.front());
-
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
