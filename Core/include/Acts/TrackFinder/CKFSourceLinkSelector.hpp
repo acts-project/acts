@@ -161,9 +161,9 @@ struct CKFSourceLinkSelector {
                 typename std::remove_const<typename std::remove_reference<
                     decltype(calibrated)>::type>::type;
             // measurement (local) parameter vector
-            using meas_par_t = typename meas_t::ParVector_t;
+            using meas_par_t = typename meas_t::ParameterVector;
             // type of projection
-            using projection_t = typename meas_t::Projection_t;
+            using projection_t = typename meas_t::Projection;
 
             // Take the projector (measurement mapping function)
             const projection_t& H = calibrated.projector();
