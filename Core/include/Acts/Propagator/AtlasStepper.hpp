@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <functional>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -79,10 +80,10 @@ class AtlasStepper {
       const auto Vp = pars.parameters();
 
       double Sf, Cf, Ce, Se;
-      Sf = sin(Vp(2));
-      Cf = cos(Vp(2));
-      Se = sin(Vp(3));
-      Ce = cos(Vp(3));
+      Sf = sin(Vp[eBoundPhi]);
+      Cf = cos(Vp[eBoundPhi]);
+      Se = sin(Vp[eBoundTheta]);
+      Ce = cos(Vp[eBoundTheta]);
 
       pVector[0] = pos(0);
       pVector[1] = pos(1);
@@ -91,7 +92,7 @@ class AtlasStepper {
       pVector[4] = Cf * Se;
       pVector[5] = Sf * Se;
       pVector[6] = Ce;
-      pVector[7] = Vp[4];
+      pVector[7] = Vp[eBoundQOverP];
 
       // @todo: remove magic numbers - is that the charge ?
       if (std::abs(pVector[7]) < .000000000000001) {
@@ -297,7 +298,7 @@ class AtlasStepper {
     size_t debugMsgWidth = 50;
   };
 
-  AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};
+  AtlasStepper(bfield_t bField) : m_bField(std::move(bField)){};
 
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,

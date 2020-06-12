@@ -170,7 +170,7 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(BField bField = BField());
+  EigenStepper(BField bField);
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
