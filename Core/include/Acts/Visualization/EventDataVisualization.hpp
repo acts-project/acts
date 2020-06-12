@@ -23,7 +23,8 @@
 #include <optional>
 
 namespace Acts {
-namespace Visualization {
+
+namespace EventDataVisualization {
 
 /// Helper to find the egen values and corr angle
 ///
@@ -180,8 +181,9 @@ static inline void drawBoundParameters(
     double outOfPlane = 0.1) {
   // First, if necessary, draw the surface
   if (drawParameterSurface) {
-    drawSurface(helper, parameters.referenceSurface(), gctx,
-                Transform3D::Identity(), lseg, false, scolor);
+    GeometryVisualization::drawSurface(helper, parameters.referenceSurface(),
+                                       gctx, Transform3D::Identity(), lseg,
+                                       false, scolor);
   }
 
   // Draw the parameter shaft and cone
@@ -193,8 +195,9 @@ static inline void drawBoundParameters(
                           ? 0.25 * p * momentumScale * direction
                           : Vector3D(0., 0., 0.);
 
-  drawArrowForward(helper, position, position + p * momentumScale * direction,
-                   0.025, 0.05, 2., 72, pcolor);
+  GeometryVisualization::drawArrowForward(
+      helper, position, position + p * momentumScale * direction, 0.025, 0.05,
+      2., 72, pcolor);
 
   if (parameters.covariance().has_value()) {
     auto paramVec = parameters.parameters();
@@ -277,8 +280,9 @@ static inline void drawMultiTrajectory(
 
     // First, if necessary, draw the surface
     if (drawParameterSurface) {
-      drawSurface(helper, state.referenceSurface(), gctx,
-                  Transform3D::Identity(), lseg, false, scolor);
+      GeometryVisualization::drawSurface(helper, state.referenceSurface(), gctx,
+                                         Transform3D::Identity(), lseg, false,
+                                         scolor);
     }
 
     // Second, if necessary and present, draw the calibrated measurement (only
@@ -299,9 +303,8 @@ static inline void drawMultiTrajectory(
     if (drawPredictedParameters and state.hasPredicted()) {
       drawBoundParameters(
           helper,
-          Acts::BoundParameters(gctx, state.predictedCovariance(),
-                                state.predicted(),
-                                state.referenceSurface().getSharedPtr()),
+          BoundParameters(gctx, state.predictedCovariance(), state.predicted(),
+                          state.referenceSurface().getSharedPtr()),
           gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
           ppcolor, scolor, outOfPlanes.at(1));
     }
@@ -309,9 +312,8 @@ static inline void drawMultiTrajectory(
     if (drawFilteredParameters and state.hasFiltered()) {
       drawBoundParameters(
           helper,
-          Acts::BoundParameters(gctx, state.filteredCovariance(),
-                                state.filtered(),
-                                state.referenceSurface().getSharedPtr()),
+          BoundParameters(gctx, state.filteredCovariance(), state.filtered(),
+                          state.referenceSurface().getSharedPtr()),
           gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
           fpcolor, scolor, outOfPlanes.at(2));
     }
@@ -319,9 +321,8 @@ static inline void drawMultiTrajectory(
     if (drawSmoothedParameters and state.hasSmoothed()) {
       drawBoundParameters(
           helper,
-          Acts::BoundParameters(gctx, state.smoothedCovariance(),
-                                state.smoothed(),
-                                state.referenceSurface().getSharedPtr()),
+          BoundParameters(gctx, state.smoothedCovariance(), state.smoothed(),
+                          state.referenceSurface().getSharedPtr()),
           gctx, momentumScale, locErrorScale, angularErrorScale, false, 72,
           spcolor, scolor, outOfPlanes.at(3));
     }
@@ -329,5 +330,5 @@ static inline void drawMultiTrajectory(
   });
 }
 
-}  // namespace Visualization
+}  // namespace EventDataVisualization
 }  // namespace Acts
