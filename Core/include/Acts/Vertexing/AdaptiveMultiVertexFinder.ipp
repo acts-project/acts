@@ -59,7 +59,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
                << vtxCandidate.fullPosition());
-    if (vtxCandidate.position().z() == 0.) {
+    if (vtxCandidate.position().z() ==
+        vertexingOptions.vertexConstraint.position().z()) {
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
       allVertices.pop_back();
