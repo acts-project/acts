@@ -70,8 +70,9 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   IVisualization::ColorType unsortedColor = {252, 160, 0};
   for (auto& sf : cylinderSurfaces) {
-    Visualization::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                               1, false, unsortedColor);
+    GeometryVisualization::drawSurface(objVis, *sf, tgContext,
+                                       Transform3D::Identity(), 1, false,
+                                       unsortedColor);
   }
   // Draw the all surfaces
   write(objVis, "ProtoLayerHelper_CylinderLayers_unsorted", true);
@@ -92,8 +93,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
       auto color = sortedColors[il];
-      Visualization::drawSurface(objVis, *sf, tgContext,
-                                 Transform3D::Identity(), 1, false, color);
+      GeometryVisualization::drawSurface(
+          objVis, *sf, tgContext, Transform3D::Identity(), 1, false, color);
     }
     ++il;
   }
@@ -124,8 +125,9 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   }
 
   for (auto& sf : discSurfaces) {
-    Visualization::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                               1, false, unsortedColor);
+    GeometryVisualization::drawSurface(objVis, *sf, tgContext,
+                                       Transform3D::Identity(), 1, false,
+                                       unsortedColor);
   }
   // Draw the all surfaces
   write(objVis, "ProtoLayerHelper_DiscLayers_unsorted", true);
@@ -138,9 +140,9 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   il = 0;
   for (auto& layer : discLayersZ) {
     for (auto& sf : layer.surfaces()) {
-      Visualization::drawSurface(objVis, *sf, tgContext,
-                                 Transform3D::Identity(), 1, false,
-                                 sortedColors[il]);
+      GeometryVisualization::drawSurface(objVis, *sf, tgContext,
+                                         Transform3D::Identity(), 1, false,
+                                         sortedColors[il]);
     }
     ++il;
   }
@@ -173,8 +175,9 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   }
 
   for (auto& sf : ringSurfaces) {
-    Visualization::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                               1, false, unsortedColor);
+    GeometryVisualization::drawSurface(objVis, *sf, tgContext,
+                                       Transform3D::Identity(), 1, false,
+                                       unsortedColor);
   }
   // Draw the all surfaces
   write(objVis, "ProtoLayerHelper_RingLayers_unsorted", true);
@@ -193,8 +196,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
     for (auto& layer : lSorted) {
       dColor[ir] -= il * 50;
       for (auto& sf : layer.surfaces()) {
-        Visualization::drawSurface(objVis, *sf, tgContext,
-                                   Transform3D::Identity(), 1, false, dColor);
+        GeometryVisualization::drawSurface(
+            objVis, *sf, tgContext, Transform3D::Identity(), 1, false, dColor);
       }
       ++il;
     }

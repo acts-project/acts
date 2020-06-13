@@ -20,6 +20,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/ObjVisualization.hpp"
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -545,6 +547,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
   auto axes = sArray->getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 10u);
+
+  // Write the surrace array with grid
+  ObjVisualization objVis;
+  GeometryVisualization::drawSurfaceArray(
+      objVis, *sArray, tgContext, {binR, binPhi}, Transform3D::Identity(), 1,
+      false, {120, 120, 0}, {200, 0, 0});
+  objVis.write("SurfaceArrayCreator_EndcapGrid");
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
@@ -573,6 +582,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
+
+  // Write the surrace array with grid
+  ObjVisualization objVis;
+  GeometryVisualization::drawSurfaceArray(objVis, sa, tgContext, {binPhi, binZ},
+                                          Transform3D::Identity(), 1, false,
+                                          {120, 120, 0}, {200, 0, 0});
+  objVis.write("SurfaceArrayCreator_BarrelGrid");
 
   // actually filled SA
   for (const auto& srf : brl) {

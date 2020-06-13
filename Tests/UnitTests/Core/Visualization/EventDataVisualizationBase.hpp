@@ -91,7 +91,7 @@ static inline std::string testBoundParameters(IVisualization& helper) {
       -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
       0, 0, 0, 0, 0, 1;
 
-  Visualization::drawBoundParameters(
+  EventDataVisualization::drawBoundParameters(
       helper, BoundParameters(gctx, std::move(cov), pars, plane), gctx,
       momentumScale, localErrorScale, directionErrorScale, true, 72, pcolor,
       scolor);
@@ -284,7 +284,7 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   const IVisualization::ColorType& fpcolor = {92, 149, 255};
   const IVisualization::ColorType& spcolor = {20, 120, 20};
 
-  Visualization::drawMultiTrajectory(
+  EventDataVisualization::drawMultiTrajectory(
       helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,
       momentumScale, localErrorScale, directionErrorScale, true, true, true,
       true, true, 50, scolor, mcolor, ppcolor, fpcolor, spcolor);
