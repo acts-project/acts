@@ -217,9 +217,9 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   size_t irz = 0;
   for (auto& layer : rzSorted) {
     for (auto& sf : layer.surfaces()) {
-      Visualization::drawSurface(objVis, *sf, tgContext,
-                                 Transform3D::Identity(), 1, false,
-                                 {125, 0, 0});
+      GeometryVisualization::drawSurface(objVis, *sf, tgContext,
+                                         Transform3D::Identity(), 1, false,
+                                         {125, 0, 0});
     }
     write(objVis,
           "ProtoLayerHelper_RingLayers_rz_sorted" + std::to_string(irz++),

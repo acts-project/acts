@@ -78,22 +78,22 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_TEST(transform_XYZ.isApprox(Transform3D::Identity()));
 
   const Vector3D offset_XYZ{-5.5 * x, 0., 0.};
-  Visualization::drawSurface(
+  GeometryVisualization::drawSurface(
       objVis, *plane_XYZ, tgContext,
       Translation3D{offset_XYZ} * Transform3D::Identity(), 1, false,
       {200, 0, 0});
   const Vector3D center_XYZ = plane_XYZ->center(tgContext) + offset_XYZ;
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_XYZ,
       center_XYZ + 0.6 * (maxX - minX) * rotation_XYZ.col(0), 0.2, 4., 2.5, 72,
       {200, 0, 0});
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_XYZ,
       center_XYZ + 0.6 * (maxY - minY) * rotation_XYZ.col(1), 0.2, 4., 2.5, 72,
       {0, 200, 0});
-  Visualization::drawArrowForward(objVis, center_XYZ,
-                                  center_XYZ + 2 * rotation_XYZ.col(2), 0.2, 4.,
-                                  2.5, 72, {0, 0, 200});
+  GeometryVisualization::drawArrowForward(objVis, center_XYZ,
+                                          center_XYZ + 2 * rotation_XYZ.col(2),
+                                          0.2, 4., 2.5, 72, {0, 0, 200});
 
   // Lower case ---------------------------------
   auto plane_xyz = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
@@ -112,22 +112,22 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_TEST(rotation_xyz.col(2).isApprox(rotation_XYZ.col(2)));
 
   const Vector3D offset_xyz{-2 * x, 0., 0.};
-  Visualization::drawSurface(
+  GeometryVisualization::drawSurface(
       objVis, *plane_xyz, tgContext,
       Translation3D(offset_xyz) * Transform3D::Identity(), 1, false,
       {200, 0, 0});
   const Vector3D center_xyz = plane_xyz->center(tgContext) + offset_xyz;
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_xyz,
       center_xyz + 0.6 * (maxX - minX) * rotation_xyz.col(0), 0.2, 4., 2.5, 72,
       {200, 0, 0});
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_xyz,
       center_xyz + 0.6 * (maxY - minY) * rotation_xyz.col(1), 0.2, 4., 2.5, 72,
       {0, 200, 0});
-  Visualization::drawArrowForward(objVis, center_xyz,
-                                  center_xyz + 2 * rotation_xyz.col(2), 0.2, 4.,
-                                  2.5, 72, {0, 0, 200});
+  GeometryVisualization::drawArrowForward(objVis, center_xyz,
+                                          center_xyz + 2 * rotation_xyz.col(2),
+                                          0.2, 4., 2.5, 72, {0, 0, 200});
 
   // Mixed case ---------------------------------
   auto plane_xYz = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
@@ -146,22 +146,22 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_TEST(rotation_xYz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
   const Vector3D offset_xYz{2 * x, 0., 0.};
-  Visualization::drawSurface(
+  GeometryVisualization::drawSurface(
       objVis, *plane_xYz, tgContext,
       Translation3D{offset_xYz} * Transform3D::Identity(), 1, false,
       {200, 0, 0});
   const Vector3D center_xYz = plane_xYz->center(tgContext) + offset_xYz;
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_xYz,
       center_xYz + 0.6 * (maxX - minX) * rotation_xYz.col(0), 0.2, 4., 2.5, 72,
       {200, 0, 0});
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_xYz,
       center_xYz + 0.6 * (maxY - minY) * rotation_xYz.col(1), 0.2, 4., 2.5, 72,
       {0, 200, 0});
-  Visualization::drawArrowForward(objVis, center_xYz,
-                                  center_xYz + 2 * rotation_xYz.col(2), 0.2, 4.,
-                                  2.5, 72, {0, 0, 200});
+  GeometryVisualization::drawArrowForward(objVis, center_xYz,
+                                          center_xYz + 2 * rotation_xYz.col(2),
+                                          0.2, 4., 2.5, 72, {0, 0, 200});
 
   // Swap case --------------------------------- (x/y) here
   auto plane_YXz = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
@@ -184,22 +184,22 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_TEST(rotation_YXz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
   const Vector3D offset_YXz{5.5 * x, 0., 0.};
-  Visualization::drawSurface(
+  GeometryVisualization::drawSurface(
       objVis, *plane_YXz, tgContext,
       Translation3D{offset_YXz} * Transform3D::Identity(), 1, false,
       {200, 0, 0});
   const Vector3D center_YXz = plane_YXz->center(tgContext) + offset_YXz;
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_YXz,
       center_YXz + 0.6 * (maxX - minX) * rotation_YXz.col(0), 0.2, 4., 2.5, 72,
       {200, 0, 0});
-  Visualization::drawArrowForward(
+  GeometryVisualization::drawArrowForward(
       objVis, center_YXz,
       center_YXz + 0.6 * (maxY - minY) * rotation_YXz.col(1), 0.2, 4., 2.5, 72,
       {0, 200, 0});
-  Visualization::drawArrowForward(objVis, center_YXz,
-                                  center_YXz + 2 * rotation_YXz.col(2), 0.2, 4.,
-                                  2.5, 72, {0, 0, 200});
+  GeometryVisualization::drawArrowForward(objVis, center_YXz,
+                                          center_YXz + 2 * rotation_YXz.col(2),
+                                          0.2, 4., 2.5, 72, {0, 0, 200});
 
   // Scaling test ---------------------------------
   auto plane_XYZ10 = TGeoSurfaceConverter::toSurface(*vol->GetShape(),

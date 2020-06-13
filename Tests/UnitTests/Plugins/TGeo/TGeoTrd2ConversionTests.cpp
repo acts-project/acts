@@ -77,19 +77,19 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
     const Vector3D offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
-    Visualization::drawSurface(objVis, *plane, tgContext,
-                               Translation3D{offset} * Transform3D::Identity(),
-                               1, false, {120, 0, 0});
+    GeometryVisualization::drawSurface(
+        objVis, *plane, tgContext,
+        Translation3D{offset} * Transform3D::Identity(), 1, false, {120, 0, 0});
     const Vector3D center = plane->center(tgContext) + offset;
-    Visualization::drawArrowForward(
+    GeometryVisualization::drawArrowForward(
         objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 0.2,
         4., 2.5, 72, {200, 0, 0});
-    Visualization::drawArrowForward(objVis, center,
-                                    center + 1.2 * hY * rotation.col(1), 0.2,
-                                    4., 2.5, 72, {0, 200, 0});
-    Visualization::drawArrowForward(objVis, center,
-                                    center + 2 * rotation.col(2), 0.2, 4., 2.5,
-                                    72, {0, 0, 200});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 1.2 * hY * rotation.col(1),
+                                            0.2, 4., 2.5, 72, {0, 200, 0});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 2 * rotation.col(2), 0.2,
+                                            4., 2.5, 72, {0, 0, 200});
   }
   objVis.write("TGeoConversion_TGeoTrd2_xz_PlaneSurface");
 
@@ -145,19 +145,19 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
     const Vector3D offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
-    Visualization::drawSurface(objVis, *plane, tgContext,
-                               Translation3D{offset} * Transform3D::Identity(),
-                               1, false, {120, 0, 0});
+    GeometryVisualization::drawSurface(
+        objVis, *plane, tgContext,
+        Translation3D{offset} * Transform3D::Identity(), 1, false, {120, 0, 0});
     const Vector3D center = plane->center(tgContext) + offset;
-    Visualization::drawArrowForward(
+    GeometryVisualization::drawArrowForward(
         objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 0.2,
         4., 2.5, 72, {200, 0, 0});
-    Visualization::drawArrowForward(objVis, center,
-                                    center + 1.2 * hY * rotation.col(1), 0.2,
-                                    4., 2.5, 72, {0, 200, 0});
-    Visualization::drawArrowForward(objVis, center,
-                                    center + 2 * rotation.col(2), 0.2, 4., 2.5,
-                                    72, {0, 0, 200});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 1.2 * hY * rotation.col(1),
+                                            0.2, 4., 2.5, 72, {0, 200, 0});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 2 * rotation.col(2), 0.2,
+                                            4., 2.5, 72, {0, 0, 200});
   }
   objVis.write("TGeoConversion_TGeoTrd2_yz_PlaneSurface");
 

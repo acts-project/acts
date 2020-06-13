@@ -97,9 +97,9 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
     auto sArray = pLayer->surfaceArray();
     if (sArray) {
       for (auto& surface : sArray->surfaces()) {
-        Visualization::drawSurface(objVis, *surface, tgContext,
-                                   Transform3D::Identity(), 1, false,
-                                   {120, 0, 0});
+        GeometryVisualization::drawSurface(objVis, *surface, tgContext,
+                                           Transform3D::Identity(), 1, false,
+                                           {120, 0, 0});
       }
     }
     objVis.write("PositiveLayer_" + std::to_string(ipl++));

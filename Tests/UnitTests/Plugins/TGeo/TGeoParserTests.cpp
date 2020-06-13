@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
       const auto& transform = *(snode.transform.get());
       auto surface =
           TGeoSurfaceConverter::toSurface(shape, transform, axes, scale);
-      Visualization::drawSurface(objVis, *surface, tgContext,
-                                 Transform3D::Identity(), 1, false,
-                                 {120, 0, 0});
+      GeometryVisualization::drawSurface(objVis, *surface, tgContext,
+                                         Transform3D::Identity(), 1, false,
+                                         {120, 0, 0});
     }
     objVis.write("PixelActive");
   }
@@ -97,9 +97,9 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
       const auto& transform = *(snode.transform.get());
       auto surface = TGeoSurfaceConverter::toSurface(shape, transform, axes,
                                                      tgpOptions.unit);
-      Visualization::drawSurface(objVis, *surface, tgContext,
-                                 Transform3D::Identity(), 1, false,
-                                 {120, 0, 0});
+      GeometryVisualization::drawSurface(objVis, *surface, tgContext,
+                                         Transform3D::Identity(), 1, false,
+                                         {120, 0, 0});
     }
     objVis.write("PixelActive_Innemost");
   }

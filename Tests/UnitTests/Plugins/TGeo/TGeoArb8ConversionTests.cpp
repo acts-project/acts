@@ -76,18 +76,19 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     // Check if the surface is the (negative) identity
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
-    Visualization::drawSurface(objVis, *plane, tgContext,
-                               Transform3D::Identity(), 1, false, {0, 0, 120});
+    GeometryVisualization::drawSurface(objVis, *plane, tgContext,
+                                       Transform3D::Identity(), 1, false,
+                                       {0, 0, 120});
     const Vector3D center = plane->center(tgContext);
-    Visualization::drawArrowForward(objVis, center,
-                                    center + 30 * rotation.col(0), 0.2, 4., 2.5,
-                                    72, {200, 0, 0});
-    Visualization::drawArrowForward(objVis, center,
-                                    center + 30 * rotation.col(1), 0.2, 4., 2.5,
-                                    72, {0, 200, 0});
-    Visualization::drawArrowForward(objVis, center,
-                                    center + 2 * rotation.col(2), 0.2, 4., 2.5,
-                                    72, {0, 0, 200});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 30 * rotation.col(0), 0.2,
+                                            4., 2.5, 72, {200, 0, 0});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 30 * rotation.col(1), 0.2,
+                                            4., 2.5, 72, {0, 200, 0});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 2 * rotation.col(2), 0.2,
+                                            4., 2.5, 72, {0, 0, 200});
 
     objVis.write("TGeoConversion_TGeoArb8_PlaneSurface_" +
                  std::to_string(iarb8++));
