@@ -59,8 +59,9 @@ static inline std::string test(IVisualization& helper, bool triangulate,
 
   auto box = std::make_shared<CuboidVolumeBounds>(4., 3., 6.);
   auto cuboid = std::make_shared<AbstractVolume>(identity, box);
-  Visualization::drawVolume(helper, *cuboid, gctx, Transform3D::Identity(), 72,
-                            triangulate, boxColor);
+  GeometryVisualization::drawVolume(helper, *cuboid, gctx,
+                                    Transform3D::Identity(), 72, triangulate,
+                                    boxColor);
   write("Volumes_CuboidVolume");
 
   //----------------------------------------------------
@@ -71,48 +72,48 @@ static inline std::string test(IVisualization& helper, bool triangulate,
   auto solidCone =
       std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 5., 5., 0., M_PI);
   auto cone = std::make_shared<AbstractVolume>(identity, solidCone);
-  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
-                            triangulate, coneColor);
+  GeometryVisualization::drawVolume(
+      helper, *cone, gctx, Transform3D::Identity(), 72, triangulate, coneColor);
   write("Volumes_ConeVolumeSolid");
 
   // Single solid Cone - with cut off
   auto cutOffCone =
       std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 8., 5., 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffCone);
-  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
-                            triangulate, coneColor);
+  GeometryVisualization::drawVolume(
+      helper, *cone, gctx, Transform3D::Identity(), 72, triangulate, coneColor);
   write("Volumes_ConeVolumeSolidCutOff");
 
   // Cone - Cone inlay
   auto cutOffHollowCone =
       std::make_shared<ConeVolumeBounds>(0.35, 7., 0.45, 8., 5, 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowCone);
-  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
-                            triangulate, coneColor);
+  GeometryVisualization::drawVolume(
+      helper, *cone, gctx, Transform3D::Identity(), 72, triangulate, coneColor);
   write("Volumes_ConeVolumeConeCone");
 
   // Sectoral Cone - Cone inlay
   auto cutOffHollowSectoralCone =
       std::make_shared<ConeVolumeBounds>(0.35, 7., 0.45, 8., 5., 0., 0.456);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowSectoralCone);
-  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
-                            triangulate, coneColor);
+  GeometryVisualization::drawVolume(
+      helper, *cone, gctx, Transform3D::Identity(), 72, triangulate, coneColor);
   write("Volumes_ConeVolumeConeConeSectoral");
 
   // Single Hollow Cone - cylindrical inlay
   auto cutOffHollowCylCone =
       std::make_shared<ConeVolumeBounds>(1., 0.45, 8., 5., 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowCylCone);
-  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
-                            triangulate, coneColor);
+  GeometryVisualization::drawVolume(
+      helper, *cone, gctx, Transform3D::Identity(), 72, triangulate, coneColor);
   write("Volumes_ConeVolumeConeCylinder");
 
   // Single Hollow Cylinder - Cone inlay
   auto cutOffHollowConeCyl =
       std::make_shared<ConeVolumeBounds>(12., 0.35, 7., 5., 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowConeCyl);
-  Visualization::drawVolume(helper, *cone, gctx, Transform3D::Identity(), 72,
-                            triangulate, coneColor);
+  GeometryVisualization::drawVolume(
+      helper, *cone, gctx, Transform3D::Identity(), 72, triangulate, coneColor);
   write("Volumes_ConeVolumeCylinderCone");
 
   //----------------------------------------------------
@@ -126,22 +127,25 @@ static inline std::string test(IVisualization& helper, bool triangulate,
   auto fullCylinder =
       std::make_shared<CylinderVolumeBounds>(0., cylinderOuterR, cylinderHalfZ);
   auto cylinder = std::make_shared<AbstractVolume>(identity, fullCylinder);
-  Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
-                            72, triangulate, cylinderColor);
+  GeometryVisualization::drawVolume(helper, *cylinder, gctx,
+                                    Transform3D::Identity(), 72, triangulate,
+                                    cylinderColor);
   write("Volumes_CylinderVolumeFull");
 
   auto tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
-  Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
-                            72, triangulate, cylinderColor);
+  GeometryVisualization::drawVolume(helper, *cylinder, gctx,
+                                    Transform3D::Identity(), 72, triangulate,
+                                    cylinderColor);
   write("Volumes_CylinderVolumeTube");
 
   tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ, halfPhiSector);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
-  Visualization::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
-                            72, triangulate, cylinderColor);
+  GeometryVisualization::drawVolume(helper, *cylinder, gctx,
+                                    Transform3D::Identity(), 72, triangulate,
+                                    cylinderColor);
   write("Volumes_CylinderVolumeTubeSector");
 
   //----------------------------------------------------
@@ -158,8 +162,9 @@ static inline std::string test(IVisualization& helper, bool triangulate,
                {0, 1, 1}}};
   auto genericCuboid = std::make_shared<GenericCuboidVolumeBounds>(vertices);
   auto generic = std::make_shared<AbstractVolume>(identity, genericCuboid);
-  Visualization::drawVolume(helper, *generic, gctx, Transform3D::Identity(), 72,
-                            triangulate, genericColor);
+  GeometryVisualization::drawVolume(helper, *generic, gctx,
+                                    Transform3D::Identity(), 72, triangulate,
+                                    genericColor);
   write("Volumes_GenericCuboidVolume");
 
   //----------------------------------------------------
@@ -167,9 +172,9 @@ static inline std::string test(IVisualization& helper, bool triangulate,
   IVisualization::ColorType trapezoidColor = {23, 196, 22};
   auto trapezoid = std::make_shared<TrapezoidVolumeBounds>(2., 4., 5., 6.);
   auto trapezoidVolume = std::make_shared<AbstractVolume>(identity, trapezoid);
-  Visualization::drawVolume(helper, *trapezoidVolume, gctx,
-                            Transform3D::Identity(), 72, triangulate,
-                            trapezoidColor);
+  GeometryVisualization::drawVolume(helper, *trapezoidVolume, gctx,
+                                    Transform3D::Identity(), 72, triangulate,
+                                    trapezoidColor);
   write("Volumes_TrapezoidVolume");
 
   return cStream.str();
