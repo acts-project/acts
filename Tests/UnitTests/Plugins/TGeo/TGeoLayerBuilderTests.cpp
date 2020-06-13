@@ -14,9 +14,9 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Visualization/GeometryVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
 #include "TGeoManager.h"
 
