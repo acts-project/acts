@@ -23,6 +23,7 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -154,7 +155,7 @@ struct PropagatorOptions {
   // - it also has some formatting options
   bool debug = false;            ///< switch debug on
   std::string debugString = "";  ///< the string to collect msgs
-  size_t debugPfxWidth = 30;     ///< the prefix width
+  size_t debugPfxWidth = 14;     ///< the prefix width
   size_t debugMsgWidth = 50;     ///< the mesage width
 
   // Configurations for Stepper
@@ -230,8 +231,12 @@ class Propagator final {
   ///
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
-  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      : m_stepper(std::move(stepper)), m_navigator(std::move(navigator)) {}
+  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t(),
+                      std::unique_ptr<const Logger> logger =
+                          getDefaultLogger("Propagator", Logging::INFO))
+      : m_stepper(std::move(stepper)),
+        m_navigator(std::move(navigator)),
+        m_logger{std::move(logger)} {}
 
   /// @brief private Propagator state for navigation and debugging
   ///
@@ -385,6 +390,12 @@ class Propagator final {
 
   /// Implementation of navigator
   navigator_t m_navigator;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger{nullptr};
+
+  /// Getter for the logger
+  const Logger& logger() const { return *m_logger; }
 
   /// The private propagation debug logging
   ///
