@@ -1,26 +1,29 @@
-#ifndef ActsVersion_h
-#define ActsVersion_h
+// This file is part of the Acts project.
+//
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <string_view>
+#pragma once
 
 //  Caution: this is the only Acts header that is guaranteed
 //  to change with every Acts release. Including this header
 //  will cause a recompile every time a new Acts version is
 //  used.
 
-// clang-format off
 namespace Acts {
+
+// clang-format does not like the CMake @...@ replacement variables
+// clang-format off
 constexpr unsigned int VersionMajor = @PROJECT_VERSION_MAJOR@u;
 constexpr unsigned int VersionMinor = @PROJECT_VERSION_MINOR@u;
 constexpr unsigned int VersionPatch = @PROJECT_VERSION_PATCH@u;
-constexpr unsigned int Version
-    = 10000u * VersionMajor + 100u * VersionMinor + VersionPatch;
-constexpr std::string_view CommitHash = "@_acts_commit_hash@";
-constexpr std::string_view CommitHashShort = "@_acts_commit_hash_short@";
-}  // namespace Acts
 // clang-format on
+constexpr unsigned int Version =
+    10000u * VersionMajor + 100u * VersionMinor + VersionPatch;
+constexpr const char* const CommitHash = "@_acts_commit_hash@";
+constexpr const char* const CommitHashShort = "@_acts_commit_hash_short@";
 
-// for backward compatibility
-#define ACTS_VERSION Acts::Version
-
-#endif  // ActsVersion_h
+}  // namespace Acts
