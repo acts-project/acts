@@ -89,7 +89,6 @@ In addition, some conventions are used in Acts code, details can be found [here]
 - Use `///` as block comment (instead of `/* ... */`).
 - Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
 - Use the `@<cmd>` notation.
-- Functions and classes must have the \@brief description.
 - Document all (template) parameters using \@(t)param and explain the return value for non-void functions. Mention important conditions which may affect the return value.
 - Use `@remark` to specify pre-conditions.
 - Use `@note` to provide additional information.
