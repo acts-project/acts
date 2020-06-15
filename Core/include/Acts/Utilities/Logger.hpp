@@ -521,6 +521,13 @@ class Logger {
                                         std::placeholders::_1));
   }
 
+  template <typename Callable>
+  void log(const Logging::Level& lvl, Callable&& callable) const {
+    if (doPrint(lvl)) {
+      callable(log(lvl));
+    }
+  }
+
  private:
   /// policy object for printing debug messages
   std::unique_ptr<Logging::OutputPrintPolicy> m_printPolicy;
