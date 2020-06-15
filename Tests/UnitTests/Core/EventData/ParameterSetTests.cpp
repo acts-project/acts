@@ -227,68 +227,6 @@ void random_residual_tests() {
   }
 }
 
-void check_residuals_for_bound_free_parameters() {
-  const double max = FreeParameterType<eFreeDir0>::max;
-  const double min = FreeParameterType<eFreeDir0>::min;
-  double tx_1 = 0.7;
-  double tx_2 = 0.4;
-  ActsVectorD<1> dTx;
-  dTx << (tx_1 - tx_2);
-
-  // both parameters inside bounds, difference is positive
-  ParameterSet<FreeParametersIndices, eFreeDir0> bound1(std::nullopt, tx_1);
-  ParameterSet<FreeParametersIndices, eFreeDir0> bound2(std::nullopt, tx_2);
-  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
-
-  // both parameters inside bound, difference negative
-  dTx << (tx_2 - tx_1);
-  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
-
-  // one parameter above upper bound, difference positive
-  tx_1 = max + 1;
-  bound1.setParameter<eFreeDir0>(tx_1);
-  dTx << max - tx_2;
-  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
-
-  // one parameter above upper bound, difference negative
-  dTx << tx_2 - max;
-  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
-
-  // one parameter below lower bound, difference positive
-  tx_1 = min - 1;
-  bound1.setParameter<eFreeDir0>(tx_1);
-  dTx << tx_2 - min;
-  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
-
-  // one parameter below lower bound, difference negative
-  dTx << min - tx_2;
-  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
-
-  // both parameters outside bounds, both below
-  tx_1 = min - 1;
-  tx_2 = min - 2;
-  bound1.setParameter<eFreeDir0>(tx_1);
-  bound2.setParameter<eFreeDir0>(tx_2);
-  CHECK_SMALL(bound1.residual(bound2), tol);
-
-  // both parameters outside bounds, both above
-  tx_1 = max + 1;
-  tx_2 = max + 2;
-  bound1.setParameter<eFreeDir0>(tx_1);
-  bound2.setParameter<eFreeDir0>(tx_2);
-  CHECK_SMALL(bound1.residual(bound2), tol);
-
-  // both parameters outside bounds, one above, one below
-  tx_1 = max + 1;
-  tx_2 = min - 2;
-  bound1.setParameter<eFreeDir0>(tx_1);
-  bound2.setParameter<eFreeDir0>(tx_2);
-  dTx << max - min;
-  CHECK_CLOSE_REL(bound1.residual(bound2), dTx, tol);
-  dTx << min - max;
-  CHECK_CLOSE_REL(bound2.residual(bound1), dTx, tol);
-}
-
 void free_random_residual_tests() {
   // random number generators
   std::default_random_engine e;
@@ -610,30 +548,45 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
  * @sa ParameterSet::projector
  */
 BOOST_AUTO_TEST_CASE(parset_projection_tests) {
+  // clang-format off
   ActsMatrixD<1, eBoundParametersSize> phi_proj;
   phi_proj << 0, 0, 1, 0, 0, 0;
 
   ActsMatrixD<2, eBoundParametersSize> loc0_qop_proj;
-  loc0_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
+  loc0_qop_proj << 1, 0, 0, 0, 0, 0, 
+                   0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<2, eBoundParametersSize> loc1_theta_proj;
-  loc1_theta_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0;
+  loc1_theta_proj << 0, 1, 0, 0, 0, 0, 
+                     0, 0, 0, 1, 0, 0;
 
   ActsMatrixD<3, eBoundParametersSize> loc0_loc1_phi_proj;
-  loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
+  loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 
+                        0, 1, 0, 0, 0, 0, 
+                        0, 0, 1, 0, 0, 0;
 
   ActsMatrixD<4, eBoundParametersSize> loc0_phi_theta_qop_proj;
-  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 1, 0;
+  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 
+                             0, 0, 1, 0, 0, 0, 
+                             0, 0, 0, 1, 0, 0, 
+                             0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<5, eBoundParametersSize> loc0_loc1_phi_theta_qop_proj;
-  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0;
+  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 
+                                  0, 1, 0, 0, 0, 0, 
+                                  0, 0, 1, 0, 0, 0, 
+                                  0, 0, 0, 1, 0, 0, 
+                                  0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<eBoundParametersSize, eBoundParametersSize>
       loc0_loc1_phi_theta_qop_t_proj;
-  loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 
+                                    0, 1, 0, 0, 0, 0, 
+                                    0, 0, 1, 0, 0, 0, 
+                                    0, 0, 0, 1, 0, 0, 
+                                    0, 0, 0, 0, 1, 0, 
+                                    0, 0, 0, 0, 0, 1;
+  // clang-format on
 
   BOOST_CHECK((ParameterSet<BoundParametersIndices, eBoundPhi>::projector() ==
                phi_proj));
@@ -1036,42 +989,64 @@ BOOST_AUTO_TEST_CASE(free_parset_comparison_tests) {
  * @sa ParameterSet::projector
  */
 BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
+  // clang-format off
   ActsMatrixD<1, eFreeParametersSize> z_proj;
   z_proj << 0, 0, 1, 0, 0, 0, 0, 0;
 
   ActsMatrixD<2, eFreeParametersSize> x_qop_proj;
-  x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<2, eFreeParametersSize> y_tz_proj;
-  y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0;
+  y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<3, eFreeParametersSize> x_y_z_proj;
-  x_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-      0, 0, 0;
+  x_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                0, 1, 0, 0, 0, 0, 0, 0, 
+                0, 0, 1, 0, 0, 0, 0, 0;
 
   ActsMatrixD<4, eFreeParametersSize> x_z_tz_qop_proj;
-  x_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  x_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                     0, 0, 1, 0, 0, 0, 0, 0, 
+                     0, 0, 0, 0, 0, 0, 1, 0, 
+                     0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<5, eFreeParametersSize> x_y_z_tz_qop_proj;
-  x_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  x_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                       0, 1, 0, 0, 0, 0, 0, 0, 
+                       0, 0, 1, 0, 0, 0, 0, 0, 
+                       0, 0, 0, 0, 0, 0, 1, 0, 
+                       0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<6, eFreeParametersSize> x_y_z_t_tz_qop_proj;
-  x_y_z_t_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-      1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-      0, 0, 0, 0, 1;
+  x_y_z_t_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                         0, 1, 0, 0, 0, 0, 0, 0, 
+                         0, 0, 1, 0, 0, 0, 0, 0, 
+                         0, 0, 0, 1, 0, 0, 0, 0, 
+                         0, 0, 0, 0, 0, 0, 1, 0, 
+                         0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<7, eFreeParametersSize> x_y_z_t_ty_tz_qop_proj;
-  x_y_z_t_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-      0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-      0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  x_y_z_t_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                            0, 1, 0, 0, 0, 0, 0, 0, 
+                            0, 0, 1, 0, 0, 0, 0, 0, 
+                            0, 0, 0, 1, 0, 0, 0, 0, 
+                            0, 0, 0, 0, 0, 1, 0, 0, 
+                            0, 0, 0, 0, 0, 0, 1, 0, 
+                            0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<eFreeParametersSize, eFreeParametersSize>
       x_y_z_t_tx_ty_tz_qop_proj;
-  x_y_z_t_tx_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-      0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-      0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  x_y_z_t_tx_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+                               0, 1, 0, 0, 0, 0, 0, 0,
+                               0, 0, 1, 0, 0, 0, 0, 0, 
+                               0, 0, 0, 1, 0, 0, 0, 0, 
+                               0, 0, 0, 0, 1, 0, 0, 0, 
+                               0, 0, 0, 0, 0, 1, 0, 0, 
+                               0, 0, 0, 0, 0, 0, 1, 0, 
+                               0, 0, 0, 0, 0, 0, 0, 1;
+  // clang-format on
 
   BOOST_CHECK(
       (ParameterSet<FreeParametersIndices, eFreePos2>::projector() == z_proj));

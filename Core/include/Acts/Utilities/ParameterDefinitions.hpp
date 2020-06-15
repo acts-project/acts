@@ -256,21 +256,15 @@ struct FreeParameterTraits<FreeParametersIndices::eFreeTime> {
 };
 template <>
 struct FreeParameterTraits<FreeParametersIndices::eFreeDir0> {
-  static constexpr double pMin() { return -1.; }
-  static constexpr double pMax() { return 1.; }
-  using type = bound_parameter<double, pMin, pMax>;
+  using type = unbound_parameter;
 };
 template <>
 struct FreeParameterTraits<FreeParametersIndices::eFreeDir1> {
-  static constexpr double pMin() { return -1.; }
-  static constexpr double pMax() { return 1.; }
-  using type = bound_parameter<double, pMin, pMax>;
+  using type = unbound_parameter;
 };
 template <>
 struct FreeParameterTraits<FreeParametersIndices::eFreeDir2> {
-  static constexpr double pMin() { return -1.; }
-  static constexpr double pMax() { return 1.; }
-  using type = bound_parameter<double, pMin, pMax>;
+  using type = unbound_parameter;
 };
 template <>
 struct FreeParameterTraits<FreeParametersIndices::eFreeQOverP> {
