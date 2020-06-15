@@ -24,9 +24,9 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-BOOST_AUTO_TEST_CASE(EventDataVisualizationObj) {
+BOOST_AUTO_TEST_CASE(BoundParametersVisualizationObj) {
   ObjVisualization obj;
-  auto objTest = EventDataVisualization::test(obj);
+  auto objTest = EventDataVisualization::testBoundParameters(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
@@ -34,9 +34,29 @@ BOOST_AUTO_TEST_CASE(EventDataVisualizationObj) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(EventDataVisualizationPly) {
+BOOST_AUTO_TEST_CASE(BoundParametersVisualizationPly) {
   PlyVisualization ply;
-  auto plyTest = EventDataVisualization::test(ply);
+  auto plyTest = EventDataVisualization::testBoundParameters(ply);
+  auto plyErrors = testPlyString(plyTest);
+  BOOST_CHECK(plyErrors.size() == 0);
+  for (auto plyerr : plyErrors) {
+    std::cout << plyerr << std::endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
+  ObjVisualization obj;
+  auto objTest = EventDataVisualization::testMultiTrajectory(obj);
+  auto objErrors = testObjString(objTest);
+  BOOST_CHECK(objErrors.size() == 0);
+  for (auto objerr : objErrors) {
+    std::cout << objerr << std::endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
+  PlyVisualization ply;
+  auto plyTest = EventDataVisualization::testMultiTrajectory(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {

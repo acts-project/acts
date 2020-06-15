@@ -266,7 +266,7 @@ documentation](https://cmake.org/documentation/).
 
 | Option               | Description |
 |----------------------|-------------|
-| CMAKE_BUILD_TYPE     | Build type, e.g. Debug or Release; affects compiler flags |
+| CMAKE_BUILD_TYPE     | Build type, e.g. Debug or Release; affects compiler flags <br/> (if not specified **`RelWithDebInfo`** will be used as a default) |
 | CMAKE_CXX_COMPILER   | Which C++ compiler to use, e.g. g++ or clang++ |
 | CMAKE_INSTALL_PREFIX | Where to install Acts to |
 | CMAKE_PREFIX_PATH    | Search path for external packages |
