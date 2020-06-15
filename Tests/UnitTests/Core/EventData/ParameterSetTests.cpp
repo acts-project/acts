@@ -232,13 +232,6 @@ void free_random_residual_tests() {
   std::default_random_engine e;
   std::uniform_real_distribution<float> uniform_dist(-1000, 300);
 
-  const double tx_max = FreeParameterType<eFreeDir0>::max;
-  const double tx_min = FreeParameterType<eFreeDir0>::min;
-  const double ty_max = FreeParameterType<eFreeDir1>::max;
-  const double ty_min = FreeParameterType<eFreeDir1>::min;
-  const double tz_max = FreeParameterType<eFreeDir2>::max;
-  const double tz_min = FreeParameterType<eFreeDir2>::min;
-
   FreeVector parValues_1;
   FreeVector parValues_2;
   FullFreeParameterSet parSet_1(std::nullopt, parValues_1);
@@ -272,14 +265,9 @@ void free_random_residual_tests() {
     const double delta_y = y1 - y2;
     const double delta_z = z1 - z2;
     const double delta_t = t1 - t2;
-    // for direction make sure that the difference calculation considers the
-    // restricted value range
-    const double delta_tx = std::max(std::min(tx1, tx_max), tx_min) -
-                            std::max(std::min(tx2, tx_max), tx_min);
-    const double delta_ty = std::max(std::min(ty1, ty_max), ty_min) -
-                            std::max(std::min(ty2, ty_max), ty_min);
-    const double delta_tz = std::max(std::min(tz1, tz_max), tz_min) -
-                            std::max(std::min(tz2, tz_max), tz_min);
+    const double delta_tx = tx1 - tx2;
+    const double delta_ty = ty1 - ty2;
+    const double delta_tz = tz1 - tz2;
     const double delta_qop = qop1 - qop2;
     residual = parSet_1.residual(parSet_2);
 
@@ -1098,19 +1086,7 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   BOOST_CHECK(unbound.getParameter<eFreePos1>() == large_number);
   BOOST_CHECK(unbound.getParameter<eFreeQOverP>() == normal_number);
 
-  // check bound parameter type
-  ParameterSet<FreeParametersIndices, eFreeDir2> bound(std::nullopt,
-                                                       small_number);
-  BOOST_CHECK(
-      (bound.getParameter<eFreeDir2>() == FreeParameterType<eFreeDir2>::min));
-  bound.setParameter<eFreeDir2>(large_number);
-  BOOST_CHECK(
-      (bound.getParameter<eFreeDir2>() == FreeParameterType<eFreeDir2>::max));
-  bound.setParameter<eFreeDir2>(normal_number);
-  BOOST_CHECK((bound.getParameter<eFreeDir2>() == normal_number));
-
   // check residual calculation
-
   // input numbers
   const double first_x = 0.3;
   const double first_y = 0.9;
@@ -1131,9 +1107,6 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> second(
       std::nullopt, second_x, second_y, second_z);
   CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
-
-  // some more checks for bound variables
-  check_residuals_for_bound_free_parameters();
 
   // inspecific residual tests with random numbers
   free_random_residual_tests();
