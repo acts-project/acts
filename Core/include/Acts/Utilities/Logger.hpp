@@ -536,6 +536,24 @@ class Logger {
   std::unique_ptr<Logging::OutputFilterPolicy> m_filterPolicy;
 };
 
+class LoggerWrapper {
+ public:
+  explicit LoggerWrapper(const Logger& logger) : m_logger(&logger) {}
+
+  bool doPrint(const Logging::Level& lvl) const {
+    return m_logger->doPrint(lvl);
+  }
+
+  Logging::OutStream log(const Logging::Level& lvl) const {
+    return m_logger->log(lvl);
+  }
+
+  const Logger& operator()() { return *m_logger; }
+
+ private:
+  const Logger* m_logger;
+};
+
 /// @brief get default debug output logger
 ///
 /// @param [in] name       name of the logger instance
@@ -552,5 +570,7 @@ class Logger {
 std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
     std::ostream* log_stream = &std::cout);
+
+LoggerWrapper getDummyLogger();
 
 }  // namespace Acts
