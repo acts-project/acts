@@ -53,8 +53,7 @@ class GainMatrixSmoother {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
-    // using ParVector_t = typename parameters_t::ParVector_t;
-    using Matrix_t =
+    using Matrix =
         ActsSymMatrixD<MultiTrajectory<source_link_t>::ParametersSize>;
 
     // For the last state: smoothed is filtered - also: switch to next
@@ -65,7 +64,7 @@ class GainMatrixSmoother {
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
     // Smoothing gain matrix
-    Matrix_t G;
+    Matrix G;
 
     // make sure there is more than one track state
     std::optional<std::error_code> error{std::nullopt};  // assume ok
@@ -134,8 +133,8 @@ class GainMatrixSmoother {
         // If not, make one (could do more) attempt to replace it with the
         // nearest semi-positive def matrix,
         // but it could still be non semi-positive
-        Matrix_t smoothedCov = ts.smoothedCovariance();
-        if (not detail::covariance_helper<Matrix_t>::validate(smoothedCov)) {
+        Matrix smoothedCov = ts.smoothedCovariance();
+        if (not detail::covariance_helper<Matrix>::validate(smoothedCov)) {
           ACTS_DEBUG(
               "Smoothed covariance is not positive definite. Could result in "
               "negative covariance!");
