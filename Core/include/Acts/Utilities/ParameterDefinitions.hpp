@@ -235,6 +235,59 @@ template <>
 struct BoundParameterTraits<BoundParametersIndices::eBoundTime> {
   using type = unbound_parameter;
 };
+
+template <FreeParametersIndices>
+struct FreeParameterTraits;
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreePos0> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreePos1> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreePos2> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeTime> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeDir0> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeDir1> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeDir2> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeParametersIndices::eFreeQOverP> {
+  using type = unbound_parameter;
+};
+
+template <typename parameter_indices_t>
+struct ParametersSize;
+template <>
+struct ParametersSize<BoundParametersIndices> {
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(BoundParametersIndices::eBoundParametersSize);
+};
+template <>
+struct ParametersSize<FreeParametersIndices> {
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(FreeParametersIndices::eFreeParametersSize);
+};
+template <>
+struct ParametersSize<SpacePointIndices> {
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(SpacePointIndices::eSpacePointSize);
+};
 }  // namespace detail
 
 /// Single bound track parameter type for value constrains.
@@ -242,6 +295,31 @@ struct BoundParameterTraits<BoundParametersIndices::eBoundTime> {
 /// The singular name is not a typo since this describes individual components.
 template <BoundParametersIndices kIndex>
 using BoundParameterType = typename detail::BoundParameterTraits<kIndex>::type;
+
+/// Single free track parameter type for value constrains.
+///
+/// The singular name is not a typo since this describes individual components.
+template <FreeParametersIndices kIndex>
+using FreeParameterType = typename detail::FreeParameterTraits<kIndex>::type;
+
+/// Access the (Bound/Free)ParameterType through common struct
+///
+/// @tparam T Parameter indices enum
+/// @tparam I Index of @p T
+template <typename T, T I>
+struct ParameterTypeFor {};
+
+/// Access for @c BoundParametersIndices
+template <BoundParametersIndices I>
+struct ParameterTypeFor<BoundParametersIndices, I> {
+  using type = BoundParameterType<I>;
+};
+
+/// Access for @c FreeParametersIndices
+template <FreeParametersIndices I>
+struct ParameterTypeFor<FreeParametersIndices, I> {
+  using type = FreeParameterType<I>;
+};
 
 // The following matrix and vector types are automatically derived from the
 // indices enums and scalar typedefs.

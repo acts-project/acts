@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,7 +30,10 @@
 namespace Acts {
 /// @cond
 // forward type declaration for full parameter set
-using FullParameterSet = typename detail::full_parset::type;
+using FullParameterSet =
+    typename detail::full_parset<BoundParametersIndices>::type;
+using FullFreeParameterSet =
+    typename detail::full_parset<FreeParametersIndices>::type;
 /// @endcond
 
 /**
@@ -41,11 +44,10 @@ using FullParameterSet = typename detail::full_parset::type;
  * @pre
  * The template parameter @c ParameterPolicy must fulfill the following
  * requirements:
- *  -# It must contain a <tt>typedef #ParID_t</tt> specifying an integral
- * type used to identify different
- *     parameters. This could for example be an @c enum, @c short, or
- * <tt>unsigned int</tt>.
- *     This @c typedef must be convertible to an <tt>unsigned int</tt>
+ *  -# It must contain a <tt>typedef #parameter_indices_t</tt> specifying an
+ * integral type used to identify different parameters. This could for example
+ * be an @c enum, @c short, or <tt>unsigned int</tt>. This @c typedef must be
+ * convertible to an <tt>unsigned int</tt>
  *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
  * the parameter values. This could for
  *     instance be @c double, or @c float.
@@ -58,7 +60,7 @@ using FullParameterSet = typename detail::full_parset::type;
  * The template parameter pack @c params must be given in a strictly ascending
  * order. The parameter pack must
  * be non-empty and it cannot contain more elements than
- * <tt>Acts::eBoundParametersSize</tt>.
+ * <tt>parsSize</tt>.
  *
  * @test The behavior of this class is tested in the following unit tests:
  *       - \link Acts::Test::BOOST_AUTO_TEST_CASE(parset_consistency_tests)
@@ -77,36 +79,41 @@ using FullParameterSet = typename detail::full_parset::type;
  * @tparam params           parameter pack containing the (local) parameters
  * stored in this class
  */
-template <ParID_t... params>
+template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
   // local typedefs and constants
-  using ParSet_t = ParameterSet<params...>;  ///< type of this parameter set
-  static constexpr unsigned int NPars =
+  using Self = ParameterSet<parameter_indices_t,
+                            params...>;  ///< type of this parameter set
+  static constexpr unsigned int kNumberOfParameters =
       sizeof...(params);  ///< number of parameters stored in this class
+  static constexpr unsigned int kSizeMax = detail::ParametersSize<
+      parameter_indices_t>::size;  ///< Highest index in used parameter indices
 
   // static assert to check that the template parameters are consistent
-  static_assert(detail::are_sorted<true, true, ParID_t, params...>::value,
-                "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int, 0, eBoundParametersSize,
+      detail::are_sorted<true, true, parameter_indices_t, params...>::value,
+      "parameter identifiers are not sorted");
+  static_assert(
+      detail::are_within<unsigned int, 0, kSizeMax,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
-  static_assert(NPars > 0, "number of stored parameters can not be zero");
+  static_assert(kNumberOfParameters > 0,
+                "number of stored parameters can not be zero");
   static_assert(
-      NPars <= eBoundParametersSize,
+      kNumberOfParameters <= kSizeMax,
       "number of stored parameters can not exceed number of total parameters");
 
  public:
   // public typedefs
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
-  using Projection_t = ActsMatrix<ParValue_t, NPars, eBoundParametersSize>;
+  using Projection = ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax>;
   /// vector type for stored parameters
-  using ParVector_t = ActsVector<ParValue_t, NPars>;
+  using ParameterVector = ActsVector<ParValue_t, kNumberOfParameters>;
   /// type of covariance matrix
-  using CovMatrix_t = ActsSymMatrix<ParValue_t, NPars>;
+  using CovarianceMatrix = ActsSymMatrix<ParValue_t, kNumberOfParameters>;
 
   /**
    * @brief initialize values of stored parameters and their covariance matrix
@@ -119,14 +126,17 @@ class ParameterSet {
    * @param values values for the remaining stored parameters
    */
   template <typename... Tail>
-  ParameterSet(std::optional<CovMatrix_t> cov,
-               std::enable_if_t<sizeof...(Tail) + 1 == NPars, ParValue_t> head,
-               Tail... values)
-      : m_vValues(NPars) {
+  ParameterSet(
+      std::optional<CovarianceMatrix> cov,
+      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, ParValue_t>
+          head,
+      Tail... values)
+      : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<ParID_t, params...>::init(*this, head, values...);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head,
+                                                                    values...);
   }
 
   /**
@@ -141,12 +151,14 @@ class ParameterSet {
    * @param cov unique pointer to covariance matrix (nullptr is accepted)
    * @param values vector with parameter values
    */
-  ParameterSet(std::optional<CovMatrix_t> cov, const ParVector_t& values)
-      : m_vValues(NPars) {
+  ParameterSet(std::optional<CovarianceMatrix> cov,
+               const ParameterVector& values)
+      : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<ParID_t, params...>::init(*this, values);
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
+                                                                    values);
   }
 
   /**
@@ -155,7 +167,7 @@ class ParameterSet {
    * @param copy object whose content is copied into the new @c ParameterSet
    * object
    */
-  ParameterSet(const ParSet_t& copy)
+  ParameterSet(const Self& copy)
       : m_vValues(copy.m_vValues), m_optCovariance(copy.m_optCovariance) {}
 
   /**
@@ -164,7 +176,7 @@ class ParameterSet {
    * @param copy object whose content is moved into the new @c ParameterSet
    * object
    */
-  ParameterSet(ParSet_t&& copy) : m_vValues(std::move(copy.m_vValues)) {
+  ParameterSet(Self&& copy) : m_vValues(std::move(copy.m_vValues)) {
     if (copy.m_optCovariance) {
       m_optCovariance = std::move(*copy.m_optCovariance);
     }
@@ -180,7 +192,7 @@ class ParameterSet {
    *
    * @param rhs object whose content is assigned to this @c ParameterSet object
    */
-  ParSet_t& operator=(const ParSet_t& rhs) {
+  Self& operator=(const Self& rhs) {
     m_vValues = rhs.m_vValues;
     m_optCovariance = rhs.m_optCovariance;
     return *this;
@@ -191,7 +203,7 @@ class ParameterSet {
    *
    * @param rhs object whose content is moved into this @c ParameterSet object
    */
-  ParSet_t& operator=(ParSet_t&& rhs) {
+  Self& operator=(Self&& rhs) {
     m_vValues = std::move(rhs.m_vValues);
     m_optCovariance = std::move(rhs.m_optCovariance);
     return *this;
@@ -200,7 +212,7 @@ class ParameterSet {
   /**
    * @brief swap two objects
    */
-  friend void swap(ParSet_t& first, ParSet_t& second) noexcept {
+  friend void swap(Self& first, Self& second) noexcept {
     using std::swap;
     swap(first.m_vValues, second.m_vValues);
     swap(first.m_optCovariance, second.m_optCovariance);
@@ -215,9 +227,10 @@ class ParameterSet {
    *
    * @return position of parameter in variadic template parameter set @c params
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   static constexpr size_t getIndex() {
-    return detail::get_position<ParID_t, parameter, params...>::value;
+    return detail::get_position<parameter_indices_t, parameter,
+                                params...>::value;
   }
 
   /**
@@ -232,8 +245,8 @@ class ParameterSet {
    *         parameter set @c params
    */
   template <size_t index>
-  static constexpr ParID_t getParID() {
-    return detail::at_index<ParID_t, index, params...>::value;
+  static constexpr parameter_indices_t getParID() {
+    return detail::at_index<parameter_indices_t, index, params...>::value;
   }
 
   /**
@@ -245,7 +258,7 @@ class ParameterSet {
    *
    * @return value of the stored parameter
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   ParValue_t getParameter() const {
     return m_vValues(getIndex<parameter>());
   }
@@ -253,9 +266,9 @@ class ParameterSet {
   /**
    * @brief access vector with stored parameters
    *
-   * @return column vector with @c #NPars rows
+   * @return column vector with @c #kNumberOfParameters rows
    */
-  ParVector_t getParameters() const { return m_vValues; }
+  ParameterVector getParameters() const { return m_vValues; }
 
   /**
    * @brief sets value for given parameter
@@ -267,10 +280,10 @@ class ParameterSet {
    *
    * @return previously stored value of this parameter
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   void setParameter(ParValue_t value) {
     m_vValues(getIndex<parameter>()) =
-        BoundParameterType<parameter>::getValue(value);
+        ParameterTypeFor<parameter_indices_t, parameter>::type::getValue(value);
   }
 
   /**
@@ -280,10 +293,11 @@ class ParameterSet {
    * order
    * of the class template `params...`.
    *
-   * @param values vector of length #NPars
+   * @param values vector of length #kNumberOfParameters
    */
-  void setParameters(const ParVector_t& values) {
-    detail::initialize_parset<ParID_t, params...>::init(*this, values);
+  void setParameters(const ParameterVector& values) {
+    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
+                                                                    values);
   }
 
   /**
@@ -297,9 +311,10 @@ class ParameterSet {
    *
    * @return @c true if the parameter is stored in this set, otherwise @c false
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   bool contains() const {
-    return detail::is_contained<ParID_t, parameter, params...>::value;
+    return detail::is_contained<parameter_indices_t, parameter,
+                                params...>::value;
   }
 
   /**
@@ -310,7 +325,7 @@ class ParameterSet {
    *
    * @return raw pointer to covariance matrix (can be a nullptr)
    */
-  const std::optional<CovMatrix_t>& getCovariance() const {
+  const std::optional<CovarianceMatrix>& getCovariance() const {
     return m_optCovariance;
   }
 
@@ -326,7 +341,7 @@ class ParameterSet {
    * is returned if no
    *         covariance matrix is set
    */
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   ParValue_t getUncertainty() const {
     if (m_optCovariance) {
       size_t index = getIndex<parameter>();
@@ -343,7 +358,7 @@ class ParameterSet {
    *
    * @param cov unique pointer to new covariance matrix (nullptr is accepted)
    */
-  void setCovariance(const CovMatrix_t& cov) { m_optCovariance = cov; }
+  void setCovariance(const CovarianceMatrix& cov) { m_optCovariance = cov; }
 
   /**
    * @brief equality operator
@@ -352,7 +367,7 @@ class ParameterSet {
    * matrices are
    *         either identical or not set, otherwise @c false
    */
-  bool operator==(const ParSet_t& rhs) const {
+  bool operator==(const Self& rhs) const {
     // shortcut comparison with myself
     if (&rhs == this) {
       return true;
@@ -383,7 +398,7 @@ class ParameterSet {
    *
    * @sa ParameterSet::operator==
    */
-  bool operator!=(const ParSet_t& rhs) const { return !(*this == rhs); }
+  bool operator!=(const Self& rhs) const { return !(*this == rhs); }
 
   /**
    * @brief project vector of full parameter set onto parameter sub-space
@@ -410,7 +425,7 @@ class ParameterSet {
    * vector
    *         which are also defined for this ParameterSet object
    */
-  ParVector_t project(const FullParameterSet& fullParSet) const {
+  ParameterVector project(const FullParameterSet& fullParSet) const {
     return projector() * fullParSet.getParameters();
   }
 
@@ -450,11 +465,11 @@ class ParameterSet {
    */
   /// @cond
   template <
-      typename T = ParSet_t,
+      typename T = Self,
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
   /// @endcond
-  ParVector_t residual(const FullParameterSet& fullParSet) const {
-    return detail::residual_calculator<params...>::result(
+  ParameterVector residual(const FullParameterSet& fullParSet) const {
+    return detail::residual_calculator<parameter_indices_t, params...>::result(
         m_vValues, projector() * fullParSet.getParameters());
   }
 
@@ -490,8 +505,8 @@ class ParameterSet {
    * ParameterSet object
    *         with respect to the given other parameter set
    */
-  ParVector_t residual(const ParSet_t& otherParSet) const {
-    return detail::residual_calculator<params...>::result(
+  ParameterVector residual(const Self& otherParSet) const {
+    return detail::residual_calculator<parameter_indices_t, params...>::result(
         m_vValues, otherParSet.m_vValues);
   }
 
@@ -502,10 +517,11 @@ class ParameterSet {
    * the sub-space
    * spanned by the parameters defined in this ParameterSet object.
    *
-   * @return constant matrix with @c #NPars rows and @c
-   * #Acts::eBoundParametersSize columns
+   * @return constant matrix with @c #kNumberOfParameters rows and @c
+   * #kSizeMax columns
    */
-  static const ActsMatrix<ParValue_t, NPars, eBoundParametersSize> projector() {
+  static const ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax>
+  projector() {
     return sProjector;
   }
 
@@ -514,7 +530,7 @@ class ParameterSet {
    *
    * @return number of stored parameters
    */
-  static constexpr unsigned int size() { return NPars; }
+  static constexpr unsigned int size() { return kNumberOfParameters; }
 
   /**
    * @brief correct given parameter values
@@ -528,26 +544,29 @@ class ParameterSet {
    * @param values vector with parameter values to be checked and corrected if
    * necessary
    */
-  static void correctValues(ParVector_t& values) {
+  static void correctValues(ParameterVector& values) {
     detail::value_corrector<params...>::result(values);
   }
 
  private:
-  ParVector_t m_vValues{ParVector_t::Zero()};  ///< column vector containing
-                                               ///< values of local parameters
-  std::optional<CovMatrix_t> m_optCovariance{
+  ParameterVector m_vValues{
+      ParameterVector::Zero()};  ///< column vector containing
+                                 ///< values of local parameters
+  std::optional<CovarianceMatrix> m_optCovariance{
       std::nullopt};  ///< an optional covariance matrix
 
-  static const Projection_t sProjector;  ///< matrix to project full parameter
-                                         /// vector onto local parameter space
+  static const Projection sProjector;  ///< matrix to project full parameter
+                                       /// vector onto local parameter space
 };
 
 // initialize static class members
-template <ParID_t... params>
-constexpr unsigned int ParameterSet<params...>::NPars;
+template <typename parameter_indices_t, parameter_indices_t... params>
+constexpr unsigned int
+    ParameterSet<parameter_indices_t, params...>::kNumberOfParameters;
 
-template <ParID_t... params>
-const typename ParameterSet<params...>::Projection_t
-    ParameterSet<params...>::sProjector = detail::make_projection_matrix<
-        eBoundParametersSize, static_cast<unsigned int>(params)...>::init();
+template <typename parameter_indices_t, parameter_indices_t... params>
+const typename ParameterSet<parameter_indices_t, params...>::Projection
+    ParameterSet<parameter_indices_t, params...>::sProjector =
+        detail::make_projection_matrix<
+            kSizeMax, static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts
