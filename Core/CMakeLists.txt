@@ -10,7 +10,6 @@ target_compile_features(
   PUBLIC cxx_std_17)
 target_include_directories(
   ActsCore
-  SYSTEM PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     # for the generated version header
@@ -18,7 +17,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsCore
-  PUBLIC Boost::boost)
+  PUBLIC Boost::boost Eigen3::Eigen)
 
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)
   target_compile_definitions(
