@@ -67,14 +67,14 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      const OutlierFinder& outlierFinder,
+                      const OutlierFinder& outlierFinder_,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        outlierFinder(outlierFinder),
+        outlierFinder(outlierFinder_),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
@@ -343,18 +343,19 @@ class KalmanFitter {
 
         // Reset smoothed status of states missed in backward filtering
         if (backwardFiltering) {
-          result.fittedStates.applyBackwards(result.trackTip, [&](auto state) {
-            auto fSurface = &state.referenceSurface();
-            auto surface_it = std::find_if(
-                result.passedAgainSurfaces.begin(),
-                result.passedAgainSurfaces.end(),
-                [=](const Surface* surface) { return surface == fSurface; });
-            if (surface_it == result.passedAgainSurfaces.end()) {
-              // If backward filtering missed this surface, then there is
-              // no smoothed parameter
-              state.data().ismoothed = detail_lt::IndexData::kInvalid;
-            }
-          });
+          result.fittedStates.applyBackwards(
+              result.trackTip, [&](auto trackState) {
+                auto fSurface = &trackState.referenceSurface();
+                auto surface_it = std::find_if(
+                    result.passedAgainSurfaces.begin(),
+                    result.passedAgainSurfaces.end(),
+                    [=](const Surface* s) { return s == fSurface; });
+                if (surface_it == result.passedAgainSurfaces.end()) {
+                  // If backward filtering missed this surface, then there is
+                  // no smoothed parameter
+                  trackState.data().ismoothed = detail_lt::IndexData::kInvalid;
+                }
+              });
         }
         // Remember the track fitting is done
         result.finished = true;
@@ -368,7 +369,7 @@ class KalmanFitter {
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
-    /// @param result is the mutable result state object
+    /// @param result is the mutable result state objecte
     template <typename propagator_state_t, typename stepper_t>
     void reverse(propagator_state_t& state, stepper_t& stepper,
                  result_type& result) const {
@@ -666,16 +667,18 @@ class KalmanFitter {
               << trackStateProxy.filtered().transpose());
 
           // Fill the smoothed parameter for the existing track state
-          result.fittedStates.applyBackwards(result.trackTip, [&](auto state) {
-            auto fSurface = &state.referenceSurface();
-            if (fSurface == surface) {
-              result.passedAgainSurfaces.push_back(surface);
-              state.smoothed() = trackStateProxy.filtered();
-              state.smoothedCovariance() = trackStateProxy.filteredCovariance();
-              return false;
-            }
-            return true;
-          });
+          result.fittedStates.applyBackwards(
+              result.trackTip, [&](auto trackState) {
+                auto fSurface = &trackState.referenceSurface();
+                if (fSurface == surface) {
+                  result.passedAgainSurfaces.push_back(surface);
+                  trackState.smoothed() = trackStateProxy.filtered();
+                  trackState.smoothedCovariance() =
+                      trackStateProxy.filteredCovariance();
+                  return false;
+                }
+                return true;
+              });
 
           // update stepping state using filtered parameters after kalman
           // update We need to (re-)construct a BoundParameters instance here,
