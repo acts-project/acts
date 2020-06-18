@@ -146,32 +146,37 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
   return std::atanh(v[2] / v.norm());
 }
 
-/// Helper method to cast out the binning value from a 3D Vector
+/// Helper method to extract the binning value from a 3D vector.
 ///
 /// For this method a 3D vector is required to guarantee all potential
-/// binning values
-///
-static double cast(const Vector3D& position, BinningValue bval) {
-  if (bval < 3)
-    return position[bval];
+/// binning values.
+inline double cast(const Vector3D& position, BinningValue bval) {
   switch (bval) {
+    case binX:
+      return position[0];
+    case binY:
+      return position[1];
+    case binZ:
+      return position[2];
     case binR:
       return perp(position);
-      break;
     case binPhi:
       return phi(position);
-      break;
+    case binRPhi:
+      return perp(position) * phi(position);
     case binH:
       return theta(position);
-      break;
     case binEta:
       return eta(position);
-      break;
     case binMag:
       return position.norm();
+    case binValues:
+      // binValues stores the maximum number of entries. this is not a real
+      // binning option and the case is only here to make the switch exhaustive.
       break;
   }
-  return 0.;
+  // without a defined binning value the cast is undefined
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 /// @brief Calculates column-wise cross products of a matrix and a vector and
