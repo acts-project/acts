@@ -25,7 +25,8 @@ namespace Acts {
 /// @todo write more documentation on how this is done
 class ProtoLayerHelper {
  public:
-  /// Nested configuration struct
+  using SortingConfig = std::pair<BinningValue, double>;
+
   struct Config {};
 
   /// Constructor with explicit config
@@ -37,20 +38,29 @@ class ProtoLayerHelper {
                        getDefaultLogger("ProtoLayerHelper", Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-  /// Destructor
   virtual ~ProtoLayerHelper() = default;
 
   /// Sort the surfaces into ProtoLayers
   ///
   /// @param gctx The geometry context (usually building context at this stage)
   /// @param surfaces The surfaces to be sorted into arrays
-  /// @param bValue The binning value for the sorting
-  /// @param joinTolerance The tolerance for which bins are joined
+  /// @param sorting The sorting setup, one single sorting
   ///
   /// @return A vector of ProtoLayers
   std::vector<ProtoLayer> protoLayers(
       const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-      BinningValue bValue, double joinTolerance) const;
+      const SortingConfig& sorting) const;
+
+  /// Sort the surfaces into ProtoLayers, sequential sorting
+  ///
+  /// @param gctx The geometry context (usually building context at this stage)
+  /// @param surfaces The surfaces to be sorted into arrays
+  /// @param sortings The sequential sorting setup
+  ///
+  /// @return A vector of ProtoLayers
+  std::vector<ProtoLayer> protoLayers(
+      const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
+      const std::vector<SortingConfig>& sortings) const;
 
  private:
   /// Configuration struct
@@ -58,6 +68,9 @@ class ProtoLayerHelper {
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
+
+  /// Private access to logger
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

@@ -11,6 +11,7 @@
 #include <boost/program_options.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 #include "ACTFW/Utilities/Options.hpp"
@@ -44,97 +45,80 @@ void addTGeoGeometryOptions(options_t& opt) {
       "geo-tgeo-bp-parameters",
       po::value<read_range>()->multitoken()->default_value({}),
       "Potential beam pipe parameters {r, z, t} in [mm].")(
-      "geo-tgeo-nlayers",
-      po::value<read_series>()->multitoken()->default_value({}),
+      "geo-tgeo-nlayers", po::value<read_series>()->default_value({}),
       "Number of layers on the negative side.")(
-      "geo-tgeo-clayers",
-      po::value<read_series>()->multitoken()->default_value({}),
+      "geo-tgeo-clayers", po::value<read_series>()->default_value({}),
       "Number of layers in the barrel.")(
-      "geo-tgeo-players",
-      po::value<read_series>()->multitoken()->default_value({}),
+      "geo-tgeo-players", po::value<read_series>()->default_value({}),
       "Number of layers on the positive side.")(
-      "geo-tgeo-ringlayout",
-      po::value<read_series>()->multitoken()->default_value({}),
+      "geo-tgeo-ringlayout", po::value<read_series>()->default_value({}),
       "Indicator if ring layout is present.")(
-      "geo-tgeo-ringtolerance",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "geo-tgeo-ringtolerance", po::value<read_range>()->default_value({}),
       "Tolerance for ring layout detection in [mm].")(
-      "geo-tgeo-nlayernames",
-      po::value<read_strings>()->multitoken()->default_value({}),
+      "geo-tgeo-nlayernames", po::value<read_strings>()->default_value({}),
       "Name identifier for negative layer objects, odered along the series.")(
-      "geo-tgeo-clayernames",
-      po::value<read_strings>()->multitoken()->default_value({}),
+      "geo-tgeo-clayernames", po::value<read_strings>()->default_value({}),
       "Name identifier for central layer objects, odered along the series.")(
-      "geo-tgeo-playernames",
-      po::value<read_strings>()->multitoken()->default_value({}),
+      "geo-tgeo-playernames", po::value<read_strings>()->default_value({}),
       "Name identifier for positive layer objects, odered along the series.")(
-      "geo-tgeo-nmodulenames",
-      po::value<read_strings>()->multitoken()->default_value({}),
+      "geo-tgeo-nmodulenames", po::value<read_strings>()->default_value({}),
       "Name identifier for negative sensitive objects, odered along the "
       "series.")("geo-tgeo-cmodulenames",
-                 po::value<read_strings>()->multitoken()->default_value({}),
+                 po::value<read_strings>()->default_value({}),
                  "Name identifier for central sensitive objects, odered "
                  "along the series.")(
-      "geo-tgeo-pmodulenames",
-      po::value<read_strings>()->multitoken()->default_value({}),
+      "geo-tgeo-pmodulenames", po::value<read_strings>()->default_value({}),
       "Name identifier for positive sensitive objects, odered along the "
       "series.")("geo-tgeo-nmoduleaxes",
-                 po::value<read_strings>()->multitoken()->default_value({}),
+                 po::value<read_strings>()->default_value({}),
                  "Axes definition for negative sensitive objects, odered "
                  "along the series.")(
-      "geo-tgeo-nlayer-rmin",
-      po::value<read_range>()->multitoken()->default_value({}),
-      "Cylindrical boundariy min r for negative layers "
+      "geo-tgeo-nlayer-r-range",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Radial range(s) for negative layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-nlayer-rmax",
-      po::value<read_range>()->multitoken()->default_value({}),
-      "Cylindrical boundariy max r for negative layers "
+      "geo-tgeo-clayer-r-range",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Radial range(s) for central layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-clayer-rmin",
-      po::value<read_range>()->multitoken()->default_value({}),
-      "Cylindrical boundariy min r for central layers "
+      "geo-tgeo-player-r-range",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Radial range(s) for positive layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-clayer-rmax",
-      po::value<read_range>()->multitoken()->default_value({}),
-      "Cylindrical boundariy max r for central layers "
+      "geo-tgeo-nlayer-z-range",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Longitudinal range(s) for negative layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-player-rmin",
-      po::value<read_range>()->multitoken()->default_value({}),
-      "Cylindrical boundariy min r for central layers "
+      "geo-tgeo-clayer-z-range",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Longitudinal range(s) for central layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-player-rmax",
-      po::value<read_range>()->multitoken()->default_value({}),
-      "Cylindrical boundariy max r for positive layers "
+      "geo-tgeo-player-z-range",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Longitudinal range(s) for positive layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-nlayer-rsplit",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "geo-tgeo-nlayer-r-split", po::value<read_range>()->default_value({}),
       "R-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different negative layers.")(
-      "geo-tgeo-nlayer-zsplit",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "geo-tgeo-nlayer-z-split", po::value<read_range>()->default_value({}),
       "Z-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different negative layers.")(
-      "geo-tgeo-clayer-rsplit",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "geo-tgeo-clayer-r-split", po::value<read_range>()->default_value({}),
       "R-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different central layers.")(
-      "geo-tgeo-clayer-zsplit",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "geo-tgeo-clayer-z-split", po::value<read_range>()->default_value({}),
       "Z-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different central layers.")(
-      "geo-tgeo-player-rsplit",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "geo-tgeo-player-r-split", po::value<read_range>()->default_value({}),
       "R-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different positive layers.")(
-      "geo-tgeo-player-zsplit",
-      po::value<read_range>()->multitoken()->default_value({}),
+      "geo-tgeo-player-z-split", po::value<read_range>()->default_value({}),
       "Z-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different positive layers.")(
-      "geo-tgeo-cmoduleaxes",
-      po::value<read_strings>()->multitoken()->default_value({}),
+      "geo-tgeo-cmoduleaxes", po::value<read_strings>()->default_value({}),
       "Axes definition for central sensitive objects, odered along the "
       "series.")("geo-tgeo-pmoduleaxes",
-                 po::value<read_strings>()->multitoken()->default_value({}),
+                 po::value<read_strings>()->default_value({}),
                  "Axes definition for positive sensitive objects, odered "
                  "along the series.");
 }
@@ -150,12 +134,13 @@ void addTGeoGeometryOptions(options_t& opt) {
 template <typename variable_map_t>
 std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
     const variable_map_t& vm,
-    std::shared_ptr<const Acts::LayerCreator> layerCreator) {
+    std::shared_ptr<const Acts::LayerCreator> layerCreator,
+    std::shared_ptr<const Acts::ProtoLayerHelper> protoLayerHelper) {
   std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // General: subdetector naming
   read_strings subdetectors =
-      vm["geo-subdetectors"].template as<read_strings>();
+      vm["geo-detector-volume"].template as<read_strings>();
   double unitScalor = vm["geo-tgeo-unitScalor"].template as<double>();
 
   // The number of layers, can be set 1 with splitting detection
@@ -206,29 +191,36 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
                                                psensitiveaxes};
 
   // The parse radii in r
-  read_range nrmin = vm["geo-tgeo-nlayer-rmin"].template as<read_range>();
-  read_range nrmax = vm["geo-tgeo-nlayer-rmax"].template as<read_range>();
-  read_range crmin = vm["geo-tgeo-clayer-rmin"].template as<read_range>();
-  read_range crmax = vm["geo-tgeo-clayer-rmax"].template as<read_range>();
-  read_range prmin = vm["geo-tgeo-player-rmin"].template as<read_range>();
-  read_range prmax = vm["geo-tgeo-player-rmax"].template as<read_range>();
+  std::vector<Interval> nrrange =
+      vm["geo-tgeo-nlayer-r-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> crrange =
+      vm["geo-tgeo-clayer-r-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> prrange =
+      vm["geo-tgeo-player-r-range"].template as<std::vector<Interval>>();
+  std::array<std::vector<Interval>, 3> rranges = {nrrange, crrange, prrange};
 
-  std::array<read_range, 3> rmin = {nrmin, crmin, prmin};
-  std::array<read_range, 3> rmax = {nrmax, crmax, prmax};
+  // The parse ranges in z
+  std::vector<Interval> nzrange =
+      vm["geo-tgeo-nlayer-z-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> czrange =
+      vm["geo-tgeo-clayer-z-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> pzrange =
+      vm["geo-tgeo-player-z-range"].template as<std::vector<Interval>>();
+  std::array<std::vector<Interval>, 3> zranges = {nzrange, czrange, pzrange};
 
   // The split tolerances in r and z
   read_range nlayersplitr =
-      vm["geo-tgeo-nlayer-rsplit"].template as<read_range>();
+      vm["geo-tgeo-nlayer-r-split"].template as<read_range>();
   read_range nlayersplitz =
-      vm["geo-tgeo-nlayer-zsplit"].template as<read_range>();
+      vm["geo-tgeo-nlayer-z-split"].template as<read_range>();
   read_range clayersplitr =
-      vm["geo-tgeo-clayer-rsplit"].template as<read_range>();
+      vm["geo-tgeo-clayer-r-split"].template as<read_range>();
   read_range clayersplitz =
-      vm["geo-tgeo-clayer-zsplit"].template as<read_range>();
+      vm["geo-tgeo-clayer-z-split"].template as<read_range>();
   read_range playersplitr =
-      vm["geo-tgeo-player-rsplit"].template as<read_range>();
+      vm["geo-tgeo-player-r-split"].template as<read_range>();
   read_range playersplitz =
-      vm["geo-tgeo-player-zsplit"].template as<read_range>();
+      vm["geo-tgeo-player-z-split"].template as<read_range>();
 
   std::array<read_range, 3> splittolr = {nlayersplitr, clayersplitr,
                                          playersplitr};
@@ -249,6 +241,18 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
     ++idetaddon;
   }
 
+  // Split the sensor names if there are mulitple ones
+  auto splitAtOr =
+      [](const std::string& sensorNames) -> std::vector<std::string> {
+    std::vector<std::string> sensors;
+    std::istringstream feed(sensorNames);
+    std::string split;
+    while (getline(feed, split, '|')) {
+      sensors.push_back(split);
+    }
+    return sensors;
+  };
+
   // Prepare the TGeoLayerBuilder::Configs
   for (size_t idet = 0; idet < max_series; ++idet) {
     // Each detector needs a layer builder
@@ -261,30 +265,40 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
         // Create the layer config object and fill it
         Acts::TGeoLayerBuilder::LayerConfig lConfig;
         lConfig.layerName = layernames[ncp][ti[ncp]];
-        lConfig.sensorName = sensitivenames[ncp][ti[ncp]];
+        lConfig.sensorNames = splitAtOr(sensitivenames[ncp][ti[ncp]]);
         lConfig.localAxes = sensitiveaxes[ncp][ti[ncp]];
         // Fill the parsing restrictions in r
-        auto trmin = rmin[ncp];
-        auto trmax = rmax[ncp];
-        if (trmin.size() > ti[ncp] and trmax.size() > ti[ncp]) {
-          lConfig.parseRangeR = {trmin[ti[ncp]], trmax[ti[ncp]]};
+        auto rrange = rranges[ncp];
+        if (rrange.size() > ti[ncp]) {
+          double rmin = rrange[ti[ncp]].lower.value_or(0.);
+          double rmax = rrange[ti[ncp]].upper.value_or(
+              std::numeric_limits<double>::max());
+          lConfig.parseRanges.push_back({Acts::binR, {rmin, rmax}});
         }
         // Fill the layer splitting parameters in r
         if (splittolr[ncp].size() > ti[ncp]) {
-          layerBuilderConfig.layerSplitToleranceR[ncp] =
-              splittolr[ncp][ti[ncp]];
+          double rsplitol = splittolr[ncp][ti[ncp]];
+          if (rsplitol > 0.) {
+            lConfig.splitConfigs.push_back({Acts::binR, rsplitol});
+          }
+        }
+        // Fill the parsing restrictions in z
+        auto zrange = zranges[ncp];
+        if (zrange.size() > ti[ncp]) {
+          double zmin = zrange[ti[ncp]].lower.value_or(
+              -std::numeric_limits<double>::max());
+          double zmax = zrange[ti[ncp]].upper.value_or(
+              std::numeric_limits<double>::max());
+          lConfig.parseRanges.push_back({Acts::binZ, {zmin, zmax}});
         }
         // Fill the layer splitting parameters in z
         if (splittolz[ncp].size() > ti[ncp]) {
-          layerBuilderConfig.layerSplitToleranceZ[ncp] =
-              splittolz[ncp][ti[ncp]];
+          double zsplitol = splittolz[ncp][ti[ncp]];
+          if (zsplitol > 0.) {
+            lConfig.splitConfigs.push_back({Acts::binZ, zsplitol});
+          }
         }
         layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
-        // Set the ring layout if configured to do so
-        if (ringlayout.size() > idet and ringtolerance.size() > idet) {
-          layerBuilderConfig.checkRingLayout = (ringlayout[idet] != 0);
-          layerBuilderConfig.ringTolerance = ringtolerance[idet];
-        }
       }
     }
 
@@ -292,6 +306,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
     layerBuilderConfig.configurationName = subdetectors[idet + idetaddon];
     layerBuilderConfig.unit = unitScalor;
     layerBuilderConfig.layerCreator = layerCreator;
+    layerBuilderConfig.protoLayerHelper = protoLayerHelper;
 
     // Node search (ultra verbose) screen debug
     layerBuilderConfig.nodeSearchDebug =

@@ -57,8 +57,7 @@ void FW::Options::addGeometryOptions(
       "The output log level for the layer building.")(
       "geo-volume-loglevel", value<size_t>()->default_value(3),
       "The output log level for the volume building.")(
-      "geo-subdetectors",
-      value<read_strings>()->multitoken()->default_value({{}}),
+      "geo-detector-volume", value<read_strings>()->default_value({{}}),
       "Sub detectors for the output writing");
 }
 

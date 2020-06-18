@@ -6,15 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TGeoLayerBuilder.h, Acts project, TGeoDetector plugin
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 #include <climits>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -29,7 +26,6 @@ namespace Acts {
 class TGeoDetectorElement;
 class Surface;
 
-using NodeTransform = std::pair<TGeoNode*, std::shared_ptr<const Transform3D>>;
 using namespace Acts::UnitLiterals;
 
 /// @class TGeoLayerBuilder
@@ -47,33 +43,22 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsin
   struct LayerConfig {
    public:
+    using RangeConfig = std::pair<BinningValue, std::pair<double, double>>;
+
+    using SplitConfig = std::pair<BinningValue, double>;
+
     /// Identify the layer by name
     std::string layerName = "";
-    /// Identify the sensor by name
-    std::string sensorName = "";
+    /// Identify the sensor(s) by name
+    std::vector<std::string> sensorNames = {};
     /// The local axis definition of TGeo object to Acts::Surface
-    std::string localAxes = "xyz";
-    /// Parse area :  in r
-    std::pair<double, double> parseRangeR = {
-        0., std::numeric_limits<double>::max()};
-    /// Parse area : in z
-    std::pair<double, double> parseRangeZ = {
-        -std::numeric_limits<double>::max(),
-        std::numeric_limits<double>::max()};
+    std::string localAxes = "XYZ";
+    /// Parse ranges: parameter and ranges
+    std::vector<RangeConfig> parseRanges = {};
+    /// Layer splitting: parameter and tolerance
+    std::vector<SplitConfig> splitConfigs = {};
     /// The envelope to be built around the layer
     std::pair<double, double> envelope = {0_mm, 0_mm};
-    /// Layer splitting: r min/max of the split range
-    std::pair<double, double> splitRangeR = {
-        std::numeric_limits<double>::max(),
-        -std::numeric_limits<double>::max()};
-    /// Layer splitting: r the result of the splitting
-    std::vector<double> splitParametersR = {};
-    /// Layer splitting: z min/max of the split range
-    std::pair<double, double> splitRangeZ = {
-        std::numeric_limits<double>::max(),
-        -std::numeric_limits<double>::max()};
-    /// Layer splitting: z the result of the splitting
-    std::vector<double> splitParametersZ = {};
     /// Define the number of bins in loc0
     size_t binsLoc0{1};
     /// Define the number of bins in loc1
@@ -82,7 +67,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     // Default constructor
     LayerConfig()
         : layerName(""),
-          sensorName(""),
+          sensorNames({}),
           localAxes("XZY"),
           envelope(std::pair<double, double>(1_mm, 1_mm)) {}
   };
@@ -98,16 +83,14 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
     /// Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
+    /// ProtoLayer helper
+    std::shared_ptr<const ProtoLayerHelper> protoLayerHelper = nullptr;
     /// Configuration is always | n | c | p |
     std::array<std::vector<LayerConfig>, 3> layerConfigurations;
     /// Split tolerances in R
     std::array<double, 3> layerSplitToleranceR = {-1., -1., -1.};
     /// Split tolerances in Z
     std::array<double, 3> layerSplitToleranceZ = {-1., -1., -1.};
-    /// Check for ring layout when building a volume
-    bool checkRingLayout = false;
-    /// Tolerance for ring detection and association
-    double ringTolerance = 0_mm;
     /// Special debug output, is very verbose and hence needs
     /// an additional switch to log level
     bool nodeSearchDebug = false;
@@ -118,7 +101,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// @param logger the local logging instance
   TGeoLayerBuilder(const Config& config,
                    std::unique_ptr<const Logger> logger =
-                       getDefaultLogger("LayerArrayCreator", Logging::INFO));
+                       getDefaultLogger("TGeoLayerBuilder", Logging::INFO));
 
   /// Destructor
   ~TGeoLayerBuilder() override;
@@ -174,24 +157,6 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// @todo make clear where the TGeoDetectorElement lives
   std::vector<std::shared_ptr<const TGeoDetectorElement>> m_elementStore;
 
-  /// Private helper function to parse the geometry tree
-  ///
-  /// @param gcts the geometry context of this call
-  /// @param layerSurfaces are the surfaces that build the layer
-  /// @param tgVolume is the current volume
-  /// @param tgNode the current Node (branch)
-  /// @param tgTransform is the current relative transform
-  /// @param layerConfig is the configuration to be filled
-  /// @param type is ( n | c | p ) as of  ( -1 | 0 | 1 )
-  /// @param correctBranch is the branch hit
-  /// @param offset is a string offset for the screen output
-  void resolveSensitive(
-      const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
-      TGeoVolume* tgVolume, TGeoNode* tgNode, const TGeoMatrix& tgTransform,
-      LayerConfig& layerConfig, int type, bool correctBranch = false,
-      const std::string& offset = "");
-
   /// Private helper method : build layers
   ///
   /// @param gcts the geometry context of this call
@@ -199,11 +164,6 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// @param type is the indication which ones to build -1 | 0 | 1
   void buildLayers(const GeometryContext& gctx, LayerVector& layers,
                    int type = 0);
-
-  /// Private helper method : match string with wildcards
-  /// @param wc is the one with the potential wildcard
-  /// @param test is the test string
-  bool match(const char* first, const char* second) const;
 
   /// Private helper method : register splitting input
   void registerSplit(std::vector<double>& parameters, double test,
@@ -241,34 +201,4 @@ inline const std::string& TGeoLayerBuilder::identification() const {
   return m_cfg.configurationName;
 }
 
-// The main function that checks if two given strings
-// match. The first string may contain wildcard characters
-inline bool TGeoLayerBuilder::match(const char* first,
-                                    const char* second) const {
-  // If we reach at the end of both strings, we are done
-  if (*first == '\0' && *second == '\0') {
-    return true;
-  }
-
-  // Make sure that the characters after '*' are present
-  // in second string. This function assumes that the first
-  // string will not contain two consecutive '*'
-  if (*first == '*' && *(first + 1) != '\0' && *second == '\0') {
-    return false;
-  }
-
-  // If the first string contains '?', or current characters
-  // of both strings match
-  if (*first == '?' || *first == *second) {
-    return match(first + 1, second + 1);
-  }
-
-  // If there is *, then there are two possibilities
-  // a) We consider current character of second string
-  // b) We ignore current character of second string.
-  if (*first == '*') {
-    return match(first + 1, second) || match(first, second + 1);
-  }
-  return false;
-}
 }  // namespace Acts

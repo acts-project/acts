@@ -110,8 +110,8 @@ struct GeometryVisualization {
   /// @param start The start point
   /// @param end The end point
   /// @param thickness of the line, if bigger 0, approximated by cylinder
-  /// @param arrowLength wrt halflength
-  /// @param arrorWidth wrt thickness
+  /// @param arrowLength wrt thickness
+  /// @param arrowWidth wrt thickness
   /// @param lseg The number of segments for a full arch (if needed)
   /// @param color the (optional) color of the object to be written
   static void drawArrowBackward(
@@ -125,8 +125,8 @@ struct GeometryVisualization {
   /// @param start The start point
   /// @param end The end point
   /// @param thickness of the line, if bigger 0, approximated by cylinder
-  /// @param arrowLength wrt halflength
-  /// @param arrorWidth wrt thickness
+  /// @param arrowLength wrt thickness
+  /// @param arrowWidth wrt thickness
   /// @param lseg The number of segments for a full arch (if needed)
   /// @param color the (optional) color of the object to be written
   static void drawArrowForward(
@@ -140,8 +140,8 @@ struct GeometryVisualization {
   /// @param start The start point
   /// @param end The end point
   /// @param thickness of the line, if bigger 0, approximated by cylinder
-  /// @param arrowLength wrt halflength
-  /// @param arrorWidth wrt thickness
+  /// @param arrowLength wrt thickness
+  /// @param arrowWidth wrt thickness
   /// @param lseg The number of segments for a full arch (if needed)
   /// @param color the (optional) color of the object to be written
   static void drawArrowsBoth(

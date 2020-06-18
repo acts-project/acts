@@ -62,6 +62,22 @@ std::ostream& FW::Options::operator<<(std::ostream& os,
   return os;
 }
 
+std::istream& FW::Options::operator>>(
+    std::istream& is, std::vector<FW::Options::Interval>& intervals) {
+  for (auto& interval : intervals) {
+    is >> interval;
+  }
+  return is;
+}
+
+std::ostream& FW::Options::operator<<(
+    std::ostream& os, const std::vector<FW::Options::Interval>& intervals) {
+  for (auto& interval : intervals) {
+    os << interval;
+  }
+  return os;
+}
+
 namespace {
 /// Helper function to print multiple elements in a container.
 template <typename Iterator>
