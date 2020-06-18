@@ -201,9 +201,6 @@ struct CKFSourceLinkSelector {
     size_t nFinalCandidates =
         std::min(nInitialCandidates, numSourcelinksCutOff);
 
-    // Size of sourcelinkCandidates
-    size_t containerSize = sourcelinkCandidateIndices.size();
-
     // If there is no selected source link, return the source link with the best
     // chi2 and tag it as an outlier
     if (nFinalCandidates == 0) {
