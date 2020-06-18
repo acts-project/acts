@@ -22,7 +22,6 @@
 #include "ACTFW/Io/Root/RootMaterialWriter.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Plugins/Json/JsonMaterialWriter.hpp"
-#include "ACTFW/Plugins/Obj/ObjSurfaceWriter.hpp"
 #include "ACTFW/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ACTFW/Plugins/Obj/ObjWriterOptions.hpp"
 #include "ACTFW/Utilities/Options.hpp"
@@ -57,10 +56,6 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
   // The detectors
   read_strings subDetectors = vm["geo-detector-volume"].as<read_strings>();
 
-  auto surfaceLogLevel =
-      Acts::Logging::Level(vm["geo-surface-loglevel"].as<size_t>());
-  // auto layerLogLevel =
-  //    Acts::Logging::Level(vm["geo-layer-loglevel"].as<size_t>());
   auto volumeLogLevel =
       Acts::Logging::Level(vm["geo-volume-loglevel"].as<size_t>());
 
@@ -93,46 +88,13 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
 
     // OBJ output
     if (vm["output-obj"].as<bool>()) {
-      // The writers
-      std::vector<std::shared_ptr<FW::Obj::ObjSurfaceWriter>> subWriters;
-      std::vector<std::shared_ptr<std::ofstream>> subStreams;
-      // Loop and create the obj output writers per defined sub detector
-      for (auto sdet : subDetectors) {
-        // Sub detector stream
-        auto sdStream = std::shared_ptr<std::ofstream>(new std::ofstream);
-        std::string sdOutputName =
-            FW::joinPaths(outputDir, sdet + geoContextStr + ".obj");
-        sdStream->open(sdOutputName);
-        // Object surface writers
-        FW::Obj::ObjSurfaceWriter::Config sdObjWriterConfig =
-            FW::Options::readObjSurfaceWriterConfig(vm, sdet, surfaceLogLevel);
-        sdObjWriterConfig.outputStream = sdStream;
-        // Let's not write the layer surface when we have misalignment
-        if (contextDecorators.size() > 0) {
-          sdObjWriterConfig.outputLayerSurface = false;
-        }
-        auto sdObjWriter =
-            std::make_shared<FW::Obj::ObjSurfaceWriter>(sdObjWriterConfig);
-        // Push back
-        subWriters.push_back(sdObjWriter);
-        subStreams.push_back(sdStream);
-      }
-
       // Configure the tracking geometry writer
       auto tgObjWriterConfig = FW::Options::readObjTrackingGeometryWriterConfig(
           vm, "ObjTrackingGeometryWriter", volumeLogLevel);
-
-      tgObjWriterConfig.surfaceWriters = subWriters;
       auto tgObjWriter = std::make_shared<FW::Obj::ObjTrackingGeometryWriter>(
           tgObjWriterConfig);
-
       // Write the tracking geometry object
       tgObjWriter->write(context, *tGeometry);
-
-      // Close the output streams
-      for (auto sStreams : subStreams) {
-        sStreams->close();
-      }
     }
 
     // CSV output

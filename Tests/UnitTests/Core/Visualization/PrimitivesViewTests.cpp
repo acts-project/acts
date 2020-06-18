@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "PrimitivesVisualizationBase.hpp"
+#include "PrimitivesViewBase.hpp"
 #include "VisualizationTester.hpp"
 
 #include <fstream>
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(VisualizationHelpers) {
   // No correlation, fully summetric
   ActsSymMatrixD<2> covariance;
   covariance << 4., 0., 0., 4.;
-  auto decops = Acts::EventDataVisualization::decomposeCovariance(covariance);
+  auto decops = Acts::EventDataView::decomposeCovariance(covariance);
   BOOST_CHECK(decops[0] == 4.);
   BOOST_CHECK(decops[1] == 4.);
   BOOST_CHECK(decops[2] == 0.);
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(VisualizationHelpers) {
   // Fully positively correlated
   covariance.setZero();
   covariance << 4., 4., 4., 4.;
-  decops = Acts::EventDataVisualization::decomposeCovariance(covariance);
+  decops = Acts::EventDataView::decomposeCovariance(covariance);
   BOOST_CHECK(decops[0] == 8.);
   BOOST_CHECK(decops[1] == 0.);
   CHECK_CLOSE_ABS(decops[2], M_PI / 4, 0.0001);
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(VisualizationHelpers) {
   // Fully negatively correlated
   covariance.setZero();
   covariance << 4., -4., -4., 4.;
-  decops = Acts::EventDataVisualization::decomposeCovariance(covariance);
+  decops = Acts::EventDataView::decomposeCovariance(covariance);
   BOOST_CHECK(decops[0] == 8.);
   BOOST_CHECK(decops[1] == 0.);
   CHECK_CLOSE_ABS(decops[2], 3 * M_PI / 4, 0.0001);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(VisualizationHelpers) {
   // Correlation coefficient 0.5 (off-diagonal: 3*2*0.5)
   covariance.setZero();
   covariance << 4., 2., 2., 4.;
-  decops = Acts::EventDataVisualization::decomposeCovariance(covariance);
+  decops = Acts::EventDataView::decomposeCovariance(covariance);
   BOOST_CHECK(decops[0] == 6.);
   BOOST_CHECK(decops[1] == 2.);
   CHECK_CLOSE_ABS(decops[2], M_PI / 4, 0.0001);
@@ -62,15 +62,15 @@ BOOST_AUTO_TEST_CASE(VisualizationHelpers) {
   // Correlation coefficient -0.5 & different diagonal (off-diagonal: 3*2*0.5)
   covariance.setZero();
   covariance << 9., -3., -3, 4.;
-  decops = Acts::EventDataVisualization::decomposeCovariance(covariance);
+  decops = Acts::EventDataView::decomposeCovariance(covariance);
   CHECK_CLOSE_ABS(decops[0], 10.4051, 0.0001);
   CHECK_CLOSE_ABS(decops[1], 2.59488, 0.0001);
   CHECK_CLOSE_ABS(decops[2], 2.70356, 0.0001);
 }
 
-BOOST_AUTO_TEST_CASE(PrimitivesVisualizationObj) {
+BOOST_AUTO_TEST_CASE(PrimitivesViewObj) {
   ObjVisualization obj;
-  auto objTest = PrimitivesVisualization::test(obj);
+  auto objTest = PrimitivesViewTest::run(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(PrimitivesVisualizationObj) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(PrimitivesVisualizationPly) {
+BOOST_AUTO_TEST_CASE(PrimitivesViewPly) {
   PlyVisualization ply;
-  auto plyTest = PrimitivesVisualization::test(ply);
+  auto plyTest = PrimitivesViewTest::run(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {

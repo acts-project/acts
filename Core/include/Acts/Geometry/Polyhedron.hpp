@@ -30,7 +30,6 @@ namespace Acts {
 /// This allows the @c objString method to produce a ready-to-go obj output.
 struct Polyhedron {
   using FaceType = std::vector<size_t>;
-  using ColorType = std::array<int, 3>;
 
   /// Default constructor
   Polyhedron() = default;
@@ -74,24 +73,6 @@ struct Polyhedron {
   ///
   /// @param transform The additional transform applied
   void move(const Transform3D& transform);
-
-  /// Draw method for polyhedrons
-  ///
-  /// @tparam helper_t The draw helper
-  ///
-  /// @param helper The draw helper object (visitor pattern)
-  /// @param triangulate Force the faces to be a triangular mesh
-  /// @param color The color for drawing this object
-  template <typename helper_t>
-  void draw(helper_t& helper, bool triangulate = false,
-            const ColorType& color = {120, 120, 120}) const {
-    // vertices and faces are
-    if (not triangulate) {
-      helper.faces(vertices, faces, color);
-    } else {
-      helper.faces(vertices, triangularMesh, color);
-    }
-  }
 
   /// Maximum extent of the polyhedron in space
   ///

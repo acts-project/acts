@@ -15,3 +15,4 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
    utilities/grid_axis
    utilities/logging
    utilities/units
+   visualization/visualization
