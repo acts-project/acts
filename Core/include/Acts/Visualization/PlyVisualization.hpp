@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
 #include <fstream>
@@ -34,20 +35,19 @@ class PlyVisualization : public IVisualization {
   using VertexType = ActsVector<ValueType, 3>;
 
   /// @copydoc Acts::IVisualization::vertex()
-  void vertex(const Vector3D& vtx,
-              IVisualization::ColorType color = {120, 120, 120}) final;
+  void vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::line()
   void face(const std::vector<Vector3D>& vtxs,
-            IVisualization::ColorType color = {120, 120, 120}) final;
+            ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::faces()
   void faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
-             ColorType color = {120, 120, 120}) final;
+             ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::face()
   void line(const Vector3D& a, const Vector3D& b,
-            IVisualization::ColorType color = {120, 120, 120}) final;
+            ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::write()
   void write(const std::string& path) const final;
@@ -59,10 +59,9 @@ class PlyVisualization : public IVisualization {
   void clear() final;
 
  private:
-  std::vector<std::pair<VertexType, IVisualization::ColorType>> m_vertices;
+  std::vector<std::pair<VertexType, ColorRGB>> m_vertices;
   std::vector<FaceType> m_faces;
-  std::vector<std::pair<std::pair<size_t, size_t>, IVisualization::ColorType>>
-      m_edges;
+  std::vector<std::pair<std::pair<size_t, size_t>, ColorRGB>> m_edges;
 };
 
 #include "detail/PlyVisualization.ipp"

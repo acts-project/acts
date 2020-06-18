@@ -17,7 +17,6 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/ObjTestWriter.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
 
@@ -169,34 +168,12 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsInside) {
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   GeometryContext tgContext = GeometryContext();
-  std::vector<IdentifiedPolyhedron> tPolyhedrons;
-
-  auto combineAndDecompose = [&](const OrientedSurfaces& surfaces,
-                                 const std::string& name) -> void {
-    std::string writeBase = std::string("CutoutCylinderVolumeBounds") + name;
-
-    Polyhedron phCombined;
-    size_t is = 0;
-    for (const auto& sf : surfaces) {
-      Polyhedron phComponent =
-          sf.first->polyhedronRepresentation(tgContext, 72);
-      phCombined.merge(phComponent);
-      tPolyhedrons.push_back(
-          {writeBase + std::string("_comp_") + std::to_string(is++), false,
-           phComponent});
-    }
-    tPolyhedrons.push_back({writeBase, false, phCombined});
-  };
-
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
   auto box = ccvb.boundingBox();
   CHECK_CLOSE_ABS(box.min(), Vector3D(-15, -15, -30), 1e-6);
   CHECK_CLOSE_ABS(box.max(), Vector3D(15, 15, 30), 1e-6);
 
   auto ccvbSurfaces = ccvb.orientedSurfaces(nullptr);
-  combineAndDecompose(ccvbSurfaces, "");
-  ObjTestWriter::writeObj("CutoutCylinderVolumeBounds_BB", box);
-  ObjTestWriter::writeObj(tPolyhedrons);
 }
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
