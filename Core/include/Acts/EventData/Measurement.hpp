@@ -33,13 +33,13 @@ template<>
 struct ReferenceObject<BoundParametersIndices>
 {
 	using type = Surface;
-}
+};
 
 template<>
 struct ReferenceObject<FreeParametersIndices>
 {
 	using type = Volume;
-}
+};
 
 /// @brief base class for Measurements
 ///
@@ -77,17 +77,17 @@ class Measurement {
   // private typedefs
 
   /// type of the underlying ParameterSet object
-  using ParSet_t = ParameterSet<parameter_indices_t, params...>;
+  using ParamSet = ParameterSet<parameter_indices_t, params...>;
 
  public:
   /// type of the vector containing the parameter values
-  using ParVector_t = typename ParSet_t::ParVector_t;
+  using ParameterVector = typename ParamSet::ParameterVector;
   /// type of the covariance matrix of the measurement
-  using CovMatrix_t = typename ParSet_t::CovMatrix_t;
+  using CovarianceMatrix = typename ParamSet::CovarianceMatrix;
   /// matrix type for projecting full parameter vector onto local parameters
-  using Projection_t = typename ParSet_t::Projection_t;
+  using Projection = typename ParamSet::Projection;
   /// Object type that corresponds to the measurement
-  using ReferenceObject_t = typename ReferenceObject<parameter_indices_t>::type;
+  using RefObject = typename ReferenceObject<parameter_indices_t>::type;
   
   /// Delete the default constructor
   Measurement() = delete;
@@ -112,8 +112,8 @@ class Measurement {
   /// @param head,values consistent number of parameter values of the
   /// measurement
   template <typename... Tail>
-  Measurement(std::shared_ptr<const ReferenceObject_t> referenceObject,
-              const source_link_t& source, CovMatrix_t cov,
+  Measurement(std::shared_ptr<const RefObject> referenceObject,
+              const source_link_t& source, CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
@@ -121,39 +121,6 @@ class Measurement {
         m_pReferenceObject(std::move(referenceObject)),
         m_sourceLink(source) {
     assert(m_pSurface);
-  }
-
-  /// @brief standard constructor for volume bound measurements
-  ///
-  /// Concrete class for all possible measurements.
-  ///
-  /// @note Only a reference to the given volume is stored. The user must
-  /// ensure that the lifetime of the @c Volume object surpasses the lifetime
-  /// of this Measurement object.
-  /// The given parameter values are interpreted as values to the
-  /// parameters as defined in the class template argument @c params.
-  ///
-  /// @attention The current design will fail if the in-memory location of
-  /// the @c Volume object is changed (e.g. if it is stored in a
-  /// container and this gets relocated).
-  ///
-  /// @param volume volume in which the measurement took place
-  /// @param source object for this measurement
-  /// @param cov covariance matrix of the measurement.
-  /// @param head,values consistent number of parameter values of the
-  /// measurement
-  template <
-      typename T = parameter_indices_t, typename... Tail,
-      std::enable_if_t<std::is_same<T, FreeParametersIndices>::value, int> = 0>
-  Measurement(std::shared_ptr<const Volume> volume, const source_link_t& source,
-              CovMatrix_t cov,
-              typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
-                                      ParValue_t>::type head,
-              Tail... values)
-      : m_oParameters(std::move(cov), head, values...),
-        m_pVolume(std::move(volume)),
-        m_sourceLink(source) {
-    assert(m_pVolume);
   }
 
   /// @brief copy constructor
@@ -260,15 +227,15 @@ class Measurement {
   /// @brief number of measured parameters
   ///
   /// @return number of measured parameters
-  static constexpr unsigned int size() { return ParSet_t::size(); }
+  static constexpr unsigned int size() { return ParamSet::size(); }
 
   /// @brief access associated object
   ///
-  /// @pre The @c ReferenceObject_t object used to construct this @c Measurement object
+  /// @pre The @c ReferenceObject object used to construct this @c Measurement object
   /// must still be valid at the same memory location.
   ///
   /// @return reference to surface at which the measurement took place
-  const ReferenceObject_t& referenceObject() const { return *m_pReferenceObject; }
+  const RefObject& referenceObject() const { return *m_pReferenceObject; }
 
   /// @brief link access to the source of the measurement.
   ///
@@ -320,7 +287,7 @@ class Measurement {
   }
 
   /// @projection operator
-  static Projection projector() { return ParSet_t::projector(); }
+  static Projection projector() { return ParamSet::projector(); }
 
   friend std::ostream& operator<<(
       std::ostream& out,
@@ -343,8 +310,8 @@ class Measurement {
   }
 
  private:
-  ParSet_t m_oParameters;  ///< measured parameter set
-  std::shared_ptr<const ReferenceObject_t> m_pReferenceObject =
+  ParamSet m_oParameters;  ///< measured parameter set
+  std::shared_ptr<const RefObject> m_pReferenceObject =
       nullptr;  ///< object which corresponds to the measurement
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };

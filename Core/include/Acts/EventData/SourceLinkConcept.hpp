@@ -24,8 +24,8 @@ namespace concept {
   template <typename T>
   using dereferenceable_t = decltype(*std::declval<T>());
 
-  template <typename T>
-  using surface_method_t = decltype(std::declval<T>().referenceSurface());
+  //~ template <typename T>
+  //~ using surface_method_t = decltype(std::declval<T>().referenceSurface());
 
   template <typename T>
   struct SourceLinkConcept {
@@ -34,11 +34,11 @@ namespace concept {
     static_assert(comparison_works,
                   "Source link does not implement equality operator");
 
-    constexpr static bool surface_method_exists =
-        converts_to<const Surface&, surface_method_t, T>;
-    static_assert(
-        surface_method_exists,
-        "Source link does not have compliant referenceSurface method");
+    //~ constexpr static bool surface_method_exists =
+        //~ converts_to<const Surface&, surface_method_t, T>;
+    //~ static_assert(
+        //~ surface_method_exists,
+        //~ "Source link does not have compliant referenceSurface method");
 
     constexpr static bool copyable = std::is_copy_constructible_v<T>;
     static_assert(copyable, "Source link must be copy constructible");
@@ -49,7 +49,7 @@ namespace concept {
                   "Source link must be default-constructible");
 
     constexpr static bool value =
-        concept ::require<comparison_works, surface_method_exists, copyable,
+        concept ::require<comparison_works, copyable, //surface_method_exists,
                           default_constructible>;
   };
   }  // namespace detail_slc

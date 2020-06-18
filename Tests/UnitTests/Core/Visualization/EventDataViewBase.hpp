@@ -47,7 +47,7 @@ using SourceLink = MinimalSourceLink;
 using Covariance = BoundSymMatrix;
 
 template <ParID_t... params>
-using MeasurementType = Measurement<SourceLink, params...>;
+using MeasurementType = Measurement<SourceLink, BoundParametersIndices, params...>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
