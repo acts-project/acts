@@ -51,10 +51,10 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval);
 ///
 /// @note The more common range notation uses `lower-upper` but the `-`
 ///       separator complicates the parsing of negative values.
-std::istream& operator>>(std::istream& is, Intervals& intervals);
+std::istream& operator>>(std::istream& is, std::vector<Interval>& intervals);
 
 /// Print an interval as `lower:upper`.
-std::ostream& operator<<(std::ostream& os, const Intervals& intervals);
+std::ostream& operator<<(std::ostream& os, const std::vector<Interval>& intervals);
 
 }  // namespace Options
 }  // namespace FW

@@ -1,15 +1,15 @@
 TGeo plugin
-***********
+===========
 
 General
-=======
+-------
 
 
 The ``TGeo`` plugin connects a geometry described with the ``ROOT::Geom`` module with Acts. This is done by parsing the ROOT geometry and selecting ``TGeoNode`` objects that represent chosen geometrical objects. 
 Acts detector elements are represented by surfaces with dedicated shapes, hence a conversion of the volume based ``TGeoNode`` description into ``Acts::Surface`` objects needs to take place.
 
 Parsing the ROOT Geometry 
-=========================
+-------------------------
 
 Once a geometry is imported in ROOT, it can be accessed via the ``gGeoManager``. The ``Acts::TGeoLayerBuilder`` relies on the fact that this ``gGeoManager`` is accessible, if it points to ``nullptr``, obviously no conversion is done.
 The ``Acts::TGeoLayerBuilder`` can hereby be configured to search within given parsing ranges for ``TGeoNode`` objects to be converted into ``Acts::Surface`` objects. A vector of search strings can be used for situations where multiple sensor types are used or additional objects are bound to be described. 
@@ -17,7 +17,7 @@ A dedicated ``Acts::TGeoParser`` struct is then used to select the nodes from th
 
 
 Conversion of TGeoShapes to Acts::Surfaces
-==========================================
+------------------------------------------
 
 An automatic translation of ``TGeoShape`` objects into corresponding ``Acts::Surface`` objects with appropriate bound descriptions is done by the ``Acts::TGeoSurfaceConverter`` class. 
 There is some limited freedom in re-defining the orientation of the coordinate system between ROOT and Acts which can be used to adapt local coordinate definitions on the converted objects.
