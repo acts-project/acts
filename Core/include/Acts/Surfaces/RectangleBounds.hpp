@@ -159,8 +159,14 @@ inline double RectangleBounds::get(BoundValues bValue) const {
       return m_min.y();
     case eMaxX:
       return m_max.x();
+    case eMaxY:
+      return m_max.y();
+    case eSize:
+      // eSize case is only necessary to make the switch exhaustive
+      break;
   }
-  return m_max.y();
+  // should never reach this point
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 inline void RectangleBounds::checkConsistency() noexcept(false) {
