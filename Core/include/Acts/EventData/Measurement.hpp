@@ -26,6 +26,21 @@ namespace Acts {
 // forward declarations
 class Surface;
 
+template <typename T>
+struct ReferenceObject {};
+
+template<>
+struct ReferenceObject<BoundParametersIndices>
+{
+	using type = Surface;
+}
+
+template<>
+struct ReferenceObject<FreeParametersIndices>
+{
+	using type = Volume;
+}
+
 /// @brief base class for Measurements
 ///
 /// This class describes the measurement of track parameters at a certain
@@ -66,12 +81,14 @@ class Measurement {
 
  public:
   /// type of the vector containing the parameter values
-  using ParameterVector = typename ParSet_t::ParameterVector;
+  using ParVector_t = typename ParSet_t::ParVector_t;
   /// type of the covariance matrix of the measurement
-  using CovarianceMatrix = typename ParSet_t::CovarianceMatrix;
+  using CovMatrix_t = typename ParSet_t::CovMatrix_t;
   /// matrix type for projecting full parameter vector onto local parameters
-  using Projection = typename ParSet_t::Projection;
-
+  using Projection_t = typename ParSet_t::Projection_t;
+  /// Object type that corresponds to the measurement
+  using ReferenceObject_t = typename ReferenceObject<parameter_indices_t>::type;
+  
   /// Delete the default constructor
   Measurement() = delete;
 
@@ -94,16 +111,14 @@ class Measurement {
   /// @param cov covariance matrix of the measurement.
   /// @param head,values consistent number of parameter values of the
   /// measurement
-  template <
-      typename T = parameter_indices_t, typename... Tail,
-      std::enable_if_t<std::is_same<T, BoundParametersIndices>::value, int> = 0>
-  Measurement(std::shared_ptr<const Surface> surface,
-              const source_link_t& source, CovarianceMatrix cov,
+  template <typename... Tail>
+  Measurement(std::shared_ptr<const ReferenceObject_t> referenceObject,
+              const source_link_t& source, CovMatrix_t cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
       : m_oParameters(std::move(cov), head, values...),
-        m_pSurface(std::move(surface)),
+        m_pReferenceObject(std::move(referenceObject)),
         m_sourceLink(source) {
     assert(m_pSurface);
   }
@@ -141,9 +156,6 @@ class Measurement {
     assert(m_pVolume);
   }
 
-  /// @brief virtual destructor
-  virtual ~Measurement() = default;
-
   /// @brief copy constructor
   ///
   /// @tparam source_link_t The identifier type
@@ -154,8 +166,7 @@ class Measurement {
   Measurement(
       const Measurement<source_link_t, parameter_indices_t, params...>& copy)
       : m_oParameters(copy.m_oParameters),
-        m_pSurface(copy.m_pSurface),
-        m_pVolume(copy.m_pVolume),
+        m_pReferenceObject(copy.m_pReferenceObject),
         m_sourceLink(copy.m_sourceLink) {}
 
   /// @brief move constructor
@@ -168,8 +179,7 @@ class Measurement {
   Measurement(
       Measurement<source_link_t, parameter_indices_t, params...>&& other)
       : m_oParameters(std::move(other.m_oParameters)),
-        m_pSurface(std::move(other.m_pSurface)),
-        m_pVolume(std::move(other.m_pVolume)),
+        m_pReferenceObject(std::move(other.m_pReferenceObject)),
         m_sourceLink(std::move(other.m_sourceLink)) {}
 
   /// @brief copy assignment operator
@@ -184,8 +194,7 @@ class Measurement {
     // check for self-assignment
     if (&rhs != this) {
       m_oParameters = rhs.m_oParameters;
-      m_pSurface = rhs.m_pSurface;
-      m_pVolume = rhs.m_pVolume;
+      m_pReferenceObject = rhs.m_pReferenceObject;
       m_sourceLink = rhs.m_sourceLink;
     }
     return *this;
@@ -201,8 +210,7 @@ class Measurement {
   Measurement<source_link_t, parameter_indices_t, params...>& operator=(
       Measurement<source_link_t, parameter_indices_t, params...>&& rhs) {
     m_oParameters = std::move(rhs.m_oParameters);
-    m_pSurface = std::move(rhs.m_pSurface);
-    m_pVolume = std::move(rhs.m_pVolume);
+    m_pReferenceObject = std::move(rhs.m_pReferenceObject);
     m_sourceLink = std::move(rhs.m_sourceLink);
     return *this;
   }
@@ -254,21 +262,13 @@ class Measurement {
   /// @return number of measured parameters
   static constexpr unsigned int size() { return ParSet_t::size(); }
 
-  /// @brief access associated surface
+  /// @brief access associated object
   ///
-  /// @pre The @c Surface object used to construct this @c Measurement object
+  /// @pre The @c ReferenceObject_t object used to construct this @c Measurement object
   /// must still be valid at the same memory location.
   ///
   /// @return reference to surface at which the measurement took place
-  const Acts::Surface& referenceSurface() const { return *m_pSurface; }
-
-  /// @brief access associated volume
-  ///
-  /// @pre The @c Volume object used to construct this @c Measurement object
-  /// must still be valid at the same memory location.
-  ///
-  /// @return reference to volume in which the measurement took place
-  const Acts::Volume& referenceVolume() const { return *m_pVolume; }
+  const ReferenceObject_t& referenceObject() const { return *m_pReferenceObject; }
 
   /// @brief link access to the source of the measurement.
   ///
@@ -297,7 +297,7 @@ class Measurement {
   ParameterVector residual(const BoundParameters& trackPars) const {
     return m_oParameters.residual(trackPars.getParameterSet());
   }
-
+  
   /// @brief equality operator
   ///
   /// @return @c true if parameter sets and associated surfaces/volumes compare
@@ -305,8 +305,7 @@ class Measurement {
   virtual bool operator==(const Measurement<source_link_t, parameter_indices_t,
                                             params...>& rhs) const {
     return ((m_oParameters == rhs.m_oParameters) &&
-            (*m_pSurface == *rhs.m_pSurface) &&
-            (*m_pVolume == *rhs.m_pVolume) &&
+            (*m_pReferenceObject == *rhs.m_pReferenceObject) &&
             (m_sourceLink == rhs.m_sourceLink));
   }
 
@@ -345,10 +344,8 @@ class Measurement {
 
  private:
   ParSet_t m_oParameters;  ///< measured parameter set
-  std::shared_ptr<const Surface> m_pSurface =
-      nullptr;  ///< surface at which the measurement took place
-  std::shared_ptr<const Volume> m_pVolume =
-      nullptr;                 ///< volume in which the measurement took place
+  std::shared_ptr<const ReferenceObject_t> m_pReferenceObject =
+      nullptr;  ///< object which corresponds to the measurement
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
