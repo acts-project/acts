@@ -72,9 +72,9 @@ FW::Obj::ObjTrackingGeometryWriter::Config readObjTrackingGeometryWriterConfig(
   objTgConfig.outputPrecision = vm["obj-precision"].template as<int>();
   objTgConfig.outputScalor = vm["obj-scalor"].template as<double>();
 
-  auto setView = [&](const std::string& name,
+  auto setView = [&](const std::string& vname,
                      Acts::ViewConfig& viewCfg) -> void {
-    read_series cview = vm[name].template as<read_series>();
+    read_series cview = vm[vname].template as<read_series>();
     if (not cview.empty()) {
       if (cview[0] == 0) {
         viewCfg.visible = false;
