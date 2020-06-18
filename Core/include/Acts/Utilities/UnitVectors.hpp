@@ -27,11 +27,10 @@ namespace Acts {
 ///       explicitely cast missmatched input types.
 template <typename T>
 inline ActsVector<T, 3> makeDirectionUnitFromPhiEta(T phi, T eta) {
-  const auto coshEta = std::cosh(eta);
-  const auto tanhEta = std::tanh(eta);
+  const auto coshEtaInv = 1 / std::cosh(eta);
   return {
-      std::cos(phi) / coshEta,
-      std::sin(phi) / coshEta,
+      std::cos(phi) * coshEtaInv,
+      std::sin(phi) * coshEtaInv,
       std::tanh(eta),
   };
 }
