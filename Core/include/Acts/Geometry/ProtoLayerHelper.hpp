@@ -55,7 +55,7 @@ class ProtoLayerHelper {
   ///
   /// @param gctx The geometry context (usually building context at this stage)
   /// @param surfaces The surfaces to be sorted into arrays
-  /// @param sortings The sequential sorting setup, one single sorting
+  /// @param sortings The sequential sorting setup
   ///
   /// @return A vector of ProtoLayers
   std::vector<ProtoLayer> protoLayers(

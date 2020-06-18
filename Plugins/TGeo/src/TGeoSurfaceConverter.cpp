@@ -73,15 +73,15 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                          : ys * Vector3D(rotation[1], rotation[4], rotation[7]);
     Vector3D az = ax.cross(ay);
 
-    transform = std::make_shared<const Transform3D>(
-        TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
-
     double minR = tube->GetRmin() * scalor;
     double maxR = tube->GetRmax() * scalor;
     double deltaR = maxR - minR;
     double medR = 0.5 * (minR + maxR);
     double halfZ = tube->GetDz() * scalor;
     if (halfZ > deltaR) {
+      transform = std::make_shared<const Transform3D>(
+          TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
+
       double halfPhi = M_PI;
       double avgPhi = 0.;
       // Check if it's a segment

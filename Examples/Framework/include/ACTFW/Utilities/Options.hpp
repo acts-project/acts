@@ -32,8 +32,6 @@ struct Interval {
   std::optional<double> upper;
 };
 
-using Intervals = std::vector<Interval>;
-
 /// Extract an interval from an input of the form 'lower:upper'.
 ///
 /// An input of the form `lower:` or `:upper` sets just one of the limits. Any

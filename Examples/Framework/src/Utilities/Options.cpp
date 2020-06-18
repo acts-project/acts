@@ -62,16 +62,16 @@ std::ostream& FW::Options::operator<<(std::ostream& os,
   return os;
 }
 
-std::istream& FW::Options::operator>>(std::istream& is,
-                                      FW::Options::Intervals& intervals) {
+std::istream& FW::Options::operator>>(
+    std::istream& is, std::vector<FW::Options::Interval>& intervals) {
   for (auto& interval : intervals) {
     is >> interval;
   }
   return is;
 }
 
-std::ostream& FW::Options::operator<<(std::ostream& os,
-                                      const FW::Options::Intervals& intervals) {
+std::ostream& FW::Options::operator<<(
+    std::ostream& os, const std::vector<FW::Options::Interval>& intervals) {
   for (auto& interval : intervals) {
     os << interval;
   }

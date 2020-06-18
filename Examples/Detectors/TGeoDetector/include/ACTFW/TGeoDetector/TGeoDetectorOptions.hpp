@@ -73,22 +73,28 @@ void addTGeoGeometryOptions(options_t& opt) {
                  po::value<read_strings>()->default_value({}),
                  "Axes definition for negative sensitive objects, odered "
                  "along the series.")(
-      "geo-tgeo-nlayer-r-range", po::value<Intervals>()->default_value({}),
+      "geo-tgeo-nlayer-r-range",
+      po::value<std::vector<Interval>>()->default_value({}),
       "Radial range(s) for negative layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-clayer-r-range", po::value<Intervals>()->default_value({}),
+      "geo-tgeo-clayer-r-range",
+      po::value<std::vector<Interval>>()->default_value({}),
       "Radial range(s) for central layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-player-r-range", po::value<Intervals>()->default_value({}),
+      "geo-tgeo-player-r-range",
+      po::value<std::vector<Interval>>()->default_value({}),
       "Radial range(s) for positive layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-nlayer-z-range", po::value<Intervals>()->default_value({}),
+      "geo-tgeo-nlayer-z-range",
+      po::value<std::vector<Interval>>()->default_value({}),
       "Longitudinal range(s) for negative layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-clayer-z-range", po::value<Intervals>()->default_value({}),
+      "geo-tgeo-clayer-z-range",
+      po::value<std::vector<Interval>>()->default_value({}),
       "Longitudinal range(s) for central layers "
       "to restrict the module parsing (optional).")(
-      "geo-tgeo-player-z-range", po::value<Intervals>()->default_value({}),
+      "geo-tgeo-player-z-range",
+      po::value<std::vector<Interval>>()->default_value({}),
       "Longitudinal range(s) for positive layers "
       "to restrict the module parsing (optional).")(
       "geo-tgeo-nlayer-r-split", po::value<read_range>()->default_value({}),
@@ -185,16 +191,22 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
                                                psensitiveaxes};
 
   // The parse radii in r
-  Intervals nrrange = vm["geo-tgeo-nlayer-r-range"].template as<Intervals>();
-  Intervals crrange = vm["geo-tgeo-clayer-r-range"].template as<Intervals>();
-  Intervals prrange = vm["geo-tgeo-player-r-range"].template as<Intervals>();
-  std::array<Intervals, 3> rranges = {nrrange, crrange, prrange};
+  std::vector<Interval> nrrange =
+      vm["geo-tgeo-nlayer-r-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> crrange =
+      vm["geo-tgeo-clayer-r-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> prrange =
+      vm["geo-tgeo-player-r-range"].template as<std::vector<Interval>>();
+  std::array<std::vector<Interval>, 3> rranges = {nrrange, crrange, prrange};
 
   // The parse ranges in z
-  Intervals nzrange = vm["geo-tgeo-nlayer-z-range"].template as<Intervals>();
-  Intervals czrange = vm["geo-tgeo-clayer-z-range"].template as<Intervals>();
-  Intervals pzrange = vm["geo-tgeo-player-z-range"].template as<Intervals>();
-  std::array<Intervals, 3> zranges = {nzrange, czrange, pzrange};
+  std::vector<Interval> nzrange =
+      vm["geo-tgeo-nlayer-z-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> czrange =
+      vm["geo-tgeo-clayer-z-range"].template as<std::vector<Interval>>();
+  std::vector<Interval> pzrange =
+      vm["geo-tgeo-player-z-range"].template as<std::vector<Interval>>();
+  std::array<std::vector<Interval>, 3> zranges = {nzrange, czrange, pzrange};
 
   // The split tolerances in r and z
   read_range nlayersplitr =
