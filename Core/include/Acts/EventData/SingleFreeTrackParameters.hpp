@@ -24,7 +24,7 @@ namespace Acts {
 /// position_z, time, direction_x, direction_y, direction_z, charge /
 /// |momentum|).
 ///
-/// @tparam ChargePolicy Selection typt if the particle is charged or neutral
+/// @tparam ChargePolicy Selection type if the particle is charged or neutral
 /// @note It is assumed that a charged particle has a charge of +/-1
 template <class ChargePolicy>
 class SingleFreeTrackParameters {
