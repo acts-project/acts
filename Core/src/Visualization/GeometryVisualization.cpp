@@ -124,7 +124,7 @@ void Acts::GeometryVisualization::drawSegmentBase(
   lrotation.col(2) = direction;
 
   Vector3D lcenter = 0.5 * (start + end);
-  double alength = arrowLength * (2 * hlength);
+  double alength = (thickness > 0.) ? arrowLength * thickness : 2.;
 
   if (arrows == 2) {
     hlength -= alength;

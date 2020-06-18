@@ -11,12 +11,11 @@
 
 std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    BinningValue bValue, double joinTolerance) const {
+    const SortingConfig& sorting) const {
   std::vector<Acts::ProtoLayer> protoLayers;
 
   using SurfaceCluster = std::pair<Extent, std::vector<const Surface*>>;
   std::vector<SurfaceCluster> clusteredSurfaces;
-
   /// Helper function to find/create the cluster of surfaces where
   /// the Extent belongs to. In case none is found, a new one is inserted
   ///
@@ -25,7 +24,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   /// @return the referece of the SurfaceCluster for insertion
   auto findCluster = [&](const Extent& extent) -> SurfaceCluster& {
     for (auto& cluster : clusteredSurfaces) {
-      if (cluster.first.intersects(extent, bValue, joinTolerance)) {
+      if (cluster.first.intersects(extent, sorting.first, sorting.second)) {
         return cluster;
       }
     }
@@ -37,7 +36,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   // Loop over surfaces and sort into clusters
   for (auto& sf : surfaces) {
     auto sfExtent = sf->polyhedronRepresentation(gctx, 1).extent();
-    auto sfCluster = findCluster(sfExtent);
+    auto& sfCluster = findCluster(sfExtent);
     sfCluster.first.extend(sfExtent);
     sfCluster.second.push_back(sf);
   }
@@ -45,8 +44,41 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   // Loop over clusters and create ProtoLayer
   protoLayers.reserve(clusteredSurfaces.size());
   for (auto& clusters : clusteredSurfaces) {
+    ACTS_VERBOSE("Creatingg ProtoLayer with " << clusters.second.size()
+                                              << " surfaces.");
     protoLayers.push_back(ProtoLayer(gctx, clusters.second));
   }
-
   return protoLayers;
+}
+
+std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
+    const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
+    const std::vector<SortingConfig>& sortings) const {
+  ACTS_DEBUG("Received " << surfaces.size() << " surfaces at input.");
+  std::vector<std::vector<const Surface*>> sortSurfaces = {surfaces};
+  for (const auto& sorting : sortings) {
+    ACTS_VERBOSE("-> Sorting a set of " << sortSurfaces.size() << " in "
+                                        << binningValueNames[sorting.first]);
+    std::vector<std::vector<const Surface*>> subSurfaces;
+    for (const auto& ssurfaces : sortSurfaces) {
+      ACTS_VERBOSE("-> Surfaces for this sorting step: " << ssurfaces.size());
+      auto pLayers = protoLayers(gctx, ssurfaces, sorting);
+      ACTS_VERBOSE("-> Resulted in " << pLayers.size() << " ProtoLayers.");
+      for (const auto& pLayer : pLayers) {
+        ACTS_VERBOSE("--> ProtoLayer containes " << pLayer.surfaces().size()
+                                                 << " surfaces.");
+        subSurfaces.push_back(pLayer.surfaces());
+      }
+    }
+    sortSurfaces = subSurfaces;
+  }
+  ACTS_DEBUG("Yielded " << sortSurfaces.size() << " at output.");
+
+  std::vector<Acts::ProtoLayer> finalProtoLayers;
+
+  for (auto ssurfaces : sortSurfaces) {
+    finalProtoLayers.push_back(ProtoLayer(gctx, ssurfaces));
+  }
+
+  return finalProtoLayers;
 }

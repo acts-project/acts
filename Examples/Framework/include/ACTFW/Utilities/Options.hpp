@@ -44,6 +44,19 @@ std::istream& operator>>(std::istream& is, Interval& interval);
 /// Print an interval as `lower:upper`.
 std::ostream& operator<<(std::ostream& os, const Interval& interval);
 
+/// Extract an interval from an input of the form 'lower:upper'.
+///
+/// An input of the form `lower:` or `:upper` sets just one of the limits. Any
+/// other input leads to an unbounded interval. If the input is `:SECOND` the
+///
+/// @note The more common range notation uses `lower-upper` but the `-`
+///       separator complicates the parsing of negative values.
+std::istream& operator>>(std::istream& is, std::vector<Interval>& intervals);
+
+/// Print an interval as `lower:upper`.
+std::ostream& operator<<(std::ostream& os,
+                         const std::vector<Interval>& intervals);
+
 }  // namespace Options
 }  // namespace FW
 

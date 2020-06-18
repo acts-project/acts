@@ -1,0 +1,111 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2020 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/ObjVisualization.hpp"
+#include "TGeoArb8.h"
+#include "TGeoManager.h"
+#include "TGeoMaterial.h"
+#include "TGeoMatrix.h"
+#include "TGeoMedium.h"
+#include "TGeoVolume.h"
+#include "TView.h"
+
+namespace bdata = boost::unit_test::data;
+namespace tt = boost::test_tools;
+
+namespace Acts {
+
+namespace Test {
+
+GeometryContext tgContext = GeometryContext();
+
+/// @brief Unit test to convert a TGeoTrd2 into a Plane
+///
+/// * The TGeoTrd2 has x/z orientation
+BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
+  ObjVisualization objVis;
+
+  new TGeoManager("arb8", "poza12");
+  TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
+  TGeoMedium *med = new TGeoMedium("MED", 1, mat);
+  TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 100, 100, 100);
+  gGeoManager->SetTopVolume(top);
+  TGeoArb8 *arb = new TGeoArb8(1);
+  arb->SetVertex(0, -30, -25);
+  arb->SetVertex(1, -25, 25);
+  arb->SetVertex(2, 5, 25);
+  arb->SetVertex(3, 25, -25);
+  arb->SetVertex(4, -30, -25);
+  arb->SetVertex(5, -25, 25);
+  arb->SetVertex(6, 5, 25);
+  arb->SetVertex(7, 25, -25);
+  TGeoVolume *vol = new TGeoVolume("ARB8", arb, med);
+  top->AddNode(vol, 1);
+  gGeoManager->CloseGeometry();
+
+  // Check the 4 possible ways
+  std::vector<std::string> allowedAxes = {"XY*", "xy*", "Xy*", "xY*",
+                                          "YX*", "yx*", "Yx*", "yX*"};
+
+  size_t iarb8 = 0;
+  for (const auto &axes : allowedAxes) {
+    auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
+                                                 *gGeoIdentity, axes, 1);
+    BOOST_TEST(plane != nullptr);
+    BOOST_TEST(plane->type() == Surface::Plane);
+
+    auto bounds =
+        dynamic_cast<const ConvexPolygonBounds<4> *>(&(plane->bounds()));
+    BOOST_TEST(bounds != nullptr);
+
+    // Check if the surface is the (negative) identity
+    auto transform = plane->transform(tgContext);
+    auto rotation = transform.rotation();
+    GeometryVisualization::drawSurface(objVis, *plane, tgContext,
+                                       Transform3D::Identity(), 1, false,
+                                       {0, 0, 120});
+    const Vector3D center = plane->center(tgContext);
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 30 * rotation.col(0), 0.2,
+                                            4., 2.5, 72, {200, 0, 0});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 30 * rotation.col(1), 0.2,
+                                            4., 2.5, 72, {0, 200, 0});
+    GeometryVisualization::drawArrowForward(objVis, center,
+                                            center + 2 * rotation.col(2), 0.2,
+                                            4., 2.5, 72, {0, 0, 200});
+
+    objVis.write("TGeoConversion_TGeoArb8_PlaneSurface_" +
+                 std::to_string(iarb8++));
+    objVis.clear();
+  }
+
+  // Check exceptions for not allowed axis definition
+  std::vector<std::string> notAllowed = {
+      "XZ*", "xz*", "xZ*", "Xz*", "ZX*", "zx*", "zX*", "Zx*",
+      "YZ*", "yz*", "yZ*", "Yz*", "ZY*", "zy*", "Zy*", "zY*"};
+  for (const auto &naxis : notAllowed) {
+    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
+                                                      *gGeoIdentity, naxis, 1),
+                      std::invalid_argument);
+  }
+}
+
+}  // namespace Test
+
+}  // namespace Acts

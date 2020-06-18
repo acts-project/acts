@@ -11,5 +11,5 @@ helper functions from the `CommonHelpers` package:
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
 ...
-auto path = Acts::Tests::getDataPath("some-data-file.csv");
+auto path = Acts::Test::getDataPath("some-data-file.csv");
 ```
