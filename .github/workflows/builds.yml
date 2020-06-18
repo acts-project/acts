@@ -65,9 +65,6 @@ jobs:
         lcg:
           - 95apython3
           - 96
-        exclude:
-          - os: slc6
-            lcg: 96
     env:
       SETUP: /opt/lcg_view/setup.sh
     steps:
