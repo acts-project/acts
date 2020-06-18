@@ -95,8 +95,7 @@ $ cd <source>
 $ source CI/setup_lcg95.sh # or setup_lcg96.sh
 ```
 
-This activates a compatible release variant regardless of whether you are on
-*SLC 6* or on *CentOS 7*.
+This activates a compatible release variant on *CentOS 7*.
 
 After sourcing the setup script, you can build Acts as described above. The
 following commands will build Acts in the `<source>/build` directory with the
@@ -121,8 +120,6 @@ continous integration setup and come with all dependencies pre-installed.
     LCG release 95apython3
 -   `centos7-lcg96`: based on CentOS 7 with HEP-specific software from LCG
     release 96
--   `slc6-lcg95apython3`: based on SLC 6 with HEP-specific software from LCG
-    release 95apython3
 
 To use these locally, you first need to pull the relevant images from the
 registry. The current version is always tagged as `master.
