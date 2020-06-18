@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,7 +16,7 @@
 namespace Acts {
 /// @cond
 // forward declaration
-template <ParID_t... params>
+template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet;
 /// @endcond
 
@@ -28,13 +28,15 @@ namespace detail {
 ///         `ParameterSet<Policy,ID_t(0),ID_t(1),...,ID_t(N-1)>` where @c ID_t
 ///         is a @c typedef to `Policy::par_id_type` and @c N is the total
 ///         number of parameters
+template <typename parameter_indices_t>
 struct full_parset {
-  template <ParID_t v, typename C>
+  template <parameter_indices_t v, typename C>
   struct add_to_value_container;
 
-  template <ParID_t v, ParID_t... others>
-  struct add_to_value_container<v, std::integer_sequence<ParID_t, others...>> {
-    using type = std::integer_sequence<ParID_t, others..., v>;
+  template <parameter_indices_t v, parameter_indices_t... others>
+  struct add_to_value_container<
+      v, std::integer_sequence<parameter_indices_t, others...>> {
+    using type = std::integer_sequence<parameter_indices_t, others..., v>;
   };
 
   template <typename T, unsigned int N>
@@ -51,13 +53,14 @@ struct full_parset {
   template <typename T>
   struct converter;
 
-  template <ParID_t... values>
-  struct converter<std::integer_sequence<ParID_t, values...>> {
-    using type = ParameterSet<values...>;
+  template <parameter_indices_t... values>
+  struct converter<std::integer_sequence<parameter_indices_t, values...>> {
+    using type = ParameterSet<parameter_indices_t, values...>;
   };
 
-  using type = typename converter<
-      typename tparam_generator<ParID_t, eBoundParametersSize - 1>::type>::type;
+  using type = typename converter<typename tparam_generator<
+      parameter_indices_t,
+      detail::ParametersSize<parameter_indices_t>::size - 1>::type>::type;
 };
 }  // namespace detail
 /// @endcond

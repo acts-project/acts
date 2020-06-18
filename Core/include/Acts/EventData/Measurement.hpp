@@ -57,15 +57,15 @@ class Measurement {
   // private typedefs
 
   /// type of the underlying ParameterSet object
-  using ParSet_t = ParameterSet<params...>;
+  using ParSet_t = ParameterSet<BoundParametersIndices, params...>;
 
  public:
   /// type of the vector containing the parameter values
-  using ParVector_t = typename ParSet_t::ParVector_t;
+  using ParameterVector = typename ParSet_t::ParameterVector;
   /// type of the covariance matrix of the measurement
-  using CovMatrix_t = typename ParSet_t::CovMatrix_t;
+  using CovarianceMatrix = typename ParSet_t::CovarianceMatrix;
   /// matrix type for projecting full parameter vector onto local parameters
-  using Projection_t = typename ParSet_t::Projection_t;
+  using Projection = typename ParSet_t::Projection;
 
   /// Delete the default constructor
   Measurement() = delete;
@@ -91,7 +91,7 @@ class Measurement {
   /// measurement
   template <typename... Tail>
   Measurement(std::shared_ptr<const Surface> surface,
-              const source_link_t& source, CovMatrix_t cov,
+              const source_link_t& source, CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
@@ -178,12 +178,12 @@ class Measurement {
   ///         given for the measured parameters in the order defined by the
   ///         class
   /// template argument @c params.
-  ParVector_t parameters() const { return m_oParameters.getParameters(); }
+  ParameterVector parameters() const { return m_oParameters.getParameters(); }
 
   /// @brief access covariance matrix of the measured parameter values
   ///
   /// @return covariance matrix of the measurement
-  CovMatrix_t covariance() const { return *m_oParameters.getCovariance(); }
+  CovarianceMatrix covariance() const { return *m_oParameters.getCovariance(); }
 
   /// @brief retrieve stored uncertainty for given parameter
   ///
@@ -236,7 +236,7 @@ class Measurement {
   /// @return vector with the residual parameter values (in valid range)
   ///
   /// @sa ParameterSet::residual
-  ParVector_t residual(const TrackParameters& trackPars) const {
+  ParameterVector residual(const TrackParameters& trackPars) const {
     return m_oParameters.residual(trackPars.getParameterSet());
   }
 
@@ -261,7 +261,7 @@ class Measurement {
   }
 
   /// @projection operator
-  static Projection_t projector() { return ParSet_t::projector(); }
+  static Projection projector() { return ParSet_t::projector(); }
 
   friend std::ostream& operator<<(
       std::ostream& out, const Measurement<source_link_t, params...>& m) {
