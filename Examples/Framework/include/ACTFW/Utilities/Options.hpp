@@ -54,7 +54,8 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval);
 std::istream& operator>>(std::istream& is, std::vector<Interval>& intervals);
 
 /// Print an interval as `lower:upper`.
-std::ostream& operator<<(std::ostream& os, const std::vector<Interval>& intervals);
+std::ostream& operator<<(std::ostream& os,
+                         const std::vector<Interval>& intervals);
 
 }  // namespace Options
 }  // namespace FW
