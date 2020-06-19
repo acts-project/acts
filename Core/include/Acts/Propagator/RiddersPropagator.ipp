@@ -82,7 +82,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
 			if (start.covariance()) {
 			  mParSet->setCovariance(std::get<BoundSymMatrix>(
-				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(eFreeDir0))));
+				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
 			} 
 	  }
 	}
@@ -338,7 +338,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
         wiggleStartVector(options.geoContext, h, param, startPars);
 
     const auto& r =
-        m_propagator.template propagate<FreeParameters>(tp, options).value();
+        m_propagator.template propagate<FreeTrackParameters>(tp, options).value();
 
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);

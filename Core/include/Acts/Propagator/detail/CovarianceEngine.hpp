@@ -121,7 +121,7 @@ std::tuple<CurvilinearTrackParameters, Jacobian, double> curvilinearState(
 ///   - the free parameters at given position
 ///   - the stepweise jacobian towards it (from last location)
 ///   - and the path length (from start - for ordering)
-std::tuple<FreeParameters, Jacobian, double> freeState(
+std::tuple<FreeTrackParameters, Jacobian, double> freeState(
     Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     std::optional<BoundToFreeMatrix>& jacobianLocalToGlobal,

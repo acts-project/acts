@@ -261,7 +261,7 @@ class AtlasStepper {
                        double /*unused*/)
         : geoContext(gctx), fieldCache(mctx) {
       throw std::runtime_error(
-          "AtlasStepper::State with FreeParameters is not implemented");
+          "AtlasStepper::State with FreeTrackParameters is not implemented");
     }
 
     // optimisation that init is not called twice
