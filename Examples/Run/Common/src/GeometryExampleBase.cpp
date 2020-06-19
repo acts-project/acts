@@ -55,7 +55,7 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
   auto contextDecorators = geometry.second;
 
   // The detectors
-  read_strings subDetectors = vm["geo-subdetectors"].as<read_strings>();
+  read_strings subDetectors = vm["geo-detector-volume"].as<read_strings>();
 
   auto surfaceLogLevel =
       Acts::Logging::Level(vm["geo-surface-loglevel"].as<size_t>());

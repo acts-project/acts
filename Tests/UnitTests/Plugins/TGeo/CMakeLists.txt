@@ -1,0 +1,10 @@
+set(unittest_extra_libraries ActsTGeoPlugin)
+
+add_unittest(TGeoArb8Conversion TGeoArb8ConversionTests.cpp)
+add_unittest(TGeoBBoxConversion TGeoBBoxConversionTests.cpp)
+add_unittest(TGeoTrd1Conversion TGeoTrd1ConversionTests.cpp)
+add_unittest(TGeoTrd2Conversion TGeoTrd2ConversionTests.cpp)
+add_unittest(TGeoTubeConversion TGeoTubeConversionTests.cpp)
+add_unittest(TGeoLayerBuilder TGeoLayerBuilderTests.cpp)
+add_unittest(TGeoParser TGeoParserTests.cpp)
+add_unittest(TGeoPrimitivesHelper TGeoPrimitivesHelperTests.cpp)

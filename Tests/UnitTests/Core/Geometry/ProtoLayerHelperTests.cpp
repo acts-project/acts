@@ -29,7 +29,8 @@ BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   ProtoLayerHelper::Config plhConfig;
-  ProtoLayerHelper plHelper(plhConfig);
+  ProtoLayerHelper plHelper(
+      plhConfig, getDefaultLogger("ProtoLayerHelper", Logging::VERBOSE));
 
   GeometryContext tgContext = GeometryContext();
 
@@ -78,8 +79,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   write(objVis, "ProtoLayerHelper_CylinderLayers_unsorted", true);
 
   // Sort into ProtoLayers
-  auto radialLayers =
-      plHelper.protoLayers(tgContext, cylinderSurfaces, binR, 5.);
+  auto radialLayers = plHelper.protoLayers(
+      tgContext, cylinderSurfaces, ProtoLayerHelper::SortingConfig(binR, 5.));
 
   BOOST_CHECK(radialLayers.size() == 4);
 
@@ -133,7 +134,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   write(objVis, "ProtoLayerHelper_DiscLayers_unsorted", true);
 
   // Sort into ProtoLayers
-  auto discLayersZ = plHelper.protoLayers(tgContext, discSurfaces, binZ, 5.);
+  auto discLayersZ = plHelper.protoLayers(tgContext, discSurfaces, {binZ, 5.});
 
   BOOST_CHECK(discLayersZ.size() == 4);
 
@@ -183,14 +184,17 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   write(objVis, "ProtoLayerHelper_RingLayers_unsorted", true);
 
   // First: Sort into ProtoLayers radially
-  auto rSorted = plHelper.protoLayers(tgContext, ringSurfaces, binR, 1.);
+  auto rSorted = plHelper.protoLayers(
+      tgContext, ringSurfaces, ProtoLayerHelper::SortingConfig(binR, 1.));
   BOOST_CHECK(rSorted.size() == 3);
 
   IVisualization::ColorType dColor = {0, 0, 0};
 
   int ir = 0;
   for (auto& rBatch : rSorted) {
-    auto lSorted = plHelper.protoLayers(tgContext, rBatch.surfaces(), binZ, 5.);
+    auto lSorted =
+        plHelper.protoLayers(tgContext, rBatch.surfaces(),
+                             ProtoLayerHelper::SortingConfig(binZ, 5.));
     il = 0;
     dColor[ir] = 256;
     for (auto& layer : lSorted) {
@@ -205,6 +209,22 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   }
   // Draw the all surfaces
   write(objVis, "ProtoLayerHelper_RingLayers_sorted", true);
+
+  // Perform the split at once
+  auto rzSorted =
+      plHelper.protoLayers(tgContext, ringSurfaces, {{binR, 1.}, {binZ, 5}});
+
+  size_t irz = 0;
+  for (auto& layer : rzSorted) {
+    for (auto& sf : layer.surfaces()) {
+      GeometryVisualization::drawSurface(objVis, *sf, tgContext,
+                                         Transform3D::Identity(), 1, false,
+                                         {125, 0, 0});
+    }
+    write(objVis,
+          "ProtoLayerHelper_RingLayers_rz_sorted" + std::to_string(irz++),
+          true);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

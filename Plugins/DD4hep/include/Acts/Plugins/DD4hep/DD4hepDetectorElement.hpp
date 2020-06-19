@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// DD4hepDetectorElement.h, Acts project, DD4hepDetector plugin
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "DD4hep/DetElement.h"
@@ -23,15 +19,12 @@ class DigitizationModule;
 ///
 /// @brief DetectorElement class implementation for DD4hep geometry
 ///
-/// DetectorElement plugin for DD4hep detector elements. DD4hep is based on TGeo
-/// shapes, therefore the DD4hepDetectorElement inherits from
+/// DetectorElement plugin for DD4hep detector elements. DD4hep is based on
+/// TGeo shapes, therefore the DD4hepDetectorElement inherits from
 /// TGeoDetectorElement.
-/// The
-/// full geometrical information is provided by the TGeoDetectorElement. The
-/// DD4hepDetectorElement extends the TGeoDetectorElement by containing a
-/// segmentation
-/// for the readout.
-
+/// The full geometrical information is provided by the TGeoDetectorElement.
+/// The DD4hepDetectorElement extends the TGeoDetectorElement by containing a
+/// segmentation for the readout.
 /// @todo what if shape conversion failes? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what
@@ -47,9 +40,8 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// @param detElement The DD4hep DetElement which should be linked to a
   /// surface
   /// @param axes is the axis orientation with respect to the tracking frame
-  ///        it is a string of the three characters x, y and z (standing for the
-  ///        three axes)
-  ///        There is a distinction between
+  ///        it is a string of the three characters x, y and z (standing for
+  ///        the three axes) There is a distinction between
   /// capital and lower case
   /// characters :
   /// 	- capital      -> positive orientation of the axis
@@ -63,14 +55,15 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// @param scalor is the scale factor for unit conversion if needed
   /// @param isDisc in case the sensitive detector module should be translated
   ///        as disc (e.g. for endcaps) this flag should be set to true
-  /// @note In the translation from a 3D geometry (TGeo) which only knows tubes
+  /// @note In the translation from a 3D geometry (TGeo) which only knows
+  /// tubes
   ///       to a 2D geometry (Tracking geometry) a distinction if the module
   ///       should be described as a cylinder or a disc surface needs to be
-  ///       done. Since this information can not be taken just from the geometry
-  ///       description (both can be described as TGeoTubeSeg), one needs to
-  ///       set the flag 'isDisc' in case a volume with shape \c TGeoTubeSeg
-  ///       should be translated to a disc surface. Per default it will be
-  ///       translated into a cylindrical surface.
+  ///       done. Since this information can not be taken just from the
+  ///       geometry description (both can be described as TGeoTubeSeg), one
+  ///       needs to set the flag 'isDisc' in case a volume with shape \c
+  ///       TGeoTubeSeg should be translated to a disc surface. Per default it
+  ///       will be translated into a cylindrical surface.
   /// @param material Possible material of detector element
   DD4hepDetectorElement(
       const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
@@ -78,7 +71,6 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
       std::shared_ptr<const ISurfaceMaterial> material = nullptr,
       std::shared_ptr<const DigitizationModule> digitizationModule = nullptr);
 
-  /// Desctructor
   ~DD4hepDetectorElement() override = default;
 
  private:

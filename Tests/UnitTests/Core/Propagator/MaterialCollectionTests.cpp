@@ -9,7 +9,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
-
 #include <memory>
 
 #include "Acts/EventData/TrackParameters.hpp"
@@ -262,7 +261,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // move forward step by step through the surfaces
-  const TrackParameters* sParameters = &start;
+  const SingleTrackParameters<ChargedPolicy>* sParameters = &start;
   std::vector<std::unique_ptr<const BoundParameters>> stepParameters;
   for (auto& fwdSteps : fwdMaterial.materialInteractions) {
     if (debugModeFwdStep) {

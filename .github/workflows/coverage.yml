@@ -12,6 +12,9 @@ on:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
 
+# NOTE this only builds core unittests to reduce the output size. if we
+#      found a way to have Github actions not fail regularly with this job
+#      all unit tests should be reactivated.
 jobs:
   build_debug:
     runs-on: ubuntu-latest
@@ -24,14 +27,6 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
-          -DACTS_BUILD_DD4HEP_PLUGIN=on
-          -DACTS_BUILD_DIGITIZATION_PLUGIN=on
-          -DACTS_BUILD_IDENTIFICATION_PLUGIN=on
-          -DACTS_BUILD_JSON_PLUGIN=on
-          -DACTS_BUILD_TGEO_PLUGIN=on
-          -DACTS_BUILD_LEGACY=on
-          -DACTS_BUILD_FATRAS=on
-          -DACTS_BUILD_BENCHMARKS=on
           -DACTS_BUILD_UNITTESTS=on
       - name: Build
         run: cmake --build build --

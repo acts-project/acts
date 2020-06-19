@@ -17,7 +17,7 @@
 #include "ACTFW/Framework/ProcessCode.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
-#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
