@@ -10,7 +10,7 @@
 
 #include <limits>
 
-#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/DebugOutputActor.hpp"
@@ -286,7 +286,7 @@ std::pair<Vector3D, double> to_cylinder(
   options.pathLimit *= 2;
 
   if (q == 0.) {
-    auto start = new NeutralCurvilinearParameters(covOpt, pos, mom, time);
+    auto start = new NeutralCurvilinearTrackParameters(covOpt, pos, mom, time);
 
     const auto result =
         propagator.propagate(*start, *endSurface, options).value();
@@ -353,7 +353,7 @@ std::pair<Vector3D, double> to_surface(
   }
   // Create curvilinear start parameters
   if (q == 0.) {
-    auto start = new NeutralCurvilinearParameters(covOpt, pos, mom, time);
+    auto start = new NeutralCurvilinearTrackParameters(covOpt, pos, mom, time);
     const auto result_s = propagator.propagate(*start, options).value();
     const auto& tp_s = result_s.endParameters;
     // The transform at the destination

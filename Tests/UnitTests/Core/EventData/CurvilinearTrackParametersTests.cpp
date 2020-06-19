@@ -8,12 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-
 #include "ParametersTestHelper.hpp"
 
 namespace Acts {
@@ -37,8 +36,8 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   /// create curvilinear parameters without covariance +1/-1 charge
   CurvilinearParameters curvilinear_pos(std::nullopt, pos, mom, 1_e, 1_s);
   CurvilinearParameters curvilinear_neg(std::nullopt, pos, mom, -1_e, 2.5_s);
-  NeutralCurvilinearParameters curvilinear_neut(std::nullopt, pos, mom,
-                                                33.33_s);
+  NeutralCurvilinearTrackParameters curvilinear_neut(std::nullopt, pos, mom,
+                                                     33.33_s);
 
   /// check local coordinates
   const auto fphi = phi(mom);
@@ -88,7 +87,7 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   /// copy construction test
   CurvilinearParameters curvilinear_pos_copy(curvilinear_pos);
   CurvilinearParameters curvilinear_neg_copy(curvilinear_neg);
-  NeutralCurvilinearParameters curvilinear_neut_copy(curvilinear_neut);
+  NeutralCurvilinearTrackParameters curvilinear_neut_copy(curvilinear_neut);
 
   BOOST_CHECK_EQUAL(curvilinear_pos_copy, curvilinear_pos);
   BOOST_CHECK_EQUAL(curvilinear_neg_copy, curvilinear_neg);

@@ -115,8 +115,8 @@ Or, respectively, a `NeutralPolicy` object
 namespace Acts {
     typedef SingleTrackParameters<NeutralPolicy> NeutralParameters;
     typedef SingleCurvilinearTrackParameters<NeutralPolicy>
-                                              NeutralCurvilinearParameters;
-    typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundParameters;
+                                              NeutralCurvilinearTrackParameters;
+    typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundTrackParameters;
 } // end of namespace Acts  
 ```
 

@@ -15,12 +15,13 @@
 
 namespace Acts {
 
-extern template class SingleBoundTrackParameters<ChargedPolicy>;
-extern template class SingleCurvilinearTrackParameters<ChargedPolicy>;
-extern template class SingleFreeTrackParameters<ChargedPolicy>;
+extern template class SingleBoundTrackParameters<NeutralPolicy>;
+extern template class SingleCurvilinearTrackParameters<NeutralPolicy>;
+extern template class SingleFreeTrackParameters<NeutralPolicy>;
 
-using BoundParameters = SingleBoundTrackParameters<ChargedPolicy>;
-using CurvilinearParameters = SingleCurvilinearTrackParameters<ChargedPolicy>;
-using FreeTrackParameters = SingleFreeTrackParameters<ChargedPolicy>;
+using NeutralBoundTrackParameters = SingleBoundTrackParameters<NeutralPolicy>;
+using NeutralCurvilinearTrackParameters =
+    SingleCurvilinearTrackParameters<NeutralPolicy>;
+using NeutralFreeTrackParameters = SingleFreeTrackParameters<NeutralPolicy>;
 
 }  // namespace Acts
