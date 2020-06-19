@@ -67,7 +67,7 @@ FW::ProcessCode FW::CsvPlanarClusterWriter::writeT(
     Acts::Vector3D globalPos(0, 0, 0);
     // transform local into global position information
     cluster.referenceObject().localToGlobal(ctx.geoContext, localPos,
-                                             globalFakeMom, globalPos);
+                                            globalFakeMom, globalPos);
 
     // encoded geometry identifier
     hit.geometry_id = geoId.value();

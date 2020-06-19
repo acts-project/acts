@@ -29,15 +29,13 @@ class Surface;
 /// @brief Deduction of the measuring geometry object based on the used indices
 template <typename T>
 struct ReferenceObject {};
-template<>
-struct ReferenceObject<BoundParametersIndices>
-{
-	using type = Surface;
+template <>
+struct ReferenceObject<BoundParametersIndices> {
+  using type = Surface;
 };
-template<>
-struct ReferenceObject<FreeParametersIndices>
-{
-	using type = Volume;
+template <>
+struct ReferenceObject<FreeParametersIndices> {
+  using type = Volume;
 };
 
 /// @brief base class for Measurements
@@ -45,7 +43,8 @@ struct ReferenceObject<FreeParametersIndices>
 /// This class describes the measurement of track parameters at a certain
 /// Surface/Volume in the TrackingGeometry.
 ///
-/// If the measurement is in local parameters and will not provide localToGlobal information. It is thus free from any Context.
+/// If the measurement is in local parameters and will not provide localToGlobal
+/// information. It is thus free from any Context.
 ///
 /// @tparam source_link_t the templated class that allows to link back to
 /// the source used to create this measurement, this can simply be an identifier
@@ -86,7 +85,7 @@ class Measurement {
   using Projection = typename ParamSet::Projection;
   /// Object type that corresponds to the measurement
   using RefObject = typename ReferenceObject<parameter_indices_t>::type;
-  
+
   /// Delete the default constructor
   Measurement() = delete;
 
@@ -94,13 +93,15 @@ class Measurement {
   ///
   /// Concrete class for all possible measurements.
   ///
-  /// @note Only a reference to the given surface/volume is stored. The user must
-  /// ensure that the lifetime of the @c Surface / @c Volume object surpasses the lifetime of this Measurement object.
-  /// The given parameter values are interpreted as values to the
-  /// parameters as defined in the class template argument @c params.
+  /// @note Only a reference to the given surface/volume is stored. The user
+  /// must ensure that the lifetime of the @c Surface / @c Volume object
+  /// surpasses the lifetime of this Measurement object. The given parameter
+  /// values are interpreted as values to the parameters as defined in the class
+  /// template argument @c params.
   ///
   /// @attention The current design will fail if the in-memory location of
-  /// the @c Surface / @c Volume object is changed (e.g. if it is stored in a container and this gets relocated).
+  /// the @c Surface / @c Volume object is changed (e.g. if it is stored in a
+  /// container and this gets relocated).
   ///
   /// @param referenceObject surface/volume origin of the measurement
   /// @param source object for this measurement
@@ -227,8 +228,8 @@ class Measurement {
 
   /// @brief access associated object
   ///
-  /// @pre The @c ReferenceObject object used to construct this @c Measurement object
-  /// must still be valid at the same memory location.
+  /// @pre The @c ReferenceObject object used to construct this @c Measurement
+  /// object must still be valid at the same memory location.
   ///
   /// @return reference to surface/volume associated which the measurement
   const RefObject& referenceObject() const { return *m_pReferenceObject; }
@@ -248,7 +249,8 @@ class Measurement {
   /// range (e.g.
   ///       residuals in \f$\phi\f$ are corrected).
   ///
-  /// @todo Implement check that TrackParameters are defined at the same Surface/Volume as the Measurement is.
+  /// @todo Implement check that TrackParameters are defined at the same
+  /// Surface/Volume as the Measurement is.
   /// @todo Implement validity check for residuals of parameters.
   ///
   /// @param trackPars reference TrackParameters object
@@ -259,7 +261,7 @@ class Measurement {
   ParameterVector residual(const BoundParameters& trackPars) const {
     return m_oParameters.residual(trackPars.getParameterSet());
   }
-  
+
   /// @brief equality operator
   ///
   /// @return @c true if parameter sets and associated surfaces/volumes compare
@@ -307,7 +309,7 @@ class Measurement {
  private:
   ParamSet m_oParameters;  ///< measured parameter set
   std::shared_ptr<const RefObject> m_pReferenceObject =
-      nullptr;  ///< object which corresponds to the measurement
+      nullptr;                 ///< object which corresponds to the measurement
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
