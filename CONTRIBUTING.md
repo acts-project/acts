@@ -2,21 +2,7 @@
 
 Contributions to the Acts project are very welcome and feedback on the documentation is greatly appreciated.
 
-1. [Mailing lists](#mailing-lists)
-2. [Bug reports and feature requests](#bug-reports-and-feature-requests)
-3. [Make a contribution](#make-a-contribution)
-    1. [Checklist for pull requests](#checklist-pull-requests)
-    2. [Workflow recommendations](#workflow-recommendations)
-    3. [Coding style and guidelines](#coding-style-and-guidelines)
-    4. [Tips for users migrating from Gitlab](#tips-for-users-migrating-from-gitlab)
-4. [Review other contributions](#review-other-contributions)
-    1. [Configuring your own PRs and PRs by people with read rights](#apply-labels)
-    2. [Approving a pull request](#approving-a-pull-request)
-    3. [Merging a pull request](#merging-a-pull-request)
-5. [Administrator's corner](#admin-corner)
-    1. [Making a new Acts release](#tag-release)
-
-## <a name="mailing-lists">Mailing lists</a>
+## Mailing lists
 
 1. [acts-users@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-users): Users of the Acts project should subscribe to this list as it provides
     - regular updates on the software,
@@ -25,7 +11,7 @@ Contributions to the Acts project are very welcome and feedback on the documenta
     - information about developer meetings,
     - a common place for technical discussions.
 
-## <a name="bug-reports-and-feature-requests">Bug reports and feature requests</a>
+## Bug reports and feature requests
 
 To report an issue and before starting work, please create an issue in the [Github issue tracker](https://github.com/acts-project/acts-core/issues). A comprehensive explanation will help the development team to respond in a timely manner. Verbalizing the issue before starting work allows the other contributors to chime in and avoids disagreements how to progress.
 - The title should summarize the issue
@@ -48,7 +34,7 @@ Guidelines regarding labels, assignees and milestone therefore only concern memb
     - issue type: "Improvement" or "New Feature"
     - a detailed description of the feature request including possible use cases and benefits for other users
 
-## <a name="make-a-contribution">Make a contribution</a>
+## Make a contribution
 
 Anyone is welcome to contribute to Acts. Below is a short description how to contribute. If you have any questions, feel free to ask [acts-developers@cern](mailto:acts-developers@cern.ch) for help or guidance.
 
@@ -56,7 +42,7 @@ Please always fork the Acts repository you want to work on and create branches o
 
 To get started with git, please refer to the [short introduction](http://git-scm.com/docs/gittutorial) as well as the [full git documentation](https://git-scm.com/doc). Tutorials as well as explanations of concepts and workflows with git can also be found on [Atlassian](http://www.atlassian.com/git/).
  
-### <a name="checklist-pull-requests">Checklist for pull requests</a>
+### Checklist for pull requests
 - Your branch has been rebased on the target branch and can be integrated through a fast-forward merge.
 - A detailed description of the pull request is provided.
 - The issue the PR closes is linked.
@@ -66,7 +52,7 @@ To get started with git, please refer to the [short introduction](http://git-scm
 - For bugfixes: a test case has been added to avoid the re-appearance of this bug in the future.
 - All added cmake options were added to 'cmake/PrintOptions.cmake'.
 
-### <a name="workflow-recommendations">Workflow recommendations</a>
+### Workflow recommendations
 
 In the following a few recommendations are outlined which should help you to get familiar with development process in the Acts project.
 
@@ -75,7 +61,7 @@ Write access for developers has been disabled for developers on acts-project. Th
 If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch.
 
 1. **Never, ever directly work on any "official" branch!**
-Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the Acts project you should not work directly on branches which are **protected** in the repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
+Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the Acts project you should not work directly on branches which are **protected** in the repository. Usually, these are the _master_ and _release/X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
 
 1. **Use atomic commits!**
 Similarly to the concept of branches, each commit should reflect a self-contained change. Try to avoid overly large commits (bad examples are for instance mixing logical change with code cleanup and typo fixes).
@@ -93,52 +79,26 @@ If you work with a colleague on a new development, you may want to include his l
 1. **Update the documentation!**
 Make sure that the documentation is still valid after your changes. Perform updates where needed and ensure integrity between the code and its documentation.
 
-### <a name="coding-style-and-guidelines">Coding style and guidelines</a>
+### Coding style and guidelines
 
 The Acts project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. Developers can use the provided Docker image to format their project or install clang-format locally. Developers should be aware that clang-format will behave differently for different versions, so installing [the same clang version as used in the CI](https://github.com/acts-project/machines/blob/github-actions/check/Dockerfile.llvm8) is recommended. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)). The Acts CI system will automatically apply code reformatting using the provided clang-format configuration once pull requests are opened. However, developers are encouraged to use this code formatter also locally to reduce conflicts due to formatting issues.
 
-In addition, the following conventions are used in Acts code:
+In addition, some conventions are used in Acts code, details can be found [here](https://acts.readthedocs.io/en/latest/codeguide.html). For Doxygen documentation, please follow these recommendations:
 
-- Class names start with a capital letter.
-- Function names start with a lower-case letter and use camel-case.
-- Names of class member variables start with `m_`.
-- getter methods are called like the corresponding member variable without the prefix 'get' (e.g. `covariance()` instead of `getCovariance()`)
-- setter methods use the prefix 'set' (e.g. `setCovariance(...)`)
-- passing arguments to functions:
-    - by value for simple data types (e.g. int, float double, bool)
-    - by constant reference for required input of non-trivial type
-    - by (raw) pointer for optional input of non-trivial type
-    - only use smart pointers if the function called must handle ownership (very few functions actually do)
-- returning results from functions:
-    - newly created objects should be returned<br />
-      a) as unique pointer if the object is of polymorphic type or its presence is not always ensured<br />
-      b) by value if the object is of non-polymorphic type and always exists
-    - existing objects (e.g. member variables) should be returned by<br />
-      a) const reference for custom types with costly copy constructors<br />
-      b) value in all other cases
-- writing unit tests:
-    - place the source code of the test in the `Tests` directory, with following options:
-      a) the naming of most unit test should be `{ClassName}`+`Tests.cpp`
-      b) in case specific functionality of a single class is tested in different files, use `{ClassName}`+`{TestType}`+`Tests.cpp`
-      c) case the written tests concerns CPU profiling, use `{ClassName}`+`Benchmark.cpp`
-    - add the test as `{ClassName}`+`UnitTest` or `{ClassName}`+`{TestType}`+`UnitTest` to the test suite for unit tests
-    - add the benchmark executable as `{ClassName}`+`Benchmark` to the `bin/Profiling` folder
+- Put all documentation in the header files.
+- Use `///` as block comment (instead of `/* ... */`).
+- Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
+- Use the `@<cmd>` notation.
+- Document all (template) parameters using \@(t)param and explain the return value for non-void functions. Mention important conditions which may affect the return value.
+- Use `@remark` to specify pre-conditions.
+- Use `@note` to provide additional information.
+- Link other related entities (e.g. functions) using `@sa`.
 
-- Doxygen documentation:
-    - Put all documentation in the header files.
-    - Use `///` as block comment (instead of `/* ... */`).
-    - Doxygen documentation goes in front of the documented entity (class, function, (member) variable).
-    - Use the \@&lt;cmd&gt; notation.
-    - Functions and classes must have the \@brief description.
-    - Document all (template) parameters using \@(t)param and explain the return value for non-void functions. Mention important conditions which may affect the return value.
-    - Use `@remark` to specify pre-conditions.
-    - Use `@note` to provide additional information.
-    - Link other related entities (e.g. functions) using `@sa`.
-
-**Make a bugfix while working on a feature**
-    During the development of a new feature you discover a bug which needs to be fixed. In order to not mix bugfix and feature development, the bugfix should happen in a different branch. The recommended procedure for handling this situation is the following:
+### Example: Make a bugfix while working on a feature
+  
+During the development of a new feature you discover a bug which needs to be fixed. In order to not mix bugfix and feature development, the bugfix should happen in a different branch. The recommended procedure for handling this situation is the following:
 1. Get into a clean state of your working directory on your feature branch (either by commiting open changes or by stashing them).
-1. Checkout the branch the bugfix should be merged into (either _master_ or _release-X.Y.Z_) and get the most recent version.
+1. Checkout the branch the bugfix should be merged into (either _master_ or _release/X.Y.Z_) and get the most recent version.
 1. Create a new branch for the bugfix.
 1. Fix the bug, write a test, update documentation etc.
 1. Open a pull request for the bug fix.
@@ -146,26 +106,30 @@ In addition, the following conventions are used in Acts code:
 1. Merge your local bugfix branch into the feature branch. Continue your feature development.
 1. Eventually, the bugfix will be merged into _master_. Then, you can rebase your feature branch on master which will remove all duplicate commits related to the bugfix.
 
-### <a name="tips-for-users-migrating-from-gitlab">Tips for users migrating from Gitlab</a>
+### Example: Backporting a feature or bugfix
+
+Suppose you have a bugfix or feature branch that is eventually going to be merged in `master`. You might want to have the feature/bugfix avilable in a patch (say `0.25.1`) tag. To to that, find the corresponding release branch, for this example that would be `release/v0.25.X`. You must create a dedicated branch that **only** contains the commits that relate to your feature/bugfix, otherwise the PR will contain all other commits that were merged into master since the release was branched off. With that branch, open a PR to that branch, and make it clear that it is a backport, also linking to a potential equivalent PR that targets `master`.
+
+### Tips for users migrating from Gitlab
 
 - The most obvious difference first: What is called Merge Request (MR) in Gitlab is called Pull Request (PR) in Github.
 - Once your PR is ready to be merged, request a review by the users in the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers)
 - As Acts started enforcing using your own fork with the switch to Github, developers no longer have write access to the upstream repository.
 - The CI will fail if a PR does not yet have the required approvals.
 
-## <a name="review-other-contributions">Review other contributions</a>
+## Review other contributions
 
 Acts requires that every pull request receives at least one review by a member of the reviewers team before being merged but anyone is welcome to contribute by commenting on code changes. You can help reviewing proposed contributions by going to [the "pull requests" section of the Acts (core) Github repository](https://github.com/acts-project/acts-core/pulls).
 
 As some of the guidelines recommended here require rights granted to the reviewers team, this guide specifically addresses the people in this team. The present contribution guide should serve as a good indication of what we expect from code submissions.
 
-### <a name="apply-labels">Configuring your own PRs and PRs by people with read rights</a>
+### Configuring your own PRs and PRs by people with read rights
 
 * Check if the "request review" label is set, if it is a draft PR or if the title starts with WIP. The latter two are equivalent.
 * Check if the "triage" label is set and configure labels, assignees and milestone for those PR
     * Needs at least label "Bug", "Improvement", "Infrastructure" or "New Feature"
 
-### <a name="approving-a-pull-request">Approving a pull request</a>
+### Approving a pull request
 
 * Does its title and description reflect its contents?
 * Do the automated continuous integration tests pass without problems?
@@ -173,7 +137,7 @@ As some of the guidelines recommended here require rights granted to the reviewe
 
 If you are confident that a pull request is ready for integration, please make it known by clicking the "Approve pull request" button of the Gitlab interface. This notifies other members of the Acts team of your decision, and marks the pull request as ready to be merged.
 
-### <a name="merging-a-pull-request">Merging a pull request</a>
+### Merging a pull request
 
 If you have been granted write access on the Acts repository, you can merge a pull request into the Acts master branch after it has been approved.
 
