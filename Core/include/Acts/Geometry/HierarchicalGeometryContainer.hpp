@@ -70,8 +70,8 @@ class HierarchicalGeometryContainer {
 
   /// Construct the container from the given elements.
   ///
-  /// @param elements input elements (must be unique with respect to identifier)
-  HierarchicalGeometryContainer(std::vector<Value>&& elements);
+  /// @param values input elements (must be unique with respect to identifier)
+  HierarchicalGeometryContainer(std::vector<Value>&& values);
 
   // defaulted constructors and assignment operators
   HierarchicalGeometryContainer() = default;
@@ -84,13 +84,13 @@ class HierarchicalGeometryContainer {
       default;
 
   /// Return an iterator pointing to the beginning of the stored elements.
-  Iterator begin() const { return m_elements.begin(); }
+  Iterator begin() const { return m_values.begin(); }
   /// Return an iterator pointing to the end of the stored elements.
-  Iterator end() const { return m_elements.end(); }
+  Iterator end() const { return m_values.end(); }
   /// Check if any elements are stored.
-  bool empty() const { return m_elements.empty(); }
+  bool empty() const { return m_values.empty(); }
   /// Return the number of stored elements.
-  Size size() const { return m_elements.size(); }
+  Size size() const { return m_values.size(); }
 
   /// Access the geometry identifier for the i-th element with bounds check.
   ///
@@ -99,7 +99,7 @@ class HierarchicalGeometryContainer {
   /// Access the i-th element in the container with bounds check.
   ///
   /// @throws std::out_of_range for invalid indices
-  const Value& valueAt(Size index) const { return m_elements.at(index); }
+  const Value& valueAt(Size index) const { return m_values.at(index); }
 
   /// Find the most specific element for a given geometry identifier.
   ///
@@ -116,7 +116,7 @@ class HierarchicalGeometryContainer {
   using Identifier = GeometryID::Value;
   using IdentifierGetter = identifier_getter_t;
 
-  std::vector<Value> m_elements;
+  std::vector<Value> m_values;
   // encoded ids for all elements for faster lookup.
   std::vector<Identifier> m_ids;
   // validity bit masks for the ids: which parts to use for comparison
@@ -168,22 +168,22 @@ class HierarchicalGeometryContainer {
       return IdentifierGetter()(lhs) == IdentifierGetter()(rhs);
     };
     // ensure elements are sorted
-    std::sort(m_elements.begin(), m_elements.end(), idLess);
+    std::sort(m_values.begin(), m_values.end(), idLess);
     // check that all elements are unique
     auto duplicate =
-        std::adjacent_find(m_elements.begin(), m_elements.end(), idEqual);
-    if (duplicate != m_elements.end()) {
+        std::adjacent_find(m_values.begin(), m_values.end(), idEqual);
+    if (duplicate != m_values.end()) {
       throw std::invalid_argument("Input elements contain duplicates");
     }
   }
   /// Fill the lookup containers from the current values.
   void fillLookup() {
     m_ids.clear();
-    m_ids.reserve(m_elements.size());
+    m_ids.reserve(m_values.size());
     m_masks.clear();
-    m_masks.reserve(m_elements.size());
+    m_masks.reserve(m_values.size());
     IdentifierGetter getId;
-    for (const auto& element : m_elements) {
+    for (const auto& element : m_values) {
       m_ids.push_back(getId(element).value());
       m_masks.push_back(makeLeadingLevelsMask(getId(element).value()));
     }
@@ -194,8 +194,8 @@ class HierarchicalGeometryContainer {
 
 template <typename value_t, typename identifier_getter_t>
 inline HierarchicalGeometryContainer<value_t, identifier_getter_t>::
-    HierarchicalGeometryContainer(std::vector<Value>&& elements)
-    : m_elements(std::move(elements)) {
+    HierarchicalGeometryContainer(std::vector<Value>&& values)
+    : m_values(std::move(values)) {
   sortAndCheckDuplicates();
   fillLookup();
 }
@@ -203,9 +203,9 @@ inline HierarchicalGeometryContainer<value_t, identifier_getter_t>::
 template <typename value_t, typename identifier_getter_t>
 inline auto HierarchicalGeometryContainer<value_t, identifier_getter_t>::find(
     GeometryID id) const -> Iterator {
-  assert((m_elements.size() == m_ids.size()) and
+  assert((m_values.size() == m_ids.size()) and
          "Inconsistent container state: #elements != #ids");
-  assert((m_elements.size() == m_masks.size()) and
+  assert((m_values.size() == m_masks.size()) and
          "Inconsistent container state: #elements != #masks");
 
   // we can not search for the element directly since the relevant one
