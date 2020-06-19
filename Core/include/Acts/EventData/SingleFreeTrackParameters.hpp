@@ -76,7 +76,7 @@ class SingleFreeTrackParameters {
   /// @tparam par Identifier of the parameter index which will be retrieved
   ///
   /// @return Value of the requested parameter
-  template <unsigned int par,
+  template <FreeParametersIndices par,
             std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t get()
                 const {
     return m_oParameters.template getParameter<par>();
@@ -88,7 +88,7 @@ class SingleFreeTrackParameters {
   /// be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
-  template <unsigned int par,
+  template <FreeParametersIndices par,
             std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t
                 uncertainty() const {
     return m_oParameters.template getUncertainty<par>();
@@ -168,7 +168,7 @@ class SingleFreeTrackParameters {
   ///
   /// @note The context is not used here but makes the API consistent with
   /// @c SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
-  template <unsigned int par,
+  template <FreeParametersIndices par,
             std::enable_if_t<par<eFreeParametersSize, int> = 0> void set(
                 const GeometryContext& /*gctx*/, ParValue_t newValue) {
     m_oParameters.setParameter<par>(newValue);
