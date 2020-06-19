@@ -8,20 +8,22 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Geometry/detail/DefaultGeometryIdGetter.hpp"
-
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
 
+#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/detail/DefaultGeometryIdGetter.hpp"
+
 namespace Acts {
 
 /// Store homogeneous elements anchored in the geometry hierarchy.
 ///
 /// @tparam value_t stored element type
+/// @tparam identifier_getter_t functor to access element geometry identifier.
+/// must be default-constructible and have no internal state.
 ///
 /// The core functionality is to find an equivalent element for a given
 /// identifier via
@@ -58,7 +60,8 @@ namespace Acts {
 /// potentially change its identifier which would also break the lookup. Thus,
 /// the container can not be modified after construction to prevent misuse.
 ///
-template <typename value_t>
+template <typename value_t,
+          typename identifier_getter_t = detail::DefaultGeometryIdGetter>
 class HierarchicalGeometryContainer {
  public:
   using Iterator = typename std::vector<value_t>::const_iterator;
@@ -68,12 +71,7 @@ class HierarchicalGeometryContainer {
   /// Construct the container from the given elements.
   ///
   /// @param elements input elements (must be unique with respect to identifier)
-  /// @param getId functor to retrieve the id of an element
-  ///
-  /// @tparam id_getter_t Functor type to retrieve the id of an element
-  template <typename id_getter_t = detail::DefaultGeometryIdGetter>
-  HierarchicalGeometryContainer(std::vector<Value>&& elements,
-                                id_getter_t getId = id_getter_t());
+  HierarchicalGeometryContainer(std::vector<Value>&& elements);
 
   // defaulted constructors and assignment operators
   HierarchicalGeometryContainer() = default;
@@ -116,10 +114,10 @@ class HierarchicalGeometryContainer {
 
  private:
   using Identifier = GeometryID::Value;
+  using IdentifierGetter = identifier_getter_t;
 
   std::vector<Value> m_elements;
-  // encoded ids for all elements for faster lookup and to avoid having
-  // to store a method to retrieve the ids from the stored elements.
+  // encoded ids for all elements for faster lookup.
   std::vector<Identifier> m_ids;
   // validity bit masks for the ids: which parts to use for comparison
   std::vector<Identifier> m_masks;
@@ -161,15 +159,30 @@ class HierarchicalGeometryContainer {
     return (lhs & mask) == (rhs & mask);
   }
 
+  /// Ensure ordering and uniqueness.
+  void sortAndCheckDuplicates() {
+    auto idLess = [=](const auto& lhs, const auto& rhs) {
+      return IdentifierGetter()(lhs) < IdentifierGetter()(rhs);
+    };
+    auto idEqual = [](const auto& lhs, const auto& rhs) {
+      return IdentifierGetter()(lhs) == IdentifierGetter()(rhs);
+    };
+    // ensure elements are sorted
+    std::sort(m_elements.begin(), m_elements.end(), idLess);
+    // check that all elements are unique
+    auto duplicate =
+        std::adjacent_find(m_elements.begin(), m_elements.end(), idEqual);
+    if (duplicate != m_elements.end()) {
+      throw std::invalid_argument("Input elements contain duplicates");
+    }
+  }
   /// Fill the lookup containers from the current values.
-  ///
-  /// @tparam id_getter_t Functor type to retrieve the id of an element
-  template <typename id_getter_t>
-  void fillLookup(id_getter_t getId) {
+  void fillLookup() {
     m_ids.clear();
     m_ids.reserve(m_elements.size());
     m_masks.clear();
     m_masks.reserve(m_elements.size());
+    IdentifierGetter getId;
     for (const auto& element : m_elements) {
       m_ids.push_back(getId(element).value());
       m_masks.push_back(makeLeadingLevelsMask(getId(element).value()));
@@ -179,30 +192,17 @@ class HierarchicalGeometryContainer {
 
 // implementations
 
-template <typename value_t>
-template <typename id_getter_t>
-inline HierarchicalGeometryContainer<value_t>::HierarchicalGeometryContainer(
-    std::vector<Value>&& elements, id_getter_t getId)
+template <typename value_t, typename identifier_getter_t>
+inline HierarchicalGeometryContainer<value_t, identifier_getter_t>::
+    HierarchicalGeometryContainer(std::vector<Value>&& elements)
     : m_elements(std::move(elements)) {
-  // ensure values are sorted by geometry id
-  std::sort(m_elements.begin(), m_elements.end(),
-            [&](const auto& lhs, const auto& rhs) {
-              return getId(lhs) < getId(rhs);
-            });
-  // check that all elements are unique
-  auto duplicate = std::adjacent_find(m_elements.begin(), m_elements.end(),
-                                      [&](const auto& lhs, const auto& rhs) {
-                                        return getId(lhs) == getId(rhs);
-                                      });
-  if (duplicate != m_elements.end()) {
-    throw std::invalid_argument("Input elements contain duplicates");
-  }
-  fillLookup(getId);
+  sortAndCheckDuplicates();
+  fillLookup();
 }
 
-template <typename value_t>
-inline typename HierarchicalGeometryContainer<value_t>::Iterator
-HierarchicalGeometryContainer<value_t>::find(GeometryID id) const {
+template <typename value_t, typename identifier_getter_t>
+inline auto HierarchicalGeometryContainer<value_t, identifier_getter_t>::find(
+    GeometryID id) const -> Iterator {
   assert((m_elements.size() == m_ids.size()) and
          "Inconsistent container state: #elements != #ids");
   assert((m_elements.size() == m_masks.size()) and
