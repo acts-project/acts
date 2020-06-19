@@ -26,15 +26,14 @@ namespace Acts {
 // forward declarations
 class Surface;
 
+/// @brief Deduction of the measuring geometry object based on the used indices
 template <typename T>
 struct ReferenceObject {};
-
 template<>
 struct ReferenceObject<BoundParametersIndices>
 {
 	using type = Surface;
 };
-
 template<>
 struct ReferenceObject<FreeParametersIndices>
 {
@@ -44,10 +43,9 @@ struct ReferenceObject<FreeParametersIndices>
 /// @brief base class for Measurements
 ///
 /// This class describes the measurement of track parameters at a certain
-/// Surface in the TrackingGeometry.
+/// Surface/Volume in the TrackingGeometry.
 ///
-/// The measurement is in local parameters and will not provide localToGlobal
-/// information. It is thus free from any Context.
+/// If the measurement is in local parameters and will not provide localToGlobal information. It is thus free from any Context.
 ///
 /// @tparam source_link_t the templated class that allows to link back to
 /// the source used to create this measurement, this can simply be an identifier
@@ -92,21 +90,19 @@ class Measurement {
   /// Delete the default constructor
   Measurement() = delete;
 
-  /// @brief standard constructor for surface bound measurements
+  /// @brief standard constructor for surface/volume bound measurements
   ///
   /// Concrete class for all possible measurements.
   ///
-  /// @note Only a reference to the given surface is stored. The user must
-  /// ensure that the lifetime of the @c Surface object surpasses the lifetime
-  /// of this Measurement object.
+  /// @note Only a reference to the given surface/volume is stored. The user must
+  /// ensure that the lifetime of the @c Surface / @c Volume object surpasses the lifetime of this Measurement object.
   /// The given parameter values are interpreted as values to the
   /// parameters as defined in the class template argument @c params.
   ///
   /// @attention The current design will fail if the in-memory location of
-  /// the @c Surface object is changed (e.g. if it is stored in a
-  /// container and this gets relocated).
+  /// the @c Surface / @c Volume object is changed (e.g. if it is stored in a container and this gets relocated).
   ///
-  /// @param surface surface at which the measurement took place
+  /// @param referenceObject surface/volume origin of the measurement
   /// @param source object for this measurement
   /// @param cov covariance matrix of the measurement.
   /// @param head,values consistent number of parameter values of the
@@ -120,7 +116,7 @@ class Measurement {
       : m_oParameters(std::move(cov), head, values...),
         m_pReferenceObject(std::move(referenceObject)),
         m_sourceLink(source) {
-    assert(m_pSurface);
+    assert(m_pReferenceObject);
   }
 
   /// @brief copy constructor
@@ -234,7 +230,7 @@ class Measurement {
   /// @pre The @c ReferenceObject object used to construct this @c Measurement object
   /// must still be valid at the same memory location.
   ///
-  /// @return reference to surface at which the measurement took place
+  /// @return reference to surface/volume associated which the measurement
   const RefObject& referenceObject() const { return *m_pReferenceObject; }
 
   /// @brief link access to the source of the measurement.
@@ -252,9 +248,8 @@ class Measurement {
   /// range (e.g.
   ///       residuals in \f$\phi\f$ are corrected).
   ///
-  /// @todo Implement check that TrackParameters are defined at the same Surface
-  /// as the Measurement is.
-  /// @todo Implement validity check for residuals of local parameters.
+  /// @todo Implement check that TrackParameters are defined at the same Surface/Volume as the Measurement is.
+  /// @todo Implement validity check for residuals of parameters.
   ///
   /// @param trackPars reference TrackParameters object
   ///
@@ -342,6 +337,16 @@ struct fittable_volume_measurement_helper {
       typename detail::type_generator_t<FreeParametersIndices, meas_factory>;
 };
 
+/// @brief Builds a std::variant with the elements from two std::variant types
+/// https://stackoverflow.com/questions/59250481/is-it-ok-to-use-stdvariant-of-stdvariants
+template <typename Var1, typename Var2>
+struct variant_flat;
+
+template <typename... Ts1, typename... Ts2>
+struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>> {
+  using type = std::variant<Ts1..., Ts2...>;
+};
+
 /**
  * @brief Measurement variant types
  */
@@ -352,15 +357,6 @@ using FittableMeasurement =
 template <typename source_link_t>
 using FittableVolumeMeasurement =
     typename fittable_volume_measurement_helper<source_link_t>::type;
-
-// https://stackoverflow.com/questions/59250481/is-it-ok-to-use-stdvariant-of-stdvariants
-template <typename Var1, typename Var2>
-struct variant_flat;
-
-template <typename... Ts1, typename... Ts2>
-struct variant_flat<std::variant<Ts1...>, std::variant<Ts2...>> {
-  using type = std::variant<Ts1..., Ts2...>;
-};
 
 template <typename source_link_t>
 using FittableCombinedMeasurement =
