@@ -1,16 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <memory>
 #include <ostream>
 #include <type_traits>
 #include <utility>
+
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -236,7 +238,7 @@ class Measurement {
   /// @return vector with the residual parameter values (in valid range)
   ///
   /// @sa ParameterSet::residual
-  ParameterVector residual(const TrackParameters& trackPars) const {
+  ParameterVector residual(const BoundParameters& trackPars) const {
     return m_oParameters.residual(trackPars.getParameterSet());
   }
 

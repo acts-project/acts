@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -70,14 +70,14 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_TEST(slsState.tolerance == tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearParameters ncp(std::nullopt, pos, mom, time);
+  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, ndir,
                                         stepSize, tolerance);
   BOOST_TEST(slsState.q == 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearParameters(cov, pos, mom, time);
+  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, ndir,
                                         stepSize, tolerance);
   BOOST_TEST(slsState.jacToGlobal != BoundToFreeMatrix::Zero());

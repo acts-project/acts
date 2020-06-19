@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
@@ -232,8 +232,8 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
 void Acts::VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
-  NeutralCurvilinearParameters start(std::nullopt, mTrack.first.first,
-                                     mTrack.first.second, 0.);
+  NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,
+                                          mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
