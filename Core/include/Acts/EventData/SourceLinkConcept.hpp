@@ -38,7 +38,7 @@ namespace concept {
         //~ converts_to<const Surface&, surface_method_t, T>;
     //~ static_assert(
         //~ surface_method_exists,
-        //~ "Source link does not have compliant referenceSurface method");
+        //~ "Source link does not have compliant referenceSurface method"); // TODO: Test whether it works with ReferenceObject<>
 
     constexpr static bool copyable = std::is_copy_constructible_v<T>;
     static_assert(copyable, "Source link must be copy constructible");

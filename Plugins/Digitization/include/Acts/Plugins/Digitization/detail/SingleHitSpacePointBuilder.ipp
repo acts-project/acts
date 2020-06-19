@@ -19,7 +19,7 @@ template <typename Cluster>
 Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
-  auto& clusterSurface = cluster.referenceSurface();
+  auto& clusterSurface = cluster.referenceObject();
 
   // Transform local into global position information
   Acts::Vector3D pos, mom;

@@ -369,7 +369,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       // get global position
       Acts::Vector3D global(0, 0, 0);
       Acts::Vector3D mom(1, 1, 1);
-      meas.referenceSurface().localToGlobal(ctx.geoContext, local, mom, global);
+      meas.referenceObject().localToGlobal(ctx.geoContext, local, mom, global);
 
       // get measurement covariance
       auto cov = meas.covariance();
@@ -387,7 +387,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       const auto& truthHit = state.uncalibrated().truthHit();
       // get local truth position
       Acts::Vector2D truthlocal;
-      meas.referenceSurface().globalToLocal(
+      meas.referenceObject().globalToLocal(
           gctx, truthHit.position(), truthHit.unitDirection(), truthlocal);
 
       // push the truth hit info
