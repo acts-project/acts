@@ -57,6 +57,21 @@ BOOST_AUTO_TEST_CASE(ConstructNonUnique) {
   BOOST_CHECK_THROW(Container(std::move(elements)), std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
+  Container c = {
+      {makeId(0, 1, 2), 1.0},
+      {makeId(3, 4), 3.0},
+      {makeId(2), 2.0},
+  };
+  BOOST_TEST(std::next(c.begin(), 3) == c.end());
+  BOOST_TEST(not c.empty());
+  BOOST_TEST(c.size() == 3u);
+  // only test that all elements are there; failure test are below
+  BOOST_TEST(c.find(makeId(0, 1, 2)) != c.end());
+  BOOST_TEST(c.find(makeId(3, 4)) != c.end());
+  BOOST_TEST(c.find(makeId(2)) != c.end());
+}
+
 BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
   Container c({
       {makeId(1, 2, 3), 1.0},

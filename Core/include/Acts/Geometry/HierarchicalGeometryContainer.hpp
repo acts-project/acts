@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <initializer_list>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -72,6 +73,10 @@ class HierarchicalGeometryContainer {
   ///
   /// @param values input elements (must be unique with respect to identifier)
   HierarchicalGeometryContainer(std::vector<Value>&& values);
+  /// Construct the container from an initializer list.
+  ///
+  /// @param values input initializer list
+  HierarchicalGeometryContainer(std::initializer_list<Value> values);
 
   // defaulted constructors and assignment operators
   HierarchicalGeometryContainer() = default;
@@ -199,6 +204,12 @@ inline HierarchicalGeometryContainer<value_t, identifier_getter_t>::
   sortAndCheckDuplicates();
   fillLookup();
 }
+
+template <typename value_t, typename identifier_getter_t>
+inline HierarchicalGeometryContainer<value_t, identifier_getter_t>::
+    HierarchicalGeometryContainer(std::initializer_list<Value> values)
+    : HierarchicalGeometryContainer(
+          std::vector<Value>(values.begin(), values.end())) {}
 
 template <typename value_t, typename identifier_getter_t>
 inline auto HierarchicalGeometryContainer<value_t, identifier_getter_t>::find(
