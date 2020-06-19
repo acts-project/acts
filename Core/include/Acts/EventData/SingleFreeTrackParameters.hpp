@@ -60,8 +60,7 @@ class SingleFreeTrackParameters {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
                             const FreeVector& parValues)
-      : m_oParameters(std::move(cov), parValues),
-        m_oChargePolicy() {}
+      : m_oParameters(std::move(cov), parValues), m_oChargePolicy() {}
 
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
