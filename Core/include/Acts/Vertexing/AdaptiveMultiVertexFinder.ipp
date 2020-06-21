@@ -582,8 +582,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     // with old vertex?
 
     // Do the fit with removed vertex
-    auto fitResult = m_cfg.vertexFitter.fit(fitterState, allVerticesPtr,
-                                            m_cfg.linearizer, vertexingOptions);
+    auto fitResult = m_cfg.vertexFitter.addVtxToFit(
+        fitterState, vtx, m_cfg.linearizer, vertexingOptions);
     if (!fitResult.ok()) {
       return fitResult.error();
     }
