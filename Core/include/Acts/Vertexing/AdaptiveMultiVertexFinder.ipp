@@ -245,8 +245,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     -> Result<void> {
   for (const auto& trk : tracks) {
     auto params = m_extractParameters(*trk);
-    // If track is too far away from vertex, do not consider checking the IP significance
-    if(std::abs(estimateDeltaZ(params, vtx.position())) > m_cfg.tracksMaxZinterval){
+    // If track is too far away from vertex, do not consider checking the IP
+    // significance
+    if (std::abs(estimateDeltaZ(params, vtx.position())) >
+        m_cfg.tracksMaxZinterval) {
       continue;
     }
     auto sigRes = getIPSignificance(trk, vtx, vertexingOptions);
@@ -589,9 +591,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     if (!fitResult.ok()) {
       return fitResult.error();
     }
-
-
-
   }
   return {};
 }

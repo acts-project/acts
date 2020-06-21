@@ -231,12 +231,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double sinPhi = std::sin(phi);
 
   // Set momentum direction
-  momDir = Vector3D(sinTheta * cosPhi,
-                    sinPhi * sinTheta, std::cos(theta));
+  momDir = Vector3D(sinTheta * cosPhi, sinPhi * sinTheta, std::cos(theta));
 
   // point of closest approach in 3D
-  Vector3D pointCA3d =
-      vec0 + r * Vector3D(-sinPhi, cosPhi, -cotTheta * phi);
+  Vector3D pointCA3d = vec0 + r * Vector3D(-sinPhi, cosPhi, -cotTheta * phi);
 
   // Set deltaR
   deltaR = pointCA3d - vtxPos;
@@ -319,8 +317,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
         z0JacZ0Theta.transpose() * (covPerigeeZ0Theta * z0JacZ0Theta) +
         sinTheta * vtxZZCov * sinTheta);
 
-    newIPandSigma.PVsigmaz0SinTheta =
-        std::sqrt(sinTheta * vtxZZCov * sinTheta);
+    newIPandSigma.PVsigmaz0SinTheta = std::sqrt(sinTheta * vtxZZCov * sinTheta);
     newIPandSigma.IPz0 = z0;
     newIPandSigma.sigmaz0 =
         std::sqrt(vtxZZCov + perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
