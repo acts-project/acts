@@ -258,7 +258,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     double ipSig = *sigRes;
     if (ipSig < m_cfg.tracksMaxSignificance) {
       // Create TrackAtVertex objects, unique for each (track, vertex) pair
-      // fitterState.tracksAtVerticesMap.clear();
       fitterState.tracksAtVerticesMap.emplace(std::make_pair(trk, &vtx),
                                               TrackAtVertex(params, trk));
 
