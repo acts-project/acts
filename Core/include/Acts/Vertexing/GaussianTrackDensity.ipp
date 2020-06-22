@@ -13,7 +13,7 @@ std::pair<double, double> Acts::GaussianTrackDensity<input_track_t>::globalMaxim
     State& state, const std::vector<const input_track_t*>& trackList,
     const std::function<BoundParameters(input_track_t)>& extractParameters) const {
 
-  addAllTracks(state, trackList, extractParameters);
+  addTracks(state, trackList, extractParameters);
 
   double maxPosition = 0.;
   double maxDensity = 0.;
@@ -58,58 +58,53 @@ double Acts::GaussianTrackDensity<input_track_t>::globalMaximum(State& state,
 }
 
 template <typename input_track_t>
-void Acts::GaussianTrackDensity<input_track_t>::addAllTracks(State& state, 
-    const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters) const {
-  for (auto trk : trackList) {
-    addTrack(state, trk, extractParameters);
-  }
-}
-
-template <typename input_track_t>
-void Acts::GaussianTrackDensity<input_track_t>::addTrack(State& state, const input_track_t* trk,
+void Acts::GaussianTrackDensity<input_track_t>::addTracks(State& state,
+  const std::vector<const input_track_t*>& trackList,
   const std::function<BoundParameters(input_track_t)>& extractParameters) const {
-  const BoundParameters& boundParams = extractParameters(*trk);
 
-  // Get required track parameters
-  const double d0 = boundParams.parameters()[ParID_t::eLOC_D0];
-  const double z0 = boundParams.parameters()[ParID_t::eLOC_Z0];
-  // Get track covariance
-  const auto perigeeCov = *(boundParams.covariance());
-  const double covDD = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0);
-  const double covZZ = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
-  const double covDZ = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_Z0);
-  const double covDeterminant = covDD * covZZ - covDZ * covDZ;
+  for (auto trk : trackList) {
 
-  // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
-  if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) || (covZZ <= 0) ||
-      (covDeterminant <= 0)) {
-    return;
+    const BoundParameters& boundParams = extractParameters(*trk);
+    // Get required track parameters
+    const double d0 = boundParams.parameters()[ParID_t::eLOC_D0];
+    const double z0 = boundParams.parameters()[ParID_t::eLOC_Z0];
+    // Get track covariance
+    const auto perigeeCov = *(boundParams.covariance());
+    const double covDD = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0);
+    const double covZZ = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
+    const double covDZ = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_Z0);
+    const double covDeterminant = covDD * covZZ - covDZ * covDZ;
+
+    // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
+    if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) || (covZZ <= 0) ||
+        (covDeterminant <= 0)) {
+      continue;
+    }
+
+    // Calculate track density quantities
+    double constantTerm =
+        -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
+        (2. * covDeterminant);
+    const double linearTerm =
+        (d0 * covDZ + z0 * covDD) /
+        covDeterminant;  // minus signs and factors of 2 cancel...
+    const double quadraticTerm = -covDD / (2. * covDeterminant);
+    double discriminant =
+        linearTerm * linearTerm -
+        4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
+    if (discriminant < 0) {
+      continue;
+    }
+
+    // Add the track to the current maps in the state
+    discriminant = std::sqrt(discriminant);
+    const double zMax = (-linearTerm - discriminant) / (2. * quadraticTerm);
+    const double zMin = (-linearTerm + discriminant) / (2. * quadraticTerm);
+    constantTerm -= std::log(2. * M_PI * std::sqrt(covDeterminant));
+
+    state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
+                                    zMin, zMax);
   }
-
-  // Calculate track density quantities
-  double constantTerm =
-      -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
-      (2. * covDeterminant);
-  const double linearTerm =
-      (d0 * covDZ + z0 * covDD) /
-      covDeterminant;  // minus signs and factors of 2 cancel...
-  const double quadraticTerm = -covDD / (2. * covDeterminant);
-  double discriminant =
-      linearTerm * linearTerm -
-      4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
-  if (discriminant < 0) {
-    return;
-  }
-
-  // Add the track to the current maps in the state
-  discriminant = std::sqrt(discriminant);
-  const double zMax = (-linearTerm - discriminant) / (2. * quadraticTerm);
-  const double zMin = (-linearTerm + discriminant) / (2. * quadraticTerm);
-  constantTerm -= std::log(2. * M_PI * std::sqrt(covDeterminant));
-
-  state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
-                                  zMin, zMax);
 }
 
 template <typename input_track_t>

@@ -126,21 +126,12 @@ class GaussianTrackDensity {
   /// The configuration
   Config m_cfg;
 
-  /// @brief Adds all track densities to current state
+  /// @brief Add a track to the set being considered
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
   /// @param extractParameters Function extracting BoundParameters from InputTrack
-  void addAllTracks(State& state, 
-    const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
-
-  /// @brief Add a track to the set being considered
-  ///
-  /// @param state The track density state
-  /// @param trk Track to be added
-  /// @param extractParameters Function extracting BoundParameters from InputTrack
-  void addTrack(State& state, const input_track_t* trk,
+  void addTracks(State& state, const std::vector<const input_track_t*>& trackList,
     const std::function<BoundParameters(input_track_t)>& extractParameters) const;
 
   /// @brief Evaluate the density function at the specified
