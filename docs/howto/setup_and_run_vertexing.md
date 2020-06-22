@@ -71,7 +71,7 @@ Fitter fitter(fitterCfg);
 The last tool we need to set up (before finally setting up the AMVF) is a vertex seed finder:
 ```cpp
 // Set up the vertex seed finder
-using SeedFinder = Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
+using SeedFinder = Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity<Acts::BoundParameters>>;
 SeedFinder seedFinder;
 ```
 ### Setting up the AMVF tool

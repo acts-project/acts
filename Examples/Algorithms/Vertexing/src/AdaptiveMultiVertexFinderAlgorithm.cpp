@@ -85,7 +85,7 @@ FW::ProcessCode FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   // Set up the vertex seed finder
   using SeedFinder =
-      Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
+      Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity<Acts::BoundParameters>>;
   SeedFinder seedFinder;
 
   // The vertex finder type
