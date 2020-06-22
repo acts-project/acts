@@ -93,7 +93,7 @@ static inline std::vector<Vector3D> createEllipse(
 static inline void drawCovarianceCartesian(
     IVisualization& helper, const Vector2D& lposition,
     const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
-    std::vector<int> nsigma = {3}, double locErrorScale = 1, size_t lseg = 72,
+    std::vector<int> = {}, double locErrorScale = 1, size_t lseg = 72,
     const IVisualization::ColorType& color = {20, 120, 20},
     double outOfPlane = 0.1) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
@@ -123,7 +123,7 @@ static inline void drawCovarianceCartesian(
 /// @param color The draw color
 static inline void drawCovarianceAngular(
     IVisualization& helper, const Vector3D& position, const Vector3D& direction,
-    const ActsSymMatrixD<2>& covariance, std::vector<int> nsigma = {3},
+    const ActsSymMatrixD<2>& covariance, std::vector<int> = {3},
     double directionScale = 1, double angularErrorScale = 1, size_t lseg = 72,
     const IVisualization::ColorType& color = {20, 120, 20}) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
@@ -190,10 +190,6 @@ static inline void drawBoundParameters(
   auto position = parameters.position();
   auto direction = parameters.momentum().normalized();
   double p = parameters.momentum().norm();
-
-  Vector3D startmod = parameters.covariance().has_value()
-                          ? 0.25 * p * momentumScale * direction
-                          : Vector3D(0., 0., 0.);
 
   GeometryVisualization::drawArrowForward(
       helper, position, position + p * momentumScale * direction, 0.025, 0.05,
