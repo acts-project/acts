@@ -65,7 +65,7 @@ void EventAction::clear() {
 ///
 /// This only contains valid data after the end-of-event action has been
 /// executed.
- std::vector<Acts::RecordedMaterialTrack> EventAction::materialTracks() {
+std::vector<Acts::RecordedMaterialTrack> EventAction::materialTracks() {
   auto materialTracks = m_materialTracks;
   m_materialTracks.clear();
   return materialTracks;
