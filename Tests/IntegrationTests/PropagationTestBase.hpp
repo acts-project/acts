@@ -139,16 +139,16 @@ BOOST_DATA_TEST_CASE(forward_backward_propagation_,
       epropagator, plimit, startC, 1_um, 1_eV, debug);
   foward_backward<CurvilinearParameters, FreeTrackParameters>(
       epropagator, plimit, startC, 1_um, 1_eV, debug);
-  foward_backward<FreeTrackParameters, FreeTrackParameters>(epropagator, plimit, startC,
-                                                  1_um, 1_eV, debug);
+  foward_backward<FreeTrackParameters, FreeTrackParameters>(
+      epropagator, plimit, startC, 1_um, 1_eV, debug);
   foward_backward<CurvilinearParameters, CurvilinearParameters>(
       epropagator, plimit, startF, 1_um, 1_eV, debug);
   foward_backward<FreeTrackParameters, CurvilinearParameters>(
       epropagator, plimit, startF, 1_um, 1_eV, debug);
   foward_backward<CurvilinearParameters, FreeTrackParameters>(
       epropagator, plimit, startF, 1_um, 1_eV, debug);
-  foward_backward<FreeTrackParameters, FreeTrackParameters>(epropagator, plimit, startF,
-                                                  1_um, 1_eV, debug);
+  foward_backward<FreeTrackParameters, FreeTrackParameters>(
+      epropagator, plimit, startF, 1_um, 1_eV, debug);
   // foward backward check straight line stepper
   foward_backward<CurvilinearParameters, CurvilinearParameters>(
       spropagator, plimit, startC, 1_um, 1_eV, debug);
@@ -156,16 +156,16 @@ BOOST_DATA_TEST_CASE(forward_backward_propagation_,
       spropagator, plimit, startC, 1_um, 1_eV, debug);
   foward_backward<CurvilinearParameters, FreeTrackParameters>(
       spropagator, plimit, startC, 1_um, 1_eV, debug);
-  foward_backward<FreeTrackParameters, FreeTrackParameters>(spropagator, plimit, startC,
-                                                  1_um, 1_eV, debug);
+  foward_backward<FreeTrackParameters, FreeTrackParameters>(
+      spropagator, plimit, startC, 1_um, 1_eV, debug);
   foward_backward<CurvilinearParameters, CurvilinearParameters>(
       spropagator, plimit, startF, 1_um, 1_eV, debug);
   foward_backward<FreeTrackParameters, CurvilinearParameters>(
       spropagator, plimit, startF, 1_um, 1_eV, debug);
   foward_backward<CurvilinearParameters, FreeTrackParameters>(
       spropagator, plimit, startF, 1_um, 1_eV, debug);
-  foward_backward<FreeTrackParameters, FreeTrackParameters>(spropagator, plimit, startF,
-                                                  1_um, 1_eV, debug);
+  foward_backward<FreeTrackParameters, FreeTrackParameters>(
+      spropagator, plimit, startF, 1_um, 1_eV, debug);
 }
 
 /// test consistency of propagators when approaching a cylinder
@@ -614,7 +614,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_disc,
   auto startSurface = Surface::makeShared<DiscSurface>(ssTransform, nullptr);
   BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
   NeutralBoundTrackParameters startN(tgContext, covOpt, pos, mom, time,
-                                startSurface);
+                                     startSurface);
 
   ///
   /// Disc to Disc Tests
@@ -731,7 +731,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_plane,
   auto startSurface = Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
   BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
   NeutralBoundTrackParameters startN(tgContext, covOpt, pos, mom, time,
-                                startSurface);
+                                     startSurface);
 
   ///
   /// Plane to Plane Tests
@@ -842,7 +842,7 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_line,
   auto startSurface = Surface::makeShared<StrawSurface>(ssTransform, nullptr);
   BoundParameters startC(tgContext, covOpt, pos, mom, q, time, startSurface);
   NeutralBoundTrackParameters startN(tgContext, covOpt, pos, mom, time,
-                                startSurface);
+                                     startSurface);
 
   ///
   /// Line to Line Tests
@@ -948,10 +948,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     NeutralCurvilinearTrackParameters startNC(covOpt, pos, mom, time);
 
     // covariance check for straight line stepper
-    auto covObtained =
-        covariance_curvilinear<FreeTrackParameters>(spropagator, startNC, plimit);
-    auto covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(rspropagator, startNC, plimit);
+    auto covObtained = covariance_curvilinear<FreeTrackParameters>(
+        spropagator, startNC, plimit);
+    auto covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        rspropagator, startNC, plimit);
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
     // to 1
@@ -968,10 +968,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
 
     // covariance check for eigen stepper
-    covObtained =
-        covariance_curvilinear<FreeTrackParameters>(epropagator, startCC, plimit);
-    covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(repropagator, startCC, plimit);
+    covObtained = covariance_curvilinear<FreeTrackParameters>(epropagator,
+                                                              startCC, plimit);
+    covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        repropagator, startCC, plimit);
 
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
@@ -998,13 +998,13 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     auto startSurface = Surface::makeShared<DiscSurface>(ssTransform, nullptr);
     BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
     NeutralBoundTrackParameters startNB(tgContext, covOpt, pos, mom, time,
-                                   startSurface);
+                                        startSurface);
 
     // covariance check for straight line stepper
-    auto covObtained =
-        covariance_curvilinear<FreeTrackParameters>(spropagator, startNB, plimit);
-    auto covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(rspropagator, startNB, plimit);
+    auto covObtained = covariance_curvilinear<FreeTrackParameters>(
+        spropagator, startNB, plimit);
+    auto covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        rspropagator, startNB, plimit);
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
     // to 1
@@ -1021,10 +1021,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
 
     // covariance check for eigen stepper
-    covObtained =
-        covariance_curvilinear<FreeTrackParameters>(epropagator, startCB, plimit);
-    covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(repropagator, startCB, plimit);
+    covObtained = covariance_curvilinear<FreeTrackParameters>(epropagator,
+                                                              startCB, plimit);
+    covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        repropagator, startCB, plimit);
 
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
@@ -1051,13 +1051,13 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     auto startSurface = Surface::makeShared<PlaneSurface>(ssTransform, nullptr);
     BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
     NeutralBoundTrackParameters startNB(tgContext, covOpt, pos, mom, time,
-                                   startSurface);
+                                        startSurface);
 
     // covariance check for straight line stepper
-    auto covObtained =
-        covariance_curvilinear<FreeTrackParameters>(spropagator, startNB, plimit);
-    auto covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(rspropagator, startNB, plimit);
+    auto covObtained = covariance_curvilinear<FreeTrackParameters>(
+        spropagator, startNB, plimit);
+    auto covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        rspropagator, startNB, plimit);
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
     // to 1
@@ -1074,10 +1074,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
 
     // covariance check for eigen stepper
-    covObtained =
-        covariance_curvilinear<FreeTrackParameters>(epropagator, startCB, plimit);
-    covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(repropagator, startCB, plimit);
+    covObtained = covariance_curvilinear<FreeTrackParameters>(epropagator,
+                                                              startCB, plimit);
+    covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        repropagator, startCB, plimit);
 
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
@@ -1104,13 +1104,13 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     auto startSurface = Surface::makeShared<StrawSurface>(ssTransform, nullptr);
     BoundParameters startCB(tgContext, covOpt, pos, mom, q, time, startSurface);
     NeutralBoundTrackParameters startNB(tgContext, covOpt, pos, mom, time,
-                                   startSurface);
+                                        startSurface);
 
     // covariance check for straight line stepper
-    auto covObtained =
-        covariance_curvilinear<FreeTrackParameters>(spropagator, startNB, plimit);
-    auto covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(rspropagator, startNB, plimit);
+    auto covObtained = covariance_curvilinear<FreeTrackParameters>(
+        spropagator, startNB, plimit);
+    auto covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        rspropagator, startNB, plimit);
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
     // to 1
@@ -1127,10 +1127,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 5e-1);
 
     // covariance check for eigen stepper
-    covObtained =
-        covariance_curvilinear<FreeTrackParameters>(epropagator, startCB, plimit);
-    covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(repropagator, startCB, plimit);
+    covObtained = covariance_curvilinear<FreeTrackParameters>(epropagator,
+                                                              startCB, plimit);
+    covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        repropagator, startCB, plimit);
 
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
@@ -1160,10 +1160,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     NeutralFreeTrackParameters startNF(covOptFree, parsN);
 
     // covariance check for straight line stepper
-    auto covObtained =
-        covariance_curvilinear<FreeTrackParameters>(spropagator, startNF, plimit);
-    auto covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(rspropagator, startNF, plimit);
+    auto covObtained = covariance_curvilinear<FreeTrackParameters>(
+        spropagator, startNF, plimit);
+    auto covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        rspropagator, startNF, plimit);
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
     // to 1
@@ -1180,10 +1180,10 @@ BOOST_DATA_TEST_CASE(covariance_transport_to_free,
     CHECK_CLOSE_COVARIANCE(covObtained, covCalculated, 1e-3);
 
     // covariance check for eigen stepper
-    covObtained =
-        covariance_curvilinear<FreeTrackParameters>(epropagator, startCF, plimit);
-    covCalculated =
-        covariance_curvilinear<FreeTrackParameters>(repropagator, startCF, plimit);
+    covObtained = covariance_curvilinear<FreeTrackParameters>(epropagator,
+                                                              startCF, plimit);
+    covCalculated = covariance_curvilinear<FreeTrackParameters>(
+        repropagator, startCF, plimit);
     // Numerical fluctuations in the covariances cause errors in relative
     // comparison. This needs to be tested and avoided by setting both entries
     // to 1

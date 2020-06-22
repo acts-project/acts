@@ -338,7 +338,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
         wiggleStartVector(options.geoContext, h, param, startPars);
 
     const auto& r =
-        m_propagator.template propagate<FreeTrackParameters>(tp, options).value();
+        m_propagator.template propagate<FreeTrackParameters>(tp, options)
+            .value();
 
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
