@@ -120,13 +120,6 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   // Special test for composite shape of silicon
   auto compShape = dynamic_cast<const TGeoCompositeShape*>(&tgShape);
   if (compShape != nullptr) {
-    if (not boost::istarts_with(axes, "XY")) {
-      throw std::invalid_argument(
-          "TGeoShape -> DiscSurface (Annulus): can only be converted with "
-          "'(x/X)(y/Y)(*)' "
-          "axes");
-    }
-
     // Create translation and rotation
     Vector3D t(scalor * translation[0], scalor * translation[1],
                scalor * translation[2]);
@@ -141,6 +134,13 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     if (interNode != nullptr) {
       auto baseTube = dynamic_cast<TGeoTubeSeg*>(interNode->GetLeftShape());
       if (baseTube != nullptr) {
+        if (not boost::istarts_with(axes, "XY")) {
+          throw std::invalid_argument(
+              "TGeoShape -> DiscSurface (Annulus): can only be converted with "
+              "'(x/X)(y/Y)(*)' "
+              "axes");
+        }
+
         double rMin = baseTube->GetRmin() * scalor;
         double rMax = baseTube->GetRmax() * scalor;
         auto maskShape = dynamic_cast<TGeoArb8*>(interNode->GetRightShape());

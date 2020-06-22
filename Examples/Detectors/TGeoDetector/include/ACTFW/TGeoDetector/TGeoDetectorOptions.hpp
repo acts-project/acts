@@ -16,6 +16,7 @@
 
 #include "ACTFW/Utilities/Options.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace po = boost::program_options;
@@ -117,10 +118,41 @@ void addTGeoGeometryOptions(options_t& opt) {
       " of collected surfaces into different positive layers.")(
       "geo-tgeo-cmoduleaxes", po::value<read_strings>()->default_value({}),
       "Axes definition for central sensitive objects, odered along the "
-      "series.")("geo-tgeo-pmoduleaxes",
-                 po::value<read_strings>()->default_value({}),
-                 "Axes definition for positive sensitive objects, odered "
-                 "along the series.");
+      "series.")("geo-tgeo-nlayer-sfbin-dims",
+                 po::value<read_series>()->default_value({}),
+                 "Number of bins for automated surface "
+                 "binning for negative layers.")(
+      "geo-tgeo-nlayer-sfbin-values",
+      po::value<read_series>()->default_value({}),
+      "Binning prescription of binning values for automated surface "
+      "binning for negative layers.")(
+      "geo-tgeo-nlayer-sfbin-tolerances",
+      po::value<read_range>()->default_value({}),
+      "Binning prescription of binning values for automated surface binning "
+      "for negative layers.")("geo-tgeo-clayer-sfbin-dims",
+                              po::value<read_series>()->default_value({}),
+                              "Number of bins for automated surface "
+                              "binning for central layers.")(
+      "geo-tgeo-clayer-sfbin-values",
+      po::value<read_series>()->default_value({}),
+      "Binning prescription of binning values for automated surface binning "
+      "for central layers.")("geo-tgeo-clayer-sfbin-tolerances",
+                             po::value<read_range>()->default_value({}),
+                             "Binning prescription of binning values for "
+                             "automated surface binning for central layers.")(
+      "geo-tgeo-player-sfbin-dims", po::value<read_series>()->default_value({}),
+      "Number of bins for automated surface "
+      "binning for positive layers.")(
+      "geo-tgeo-player-sfbin-values",
+      po::value<read_series>()->default_value({}),
+      "Binning prescription of binning values for automated surface binning "
+      "for positive layers.")("geo-tgeo-player-sfbin-tolerances",
+                              po::value<read_range>()->default_value({}),
+                              "Binning prescription of binning values for "
+                              "automated surface binning for positive layers.")(
+      "geo-tgeo-pmoduleaxes", po::value<read_strings>()->default_value({}),
+      "Axes definition for positive sensitive objects, odered "
+      "along the series.");
 }
 
 /// @brief Read the specific options for the ROOT detector
@@ -222,11 +254,39 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
   read_range playersplitz =
       vm["geo-tgeo-player-z-split"].template as<read_range>();
 
+  // The automated binning prescription
+  read_series nbindims =
+      vm["geo-tgeo-nlayer-sfbin-dims"].template as<read_series>();
+  read_series nbinnings =
+      vm["geo-tgeo-nlayer-sfbin-values"].template as<read_series>();
+  read_range nbintols =
+      vm["geo-tgeo-nlayer-sfbin-tolerances"].template as<read_range>();
+  read_series cbindims =
+      vm["geo-tgeo-clayer-sfbin-dims"].template as<read_series>();
+  read_series cbinnings =
+      vm["geo-tgeo-clayer-sfbin-values"].template as<read_series>();
+  read_range cbintols =
+      vm["geo-tgeo-clayer-sfbin-tolerances"].template as<read_range>();
+  read_series pbindims =
+      vm["geo-tgeo-player-sfbin-dims"].template as<read_series>();
+  read_series pbinnings =
+      vm["geo-tgeo-player-sfbin-values"].template as<read_series>();
+  read_range pbintols =
+      vm["geo-tgeo-player-sfbin-tolerances"].template as<read_range>();
+
   std::array<read_range, 3> splittolr = {nlayersplitr, clayersplitr,
                                          playersplitr};
 
   std::array<read_range, 3> splittolz = {nlayersplitz, clayersplitz,
                                          playersplitz};
+
+  std::array<int, 3> bindimacc = {0, 0, 0};
+
+  std::array<read_series, 3> bindims = {nbindims, cbindims, pbindims};
+
+  std::array<read_series, 3> binnings = {nbinnings, cbinnings, pbinnings};
+
+  std::array<read_range, 3> bintols = {nbintols, cbintols, pbintols};
 
   // The maximum series and total counter for access of nonsplit layers
   size_t max_series = *std::max_element(series_size.begin(), series_size.end());
@@ -298,6 +358,20 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
             lConfig.splitConfigs.push_back({Acts::binZ, zsplitol});
           }
         }
+        // Switch on automated binning per default
+        auto bindim = bindims[ncp];
+
+        if (not bindim.empty()){
+            auto binning = binnings[ncp];
+            auto bintol = bintols[ncp];
+
+            for (int ib = 0; ib < bindim[in]; ++ib, ++bindimacc[ncp]) {
+             lConfig.binningConfigs.push_back(
+                  {Acts::BinningValue(binning[bindimacc[ncp]]),
+                   bintol[bindimacc[ncp]]});
+            }
+        }
+
         layerBuilderConfig.layerConfigurations[ncp].push_back(lConfig);
       }
     }

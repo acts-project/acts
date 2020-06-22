@@ -199,7 +199,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   // Perform the split at once
   auto rzSorted =
-      plHelper.protoLayers(tgContext, ringSurfaces, {{binR, 1.}, {binZ, 5}});
+      plHelper.protoLayers(tgContext, ringSurfaces, {{binR, 1.}, {binZ, 5}},
+                           {{binR, 5.}, {binPhi, 0.05}});
 
   size_t irz = 0;
   for (auto& layer : rzSorted) {

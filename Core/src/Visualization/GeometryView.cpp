@@ -150,6 +150,10 @@ void Acts::GeometryView::drawLayer(IVisualization& helper, const Layer& layer,
                                    const ViewConfig& layerConfig,
                                    const ViewConfig& sensitiveConfig,
                                    const ViewConfig& gridConfig) {
+  if (layer.layerType() == LayerType::navigation) {
+    return;
+  }
+
   if (layerConfig.visible) {
     auto layerVolume = layer.representingVolume();
     if (layerVolume != nullptr) {
@@ -278,7 +282,7 @@ void Acts::GeometryView::drawSegmentBase(IVisualization& helper,
     ltransform->prerotate(lrotation);
     ltransform->pretranslate(lcenter);
 
-    auto lbounds = std::make_shared<CylinderBounds>(thickness, hlength);
+    auto lbounds = std::make_shared<CylinderBounds>(0.5 * thickness, hlength);
     auto line = Surface::makeShared<CylinderSurface>(ltransform, lbounds);
 
     drawSurface(helper, *line, GeometryContext(), Transform3D::Identity(),

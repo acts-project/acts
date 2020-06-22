@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -90,25 +90,39 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        << " configuration(s)" + addonOutput);
 
   // Helper function to fill the layer
-  auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
-                       const LayerConfig& lCfg) -> void {
+  auto fillLayer =
+      [&](const LayerSurfaceVector lSurfaces, const LayerConfig& lCfg,
+          const std::map<BinningValue, ProtoLayer::BinningRange>& binning = {})
+      -> void {
     // Create the layer  - either way as cylinder or disk
     if (type == 0) {
       ACTS_DEBUG("- creating CylinderLayer with " << lSurfaces.size()
                                                   << " surfaces.");
-      ProtoLayer pl(gctx, lSurfaces);
+      ProtoLayer pl(gctx, lSurfaces, binning);
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      layers.push_back(m_cfg.layerCreator->cylinderLayer(
-          gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
+      size_t nBinsPhi = (binning.find(binPhi) != binning.end())
+                            ? binning.find(binPhi)->second.nBins
+                            : lCfg.binsLoc0;
+      size_t nBinsZ = (binning.find(binZ) != binning.end())
+                          ? binning.find(binZ)->second.nBins
+                          : lCfg.binsLoc1;
+      layers.push_back(m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces,
+                                                         nBinsPhi, nBinsZ, pl));
     } else {
       ACTS_DEBUG("- creating DiscLayer with " << lSurfaces.size()
                                               << " surfaces.");
-      ProtoLayer pl(gctx, lSurfaces);
+      ProtoLayer pl(gctx, lSurfaces, binning);
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      layers.push_back(m_cfg.layerCreator->discLayer(
-          gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
+      size_t nBinsR = (binning.find(binR) != binning.end())
+                          ? binning.find(binR)->second.nBins
+                          : lCfg.binsLoc0;
+      size_t nBinsPhi = (binning.find(binPhi) != binning.end())
+                            ? binning.find(binPhi)->second.nBins
+                            : lCfg.binsLoc1;
+      layers.push_back(
+          m_cfg.layerCreator->discLayer(gctx, lSurfaces, nBinsR, nBinsPhi, pl));
     }
   };
 
@@ -169,15 +183,21 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       if (m_cfg.protoLayerHelper != nullptr and
           not layerCfg.splitConfigs.empty()) {
         auto protoLayers = m_cfg.protoLayerHelper->protoLayers(
-            gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs);
+            gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs,
+            layerCfg.binningConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
         for (auto& pLayer : protoLayers) {
           layerSurfaces.clear();
           for (const auto& lsurface : pLayer.surfaces()) {
             layerSurfaces.push_back(lsurface->getSharedPtr());
           }
-          fillLayer(layerSurfaces, layerCfg);
+          fillLayer(layerSurfaces, layerCfg, pLayer.binning);
         }
+      } else if (m_cfg.protoLayerHelper != nullptr and
+                 not layerCfg.binningConfigs.empty()) {
+        auto binning = m_cfg.protoLayerHelper->gridBinning(
+            gctx, unpack_shared_vector(layerSurfaces), layerCfg.binningConfigs);
+        fillLayer(layerSurfaces, layerCfg, binning);
       } else {
         fillLayer(layerSurfaces, layerCfg);
       }

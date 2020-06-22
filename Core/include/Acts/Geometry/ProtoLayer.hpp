@@ -8,6 +8,7 @@
 
 #pragma once
 #include <iostream>
+#include <map>
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -29,7 +30,14 @@ struct ProtoLayer {
 
   /// The envelope parameters
   using Range = std::pair<double, double>;
-  std::vector<Range> envelope{(int)binValues, {0., 0.}};
+  std::vector<Range> envelope = std::vector<Range>((int)binValues, {0., 0.});
+
+  /// The surface binning parameters
+  struct BinningRange {
+    size_t nBins;
+    Range range;
+  };
+  std::map<BinningValue, BinningRange> binning;
 
   /// Constructor
   ///
@@ -39,8 +47,10 @@ struct ProtoLayer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
+  /// @param binningMap The binning prescription if known already
   ProtoLayer(const GeometryContext& gctx,
-             const std::vector<const Surface*>& surfaces);
+             const std::vector<const Surface*>& surfaces,
+             const std::map<BinningValue, BinningRange>& binningMap = {});
 
   /// Constructor
   ///
@@ -50,30 +60,32 @@ struct ProtoLayer {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
+  /// @param binningMap The binning prescription if known already
   ProtoLayer(const GeometryContext& gctx,
-             const std::vector<std::shared_ptr<const Surface>>& surfaces);
+             const std::vector<std::shared_ptr<const Surface>>& surfaces,
+             const std::map<BinningValue, BinningRange>& binningMap = {});
 
   ProtoLayer() = default;
 
   /// Get the parameters : min
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double min(BinningValue bval, bool addenv = true) const;
+  double min(BinningValue bval, bool addenv = true);
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double max(BinningValue bval, bool addenv = true) const;
+  double max(BinningValue bval, bool addenv = true);
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double medium(BinningValue bval, bool addenv = true) const;
+  double medium(BinningValue bval, bool addenv = true);
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double range(BinningValue bval, bool addenv = true) const;
+  double range(BinningValue bval, bool addenv = true);
 
   /// Output to ostream
   /// @param sl the input ostream

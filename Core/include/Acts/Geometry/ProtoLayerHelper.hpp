@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <map>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -25,7 +27,12 @@ namespace Acts {
 /// @todo write more documentation on how this is done
 class ProtoLayerHelper {
  public:
+  /// Prescription how to sort the surfaces onto proto layers + tolerance
   using SortingConfig = std::pair<BinningValue, double>;
+  /// Prescription how to bin surfaces on one proto layer + tolerance
+  using BinningConfig = std::pair<BinningValue, double>;
+
+  using BinnedRange = std::pair<double, double>;
 
   struct Config {};
 
@@ -45,22 +52,35 @@ class ProtoLayerHelper {
   /// @param gctx The geometry context (usually building context at this stage)
   /// @param surfaces The surfaces to be sorted into arrays
   /// @param sorting The sorting setup, one single sorting
+  /// @param binning The binning setup, if emtpy, no binning attempts done
   ///
   /// @return A vector of ProtoLayers
   std::vector<ProtoLayer> protoLayers(
       const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-      const SortingConfig& sorting) const;
+      const SortingConfig& sorting,
+      const std::vector<BinningConfig>& binning = {}) const;
 
   /// Sort the surfaces into ProtoLayers, sequential sorting
   ///
   /// @param gctx The geometry context (usually building context at this stage)
   /// @param surfaces The surfaces to be sorted into arrays
-  /// @param sortings The sequential sorting setup
+  /// @param sortings The sequential sorting setup, one single sorting
+  /// @param binning The binning setup, if emtpy, no binning attempts done
   ///
   /// @return A vector of ProtoLayers
   std::vector<ProtoLayer> protoLayers(
       const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-      const std::vector<SortingConfig>& sortings) const;
+      const std::vector<SortingConfig>& sortings,
+      const std::vector<BinningConfig>& binning = {}) const;
+
+  /// Method to estimate the binnings of the ProtoLayers
+  ///
+  /// @param gctx The geometry context (usually building context at this stage)
+  /// @param surfaces The sorted surfaces to be put into a ProtoLayer
+  /// @param binning The binning setup
+  std::map<BinningValue, ProtoLayer::BinningRange> gridBinning(
+      const GeometryContext& gctx, const std::vector<const Surface*> surfaces,
+      const std::vector<BinningConfig>& binning) const;
 
  private:
   /// Configuration struct

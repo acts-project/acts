@@ -22,37 +22,39 @@ using Acts::VectorHelpers::phi;
 namespace Acts {
 
 ProtoLayer::ProtoLayer(const GeometryContext& gctx,
-                       const std::vector<const Surface*>& surfaces)
-    : m_surfaces(surfaces) {
+                       const std::vector<const Surface*>& surfaces,
+                       const std::map<BinningValue, BinningRange>& binningMap)
+    : binning(binningMap), m_surfaces(surfaces) {
   measure(gctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
     const GeometryContext& gctx,
-    const std::vector<std::shared_ptr<const Surface>>& surfaces)
-    : m_surfaces(unpack_shared_vector(surfaces)) {
+    const std::vector<std::shared_ptr<const Surface>>& surfaces,
+    const std::map<BinningValue, BinningRange>& binningMap)
+    : binning(binningMap), m_surfaces(unpack_shared_vector(surfaces)) {
   measure(gctx, m_surfaces);
 }
 
-double ProtoLayer::min(BinningValue bval, bool addenv) const {
+double ProtoLayer::min(BinningValue bval, bool addenv) {
   if (addenv) {
     return extent.min(bval) - envelope[bval].first;
   }
   return extent.min(bval);
 }
 
-double ProtoLayer::max(BinningValue bval, bool addenv) const {
+double ProtoLayer::max(BinningValue bval, bool addenv) {
   if (addenv) {
     return extent.max(bval) + envelope[bval].second;
   }
   return extent.max(bval);
 }
 
-double ProtoLayer::medium(BinningValue bval, bool addenv) const {
+double ProtoLayer::medium(BinningValue bval, bool addenv) {
   return 0.5 * (min(bval, addenv) + max(bval, addenv));
 }
 
-double ProtoLayer::range(BinningValue bval, bool addenv) const {
+double ProtoLayer::range(BinningValue bval, bool addenv) {
   return std::abs(max(bval, addenv) - min(bval, addenv));
 }
 

@@ -47,6 +47,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
     using SplitConfig = std::pair<BinningValue, double>;
 
+    using BinningConfig = std::pair<BinningValue, double>;
+
     /// Identify the layer by name
     std::string layerName = "";
     /// Identify the sensor(s) by name
@@ -57,6 +59,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::vector<RangeConfig> parseRanges = {};
     /// Layer splitting: parameter and tolerance
     std::vector<SplitConfig> splitConfigs = {};
+    /// Binning config
+    std::vector<BinningConfig> binningConfigs = {};
     /// The envelope to be built around the layer
     std::pair<double, double> envelope = {0_mm, 0_mm};
     /// Define the number of bins in loc0
