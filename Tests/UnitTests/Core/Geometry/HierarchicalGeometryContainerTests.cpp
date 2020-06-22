@@ -34,6 +34,16 @@ GeometryID makeId(int volume, int layer = 0, int sensitive = 0) {
 
 }  // namespace
 
+// check that an entry exists for the query and compare the id
+#define CHECK_ENTRY(container, query, compare) \
+  do {                                         \
+    auto ret = container.find(query);          \
+    BOOST_TEST(ret != container.end());        \
+    if (ret != container.end()) {              \
+      BOOST_TEST(ret->id == compare);          \
+    }                                          \
+  } while (false)
+
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Container::Iterator)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Thing)
 
@@ -67,9 +77,9 @@ BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
   BOOST_TEST(not c.empty());
   BOOST_TEST(c.size() == 3u);
   // only test that all elements are there; failure test are below
-  BOOST_TEST(c.find(makeId(0, 1, 2)) != c.end());
-  BOOST_TEST(c.find(makeId(3, 4)) != c.end());
-  BOOST_TEST(c.find(makeId(2)) != c.end());
+  CHECK_ENTRY(c, makeId(0, 1, 2), makeId(0, 1, 2));
+  CHECK_ENTRY(c, makeId(2), makeId(2));
+  CHECK_ENTRY(c, makeId(3, 4), makeId(3, 4));
 }
 
 BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
@@ -112,56 +122,22 @@ BOOST_AUTO_TEST_CASE(Find) {
   BOOST_TEST(c.size() == 4u);
 
   // find existing sensitive
-  {
-    auto ret = c.find(makeId(2, 4, 6));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(2, 4, 6));
-  }
-  // find non-existing sensitive, which has a set volume
-  {
-    auto ret = c.find(makeId(2, 4, 7));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(2));
-  }
-  // find non-existing layer id, which has a set volume
-  {
-    auto ret = c.find(makeId(2, 13));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(2));
-  }
-  // find non-existing sensitive id, which has a set layer
-  {
-    auto ret = c.find(makeId(2, 8, 13));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(2, 8));
-  }
+  CHECK_ENTRY(c, makeId(2, 4, 6), makeId(2, 4, 6));
   // find existing layer
-  {
-    auto ret = c.find(makeId(2, 8));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(2, 8));
-  }
+  CHECK_ENTRY(c, makeId(2, 8), makeId(2, 8));
   // find existing volume
-  {
-    auto ret = c.find(makeId(2));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(2));
-  }
-
-  // find non-existing sensitive, which has a set layer
-  {
-    auto ret = c.find(makeId(12, 16, 20));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(12, 16));
-  }
+  CHECK_ENTRY(c, makeId(2), makeId(2));
   // find existing layer
-  {
-    auto ret = c.find(makeId(12, 16));
-    BOOST_TEST(ret != c.end());
-    BOOST_TEST(ret->id == makeId(12, 16));
-  }
-  // find non-existing volume, which has only lower hierarchy elements
-  BOOST_TEST(c.find(makeId(12)) == c.end());
+  CHECK_ENTRY(c, makeId(12, 16), makeId(12, 16));
+
+  // find non-existing sensitive, which has a set volume
+  CHECK_ENTRY(c, makeId(2, 4, 7), makeId(2));
+  // find non-existing layer id, which has a set volume
+  CHECK_ENTRY(c, makeId(2, 13), makeId(2));
+  // find non-existing sensitive id, which has a set layer
+  CHECK_ENTRY(c, makeId(2, 8, 13), makeId(2, 8));
+  // find non-existing sensitive, which has a set layer
+  CHECK_ENTRY(c, makeId(12, 16, 20), makeId(12, 16));
 
   // find non-existing sensitive, which has no higher hierarchy set
   BOOST_TEST(c.find(makeId(3, 5, 7)) == c.end());
