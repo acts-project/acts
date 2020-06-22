@@ -581,9 +581,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     // Update fitter state with removed vertex candidate
     fitterState.removeVertexFromMultiMap(vtx);
 
-    // TODO: clean tracksAtVerticesMap maybe here? i.e. remove all entries
-    // with old vertex?
-
     // Do the fit with removed vertex
     auto fitResult = m_cfg.vertexFitter.addVtxToFit(
         fitterState, vtx, m_cfg.linearizer, vertexingOptions);
