@@ -118,6 +118,22 @@ class HierarchicalGeometryContainer {
   Iterator find(GeometryID id) const;
 
  private:
+  // NOTE this class assumes that it knows the ordering of the levels within
+  //      the geometry id. if the geometry id changes, this code has to be
+  //      adapted too. the asserts ensure that such a change is caught.
+  static_assert(GeometryID().setVolume(1).value() <
+                    GeometryID().setVolume(1).setBoundary(1).value(),
+                "Incompatible GeometryID hierarchy");
+  static_assert(GeometryID().setBoundary(1).value() <
+                    GeometryID().setBoundary(1).setLayer(1).value(),
+                "Incompatible GeometryID hierarchy");
+  static_assert(GeometryID().setLayer(1).value() <
+                    GeometryID().setLayer(1).setApproach(1).value(),
+                "Incompatible GeometryID hierarchy");
+  static_assert(GeometryID().setApproach(1).value() <
+                    GeometryID().setApproach(1).setSensitive(1).value(),
+                "Incompatible GeometryID hierarchy");
+
   using Identifier = GeometryID::Value;
   using IdentifierGetter = identifier_getter_t;
 
