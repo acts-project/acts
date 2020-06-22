@@ -9,7 +9,7 @@
 #include <math.h>
 
 template <typename input_track_t>
-std::pair<double, double> Acts::TrackDensity<input_track_t>::globalMaximumWithWidth(
+std::pair<double, double> Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
     State& state, const std::vector<const input_track_t*>& trackList,
     const std::function<BoundParameters(input_track_t)>& extractParameters) const {
 
@@ -51,14 +51,14 @@ std::pair<double, double> Acts::TrackDensity<input_track_t>::globalMaximumWithWi
 }
 
 template <typename input_track_t>
-double Acts::TrackDensity<input_track_t>::globalMaximum(State& state,
+double Acts::GaussianTrackDensity<input_track_t>::globalMaximum(State& state,
   const std::vector<const input_track_t*>& trackList,
   const std::function<BoundParameters(input_track_t)>& extractParameters) const {
   return globalMaximumWithWidth(state, trackList, extractParameters).first;
 }
 
 template <typename input_track_t>
-void Acts::TrackDensity<input_track_t>::addAllTracks(State& state, 
+void Acts::GaussianTrackDensity<input_track_t>::addAllTracks(State& state, 
     const std::vector<const input_track_t*>& trackList,
     const std::function<BoundParameters(input_track_t)>& extractParameters) const {
   for (auto trk : trackList) {
@@ -67,7 +67,7 @@ void Acts::TrackDensity<input_track_t>::addAllTracks(State& state,
 }
 
 template <typename input_track_t>
-void Acts::TrackDensity<input_track_t>::addTrack(State& state, const input_track_t* trk,
+void Acts::GaussianTrackDensity<input_track_t>::addTrack(State& state, const input_track_t* trk,
   const std::function<BoundParameters(input_track_t)>& extractParameters) const {
   const BoundParameters& boundParams = extractParameters(*trk);
 
@@ -113,17 +113,17 @@ void Acts::TrackDensity<input_track_t>::addTrack(State& state, const input_track
 }
 
 template <typename input_track_t>
-double Acts::TrackDensity<input_track_t>::trackDensity(State& state, double z) const {
+double Acts::GaussianTrackDensity<input_track_t>::trackDensity(State& state, double z) const {
   double firstDerivative = 0;
   double secondDerivative = 0;
   return trackDensity(state, z, firstDerivative, secondDerivative);
 }
 
 template <typename input_track_t>
-double Acts::TrackDensity<input_track_t>::trackDensity(State& state, double z,
+double Acts::GaussianTrackDensity<input_track_t>::trackDensity(State& state, double z,
                                         double& firstDerivative,
                                         double& secondDerivative) const {
-  TrackDensityStore densityResult(z);
+  GaussianTrackDensityStore densityResult(z);
   for (const auto& trackEntry : state.trackEntries) {
     densityResult.addTrackToDensity(trackEntry);
   }
@@ -134,7 +134,7 @@ double Acts::TrackDensity<input_track_t>::trackDensity(State& state, double z,
 }
 
 template <typename input_track_t>
-void Acts::TrackDensity<input_track_t>::updateMaximum(double newZ, double newValue,
+void Acts::GaussianTrackDensity<input_track_t>::updateMaximum(double newZ, double newValue,
                                        double newSecondDerivative, double& maxZ,
                                        double& maxValue,
                                        double& maxSecondDerivative) const {
@@ -146,12 +146,12 @@ void Acts::TrackDensity<input_track_t>::updateMaximum(double newZ, double newVal
 }
 
 template <typename input_track_t>
-double Acts::TrackDensity<input_track_t>::stepSize(double y, double dy, double ddy) const {
+double Acts::GaussianTrackDensity<input_track_t>::stepSize(double y, double dy, double ddy) const {
   return (m_cfg.isGaussianShaped ? (y * dy) / (dy * dy - y * ddy) : -dy / ddy);
 }
 
 template <typename input_track_t>
-void Acts::TrackDensity<input_track_t>::TrackDensityStore::addTrackToDensity(
+void Acts::GaussianTrackDensity<input_track_t>::GaussianTrackDensityStore::addTrackToDensity(
     const TrackEntry& entry){
   // Take track only if it's within bounds
   if (entry.lowerBound < m_z && m_z < entry.upperBound) {

@@ -14,13 +14,13 @@
 
 namespace Acts {
 
-/// @class TrackDensity
+/// @class GaussianTrackDensity
 ///
 /// @brief Class to model tracks as 2D density functions based on
 /// their d0 and z0 perigee parameters (mean value) and covariance
 /// matrices (determining the width of the function)
 template<typename input_track_t>
-class TrackDensity {
+class GaussianTrackDensity {
  public:
   /// @brief Struct to store information for a single track
   struct TrackEntry {
@@ -84,10 +84,10 @@ class TrackDensity {
   };
 
   /// Default constructor
-  TrackDensity() = default;
+  GaussianTrackDensity() = default;
 
   /// Constructor with config
-  TrackDensity(const Config& cfg) : m_cfg(cfg) {}
+  GaussianTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief Calculates z position of global maximum with Gaussian width
   /// for density function.
@@ -186,10 +186,10 @@ class TrackDensity {
   double stepSize(double y, double dy, double ddy) const;
 
   // Helper class to evaluate and store track density at specific position
-  class TrackDensityStore {
+  class GaussianTrackDensityStore {
    public:
     // Initialise at the z coordinate at which the density is to be evaluated
-    TrackDensityStore(double z_coordinate) : m_z(z_coordinate) {}
+    GaussianTrackDensityStore(double z_coordinate) : m_z(z_coordinate) {}
 
     // Add the contribution of a single track to the density
     void addTrackToDensity(const TrackEntry& entry);
@@ -208,5 +208,5 @@ class TrackDensity {
   };
 };
 
-#include "Acts/Vertexing/TrackDensity.ipp"
+#include "Acts/Vertexing/GaussianTrackDensity.ipp"
 }  // namespace Acts

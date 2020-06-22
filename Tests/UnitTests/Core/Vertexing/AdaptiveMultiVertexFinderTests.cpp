@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, TrackDensity<BoundParameters>>;
+  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity<BoundParameters>>;
 
   SeedFinder seedFinder;
 
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Fitter fitter(fitterCfg, extractParameters);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, TrackDensity<InputTrack>>;
+  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity<InputTrack>>;
 
   SeedFinder seedFinder(extractParameters);
 
