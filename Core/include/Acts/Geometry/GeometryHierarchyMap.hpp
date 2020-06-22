@@ -20,14 +20,14 @@
 
 namespace Acts {
 
-/// Store homogeneous elements mapped into the geometry hierarchy.
+/// Store elements mapped into the geometry hierarchy.
 ///
 /// @tparam value_t stored element type
 /// @tparam identifier_getter_t functor to access element geometry identifier.
 /// must be default-constructible and have no internal state.
 ///
 /// The core functionality is to find an equivalent element for a given
-/// identifier via
+/// geometry identifier via
 ///
 ///     auto it = container.find(GeometryID(...));
 ///     if (it != container.end()) {
@@ -62,7 +62,7 @@ namespace Acts {
 /// modified after construction to prevent misuse.
 template <typename value_t,
           typename identifier_getter_t = detail::DefaultGeometryIdGetter>
-class HierarchicalGeometryContainer {
+class GeometryHierarchyMap {
  public:
   using Iterator = typename std::vector<value_t>::const_iterator;
   using Size = typename std::vector<value_t>::size_type;
@@ -71,21 +71,19 @@ class HierarchicalGeometryContainer {
   /// Construct the container from the given elements.
   ///
   /// @param values input elements (must be unique with respect to identifier)
-  HierarchicalGeometryContainer(std::vector<Value>&& values);
+  GeometryHierarchyMap(std::vector<Value>&& values);
   /// Construct the container from an initializer list.
   ///
   /// @param values input initializer list
-  HierarchicalGeometryContainer(std::initializer_list<Value> values);
+  GeometryHierarchyMap(std::initializer_list<Value> values);
 
   // defaulted constructors and assignment operators
-  HierarchicalGeometryContainer() = default;
-  HierarchicalGeometryContainer(const HierarchicalGeometryContainer&) = default;
-  HierarchicalGeometryContainer(HierarchicalGeometryContainer&&) = default;
-  ~HierarchicalGeometryContainer() = default;
-  HierarchicalGeometryContainer& operator=(
-      const HierarchicalGeometryContainer&) = default;
-  HierarchicalGeometryContainer& operator=(HierarchicalGeometryContainer&&) =
-      default;
+  GeometryHierarchyMap() = default;
+  GeometryHierarchyMap(const GeometryHierarchyMap&) = default;
+  GeometryHierarchyMap(GeometryHierarchyMap&&) = default;
+  ~GeometryHierarchyMap() = default;
+  GeometryHierarchyMap& operator=(const GeometryHierarchyMap&) = default;
+  GeometryHierarchyMap& operator=(GeometryHierarchyMap&&) = default;
 
   /// Return an iterator pointing to the beginning of the stored elements.
   Iterator begin() const { return m_values.begin(); }
@@ -214,21 +212,20 @@ class HierarchicalGeometryContainer {
 // implementations
 
 template <typename value_t, typename identifier_getter_t>
-inline HierarchicalGeometryContainer<value_t, identifier_getter_t>::
-    HierarchicalGeometryContainer(std::vector<Value>&& values)
+inline GeometryHierarchyMap<value_t, identifier_getter_t>::GeometryHierarchyMap(
+    std::vector<Value>&& values)
     : m_values(std::move(values)) {
   sortAndCheckDuplicates();
   fillLookup();
 }
 
 template <typename value_t, typename identifier_getter_t>
-inline HierarchicalGeometryContainer<value_t, identifier_getter_t>::
-    HierarchicalGeometryContainer(std::initializer_list<Value> values)
-    : HierarchicalGeometryContainer(
-          std::vector<Value>(values.begin(), values.end())) {}
+inline GeometryHierarchyMap<value_t, identifier_getter_t>::GeometryHierarchyMap(
+    std::initializer_list<Value> values)
+    : GeometryHierarchyMap(std::vector<Value>(values.begin(), values.end())) {}
 
 template <typename value_t, typename identifier_getter_t>
-inline auto HierarchicalGeometryContainer<value_t, identifier_getter_t>::find(
+inline auto GeometryHierarchyMap<value_t, identifier_getter_t>::find(
     GeometryID id) const -> Iterator {
   assert((m_values.size() == m_ids.size()) and
          "Inconsistent container state: #elements != #ids");

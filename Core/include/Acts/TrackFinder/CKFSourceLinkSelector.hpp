@@ -14,7 +14,7 @@
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Geometry/HierarchicalGeometryContainer.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/TrackFinder/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -67,7 +67,7 @@ struct CKFSourceLinkSelector {
   ///
   struct Config {
     using CKFCriteriaContainer =
-        Acts::HierarchicalGeometryContainer<GeometryCKFCriteria>;
+        Acts::GeometryHierarchyMap<GeometryCKFCriteria>;
 
     // Hierarchical geometry container of cutoff value for chi2 and number of
     // source links on surface

@@ -10,7 +10,7 @@
 #include <iterator>
 #include <stdexcept>
 
-#include "Acts/Geometry/HierarchicalGeometryContainer.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 
 namespace {
 
@@ -25,7 +25,7 @@ struct Thing {
   constexpr auto geometryId() const { return id; }
 };
 
-using Container = Acts::HierarchicalGeometryContainer<Thing>;
+using Container = Acts::GeometryHierarchyMap<Thing>;
 
 // helper function to create geometry ids
 GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
@@ -47,7 +47,7 @@ GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Container::Iterator)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Thing)
 
-BOOST_AUTO_TEST_SUITE(HierarchicalGeometryContainer)
+BOOST_AUTO_TEST_SUITE(GeometryHierarchyMap)
 
 BOOST_AUTO_TEST_CASE(ConstructDefault) {
   Container c;

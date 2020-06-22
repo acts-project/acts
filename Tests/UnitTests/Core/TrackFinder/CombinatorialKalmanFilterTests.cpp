@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
   using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
   using CKFCriteriaContainer =
-      Acts::HierarchicalGeometryContainer<GeometryCKFCriteria>;
+      Acts::GeometryHierarchyMap<GeometryCKFCriteria>;
   // Implement different chi2/nSourceLinks cutoff at different detector level
   // NB: pixel volumeID = 2, strip volumeID= 3
   std::vector<GeometryCKFCriteria> elements = {
