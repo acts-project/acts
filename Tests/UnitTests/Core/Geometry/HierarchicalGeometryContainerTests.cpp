@@ -28,7 +28,7 @@ struct Thing {
 using Container = Acts::HierarchicalGeometryContainer<Thing>;
 
 // helper function to create geometry ids
-GeometryID makeId(int volume, int layer = 0, int sensitive = 0) {
+GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
   return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
 }
 
@@ -57,14 +57,21 @@ BOOST_AUTO_TEST_CASE(ConstructDefault) {
 }
 
 BOOST_AUTO_TEST_CASE(ConstructNonUnique) {
-  std::vector<Thing> elements = {
+  std::vector<Thing> entries = {
       {makeId(2, 4, 6), 1.0},
       {makeId(3, 5), 1.0},
       {makeId(3), 1.0},
       // duplicate identifier
       {makeId(2, 4, 6), 2.0},
   };
-  BOOST_CHECK_THROW(Container(std::move(elements)), std::invalid_argument);
+  BOOST_CHECK_THROW(Container(std::move(entries)), std::invalid_argument);
+
+  std::vector<Thing> defaults = {
+      {makeId(), 1.0},
+      // duplicate global default
+      {makeId(), 2.0},
+  };
+  BOOST_CHECK_THROW(Container(std::move(defaults)), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
@@ -72,10 +79,11 @@ BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
       {makeId(0, 1, 2), 1.0},
       {makeId(3, 4), 3.0},
       {makeId(2), 2.0},
+      {makeId(), 23.0},
   };
-  BOOST_TEST(std::next(c.begin(), 3) == c.end());
+  BOOST_TEST(std::next(c.begin(), 4) == c.end());
   BOOST_TEST(not c.empty());
-  BOOST_TEST(c.size() == 3u);
+  BOOST_TEST(c.size() == 4u);
   // only test that all elements are there; failure test are below
   CHECK_ENTRY(c, makeId(0, 1, 2), makeId(0, 1, 2));
   CHECK_ENTRY(c, makeId(2), makeId(2));
@@ -145,6 +153,41 @@ BOOST_AUTO_TEST_CASE(Find) {
   BOOST_TEST(c.find(makeId(3, 5)) == c.end());
   // find non-existing volume
   BOOST_TEST(c.find(makeId(3)) == c.end());
+  // find non-existing volume, which has only lower hierarchy elements
+  BOOST_TEST(c.find(makeId(12)) == c.end());
+}
+
+BOOST_AUTO_TEST_CASE(FindWithGlobalDefault) {
+  Container c = {
+      // global default entry
+      {makeId(), 1.0},
+      // entry for volume 2, layer 3
+      {makeId(2, 3), 2.0},
+      // entry for volume 4
+      {makeId(4), 4.0},
+  };
+
+  // basic checks
+  BOOST_TEST(std::next(c.begin(), 3u) == c.end());
+  BOOST_TEST(not c.empty());
+  BOOST_TEST(c.size() == 3u);
+
+  // find existing entries
+  CHECK_ENTRY(c, makeId(), makeId());
+  CHECK_ENTRY(c, makeId(2, 3), makeId(2, 3));
+  CHECK_ENTRY(c, makeId(4), makeId(4));
+
+  // find missing sensitive w/ set layer
+  CHECK_ENTRY(c, makeId(2, 3, 4), makeId(2, 3));
+  // find missing layer w/ set volume
+  CHECK_ENTRY(c, makeId(4, 5), makeId(4));
+
+  // find missing sensitive w/o set volume/layer -> global default
+  CHECK_ENTRY(c, makeId(2, 4, 5), makeId());
+  // find missing layer w/o set volume -> global default
+  CHECK_ENTRY(c, makeId(2, 4), makeId());
+  // find missing volume
+  CHECK_ENTRY(c, makeId(5), makeId());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

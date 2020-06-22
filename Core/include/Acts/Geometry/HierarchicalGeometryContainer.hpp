@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-/// Store homogeneous elements anchored in the geometry hierarchy.
+/// Store homogeneous elements mapped into the geometry hierarchy.
 ///
 /// @tparam value_t stored element type
 /// @tparam identifier_getter_t functor to access element geometry identifier.
@@ -34,11 +34,11 @@ namespace Acts {
 ///         ...
 ///     }
 ///
-/// Trailing zero components of stored geometry identifiers are used as
+/// Trailing zero levels of stored geometry identifiers are used as
 /// broadcast values to refer to higher-level objects within the geometry, e.g.
-/// a geometry identifier with vanishing approach and sensitive index refers
-/// to the full layer. All stored geometry identifiers must set at least
-/// the highest hierarchy level.
+/// a geometry identifier with vanishing approach and sensitive index identifies
+/// a layer. An entry will all geometry identifier levels set to zero acts as
+/// the global default value.
 ///
 /// The container also supports range-based iteration over all stored elements
 ///
@@ -57,10 +57,9 @@ namespace Acts {
 ///   implementation detail and might change.
 ///
 /// Adding elements is potentially expensive as the internal lookup structure
-/// must be updated. In addition, modifying an element in-place can
-/// potentially change its identifier which would also break the lookup. Thus,
-/// the container can not be modified after construction to prevent misuse.
-///
+/// must be updated. In addition, modifying an element in-place could change its
+/// identifier which would also break the lookup. Thus, the container can not be
+/// modified after construction to prevent misuse.
 template <typename value_t,
           typename identifier_getter_t = detail::DefaultGeometryIdGetter>
 class HierarchicalGeometryContainer {
@@ -146,29 +145,30 @@ class HierarchicalGeometryContainer {
   /// Construct a mask where all leading non-zero levels are set.
   static constexpr Identifier makeLeadingLevelsMask(GeometryID id) {
     // construct id from encoded value with all bits set
-    auto mask = GeometryID(~GeometryID::Value(0u));
-    // NOTE this code assumes some knowledge about the ordering of the levels
-    //      within the geometry id. if the geometry id changes, this code has
-    //      to be adapted too.
+    auto allSet = GeometryID(~GeometryID::Value(0u));
+    // manually iterate over identifier levels starting from the lowest
     if (id.sensitive() != 0u) {
-      // all levels are valid; keep all at one.
-      return mask.value();
+      // all levels are valid; keep all bits set.
+      return allSet.value();
     }
     if (id.approach() != 0u) {
-      return mask.setSensitive(0u).value();
+      return allSet.setSensitive(0u).value();
     }
     if (id.layer() != 0u) {
-      return mask.setSensitive(0u).setApproach(0u).value();
+      return allSet.setSensitive(0u).setApproach(0u).value();
     }
     if (id.boundary() != 0u) {
-      return mask.setSensitive(0u).setApproach(0u).setLayer(0u).value();
+      return allSet.setSensitive(0u).setApproach(0u).setLayer(0u).value();
     }
-    // identifier must always have non-zero volume
-    return mask.setSensitive(0u)
-        .setApproach(0u)
-        .setLayer(0u)
-        .setBoundary(0u)
-        .value();
+    if (id.volume() != 0u) {
+      return allSet.setSensitive(0u)
+          .setApproach(0u)
+          .setLayer(0u)
+          .setBoundary(0u)
+          .value();
+    }
+    // no valid levels; all bits are zero.
+    return Identifier(0u);
   }
   /// Construct a mask where only the highest level is set.
   static constexpr Identifier makeHighestLevelMask() {
@@ -243,26 +243,31 @@ inline auto HierarchicalGeometryContainer<value_t, identifier_getter_t>::find(
   auto i = std::distance(m_ids.begin(), it);
 
   // now go up the hierarchy to find the first matching element.
-  // example: the container stores three identifiers
+  // example: the container stores four identifiers
   //
   //     2|x|x (volume-only)
+  //     2|2|1 (volume, layer, and sensitive)
   //     2|3|x (volume and layer)
   //     2|3|4 (volume, layer, and sensitive)
   //
   // where | marks level boundaries. searching for either 2|3|4, 2|3|7, or
   // 2|4|x would first point to 2|3|4 and thus needs to go up the hierarchy.
   while (0 < i) {
-    // always starts below item of interest due to upper bound search
+    // index always starts before item of interest due to upper bound search
     --i;
 
     // if the input id does not even match at the highest hierarchy level
     // with the current comparison id, then have reached the end of this
-    // hierarchy without finding a matching entry.
-    // NOTE this prevents adding a catch-all entry (all components equal to
-    //      zero), but avoids having an unbounded search window all the way to
-    //      the beginning of the ids container.
+    // hierarchy. having a special check for the highest level avoids an
+    // unbounded search window all the way to the beginning of the container for
+    // the global default entry.
     if (not equalWithinMask(id.value(), m_ids[i], makeHighestLevelMask())) {
-      return end();
+      // check if a global default entry exists
+      if (m_ids.front() == Identifier(0u)) {
+        return begin();
+      } else {
+        return end();
+      }
     }
 
     // since the search is going backwards in the sorted container, it
