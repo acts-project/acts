@@ -27,17 +27,14 @@ class TrackDensity {
     // Default constructor
     TrackEntry() = default;
     // Constructor initializing all members
-    TrackEntry(/*const input_track_t* trk,*/ double z, double c0in, double c1in, double c2in, double zMin,
+    TrackEntry(double z, double c0in, double c1in, double c2in, double zMin,
                double zMax)
-        : //trkPtr(trk),
-          z(z),
+        : z(z),
           c0(c0in),
           c1(c1in),
           c2(c2in),
           lowerBound(zMin),
           upperBound(zMax) {}
-
-    //const input_track_t* trkPtr;
 
     double z = 0;
     // Cached information for a single track
@@ -106,39 +103,45 @@ class TrackDensity {
   /// is considered the maximum.
   ///
   /// @param state The track density state
-  /// TODO
+  /// @param trackList All input tracks
+  /// @param extractParameters Function extracting BoundParameters from InputTrack
   ///
   /// @return Pair of position of global maximum and Gaussian width
   std::pair<double, double> globalMaximumWithWidth(State& state,
     const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& m_extractParameters) const;
+    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
 
   /// @brief Calculates the z position of the global maximum
   ///
   /// @param state The track density state
-  /// TODO
+  /// @param trackList All input tracks
+  /// @param extractParameters Function extracting BoundParameters from InputTrack
   ///
   /// @return z position of the global maximum
   double globalMaximum(State& state,
     const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& m_extractParameters) const;
+    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
 
  private:
   /// The configuration
   Config m_cfg;
 
-  // TODO
+  /// @brief Adds all track densities to current state
+  ///
+  /// @param state The track density state
+  /// @param trackList All input tracks
+  /// @param extractParameters Function extracting BoundParameters from InputTrack
   void addAllTracks(State& state, 
     const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& m_extractParameters) const;
+    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
 
   /// @brief Add a track to the set being considered
   ///
   /// @param state The track density state
-  /// @param trk Track parameters.
-  /// TODO
+  /// @param trk Track to be added
+  /// @param extractParameters Function extracting BoundParameters from InputTrack
   void addTrack(State& state, const input_track_t* trk,
-    const std::function<BoundParameters(input_track_t)>& m_extractParameters) const;
+    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
 
   /// @brief Evaluate the density function at the specified
   /// coordinate along the beamline
@@ -189,10 +192,7 @@ class TrackDensity {
     TrackDensityStore(double z_coordinate) : m_z(z_coordinate) {}
 
     // Add the contribution of a single track to the density
-    void addTrackToDensity(const TrackEntry& entry);//, double& cache1, double& cache2, double& cache3);
-
-    // TODO
-    void updateValues(double density, double fD, double sD);
+    void addTrackToDensity(const TrackEntry& entry);
 
     // Retrieve the density and its derivatives
     inline double density() const { return m_density; }

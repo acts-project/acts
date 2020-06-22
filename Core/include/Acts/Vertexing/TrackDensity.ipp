@@ -125,19 +125,7 @@ double Acts::TrackDensity<input_track_t>::trackDensity(State& state, double z,
                                         double& secondDerivative) const {
   TrackDensityStore densityResult(z);
   for (const auto& trackEntry : state.trackEntries) {
-    // double cache1 = 0;
-    // double cache2 = 0;
-    // double cache3 = 0;
-    //if(state.testMap.find(std::make_tuple(trackEntry.z,trackEntry.c0,trackEntry.c1,trackEntry.c2,trackEntry.lowerBound,trackEntry.upperBound, z)) == state.testMap.end()){
-    densityResult.addTrackToDensity(trackEntry);//, cache1, cache2, cache3);
-    //   state.testMap[std::make_tuple(trackEntry.z,trackEntry.c0,trackEntry.c1,trackEntry.c2,trackEntry.lowerBound,trackEntry.upperBound, z)] = std::make_tuple(cache1, cache2, cache3);
-    // }
-    // else{
-    //   auto tuple = state.testMap.at(std::make_tuple(trackEntry.z,trackEntry.c0,trackEntry.c1,trackEntry.c2,trackEntry.lowerBound,trackEntry.upperBound, z));
-    //   densityResult.updateValues(std::get<0>(tuple), std::get<1>(tuple), std::get<2>(tuple));
-    // }
-    
-    
+    densityResult.addTrackToDensity(trackEntry);
   }
   firstDerivative = densityResult.firstDerivative();
   secondDerivative = densityResult.secondDerivative();
@@ -163,15 +151,8 @@ double Acts::TrackDensity<input_track_t>::stepSize(double y, double dy, double d
 }
 
 template <typename input_track_t>
-void Acts::TrackDensity<input_track_t>::TrackDensityStore::updateValues(double density, double fD, double sD){
-    m_density += density;
-    m_firstDerivative += fD;
-    m_secondDerivative += sD;
-}
-
-template <typename input_track_t>
 void Acts::TrackDensity<input_track_t>::TrackDensityStore::addTrackToDensity(
-    const TrackEntry& entry){//, double& cache1, double& cache2, double& cache3) {
+    const TrackEntry& entry){
   // Take track only if it's within bounds
   if (entry.lowerBound < m_z && m_z < entry.upperBound) {
     double delta = std::exp(entry.c0 + m_z * (entry.c1 + m_z * entry.c2));
