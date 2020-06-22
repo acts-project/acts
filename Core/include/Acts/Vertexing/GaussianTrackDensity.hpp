@@ -19,7 +19,7 @@ namespace Acts {
 /// @brief Class to model tracks as 2D density functions based on
 /// their d0 and z0 perigee parameters (mean value) and covariance
 /// matrices (determining the width of the function)
-template<typename input_track_t>
+template <typename input_track_t>
 class GaussianTrackDensity {
  public:
   /// @brief Struct to store information for a single track
@@ -52,13 +52,11 @@ class GaussianTrackDensity {
 
   /// @brief The Config struct
   struct Config {
-
     Config(double d0Sig = 3.5, double z0Sig = 12.)
-    : d0MaxSignificance(d0Sig)
-    , z0MaxSignificance(z0Sig)
-    , d0SignificanceCut(d0Sig * d0Sig)
-    , z0SignificanceCut(z0Sig * z0Sig)
-    {}
+        : d0MaxSignificance(d0Sig),
+          z0MaxSignificance(z0Sig),
+          d0SignificanceCut(d0Sig * d0Sig),
+          z0SignificanceCut(z0Sig * z0Sig) {}
 
     // Assumed shape of density function:
     // Gaussian (true) or parabolic (false)
@@ -80,7 +78,9 @@ class GaussianTrackDensity {
     // Vector to cache track information
     std::vector<TrackEntry> trackEntries;
 
-    std::map<std::tuple<double, double, double, double, double, double, double>, std::tuple<double, double, double>> testMap;
+    std::map<std::tuple<double, double, double, double, double, double, double>,
+             std::tuple<double, double, double>>
+        testMap;
   };
 
   /// Default constructor
@@ -104,23 +104,27 @@ class GaussianTrackDensity {
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundParameters from InputTrack
+  /// @param extractParameters Function extracting BoundParameters from
+  /// InputTrack
   ///
   /// @return Pair of position of global maximum and Gaussian width
-  std::pair<double, double> globalMaximumWithWidth(State& state,
-    const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
+  std::pair<double, double> globalMaximumWithWidth(
+      State& state, const std::vector<const input_track_t*>& trackList,
+      const std::function<BoundParameters(input_track_t)>& extractParameters)
+      const;
 
   /// @brief Calculates the z position of the global maximum
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundParameters from InputTrack
+  /// @param extractParameters Function extracting BoundParameters from
+  /// InputTrack
   ///
   /// @return z position of the global maximum
   double globalMaximum(State& state,
-    const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
+                       const std::vector<const input_track_t*>& trackList,
+                       const std::function<BoundParameters(input_track_t)>&
+                           extractParameters) const;
 
  private:
   /// The configuration
@@ -130,9 +134,12 @@ class GaussianTrackDensity {
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundParameters from InputTrack
-  void addTracks(State& state, const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters) const;
+  /// @param extractParameters Function extracting BoundParameters from
+  /// InputTrack
+  void addTracks(State& state,
+                 const std::vector<const input_track_t*>& trackList,
+                 const std::function<BoundParameters(input_track_t)>&
+                     extractParameters) const;
 
   /// @brief Evaluate the density function at the specified
   /// coordinate along the beamline

@@ -50,7 +50,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity<BoundParameters>>;
+      TrackDensityVertexFinder<DummyVertexFitter<>,
+                               GaussianTrackDensity<BoundParameters>>;
   Finder finder;
   Finder::State state;
 
@@ -121,7 +122,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   vertexingOptions.vertexConstraint = vertexConstraint;
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity<BoundParameters>>;
+      TrackDensityVertexFinder<DummyVertexFitter<>,
+                               GaussianTrackDensity<BoundParameters>>;
   Finder finder;
   Finder::State state;
 
@@ -188,7 +190,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity<BoundParameters>>;
+      TrackDensityVertexFinder<DummyVertexFitter<>,
+                               GaussianTrackDensity<BoundParameters>>;
   Finder finder;
   Finder::State state;
 

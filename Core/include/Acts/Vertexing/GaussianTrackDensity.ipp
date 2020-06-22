@@ -9,10 +9,11 @@
 #include <math.h>
 
 template <typename input_track_t>
-std::pair<double, double> Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
+std::pair<double, double>
+Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
     State& state, const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters) const {
-
+    const std::function<BoundParameters(input_track_t)>& extractParameters)
+    const {
   addTracks(state, trackList, extractParameters);
 
   double maxPosition = 0.;
@@ -51,19 +52,19 @@ std::pair<double, double> Acts::GaussianTrackDensity<input_track_t>::globalMaxim
 }
 
 template <typename input_track_t>
-double Acts::GaussianTrackDensity<input_track_t>::globalMaximum(State& state,
-  const std::vector<const input_track_t*>& trackList,
-  const std::function<BoundParameters(input_track_t)>& extractParameters) const {
+double Acts::GaussianTrackDensity<input_track_t>::globalMaximum(
+    State& state, const std::vector<const input_track_t*>& trackList,
+    const std::function<BoundParameters(input_track_t)>& extractParameters)
+    const {
   return globalMaximumWithWidth(state, trackList, extractParameters).first;
 }
 
 template <typename input_track_t>
-void Acts::GaussianTrackDensity<input_track_t>::addTracks(State& state,
-  const std::vector<const input_track_t*>& trackList,
-  const std::function<BoundParameters(input_track_t)>& extractParameters) const {
-
+void Acts::GaussianTrackDensity<input_track_t>::addTracks(
+    State& state, const std::vector<const input_track_t*>& trackList,
+    const std::function<BoundParameters(input_track_t)>& extractParameters)
+    const {
   for (auto trk : trackList) {
-
     const BoundParameters& boundParams = extractParameters(*trk);
     // Get required track parameters
     const double d0 = boundParams.parameters()[ParID_t::eLOC_D0];
@@ -76,8 +77,8 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(State& state,
     const double covDeterminant = covDD * covZZ - covDZ * covDZ;
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
-    if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) || (covZZ <= 0) ||
-        (covDeterminant <= 0)) {
+    if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
+        (covZZ <= 0) || (covDeterminant <= 0)) {
       continue;
     }
 
@@ -108,16 +109,17 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(State& state,
 }
 
 template <typename input_track_t>
-double Acts::GaussianTrackDensity<input_track_t>::trackDensity(State& state, double z) const {
+double Acts::GaussianTrackDensity<input_track_t>::trackDensity(State& state,
+                                                               double z) const {
   double firstDerivative = 0;
   double secondDerivative = 0;
   return trackDensity(state, z, firstDerivative, secondDerivative);
 }
 
 template <typename input_track_t>
-double Acts::GaussianTrackDensity<input_track_t>::trackDensity(State& state, double z,
-                                        double& firstDerivative,
-                                        double& secondDerivative) const {
+double Acts::GaussianTrackDensity<input_track_t>::trackDensity(
+    State& state, double z, double& firstDerivative,
+    double& secondDerivative) const {
   GaussianTrackDensityStore densityResult(z);
   for (const auto& trackEntry : state.trackEntries) {
     densityResult.addTrackToDensity(trackEntry);
@@ -129,10 +131,9 @@ double Acts::GaussianTrackDensity<input_track_t>::trackDensity(State& state, dou
 }
 
 template <typename input_track_t>
-void Acts::GaussianTrackDensity<input_track_t>::updateMaximum(double newZ, double newValue,
-                                       double newSecondDerivative, double& maxZ,
-                                       double& maxValue,
-                                       double& maxSecondDerivative) const {
+void Acts::GaussianTrackDensity<input_track_t>::updateMaximum(
+    double newZ, double newValue, double newSecondDerivative, double& maxZ,
+    double& maxValue, double& maxSecondDerivative) const {
   if (newValue > maxValue) {
     maxZ = newZ;
     maxValue = newValue;
@@ -141,13 +142,14 @@ void Acts::GaussianTrackDensity<input_track_t>::updateMaximum(double newZ, doubl
 }
 
 template <typename input_track_t>
-double Acts::GaussianTrackDensity<input_track_t>::stepSize(double y, double dy, double ddy) const {
+double Acts::GaussianTrackDensity<input_track_t>::stepSize(double y, double dy,
+                                                           double ddy) const {
   return (m_cfg.isGaussianShaped ? (y * dy) / (dy * dy - y * ddy) : -dy / ddy);
 }
 
 template <typename input_track_t>
-void Acts::GaussianTrackDensity<input_track_t>::GaussianTrackDensityStore::addTrackToDensity(
-    const TrackEntry& entry){
+void Acts::GaussianTrackDensity<input_track_t>::GaussianTrackDensityStore::
+    addTrackToDensity(const TrackEntry& entry) {
   // Take track only if it's within bounds
   if (entry.lowerBound < m_z && m_z < entry.upperBound) {
     double delta = std::exp(entry.c0 + m_z * (entry.c1 + m_z * entry.c2));
