@@ -40,7 +40,7 @@ class GaussianGridTrackDensity {
     /// should be covered by the main 1-dim density grid along the z-axis
     /// Note: This value together with 'mainGridSize' determines the
     /// overall bin size to be used as seen below
-    Config(float zMinMax = 100) : zMinMax(zMinMax) {
+    Config(float zMinMax_ = 100) : zMinMax(zMinMax_) {
       binSize = 2. * zMinMax / mainGridSize;
     }
     // Min and max z value of big grid
