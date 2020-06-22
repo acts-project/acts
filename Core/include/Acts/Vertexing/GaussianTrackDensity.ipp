@@ -22,28 +22,27 @@ Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
 
   for (const auto& track : state.trackEntries) {
     double trialZ = track.z;
-    double density = 0.;
-    double firstDerivative = 0.;
-    double secondDerivative = 0.;
-    density = trackDensity(state, trialZ, firstDerivative, secondDerivative);
+  
+    auto [density, firstDerivative, secondDerivative] = trackDensityAndDerivatives(state, trialZ);
+    
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
+    std::tie(maxPosition, maxDensity, maxSecondDerivative) = updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
                   maxSecondDerivative);
     trialZ += stepSize(density, firstDerivative, secondDerivative);
-    density = trackDensity(state, trialZ, firstDerivative, secondDerivative);
+    std::tie(density, firstDerivative, secondDerivative) = trackDensityAndDerivatives(state, trialZ);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
+    std::tie(maxPosition, maxDensity, maxSecondDerivative) = updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
                   maxSecondDerivative);
     trialZ += stepSize(density, firstDerivative, secondDerivative);
-    density = trackDensity(state, trialZ, firstDerivative, secondDerivative);
+    std::tie(density, firstDerivative, secondDerivative) = trackDensityAndDerivatives(state, trialZ);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
+    std::tie(maxPosition, maxDensity, maxSecondDerivative) = updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
                   maxSecondDerivative);
   }
 
@@ -74,7 +73,7 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(
     const double covDD = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0);
     const double covZZ = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
     const double covDZ = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_Z0);
-    const double covDeterminant = covDD * covZZ - covDZ * covDZ;
+    const double covDeterminant = perigeeCov.determinant();
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
     if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
@@ -109,36 +108,25 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(
 }
 
 template <typename input_track_t>
-double Acts::GaussianTrackDensity<input_track_t>::trackDensity(State& state,
-                                                               double z) const {
-  double firstDerivative = 0;
-  double secondDerivative = 0;
-  return trackDensity(state, z, firstDerivative, secondDerivative);
-}
-
-template <typename input_track_t>
-double Acts::GaussianTrackDensity<input_track_t>::trackDensity(
-    State& state, double z, double& firstDerivative,
-    double& secondDerivative) const {
+std::tuple<double, double, double> Acts::GaussianTrackDensity<input_track_t>::trackDensityAndDerivatives(
+    State& state, double z) const {
   GaussianTrackDensityStore densityResult(z);
   for (const auto& trackEntry : state.trackEntries) {
     densityResult.addTrackToDensity(trackEntry);
   }
-  firstDerivative = densityResult.firstDerivative();
-  secondDerivative = densityResult.secondDerivative();
-
-  return densityResult.density();
+  return densityResult.densityAndDerivatives();
 }
 
 template <typename input_track_t>
-void Acts::GaussianTrackDensity<input_track_t>::updateMaximum(
-    double newZ, double newValue, double newSecondDerivative, double& maxZ,
-    double& maxValue, double& maxSecondDerivative) const {
+std::tuple<double, double, double> Acts::GaussianTrackDensity<input_track_t>::updateMaximum(
+    double newZ, double newValue, double newSecondDerivative, double maxZ,
+    double maxValue, double maxSecondDerivative) const {
   if (newValue > maxValue) {
     maxZ = newZ;
     maxValue = newValue;
     maxSecondDerivative = newSecondDerivative;
   }
+  return {maxZ, maxValue, maxSecondDerivative};
 }
 
 template <typename input_track_t>
