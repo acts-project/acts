@@ -971,7 +971,7 @@ class KalmanFitter {
     }
 
     // Return the converted Track
-    return std::move(kalmanResult);
+    return kalmanResult;
   }
 
   /// Fit implementation of the foward filter, calls the
@@ -1069,7 +1069,7 @@ class KalmanFitter {
     }
 
     // Return the converted Track
-    return std::move(kalmanResult);
+    return kalmanResult;
   }
 };
 
