@@ -11,6 +11,8 @@
 #include <boost/program_options.hpp>
 #include <string>
 
+#include "Acts/Geometry/GeometryID.hpp"
+
 void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
   using boost::program_options::value;
 
@@ -24,13 +26,13 @@ void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
 
 FW::TrackFindingAlgorithm::Config FW::Options::readTrackFindingConfig(
     const FW::Options::Variables& variables) {
-  using Config = typename FW::TrackFindingAlgorithm::Config;
-  Config tfAlgCfg;
+  auto chi2Max = variables["ckf-slselection-chi2max"].template as<double>();
+  auto nMax = variables["ckf-slselection-nmax"].template as<size_t>();
 
-  tfAlgCfg.sourcelinkSelectorCfg.globalChi2CutOff =
-      variables["ckf-slselection-chi2max"].template as<double>();
-  tfAlgCfg.sourcelinkSelectorCfg.globalNumSourcelinksCutOff =
-      variables["ckf-slselection-nmax"].template as<int>();
-
-  return tfAlgCfg;
+  // config is a GeometryHierarchyMap with just the global default
+  TrackFindingAlgorithm::Config cfg;
+  cfg.sourcelinkSelectorCfg = {
+      {Acts::GeometryID(), {chi2Max, nMax}},
+  };
+  return cfg;
 }
