@@ -252,15 +252,6 @@ class AdaptiveMultiVertexFinder {
   void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
                                  const Vertex<InputTrack_t>& seedVertex) const;
 
-  /// @brief Estimates delta Z between a track and a vertex position
-  ///
-  /// @param track The track
-  /// @param vtxPos The vertex position
-  ///
-  /// @return The delta Z estimate
-  double estimateDeltaZ(const BoundParameters& track,
-                        const Vector3D& vtxPos) const;
-
   /// @brief Calculates the IP significance of a track to a given vertex
   ///
   /// @param track The track
