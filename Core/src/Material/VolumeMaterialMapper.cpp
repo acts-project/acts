@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
