@@ -22,29 +22,35 @@ Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
 
   for (const auto& track : state.trackEntries) {
     double trialZ = track.z;
-  
-    auto [density, firstDerivative, secondDerivative] = trackDensityAndDerivatives(state, trialZ);
+
+    auto [density, firstDerivative, secondDerivative] =
+        trackDensityAndDerivatives(state, trialZ);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    std::tie(maxPosition, maxDensity, maxSecondDerivative) = updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
-                  maxSecondDerivative);
+    std::tie(maxPosition, maxDensity, maxSecondDerivative) =
+        updateMaximum(trialZ, density, secondDerivative, maxPosition,
+                      maxDensity, maxSecondDerivative);
 
     trialZ += stepSize(density, firstDerivative, secondDerivative);
-    std::tie(density, firstDerivative, secondDerivative) = trackDensityAndDerivatives(state, trialZ);
+    std::tie(density, firstDerivative, secondDerivative) =
+        trackDensityAndDerivatives(state, trialZ);
 
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    std::tie(maxPosition, maxDensity, maxSecondDerivative) = updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
-                  maxSecondDerivative);
+    std::tie(maxPosition, maxDensity, maxSecondDerivative) =
+        updateMaximum(trialZ, density, secondDerivative, maxPosition,
+                      maxDensity, maxSecondDerivative);
     trialZ += stepSize(density, firstDerivative, secondDerivative);
-    std::tie(density, firstDerivative, secondDerivative) = trackDensityAndDerivatives(state, trialZ);
+    std::tie(density, firstDerivative, secondDerivative) =
+        trackDensityAndDerivatives(state, trialZ);
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
-    std::tie(maxPosition, maxDensity, maxSecondDerivative) = updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
-                  maxSecondDerivative);
+    std::tie(maxPosition, maxDensity, maxSecondDerivative) =
+        updateMaximum(trialZ, density, secondDerivative, maxPosition,
+                      maxDensity, maxSecondDerivative);
   }
 
   return std::make_pair(maxPosition,
@@ -74,7 +80,7 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(
     const double covDD = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0);
     const double covZZ = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
     const double covDZ = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_Z0);
-    const double covDeterminant = (perigeeCov.block<2,2>(0,0)).determinant();
+    const double covDeterminant = (perigeeCov.block<2, 2>(0, 0)).determinant();
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
     if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
@@ -109,7 +115,8 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(
 }
 
 template <typename input_track_t>
-std::tuple<double, double, double> Acts::GaussianTrackDensity<input_track_t>::trackDensityAndDerivatives(
+std::tuple<double, double, double>
+Acts::GaussianTrackDensity<input_track_t>::trackDensityAndDerivatives(
     State& state, double z) const {
   GaussianTrackDensityStore densityResult(z);
   for (const auto& trackEntry : state.trackEntries) {
@@ -119,7 +126,8 @@ std::tuple<double, double, double> Acts::GaussianTrackDensity<input_track_t>::tr
 }
 
 template <typename input_track_t>
-std::tuple<double, double, double> Acts::GaussianTrackDensity<input_track_t>::updateMaximum(
+std::tuple<double, double, double>
+Acts::GaussianTrackDensity<input_track_t>::updateMaximum(
     double newZ, double newValue, double newSecondDerivative, double maxZ,
     double maxValue, double maxSecondDerivative) const {
   if (newValue > maxValue) {

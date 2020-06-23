@@ -150,17 +150,19 @@ class GaussianTrackDensity {
   /// @param z z-position along the beamline
   ///
   /// @return Track density, first and second derivatives
-  std::tuple<double, double, double> trackDensityAndDerivatives(State& state, double z) const;
+  std::tuple<double, double, double> trackDensityAndDerivatives(State& state,
+                                                                double z) const;
 
   /// @brief Update the current maximum values
   ///
   /// @param newZ The new z value
   /// @param newValue The new value at z position
   /// @param newSecondDerivative The new second derivative
-  /// @return The max z position, the max value at z position, the max second derivative
-  std::tuple<double, double, double> updateMaximum(double newZ, double newValue, double newSecondDerivative,
-                     double maxZ, double maxValue,
-                     double maxSecondDerivative) const;
+  /// @return The max z position, the max value at z position, the max second
+  /// derivative
+  std::tuple<double, double, double> updateMaximum(
+      double newZ, double newValue, double newSecondDerivative, double maxZ,
+      double maxValue, double maxSecondDerivative) const;
 
   /// @brief Calculates the step size
   ///
