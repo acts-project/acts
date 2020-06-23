@@ -64,5 +64,5 @@ int main(int argc, char* argv[]) {
     sequencer.addWriter(std::make_shared<RootMaterialTrackWriter>(
         materialTrackWriter, logLevel));
   }
-  sequencer.run();
+  return sequencer.run();
 }
