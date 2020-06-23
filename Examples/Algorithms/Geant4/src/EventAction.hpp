@@ -53,7 +53,6 @@ class EventAction final : public G4UserEventAction {
   ///
   /// This only contains valid data after the end-of-event action has been
   /// executed.
-  // std::vector<Acts::RecordedMaterialTrack> materialTracks();
   const std::vector<Acts::RecordedMaterialTrack>& materialTracks() const;
 
  private:
