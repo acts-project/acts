@@ -230,7 +230,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     auto params = m_extractParameters(*trk);
     // If track is too far away from vertex, do not consider checking the IP
     // significance
-    if (std::abs(params.position()[eZ]-vtx.position()[eZ]) >
+    if (std::abs(params.position()[eZ] - vtx.position()[eZ]) >
         m_cfg.tracksMaxZinterval) {
       continue;
     }
