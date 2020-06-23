@@ -110,6 +110,9 @@ class GeometryID {
   friend constexpr bool operator==(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value == rhs.m_value;
   }
+  friend constexpr bool operator!=(GeometryID lhs, GeometryID rhs) {
+    return lhs.m_value != rhs.m_value;
+  }
   friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value < rhs.m_value;
   }
