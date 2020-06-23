@@ -60,8 +60,7 @@ FW::ProcessCode GeantinoRecording::execute(
 
   auto materialTracks = EventAction::instance()->materialTracks();
   // Write the recorded material to the event store
-  ctx.eventStore.add(m_cfg.outputMaterialTracks,
-                     move(materialTracks));
+  ctx.eventStore.add(m_cfg.outputMaterialTracks, move(materialTracks));
 
   return FW::ProcessCode::SUCCESS;
 }
