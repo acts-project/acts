@@ -29,6 +29,7 @@ Key features:
    plugins/plugins
    integration/integration
    howto/howto
+   formats/formats
    api/api
    codeguide
    authors
