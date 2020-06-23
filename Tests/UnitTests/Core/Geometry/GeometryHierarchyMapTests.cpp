@@ -16,32 +16,29 @@ namespace {
 
 using Acts::GeometryID;
 
-struct Thing {
-  GeometryID id;
-  double value = 1.0;
-
-  Thing(GeometryID i, double v) : id(i), value(v) {}
-
-  constexpr auto geometryId() const { return id; }
-};
-
-using Container = Acts::GeometryHierarchyMap<Thing>;
-
 // helper function to create geometry ids
 GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
   return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
 }
 
+// example value type stored in the geometry hierarchy map
+struct Thing {
+  double value = 1.0;
+};
+
+using Container = Acts::GeometryHierarchyMap<Thing>;
+
 }  // namespace
 
 // check that an entry exists for the query and compare the id
-#define CHECK_ENTRY(container, query, compare) \
-  do {                                         \
-    auto ret = container.find(query);          \
-    BOOST_TEST(ret != container.end());        \
-    if (ret != container.end()) {              \
-      BOOST_TEST(ret->id == compare);          \
-    }                                          \
+#define CHECK_ENTRY(container, query, compare)          \
+  do {                                                  \
+    auto ret = container.find(query);                   \
+    BOOST_TEST(ret != container.end());                 \
+    if (ret != container.end()) {                       \
+      auto idx = std::distance(container.begin(), ret); \
+      BOOST_TEST(container.idAt(idx) == compare);       \
+    }                                                   \
   } while (false)
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Container::Iterator)
@@ -57,29 +54,29 @@ BOOST_AUTO_TEST_CASE(ConstructDefault) {
 }
 
 BOOST_AUTO_TEST_CASE(ConstructNonUnique) {
-  std::vector<Thing> entries = {
-      {makeId(2, 4, 6), 1.0},
-      {makeId(3, 5), 1.0},
-      {makeId(3), 1.0},
+  std::vector<std::pair<GeometryID, Thing>> entries = {
+      {makeId(2, 4, 6), {1.0}},
+      {makeId(3, 5), {1.0}},
+      {makeId(3), {1.0}},
       // duplicate identifier
-      {makeId(2, 4, 6), 2.0},
+      {makeId(2, 4, 6), {2.0}},
   };
   BOOST_CHECK_THROW(Container(std::move(entries)), std::invalid_argument);
 
-  std::vector<Thing> defaults = {
-      {makeId(), 1.0},
+  std::vector<std::pair<GeometryID, Thing>> defaults = {
+      {makeId(), {1.0}},
       // duplicate global default
-      {makeId(), 2.0},
+      {makeId(), {2.0}},
   };
   BOOST_CHECK_THROW(Container(std::move(defaults)), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
   Container c = {
-      {makeId(0, 1, 2), 1.0},
-      {makeId(3, 4), 3.0},
-      {makeId(2), 2.0},
-      {makeId(), 23.0},
+      {makeId(0, 1, 2), {1.0}},
+      {makeId(3, 4), {3.0}},
+      {makeId(2), {2.0}},
+      {makeId(), {23.0}},
   };
   BOOST_TEST(std::next(c.begin(), 4) == c.end());
   BOOST_TEST(not c.empty());
@@ -92,19 +89,21 @@ BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
 
 BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
   Container c({
-      {makeId(1, 2, 3), 1.0},
-      {makeId(3, 4, 5), 2.0},
-      {makeId(3, 5), 3.0},
-      {makeId(4, 5, 7), 4.0},
+      {makeId(1, 2, 3), {2.0}},
+      {makeId(3, 4, 5), {2.5}},
+      {makeId(3, 5), {3.0}},
+      {makeId(4, 5, 7), {4.0}},
   });
 
   BOOST_TEST(not c.empty());
   BOOST_TEST(c.size() == 4u);
-  // this test both that the index-based access works and that the identifier
-  // stored in the container matches the one from the stored element
+  // this tests just that the index-based access works
   // NOTE order is undefined and should not be tested
   for (auto i = c.size(); 0 < i--;) {
-    BOOST_TEST(c.idAt(i) == c.valueAt(i).id);
+    // just check that the id is valid
+    BOOST_TEST(c.idAt(i) != GeometryID());
+    // check that something is actually stored by comparing with the default
+    BOOST_TEST(c.valueAt(i).value != Thing().value);
   }
   // test that invalid inputs actually fail
   BOOST_CHECK_THROW(c.idAt(c.size()), std::out_of_range);
@@ -112,17 +111,17 @@ BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
 }
 
 BOOST_AUTO_TEST_CASE(Find) {
-  Container c({
+  Container c = {
       // entry for volume 2, layer 4, sensitive 6
-      {makeId(2, 4, 6), -23.0},
+      {makeId(2, 4, 6), {-23.0}},
       // entry for volume 2, layer 8
-      {makeId(2, 8), 5.0},
+      {makeId(2, 8), {5.0}},
       // entry for the whole volume 2
-      {makeId(2), 1.0},
+      {makeId(2), {1.0}},
       // entry for volume 12, layer 16
       // NOTE no entry for the volume as a whole
-      {makeId(12, 16), -1.0},
-  });
+      {makeId(12, 16), {-1.0}},
+  };
 
   // basic checks
   BOOST_TEST(std::next(c.begin(), 4u) == c.end());
@@ -160,11 +159,11 @@ BOOST_AUTO_TEST_CASE(Find) {
 BOOST_AUTO_TEST_CASE(FindWithGlobalDefault) {
   Container c = {
       // global default entry
-      {makeId(), 1.0},
+      {makeId(), {1.0}},
       // entry for volume 2, layer 3
-      {makeId(2, 3), 2.0},
+      {makeId(2, 3), {2.0}},
       // entry for volume 4
-      {makeId(4), 4.0},
+      {makeId(4), {4.0}},
   };
 
   // basic checks

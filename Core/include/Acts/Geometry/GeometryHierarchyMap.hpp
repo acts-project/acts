@@ -13,21 +13,19 @@
 #include <initializer_list>
 #include <iterator>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Geometry/detail/DefaultGeometryIdGetter.hpp"
 
 namespace Acts {
 
-/// Store elements mapped into the geometry hierarchy.
+/// Store values mapped into the geometry hierarchy.
 ///
-/// @tparam value_t stored element type
-/// @tparam identifier_getter_t functor to access element geometry identifier.
-/// must be default-constructible and have no internal state.
+/// @tparam value_t stored value type
 ///
-/// The core functionality is to find an equivalent element for a given
-/// geometry identifier via
+/// The core functionality is to find an equivalent element, i.e. an
+/// identifier-value pair, for a given geometry identifier via
 ///
 ///     auto it = container.find(GeometryID(...));
 ///     if (it != container.end()) {
@@ -60,22 +58,23 @@ namespace Acts {
 /// must be updated. In addition, modifying an element in-place could change its
 /// identifier which would also break the lookup. Thus, the container can not be
 /// modified after construction to prevent misuse.
-template <typename value_t,
-          typename identifier_getter_t = detail::DefaultGeometryIdGetter>
+template <typename value_t>
 class GeometryHierarchyMap {
  public:
+  /// Combined geometry identifier and value element. Only used for input.
+  using InputElement = typename std::pair<GeometryID, value_t>;
   using Iterator = typename std::vector<value_t>::const_iterator;
   using Size = typename std::vector<value_t>::size_type;
   using Value = value_t;
 
   /// Construct the container from the given elements.
   ///
-  /// @param values input elements (must be unique with respect to identifier)
-  GeometryHierarchyMap(std::vector<Value>&& values);
+  /// @param elements input elements (must be unique with respect to identifier)
+  GeometryHierarchyMap(std::vector<InputElement> elements);
   /// Construct the container from an initializer list.
   ///
-  /// @param values input initializer list
-  GeometryHierarchyMap(std::initializer_list<Value> values);
+  /// @param elements input initializer list
+  GeometryHierarchyMap(std::initializer_list<InputElement> elements);
 
   // defaulted constructors and assignment operators
   GeometryHierarchyMap() = default;
@@ -85,9 +84,9 @@ class GeometryHierarchyMap {
   GeometryHierarchyMap& operator=(const GeometryHierarchyMap&) = default;
   GeometryHierarchyMap& operator=(GeometryHierarchyMap&&) = default;
 
-  /// Return an iterator pointing to the beginning of the stored elements.
+  /// Return an iterator pointing to the beginning of the stored values.
   Iterator begin() const { return m_values.begin(); }
-  /// Return an iterator pointing to the end of the stored elements.
+  /// Return an iterator pointing to the end of the stored values.
   Iterator end() const { return m_values.end(); }
   /// Check if any elements are stored.
   bool empty() const { return m_values.empty(); }
@@ -98,19 +97,19 @@ class GeometryHierarchyMap {
   ///
   /// @throws std::out_of_range for invalid indices
   GeometryID idAt(Size index) const { return m_ids.at(index); }
-  /// Access the i-th element in the container with bounds check.
+  /// Access the value of the i-th element in the container with bounds check.
   ///
   /// @throws std::out_of_range for invalid indices
   const Value& valueAt(Size index) const { return m_values.at(index); }
 
-  /// Find the most specific element for a given geometry identifier.
+  /// Find the most specific value for a given geometry identifier.
   ///
-  /// This can be either the element matching exactly to the given geometry id,
-  /// if it exists, or the element from the next available higher level within
-  /// the geometry hierachy.
+  /// This can be either from the element matching exactly to the given geometry
+  /// id, if it exists, or from the element for the next available higher level
+  /// within the geometry hierachy.
   ///
   /// @param id geometry identifier for which information is requested
-  /// @retval iterator to an existing element
+  /// @retval iterator to an existing value
   /// @retval `.end()` iterator if no matching element exists
   Iterator find(GeometryID id) const;
 
@@ -132,13 +131,12 @@ class GeometryHierarchyMap {
                 "Incompatible GeometryID hierarchy");
 
   using Identifier = GeometryID::Value;
-  using IdentifierGetter = identifier_getter_t;
 
-  std::vector<Value> m_values;
   // encoded ids for all elements for faster lookup.
   std::vector<Identifier> m_ids;
   // validity bit masks for the ids: which parts to use for comparison
   std::vector<Identifier> m_masks;
+  std::vector<Value> m_values;
 
   /// Construct a mask where all leading non-zero levels are set.
   static constexpr Identifier makeLeadingLevelsMask(GeometryID id) {
@@ -177,60 +175,75 @@ class GeometryHierarchyMap {
                                         Identifier mask) {
     return (lhs & mask) == (rhs & mask);
   }
+  /// Ensure identifier ordering and uniqueness.
+  template <typename iterator_t>
+  static void sortAndCheckDuplicates(iterator_t beg, iterator_t end);
 
-  /// Ensure ordering and uniqueness.
-  void sortAndCheckDuplicates() {
-    auto idLess = [=](const auto& lhs, const auto& rhs) {
-      return IdentifierGetter()(lhs) < IdentifierGetter()(rhs);
-    };
-    auto idEqual = [](const auto& lhs, const auto& rhs) {
-      return IdentifierGetter()(lhs) == IdentifierGetter()(rhs);
-    };
-    // ensure elements are sorted
-    std::sort(m_values.begin(), m_values.end(), idLess);
-    // check that all elements are unique
-    auto duplicate =
-        std::adjacent_find(m_values.begin(), m_values.end(), idEqual);
-    if (duplicate != m_values.end()) {
-      throw std::invalid_argument("Input elements contain duplicates");
-    }
-  }
-  /// Fill the lookup containers from the current values.
-  void fillLookup() {
-    m_ids.clear();
-    m_ids.reserve(m_values.size());
-    m_masks.clear();
-    m_masks.reserve(m_values.size());
-    IdentifierGetter getId;
-    for (const auto& element : m_values) {
-      m_ids.push_back(getId(element).value());
-      m_masks.push_back(makeLeadingLevelsMask(getId(element).value()));
-    }
-  }
+  /// Fill the container from the input elements.
+  ///
+  /// This assumes that the elements are ordered and unique with respect to
+  /// their identifiers.
+  template <typename iterator_t>
+  void fill(iterator_t beg, iterator_t end);
 };
 
 // implementations
 
-template <typename value_t, typename identifier_getter_t>
-inline GeometryHierarchyMap<value_t, identifier_getter_t>::GeometryHierarchyMap(
-    std::vector<Value>&& values)
-    : m_values(std::move(values)) {
-  sortAndCheckDuplicates();
-  fillLookup();
+template <typename value_t>
+inline GeometryHierarchyMap<value_t>::GeometryHierarchyMap(
+    std::vector<InputElement> elements) {
+  sortAndCheckDuplicates(elements.begin(), elements.end());
+  fill(elements.begin(), elements.end());
 }
 
-template <typename value_t, typename identifier_getter_t>
-inline GeometryHierarchyMap<value_t, identifier_getter_t>::GeometryHierarchyMap(
-    std::initializer_list<Value> values)
-    : GeometryHierarchyMap(std::vector<Value>(values.begin(), values.end())) {}
+template <typename value_t>
+inline GeometryHierarchyMap<value_t>::GeometryHierarchyMap(
+    std::initializer_list<InputElement> elements)
+    : GeometryHierarchyMap(
+          std::vector<InputElement>(elements.begin(), elements.end())) {}
 
-template <typename value_t, typename identifier_getter_t>
-inline auto GeometryHierarchyMap<value_t, identifier_getter_t>::find(
-    GeometryID id) const -> Iterator {
-  assert((m_values.size() == m_ids.size()) and
-         "Inconsistent container state: #elements != #ids");
-  assert((m_values.size() == m_masks.size()) and
-         "Inconsistent container state: #elements != #masks");
+template <typename value_t>
+template <typename iterator_t>
+inline void GeometryHierarchyMap<value_t>::sortAndCheckDuplicates(
+    iterator_t beg, iterator_t end) {
+  // ensure elements are sorted by identifier
+  std::sort(beg, end, [=](const auto& lhs, const auto& rhs) {
+    return lhs.first < rhs.first;
+  });
+  // check that all elements have unique identifier
+  auto dup = std::adjacent_find(beg, end, [](const auto& lhs, const auto& rhs) {
+    return lhs.first == rhs.first;
+  });
+  if (dup != end) {
+    throw std::invalid_argument("Input elements contain duplicates");
+  }
+}
+
+template <typename value_t>
+template <typename iterator_t>
+inline void GeometryHierarchyMap<value_t>::fill(iterator_t beg,
+                                                iterator_t end) {
+  const auto n = std::distance(beg, end);
+  m_ids.clear();
+  m_ids.reserve(n);
+  m_masks.clear();
+  m_masks.reserve(n);
+  m_values.clear();
+  m_values.reserve(n);
+  for (; beg != end; ++beg) {
+    m_ids.push_back(beg->first.value());
+    m_masks.push_back(makeLeadingLevelsMask(beg->first.value()));
+    m_values.push_back(std::move(beg->second));
+  }
+}
+
+template <typename value_t>
+inline auto GeometryHierarchyMap<value_t>::find(GeometryID id) const
+    -> Iterator {
+  assert((m_ids.size() == m_values.size()) and
+         "Inconsistent container state: #ids != # values");
+  assert((m_masks.size() == m_values.size()) and
+         "Inconsistent container state: #masks != #values");
 
   // we can not search for the element directly since the relevant one
   // might be stored at a higher level. ids for higher levels would always
@@ -250,7 +263,7 @@ inline auto GeometryHierarchyMap<value_t, identifier_getter_t>::find(
   // where | marks level boundaries. searching for either 2|3|4, 2|3|7, or
   // 2|4|x would first point to 2|3|4 and thus needs to go up the hierarchy.
   while (0 < i) {
-    // index always starts before item of interest due to upper bound search
+    // index always starts after item of interest due to upper bound search
     --i;
 
     // if the input id does not even match at the highest hierarchy level
@@ -275,7 +288,7 @@ inline auto GeometryHierarchyMap<value_t, identifier_getter_t>::find(
     }
   }
 
-  // all options are exhausted and not matching element was found.
+  // all options are exhausted and no matching element was found.
   return end();
 }
 
