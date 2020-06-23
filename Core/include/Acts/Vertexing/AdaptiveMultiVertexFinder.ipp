@@ -187,23 +187,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 }
 
 template <typename vfitter_t, typename sfinder_t>
-auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::estimateDeltaZ(
-    const BoundParameters& track, const Vector3D& vtxPos) const -> double {
-  Vector3D trackPos = track.position();
-
-  double phi = track.parameters()[ParID_t::ePHI];
-  double th = track.parameters()[ParID_t::eTHETA];
-
-  double X = trackPos[eX] - vtxPos.x();
-  double Y = trackPos[eY] - vtxPos.y();
-
-  double deltaZ = trackPos[eZ] - vtxPos.z() -
-                  1. / std::tan(th) * (X * std::cos(phi) + Y * std::sin(phi));
-
-  return deltaZ;
-}
-
-template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
     const InputTrack_t* track, const Vertex<InputTrack_t>& vtx,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
@@ -247,7 +230,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     auto params = m_extractParameters(*trk);
     // If track is too far away from vertex, do not consider checking the IP
     // significance
-    if (std::abs(estimateDeltaZ(params, vtx.position())) >
+    if (std::abs(params.position()[eZ] - vtx.position()[eZ]) >
         m_cfg.tracksMaxZinterval) {
       continue;
     }
