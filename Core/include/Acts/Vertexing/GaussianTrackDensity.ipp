@@ -24,14 +24,15 @@ Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
     double trialZ = track.z;
   
     auto [density, firstDerivative, secondDerivative] = trackDensityAndDerivatives(state, trialZ);
-    
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
     std::tie(maxPosition, maxDensity, maxSecondDerivative) = updateMaximum(trialZ, density, secondDerivative, maxPosition, maxDensity,
                   maxSecondDerivative);
+
     trialZ += stepSize(density, firstDerivative, secondDerivative);
     std::tie(density, firstDerivative, secondDerivative) = trackDensityAndDerivatives(state, trialZ);
+
     if (secondDerivative >= 0. || density <= 0.) {
       continue;
     }
@@ -73,7 +74,7 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(
     const double covDD = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0);
     const double covZZ = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
     const double covDZ = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_Z0);
-    const double covDeterminant = perigeeCov.determinant();
+    const double covDeterminant = (perigeeCov.block<2,2>(0,0)).determinant();
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
     if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||

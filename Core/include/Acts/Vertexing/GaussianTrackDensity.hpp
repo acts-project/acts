@@ -83,10 +83,6 @@ class GaussianTrackDensity {
     State(unsigned int nTracks) { trackEntries.reserve(nTracks); }
     // Vector to cache track information
     std::vector<TrackEntry> trackEntries;
-
-    std::map<std::tuple<double, double, double, double, double, double, double>,
-             std::tuple<double, double, double>>
-        testMap;
   };
 
   /// Default constructor
@@ -185,7 +181,7 @@ class GaussianTrackDensity {
     void addTrackToDensity(const TrackEntry& entry);
 
     // Return density, first and second derivatives
-    inline std::array<double, 3> densityAndDerivatives() const { 
+    inline std::tuple<double, double, double> densityAndDerivatives() const {
       return {m_density, m_firstDerivative, m_secondDerivative};
     }
 
