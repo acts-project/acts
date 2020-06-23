@@ -58,15 +58,14 @@ void EventAction::EndOfEventAction(const G4Event* event) {
 
 /// Clear the recorded data.
 void EventAction::clear() {
-  //
+  m_materialTracks.clear();
 }
 
 /// Access the recorded material tracks.
 ///
 /// This only contains valid data after the end-of-event action has been
 /// executed.
-std::vector<Acts::RecordedMaterialTrack> EventAction::materialTracks() {
-  auto materialTracks = m_materialTracks;
-  m_materialTracks.clear();
-  return materialTracks;
+const std::vector<Acts::RecordedMaterialTrack>& EventAction::materialTracks()
+    const {
+  return m_materialTracks;
 }
