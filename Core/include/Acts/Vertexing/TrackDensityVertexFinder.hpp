@@ -31,7 +31,9 @@ namespace Acts {
 ///
 /// @tparam vfitter_t The vertex fitter type (needed to fulfill concept)
 /// @tparam track_density_t The track density type
-template <typename vfitter_t, typename track_density_t = GaussianTrackDensity>
+template <typename vfitter_t,
+          typename track_density_t =
+              GaussianTrackDensity<typename vfitter_t::InputTrack_t>>
 class TrackDensityVertexFinder {
   // Provided vertex fitter type should comply with the VertexFitterConcept
   // to ensure providing an input track type InputTrack_t

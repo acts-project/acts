@@ -8,35 +8,81 @@
 
 #pragma once
 
-#include "Acts/Vertexing/TrackDensity.hpp"
+#include <map>
+#include <set>
+#include "Acts/EventData/TrackParameters.hpp"
 
 namespace Acts {
 
 /// @class GaussianTrackDensity
 ///
-/// @brief Class to model tracks as 2D Gaussian-shaped density functions
-/// based on their d0 and z0 perigee parameters (mean value)
-/// and covariance matrices (determining the width of the function)
+/// @brief Class to model tracks as 2D density functions based on
+/// their d0 and z0 perigee parameters (mean value) and covariance
+/// matrices (determining the width of the function)
+template <typename input_track_t>
 class GaussianTrackDensity {
  public:
-  /// @brief The State struct
-  struct State {
-    State(unsigned int nTracks) : trackDensityState(nTracks) {}
-    // The track density
-    // Defaulted to Gaussian shaped density function
-    TrackDensity trackDensity;
+  /// @brief Struct to store information for a single track
+  struct TrackEntry {
+    /// @brief Default constructor
+    TrackEntry() = default;
+    /// @brief Constructor initializing all members
+    /// @param z Trial z position
+    /// @param c0in z-independent term in exponent
+    /// @param c1in Linear coefficient in exponent
+    /// @param c2in Quadratic coefficient in exponent
+    /// @param zMin The lower bound
+    /// @param zMax The upper bound
+    TrackEntry(double z, double c0in, double c1in, double c2in, double zMin,
+               double zMax)
+        : z(z),
+          c0(c0in),
+          c1(c1in),
+          c2(c2in),
+          lowerBound(zMin),
+          upperBound(zMax) {}
 
-    // The track density state
-    TrackDensity::State trackDensityState;
+    double z = 0;
+    // Cached information for a single track
+    // z-independent term in exponent
+    double c0 = 0;
+    // linear coefficient in exponent
+    double c1 = 0;
+    // quadratic coefficient in exponent
+    double c2 = 0;
+    // The lower bound
+    double lowerBound = 0;
+    // The upper bound
+    double upperBound = 0;
   };
 
   /// @brief The Config struct
   struct Config {
-    // Maximum d0 impact parameter significance to use a track
-    double d0MaxSignificance = 3.5;
+    Config(double d0Sig = 3.5, double z0Sig = 12.)
+        : d0MaxSignificance(d0Sig),
+          z0MaxSignificance(z0Sig),
+          d0SignificanceCut(d0Sig * d0Sig),
+          z0SignificanceCut(z0Sig * z0Sig) {}
 
+    // Assumed shape of density function:
+    // Gaussian (true) or parabolic (false)
+    bool isGaussianShaped = true;
+
+    // Maximum d0 impact parameter significance to use a track
+    double d0MaxSignificance;
     // Maximum z0 impact parameter significance to use a track
-    double z0MaxSignificance = 12.;
+    double z0MaxSignificance;
+    // Correspondig cut values
+    const double d0SignificanceCut;
+    const double z0SignificanceCut;
+  };
+
+  /// @brief The State struct
+  struct State {
+    // Constructor with size track map
+    State(unsigned int nTracks) { trackEntries.reserve(nTracks); }
+    // Vector to cache track information
+    std::vector<TrackEntry> trackEntries;
   };
 
   /// Default constructor
@@ -45,33 +91,110 @@ class GaussianTrackDensity {
   /// Constructor with config
   GaussianTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
-  /// @brief Calculates the global maximum
+  /// @brief Calculates z position of global maximum with Gaussian width
+  /// for density function.
+  /// Strategy:
+  /// The global maximum must be somewhere near a track.
+  /// Since we can calculate the first and second derivatives, at each point we
+  /// can determine a) whether the function is curved up (minimum) or down
+  /// (maximum) b) the distance to nearest maximum, assuming either Newton
+  /// (parabolic) or Gaussian local behavior.
+  /// For each track where the second derivative is negative, find step to
+  /// nearest maximum, take that step and then do one final refinement. The
+  /// largest density encountered in this procedure (after checking all tracks)
+  /// is considered the maximum.
   ///
-  /// @param trackList The list of tracks
-  /// @param state The GaussianTrackDensity state
+  /// @param state The track density state
+  /// @param trackList All input tracks
+  /// @param extractParameters Function extracting BoundParameters from
+  /// InputTrack
   ///
-  /// @return The z position of the maximum
-  double globalMaximum(const std::vector<Acts::BoundParameters>& trackList,
-                       State& state) const;
-
-  /// @brief Calculates the global maximum with width
-  ///
-  /// @param trackList The list of tracks
-  /// @param state The GaussianTrackDensity state
-  ///
-  /// @return The z position of the maximum and its width
+  /// @return Pair of position of global maximum and Gaussian width
   std::pair<double, double> globalMaximumWithWidth(
-      const std::vector<Acts::BoundParameters>& trackList, State& state) const;
+      State& state, const std::vector<const input_track_t*>& trackList,
+      const std::function<BoundParameters(input_track_t)>& extractParameters)
+      const;
+
+  /// @brief Calculates the z position of the global maximum
+  ///
+  /// @param state The track density state
+  /// @param trackList All input tracks
+  /// @param extractParameters Function extracting BoundParameters from
+  /// InputTrack
+  ///
+  /// @return z position of the global maximum
+  double globalMaximum(State& state,
+                       const std::vector<const input_track_t*>& trackList,
+                       const std::function<BoundParameters(input_track_t)>&
+                           extractParameters) const;
 
  private:
   /// The configuration
   Config m_cfg;
 
-  /// @brief Adds tracks based on a significance cut
+  /// @brief Add a track to the set being considered
   ///
-  /// @param trackList The list of tracks
-  /// @param state The GaussianTrackDensity state
-  void addTracks(const std::vector<Acts::BoundParameters>& trackList,
-                 State& state) const;
+  /// @param state The track density state
+  /// @param trackList All input tracks
+  /// @param extractParameters Function extracting BoundParameters from
+  /// InputTrack
+  void addTracks(State& state,
+                 const std::vector<const input_track_t*>& trackList,
+                 const std::function<BoundParameters(input_track_t)>&
+                     extractParameters) const;
+
+  /// @brief Evaluate the density function and its two first
+  /// derivatives at the specified coordinate along the beamline
+  ///
+  /// @param state The track density state
+  /// @param z z-position along the beamline
+  ///
+  /// @return Track density, first and second derivatives
+  std::tuple<double, double, double> trackDensityAndDerivatives(State& state,
+                                                                double z) const;
+
+  /// @brief Update the current maximum values
+  ///
+  /// @param newZ The new z value
+  /// @param newValue The new value at z position
+  /// @param newSecondDerivative The new second derivative
+  /// @return The max z position, the max value at z position, the max second
+  /// derivative
+  std::tuple<double, double, double> updateMaximum(
+      double newZ, double newValue, double newSecondDerivative, double maxZ,
+      double maxValue, double maxSecondDerivative) const;
+
+  /// @brief Calculates the step size
+  ///
+  /// @param y Position value
+  /// @param dy First derivative
+  /// @param ddy Second derivative
+  ///
+  /// @return The step size
+  double stepSize(double y, double dy, double ddy) const;
+
+  // Helper class to evaluate and store track density at specific position
+  class GaussianTrackDensityStore {
+   public:
+    // Initialise at the z coordinate at which the density is to be evaluated
+    GaussianTrackDensityStore(double z_coordinate) : m_z(z_coordinate) {}
+
+    // Add the contribution of a single track to the density
+    void addTrackToDensity(const TrackEntry& entry);
+
+    // Return density, first and second derivatives
+    inline std::tuple<double, double, double> densityAndDerivatives() const {
+      return {m_density, m_firstDerivative, m_secondDerivative};
+    }
+
+   private:
+    // Store density and derivatives for z position m_z
+    double m_z;
+    double m_density{0};
+    double m_firstDerivative{0};
+    double m_secondDerivative{0};
+  };
 };
+
+#include "Acts/Vertexing/GaussianTrackDensity.ipp"
 }  // namespace Acts
