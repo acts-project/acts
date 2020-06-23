@@ -244,17 +244,20 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<void> {
   for (const auto& trk : tracks) {
+    auto params = m_extractParameters(*trk);
+    // If track is too far away from vertex, do not consider checking the IP
+    // significance
+    if (std::abs(estimateDeltaZ(params, vtx.position())) >
+        m_cfg.tracksMaxZinterval) {
+      continue;
+    }
     auto sigRes = getIPSignificance(trk, vtx, vertexingOptions);
     if (!sigRes.ok()) {
       return sigRes.error();
     }
     double ipSig = *sigRes;
-    auto params = m_extractParameters(*trk);
-    if ((std::abs(estimateDeltaZ(params, vtx.position())) <
-         m_cfg.tracksMaxZinterval) &&
-        (ipSig < m_cfg.tracksMaxSignificance)) {
+    if (ipSig < m_cfg.tracksMaxSignificance) {
       // Create TrackAtVertex objects, unique for each (track, vertex) pair
-      // fitterState.tracksAtVerticesMap.clear();
       fitterState.tracksAtVerticesMap.emplace(std::make_pair(trk, &vtx),
                                               TrackAtVertex(params, trk));
 
@@ -578,12 +581,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     // Update fitter state with removed vertex candidate
     fitterState.removeVertexFromMultiMap(vtx);
 
-    // TODO: clean tracksAtVerticesMap maybe here? i.e. remove all entries
-    // with old vertex?
-
     // Do the fit with removed vertex
-    auto fitResult = m_cfg.vertexFitter.fit(fitterState, allVerticesPtr,
-                                            m_cfg.linearizer, vertexingOptions);
+    auto fitResult = m_cfg.vertexFitter.addVtxToFit(
+        fitterState, vtx, m_cfg.linearizer, vertexingOptions);
     if (!fitResult.ok()) {
       return fitResult.error();
     }

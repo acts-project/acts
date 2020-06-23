@@ -78,7 +78,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
+  using SeedFinder =
+      TrackDensityVertexFinder<Fitter, GaussianTrackDensity<BoundParameters>>;
 
   SeedFinder seedFinder;
 
@@ -294,7 +295,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Fitter fitter(fitterCfg, extractParameters);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
+  using SeedFinder =
+      TrackDensityVertexFinder<Fitter, GaussianTrackDensity<InputTrack>>;
 
   SeedFinder seedFinder(extractParameters);
 
@@ -496,7 +498,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  // using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
+  // using SeedFinder = TrackDensityVertexFinder<Fitter, TrackDensity>;
   using SeedFinder = GridDensityVertexFinder<2000, 35>;
   SeedFinder::Config seedFinderCfg;
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
