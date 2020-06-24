@@ -28,9 +28,10 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     }
     if (not couldRemoveTracks) {
       // No tracks were removed anymore
-      // Return empty seed
+      // Return empty seed, i.e. vertex at constraint position
+      // (Note: Upstream finder should check for this break condition)
       std::vector<Vertex<InputTrack_t>> seedVec{
-          Vertex<InputTrack_t>(Vector3D(0, 0, 0))};
+          vertexingOptions.vertexConstraint};
       return seedVec;
     }
   } else {
