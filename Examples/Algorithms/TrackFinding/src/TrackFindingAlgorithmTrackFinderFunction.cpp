@@ -42,8 +42,8 @@ FW::TrackFindingAlgorithm::TrackFinderFunction
 FW::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
-  using Updater = Acts::GainMatrixUpdater<Acts::BoundParameters>;
-  using Smoother = Acts::GainMatrixSmoother<Acts::BoundParameters>;
+  using Updater = Acts::GainMatrixUpdater;
+  using Smoother = Acts::GainMatrixSmoother;
 
   // unpack the magnetic field variant and instantiate the corresponding track
   // finder.

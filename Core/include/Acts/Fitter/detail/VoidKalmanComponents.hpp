@@ -30,19 +30,6 @@ struct VoidKalmanComponents {
                                    const parameters_t& /*pars*/) const {
     return m;
   }
-
-  /// @brief void measurement converter only moves the
-  /// the measurement through for further processing
-  ///
-  /// @tparam measurement_container_t Type of the measurement
-  ///
-  /// @param ms Measurements to be moved through
-  ///
-  /// @return moved measurements
-  template <typename measurements_t>
-  Result<measurements_t> operator()(measurements_t ms) const {
-    return std::move(ms);
-  }
 };
 
 /// @brief Void measurement calibrator for filtering

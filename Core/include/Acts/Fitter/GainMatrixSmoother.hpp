@@ -23,7 +23,6 @@ namespace Acts {
 ///
 /// @tparam parameters_t Type of the track parameters
 /// @tparam jacobian_t Type of the Jacobian
-template <typename parameters_t>
 class GainMatrixSmoother {
  public:
   /// @brief Gain Matrix smoother implementation
@@ -48,15 +47,14 @@ class GainMatrixSmoother {
   ///
   /// @return The smoothed track parameters at the first measurement state
   template <typename source_link_t>
-  Result<parameters_t> operator()(const GeometryContext& gctx,
-                                  MultiTrajectory<source_link_t>& trajectory,
-                                  size_t entryIndex) const {
+  Result<void> operator()(const GeometryContext& gctx,
+                          MultiTrajectory<source_link_t>& trajectory,
+                          size_t entryIndex) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
-    // using ParVector_t = typename parameters_t::ParVector_t;
-    using CovMatrix = typename parameters_t::CovMatrix_t;
-    using GainMatrix = CovMatrix;
+    using Matrix =
+        ActsSymMatrixD<MultiTrajectory<source_link_t>::ParametersSize>;
 
     // For the last state: smoothed is filtered - also: switch to next
     ACTS_VERBOSE("Getting previous track state");
@@ -66,7 +64,7 @@ class GainMatrixSmoother {
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
     // Smoothing gain matrix
-    GainMatrix G;
+    Matrix G;
 
     // make sure there is more than one track state
     std::optional<std::error_code> error{std::nullopt};  // assume ok
@@ -135,8 +133,8 @@ class GainMatrixSmoother {
         // If not, make one (could do more) attempt to replace it with the
         // nearest semi-positive def matrix,
         // but it could still be non semi-positive
-        CovMatrix smoothedCov = ts.smoothedCovariance();
-        if (not detail::covariance_helper<CovMatrix>::validate(smoothedCov)) {
+        Matrix smoothedCov = ts.smoothedCovariance();
+        if (not detail::covariance_helper<Matrix>::validate(smoothedCov)) {
           ACTS_DEBUG(
               "Smoothed covariance is not positive definite. Could result in "
               "negative covariance!");
@@ -155,7 +153,7 @@ class GainMatrixSmoother {
     }
 
     // construct parameters from last track state
-    return prev_ts.smoothedParameters(gctx);
+    return Result<void>::success();
   }
 
   /// Pointer to a logger that is owned by the parent, KalmanFilter
