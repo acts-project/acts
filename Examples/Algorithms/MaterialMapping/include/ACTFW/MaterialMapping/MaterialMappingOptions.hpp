@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,10 +32,15 @@ void addMaterialMappingOptions(aopt_t& opt) {
                     "Collection name of the material tracks for reading.")(
       "mat-mapping-emptybins", po::value<bool>()->default_value(true),
       "Empty bin correction (recommended). Corrects for vaccuum/emtpy "
-      "assigments.")("mat-mapping-type",
-                     po::value<std::string>()->default_value("surface"),
-                     "Either surface (default) or volume, element on which the "
-                     "material is mapped.");
+      "assigments.")("mat-mapping-surfaces",
+                     po::value<bool>()->default_value(true),
+                     "Map the material onto the selected surfaces")(
+      "mat-mapping-volumes", po::value<bool>()->default_value(false),
+      "Map the material into the selected material volumes")(
+      "mat-mapping-volume-stepsize",
+      po::value<float>()->default_value(std::numeric_limits<float>::infinity()),
+      "Step size of the sampling of volume material for the mapping "
+      "(should be smaller than the size of the bins in depth)");
 }
 
 }  // namespace Options
