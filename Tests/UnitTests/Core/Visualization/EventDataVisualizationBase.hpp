@@ -254,8 +254,8 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
 
   const Surface* rSurface = &rStart.referenceSurface();
 
-  using Updater = GainMatrixUpdater<BoundParameters>;
-  using Smoother = GainMatrixSmoother<BoundParameters>;
+  using Updater = GainMatrixUpdater;
+  using Smoother = GainMatrixSmoother;
   using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
 
   KalmanFitter kFitter(rPropagator,

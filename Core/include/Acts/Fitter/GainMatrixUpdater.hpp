@@ -23,11 +23,6 @@
 namespace Acts {
 
 /// @brief Update step of Kalman Filter using gain matrix formalism
-///
-/// @tparam parameters_t Type of the parameters to be filtered
-/// @tparam jacobian_t Type of the Transport jacobian
-///
-template <typename parameters_t>
 class GainMatrixUpdater {
  public:
   /// Explicit constructor
@@ -62,9 +57,6 @@ class GainMatrixUpdater {
         typename MultiTrajectory<SourceLink>::TrackStateProxy;
     static_assert(std::is_same_v<track_state_t, TrackStateProxy>,
                   "Given track state type is not a track state proxy");
-
-    using CovMatrix_t = typename parameters_t::CovMatrix_t;
-    using ParVector_t = typename parameters_t::ParVector_t;
 
     // we should definitely have an uncalibrated measurement here
     assert(trackState.hasUncalibrated());
