@@ -58,7 +58,7 @@ void EventAction::EndOfEventAction(const G4Event* event) {
 
 /// Clear the recorded data.
 void EventAction::clear() {
-  //
+  m_materialTracks.clear();
 }
 
 /// Access the recorded material tracks.
