@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   ts.pathLength() = 0.;
 
   // Gain matrix update and filtered state
-  GainMatrixUpdater<BoundParameters> gmu;
+  GainMatrixUpdater gmu;
 
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(ts.hasCalibrated());
