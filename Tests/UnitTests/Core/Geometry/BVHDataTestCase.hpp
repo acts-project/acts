@@ -136,7 +136,7 @@ BOOST_DATA_TEST_CASE(
 
   Stepper stepper{};
   Navigator navigator(tg);
-  PropagatorType propagator(std::move(stepper), navigator);
+  PropagatorType propagator(std::move(stepper), std::move(navigator));
 
   using DebugOutput = Acts::DebugOutputActor;
   using ActionList = Acts::ActionList<SteppingLogger, DebugOutput>;

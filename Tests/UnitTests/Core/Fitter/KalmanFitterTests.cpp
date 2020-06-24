@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   using MeasurementPropagator = Propagator<StraightLineStepper, Navigator>;
 
   // Build propagator for the measurement creation
-  MeasurementPropagator mPropagator(mStepper, mNavigator);
+  MeasurementPropagator mPropagator(mStepper, std::move(mNavigator));
   Vector3D mPos(-3_m, 0., 0.), mMom(1_GeV, 0., 0);
   SingleCurvilinearTrackParameters<NeutralPolicy> mStart(std::nullopt, mPos,
                                                          mMom, 42_ns);
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   using RecoStepper = EigenStepper<ConstantBField>;
   RecoStepper rStepper(bField);
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
-  RecoPropagator rPropagator(rStepper, rNavigator);
+  RecoPropagator rPropagator(rStepper, std::move(rNavigator));
 
   // Set initial parameters for the particle track
   Covariance cov;
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   MinimalOutlierFinder outlierFinder;
   outlierFinder.measurementSignificanceCutoff = 0.05;
 
-  KalmanFitter kFitter(rPropagator,
+  KalmanFitter kFitter(std::move(rPropagator),
                        getDefaultLogger("KalmanFilter", Logging::VERBOSE));
 
   KalmanFitterOptions<MinimalOutlierFinder> kfOptions(

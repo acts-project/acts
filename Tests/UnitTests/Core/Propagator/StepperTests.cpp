@@ -522,7 +522,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviVac);
+      prop(es, std::move(naviVac));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -551,12 +551,17 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOptsDef.maxSteps = 100;
   propOptsDef.maxStepSize = 1.5_m;
 
+  naviVac = Navigator{vacuum};
+  naviVac.resolvePassive = true;
+  naviVac.resolveMaterial = true;
+  naviVac.resolveSensitive = true;
+
   EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
       bField);
   Propagator<
       EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>>,
       Navigator>
-      propDef(esDef, naviVac);
+      propDef(esDef, std::move(naviVac));
 
   // Launch and collect results
   const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
@@ -636,7 +641,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviMat);
+      prop(es, std::move(naviMat));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -674,13 +679,18 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOptsDense.maxStepSize = 1.5_m;
   propOptsDense.debug = true;
 
+  naviMat = Navigator{material};
+  naviMat.resolvePassive = true;
+  naviMat.resolveMaterial = true;
+  naviMat.resolveSensitive = true;
+
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
       esDense(bField);
   Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DenseEnvironmentExtension>>,
              Navigator>
-      propDense(esDense, naviMat);
+      propDense(esDense, std::move(naviMat));
 
   // Launch and collect results
   const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
@@ -699,6 +709,11 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   }
 
   ////////////////////////////////////////////////////////////////////
+  //
+  naviMat = Navigator{material};
+  naviMat.resolvePassive = true;
+  naviMat.resolveMaterial = true;
+  naviMat.resolveSensitive = true;
 
   // Re-launch the configuration with magnetic field
   bField.setField(0., 1_T, 0.);
@@ -712,7 +727,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      propB(esB, naviMat);
+      propB(esB, std::move(naviMat));
 
   const auto& resultB = propB.propagate(sbtp, propOptsDense).value();
   const StepCollector::this_result& stepResultB =
@@ -808,7 +823,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviDet);
+      prop(es, std::move(naviDet));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -857,13 +872,18 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDef.maxStepSize = 1.5_m;
   propOptsDef.debug = false;
 
+  naviDet = Navigator{det};
+  naviDet.resolvePassive = true;
+  naviDet.resolveMaterial = true;
+  naviDet.resolveSensitive = true;
+
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
       bField);
   Propagator<
       EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>>,
       Navigator>
-      propDef(esDef, naviDet);
+      propDef(esDef, std::move(naviDet));
 
   // Launch and collect results
   const auto& resultDef =
@@ -928,13 +948,18 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDense.maxStepSize = 1.5_m;
   propOptsDense.tolerance = 1e-8;
 
+  naviDet = Navigator{det};
+  naviDet.resolvePassive = true;
+  naviDet.resolveMaterial = true;
+  naviDet.resolveSensitive = true;
+
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
       esDense(bField);
   Propagator<EigenStepper<ConstantBField,
                           StepperExtensionList<DenseEnvironmentExtension>>,
              Navigator>
-      propDense(esDense, naviDet);
+      propDense(esDense, std::move(naviDet));
 
   // Launch and collect results
   const auto& resultDense =
@@ -1076,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviVac);
+      prop(es, std::move(naviVac));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();

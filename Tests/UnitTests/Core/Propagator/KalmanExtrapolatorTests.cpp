@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   using Stepper = EigenStepper<ConstantBField>;
   Stepper stepper(bField);
   using Propagator = Propagator<Stepper, Navigator>;
-  Propagator propagator(stepper, navigator);
+  Propagator propagator(stepper, std::move(navigator));
 
   // Set initial parameters for the particle track
   Covariance cov;

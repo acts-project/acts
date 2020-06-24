@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   using MeasurementPropagator = Propagator<StraightLineStepper, Navigator>;
 
   // Build propagator for the measurement creation
-  MeasurementPropagator mPropagator(mStepper, mNavigator);
+  MeasurementPropagator mPropagator(mStepper, std::move(mNavigator));
 
   // Create action list for the measurement creation
   using MeasurementActions = ActionList<MeasurementCreator, DebugOutput>;
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   using RecoStepper = EigenStepper<ConstantBField>;
   RecoStepper rStepper(bField);
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
-  RecoPropagator rPropagator(rStepper, rNavigator);
+  RecoPropagator rPropagator(rStepper, std::move(rNavigator));
 
   using Updater = GainMatrixUpdater;
   using Smoother = GainMatrixSmoother;
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
       {makeId(3), {8.0, 5}},
   };
   CombinatorialKalmanFilter cKF(
-      rPropagator,
+      std::move(rPropagator),
       getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE));
 
   // Run the CombinaltorialKamanFitter for track finding from different starting

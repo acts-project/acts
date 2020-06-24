@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Construct a simple propagation through the detector
   StraightLineStepper sls;
   Navigator nav(std::move(detector));
-  Propagator<StraightLineStepper, Navigator> prop(sls, nav);
+  Propagator<StraightLineStepper, Navigator> prop(sls, std::move(nav));
 
   // Set some start parameters
   Vector3D pos(0., 0., 0.);
