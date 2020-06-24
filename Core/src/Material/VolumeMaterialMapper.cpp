@@ -313,9 +313,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         float remainder = rmIter->materialProperties.thickness() -
                           m_cfg.mappingStep * volumeStep;
         properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
-        mState.recordedMaterial[volIter->volume->geoID()].push_back(
-            std::pair(properties, rmIter->position));
-        for (int step = 1; step <= volumeStep; step++) {
+        for (int step = 0; step <= volumeStep; step++) {
           // Create additional extrapolated point for the grid mapping
           extraDirection = rmIter->direction;
           extraDirection =

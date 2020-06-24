@@ -13,12 +13,12 @@
 void Acts::AccumulatedVolumeMaterial::accumulate(
     const MaterialProperties& mat) {
   // Replace the vacuum by matter or add matter to matter
-  if (m_totalX0 == std::numeric_limits<float>::infinity()) {
+  if (m_totalX0 == std::numeric_limits<double>::infinity()) {
     m_totalX0 = mat.thickness() / mat.material().X0();
   } else {
     m_totalX0 += mat.thickness() / mat.material().X0();
   }
-  if (m_totalL0 == std::numeric_limits<float>::infinity()) {
+  if (m_totalL0 == std::numeric_limits<double>::infinity()) {
     m_totalL0 = mat.thickness() / mat.material().L0();
   } else {
     m_totalL0 += mat.thickness() / mat.material().L0();
