@@ -14,22 +14,23 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
-    // Bool to check if removable tracks, that pass selection, still exist 
+    // Bool to check if removable tracks, that pass selection, still exist
     bool couldRemoveTracks = false;
     for (auto trk : state.tracksToRemove) {
       if (not state.trackSelectionMap.at(trk)) {
         // Track was never added to grid, so cannot remove it
         continue;
       }
-      couldRemoveTracks = true; 
+      couldRemoveTracks = true;
       auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
       m_cfg.gridDensity.removeTrackGridFromMainGrid(
           binAndTrackGrid.first, binAndTrackGrid.second, state.mainGrid);
     }
-    if(not couldRemoveTracks){
+    if (not couldRemoveTracks) {
       // No tracks were removed anymore
       // Return empty seed
-      std::vector<Vertex<InputTrack_t>> seedVec{Vertex<InputTrack_t>(Vector3D(0,0,0))};
+      std::vector<Vertex<InputTrack_t>> seedVec{
+          Vertex<InputTrack_t>(Vector3D(0, 0, 0))};
       return seedVec;
     }
   } else {
@@ -130,6 +131,6 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
   if (discriminant < 0) {
     return false;
   }
-  
+
   return true;
 }
