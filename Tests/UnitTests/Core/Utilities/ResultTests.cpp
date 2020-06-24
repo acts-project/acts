@@ -190,7 +190,6 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     BOOST_CHECK_EQUAL(*res, 46.);
     BOOST_CHECK_EQUAL(res.value(), 46u);
 
-
     Result res2(ec);
     BOOST_CHECK(!res2.ok());
     BOOST_CHECK_EQUAL(res2.error(), ec);
