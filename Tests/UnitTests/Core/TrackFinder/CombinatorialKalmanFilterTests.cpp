@@ -286,8 +286,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
   RecoPropagator rPropagator(rStepper, rNavigator);
 
-  using Updater = GainMatrixUpdater<BoundParameters>;
-  using Smoother = GainMatrixSmoother<BoundParameters>;
+  using Updater = GainMatrixUpdater;
+  using Smoother = GainMatrixSmoother;
   using SourceLinkSelector = CKFSourceLinkSelector;
   using CombinatorialKalmanFilter =
       CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother,

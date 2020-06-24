@@ -361,8 +361,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   const Surface* rSurface = &rStart.referenceSurface();
 
-  using Updater = GainMatrixUpdater<BoundParameters>;
-  using Smoother = GainMatrixSmoother<BoundParameters>;
+  using Updater = GainMatrixUpdater;
+  using Smoother = GainMatrixSmoother;
   using KalmanFitter =
       KalmanFitter<RecoPropagator, Updater, Smoother, MinimalOutlierFinder>;
 
