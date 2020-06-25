@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// MaterialMapping.cpp
-///////////////////////////////////////////////////////////////////
 
 #include "ACTFW/MaterialMapping/MaterialMapping.hpp"
 
@@ -36,7 +32,8 @@ FW::MaterialMapping::MaterialMapping(const FW::MaterialMapping::Config& cnf,
     // Generate and retrieve the central cache object
     m_mappingState = m_cfg.materialSurfaceMapper->createState(
         m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.trackingGeometry);
-  } else if (m_cfg.materialVolumeMapper) {
+  }
+  if (m_cfg.materialVolumeMapper) {
     // Generate and retrieve the central cache object
     m_mappingStateVol = m_cfg.materialVolumeMapper->createState(
         m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.trackingGeometry);
@@ -46,27 +43,42 @@ FW::MaterialMapping::MaterialMapping(const FW::MaterialMapping::Config& cnf,
 FW::MaterialMapping::~MaterialMapping() {
   Acts::DetectorMaterialMaps detectorMaterial;
 
-  if (m_cfg.materialSurfaceMapper) {
+  if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
     // Finalize all the maps using the cached state
     m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
+    m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
     // Loop over the state, and collect the maps for surfaces
     for (auto& [key, value] : m_mappingState.surfaceMaterial) {
       detectorMaterial.first.insert({key, std::move(value)});
     }
     // Loop over the state, and collect the maps for volumes
-    for (auto& [key, value] : m_mappingState.volumeMaterial) {
-      detectorMaterial.second.insert({key, std::move(value)});
-    }
-  } else if (m_cfg.materialVolumeMapper) {
-    // Finalize all the maps using the cached state
-    m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
-    // Loop over the state, and collect the maps for surfaces
-    for (auto& [key, value] : m_mappingStateVol.surfaceMaterial) {
-      detectorMaterial.first.insert({key, std::move(value)});
-    }
-    // Loop over the state, and collect the maps for volumes
     for (auto& [key, value] : m_mappingStateVol.volumeMaterial) {
       detectorMaterial.second.insert({key, std::move(value)});
+    }
+  } else {
+    if (m_cfg.materialSurfaceMapper) {
+      // Finalize all the maps using the cached state
+      m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
+      // Loop over the state, and collect the maps for surfaces
+      for (auto& [key, value] : m_mappingState.surfaceMaterial) {
+        detectorMaterial.first.insert({key, std::move(value)});
+      }
+      // Loop over the state, and collect the maps for volumes
+      for (auto& [key, value] : m_mappingState.volumeMaterial) {
+        detectorMaterial.second.insert({key, std::move(value)});
+      }
+    }
+    if (m_cfg.materialVolumeMapper) {
+      // Finalize all the maps using the cached state
+      m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
+      // Loop over the state, and collect the maps for surfaces
+      for (auto& [key, value] : m_mappingStateVol.surfaceMaterial) {
+        detectorMaterial.first.insert({key, std::move(value)});
+      }
+      // Loop over the state, and collect the maps for volumes
+      for (auto& [key, value] : m_mappingStateVol.volumeMaterial) {
+        detectorMaterial.second.insert({key, std::move(value)});
+      }
     }
   }
   // Loop over the available writers and write the maps
@@ -94,7 +106,8 @@ FW::ProcessCode FW::MaterialMapping::execute(
 
     context.eventStore.add(m_cfg.mappingMaterialCollection,
                            std::move(mtrackCollection));
-  } else if (m_cfg.materialVolumeMapper) {
+  }
+  if (m_cfg.materialVolumeMapper) {
     // Write to the collection to the EventStore
     std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
         context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
