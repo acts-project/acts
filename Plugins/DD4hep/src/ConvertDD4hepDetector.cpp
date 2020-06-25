@@ -343,7 +343,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.trackingVolumeHelper = volumeHelper;
     cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
-    cvbConfig.volumeMaterial = volumeMaterial;
+    // cvbConfig.volumeMaterial = volumeMaterial;
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
     auto cylinderVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
@@ -481,7 +481,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.trackingVolumeHelper = volumeHelper;
     cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
-    cvbConfig.volumeMaterial = volumeMaterial;
+    // cvbConfig.volumeMaterial = volumeMaterial;
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
     cvbConfig.ctVolumeBuilder = dd4hepVolumeBuilder;
     auto cylinderVolumeBuilder =
