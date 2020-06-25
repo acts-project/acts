@@ -72,13 +72,13 @@ class SingleFreeTrackParameters {
 
   /// @brief Access to a single parameter
   ///
-  /// @tparam par Identifier of the parameter index which will be retrieved
+  /// @tparam kIndex Identifier of the parameter index which will be retrieved
   ///
   /// @return Value of the requested parameter
-  template <FreeParametersIndices par,
-            std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t get()
+  template <FreeParametersIndices kIndex,
+            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t get()
                 const {
-    return m_oParameters.template getParameter<par>();
+    return m_oParameters.template getParameter<kIndex>();
   }
 
   /// @brief Access track parameter uncertainty
@@ -87,10 +87,10 @@ class SingleFreeTrackParameters {
   /// be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
-  template <FreeParametersIndices par,
-            std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t
+  template <FreeParametersIndices kIndex,
+            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
                 uncertainty() const {
-    return m_oParameters.template getUncertainty<par>();
+    return m_oParameters.template getUncertainty<kIndex>();
   }
 
   /// @brief Access covariance matrix of track parameters
