@@ -28,12 +28,12 @@ class AccumulatedVolumeMaterial {
   Material average();
 
  private:
-  float m_totalX0{std::numeric_limits<float>::infinity()};
-  float m_totalL0{std::numeric_limits<float>::infinity()};
-  float m_totalAr{0.};
-  float m_totalZ{0.};
-  float m_totalRho{0.};
-  float m_thickness{1.};
+  double m_totalX0{std::numeric_limits<double>::infinity()};
+  double m_totalL0{std::numeric_limits<double>::infinity()};
+  double m_totalAr{0.};
+  double m_totalZ{0.};
+  double m_totalRho{0.};
+  double m_thickness{1.};
   unsigned int m_materialEntries{0};
   unsigned int m_vacuumEntries{0};
 };

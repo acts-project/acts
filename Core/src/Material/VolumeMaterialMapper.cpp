@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
@@ -312,15 +313,14 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         float remainder = rmIter->materialProperties.thickness() -
                           m_cfg.mappingStep * volumeStep;
         properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
-        mState.recordedMaterial[volIter->volume->geoID()].push_back(
-            std::pair(properties, rmIter->position));
-        for (int step = 1; step <= volumeStep; step++) {
-          // Create additional extrapolated point for the grid mapping
-          extraDirection = rmIter->direction;
-          extraDirection =
-              extraDirection * (m_cfg.mappingStep / extraDirection.norm());
-          extraPosition = rmIter->position + step * extraDirection;
-          if (step == volumeStep) {
+        // Get the direction of the Geantino in the volume
+        extraDirection = rmIter->direction;
+        extraDirection =
+            extraDirection * (m_cfg.mappingStep / extraDirection.norm());
+        for (int extraStep = 0; extraStep <= volumeStep; extraStep++) {
+          // Create additional extrapolated points for the grid mapping
+          extraPosition = rmIter->position + extraStep * extraDirection;
+          if (extraStep == volumeStep) {
             // adjust the thickness of the last extrapolated step
             properties.scaleThickness(remainder / properties.thickness());
           }
