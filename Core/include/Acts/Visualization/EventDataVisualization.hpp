@@ -30,7 +30,7 @@ namespace EventDataVisualization {
 ///
 /// @param covariance The covariance matrix
 static inline std::array<double, 3> decomposeCovariance(
-    const ActsSymMatrixD<2>& covariance) {
+    const SymMatrix2D& covariance) {
   double c00 = covariance(eLOC_0, eLOC_0);
   double c01 = covariance(eLOC_0, eLOC_1);
   double c11 = covariance(eLOC_1, eLOC_1);
@@ -92,7 +92,7 @@ static inline std::vector<Vector3D> createEllipse(
 /// @param outOfPlane The out of plane drawning option
 static inline void drawCovarianceCartesian(
     IVisualization& helper, const Vector2D& lposition,
-    const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
+    const SymMatrix2D& covariance, const Transform3D& transform,
     std::vector<int> nsigma = {3}, double locErrorScale = 1, size_t lseg = 72,
     const IVisualization::ColorType& color = {20, 120, 20},
     double outOfPlane = 0.1) {
@@ -123,7 +123,7 @@ static inline void drawCovarianceCartesian(
 /// @param color The draw color
 static inline void drawCovarianceAngular(
     IVisualization& helper, const Vector3D& position, const Vector3D& direction,
-    const ActsSymMatrixD<2>& covariance, std::vector<int> nsigma = {3},
+    const SymMatrix2D& covariance, std::vector<int> nsigma = {3},
     double directionScale = 1, double angularErrorScale = 1, size_t lseg = 72,
     const IVisualization::ColorType& color = {20, 120, 20}) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
@@ -291,7 +291,7 @@ static inline void drawMultiTrajectory(
     if (drawMeasurement and state.hasCalibrated() and
         state.calibratedSize() == 2) {
       const Vector2D& lposition = state.calibrated().template head<2>();
-      ActsSymMatrixD<2> covariance =
+      SymMatrix2D covariance =
           state.calibratedCovariance().template topLeftCorner<2, 2>();
       drawCovarianceCartesian(helper, lposition, covariance,
                               state.referenceSurface().transform(gctx), {3},

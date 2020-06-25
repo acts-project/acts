@@ -30,7 +30,7 @@ namespace detail {
     parameters2globalPosition(const ParVector_t& pars, const Surface& s)
     {
       ActsVectorD<3> globalPosition;
-      s.localToGlobal(ActsVectorD<2>(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
+      s.localToGlobal(Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
                       parameters2globalMomentum(pars),
                       globalPosition);
       return globalPosition;

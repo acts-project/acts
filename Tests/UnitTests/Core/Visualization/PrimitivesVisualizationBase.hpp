@@ -78,7 +78,7 @@ static inline std::string test(IVisualization& helper) {
 
   IVisualization::ColorType errorColor = {250, 0, 0};
 
-  ActsSymMatrixD<2> cov = ActsSymMatrixD<2>::Identity();
+  SymMatrix2D cov = SymMatrix2D::Identity();
   double s0 = 0.45;
   double s1 = 1.99;
   double r01 = 0.78;
@@ -99,7 +99,7 @@ static inline std::string test(IVisualization& helper) {
   // Error visualization
   errorColor = {250, 0, 0};
 
-  cov = ActsSymMatrixD<2>::Identity();
+  cov = SymMatrix2D::Identity();
   s0 = 0.08;
   s1 = 0.01;
   r01 = 0.3;

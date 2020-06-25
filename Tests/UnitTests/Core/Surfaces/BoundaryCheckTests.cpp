@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
 
 // Aligned box w/ covariance check
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
-  ActsSymMatrixD<2> cov;
+  SymMatrix2D cov;
   cov << 1, 0.5, 0.5, 2;
   BoundaryCheck check(cov, 3.0);
   Vector2D ll(-1, -1);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleSimple) {
 // Triangle w/ covariance check
 BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   Vector2D vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
-  ActsSymMatrixD<2> cov;
+  SymMatrix2D cov;
   cov << 0.5, 0, 0, 0.5;
   BoundaryCheck check(cov, 4.1);
   BOOST_CHECK(check.isInside({0, 0}, vertices));

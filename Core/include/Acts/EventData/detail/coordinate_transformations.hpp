@@ -44,8 +44,7 @@ struct coordinate_transformation {
                                                   const ParVector_t& pars,
                                                   const Surface& s) {
     ActsVectorD<3> globalPosition;
-    s.localToGlobal(gctx,
-                    ActsVectorD<2>(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
+    s.localToGlobal(gctx, Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
                     parameters2globalMomentum(pars), globalPosition);
     return globalPosition;
   }
@@ -113,7 +112,7 @@ struct coordinate_transformation {
                                        double time, const Surface& s) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;
-    ActsVectorD<2> localPosition;
+    Vector2D localPosition;
     s.globalToLocal(gctx, pos, mom, localPosition);
     ParVector_t result;
     result << localPosition(0), localPosition(1), phi(mom), theta(mom),

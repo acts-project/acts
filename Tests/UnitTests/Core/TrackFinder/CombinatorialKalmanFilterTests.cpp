@@ -83,7 +83,7 @@ std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
 ActsSymMatrixD<1> cov1D;
-ActsSymMatrixD<2> cov2D;
+SymMatrix2D cov2D;
 
 bool debugMode = false;
 
