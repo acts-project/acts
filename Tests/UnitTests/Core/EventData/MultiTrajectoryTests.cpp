@@ -12,7 +12,6 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/TrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -38,10 +37,6 @@ CurvilinearParameters make_params() {
   Covariance rnd = Covariance::Random();
   Covariance cov = rnd.transpose() * rnd;
   return {cov, Vector3D(0, 0, 1), Vector3D(100, 1000, 400), -1, 0};
-}
-
-TrackState<SourceLink, CurvilinearParameters> make_rand_trackstate() {
-  return {make_params()};
 }
 
 using ParVec_t = BoundParameters::ParVector_t;
@@ -169,12 +164,12 @@ BOOST_AUTO_TEST_CASE(multitrajectory_build) {
   TrackStatePropMask mask = TrackStatePropMask::Predicted;
 
   // construct trajectory w/ multiple components
-  auto i0 = t.addTrackState(make_rand_trackstate(), mask);
+  auto i0 = t.addTrackState(mask);
   // trajectory bifurcates here into multiple hypotheses
-  auto i1a = t.addTrackState(make_rand_trackstate(), mask, i0);
-  auto i1b = t.addTrackState(make_rand_trackstate(), mask, i0);
-  auto i2a = t.addTrackState(make_rand_trackstate(), mask, i1a);
-  auto i2b = t.addTrackState(make_rand_trackstate(), mask, i1b);
+  auto i1a = t.addTrackState(mask, i0);
+  auto i1b = t.addTrackState(mask, i0);
+  auto i2a = t.addTrackState(mask, i1a);
+  auto i2b = t.addTrackState(mask, i1b);
 
   // print each trajectory component
   std::vector<size_t> act;
@@ -207,9 +202,9 @@ BOOST_AUTO_TEST_CASE(visit_apply_abort) {
   TrackStatePropMask mask = TrackStatePropMask::Predicted;
 
   // construct trajectory with three components
-  auto i0 = t.addTrackState(make_rand_trackstate(), mask);
-  auto i1 = t.addTrackState(make_rand_trackstate(), mask, i0);
-  auto i2 = t.addTrackState(make_rand_trackstate(), mask, i1);
+  auto i0 = t.addTrackState(mask);
+  auto i1 = t.addTrackState(mask, i0);
+  auto i2 = t.addTrackState(mask, i1);
 
   size_t n = 0;
   t.applyBackwards(i2, [&](const auto&) {

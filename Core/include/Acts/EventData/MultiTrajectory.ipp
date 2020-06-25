@@ -13,7 +13,6 @@
 
 #include <Eigen/Core>
 
-#include "Acts/EventData/TrackState.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
