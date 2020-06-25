@@ -29,7 +29,6 @@ using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
 using MeasurementType = Measurement<SourceLink, params...>;
-using TrackState = TrackState<SourceLink, BoundParameters>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();

@@ -44,12 +44,11 @@ using CovMat_t = BoundParameters::CovMatrix_t;
 
 // std::pair<TrackState<SourceLink, BoundParameters>,
 // std::unique_ptr<FittableMeasurement<SourceLink>>>
-auto make_trackstate(size_t dim = 3) {
+template <typename track_state_t>
+auto make_trackstate(track_state_t& ts, TrackStatePropMask mask, size_t dim = 3) {
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
                                                  Vector3D{0., 0., 1.});
-  using TrackState = TrackState<SourceLink, BoundParameters>;
 
-  std::optional<TrackState> tso{std::nullopt};
   std::unique_ptr<FittableMeasurement<SourceLink>> fm;
 
   if (dim == 3) {
@@ -66,18 +65,18 @@ auto make_trackstate(size_t dim = 3) {
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
     SourceLink sl{fm.get()};
-
-    TrackState ts{sl};
+	if(mask == TrackStatePropMask::Uncalibrated){
+	ts.uncalibrated() = sl;}
 
     // "calibrate", keep original source link (stack address)
-    ts.measurement.calibrated =
+    	if(mask == TrackStatePropMask::Calibrated){
+    ts.setCalibrated(
         decltype(meas){meas.referenceSurface().getSharedPtr(),
                        sl,
                        meas.covariance(),
                        meas.parameters()[0],
                        meas.parameters()[1],
-                       meas.parameters()[2]};
-    tso = ts;
+                       meas.parameters()[2]});}
   } else if (dim == 2) {
     ActsMatrixD<2, 2> mCov;
     // mCov << 1, 2, 3, 4;
@@ -93,18 +92,17 @@ auto make_trackstate(size_t dim = 3) {
 
     SourceLink sl{fm.get()};
 
-    TrackState ts{sl};
+	if(mask == TrackStatePropMask::Uncalibrated){
+	ts.uncalibrated() = sl;}
 
     // "calibrate", keep original source link (stack address)
-    ts.measurement.calibrated = decltype(meas){
+    	if(mask == TrackStatePropMask::Calibrated){
+    ts.setCalibrated(decltype(meas){
         meas.referenceSurface().getSharedPtr(), sl, meas.covariance(),
-        meas.parameters()[0], meas.parameters()[1]};
-    tso = ts;
+        meas.parameters()[0], meas.parameters()[1]});}
   } else {
     throw std::runtime_error("wrong dim");
   }
-
-  TrackState ts = *tso;
 
   // add parameters
 
@@ -117,8 +115,8 @@ auto make_trackstate(size_t dim = 3) {
   predCov.setRandom();
 
   BoundParameters pred(gctx, predCov, predPar, plane);
-
-  ts.parameter.predicted = pred;
+	if(mask == TrackStatePropMask::Predicted){
+  ts.predicted() = pred;}
 
   // filtered
   ParVec_t filtPar;
@@ -129,8 +127,8 @@ auto make_trackstate(size_t dim = 3) {
   filtCov.setRandom();
 
   BoundParameters filt(gctx, filtCov, filtPar, plane);
-
-  ts.parameter.filtered = filt;
+	if(mask == TrackStatePropMask::Filtered){
+  ts.filtered() = filt;}
 
   // smoothed
   ParVec_t smotPar;
@@ -141,22 +139,22 @@ auto make_trackstate(size_t dim = 3) {
   smotCov.setRandom();
 
   BoundParameters smot(gctx, smotCov, smotPar, plane);
-
-  ts.parameter.smoothed = smot;
+	if(mask == TrackStatePropMask::Smoothed){
+  ts.smoothed() = smot;}
 
   // make jacobian
   CovMat_t jac;
   jac.setRandom();
-
-  ts.parameter.jacobian = jac;
+	if(mask == TrackStatePropMask::Jacobian){
+  ts.jacobian() = jac;}
 
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_real_distribution<> dis(1.0, 100.0);
-  ts.parameter.chi2 = dis(gen);
-  ts.parameter.pathLength = dis(gen);
+  ts.chi2() = dis(gen);
+  ts.pathLength() = dis(gen);
 
-  return std::make_tuple(ts, std::move(fm));
+  return std::move(fm);
 }
 
 BOOST_AUTO_TEST_CASE(multitrajectory_build) {
@@ -382,11 +380,10 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 
 BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   // assert expected "cross-talk" between trackstate proxies
-  auto [ots, fm] = make_trackstate();
 
   MultiTrajectory<SourceLink> t;
-
-  t.addTrackState(ots);
+  size_t index = t.addTrackState();
+  auto fm = make_trackstate(t.getTrackState(index), TrackStatePropMask::All);
 
   const auto& ct = t;
   auto cts = ct.getTrackState(0);
@@ -461,12 +458,12 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
-  auto [ots, fm] = make_trackstate();
 
   constexpr size_t maxmeasdim = MultiTrajectory<SourceLink>::MeasurementSizeMax;
 
   MultiTrajectory<SourceLink> t;
-  t.addTrackState(ots);
+  size_t index = t.addTrackState();
+  auto fm = make_trackstate(t.getTrackState(index), TrackStatePropMask::All);
 
   auto ts = t.getTrackState(0);
 
@@ -514,12 +511,10 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
 }
 
 BOOST_AUTO_TEST_CASE(storage_consistency) {
+
   MultiTrajectory<SourceLink> t;
-
-  auto [ts, fm] = make_trackstate();
-
-  // now put it into the collection
-  t.addTrackState(ts);
+  size_t index = t.addTrackState();
+  auto fm = make_trackstate(t.getTrackState(index), TrackStatePropMask::All);
 
   // now investigate the proxy
   auto tsProxy = t.getTrackState(0);
@@ -598,7 +593,14 @@ BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
   // this should allocate for all the components in the trackstate, plus
   // filtered
   size_t i = mj.addTrackState(ts, TrackStatePropMask::Filtered);
-
+  
+  MultiTrajectory<SourceLink> t;
+  size_t i = t.addTrackState(TrackStatePropMask::All);
+  make_trackstate(t.getTrackState(index), TrackStatePropMask::Predicted);
+  make_trackstate(t.getTrackState(index), TrackStatePropMask::Filtered);
+  make_trackstate(t.getTrackState(index), TrackStatePropMask::Uncalibrated);
+  make_trackstate(t.getTrackState(index), TrackStatePropMask::Jacobian);
+  
   auto tsp = mj.getTrackState(i);
 
   BOOST_CHECK(tsp.hasPredicted());
