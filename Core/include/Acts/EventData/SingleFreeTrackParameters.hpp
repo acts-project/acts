@@ -76,8 +76,8 @@ class SingleFreeTrackParameters {
   ///
   /// @return Value of the requested parameter
   template <FreeParametersIndices kIndex,
-            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t get()
-                const {
+            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
+                get() const {
     return m_oParameters.template getParameter<kIndex>();
   }
 
