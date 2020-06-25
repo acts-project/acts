@@ -23,6 +23,20 @@
 
 namespace Acts {
 
+/// @enum TrackStateFlag
+///
+/// This enum describes the type of TrackState
+enum TrackStateFlag {
+  MeasurementFlag = 0,
+  ParameterFlag = 1,
+  OutlierFlag = 2,
+  HoleFlag = 3,
+  MaterialFlag = 4,
+  NumTrackStateFlags = 5
+};
+
+using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
+
 // forward declarations
 template <typename source_link_t>
 class MultiTrajectory;
