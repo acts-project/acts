@@ -12,7 +12,7 @@ string(STRIP "${_acts_version}" _acts_version)
 # read commit hash from git
 include(GetGitRevisionDescription)
 get_git_head_revision(_git_refspec _git_hash)
-string(SUBSTRING "${_git_hash}" 0 9 _git_hash_short)
+string(SUBSTRING "${_git_hash}" 0 7 _git_hash_short)
 git_local_changes(_git_local_changes)
 if(_git_local_changes STREQUAL "CLEAN")
   set(_acts_commit_hash "${_git_hash}")
