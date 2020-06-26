@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/ObjTestWriter.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -29,8 +29,6 @@ namespace Test {
 BOOST_AUTO_TEST_SUITE(VolumeBounds)
 
 BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
-  std::vector<IdentifiedPolyhedron> tPolyhedrons;
-
   // Single solid Cone
   ConeVolumeBounds solidCone(0., 0., 0.45, 50_mm, 50_mm, 0., M_PI);
 

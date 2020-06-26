@@ -15,7 +15,7 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
-#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 
 #include "TGeoManager.h"
@@ -97,9 +97,7 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
     auto sArray = pLayer->surfaceArray();
     if (sArray) {
       for (auto& surface : sArray->surfaces()) {
-        GeometryVisualization::drawSurface(objVis, *surface, tgContext,
-                                           Transform3D::Identity(), 1, false,
-                                           {120, 0, 0});
+        GeometryView::drawSurface(objVis, *surface, tgContext);
       }
     }
     objVis.write("PositiveLayer_" + std::to_string(ipl++));

@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
-#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 
 #include "TGeoManager.h"
@@ -59,9 +59,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
       const auto& transform = *(snode.transform.get());
       auto surface =
           TGeoSurfaceConverter::toSurface(shape, transform, axes, scale);
-      GeometryVisualization::drawSurface(objVis, *surface, tgContext,
-                                         Transform3D::Identity(), 1, false,
-                                         {120, 0, 0});
+      GeometryView::drawSurface(objVis, *surface, tgContext);
     }
     objVis.write("PixelActive");
   }
@@ -97,9 +95,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
       const auto& transform = *(snode.transform.get());
       auto surface = TGeoSurfaceConverter::toSurface(shape, transform, axes,
                                                      tgpOptions.unit);
-      GeometryVisualization::drawSurface(objVis, *surface, tgContext,
-                                         Transform3D::Identity(), 1, false,
-                                         {120, 0, 0});
+      GeometryView::drawSurface(objVis, *surface, tgContext);
     }
     objVis.write("PixelActive_Innemost");
   }

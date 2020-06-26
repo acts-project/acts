@@ -108,7 +108,7 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
     double sens_thickness = x_sensitive.thickness();
     double sens_width = x_sensitive.width();
 
-    std::string sens_vis = x_sensitive.visStr();
+    std::string sens_view = x_sensitive.visStr();
     std::string sens_matS = x_sensitive.materialStr();
 
     double phi0 = x_layer.phi0();
@@ -192,7 +192,7 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
     sens_vol.setSensitiveDetector(sens);
 
     sens_vol.setAttributes(lcdd, x_det.regionStr(), x_det.limitsStr(),
-                           sens_vis);
+                           sens_view);
     supp_vol.setAttributes(lcdd, x_det.regionStr(), x_det.limitsStr(),
                            supp_vis);
 
