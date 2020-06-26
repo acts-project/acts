@@ -54,8 +54,15 @@ struct TestTrackState {
   double pathLength;
 };
 
-// std::pair<TrackState<SourceLink, BoundParameters>,
-// std::unique_ptr<FittableMeasurement<SourceLink>>>
+/// @brief Fills a @c TrackStateProxy object
+///
+/// @tparam track_state_t Type of the TrackStateProxy
+///
+/// @param [in, out] ts TrackStateProxy which is filled
+/// @param [in] mask Specifies which components are filled
+/// @param [in] dim Dimension of the measurement
+///
+/// @return Tuple containing a @c TestTrackState and the @c FittableMeasurement that were generated in this function
 template <typename track_state_t>
 auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
                      size_t dim = 3) {
