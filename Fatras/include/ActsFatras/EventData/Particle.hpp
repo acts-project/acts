@@ -141,7 +141,7 @@ class Particle {
     // stored direction is always normalized
     mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[0];
     mom4[Acts::eMom1] = m_absMomentum * m_unitDirection[1];
-    mom4[Acts::eMom2] = m_absMomentum * m_unitDirection[2];
+    mom4[Acts::eMom2] = m_absMomentum * m_unitDirection[Acts::ePos2];
     mom4[Acts::eEnergy] = energy();
     return mom4;
   }
