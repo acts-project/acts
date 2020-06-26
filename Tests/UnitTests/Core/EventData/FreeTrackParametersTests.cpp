@@ -99,24 +99,24 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   /// Test getters/setters
 
   // Test getter of single elements
-  CHECK_CLOSE_ABS(fp.get<0>(), pos.x(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<1>(), pos.y(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<2>(), pos.z(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<3>(), t, 1e-6);
-  CHECK_CLOSE_ABS(fp.get<4>(), dir.x(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<5>(), dir.y(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<6>(), dir.z(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<7>(), qop, 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos0>(), pos.x(), 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos1>(), pos.y(), 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos2>(), pos.z(), 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeTime>(), t, 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeDir0>(), dir.x(), 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeDir1>(), dir.y(), 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeDir2>(), dir.z(), 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeQOverP>(), qop, 1e-6);
 
   // Test getter of uncertainties
-  CHECK_CLOSE_ABS(fp.uncertainty<0>(), std::sqrt((*cov)(0, 0)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<1>(), std::sqrt((*cov)(1, 1)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<2>(), std::sqrt((*cov)(2, 2)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<3>(), std::sqrt((*cov)(3, 3)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<4>(), std::sqrt((*cov)(4, 4)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<5>(), std::sqrt((*cov)(5, 5)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<6>(), std::sqrt((*cov)(6, 6)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<7>(), std::sqrt((*cov)(7, 7)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreePos0>(), std::sqrt((*cov)(0, 0)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreePos1>(), std::sqrt((*cov)(1, 1)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreePos2>(), std::sqrt((*cov)(2, 2)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreeTime>(), std::sqrt((*cov)(3, 3)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreeDir0>(), std::sqrt((*cov)(4, 4)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreeDir1>(), std::sqrt((*cov)(5, 5)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreeDir2>(), std::sqrt((*cov)(6, 6)), 1e-6);
+  CHECK_CLOSE_ABS(fp.uncertainty<eFreeQOverP>(), std::sqrt((*cov)(7, 7)), 1e-6);
 
   // Test getter of parts of the parameters by their meaning
   CHECK_CLOSE_ABS(fp.position(), pos, 1e-6);
@@ -127,22 +127,22 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
 
   // Test setters
   GeometryContext dummy;
-  fp.set<0>(dummy, 8.);
-  fp.set<1>(dummy, 9.);
-  fp.set<2>(dummy, 10.);
-  fp.set<3>(dummy, 11.);
-  fp.set<4>(dummy, 12.);
-  fp.set<5>(dummy, 13.);
-  fp.set<6>(dummy, 14.);
-  fp.set<7>(dummy, 15.);
-  CHECK_CLOSE_ABS(fp.get<0>(), 8., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<1>(), 9., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<2>(), 10., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<3>(), 11., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<4>(), 12., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<5>(), 13., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<6>(), 14., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<7>(), 15., 1e-6);
+  fp.set<eFreePos0>(dummy, 8.);
+  fp.set<eFreePos1>(dummy, 9.);
+  fp.set<eFreePos2>(dummy, 10.);
+  fp.set<eFreeTime>(dummy, 11.);
+  fp.set<eFreeDir0>(dummy, 12.);
+  fp.set<eFreeDir1>(dummy, 13.);
+  fp.set<eFreeDir2>(dummy, 14.);
+  fp.set<eFreeQOverP>(dummy, 15.);
+  CHECK_CLOSE_ABS(fp.get<eFreePos0>(), 8., 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos1>(), 9., 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos2>(), 10., 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeTime>(), 11., 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeDir0>(), 12., 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeDir1>(), 13., 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeDir2>(), 14., 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeQOverP>(), 15., 1e-6);
 }
 }  // namespace Test
 }  // namespace Acts
