@@ -93,8 +93,8 @@ static inline std::vector<Vector3D> createEllipse(
 static inline void drawCovarianceCartesian(
     IVisualization& helper, const Vector2D& lposition,
     const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
-    std::vector<int> = {}, double locErrorScale = 1, size_t lseg = 72,
-    const IVisualization::ColorType& color = {20, 120, 20},
+    std::vector<int> /* nsigma */ = {}, double locErrorScale = 1,
+    size_t lseg = 72, const IVisualization::ColorType& color = {20, 120, 20},
     double outOfPlane = 0.1) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
@@ -123,7 +123,7 @@ static inline void drawCovarianceCartesian(
 /// @param color The draw color
 static inline void drawCovarianceAngular(
     IVisualization& helper, const Vector3D& position, const Vector3D& direction,
-    const ActsSymMatrixD<2>& covariance, std::vector<int> = {3},
+    const ActsSymMatrixD<2>& covariance, std::vector<int> /* nsigma */ = {3},
     double directionScale = 1, double angularErrorScale = 1, size_t lseg = 72,
     const IVisualization::ColorType& color = {20, 120, 20}) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
