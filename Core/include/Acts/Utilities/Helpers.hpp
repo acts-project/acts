@@ -172,10 +172,9 @@ inline double cast(const Vector3D& position, BinningValue bval) {
     case binMag:
       return position.norm();
     default:
-      // empty default to suppress warnings on non-exhaustive switch
+      assert("Invalid BinningValue enum value");
+      return std::numeric_limits<double>::quiet_NaN();
   }
-  assert("Invalid BinningValue enum value");
-  return std::numeric_limits<double>::quiet_NaN();
 }
 
 /// @brief Calculates column-wise cross products of a matrix and a vector and

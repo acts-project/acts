@@ -163,10 +163,9 @@ inline double RectangleBounds::get(BoundValues bValue) const {
     case eMaxY:
       return m_max.y();
     default:
-      // empty default to suppress warnings for non-exhaustive switch
+      assert("Invalid BoundValue enum value");
+      return std::numeric_limits<double>::quiet_NaN();
   }
-  assert("Invalid BoundValue enum value");
-  return std::numeric_limits<double>::quiet_NaN();
 }
 
 inline void RectangleBounds::checkConsistency() noexcept(false) {
