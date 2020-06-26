@@ -15,7 +15,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 
 std::tuple<std::vector<const Volume*>, std::shared_ptr<TrackingGeometry>>
 gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
-  Box::Size size(Acts::ActsVectorD<3>(2, 2, 2));
+  Box::Size size(Acts::Vector3D(2, 2, 2));
 
   std::shared_ptr<CuboidVolumeBounds> vbds =
       std::make_shared<CuboidVolumeBounds>(10, 10, 10);

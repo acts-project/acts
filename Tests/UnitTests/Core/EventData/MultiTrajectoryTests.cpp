@@ -62,7 +62,7 @@ auto make_trackstate(size_t dim = 3) {
     // mCov << 1, 2, 3, 4, 5, 6, 7, 8, 9;
     mCov.setRandom();
 
-    ActsVectorD<3> mPar;
+    Vector3D mPar;
     // mPar << 2, 3, 4;
     mPar.setRandom();
     Measurement<SourceLink, eLOC_0, eLOC_1, eQOP> meas{

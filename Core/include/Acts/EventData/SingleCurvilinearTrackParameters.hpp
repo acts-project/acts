@@ -40,9 +40,9 @@ class SingleCurvilinearTrackParameters
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
-                                   const ActsVectorD<3>& position,
-                                   const ActsVectorD<3>& momentum,
-                                   double dCharge, double dTime)
+                                   const Vector3D& position,
+                                   const Vector3D& momentum, double dCharge,
+                                   double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2curvilinear(
@@ -60,8 +60,8 @@ class SingleCurvilinearTrackParameters
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
-                                   const ActsVectorD<3>& position,
-                                   const ActsVectorD<3>& momentum, double dTime)
+                                   const Vector3D& position,
+                                   const Vector3D& momentum, double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2curvilinear(

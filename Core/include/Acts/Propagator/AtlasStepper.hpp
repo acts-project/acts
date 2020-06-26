@@ -76,7 +76,7 @@ class AtlasStepper {
       // this is a nasty but working solution for the stepper state without
       // functions
 
-      const ActsVectorD<3> pos = pars.position();
+      const Vector3D pos = pars.position();
       const auto Vp = pars.parameters();
 
       double Sf, Cf, Ce, Se;
@@ -469,7 +469,7 @@ class AtlasStepper {
       return;
     }
 
-    const ActsVectorD<3> pos = pars.position();
+    const Vector3D pos = pars.position();
     const auto Vp = pars.parameters();
 
     double Sf, Cf, Ce, Se;
