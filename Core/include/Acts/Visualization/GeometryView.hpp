@@ -113,7 +113,7 @@ struct GeometryView {
       const ViewConfig& containerView = s_viewVolume,
       const ViewConfig& volumeView = s_viewVolume,
       const ViewConfig& layerView = s_viewPassive,
-      const ViewConfig& sensitisensitiveViewveConfig = s_viewSensitive,
+      const ViewConfig& sensitiveView = s_viewSensitive,
       const ViewConfig& gridView = s_viewGrid, bool writeIt = true,
       const std::string& tag = "");
 

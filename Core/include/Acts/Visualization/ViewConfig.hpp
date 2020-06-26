@@ -36,7 +36,7 @@ struct ViewConfig {
   double lineThickness = 0.15;
   /// The visual surface thickness for this object
   double surfaceThickness = 0.15;
-  /// The number of segmetns to approximate full 2pi
+  /// The number of segments to approximate full 2pi
   unsigned int nSegments = 72;
   /// Whether to triangulate or not
   bool triangulate = false;
