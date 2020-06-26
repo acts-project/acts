@@ -858,7 +858,7 @@ BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   double x = 0.5;
   double y = -0.2;
   double z = 0.3;
-  Vector3D first_parValues(x, y, z);
+  Vector3D firstParValues(x, y, z);
 
   // parameter set with covariance matrix
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> first(
