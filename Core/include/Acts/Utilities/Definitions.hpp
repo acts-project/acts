@@ -111,36 +111,88 @@ using ActsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 using ActsRowVectorXd = ActsRowVectorX<double>;
 using ActsRowVectorXf = ActsRowVectorX<float>;
 
-using Rotation3D = Eigen::Quaternion<double>;
-using Translation3D = Eigen::Translation<double, 3>;
-using AngleAxis3D = Eigen::AngleAxisd;
-using Transform3D = Eigen::Affine3d;
-using Vector3D = Eigen::Matrix<double, 3, 1>;
-using Vector2D = Eigen::Matrix<double, 2, 1>;
-using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
-
-using Rotation3F = Eigen::Quaternion<float>;
-using Translation3F = Eigen::Translation<float, 3>;
-using AngleAxis3F = Eigen::AngleAxisf;
-using Transform3F = Eigen::Affine3f;
-using Vector3F = Eigen::Matrix<float, 3, 1>;
-using Vector2F = Eigen::Matrix<float, 2, 1>;
-using RotationMatrix3F = Eigen::Matrix<float, 3, 3>;
-
-/// axis defintion element for code readability
-/// - please use these for access to the member variables if needed, e.g.
-///     double z  = position[Acts::eZ];
-///     double px = momentum[Acts::ePX];
+/// @defgroup fixed-algebra-types Fixed-size vector/matrix e.g. for coordinates
 ///
-enum AxisDefs : int {
-  // position access
-  eX = 0,
-  eY = 1,
-  eZ = 2,
-  // momentum access
-  ePX = 0,
-  ePY = 1,
-  ePZ = 2
+/// These predefined types should always be used when handling the coordinate
+/// vectors in different coordinate systems, i.e. local (2d), global spatial
+/// (3d), or global space-time (4d).
+///
+/// @{
+
+// coordinate vectors
+using Vector2F = ActsVector<float, 2>;
+using Vector3F = ActsVector<float, 3>;
+using Vector4F = ActsVector<float, 4>;
+using Vector2D = ActsVector<double, 2>;
+using Vector3D = ActsVector<double, 3>;
+using Vector4D = ActsVector<double, 4>;
+// symmetric matrices e.g. for coordinate covariance matrices
+using SymMatrix2F = ActsSymMatrix<float, 2>;
+using SymMatrix3F = ActsSymMatrix<float, 3>;
+using SymMatrix4F = ActsSymMatrix<float, 4>;
+using SymMatrix2D = ActsSymMatrix<double, 2>;
+using SymMatrix3D = ActsSymMatrix<double, 3>;
+using SymMatrix4D = ActsSymMatrix<double, 4>;
+
+/// Components of coordinate vectors.
+///
+/// To be used to access coordinate components by named indices instead of magic
+/// numbers. This must be a regular `enum` and not a scoped `enum class` to
+/// allow implicit conversion to an integer. The enum value are thus visible
+/// directly in `namespace Acts`.
+///
+/// This index enum is not user-configurable (in contrast e.g. to the track
+/// parameter index enums) since it must be compatible with varying
+/// dimensionality (2d-4d) and other access methods (`.{x,y,z}()` accessors).
+enum CoordinateIndices : unsigned int {
+  // generic position-like access
+  ePos0 = 0,
+  ePos1 = 1,
+  ePos2 = 2,
+  eTime = 3,
+  // generic momentum-like access
+  eMom0 = ePos0,
+  eMom1 = ePos1,
+  eMom2 = ePos2,
+  eEnergy = eTime,
+  // Cartesian spatial coordinates
+  eX = ePos0,
+  eY = ePos1,
+  eZ = ePos2,
 };
+
+// pure translation transformations
+using Translation2F = Eigen::Translation<float, 2>;
+using Translation3F = Eigen::Translation<float, 3>;
+using Translation4F = Eigen::Translation<float, 4>;
+using Translation2D = Eigen::Translation<double, 2>;
+using Translation3D = Eigen::Translation<double, 3>;
+using Translation4D = Eigen::Translation<double, 4>;
+// linear (rotation) matrices
+using RotationMatrix2F = Eigen::Matrix<float, 2, 2>;
+using RotationMatrix3F = Eigen::Matrix<float, 3, 3>;
+using RotationMatrix4F = Eigen::Matrix<float, 4, 4>;
+using RotationMatrix2D = Eigen::Matrix<double, 2, 2>;
+using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
+using RotationMatrix4D = Eigen::Matrix<double, 4, 4>;
+// pure rotation transformations. only available in 2d and 3d
+using Rotation2F = Eigen::Rotation2D<float>;
+using Rotation3F = Eigen::Quaternion<float>;
+using AngleAxis3F = Eigen::AngleAxis<float>;
+using Rotation2D = Eigen::Rotation2D<double>;
+using Rotation3D = Eigen::Quaternion<double>;
+using AngleAxis3D = Eigen::AngleAxis<double>;
+// combined affine transformations. types are chosen for better data alignment:
+// - 2d affine compact stored as 2x3 matrix
+// - 3d affine stored as 4x4 matrix
+// - 4d affine compact stored as 4x5 matrix
+using Transform2F = Eigen::Transform<float, 2, Eigen::AffineCompact>;
+using Transform3F = Eigen::Transform<float, 3, Eigen::Affine>;
+using Transform4F = Eigen::Transform<float, 4, Eigen::AffineCompact>;
+using Transform2D = Eigen::Transform<double, 2, Eigen::AffineCompact>;
+using Transform3D = Eigen::Transform<double, 3, Eigen::Affine>;
+using Transform4D = Eigen::Transform<double, 4, Eigen::AffineCompact>;
+
+/// @}
 
 }  // namespace Acts

@@ -28,7 +28,7 @@ using MeasurementType = Measurement<SourceLink, params...>;
 BOOST_AUTO_TEST_CASE(measurement_initialization) {
   auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
 
-  ActsSymMatrixD<2> cov;
+  SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
                                                     std::move(cov), -0.1, 0.45);
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   std::default_random_engine generator(42);
 
   // Create a measurement on a cylinder
-  ActsSymMatrixD<2> covc;
+  SymMatrix2D covc;
   covc << 0.04, 0, 0, 0.1;
   MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mc(
       cylinder, {}, std::move(covc), -0.1, 0.45);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   covp << 0.01;
   MeasurementType<ParDef::eLOC_0> mp(plane, {}, std::move(covp), 0.1);
 
-  ActsSymMatrixD<2> covpp;
+  SymMatrix2D covpp;
   covpp << 0.01, 0., 0., 0.02;
   MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mpp(
       plane, {}, std::move(covpp), 0.1, 0.2);

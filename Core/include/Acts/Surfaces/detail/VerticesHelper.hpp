@@ -134,11 +134,11 @@ static std::vector<Vector2D> ellispoidVertices(double innerRx, double innerRy,
   for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
     int addon = (iseg == phiSegs.size() - 2 and not closed) ? 1 : 0;
     if (innerExists) {
-      detail::VerticesHelper::createSegment<Vector2D, Eigen::Affine2d>(
+      detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
           ivertices, {innerRx, innerRy}, phiSegs[iseg], phiSegs[iseg + 1], lseg,
           addon);
     }
-    detail::VerticesHelper::createSegment<Vector2D, Eigen::Affine2d>(
+    detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
         overtices, {outerRx, outerRy}, phiSegs[iseg], phiSegs[iseg + 1], lseg,
         addon);
   }

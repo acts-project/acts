@@ -6,6 +6,43 @@ All guidelines have a short identifier label, e.g. N.1, for easier reference in 
 
 For cases and constructs not explicitely mentioned here, code should fall back to the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
+## Acts-specific
+
+### A.indices: Always use enum values to access vector/matrix components
+
+Always use the apropriate enum values to access components. This clearly states
+the semantic meaning and is easier to understand.
+
+Example:
+
+```cpp
+// local surface coordinate vector
+Vector2D loc;
+loc[ePos0] = 2.0;
+
+// space-time coordinate vector
+Vector4D pos4;
+pos4[ePos0] = 0.1;
+...
+pos4[eTime] = 12.3;
+
+// bound parameters vector
+BoundVector pars;
+pars[eBoundLoc0] = 1.2;
+...
+pars[eBoundPhi] = M_PI;
+...
+```
+
+**Do not** use plain numbers as this can lead to inconsistencies if the order
+changes. It reduces the readability and makes it harder to spot errors.
+
+**Do not** use the `.{x,y,z,w}()` accessors available for small fixed-size
+vectors. While this should produce correct results in most cases, the accessor
+name does not always match the semantic meaning, e.g. for momentum vectors, and
+it only works for vectors but not for matrices. Always use the entries in
+`enum CoordinateIndices` for a consistent way of accessing both vectors and matrices.
+
 ## Naming
 
 ### N.1: Namespaces use CamelCase
@@ -173,4 +210,3 @@ Files that contain only symbols in the `detail` namespace should be moved in a`d
 ## Formatting
 
 Code formatting is handled by [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html). A configuration file is available in the repository root. Please set up your editor/IDE to format files automatically.
-
