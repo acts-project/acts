@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
+#include <cassert>
 #include <vector>
 
 namespace Acts {
@@ -161,11 +162,10 @@ inline double RectangleBounds::get(BoundValues bValue) const {
       return m_max.x();
     case eMaxY:
       return m_max.y();
-    case eSize:
-      // eSize case is only necessary to make the switch exhaustive
-      break;
+    default:
+      // empty default to suppress warnings for non-exhaustive switch
   }
-  // should never reach this point
+  assert("Invalid BoundValue enum value");
   return std::numeric_limits<double>::quiet_NaN();
 }
 
