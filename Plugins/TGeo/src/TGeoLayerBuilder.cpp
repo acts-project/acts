@@ -92,23 +92,39 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   // Helper function to fill the layer
   auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
                        const LayerConfig& lCfg) -> void {
-    // Create the layer  - either way as cylinder or disk
+    // Set binning by hand if nb0 > 0 and nb1 > 0
+    auto nb0 = std::get<int>(lCfg.binning0);
+    auto nb1 = std::get<int>(lCfg.binning1);
+    // Or use the binning type
+    auto nt0 = std::get<BinningType>(lCfg.binning0);
+    auto nt1 = std::get<BinningType>(lCfg.binning1);
+
     if (type == 0) {
       ACTS_DEBUG("- creating CylinderLayer with " << lSurfaces.size()
                                                   << " surfaces.");
       ProtoLayer pl(gctx, lSurfaces);
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      layers.push_back(m_cfg.layerCreator->cylinderLayer(
-          gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
+      if (nb0 > 0 and nb1 > 0) {
+        layers.push_back(
+            m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
+      } else {
+        layers.push_back(
+            m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nt0, nt1, pl));
+      }
     } else {
       ACTS_DEBUG("- creating DiscLayer with " << lSurfaces.size()
                                               << " surfaces.");
       ProtoLayer pl(gctx, lSurfaces);
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      layers.push_back(m_cfg.layerCreator->discLayer(
-          gctx, lSurfaces, lCfg.binsLoc0, lCfg.binsLoc1, pl));
+      if (nb0 > 0 and nb1 > 0) {
+        layers.push_back(
+            m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));
+      } else {
+        layers.push_back(
+            m_cfg.layerCreator->discLayer(gctx, lSurfaces, nt0, nt1, pl));
+      }
     }
   };
 
