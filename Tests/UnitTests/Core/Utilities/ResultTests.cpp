@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   {
     using Result = Result<double, MyError>;
 
-    Result res(42);
+    Result res(42.);
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 42.);
 
@@ -102,11 +102,11 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   {
     using Result = Result<double, std::error_code>;
 
-    Result res(42);
+    Result res(42.);
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 42.);
     BOOST_CHECK_EQUAL(res.value(), 42u);
-    res = 46;
+    res = 46.;
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 46.);
     BOOST_CHECK_EQUAL(res.value(), 46u);
@@ -124,11 +124,11 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
 
   {
     using Result = Result<double, const char*>;
-    Result res{0};
+    Result res{0.};
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 0.0);
 
-    res = 1;
+    res = 1.;
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 1.0);
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
 
   {
     using Result = Result<const char*, double>;
-    Result res{0};
+    Result res{0.};
     BOOST_CHECK(!res.ok());
     BOOST_CHECK_EQUAL(res.error(), 0.0);
 
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     BOOST_CHECK(res2.ok());
     BOOST_CHECK_EQUAL(res2.value(), "blibb");
 
-    res2 = 0;
+    res2 = 0.;
     BOOST_CHECK(!res2.ok());
     BOOST_CHECK_EQUAL(res2.error(), 0.0);
   }
@@ -181,11 +181,11 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   {
     using Result = Result<double>;
 
-    Result res(42);
+    Result res(42.);
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 42.);
     BOOST_CHECK_EQUAL(res.value(), 42u);
-    res = 46;
+    res = 46.;
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 46.);
     BOOST_CHECK_EQUAL(res.value(), 46u);
