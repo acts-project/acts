@@ -139,7 +139,7 @@ class Particle {
   Vector4 momentum4() const {
     Vector4 mom4;
     // stored direction is always normalized
-    mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[0];
+    mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[Acts::ePos0];
     mom4[Acts::eMom1] = m_absMomentum * m_unitDirection[Acts::ePos1];
     mom4[Acts::eMom2] = m_absMomentum * m_unitDirection[Acts::ePos2];
     mom4[Acts::eEnergy] = energy();
