@@ -30,7 +30,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/EventDataVisualization.hpp"
+#include "Acts/Visualization/EventDataView.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
@@ -43,7 +43,7 @@
 #include <string>
 
 namespace Acts {
-namespace EventDataVisualization {
+namespace EventDataViewTest {
 using SourceLink = MinimalSourceLink;
 using Covariance = BoundSymMatrix;
 
@@ -61,8 +61,8 @@ std::default_random_engine generator(42);
 static inline std::string testBoundParameters(IVisualization& helper) {
   std::stringstream ss;
 
-  const IVisualization::ColorType pcolor = {20, 120, 20};
-  const IVisualization::ColorType scolor = {235, 198, 52};
+  ViewConfig pcolor({20, 120, 20});
+  ViewConfig scolor({235, 198, 52});
 
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
@@ -91,10 +91,9 @@ static inline std::string testBoundParameters(IVisualization& helper) {
       -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
       0, 0, 0, 0, 0, 1;
 
-  EventDataVisualization::drawBoundParameters(
+  EventDataView::drawBoundParameters(
       helper, BoundParameters(gctx, std::move(cov), pars, plane), gctx,
-      momentumScale, localErrorScale, directionErrorScale, true, 72, pcolor,
-      scolor);
+      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);
@@ -274,20 +273,24 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
 
   // Draw the track
   std::cout << "Draw the fitted track" << std::endl;
-  double momentumScale = 5;
+  double momentumScale = 15;
   double localErrorScale = 100.;
   double directionErrorScale = 500000;
 
-  const IVisualization::ColorType scolor = {235, 198, 52};
-  const IVisualization::ColorType& mcolor = {255, 145, 48};
-  const IVisualization::ColorType& ppcolor = {138, 214, 255};
-  const IVisualization::ColorType& fpcolor = {92, 149, 255};
-  const IVisualization::ColorType& spcolor = {20, 120, 20};
+  ViewConfig scolor({235, 198, 52});
+  ViewConfig mcolor({255, 145, 48});
+  mcolor.offset = -0.01;
+  ViewConfig ppcolor({138, 214, 255});
+  ppcolor.offset = -0.02;
+  ViewConfig fpcolor({92, 149, 255});
+  fpcolor.offset = -0.03;
+  ViewConfig spcolor({20, 120, 20});
+  spcolor.offset = -0.04;
 
-  EventDataVisualization::drawMultiTrajectory(
+  EventDataView::drawMultiTrajectory(
       helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,
-      momentumScale, localErrorScale, directionErrorScale, true, true, true,
-      true, true, 50, scolor, mcolor, ppcolor, fpcolor, spcolor);
+      momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
+      ppcolor, fpcolor, spcolor);
 
   helper.write("EventData_MultiTrajectory");
   helper.write(ss);
@@ -295,5 +298,5 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   return ss.str();
 }
 
-}  // namespace EventDataVisualization
+}  // namespace EventDataViewTest
 }  // namespace Acts
