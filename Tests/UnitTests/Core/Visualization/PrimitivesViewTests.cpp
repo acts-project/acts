@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 ///
 BOOST_AUTO_TEST_CASE(VisualizationHelpers) {
   // No correlation, fully summetric
-  ActsSymMatrixD<2> covariance;
+  SymMatrix2D covariance;
   covariance << 4., 0., 0., 4.;
   auto decops = Acts::EventDataView::decomposeCovariance(covariance);
   BOOST_CHECK(decops[0] == 4.);

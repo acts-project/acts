@@ -26,20 +26,20 @@ namespace detail {
   {
     typedef ActsVector<ParValue_t, Acts::NGlobalPars> ParVector_t;
 
-    static ActsVectorD<3>
+    static Vector3D
     parameters2globalPosition(const ParVector_t& pars, const Surface& s)
     {
-      ActsVectorD<3> globalPosition;
-      s.localToGlobal(ActsVectorD<2>(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
+      Vector3D globalPosition;
+      s.localToGlobal(Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
                       parameters2globalMomentum(pars),
                       globalPosition);
       return globalPosition;
     }
 
-    static ActsVectorD<3>
+    static Vector3D
     parameters2globalMomentum(const ParVector_t& pars)
     {
-      ActsVectorD<3> momentum;
+      Vector3D momentum;
       double         p     = std::abs(1. / pars(Acts::eQOP));
       double         phi   = pars(Acts::ePHI);
       double         theta = pars(Acts::eTHETA);
@@ -50,8 +50,8 @@ namespace detail {
     }
 
     static ParVector_t
-    global2curvilinear(const ActsVectorD<3>&,
-                       const ActsVectorD<3>& mom,
+    global2curvilinear(const Vector3D&,
+                       const Vector3D& mom,
                        double                charge)
     {
       ParVector_t parameters;

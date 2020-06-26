@@ -135,8 +135,7 @@ class GaussianGridTrackDensity {
   /// bin center in the 2-dim grid
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  ActsVectorF<trkGridSize> createTrackGrid(int offset,
-                                           const ActsSymMatrixD<2>& cov,
+  ActsVectorF<trkGridSize> createTrackGrid(int offset, const SymMatrix2D& cov,
                                            float distCtrD,
                                            float distCtrZ) const;
 
@@ -151,7 +150,7 @@ class GaussianGridTrackDensity {
                                   float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
-  float normal2D(float d, float z, const ActsSymMatrixD<2>& cov) const;
+  float normal2D(float d, float z, const SymMatrix2D& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main
