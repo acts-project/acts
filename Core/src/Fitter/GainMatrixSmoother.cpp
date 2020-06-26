@@ -8,12 +8,11 @@
 
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 
-  Acts::GainMatrixSmoother::GainMatrixSmoother(
-      std::shared_ptr<const Acts::Logger> logger)
-      : m_logger(std::move(logger)) {}
+Acts::GainMatrixSmoother::GainMatrixSmoother(
+    std::shared_ptr<const Acts::Logger> logger)
+    : m_logger(std::move(logger)) {}
 
-  const Acts::Logger& 
-  Acts::GainMatrixSmoother::logger() const {
-    assert(m_logger);
-    return *m_logger;
-  }
+const Acts::Logger& Acts::GainMatrixSmoother::logger() const {
+  assert(m_logger);
+  return *m_logger;
+}

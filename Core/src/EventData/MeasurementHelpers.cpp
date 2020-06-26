@@ -8,14 +8,16 @@
 
 #include "Acts/EventData/MeasurementHelpers.hpp"
 
-bool Acts::MinimalSourceLink::operator==(const Acts::MinimalSourceLink& rhs) const {
-return meas == rhs.meas;
+bool Acts::MinimalSourceLink::operator==(
+    const Acts::MinimalSourceLink& rhs) const {
+  return meas == rhs.meas;
 }
 
 const Acts::Surface& Acts::MinimalSourceLink::referenceSurface() const {
-return *MeasurementHelpers::getSurface(*meas);
+  return *MeasurementHelpers::getSurface(*meas);
 }
 
-const Acts::FittableMeasurement<Acts::MinimalSourceLink>& Acts::MinimalSourceLink::operator*() const {
-return *meas;
+const Acts::FittableMeasurement<Acts::MinimalSourceLink>&
+    Acts::MinimalSourceLink::operator*() const {
+  return *meas;
 }
