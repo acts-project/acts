@@ -363,7 +363,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
@@ -372,7 +372,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
@@ -381,7 +381,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
@@ -390,7 +390,7 @@ class SurfaceArrayCreator {
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
       ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
+            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
     }
     // clang-format on
 

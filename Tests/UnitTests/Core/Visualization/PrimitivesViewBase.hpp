@@ -12,8 +12,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/EventDataVisualization.hpp"
-#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/EventDataView.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
@@ -23,7 +23,8 @@
 #include <string>
 
 namespace Acts {
-namespace PrimitivesVisualization {
+
+namespace PrimitivesViewTest {
 
 // Test on a plane
 auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
@@ -38,70 +39,62 @@ GeometryContext gctx = GeometryContext();
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string test(IVisualization& helper) {
+static inline std::string run(IVisualization& helper) {
   std::stringstream ss;
 
+  ViewConfig lineView({0, 0, 255});
+  lineView.lineThickness = 0.1;
+
   // Line visualization ------------------------------------------------
-  IVisualization::ColorType lineColor = {0, 0, 250};
   Vector3D start = {1., 1., 1.};
   Vector3D end = {4., 4., 4.};
-  Acts::GeometryVisualization::drawSegment(helper, start, end, 0.1, 72,
-                                           lineColor);
+  Acts::GeometryView::drawSegment(helper, start, end);
   helper.write("Primitives_Line");
-  helper.write(ss);
   helper.write(ss);
   helper.clear();
 
   // Arrows visualization ------------------------------------------------
   start = {1., 0., 0.};
   end = {4., 0., 0.};
-  Acts::GeometryVisualization::drawArrowForward(helper, start, end, 0.1, 0.1,
-                                                3., 72, {0, 75, 0});
+  Acts::GeometryView::drawArrowForward(helper, start, end, 3., 2., lineView);
 
   start = {1., 2., 0.};
   end = {4., 2., 0.};
-  Acts::GeometryVisualization::drawArrowBackward(helper, start, end, 0.1, 0.1,
-                                                 3., 72, {0, 150, 0});
+  Acts::GeometryView::drawArrowBackward(helper, start, end, 3., 2., lineView);
 
   start = {1., 4., 0.};
   end = {4., 4., 0.};
-  Acts::GeometryVisualization::drawArrowsBoth(helper, start, end, 0.1, 0.1, 3.,
-                                              72, {0, 250, 0});
+  Acts::GeometryView::drawArrowsBoth(helper, start, end, 3., 2., lineView);
+
   helper.write("Primitives_Arrows");
   helper.write(ss);
   helper.clear();
 
   // Error visualization: local ---------------------------------------------
-  IVisualization::ColorType surfaceColor = {120, 250, 0};
-  Acts::GeometryVisualization::drawSurface(
-      helper, *plane, gctx, Transform3D::Identity(), 72, false, surfaceColor);
+  Acts::GeometryView::drawSurface(helper, *plane, gctx);
 
-  IVisualization::ColorType errorColor = {250, 0, 0};
+  ViewConfig errorVis({250, 0, 0});
+  errorVis.lineThickness = 0.025;
 
   ActsSymMatrixD<2> cov = ActsSymMatrixD<2>::Identity();
-  double s0 = 0.45;
+  double s0 = 0.75;
   double s1 = 1.99;
   double r01 = 0.78;
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
 
   Vector2D lcentered{0., 0.};
-  Acts::EventDataVisualization::drawCovarianceCartesian(
-      helper, lcentered, cov, plane->transform(gctx), {3}, 10., 72, errorColor);
+  Acts::EventDataView::drawCovarianceCartesian(
+      helper, lcentered, cov, plane->transform(gctx), 1.0, errorVis);
 
   helper.write("Primitives_CartesianError");
   helper.write(ss);
   helper.clear();
 
   // Error visualization: angular ---------------------------------------------
-  Acts::GeometryVisualization::drawSurface(
-      helper, *plane, gctx, Transform3D::Identity(), 72, false, surfaceColor);
-
-  // Error visualization
-  errorColor = {250, 0, 0};
-
+  Acts::GeometryView::drawSurface(helper, *plane, gctx);
   cov = ActsSymMatrixD<2>::Identity();
   s0 = 0.08;
-  s1 = 0.01;
+  s1 = 0.035;
   r01 = 0.3;
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
 
@@ -110,13 +103,12 @@ static inline std::string test(IVisualization& helper) {
 
   double directionScale = 5.;
 
-  Acts::EventDataVisualization::drawCovarianceAngular(
-      helper, origin, direction, cov, {3}, directionScale, 10., 72, errorColor);
+  Acts::EventDataView::drawCovarianceAngular(helper, origin, direction, cov,
+                                             directionScale, 10., errorVis);
 
-  Acts::GeometryVisualization::drawArrowForward(
+  Acts::GeometryView::drawArrowForward(
       helper, origin + 0.5 * directionScale * direction,
-      origin + 1.2 * directionScale * direction, 0.02, 0.1, 5., 72,
-      {10, 10, 10});
+      origin + 1.2 * directionScale * direction, 3., 2., errorVis);
 
   helper.write("Primitives_AngularError");
   helper.write(ss);
@@ -125,5 +117,5 @@ static inline std::string test(IVisualization& helper) {
   return ss.str();
 }
 
-}  // namespace PrimitivesVisualization
+}  // namespace PrimitivesViewTest
 }  // namespace Acts

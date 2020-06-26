@@ -10,9 +10,11 @@
 
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
 #include <fstream>
+#include <iomanip>
 #include <map>
 #include <sstream>
 #include <string>
@@ -38,22 +40,27 @@ class ObjVisualization : public IVisualization {
   /// Type of a line
   using LineType = std::pair<size_t, size_t>;
 
+  /// Constructor that allows to set scalor and precision
+  /// @param prec The output precission with std::setprecision
+  /// @param scale An (optional) scaling for the writing out
+  ObjVisualization(unsigned int prec = 4, double scale = 1.)
+      : m_outputPrecision(prec), m_outputScalor(scale) {}
+
   /// @copydoc Acts::IVisualization::vertex()
-  void vertex(const Vector3D& vtx,
-              IVisualization::ColorType color = {0, 0, 0}) final;
+  void vertex(const Vector3D& vtx, ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::line()
   void line(const Vector3D& a, const Vector3D& b,
-            IVisualization::ColorType color = {0, 0, 0}) final;
+            ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::face()
   void face(const std::vector<Vector3D>& vtxs,
-            IVisualization::ColorType color = {0, 0, 0}) final;
+            ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::faces()
   void faces(const std::vector<Vector3D>& vtxs,
              const std::vector<FaceType>& faces,
-             ColorType color = {0, 0, 0}) final;
+             ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::write()
   void write(const std::string& path) const final;
@@ -70,13 +77,17 @@ class ObjVisualization : public IVisualization {
   void clear() final;
 
  private:
+  /// The output parameters
+  unsigned int m_outputPrecision = 4;
+  double m_outputScalor = 1.;
+  /// The object data to be written
   std::vector<VertexType> m_vertices;
   std::vector<FaceType> m_faces;
   std::vector<LineType> m_lines;
   /// Map of colors to be written at given index position
-  std::map<size_t, IVisualization::ColorType> m_lineColors;
-  std::map<size_t, IVisualization::ColorType> m_vertexColors;
-  std::map<size_t, IVisualization::ColorType> m_faceColors;
+  std::map<size_t, ColorRGB> m_lineColors;
+  std::map<size_t, ColorRGB> m_vertexColors;
+  std::map<size_t, ColorRGB> m_faceColors;
 };
 
 #include "detail/ObjVisualization.ipp"
