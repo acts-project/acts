@@ -20,7 +20,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 
 using Acts::VectorHelpers::perp;
@@ -550,9 +550,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
 
   // Write the surrace array with grid
   ObjVisualization objVis;
-  GeometryVisualization::drawSurfaceArray(
-      objVis, *sArray, tgContext, {binR, binPhi}, Transform3D::Identity(), 1,
-      false, {120, 120, 0}, {200, 0, 0});
+  GeometryView::drawSurfaceArray(objVis, *sArray, tgContext);
   objVis.write("SurfaceArrayCreator_EndcapGrid");
 }
 
@@ -585,9 +583,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   // Write the surrace array with grid
   ObjVisualization objVis;
-  GeometryVisualization::drawSurfaceArray(objVis, sa, tgContext, {binPhi, binZ},
-                                          Transform3D::Identity(), 1, false,
-                                          {120, 120, 0}, {200, 0, 0});
+  GeometryView::drawSurfaceArray(objVis, sa, tgContext);
   objVis.write("SurfaceArrayCreator_BarrelGrid");
 
   // actually filled SA

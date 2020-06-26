@@ -7,14 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename T>
-void PlyVisualization<T>::vertex(const Vector3D& vtx,
-                                 IVisualization::ColorType color) {
+void PlyVisualization<T>::vertex(const Vector3D& vtx, ColorRGB color) {
   m_vertices.emplace_back(vtx.template cast<ValueType>(), color);
 }
 
 template <typename T>
 void PlyVisualization<T>::face(const std::vector<Vector3D>& vtxs,
-                               IVisualization::ColorType color) {
+                               ColorRGB color) {
   FaceType idxs;
   idxs.reserve(vtxs.size());
   for (const auto& vtx : vtxs) {
@@ -26,13 +25,13 @@ void PlyVisualization<T>::face(const std::vector<Vector3D>& vtxs,
 
 template <typename T>
 void PlyVisualization<T>::faces(const std::vector<Vector3D>& vtxs,
-                                const std::vector<FaceType>&, ColorType color) {
+                                const std::vector<FaceType>&, ColorRGB color) {
   face(vtxs, color);
 }
 
 template <typename T>
 void PlyVisualization<T>::line(const Vector3D& a, const Vector3D& b,
-                               IVisualization::ColorType color) {
+                               ColorRGB color) {
   vertex(a, color);
   size_t idx_a = m_vertices.size() - 1;
   vertex(b, color);
@@ -73,8 +72,7 @@ void PlyVisualization<T>::write(std::ostream& os) const {
   os << "property uchar blue\n";
   os << "end_header\n";
 
-  for (const std::pair<VertexType, IVisualization::ColorType>& vtx :
-       m_vertices) {
+  for (const std::pair<VertexType, ColorRGB>& vtx : m_vertices) {
     os << vtx.first.x() << " " << vtx.first.y() << " " << vtx.first.z() << " ";
     os << vtx.second[0] << " " << vtx.second[1] << " " << vtx.second[2] << "\n";
   }
@@ -87,8 +85,7 @@ void PlyVisualization<T>::write(std::ostream& os) const {
     os << "\n";
   }
 
-  for (const std::pair<std::pair<size_t, size_t>, IVisualization::ColorType>&
-           edge : m_edges) {
+  for (const std::pair<std::pair<size_t, size_t>, ColorRGB>& edge : m_edges) {
     std::pair<size_t, size_t> idxs = edge.first;
     os << idxs.first << " " << idxs.second << " ";
     os << edge.second[0] << " " << edge.second[1] << " " << edge.second[2]

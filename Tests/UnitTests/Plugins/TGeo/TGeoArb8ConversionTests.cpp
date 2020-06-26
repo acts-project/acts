@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "TGeoArb8.h"
 #include "TGeoManager.h"
@@ -33,6 +33,10 @@ namespace Acts {
 namespace Test {
 
 GeometryContext tgContext = GeometryContext();
+
+ViewConfig red({200, 0, 0});
+ViewConfig green({0, 200, 0});
+ViewConfig blue({0, 0, 200});
 
 /// @brief Unit test to convert a TGeoTrd2 into a Plane
 ///
@@ -76,19 +80,14 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     // Check if the surface is the (negative) identity
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
-    GeometryVisualization::drawSurface(objVis, *plane, tgContext,
-                                       Transform3D::Identity(), 1, false,
-                                       {0, 0, 120});
+    GeometryView::drawSurface(objVis, *plane, tgContext);
     const Vector3D center = plane->center(tgContext);
-    GeometryVisualization::drawArrowForward(objVis, center,
-                                            center + 30 * rotation.col(0), 0.2,
-                                            4., 2.5, 72, {200, 0, 0});
-    GeometryVisualization::drawArrowForward(objVis, center,
-                                            center + 30 * rotation.col(1), 0.2,
-                                            4., 2.5, 72, {0, 200, 0});
-    GeometryVisualization::drawArrowForward(objVis, center,
-                                            center + 2 * rotation.col(2), 0.2,
-                                            4., 2.5, 72, {0, 0, 200});
+    GeometryView::drawArrowForward(objVis, center,
+                                   center + 30 * rotation.col(0), 4., 2.5, red);
+    GeometryView::drawArrowForward(
+        objVis, center, center + 30 * rotation.col(1), 4., 2.5, green);
+    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
+                                   4., 2.5, blue);
 
     objVis.write("TGeoConversion_TGeoArb8_PlaneSurface_" +
                  std::to_string(iarb8++));
