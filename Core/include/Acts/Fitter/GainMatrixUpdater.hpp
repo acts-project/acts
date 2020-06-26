@@ -32,8 +32,7 @@ class GainMatrixUpdater {
   /// @param logger a logger instance
   GainMatrixUpdater(
       std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("GainMatrixUpdater", Logging::INFO).release()))
-      : m_logger(std::move(logger)) {}
+          getDefaultLogger("GainMatrixUpdater", Logging::INFO).release()));
 
   /// @brief Public call operator for the boost visitor pattern
   ///
@@ -151,10 +150,7 @@ class GainMatrixUpdater {
   std::shared_ptr<const Logger> m_logger{nullptr};
 
   /// Getter for the logger, to support logging macros
-  const Logger& logger() const {
-    assert(m_logger);
-    return *m_logger;
-  }
+  const Logger& logger() const;
 };
 
 }  // namespace Acts
