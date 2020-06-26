@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <ostream>
 
+#include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -47,9 +48,8 @@ class SingleFreeTrackParameters {
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
                             const FreeVector& parValues)
-      : m_parameters(parValues),
-        m_oChargePolicy((0 < parValues(eFreeQOverP)) ? 1. : -1.),
-        m_covariance(std::move(cov)) {}
+      : m_oParameters(std::move(cov), parValues),
+        m_oChargePolicy(std::copysign(1., parValues[eFreeQOverP])) {}
 
   /// Construct track parameters for neutral particles.
   ///
@@ -60,9 +60,7 @@ class SingleFreeTrackParameters {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
                             const FreeVector& parValues)
-      : m_parameters(parValues),
-        m_oChargePolicy(),
-        m_covariance(std::move(cov)) {}
+      : m_oParameters(std::move(cov), parValues), m_oChargePolicy() {}
 
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
@@ -70,17 +68,17 @@ class SingleFreeTrackParameters {
   /// @brief Access all parameters
   ///
   /// @return Vector containing the store parameters
-  FreeVector parameters() const { return m_parameters; }
+  FreeVector parameters() const { return m_oParameters.getParameters(); }
 
   /// @brief Access to a single parameter
   ///
-  /// @tparam par Identifier of the parameter index which will be retrieved
+  /// @tparam kIndex Identifier of the parameter index which will be retrieved
   ///
   /// @return Value of the requested parameter
-  template <unsigned int par,
-            std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t get()
-                const {
-    return m_parameters(par);
+  template <FreeParametersIndices kIndex,
+            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
+                get() const {
+    return m_oParameters.template getParameter<kIndex>();
   }
 
   /// @brief Access track parameter uncertainty
@@ -89,10 +87,10 @@ class SingleFreeTrackParameters {
   /// be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
-  template <unsigned int par,
-            std::enable_if_t<par<eFreeParametersSize, int> = 0> ParValue_t
+  template <FreeParametersIndices kIndex,
+            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
                 uncertainty() const {
-    return std::sqrt(m_covariance->coeff(par, par));
+    return m_oParameters.template getUncertainty<kIndex>();
   }
 
   /// @brief Access covariance matrix of track parameters
@@ -103,18 +101,23 @@ class SingleFreeTrackParameters {
   /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const std::optional<CovMatrix_t>& covariance() const { return m_covariance; }
+  const std::optional<CovMatrix_t>& covariance() const {
+    return m_oParameters.getCovariance();
+  }
 
   /// @brief access position in global coordinate system
   ///
   /// @return 3D vector with global position
-  Vector3D position() const { return m_parameters.template head<3>(); }
+  Vector3D position() const {
+    return parameters().template segment<3>(eFreePos0);
+  }
 
   /// @brief access momentum in global coordinate system
   ///
   /// @return 3D vector with global momentum
   Vector3D momentum() const {
-    return m_parameters.template segment<3>(4) / std::abs(get<7>());
+    return parameters().template segment<3>(eFreeDir0) /
+           std::abs(get<eFreeQOverP>());
   }
 
   /// @brief retrieve electric charge
@@ -125,7 +128,13 @@ class SingleFreeTrackParameters {
   /// @brief retrieve time
   ///
   /// @return value of time
-  double time() const { return m_parameters(3); }
+  double time() const { return get<eFreeTime>(); }
+
+  /// @brief access to the internally stored FreeParameterSet
+  ///
+  /// @return FreeParameterSet object holding parameter values and their
+  /// covariance matrix
+  const FullFreeParameterSet& getParameterSet() const { return m_oParameters; }
 
   /// @brief Equality operator
   ///
@@ -139,19 +148,8 @@ class SingleFreeTrackParameters {
       return false;
     }
 
-    // Both have covariance matrices set
-    if ((m_covariance.has_value() && casted->m_covariance.has_value()) &&
-        (*m_covariance != *casted->m_covariance)) {
-      return false;
-    }
-    // Only one has a covariance matrix set
-    if ((m_covariance.has_value() && !casted->m_covariance.has_value()) ||
-        (!m_covariance.has_value() && casted->m_covariance.has_value())) {
-      return false;
-    }
-
     return (m_oChargePolicy == casted->m_oChargePolicy &&
-            m_parameters == casted->m_parameters);
+            m_oParameters == casted->m_oParameters);
   }
 
   /// @brief inequality operator
@@ -169,10 +167,10 @@ class SingleFreeTrackParameters {
   ///
   /// @note The context is not used here but makes the API consistent with
   /// @c SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
-  template <unsigned int par,
+  template <FreeParametersIndices par,
             std::enable_if_t<par<eFreeParametersSize, int> = 0> void set(
                 const GeometryContext& /*gctx*/, ParValue_t newValue) {
-    m_parameters(par) = newValue;
+    m_oParameters.setParameter<par>(newValue);
   }
 
   /// @brief Print information to output stream
@@ -216,10 +214,10 @@ class SingleFreeTrackParameters {
   }
 
  private:
-  FreeVector m_parameters;       ///< Parameter vector
+  FullFreeParameterSet
+      m_oParameters;             ///< FreeParameterSet object holding the
+                                 /// parameter values and covariance matrix
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
-  std::optional<CovMatrix_t> m_covariance;  ///< Covariance matrix
 };
-
 }  // namespace Acts
