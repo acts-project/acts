@@ -19,6 +19,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/EventData/Measurement.hpp"
 
 namespace Acts {
 
