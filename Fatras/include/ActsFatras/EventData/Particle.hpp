@@ -66,24 +66,22 @@ class Particle {
   /// Set the process type that generated this particle.
   Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
   /// Set the space-time position four-vector.
-  ///
-  /// The component order is [x,y,z,t].
   Particle &setPosition4(const Vector4 &pos4) {
     m_position4 = pos4;
     return *this;
   }
   /// Set the space-time position four-vector from three-position and time.
   Particle &setPosition4(const Vector3 &position, Scalar time) {
-    m_position4.head<3>() = position;
-    m_position4[3] = time;
+    m_position4.segment<3>(Acts::ePos0) = position;
+    m_position4[Acts::eTime] = time;
     return *this;
   }
   /// Set the space-time position four-vector from scalar components.
   Particle &setPosition4(Scalar x, Scalar y, Scalar z, Scalar time) {
-    m_position4[0] = x;
-    m_position4[1] = y;
-    m_position4[2] = z;
-    m_position4[3] = time;
+    m_position4[Acts::ePos0] = x;
+    m_position4[Acts::ePos1] = y;
+    m_position4[Acts::ePos2] = z;
+    m_position4[Acts::eTime] = time;
     return *this;
   }
   /// Set the direction three-vector
@@ -94,9 +92,9 @@ class Particle {
   }
   /// Set the direction three-vector from scalar components.
   Particle &setDirection(Scalar dx, Scalar dy, Scalar dz) {
-    m_unitDirection[0] = dx;
-    m_unitDirection[1] = dy;
-    m_unitDirection[2] = dz;
+    m_unitDirection[Acts::ePos0] = dx;
+    m_unitDirection[Acts::ePos1] = dy;
+    m_unitDirection[Acts::ePos2] = dz;
     m_unitDirection.normalize();
     return *this;
   }
@@ -132,30 +130,26 @@ class Particle {
   constexpr Scalar mass() const { return m_mass; }
 
   /// Space-time position four-vector.
-  ///
-  /// The component order is [x,y,z,t].
   constexpr const Vector4 &position4() const { return m_position4; }
   /// Three-position, i.e. spatial coordinates without the time.
-  auto position() const { return m_position4.head<3>(); }
+  auto position() const { return m_position4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
-  Scalar time() const { return m_position4[3]; }
+  Scalar time() const { return m_position4[Acts::eTime]; }
   /// Energy-momentum four-vector.
-  ///
-  /// The component order is [px,py,pz,E].
   Vector4 momentum4() const {
     Vector4 mom4;
     // stored direction is always normalized
-    mom4[0] = m_absMomentum * m_unitDirection[0];
-    mom4[1] = m_absMomentum * m_unitDirection[1];
-    mom4[2] = m_absMomentum * m_unitDirection[2];
-    mom4[3] = energy();
+    mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[Acts::ePos0];
+    mom4[Acts::eMom1] = m_absMomentum * m_unitDirection[Acts::ePos1];
+    mom4[Acts::eMom2] = m_absMomentum * m_unitDirection[Acts::ePos2];
+    mom4[Acts::eEnergy] = energy();
     return mom4;
   }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
   const Vector3 &unitDirection() const { return m_unitDirection; }
   /// Absolute momentum in the x-y plane.
   Scalar transverseMomentum() const {
-    return m_absMomentum * m_unitDirection.head<2>().norm();
+    return m_absMomentum * m_unitDirection.segment<2>(Acts::eMom0).norm();
   }
   /// Absolute momentum.
   constexpr Scalar absMomentum() const { return m_absMomentum; }

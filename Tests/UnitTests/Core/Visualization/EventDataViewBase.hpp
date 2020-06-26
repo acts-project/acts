@@ -205,7 +205,7 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   measurements.reserve(6);
   Vector2D lPosCenter{10_mm, 10_mm};
   std::array<double, 2> resolution = {30_um, 50_um};
-  ActsSymMatrixD<2> cov2D;
+  SymMatrix2D cov2D;
   cov2D << resolution[eLOC_0] * resolution[eLOC_0], 0., 0.,
       resolution[eLOC_1] * resolution[eLOC_1];
   for (const auto& surface : surfaces) {
