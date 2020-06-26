@@ -62,10 +62,11 @@ struct TestTrackState {
 /// @param [in] mask Specifies which components are filled
 /// @param [in] dim Dimension of the measurement
 ///
-/// @return Tuple containing a @c TestTrackState and the @c FittableMeasurement that were generated in this function
+/// @return Tuple containing a @c TestTrackState and the @c FittableMeasurement
+/// that were generated in this function
 template <typename track_state_t>
 auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
-                     size_t dim = 3) {
+                    size_t dim = 3) {
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
                                                  Vector3D{0., 0., 1.});
 
@@ -117,8 +118,8 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sourceLink, meas.covariance(),
-                 meas.parameters()[0], meas.parameters()[1]};
+    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sourceLink,
+                 meas.covariance(), meas.parameters()[0], meas.parameters()[1]};
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       ts.setCalibrated(*pc.meas2d);
     }
