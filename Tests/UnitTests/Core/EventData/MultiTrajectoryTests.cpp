@@ -78,7 +78,7 @@ auto fill_trackstate(track_state_t& ts, TrackStatePropMask mask,
 
     SourceLink sl{fm.get()};
     pc.sl = sl;
-    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated) {
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
       ts.uncalibrated() = sl;
     }
 
@@ -89,7 +89,7 @@ auto fill_trackstate(track_state_t& ts, TrackStatePropMask mask,
                  meas.parameters()[0],
                  meas.parameters()[1],
                  meas.parameters()[2]};
-    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated) {
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       ts.setCalibrated(*pc.meas3d);
     }
   } else if (dim == 2) {
@@ -105,7 +105,7 @@ auto fill_trackstate(track_state_t& ts, TrackStatePropMask mask,
 
     SourceLink sl{fm.get()};
     pc.sl = sl;
-    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated) {
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
       ts.uncalibrated() = sl;
     }
 
@@ -161,7 +161,7 @@ auto fill_trackstate(track_state_t& ts, TrackStatePropMask mask,
 
   BoundParameters smot(gctx, smotCov, smotPar, plane);
   pc.smoothed = smot;
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed) {
+  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
     ts.smoothed() = smot.parameters();
     ts.smoothedCovariance() = *smot.covariance();
   }
