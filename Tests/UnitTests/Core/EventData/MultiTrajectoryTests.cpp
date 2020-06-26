@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,8 +42,8 @@ CurvilinearParameters make_params() {
 using ParVec_t = BoundParameters::ParVector_t;
 using CovMat_t = BoundParameters::CovMatrix_t;
 
-struct ParameterContainer {
-  SourceLink sl;
+struct TestTrackState {
+  SourceLink sourceLink;
   std::optional<Measurement<SourceLink, eLOC_0, eLOC_1, eQOP>> meas3d;
   std::optional<Measurement<SourceLink, eLOC_0, eLOC_1>> meas2d;
   std::optional<BoundParameters> predicted;
@@ -57,13 +57,13 @@ struct ParameterContainer {
 // std::pair<TrackState<SourceLink, BoundParameters>,
 // std::unique_ptr<FittableMeasurement<SourceLink>>>
 template <typename track_state_t>
-auto fill_trackstate(track_state_t& ts, TrackStatePropMask mask,
+auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
                      size_t dim = 3) {
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
                                                  Vector3D{0., 0., 1.});
 
   std::unique_ptr<FittableMeasurement<SourceLink>> fm;
-  ParameterContainer pc;
+  TestTrackState pc;
 
   if (dim == 3) {
     ActsMatrixD<3, 3> mCov;
@@ -76,15 +76,15 @@ auto fill_trackstate(track_state_t& ts, TrackStatePropMask mask,
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
-    SourceLink sl{fm.get()};
-    pc.sl = sl;
+    SourceLink sourceLink{fm.get()};
+    pc.sourceLink = sourceLink;
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
-      ts.uncalibrated() = sl;
+      ts.uncalibrated() = sourceLink;
     }
 
     // "calibrate", keep original source link (stack address)
     pc.meas3d = {meas.referenceSurface().getSharedPtr(),
-                 sl,
+                 sourceLink,
                  meas.covariance(),
                  meas.parameters()[0],
                  meas.parameters()[1],
@@ -103,14 +103,14 @@ auto fill_trackstate(track_state_t& ts, TrackStatePropMask mask,
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
-    SourceLink sl{fm.get()};
-    pc.sl = sl;
+    SourceLink sourceLink{fm.get()};
+    pc.sourceLink = sourceLink;
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
-      ts.uncalibrated() = sl;
+      ts.uncalibrated() = sourceLink;
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sl, meas.covariance(),
+    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sourceLink, meas.covariance(),
                  meas.parameters()[0], meas.parameters()[1]};
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       ts.setCalibrated(*pc.meas2d);
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   MultiTrajectory<SourceLink> t;
   size_t index = t.addTrackState();
   auto tso = t.getTrackState(index);
-  auto [pc, fm] = fill_trackstate(tso, TrackStatePropMask::All);
+  auto [pc, fm] = fillTrackState(tso, TrackStatePropMask::All);
 
   const auto& ct = t;
   auto cts = ct.getTrackState(0);
@@ -450,9 +450,9 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 
   // make copy of fm
   auto fm2 = std::make_unique<FittableMeasurement<SourceLink>>(*fm);
-  SourceLink sl2{fm2.get()};
-  ts.uncalibrated() = sl2;
-  BOOST_CHECK_EQUAL(cts.uncalibrated(), sl2);
+  SourceLink sourceLink2{fm2.get()};
+  ts.uncalibrated() = sourceLink2;
+  BOOST_CHECK_EQUAL(cts.uncalibrated(), sourceLink2);
   BOOST_CHECK_NE(cts.uncalibrated(), SourceLink{fm.get()});
 
   CovMat_t newMeasCov;
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   MultiTrajectory<SourceLink> t;
   size_t index = t.addTrackState();
   auto tso = t.getTrackState(index);
-  auto [pc, fm] = fill_trackstate(tso, TrackStatePropMask::All);
+  auto [pc, fm] = fillTrackState(tso, TrackStatePropMask::All);
 
   auto ts = t.getTrackState(0);
 
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   MultiTrajectory<SourceLink> t;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
-  auto [pc, fm] = fill_trackstate(ts, TrackStatePropMask::All);
+  auto [pc, fm] = fillTrackState(ts, TrackStatePropMask::All);
 
   // now investigate the proxy
   // parameters
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.smoothed->parameters(), ts.smoothed());
   BOOST_CHECK_EQUAL(*pc.smoothed->covariance(), ts.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(&ts.referenceSurface(), &pc.sl.referenceSurface());
+  BOOST_CHECK_EQUAL(&ts.referenceSurface(), &pc.sourceLink.referenceSurface());
 
   BOOST_CHECK(ts.hasJacobian());
   BOOST_CHECK_EQUAL(ts.jacobian(), pc.jacobian);
@@ -607,10 +607,10 @@ BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
       TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
       TrackStatePropMask::Uncalibrated | TrackStatePropMask::Jacobian);
   auto tso = t.getTrackState(i);
-  fill_trackstate(tso, TrackStatePropMask::Predicted);
-  fill_trackstate(tso, TrackStatePropMask::Filtered);
-  fill_trackstate(tso, TrackStatePropMask::Uncalibrated);
-  fill_trackstate(tso, TrackStatePropMask::Jacobian);
+  fillTrackState(tso, TrackStatePropMask::Predicted);
+  fillTrackState(tso, TrackStatePropMask::Filtered);
+  fillTrackState(tso, TrackStatePropMask::Uncalibrated);
+  fillTrackState(tso, TrackStatePropMask::Jacobian);
 
   BOOST_CHECK(tso.hasPredicted());
   BOOST_CHECK(tso.hasFiltered());
@@ -702,8 +702,8 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   size_t i1 = mj.addTrackState();
   ts1 = mj.getTrackState(i0);
   ts2 = mj.getTrackState(i1);
-  auto [rts1, fm1] = fill_trackstate(ts1, TrackStatePropMask::All, 2);
-  auto [rts2, fm2] = fill_trackstate(ts2, TrackStatePropMask::All, 3);
+  auto [rts1, fm1] = fillTrackState(ts1, TrackStatePropMask::All, 2);
+  auto [rts2, fm2] = fillTrackState(ts2, TrackStatePropMask::All, 3);
 
   auto ots1 = mkts(PM::All);
   auto ots2 = mkts(PM::All);
