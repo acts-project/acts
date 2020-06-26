@@ -77,7 +77,7 @@ static inline std::string run(IVisualization& helper) {
   errorVis.lineThickness = 0.025;
 
   SymMatrix2D cov = SymMatrix2D::Identity();
-  double s0 = 0.45;
+  double s0 = 0.75;
   double s1 = 1.99;
   double r01 = 0.78;
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
