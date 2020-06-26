@@ -33,7 +33,7 @@ class ProtoLayerHelper {
   ///
   /// @param cfg Explicit config struct
   /// @param logger logging instance
-  ProtoLayerHelper(const Config&,
+  ProtoLayerHelper(const Config& /* cfg */,
                    std::unique_ptr<const Logger> logger =
                        getDefaultLogger("ProtoLayerHelper", Logging::INFO))
       : m_logger(std::move(logger)) {}
