@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include <array>
 #include <random>
 
 #include "ACTFW/Framework/RandomNumbers.hpp"
@@ -22,26 +21,27 @@ namespace FW {
 
 struct FixedVertexGenerator {
   /// The fixed vertex position and time.
-  Acts::ActsVector<double, 4> fixed = {0.0, 0.0, 0.0, 0.0};
+  Acts::Vector4D fixed = Acts::Vector4D::Zero();
 
-  Acts::ActsVector<double, 4> operator()(RandomEngine& /* unused */) const {
-    return fixed;
-  }
+  Acts::Vector4D operator()(RandomEngine& /* unused */) const { return fixed; }
 };
 
 struct GaussianVertexGenerator {
   // standard deviation comes first, since it is more likely to be modified
   /// Vertex position and time standard deviation.
-  std::array<double, 4> stddev = {0.0, 0.0, 0.0, 0.0};
+  Acts::Vector4D stddev = {0.0, 0.0, 0.0, 0.0};
   /// Mean vertex position and time.
-  std::array<double, 4> mean = {0.0, 0.0, 0.0, 0.0};
+  Acts::Vector4D mean = {0.0, 0.0, 0.0, 0.0};
 
-  Acts::ActsVector<double, 4> operator()(RandomEngine& rng) const {
-    auto x = std::normal_distribution<double>(mean[0], stddev[0])(rng);
-    auto y = std::normal_distribution<double>(mean[1], stddev[1])(rng);
-    auto z = std::normal_distribution<double>(mean[2], stddev[2])(rng);
-    auto t = std::normal_distribution<double>(mean[3], stddev[3])(rng);
-    return {x, y, z, t};
+  Acts::Vector4D operator()(RandomEngine& rng) const {
+    auto normal = std::normal_distribution<double>(0.0, 1.0);
+    Acts::Vector4D rndNormal = {
+        normal(rng),
+        normal(rng),
+        normal(rng),
+        normal(rng),
+    };
+    return mean + rndNormal.cwiseProduct(stddev);
   }
 };
 
