@@ -13,6 +13,7 @@
 #pragma once
 
 #include <bitset>
+#include <cassert>
 #include <cmath>
 #include <cstdlib>
 #include <iomanip>
@@ -170,12 +171,10 @@ inline double cast(const Vector3D& position, BinningValue bval) {
       return eta(position);
     case binMag:
       return position.norm();
-    case binValues:
-      // binValues stores the maximum number of entries. this is not a real
-      // binning option and the case is only here to make the switch exhaustive.
-      break;
+    default:
+      // empty default to suppress warnings on non-exhaustive switch
   }
-  // without a defined binning value the cast is undefined
+  assert("Invalid BinningValue enum value");
   return std::numeric_limits<double>::quiet_NaN();
 }
 
