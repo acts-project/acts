@@ -13,9 +13,9 @@
 namespace Acts {
 
 // explicitly instantiate templates
-template class SingleBoundTrackParameters<NeutralPolicy>;
-template class SingleCurvilinearTrackParameters<NeutralPolicy>;
-template class SingleFreeTrackParameters<NeutralPolicy>;
+template class SingleBoundTrackParameters<Neutral>;
+template class SingleCurvilinearTrackParameters<Neutral>;
+template class SingleFreeTrackParameters<Neutral>;
 
 // ensure concrete classes satisfy the concepts
 static_assert(

@@ -12,9 +12,9 @@
 namespace Acts {
 
 // explicitly instantiate templates
-template class SingleBoundTrackParameters<ChargedPolicy>;
-template class SingleCurvilinearTrackParameters<ChargedPolicy>;
-template class SingleFreeTrackParameters<ChargedPolicy>;
+template class SingleBoundTrackParameters<SinglyCharged>;
+template class SingleCurvilinearTrackParameters<SinglyCharged>;
+template class SingleFreeTrackParameters<SinglyCharged>;
 
 // ensure concrete classes satisfy the concepts
 static_assert(Concepts::BoundTrackParametersConcept<BoundParameters>);
