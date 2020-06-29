@@ -93,47 +93,7 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   BOOST_CHECK_EQUAL(curvilinear_pos_copy, curvilinear_pos);
   BOOST_CHECK_EQUAL(curvilinear_neg_copy, curvilinear_neg);
   BOOST_CHECK_EQUAL(curvilinear_neut_copy, curvilinear_neut);
-
-  /// modification test with set methods
-  double ux = 0.1_mm;
-  double uy = 0.5_mm;
-  curvilinear_pos_copy.set<eLOC_0>(tgContext, ux);
-  curvilinear_pos_copy.set<eLOC_1>(tgContext, uy);
-  // the local parameter should still be (0,0) for Curvilinear
-  BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_0], 0u);
-  BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_1], 0u);
-  // the position should be updated though
-  Vector3D uposition =
-      curvilinear_neg_copy.referenceSurface().transform(tgContext) *
-      Vector3D(ux, uy, 0.);
-  // the position should be updated
-  CHECK_CLOSE_REL(curvilinear_pos_copy.position(), uposition, 1e-6);
-  // it should be the position of the surface
-  CHECK_CLOSE_REL(curvilinear_pos_copy.referenceSurface().center(tgContext),
-                  uposition, 1e-6);
-
-  double uphi = 1.2;
-  double utheta = 0.2;
-  double uqop = 0.025_e / 1_GeV;
-  double ut = 1337_s;
-
-  curvilinear_pos_copy.set<ePHI>(tgContext, uphi);
-  curvilinear_pos_copy.set<eTHETA>(tgContext, utheta);
-  curvilinear_pos_copy.set<eQOP>(tgContext, uqop);
-  curvilinear_pos_copy.set<eT>(tgContext, ut);
-  // we should have a new updated momentum
-  Vector3D umomentum =
-      40. *
-      Vector3D(cos(uphi) * sin(utheta), sin(uphi) * sin(utheta), cos(utheta)) *
-      1_GeV;
-  CHECK_CLOSE_REL(umomentum, curvilinear_pos_copy.momentum(), 1e-6);
-  // the updated momentum should be the col(2) of the transform
-  CHECK_CLOSE_REL(umomentum.normalized(),
-                  curvilinear_pos_copy.referenceSurface()
-                      .transform(tgContext)
-                      .rotation()
-                      .col(2),
-                  1e-6);
 }
+
 }  // namespace Test
 }  // namespace Acts

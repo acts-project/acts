@@ -115,32 +115,6 @@ BOOST_DATA_TEST_CASE(
 
   // check that the reference frame is the rotation matrix
   CHECK_CLOSE_REL(ataPlane_from_pars.referenceFrame(tgContext), rot, 1e-6);
-
-  /// modification test via setter functions
-  double ux = 0.3;
-  double uy = 0.4;
-
-  ataPlane_from_pars.set<Acts::eLOC_X>(tgContext, ux);
-  ataPlane_from_pars.set<Acts::eLOC_Y>(tgContext, uy);
-  // we should have a new updated position
-  Vector3D lPosition3D(ux, uy, 0.);
-  Vector3D uposition = rot * lPosition3D + center;
-  CHECK_CLOSE_REL(uposition, ataPlane_from_pars.position(), 1e-6);
-
-  double uphi = 1.2;
-  double utheta = 0.2;
-  double uqop = 0.025;
-  double ut = 1337.;
-
-  ataPlane_from_pars.set<Acts::ePHI>(tgContext, uphi);
-  ataPlane_from_pars.set<Acts::eTHETA>(tgContext, utheta);
-  ataPlane_from_pars.set<Acts::eQOP>(tgContext, uqop);
-  ataPlane_from_pars.set<Acts::eT>(tgContext, ut);
-  // we should have a new updated momentum
-  Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
-                                      sin(uphi) * sin(utheta), cos(utheta));
-
-  CHECK_CLOSE_REL(umomentum, ataPlane_from_pars.momentum(), 1e-6);
 }
 
 /// @brief Unit test for parameters at a disc
