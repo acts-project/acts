@@ -414,38 +414,38 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
   // Modify start parameter
   switch (param) {
     case 0: {
-      tp.template set<0>(geoContext, tp.template get<0>() + h);
+      tp.template set<eFreePos0>(geoContext, tp.template get<eFreePos0>() + h);
       break;
     }
     case 1: {
-      tp.template set<1>(geoContext, tp.template get<1>() + h);
+      tp.template set<eFreePos1>(geoContext, tp.template get<eFreePos1>() + h);
       break;
     }
     case 2: {
-      tp.template set<2>(geoContext, tp.template get<2>() + h);
+      tp.template set<eFreePos2>(geoContext, tp.template get<eFreePos2>() + h);
       break;
     }
     case 3: {
-      tp.template set<3>(geoContext, tp.template get<3>() + h);
+      tp.template set<eFreeTime>(geoContext, tp.template get<eFreeTime>() + h);
       break;
     }
     case 4: {
-      const double phi = std::atan2(tp.template get<5>(), tp.template get<4>());
-      const double theta = std::acos(tp.template get<6>());
-      tp.template set<4>(geoContext, std::cos(phi + h) * std::sin(theta));
-      tp.template set<5>(geoContext, std::sin(phi + h) * std::sin(theta));
+      const double phi = std::atan2(tp.template get<eFreeDir1>(), tp.template get<eFreeDir0>());
+      const double theta = std::acos(tp.template get<eFreeDir2>());
+      tp.template set<eFreeDir0>(geoContext, std::cos(phi + h) * std::sin(theta));
+      tp.template set<eFreeDir1>(geoContext, std::sin(phi + h) * std::sin(theta));
       break;
     }
     case 5: {
-      const double phi = std::atan2(tp.template get<5>(), tp.template get<4>());
-      const double theta = std::acos(tp.template get<6>());
-      tp.template set<4>(geoContext, std::cos(phi) * std::sin(theta + h));
-      tp.template set<5>(geoContext, std::sin(phi) * std::sin(theta + h));
-      tp.template set<6>(geoContext, std::cos(theta + h));
+      const double phi = std::atan2(tp.template get<eFreeDir1>(), tp.template get<eFreeDir0>());
+      const double theta = std::acos(tp.template get<eFreeDir2>());
+      tp.template set<eFreeDir0>(geoContext, std::cos(phi) * std::sin(theta + h));
+      tp.template set<eFreeDir1>(geoContext, std::sin(phi) * std::sin(theta + h));
+      tp.template set<eFreeDir2>(geoContext, std::cos(theta + h));
       break;
     }
     case 6: {
-      tp.template set<7>(geoContext, tp.template get<7>() + h);
+      tp.template set<eFreeQOverP>(geoContext, tp.template get<eFreeQOverP>() + h);
       break;
     }
   }
