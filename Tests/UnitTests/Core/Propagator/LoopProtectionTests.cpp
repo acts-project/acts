@@ -44,7 +44,7 @@ struct SteppingState {
   Vector3D dir = Vector3D(0., 0., 1);
   double p = 100_MeV;
 
-  NavigationDirection navDir;
+  NavigationDirection navDir = NavigationDirection::forward;
 };
 
 /// @brief mockup of stepping state

@@ -35,7 +35,6 @@ class AccumulatedVolumeMaterial {
   double m_totalRho{0.};
   double m_thickness{1.};
   unsigned int m_materialEntries{0};
-  unsigned int m_vacuumEntries{0};
 };
 
 }  // namespace Acts

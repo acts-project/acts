@@ -26,9 +26,9 @@ struct VoidKalmanComponents {
   ///
   /// @return void-calibrated measurement
   template <typename measurement_t, typename parameters_t>
-  Result<measurement_t> operator()(measurement_t m,
-                                   const parameters_t& /*pars*/) const {
-    return m;
+  Result<measurement_t> operator()(measurement_t measurement,
+                                   const parameters_t& /* parameters */) const {
+    return measurement;
   }
 };
 
@@ -50,7 +50,8 @@ struct VoidMeasurementCalibrator {
   /// uncalibrated measurement via sourcelink, it's just a copy.
   template <typename source_link_t, typename parameters_t>
   FittableMeasurement<source_link_t> operator()(
-      const source_link_t& sl, const parameters_t& /*pars*/) const {
+      const source_link_t& sourceLink,
+      const parameters_t& /* parameters */) const {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does fulfill SourceLinkConcept.");
     static_assert(
@@ -59,8 +60,7 @@ struct VoidMeasurementCalibrator {
                               source_link_t>,
         "For DefaultMeasurementCalibrator, source link needs to implement "
         "dereference operator");
-
-    return *sl;
+    return *sourceLink;
   }
 };
 
@@ -76,7 +76,7 @@ struct VoidKalmanUpdater {
   ///
   /// @return The copied predicted parameters
   template <typename track_state_t, typename predicted_state_t>
-  auto operator()(track_state_t& /*m*/,
+  auto operator()(track_state_t& /* trackState */,
                   const predicted_state_t& predicted) const {
     return &(predicted.parameters);
   }
@@ -92,7 +92,7 @@ struct VoidKalmanSmoother {
   ///
   /// @return The resulting
   template <typename parameters_t, typename track_states_t>
-  const parameters_t* operator()(track_states_t& /*states*/) const {
+  const parameters_t* operator()(track_states_t& /* trackStates */) const {
     return nullptr;
   }
 };
@@ -107,7 +107,7 @@ struct VoidOutlierFinder {
   ///
   /// @return Whether it's outlier or not
   template <typename track_state_t>
-  constexpr bool operator()(const track_state_t& trackState) const {
+  constexpr bool operator()(const track_state_t& /* trackState */) const {
     return false;
   }
 };

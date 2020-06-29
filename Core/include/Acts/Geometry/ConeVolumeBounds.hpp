@@ -206,7 +206,7 @@ inline double ConeVolumeBounds::outerRmax() const {
 
 inline double ConeVolumeBounds::outerTanAlpha() const {
   return m_outerTanAlpha;
-};
+}
 
 inline std::vector<double> ConeVolumeBounds::values() const {
   std::vector<double> valvector;
@@ -225,4 +225,5 @@ stream_t& ConeVolumeBounds::dumpT(stream_t& dt) const {
   dt << get(eHalfLengthZ) << ", " << get(eAveragePhi) << std::endl;
   return dt;
 }
+
 }  // namespace Acts

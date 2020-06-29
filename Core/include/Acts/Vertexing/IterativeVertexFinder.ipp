@@ -398,7 +398,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     Vertex<InputTrack_t>& currentVertex,
     std::vector<const InputTrack_t*>& perigeesToFit,
     std::vector<const InputTrack_t*>& seedTracks,
-    const std::vector<const InputTrack_t*>& origTracks,
+    const std::vector<const InputTrack_t*>& /* origTracks */,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const {
   int numberOfAddedTracks = 0;
 
