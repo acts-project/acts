@@ -11,10 +11,10 @@
 #include <cassert>
 #include <cmath>
 
+#include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -144,14 +144,6 @@ class SingleBoundTrackParameters {
   template <BoundParametersIndices kIndex>
   Scalar uncertainty() const {
     return m_paramSet.getUncertainty<kIndex>();
-  }
-
-  /// Set a single parameter value identified by its index.
-  ///
-  /// @tparam kIndex Track parameter index
-  template <BoundParametersIndices kIndex>
-  void set(Scalar value) {
-    m_paramSet.setParameter<kIndex>(value);
   }
 
   /// Access the spatial position vector.
