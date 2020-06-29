@@ -77,23 +77,8 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
     }
     // Build boundaries
     CylinderVolumeBounds cvBounds(rMin, rMax, dz);
-    // Extract material if available
-    // dd4hep::Material ddmaterial = detElement.volume().material();
-    // if (!boost::iequals(ddmaterial.name(), "vacuum")) {
-    //   Material volumeMaterial(ddmaterial.radLength() * Acts::units::_cm,
-    //                           ddmaterial.intLength() * Acts::units::_cm,
-    //                           ddmaterial.A(), ddmaterial.Z(),
-    //                           ddmaterial.density() / pow(Acts::units::_cm,
-    //                           3));
-    //
-    //   volumes.push_back(TrackingVolume::create(
-    //       transform, std::make_shared<const CylinderVolumeBounds>(cvBounds),
-    //       std::make_shared<const
-    //       HomogeneousVolumeMaterial>(volumeMaterial)));
-    // } else {
     volumes.push_back(TrackingVolume::create(
         transform, std::make_shared<const CylinderVolumeBounds>(cvBounds)));
-    // }
   }
   return volumes;
 }
