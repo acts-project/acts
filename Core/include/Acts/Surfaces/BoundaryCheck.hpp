@@ -51,7 +51,7 @@ class BoundaryCheck {
   ///
   /// @param localCovariance Coverance matrix in local coordinates
   /// @param sigmaMax  Significance for the compatibility test
-  BoundaryCheck(const ActsSymMatrixD<2>& localCovariance, double sigmaMax = 1);
+  BoundaryCheck(const SymMatrix2D& localCovariance, double sigmaMax = 1);
 
   operator bool() const { return (m_type != Type::eNone); }
   bool operator!() const { return !bool(*this); }
@@ -124,7 +124,7 @@ class BoundaryCheck {
   const Vector2D& tolerance() const;
 
   // Return the covariance matrix
-  ActsSymMatrixD<2> covariance() const;
+  SymMatrix2D covariance() const;
 
  private:
   /// Return a new BoundaryCheck with updated covariance.
@@ -150,7 +150,7 @@ class BoundaryCheck {
       const Vector2D& upperRight) const;
 
   /// metric weight matrix: identity for absolute mode or inverse covariance
-  ActsSymMatrixD<2> m_weight;
+  SymMatrix2D m_weight;
 
   /// dual use: absolute tolerances or relative chi2/ sigma cut.
   Vector2D m_tolerance;
@@ -176,24 +176,24 @@ inline const Acts::Vector2D& Acts::BoundaryCheck::tolerance() const {
   return m_tolerance;
 }
 
-inline Acts::ActsSymMatrixD<2> Acts::BoundaryCheck::covariance() const {
+inline Acts::SymMatrix2D Acts::BoundaryCheck::covariance() const {
   return m_weight.inverse();
 }
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool check)
-    : m_weight(ActsSymMatrixD<2>::Identity()),
+    : m_weight(SymMatrix2D::Identity()),
       m_tolerance(0, 0),
       m_type(check ? Type::eAbsolute : Type::eNone) {}
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool checkLocal0, bool checkLocal1,
                                           double tolerance0, double tolerance1)
-    : m_weight(ActsSymMatrixD<2>::Identity()),
+    : m_weight(SymMatrix2D::Identity()),
       m_tolerance(checkLocal0 ? tolerance0 : DBL_MAX,
                   checkLocal1 ? tolerance1 : DBL_MAX),
       m_type(Type::eAbsolute) {}
 
-inline Acts::BoundaryCheck::BoundaryCheck(
-    const ActsSymMatrixD<2>& localCovariance, double sigmaMax)
+inline Acts::BoundaryCheck::BoundaryCheck(const SymMatrix2D& localCovariance,
+                                          double sigmaMax)
     : m_weight(localCovariance.inverse()),
       m_tolerance(sigmaMax, 0),
       m_type(Type::eChi2) {}

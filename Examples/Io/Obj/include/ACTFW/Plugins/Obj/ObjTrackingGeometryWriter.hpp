@@ -9,12 +9,13 @@
 #pragma once
 
 #include <Acts/Utilities/Logger.hpp>
+#include <Acts/Visualization/ViewConfig.hpp>
 #include <fstream>
 #include <iostream>
 #include <mutex>
 
+#include "ACTFW/Framework/AlgorithmContext.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
-#include "ACTFW/Plugins/Obj/ObjSurfaceWriter.hpp"
 
 namespace Acts {
 class TrackingVolume;
@@ -35,21 +36,22 @@ class ObjTrackingGeometryWriter {
   // The nested config class
   class Config {
    public:
-    /// the default logger
     std::shared_ptr<const Acts::Logger> logger;
-    /// the name of the writer
+
     std::string name = "";
-    /// surfaceWriters
-    std::vector<std::shared_ptr<ObjSurfaceWriter>> surfaceWriters;
-    std::string filePrefix = "";
-    std::string sensitiveGroupPrefix = "";
-    std::string layerPrefix = "";
+
+    double outputScalor = 1.0;   ///< scale output values
+    size_t outputPrecision = 6;  ///< floating point precision
+
+    Acts::ViewConfig containerView = Acts::ViewConfig({220, 220, 220});
+    Acts::ViewConfig volumeView = Acts::ViewConfig({220, 220, 0});
+    Acts::ViewConfig sensitiveView = Acts::ViewConfig({0, 180, 240});
+    Acts::ViewConfig passiveView = Acts::ViewConfig({240, 280, 0});
+    Acts::ViewConfig gridView = Acts::ViewConfig({220, 0, 0});
 
     Config(const std::string& lname = "ObjTrackingGeometryWriter",
            Acts::Logging::Level lvl = Acts::Logging::INFO)
-        : logger(Acts::getDefaultLogger(lname, lvl)),
-          name(lname),
-          surfaceWriters() {}
+        : logger(Acts::getDefaultLogger(lname, lvl)), name(lname) {}
   };
 
   /// Constructor

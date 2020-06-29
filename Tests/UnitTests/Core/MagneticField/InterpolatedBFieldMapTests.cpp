@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
 
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Vector3D& pos) {
-    return ActsVectorD<2>(perp(pos), pos.z());
+    return Vector2D(perp(pos), pos.z());
   };
 
   // map (Bx,By,Bz) -> (Bx,By,Bz)

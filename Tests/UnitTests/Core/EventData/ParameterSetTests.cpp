@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   double loc1 = -0.2;
   double phi = 0.3 * M_PI;  // this should be within [-M_PI,M_PI) to avoid
                             // failed tests due to angle range corrections
-  ActsVectorD<3> parValues(loc0, loc1, phi);
+  Vector3D parValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix
   ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi>
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   double loc1 = -0.2;
   double phi = 0.3 * M_PI;  // this should be within [-M_PI,M_PI) to avoid
                             // failed tests due to angle range corrections
-  ActsVectorD<3> first_parValues(loc0, loc1, phi);
+  Vector3D firstParValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix
   ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> first(
@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   const double delta_phi =
       get_cyclic_difference(second_phi, first_phi, min, max);
   const double delta_theta = second_theta - first_theta;
-  ActsVectorD<3> residuals(delta_loc0, delta_phi, delta_theta);
+  Vector3D residuals(delta_loc0, delta_phi, delta_theta);
 
   ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundPhi, eBoundTheta>
       first(std::nullopt, first_loc0, first_phi, first_theta);
@@ -779,7 +779,7 @@ BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
   double x = 0.5;
   double y = -0.2;
   double z = 0.3;
-  ActsVectorD<3> parValues(x, y, z);
+  Vector3D parValues(x, y, z);
 
   // parameter set with covariance matrix
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2>
@@ -858,7 +858,7 @@ BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   double x = 0.5;
   double y = -0.2;
   double z = 0.3;
-  ActsVectorD<3> first_parValues(x, y, z);
+  Vector3D firstParValues(x, y, z);
 
   // parameter set with covariance matrix
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> first(
@@ -1100,7 +1100,7 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   const double delta_x = second_x - first_x;
   const double delta_y = second_y - first_y;
   const double delta_z = second_z - first_z;
-  ActsVectorD<3> residuals(delta_x, delta_y, delta_z);
+  Vector3D residuals(delta_x, delta_y, delta_z);
 
   ParameterSet<FreeParametersIndices, eFreePos0, eFreePos1, eFreePos2> first(
       std::nullopt, first_x, first_y, first_z);
