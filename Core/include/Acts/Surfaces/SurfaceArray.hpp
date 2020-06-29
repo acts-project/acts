@@ -104,6 +104,10 @@ class SurfaceArray {
     ///       or overflow bin or out of range in any axis.
     virtual bool isValidBin(size_t bin) const = 0;
 
+    /// @brief The binning values described by this surface grid lookup
+    /// They are in order of the axes (optional) and empty for eingle lookups
+    virtual std::vector<BinningValue> binningValues() const { return {}; };
+
     /// Pure virtual destructor
     virtual ~ISurfaceGridLookup() = 0;
   };
@@ -126,16 +130,19 @@ class SurfaceArray {
     ///
     /// @param globalToLocal Callable that converts from global to local
     /// @param localToGlobal Callable that converts from local to global
-    /// @param grid The grid data structure.
+    /// @param axes The axes to build the grid data structure.
+    /// @param bValues What the axes represent (optional)
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
     ///       If DIM > 1, local coords are @c ActsVectorD<DIM> else
     ///       @c std::array<double, 1>.
     SurfaceGridLookup(std::function<point_t(const Vector3D&)> globalToLocal,
                       std::function<Vector3D(const point_t&)> localToGlobal,
-                      std::tuple<Axes...> axes)
+                      std::tuple<Axes...> axes,
+                      std::vector<BinningValue> bValues = {})
         : m_globalToLocal(std::move(globalToLocal)),
           m_localToGlobal(std::move(localToGlobal)),
-          m_grid(std::move(axes)) {
+          m_grid(std::move(axes)),
+          m_binValues(bValues) {
       m_neighborMap.resize(m_grid.size());
     }
 
@@ -145,7 +152,6 @@ class SurfaceArray {
     /// and append.
     /// Also populates the neighbor map by combining the filled bins of
     /// all bins around a given one.
-    ///
     ///
     /// @param gctx The current geometry context object, e.g. alignment
     /// @param surfaces Input surface pointers
@@ -246,6 +252,12 @@ class SurfaceArray {
     /// @return Size of the grid data structure
     size_t size() const override { return m_grid.size(); }
 
+    /// @brief The binning values described by this surface grid lookup
+    /// They are in order of the axes
+    std::vector<BinningValue> binningValues() const override {
+      return m_binValues;
+    }
+
     /// @brief Gets the center position of bin @c bin in global coordinates
     /// @param bin the global bin index
     /// @return The bin center
@@ -330,6 +342,7 @@ class SurfaceArray {
     std::function<point_t(const Vector3D&)> m_globalToLocal;
     std::function<Vector3D(const point_t&)> m_localToGlobal;
     Grid_t m_grid;
+    std::vector<BinningValue> m_binValues;
     std::vector<SurfaceVector> m_neighborMap;
   };
 
@@ -507,6 +520,12 @@ class SurfaceArray {
   bool isValidBin(size_t bin) const { return p_gridLookup->isValidBin(bin); }
 
   const Transform3D& transform() const { return *m_transform; }
+
+  /// @brief The binning values described by this surface grid lookup
+  /// They are in order of the axes
+  std::vector<BinningValue> binningValues() const {
+    return p_gridLookup->binningValues();
+  };
 
   /// @brief String representation of this @c SurfaceArray
   /// @param gctx The current geometry context object, e.g. alignment

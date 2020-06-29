@@ -10,7 +10,6 @@
 
 #include <iostream>
 
-#include "ACTFW/Plugins/Obj/ObjSurfaceWriter.hpp"
 #include "ACTFW/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ACTFW/Utilities/Options.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -28,59 +27,76 @@ namespace Options {
 /// @param opt The options object, where string based options are attached
 template <typename aopt_t>
 void addObjWriterOptions(aopt_t& opt) {
-  opt.add_options()("obj-tg-fileheader",
-                    po::value<std::string>()->default_value(""),
-                    "The (optional) file header for the tracking geometry.")(
-      "obj-tg-sensitiveheader", po::value<std::string>()->default_value(""),
-      "The (optional) header in front of sensitive sensors.")(
-      "obj-tg-layerheader", po::value<std::string>()->default_value(""),
-      "The (optional) header in front of layer surfaces.")(
-      "obj-sf-fileheader", po::value<std::string>()->default_value(""),
-      "The (optional) file header for the surface writer.")(
-      "obj-sf-phisegments", po::value<int>()->default_value(72),
-      "Number of phi segments to approximate curves.")(
-      "obj-sf-outputPrecission", po::value<int>()->default_value(6),
-      "Floating number output precission.")(
-      "obj-sf-outputScalor", po::value<double>()->default_value(1.),
-      "Scale factor to be applied.")("obj-sf-outputThickness",
-                                     po::value<double>()->default_value(1.),
-                                     "The surface thickness.")(
-      "obj-sf-outputSensitive", po::value<bool>()->default_value(true),
-      "Write sensitive surfaces.")("obj-sf-outputLayers",
-                                   po::value<bool>()->default_value(true),
-                                   "Write layer surfaces.");
+  opt.add_options()("obj-precision", po::value<int>()->default_value(6),
+                    "Floating number output precission.")(
+      "obj-scalor", po::value<double>()->default_value(1.),
+      "Optional scaling from Acts units to ouput units.")(
+      "obj-container-view",
+      po::value<read_series>()->multitoken()->default_value(
+          {0, 220, 220, 220, 0}),
+      "View configuration of container volumes (vis/novis, r, g, b, trimesh).")(
+      "obj-volume-view",
+      po::value<read_series>()->multitoken()->default_value(
+          {1, 220, 220, 0, 0}),
+      "View configuration of navigation volumes (vis/novis, r, g, b, "
+      "trimesh).")(
+      "obj-layer-view",
+      po::value<read_series>()->multitoken()->default_value(
+          {1, 100, 180, 240, 0}),
+      "View configuration of layer structures (vis/novis, r, g, b, trimesh).")(
+      "obj-sensitive-view",
+      po::value<read_series>()->multitoken()->default_value(
+          {1, 0, 180, 240, 0}),
+      "View configuration of sensitive surfaces (vis/novis, r, g, b, "
+      "trimesh).")("obj-passive-view",
+                   po::value<read_series>()->multitoken()->default_value(
+                       {1, 240, 280, 0, 0}),
+                   "View configuration of sensitive surfaces (vis/novis, r, g, "
+                   "b, trimesh).")(
+      "obj-grid-view",
+      po::value<read_series>()->multitoken()->default_value({1, 220, 0, 0, 0}),
+      "View configuration of grid structures (vis/novis, r, g, b, trimesh).")(
+      "obj-grid-offset", po::value<double>()->default_value(0.),
+      "View offset of grid values.")("obj-grid-thickness",
+                                     po::value<double>()->default_value(0.5),
+                                     "Thickness of grid objects.");
 }
 
 /// read the evgen options and return a Config file
-template <class AMAP>
+template <class amap_t>
 FW::Obj::ObjTrackingGeometryWriter::Config readObjTrackingGeometryWriterConfig(
-    const AMAP& vm, const std::string& name,
+    const amap_t& vm, const std::string& name,
     Acts::Logging::Level loglevel = Acts::Logging::INFO) {
   FW::Obj::ObjTrackingGeometryWriter::Config objTgConfig(name, loglevel);
-  objTgConfig.filePrefix = vm["obj-tg-fileheader"].template as<std::string>();
-  objTgConfig.sensitiveGroupPrefix =
-      vm["obj-tg-sensitiveheader"].template as<std::string>();
-  objTgConfig.layerPrefix = vm["obj-tg-layerheader"].template as<std::string>();
-  return objTgConfig;
-}
 
-template <class AMAP>
-FW::Obj::ObjSurfaceWriter::Config readObjSurfaceWriterConfig(
-    const AMAP& vm, const std::string& name, Acts::Logging::Level loglevel) {
-  FW::Obj::ObjSurfaceWriter::Config objSfConfig(name,
-                                                loglevel = Acts::Logging::INFO);
-  objSfConfig.filePrefix = vm["obj-sf-fileheader"].template as<std::string>();
-  objSfConfig.outputPhiSegemnts = vm["obj-sf-phisegments"].template as<int>();
-  objSfConfig.outputPrecision =
-      vm["obj-sf-outputPrecission"].template as<int>();
-  objSfConfig.outputScalor = vm["obj-sf-outputScalor"].template as<double>();
-  objSfConfig.outputThickness =
-      vm["obj-sf-outputThickness"].template as<double>();
-  objSfConfig.outputSensitive =
-      vm["obj-sf-outputSensitive"].template as<bool>();
-  objSfConfig.outputLayerSurface =
-      vm["obj-sf-outputLayers"].template as<bool>();
-  return objSfConfig;
+  objTgConfig.outputPrecision = vm["obj-precision"].template as<int>();
+  objTgConfig.outputScalor = vm["obj-scalor"].template as<double>();
+
+  auto setView = [&](const std::string& vname,
+                     Acts::ViewConfig& viewCfg) -> void {
+    read_series cview = vm[vname].template as<read_series>();
+    if (not cview.empty()) {
+      if (cview[0] == 0) {
+        viewCfg.visible = false;
+      } else if (cview.size() > 3) {
+        viewCfg.color = {cview[1], cview[2], cview[3]};
+        if (cview.size() > 4 and cview[4] != 0) {
+          viewCfg.triangulate = true;
+        }
+      }
+    }
+  };
+
+  setView("obj-container-view", objTgConfig.containerView);
+  setView("obj-volume-view", objTgConfig.containerView);
+  setView("obj-sensitive-view", objTgConfig.sensitiveView);
+  setView("obj-passive-view", objTgConfig.passiveView);
+  setView("obj-grid-view", objTgConfig.gridView);
+  objTgConfig.gridView.offset = vm["obj-grid-offset"].template as<double>();
+  objTgConfig.gridView.lineThickness =
+      vm["obj-grid-thickness"].template as<double>();
+
+  return objTgConfig;
 }
 
 }  // namespace Options

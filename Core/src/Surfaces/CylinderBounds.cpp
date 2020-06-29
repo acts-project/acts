@@ -27,8 +27,8 @@ Acts::Vector2D Acts::CylinderBounds::shifted(
           lposition[Acts::eLOC_Z]};
 }
 
-Acts::ActsSymMatrixD<2> Acts::CylinderBounds::jacobian() const {
-  ActsSymMatrixD<2> j;
+Acts::ActsMatrixD<2, 2> Acts::CylinderBounds::jacobian() const {
+  ActsMatrixD<2, 2> j;
   j(0, eLOC_RPHI) = 1 / get(eR);
   j(0, eLOC_Z) = 0;
   j(1, eLOC_RPHI) = 0;
