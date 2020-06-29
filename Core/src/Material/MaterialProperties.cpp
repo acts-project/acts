@@ -40,6 +40,7 @@ Acts::MaterialProperties::MaterialProperties(
   double Ar = 0.0;
   double Z = 0.0;
   double weight = 0.0;
+  double atoms = 0.0;
   double thickness = 0.0;
   double thicknessInX0 = 0.0;
   double thicknessInL0 = 0.0;
@@ -48,18 +49,19 @@ Acts::MaterialProperties::MaterialProperties(
     const auto& mat = layer.material();
     // weight of the layer assuming a unit area, i.e. volume = thickness*1*1
     const auto layerWeight = mat.massDensity() * layer.thickness();
-    // Ar,Z are weighted by mass
-    Ar += mat.Ar() * layerWeight;
-    Z += mat.Z() * layerWeight;
+    // Ar,Z are weighted proportionally to the number of atoms
+    Ar += mat.Ar() * layerWeight / Ar;
+    Z += mat.Z() * layerWeight / Ar;
     weight += layerWeight;
+    atoms += layerWeight / Ar;
     // thickness and relative thickness in X0,L0 are strictly additive
     thickness += layer.thickness();
     thicknessInX0 += layer.thicknessInX0();
     thicknessInL0 += layer.thicknessInL0();
   }
   // store averaged material constants
-  Ar /= weight;
-  Z /= weight;
+  Ar /= atoms;
+  Z /= atoms;
   // this is weight/volume w/ volume = thickness*unitArea = thickness*1*1
   const auto density = weight / thickness;
   const auto X0 = thickness / thicknessInX0;
