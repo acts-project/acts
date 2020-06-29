@@ -68,7 +68,7 @@ struct Extent {
   /// Extend with another extent
   /// @param other is the source Extent
   void extend(const Extent& other) {
-    for (auto ir = 0; ir < other.ranges.size(); ++ir) {
+    for (std::size_t ir = 0; ir < other.ranges.size(); ++ir) {
       ranges[ir].first = std::min(ranges[ir].first, other.ranges[ir].first);
       ranges[ir].second = std::max(ranges[ir].second, other.ranges[ir].second);
     }

@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
+#include <cassert>
 #include <vector>
 
 namespace Acts {
@@ -159,8 +160,12 @@ inline double RectangleBounds::get(BoundValues bValue) const {
       return m_min.y();
     case eMaxX:
       return m_max.x();
+    case eMaxY:
+      return m_max.y();
+    default:
+      assert(false and "Invalid BoundValue enum value");
+      return std::numeric_limits<double>::quiet_NaN();
   }
-  return m_max.y();
 }
 
 inline void RectangleBounds::checkConsistency() noexcept(false) {

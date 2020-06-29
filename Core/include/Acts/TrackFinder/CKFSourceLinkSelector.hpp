@@ -21,11 +21,11 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
-/// @brief Geometry CKF criteria struct in the hierarchical geometry container
+
+/// Geometry CKF criteria struct in the hierarchical geometry container.
 ///
 /// It take a geometry identifier and cutoff values for chi2 and number of
-/// source links on surface
-///
+/// source links on surface.
 struct GeometryCKFCriteria {
   // The geometry identifier
   GeometryID id;
@@ -38,8 +38,8 @@ struct GeometryCKFCriteria {
   size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
 
   // The constructor
-  GeometryCKFCriteria(GeometryID id, double chi2, size_t num)
-      : id(id), chi2CutOff(chi2), numSourcelinksCutOff(num) {}
+  GeometryCKFCriteria(GeometryID id_, double chi2_, size_t num_)
+      : id(id_), chi2CutOff(chi2_), numSourcelinksCutOff(num_) {}
 
   // The geometry identifier getter
   constexpr auto geometryId() const { return id; }
@@ -200,9 +200,6 @@ struct CKFSourceLinkSelector {
     // considered
     size_t nFinalCandidates =
         std::min(nInitialCandidates, numSourcelinksCutOff);
-
-    // Size of sourcelinkCandidates
-    size_t containerSize = sourcelinkCandidateIndices.size();
 
     // If there is no selected source link, return the source link with the best
     // chi2 and tag it as an outlier

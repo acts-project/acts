@@ -39,11 +39,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
-    std::vector<const InputTrack_t*> allTracks;
+    std::vector<const InputTrack_t*> searchTracks;
     if (m_cfg.doRealMultiVertex) {
-      allTracks = origTracks;
+      searchTracks = origTracks;
     } else {
-      allTracks = seedTracks;
+      searchTracks = seedTracks;
     }
     Vertex<InputTrack_t> currentConstraint = vertexingOptions.vertexConstraint;
     // Retrieve seed vertex from all remaining seedTracks
@@ -72,7 +72,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     // now after seed finding is done
     removedSeedTracks.clear();
 
-    auto prepResult = canPrepareVertexForFit(allTracks, seedTracks,
+    auto prepResult = canPrepareVertexForFit(searchTracks, seedTracks,
                                              vtxCandidate, currentConstraint,
                                              fitterState, vertexingOptions);
 
@@ -553,8 +553,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     fitterState.vertexCollection = oldFitterState.vertexCollection;
     fitterState.annealingState = oldFitterState.annealingState;
     fitterState.vtxInfoMap.clear();
-    for (const auto& vtx : allVerticesPtr) {
-      fitterState.vtxInfoMap.emplace(vtx, oldFitterState.vtxInfoMap[vtx]);
+    for (const auto& v : allVerticesPtr) {
+      fitterState.vtxInfoMap.emplace(v, oldFitterState.vtxInfoMap[v]);
     }
     fitterState.trackToVerticesMultiMap =
         oldFitterState.trackToVerticesMultiMap;
