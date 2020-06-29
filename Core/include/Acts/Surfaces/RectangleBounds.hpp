@@ -163,7 +163,7 @@ inline double RectangleBounds::get(BoundValues bValue) const {
     case eMaxY:
       return m_max.y();
     default:
-      assert("Invalid BoundValue enum value");
+      assert(false and "Invalid BoundValue enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }
