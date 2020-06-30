@@ -75,7 +75,7 @@ void createSegment(std::vector<vertex_t>& vertices,
 /// @param halfPhi The half phi sector if sector
 /// @param lseg The number of segments for for a full 2*pi segment
 /// @return a vector of 2d-vectors
-std::vector<Vector2D> ellispoidVertices(double innerRx, double innerRy,
+std::vector<Vector2D> ellipsoidVertices(double innerRx, double innerRy,
                                         double outerRx, double outerRy,
                                         double avgPhi = 0.,
                                         double halfPhi = M_PI,

@@ -44,7 +44,7 @@ std::vector<double> Acts::detail::VerticesHelper::phiSegments(
   return phiSegments;
 }
 
-std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellispoidVertices(
+std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
     double innerRx, double innerRy, double outerRx, double outerRy,
     double avgPhi, double halfPhi, unsigned int lseg) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
@@ -93,7 +93,7 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellispoidVertices(
 std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::circularVertices(
     double innerR, double outerR, double avgPhi, double halfPhi,
     unsigned int lseg) {
-  return ellispoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
+  return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
                            lseg);
 }
 

@@ -117,7 +117,7 @@ double Acts::EllipseBounds::distanceToBoundary(
 
 std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices(
     unsigned int lseg) const {
-  return detail::VerticesHelper::ellispoidVertices(
+  return detail::VerticesHelper::ellipsoidVertices(
       get(eInnerRx), get(eInnerRy), get(eOuterRx), get(eOuterRy),
       get(eAveragePhi), get(eHalfPhiSector), lseg);
 }
