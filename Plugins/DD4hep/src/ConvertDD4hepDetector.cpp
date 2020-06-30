@@ -19,7 +19,6 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
@@ -328,13 +327,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         Acts::getDefaultLogger(std::string("D2A_L:") + subDetector.name(),
                                loggingLevel));
 
-    // get the possible material of the surounding volume
-    dd4hep::Material ddmaterial = subDetector.volume().material();
-    auto volumeMaterial =
-        std::make_shared<const Acts::HomogeneousVolumeMaterial>(Acts::Material(
-            ddmaterial.radLength(), ddmaterial.intLength(), ddmaterial.A(),
-            ddmaterial.Z(), ddmaterial.density()));
-
     // Create the sub volume
     // Dimensions are created automatically by adding a tolerance to the
     // layer setup
@@ -343,7 +335,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.trackingVolumeHelper = volumeHelper;
     cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
-    cvbConfig.volumeMaterial = volumeMaterial;
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
     auto cylinderVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
@@ -469,19 +460,11 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                              std::string(" has no a shape!"));
     }
 
-    // get the possible material
-    /// @todo volume material currently not used
-    dd4hep::Material ddmaterial = subDetector.volume().material();
-    auto volumeMaterial =
-        std::make_shared<const Acts::HomogeneousVolumeMaterial>(Acts::Material(
-            ddmaterial.radLength(), ddmaterial.intLength(), ddmaterial.A(),
-            ddmaterial.Z(), ddmaterial.density()));
     cvbConfig.layerEnvelopeR = std::make_pair(layerEnvelopeR, layerEnvelopeR);
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
     cvbConfig.trackingVolumeHelper = volumeHelper;
     cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
-    cvbConfig.volumeMaterial = volumeMaterial;
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
     cvbConfig.ctVolumeBuilder = dd4hepVolumeBuilder;
     auto cylinderVolumeBuilder =
