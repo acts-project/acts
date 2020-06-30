@@ -38,7 +38,7 @@ std::pair<ActsMatrixX<BoundParametersScalar>,
 globalTrackParametersCovariance(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
     const size_t& entryIndex) {
-  using CovMatrix = typename parameters_t::CovMatrix_t;
+  using CovMatrix = typename parameters_t::Covariance;
   using GainMatrix = CovMatrix;
 
   // The last smoothed state index
