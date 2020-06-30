@@ -21,12 +21,16 @@ namespace Acts {
 /// @tparam value_t value type stored in the geometry hierarchy map
 ///
 /// The value type is expected to be directly convertible to/from a Json object.
-/// It has to be either a fundamental type or appropriate `to_json` and
-/// `from_json` functions must be available.
+/// It has to be either a fundamental type or appropriate `to_json(json&, const
+/// value_t&)` and `from_json(const json&, value_t&)` functions must be
+/// available. See the relevant [nlohmann::json documentation][1] for further
+/// information.
 ///
 /// A user-defined identifier is stored in the encoded Json object that is used
 /// to identify which value type is stored in the file. The identifier is
 /// checked for consistency when decoding the Json object.
+///
+/// [1]: https://nlohmann.github.io/json/features/arbitrary_types/
 template <typename value_t>
 class GeometryHierarchyMapJsonConverter {
  public:
