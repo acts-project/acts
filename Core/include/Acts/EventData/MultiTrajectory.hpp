@@ -20,6 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 namespace Acts {
 
@@ -288,33 +289,29 @@ class TrackStateProxy {
   /// @return The filtered parameters
   Parameters filtered() const;
 
+  /// Filtered track parameters vector
+  /// @return The filtered parameters in free representation
   FreeVector filtered(const Acts::GeometryContext& gctx) const;
 
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
   Covariance filteredCovariance() const;
 
-  //~ /// Filtered parameters in the form of BoundParameters
-  //~ /// @return BoundParameters instance of the filtered parameters
-  //~ std::tuple<FreeVector, BoundSymMatrix> filteredParameters(const Acts::GeometryContext& gctx) const;
-
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
   bool hasFiltered() const { return data().ifiltered != IndexData::kInvalid; }
 
   /// Smoothed track parameters vector
-  /// @return the parameter vector
+  /// @return The smoothed parameters
   Parameters smoothed() const;
 
+  /// Smoothed track parameters vector
+  /// @return The smoothed parameters in free representation
   FreeVector smoothed(const Acts::GeometryContext& gctx) const;
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
   Covariance smoothedCovariance() const;
-
-  //~ /// Smoothed parameters in the form of BoundParameters
-  //~ /// @return BoundParameters instance of the smoothed parameters
-  //~ std::tuple<FreeVector, BoundSymMatrix> smoothedParameters(const Acts::GeometryContext& gctx) const;
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set

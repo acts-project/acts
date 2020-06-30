@@ -127,6 +127,13 @@ struct coordinate_transformation {
     return (pars(Acts::eQOP) > 0) ? 1. : -1.;
   }
   
+  /// @brief Transforms a bound parameter vector into the free equivalent
+  ///
+  /// @param [in] gtcx Geometry context
+  /// @param [in] parameters Bound parameter vector
+  /// @param [in] surface Surface related to @p parameters
+  ///
+  /// @return FreeVector representation of @p parameters
   static FreeVector boundParameters2freeParameters(const GeometryContext& gtcx, const BoundVector& parameters, const Surface& surface)
   {
 	 FreeVector result;

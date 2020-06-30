@@ -92,13 +92,6 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const
   return Covariance(m_traj->m_cov.col(data().ipredicted).data());
 }
 
-//~ template <typename SL, size_t N, size_t M, bool ReadOnly>
-//~ inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::predictedParameters(
-    //~ const Acts::GeometryContext& gctx) const {
-  //~ return {gctx, predictedCovariance(), predicted(),
-          //~ m_traj->m_referenceSurfaces[data().irefsurface]};
-//~ }
-
 template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered() const
     -> Parameters {
@@ -109,7 +102,7 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered() const
 template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered(const Acts::GeometryContext& gctx) const
     -> FreeVector {
-  return boundParameters2freeParameters(gctx, filtered(), referenceSurface());
+  return detail::coordinate_transformation::boundParameters2freeParameters(gctx, filtered(), referenceSurface());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
@@ -118,13 +111,6 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const
   assert(data().ifiltered != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ifiltered).data());
 }
-
-//~ template <typename SL, size_t N, size_t M, bool ReadOnly>
-//~ inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::filteredParameters(
-    //~ const Acts::GeometryContext& gctx) const {
-  //~ return {gctx, filteredCovariance(), filtered(),
-          //~ m_traj->m_referenceSurfaces[data().irefsurface]};
-//~ }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const
@@ -136,7 +122,7 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const
 template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed(const Acts::GeometryContext& gctx) const
     -> FreeVector {
-  return boundParameters2freeParameters(gctx, smoothed(), referenceSurface());
+  return detail::coordinate_transformation::boundParameters2freeParameters(gctx, smoothed(), referenceSurface());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
@@ -145,13 +131,6 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const
   assert(data().ismoothed != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ismoothed).data());
 }
-
-//~ template <typename SL, size_t N, size_t M, bool ReadOnly>
-//~ inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::smoothedParameters(
-    //~ const Acts::GeometryContext& gctx) const {
-  //~ return {gctx, smoothedCovariance(), smoothed(),
-          //~ m_traj->m_referenceSurfaces[data().irefsurface]};
-//~ }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::jacobian() const
