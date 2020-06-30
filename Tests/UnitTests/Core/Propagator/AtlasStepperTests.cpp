@@ -137,11 +137,13 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   // example surface and bound parameters at the updated position
   auto plane = Surface::makeShared<PlaneSurface>(newPos, newUnitDir);
   BoundParameters params(geoCtx, cov, newPos, newMom, charge, newTime, plane);
-
+  FreeVector freeParams;
+  freeParams << newPos[0], newPos[1], newPos[2], newTime, newUnitDir[0], newUnitDir[1], newUnitDir[2], charge / newMom.norm();
+  
   // WARNING for some reason there seems to be an additional flag that makes
   //         the update method not do anything when it is set. Why?
   state.state_ready = false;
-  stepper.update(state, params);
+  stepper.update(state, freeParams, *params.covariance());
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);

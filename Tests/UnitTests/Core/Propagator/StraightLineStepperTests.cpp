@@ -233,7 +233,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Update in context of a surface
   BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
                            -1. * charge, 2. * time, targetSurface);
-  sls.update(slsState, bpTarget);
+  Vector3D dir = bpTarget.momentum().normalized();
+  FreeVector freeParams;
+  freeParams << bpTarget.position()[0], bpTarget.position()[1], bpTarget.position()[2], bpTarget.time(), dir[0], dir[1], dir[2], bpTarget.charge() / bpTarget.momentum().norm();
+  sls.update(slsState, freeParams, *bpTarget.covariance());
   BOOST_TEST(slsState.pos == 2. * pos);
   BOOST_TEST(slsState.dir == mom.normalized());
   BOOST_TEST(slsState.p == 2. * mom.norm());

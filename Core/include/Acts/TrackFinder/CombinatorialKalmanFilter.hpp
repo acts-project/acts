@@ -618,7 +618,7 @@ class CombinatorialKalmanFilter {
               result.fittedStates.getTrackState(result.activeTips.back().first);
           stepper.update(state.stepping, ts.filtered(state.options.geoContext), ts.filteredCovariance());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
-                       << filteredParams.parameters().transpose()
+                       << ts.filtered().transpose()
                        << " of track state with tip = "
                        << result.activeTips.back().first);
         }

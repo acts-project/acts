@@ -316,7 +316,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Update in context of a surface
   BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
                            -1. * charge, 2. * time, targetSurface);
-  es.update(esState, bpTarget);
+  Vector3D dir = bpTarget.momentum().normalized();
+  FreeVector freeParams;
+  freeParams << bpTarget.position()[0], bpTarget.position()[1], bpTarget.position()[2], bpTarget.time(), dir[0], dir[1], dir[2], bpTarget.charge() / bpTarget.momentum().norm();
+  es.update(esState, freeParams, *bpTarget.covariance());
   BOOST_TEST(esState.pos == 2. * pos);
   BOOST_TEST(esState.dir == mom.normalized());
   BOOST_TEST(esState.p == 2. * mom.norm());
