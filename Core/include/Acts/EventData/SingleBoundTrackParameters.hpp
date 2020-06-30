@@ -13,6 +13,7 @@
 
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -197,6 +198,17 @@ class SingleBoundTrackParameters {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
 
+  /// Print information to the output stream.
+  ///
+  /// @param os The output stream
+  /// @return The modified output stream
+  std::ostream& print(std::ostream& os) const {
+    detail::printBoundParameters(
+        os, *m_surface, parameters(),
+        covariance().has_value() ? &covariance().value() : nullptr);
+    return os;
+  }
+
  private:
   /// parameter set holding parameters vector and covariance.
   FullParameterSet m_paramSet;
@@ -216,6 +228,12 @@ class SingleBoundTrackParameters {
   friend bool operator!=(const SingleBoundTrackParameters& lhs,
                          const SingleBoundTrackParameters& rhs) {
     return !(lhs == rhs);
+  }
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleBoundTrackParameters& tp) {
+    tp.print(os);
+    return os;
   }
 };
 
