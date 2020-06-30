@@ -7,12 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <climits>
+#include <tuple>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
+#include "Acts/Geometry/SurfaceBinningMatcher.hpp"
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -59,10 +63,10 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::vector<SplitConfig> splitConfigs = {};
     /// The envelope to be built around the layer
     std::pair<double, double> envelope = {0_mm, 0_mm};
-    /// Define the number of bins in loc0
-    size_t binsLoc0{1};
-    /// Define the number of bins in loc1
-    size_t binsLoc1{1};
+    /// Binning setup in l0: nbins (-1 -> automated), axis binning type
+    std::tuple<int, BinningType> binning0 = {-1, equidistant};
+    /// Binning setup in l1: nbins (-1 -> automated), axis binning type
+    std::tuple<int, BinningType> binning1 = {-1, equidistant};
 
     // Default constructor
     LayerConfig()
@@ -91,6 +95,10 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::array<double, 3> layerSplitToleranceR = {-1., -1., -1.};
     /// Split tolerances in Z
     std::array<double, 3> layerSplitToleranceZ = {-1., -1., -1.};
+    /// Automated binning & tolerances
+    bool autoSurfaceBinning = false;
+    /// The surface binning matcher
+    Acts::SurfaceBinningMatcher surfaceBinMatcher;
     /// Special debug output, is very verbose and hence needs
     /// an additional switch to log level
     bool nodeSearchDebug = false;
