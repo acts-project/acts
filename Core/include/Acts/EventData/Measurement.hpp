@@ -79,6 +79,8 @@ class Measurement {
   using ParamSet = ParameterSet<parameter_indices_t, params...>;
 
  public:
+  /// Type of the source link
+  using SourceLink = source_link_t;
   /// type of the vector containing the parameter values
   using ParameterVector = typename ParamSet::ParameterVector;
   /// type of the covariance matrix of the measurement
