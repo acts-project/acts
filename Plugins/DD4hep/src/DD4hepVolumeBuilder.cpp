@@ -8,8 +8,6 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
 
-#include <boost/algorithm/string.hpp>
-
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
