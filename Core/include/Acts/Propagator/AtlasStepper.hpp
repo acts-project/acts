@@ -469,23 +469,14 @@ class AtlasStepper {
       return;
     }
 
-    const Vector3D pos = parameters.template segment<3>(eFreePos0);
-    const auto Vp = parameters;
-
-    double Sf, Cf, Ce, Se;
-    Sf = sin(Vp(2));
-    Cf = cos(Vp(2));
-    Se = sin(Vp(3));
-    Ce = cos(Vp(3));
-
-    state.pVector[0] = pos(0);
-    state.pVector[1] = pos(1);
-    state.pVector[2] = pos(2);
+    state.pVector[0] = parameters[eFreePos0];
+    state.pVector[1] = parameters[eFreePos1];
+    state.pVector[2] = parameters[eFreePos2];
     state.pVector[3] = parameters[eFreeTime];
-    state.pVector[4] = Cf * Se;
-    state.pVector[5] = Sf * Se;
-    state.pVector[6] = Ce;
-    state.pVector[7] = Vp[4];
+    state.pVector[4] = parameters[eFreeDir0];
+    state.pVector[5] = parameters[eFreeDir1];
+    state.pVector[6] = parameters[eFreeDir2];
+    state.pVector[7] = parameters[eFreeQOverP];
 
     // @todo: remove magic numbers - is that the charge ?
     if (std::abs(state.pVector[7]) < .000000000000001) {

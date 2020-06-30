@@ -41,8 +41,8 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
                                          const FreeVector& parameters, const Covariance& covariance) const {
   state.pos = parameters.template segment<3>(eFreePos0);
   state.dir = parameters.template segment<3>(eFreeDir0).normalized();
-  state.p = 1. / parameters[eBoundQOverP];
-  state.t = parameters[eBoundTime];
+  state.p = std::abs(1. / parameters[eFreeQOverP]);
+  state.t = parameters[eFreeTime];
 
   state.cov = covariance;
 }

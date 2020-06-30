@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   freeParams << bpTarget.position()[0], bpTarget.position()[1], bpTarget.position()[2], bpTarget.time(), dir[0], dir[1], dir[2], bpTarget.charge() / bpTarget.momentum().norm();
   sls.update(slsState, freeParams, *bpTarget.covariance());
   BOOST_TEST(slsState.pos == 2. * pos);
-  BOOST_TEST(slsState.dir == mom.normalized());
+  CHECK_CLOSE_ABS(slsState.dir, mom.normalized(), 1e-6);
   BOOST_TEST(slsState.p == 2. * mom.norm());
   BOOST_TEST(slsState.q == 1. * charge);
   BOOST_TEST(slsState.t == 2. * time);
