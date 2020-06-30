@@ -33,9 +33,9 @@ class SingleFreeTrackParameters {
                 "'Acts::NeutralPolicy");
 
  public:
-  /// Public typedefs
-  /// Type of covariance matrix
-  using CovMatrix_t = FreeSymMatrix;
+  using Scalar = FreeParametersScalar;
+  using Parameters = FreeVector;
+  using Covariance = FreeSymMatrix;
 
   /// Construct track parameters for charged particles.
   ///
@@ -44,8 +44,8 @@ class SingleFreeTrackParameters {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
-                            const FreeVector& parValues)
+  SingleFreeTrackParameters(std::optional<Covariance> cov,
+                            const Parameters& parValues)
       : m_oParameters(std::move(cov), parValues),
         m_oChargePolicy(std::copysign(1., parValues[eFreeQOverP])) {}
 
@@ -56,8 +56,8 @@ class SingleFreeTrackParameters {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
-                            const FreeVector& parValues)
+  SingleFreeTrackParameters(std::optional<Covariance> cov,
+                            const Parameters& parValues)
       : m_oParameters(std::move(cov), parValues), m_oChargePolicy() {}
 
   // this class does not have a custom default constructor and thus should not
@@ -66,7 +66,7 @@ class SingleFreeTrackParameters {
   /// @brief Access all parameters
   ///
   /// @return Vector containing the store parameters
-  FreeVector parameters() const { return m_oParameters.getParameters(); }
+  Parameters parameters() const { return m_oParameters.getParameters(); }
 
   /// @brief Access to a single parameter
   ///
@@ -74,8 +74,8 @@ class SingleFreeTrackParameters {
   ///
   /// @return Value of the requested parameter
   template <FreeParametersIndices kIndex,
-            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
-                get() const {
+            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> Scalar get()
+                const {
     return m_oParameters.template getParameter<kIndex>();
   }
 
@@ -86,7 +86,7 @@ class SingleFreeTrackParameters {
   ///
   /// @return Value of the requested parameter uncertainty
   template <FreeParametersIndices kIndex,
-            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
+            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> Scalar
                 uncertainty() const {
     return m_oParameters.template getUncertainty<kIndex>();
   }
@@ -99,7 +99,7 @@ class SingleFreeTrackParameters {
   /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const std::optional<CovMatrix_t>& covariance() const {
+  const std::optional<Covariance>& covariance() const {
     return m_oParameters.getCovariance();
   }
 
@@ -121,12 +121,12 @@ class SingleFreeTrackParameters {
   /// @brief retrieve electric charge
   ///
   /// @return value of electric charge
-  double charge() const { return m_oChargePolicy.getCharge(); }
+  Scalar charge() const { return m_oChargePolicy.getCharge(); }
 
   /// @brief retrieve time
   ///
   /// @return value of time
-  double time() const { return get<eFreeTime>(); }
+  Scalar time() const { return get<eFreeTime>(); }
 
   /// @brief access to the internally stored FreeParameterSet
   ///
