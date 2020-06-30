@@ -86,8 +86,6 @@ struct CKFSourceLinkSelector {
       std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
-    using CovMatrix_t = typename BoundParameters::CovMatrix_t;
-
     // Return error if no source link
     if (sourcelinks.empty()) {
       return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
@@ -123,22 +121,12 @@ struct CKFSourceLinkSelector {
             // The measurement surface should be the same as parameter surface
             assert(&calibrated.referenceSurface() == surface);
 
-            // type of measurement
-            using meas_t =
-                typename std::remove_const<typename std::remove_reference<
-                    decltype(calibrated)>::type>::type;
-            // measurement (local) parameter vector
-            using meas_par_t = typename meas_t::ParameterVector;
-            // type of projection
-            using projection_t = typename meas_t::Projection;
-
             // Take the projector (measurement mapping function)
-            const projection_t& H = calibrated.projector();
+            const auto& H = calibrated.projector();
             // Take the parameter covariance
-            const CovMatrix_t& predicted_covariance =
-                *predictedParams.covariance();
+            const auto& predicted_covariance = *predictedParams.covariance();
             // Get the residual
-            meas_par_t residual = calibrated.residual(predictedParams);
+            const auto& residual = calibrated.residual(predictedParams);
             // Get the chi2
             double chi2 = (residual.transpose() *
                            ((calibrated.covariance() +
