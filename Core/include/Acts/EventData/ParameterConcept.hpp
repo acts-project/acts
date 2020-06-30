@@ -19,7 +19,7 @@ namespace concept {
 
   /// Typedef of CovMatrix_t required
   template <typename T>
-  using covmat_t = typename T::CovMatrix_t;
+  using covmat_t = typename T::Covariance;
 
   /// The following lines define functions for surface bound parametrisations
   METHOD_TRAIT(reference_surface_t, referenceSurface);
