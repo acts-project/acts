@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(gmu(tgContext, ts).ok());
-  // ref surface is same on measurements and parameters
-  BOOST_CHECK_EQUAL(&ts.referenceSurface(), cylinder.get());
+  // ref object is same on measurements and parameters
+  BOOST_CHECK_EQUAL(&ts.referenceObject(), cylinder.get());
 
   // Check for regression. This does NOT test if the math is correct, just that
   // the result is the same as when the test was written.

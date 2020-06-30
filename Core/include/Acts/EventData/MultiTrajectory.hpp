@@ -40,7 +40,7 @@ using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 // forward declarations
 template <typename source_link_t>
 class MultiTrajectory;
-class Surface;
+class GeometryObject;
 
 namespace detail_lt {
 /// Either type T or const T depending on the boolean.
@@ -113,7 +113,7 @@ struct IndexData {
 
   static constexpr IndexType kInvalid = UINT16_MAX;
 
-  IndexType irefsurface = kInvalid;
+  IndexType irefobject = kInvalid;
   IndexType iprevious = kInvalid;
   IndexType ipredicted = kInvalid;
   IndexType ifiltered = kInvalid;
@@ -237,26 +237,26 @@ class TrackStateProxy {
     typeFlags() = other.typeFlags();
 
     // can be nullptr, but we just take that
-    setReferenceSurface(other.referenceSurfacePointer());
+    setReferenceObject(other.referenceObjectPointer());
   }
 
   /// Return the index tuple that makes up this track state
   /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
   const IndexData& data() const { return m_traj->m_index[m_istate]; }
 
-  /// Reference surface.
-  /// @return the reference surface
-  const Surface& referenceSurface() const {
-    assert(data().irefsurface != IndexData::kInvalid);
-    return *m_traj->m_referenceSurfaces[data().irefsurface];
+  /// Reference object.
+  /// @return the reference object
+  const GeometryObject& referenceObject() const {
+    assert(data().irefobject != IndexData::kInvalid);
+    return *m_traj->m_referenceObjects[data().irefobject];
   }
 
-  /// Set the reference surface to a given value
-  /// @param srf Shared pointer to the surface to set
+  /// Set the reference object to a given value
+  /// @param srf Shared pointer to the object to set
   /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
-    m_traj->m_referenceSurfaces[data().irefsurface] = std::move(srf);
+  void setReferenceObject(std::shared_ptr<const GeometryObject> srf) {
+    m_traj->m_referenceObjects[data().irefobject] = std::move(srf);
   }
 
   /// Track parameters vector. This tries to be somewhat smart and return the
@@ -445,14 +445,11 @@ class TrackStateProxy {
   /// *invalid* (i.e. unset) for this TrackState..
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
-            ParID_t... params>
-  void setCalibrated(const Acts::Measurement<SourceLink, BoundParametersIndices,
-                                             params...>& meas) {
+  template <typename measurement_t, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setCalibrated(const measurement_t& meas) {
+		static_assert(std::is_same<SourceLink, typename measurement_t::SourceLink>::value);
     IndexData& dataref = data();
-    constexpr size_t measdim =
-        Acts::Measurement<SourceLink, BoundParametersIndices,
-                          params...>::size();
+    constexpr size_t measdim = measurement_t::size();
 
     dataref.measdim = measdim;
 
@@ -467,13 +464,13 @@ class TrackStateProxy {
     setProjector(meas.projector());
 
     // this shouldn't change
-    assert(data().irefsurface != IndexData::kInvalid);
-    std::shared_ptr<const Surface>& refSrf =
-        m_traj->m_referenceSurfaces[dataref.irefsurface];
+    assert(data().irefobject != IndexData::kInvalid);
+    std::shared_ptr<const GeometryObject>& refSrf =
+        m_traj->m_referenceObjects[dataref.irefobject];
     // either unset, or the same, otherwise this is inconsistent assignment
     assert(!refSrf || refSrf.get() == &meas.referenceObject());
     if (!refSrf) {
-      // ref surface is not set, set it now
+      // ref object is not set, set it now
       refSrf = meas.referenceObject().getSharedPtr();
     }
 
@@ -487,11 +484,11 @@ class TrackStateProxy {
   /// they will **not be removed**, but may become unaccessible.
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
-            ParID_t... params>
+  template <typename measurement_t, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void resetCalibrated(
-      const Acts::Measurement<SourceLink, BoundParametersIndices, params...>&
+      const measurement_t&
           meas) {
+			  static_assert(std::is_same<SourceLink, typename measurement_t::SourceLink>::value);
     IndexData& dataref = data();
     auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index
@@ -558,9 +555,9 @@ class TrackStateProxy {
   TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
                   size_t istate);
 
-  const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
-    assert(data().irefsurface != IndexData::kInvalid);
-    return m_traj->m_referenceSurfaces[data().irefsurface];
+  const std::shared_ptr<const GeometryObject>& referenceObjectPointer() const {
+    assert(data().irefobject != IndexData::kInvalid);
+    return m_traj->m_referenceObjects[data().irefobject];
   }
 
   typename MultiTrajectory<SourceLink>::ProjectorBitset projectorBitset()
@@ -669,11 +666,11 @@ class MultiTrajectory {
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
-  // owning vector of shared pointers to surfaces
-  // @TODO: This might be problematic when appending a large number of surfaces
+  // owning vector of shared pointers to objects
+  // @TODO: This might be problematic when appending a large number of objects
   // trackstates, because vector has to reallocated and thus copy. This might
   // be handled in a smart way by moving but not sure.
-  std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
+  std::vector<std::shared_ptr<const GeometryObject>> m_referenceObjects;
 
   friend class detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, true>;
   friend class detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax,

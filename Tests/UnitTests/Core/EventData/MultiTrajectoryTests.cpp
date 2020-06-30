@@ -743,7 +743,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_NE(ts1.pathLength(), ts2.pathLength());
-  BOOST_CHECK_NE(&ts1.referenceSurface(), &ts2.referenceSurface());
+  BOOST_CHECK_NE(&ts1.referenceObject(), &ts2.referenceObject());
 
   ts1.copyFrom(ts2);
 
@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_EQUAL(ts1.pathLength(), ts2.pathLength());
-  BOOST_CHECK_EQUAL(&ts1.referenceSurface(), &ts2.referenceSurface());
+  BOOST_CHECK_EQUAL(&ts1.referenceObject(), &ts2.referenceObject());
 
   // full copy proven to work. now let's do partial copy
   ts2 = mkts(PM::Predicted | PM::Jacobian | PM::Calibrated);
@@ -785,7 +785,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_NE(ts1.pathLength(), ts2.pathLength());
-  BOOST_CHECK_NE(&ts1.referenceSurface(), &ts2.referenceSurface());
+  BOOST_CHECK_NE(&ts1.referenceObject(), &ts2.referenceObject());
 
   ts1.copyFrom(ts2);
 
@@ -802,8 +802,8 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());              // always copied
   BOOST_CHECK_EQUAL(ts1.pathLength(), ts2.pathLength());  // always copied
-  BOOST_CHECK_EQUAL(&ts1.referenceSurface(),
-                    &ts2.referenceSurface());  // always copied
+  BOOST_CHECK_EQUAL(&ts1.referenceObject(),
+                    &ts2.referenceObject());  // always copied
 }
 
 }  // namespace Test

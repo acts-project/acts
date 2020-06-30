@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <type_traits>
 #include <vector>
+#include <memory>
 
 #include <Eigen/Core>
 
@@ -172,8 +173,8 @@ inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
   }
 
   // always set, but can be null
-  m_referenceSurfaces.emplace_back(nullptr);
-  p.irefsurface = m_referenceSurfaces.size() - 1;
+  m_referenceObjects.emplace_back(nullptr);
+  p.irefobject = m_referenceObjects.size() - 1;
 
   if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
     m_params.addCol();

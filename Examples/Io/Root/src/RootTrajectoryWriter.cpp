@@ -354,9 +354,17 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (not typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
         return true;
       }
+      
+      // get the Surface
+      const Acts::Surface* surfacePtr = dynamic_cast<const Acts::Surface*>(&state.referenceObject());
+      if(surfacePtr == nullptr)
+      {
+		return true;
+	}
+      auto surface = surfacePtr->getSharedPtr();
 
       // get the geometry ID
-      auto geoID = state.referenceSurface().geoID();
+      auto geoID = state.referenceObject().geoID();
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
@@ -417,7 +425,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       m_t_eTHETA.push_back(truthTHETA);
       m_t_eQOP.push_back(truthQOP);
       m_t_eT.push_back(truthTIME);
-
+      
       // get the predicted parameter
       bool predicted = false;
       if (state.hasPredicted()) {
@@ -425,7 +433,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_nPredicted++;
         Acts::BoundParameters parameter(
             gctx, state.predictedCovariance(), state.predicted(),
-            state.referenceSurface().getSharedPtr());
+            surface);
         auto covariance = state.predictedCovariance();
         // local hit residual info
         auto H = meas.projector();
@@ -560,7 +568,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_nFiltered++;
         Acts::BoundParameters parameter(
             gctx, state.filteredCovariance(), state.filtered(),
-            state.referenceSurface().getSharedPtr());
+            surface);
         auto covariance = state.filteredCovariance();
         // filtered parameter
         m_eLOC0_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0]);
@@ -671,7 +679,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_nSmoothed++;
         Acts::BoundParameters parameter(
             gctx, state.smoothedCovariance(), state.smoothed(),
-            state.referenceSurface().getSharedPtr());
+            surface);
         auto covariance = state.smoothedCovariance();
 
         // smoothed parameter

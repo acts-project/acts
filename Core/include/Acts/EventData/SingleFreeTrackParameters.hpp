@@ -11,6 +11,7 @@
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Geometry/Volume.hpp"
 
 namespace Acts {
 
@@ -129,6 +130,9 @@ class SingleFreeTrackParameters {
   /// covariance matrix
   const FullFreeParameterSet& getParameterSet() const { return m_oParameters; }
 
+  /// @brief access method to the reference volume
+  const Volume& referenceVolume() const { return *m_pVolume; }
+  
   /// @brief Equality operator
   ///
   /// @param [in] rhs Object to compare `*this` to
@@ -171,15 +175,7 @@ class SingleFreeTrackParameters {
                                  /// parameter values and covariance matrix
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
-
-  /// Print information to the output stream.
-  friend std::ostream& operator<<(std::ostream& os,
-                                  const SingleFreeTrackParameters& tp) {
-    detail::printFreeParameters(
-        os, tp.parameters(),
-        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
-    return os;
-  }
+  std::shared_ptr<const Volume> m_pVolume;
 };
 
 }  // namespace Acts
