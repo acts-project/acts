@@ -87,10 +87,10 @@ class RadialBounds : public DiscBounds {
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return method for inner Radius
-  double rMin() const;
+  double rMin() const final;
 
   /// Return method for outer Radius
-  double rMax() const;
+  double rMax() const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
@@ -132,7 +132,7 @@ class RadialBounds : public DiscBounds {
   /// number of segments returned
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg) const;
+  std::vector<Vector2D> vertices(unsigned int lseg) const final;
 };
 
 inline double RadialBounds::rMin() const {

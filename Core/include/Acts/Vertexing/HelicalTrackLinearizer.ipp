@@ -63,15 +63,11 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // get B-field z-component at current position
   double Bz = m_cfg.bField.getField(VectorHelpers::position(positionAtPCA))[eZ];
-
   double rho;
-  double rho2;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
     rho = m_cfg.maxRho;
   } else {
-    // signed(!) rho
-    rho2 = sinTh / (qOvP * Bz);
     rho = sinTh * (1. / qOvP) / Bz;
   }
 
