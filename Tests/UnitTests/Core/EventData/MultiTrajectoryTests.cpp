@@ -39,8 +39,8 @@ CurvilinearParameters make_params() {
   return {cov, Vector3D(0, 0, 1), Vector3D(100, 1000, 400), -1, 0};
 }
 
-using ParVec_t = BoundParameters::ParVector_t;
-using CovMat_t = BoundParameters::CovMatrix_t;
+using ParVec_t = BoundParameters::ParametersVector;
+using CovMat_t = BoundParameters::CovarianceMatrix;
 
 struct TestTrackState {
   SourceLink sourceLink;
