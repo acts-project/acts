@@ -14,7 +14,7 @@
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -88,8 +88,9 @@ class SingleBoundTrackParameters {
                              Scalar charge, Scalar time,
                              std::shared_ptr<const Surface> surface)
       : m_paramSet(std::move(cov),
-                   detail::coordinate_transformation::global2parameters(
-                       geoCtx, position, momentum, charge, time, *surface)),
+                   detail::transformFreeToBoundParameters(
+                       position, time, momentum, charge / momentum.norm(),
+                       *surface, geoCtx)),
         m_chargePolicy(charge),
         m_surface(std::move(surface)) {
     assert(m_surface);
@@ -110,9 +111,9 @@ class SingleBoundTrackParameters {
                              const Vector3D& position, const Vector3D& momentum,
                              Scalar time,
                              std::shared_ptr<const Surface> surface)
-      : m_paramSet(std::move(cov),
-                   detail::coordinate_transformation::global2parameters(
-                       geoCtx, position, momentum, 0, time, *surface)),
+      : m_paramSet(std::move(cov), detail::transformFreeToBoundParameters(
+                                       position, time, momentum,
+                                       1 / momentum.norm(), *surface, geoCtx)),
         m_surface(std::move(surface)) {
     assert(m_surface);
   }
