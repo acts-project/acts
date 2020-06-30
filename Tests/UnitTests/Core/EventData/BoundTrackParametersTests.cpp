@@ -75,7 +75,7 @@ BOOST_DATA_TEST_CASE(
   // l_x, l_y, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {
       {-0.1234, 9.8765, 0.45, 0.888, 0.001, 21.}};
-  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::Parameters pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -156,7 +156,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // r, phi, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{125., 0.345, 0.45, 0.888, 0.001, 21.}};
-  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::Parameters pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -241,7 +241,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // rPhi, a, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{125., 343., 0.45, 0.888, 0.001, 21.}};
-  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::Parameters pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -336,7 +336,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // d0, z0, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{-0.7321, 22.5, 0.45, 0.888, 0.001, 21.}};
-  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::Parameters pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -410,7 +410,7 @@ BOOST_DATA_TEST_CASE(
   // now create parameters on this surface
   // r, z, phi, theta, q/p (1/p), t
   std::array<double, 6> pars_array = {{0.2321, 22.5, 0.45, 0.888, 0.001, 21.}};
-  SingleBoundTrackParameters<ChargedPolicy>::ParVector_t pars;
+  SingleBoundTrackParameters<ChargedPolicy>::Parameters pars;
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 

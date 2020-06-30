@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     }
 
     // The track parameters
-    BoundParameters::ParVector_t paramVec;
+    BoundParameters::Parameters paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
     double z0 = z0Dist(gen);
 
     // The track parameters
-    BoundParameters::ParVector_t paramVec;
+    BoundParameters::Parameters paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface

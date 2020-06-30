@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
 
     // Construct random track parameters
-    BoundParameters::ParVector_t paramVec;
+    BoundParameters::Parameters paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 

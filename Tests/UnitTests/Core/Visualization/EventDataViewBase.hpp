@@ -79,7 +79,7 @@ static inline std::string testBoundParameters(IVisualization& helper) {
   std::array<double, 6> pars_array = {
       {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
 
-  BoundParameters::ParVector_t pars = BoundParameters::ParVector_t::Zero();
+  BoundParameters::Parameters pars = BoundParameters::Parameters::Zero();
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 

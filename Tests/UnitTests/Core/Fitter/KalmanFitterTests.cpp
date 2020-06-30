@@ -9,11 +9,6 @@
 #include <boost/math/distributions/chi_squared.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
-#include <cmath>
-#include <random>
-#include <vector>
-
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -40,6 +35,11 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <random>
+#include <vector>
+
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -47,14 +47,13 @@ namespace Test {
 
 // A few initialisations and definitionas
 using SourceLink = MinimalSourceLink;
-using Jacobian = BoundParameters::CovMatrix_t;
+using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
-
 using DebugOutput = DebugOutputActor;
 
 std::normal_distribution<double> gauss(0., 1.);
