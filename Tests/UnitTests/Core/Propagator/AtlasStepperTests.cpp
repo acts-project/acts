@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   auto plane = Surface::makeShared<PlaneSurface>(newPos, newUnitDir);
   BoundParameters params(geoCtx, cov, newPos, newMom, charge, newTime, plane);
   FreeVector freeParams;
-  freeParams << newPos[0], newPos[1], newPos[2], newTime, newUnitDir[0], newUnitDir[1], newUnitDir[2], charge / newMom.norm();
+  freeParams << newPos[0], newPos[1], newPos[2], newTime, newUnitDir[0], newUnitDir[1], newUnitDir[2], charge / newAbsMom;
   
   // WARNING for some reason there seems to be an additional flag that makes
   //         the update method not do anything when it is set. Why?
