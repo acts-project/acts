@@ -32,8 +32,7 @@ class GainMatrixSmoother {
   /// @param logger a logger instance
   GainMatrixSmoother(
       std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()))
-      : m_logger(std::move(logger)) {}
+          getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()));
 
   /// Operater for Kalman smoothing
   ///
@@ -160,9 +159,6 @@ class GainMatrixSmoother {
   std::shared_ptr<const Logger> m_logger{nullptr};
 
   /// Getter for the logger, to support logging macros
-  const Logger& logger() const {
-    assert(m_logger);
-    return *m_logger;
-  }
+  const Logger& logger() const;
 };
 }  // namespace Acts
