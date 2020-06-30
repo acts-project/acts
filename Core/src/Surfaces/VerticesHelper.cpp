@@ -64,13 +64,13 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellispoidVertices(
   for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
     int addon = (iseg == phiSegs.size() - 2 and not closed) ? 1 : 0;
     if (innerExists) {
-      createSegment(ivertices, {innerRx, innerRy}, phiSegs[iseg],
-                    phiSegs[iseg + 1], lseg, addon, Vector2D::Zero(),
-                    Transform2D::Identity());
+      createSegment<Vector2D, Transform2D>(ivertices, {innerRx, innerRy},
+                                           phiSegs[iseg], phiSegs[iseg + 1],
+                                           lseg, addon);
     }
-    createSegment(overtices, {outerRx, outerRy}, phiSegs[iseg],
-                  phiSegs[iseg + 1], lseg, addon, Vector2D::Zero(),
-                  Transform2D::Identity());
+    createSegment<Vector2D, Transform2D>(overtices, {outerRx, outerRy},
+                                         phiSegs[iseg], phiSegs[iseg + 1], lseg,
+                                         addon);
   }
 
   // We want to keep the same counter-clockwise orientation for displaying
