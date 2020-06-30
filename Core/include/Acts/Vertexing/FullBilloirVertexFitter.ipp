@@ -333,5 +333,5 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       fittedVertex.setTracksAtVertex(tracksAtVertex);
     }
   }  // end loop iterations
-  return std::move(fittedVertex);
+  return fittedVertex;
 }

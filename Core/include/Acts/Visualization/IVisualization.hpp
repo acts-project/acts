@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
 #include <fstream>
@@ -19,17 +20,9 @@ namespace Acts {
 
 /// Partially abstract base class which provides an interface to visualization
 /// helper classes. It provides a number of methods that all the helpers need to
-/// conform to. It also provides a `ColorType` typedef, but not all of the
-/// helpers actually support that.
-///
+/// conform to.
 class IVisualization {
  public:
-  /// The color typedef. It's an array of three numbers [0, 255] indicating RGB
-  /// color values.
-  ///
-  using ColorType = std::array<int, 3>;
-
-  /// The face type
   using FaceType = std::vector<size_t>;
 
   /// Draw a vertex at a given location and a color.
@@ -37,7 +30,7 @@ class IVisualization {
   /// @param color The color
   ///
   virtual void vertex(const Vector3D& vtx,
-                      ColorType color = {120, 120, 120}) = 0;
+                      ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a face that connects a list of vertices.
   /// @note Depending on the helper implementation, out of plane vertices might
@@ -46,7 +39,7 @@ class IVisualization {
   /// @param color The color of the face
   ///
   virtual void face(const std::vector<Vector3D>& vtxs,
-                    ColorType color = {120, 120, 120}) = 0;
+                    ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a faces that connects a list of vertices - expert only
   ///
@@ -58,7 +51,7 @@ class IVisualization {
   ///
   virtual void faces(const std::vector<Vector3D>& vtxs,
                      const std::vector<FaceType>& faces,
-                     ColorType color = {120, 120, 120}) = 0;
+                     ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a line from a vertex to another
   /// @param a The start vertex
@@ -66,7 +59,7 @@ class IVisualization {
   /// @param color The color of the line
   ///
   virtual void line(const Vector3D& a, const Vector3D& b,
-                    ColorType color = {120, 120, 120}) = 0;
+                    ColorRGB color = {120, 120, 120}) = 0;
 
   /// Write the content of the helper to an outstream.
   /// @param os The output stream for file
@@ -86,20 +79,20 @@ class IVisualization {
   /// them and calls the above methods.
   ///
 
-  /// @copydoc Acts::IVisualization::vertex(const Vector3D&, ColorType)
+  /// @copydoc Acts::IVisualization::vertex(const Vector3D&, ColorRGB)
   ///
-  void vertex(const Vector3F& vtx, ColorType color = {120, 120, 120});
+  void vertex(const Vector3F& vtx, ColorRGB color = {120, 120, 120});
 
-  /// @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, ColorType)
+  /// @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, ColorRGB)
   ///
   void face(const std::vector<Vector3F>& vtxs,
-            ColorType color = {120, 120, 120});
+            ColorRGB color = {120, 120, 120});
 
   ///  @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
-  /// ColorType)
+  /// ColorRGB)
   ///
   void line(const Vector3F& a, const Vector3F& b,
-            ColorType color = {120, 120, 120});
+            ColorRGB color = {120, 120, 120});
 
  protected:
   /// Helper: check for extension

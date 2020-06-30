@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/GeometryVisualization.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -33,6 +33,10 @@ namespace Acts {
 namespace Test {
 
 GeometryContext tgContext = GeometryContext();
+
+ViewConfig red({200, 0, 0});
+ViewConfig green({0, 200, 0});
+ViewConfig blue({0, 0, 200});
 
 /// @brief Unit test to convert a TGeoTrd1 into a Plane
 ///
@@ -77,19 +81,16 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
     const Vector3D offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
-    GeometryVisualization::drawSurface(
-        objVis, *plane, tgContext,
-        Translation3D{offset} * Transform3D::Identity(), 1, false, {0, 0, 120});
+    GeometryView::drawSurface(objVis, *plane, tgContext,
+                              Translation3D{offset} * Transform3D::Identity());
     const Vector3D center = plane->center(tgContext) + offset;
-    GeometryVisualization::drawArrowForward(
-        objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 0.2,
-        4., 2.5, 72, {200, 0, 0});
-    GeometryVisualization::drawArrowForward(objVis, center,
-                                            center + 1.2 * hY * rotation.col(1),
-                                            0.2, 4., 2.5, 72, {0, 200, 0});
-    GeometryVisualization::drawArrowForward(objVis, center,
-                                            center + 2 * rotation.col(2), 0.2,
-                                            4., 2.5, 72, {0, 0, 200});
+    GeometryView::drawArrowForward(
+        objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 4.,
+        2.5, red);
+    GeometryView::drawArrowForward(
+        objVis, center, center + 1.2 * hY * rotation.col(1), 4., 2.5, green);
+    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
+                                   4., 2.5, blue);
   }
 
   // Check exceptions for not allowed axis definition

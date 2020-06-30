@@ -77,9 +77,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
                              std::optional<CovMatrix_t> cov,
-                             const ActsVectorD<3>& position,
-                             const ActsVectorD<3>& momentum, double dCharge,
-                             double dTime,
+                             const Vector3D& position, const Vector3D& momentum,
+                             double dCharge, double dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
@@ -139,8 +138,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
                              std::optional<CovMatrix_t> cov,
-                             const ActsVectorD<3>& position,
-                             const ActsVectorD<3>& momentum, double dTime,
+                             const Vector3D& position, const Vector3D& momentum,
+                             double dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),

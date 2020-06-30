@@ -241,10 +241,10 @@ struct DenseEnvironmentExtension {
     ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
     ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
 
-    ActsVectorD<3> dk1dL = ActsVectorD<3>::Zero();
-    ActsVectorD<3> dk2dL = ActsVectorD<3>::Zero();
-    ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
-    ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
+    Vector3D dk1dL = Vector3D::Zero();
+    Vector3D dk2dL = Vector3D::Zero();
+    Vector3D dk3dL = Vector3D::Zero();
+    Vector3D dk4dL = Vector3D::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
     std::array<double, 4> jdL;

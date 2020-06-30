@@ -1,7 +1,5 @@
 add_library(
   ActsExamplesIoObj SHARED
-  src/ObjHelper.cpp
-  src/ObjSurfaceWriter.cpp
   src/ObjTrackingGeometryWriter.cpp)
 target_include_directories(
   ActsExamplesIoObj

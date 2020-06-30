@@ -8,13 +8,13 @@
 
 #include "Acts/Visualization/IVisualization.hpp"
 
-void Acts::IVisualization::vertex(const Vector3F& vtx, ColorType color) {
+void Acts::IVisualization::vertex(const Vector3F& vtx, ColorRGB color) {
   Vector3D vtxd = vtx.template cast<double>();
   vertex(vtxd, color);
 }
 
 void Acts::IVisualization::face(const std::vector<Vector3F>& vtxs,
-                                ColorType color) {
+                                ColorRGB color) {
   std::vector<Vector3D> vtxsd;
   std::transform(vtxs.begin(), vtxs.end(), std::back_inserter(vtxsd),
                  [](auto& v) { return v.template cast<double>(); });
@@ -22,7 +22,7 @@ void Acts::IVisualization::face(const std::vector<Vector3F>& vtxs,
 }
 
 void Acts::IVisualization::line(const Vector3F& a, const Vector3F& b,
-                                ColorType color) {
+                                ColorRGB color) {
   Vector3D ad = a.template cast<double>();
   Vector3D bd = b.template cast<double>();
   line(ad, bd, color);

@@ -10,11 +10,13 @@
 
 #include <functional>
 #include <optional>
+
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
+
 namespace Acts {
 
 /// @brief Struct for mapping global 3D positions to material values
@@ -339,7 +341,8 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
     sl << "Acts::InterpolatedMaterialMap : " << std::endl;
     sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
        << " / " << m_binUtility.max(1) + 1 << std::endl;
-    sl << "   - Parse full update material    : " << std::endl;  //
+    sl << "   - Parse full update material    : " << std::endl;
+    return sl;
   }
 
  private:
