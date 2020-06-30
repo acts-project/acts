@@ -276,10 +276,6 @@ class TrackStateProxy {
   /// @return The predicted parameters
   Parameters predicted() const;
 
-  /// Predicted parameters in the form of BoundParameters
-  /// @return BoundParameters instance of the predicted parameters
-  BoundParameters predictedParameters(const Acts::GeometryContext& gctx) const;
-
   /// Predicted track parameters covariance matrix.
   /// @return The predicted track parameter covariance
   Covariance predictedCovariance() const;
@@ -292,13 +288,15 @@ class TrackStateProxy {
   /// @return The filtered parameters
   Parameters filtered() const;
 
+  FreeVector filtered(const Acts::GeometryContext& gctx) const;
+
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
   Covariance filteredCovariance() const;
 
-  /// Filtered parameters in the form of BoundParameters
-  /// @return BoundParameters instance of the filtered parameters
-  BoundParameters filteredParameters(const Acts::GeometryContext& gctx) const;
+  //~ /// Filtered parameters in the form of BoundParameters
+  //~ /// @return BoundParameters instance of the filtered parameters
+  //~ std::tuple<FreeVector, BoundSymMatrix> filteredParameters(const Acts::GeometryContext& gctx) const;
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
@@ -308,13 +306,15 @@ class TrackStateProxy {
   /// @return the parameter vector
   Parameters smoothed() const;
 
+  FreeVector smoothed(const Acts::GeometryContext& gctx) const;
+
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
   Covariance smoothedCovariance() const;
 
-  /// Smoothed parameters in the form of BoundParameters
-  /// @return BoundParameters instance of the smoothed parameters
-  BoundParameters smoothedParameters(const Acts::GeometryContext& gctx) const;
+  //~ /// Smoothed parameters in the form of BoundParameters
+  //~ /// @return BoundParameters instance of the smoothed parameters
+  //~ std::tuple<FreeVector, BoundSymMatrix> smoothedParameters(const Acts::GeometryContext& gctx) const;
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set

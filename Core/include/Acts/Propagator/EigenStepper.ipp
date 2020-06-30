@@ -38,15 +38,13 @@ auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state) const
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::update(State& state,
-                                         const BoundParameters& pars) const {
-  const auto& mom = pars.momentum();
-  state.pos = pars.position();
-  state.dir = mom.normalized();
-  state.p = mom.norm();
-  state.t = pars.time();
-  if (pars.covariance()) {
-    state.cov = (*(pars.covariance()));
-  }
+                                         const FreeVector& parameters, const Covariance& covariance) const {
+  state.pos = parameters.template segment<3>(eFreePos0);
+  state.dir = parameters.template segment<3>(eFreeDir0).normalized();
+  state.p = 1. / parameters[eBoundQOverP];
+  state.t = parameters[eBoundTime];
+
+  state.cov = covariance;
 }
 
 template <typename B, typename E, typename A>

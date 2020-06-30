@@ -398,8 +398,7 @@ class KalmanFitter {
           state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
-          stepper.update(state.stepping,
-                         st.filteredParameters(state.options.geoContext));
+          stepper.update(state.stepping, st.filtered(state.options.geoContext), st.filteredCovariance());
           // Reverse stepping direction
           state.stepping.navDir = backward;
           state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
@@ -408,7 +407,7 @@ class KalmanFitter {
           st.referenceSurface().initJacobianToGlobal(
               state.options.geoContext, state.stepping.jacToGlobal,
               state.stepping.pos, state.stepping.dir,
-              st.filteredParameters(state.options.geoContext).parameters());
+              st.filtered());
           state.stepping.jacobian = BoundMatrix::Identity();
           state.stepping.jacTransport = FreeMatrix::Identity();
           state.stepping.derivative = FreeVector::Zero();
@@ -502,8 +501,7 @@ class KalmanFitter {
             // update stepping state using filtered parameters after kalman
             // update We need to (re-)construct a BoundParameters instance
             // here, which is a bit awkward.
-            stepper.update(state.stepping, trackStateProxy.filteredParameters(
-                                               state.options.geoContext));
+            stepper.update(state.stepping, trackStateProxy.filtered(state.options.geoContext), trackStateProxy.filteredCovariance());
             // We count the state with measurement
             ++result.measurementStates;
           } else {
@@ -681,8 +679,7 @@ class KalmanFitter {
           // update stepping state using filtered parameters after kalman
           // update We need to (re-)construct a BoundParameters instance here,
           // which is a bit awkward.
-          stepper.update(state.stepping, trackStateProxy.filteredParameters(
-                                             state.options.geoContext));
+          stepper.update(state.stepping, trackStateProxy.filtered(state.options.geoContext), trackStateProxy.filteredCovariance());
 
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
@@ -824,14 +821,12 @@ class KalmanFitter {
       // Obtain the smoothed parameters at first measurement state
       auto firstMeasurement =
           result.fittedStates.getTrackState(measurementIndices.back());
-      parameters_t smoothedPars =
-          firstMeasurement.smoothedParameters(state.options.geoContext);
-
+      
       // Update the stepping parameters - in order to progress to destination
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state, "
           "set target surface.");
-      stepper.update(state.stepping, smoothedPars);
+      stepper.update(state.stepping, firstMeasurement.smoothed(state.options.geoContext), firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);

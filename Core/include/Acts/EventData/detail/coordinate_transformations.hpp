@@ -126,6 +126,16 @@ struct coordinate_transformation {
   static double parameters2charge(const ParVector_t& pars) {
     return (pars(Acts::eQOP) > 0) ? 1. : -1.;
   }
+  
+  static FreeVector boundParameters2freeParameters(const GeometryContext& gtcx, const BoundVector& parameters, const Surface& surface)
+  {
+	 FreeVector result;
+	 result.template segment<3>(eFreePos0) = parameters2globalPosition(gtcx, parameters, surface);
+	 result[eFreeTime] = parameters[eBoundTime];
+	 result.template segment<3>(eFreeDir0) = parameters2globalMomentum(parameters).normalized();
+	 result[eFreeQOverP] = parameters[eBoundQOverP];
+	 return result;
+  }
 };
 }  // namespace detail
 /// @endcond
