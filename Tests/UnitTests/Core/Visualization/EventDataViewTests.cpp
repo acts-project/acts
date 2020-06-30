@@ -15,7 +15,7 @@
 #include "Acts/Visualization/IVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
-#include "EventDataVisualizationBase.hpp"
+#include "EventDataViewBase.hpp"
 #include "VisualizationTester.hpp"
 
 namespace Acts {
@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 
 BOOST_AUTO_TEST_CASE(BoundParametersVisualizationObj) {
   ObjVisualization obj;
-  auto objTest = EventDataVisualization::testBoundParameters(obj);
+  auto objTest = EventDataViewTest::testBoundParameters(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(BoundParametersVisualizationObj) {
 
 BOOST_AUTO_TEST_CASE(BoundParametersVisualizationPly) {
   PlyVisualization ply;
-  auto plyTest = EventDataVisualization::testBoundParameters(ply);
+  auto plyTest = EventDataViewTest::testBoundParameters(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(BoundParametersVisualizationPly) {
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
   ObjVisualization obj;
-  auto objTest = EventDataVisualization::testMultiTrajectory(obj);
+  auto objTest = EventDataViewTest::testMultiTrajectory(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
   PlyVisualization ply;
-  auto plyTest = EventDataVisualization::testMultiTrajectory(ply);
+  auto plyTest = EventDataViewTest::testMultiTrajectory(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {

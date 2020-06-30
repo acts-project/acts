@@ -15,33 +15,35 @@
 #include "Acts/Visualization/IVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
-#include "SurfaceVisualizationBase.hpp"
 #include "VisualizationTester.hpp"
+#include "VolumeViewBase.hpp"
 
 namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-/// This tests if the corresponding obj output is well formatted
-BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
+// Tests if the written obj output is well formatted
+BOOST_AUTO_TEST_CASE(VolumeViewObj) {
   ObjVisualization obj;
+
   // Standard test
   bool triangulate = false;
-  auto objTest = SurfaceVisualization::test(obj, triangulate, "");
+  auto objTest = VolumeViewTest::run(obj, triangulate, "");
   auto objErrors = testObjString(objTest, triangulate);
-  std::cout << "Sufaces Obj Test    : " << objTest.size()
+  std::cout << "Volumes Obj Test    : " << objTest.size()
             << " characters written with " << objErrors.size() << " errors."
             << std::endl;
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
+
   // Triangular mesh test
   triangulate = true;
-  auto objTest3M = SurfaceVisualization::test(obj, triangulate, "_3M");
+  auto objTest3M = VolumeViewTest::run(obj, triangulate, "_3M");
   auto objErrors3M = testObjString(objTest3M, triangulate);
-  std::cout << "Sufaces Obj Test 3M : " << objTest3M.size()
+  std::cout << "Volumes Obj Test 3M : " << objTest3M.size()
             << " characters written with " << objErrors3M.size() << " errors."
             << std::endl;
   BOOST_CHECK(objErrors3M.size() == 0);
@@ -50,25 +52,27 @@ BOOST_AUTO_TEST_CASE(SurfaceVisualizationObj) {
   }
 }
 
-/// This tests if the corresponding ply output is well formatted
-BOOST_AUTO_TEST_CASE(SurfaceVisualizationPly) {
+// Tests if the written ply output is well formatted
+BOOST_AUTO_TEST_CASE(VolumeViewPly) {
   PlyVisualization ply;
+
   // Standard test
   bool triangulate = false;
-  auto plyTest = SurfaceVisualization::test(ply, triangulate, "");
+  auto plyTest = VolumeViewTest::run(ply, triangulate, "");
   auto plyErrors = testPlyString(plyTest, triangulate);
-  std::cout << "Sufaces Ply Test    : " << plyTest.size()
+  std::cout << "Volumes Ply Test    : " << plyTest.size()
             << " characters written with " << plyErrors.size() << " errors."
             << std::endl;
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
+
   // Triangular mesh test
   triangulate = true;
-  auto plyTest3M = SurfaceVisualization::test(ply, triangulate, "_3M");
+  auto plyTest3M = VolumeViewTest::run(ply, triangulate, "_3M");
   auto plyErrors3M = testPlyString(plyTest3M, triangulate);
-  std::cout << "Sufaces Ply Test 3M : " << plyTest3M.size()
+  std::cout << "Volumes Ply Test 3M : " << plyTest3M.size()
             << " characters written with " << plyErrors3M.size() << " errors."
             << std::endl;
   BOOST_CHECK(plyErrors3M.size() == 0);

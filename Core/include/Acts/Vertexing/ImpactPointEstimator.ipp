@@ -114,7 +114,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // track covariance
   auto cov = trkParams->covariance();
-  ActsSymMatrixD<2> myWeightXY = cov->block<2, 2>(0, 0).inverse();
+  SymMatrix2D myWeightXY = cov->block<2, 2>(0, 0).inverse();
 
   // 2-dim residual
   Vector2D myXYpos =
@@ -280,12 +280,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const double cosPhi = std::cos(phi);
   const double cosTheta = std::cos(theta);
 
-  ActsSymMatrixD<2> vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
+  SymMatrix2D vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
 
   // Covariance of perigee parameters after propagation to perigee surface
   const auto& perigeeCov = *(propRes.endParameters->covariance());
 
-  ActsVectorD<2> d0JacXY(-sinPhi, cosPhi);
+  Vector2D d0JacXY(-sinPhi, cosPhi);
 
   ImpactParametersAndSigma newIPandSigma;
 
@@ -301,7 +301,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmad0 = 0;
   }
 
-  ActsSymMatrixD<2> covPerigeeZ0Theta;
+  SymMatrix2D covPerigeeZ0Theta;
   covPerigeeZ0Theta(0, 0) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
   covPerigeeZ0Theta(0, 1) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eTHETA);
   covPerigeeZ0Theta(1, 0) = perigeeCov(ParID_t::eTHETA, ParID_t::eLOC_Z0);
@@ -309,7 +309,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   double vtxZZCov = vtx.covariance()(eZ, eZ);
 
-  ActsVectorD<2> z0JacZ0Theta(sinTheta, z0 * cosTheta);
+  Vector2D z0JacZ0Theta(sinTheta, z0 * cosTheta);
 
   if (vtxZZCov >= 0) {
     newIPandSigma.IPz0SinTheta = z0 * sinTheta;

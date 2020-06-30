@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
       MeasurementType<ParDef::eLOC_0>(plane, {}, std::move(cov1D), 0.02));
 
   // Construct the 2D measurement
-  ActsSymMatrixD<2> cov2D;
+  SymMatrix2D cov2D;
   cov2D << 0.04, 0., 0.09, 0.;
 
   FittableMeasurement m2D(MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(

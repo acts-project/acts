@@ -211,10 +211,10 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
   auto linTrack = std::move(*result);
 
   // Calculate reduced weight
-  ActsSymMatrixD<2> weightReduced =
+  SymMatrix2D weightReduced =
       linTrack.covarianceAtPCA.template block<2, 2>(0, 0);
 
-  ActsSymMatrixD<2> errorVertexReduced =
+  SymMatrix2D errorVertexReduced =
       (linTrack.positionJacobian *
        (vertex.fullCovariance() * linTrack.positionJacobian.transpose()))
           .template block<2, 2>(0, 0);
@@ -398,7 +398,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     Vertex<InputTrack_t>& currentVertex,
     std::vector<const InputTrack_t*>& perigeesToFit,
     std::vector<const InputTrack_t*>& seedTracks,
-    const std::vector<const InputTrack_t*>& origTracks,
+    const std::vector<const InputTrack_t*>& /* origTracks */,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const {
   int numberOfAddedTracks = 0;
 

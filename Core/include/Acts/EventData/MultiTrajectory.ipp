@@ -192,8 +192,6 @@ template <typename parameters_t>
 inline size_t MultiTrajectory<SL>::addTrackState(
     const TrackState<SL, parameters_t>& ts, TrackStatePropMask mask,
     size_t iprevious) {
-  using CovMap =
-      typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
   using PropMask = TrackStatePropMask;
 
   // build a mask to allocate for the components in the trackstate
@@ -270,7 +268,7 @@ inline size_t MultiTrajectory<SL>::addTrackState(
   nts.typeFlags() = ts.type();
 
   return nts.index();
-}  // namespace Acts
+}
 
 template <typename SL>
 inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,

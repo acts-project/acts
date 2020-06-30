@@ -82,7 +82,7 @@ std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
 ActsSymMatrixD<1> cov1D;
-ActsSymMatrixD<2> cov2D;
+SymMatrix2D cov2D;
 
 bool debugMode = false;
 
@@ -285,8 +285,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
   RecoPropagator rPropagator(rStepper, rNavigator);
 
-  using Updater = GainMatrixUpdater<BoundParameters>;
-  using Smoother = GainMatrixSmoother<BoundParameters>;
+  using Updater = GainMatrixUpdater;
+  using Smoother = GainMatrixSmoother;
   using SourceLinkSelector = CKFSourceLinkSelector;
   using CombinatorialKalmanFilter =
       CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother,

@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   // Make dummy measurement
   auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
 
-  ActsSymMatrixD<2> cov;
+  SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas(
       MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   ts.pathLength() = 0.;
 
   // Gain matrix update and filtered state
-  GainMatrixUpdater<BoundParameters> gmu;
+  GainMatrixUpdater gmu;
 
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(ts.hasCalibrated());

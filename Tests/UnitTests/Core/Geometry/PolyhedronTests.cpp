@@ -13,11 +13,11 @@
 // Helper
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-// The class to test
 #include <fstream>
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 
 namespace Acts {
@@ -39,12 +39,10 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   BOOST_CHECK(tfaces == triangle.faces);
   BOOST_CHECK(tfaces == triangle.triangularMesh);
 
-  std::ofstream tStream;
-  tStream.open("PolyhedronTriangle.obj");
-  ObjVisualization objtH;
-  triangle.draw(objtH);
-  objtH.write(tStream);
-  tStream.close();
+  ObjVisualization objVis;
+  GeometryView::drawPolyhedron(objVis, triangle);
+  objVis.write("Polyhedron_Triangle");
+  objVis.clear();
 
   std::vector<Vector3D> rvertices = {Vector3D(-1, -2, 0.), Vector3D(1., -2, 0.),
                                      Vector3D(1., -1., 0.),
@@ -56,12 +54,9 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   BOOST_CHECK(rfaces == rectangle.faces);
   BOOST_CHECK(rmesh == rectangle.triangularMesh);
 
-  std::ofstream rStream;
-  rStream.open("PolyhedronRectangle.obj");
-  ObjVisualization objrH;
-  rectangle.draw(objrH);
-  objrH.write(rStream);
-  rStream.close();
+  GeometryView::drawPolyhedron(objVis, rectangle);
+  objVis.write("Polyhedron_Rectangle");
+  objVis.clear();
 
   // Now add them
   Polyhedron tr;
@@ -69,15 +64,11 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   BOOST_CHECK(tr.vertices == triangle.vertices);
   BOOST_CHECK(tr.faces == triangle.faces);
   BOOST_CHECK(tr.triangularMesh == triangle.triangularMesh);
-
   tr.merge(rectangle);
 
-  std::ofstream trStream;
-  trStream.open("PolyhedronTriangleRectangle.obj");
-  ObjVisualization objtrH;
-  tr.draw(objtrH);
-  objtrH.write(trStream);
-  trStream.close();
+  GeometryView::drawPolyhedron(objVis, tr);
+  objVis.write("Polyhedron_TriangleRectangle");
+  objVis.clear();
 }
 
 /// Unit tests for Polyderon construction & operator +=

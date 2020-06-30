@@ -23,8 +23,8 @@ namespace Acts {
 
 /// Selection cuts for associating source links on a surface.
 ///
-/// The default configuration only takes the best matching source link without a
-/// cut on the local chi2.
+/// The default configuration only takes the best matching source link without
+/// a cut on the local chi2.
 struct SourceLinkSelectorCuts {
   /// Maximum local chi2 contribution.
   double chi2CutOff = std::numeric_limits<double>::max();
@@ -32,14 +32,15 @@ struct SourceLinkSelectorCuts {
   size_t numSourcelinksCutOff = 1;
 };
 
-/// @brief Source link selection struct selecting those source links compatible
-/// with the given track parameter against provided criteria on one surface
+/// @brief Source link selection struct selecting those source links
+/// compatible with the given track parameter against provided criteria on one
+/// surface
 ///
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of source links on one surface
 ///
-/// If there is no compatible source link, the source link with the mininum chi2
-/// will be selected and the status will be tagged as an outlier
+/// If there is no compatible source link, the source link with the mininum
+/// chi2 will be selected and the status will be tagged as an outlier
 ///
 struct CKFSourceLinkSelector {
  public:
@@ -166,9 +167,6 @@ struct CKFSourceLinkSelector {
     // considered
     size_t nFinalCandidates =
         std::min(nInitialCandidates, numSourcelinksCutOff);
-
-    // Size of sourcelinkCandidates
-    size_t containerSize = sourcelinkCandidateIndices.size();
 
     // If there is no selected source link, return the source link with the best
     // chi2 and tag it as an outlier

@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   auto plane3 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 3,
                                                   Vector3D::UnitX());
 
-  ActsSymMatrixD<2> cov;
+  SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas1(
       MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   // "smooth" these three track states
 
-  GainMatrixSmoother<BoundParameters> gms;
+  GainMatrixSmoother gms;
   BOOST_CHECK(gms(tgContext, traj, ts_idx).ok());
 
   // Regression tests, only tests very basic correctness of the math, but tests
