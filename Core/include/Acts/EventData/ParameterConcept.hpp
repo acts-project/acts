@@ -41,7 +41,7 @@ namespace concept {
   METHOD_TRAIT(position_t, position);
   METHOD_TRAIT(momentum_t, momentum);
   METHOD_TRAIT(charge_t, charge);
-  METHOD_TRAIT(timet, time);
+  METHOD_TRAIT(time_t, time);
   METHOD_TRAIT(covariance_t, covariance);
   METHOD_TRAIT(parameters_t, parameters);
 
@@ -82,7 +82,8 @@ namespace concept {
         has_method<const P, Vector3D, momentum_t>;
     constexpr static bool free_charge_exists =
         has_method<const P, double, charge_t>;
-    constexpr static bool free_time_exists = has_method<const P, double, timet>;
+    constexpr static bool free_time_exists =
+        has_method<const P, double, time_t>;
     constexpr static bool free_covariance_exists =
         has_method<const P, const std::optional<FreeSymMatrix>&, covariance_t>;
     constexpr static bool free_parameters_exists =
