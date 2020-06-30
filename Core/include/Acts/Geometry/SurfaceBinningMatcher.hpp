@@ -26,7 +26,7 @@ struct SurfaceBinningMatcher {
   SurfaceBinningMatcher(const std::vector<Range>& tolpars)
       : tolerances(tolpars) {}
 
-  /// Check funtion for surface equivalent
+  /// Check function for surface equivalent
   ///
   /// @param gctx [in] gctx the geometry context for this check
   /// @param bValue the binning value for the binning
