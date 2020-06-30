@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -126,7 +126,7 @@ struct coordinate_transformation {
   static double parameters2charge(const ParVector_t& pars) {
     return (pars(Acts::eQOP) > 0) ? 1. : -1.;
   }
-  
+
   /// @brief Transforms a bound parameter vector into the free equivalent
   ///
   /// @param [in] gtcx Geometry context
@@ -134,14 +134,17 @@ struct coordinate_transformation {
   /// @param [in] surface Surface related to @p parameters
   ///
   /// @return FreeVector representation of @p parameters
-  static FreeVector boundParameters2freeParameters(const GeometryContext& gtcx, const BoundVector& parameters, const Surface& surface)
-  {
-	 FreeVector result;
-	 result.template segment<3>(eFreePos0) = parameters2globalPosition(gtcx, parameters, surface);
-	 result[eFreeTime] = parameters[eBoundTime];
-	 result.template segment<3>(eFreeDir0) = parameters2globalMomentum(parameters).normalized();
-	 result[eFreeQOverP] = parameters[eBoundQOverP];
-	 return result;
+  static FreeVector boundParameters2freeParameters(
+      const GeometryContext& gtcx, const BoundVector& parameters,
+      const Surface& surface) {
+    FreeVector result;
+    result.template segment<3>(eFreePos0) =
+        parameters2globalPosition(gtcx, parameters, surface);
+    result[eFreeTime] = parameters[eBoundTime];
+    result.template segment<3>(eFreeDir0) =
+        parameters2globalMomentum(parameters).normalized();
+    result[eFreeQOverP] = parameters[eBoundQOverP];
+    return result;
   }
 };
 }  // namespace detail

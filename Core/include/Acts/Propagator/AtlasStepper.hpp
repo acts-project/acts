@@ -463,7 +463,8 @@ class AtlasStepper {
   ///
   /// @param [in,out] state The stepper state for
   /// @param [in] pars The new track parameters at start
-  void update(State& state, const FreeVector& parameters, const Covariance& covariance) const {
+  void update(State& state, const FreeVector& parameters,
+              const Covariance& covariance) const {
     // state is ready - noting to do
     if (state.state_ready) {
       return;
@@ -485,12 +486,11 @@ class AtlasStepper {
     }
 
     // prepare the jacobian if we have a covariance
-      // copy the covariance matrix
-      state.covariance =
-          new ActsSymMatrixD<eBoundParametersSize>(covariance);
-      state.covTransport = true;
-      state.useJacobian = true;
-      
+    // copy the covariance matrix
+    state.covariance = new ActsSymMatrixD<eBoundParametersSize>(covariance);
+    state.covTransport = true;
+    state.useJacobian = true;
+
     // now declare the state as ready
     state.state_ready = true;
   }

@@ -318,7 +318,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                            -1. * charge, 2. * time, targetSurface);
   Vector3D dir = bpTarget.momentum().normalized();
   FreeVector freeParams;
-  freeParams << bpTarget.position()[0], bpTarget.position()[1], bpTarget.position()[2], bpTarget.time(), dir[0], dir[1], dir[2], bpTarget.charge() / bpTarget.momentum().norm();
+  freeParams << bpTarget.position()[0], bpTarget.position()[1],
+      bpTarget.position()[2], bpTarget.time(), dir[0], dir[1], dir[2],
+      bpTarget.charge() / bpTarget.momentum().norm();
   es.update(esState, freeParams, *bpTarget.covariance());
   BOOST_TEST(esState.pos == 2. * pos);
   CHECK_CLOSE_ABS(esState.dir, mom.normalized(), 1e-6);

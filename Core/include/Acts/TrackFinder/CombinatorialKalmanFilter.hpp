@@ -470,12 +470,13 @@ class CombinatorialKalmanFilter {
       state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
-      stepper.update(state.stepping, currentState.filtered(state.options.geoContext), currentState.filteredCovariance());
+      stepper.update(state.stepping,
+                     currentState.filtered(state.options.geoContext),
+                     currentState.filteredCovariance());
       // Reinitialize the stepping jacobian
       currentState.referenceSurface().initJacobianToGlobal(
           state.options.geoContext, state.stepping.jacToGlobal,
-          state.stepping.pos, state.stepping.dir,
-          currentState.filtered());
+          state.stepping.pos, state.stepping.dir, currentState.filtered());
       state.stepping.jacobian = BoundMatrix::Identity();
       state.stepping.jacTransport = FreeMatrix::Identity();
       state.stepping.derivative = FreeVector::Zero();
@@ -616,7 +617,8 @@ class CombinatorialKalmanFilter {
           // state on this surface
           auto ts =
               result.fittedStates.getTrackState(result.activeTips.back().first);
-          stepper.update(state.stepping, ts.filtered(state.options.geoContext), ts.filteredCovariance());
+          stepper.update(state.stepping, ts.filtered(state.options.geoContext),
+                         ts.filteredCovariance());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
                        << " of track state with tip = "
@@ -1009,7 +1011,9 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state, "
           "set target surface.");
-      stepper.update(state.stepping, firstMeasurement.smoothed(state.options.geoContext), firstMeasurement.smoothedCovariance());
+      stepper.update(state.stepping,
+                     firstMeasurement.smoothed(state.options.geoContext),
+                     firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);

@@ -32,8 +32,8 @@ StraightLineStepper::curvilinearState(State& state) const {
       state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated);
 }
 
-void StraightLineStepper::update(State& state,
-                                 const FreeVector& parameters, const Covariance& covariance) const {
+void StraightLineStepper::update(State& state, const FreeVector& parameters,
+                                 const Covariance& covariance) const {
   state.pos = parameters.template segment<3>(eFreePos0);
   state.dir = parameters.template segment<3>(eFreeDir0).normalized();
   state.p = std::abs(1. / parameters[eFreeQOverP]);
