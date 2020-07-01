@@ -30,15 +30,6 @@ namespace Acts {
 /// of materials is described.
 class Material {
  public:
-  /// Index of the parameters in the encoded parameters vector.
-  enum Param {
-    eX0 = 0,
-    eL0 = 1,
-    eAr = 2,
-    eZ = 3,
-    eRho = 4,
-  };
-
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from material parameters.
@@ -80,7 +71,7 @@ class Material {
   /// Return the mean electron excitation energy.
   float meanExcitationEnergy() const;
 
-  /// Encode the properties into a parameter vector.
+  /// Encode the properties into an opaque parameters vector.
   ActsVectorF<5> classificationNumbers() const;
 
  private:
