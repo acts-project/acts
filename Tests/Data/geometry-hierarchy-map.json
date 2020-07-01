@@ -1,0 +1,39 @@
+{
+    "acts-geometry-hierarchy-map": {
+        "format-version": 0,
+        "value-identifier": "thing"
+    },
+    "entries": [
+        {
+            "_comment": "global default entry w/o identifier",
+            "value": {
+                "x": 0.25,
+                "y": -1234
+            }
+        },
+        {
+            "volume": 1,
+            "layer": 2,
+            "value": {
+                "x": 1.25,
+                "y": 23
+            }
+        },
+        {
+            "volume": 3,
+            "value": {
+                "x": 3.25,
+                "y": -42
+            }
+        },
+        {
+            "volume": 3,
+            "layer": 4,
+            "sensitive": 5,
+            "value": {
+                "x": 3.25,
+                "y": -5
+            }
+        }
+    ]
+}
