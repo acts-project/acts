@@ -148,7 +148,7 @@ void FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
   auto pSurface = &fittedParamters.referenceSurface();
 
   // get the truth position and momentum
-  ParVector_t truthParameter;
+  Parameters truthParameter;
 
   // get the truth perigee parameter
   Acts::Vector2D local(0., 0.);

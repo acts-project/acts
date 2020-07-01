@@ -24,7 +24,7 @@ namespace FW {
 // truth_parameter)/smoothed_paramter_error, of track parameters at perigee
 // surface
 class ResPlotTool {
-  using ParVector_t = typename Acts::BoundParameters::ParVector_t;
+  using Parameters = typename Acts::BoundParameters::Parameters;
 
  public:
   /// @brief Nested configuration struct
