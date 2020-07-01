@@ -149,23 +149,22 @@ inline void AccumulatedMaterialProperties::trackAverage(bool emptyHit) {
 
 inline std::pair<MaterialProperties, unsigned int>
 AccumulatedMaterialProperties::totalAverage() {
-  if (m_totalEvents > 0 && m_totalPathInX0 > 0.) {
-    double eventScalor = 1. / m_totalEvents;
-    m_totalPathInX0 *= eventScalor;
-    m_totalPathInL0 *= eventScalor;
-    m_totalRho *= eventScalor;
-    m_totalAr *= eventScalor;
-    m_totalZ *= eventScalor;
-    // Create the material
-    double X0 = 1. / m_totalPathInX0;
-    double L0 = 1. / m_totalPathInL0;
-    // Create the material properties - fixed to unit path length
-    MaterialProperties averageMat(X0, L0, m_totalAr, m_totalZ, m_totalRho, 1.);
-    return std::pair<MaterialProperties, unsigned int>(std::move(averageMat),
-                                                       m_totalEvents);
+  if ((m_totalEvents == 0) or (m_totalPathInX0 <= 0.0)) {
+    // return vacuum
+    return {MaterialProperties(), m_totalEvents};
   }
-  return std::pair<MaterialProperties, unsigned int>(
-      MaterialProperties{Material(), 0.}, m_totalEvents);
+  double eventScalor = 1. / m_totalEvents;
+  m_totalPathInX0 *= eventScalor;
+  m_totalPathInL0 *= eventScalor;
+  m_totalRho *= eventScalor;
+  m_totalAr *= eventScalor;
+  m_totalZ *= eventScalor;
+  // Create the material
+  double X0 = 1. / m_totalPathInX0;
+  double L0 = 1. / m_totalPathInL0;
+  Material averageMat(X0, L0, m_totalAr, m_totalZ, m_totalRho);
+  // Create the material properties - fixed to unit path length
+  return {MaterialProperties(averageMat, 1.0), m_totalEvents};
 }
 
-}  // end of namespace Acts
+}  // namespace Acts

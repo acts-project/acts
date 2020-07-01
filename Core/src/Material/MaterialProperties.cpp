@@ -17,14 +17,6 @@ static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 Acts::MaterialProperties::MaterialProperties(float thickness)
     : m_thickness(thickness) {}
 
-Acts::MaterialProperties::MaterialProperties(float X0, float L0, float Ar,
-                                             float Z, float rho,
-                                             float thickness)
-    : m_material(X0, L0, Ar, Z, rho),
-      m_thickness(thickness),
-      m_thicknessInX0((X0 > eps) ? (thickness / X0) : 0),
-      m_thicknessInL0((L0 > eps) ? (thickness / L0) : 0) {}
-
 Acts::MaterialProperties::MaterialProperties(const Material& material,
                                              float thickness)
     : m_material(material),
