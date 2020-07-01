@@ -22,21 +22,21 @@ static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 static constexpr float SiNe = 1.160954941 / 1_cm3;
 static constexpr float SiI = 172.042290036_eV;
 
-BOOST_AUTO_TEST_SUITE(material)
+BOOST_AUTO_TEST_SUITE(Material)
 
-BOOST_AUTO_TEST_CASE(construct_vacuum) {
+BOOST_AUTO_TEST_CASE(ConstructVacuum) {
   // default constructor builds invalid material a.k.a. vacuum
   Acts::Material vacuum;
   BOOST_TEST(!vacuum);
 }
 
-BOOST_AUTO_TEST_CASE(construct_something) {
+BOOST_AUTO_TEST_CASE(ConstructSomething) {
   // anything with non-zero Ar is a valid material
   Acts::Material notVacuum(1, 2, 3, 4, 5);
   BOOST_TEST(!!notVacuum);
 }
 
-BOOST_AUTO_TEST_CASE(units) {
+BOOST_AUTO_TEST_CASE(Units) {
   Acts::Material silicon = Acts::Test::makeSilicon();
 
   // check values w/ different units if possible
