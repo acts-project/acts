@@ -617,7 +617,8 @@ class CombinatorialKalmanFilter {
           // state on this surface
           auto ts =
               result.fittedStates.getTrackState(result.activeTips.back().first);
-          stepper.update(state.stepping, ts.freeFiltered(state.options.geoContext),
+          stepper.update(state.stepping,
+                         ts.freeFiltered(state.options.geoContext),
                          ts.filteredCovariance());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()

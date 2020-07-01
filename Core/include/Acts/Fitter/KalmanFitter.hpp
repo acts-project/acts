@@ -398,7 +398,8 @@ class KalmanFitter {
           state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
-          stepper.update(state.stepping, st.freeFiltered(state.options.geoContext),
+          stepper.update(state.stepping,
+                         st.freeFiltered(state.options.geoContext),
                          st.filteredCovariance());
           // Reverse stepping direction
           state.stepping.navDir = backward;
@@ -501,9 +502,10 @@ class KalmanFitter {
             // update stepping state using filtered parameters after kalman
             // update We need to (re-)construct a BoundParameters instance
             // here, which is a bit awkward.
-            stepper.update(state.stepping,
-                           trackStateProxy.freeFiltered(state.options.geoContext),
-                           trackStateProxy.filteredCovariance());
+            stepper.update(
+                state.stepping,
+                trackStateProxy.freeFiltered(state.options.geoContext),
+                trackStateProxy.filteredCovariance());
             // We count the state with measurement
             ++result.measurementStates;
           } else {
