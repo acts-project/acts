@@ -56,7 +56,7 @@ Acts::MaterialProperties::MaterialProperties(
   const auto density = weight / thickness;
   const auto X0 = thickness / thicknessInX0;
   const auto L0 = thickness / thicknessInL0;
-  m_material = Material(X0, L0, Ar, Z, density);
+  m_material = Material::fromMassDensity(X0, L0, Ar, Z, density);
   // thickness properties do not need to be averaged
   m_thickness = thickness;
   m_thicknessInX0 = thicknessInX0;

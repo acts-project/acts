@@ -162,7 +162,8 @@ AccumulatedMaterialProperties::totalAverage() {
   // Create the material
   double X0 = 1. / m_totalPathInX0;
   double L0 = 1. / m_totalPathInL0;
-  Material averageMat(X0, L0, m_totalAr, m_totalZ, m_totalRho);
+  auto averageMat =
+      Material::fromMassDensity(X0, L0, m_totalAr, m_totalZ, m_totalRho);
   // Create the material properties - fixed to unit path length
   return {MaterialProperties(averageMat, 1.0), m_totalEvents};
 }
