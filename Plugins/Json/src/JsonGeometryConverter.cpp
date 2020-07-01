@@ -892,7 +892,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
     for (auto& inner : outer) {
       if (inner.size() > 5) {
         mpVector.push_back(Acts::MaterialProperties(
-            inner[0], inner[1], inner[2], inner[3], inner[4], inner[5]));
+            Acts::Material(inner[0], inner[1], inner[2], inner[3], inner[4]),
+            inner[5]));
       } else {
         mpVector.push_back(Acts::MaterialProperties());
       }

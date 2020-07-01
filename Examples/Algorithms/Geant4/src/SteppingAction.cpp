@@ -81,7 +81,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     mInteraction.direction = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
     mInteraction.direction.normalized();
     mInteraction.materialProperties =
-        Acts::MaterialProperties(X0, L0, A, Z, rho, steplength);
+        Acts::MaterialProperties(Acts::Material(X0, L0, A, Z, rho), steplength);
     m_materialSteps.push_back(mInteraction);
 
     //   // Get the track associated to the step
