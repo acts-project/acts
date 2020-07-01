@@ -21,8 +21,8 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
                                              float thickness)
     : m_material(material),
       m_thickness(thickness),
-      m_thicknessInX0((material.X0() > eps) ? (thickness / material.X0()) : 0),
-      m_thicknessInL0((material.L0() > eps) ? (thickness / material.L0()) : 0) {
+      m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0()) : 0),
+      m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0()) : 0) {
 }
 
 Acts::MaterialProperties::MaterialProperties(
