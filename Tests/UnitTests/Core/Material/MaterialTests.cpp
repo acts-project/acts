@@ -22,7 +22,7 @@ using namespace Acts::UnitLiterals;
 
 static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 // manually calculated derived values for silicon
-static constexpr float SiNe = 1.160954941 / 1_cm3;
+static constexpr float SiNe = 1.160954941_mol / 1_cm3;
 static constexpr float SiI = 172.042290036_eV;
 
 BOOST_AUTO_TEST_SUITE(Material)
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(ConstructVacuum) {
 
 BOOST_AUTO_TEST_CASE(ConstructSomething) {
   // anything with non-zero Ar is a valid material
-  Acts::Material notVacuum(1, 2, 3, 4, 5);
+  auto notVacuum = Acts::Material::fromMolarDensity(1, 2, 3, 4, 5);
   BOOST_CHECK(!!notVacuum);
 }
 
@@ -51,10 +51,14 @@ BOOST_AUTO_TEST_CASE(Units) {
   CHECK_CLOSE_REL(silicon.L0(), 0.4652_m, eps);
   CHECK_CLOSE_REL(silicon.Ar(), 28.0855, eps);
   CHECK_CLOSE_REL(silicon.Z(), 14.0, eps);
+  CHECK_CLOSE_REL(silicon.molarDensity(), 0.08292535294012926_mol / 1_cm3, eps);
+  CHECK_CLOSE_REL(silicon.molarDensity(), 82925.35294012926_mol / 1_m3, eps);
+  // check derived values
   CHECK_CLOSE_REL(silicon.massDensity(), 2.329_g / 1_cm3, eps);
   CHECK_CLOSE_REL(silicon.massDensity(), 0.002329_kg / 1_cm3, eps);
   CHECK_CLOSE_REL(silicon.massDensity(), 0.002329_g / 1_mm3, eps);
-  // check derived values
+  CHECK_CLOSE_REL(silicon.molarElectronDensity(),
+                  silicon.Z() * silicon.molarDensity(), eps);
   CHECK_CLOSE_REL(silicon.molarElectronDensity(), SiNe, eps);
   CHECK_CLOSE_REL(silicon.meanExcitationEnergy(), SiI, eps);
 }
@@ -62,7 +66,7 @@ BOOST_AUTO_TEST_CASE(Units) {
 BOOST_DATA_TEST_CASE(EncodingDecodingRoundtrip,
                      bdata::make({
                          Acts::Material(),
-                         Acts::Material(1, 2, 3, 4, 5),
+                         Acts::Material::fromMolarDensity(1, 2, 3, 4, 5),
                          Acts::Test::makeBeryllium(),
                          Acts::Test::makeSilicon(),
                      }),
