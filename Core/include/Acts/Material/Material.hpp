@@ -20,11 +20,11 @@ namespace Acts {
 /// The following parameters are used to specify the material and its
 /// interactions with traversing particles:
 ///
-/// *   X0:  radiation length (native length units)
-/// *   L0:  nuclear interaction length (native length units)
-/// *   Ar:  relative atomic mass (unitless number)
-/// *   Z:   atomic number (unitless number)
-/// *   rho: mass density (native mass unit / (native length unit)³)
+/// - radiation length X0 (native length units)
+/// - nuclear interaction length L0 (native length units)
+/// - relative atomic mass Ar (unitless number)
+/// - nuclear charge number Z (elementary charge e)
+/// - mass density rho (native mass unit / (native length unit)³)
 ///
 /// The parameters can be effective or average parameters when e.g. a mixture
 /// of materials is described.
@@ -68,11 +68,11 @@ class Material {
   constexpr float L0() const { return m_l0; }
   /// Return the relative atomic mass.
   constexpr float Ar() const { return m_ar; }
-  /// Return the atomic number.
+  /// Return the nuclear charge number.
   constexpr float Z() const { return m_z; }
   /// Return the mass density.
   constexpr float massDensity() const { return m_rho; }
-  /// Return the electron density in mol / (native length unit)³.
+  /// Return the molar electron density in mol / (native length unit)³.
   ///
   /// Use mol instead of the real number of electrons to avoid large numbers
   /// which could result in numerical instabilities somewhere else.
