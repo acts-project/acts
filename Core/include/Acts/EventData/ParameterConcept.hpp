@@ -21,6 +21,10 @@ namespace concept {
   template <typename T>
   using covmat_t = typename T::Covariance;
 
+  template <typename T>
+  using reference_surface_returntype_t =
+      decltype(std::declval<T>().referenceSurface());
+
   /// The following lines define functions for surface bound parametrisations
   METHOD_TRAIT(reference_surface_t, referenceSurface);
 
@@ -53,7 +57,7 @@ namespace concept {
 
     /// Tests related to surface bound parametrisations
     constexpr static bool reference_surface_exists =
-        has_method<const P, const Surface&, reference_surface_t>;
+        identical_to<const Surface&, reference_surface_returntype_t, const P>;
     constexpr static bool surfacebound_position_exists =
         identical_to<Vector3D, position_returntype_t, const P>;
     constexpr static bool surfacebound_momentum_exists =
