@@ -100,7 +100,7 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered(
+inline auto TrackStateProxy<SL, N, M, ReadOnly>::freeFiltered(
     const Acts::GeometryContext& gctx) const -> FreeVector {
   return detail::coordinate_transformation::boundParameters2freeParameters(
       gctx, filtered(), referenceSurface());
@@ -121,7 +121,7 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed(
+inline auto TrackStateProxy<SL, N, M, ReadOnly>::freeSmoothed(
     const Acts::GeometryContext& gctx) const -> FreeVector {
   return detail::coordinate_transformation::boundParameters2freeParameters(
       gctx, smoothed(), referenceSurface());

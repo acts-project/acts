@@ -291,7 +291,7 @@ class TrackStateProxy {
 
   /// Filtered track parameters vector
   /// @return The filtered parameters in free representation
-  FreeVector filtered(const Acts::GeometryContext& gctx) const;
+  FreeVector freeFiltered(const Acts::GeometryContext& gctx) const;
 
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
@@ -307,7 +307,7 @@ class TrackStateProxy {
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters in free representation
-  FreeVector smoothed(const Acts::GeometryContext& gctx) const;
+  FreeVector freeSmoothed(const Acts::GeometryContext& gctx) const;
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix

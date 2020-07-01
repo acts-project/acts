@@ -471,7 +471,7 @@ class CombinatorialKalmanFilter {
 
       // Update the stepping state
       stepper.update(state.stepping,
-                     currentState.filtered(state.options.geoContext),
+                     currentState.freeFiltered(state.options.geoContext),
                      currentState.filteredCovariance());
       // Reinitialize the stepping jacobian
       currentState.referenceSurface().initJacobianToGlobal(
@@ -617,7 +617,7 @@ class CombinatorialKalmanFilter {
           // state on this surface
           auto ts =
               result.fittedStates.getTrackState(result.activeTips.back().first);
-          stepper.update(state.stepping, ts.filtered(state.options.geoContext),
+          stepper.update(state.stepping, ts.freeFiltered(state.options.geoContext),
                          ts.filteredCovariance());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
@@ -1012,7 +1012,7 @@ class CombinatorialKalmanFilter {
           "Smoothing successful, updating stepping state, "
           "set target surface.");
       stepper.update(state.stepping,
-                     firstMeasurement.smoothed(state.options.geoContext),
+                     firstMeasurement.freeSmoothed(state.options.geoContext),
                      firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =
