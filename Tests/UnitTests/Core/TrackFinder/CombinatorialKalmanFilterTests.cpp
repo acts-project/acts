@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/unit_test.hpp>
-
 #include <algorithm>
+#include <boost/test/unit_test.hpp>
 #include <cmath>
 #include <random>
 #include <vector>
@@ -63,7 +62,7 @@ struct ExtendedMinimalSourceLink {
 };
 
 // helper function to create geometry ids
-GeometryID makeId(int volume, int layer = 0, int sensitive = 0) {
+GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
   return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
 }
 
@@ -293,27 +292,20 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
       CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother,
                                 SourceLinkSelector>;
 
-  using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
-  using CKFCriteriaContainer =
-      Acts::HierarchicalGeometryContainer<GeometryCKFCriteria>;
   // Implement different chi2/nSourceLinks cutoff at different detector level
   // NB: pixel volumeID = 2, strip volumeID= 3
-  std::vector<GeometryCKFCriteria> elements = {
-      {makeId(2, 2), 8.0, 5},  // pixel layer 2 chi2/nSourceLinks cutoff: 8.0/5
-      {makeId(2, 4), 7.0, 5},  // pixel layer 4 chi2/nSourceLinks cutoff: 7.0/5
-      {makeId(2), 7.0, 5},     // pixel volume chi2/nSourceLinks cutoff: 7.0/5
-      {makeId(3), 8.0, 5},     // strip volume chi2/nSourceLinks cutoff: 8.0/5
+  SourceLinkSelector::Config sourcelinkSelectorConfig = {
+      // global default valies
+      {makeId(), {8.0, 10}},
+      // pixel layer 2 chi2/nSourceLinks cutoff: 8.0/5
+      {makeId(2, 2), {8.0, 5}},
+      // pixel layer 4 chi2/nSourceLinks cutoff: 7.0/5
+      {makeId(2, 4), {7.0, 5}},
+      // pixel volume chi2/nSourceLinks cutoff: 7.0/5
+      {makeId(2), {7.0, 5}},
+      // strip volume chi2/nSourceLinks cutoff: 8.0/5
+      {makeId(3), {8.0, 5}},
   };
-  SourceLinkSelectorConfig sourcelinkSelectorConfig;
-  // CKF source link selection criteria at detector sensitive/layer/volume level
-  // implemented via hierarchical geometry container
-  sourcelinkSelectorConfig.criteriaContainer =
-      CKFCriteriaContainer(std::move(elements));
-  // Chi2 cutoff at global level
-  sourcelinkSelectorConfig.globalChi2CutOff = 8;
-  // Cutoff for number of source links at global level
-  sourcelinkSelectorConfig.globalNumSourcelinksCutOff = 10;
-
   CombinatorialKalmanFilter cKF(
       rPropagator,
       getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE));

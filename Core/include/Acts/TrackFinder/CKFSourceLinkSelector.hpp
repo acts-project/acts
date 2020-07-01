@@ -13,8 +13,7 @@
 
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Geometry/HierarchicalGeometryContainer.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/TrackFinder/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -22,68 +21,38 @@
 
 namespace Acts {
 
-/// Geometry CKF criteria struct in the hierarchical geometry container.
+/// Selection cuts for associating source links on a surface.
 ///
-/// It take a geometry identifier and cutoff values for chi2 and number of
-/// source links on surface.
-struct GeometryCKFCriteria {
-  // The geometry identifier
-  GeometryID id;
-
-  // The cutoff value for chi2 associated with the geometry identifier
+/// The default configuration only takes the best matching source link without
+/// a cut on the local chi2.
+struct SourceLinkSelectorCuts {
+  /// Maximum local chi2 contribution.
   double chi2CutOff = std::numeric_limits<double>::max();
-
-  // The cutoff value for number of source links on surface associated with the
-  // geometry identifier
-  size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
-
-  // The constructor
-  GeometryCKFCriteria(GeometryID id_, double chi2_, size_t num_)
-      : id(id_), chi2CutOff(chi2_), numSourcelinksCutOff(num_) {}
-
-  // The geometry identifier getter
-  constexpr auto geometryId() const { return id; }
+  /// Maximum number of associated source links on a single surface.
+  size_t numSourcelinksCutOff = 1;
 };
 
-/// @brief Source link selection struct selecting those source links compatible
-/// with the given track parameter against provided criteria on one surface
+/// @brief Source link selection struct selecting those source links
+/// compatible with the given track parameter against provided criteria on one
+/// surface
 ///
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of source links on one surface
 ///
-/// If there is no compatible source link, the source link with the mininum chi2
-/// will be selected and the status will be tagged as an outlier
+/// If there is no compatible source link, the source link with the mininum
+/// chi2 will be selected and the status will be tagged as an outlier
 ///
 struct CKFSourceLinkSelector {
  public:
-  /// @brief nested config struct
+  /// Geometry-dependent cut configuration.
   ///
-  /// Configuration of source link selection criteria at different detector
-  /// level:
-  /// -> The hierarchical criteria at sensitive/layer/volume level
-  /// -> The global criteria for all sensitive surfaces
-  /// If a geometry identifier is not found in the hierarchical geometry
-  /// container, the global criteria will be used
-  ///
-  struct Config {
-    using CKFCriteriaContainer =
-        Acts::HierarchicalGeometryContainer<GeometryCKFCriteria>;
-
-    // Hierarchical geometry container of cutoff value for chi2 and number of
-    // source links on surface
-    CKFCriteriaContainer criteriaContainer;
-
-    // Global cutoff value for chi2
-    double globalChi2CutOff = std::numeric_limits<double>::max();
-
-    // Global cutoff value for number of source links on surface, e.g. value 1
-    // means selecting only the most compatible source link
-    size_t globalNumSourcelinksCutOff = 1;
-  };
+  /// Different components on the geometry can require different cut settings.
+  /// The configuration must either contain explicit settings for all geometry
+  /// components that are used or contain a global default.
+  using Config = Acts::GeometryHierarchyMap<SourceLinkSelectorCuts>;
 
   /// @brief Default constructor
   CKFSourceLinkSelector() = default;
-
   /// @brief Constructor with config and (non-owning) logger
   ///
   /// @param config a config instance
@@ -128,18 +97,16 @@ struct CKFSourceLinkSelector {
     auto surface = &predictedParams.referenceSurface();
     auto geoID = surface->geoID();
 
-    // Find the cutoff values for the surface in the hierarchical geometry
-    // container. If not found, use global cutoff values
-    double chi2CutOff = std::numeric_limits<double>::max();
-    size_t numSourcelinksCutOff = std::numeric_limits<size_t>::max();
-    auto criteria_it = m_config.criteriaContainer.find(geoID);
-    if (criteria_it != m_config.criteriaContainer.end()) {
-      chi2CutOff = criteria_it->chi2CutOff;
-      numSourcelinksCutOff = criteria_it->numSourcelinksCutOff;
-    } else {
-      chi2CutOff = m_config.globalChi2CutOff;
-      numSourcelinksCutOff = m_config.globalNumSourcelinksCutOff;
+    // Find the appropriate cuts
+    auto cuts = m_config.find(geoID);
+    if (cuts == m_config.end()) {
+      // for now we consider missing cuts an unrecoverable error
+      // TODO consider other options e.g. do not add source links at all (not
+      // even as outliers)
+      return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
     }
+    const auto chi2CutOff = cuts->chi2CutOff;
+    const auto numSourcelinksCutOff = cuts->numSourcelinksCutOff;
     ACTS_VERBOSE("Allowed maximum chi2: " << chi2CutOff);
     ACTS_VERBOSE(
         "Allowed maximum number of source links: " << numSourcelinksCutOff);
