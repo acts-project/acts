@@ -33,14 +33,14 @@ class GaussianTrackDensity {
     /// @param c2in Quadratic coefficient in exponent
     /// @param zMin The lower bound
     /// @param zMax The upper bound
-    TrackEntry(double z, double c0in, double c1in, double c2in, double zMin,
-               double zMax)
-        : z(z),
-          c0(c0in),
-          c1(c1in),
-          c2(c2in),
-          lowerBound(zMin),
-          upperBound(zMax) {}
+    TrackEntry(double z_, double c0in_, double c1in_, double c2in_,
+               double zMin_, double zMax_)
+        : z(z_),
+          c0(c0in_),
+          c1(c1in_),
+          c2(c2in_),
+          lowerBound(zMin_),
+          upperBound(zMax_) {}
 
     double z = 0;
     // Cached information for a single track
