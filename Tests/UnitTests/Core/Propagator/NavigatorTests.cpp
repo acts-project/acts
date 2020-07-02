@@ -289,7 +289,9 @@ navigator.resolveSensitive = false;
   // Stepper
   PropagatorState::Stepper stepper;
 
-  // (1) Test the inactivity
+  //
+  // (1) Test for inactivity
+  //
   navigator.status(state, stepper);
   // Run without anything present
   testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
@@ -297,6 +299,40 @@ navigator.resolveSensitive = false;
   
   // Run with geometry but without resolving
   navigator.trackingGeometry = tGeometry;
+  navigator.status(state, stepper);
+  testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
+  testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+  // Run with geometry and resolving but broken navigation for various reasons
+  navigator.resolveSensitive = true;
+  navigator.resolveMaterial = true;
+  navigator.resolvePassive = true;
+  state.navigation.navigationBreak = true;
+  // a) Because target is reached
+  state.navigation.targetReached = true;
+  navigator.status(state, stepper);
+  testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
+  testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  // b) Beacause of no target surface
+  state.navigation.targetReached = false;
+  state.navigation.targetSurface = nullptr;
+  navigator.status(state, stepper);
+  testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
+  testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  // c) Because the target surface is reached
+  auto curvParams = std::get<CurvilinearParameters>(stepper.curvilinearState(state.stepping));
+  state.navigation.targetSurface = &curvParams.referenceSurface();
+  navigator.status(state, stepper);
+  testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
+  testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  
+  // Clean-up the state
+  state.navigation.targetSurface = nullptr;
+  state.navigation.navigationBreak = false;
+  
+  //
+  // (2) Test the initialisation
+  //
   navigator.status(state, stepper);
   testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
   testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
