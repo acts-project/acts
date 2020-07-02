@@ -44,8 +44,11 @@ using CovMat_t = BoundParameters::CovarianceMatrix;
 
 struct TestTrackState {
   SourceLink sourceLink;
-  std::optional<Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1, eQOP>> meas3d;
-  std::optional<Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1>> meas2d;
+  std::optional<
+      Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1, eQOP>>
+      meas3d;
+  std::optional<Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1>>
+      meas2d;
   std::optional<BoundParameters> predicted;
   std::optional<BoundParameters> filtered;
   std::optional<BoundParameters> smoothed;
