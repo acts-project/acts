@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, SpacePointVector::Zero(), geoContext,
+            .linearizeTrack(params, Vector4D::Zero(), geoContext,
                             magFieldContext, state)
             .value();
 
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SpacePointSymMatrix::Identity() * 0.01);
+    vtx.setFullCovariance(SymMatrix4D::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(vtx, trkAtVtx);

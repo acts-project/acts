@@ -14,12 +14,12 @@ Acts::Vertex<input_track_t>::Vertex(const Vector3D& position) {
 }
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>::Vertex(const SpacePointVector& position)
+Acts::Vertex<input_track_t>::Vertex(const Vector4D& position)
     : m_position(position) {}
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const Vector3D& position, const ActsSymMatrixD<3>& covariance,
+    const Vector3D& position, const SymMatrix3D& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_tracksAtVertex(tracks) {
   m_position[ePos0] = position[ePos0];
@@ -30,7 +30,7 @@ Acts::Vertex<input_track_t>::Vertex(
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const SpacePointVector& position, const SpacePointSymMatrix& covariance,
+    const Vector4D& position, const SymMatrix4D& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_position(position),
       m_covariance(covariance),
@@ -47,8 +47,7 @@ Acts::ParValue_t Acts::Vertex<input_track_t>::time() const {
 }
 
 template <typename input_track_t>
-const Acts::SpacePointVector& Acts::Vertex<input_track_t>::fullPosition()
-    const {
+const Acts::Vector4D& Acts::Vertex<input_track_t>::fullPosition() const {
   return m_position;
 }
 
@@ -58,8 +57,7 @@ Acts::SymMatrix3D Acts::Vertex<input_track_t>::covariance() const {
 }
 
 template <typename input_track_t>
-const Acts::SpacePointSymMatrix& Acts::Vertex<input_track_t>::fullCovariance()
-    const {
+const Acts::SymMatrix4D& Acts::Vertex<input_track_t>::fullCovariance() const {
   return m_covariance;
 }
 
@@ -85,7 +83,7 @@ void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setFullPosition(
-    const SpacePointVector& fullPosition) {
+    const Vector4D& fullPosition) {
   m_position = fullPosition;
 }
 
@@ -102,7 +100,7 @@ void Acts::Vertex<input_track_t>::setCovariance(const SymMatrix3D& covariance) {
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setFullCovariance(
-    const SpacePointSymMatrix& covariance) {
+    const SymMatrix4D& covariance) {
   m_covariance = covariance;
 }
 
