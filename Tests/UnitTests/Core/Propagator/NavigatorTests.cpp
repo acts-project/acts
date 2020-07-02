@@ -112,10 +112,8 @@ struct PropagatorState {
     Intersection::Status updateSurfaceStatus(
         State& state, const Surface& surface,
         const BoundaryCheck& bcheck) const {
-			auto status = detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
+      return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
                                                         bcheck);
-                                                       std::cout << "status: " << static_cast<int>(status) << std::endl;
-      return status;
     }
 
     template <typename object_intersection_t>
@@ -304,16 +302,18 @@ navigator.resolveSensitive = false;
   //
   // (1) Test for inactivity
   //
-  navigator.status(state, stepper);
   // Run without anything present
+  navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr));
+  state.options.debugString.clear();
   
   // Run with geometry but without resolving
   navigator.trackingGeometry = tGeometry;
   navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr));
+state.options.debugString.clear();
 
   // Run with geometry and resolving but broken navigation for various reasons
   navigator.resolveSensitive = true;
@@ -325,35 +325,48 @@ navigator.resolveSensitive = false;
   navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr));
+state.options.debugString.clear();
   // b) Beacause of no target surface
   state.navigation.targetReached = false;
   state.navigation.targetSurface = nullptr;
   navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr));
+  state.options.debugString.clear();
   // c) Because the target surface is reached
-  auto curvParams = std::get<CurvilinearParameters>(stepper.curvilinearState(state.stepping));
-  const Surface* targetSurf = &curvParams.referenceSurface();
+  const Surface* startSurf = tGeometry->getBeamline();
+  state.stepping.pos = startSurf->center(state.geoContext);
+  const Surface* targetSurf = startSurf;
   state.navigation.targetSurface = targetSurf;
   navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, targetSurf, nullptr, nullptr, nullptr, targetSurf));
+  std::cout << state.options.debugString << std::endl;
+  state.options.debugString.clear();
   
   //
   // (2) Test the initialisation
   //
-  // Initialise from outside the world
+  // a) Initialise without additional information
   state.navigation = Navigator::State();
   state.stepping.pos << 0., 0., 0.;
   const TrackingVolume* worldVol = tGeometry->highestTrackingVolume();
   const TrackingVolume* startVol = tGeometry->lowestTrackingVolume(
           state.geoContext, stepper.position(state.stepping));
-  std::cout << startVol << std::endl;
   const Layer* startLay = startVol->associatedLayer(
                     state.geoContext, stepper.position(state.stepping));
   navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
   BOOST_TEST(testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay, nullptr, nullptr, startVol, nullptr, nullptr, nullptr));
+  state.options.debugString.clear();
+  
+  // b) Initialise having a start surface
+  state.navigation = Navigator::State();
+  state.navigation.startSurface = startSurf;
+  navigator.status(state, stepper);
+  BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+  BOOST_TEST(testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay, startSurf, startSurf, startVol, nullptr, nullptr, nullptr));
+  state.options.debugString.clear();
   
   /// @param [in] worldVol World volume
 /// @param [in] startVol Start volume
