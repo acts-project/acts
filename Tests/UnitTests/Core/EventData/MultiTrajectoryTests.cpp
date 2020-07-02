@@ -94,7 +94,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas3d = {meas.referenceSurface().getSharedPtr(),
+    pc.meas3d = {meas.referenceObject().getSharedPtr(),
                  sourceLink,
                  meas.covariance(),
                  meas.parameters()[0],
@@ -121,7 +121,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sourceLink,
+    pc.meas2d = {meas.referenceObject().getSharedPtr(), sourceLink,
                  meas.covariance(), meas.parameters()[0], meas.parameters()[1]};
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       ts.setCalibrated(*pc.meas2d);
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   Vector2D mPar;
   mPar.setRandom();
   Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1> m2{
-      pc.meas3d->referenceSurface().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
+      pc.meas3d->referenceObject().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
 
   ts.setCalibrated(m2);
 
