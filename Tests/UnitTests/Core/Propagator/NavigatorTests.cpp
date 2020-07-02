@@ -248,17 +248,7 @@ bool testNavigatorStateVectors(Navigator::State& state, size_t navSurf, size_t n
 /// @param [in] targetSurf Target surface
 bool testNavigatorStatePointers(Navigator::State& state, const TrackingVolume* worldVol, const TrackingVolume* startVol, const Layer* startLay, 
 const Surface* startSurf, const Surface* currSurf, const TrackingVolume* currVol, const TrackingVolume* targetVol, const Layer* targetLay, const Surface* targetSurf)
-{
-  std::cout << (state.worldVolume == worldVol) <<
-  (state.startVolume == startVol) <<
-  (state.startLayer == startLay) <<
-  (state.startSurface == startSurf) <<
-  (state.currentSurface == currSurf) <<
-  (state.currentVolume == currVol) <<
-  (state.targetVolume == targetVol) <<
-  (state.targetLayer == targetLay) <<
-  (state.targetSurface == targetSurf) << std::endl;
-  
+{  
   return ((state.worldVolume == worldVol) &&
   (state.startVolume == startVol) &&
   (state.startLayer == startLay) &&
@@ -368,16 +358,13 @@ state.options.debugString.clear();
   BOOST_TEST(testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay, startSurf, startSurf, startVol, nullptr, nullptr, nullptr));
   state.options.debugString.clear();
   
-  /// @param [in] worldVol World volume
-/// @param [in] startVol Start volume
-/// @param [in] startLay Start layer
-/// @param [in] startSurf Start surface
-/// @param [in] currSurf Current surface
-/// @param [in] currVol Current volume
-/// @param [in] targetVol Target volume
-/// @param [in] targetLay Target layer
-/// @param [in] targetSurf Target surface
-
+  // c) Initialise having a start volume
+  state.navigation = Navigator::State();
+  state.navigation.startVolume = startVol;
+  navigator.status(state, stepper);
+  BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+  BOOST_TEST(testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay, nullptr, nullptr, startVol, nullptr, nullptr, nullptr));
+  state.options.debugString.clear();
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
