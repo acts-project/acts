@@ -227,7 +227,48 @@ auto tGeometry = cGeometry();
 // the debug boolean
 bool debug = true;
 
-BOOST_AUTO_TEST_CASE(Navigator_methods) {
+BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
+	// create a navigator
+  Navigator navigator;
+  //~ navigator.trackingGeometry = tGeometry;
+  //~ navigator.resolveSensitive = true;
+  //~ navigator.resolveMaterial = true;
+  //~ navigator.resolvePassive = false;
+
+// position and direction vector
+  Vector3D position(0., 0., 0);
+  Vector3D momentum(1., 1., 0);
+
+  // the propagator cache
+  PropagatorState state;
+  state.options.debug = debug;
+
+  // the stepper cache
+  state.stepping.pos = position;
+  state.stepping.dir = momentum.normalized();
+
+  // Stepper
+  PropagatorState::Stepper stepper;
+
+  // (1) Test the inactivity
+  navigator.status(state, stepper);
+  
+  BOOST_CHECK_EQUAL(state.navigation.navSurfaces.size(), 0u);
+  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0u);
+  BOOST_CHECK_EQUAL(state.navigation.navBoundaries.size(), 0u);
+  BOOST_CHECK_EQUAL(state.navigation.externalSurfaces.size(), 0u);
+  BOOST_CHECK_EQUAL(state.navigation.worldVolume, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.startVolume, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.startLayer, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.startSurface, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.currentVolume, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.targetVolume, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.targetLayer, nullptr);
+  BOOST_CHECK_EQUAL(state.navigation.targetSurface, nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // create a navigator
   Navigator navigator;
   navigator.trackingGeometry = tGeometry;
