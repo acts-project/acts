@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <vector>
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <vector>
 
 namespace Acts {
 

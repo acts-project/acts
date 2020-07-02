@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "ACTFW/GenericDetector/GenericDetectorElement.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
@@ -28,6 +26,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <iostream>
 
 namespace Acts {
 

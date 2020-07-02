@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <cstddef>
-#include <utility>
-#include <vector>
-
 #include "ACTFW/EventData/IndexContainers.hpp"
 #include "ACTFW/EventData/ProtoTrack.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+
+#include <cstddef>
+#include <utility>
+#include <vector>
 
 namespace FW {
 

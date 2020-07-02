@@ -12,11 +12,11 @@
 
 #pragma once
 
+#include "ACTFW/Framework/IService.hpp"
 #include <Acts/Utilities/Logger.hpp>
+
 #include <memory>
 #include <string>
-
-#include "ACTFW/Framework/IService.hpp"
 
 namespace FW {
 

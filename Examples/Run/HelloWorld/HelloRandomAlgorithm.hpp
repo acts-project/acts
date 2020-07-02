@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "ACTFW/Framework/BareAlgorithm.hpp"
+#include "ACTFW/Framework/RandomNumbers.hpp"
+
 #include <array>
 #include <memory>
 #include <string>
-
-#include "ACTFW/Framework/BareAlgorithm.hpp"
-#include "ACTFW/Framework/RandomNumbers.hpp"
 
 namespace FW {
 

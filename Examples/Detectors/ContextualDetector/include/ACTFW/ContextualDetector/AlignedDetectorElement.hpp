@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "ACTFW/GenericDetector/GenericDetectorElement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
@@ -17,6 +15,8 @@
 #include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <memory>
 
 namespace FW {
 

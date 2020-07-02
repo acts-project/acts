@@ -8,8 +8,6 @@
 
 #include "ACTFW/Io/Csv/CsvPlanarClusterReader.hpp"
 
-#include <dfe/dfe_io_dsv.hpp>
-
 #include "ACTFW/EventData/GeometryContainers.hpp"
 #include "ACTFW/EventData/IndexContainers.hpp"
 #include "ACTFW/EventData/SimHit.hpp"
@@ -21,6 +19,9 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <dfe/dfe_io_dsv.hpp>
+
 #include "TrackMlData.hpp"
 
 FW::CsvPlanarClusterReader::CsvPlanarClusterReader(

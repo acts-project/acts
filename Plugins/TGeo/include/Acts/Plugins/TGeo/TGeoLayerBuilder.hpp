@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <climits>
-#include <tuple>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -20,6 +18,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <climits>
+#include <tuple>
 
 class TGeoMatrix;
 class TGeoVolume;

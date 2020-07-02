@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <memory>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <memory>
 
 using namespace Acts::UnitLiterals;
 

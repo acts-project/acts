@@ -8,12 +8,13 @@
 
 #pragma once
 
-#include <algorithm>
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 

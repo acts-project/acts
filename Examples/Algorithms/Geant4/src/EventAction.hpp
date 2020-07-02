@@ -8,12 +8,13 @@
 
 #pragma once
 
-#include <G4UserEventAction.hh>
-#include <globals.hh>
-#include <memory>
-
 #include "ACTFW/EventData/SimHit.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
+
+#include <memory>
+
+#include <G4UserEventAction.hh>
+#include <globals.hh>
 
 namespace ActsExamples {
 

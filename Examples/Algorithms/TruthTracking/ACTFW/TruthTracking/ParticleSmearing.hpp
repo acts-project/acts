@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <limits>
-#include <string>
-
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <limits>
+#include <string>
 
 namespace FW {
 

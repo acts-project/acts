@@ -8,10 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <random>
-#include <vector>
-
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -40,6 +36,10 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <limits>
+#include <random>
+#include <vector>
 
 namespace Acts {
 

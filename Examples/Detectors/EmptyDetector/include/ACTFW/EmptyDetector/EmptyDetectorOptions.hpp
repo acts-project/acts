@@ -8,10 +8,11 @@
 
 #pragma once
 
-#include <boost/program_options.hpp>
+#include "Acts/Utilities/Units.hpp"
+
 #include <utility>
 
-#include "Acts/Utilities/Units.hpp"
+#include <boost/program_options.hpp>
 
 namespace FW {
 

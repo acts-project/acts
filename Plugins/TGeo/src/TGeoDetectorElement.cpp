@@ -6,13 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/algorithm/string.hpp>
-#include <fstream>
-#include <iostream>
-#include <utility>
+#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -22,6 +18,13 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <utility>
+
+#include <boost/algorithm/string.hpp>
+
 #include "TGeoArb8.h"
 #include "TGeoBBox.h"
 #include "TGeoBoolNode.h"

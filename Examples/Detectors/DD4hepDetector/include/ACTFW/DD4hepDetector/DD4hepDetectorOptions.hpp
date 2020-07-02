@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <Acts/Utilities/Units.hpp>
-#include <cstdlib>
-#include <utility>
-
 #include "ACTFW/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ACTFW/Utilities/Options.hpp"
+#include <Acts/Utilities/Units.hpp>
+
+#include <cstdlib>
+#include <utility>
 
 namespace po = boost::program_options;
 

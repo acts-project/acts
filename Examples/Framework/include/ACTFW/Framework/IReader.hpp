@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <string>
-#include <utility>
-
 #include "ACTFW/Framework/AlgorithmContext.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
+
+#include <string>
+#include <utility>
 
 namespace FW {
 

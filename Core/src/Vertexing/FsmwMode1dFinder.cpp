@@ -7,10 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
+
+#include "Acts/Vertexing/VertexingError.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include "Acts/Vertexing/VertexingError.hpp"
 
 Acts::FsmwMode1dFinder::FsmwMode1dFinder(double firstFraction, double fraction)
     : m_firstFraction(firstFraction), m_fraction(fraction) {}

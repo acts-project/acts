@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
+
 #include "RtypesCore.h"
 
 class TGeoShape;

@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <boost/container/flat_set.hpp>
-
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <boost/container/flat_set.hpp>
 
 namespace FW {
 namespace detail {

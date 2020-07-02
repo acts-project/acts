@@ -8,23 +8,24 @@
 
 #pragma once
 
+#include "ACTFW/Framework/IService.hpp"
+#include "ACTFW/Framework/ProcessCode.hpp"
+#include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include <Acts/MagneticField/ConstantBField.hpp>
 #include <Acts/MagneticField/InterpolatedBFieldMap.hpp>
 #include <Acts/Utilities/Helpers.hpp>
 #include <Acts/Utilities/Logger.hpp>
 #include <Acts/Utilities/Units.hpp>
-#include <TFile.h>
-#include <TTree.h>
+
 #include <array>
-#include <boost/optional.hpp>
 #include <ios>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
 
-#include "ACTFW/Framework/IService.hpp"
-#include "ACTFW/Framework/ProcessCode.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
+#include <TFile.h>
+#include <TTree.h>
+#include <boost/optional.hpp>
 
 namespace FW {
 

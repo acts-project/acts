@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <vector>
-
 #include "ACTFW/EventData/SimSourceLink.hpp"
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Plugins/BField/BFieldOptions.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+
+#include <functional>
+#include <memory>
+#include <vector>
 
 namespace FW {
 

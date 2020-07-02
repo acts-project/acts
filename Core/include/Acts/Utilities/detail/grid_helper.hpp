@@ -8,11 +8,12 @@
 
 #pragma once
 
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+
 #include <array>
 #include <tuple>
 #include <utility>
-#include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 namespace Acts {
 

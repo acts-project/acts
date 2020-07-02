@@ -8,15 +8,16 @@
 
 #pragma once
 
-#include <boost/program_options.hpp>
-#include <utility>
-
 #include "ACTFW/Fatras/FatrasAlgorithm.hpp"
 #include "ACTFW/Utilities/OptionsFwd.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
 #include "ActsFatras/Physics/StandardPhysicsLists.hpp"
+
+#include <utility>
+
+#include <boost/program_options.hpp>
 
 namespace FW {
 namespace Options {

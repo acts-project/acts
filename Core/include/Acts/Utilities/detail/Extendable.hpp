@@ -8,9 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/detail/MPL/all_of.hpp"
+
 #include <tuple>
 #include <type_traits>
-#include "Acts/Utilities/detail/MPL/all_of.hpp"
 
 namespace Acts {
 

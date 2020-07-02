@@ -7,11 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
-#include <iostream>
+
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <iostream>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

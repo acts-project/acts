@@ -8,10 +8,10 @@
 
 #include "ACTFW/MaterialMapping/MaterialMapping.hpp"
 
+#include "ACTFW/Framework/WhiteBoard.hpp"
+
 #include <iostream>
 #include <stdexcept>
-
-#include "ACTFW/Framework/WhiteBoard.hpp"
 
 FW::MaterialMapping::MaterialMapping(const FW::MaterialMapping::Config& cnf,
                                      Acts::Logging::Level level)

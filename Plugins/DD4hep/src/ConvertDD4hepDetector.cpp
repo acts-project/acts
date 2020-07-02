@@ -8,9 +8,6 @@
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 
-#include <list>
-#include <stdexcept>
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -27,6 +24,10 @@
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+
+#include <list>
+#include <stdexcept>
+
 #include "TGeoManager.h"
 
 namespace Acts {

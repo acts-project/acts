@@ -8,9 +8,9 @@
 
 #include "ACTFW/Validation/ProtoTrackClassification.hpp"
 
-#include <algorithm>
-
 #include "ACTFW/Utilities/Range.hpp"
+
+#include <algorithm>
 
 void FW::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,

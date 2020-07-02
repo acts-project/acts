@@ -8,10 +8,12 @@
 
 #pragma once
 
-#include <boost/config.hpp>
+#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
+
 #include <unordered_map>
 #include <vector>
-#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
+
+#include <boost/config.hpp>
 
 namespace Acts {
 

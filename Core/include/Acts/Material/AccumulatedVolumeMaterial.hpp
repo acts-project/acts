@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <limits>
-
 #include "Acts/Material/MaterialProperties.hpp"
+
+#include <limits>
 
 namespace Acts {
 

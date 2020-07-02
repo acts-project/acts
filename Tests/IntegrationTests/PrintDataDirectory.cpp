@@ -11,10 +11,10 @@
 // the unit test framework, placing it into the integration tests directory
 // is the least akward place.
 
+#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+
 #include <cstddef>
 #include <iostream>
-
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
 int main(void) {
   std::cout << Acts::Test::getDataPath("") << std::endl;

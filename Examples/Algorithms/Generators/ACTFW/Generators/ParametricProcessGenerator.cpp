@@ -8,10 +8,10 @@
 
 #include "ACTFW/Generators/ParametricProcessGenerator.hpp"
 
-#include <random>
-
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
+
+#include <random>
 
 FW::ParametricProcessGenerator::ParametricProcessGenerator(
     const FW::ParametricProcessGenerator::Config& cfg)

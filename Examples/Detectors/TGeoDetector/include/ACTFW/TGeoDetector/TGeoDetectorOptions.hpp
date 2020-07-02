@@ -8,15 +8,16 @@
 
 #pragma once
 
-#include <boost/program_options.hpp>
+#include "ACTFW/Utilities/Options.hpp"
+#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Utilities/Units.hpp"
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <utility>
 
-#include "ACTFW/Utilities/Options.hpp"
-#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 

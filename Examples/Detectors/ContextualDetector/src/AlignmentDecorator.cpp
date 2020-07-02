@@ -9,6 +9,7 @@
 #include "ACTFW/ContextualDetector/AlignmentDecorator.hpp"
 
 #include <Acts/Geometry/TrackingGeometry.hpp>
+
 #include <random>
 
 FW::Contextual::AlignmentDecorator::AlignmentDecorator(

@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/detail/GridFwd.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
 #include <numeric>
@@ -16,9 +19,6 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
-#include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/Interpolation.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 
 namespace Acts {
 

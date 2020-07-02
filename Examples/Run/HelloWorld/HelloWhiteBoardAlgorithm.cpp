@@ -9,6 +9,7 @@
 #include "HelloWhiteBoardAlgorithm.hpp"
 
 #include "ACTFW/Framework/WhiteBoard.hpp"
+
 #include "HelloData.hpp"
 
 FW::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(

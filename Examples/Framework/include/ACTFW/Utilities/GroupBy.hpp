@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "ACTFW/Utilities/Range.hpp"
+
 #include <algorithm>
 #include <iterator>
 #include <utility>
-
-#include "ACTFW/Utilities/Range.hpp"
 
 namespace FW {
 

@@ -10,8 +10,6 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <memory>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
@@ -25,6 +23,8 @@
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <memory>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

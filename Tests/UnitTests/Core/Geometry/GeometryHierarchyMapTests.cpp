@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
-#include <iterator>
-#include <stdexcept>
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+
+#include <iterator>
+#include <stdexcept>
 
 namespace {
 

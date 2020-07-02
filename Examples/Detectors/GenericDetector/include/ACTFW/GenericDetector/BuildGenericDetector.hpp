@@ -8,13 +8,6 @@
 
 #pragma once
 
-#include <array>
-#include <cmath>
-#include <iostream>
-#include <list>
-#include <memory>
-#include <vector>
-
 #include "ACTFW/GenericDetector/LayerBuilderT.hpp"
 #include "ACTFW/GenericDetector/ProtoLayerCreatorT.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -33,6 +26,13 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <array>
+#include <cmath>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <vector>
 
 namespace Acts {
 class TrackingGeometry;

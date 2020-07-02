@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <limits>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -17,6 +16,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <limits>
 
 namespace Acts {
 

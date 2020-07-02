@@ -8,9 +8,6 @@
 
 #include "ACTFW/Io/Csv/CsvPlanarClusterWriter.hpp"
 
-#include <dfe/dfe_io_dsv.hpp>
-#include <stdexcept>
-
 #include "ACTFW/EventData/SimHit.hpp"
 #include "ACTFW/EventData/SimIdentifier.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
@@ -19,6 +16,11 @@
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <stdexcept>
+
+#include <dfe/dfe_io_dsv.hpp>
+
 #include "TrackMlData.hpp"
 
 FW::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
