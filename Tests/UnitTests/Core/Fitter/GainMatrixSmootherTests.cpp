@@ -13,7 +13,6 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/TrackState.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -29,7 +28,6 @@ using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
 using MeasurementType = Measurement<SourceLink, params...>;
-using TrackState = TrackState<SourceLink, BoundParameters>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
