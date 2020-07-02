@@ -73,8 +73,8 @@ class GaussianTrackDensity {
     // Maximum z0 impact parameter significance to use a track
     double z0MaxSignificance;
     // Correspondig cut values
-    const double d0SignificanceCut;
-    const double z0SignificanceCut;
+    double d0SignificanceCut;
+    double z0SignificanceCut;
   };
 
   /// @brief The State struct
