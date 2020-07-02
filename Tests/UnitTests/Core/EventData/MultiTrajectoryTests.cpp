@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.smoothed->parameters(), ts.smoothed());
   BOOST_CHECK_EQUAL(*pc.smoothed->covariance(), ts.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(&ts.referenceSurface(), &pc.sourceLink.referenceSurface());
+  BOOST_CHECK_EQUAL(&ts.referenceObject(), &pc.sourceLink.referenceSurface());
 
   BOOST_CHECK(ts.hasJacobian());
   BOOST_CHECK_EQUAL(ts.jacobian(), pc.jacobian);
