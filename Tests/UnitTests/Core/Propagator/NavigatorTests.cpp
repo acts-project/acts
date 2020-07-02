@@ -219,6 +219,46 @@ void step(stepper_state_t& sstate) {
   return;
 }
 
+/// @brief Method for testing vectors in @c Navigator::State
+///
+/// @param [in] state Navigator state
+/// @param [in] navSurf Number of navigation surfaces
+/// @param [in] navLay Number of navigation layers
+/// @param [in] navBound Number of navigation boundaries
+/// @param [in] extSurf Number of external surfaces
+void testNavigatorStateVectors(Navigator::State& state, size_t navSurf, size_t navLay, size_t navBound, size_t extSurf)
+{
+  BOOST_CHECK_EQUAL(state.navSurfaces.size(), navSurf);
+  BOOST_CHECK_EQUAL(state.navLayers.size(), navLay);
+  BOOST_CHECK_EQUAL(state.navBoundaries.size(), navBound);
+  BOOST_CHECK_EQUAL(state.externalSurfaces.size(), extSurf);
+}
+
+/// @brief Method for testing pointers in @c Navigator::State
+///
+/// @param [in] state Navigation state
+/// @param [in] worldVol World volume
+/// @param [in] startVol Start volume
+/// @param [in] startLay Start layer
+/// @param [in] startSurf Start surface
+/// @param [in] currSurf Current surface
+/// @param [in] currVol Current volume
+/// @param [in] targetVol Target volume
+/// @param [in] targetLay Target layer
+/// @param [in] targetSurf Target surface
+void testNavigatorStatePointers(Navigator::State& state, const TrackingVolume* worldVol, const TrackingVolume* startVol, const Layer* startLay, 
+const Surface* startSurf, const Surface* currSurf, const TrackingVolume* currVol, const TrackingVolume* targetVol, const Layer* targetLay, const Surface* targetSurf)
+{
+  BOOST_CHECK_EQUAL(state.worldVolume, worldVol);
+  BOOST_CHECK_EQUAL(state.startVolume, startVol);
+  BOOST_CHECK_EQUAL(state.startLayer, startLay);
+  BOOST_CHECK_EQUAL(state.startSurface, startSurf);
+  BOOST_CHECK_EQUAL(state.currentSurface, currSurf);
+  BOOST_CHECK_EQUAL(state.currentVolume, currVol);
+  BOOST_CHECK_EQUAL(state.targetVolume, targetVol);
+  BOOST_CHECK_EQUAL(state.targetLayer, targetLay);
+  BOOST_CHECK_EQUAL(state.targetSurface, targetSurf);
+}
 // the surface cache & the creation of the geometry
 
 CylindricalTrackingGeometry cGeometry(tgContext);
@@ -230,11 +270,10 @@ bool debug = true;
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 	// create a navigator
   Navigator navigator;
-  //~ navigator.trackingGeometry = tGeometry;
-  //~ navigator.resolveSensitive = true;
-  //~ navigator.resolveMaterial = true;
-  //~ navigator.resolvePassive = false;
-
+navigator.resolveSensitive = false;
+  navigator.resolveMaterial = false;
+  navigator.resolvePassive = false;
+  
 // position and direction vector
   Vector3D position(0., 0., 0);
   Vector3D momentum(1., 1., 0);
@@ -252,20 +291,16 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 
   // (1) Test the inactivity
   navigator.status(state, stepper);
+  // Run without anything present
+  testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
+  testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   
-  BOOST_CHECK_EQUAL(state.navigation.navSurfaces.size(), 0u);
-  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0u);
-  BOOST_CHECK_EQUAL(state.navigation.navBoundaries.size(), 0u);
-  BOOST_CHECK_EQUAL(state.navigation.externalSurfaces.size(), 0u);
-  BOOST_CHECK_EQUAL(state.navigation.worldVolume, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.startVolume, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.startLayer, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.startSurface, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.targetVolume, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.targetLayer, nullptr);
-  BOOST_CHECK_EQUAL(state.navigation.targetSurface, nullptr);
+  // Run with geometry but without resolving
+  navigator.trackingGeometry = tGeometry;
+  navigator.status(state, stepper);
+  testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u);
+  testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
