@@ -112,8 +112,10 @@ struct PropagatorState {
     Intersection::Status updateSurfaceStatus(
         State& state, const Surface& surface,
         const BoundaryCheck& bcheck) const {
-      return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
+			auto status = detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
                                                         bcheck);
+                                                       std::cout << "status: " << static_cast<int>(status) << std::endl;
+      return status;
     }
 
     template <typename object_intersection_t>
@@ -331,10 +333,11 @@ navigator.resolveSensitive = false;
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr));
   // c) Because the target surface is reached
   auto curvParams = std::get<CurvilinearParameters>(stepper.curvilinearState(state.stepping));
-  state.navigation.targetSurface = &curvParams.referenceSurface();
+  const Surface* targetSurf = &curvParams.referenceSurface();
+  state.navigation.targetSurface = targetSurf;
   navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
-  BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, &curvParams.referenceSurface(), nullptr, nullptr, nullptr, &curvParams.referenceSurface()));
+  BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr, nullptr, targetSurf, nullptr, nullptr, nullptr, targetSurf));
   
   //
   // (2) Test the initialisation
@@ -345,7 +348,8 @@ navigator.resolveSensitive = false;
   const TrackingVolume* worldVol = tGeometry->highestTrackingVolume();
   const TrackingVolume* startVol = tGeometry->lowestTrackingVolume(
           state.geoContext, stepper.position(state.stepping));
-  const Layer* startLay = state.navigation.startVolume->associatedLayer(
+  std::cout << startVol << std::endl;
+  const Layer* startLay = startVol->associatedLayer(
                     state.geoContext, stepper.position(state.stepping));
   navigator.status(state, stepper);
   BOOST_TEST(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
