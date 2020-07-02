@@ -89,11 +89,6 @@ FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
       m_cfg.trackCollection);
   std::vector<Acts::BoundParameters> inputTrackCollection;
 
-  int counte = 0;
-  for (auto& bla : input) {
-    counte += bla.tracks.size();
-  }
-
   ACTS_INFO("Truth vertices in event: " << input.size());
 
   for (auto& vertexAndTracks : input) {
