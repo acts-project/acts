@@ -142,8 +142,8 @@ struct coordinate_transformation {
     result.template segment<3>(eFreePos0) =
         parameters2globalPosition(gtcx, parameters, surface);
     result[eFreeTime] = parameters[eBoundTime];
-    result.template segment<3>(eFreeDir0) =
-        makeDirectionUnitFromPhiTheta(parameters[eBoundPhi], parameters[eBoundTheta]);
+    result.template segment<3>(eFreeDir0) = makeDirectionUnitFromPhiTheta(
+        parameters[eBoundPhi], parameters[eBoundTheta]);
     result[eFreeQOverP] = parameters[eBoundQOverP];
     return result;
   }

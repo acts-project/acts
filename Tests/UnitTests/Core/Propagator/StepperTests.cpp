@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   freeParams[eFreeDir1] = dir[eMom1];
   freeParams[eFreeDir2] = dir[eMom2];
   freeParams[eFreeQOverP] = bpTarget.charge() / bpTarget.momentum().norm();
-  
+
   es.update(esState, freeParams, *bpTarget.covariance());
   BOOST_TEST(esState.pos == 2. * pos);
   CHECK_CLOSE_ABS(esState.dir, mom.normalized(), 1e-6);

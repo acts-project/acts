@@ -11,6 +11,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
@@ -30,7 +31,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 #include <functional>
 #include <map>
@@ -471,7 +471,9 @@ class CombinatorialKalmanFilter {
       state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
-      stepper.update(state.stepping, MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, currentState),
+      stepper.update(state.stepping,
+                     MultiTrajectoryHelpers::freeFiltered(
+                         state.options.geoContext, currentState),
                      currentState.filteredCovariance());
       // Reinitialize the stepping jacobian
       currentState.referenceSurface().initJacobianToGlobal(
@@ -617,7 +619,9 @@ class CombinatorialKalmanFilter {
           // state on this surface
           auto ts =
               result.fittedStates.getTrackState(result.activeTips.back().first);
-          stepper.update(state.stepping, MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, ts),
+          stepper.update(state.stepping,
+                         MultiTrajectoryHelpers::freeFiltered(
+                             state.options.geoContext, ts),
                          ts.filteredCovariance());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
@@ -1011,7 +1015,9 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state, "
           "set target surface.");
-      stepper.update(state.stepping, MultiTrajectoryHelpers::freeSmoothed(state.options.geoContext, firstMeasurement),
+      stepper.update(state.stepping,
+                     MultiTrajectoryHelpers::freeSmoothed(
+                         state.options.geoContext, firstMeasurement),
                      firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =

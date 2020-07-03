@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   freeParams[eFreeDir1] = dir[eMom1];
   freeParams[eFreeDir2] = dir[eMom2];
   freeParams[eFreeQOverP] = bpTarget.charge() / bpTarget.momentum().norm();
-  
+
   sls.update(slsState, freeParams, *bpTarget.covariance());
   BOOST_TEST(slsState.pos == 2. * pos);
   CHECK_CLOSE_ABS(slsState.dir, mom.normalized(), 1e-6);
