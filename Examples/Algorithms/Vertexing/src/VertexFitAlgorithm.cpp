@@ -52,6 +52,7 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(vertexFitterCfg);
+  VertexFitter::State state(ctx.magFieldContext);
   // Setup the linearizer
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
@@ -86,7 +87,7 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
       auto fitRes =
-          vertexFitter.fit(inputTrackPtrCollection, linearizer, vfOptions);
+          vertexFitter.fit(inputTrackPtrCollection, linearizer, vfOptions, state);
       if (fitRes.ok()) {
         fittedVertex = *fitRes;
       } else {
@@ -105,7 +106,7 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
                                           theConstraint);
 
       auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptionsConstr);
+                                     vfOptionsConstr,state);
       if (fitRes.ok()) {
         fittedVertex = *fitRes;
       } else {
