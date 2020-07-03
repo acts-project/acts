@@ -46,6 +46,12 @@ class HelicalTrackLinearizer {
   using Propagator_t = propagator_t;
   using BField_t = typename Propagator_t::Stepper::BField;
 
+  /// @struct State struct
+  struct State{
+    /// Magnetic field cache
+    typename BField_t::Cache fieldCache;
+  };
+
   /// @brief Configuration struct
   struct Config {
     /// @ Config constructor if magnetic field is present
@@ -86,12 +92,14 @@ class HelicalTrackLinearizer {
   /// @param linPoint Linearization point
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
+  /// @param state The state object
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(
       const BoundParameters& params, const SpacePointVector& linPoint,
       const Acts::GeometryContext& gctx,
-      const Acts::MagneticFieldContext& mctx) const;
+      const Acts::MagneticFieldContext& mctx,
+      State& state) const;
 
  private:
   /// Configuration object

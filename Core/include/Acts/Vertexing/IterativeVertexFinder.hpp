@@ -107,8 +107,15 @@ class IterativeVertexFinder {
     double cutOffTrackWeight = 0.01;
   };
 
-  /// @struct State State struct for fulfilling interface
-  struct State {};
+  /// @struct State State struct
+  struct State {
+    /// The IP estimator state
+    typename IPEstimator::State ipState;
+    /// The inearizer state
+    typename Linearizer_t::State linearizerState;
+    /// The fitter state
+    typename vfitter_t::State fitterState;
+  };
 
   /// @brief Constructor used if InputTrack_t type == BoundParameters
   ///
@@ -186,9 +193,11 @@ class IterativeVertexFinder {
   /// @param params Track parameters
   /// @param vertex The vertex
   /// @param vertexingOptions Vertexing options
+  /// @param state The state object
   Result<double> getCompatibility(
       const BoundParameters& params, const Vertex<InputTrack_t>& vertex,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
   /// @brief Function that removes used tracks compatible with
   /// current vertex (`myVertex`) from `perigeesToFit` and `seedTracks`
@@ -198,11 +207,13 @@ class IterativeVertexFinder {
   /// @param perigeesToFit Tracks used to fit `myVertex`
   /// @param seedTracks Tracks used for vertex seeding
   /// @param vertexingOptions Vertexing options
+  /// @param state The state object
   Result<void> removeUsedCompatibleTracks(
       Vertex<InputTrack_t>& myVertex,
       std::vector<const InputTrack_t*>& perigeesToFit,
       std::vector<const InputTrack_t*>& seedTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///
@@ -227,6 +238,7 @@ class IterativeVertexFinder {
   /// @param seedTracks Seed tracks vector
   /// @param origTracks Vector of original track objects
   /// @param vertexingOptions Vertexing options
+  /// @param state The state object
   ///
   /// @return Bool if currentVertex is still a good vertex
   Result<bool> reassignTracksToNewVertex(
@@ -235,7 +247,8 @@ class IterativeVertexFinder {
       std::vector<const InputTrack_t*>& perigeesToFit,
       std::vector<const InputTrack_t*>& seedTracks,
       const std::vector<const InputTrack_t*>& origTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
   /// @brief Counts all tracks that are significant for a vertex
   ///
