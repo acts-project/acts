@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
   IPEstimator::Config ipEstCfg(
       bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state;
+  IPEstimator::State state(magFieldContext);
 
 
   // Reference position
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
   IPEstimator::Config ipEstCfg(
       bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state;
+  IPEstimator::State state(magFieldContext);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
   IPEstimator::Config ipEstCfg(
       bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state;
+  IPEstimator::State state(magFieldContext);
 
   // Use same values as in Athena unit test
   Vector3D pos1(2_mm, 1_mm, -10_mm);
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   IPEstimator::Config ipEstCfg(
       bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state;
+  IPEstimator::State state(magFieldContext);
 
   // Construct random track emerging from vicinity of vertex position
   // Vector to store track objects used for vertex fit

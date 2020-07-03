@@ -84,6 +84,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   // Linearizer for BoundParameters type test
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
+  Linearizer::State state(magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     LinearizedTrack linTrack =
         linearizer
             .linearizeTrack(params, SpacePointVector::Zero(), geoContext,
-                            magFieldContext)
+                            magFieldContext, state)
             .value();
 
     // Create TrackAtVertex

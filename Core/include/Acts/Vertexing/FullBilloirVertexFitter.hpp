@@ -43,6 +43,13 @@ class FullBilloirVertexFitter {
 
   struct State
   {
+    /// @brief The state constructor
+    ///
+    /// @param mctx The magnetic field context
+    State(const Acts::MagneticFieldContext& mctx)
+    : linearizerState(mctx)
+    {}
+    /// The linearizer state
     typename Linearizer_t::State linearizerState;
   };
 

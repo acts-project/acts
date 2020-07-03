@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   VertexFitter::Config vertexFitterCfg;
   VertexFitter billoirFitter(
       vertexFitterCfg);
-  VertexFitter::State state;
+  VertexFitter::State state(magFieldContext);
 
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         vertexFitterCfg;
     VertexFitter billoirFitter(
         vertexFitterCfg);
-    VertexFitter::State state;
+    VertexFitter::State state(magFieldContext);
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
     // Some abitrary values
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     VertexFitter::Config vertexFitterCfg;
     VertexFitter billoirFitter(
         vertexFitterCfg, extractParameters);
-    VertexFitter::State state;
+    VertexFitter::State state(magFieldContext);
 
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;

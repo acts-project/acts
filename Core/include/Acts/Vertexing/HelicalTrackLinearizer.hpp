@@ -48,6 +48,12 @@ class HelicalTrackLinearizer {
 
   /// @struct State struct
   struct State{
+    /// @brief The state constructor
+    ///
+    /// @param mctx The magnetic field context
+    State(const Acts::MagneticFieldContext& mctx)
+    : fieldCache(mctx)
+    {}
     /// Magnetic field cache
     typename BField_t::Cache fieldCache;
   };
