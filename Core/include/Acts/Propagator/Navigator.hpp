@@ -454,7 +454,8 @@ class Navigator {
     if (state.navigation.startSurface &&
         state.navigation.startSurface->associatedLayer()) {
       debugLog(state, [&] {
-        return std::string("Fast start initialization through association from Surface.");
+        return std::string(
+            "Fast start initialization through association from Surface.");
       });
       // assign the current layer and volume by association
       state.navigation.startLayer =
@@ -464,43 +465,43 @@ class Navigator {
       // Set the start volume as current volume
       state.navigation.currentVolume = state.navigation.startVolume;
     } else {
-		if(state.navigation.startVolume)
-		{
-			debugLog(state, [&] {
-			return std::string("Fast start initialization through association from Volume.");
-		  });
-		  state.navigation.startLayer = state.navigation.startVolume->associatedLayer(
-						state.geoContext, stepper.position(state.stepping));
-		  // Set the start volume as current volume
-		  state.navigation.currentVolume = state.navigation.startVolume;
-		}
-		else
-		{
-      debugLog(state, [&] {
-        return std::string("Slow start initialization through search.");
-      });
-      // current volume and layer search through global search
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Starting from position "
-                << toString(stepper.position(state.stepping));
-        dstream << " and direction "
-                << toString(stepper.direction(state.stepping));
-        return dstream.str();
-      });
-      state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
-          state.geoContext, stepper.position(state.stepping));
-      state.navigation.startLayer =
-          state.navigation.startVolume
-              ? state.navigation.startVolume->associatedLayer(
-                    state.geoContext, stepper.position(state.stepping))
-              : nullptr;
-      // Set the start volume as current volume
-      state.navigation.currentVolume = state.navigation.startVolume;
       if (state.navigation.startVolume) {
-        debugLog(state, [&] { return std::string("Start volume resolved."); });
+        debugLog(state, [&] {
+          return std::string(
+              "Fast start initialization through association from Volume.");
+        });
+        state.navigation.startLayer =
+            state.navigation.startVolume->associatedLayer(
+                state.geoContext, stepper.position(state.stepping));
+        // Set the start volume as current volume
+        state.navigation.currentVolume = state.navigation.startVolume;
+      } else {
+        debugLog(state, [&] {
+          return std::string("Slow start initialization through search.");
+        });
+        // current volume and layer search through global search
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Starting from position "
+                  << toString(stepper.position(state.stepping));
+          dstream << " and direction "
+                  << toString(stepper.direction(state.stepping));
+          return dstream.str();
+        });
+        state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
+            state.geoContext, stepper.position(state.stepping));
+        state.navigation.startLayer =
+            state.navigation.startVolume
+                ? state.navigation.startVolume->associatedLayer(
+                      state.geoContext, stepper.position(state.stepping))
+                : nullptr;
+        // Set the start volume as current volume
+        state.navigation.currentVolume = state.navigation.startVolume;
+        if (state.navigation.startVolume) {
+          debugLog(state,
+                   [&] { return std::string("Start volume resolved."); });
+        }
       }
-  }
     }
     return;
   }
