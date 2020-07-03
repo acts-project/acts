@@ -248,7 +248,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     // Find and remove track from seedTracks
     auto foundSeedIter =
         std::find_if(seedTracks.begin(), seedTracks.end(),
-                     [&trackAtVtx, this](const auto seedTrk) {
+                     [&trackAtVtx](const auto seedTrk) {
                        return trackAtVtx.originalParams == seedTrk;
                      });
     if (foundSeedIter != seedTracks.end()) {
@@ -260,7 +260,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     // Find and remove track from perigeesToFit
     auto foundFitIter =
         std::find_if(perigeesToFit.begin(), perigeesToFit.end(),
-                     [&trackAtVtx, this](const auto fitTrk) {
+                     [&trackAtVtx](const auto fitTrk) {
                        return trackAtVtx.originalParams == fitTrk;
                      });
     if (foundFitIter != perigeesToFit.end()) {
@@ -292,11 +292,10 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
     if (chi2 < m_cfg.maximumChi2cutForSeeding) {
-      auto foundIter =
-          std::find_if(seedTracks.begin(), seedTracks.end(),
-                       [&myPerigeeToFit, this](const auto seedTrk) {
-                         return myPerigeeToFit == seedTrk;
-                       });
+      auto foundIter = std::find_if(seedTracks.begin(), seedTracks.end(),
+                                    [&myPerigeeToFit](const auto seedTrk) {
+                                      return myPerigeeToFit == seedTrk;
+                                    });
       if (foundIter != seedTracks.end()) {
         // Remove track from seed tracks
         seedTracks.erase(foundIter);
@@ -307,7 +306,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
       // Remove track from current vertex
       auto foundIter =
           std::find_if(tracksAtVertex.begin(), tracksAtVertex.end(),
-                       [&myPerigeeToFit, this](auto trk) {
+                       [&myPerigeeToFit](auto trk) {
                          return myPerigeeToFit == trk.originalParams;
                        });
       if (foundIter != tracksAtVertex.end()) {
