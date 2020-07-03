@@ -38,7 +38,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
 
     // Fill vector with tracks to fit, only compatible with seed:
     auto res = fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
-                                 perigeesToFitSplitVertex, vertexingOptions);
+                                 perigeesToFitSplitVertex, vertexingOptions, state);
 
     if (!res.ok()) {
       return res.error();
@@ -332,7 +332,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
     const Vertex<InputTrack_t>& seedVertex,
     std::vector<const InputTrack_t*>& perigeesToFitOut,
     std::vector<const InputTrack_t*>& perigeesToFitSplitVertexOut,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const {
+    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    State& state) const {
   int numberOfTracks = perigeeList.size();
 
   // Count how many tracks are used for fit

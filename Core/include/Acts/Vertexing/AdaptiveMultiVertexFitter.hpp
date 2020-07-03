@@ -51,6 +51,10 @@ class AdaptiveMultiVertexFitter {
  public:
   /// @brief The fitter state
   struct State {
+    State(const Acts::MagneticFieldContext& mctx)
+    : ipState(mctx)
+    , linearizerState(mctx)
+    {}
     // Vertex collection to be fitted
     std::vector<Vertex<InputTrack_t>*> vertexCollection;
 

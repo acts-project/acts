@@ -22,7 +22,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   // Seed tracks
   std::vector<const InputTrack_t*> seedTracks = allTracks;
 
-  FitterState_t fitterState;
+  FitterState_t fitterState(vertexingOptions.magFieldContext);
   SeedFinderState_t seedFinderState;
 
   std::vector<std::unique_ptr<Vertex<InputTrack_t>>> allVertices;

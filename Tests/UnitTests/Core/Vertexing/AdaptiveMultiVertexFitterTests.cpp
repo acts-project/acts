@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     }
   }
 
-  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state;
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state(magFieldContext);
 
   for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
        iTrack++) {
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   std::vector<Vertex<BoundParameters>*> vtxList;
 
-  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state;
+  AdaptiveMultiVertexFitter<BoundParameters, Linearizer>::State state(magFieldContext);
 
   // The constraint vertex position covariance
   SpacePointSymMatrix covConstr(SpacePointSymMatrix::Identity());

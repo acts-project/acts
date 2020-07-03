@@ -109,6 +109,11 @@ class IterativeVertexFinder {
 
   /// @struct State State struct
   struct State {
+    State(const Acts::MagneticFieldContext& mctx)
+    : ipState(mctx)
+    , linearizerState(mctx)
+    , fitterState(mctx)
+    {}
     /// The IP estimator state
     typename IPEstimator::State ipState;
     /// The inearizer state
@@ -222,12 +227,14 @@ class IterativeVertexFinder {
   /// @param perigeesToFitOut Perigees to fit
   /// @param perigeesToFitSplitVertexOut Perigees to fit split vertex
   /// @param vertexingOptions Vertexing options
+  /// @param state The state object
   Result<void> fillPerigeesToFit(
       const std::vector<const InputTrack_t*>& perigeeList,
       const Vertex<InputTrack_t>& seedVertex,
       std::vector<const InputTrack_t*>& perigeesToFitOut,
       std::vector<const InputTrack_t*>& perigeesToFitSplitVertexOut,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      State& state) const;
 
   /// @brief Function that reassigns tracks from other vertices
   ///        to the current vertex if they are more compatible
