@@ -10,6 +10,7 @@
 
 #include <map>
 #include <set>
+
 #include "Acts/EventData/TrackParameters.hpp"
 
 namespace Acts {
@@ -27,20 +28,20 @@ class GaussianTrackDensity {
     /// @brief Default constructor
     TrackEntry() = default;
     /// @brief Constructor initializing all members
-    /// @param z Trial z position
-    /// @param c0in z-independent term in exponent
-    /// @param c1in Linear coefficient in exponent
-    /// @param c2in Quadratic coefficient in exponent
-    /// @param zMin The lower bound
-    /// @param zMax The upper bound
-    TrackEntry(double z, double c0in, double c1in, double c2in, double zMin,
-               double zMax)
-        : z(z),
-          c0(c0in),
-          c1(c1in),
-          c2(c2in),
-          lowerBound(zMin),
-          upperBound(zMax) {}
+    /// @param z_ Trial z position
+    /// @param c0_ z-independent term in exponent
+    /// @param c1_ Linear coefficient in exponent
+    /// @param c2_ Quadratic coefficient in exponent
+    /// @param lowerBound_ The lower bound
+    /// @param upperBound_ The upper bound
+    TrackEntry(double z_, double c0_, double c1_, double c2_,
+               double lowerBound_, double upperBound_)
+        : z(z_),
+          c0(c0_),
+          c1(c1_),
+          c2(c2_),
+          lowerBound(lowerBound_),
+          upperBound(upperBound_) {}
 
     double z = 0;
     // Cached information for a single track

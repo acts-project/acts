@@ -80,7 +80,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
   state.options.actionList(state, m_stepper, result);
 
   // return progress flag here, decide on SUCCESS later
-  return std::move(result);
+  return Result<result_t>(std::move(result));
 }
 
 template <typename S, typename N>
