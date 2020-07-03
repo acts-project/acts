@@ -86,8 +86,8 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
       // Vertex fitter options
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
-      auto fitRes =
-          vertexFitter.fit(inputTrackPtrCollection, linearizer, vfOptions, state);
+      auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
+                                     vfOptions, state);
       if (fitRes.ok()) {
         fittedVertex = *fitRes;
       } else {
@@ -106,7 +106,7 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
                                           theConstraint);
 
       auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptionsConstr,state);
+                                     vfOptionsConstr, state);
       if (fitRes.ok()) {
         fittedVertex = *fitRes;
       } else {
