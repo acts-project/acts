@@ -57,6 +57,12 @@ class AdaptiveMultiVertexFitter {
     // Annealing state
     AnnealingUtility::State annealingState;
 
+    // IPEstimator state
+    typename IPEstimator::State ipState;
+
+    // Linearizer state
+    typename Linearizer_t::State linearizerState;
+
     // Map to store vertices information
     std::map<Vertex<InputTrack_t>*, VertexInfo<InputTrack_t>> vtxInfoMap;
 
