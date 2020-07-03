@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
 
@@ -142,7 +143,7 @@ struct coordinate_transformation {
         parameters2globalPosition(gtcx, parameters, surface);
     result[eFreeTime] = parameters[eBoundTime];
     result.template segment<3>(eFreeDir0) =
-        parameters2globalMomentum(parameters).normalized();
+        makeDirectionUnitFromPhiTheta(parameters[eBoundPhi], parameters[eBoundTheta]);
     result[eFreeQOverP] = parameters[eBoundQOverP];
     return result;
   }

@@ -29,6 +29,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 
 #include <functional>
 #include <map>
@@ -398,8 +399,7 @@ class KalmanFitter {
           state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
-          stepper.update(state.stepping,
-                         st.freeFiltered(state.options.geoContext),
+          stepper.update(state.stepping, MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, st),
                          st.filteredCovariance());
           // Reverse stepping direction
           state.stepping.navDir = backward;
@@ -503,8 +503,7 @@ class KalmanFitter {
             // update We need to (re-)construct a BoundParameters instance
             // here, which is a bit awkward.
             stepper.update(
-                state.stepping,
-                trackStateProxy.freeFiltered(state.options.geoContext),
+                state.stepping, MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, trackStateProxy),
                 trackStateProxy.filteredCovariance());
             // We count the state with measurement
             ++result.measurementStates;
@@ -683,8 +682,7 @@ class KalmanFitter {
           // update stepping state using filtered parameters after kalman
           // update We need to (re-)construct a BoundParameters instance here,
           // which is a bit awkward.
-          stepper.update(state.stepping,
-                         trackStateProxy.freeFiltered(state.options.geoContext),
+          stepper.update(state.stepping, MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, trackStateProxy),
                          trackStateProxy.filteredCovariance());
 
           // Update state and stepper with post material effects
@@ -832,8 +830,7 @@ class KalmanFitter {
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state, "
           "set target surface.");
-      stepper.update(state.stepping,
-                     firstMeasurement.freeSmoothed(state.options.geoContext),
+      stepper.update(state.stepping, MultiTrajectoryHelpers::freeSmoothed(state.options.geoContext, firstMeasurement),
                      firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =

@@ -14,6 +14,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 namespace Acts {
 
@@ -107,6 +108,33 @@ VolumeTrajectoryStateContainer trajectoryState(
   return trajStateContainer;
 }
 
+/// @brief Transforms the filtered parameters from a @c TrackStateProxy to free parameters
+///
+/// @tparam track_state_proxy_t Type of the @c TrackStateProxy
+/// @param [in] gctx Geometry context
+/// @param [in] trackStateProxy TrackStateProxy
+///
+/// @return Free parameters representation of the filtered parameters
+template <typename track_state_proxy_t>
+FreeVector freeFiltered(const GeometryContext& gctx, const track_state_proxy_t& trackStateProxy)
+{
+	return detail::coordinate_transformation::boundParameters2freeParameters(
+      gctx, trackStateProxy.filtered(), trackStateProxy.referenceSurface());
+}
+
+/// @brief Transforms the smoothed parameters from a @c TrackStateProxy to free parameters
+///
+/// @tparam track_state_proxy_t Type of the @c TrackStateProxy
+/// @param [in] gctx Geometry context
+/// @param [in] trackStateProxy TrackStateProxy
+///
+/// @return Free parameters representation of the smoothed parameters
+template <typename track_state_proxy_t>
+FreeVector freeSmoothed(const GeometryContext& gctx, const track_state_proxy_t& trackStateProxy)
+{
+	return detail::coordinate_transformation::boundParameters2freeParameters(
+      gctx, trackStateProxy.smoothed(), trackStateProxy.referenceSurface());
+}
 }  // namespace MultiTrajectoryHelpers
 
 }  // namespace Acts

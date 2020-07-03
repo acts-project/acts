@@ -17,7 +17,6 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -289,10 +288,6 @@ class TrackStateProxy {
   /// @return The filtered parameters
   Parameters filtered() const;
 
-  /// Filtered track parameters vector
-  /// @return The filtered parameters in free representation
-  FreeVector freeFiltered(const Acts::GeometryContext& gctx) const;
-
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
   Covariance filteredCovariance() const;
@@ -304,10 +299,6 @@ class TrackStateProxy {
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
   Parameters smoothed() const;
-
-  /// Smoothed track parameters vector
-  /// @return The smoothed parameters in free representation
-  FreeVector freeSmoothed(const Acts::GeometryContext& gctx) const;
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
