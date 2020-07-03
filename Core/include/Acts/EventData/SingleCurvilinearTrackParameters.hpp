@@ -84,7 +84,7 @@ class SingleCurvilinearTrackParameters
       : SingleTrackParameters<ChargePolicy>(std::move(other)),
         m_upSurface(std::move(other.m_upSurface)) {}
 
-  ~SingleCurvilinearTrackParameters() final = default;
+  ~SingleCurvilinearTrackParameters() = default;
 
   /// @brief copy assignment operator - charged/netural
   /// virtual constructor for type creation without casting
