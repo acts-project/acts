@@ -41,13 +41,11 @@ class ImpactPointEstimator {
 
  public:
   /// @struct State struct
-  struct State{
+  struct State {
     /// @brief The state constructor
     ///
     /// @param mctx The magnetic field context
-    State(const Acts::MagneticFieldContext& mctx)
-    : fieldCache(mctx)
-    {}
+    State(const Acts::MagneticFieldContext& mctx) : fieldCache(mctx) {}
     /// Magnetic field cache
     typename BField_t::Cache fieldCache;
   };
@@ -118,7 +116,8 @@ class ImpactPointEstimator {
   /// @return New track params
   Result<std::unique_ptr<const BoundParameters>> estimate3DImpactParameters(
       const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
-      const BoundParameters& trkParams, const Vector3D& vtxPos, State& state) const;
+      const BoundParameters& trkParams, const Vector3D& vtxPos,
+      State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -180,8 +179,7 @@ class ImpactPointEstimator {
   Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
                                       const BoundParameters& trkParams,
                                       const Vector3D& vtxPos, Vector3D& deltaR,
-                                      Vector3D& momDir,
-                                      State& state) const;
+                                      Vector3D& momDir, State& state) const;
 };
 
 }  // namespace Acts

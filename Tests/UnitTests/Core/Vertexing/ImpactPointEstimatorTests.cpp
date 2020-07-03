@@ -79,11 +79,9 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
 
   // Set up the ImpactPointEstimator
   using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(
-      bField, propagator);
+  IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
-
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -131,8 +129,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     double transverseDist = std::sqrt(std::pow(d0, 2) + std::pow(z0, 2));
 
     // Estimate 3D distance
-    auto distanceRes =
-        ipEstimator.calculate3dDistance(geoContext, myTrack, refPosition, state);
+    auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
+                                                       refPosition, state);
     BOOST_CHECK(distanceRes.ok());
 
     double distance = *distanceRes;
@@ -200,8 +198,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
 
   // Set up the ImpactPointEstimator
   using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(
-      bField, propagator);
+  IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
 
@@ -251,8 +248,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
                             perigeeSurface);
 
     // Estimate 3D distance
-    auto distanceRes =
-        ipEstimator.calculate3dDistance(geoContext, myTrack, refPosition, state);
+    auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
+                                                       refPosition, state);
     BOOST_CHECK(distanceRes.ok());
 
     distancesList.push_back(*distanceRes);
@@ -320,8 +317,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
 
   // Set up the ImpactPointEstimator
   using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(
-      bField, propagator);
+  IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
 
@@ -338,7 +334,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
   // Some fixed track parameter values
   BoundParameters params1(geoContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
 
-  auto res1 = ipEstimator.calculate3dDistance(geoContext, params1, vtxPos, state);
+  auto res1 =
+      ipEstimator.calculate3dDistance(geoContext, params1, vtxPos, state);
   BOOST_CHECK(res1.ok());
   double distance = (*res1);
 
@@ -403,8 +400,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
 
   // Set up the ImpactPointEstimator
   using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(
-      bField, propagator);
+  IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
 

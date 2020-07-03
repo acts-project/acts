@@ -55,8 +55,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   // Set up Billoir Vertex Fitter
   using VertexFitter = FullBilloirVertexFitter<BoundParameters, Linearizer>;
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter billoirFitter(
-      vertexFitterCfg);
+  VertexFitter billoirFitter(vertexFitterCfg);
   VertexFitter::State state(magFieldContext);
 
   // Constraint for vertex fit
@@ -84,7 +83,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   SpacePointSymMatrix zeroMat = SpacePointSymMatrix::Zero();
   BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
-  fittedVertex = billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
+  fittedVertex =
+      billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
 
   BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
   BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
@@ -144,10 +144,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
     // Set up Billoir Vertex Fitter
     using VertexFitter = FullBilloirVertexFitter<BoundParameters, Linearizer>;
-    VertexFitter::Config
-        vertexFitterCfg;
-    VertexFitter billoirFitter(
-        vertexFitterCfg);
+    VertexFitter::Config vertexFitterCfg;
+    VertexFitter billoirFitter(vertexFitterCfg);
     VertexFitter::State state(magFieldContext);
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
@@ -219,7 +217,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     }
     // Do the fit with a constraint
     Vertex<BoundParameters> fittedVertexConstraint =
-        billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr, state).value();
+        billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr, state)
+            .value();
     if (fittedVertexConstraint.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
@@ -283,8 +282,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     // Set up Billoir Vertex Fitter
     using VertexFitter = FullBilloirVertexFitter<InputTrack, Linearizer>;
     VertexFitter::Config vertexFitterCfg;
-    VertexFitter billoirFitter(
-        vertexFitterCfg, extractParameters);
+    VertexFitter billoirFitter(vertexFitterCfg, extractParameters);
     VertexFitter::State state(magFieldContext);
 
     // Constraint for vertex fit
@@ -360,7 +358,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     }
     // Do the fit with a constraint
     Vertex<InputTrack> fittedVertexConstraint =
-        billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr, state).value();
+        billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr, state)
+            .value();
     if (fittedVertexConstraint.tracks().size() > 0) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }

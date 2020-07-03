@@ -83,8 +83,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
   // Set up ImpactPointEstimator, used for comparisons later
   using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
-  IPEstimator::Config ip3dEstConfig(
-      bField, propagator);
+  IPEstimator::Config ip3dEstConfig(bField, propagator);
   IPEstimator ip3dEst(ip3dEstConfig);
   IPEstimator::State state(magFieldContext);
 
@@ -164,7 +163,9 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // The new distance after update
     double newDistance =
-        ip3dEst.calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
+        ip3dEst
+            .calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos,
+                                 state)
             .value();
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;

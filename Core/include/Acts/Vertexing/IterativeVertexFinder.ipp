@@ -9,8 +9,8 @@
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& state) const -> Result<std::vector<Vertex<InputTrack_t>>> {
+    const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
+    -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Original tracks
   const std::vector<const InputTrack_t*>& origTracks = trackVector;
   // Tracks for seeding
@@ -37,8 +37,9 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     std::vector<const InputTrack_t*> perigeesToFitSplitVertex;
 
     // Fill vector with tracks to fit, only compatible with seed:
-    auto res = fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
-                                 perigeesToFitSplitVertex, vertexingOptions, state);
+    auto res =
+        fillPerigeesToFit(seedTracks, seedVertex, perigeesToFit,
+                          perigeesToFitSplitVertex, vertexingOptions, state);
 
     if (!res.ok()) {
       return res.error();
@@ -51,16 +52,16 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     Vertex<InputTrack_t> currentSplitVertex;
 
     if (m_cfg.useBeamConstraint && !perigeesToFit.empty()) {
-      auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer,
-                                              vertexingOptions, state.fitterState);
+      auto fitResult = m_cfg.vertexFitter.fit(
+          perigeesToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
         return fitResult.error();
       }
     } else if (!m_cfg.useBeamConstraint && perigeesToFit.size() > 1) {
-      auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer,
-                                              vertexingOptions, state.fitterState);
+      auto fitResult = m_cfg.vertexFitter.fit(
+          perigeesToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -68,8 +69,9 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
       }
     }
     if (m_cfg.createSplitVertices && perigeesToFitSplitVertex.size() > 1) {
-      auto fitResult = m_cfg.vertexFitter.fit(
-          perigeesToFitSplitVertex, m_cfg.linearizer, vertexingOptions, state.fitterState);
+      auto fitResult =
+          m_cfg.vertexFitter.fit(perigeesToFitSplitVertex, m_cfg.linearizer,
+                                 vertexingOptions, state.fitterState);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
       } else {
@@ -98,9 +100,9 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
         // vertex is good vertex here
         // but add tracks which may have been missed
 
-        auto result = reassignTracksToNewVertex(vertexCollection, currentVertex,
-                                                perigeesToFit, seedTracks,
-                                                origTracks, vertexingOptions, state);
+        auto result = reassignTracksToNewVertex(
+            vertexCollection, currentVertex, perigeesToFit, seedTracks,
+            origTracks, vertexingOptions, state);
         if (!result.ok()) {
           return result.error();
         }
@@ -427,8 +429,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
           m_extractParameters(*(tracksIter->originalParams));
 
       // compute compatibility
-      auto resultNew =
-          getCompatibility(trackPerigee, currentVertex, vertexingOptions, state);
+      auto resultNew = getCompatibility(trackPerigee, currentVertex,
+                                        vertexingOptions, state);
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
@@ -484,16 +486,16 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
   // later
   currentVertex = Vertex<InputTrack_t>();
   if (m_cfg.useBeamConstraint && !perigeesToFit.empty()) {
-    auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer,
-                                            vertexingOptions, state.fitterState);
+    auto fitResult = m_cfg.vertexFitter.fit(
+        perigeesToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
       return Result<bool>::success(false);
     }
   } else if (!m_cfg.useBeamConstraint && perigeesToFit.size() > 1) {
-    auto fitResult = m_cfg.vertexFitter.fit(perigeesToFit, m_cfg.linearizer,
-                                            vertexingOptions, state.fitterState);
+    auto fitResult = m_cfg.vertexFitter.fit(
+        perigeesToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {

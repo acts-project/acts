@@ -282,7 +282,8 @@ Acts::Result<void> Acts::
             state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
-              vertexingOptions.geoContext, vertexingOptions.magFieldContext, state.linearizerState);
+              vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+              state.linearizerState);
           if (!result.ok()) {
             return result.error();
           }
