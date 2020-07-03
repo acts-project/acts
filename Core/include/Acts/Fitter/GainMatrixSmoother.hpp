@@ -46,7 +46,7 @@ class GainMatrixSmoother {
   ///
   /// @return The smoothed track parameters at the first measurement state
   template <typename source_link_t>
-  Result<void> operator()(const GeometryContext& gctx,
+  Result<void> operator()(const GeometryContext& /* gctx */,
                           MultiTrajectory<source_link_t>& trajectory,
                           size_t entryIndex) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
