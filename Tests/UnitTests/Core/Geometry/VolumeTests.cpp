@@ -60,7 +60,8 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   Vector3D shiftTranslation{-4_mm, -5_mm, -6_mm};
   shift.translation() = shiftTranslation;
   Volume volumeShift(volume, &shift);
-  BOOST_TEST(volumeShift.center() == (volume.transform() * shift).translation());
+  BOOST_TEST(volumeShift.center() ==
+             (volume.transform() * shift).translation());
   BOOST_TEST(volumeShift.transform().rotation() ==
              volume.transform().rotation());
 
