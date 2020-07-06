@@ -145,8 +145,7 @@ int main(int argc, char** argv) {
                     << nTrplPerSpBLimit << std::endl;
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
-          std::cout << "      -G : only run on GPU, not CPU"
-                    << std::endl;
+          std::cout << "      -G : only run on GPU, not CPU" << std::endl;
         }
 
         exit(EXIT_FAILURE);
@@ -253,11 +252,11 @@ int main(int argc, char** argv) {
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
-                                                                  groupIt.bottom(), groupIt.middle(), groupIt.top()));
+          groupIt.bottom(), groupIt.middle(), groupIt.top()));
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)
-        break;
+          break;
       }
     }
     // auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
@@ -302,15 +301,16 @@ int main(int argc, char** argv) {
             << "          CUDA        " << (do_cpu ? "Speedup " : "")
             << std::endl;
   std::cout << "Seedfinding_Time  " << std::setw(11)
-            << (do_cpu ? std::to_string(cpuTime) : "" ) << "  "
-            << std::setw(11) << cudaTime << "  " << std::setw(11)
-            << (do_cpu ? std::to_string(cpuTime / cudaTime) : "" ) << std::endl;
+            << (do_cpu ? std::to_string(cpuTime) : "") << "  " << std::setw(11)
+            << cudaTime << "  " << std::setw(11)
+            << (do_cpu ? std::to_string(cpuTime / cudaTime) : "") << std::endl;
   double wallTime_cpu = cpuTime + preprocessTime;
   double wallTime_cuda = cudaTime + preprocessTime;
   std::cout << "Wall_time         " << std::setw(11)
             << (do_cpu ? std::to_string(wallTime_cpu) : "") << "  "
             << std::setw(11) << wallTime_cuda << "  " << std::setw(11)
-            << (do_cpu ? std::to_string(wallTime_cpu / wallTime_cuda) : "") << std::endl;
+            << (do_cpu ? std::to_string(wallTime_cpu / wallTime_cuda) : "")
+            << std::endl;
   std::cout << "-----------------------------------------------------------"
             << std::endl;
   std::cout << std::endl;
@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
   if (!quiet) {
     if (do_cpu) {
       std::cout << "CPU Seed result:" << std::endl;
-      
+
       for (auto& regionVec : seedVector_cpu) {
         for (size_t i = 0; i < regionVec.size(); i++) {
           const Acts::Seed<SpacePoint>* seed = &regionVec[i];
@@ -391,7 +391,7 @@ int main(int argc, char** argv) {
           std::cout << std::endl;
         }
       }
-      
+
       std::cout << std::endl;
     }
     std::cout << "CUDA Seed result:" << std::endl;
