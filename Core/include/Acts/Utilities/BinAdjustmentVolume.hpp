@@ -50,7 +50,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     } else if (bval != binR and bval != binPhi and bval != binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: phi, r, z");
     }
-    float min, max = 0.;
+    float min = 0;
+    float max = 0;
     // Perform the value adjustment
     if (bval == binPhi) {
       min = minPhi;
@@ -100,7 +101,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     } else if (bval != binX and bval != binY and bval != binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: x, y, z");
     }
-    float min, max = 0.;
+    float min = 0;
+    float max = 0;
     // Perform the value adjustment
     if (bval == binX) {
       min = minX;
