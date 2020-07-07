@@ -116,7 +116,9 @@ jobs:
           -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-acts
           -DACTS_BUILD_JSON_PLUGIN=on
           -DACTS_BUILD_FATRAS=on
-      - name: Build and install Acts
+      - name: Build Acts
+        run: cmake --build build-acts --
+      - name: Install Acts
         run: cmake --build build-acts -- install
       - name: Configure Downstream
         run: >
