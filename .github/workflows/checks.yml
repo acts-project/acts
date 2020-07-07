@@ -7,10 +7,13 @@ on:
       - master
       - 'releases/**'
 
+env:
+  ACTS_CI_IMAGE_VERSION: v1
+
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/format8:master
+    container: gitlab-registry.cern.ch/acts/machines/format8:${{ ACTS_CI_IMAGE_VERSION }}
     steps:
       - uses: actions/checkout@v2
       - name: Check
