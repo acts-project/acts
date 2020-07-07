@@ -362,7 +362,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       // and not also in all tracks
       auto foundIter =
           std::find_if(seedTracks.begin(), seedTracks.end(),
-                       [&trk, this](auto seedTrk) { return trk == seedTrk; });
+                       [&trk](auto seedTrk) { return trk == seedTrk; });
       if (foundIter != seedTracks.end()) {
         nCompatibleTracks++;
         ACTS_DEBUG("Compatible track found.");
@@ -399,7 +399,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       // Find and remove track from seedTracks
       auto foundSeedIter =
           std::find_if(seedTracks.begin(), seedTracks.end(),
-                       [&trk, this](auto seedTrk) { return trk == seedTrk; });
+                       [&trk](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         seedTracks.erase(foundSeedIter);
         removedSeedTracks.push_back(trk);
@@ -427,7 +427,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       // Try to find track in seed tracks
       auto foundSeedIter =
           std::find_if(seedTracks.begin(), seedTracks.end(),
-                       [&trk, this](auto seedTrk) { return trk == seedTrk; });
+                       [&trk](auto seedTrk) { return trk == seedTrk; });
       if (foundSeedIter != seedTracks.end()) {
         maxCompatibility = compatibility;
         maxCompSeedIt = foundSeedIter;
