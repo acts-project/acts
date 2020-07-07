@@ -164,7 +164,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
 
   /// @brief desctructor - charged/neutral
   /// checks if the surface is free and in such a case deletes it
-  ~SingleBoundTrackParameters() final = default;
+  ~SingleBoundTrackParameters() = default;
 
   /// @brief copy assignment operator - charged/neutral
   SingleBoundTrackParameters<ChargePolicy>& operator=(
