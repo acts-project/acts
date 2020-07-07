@@ -11,7 +11,7 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
-  ACTS_CI_IMAGE_VERSION: v1
+  ACTS_CI_IMAGE_TAG: v1
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -19,7 +19,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:${{ ACTS_CI_IMAGE_VERSION }}
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:${{ ACTS_CI_IMAGE_TAG }}
     steps:
       - uses: actions/checkout@v2
       - name: Configure
