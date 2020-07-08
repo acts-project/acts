@@ -27,4 +27,4 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Measure
-        run: cmakeperf build/compile_commands.json -o perf.csv -j$(nproc)
+        run: cmakeperf build/compile_commands.json -o perf.csv -j$(nproc) 2>&1
