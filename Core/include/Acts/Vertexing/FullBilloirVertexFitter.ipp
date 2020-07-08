@@ -115,10 +115,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = linearizer.linearizeTrack(trackParams, linPoint,
-                                              vertexingOptions.geoContext,
-                                              vertexingOptions.magFieldContext,
-                                              state.linearizerState);
+      auto result = linearizer.linearizeTrack(
+          trackParams, linPoint, vertexingOptions.geoContext,
+          vertexingOptions.magFieldContext, state.linearizerState);
       if (result.ok()) {
         const auto& linTrack = *result;
         const auto& parametersAtPCA = linTrack.parametersAtPCA;

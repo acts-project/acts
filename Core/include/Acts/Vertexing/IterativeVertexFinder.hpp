@@ -110,10 +110,7 @@ class IterativeVertexFinder {
   /// @struct State State struct
   struct State {
     State(const Acts::MagneticFieldContext& mctx)
-    : ipState(mctx)
-    , linearizerState(mctx)
-    , fitterState(mctx)
-    {}
+        : ipState(mctx), linearizerState(mctx), fitterState(mctx) {}
     /// The IP estimator state
     typename IPEstimator::State ipState;
     /// The inearizer state

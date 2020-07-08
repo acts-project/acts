@@ -23,7 +23,8 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   Vector3D deltaR;
   Vector3D momDir;
 
-  auto res = getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
+  auto res =
+      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -40,12 +41,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
                                const BoundParameters& trkParams,
-                               const Vector3D& vtxPos,
-                               State& state) const {
+                               const Vector3D& vtxPos, State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
-  auto res = getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
+  auto res =
+      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -190,8 +191,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundParameters& trkParams,
                            const Vector3D& vtxPos, Vector3D& deltaR,
-                           Vector3D& momDir,
-                           State& state) const {
+                           Vector3D& momDir, State& state) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
   double d0 = trkParams.parameters()[ParID_t::eLOC_D0];
