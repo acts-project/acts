@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@e823a0a
+        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@2a110c1
       - name: Configure
         run: >
           cmake -B build -S .
@@ -27,4 +27,6 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Measure
-        run: cmakeperf build/compile_commands.json -o perf.csv -j$(nproc)
+        run: cmakeperf collect build/compile_commands.json -o perf.csv -j$(nproc)
+      - name: Results
+        run: cmakeperf print perf.csv
