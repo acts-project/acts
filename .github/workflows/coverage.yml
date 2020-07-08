@@ -11,7 +11,7 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
-  ACTS_CI_IMAGE_TAG: v1
+  ACTS_CI_IMAGE_TAG: v2
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
