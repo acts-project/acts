@@ -1,0 +1,30 @@
+name: Build performance
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+      - 'releases/**'
+
+
+jobs:
+  build_debug:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v2
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DACTS_BUILD_EVERYTHING=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Measure
+        run: >
+          pip3 install git+https://github.com/paulgessinger/cmakeperf.git@1b0888c
+          && cmakeperf build/compile_commands.json -o perf.csv -j$(nproc)
