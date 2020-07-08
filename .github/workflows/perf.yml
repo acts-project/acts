@@ -22,9 +22,9 @@ jobs:
         run: >
           cmake -B build -S .
           -GNinja
-          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS="-Werror"
           -DACTS_BUILD_EVERYTHING=ON
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Measure
-        run: cmakeperf build/compile_commands.json -o perf.csv -j$(nproc) 2>&1
+        run: cmakeperf build/compile_commands.json -o perf.csv -j$(nproc)
