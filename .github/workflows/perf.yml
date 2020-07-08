@@ -11,7 +11,7 @@ on:
 
 
 jobs:
-  build performance:
+  build_performance:
     runs-on: ubuntu-latest
     container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v2
     steps:
