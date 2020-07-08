@@ -9,12 +9,11 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
-  ACTS_CI_IMAGE_TAG: v2
 
 jobs:
   ubuntu2004:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:${{ env.ACTS_CI_IMAGE_TAG }}
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v2
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -58,7 +57,7 @@ jobs:
         run: cmake --build build -- integrationtests
   lcg:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}-lcg${{ matrix.lcg }}:${{ env.ACTS_CI_IMAGE_TAG }}
+    container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}-lcg${{ matrix.lcg }}:v2
     strategy:
       matrix:
         os:
@@ -88,7 +87,7 @@ jobs:
         run: source ${SETUP} && cmake --build build -- integrationtests
   docs:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:${{ env.ACTS_CI_IMAGE_TAG }}
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v2
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
