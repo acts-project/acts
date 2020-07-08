@@ -2,8 +2,8 @@ name: Build performance
 
 on:
   push:
-    branches:
-      - master
+    # branches:
+    #   - master
   pull_request:
     branches:
       - master
