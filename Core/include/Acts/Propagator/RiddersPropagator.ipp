@@ -13,11 +13,20 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     -> Result<action_list_t_result_t<
         CurvilinearParameters,
         typename propagator_options_t::action_list_type>> {
-  // Launch nominal propagation and collect results
-  auto nominalResult = m_propagator.propagate(start, options).value();
+  using ThisResult = Result<action_list_t_result_t<
+      CurvilinearParameters, typename propagator_options_t::action_list_type>>;
+
+  // Propagate the nominal parameters
+  auto nominalRet = m_propagator.propagate(start, options);
+  if (not nominalRet.ok()) {
+    return ThisResult::failure(nominalRet.error());
+  }
+
+  // Extract results from the nominal propagation
+  auto nominalResult = std::move(nominalRet).value();
   const BoundVector& nominalParameters =
       nominalResult.endParameters->parameters();
-  // Pick the surface of the propagation as target
+  // Use the curvilinear surface of the propagated parameters as target
   const Surface& surface = nominalResult.endParameters->referenceSurface();
 
   // Steps for estimating derivatives
@@ -44,7 +53,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
         calculateCovariance(derivatives, *start.covariance(), deviations));
   }
 
-  return std::move(nominalResult);
+  return ThisResult::success(std::move(nominalResult));
 }
 
 template <typename propagator_t>
@@ -54,8 +63,17 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         BoundParameters, typename propagator_options_t::action_list_type>> {
-  // Launch nominal propagation and collect results
-  auto nominalResult = m_propagator.propagate(start, target, options).value();
+  using ThisResult = Result<action_list_t_result_t<
+      BoundParameters, typename propagator_options_t::action_list_type>>;
+
+  // Propagate the nominal parameters
+  auto nominalRet = m_propagator.propagate(start, target, options);
+  if (not nominalRet.ok()) {
+    return ThisResult::failure(nominalRet.error());
+  }
+
+  // Extract results from the nominal propagation
+  auto nominalResult = std::move(nominalRet).value();
   const BoundVector& nominalParameters =
       nominalResult.endParameters->parameters();
 
@@ -99,14 +117,14 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
           // TODO: This should be changed to indicate that something went
           // wrong
           mParSet->setCovariance(Covariance::Zero());
-          return std::move(nominalResult);
+          return ThisResult::success(std::move(nominalResult));
         }
       }
     }
     mParSet->setCovariance(
         calculateCovariance(derivatives, *start.covariance(), deviations));
   }
-  return std::move(nominalResult);
+  return ThisResult::success(std::move(nominalResult));
 }
 
 template <typename propagator_t>

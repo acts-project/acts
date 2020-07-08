@@ -61,7 +61,7 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
-  std::ostream& toStream(std::ostream& sl) const;
+  std::ostream& toStream(std::ostream& sl) const final;
 
  private:
   Material m_material = Material();

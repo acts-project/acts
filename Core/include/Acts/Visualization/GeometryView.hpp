@@ -17,10 +17,10 @@
 namespace Acts {
 
 class Layer;
-class Polyhedron;
 class Surface;
 class SurfaceArray;
 class TrackingVolume;
+struct Polyhedron;
 
 static ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
 static ViewConfig s_viewPassive = ViewConfig({240, 280, 0});

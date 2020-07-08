@@ -31,7 +31,7 @@ namespace DD4hep {
 /// The DD4hepGeometryService creates the DD4hep, the TGeo and the ACTS
 /// TrackingGeometry
 /// from DD4hep xml input. The geometries are created only on demand.
-class DD4hepGeometryService : public BareService {
+class DD4hepGeometryService final : public BareService {
  public:
   struct Config {
     /// Log level for the geometry service.
