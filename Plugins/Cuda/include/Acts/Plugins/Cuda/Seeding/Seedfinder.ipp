@@ -213,7 +213,7 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CpuMatrix<Triplet> TripletsPerSpM_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.get(),
                                         true);
   cudaStream_t cuStream;
-  cudaStreamCreate(&cuStream);
+  ACTS_CUDA_ERROR_CHECK(cudaStreamCreate(&cuStream));
 
   for (int i_m = 0; i_m <= *nSpMcomp_cpu.get(); i_m++) {
     cudaStreamSynchronize(cuStream);
@@ -292,6 +292,7 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
       m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, outputVec);
     }
   }
+  ACTS_CUDA_ERROR_CHECK(cudaStreamDestroy(cuStream));
   return outputVec;
 }
 }  // namespace Acts
