@@ -669,26 +669,26 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
     *nTrplPerSpB = *nTrplPerSpBLimit;
   }
   
-  int j = threadIdx.x;            
+  int jj = threadIdx.x;            
   
   // bubble sort tIndex
   for (int i = 0; i < *nTrplPerSpB/2+1; i++){
     if (threadIdx.x < *nTrplPerSpB){    
-      if (j % 2 == 0 && j<*nTrplPerSpB-1){
-	if (triplets[j+1].tIndex < triplets[j].tIndex){
-	  Triplet tempVal = triplets[j];
-	  triplets[j] = triplets[j+1];	  
-	  triplets[j+1] = tempVal;	  
+      if (jj % 2 == 0 && jj<*nTrplPerSpB-1){
+	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+	  Triplet tempVal = triplets[jj];
+	  triplets[jj] = triplets[jj+1];	  
+	  triplets[jj+1] = tempVal;
 	}
       }
     }
     __syncthreads();
     if (threadIdx.x < *nTrplPerSpB){    
-      if (j % 2 == 1 && j<*nTrplPerSpB-1){
-	if (triplets[j+1].tIndex < triplets[j].tIndex){
-	  Triplet tempVal = triplets[j];
-	  triplets[j] = triplets[j+1];
-	  triplets[j+1] = tempVal;
+      if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
+	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+	  Triplet tempVal = triplets[jj];
+	  triplets[jj] = triplets[jj+1];
+	  triplets[jj+1] = tempVal;
 	}
       }
     }     
