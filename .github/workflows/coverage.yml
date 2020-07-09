@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - master
-      - 'releases/**'
+      - 'release/**'
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
