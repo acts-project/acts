@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg);
-    VertexFinder::State state;
+    VertexFinder::State state(magFieldContext);
 
     // Vector to be filled with all tracks in current event
     std::vector<std::unique_ptr<const BoundParameters>> tracks;
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg, extractParameters);
-    VertexFinder::State state;
+    VertexFinder::State state(magFieldContext);
 
     // Same for user track type tracks
     std::vector<std::unique_ptr<const InputTrack>> tracks;
