@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
   bool help(false);
   bool quiet(false);
   bool allgroup(false);
+  bool do_cpu(true);
   int nGroupToIterate = 500;
   int skip = 0;
   int deviceID = 0;
@@ -85,7 +86,7 @@ int main(int argc, char** argv) {
   int nAvgTrplPerSpBLimit = 2;
 
   int opt;
-  while ((opt = getopt(argc, argv, "haf:n:s:d:l:m:q")) != -1) {
+  while ((opt = getopt(argc, argv, "haf:n:s:d:l:m:qG")) != -1) {
     switch (opt) {
       case 'a':
         allgroup = true;
@@ -110,6 +111,9 @@ int main(int argc, char** argv) {
         break;
       case 'q':
         quiet = true;
+        break;
+      case 'G':
+        do_cpu = false;
         break;
       case 'h':
         help = true;
@@ -141,6 +145,7 @@ int main(int argc, char** argv) {
                     << nTrplPerSpBLimit << std::endl;
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
+          std::cout << "      -G : only run on GPU, not CPU" << std::endl;
         }
 
         exit(EXIT_FAILURE);
@@ -242,19 +247,21 @@ int main(int argc, char** argv) {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
 
-  for (int i_s = 0; i_s < skip; i_s++)
-    ++groupIt;
-  for (; !(groupIt == spGroup.end()); ++groupIt) {
-    seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top()));
-    group_count++;
-    if (allgroup == false) {
-      if (group_count >= nGroupToIterate)
-        break;
+  if (do_cpu) {
+    for (int i_s = 0; i_s < skip; i_s++)
+      ++groupIt;
+    for (; !(groupIt == spGroup.end()); ++groupIt) {
+      seedVector_cpu.push_back(seedfinder_cpu.createSeedsForGroup(
+          groupIt.bottom(), groupIt.middle(), groupIt.top()));
+      group_count++;
+      if (allgroup == false) {
+        if (group_count >= nGroupToIterate)
+          break;
+      }
     }
+    // auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
+    std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
   }
-  // auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
-  std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
 
   auto end_cpu = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
@@ -290,16 +297,20 @@ int main(int argc, char** argv) {
   std::cout << std::endl;
   std::cout << "----------------------- Time Metric -----------------------"
             << std::endl;
-  std::cout << "                       CPU          CUDA        Speedup "
+  std::cout << "                       " << (do_cpu ? "CPU" : "   ")
+            << "          CUDA        " << (do_cpu ? "Speedup " : "")
             << std::endl;
-  std::cout << "Seedfinding_Time  " << std::setw(11) << cpuTime << "  "
-            << std::setw(11) << cudaTime << "  " << std::setw(11)
-            << cpuTime / cudaTime << std::endl;
+  std::cout << "Seedfinding_Time  " << std::setw(11)
+            << (do_cpu ? std::to_string(cpuTime) : "") << "  " << std::setw(11)
+            << cudaTime << "  " << std::setw(11)
+            << (do_cpu ? std::to_string(cpuTime / cudaTime) : "") << std::endl;
   double wallTime_cpu = cpuTime + preprocessTime;
   double wallTime_cuda = cudaTime + preprocessTime;
-  std::cout << "Wall_time         " << std::setw(11) << wallTime_cpu << "  "
+  std::cout << "Wall_time         " << std::setw(11)
+            << (do_cpu ? std::to_string(wallTime_cpu) : "") << "  "
             << std::setw(11) << wallTime_cuda << "  " << std::setw(11)
-            << wallTime_cpu / wallTime_cuda << std::endl;
+            << (do_cpu ? std::to_string(wallTime_cpu / wallTime_cuda) : "")
+            << std::endl;
   std::cout << "-----------------------------------------------------------"
             << std::endl;
   std::cout << std::endl;
@@ -355,30 +366,34 @@ int main(int argc, char** argv) {
     }
   }
 
-  std::cout << nMatch << " seeds are matched" << std::endl;
-  std::cout << "Matching rate: " << float(nMatch) / nSeed_cpu * 100 << "%"
-            << std::endl;
+  if (do_cpu) {
+    std::cout << nMatch << " seeds are matched" << std::endl;
+    std::cout << "Matching rate: " << float(nMatch) / nSeed_cpu * 100 << "%"
+              << std::endl;
+  }
 
   if (!quiet) {
-    std::cout << "CPU Seed result:" << std::endl;
+    if (do_cpu) {
+      std::cout << "CPU Seed result:" << std::endl;
 
-    for (auto& regionVec : seedVector_cpu) {
-      for (size_t i = 0; i < regionVec.size(); i++) {
-        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
-        const SpacePoint* sp = seed->sp()[0];
-        std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
-                  << ") ";
-        sp = seed->sp()[1];
-        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
-                  << sp->z() << ") ";
-        sp = seed->sp()[2];
-        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
-                  << sp->z() << ") ";
-        std::cout << std::endl;
+      for (auto& regionVec : seedVector_cpu) {
+        for (size_t i = 0; i < regionVec.size(); i++) {
+          const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+          const SpacePoint* sp = seed->sp()[0];
+          std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
+                    << ") ";
+          sp = seed->sp()[1];
+          std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                    << sp->z() << ") ";
+          sp = seed->sp()[2];
+          std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                    << sp->z() << ") ";
+          std::cout << std::endl;
+        }
       }
-    }
 
-    std::cout << std::endl;
+      std::cout << std::endl;
+    }
     std::cout << "CUDA Seed result:" << std::endl;
 
     for (auto& regionVec : seedVector_cuda) {

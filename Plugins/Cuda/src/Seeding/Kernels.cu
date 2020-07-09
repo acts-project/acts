@@ -559,8 +559,10 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
   int offset(0);
   
   while (offset < *nSpTcompPerSpM){    
+    bool isPassed(1);
+    float impact;
+    float invHelix;
     if (threadIdx.x+offset < *nSpTcompPerSpM){
-      bool isPassed(1);
       
       //float Zot        = circTcompMatPerSpM[threadId+(*nSpTcompPerSpM)*0];
       float cotThetaT  = circTcompMatPerSpM[threadIdx.x+offset+(*nSpTcompPerSpM_Max)*1];
@@ -626,20 +628,22 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if ((deltaCotTheta2 - error2 > 0) &&
 	  (dCotThetaMinusError2 >
-	 p2scatter * (*sigmaScattering) * (*sigmaScattering))) {
+           p2scatter * (*sigmaScattering) * (*sigmaScattering))) {
 	isPassed = 0;
       }
       // A and B allow calculation of impact params in U/V plane with linear
       // function
       // (in contrast to having to solve a quadratic function in x/y plane)
-      float impact = fabsf((A - B * rM) * rM);
-      float invHelix = B / sqrtf(S2);
+      impact = fabsf((A - B * rM) * rM);
+      invHelix = B / sqrtf(S2);
       if (impact > (*impactMax)){
 	isPassed = 0;
       }     
+    }
+    
+    __syncthreads();
       
-      __syncthreads();
-      
+    if (threadIdx.x+offset < *nSpTcompPerSpM){      
       // The index will be different (and not deterministic) becuase of atomic operation
       // It will be resorted after kernel call
       if (isPassed == 1){
@@ -664,30 +668,33 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
   if (threadIdx.x == 0 && *nTrplPerSpB > *nTrplPerSpBLimit){
     *nTrplPerSpB = *nTrplPerSpBLimit;
   }
-    
+  
+  int jj = threadIdx.x;            
+  
   // bubble sort tIndex
-  if (threadIdx.x < *nTrplPerSpB){    
-    for (int i = 0; i < *nTrplPerSpB/2+1; i++){
-      int j = threadIdx.x;            
-      if (j % 2 == 0 && j<*nTrplPerSpB-1){
-	if (triplets[j+1].tIndex < triplets[j].tIndex){
-	  Triplet tempVal = triplets[j];
-	  triplets[j] = triplets[j+1];	  
-	  triplets[j+1] = tempVal;	  
+  for (int i = 0; i < *nTrplPerSpB/2+1; i++){
+    if (threadIdx.x < *nTrplPerSpB){    
+      if (jj % 2 == 0 && jj<*nTrplPerSpB-1){
+	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+	  Triplet tempVal = triplets[jj];
+	  triplets[jj] = triplets[jj+1];	  
+	  triplets[jj+1] = tempVal;
 	}
       }
-      __syncthreads();
-      if (j % 2 == 1 && j<*nTrplPerSpB-1){
-	if (triplets[j+1].tIndex < triplets[j].tIndex){
-	  Triplet tempVal = triplets[j];
-	  triplets[j] = triplets[j+1];
-	  triplets[j+1] = tempVal;
+    }
+    __syncthreads();
+    if (threadIdx.x < *nTrplPerSpB){    
+      if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
+	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+	  Triplet tempVal = triplets[jj];
+	  triplets[jj] = triplets[jj+1];
+	  triplets[jj+1] = tempVal;
 	}
       }
-      __syncthreads();
     }     
+    __syncthreads();
   }
-
+  
   __syncthreads();
 
   // serial algorithm for seed filtering
