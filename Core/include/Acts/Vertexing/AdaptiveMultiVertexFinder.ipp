@@ -34,7 +34,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
           ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
          iteration < m_cfg.maxIterations) {
-
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     std::vector<const InputTrack_t*> allTracks;
@@ -546,23 +545,24 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     -> Result<void> {
   allVertices.pop_back();
   allVerticesPtr.pop_back();
-    // Update fitter state with removed vertex candidate
-    fitterState.removeVertexFromMultiMap(vtx);
+  // Update fitter state with removed vertex candidate
+  fitterState.removeVertexFromMultiMap(vtx);
 
-    // Do the fit with removed vertex
-    auto fitResult = m_cfg.vertexFitter.addVtxToFit(
-        fitterState, vtx, m_cfg.linearizer, vertexingOptions);
-    if (!fitResult.ok()) {
-      return fitResult.error();
-    }
-  
+  // Do the fit with removed vertex
+  auto fitResult = m_cfg.vertexFitter.addVtxToFit(
+      fitterState, vtx, m_cfg.linearizer, vertexingOptions);
+  if (!fitResult.ok()) {
+    return fitResult.error();
+  }
+
   return {};
 }
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getVertexOutputList(
     const std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
-    FitterState_t& fitterState) const -> Acts::Result<std::vector<Vertex<InputTrack_t>>> {
+    FitterState_t& fitterState) const
+    -> Acts::Result<std::vector<Vertex<InputTrack_t>>> {
   std::vector<Vertex<InputTrack_t>> outputVec;
   for (auto vtx : allVerticesPtr) {
     auto& outVtx = *vtx;
