@@ -188,10 +188,10 @@ add_component_if(Fatras Fatras ACTS_BUILD_FATRAS)
 add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 
 # automated tests and benchmarks
-if(ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS)
+if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
   enable_testing() # must be set in the main CMakeLists.txt
+  add_subdirectory(Tests)
 endif()
-add_subdirectory(Tests)
 
 # documentation
 add_subdirectory_if(docs ACTS_BUILD_DOCS)
