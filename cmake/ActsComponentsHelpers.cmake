@@ -3,27 +3,38 @@
 # Components must always be placed in a separate directory which can than
 # be added using either of the two provided functions
 #
-#     add_component(<SUBDIR>)
-#     add_component_if(<SUBDIR> ...) # for optional components
+#     add_component(<SUBDIR> <NAME>)
+#     add_component_if(<SUBDIR> <NAME> ...) # for optional components
 #
-# In both cases the subdirectory names is used to identify the component.
-# The following helper macros are also available
+# Both functions are wrappers around `add_subdirectory` that also register a
+# component under the given name. All additional arguments to the second
+# function are treated as a boolean expression that determines whether the
+# subdirectory should be added and the component registered. The list of
+# components is stored in the global `_components` variable. If
+# components are added from a subdirectory, this variable must be propagated to
+# the global scope using the following helper macro:
 #
 #     propagate_components_to_parent()
-#     print_components()
 #
-# and the list of components is stored in the global `_supported_components`
-# variable.
+# For cases, where a subdirectory needs to be optionally included but does not
+# need to be registered as a component, the following helper function can be
+# used
+#
+#     add_subdirectory_if(<SUBDIR> ...)
+#
+# where all additional arguments are again treated as a boolean expression that
+# determines whether the subdirectory should be added.
 
-set(_supported_components)
+set(_components)
 
 # add an optional directory and register its name as a component
 function(add_component_if path name)
   file(RELATIVE_PATH _rel ${PROJECT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/${path}")
   if(${ARGN})
     add_subdirectory(${path})
-    list(APPEND _supported_components "${name}")
-    set(_supported_components "${_supported_components}" PARENT_SCOPE)
+    list(APPEND _components "${name}")
+    # propagate variable outside function scope
+    set(_components "${_components}" PARENT_SCOPE)
     message(STATUS "Enable component '${name}' in '${_rel}'")
   else()
     message(STATUS "Disable component '${name}' in '${_rel}'")
@@ -37,7 +48,7 @@ endmacro()
 
 # propagate the list of components to the parent scope
 macro(propagate_components_to_parent)
-  set(_supported_components "${_supported_components}" PARENT_SCOPE)
+  set(_components "${_components}" PARENT_SCOPE)
 endmacro()
 
 # add an optional subdirectory that is **not** registered as a component

@@ -102,3 +102,32 @@ jobs:
         with:
           name: acts-docs
           path: docs/_build/html/
+  downstream:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure Acts
+        run: >
+          cmake -B build-acts -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install-acts
+          -DACTS_BUILD_JSON_PLUGIN=on
+          -DACTS_BUILD_FATRAS=on
+      - name: Build Acts
+        run: cmake --build build-acts --
+      - name: Install Acts
+        run: cmake --build build-acts -- install
+      - name: Configure Downstream
+        run: >
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_PREFIX_PATH=${{ github.workspace }}/install-acts
+      - name: Build Downstream
+        run: cmake --build build-downstream --
+      - name: Run Downstream
+        run: ./build-downstream/bin/ShowActsVersion
