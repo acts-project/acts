@@ -10,7 +10,7 @@ on:
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/format8:master
+    container: gitlab-registry.cern.ch/acts/machines/format8:v2
     steps:
       - uses: actions/checkout@v2
       - name: Check
