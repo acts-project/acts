@@ -65,7 +65,8 @@ Acts::Result<Acts::Vertex<input_track_t>>
 Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     const std::vector<const input_track_t*>& paramVector,
     const linearizer_t& linearizer,
-    const VertexingOptions<input_track_t>& vertexingOptions) const {
+    const VertexingOptions<input_track_t>& vertexingOptions,
+    State& state) const {
   double chi2 = std::numeric_limits<double>::max();
   double newChi2 = 0;
   unsigned int nTracks = paramVector.size();
@@ -114,9 +115,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = linearizer.linearizeTrack(trackParams, linPoint,
-                                              vertexingOptions.geoContext,
-                                              vertexingOptions.magFieldContext);
+      auto result = linearizer.linearizeTrack(
+          trackParams, linPoint, vertexingOptions.geoContext,
+          vertexingOptions.magFieldContext, state.linearizerState);
       if (result.ok()) {
         const auto& linTrack = *result;
         const auto& parametersAtPCA = linTrack.parametersAtPCA;

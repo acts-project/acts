@@ -81,7 +81,7 @@ FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
-  VertexFinder::State state;
+  VertexFinder::State state(ctx.magFieldContext);
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // Setup containers
