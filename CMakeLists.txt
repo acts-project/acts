@@ -16,7 +16,7 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 # build options
 
 # all options and compile-time parameters must be defined here for clear
-# visibility and make them available everywhere
+# visibility and to make them available everywhere
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
@@ -96,22 +96,30 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
 # required packages
-set(Boost_NO_BOOST_CMAKE ON) # disable new cmake features from Boost 1.70 on
-find_package(Boost 1.69 REQUIRED COMPONENTS program_options unit_test_framework)
-find_package(Eigen 3.2.9 REQUIRED)
+# use only the CMake FindBoost module; avoids issues with the new cmake configs
+# that become available with Boost 1.70
+set(Boost_NO_BOOST_CMAKE ON)
+find_package(Boost 1.69 MODULE REQUIRED COMPONENTS program_options unit_test_framework)
+find_package(Eigen3 3.2.9 CONFIG REQUIRED)
 find_package(Filesystem REQUIRED)
 
 # optional packages
 #
-# find packages explicitely for each component even if this can mean
-# searching for the same package twice. This avoid having complex if/else
-# trees to sort of when a particular package is actually needed.
+# find packages explicitely for each component even if this means searching for
+# the same package twice. This avoids having complex if/else trees to sort out
+# when a particular package is actually needed.
 #
 # version variables for external dependencies that are required more than once
-set(acts_dd4hep_version 1.10)
-set(acts_root_version 6.10)
+set(_dd4hep_version 1.10)
+set(_root_version 6.10)
+# plugin dependencies
+if(ACTS_BUILD_CUDA_PLUGIN)
+  enable_language(CUDA)
+  set(CMAKE_CUDA_STANDARD 14)
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+endif()
 if(ACTS_BUILD_DD4HEP_PLUGIN)
-  find_package(DD4hep ${acts_dd4hep_version} REQUIRED COMPONENTS DDCore)
+  find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore)
 endif()
 if(ACTS_BUILD_JSON_PLUGIN)
   if(ACTS_USE_BUNDLED_NLOHMANN_JSON)
@@ -120,34 +128,35 @@ if(ACTS_BUILD_JSON_PLUGIN)
     add_subdirectory(thirdparty/nlohmann_json)
   else()
     message(STATUS "Using external install of nlohmann::json")
-    find_package(nlohmann_json 3.2.0 REQUIRED)
+    find_package(nlohmann_json 3.2.0 CONFIG REQUIRED)
   endif()
 endif()
 if(ACTS_BUILD_TGEO_PLUGIN)
-  find_package(ROOT ${acts_root_version} REQUIRED COMPONENTS Geom)
+  find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Geom)
 endif()
+# examples dependencies
 if(ACTS_BUILD_EXAMPLES)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
   # we could select ROOT components based on the configured core plugins and
   # standalone components. for simplicity always request all possible
   # required components.
-  find_package(ROOT ${acts_root_version} REQUIRED COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
+  find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
   find_package(TBB REQUIRED)
   add_subdirectory(thirdparty/dfelibs)
 endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
-  find_package(DD4hep ${acts_dd4hep_version} REQUIRED COMPONENTS DDCore DDG4)
+  find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore DDG4)
 elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
-  find_package(DD4hep ${acts_dd4hep_version} REQUIRED COMPONENTS DDCore)
+  find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore)
 endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
-  find_package(Geant4 REQUIRED COMPONENTS gdml)
+  find_package(Geant4 CONFIG REQUIRED COMPONENTS gdml)
 endif()
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
   # must be version 3.1+. version 3.0 uses HepMC w/o number as module name.
   # version 3.1.0 misses the version variable so we can not check for it
-  find_package(HepMC3 REQUIRED)
+  find_package(HepMC3 CONFIG REQUIRED)
   find_package(HepPID REQUIRED)
   # HepMC version 3.1.0 has a broken cmake config: it searches for the
   # HepMC libray instead of the correct HepMC3 one and sets HEPMC_LIBRARIES
@@ -164,14 +173,10 @@ endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   find_package(Pythia8 REQUIRED)
 endif()
+# other dependencies
 if(ACTS_BUILD_DOCS)
   find_package(Doxygen 1.8.11 REQUIRED)
   find_package(Sphinx REQUIRED)
-endif()
-if(ACTS_BUILD_CUDA_PLUGIN)
-  enable_language(CUDA)
-  set(CMAKE_CUDA_STANDARD 14)
-  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 endif()
 
 # core library, core plugins, and other components
@@ -192,5 +197,5 @@ add_subdirectory(Tests)
 add_subdirectory_if(docs ACTS_BUILD_DOCS)
 
 # create cmake configuration files and environment setup script
-include(ActsCreateCMakeConfig)
+include(ActsCreatePackageConfig)
 include(ActsCreateSetup)

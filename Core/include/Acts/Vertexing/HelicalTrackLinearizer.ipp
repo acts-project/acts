@@ -13,7 +13,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
         const BoundParameters& params, const SpacePointVector& linPoint,
         const Acts::GeometryContext& gctx,
-        const Acts::MagneticFieldContext& mctx) const {
+        const Acts::MagneticFieldContext& mctx, State& state) const {
   Vector3D linPointPos = VectorHelpers::position(linPoint);
 
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -62,7 +62,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   Vector3D momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
-  double Bz = m_cfg.bField.getField(VectorHelpers::position(positionAtPCA))[eZ];
+  double Bz = m_cfg.bField.getField(VectorHelpers::position(positionAtPCA),
+                                    state.fieldCache)[eZ];
   double rho;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {

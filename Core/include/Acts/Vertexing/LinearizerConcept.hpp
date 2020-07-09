@@ -22,6 +22,8 @@ namespace concept {
 
   template <typename T>
   using propagator_t = typename T::Propagator_t;
+  template <typename T>
+  using state_t = typename T::State;
 
   METHOD_TRAIT(linTrack_t, linearizeTrack);
 
@@ -33,15 +35,20 @@ namespace concept {
          linTrack_t, const BoundParameters&,
                      const SpacePointVector&,
                      const Acts::GeometryContext&,
-                     const Acts::MagneticFieldContext&>;
+                     const Acts::MagneticFieldContext&,
+                     typename S::State&>;
   
         static_assert(linTrack_exists, "linearizeTrack method not found");
 
         constexpr static bool propagator_exists = exists<propagator_t, S>;
         static_assert(propagator_exists, "Propagator type not found");
 
+        constexpr static bool state_exists = exists<state_t, S>;
+        static_assert(state_exists, "State type not found");
+
         constexpr static bool value = require<linTrack_exists,
-                                              propagator_exists>;
+                                              propagator_exists,
+                                              state_exists>;
       };
   // clang-format on
   }  // namespace Linearizer
