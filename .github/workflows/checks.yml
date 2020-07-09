@@ -5,12 +5,12 @@ on:
   pull_request:
     branches:
       - master
-      - 'releases/**'
+      - 'release/**'
 
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/format8:master
+    container: gitlab-registry.cern.ch/acts/machines/format8:v3
     steps:
       - uses: actions/checkout@v2
       - name: Check

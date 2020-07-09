@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - master
-      - 'releases/**'
+      - 'release/**'
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
@@ -18,7 +18,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v3
     steps:
       - uses: actions/checkout@v2
       - name: Configure
