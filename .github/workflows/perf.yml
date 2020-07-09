@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@2a110c1
+        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@9dea9fb
       - name: Configure
         run: >
           cmake -B build -S .
