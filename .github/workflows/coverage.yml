@@ -18,7 +18,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v2
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v3
     steps:
       - uses: actions/checkout@v2
       - name: Configure
