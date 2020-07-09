@@ -246,8 +246,8 @@ components. q
 | ACTS_BUILD_EXAMPLES_HEPMC3            | Build HepMC3-based code in the examples |
 | ACTS_BUILD_EXAMPLES_PYTHIA8           | Build Pythia8-based code in the examples |
 | ACTS_BUILD_BENCHMARKS                 | Build benchmarks |
-| ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_INTEGRATIONTESTS           | Build integration tests |
+| ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_DOCS                       | Build documentation |
 
 All Acts-specific options are disabled or empty by default (except for
