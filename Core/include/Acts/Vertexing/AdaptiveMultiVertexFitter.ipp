@@ -209,7 +209,7 @@ Acts::Result<void> Acts::
   for (const auto& trk : currentVtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        m_extractParameters(*trk), seedPos);
+        m_extractParameters(*trk), seedPos, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
@@ -239,7 +239,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
           m_extractParameters(*trk),
-          VectorHelpers::position(currentVtxInfo.linPoint));
+          VectorHelpers::position(currentVtxInfo.linPoint), state.ipState);
       if (!res.ok()) {
         return res.error();
       }
@@ -282,7 +282,8 @@ Acts::Result<void> Acts::
             state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
-              vertexingOptions.geoContext, vertexingOptions.magFieldContext);
+              vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+              state.linearizerState);
           if (!result.ok()) {
             return result.error();
           }

@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"

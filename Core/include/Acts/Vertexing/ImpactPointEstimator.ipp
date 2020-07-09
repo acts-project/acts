@@ -18,11 +18,13 @@ Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
     propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
                                                const BoundParameters& trkParams,
-                                               const Vector3D& vtxPos) const {
+                                               const Vector3D& vtxPos,
+                                               State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
-  auto res = getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir);
+  auto res =
+      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -39,11 +41,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
                                const BoundParameters& trkParams,
-                               const Vector3D& vtxPos) const {
+                               const Vector3D& vtxPos, State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
-  auto res = getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir);
+  auto res =
+      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -188,7 +191,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundParameters& trkParams,
                            const Vector3D& vtxPos, Vector3D& deltaR,
-                           Vector3D& momDir) const {
+                           Vector3D& momDir, State& state) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
   double d0 = trkParams.parameters()[ParID_t::eLOC_D0];
@@ -202,7 +205,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double cotTheta = 1. / std::tan(theta);
 
   // get B-field z-component at current position
-  double bZ = m_cfg.bField.getField(trkSurfaceCenter)[eZ];
+  double bZ = m_cfg.bField.getField(trkSurfaceCenter, state.fieldCache)[eZ];
 
   // The radius
   double r;
