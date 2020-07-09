@@ -5,13 +5,12 @@ target_compile_features(
   INTERFACE cxx_std_17)
 target_include_directories(
   ActsLegacy
-  SYSTEM INTERFACE ${EIGEN_INCLUDE_DIRS}
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsLegacy
-  INTERFACE Boost::boost)
+  INTERFACE Boost::boost Eigen3::Eigen)
 
 install(
   TARGETS ActsLegacy

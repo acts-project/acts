@@ -122,7 +122,9 @@ continous integration setup and come with all dependencies pre-installed.
     release 96
 
 To use these locally, you first need to pull the relevant images from the
-registry. The current version is always tagged as `master.
+registry. Stable versions are tagged as `vX` where `X` is the version number.
+The latest version is also tagged as `master`. The following command downloads
+the latest `ubuntu2004` image:
 
 ```console
 $ docker pull gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
