@@ -509,7 +509,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer);
 
-  finderConfig.refitAfterBadVertex = false;
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
 

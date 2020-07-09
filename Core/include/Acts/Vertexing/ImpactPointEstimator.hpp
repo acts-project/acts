@@ -40,6 +40,16 @@ class ImpactPointEstimator {
   using BField_t = typename propagator_t::Stepper::BField;
 
  public:
+  /// @struct State struct
+  struct State {
+    /// @brief The state constructor
+    ///
+    /// @param mctx The magnetic field context
+    State(const Acts::MagneticFieldContext& mctx) : fieldCache(mctx) {}
+    /// Magnetic field cache
+    typename BField_t::Cache fieldCache;
+  };
+
   /// @struct Configuration struct
   struct Config {
     /// @brief Config constructor if magnetic field is present
@@ -81,11 +91,13 @@ class ImpactPointEstimator {
   /// @param gctx The geometry context
   /// @param trkParams Track parameters
   /// @param vtxPos Position to calculate distance to
+  /// @param state The state object
   ///
   /// @return Distance
   Result<double> calculate3dDistance(const GeometryContext& gctx,
                                      const BoundParameters& trkParams,
-                                     const Vector3D& vtxPos) const;
+                                     const Vector3D& vtxPos,
+                                     State& state) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3d to given
@@ -99,11 +111,13 @@ class ImpactPointEstimator {
   /// @param mctx The magnetic field context
   /// @param trkParams Track parameters
   /// @param vtxPos Reference position (vertex)
+  /// @param state The state object
   ///
   /// @return New track params
   Result<std::unique_ptr<const BoundParameters>> estimate3DImpactParameters(
       const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
-      const BoundParameters& trkParams, const Vector3D& vtxPos) const;
+      const BoundParameters& trkParams, const Vector3D& vtxPos,
+      State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -161,10 +175,11 @@ class ImpactPointEstimator {
   ///   track and vtxPos, to be determined by method
   /// @param momDir Momentum direction, to be
   ///   determined by method
+  /// @param state The state object
   Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
                                       const BoundParameters& trkParams,
                                       const Vector3D& vtxPos, Vector3D& deltaR,
-                                      Vector3D& momDir) const;
+                                      Vector3D& momDir, State& state) const;
 };
 
 }  // namespace Acts
