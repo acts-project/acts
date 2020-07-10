@@ -122,8 +122,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
-                            perigeeSurface);
+    BoundParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
 
     // Distance in transverse plane
     double transverseDist = std::sqrt(std::pow(d0, 2) + std::pow(z0, 2));
@@ -244,8 +243,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
-                            perigeeSurface);
+    BoundParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
 
     // Estimate 3D distance
     auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
@@ -428,8 +426,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-    BoundParameters track = BoundParameters(geoContext, std::move(covMat),
-                                            paramVec, perigeeSurface);
+    BoundParameters track(perigeeSurface, paramVec, std::move(covMat));
 
     // Check if IP are retrieved
     ImpactParametersAndSigma output =
