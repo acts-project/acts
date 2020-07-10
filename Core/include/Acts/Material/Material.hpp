@@ -30,6 +30,8 @@ namespace Acts {
 /// of materials is described.
 class Material {
  public:
+  using ParametersVector = Acts::ActsVectorF<5>;
+
   // Both mass and molar density are stored as a float and can thus not be
   // distinguish by their types. Just changing the last element in the
   // previously existing constructor to represent molar density instead of mass
@@ -62,7 +64,7 @@ class Material {
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from an encoded parameters vector.
-  Material(const ActsVectorF<5>& parameters);
+  Material(const ParametersVector& parameters);
 
   Material(Material&& mat) = default;
   Material(const Material& mat) = default;
@@ -91,7 +93,7 @@ class Material {
   float meanExcitationEnergy() const;
 
   /// Encode the properties into an opaque parameters vector.
-  ActsVectorF<5> classificationNumbers() const;
+  ParametersVector classificationNumbers() const;
 
  private:
   float m_x0 = std::numeric_limits<float>::infinity();

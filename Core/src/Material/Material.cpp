@@ -62,7 +62,7 @@ Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
   return mat;
 }
 
-Acts::Material::Material(const ActsVectorF<5>& parameters)
+Acts::Material::Material(const ParametersVector& parameters)
     : m_x0(parameters[eRadiationLength]),
       m_l0(parameters[eInteractionLength]),
       m_ar(parameters[eRelativeAtomicMass]),
@@ -85,8 +85,8 @@ float Acts::Material::meanExcitationEnergy() const {
   return 16_eV * std::pow(m_z, 0.9f);
 }
 
-Acts::ActsVectorF<5> Acts::Material::classificationNumbers() const {
-  ActsVectorF<5> parameters;
+Acts::Material::ParametersVector Acts::Material::classificationNumbers() const {
+  ParametersVector parameters;
   parameters[eRadiationLength] = m_x0;
   parameters[eInteractionLength] = m_l0;
   parameters[eRelativeAtomicMass] = m_ar;
