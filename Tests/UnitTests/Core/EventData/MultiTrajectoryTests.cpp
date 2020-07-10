@@ -142,7 +142,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   CovMat_t predCov;
   predCov.setRandom();
 
-  BoundParameters pred(gctx, predCov, predPar, plane);
+  BoundParameters pred(plane, predPar, predCov);
   pc.predicted = pred;
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted)) {
     ts.predicted() = pred.parameters();
@@ -157,7 +157,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   CovMat_t filtCov;
   filtCov.setRandom();
 
-  BoundParameters filt(gctx, filtCov, filtPar, plane);
+  BoundParameters filt(plane, filtPar, filtCov);
   pc.filtered = filt;
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered)) {
     ts.filtered() = filt.parameters();
@@ -172,7 +172,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   CovMat_t smotCov;
   smotCov.setRandom();
 
-  BoundParameters smot(gctx, smotCov, smotPar, plane);
+  BoundParameters smot(plane, smotPar, smotCov);
   pc.smoothed = smot;
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
     ts.smoothed() = smot.parameters();
