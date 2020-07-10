@@ -359,6 +359,8 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
 /// Create the Volume Material
 const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     const json& material) {
+  using ParametersVector = Material::ParametersVector;
+
   Acts::IVolumeMaterial* vMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
@@ -370,7 +372,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     }
   }
   // Convert the material
-  std::vector<std::vector<float>> mmat;
+  std::vector<Material::ParametersVector> mmat;
   // Structured binding
   for (auto& [key, value] : material.items()) {
     // Check json keys
@@ -382,9 +384,12 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
       bUtility += jsonToBinUtility(value);
     }
     if (key == m_cfg.datakey and not value.empty()) {
-      for (auto& bin : value) {
-        std::vector<float> mpVector{bin[0], bin[1], bin[2], bin[3], bin[4]};
-        mmat.push_back(mpVector);
+      for (const auto& bin : value) {
+        ParametersVector params = ParametersVector::Zero();
+        for (size_t i = 0; i < 5; ++i) {
+          params[i] = bin[i];
+        }
+        mmat.push_back(std::move(params));
       }
     }
   }
@@ -393,8 +398,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
   if (mmat.empty()) {
     vMaterial = new Acts::ProtoVolumeMaterial(bUtility);
   } else if (mmat.size() == 1) {
-    vMaterial = new Acts::HomogeneousVolumeMaterial(Acts::Material(
-        mmat[0][0], mmat[0][1], mmat[0][2], mmat[0][3], mmat[0][4]));
+    vMaterial = new Acts::HomogeneousVolumeMaterial(Acts::Material(mmat[0]));
   } else {
     if (bUtility.dimensions() == 2) {
       std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
@@ -411,9 +415,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
       MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
       for (size_t bin = 0; bin < mmat.size(); bin++) {
-        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
-                                       mmat[bin][3], mmat[bin][4])
-                            .classificationNumbers();
+        mGrid.at(bin) = mmat[bin];
       }
       MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
       vMaterial =
@@ -435,9 +437,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
       MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
       for (size_t bin = 0; bin < mmat.size(); bin++) {
-        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
-                                       mmat[bin][3], mmat[bin][4])
-                            .classificationNumbers();
+        mGrid.at(bin) = mmat[bin];
       }
       MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
       vMaterial =
@@ -610,17 +610,10 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
   json smj;
 
   // lemma 0 : accept the surface
-  auto convertMaterialProperties =
+  auto encodeMaterialProperties =
       [](const Acts::MaterialProperties& mp) -> std::vector<float> {
-    // convert when ready
-    if (mp) {
-      /// Return the thickness in mm
-      return {
-          mp.material().X0(), mp.material().L0(),          mp.material().Ar(),
-          mp.material().Z(),  mp.material().massDensity(), mp.thickness(),
-      };
-    }
-    return {};
+    const auto cn = mp.material().classificationNumbers();
+    return {cn[0], cn[1], cn[2], cn[3], cn[4], mp.thickness()};
   };
 
   // A bin utility needs to be written
@@ -642,10 +635,11 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       smj[m_cfg.typekey] = "homogeneous";
       smj[m_cfg.mapkey] = true;
       if (m_cfg.writeData) {
-        // write out the data, it's a [[[X0,L0,Z,A,rho,thickness]]]
-        auto& mp = hsMaterial->materialProperties(0, 0);
         std::vector<std::vector<std::vector<float>>> mmat = {
-            {convertMaterialProperties(mp)}};
+            {
+                encodeMaterialProperties(hsMaterial->materialProperties(0, 0)),
+            },
+        };
         smj[m_cfg.datakey] = mmat;
       }
     } else {
@@ -663,11 +657,11 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
           auto& mpMatrix = bsMaterial->fullMaterial();
           std::vector<std::vector<std::vector<float>>> mmat;
           mmat.reserve(mpMatrix.size());
-          for (auto& mpVector : mpMatrix) {
+          for (const auto& mpVector : mpMatrix) {
             std::vector<std::vector<float>> mvec;
             mvec.reserve(mpVector.size());
-            for (auto& mp : mpVector) {
-              mvec.push_back(convertMaterialProperties(mp));
+            for (const auto& mp : mpVector) {
+              mvec.push_back(encodeMaterialProperties(mp));
             }
             mmat.push_back(std::move(mvec));
           }
@@ -719,6 +713,11 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
 
 json Acts::JsonGeometryConverter::volumeMaterialToJson(
     const Acts::IVolumeMaterial& vMaterial) {
+  auto encodeMaterialParameters =
+      [](const Material::ParametersVector& params) -> std::vector<float> {
+    return {params[0], params[1], params[2], params[3], params[3]};
+  };
+
   json smj;
   // A bin utility needs to be written
   const Acts::BinUtility* bUtility = nullptr;
@@ -739,11 +738,10 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
       smj[m_cfg.typekey] = "homogeneous";
       smj[m_cfg.mapkey] = true;
       if (m_cfg.writeData) {
-        // write out the data, it's a [[[X0,L0,Z,A,rho,thickness]]]
-        auto mat = hvMaterial->material({0, 0, 0});
-        std::vector<std::vector<float>> mmat;
-        mmat.push_back(
-            {mat.X0(), mat.L0(), mat.Ar(), mat.Z(), mat.massDensity()});
+        std::vector<std::vector<float>> mmat = {
+            encodeMaterialParameters(
+                hvMaterial->material({0, 0, 0}).classificationNumbers()),
+        };
         smj[m_cfg.datakey] = mmat;
       }
     } else {
@@ -762,13 +760,7 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
           std::vector<std::vector<float>> mmat;
           MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
           for (size_t bin = 0; bin < grid.size(); bin++) {
-            auto mat = Material(grid.at(bin));
-            if (mat != Material()) {
-              mmat.push_back(
-                  {mat.X0(), mat.L0(), mat.Ar(), mat.Z(), mat.massDensity()});
-            } else {
-              mmat.push_back({0, 0, 0, 0, 0});
-            }
+            mmat.push_back(encodeMaterialParameters(grid.at(bin)));
           }
           smj[m_cfg.datakey] = mmat;
         }
@@ -787,13 +779,7 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
             std::vector<std::vector<float>> mmat;
             MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
             for (size_t bin = 0; bin < grid.size(); bin++) {
-              auto mat = Material(grid.at(bin));
-              if (mat != Material()) {
-                mmat.push_back(
-                    {mat.X0(), mat.L0(), mat.Ar(), mat.Z(), mat.massDensity()});
-              } else {
-                mmat.push_back({0, 0, 0, 0, 0});
-              }
+              mmat.push_back(encodeMaterialParameters(grid.at(bin)));
             }
             smj[m_cfg.datakey] = mmat;
           }
@@ -890,12 +876,18 @@ Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
   for (auto& outer : data) {
     Acts::MaterialPropertiesVector mpVector;
     for (auto& inner : outer) {
-      if (inner.size() > 5) {
-        mpVector.push_back(Acts::MaterialProperties(
-            Acts::Material(inner[0], inner[1], inner[2], inner[3], inner[4]),
-            inner[5]));
+      if (inner.size() == 6) {
+        // extract the encoded material parameters vector
+        Acts::ActsVectorF<5> params;
+        for (size_t i = 0; i < 5; ++i) {
+          params[i] = inner[i];
+        }
+        // extract the material thickness
+        const float thickness = inner[5];
+        // add the resulting material properties to the matrix
+        mpVector.emplace_back(Acts::Material(params), thickness);
       } else {
-        mpVector.push_back(Acts::MaterialProperties());
+        mpVector.emplace_back();
       }
     }
     mpMatrix.push_back(std::move(mpVector));
