@@ -178,8 +178,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     values[param] += h;
 
     // Propagate with updated start parameters
-    BoundParameters tp(options.geoContext, startPars.covariance(), values,
-                       startPars.referenceSurface().getSharedPtr());
+    BoundParameters tp(startPars.referenceSurface().getSharedPtr(), values,
+                       startPars.covariance());
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
