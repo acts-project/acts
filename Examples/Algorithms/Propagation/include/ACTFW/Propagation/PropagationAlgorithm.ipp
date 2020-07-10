@@ -169,16 +169,16 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
     PropagationOutput pOutput;
     if (charge) {
       // charged extrapolation - with hit recording
-      Acts::BoundParameters startParameters(context.geoContext, std::move(cov),
-                                            std::move(pars), surface);
-      sPosition = startParameters.position();
+      Acts::BoundParameters startParameters(surface, std::move(pars),
+                                            std::move(cov));
+      sPosition = startParameters.position(context.geoContext);
       sMomentum = startParameters.momentum();
       pOutput = executeTest(context, startParameters);
     } else {
       // execute the test for neeutral particles
       Acts::NeutralBoundTrackParameters neutralParameters(
-          context.geoContext, std::move(cov), std::move(pars), surface);
-      sPosition = neutralParameters.position();
+          surface, std::move(pars), std::move(cov));
+      sPosition = neutralParameters.position(context.geoContext);
       sMomentum = neutralParameters.momentum();
       pOutput = executeTest(context, neutralParameters);
     }

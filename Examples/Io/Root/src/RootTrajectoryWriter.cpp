@@ -422,9 +422,9 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasPredicted()) {
         predicted = true;
         m_nPredicted++;
-        Acts::BoundParameters parameter(
-            gctx, state.predictedCovariance(), state.predicted(),
-            state.referenceSurface().getSharedPtr());
+        Acts::BoundParameters parameter(state.referenceSurface().getSharedPtr(),
+                                        state.predicted(),
+                                        state.predictedCovariance());
         auto covariance = state.predictedCovariance();
         // local hit residual info
         auto H = meas.projector();
@@ -557,9 +557,9 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasFiltered()) {
         filtered = true;
         m_nFiltered++;
-        Acts::BoundParameters parameter(
-            gctx, state.filteredCovariance(), state.filtered(),
-            state.referenceSurface().getSharedPtr());
+        Acts::BoundParameters parameter(state.referenceSurface().getSharedPtr(),
+                                        state.filtered(),
+                                        state.filteredCovariance());
         auto covariance = state.filteredCovariance();
         // filtered parameter
         m_eLOC0_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0]);
@@ -668,9 +668,9 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasSmoothed()) {
         smoothed = true;
         m_nSmoothed++;
-        Acts::BoundParameters parameter(
-            gctx, state.smoothedCovariance(), state.smoothed(),
-            state.referenceSurface().getSharedPtr());
+        Acts::BoundParameters parameter(state.referenceSurface().getSharedPtr(),
+                                        state.smoothed(),
+                                        state.smoothedCovariance());
         auto covariance = state.smoothedCovariance();
 
         // smoothed parameter
